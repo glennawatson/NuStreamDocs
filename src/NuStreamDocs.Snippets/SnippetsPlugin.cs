@@ -15,11 +15,13 @@ namespace NuStreamDocs.Snippets;
 /// build's docs root).
 /// </summary>
 /// <remarks>
-/// First-cut implementation handles whole-file includes only.
-/// Section markers (<c>--8&lt;-- "file:section"</c>) and the
-/// <c>--;--</c> / <c>--/8&lt;--</c> begin/end markers are not yet
-/// implemented; consumers can call <c>UseSnippets()</c> today and
-/// the simple include shape works.
+/// Whole-file includes (<c>--8&lt;-- "file"</c>) and section includes
+/// (<c>--8&lt;-- "file#section"</c>) both ship. Section boundaries inside
+/// snippet files are marked with HTML comments —
+/// <c>&lt;!-- @section name --&gt;</c> opens, <c>&lt;!-- @endsection --&gt;</c>
+/// closes — chosen over a sigil syntax because the comments are invisible
+/// in any CommonMark renderer even when the snippets plugin is not in the
+/// pipeline.
 /// <para>
 /// Recursive includes are supported up to a fixed depth (a guard
 /// against include cycles). Missing files render as a fenced-code

@@ -54,9 +54,11 @@ internal static class SnippetsRewriter
             }
 
             var lineEnd = MarkdownCodeScanner.LineEnd(source, lineStart);
-            if (TryParseIncludeLine(source[lineStart..lineEnd], out var path))
+            if (TryParseIncludeLine(source[lineStart..lineEnd], out var pathStart, out var pathLength, out var sectionStart, out var sectionLength))
             {
-                EmitInclude(path, baseDirectory, writer, visited, depth);
+                var pathBytes = source.Slice(lineStart + pathStart, pathLength);
+                var sectionBytes = sectionLength is 0 ? default : source.Slice(lineStart + sectionStart, sectionLength);
+                EmitInclude(pathBytes, sectionBytes, baseDirectory, writer, visited, depth);
                 i = lineEnd;
                 continue;
             }
@@ -66,20 +68,29 @@ internal static class SnippetsRewriter
         }
     }
 
-    /// <summary>Tries to parse a <c>--8&lt;-- "file"</c> directive line.</summary>
+    /// <summary>Tries to parse a <c>--8&lt;-- "file"</c> or <c>--8&lt;-- "file#section"</c> directive line.</summary>
     /// <param name="line">UTF-8 bytes of the candidate line.</param>
-    /// <param name="path">Captured path on success.</param>
+    /// <param name="pathStart">Offset of the path's first byte within <paramref name="line"/>.</param>
+    /// <param name="pathLength">Path byte length.</param>
+    /// <param name="sectionStart">Offset of the section name's first byte within <paramref name="line"/> (0 when no section).</param>
+    /// <param name="sectionLength">Section name byte length (0 when no section).</param>
     /// <returns>True when the line is a directive.</returns>
-    private static bool TryParseIncludeLine(ReadOnlySpan<byte> line, out string path)
+    private static bool TryParseIncludeLine(ReadOnlySpan<byte> line, out int pathStart, out int pathLength, out int sectionStart, out int sectionLength)
     {
-        path = string.Empty;
-        var trimmed = TrimLeadingWhitespace(line);
+        pathStart = 0;
+        pathLength = 0;
+        sectionStart = 0;
+        sectionLength = 0;
+        var leading = LeadingWhitespaceLength(line);
+        var trimmed = line[leading..];
         if (!trimmed.StartsWith(IncludeMarker))
         {
             return false;
         }
 
-        var afterMarker = TrimLeadingWhitespace(trimmed[IncludeMarker.Length..]);
+        var afterMarker = trimmed[IncludeMarker.Length..];
+        var afterMarkerLeading = LeadingWhitespaceLength(afterMarker);
+        afterMarker = afterMarker[afterMarkerLeading..];
         if (afterMarker.Length < 2 || afterMarker[0] is not (byte)'"')
         {
             return false;
@@ -91,34 +102,53 @@ internal static class SnippetsRewriter
             return false;
         }
 
-        path = Encoding.UTF8.GetString(afterMarker.Slice(1, closeQuote));
-        return path.Length > 0;
+        // Absolute offset of the opening quote within `line`.
+        var quoteOffset = leading + IncludeMarker.Length + afterMarkerLeading;
+        var specStart = quoteOffset + 1;
+        var pathSpec = line.Slice(specStart, closeQuote);
+        var hashIdx = pathSpec.IndexOf((byte)'#');
+        if (hashIdx >= 0)
+        {
+            pathStart = specStart;
+            pathLength = hashIdx;
+            sectionStart = specStart + hashIdx + 1;
+            sectionLength = closeQuote - hashIdx - 1;
+        }
+        else
+        {
+            pathStart = specStart;
+            pathLength = closeQuote;
+        }
+
+        return pathLength > 0;
     }
 
-    /// <summary>Reads <paramref name="path"/> (relative to <paramref name="baseDirectory"/>) and recursively expands its includes into <paramref name="writer"/>.</summary>
-    /// <param name="path">Snippet path.</param>
+    /// <summary>Reads the snippet at <paramref name="pathBytes"/> and recursively expands its includes into <paramref name="writer"/>.</summary>
+    /// <param name="pathBytes">UTF-8 path bytes (encoded to <see cref="string"/> only at the <see cref="Path.Combine(string, string)"/> boundary).</param>
+    /// <param name="sectionBytes">UTF-8 section-name bytes; empty span means whole-file include.</param>
     /// <param name="baseDirectory">Snippet root.</param>
     /// <param name="writer">Sink.</param>
     /// <param name="visited">Already-included files (cycle guard).</param>
     /// <param name="depth">Current recursion depth.</param>
-    private static void EmitInclude(string path, string baseDirectory, IBufferWriter<byte> writer, HashSet<string> visited, int depth)
+    private static void EmitInclude(ReadOnlySpan<byte> pathBytes, ReadOnlySpan<byte> sectionBytes, string baseDirectory, IBufferWriter<byte> writer, HashSet<string> visited, int depth)
     {
         if (depth >= MaxIncludeDepth)
         {
-            EmitError(writer, "snippet include depth exceeded", path);
+            EmitError(writer, "snippet include depth exceeded"u8, pathBytes);
             return;
         }
 
+        var path = Encoding.UTF8.GetString(pathBytes);
         var absolute = Path.GetFullPath(Path.Combine(baseDirectory, path));
         if (!IsInside(baseDirectory, absolute))
         {
-            EmitError(writer, "snippet path escapes base directory", path);
+            EmitError(writer, "snippet path escapes base directory"u8, pathBytes);
             return;
         }
 
         if (!visited.Add(absolute))
         {
-            EmitError(writer, "snippet cycle detected", path);
+            EmitError(writer, "snippet cycle detected"u8, pathBytes);
             return;
         }
 
@@ -126,12 +156,24 @@ internal static class SnippetsRewriter
         {
             if (!File.Exists(absolute))
             {
-                EmitError(writer, "snippet not found", path);
+                EmitError(writer, "snippet not found"u8, pathBytes);
                 return;
             }
 
             var bytes = File.ReadAllBytes(absolute);
-            RewriteCore(bytes, baseDirectory, writer, visited, depth + 1);
+            if (sectionBytes.IsEmpty)
+            {
+                RewriteCore(bytes, baseDirectory, writer, visited, depth + 1);
+                return;
+            }
+
+            if (!SnippetSectionExtractor.TryFind(bytes, sectionBytes, out var sectionStart, out var sectionLength))
+            {
+                EmitError(writer, "snippet section not found"u8, pathBytes);
+                return;
+            }
+
+            RewriteCore(((ReadOnlySpan<byte>)bytes).Slice(sectionStart, sectionLength), baseDirectory, writer, visited, depth + 1);
         }
         finally
         {
@@ -141,14 +183,14 @@ internal static class SnippetsRewriter
 
     /// <summary>Writes a fenced-code error stub so missing snippets surface in the rendered page rather than failing silently.</summary>
     /// <param name="writer">Sink.</param>
-    /// <param name="reason">Short reason string.</param>
-    /// <param name="path">Snippet path that triggered the error.</param>
-    private static void EmitError(IBufferWriter<byte> writer, string reason, string path)
+    /// <param name="reason">UTF-8 reason bytes.</param>
+    /// <param name="pathBytes">Snippet path that triggered the error.</param>
+    private static void EmitError(IBufferWriter<byte> writer, ReadOnlySpan<byte> reason, ReadOnlySpan<byte> pathBytes)
     {
         writer.Write("\n```text\n!! "u8);
-        WriteUtf8(writer, reason);
+        writer.Write(reason);
         writer.Write(": "u8);
-        WriteUtf8(writer, path);
+        writer.Write(pathBytes);
         writer.Write("\n```\n"u8);
     }
 
@@ -167,10 +209,10 @@ internal static class SnippetsRewriter
         return absolute.StartsWith(basePath, StringComparison.Ordinal);
     }
 
-    /// <summary>Trims leading <c> </c> / <c>\t</c> bytes from <paramref name="line"/>.</summary>
+    /// <summary>Counts leading <c> </c> / <c>\t</c> bytes in <paramref name="line"/>.</summary>
     /// <param name="line">UTF-8 line bytes.</param>
-    /// <returns>The trimmed slice.</returns>
-    private static ReadOnlySpan<byte> TrimLeadingWhitespace(ReadOnlySpan<byte> line)
+    /// <returns>The number of leading whitespace bytes.</returns>
+    private static int LeadingWhitespaceLength(ReadOnlySpan<byte> line)
     {
         var p = 0;
         while (p < line.Length && line[p] is (byte)' ' or (byte)'\t')
@@ -178,22 +220,11 @@ internal static class SnippetsRewriter
             p++;
         }
 
-        return line[p..];
+        return p;
     }
 
     /// <summary>Writes a single byte to <paramref name="writer"/>.</summary>
     /// <param name="writer">Sink.</param>
     /// <param name="b">Byte to write.</param>
     private static void CopyByte(IBufferWriter<byte> writer, byte b) => SnippetsByteWriter.WriteOne(writer, b);
-
-    /// <summary>Encodes a UTF-16 string as UTF-8 directly into <paramref name="writer"/>.</summary>
-    /// <param name="writer">Sink.</param>
-    /// <param name="value">String.</param>
-    private static void WriteUtf8(IBufferWriter<byte> writer, string value)
-    {
-        var max = Encoding.UTF8.GetMaxByteCount(value.Length);
-        var dst = writer.GetSpan(max);
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        writer.Advance(written);
-    }
 }

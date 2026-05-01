@@ -8,12 +8,6 @@ ship; the file is meant to stay short.
 
 ## mkdocs / Material gaps
 
-- **`objects.inv`** Sphinx-style inventory emit. Autorefs already does
-  cross-doc resolution in-process; the missing piece is writing the
-  inventory file so external Sphinx sites can cross-link in.
-- **Snippets section markers.** Whole-file `--8<-- "file"` ships;
-  `--8<-- "file:section"` plus `--;--` / `--/8<--` block markers are
-  not yet implemented (`SnippetsPlugin` xmldoc explicitly notes this).
 - **Emoji index expansion.** Built-in dictionary covers ~80 popular
   shortcodes; full Twemoji set is ~1500. Data-only — drop more entries
   into `EmojiIndex.BuildMap`.
@@ -51,9 +45,9 @@ ship; the file is meant to stay short.
 
 ## Active task-list items
 
-- **#43 — pymdownx parity.** See the gaps above (snippets section
-  markers, emoji index size); the rest of the pymdownx ecosystem is
-  shipped.
+- **#43 — pymdownx parity.** See the emoji index gap above; everything
+  else in the pymdownx ecosystem (snippets section markers, betterem,
+  superfences, magic-link, …) is shipped.
 - **#77 — combined slice.** Content flags + redirect-maps + search
   tuning. In-progress slice spanning Sitemap, Search, and the
   redirects emitter.
