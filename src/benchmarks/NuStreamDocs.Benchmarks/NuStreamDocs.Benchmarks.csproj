@@ -30,6 +30,12 @@
     <ProjectReference Include="..\..\NuStreamDocs.Theme.Material\NuStreamDocs.Theme.Material.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Autorefs\NuStreamDocs.Autorefs.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Bibliography\NuStreamDocs.Bibliography.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Macros\NuStreamDocs.Macros.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Snippets\NuStreamDocs.Snippets.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.SphinxInventory\NuStreamDocs.SphinxInventory.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Icons.MaterialDesign\NuStreamDocs.Icons.MaterialDesign.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
   </ItemGroup>
 
 </Project>

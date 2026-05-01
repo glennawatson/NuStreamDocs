@@ -7,12 +7,17 @@ using System.Globalization;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using NuStreamDocs.Autorefs;
+using NuStreamDocs.Bibliography;
 using NuStreamDocs.Building;
 using NuStreamDocs.Highlight;
+using NuStreamDocs.Icons.MaterialDesign;
+using NuStreamDocs.Macros;
 using NuStreamDocs.MarkdownExtensions;
 using NuStreamDocs.Mermaid;
 using NuStreamDocs.Nav;
 using NuStreamDocs.Search;
+using NuStreamDocs.Snippets;
+using NuStreamDocs.SphinxInventory;
 
 namespace NuStreamDocs.Benchmarks;
 
@@ -131,6 +136,105 @@ public class RxuiCorpusBenchmarks
             .UseAutorefs(registry)
             .UseSearch()
             .UseMermaid()
+            .BuildAsync()
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <summary>Build with snippet-include preprocessor (whole-file + section markers).</summary>
+    /// <returns>Pages processed.</returns>
+    [Benchmark]
+    public int WithSnippets() =>
+        new DocBuilder()
+            .WithInput(RxuiDocsRoot)
+            .WithOutput(_outputRoot)
+            .UseSnippets()
+            .BuildAsync()
+            .GetAwaiter()
+            .GetResult();
+
+    /// <summary>Build with the macros preprocessor (<c>{{ name }}</c> substitution).</summary>
+    /// <returns>Pages processed.</returns>
+    [Benchmark]
+    public int WithMacros() =>
+        new DocBuilder()
+            .WithInput(RxuiDocsRoot)
+            .WithOutput(_outputRoot)
+            .UseMacros(opts => opts with
+            {
+                Variables = new Dictionary<string, string>(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
+            })
+            .BuildAsync()
+            .GetAwaiter()
+            .GetResult();
+
+    /// <summary>Build with the bibliography preprocessor — empty database, exercises the marker scanner only.</summary>
+    /// <returns>Pages processed.</returns>
+    [Benchmark]
+    public int WithBibliography() =>
+        new DocBuilder()
+            .WithInput(RxuiDocsRoot)
+            .WithOutput(_outputRoot)
+            .UseBibliography(BibliographyOptions.Default)
+            .BuildAsync()
+            .GetAwaiter()
+            .GetResult();
+
+    /// <summary>Build with the MDI inline-SVG resolver wired into the icon shortcode rewriter (~7400 entries).</summary>
+    /// <returns>Pages processed.</returns>
+    [Benchmark]
+    public int WithMdiIcons()
+    {
+        var resolver = new MdiIconResolver();
+        return new DocBuilder()
+            .WithInput(RxuiDocsRoot)
+            .WithOutput(_outputRoot)
+            .UsePlugin(new NuStreamDocs.Theme.Material.IconShortcode.IconShortcodePlugin(resolver))
+            .BuildAsync()
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <summary>Build with the Sphinx-inventory finalise emitter (drives the autorefs registry snapshot path).</summary>
+    /// <returns>Pages processed.</returns>
+    [Benchmark]
+    public int WithSphinxInventory()
+    {
+        var registry = new AutorefsRegistry();
+        return new DocBuilder()
+            .WithInput(RxuiDocsRoot)
+            .WithOutput(_outputRoot)
+            .UseAutorefs(registry)
+            .UseSphinxInventory(registry)
+            .BuildAsync()
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <summary>Kitchen sink — every shipped plugin in the pipeline at once. The honest end-to-end stress profile.</summary>
+    /// <returns>Pages processed.</returns>
+    [Benchmark]
+    public int EverythingStack()
+    {
+        var registry = new AutorefsRegistry();
+        var iconResolver = new MdiIconResolver();
+        return new DocBuilder()
+            .WithInput(RxuiDocsRoot)
+            .WithOutput(_outputRoot)
+            .UseSnippets()
+            .UseMacros(opts => opts with
+            {
+                Variables = new Dictionary<string, string>(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
+            })
+            .UseBibliography(BibliographyOptions.Default)
+            .UseCommonMarkdownExtensions()
+            .UseHighlight()
+            .UseNav()
+            .UseAutorefs(registry)
+            .UseSearch()
+            .UseMermaid()
+            .UseSphinxInventory(registry)
+            .UsePlugin(new NuStreamDocs.Theme.Material.IconShortcode.IconShortcodePlugin(iconResolver))
             .BuildAsync()
             .GetAwaiter()
             .GetResult();
