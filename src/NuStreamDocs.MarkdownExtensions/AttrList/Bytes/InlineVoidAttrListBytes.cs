@@ -17,106 +17,64 @@ internal static class InlineVoidAttrListBytes
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="sink">UTF-8 sink.</param>
     /// <returns>True when at least one element was rewritten.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
-    {
-        ArgumentNullException.ThrowIfNull(sink);
+    public static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink) =>
+        AttrListRewriteLoop.RewriteInto<Strategy>(html, sink);
 
-        var changed = false;
-        var lastEmit = 0;
-        var cursor = 0;
-        while (cursor < html.Length)
+    /// <summary>Static dispatch strategy for the shared scan loop.</summary>
+    private readonly record struct Strategy : IAttrListRewriteStrategy<Strategy>
+    {
+        /// <inheritdoc/>
+        public static bool TryRewriteAt(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
         {
-            var rel = html[cursor..].IndexOf((byte)'<');
-            if (rel < 0)
+            if (!AttrListTagMatcher.TryMatchInlineVoidTag(html, lt + 1, out var nameLen))
             {
-                break;
+                advanceTo = lt + 1;
+                return false;
             }
 
-            var lt = cursor + rel;
-            if (TryRewriteAt(html, lt, sink, ref lastEmit, out var advanceTo))
+            var nameEnd = lt + 1 + nameLen;
+            var gt = AttrListTagScanner.FindFirst(html, nameEnd, (byte)'>');
+            if (gt < 0)
             {
-                changed = true;
+                advanceTo = lt + 1;
+                return false;
             }
 
-            cursor = advanceTo;
+            var slashStart = FindSlashRunStart(html, nameEnd, gt);
+            if (!AttrListMarker.TryMatchMarker(html, gt + 1, out var contentStart, out var contentEnd, out var markerEnd))
+            {
+                advanceTo = gt + 1;
+                return false;
+            }
+
+            var merged = AttrListMarker.ParseAndMerge(html, nameEnd, slashStart, contentStart, contentEnd);
+            sink.Write(html[lastEmit..nameEnd]);
+            AttrListMarker.WriteString(merged, sink);
+            sink.Write(html[slashStart..(gt + 1)]);
+            lastEmit = markerEnd;
+            advanceTo = markerEnd;
+            return true;
         }
 
-        if (!changed)
+        /// <summary>Returns the offset of the start of the <c>\s*/</c> run before <c>&gt;</c>, or <paramref name="gt"/> when there's no <c>/</c> directly before <c>&gt;</c>.</summary>
+        /// <param name="html">UTF-8 source.</param>
+        /// <param name="nameEnd">Offset just past the tag name.</param>
+        /// <param name="gt">Offset of the closing <c>&gt;</c>.</param>
+        /// <returns>Offset where the <c>\s*/</c> run begins, or <paramref name="gt"/> when no slash is present.</returns>
+        private static int FindSlashRunStart(ReadOnlySpan<byte> html, int nameEnd, int gt)
         {
-            return false;
+            if (gt - 1 < nameEnd || html[gt - 1] is not (byte)'/')
+            {
+                return gt;
+            }
+
+            var ws = gt - 1;
+            while (ws > nameEnd && html[ws - 1] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
+            {
+                ws--;
+            }
+
+            return ws;
         }
-
-        sink.Write(html[lastEmit..]);
-        return true;
-    }
-
-    /// <summary>Attempts the void-inline match at <paramref name="lt"/>.</summary>
-    /// <param name="html">UTF-8 source.</param>
-    /// <param name="lt">Offset of the <c>&lt;</c>.</param>
-    /// <param name="sink">UTF-8 sink.</param>
-    /// <param name="lastEmit">Source offset emitted up to.</param>
-    /// <param name="advanceTo">Offset to resume scanning from.</param>
-    /// <returns>True when the element was rewritten.</returns>
-    private static bool TryRewriteAt(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
-    {
-        if (!AttrListTagMatcher.TryMatchInlineVoidTag(html, lt + 1, out var nameLen))
-        {
-            advanceTo = lt + 1;
-            return false;
-        }
-
-        var nameEnd = lt + 1 + nameLen;
-        var gt = FindTagEnd(html, nameEnd);
-        if (gt < 0)
-        {
-            advanceTo = lt + 1;
-            return false;
-        }
-
-        var slashStart = FindSlashRunStart(html, nameEnd, gt);
-        if (!AttrListMarker.TryMatchMarker(html, gt + 1, out var contentStart, out var contentEnd, out var markerEnd))
-        {
-            advanceTo = gt + 1;
-            return false;
-        }
-
-        var merged = AttrListMarker.ParseAndMerge(html, nameEnd, slashStart, contentStart, contentEnd);
-        sink.Write(html[lastEmit..nameEnd]);
-        AttrListMarker.WriteString(merged, sink);
-        sink.Write(html[slashStart..(gt + 1)]);
-        lastEmit = markerEnd;
-        advanceTo = markerEnd;
-        return true;
-    }
-
-    /// <summary>Finds the closing <c>&gt;</c> from a starting offset; returns <c>-1</c> when missing.</summary>
-    /// <param name="html">UTF-8 source.</param>
-    /// <param name="from">Search start.</param>
-    /// <returns>Offset of the <c>&gt;</c>, or <c>-1</c>.</returns>
-    private static int FindTagEnd(ReadOnlySpan<byte> html, int from)
-    {
-        var rel = html[from..].IndexOf((byte)'>');
-        return rel < 0 ? -1 : from + rel;
-    }
-
-    /// <summary>Returns the offset of the start of the <c>\s*/</c> run before <c>&gt;</c>, or <paramref name="gt"/> when there's no <c>/</c> directly before <c>&gt;</c>.</summary>
-    /// <param name="html">UTF-8 source.</param>
-    /// <param name="nameEnd">Offset just past the tag name.</param>
-    /// <param name="gt">Offset of the closing <c>&gt;</c>.</param>
-    /// <returns>Offset where the <c>\s*/</c> run begins, or <paramref name="gt"/> when no slash is present.</returns>
-    private static int FindSlashRunStart(ReadOnlySpan<byte> html, int nameEnd, int gt)
-    {
-        if (gt - 1 < nameEnd || html[gt - 1] is not (byte)'/')
-        {
-            return gt;
-        }
-
-        var ws = gt - 1;
-        while (ws > nameEnd && html[ws - 1] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
-        {
-            ws--;
-        }
-
-        return ws;
     }
 }

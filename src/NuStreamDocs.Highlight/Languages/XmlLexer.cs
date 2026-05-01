@@ -42,21 +42,7 @@ public static partial class XmlLexer
                 new(TextRegex(), TokenClass.Text, NextState: null),
             ],
 
-            // The attribute-name regex carries a lookahead for `\s*=`,
-            // so it never matches the leading tag name (no trailing
-            // equals). Listed first so attributes win over the broader
-            // tag-name pattern.
-            ["tag"] =
-            [
-                new(LanguageCommon.WhitespaceWithNewlines(), TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst },
-                new(LanguageCommon.AttributeName(), TokenClass.NameAttribute, NextState: null) { FirstChars = LanguageCommon.AttributeNameFirst },
-                new(LanguageCommon.TagName(), TokenClass.NameClass, NextState: null) { FirstChars = LanguageCommon.TagNameFirst },
-                new(LanguageCommon.EqualsSign(), TokenClass.Operator, NextState: null) { FirstChars = LanguageCommon.EqualsFirst },
-                new(LanguageCommon.DoubleQuotedStringNoEscape(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
-                new(LanguageCommon.SingleQuotedStringNoEscape(), TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
-                new(LanguageCommon.SelfClose(), TokenClass.Punctuation, LexerRule.StatePop) { FirstChars = LanguageCommon.SlashFirst },
-                new(LanguageCommon.AngleClose(), TokenClass.Punctuation, LexerRule.StatePop) { FirstChars = LanguageCommon.AngleCloseFirst },
-            ],
+            ["tag"] = MarkupTagRules.Build(),
         }.ToFrozenDictionary(StringComparer.Ordinal);
         return new("xml", states);
     }
