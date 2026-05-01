@@ -111,9 +111,9 @@ internal static class DevServer
     {
         app.UseWebSockets();
 
-        // Manual path matching keeps the pipeline AOT-clean: minimal-API
-        // MapGet(Delegate) parameter-binding uses reflection at runtime.
-        app.Use(LiveReloadDispatchAsync);
+        // Path-restricted MapGet avoids the manual path-check in Use().
+        // When using a specialized RequestDelegate, RDG emits no reflection.
+        app.MapGet(LiveReloadPath, LiveReloadDispatchAsync);
 
         if (options.LiveReload)
         {
@@ -136,38 +136,22 @@ internal static class DevServer
 
     /// <summary>Routes <c>/__livereload</c> to the websocket handler; everything else falls through to static-file middleware.</summary>
     /// <param name="ctx">HTTP context.</param>
-    /// <param name="next">Next middleware.</param>
     /// <returns>Async task.</returns>
-    private static async Task LiveReloadDispatchAsync(HttpContext ctx, RequestDelegate next)
+    private static async Task LiveReloadDispatchAsync(HttpContext ctx)
     {
-        if (string.Equals(ctx.Request.Path, LiveReloadPath, StringComparison.Ordinal))
+        if (ctx.WebSockets.IsWebSocketRequest)
         {
-            await HandleLiveReloadAsync(ctx).ConfigureAwait(false);
+            var broker = ctx.RequestServices.GetRequiredService<LiveReloadBroker>();
+            var socket = await ctx.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+            await broker.TrackAsync(socket, ctx.RequestAborted).ConfigureAwait(false);
+            if (socket.State is WebSocketState.Open)
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "shutdown", CancellationToken.None).ConfigureAwait(false);
+            }
+
             return;
         }
 
-        await next(ctx).ConfigureAwait(false);
-    }
-
-    /// <summary>Accepts the websocket upgrade and parks the request in the broker until disconnect.</summary>
-    /// <param name="ctx">HTTP request context.</param>
-    /// <returns>Async task completing on disconnect.</returns>
-    private static async Task HandleLiveReloadAsync(HttpContext ctx)
-    {
-        if (!ctx.WebSockets.IsWebSocketRequest)
-        {
-            ctx.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return;
-        }
-
-        var broker = ctx.RequestServices.GetRequiredService<LiveReloadBroker>();
-        var socket = await ctx.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
-        await broker.TrackAsync(socket, ctx.RequestAborted).ConfigureAwait(false);
-        if (socket.State is not WebSocketState.Open)
-        {
-            return;
-        }
-
-        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "shutdown", CancellationToken.None).ConfigureAwait(false);
+        ctx.Response.StatusCode = StatusCodes.Status400BadRequest;
     }
 }
