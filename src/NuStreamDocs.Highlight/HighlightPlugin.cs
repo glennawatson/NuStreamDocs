@@ -17,20 +17,35 @@ namespace NuStreamDocs.Highlight;
 /// </summary>
 /// <remarks>
 /// Match the marker-replace pattern used by the Nav plugin: snapshot the
-/// rendered HTML once, walk it forward looking for <c>&lt;code class="language-…"&gt;</c>,
+/// rendered HTML once, walk it forward looking for <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c>,
 /// emit prefix bytes verbatim, swap the body for highlighted bytes, repeat.
 /// One copy per page; per-block work is the lexer pass plus an HTML escape.
+/// <para>
+/// When <see cref="HighlightOptions.WrapInHighlightDiv"/> is on (default),
+/// each highlighted block becomes
+/// <c>&lt;div class="highlight"&gt;[title][copy]&lt;pre&gt;&lt;code&gt;…&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</c>
+/// — the Pygments / mkdocs-material convention so theme CSS can hook the
+/// wrapper. The optional title bar pulls a <c>title="..."</c> from the
+/// fence-info string the markdown emitter passes through as
+/// <c>data-info</c>.
+/// </para>
 /// </remarks>
 public sealed class HighlightPlugin : IDocPlugin
 {
-    /// <summary>The opening tag prefix scanned for during the replace pass.</summary>
-    private static readonly byte[] CodeOpenPrefix = [.. "<code class=\"language-"u8];
+    /// <summary>The opening tag the rewriter searches for.</summary>
+    private static readonly byte[] PreOpen = [.. "<pre><code class=\"language-"u8];
 
     /// <summary>The closing tag pattern that terminates a highlighted body.</summary>
     private static readonly byte[] CodeClose = [.. "</code>"u8];
 
+    /// <summary>Closing of the surrounding <c>&lt;/pre&gt;</c>.</summary>
+    private static readonly byte[] PreClose = [.. "</pre>"u8];
+
     /// <summary>The lexer registry built once at configure time.</summary>
     private readonly LexerRegistry _registry;
+
+    /// <summary>Configured options.</summary>
+    private readonly HighlightOptions _options;
 
     /// <summary>Initializes a new instance of the <see cref="HighlightPlugin"/> class with default options.</summary>
     public HighlightPlugin()
@@ -44,6 +59,7 @@ public sealed class HighlightPlugin : IDocPlugin
     {
         ArgumentNullException.ThrowIfNull(options);
         _registry = LexerRegistry.Build(options.ExtraLexers);
+        _options = options;
     }
 
     /// <inheritdoc/>
@@ -62,7 +78,7 @@ public sealed class HighlightPlugin : IDocPlugin
     {
         _ = cancellationToken;
         var html = context.Html;
-        if (html.WrittenSpan.IndexOf("<code class=\"language-"u8) < 0)
+        if (html.WrittenSpan.IndexOf("<pre><code class=\"language-"u8) < 0)
         {
             return ValueTask.CompletedTask;
         }
@@ -84,12 +100,6 @@ public sealed class HighlightPlugin : IDocPlugin
     /// <returns>Decoded source string.</returns>
     private static string HtmlUnescape(ReadOnlySpan<byte> body)
     {
-        // Bodies without an ampersand take the no-decode fast path: one
-        // GetString call. Bodies with entities decode byte-to-byte through
-        // the shared HtmlEntityDecoder (rented buffer, no intermediate
-        // string allocations) and then convert once at the end. Avoids
-        // the chained string.Replace tower the previous implementation
-        // walked through.
         if (body.IndexOf((byte)'&') < 0)
         {
             return Encoding.UTF8.GetString(body);
@@ -98,6 +108,46 @@ public sealed class HighlightPlugin : IDocPlugin
         var sink = new ArrayBufferWriter<byte>(body.Length);
         HtmlEntityDecoder.DecodeInto(sink, body);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
+    }
+
+    /// <summary>Decodes UTF-8 HTML-escaped bytes into a fresh byte array (no UTF-16 round-trip).</summary>
+    /// <param name="bytes">Source bytes.</param>
+    /// <returns>Decoded bytes.</returns>
+    private static byte[] HtmlUnescapeBytes(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.IndexOf((byte)'&') < 0)
+        {
+            return bytes.ToArray();
+        }
+
+        var sink = new ArrayBufferWriter<byte>(bytes.Length);
+        HtmlEntityDecoder.DecodeInto(sink, bytes);
+        return sink.WrittenSpan.ToArray();
+    }
+
+    /// <summary>Slices the <c>data-info</c> attribute value out of the <c>&lt;code …&gt;</c> opening, or returns empty when absent.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="afterLang">Offset just past the closing quote of <c>language-X</c>.</param>
+    /// <param name="openTagEnd">Offset of the closing <c>&gt;</c> of the open tag.</param>
+    /// <returns>Decoded fence-info bytes (HTML entities unescaped).</returns>
+    private static byte[] ExtractDataInfo(ReadOnlySpan<byte> source, int afterLang, int openTagEnd)
+    {
+        var attrs = source[afterLang..openTagEnd];
+        var marker = " data-info=\""u8;
+        var idx = attrs.IndexOf(marker);
+        if (idx < 0)
+        {
+            return [];
+        }
+
+        var valStart = idx + marker.Length;
+        var endRel = attrs[valStart..].IndexOf((byte)'"');
+        if (endRel < 0)
+        {
+            return [];
+        }
+
+        return HtmlUnescapeBytes(attrs.Slice(valStart, endRel));
     }
 
     /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>
@@ -115,7 +165,7 @@ public sealed class HighlightPlugin : IDocPlugin
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Walks <paramref name="source"/>, copying through verbatim and substituting highlighted bodies for every recognised <c>&lt;code class="language-…"&gt;</c> block.</summary>
+    /// <summary>Walks <paramref name="source"/>, copying through verbatim and substituting highlighted bodies for every recognised <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block.</summary>
     /// <param name="source">Snapshot of the rendered HTML.</param>
     /// <param name="writer">UTF-8 sink (the original page buffer).</param>
     private void Highlight(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
@@ -124,48 +174,146 @@ public sealed class HighlightPlugin : IDocPlugin
         while (cursor < source.Length)
         {
             var rest = source[cursor..];
-            var openIdx = rest.IndexOf(CodeOpenPrefix);
+            var openIdx = rest.IndexOf(PreOpen);
             if (openIdx < 0)
             {
                 Write(writer, rest);
                 return;
             }
 
-            var openAbs = cursor + openIdx;
-            Write(writer, source[cursor..openAbs]);
+            var preStart = cursor + openIdx;
+            Write(writer, source[cursor..preStart]);
 
-            var langStart = openAbs + CodeOpenPrefix.Length;
-            var langEnd = source[langStart..].IndexOf((byte)'"');
-            if (langEnd <= 0)
-            {
-                Write(writer, source[openAbs..]);
-                return;
-            }
-
-            var language = Encoding.UTF8.GetString(source.Slice(langStart, langEnd));
-            var bodyStart = langStart + langEnd + 2; // skip the "> after the language attr
-            if (bodyStart > source.Length)
-            {
-                Write(writer, source[openAbs..]);
-                return;
-            }
-
-            var bodyEndRel = source[bodyStart..].IndexOf(CodeClose);
-            if (bodyEndRel < 0)
-            {
-                Write(writer, source[openAbs..]);
-                return;
-            }
-
-            var bodyEnd = bodyStart + bodyEndRel;
-            Write(writer, source[openAbs..bodyStart]);
-
-            var body = source.Slice(bodyStart, bodyEnd - bodyStart);
-            EmitBody(writer, language, body);
-
-            Write(writer, CodeClose);
-            cursor = bodyEnd + CodeClose.Length;
+            cursor = ProcessBlock(source, preStart, writer);
         }
+    }
+
+    /// <summary>Processes one matched <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block; emits the rewritten form and returns the offset to resume scanning at.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="preStart">Offset of <c>&lt;pre&gt;</c>.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Offset just past the closing <c>&lt;/pre&gt;</c> when matched, otherwise the offset where the failed match began (so the scanner advances).</returns>
+    private int ProcessBlock(ReadOnlySpan<byte> source, int preStart, IBufferWriter<byte> writer)
+    {
+        var langStart = preStart + PreOpen.Length;
+        var langEndRel = source[langStart..].IndexOf((byte)'"');
+        if (langEndRel <= 0)
+        {
+            Write(writer, source[preStart..]);
+            return source.Length;
+        }
+
+        var language = Encoding.UTF8.GetString(source.Slice(langStart, langEndRel));
+        var afterLang = langStart + langEndRel + 1;
+        var openTagEndRel = source[afterLang..].IndexOf((byte)'>');
+        if (openTagEndRel < 0)
+        {
+            Write(writer, source[preStart..]);
+            return source.Length;
+        }
+
+        var openTagEnd = afterLang + openTagEndRel;
+        var dataInfo = ExtractDataInfo(source, afterLang, openTagEnd);
+        var bodyStart = openTagEnd + 1;
+        var bodyEndRel = source[bodyStart..].IndexOf(CodeClose);
+        if (bodyEndRel < 0)
+        {
+            Write(writer, source[preStart..]);
+            return source.Length;
+        }
+
+        var bodyEnd = bodyStart + bodyEndRel;
+        var afterCodeClose = bodyEnd + CodeClose.Length;
+        var preCloseRel = source[afterCodeClose..].IndexOf(PreClose);
+        if (preCloseRel < 0)
+        {
+            Write(writer, source[preStart..]);
+            return source.Length;
+        }
+
+        EmitWrappedBlock(source, preStart, bodyStart, bodyEnd, dataInfo, language, writer);
+        return afterCodeClose + preCloseRel + PreClose.Length;
+    }
+
+    /// <summary>Emits the rewritten block (wrapper div + optional title + optional copy button + the highlighted body).</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="preStart">Offset of <c>&lt;pre&gt;</c>.</param>
+    /// <param name="bodyStart">Offset of the first body byte.</param>
+    /// <param name="bodyEnd">Offset of <c>&lt;/code&gt;</c>.</param>
+    /// <param name="dataInfo">Decoded fence-info bytes (may be empty).</param>
+    /// <param name="language">Language word.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private void EmitWrappedBlock(ReadOnlySpan<byte> source, int preStart, int bodyStart, int bodyEnd, ReadOnlySpan<byte> dataInfo, string language, IBufferWriter<byte> writer)
+    {
+        EmitOpeningWrapper(dataInfo, writer);
+
+        // The original <pre><code class="language-X"…> opening — we rewrite the body, the rest passes through.
+        Write(writer, source[preStart..bodyStart]);
+        var body = source[bodyStart..bodyEnd];
+        EmitBody(writer, language, body);
+        Write(writer, CodeClose);
+        Write(writer, PreClose);
+
+        EmitClosingWrapper(writer);
+    }
+
+    /// <summary>Emits the opening wrapper div + title + copy button when <see cref="HighlightOptions.WrapInHighlightDiv"/> is on.</summary>
+    /// <param name="dataInfo">Fence-info bytes.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private void EmitOpeningWrapper(ReadOnlySpan<byte> dataInfo, IBufferWriter<byte> writer)
+    {
+        if (!_options.WrapInHighlightDiv)
+        {
+            return;
+        }
+
+        Write(writer, "<div class=\"highlight\">"u8);
+        EmitTitleBar(dataInfo, writer);
+        EmitCopyButton(writer);
+    }
+
+    /// <summary>Emits the closing wrapper <c>&lt;/div&gt;</c> when <see cref="HighlightOptions.WrapInHighlightDiv"/> is on.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    private void EmitClosingWrapper(IBufferWriter<byte> writer)
+    {
+        if (!_options.WrapInHighlightDiv)
+        {
+            return;
+        }
+
+        Write(writer, "</div>"u8);
+    }
+
+    /// <summary>Emits <c>&lt;span class="filename"&gt;{title}&lt;/span&gt;</c> when <see cref="HighlightOptions.EmitTitleBar"/> is on and a title attribute is present.</summary>
+    /// <param name="dataInfo">Fence-info bytes.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private void EmitTitleBar(ReadOnlySpan<byte> dataInfo, IBufferWriter<byte> writer)
+    {
+        if (!_options.EmitTitleBar || dataInfo.IsEmpty)
+        {
+            return;
+        }
+
+        if (!FenceAttrParser.TryGetTitle(dataInfo, out var title) || title.IsEmpty)
+        {
+            return;
+        }
+
+        Write(writer, "<span class=\"filename\">"u8);
+        NuStreamDocs.Html.HtmlEscape.EscapeText(title, writer);
+        Write(writer, "</span>"u8);
+    }
+
+    /// <summary>Emits a copy button (theme JS handles the click) when <see cref="HighlightOptions.CopyButton"/> is on.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    private void EmitCopyButton(IBufferWriter<byte> writer)
+    {
+        if (!_options.CopyButton)
+        {
+            return;
+        }
+
+        Write(writer, "<button class=\"md-clipboard md-icon\" type=\"button\" aria-label=\"Copy to clipboard\"></button>"u8);
     }
 
     /// <summary>Highlights <paramref name="body"/> when a lexer is registered for <paramref name="language"/>; otherwise emits it verbatim.</summary>
@@ -180,9 +328,6 @@ public sealed class HighlightPlugin : IDocPlugin
             return;
         }
 
-        // The body has already been HTML-escaped by the markdown emitter.
-        // Decode it back to a plain string for the lexer (regex APIs work
-        // on strings), then re-escape during the highlighted emit.
         var unescaped = HtmlUnescape(body);
         HighlightEmitter.Emit(lexer, unescaped, writer);
     }

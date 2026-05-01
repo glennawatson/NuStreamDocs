@@ -131,6 +131,28 @@ public static class HtmlEmitter
     /// </remarks>
     public static ReadOnlySpan<byte> ExtractInfoString(ReadOnlySpan<byte> source, in BlockSpan opener)
     {
+        var rest = ExtractFenceInfoLine(source, opener);
+        var space = rest.IndexOf((byte)' ');
+        return space < 0 ? rest : rest[..space];
+    }
+
+    /// <summary>Returns the trailing info-string content (after the language word) for a fenced-code opener — the per-block attribute payload.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="opener">Opener block.</param>
+    /// <returns>Trailing info string bytes; empty when there is only a language word or no info string.</returns>
+    public static ReadOnlySpan<byte> ExtractInfoStringTail(ReadOnlySpan<byte> source, in BlockSpan opener)
+    {
+        var rest = ExtractFenceInfoLine(source, opener);
+        var space = rest.IndexOf((byte)' ');
+        return space < 0 ? [] : rest[(space + 1)..].TrimStart((byte)' ');
+    }
+
+    /// <summary>Returns the trimmed body of the fence opener line, with the leading fence markers stripped.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="opener">Opener block.</param>
+    /// <returns>Trimmed line content.</returns>
+    private static ReadOnlySpan<byte> ExtractFenceInfoLine(ReadOnlySpan<byte> source, in BlockSpan opener)
+    {
         var line = source.Slice(opener.Start, opener.Length);
         var marker = line.Length > 0 && line[0] == (byte)'~' ? (byte)'~' : (byte)'`';
         var i = 0;
@@ -139,9 +161,7 @@ public static class HtmlEmitter
             i++;
         }
 
-        var rest = line[i..].TrimStart((byte)' ').TrimEnd((byte)' ');
-        var space = rest.IndexOf((byte)' ');
-        return space < 0 ? rest : rest[..space];
+        return line[i..].TrimStart((byte)' ').TrimEnd((byte)' ');
     }
 
     /// <summary>Writes an <c>&lt;hN&gt;</c> element using the block's level.</summary>
@@ -174,12 +194,20 @@ public static class HtmlEmitter
     {
         var opener = blocks[openerIndex];
         var info = ExtractInfoString(source, opener);
+        var infoTail = ExtractInfoStringTail(source, opener);
 
         Write("<pre><code"u8, writer);
         if (info.Length > 0)
         {
             Write(" class=\"language-"u8, writer);
             Write(info, writer);
+            Write("\""u8, writer);
+        }
+
+        if (infoTail.Length > 0)
+        {
+            Write(" data-info=\""u8, writer);
+            HtmlEscape.EscapeText(infoTail, writer);
             Write("\""u8, writer);
         }
 

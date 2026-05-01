@@ -183,7 +183,7 @@ Every plugin ships in its own NuGet so you only pay for what you use.
 |---|---|---|
 | `NuStreamDocs.Nav` | `.UseNav()` | Glob includes, ordering hints, hidden sections, `.pages` overrides, `navigation.prune`, orphan-page warnings. |
 | `NuStreamDocs.Toc` | `.UseToc()` | Per-page table of contents and permalink heading anchors. |
-| `NuStreamDocs.Highlight` | `.UseHighlight()` | Server-side syntax highlighting. TextMate JSON grammars + `[GeneratedRegex]`. No JS runtime. Pygments CSS-class output for theme parity. |
+| `NuStreamDocs.Highlight` | `.UseHighlight()` | Server-side syntax highlighting. TextMate JSON grammars + `[GeneratedRegex]`. Wraps blocks in `<div class="highlight">` (Pygments / mkdocs-material convention); reads per-block fence-info attrs (`title="..."` for filename bar, opt-in copy button). No JS runtime. |
 | `NuStreamDocs.Search` | `.UseSearch()` | Build-time search index. Pagefind-compatible by default; Lunr-compatible alt. |
 | `NuStreamDocs.MarkdownExtensions` | `.UseCommonMarkdownExtensions()` | Admonitions, content tabs, collapsible details, check-lists, mark spans, footnotes, definition lists. |
 
@@ -433,7 +433,7 @@ options-customiser+logger).
 | **`NuStreamDocs.Nav`** | `.UseNav()` | Rich navigation: glob includes, ordering hints, hidden sections, `.pages` overrides, multi-level rewrites, `navigation.prune`, orphan-page warnings. |
 | **`NuStreamDocs.Toc`** | `.UseToc()` | Per-page table of contents and permalink heading anchors. |
 | **`NuStreamDocs.Search`** | `.UseSearch()` | Build-time search index. Pagefind-compatible sharded index by default; Lunr-compatible JSON alt. |
-| **`NuStreamDocs.Highlight`** | `.UseHighlight()` | Server-side syntax highlighter. Pygments-shape lexers via `[GeneratedRegex]`. Pygments short-form CSS classes. No JS, no Python. |
+| **`NuStreamDocs.Highlight`** | `.UseHighlight()` | Server-side syntax highlighter. Pygments-shape lexers via `[GeneratedRegex]`. Pygments short-form CSS classes; wraps blocks in `<div class="highlight">`. Per-block extras: `title="..."` (filename bar), opt-in copy button. Reads fence-info from the markdown emitter's `data-info` attr. No JS, no Python. |
 | **`NuStreamDocs.MarkdownExtensions`** | `.UseCommonMarkdownExtensions()` | Common Markdown block + inline extensions — admonitions, tabs, details, checklists, mark, footnotes, definition lists, attr-list, etc. |
 | **`NuStreamDocs.Mermaid`** | `.UseMermaid()` | Retags fenced `mermaid` blocks; pulls the Mermaid runtime into the head. |
 | **`NuStreamDocs.Lightbox`** | `.UseLightbox()` | glightbox image lightbox — adds glightbox CSS/JS and wraps content images. |
