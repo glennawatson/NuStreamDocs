@@ -52,6 +52,15 @@ public class RxuiCorpusBenchmarks
     /// <summary>Absolute path to the maintainer's local rxui-website corpus checkout.</summary>
     private const string RxuiDocsRoot = "/home/glennw/source/rxui/website/docs";
 
+    /// <summary>Approximate heading-id count for the rxui corpus (~13.8K pages × ~10 headings each).</summary>
+    /// <remarks>
+    /// Pre-sizes the autorefs registry so its <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey, TValue}"/>
+    /// lands at the right bucket count immediately rather than doubling
+    /// through 4, 8, 16, … 131072. The micro-bench at 100K entries
+    /// shows this halves registry allocation.
+    /// </remarks>
+    private const int RxuiHeadingHint = 150_000;
+
     /// <summary>Per-iteration output directory created under the system temp.</summary>
     private string _outputRoot = string.Empty;
 
@@ -126,7 +135,7 @@ public class RxuiCorpusBenchmarks
     [Benchmark]
     public int FullStack()
     {
-        var registry = new AutorefsRegistry();
+        var registry = new AutorefsRegistry(RxuiHeadingHint);
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
@@ -200,7 +209,7 @@ public class RxuiCorpusBenchmarks
     [Benchmark]
     public int WithSphinxInventory()
     {
-        var registry = new AutorefsRegistry();
+        var registry = new AutorefsRegistry(RxuiHeadingHint);
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
@@ -216,7 +225,7 @@ public class RxuiCorpusBenchmarks
     [Benchmark]
     public int EverythingStack()
     {
-        var registry = new AutorefsRegistry();
+        var registry = new AutorefsRegistry(RxuiHeadingHint);
         var iconResolver = new MdiIconResolver();
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)

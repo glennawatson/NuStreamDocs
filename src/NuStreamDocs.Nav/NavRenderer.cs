@@ -42,7 +42,8 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeNode = FindActiveNode(root, currentPageUrl);
-        WriteList(writer, root.Children, activeNode, prune: false);
+        var activeBranch = BuildActiveBranchSet(activeNode);
+        WriteList(writer, root.Children, activeBranch, prune: false);
     }
 
     /// <summary>Emits the pruned nav for <paramref name="currentPageUrl"/>: only the active branch and its immediate context.</summary>
@@ -57,7 +58,36 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeNode = FindActiveNode(root, currentPageUrl);
-        WriteList(writer, root.Children, activeNode, prune: true);
+        var activeBranch = BuildActiveBranchSet(activeNode);
+        WriteList(writer, root.Children, activeBranch, prune: true);
+    }
+
+    /// <summary>Materialises the active-ancestor chain into a small reference-equality set.</summary>
+    /// <param name="activeNode">Active node, or null when no page is active.</param>
+    /// <returns>Set of nodes on the active branch — empty when there is no active node.</returns>
+    /// <remarks>
+    /// Built once per page. Without it, every visited node would walk
+    /// its parent chain at render time — O(N·D) per page on the full
+    /// tree. With it, the per-node check collapses to a hash lookup.
+    /// Sized to the active depth (≤ ~8 on real corpora) so it stays
+    /// pool-friendly even when called for every page in a large build.
+    /// </remarks>
+    private static HashSet<NavNode> BuildActiveBranchSet(NavNode? activeNode)
+    {
+        if (activeNode is null)
+        {
+            return [];
+        }
+
+        // Pre-size for the chain depth; reference-equality so each
+        // ancestor is distinct without paying string-hash costs.
+        var set = new HashSet<NavNode>(8, ReferenceEqualityComparer.Instance);
+        for (var current = activeNode; current is not null; current = current.Parent)
+        {
+            set.Add(current);
+        }
+
+        return set;
     }
 
     /// <summary>Attaches parent links when the tree was built manually in tests rather than via <see cref="NavTreeBuilder"/>.</summary>
@@ -96,32 +126,12 @@ internal static class NavRenderer
         return null;
     }
 
-    /// <summary>Returns true when <paramref name="node"/> is the active node or an ancestor of it.</summary>
-    /// <param name="node">Candidate node.</param>
-    /// <param name="activeNode">Active node, if any.</param>
-    /// <returns>True when <paramref name="node"/> lies on the active branch.</returns>
-    private static bool IsActiveBranchNode(NavNode node, NavNode? activeNode)
-    {
-        var current = activeNode;
-        while (current is not null)
-        {
-            if (ReferenceEquals(current, node))
-            {
-                return true;
-            }
-
-            current = current.Parent;
-        }
-
-        return false;
-    }
-
     /// <summary>Writes one <c>&lt;ul class="md-nav__list"&gt;</c> with <paramref name="items"/> as <c>&lt;li&gt;</c>s.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="items">Child items to render.</param>
-    /// <param name="activeNode">Active node for the current page, if any.</param>
+    /// <param name="activeBranch">Reference-equality set of nodes on the active branch (empty when there is no active page).</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
-    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, NavNode? activeNode, bool prune)
+    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, HashSet<NavNode> activeBranch, bool prune)
     {
         if (items.Length == 0)
         {
@@ -131,7 +141,7 @@ internal static class NavRenderer
         WriteUtf8(writer, "<ul class=\"md-nav__list\">"u8);
         for (var i = 0; i < items.Length; i++)
         {
-            WriteItem(writer, items[i], activeNode, prune);
+            WriteItem(writer, items[i], activeBranch, prune);
         }
 
         WriteUtf8(writer, "</ul>"u8);
@@ -140,16 +150,16 @@ internal static class NavRenderer
     /// <summary>Writes one <c>&lt;li&gt;</c> for either a section or a leaf page.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="node">Node to render.</param>
-    /// <param name="activeNode">Active node for the current page, if any.</param>
+    /// <param name="activeBranch">Reference-equality set of nodes on the active branch.</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
-    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, NavNode? activeNode, bool prune)
+    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune)
     {
-        var active = IsActiveBranchNode(node, activeNode);
+        var active = activeBranch.Contains(node);
         WriteUtf8(writer, active ? "<li class=\"md-nav__item md-nav__item--active\">"u8 : "<li class=\"md-nav__item\">"u8);
 
         if (node.IsSection)
         {
-            WriteSection(writer, node, activeNode, prune, active);
+            WriteSection(writer, node, activeBranch, prune, active);
         }
         else
         {
@@ -162,10 +172,10 @@ internal static class NavRenderer
     /// <summary>Writes a section node's label + nested list.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="node">Section node.</param>
-    /// <param name="activeNode">Active node for the current page, if any.</param>
+    /// <param name="activeBranch">Reference-equality set of nodes on the active branch.</param>
     /// <param name="prune">When true, render children only when the section is on the active branch.</param>
     /// <param name="active">True when the section sits on the active branch.</param>
-    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, NavNode? activeNode, bool prune, bool active)
+    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, bool active)
     {
         if (node.IndexPath.Length > 0)
         {
@@ -188,7 +198,7 @@ internal static class NavRenderer
             return;
         }
 
-        WriteList(writer, node.Children, activeNode, prune);
+        WriteList(writer, node.Children, activeBranch, prune);
     }
 
     /// <summary>Writes a leaf node's anchor.</summary>

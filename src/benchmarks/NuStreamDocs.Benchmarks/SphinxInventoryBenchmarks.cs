@@ -42,7 +42,7 @@ public class SphinxInventoryBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var registry = new AutorefsRegistry();
+        var registry = new AutorefsRegistry(EntryCount);
         for (var i = 0; i < EntryCount; i++)
         {
             var idx = i.ToString(CultureInfo.InvariantCulture);

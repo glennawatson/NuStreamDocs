@@ -59,21 +59,35 @@ public static class HeadingIdScanner
     /// <returns>Index of the <c>&lt;</c>, or -1 when no further heading is present.</returns>
     private static int FindHeadingOpen(ReadOnlySpan<byte> html, int from)
     {
-        for (var i = from; i < html.Length - HeadingTagLookahead; i++)
+        // Vectorised: hop between '<' bytes (SIMD-backed IndexOf) and only
+        // pay the lookahead check at candidate sites. On rendered HTML pages
+        // — most bytes of which are text content between tags — this drops
+        // the inner-loop body count by a large factor versus a per-byte walk.
+        var cursor = from;
+        while (cursor + HeadingTagLookahead < html.Length)
         {
-            if (html[i] != (byte)'<')
+            var rel = html[cursor..].IndexOf((byte)'<');
+            if (rel < 0)
             {
-                continue;
+                return -1;
+            }
+
+            var i = cursor + rel;
+            if (i + HeadingTagLookahead >= html.Length)
+            {
+                return -1;
             }
 
             if (html[i + 1] is not ((byte)'h' or (byte)'H'))
             {
+                cursor = i + 1;
                 continue;
             }
 
             var level = html[i + 2];
             if (level is < (byte)'1' or > (byte)'6')
             {
+                cursor = i + 1;
                 continue;
             }
 

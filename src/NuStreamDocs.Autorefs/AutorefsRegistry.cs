@@ -23,11 +23,43 @@ namespace NuStreamDocs.Autorefs;
 /// shadows the earlier. Plugins should namespace their IDs (e.g.
 /// <c>api:System.String</c>, <c>cite:rfc-9110</c>) to avoid collisions.
 /// </para>
+/// <para>
+/// Storage is split into <c>(pageUrl, fragment)</c> pairs rather than
+/// a pre-composed <c>page#fragment</c> string. The heading scanner is
+/// the dominant caller (~10 headings per page × thousands of pages),
+/// and clustering by page URL means the dictionary holds many entries
+/// that share the same <see cref="string"/> reference for their page —
+/// no per-call concat allocation. Composition only happens on
+/// <see cref="TryResolve"/> / <see cref="Snapshot"/>, which fire orders
+/// of magnitude less often.
+/// </para>
 /// </remarks>
 public sealed class AutorefsRegistry
 {
-    /// <summary>Anchor index: ID → page-relative URL plus optional <c>#fragment</c>.</summary>
-    private readonly ConcurrentDictionary<string, string> _anchors = new(StringComparer.Ordinal);
+    /// <summary>Default concurrency level when the caller does not pass a capacity hint.</summary>
+    /// <remarks>
+    /// Matches <see cref="ConcurrentDictionary{TKey, TValue}"/>'s default
+    /// (number of cores). Kept explicit so the capacity overload below
+    /// reuses the same value rather than re-deriving it.
+    /// </remarks>
+    private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
+
+    /// <summary>Anchor index: ID → page URL + optional fragment.</summary>
+    private readonly ConcurrentDictionary<string, Anchor> _anchors;
+
+    /// <summary>Initializes a new instance of the <see cref="AutorefsRegistry"/> class with the default capacity.</summary>
+    public AutorefsRegistry()
+    {
+        _anchors = new(StringComparer.Ordinal);
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="AutorefsRegistry"/> class pre-sized for <paramref name="initialCapacity"/> entries.</summary>
+    /// <param name="initialCapacity">Expected entry count — pass a hint when registering tens of thousands of headings to avoid bucket-resize churn.</param>
+    public AutorefsRegistry(int initialCapacity)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCapacity);
+        _anchors = new(DefaultConcurrencyLevel, initialCapacity, StringComparer.Ordinal);
+    }
 
     /// <summary>Gets the current entry count.</summary>
     public int Count => _anchors.Count;
@@ -41,9 +73,10 @@ public sealed class AutorefsRegistry
         ArgumentException.ThrowIfNullOrEmpty(id);
         ArgumentException.ThrowIfNullOrEmpty(pageRelativeUrl);
 
-        _anchors[id] = string.IsNullOrEmpty(fragment)
-            ? pageRelativeUrl
-            : pageRelativeUrl + "#" + fragment;
+        // Normalise empty fragments to null so downstream composition
+        // can branch on null alone, not "" vs null.
+        var normalisedFragment = string.IsNullOrEmpty(fragment) ? null : fragment;
+        _anchors[id] = new(pageRelativeUrl, normalisedFragment);
     }
 
     /// <summary>Resolves an ID to its full URL.</summary>
@@ -53,7 +86,14 @@ public sealed class AutorefsRegistry
     public bool TryResolve(string id, out string url)
     {
         ArgumentException.ThrowIfNullOrEmpty(id);
-        return _anchors.TryGetValue(id, out url!);
+        if (!_anchors.TryGetValue(id, out var anchor))
+        {
+            url = string.Empty;
+            return false;
+        }
+
+        url = anchor.Compose();
+        return true;
     }
 
     /// <summary>Drops every registered entry. Used between builds in watcher mode.</summary>
@@ -63,13 +103,23 @@ public sealed class AutorefsRegistry
     /// <returns>A fresh snapshot array.</returns>
     public (string Id, string Url)[] Snapshot()
     {
-        KeyValuePair<string, string>[] kvs = [.. _anchors];
+        KeyValuePair<string, Anchor>[] kvs = [.. _anchors];
         var result = new (string Id, string Url)[kvs.Length];
         for (var i = 0; i < kvs.Length; i++)
         {
-            result[i] = (kvs[i].Key, kvs[i].Value);
+            result[i] = (kvs[i].Key, kvs[i].Value.Compose());
         }
 
         return result;
+    }
+
+    /// <summary>Stored anchor — page URL + optional fragment, composed only on read.</summary>
+    /// <param name="PageUrl">Page-relative URL.</param>
+    /// <param name="Fragment">Optional anchor fragment without the leading <c>#</c>.</param>
+    private readonly record struct Anchor(string PageUrl, string? Fragment)
+    {
+        /// <summary>Composes the stored URL into <c>page</c> or <c>page#fragment</c> form.</summary>
+        /// <returns>Composed URL.</returns>
+        public string Compose() => Fragment is null ? PageUrl : PageUrl + "#" + Fragment;
     }
 }
