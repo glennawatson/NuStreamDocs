@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.CSharpApiGenerator</PackageId>
+    <Description>C# reference plugin for NuStreamDocs. Wraps SourceDocParser + the Zensical emitter so a builder can pull NuGet-packaged assemblies, generate Markdown reference pages into the docs tree, and have them picked up by normal page discovery.</Description>
+    <RootNamespace>NuStreamDocs.CSharpApiGenerator</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Autorefs\NuStreamDocs.Autorefs.csproj" />
+    <PackageReference Include="SourceDocParser" />
+    <PackageReference Include="SourceDocParser.NuGet" />
+    <PackageReference Include="SourceDocParser.Zensical" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.CSharpApiGenerator.Tests" />
+  </ItemGroup>
+
+</Project>

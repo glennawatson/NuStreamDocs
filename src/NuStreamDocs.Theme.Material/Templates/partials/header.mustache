@@ -1,0 +1,17 @@
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="{{site_root}}" class="md-header__button md-logo" aria-label="{{site_name}}">
+      <span class="md-ellipsis">{{site_name}}</span>
+    </a>
+    <div class="md-header__title">
+      <span class="md-ellipsis">{{page_title}}</span>
+    </div>
+    {{> search}}
+    {{#edit_url}}
+    <a href="{{edit_url}}" class="md-header__button md-icon" title="Edit this page" rel="noopener" target="_blank" aria-label="Edit this page">&#9998;</a>
+    {{/edit_url}}
+    {{#repo_url}}
+    <a href="{{repo_url}}" class="md-header__button md-icon" title="Source repository" rel="noopener" target="_blank" aria-label="Source repository">&#9881;</a>
+    {{/repo_url}}
+  </nav>
+</header>

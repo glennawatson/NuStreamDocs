@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Blog</PackageId>
+    <Description>Wyam-compatible blog/journal plugin for NuStreamDocs. Walks a flat directory of YYYY-MM-DD-slug.md posts, parses Wyam-style frontmatter (NoTitle / IsBlog / Title / Tags / Author / Published), and generates an index + tag archives. Drop-in for the legacy reactiveui.net blog/announcements layout.</Description>
+    <RootNamespace>NuStreamDocs.Blog</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Blog.Common\NuStreamDocs.Blog.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Blog.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Blog.MkDocs.Tests" />
+  </ItemGroup>
+
+</Project>

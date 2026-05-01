@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Common</PackageId>
+    <Description>Shared building blocks for NuStreamDocs plugin assemblies — abstract DocPluginBase that wipes the no-op IDocPlugin hook boilerplate plus byte-level YAML scanning helpers used by every plugin that reads frontmatter or sidecar metadata.</Description>
+    <RootNamespace>NuStreamDocs.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+</Project>

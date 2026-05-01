@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Keys</PackageId>
+    <Description>Keys plugin for NuStreamDocs. Implements pymdownx.keys: turns ++ctrl+alt+del++ markup into a structured keys span with normalised key classes for theme styling.</Description>
+    <RootNamespace>NuStreamDocs.Keys</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Keys.Tests" />
+  </ItemGroup>
+
+</Project>

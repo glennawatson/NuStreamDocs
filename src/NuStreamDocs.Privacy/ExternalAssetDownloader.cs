@@ -1,0 +1,228 @@
+// Copyright (c) 2026 Glenn Watson and Contributors. All rights reserved.
+// Glenn Watson and Contributors licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Collections.Concurrent;
+using NuStreamDocs.Privacy.Logging;
+using Polly;
+
+namespace NuStreamDocs.Privacy;
+
+/// <summary>
+/// Parallel HTTP downloader for the externalised assets registered
+/// during <see cref="PrivacyPlugin.OnRenderPageAsync"/>.
+/// </summary>
+/// <remarks>
+/// Iterates fixed-point: each pass downloads every URL the registry
+/// holds; CSS files discovered along the way may register more nested
+/// URLs (e.g. font files inside Google Fonts CSS) which the next pass
+/// picks up. Capped to keep pathological CSS chains bounded. Each
+/// fetch goes through a Polly retry pipeline so transient network
+/// blips don't poison the result. A separate on-disk cache directory
+/// holds the bytes across builds so subsequent runs skip the network
+/// entirely.
+/// </remarks>
+internal static class ExternalAssetDownloader
+{
+    /// <summary>Maximum number of fixed-point download passes. CSS-inside-CSS chains are rare; three is plenty.</summary>
+    private const int MaxIterations = 3;
+
+    /// <summary>Initial backoff delay between retries.</summary>
+    private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(200);
+
+    /// <summary>Downloads every URL the <paramref name="registry"/> holds, iterating until the registry stops growing or the cap is reached.</summary>
+    /// <param name="registry">URL registry; mutated as nested URLs are discovered.</param>
+    /// <param name="outputRoot">Absolute output root.</param>
+    /// <param name="cacheRoot">Absolute on-disk cache root; downloaded bytes land here first and are copied into <paramref name="outputRoot"/>.</param>
+    /// <param name="settings">Per-batch parallelism, timeout, retry settings.</param>
+    /// <param name="filter">Host filter; CSS post-processing applies it to nested URLs.</param>
+    /// <param name="logger">Logger for per-download diagnostics.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The list of URLs that exhausted retries and never succeeded.</returns>
+    public static async Task<string[]> DownloadAllAsync(
+        ExternalAssetRegistry registry,
+        string outputRoot,
+        string cacheRoot,
+        DownloadSettings settings,
+        HostFilter filter,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(registry);
+        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        ArgumentException.ThrowIfNullOrEmpty(cacheRoot);
+        ArgumentOutOfRangeException.ThrowIfLessThan(settings.Parallelism, 1);
+        ArgumentOutOfRangeException.ThrowIfNegative(settings.MaxRetries);
+        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        using var client = new HttpClient();
+        client.Timeout = settings.Timeout;
+        var environment = new DownloadEnvironment(client, BuildRetryPipeline(settings.MaxRetries), registry, filter);
+
+        var failures = new ConcurrentBag<string>();
+        var processed = new HashSet<string>(StringComparer.Ordinal);
+        for (var iteration = 0; iteration < MaxIterations; iteration++)
+        {
+            var snapshot = registry.EntriesSnapshot();
+            var pendingBuffer = new List<(string Url, string LocalPath)>(snapshot.Length);
+            for (var i = 0; i < snapshot.Length; i++)
+            {
+                if (processed.Add(snapshot[i].Url))
+                {
+                    pendingBuffer.Add(snapshot[i]);
+                }
+            }
+
+            (string Url, string LocalPath)[] pending = [.. pendingBuffer];
+            if (pending.Length is 0)
+            {
+                break;
+            }
+
+            await Parallel.ForEachAsync(
+                pending,
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = settings.Parallelism,
+                    CancellationToken = cancellationToken,
+                },
+                async (entry, ct) =>
+                {
+                    var target = new DownloadTarget(
+                        entry.Url,
+                        Path.Combine(outputRoot, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)),
+                        Path.Combine(cacheRoot, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)));
+                    if (!await DownloadOneAsync(environment, target, logger, ct).ConfigureAwait(false))
+                    {
+                        failures.Add(entry.Url);
+                        PrivacyLoggingHelper.LogDownloadFailure(logger, entry.Url, target.OutputPath);
+                    }
+                })
+                .ConfigureAwait(false);
+        }
+
+        return [.. failures];
+    }
+
+    /// <summary>Builds a Polly resilience pipeline with exponential backoff for transient HTTP errors.</summary>
+    /// <param name="maxRetries">Maximum retry attempts.</param>
+    /// <returns>A configured <see cref="ResiliencePipeline{TResult}"/> over <see cref="HttpResponseMessage"/>.</returns>
+    private static ResiliencePipeline<HttpResponseMessage> BuildRetryPipeline(int maxRetries) =>
+        new ResiliencePipelineBuilder<HttpResponseMessage>()
+            .AddRetry(new()
+            {
+                MaxRetryAttempts = maxRetries,
+                BackoffType = DelayBackoffType.Exponential,
+                Delay = InitialRetryDelay,
+                ShouldHandle = static args => ValueTask.FromResult(DownloadHttpClassifier.IsTransient(args.Outcome)),
+            })
+            .Build();
+
+    /// <summary>Downloads <paramref name="target"/>'s URL through the retry pipeline, caches it, and copies it into the output root.</summary>
+    /// <param name="environment">Shared per-batch environment.</param>
+    /// <param name="target">Per-URL paths.</param>
+    /// <param name="logger">Logger for cache-hit / download-success diagnostics.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True when the file landed in the output root (cache hit or fresh fetch); false on any failure.</returns>
+    private static async Task<bool> DownloadOneAsync(DownloadEnvironment environment, DownloadTarget target, ILogger logger, CancellationToken cancellationToken)
+    {
+        if (await TryCopyFromCacheAsync(target.CachePath, target.OutputPath, cancellationToken).ConfigureAwait(false))
+        {
+            PrivacyLoggingHelper.LogCacheHit(logger, target.Url, target.CachePath);
+            return true;
+        }
+
+        if (!Uri.TryCreate(target.Url, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var response = await environment.Pipeline.ExecuteAsync(
+                async ct => await environment.Client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false),
+                cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+            if (DownloadHttpClassifier.LooksLikeCss(uri, response))
+            {
+                bytes = CssUrlRewriter.Rewrite(bytes, uri, environment.Registry, environment.Filter);
+            }
+
+            await WriteCacheAndOutputAsync(target.CachePath, target.OutputPath, bytes, cancellationToken).ConfigureAwait(false);
+            PrivacyLoggingHelper.LogDownloadSuccess(logger, target.Url, target.OutputPath);
+            return true;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+        catch (TaskCanceledException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Copies <paramref name="cachePath"/> to <paramref name="outputPath"/> when the cache file exists.</summary>
+    /// <param name="cachePath">Absolute cache file.</param>
+    /// <param name="outputPath">Absolute output file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True when the cache hit and the file was copied.</returns>
+    private static async Task<bool> TryCopyFromCacheAsync(string cachePath, string outputPath, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(cachePath))
+        {
+            return false;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        await using var src = File.OpenRead(cachePath);
+        await using var dst = File.Create(outputPath);
+        await src.CopyToAsync(dst, cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    /// <summary>Writes <paramref name="bytes"/> to both the cache and the output root.</summary>
+    /// <param name="cachePath">Absolute cache file.</param>
+    /// <param name="outputPath">Absolute output file.</param>
+    /// <param name="bytes">Bytes to write.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when both writes finish.</returns>
+    private static async Task WriteCacheAndOutputAsync(string cachePath, string outputPath, byte[] bytes, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        await File.WriteAllBytesAsync(cachePath, bytes, cancellationToken).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(outputPath, bytes, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Per-batch download tuning settings collapsed into one parameter.</summary>
+    /// <param name="Parallelism">Maximum concurrent downloads.</param>
+    /// <param name="Timeout">Per-request HTTP timeout.</param>
+    /// <param name="MaxRetries">Maximum retry attempts on transient failures.</param>
+    public readonly record struct DownloadSettings(int Parallelism, TimeSpan Timeout, int MaxRetries);
+
+    /// <summary>Per-URL paths.</summary>
+    /// <param name="Url">External URL.</param>
+    /// <param name="OutputPath">Absolute output path.</param>
+    /// <param name="CachePath">Absolute cache path.</param>
+    public readonly record struct DownloadTarget(string Url, string OutputPath, string CachePath);
+
+    /// <summary>Shared per-batch state passed through the download helpers.</summary>
+    /// <param name="Client">Shared HTTP client.</param>
+    /// <param name="Pipeline">Polly retry pipeline.</param>
+    /// <param name="Registry">URL registry.</param>
+    /// <param name="Filter">Host filter.</param>
+    public readonly record struct DownloadEnvironment(
+        HttpClient Client,
+        ResiliencePipeline<HttpResponseMessage> Pipeline,
+        ExternalAssetRegistry Registry,
+        HostFilter Filter);
+}

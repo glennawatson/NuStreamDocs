@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Versions</PackageId>
+    <Description>mike-equivalent versioning plugin for NuStreamDocs. Publishes a versions.json manifest so themes can render a version selector across documentation revisions.</Description>
+    <RootNamespace>NuStreamDocs.Versions</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Versions.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Config.MkDocs</PackageId>
+    <Description>mkdocs.yml reader plugin for NuStreamDocs. Hand-rolled span and UTF-8 YAML to JSON pipeline; never round-trips through strings.</Description>
+    <RootNamespace>NuStreamDocs.Config.MkDocs</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Config.MkDocs.Tests" />
+  </ItemGroup>
+
+</Project>

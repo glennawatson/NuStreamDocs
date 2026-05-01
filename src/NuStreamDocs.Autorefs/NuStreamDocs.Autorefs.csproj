@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Autorefs</PackageId>
+    <Description>Cross-document reference resolver for NuStreamDocs. Collects heading anchor IDs during render and rewrites @autoref:ID markers in the emitted HTML to the resolved page URL + fragment.</Description>
+    <RootNamespace>NuStreamDocs.Autorefs</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Autorefs.Tests" />
+  </ItemGroup>
+
+</Project>

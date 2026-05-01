@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Abbr</PackageId>
+    <Description>Abbreviation plugin for NuStreamDocs. Implements the Markdown Extra abbreviation syntax — strips `*[token]: definition` lines from the source and wraps every subsequent occurrence of the token in &lt;abbr title="definition"&gt;.</Description>
+    <RootNamespace>NuStreamDocs.Abbr</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Abbr.Tests" />
+  </ItemGroup>
+
+</Project>

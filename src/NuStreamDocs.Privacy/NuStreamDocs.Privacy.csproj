@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Privacy</PackageId>
+    <Description>Privacy plugin for NuStreamDocs. Detects external assets (img, link, script) referenced from rendered pages, localises them under assets/external/, and rewrites the page HTML to point at the local copies — the equivalent of mkdocs-material's privacy plugin scoped to asset externalisation.</Description>
+    <RootNamespace>NuStreamDocs.Privacy</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Privacy.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks" />
+  </ItemGroup>
+
+</Project>

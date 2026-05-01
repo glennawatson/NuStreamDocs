@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.SuperFences</PackageId>
+    <Description>Custom-fence dispatcher for NuStreamDocs. Auto-discovers ICustomFenceHandler plugins during configure and rewrites &lt;pre&gt;&lt;code class="language-X"&gt; blocks whose language is claimed by a registered handler.</Description>
+    <RootNamespace>NuStreamDocs.SuperFences</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.SuperFences.Tests" />
+  </ItemGroup>
+
+</Project>

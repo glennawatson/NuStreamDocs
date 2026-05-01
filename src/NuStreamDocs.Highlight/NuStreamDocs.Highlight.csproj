@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Highlight</PackageId>
+    <Description>Server-side syntax highlighter for NuStreamDocs. Pygments-shape lexers compiled at build time via [GeneratedRegex]; output emits Pygments' short-form CSS classes so existing mkdocs-material themes light up unchanged. No JavaScript runtime, no Python, AOT-clean.</Description>
+    <RootNamespace>NuStreamDocs.Highlight</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Highlight.Tests" />
+  </ItemGroup>
+
+</Project>

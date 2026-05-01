@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.MagicLink</PackageId>
+    <Description>Magic-link plugin for NuStreamDocs. Implements pymdownx.magiclink default behaviour — wraps bare http(s)/ftp(s)/mailto/www URLs in CommonMark autolink brackets so the inline renderer emits anchor tags.</Description>
+    <RootNamespace>NuStreamDocs.MagicLink</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.MagicLink.Tests" />
+  </ItemGroup>
+
+</Project>

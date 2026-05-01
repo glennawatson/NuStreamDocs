@@ -1,0 +1,10 @@
+<nav class="md-breadcrumbs md-typeset" aria-label="Breadcrumb">
+  <ol class="md-breadcrumbs__list">
+    {{#breadcrumbs}}
+    <li class="md-breadcrumbs__item">
+      <a href="{{path}}">{{title}}</a>
+    </li>
+    {{/breadcrumbs}}
+    <li class="md-breadcrumbs__item md-breadcrumbs__item--active">{{page_title}}</li>
+  </ol>
+</nav>

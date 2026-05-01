@@ -1,0 +1,110 @@
+<Project>
+
+  <PropertyGroup>
+    <Copyright>Copyright (c) Glenn Watson and Contributors</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/glennawatson/NuStreamDocs</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>Glenn Watson and Contributors</Authors>
+    <Owners>glennawatson</Owners>
+    <PackageTags>markdown;static-site;mkdocs;zensical;material;aot;dotnet</PackageTags>
+    <RepositoryUrl>https://github.com/glennawatson/NuStreamDocs</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DebugType>Embedded</DebugType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <ReportAnalyzer>true</ReportAnalyzer>
+
+    <!-- MinVer pre-release defaults: untagged commits ride the next minor as alpha. -->
+    <MinVerAutoIncrement>minor</MinVerAutoIncrement>
+    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
+
+    <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
+
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <NoWarn>$(NoWarn);CA1812;S4261</NoWarn>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <TUnitImplicitUsings>true</TUnitImplicitUsings>
+    <TUnitAssertionsImplicitUsings>true</TUnitAssertionsImplicitUsings>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Verify.TUnit" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <!-- Per-test-assembly testconfig.json copied next to the binary so the
+       MTP coverage extension picks up format + exclusion rules. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)testconfig.json">
+      <Link>$(AssemblyName).testconfig.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="MinVer" PrivateAssets="all" />
+    <PackageReference Include="stylecop.analyzers" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" />
+    <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All" />
+    <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <!--
+    The .NET SDK + transitive packages auto-load several source generators that
+    have nothing to do in this codebase. Each one still scans the full compilation
+    looking for its trigger attribute, so removing them from @(Analyzer) before
+    CoreCompile shaves real csc time. Audited usage (re-check before re-enabling):
+      ComInterfaceGenerator       — no [GeneratedComInterface]    (~863 ms)
+      ComClassGenerator           — no [GeneratedComClass]        (~141 ms)
+      VtableIndexStubGenerator    — COM vtable, unused             (~37 ms)
+      JSImportGenerator           — no Blazor WASM JS interop      (varies)
+      LibraryImportGenerator      — no [LibraryImport]/[DllImport] (~12.7 s)
+      System.Text.Json.SourceGeneration
+                                  — no JsonSerializable contexts   (~1.1 s)
+    Re-enable any of these the moment the corresponding attribute is introduced;
+    csc will silently produce wrong output otherwise.
+  -->
+  <Target Name="RemoveUnusedSdkGenerators" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)"
+                Condition="'%(Filename)' == 'Microsoft.Interop.ComInterfaceGenerator'
+                        or '%(Filename)' == 'Microsoft.Interop.ComClassGenerator'
+                        or '%(Filename)' == 'Microsoft.Interop.VtableIndexStubGenerator'
+                        or '%(Filename)' == 'Microsoft.Interop.JavaScript.JSImportGenerator'
+                        or '%(Filename)' == 'Microsoft.Interop.LibraryImportGenerator'
+                        or '%(Filename)' == 'System.Text.Json.SourceGeneration'" />
+    </ItemGroup>
+  </Target>
+</Project>

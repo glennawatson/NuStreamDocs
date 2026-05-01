@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Config.Zensical</PackageId>
+    <Description>Zensical-flavoured TOML config reader plugin for NuStreamDocs. Span-based and AOT clean.</Description>
+    <RootNamespace>NuStreamDocs.Config.Zensical</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Config.Zensical.Tests" />
+  </ItemGroup>
+
+</Project>

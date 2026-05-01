@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Feed</PackageId>
+    <Description>RSS 2.0 / Atom feed plugin for NuStreamDocs. Reuses NuStreamDocs.Blog's BlogPostScanner for the post source so the same authoring directory powers the rendered blog and the syndication feed.</Description>
+    <RootNamespace>NuStreamDocs.Feed</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Blog\NuStreamDocs.Blog.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Feed.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Xrefs</PackageId>
+    <Description>DocFX-style xrefmap plugin for NuStreamDocs. Emits an xrefmap.json catalog at finalise time, optionally consumes external xrefmaps at configure time, and resolves cross-site UIDs through the Autorefs registry. Byte-level UTF-8 throughout.</Description>
+    <RootNamespace>NuStreamDocs.Xrefs</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Autorefs\NuStreamDocs.Autorefs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Xrefs.Tests" />
+  </ItemGroup>
+
+</Project>

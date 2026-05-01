@@ -1,0 +1,18 @@
+<footer class="md-footer">
+  {{#prev_url}}{{^next_url}}
+  <nav class="md-footer__nav" aria-label="Footer">
+    <a class="md-footer__link md-footer__link--prev" href="{{prev_url}}" rel="prev"><span class="md-footer__direction">Previous</span><span class="md-footer__title">{{prev_title}}</span></a>
+  </nav>
+  {{/next_url}}{{/prev_url}}
+  {{#next_url}}
+  <nav class="md-footer__nav" aria-label="Footer">
+    {{#prev_url}}<a class="md-footer__link md-footer__link--prev" href="{{prev_url}}" rel="prev"><span class="md-footer__direction">Previous</span><span class="md-footer__title">{{prev_title}}</span></a>{{/prev_url}}
+    <a class="md-footer__link md-footer__link--next" href="{{next_url}}" rel="next"><span class="md-footer__direction">Next</span><span class="md-footer__title">{{next_title}}</span></a>
+  </nav>
+  {{/next_url}}
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner">
+      <div class="md-copyright">{{copyright}}</div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.MarkdownExtensions</PackageId>
+    <Description>Common Markdown block and inline extensions for NuStreamDocs — admonitions, content tabs, collapsible details, check-lists, mark spans, footnotes, definition lists. Works under both NuStreamDocs.Theme.Material and NuStreamDocs.Theme.Material3.</Description>
+    <RootNamespace>NuStreamDocs.MarkdownExtensions</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.MarkdownExtensions.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Blog.Common</PackageId>
+    <Description>Shared blog pipeline for NuStreamDocs. Owns the Wyam-style frontmatter reader, post scanner, markdown emitters, and generation orchestration used by both the legacy Wyam blog plugin and the mkdocs-style variant.</Description>
+    <RootNamespace>NuStreamDocs.Blog.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Blog.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Blog.MkDocs.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>

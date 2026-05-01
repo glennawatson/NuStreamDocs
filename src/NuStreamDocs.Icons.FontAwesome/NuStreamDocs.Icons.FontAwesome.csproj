@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Icons.FontAwesome</PackageId>
+    <Description>Font Awesome icon-font plugin for NuStreamDocs. Theme-agnostic; pairs with any theme via the IHeadExtraProvider contract. Loads Font Awesome Free from a configurable CDN.</Description>
+    <RootNamespace>NuStreamDocs.Icons.FontAwesome</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Icons.FontAwesome.Tests" />
+  </ItemGroup>
+
+</Project>

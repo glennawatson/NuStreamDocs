@@ -1,0 +1,15 @@
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner" aria-label="Header">
+    <a href="{{site_root}}" class="md-logo" aria-label="{{site_name}}">
+      <span class="md-ellipsis">{{site_name}}</span>
+    </a>
+    <div class="md-header__title"><span class="md-ellipsis">{{page_title}}</span></div>
+    {{#edit_url}}
+    <a href="{{edit_url}}" class="md-header__option" title="Edit this page" rel="noopener" target="_blank" aria-label="Edit this page">&#9998;</a>
+    {{/edit_url}}
+    {{#repo_url}}
+    <a href="{{repo_url}}" class="md-header__option" title="Source repository" rel="noopener" target="_blank" aria-label="Source repository">&#9881;</a>
+    {{/repo_url}}
+    <button class="md-header__option" type="button" data-md-component="palette-toggle" aria-label="Toggle colour scheme">&#9728;</button>
+  </nav>
+</header>

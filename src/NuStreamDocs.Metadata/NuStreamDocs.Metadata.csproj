@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Metadata</PackageId>
+    <Description>Metadata plugin for NuStreamDocs. Walks the docs tree at configure time, merges directory-level (`_meta.yml`) and per-page sidecar (`page.meta.yml`) frontmatter, and splices the merged keys into each page before render — concept-level inspired by Statiq's directory/sidecar/computed metadata model, byte-level UTF-8 throughout.</Description>
+    <RootNamespace>NuStreamDocs.Metadata</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Metadata.Tests" />
+  </ItemGroup>
+
+</Project>

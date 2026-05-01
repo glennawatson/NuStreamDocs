@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Tags</PackageId>
+    <Description>Tags plugin for NuStreamDocs. Collects per-page `tags:` frontmatter during the build and emits a tags index plus per-tag listing pages.</Description>
+    <RootNamespace>NuStreamDocs.Tags</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Tags.Tests" />
+  </ItemGroup>
+
+</Project>

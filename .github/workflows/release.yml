@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Auto-increment level for the new tag (major / minor / patch)."
+        required: true
+        default: "minor"
+        type: choice
+        options: [major, minor, patch]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Install minver-cli
+        run: dotnet tool install -g minver-cli
+
+      - name: Compute next version + create tag
+        id: ver
+        run: |
+          VERSION="$(minver --auto-increment ${{ inputs.bump }} --default-pre-release-identifiers '')"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          # Propagate to every downstream MSBuild call so per-project MinVer tasks short-circuit.
+          echo "MINVERVERSIONOVERRIDE=$VERSION" >> "$GITHUB_ENV"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Restore
+        run: dotnet restore src/NuStreamDocs.slnx
+
+      - name: Build
+        run: dotnet build src/NuStreamDocs.slnx --no-restore --configuration Release
+
+      - name: Pack
+        run: dotnet pack src/NuStreamDocs.slnx --no-build --configuration Release -o packages
+
+      - name: Sign packages with SSL.com eSigner
+        uses: SSLcom/esigner-codesign@v1.3.2
+        with:
+          command: batch_sign
+          username: ${{ secrets.ES_USERNAME }}
+          password: ${{ secrets.ES_PASSWORD }}
+          credential_id: ${{ secrets.CREDENTIAL_ID }}
+          totp_secret: ${{ secrets.ES_TOTP_SECRET }}
+          dir_path: ./packages
+          output_path: ./signed
+          malware_block: true
+          jvm_max_memory: 2048M
+
+      - name: Upload signed packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: signed-nuget
+          path: ./signed/*.nupkg
+          if-no-files-found: error
+
+      - name: NuGet login (OIDC trusted publishing)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
+        run: |
+          for pkg in ./signed/*.nupkg; do
+            dotnet nuget push "$pkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          done
+
+      - name: Install GitReleaseNoteGenerator
+        run: dotnet tool install -g GitReleaseNoteGenerator
+
+      - name: Generate release notes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: git-release-notes --release-version "${{ steps.ver.outputs.version }}" --output-file release-notes.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ steps.ver.outputs.tag }}" --repo "${{ github.repository }}" --title "${{ steps.ver.outputs.version }}" --notes-file release-notes.md ./signed/*.nupkg

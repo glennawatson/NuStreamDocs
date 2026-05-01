@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NuStreamDocs.Config.MkDocs\NuStreamDocs.Config.MkDocs.csproj" />
+  </ItemGroup>
+
+</Project>

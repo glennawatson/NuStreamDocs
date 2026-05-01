@@ -1,0 +1,65 @@
+// Copyright (c) 2026 Glenn Watson and Contributors. All rights reserved.
+// Glenn Watson and Contributors licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+namespace NuStreamDocs.Toc.Tests;
+
+/// <summary>Tests for <c>HeadingScanner</c>.</summary>
+public class HeadingScannerTests
+{
+    /// <summary>Scanner finds h1/h2/h3 in order.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FindsAllStandardHeadings()
+    {
+        var html = "<h1>One</h1><p>x</p><h2>Two</h2><h3>Three</h3>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings.Length).IsEqualTo(3);
+        await Assert.That(headings[0].Level).IsEqualTo(1);
+        await Assert.That(headings[1].Level).IsEqualTo(2);
+        await Assert.That(headings[2].Level).IsEqualTo(3);
+    }
+
+    /// <summary>Non-heading tags are ignored.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SkipsNonHeadingElements()
+    {
+        var html = "<header>x</header><hr><p>none</p><div>nope</div>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings.Length).IsEqualTo(0);
+    }
+
+    /// <summary>Existing id attribute is captured.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task CapturesExistingId()
+    {
+        var html = "<h2 id=\"intro\" class=\"x\">Hello</h2>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings.Length).IsEqualTo(1);
+        await Assert.That(headings[0].ExistingId).IsEqualTo("intro");
+    }
+
+    /// <summary>Heading level out of range is ignored.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task IgnoresOutOfRangeLevel()
+    {
+        var html = "<h7>too deep</h7><h2>ok</h2>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings.Length).IsEqualTo(1);
+        await Assert.That(headings[0].Level).IsEqualTo(2);
+    }
+
+    /// <summary>DecodeText strips inline tags.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task DecodeTextStripsInlineMarkup()
+    {
+        var html = "<h2>Hello <code>World</code></h2>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
+        var text = HeadingScanner.DecodeText(html, in headings[0]);
+        await Assert.That(text).IsEqualTo("Hello World");
+    }
+}

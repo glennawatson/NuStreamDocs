@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Snippets</PackageId>
+    <Description>Snippets plugin for NuStreamDocs. Implements pymdownx.snippets — splices `--8&lt;-- "file"` includes inline at preprocess time, resolved against the docs root.</Description>
+    <RootNamespace>NuStreamDocs.Snippets</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Snippets.Tests" />
+  </ItemGroup>
+
+</Project>

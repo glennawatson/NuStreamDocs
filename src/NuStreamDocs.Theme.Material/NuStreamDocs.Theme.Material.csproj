@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Theme.Material</PackageId>
+    <Description>Material-styled theme for NuStreamDocs. Mustache page template plus the Material CSS/JS bundle, all shipped inside the assembly as embedded resources for single-file / AOT-friendly distribution.</Description>
+    <RootNamespace>NuStreamDocs.Theme.Material</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Templating\NuStreamDocs.Templating.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Theme.Material.Tests" />
+  </ItemGroup>
+
+</Project>

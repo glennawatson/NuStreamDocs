@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NuStreamDocs.Feed\NuStreamDocs.Feed.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Blog.Common\NuStreamDocs.Blog.Common.csproj" />
+  </ItemGroup>
+
+</Project>

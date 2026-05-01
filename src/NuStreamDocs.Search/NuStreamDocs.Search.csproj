@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Search</PackageId>
+    <Description>Build-time search-index plugin for NuStreamDocs. Walks rendered pages, extracts plain text and heading anchors, and emits an index in the configured format. Defaults to a Pagefind-compatible sharded index for large corpora; Lunr-compatible JSON is available for sites using the upstream mkdocs-material bundled JS.</Description>
+    <RootNamespace>NuStreamDocs.Search</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Tests" />
+  </ItemGroup>
+
+</Project>
