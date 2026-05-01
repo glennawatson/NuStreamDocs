@@ -21,6 +21,7 @@
   <Project Path="NuStreamDocs.Config.Zensical/NuStreamDocs.Config.Zensical.csproj" />
   <Project Path="NuStreamDocs.Nav/NuStreamDocs.Nav.csproj" />
   <Project Path="NuStreamDocs.Theme.Common/NuStreamDocs.Theme.Common.csproj" />
+  <Project Path="NuStreamDocs.Bibliography/NuStreamDocs.Bibliography.csproj" />
   <Project Path="NuStreamDocs.Blog.Common/NuStreamDocs.Blog.Common.csproj" />
   <Project Path="NuStreamDocs.Theme.Material/NuStreamDocs.Theme.Material.csproj" />
   <Project Path="NuStreamDocs.Theme.Material3/NuStreamDocs.Theme.Material3.csproj" />
@@ -81,6 +82,7 @@
     <Project Path="tests/NuStreamDocs.Privacy.Tests/NuStreamDocs.Privacy.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Abbr.Tests/NuStreamDocs.Abbr.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Arithmatex.Tests/NuStreamDocs.Arithmatex.Tests.csproj" />
+    <Project Path="tests/NuStreamDocs.Bibliography.Tests/NuStreamDocs.Bibliography.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Emoji.Tests/NuStreamDocs.Emoji.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Keys.Tests/NuStreamDocs.Keys.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.MagicLink.Tests/NuStreamDocs.MagicLink.Tests.csproj" />
