@@ -225,6 +225,30 @@ These rules apply to **production code** (everything under `src/` that isn't a t
 
 The order of preference is: **for-loop over array → for-loop over `List<T>` → `foreach` over indexable → `foreach` over `IEnumerable<T>` (last resort)**. If a hot path can't be expressed with the top option, leave a one-line comment explaining why.
 
+## Commit messages — Conventional Commits 1.0.0
+
+Use the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) shape on every commit.
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footers>
+```
+
+- **Type** (required): `feat` | `fix` | `perf` | `refactor` | `docs` | `test` | `build` | `ci` | `chore` | `revert`.
+- **Scope** (optional): the affected assembly or feature, lowercase, **no** `NuStreamDocs.` prefix. Examples: `nav`, `theme.material`, `bibliography`, `icons.materialdesign`, `markdown-extensions`, `cli`, `serve`, `build`. Omit when the change spans many assemblies in roughly equal measure.
+- **Subject**: imperative, lowercase, no trailing period, ~70 chars max — what changed and why it matters in one line.
+- **Body**: wrap at ~80 chars; explain the *why* (constraints, alternatives, follow-ups); include benchmark numbers for `perf` commits.
+- **Breaking changes**: append `!` after the type (`feat(nav)!:`) and add a `BREAKING CHANGE:` footer with the migration note.
+- **Issue links**: `Closes #N` / `Refs #N` in footers.
+- **No `Co-Authored-By` trailer** in this repo (separate rule, also still applies).
+
+Pick the type from what the commit *changes*, not what triggered it. Reorganising code that ships no behaviour change is `refactor`, even when motivated by a perf review. Adding a benchmark is `test`. A perf win the diff actually delivers is `perf`. `chore` is the catch-all only when nothing else fits.
+
+The full type table + worked examples (including the `perf` shape with benchmark numbers in the body) are in [CONTRIBUTING.md](CONTRIBUTING.md#commit-style).
+
 ## Versioning
 
 `MinVer` derives the version from the most recent `v*` git tag. Untagged commits build as `0.{nextMinor}.0-alpha.0.{height}+sha` (auto-increment minor). Releases run via the `Release` workflow (`workflow_dispatch`) — pick `major`/`minor`/`patch`, the workflow runs `minver --auto-increment $level`, creates the `v$VERSION` tag, builds, packs, signs, pushes to NuGet, and creates the GitHub Release.

@@ -300,6 +300,15 @@ public static class BuildPipeline
                 continue;
             }
 
+            // Vectorised marker probe — preprocessors override NeedsRewrite to do an IndexOf
+            // for their distinctive bytes. When no markers exist anywhere in the source we
+            // skip both the rewriter and the buffer swap, leaving `current` pointing at the
+            // previous pass's output.
+            if (!pre.NeedsRewrite(current.Span))
+            {
+                continue;
+            }
+
             front.Writer.ResetWrittenCount();
             pre.Preprocess(current.Span, front.Writer, relativePath);
             current = front.Writer.WrittenMemory;

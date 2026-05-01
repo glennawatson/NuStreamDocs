@@ -35,6 +35,18 @@ namespace NuStreamDocs.Plugins;
 /// </remarks>
 public interface IMarkdownPreprocessor
 {
+    /// <summary>Returns true when <paramref name="source"/> may contain markers this preprocessor recognises.</summary>
+    /// <param name="source">UTF-8 markdown bytes about to be passed to <see cref="Preprocess(ReadOnlySpan{byte}, IBufferWriter{byte})"/>.</param>
+    /// <returns>
+    /// True when the preprocessor must run (the default — preserves back-compat). Implementations
+    /// override this with a vectorised <see cref="MemoryExtensions.IndexOf{T}(ReadOnlySpan{T}, T)"/>
+    /// (or <c>SearchValues</c>) probe for their distinctive marker bytes; the pipeline then skips
+    /// the rewriter entirely when no marker is anywhere in the source. On the rxui corpus, where
+    /// most pages use only a subset of the registered preprocessors, this cuts both the per-page
+    /// CPU work and the writer-buffer growth that the line-walk would otherwise drive.
+    /// </returns>
+    bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> with the plugin's substitutions applied.</summary>
     /// <param name="source">UTF-8 markdown bytes (as read from disk for the first preprocessor; the previous preprocessor's output for subsequent ones).</param>
     /// <param name="writer">UTF-8 sink the rewritten markdown is written into.</param>

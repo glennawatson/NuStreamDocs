@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Details;
 
@@ -46,6 +47,10 @@ details.quote,details.cite{border-left-color:#9e9e9e;background:rgba(158,158,158
 
     /// <inheritdoc/>
     protected override byte[] HeadLink => LinkBytes;
+
+    /// <inheritdoc/>
+    public override bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+        MarkdownMarkerProbes.HasDetailsOpener(source);
 
     /// <inheritdoc/>
     public override void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

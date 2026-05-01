@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 
@@ -45,6 +46,10 @@ public sealed class AdmonitionPlugin : MarkdownAssetPluginBase
 
     /// <inheritdoc/>
     protected override byte[] HeadLink => LinkBytes;
+
+    /// <inheritdoc/>
+    public override bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+        MarkdownMarkerProbes.HasAdmonitionOpener(source);
 
     /// <inheritdoc/>
     public override void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

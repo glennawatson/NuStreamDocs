@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.MdInHtml;
@@ -25,6 +26,10 @@ public sealed class MdInHtmlPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
     public override string Name => "md_in_html";
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+        MarkdownMarkerProbes.HasMdInHtmlAttribute(source);
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

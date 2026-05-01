@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.InlineHilite;
@@ -24,6 +25,10 @@ public sealed class InlineHilitePlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
     public override string Name => "inlinehilite";
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+        MarkdownMarkerProbes.HasInlineHiliteFence(source);
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

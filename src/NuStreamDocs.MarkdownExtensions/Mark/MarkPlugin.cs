@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Mark;
@@ -17,6 +18,10 @@ public sealed class MarkPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
     public override string Name => "mark";
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+        MarkdownMarkerProbes.HasMarkSpan(source);
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

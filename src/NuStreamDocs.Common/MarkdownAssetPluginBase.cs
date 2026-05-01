@@ -35,5 +35,8 @@ public abstract class MarkdownAssetPluginBase : DocPluginBase, IMarkdownPreproce
     }
 
     /// <inheritdoc/>
+    public virtual bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+    /// <inheritdoc/>
     public abstract void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer);
 }

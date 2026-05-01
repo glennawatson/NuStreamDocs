@@ -427,12 +427,98 @@ suppress it without a documented Justification.
 
 ## Commit style
 
-- Subject line under ~70 characters, imperative mood.
-- Body explains *why* the change is needed, not what each line does
-  (the diff already shows that). Describe constraints, alternatives
-  considered, follow-ups.
-- Reference task numbers from the project's issue tracker when
-  applicable.
+We follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+so the `git log` is mechanically scannable and tools (release-notes
+generators, bots) can group changes by intent.
+
+### Format
+
+```
+<type>(<optional scope>): <subject>
+
+<body>
+
+<footers>
+```
+
+### Types
+
+| Type | When to use |
+|---|---|
+| `feat` | A new user-visible feature (a new plugin, a new builder method, etc.). |
+| `fix` | A bug fix. |
+| `perf` | A change that improves performance — typically backed by a benchmark number in the body. |
+| `refactor` | An internal restructure that doesn't change behaviour. |
+| `docs` | README / CONTRIBUTING / xmldoc / inline-comment changes. |
+| `test` | Adding or fixing tests, with no production-code change. |
+| `build` | Changes to the build system, MSBuild props, NuGet packaging, embedded resources. |
+| `ci` | Changes to GitHub Actions / Dependabot / SonarCloud config. |
+| `chore` | Anything that doesn't fit above (lockfile bumps, repo housekeeping). |
+| `revert` | Reverting an earlier commit. |
+
+### Scope
+
+Scope is the affected assembly or feature, lowercase, no `NuStreamDocs.`
+prefix. Examples: `nav`, `theme.material`, `bibliography`,
+`icons.materialdesign`, `markdown-extensions`, `cli`, `serve`. Use
+`build` (no scope) for cross-cutting build infra. Omit the scope when
+the change spans many assemblies in roughly equal measure.
+
+### Subject
+
+- ~70 characters max, imperative mood (`add`, `fix`, `cut`), lowercase
+  initial letter.
+- Don't end with a period.
+- A single-sentence summary of *what changed and why it matters*.
+
+### Body
+
+- Explains the *why*, not the *what* (the diff shows the what).
+- Wraps at ~80 chars.
+- For `perf` commits, include the benchmark numbers (before / after,
+  scenario, allocation delta) so reviewers and the future-you can
+  trust the win is real.
+- Describe constraints, alternatives considered, follow-ups.
+
+### Footers
+
+- `BREAKING CHANGE: <text>` (or `!` after the type — e.g. `feat(nav)!:`)
+  for any change that alters a public API.
+- Reference task numbers from the project's issue tracker
+  (`Closes #123`, `Refs #456`).
+
+### Examples
+
+```
+feat(bibliography): add AGLC4 citation style + pandoc marker resolver
+
+Resolves [@key] / [@key, p 23] / [@a; @b] markers through a fluent
+BibliographyDatabase or a CSL-JSON loader. Emits one numbered footnote
+per citation plus a per-page `## Bibliography` section.
+
+Closes #142
+```
+
+```
+perf(nav): cut WithNav rxui-corpus alloc 229 MB → 74 MB (-68%)
+
+Folds Path.GetRelativePath + Replace('\\', '/') into one string.Create
+and skips the Microsoft.Extensions.FileSystemGlobbing matcher when no
+glob filters were configured (the common case). Verified on the rxui
+corpus benchmark: 544 ms → 390 ms.
+
+Refs #210
+```
+
+```
+refactor(markdown-extensions): centralise marker probes in
+NuStreamDocs.Markdown.Common.MarkdownMarkerProbes
+
+Was: each plugin had its own IndexOf("..."u8) NeedsRewrite override.
+Now: shared helpers per marker family. Avoids the marker bytes
+duplicating across plugins and gives one place to update if a syntax
+spelling changes upstream.
+```
 
 ## Tests and benchmarks
 
