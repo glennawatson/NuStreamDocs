@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Macros</PackageId>
+    <Description>Mustache-style variable substitution for NuStreamDocs markdown. Pre-render preprocessor that walks UTF-8 source, skips fenced + inline code regions, and replaces `{{ name }}` markers with values from a host-supplied variables dictionary. Closes the mkdocs-macros gap; AOT-clean (byte-level scanner, no reflection).</Description>
+    <RootNamespace>NuStreamDocs.Macros</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Macros.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>

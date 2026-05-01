@@ -187,6 +187,12 @@ Every plugin ships in its own NuGet so you only pay for what you use.
 | `NuStreamDocs.Search` | `.UseSearch()` | Build-time search index. Pagefind-compatible by default; Lunr-compatible alt. |
 | `NuStreamDocs.MarkdownExtensions` | `.UseCommonMarkdownExtensions()` | Admonitions, content tabs, collapsible details, check-lists, mark spans, footnotes, definition lists. |
 
+### Authoring helpers
+
+| Package | Builder | What |
+|---|---|---|
+| `NuStreamDocs.Macros` | `.UseMacros()` | Variable substitution. `{{ name }}` markers in markdown resolve through a host-supplied `Dictionary<string, string>`. Skips fenced + inline code regions. Closes the mkdocs-macros gap (variable substitution slice). |
+
 ### Markdown syntax extensions (à la carte)
 
 Each is a separate assembly so you only pull what you use:
@@ -449,6 +455,7 @@ options-customiser+logger).
 | **`NuStreamDocs.Xrefs`** | `.UseXrefs()` | DocFX-style xrefmap. Emits `xrefmap.json` at finalise; optionally consumes external xrefmaps at configure. Resolves cross-site UIDs via Autorefs. |
 | **`NuStreamDocs.SuperFences`** | `.UseSuperFences()` | Custom-fence dispatcher. Auto-discovers `ICustomFenceHandler` plugins and rewrites `<pre><code class="language-X">` blocks claimed by a registered handler. |
 | **`NuStreamDocs.Snippets`** | `.UseSnippets()` | pymdownx.snippets — `--8<-- "file"` includes spliced inline at preprocess time. |
+| **`NuStreamDocs.Macros`** | `.UseMacros()` | mkdocs-macros-equivalent variable substitution. `{{ name }}` markers resolve through a host-supplied dictionary; fenced and inline code regions pass through untouched. Optional HTML escaping; optional `Warning`-level logging for unresolved names. |
 | **`NuStreamDocs.Abbr`** | `.UseAbbreviations()` | Markdown Extra abbreviations — strips `*[token]: definition` lines and wraps occurrences in `<abbr>`. |
 | **`NuStreamDocs.Arithmatex`** | `.UseArithmatex()` | pymdownx.arithmatex (generic mode) — wraps `$x$` / `$$x$$` for client-side renderers. |
 | **`NuStreamDocs.Emoji`** | `.UseEmoji()` | pymdownx.emoji default — `:name:` shortcodes become twemoji spans backed by a built-in popular-emoji index. |
