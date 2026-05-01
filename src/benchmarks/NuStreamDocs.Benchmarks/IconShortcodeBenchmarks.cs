@@ -23,6 +23,9 @@ public class IconShortcodeBenchmarks
     /// <summary>Number of <c>:material-foo:</c> shortcodes stamped into each fixture.</summary>
     private const int Repetitions = 100;
 
+    /// <summary>Capacity for the resolver-direct sink — sized to fit one wrapped MDI SVG (wrapper ~80 B + path ~250 B).</summary>
+    private const int ResolverSinkCapacity = 512;
+
     /// <summary>Pre-built fixture mixing MDI hits + ligature fallbacks + Font Awesome shortcodes.</summary>
     private byte[] _mixedSource = [];
 
@@ -41,6 +44,9 @@ public class IconShortcodeBenchmarks
     /// <summary>Byte fixture for the resolver-only benchmark — guaranteed miss.</summary>
     private byte[] _resolverMiss = [];
 
+    /// <summary>Pre-allocated sink used by the resolver-direct benchmarks; reset between iterations.</summary>
+    private ArrayBufferWriter<byte> _resolverSink = null!;
+
     /// <summary>Allocates fixtures + plugins.</summary>
     [GlobalSetup]
     public void Setup()
@@ -53,19 +59,26 @@ public class IconShortcodeBenchmarks
         _mdiResolver = new();
         _withMdi = new(_mdiResolver);
         _ligatureOnly = new();
+        _resolverSink = new(ResolverSinkCapacity);
     }
 
-    /// <summary>MDI resolver hot-path — direct <c>TryResolve</c> for a known hit.</summary>
-    /// <returns>SVG length on hit; 0 on miss.</returns>
+    /// <summary>MDI resolver hot-path — direct <c>TryResolve</c> for a known hit, writes wrapped SVG to a pre-sized sink.</summary>
+    /// <returns>Bytes written on hit; 0 on miss.</returns>
     [Benchmark]
-    public int MdiResolverDirect() =>
-        _mdiResolver.TryResolve(_resolverHit, out var svg) ? svg.Length : 0;
+    public int MdiResolverDirect()
+    {
+        _resolverSink.ResetWrittenCount();
+        return _mdiResolver.TryResolve(_resolverHit, _resolverSink) ? _resolverSink.WrittenCount : 0;
+    }
 
     /// <summary>MDI resolver miss-path — <c>TryResolve</c> with a name that walks the full per-length bucket and falls through.</summary>
     /// <returns>0 (always misses).</returns>
     [Benchmark]
-    public int MdiResolverMiss() =>
-        _mdiResolver.TryResolve(_resolverMiss, out _) ? 1 : 0;
+    public int MdiResolverMiss()
+    {
+        _resolverSink.ResetWrittenCount();
+        return _mdiResolver.TryResolve(_resolverMiss, _resolverSink) ? 1 : 0;
+    }
 
     /// <summary>Icon shortcode rewriter end-to-end with the MDI resolver — inlines SVGs for known names, falls back for the rest.</summary>
     /// <returns>Bytes written.</returns>

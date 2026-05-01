@@ -22,6 +22,9 @@ public static class IconShortcodeRewriter
     /// <summary>Length of the <c>fontawesome-</c> prefix.</summary>
     private const int FontAwesomePrefixLength = 12;
 
+    /// <summary>Bytes that interrupt the bulk-copy fast path — backtick (inline code), colon (shortcode), newline (potential fence start). Cached so the IndexOfAny is vectorised.</summary>
+    private static readonly SearchValues<byte> InterestingBytes = SearchValues.Create("`:\n"u8);
+
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>, emitting <paramref name="materialIconClass"/> for Material shortcodes.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -40,11 +43,28 @@ public static class IconShortcodeRewriter
         var i = 0;
         while (i < source.Length)
         {
+            // Check fence-at-line-start first — fences begin on bytes (' ' / '`' / '~') we'd otherwise
+            // scan past, and they can land just past a newline we just bulk-copied through.
             if (MarkdownCodeScanner.AtLineStart(source, i) && MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
             {
                 writer.Write(source[i..fenceEnd]);
                 i = fenceEnd;
                 continue;
+            }
+
+            // Bulk-copy every byte up to the next interesting one. Avoids the per-byte GetSpan(1)
+            // pump that previously dominated the rewriter's per-page cost on prose-heavy pages.
+            var rel = source[i..].IndexOfAny(InterestingBytes);
+            if (rel < 0)
+            {
+                writer.Write(source[i..]);
+                return;
+            }
+
+            if (rel > 0)
+            {
+                writer.Write(source.Slice(i, rel));
+                i += rel;
             }
 
             if (source[i] is (byte)'`')
@@ -61,6 +81,8 @@ public static class IconShortcodeRewriter
                 continue;
             }
 
+            // The interesting byte (newline, or a colon that didn't match a shortcode) wasn't actionable
+            // — copy it through and resume the bulk scan after it.
             var dst = writer.GetSpan(1);
             dst[0] = source[i];
             writer.Advance(1);
@@ -115,9 +137,8 @@ public static class IconShortcodeRewriter
         }
 
         var name = body[MaterialPrefixLength..];
-        if (resolver is not null && resolver.TryResolve(name, out var svg) && svg.Length > 0)
+        if (resolver?.TryResolve(name, writer) == true)
         {
-            writer.Write(svg);
             return true;
         }
 

@@ -11,19 +11,19 @@ namespace NuStreamDocs.Icons.MaterialDesign.Tests;
 /// <summary>End-to-end coverage for the MDI lookup, resolver, and rewriter integration.</summary>
 public class MdiIconLookupTests
 {
-    /// <summary>Builder produces a lookup whose <c>TryGet</c> returns the SVG bytes verbatim.</summary>
+    /// <summary>Builder produces a lookup whose <c>TryGet</c> returns the path-data bytes verbatim.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task BuilderRoundTripsSvg()
+    public async Task BuilderRoundTripsPathData()
     {
         var lookup = new MdiIconLookupBuilder()
-            .Add("rocket-launch", "<svg>R</svg>"u8)
-            .Add("source-branch", "<svg>S</svg>"u8)
+            .Add("rocket-launch", "M1,1H2"u8)
+            .Add("source-branch", "M3,3H4"u8)
             .Build();
 
         await Assert.That(lookup.Count).IsEqualTo(2);
-        await Assert.That(Resolve(lookup, "rocket-launch")).IsEqualTo("<svg>R</svg>");
-        await Assert.That(Resolve(lookup, "source-branch")).IsEqualTo("<svg>S</svg>");
+        await Assert.That(Resolve(lookup, "rocket-launch")).IsEqualTo("M1,1H2");
+        await Assert.That(Resolve(lookup, "source-branch")).IsEqualTo("M3,3H4");
     }
 
     /// <summary>Unknown names miss cleanly.</summary>
@@ -31,7 +31,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task UnknownNameMisses()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "<svg/>"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1H2"u8).Build();
         await Assert.That(Resolve(lookup, "no-such-icon")).IsEqualTo(string.Empty);
     }
 
@@ -40,34 +40,50 @@ public class MdiIconLookupTests
     [Test]
     public async Task LookupIsCaseSensitive()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "<svg/>"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1H2"u8).Build();
         await Assert.That(Resolve(lookup, "Rocket-Launch")).IsEqualTo(string.Empty);
     }
 
-    /// <summary>Resolver implements <see cref="IIconResolver"/> and proxies the lookup.</summary>
+    /// <summary>Resolver wraps the path data in the standard SVG envelope.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task ResolverProxiesLookup()
+    public async Task ResolverWrapsPathDataInSvgEnvelope()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "<svg>R</svg>"u8).Build();
-        IIconResolver resolver = new MdiIconResolver(lookup);
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
+        var resolver = new MdiIconResolver(lookup);
 
-        var foundHit = TryResolveString(resolver, "rocket-launch", out var hitSvg);
-        var foundMiss = TryResolveString(resolver, "missing", out _);
+        var sink = new ArrayBufferWriter<byte>(128);
+        var found = resolver.TryResolve("rocket-launch"u8, sink);
+        var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
-        await Assert.That(foundHit).IsTrue();
-        await Assert.That(hitSvg).IsEqualTo("<svg>R</svg>");
-        await Assert.That(foundMiss).IsFalse();
+        await Assert.That(found).IsTrue();
+        await Assert.That(output).IsEqualTo(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M1,1H2\"/></svg>");
     }
 
-    /// <summary>Rewriter inlines the resolved SVG instead of emitting a font-ligature span.</summary>
+    /// <summary>Resolver returns false (and writes nothing) on a miss.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ResolverWritesNothingOnMiss()
+    {
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
+        var resolver = new MdiIconResolver(lookup);
+
+        var sink = new ArrayBufferWriter<byte>(64);
+        var found = resolver.TryResolve("missing"u8, sink);
+
+        await Assert.That(found).IsFalse();
+        await Assert.That(sink.WrittenCount).IsEqualTo(0);
+    }
+
+    /// <summary>Rewriter inlines the wrapped SVG produced by the resolver.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RewriterInlinesResolvedSvg()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "<svg viewBox=\"0 0 24 24\"/>"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
         var resolver = new MdiIconResolver(lookup);
-        var sink = new ArrayBufferWriter<byte>(64);
+        var sink = new ArrayBufferWriter<byte>(128);
 
         IconShortcodeRewriter.Rewrite(
             "Click :material-rocket-launch: now"u8,
@@ -76,7 +92,8 @@ public class MdiIconLookupTests
             resolver);
 
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(output).IsEqualTo("Click <svg viewBox=\"0 0 24 24\"/> now");
+        await Assert.That(output).IsEqualTo(
+            "Click <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M1,1H2\"/></svg> now");
     }
 
     /// <summary>When the resolver misses, the rewriter falls back to the font-ligature span shape.</summary>
@@ -84,9 +101,9 @@ public class MdiIconLookupTests
     [Test]
     public async Task UnresolvedFallsBackToFontLigature()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "<svg/>"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
         var resolver = new MdiIconResolver(lookup);
-        var sink = new ArrayBufferWriter<byte>(64);
+        var sink = new ArrayBufferWriter<byte>(128);
 
         IconShortcodeRewriter.Rewrite(
             "Use :material-not-in-bundle: here"u8,
@@ -107,7 +124,7 @@ public class MdiIconLookupTests
         // an empty / partial bundle slipping through on regen.
         await Assert.That(MdiIconBundle.Count).IsGreaterThan(6000);
 
-    /// <summary>The icon names rxui's docs use today resolve through the default bundle.</summary>
+    /// <summary>Every icon name rxui's docs use today resolves through the default bundle.</summary>
     /// <param name="iconName">MDI icon name (kebab-case, no <c>material-</c> prefix).</param>
     /// <returns>Async test.</returns>
     [Test]
@@ -121,11 +138,67 @@ public class MdiIconLookupTests
     [Arguments("account-group-outline")]
     [Arguments("weather-night")]
     [Arguments("weather-sunny")]
-    public async Task RxuiUsedIconsResolveInDefaultBundle(string iconName)
+    public Task RxuiUsedIconsResolveInDefaultBundle(string iconName) => AssertIconResolves(iconName);
+
+    /// <summary>Common docs-site MDI staples resolve through the default bundle — guards against a regen accidentally dropping one.</summary>
+    /// <param name="iconName">MDI icon name (kebab-case, no <c>material-</c> prefix).</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("account")]
+    [Arguments("account-circle")]
+    [Arguments("login")]
+    [Arguments("logout")]
+    [Arguments("alert")]
+    [Arguments("alert-circle")]
+    [Arguments("check")]
+    [Arguments("check-circle")]
+    [Arguments("close")]
+    [Arguments("close-circle")]
+    [Arguments("information")]
+    [Arguments("information-outline")]
+    [Arguments("help-circle")]
+    [Arguments("arrow-up")]
+    [Arguments("arrow-down")]
+    [Arguments("arrow-left")]
+    [Arguments("arrow-right")]
+    [Arguments("chevron-up")]
+    [Arguments("chevron-down")]
+    [Arguments("chevron-left")]
+    [Arguments("chevron-right")]
+    [Arguments("menu")]
+    [Arguments("home")]
+    [Arguments("cog")]
+    [Arguments("magnify")]
+    [Arguments("dots-vertical")]
+    [Arguments("pencil")]
+    [Arguments("delete")]
+    [Arguments("download")]
+    [Arguments("upload")]
+    [Arguments("share-variant")]
+    [Arguments("content-copy")]
+    [Arguments("folder")]
+    [Arguments("folder-open")]
+    [Arguments("file")]
+    [Arguments("file-document")]
+    [Arguments("calendar")]
+    [Arguments("clock")]
+    [Arguments("github")]
+    [Arguments("code-tags")]
+    [Arguments("bug")]
+    [Arguments("lightbulb")]
+    [Arguments("lock")]
+    [Arguments("lock-open")]
+    [Arguments("key")]
+    public Task CommonIconsResolveInDefaultBundle(string iconName) => AssertIconResolves(iconName);
+
+    /// <summary>Asserts <paramref name="iconName"/> resolves to a non-empty path-data span in the default bundle.</summary>
+    /// <param name="iconName">UTF-8 icon name.</param>
+    /// <returns>Async test.</returns>
+    private static async Task AssertIconResolves(string iconName)
     {
         var bytes = Encoding.UTF8.GetBytes(iconName);
-        var found = MdiIconBundle.TryGet(bytes, out var svg);
-        var nonEmpty = svg.Length > 0;
+        var found = MdiIconBundle.TryGet(bytes, out var path);
+        var nonEmpty = path.Length > 0;
 
         await Assert.That(found).IsTrue();
         await Assert.That(nonEmpty).IsTrue();
@@ -134,28 +207,10 @@ public class MdiIconLookupTests
     /// <summary>Resolves <paramref name="name"/> against <paramref name="lookup"/> and decodes the result before any await.</summary>
     /// <param name="lookup">Lookup under test.</param>
     /// <param name="name">UTF-8 icon name.</param>
-    /// <returns>Decoded SVG (empty when missed).</returns>
+    /// <returns>Decoded path data (empty when missed).</returns>
     private static string Resolve(MdiIconLookup lookup, string name)
     {
         var bytes = Encoding.UTF8.GetBytes(name);
-        return lookup.TryGet(bytes, out var svg) ? Encoding.UTF8.GetString(svg) : string.Empty;
-    }
-
-    /// <summary>Routes a name through <paramref name="resolver"/> and returns the decoded SVG, materialising before the caller awaits.</summary>
-    /// <param name="resolver">Resolver under test.</param>
-    /// <param name="name">UTF-8 icon name.</param>
-    /// <param name="svg">Decoded SVG on hit.</param>
-    /// <returns>Hit flag.</returns>
-    private static bool TryResolveString(IIconResolver resolver, string name, out string svg)
-    {
-        var bytes = Encoding.UTF8.GetBytes(name);
-        if (resolver.TryResolve(bytes, out var resolved))
-        {
-            svg = Encoding.UTF8.GetString(resolved);
-            return true;
-        }
-
-        svg = string.Empty;
-        return false;
+        return lookup.TryGet(bytes, out var path) ? Encoding.UTF8.GetString(path) : string.Empty;
     }
 }

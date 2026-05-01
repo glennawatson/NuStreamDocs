@@ -134,23 +134,59 @@ public static class Program
         throw new InvalidOperationException($"git clone exited {process.ExitCode}: {stderr}");
     }
 
-    /// <summary>Reads every <c>.svg</c> under <paramref name="svgRoot"/> into <c>(name, bytes)</c> pairs sorted by name.</summary>
+    /// <summary>Reads every <c>.svg</c> under <paramref name="svgRoot"/>, strips the SVG wrapper, and returns <c>(name, path-bytes)</c> pairs sorted by name.</summary>
     /// <param name="svgRoot">Path to the cloned <c>svg/</c> directory.</param>
-    /// <returns>Per-icon entries in <see cref="StringComparer.Ordinal"/> order so generated output is byte-stable.</returns>
+    /// <returns>Per-icon path-data entries in <see cref="StringComparer.Ordinal"/> order so generated output is byte-stable.</returns>
     private static async Task<List<(string Name, byte[] Svg)>> CollectEntriesAsync(string svgRoot)
     {
         var paths = Directory.GetFiles(svgRoot, "*.svg", SearchOption.TopDirectoryOnly);
         Array.Sort(paths, StringComparer.Ordinal);
         var entries = new List<(string Name, byte[] Svg)>(paths.Length);
+        var skipped = 0;
         for (var i = 0; i < paths.Length; i++)
         {
             var path = paths[i];
             var name = Path.GetFileNameWithoutExtension(path);
             var svg = await File.ReadAllBytesAsync(path).ConfigureAwait(false);
-            entries.Add((name, svg));
+            var pathData = ExtractPathData(svg);
+            if (pathData is null)
+            {
+                skipped++;
+                await Console.Error.WriteLineAsync($"  warn: skipped {name} — could not extract <path d=\"…\"/>").ConfigureAwait(false);
+                continue;
+            }
+
+            entries.Add((name, pathData));
+        }
+
+        if (skipped > 0)
+        {
+            await Console.Error.WriteLineAsync($"  warn: {skipped} icon(s) skipped due to non-standard SVG shape").ConfigureAwait(false);
         }
 
         return entries;
+    }
+
+    /// <summary>Extracts the value of the <c>&lt;path d="…"/&gt;</c> attribute from a single-path MDI SVG.</summary>
+    /// <param name="svg">Raw SVG file bytes.</param>
+    /// <returns>Path-data bytes on success, or <c>null</c> when the SVG doesn't have the expected single-path shape.</returns>
+    private static byte[]? ExtractPathData(byte[] svg)
+    {
+        var span = svg.AsSpan();
+        var pathDataStart = span.IndexOf("<path d=\""u8);
+        if (pathDataStart < 0)
+        {
+            return null;
+        }
+
+        var afterOpen = pathDataStart + "<path d=\"".Length;
+        var rel = span[afterOpen..].IndexOf((byte)'"');
+        if (rel < 0)
+        {
+            return null;
+        }
+
+        return span.Slice(afterOpen, rel).ToArray();
     }
 
     /// <summary>Writes the generated catalogue file (<c>MdiIconData.g.cs</c>) for <paramref name="entries"/>.</summary>
