@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
-
 namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>JavaScript lexer.</summary>
@@ -19,8 +17,5 @@ public static class JavaScriptLexer
     /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = new(
         "javascript",
-        new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
-        {
-            [Lexer.RootState] = TypeScriptLexer.BuildRules("javascript"),
-        }.ToFrozenDictionary(StringComparer.Ordinal));
+        LanguageRuleBuilder.BuildSingleState(TypeScriptLexer.BuildRules("javascript")));
 }

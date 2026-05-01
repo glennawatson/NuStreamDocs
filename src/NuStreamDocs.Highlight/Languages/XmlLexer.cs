@@ -29,23 +29,21 @@ public static partial class XmlLexer
     {
         var states = new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
         {
-            [Lexer.RootState] =
-            [
+            [Lexer.RootState] = MarkupRootRules.Build(
+                new(TextRegex(), TokenClass.Text, NextState: null),
                 new(LanguageCommon.WhitespaceWithNewlines(), TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst },
                 new(CommentRegex(), TokenClass.CommentMulti, NextState: null) { FirstChars = LanguageCommon.AngleOpenFirst },
                 new(CDataRegex(), TokenClass.CommentSpecial, NextState: null) { FirstChars = LanguageCommon.AngleOpenFirst },
                 new(DoctypeRegex(), TokenClass.CommentPreproc, NextState: null) { FirstChars = LanguageCommon.AngleOpenFirst },
-                new(ProcessingInstructionRegex(), TokenClass.CommentPreproc, NextState: null) { FirstChars = LanguageCommon.AngleOpenFirst },
-                new(LanguageCommon.EntityReference(), TokenClass.StringEscape, NextState: null) { FirstChars = LanguageCommon.EntityFirst },
-                new(LanguageCommon.AngleOpen(), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst },
-                new(LanguageCommon.AngleOpenSlash(), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst },
-                new(TextRegex(), TokenClass.Text, NextState: null),
-            ],
+                new(ProcessingInstructionRegex(), TokenClass.CommentPreproc, NextState: null) { FirstChars = LanguageCommon.AngleOpenFirst }),
 
             ["tag"] = MarkupTagRules.Build(),
         }.ToFrozenDictionary(StringComparer.Ordinal);
         return new("xml", states);
     }
+
+    [GeneratedRegex(@"\G[^<&]+", RegexOptions.Compiled)]
+    private static partial Regex TextRegex();
 
     [GeneratedRegex(@"\G<!--[\s\S]*?-->", RegexOptions.Compiled)]
     private static partial Regex CommentRegex();
@@ -58,7 +56,4 @@ public static partial class XmlLexer
 
     [GeneratedRegex(@"\G<\?[\s\S]*?\?>", RegexOptions.Compiled)]
     private static partial Regex ProcessingInstructionRegex();
-
-    [GeneratedRegex(@"\G[^<&]+", RegexOptions.Compiled)]
-    private static partial Regex TextRegex();
 }

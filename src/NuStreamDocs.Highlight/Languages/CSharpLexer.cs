@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
-
 namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>C# lexer.</summary>
@@ -18,8 +16,5 @@ public static class CSharpLexer
     /// <summary>Gets the singleton <see cref="Lexer"/> for C#.</summary>
     public static Lexer Instance { get; } = new(
         "csharp",
-        new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
-        {
-            [Lexer.RootState] = CSharpRules.Build(),
-        }.ToFrozenDictionary(StringComparer.Ordinal));
+        LanguageRuleBuilder.BuildSingleState(CSharpRules.Build()));
 }

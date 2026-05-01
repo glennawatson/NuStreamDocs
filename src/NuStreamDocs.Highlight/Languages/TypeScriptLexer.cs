@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 
 namespace NuStreamDocs.Highlight.Languages;
@@ -66,36 +65,34 @@ public static partial class TypeScriptLexer
     internal static LexerRule[] BuildRules(string languageHint)
     {
         _ = languageHint;
-        return
-        [
-            new(LanguageCommon.WhitespaceWithNewlines(), TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst },
-            new(LanguageCommon.LineComment(), TokenClass.CommentSingle, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
-            new(LanguageCommon.BlockComment(), TokenClass.CommentMulti, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
-            new(TemplateStringRegex(), TokenClass.StringDouble, NextState: null) { FirstChars = BacktickFirst },
-            new(LanguageCommon.DoubleQuotedStringWithEscapes(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
-            new(SingleStringRegex(), TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
-            new(HexNumberRegex(), TokenClass.NumberHex, NextState: null) { FirstChars = LanguageCommon.HexFirst },
-            new(FloatNumberRegex(), TokenClass.NumberFloat, NextState: null) { FirstChars = LanguageCommon.DigitFirst },
-            new(IntNumberRegex(), TokenClass.NumberInteger, NextState: null) { FirstChars = LanguageCommon.IntegerFirst },
-            new(KeywordConstantRegex(), TokenClass.KeywordConstant, NextState: null) { FirstChars = KeywordConstantFirst },
-            new(KeywordTypeRegex(), TokenClass.KeywordType, NextState: null) { FirstChars = KeywordTypeFirst },
-            new(KeywordDeclarationRegex(), TokenClass.KeywordDeclaration, NextState: null) { FirstChars = KeywordDeclarationFirst },
-            new(KeywordRegex(), TokenClass.Keyword, NextState: null) { FirstChars = KeywordFirst },
-            new(IdentifierRegex(), TokenClass.Name, NextState: null) { FirstChars = IdentifierFirst },
-            new(OperatorRegex(), TokenClass.Operator, NextState: null) { FirstChars = OperatorFirst },
-            new(LanguageCommon.CCurlyPunctuation(), TokenClass.Punctuation, NextState: null) { FirstChars = LanguageCommon.CCurlyPunctuationFirst },
-        ];
+        return LanguageRuleBuilder.BuildCStyleRules(
+            new(
+                new(LanguageCommon.WhitespaceWithNewlines(), TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst },
+                null,
+                new(LanguageCommon.LineComment(), TokenClass.CommentSingle, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
+                new(LanguageCommon.BlockComment(), TokenClass.CommentMulti, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
+                null,
+                new(TemplateStringRegex(), TokenClass.StringDouble, NextState: null) { FirstChars = BacktickFirst },
+                new(LanguageCommon.DoubleQuotedStringWithEscapes(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
+                new(SingleStringRegex(), TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
+                null,
+                new(HexNumberRegex(), TokenClass.NumberHex, NextState: null) { FirstChars = LanguageCommon.HexFirst },
+                new(FloatNumberRegex(), TokenClass.NumberFloat, NextState: null) { FirstChars = LanguageCommon.DigitFirst },
+                new(IntNumberRegex(), TokenClass.NumberInteger, NextState: null) { FirstChars = LanguageCommon.IntegerFirst },
+                new(KeywordConstantRegex(), TokenClass.KeywordConstant, NextState: null) { FirstChars = KeywordConstantFirst },
+                new(KeywordTypeRegex(), TokenClass.KeywordType, NextState: null) { FirstChars = KeywordTypeFirst },
+                new(KeywordDeclarationRegex(), TokenClass.KeywordDeclaration, NextState: null) { FirstChars = KeywordDeclarationFirst },
+                new(KeywordRegex(), TokenClass.Keyword, NextState: null) { FirstChars = KeywordFirst },
+                new(IdentifierRegex(), TokenClass.Name, NextState: null) { FirstChars = IdentifierFirst },
+                new(OperatorRegex(), TokenClass.Operator, NextState: null) { FirstChars = OperatorFirst },
+                new(LanguageCommon.CCurlyPunctuation(), TokenClass.Punctuation, NextState: null) { FirstChars = LanguageCommon.CCurlyPunctuationFirst }));
     }
 
     /// <summary>Builds the lexer.</summary>
     /// <returns>Configured lexer.</returns>
     private static Lexer Build()
     {
-        var states = new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
-        {
-            [Lexer.RootState] = BuildRules("typescript"),
-        }.ToFrozenDictionary(StringComparer.Ordinal);
-        return new("typescript", states);
+        return new("typescript", LanguageRuleBuilder.BuildSingleState(BuildRules("typescript")));
     }
 
     [GeneratedRegex(@"\G`(?:\\.|[^`\\])*`", RegexOptions.Compiled)]

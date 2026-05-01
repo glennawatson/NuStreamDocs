@@ -24,44 +24,7 @@ internal static class InlinePairedAttrListBytes
     private readonly record struct Strategy : IAttrListRewriteStrategy<Strategy>
     {
         /// <inheritdoc/>
-        public static bool TryRewriteAt(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
-        {
-            if (!AttrListTagMatcher.TryMatchInlinePairedTag(html, lt + 1, out var nameLen))
-            {
-                advanceTo = lt + 1;
-                return false;
-            }
-
-            var nameEnd = lt + 1 + nameLen;
-            var openGt = AttrListTagScanner.FindFirst(html, nameEnd, (byte)'>');
-            if (openGt < 0)
-            {
-                advanceTo = lt + 1;
-                return false;
-            }
-
-            var innerStart = openGt + 1;
-            var closeStart = AttrListTagScanner.FindMatchingClose(html, innerStart, html.Slice(lt + 1, nameLen));
-            if (closeStart < 0)
-            {
-                advanceTo = innerStart;
-                return false;
-            }
-
-            var afterClose = closeStart + nameLen + AttrListTagScanner.CloseTagOverhead;
-            if (!AttrListMarker.TryMatchMarker(html, afterClose, out var contentStart, out var contentEnd, out var markerEnd))
-            {
-                advanceTo = afterClose;
-                return false;
-            }
-
-            var merged = AttrListMarker.ParseAndMerge(html, nameEnd, openGt, contentStart, contentEnd);
-            sink.Write(html[lastEmit..nameEnd]);
-            AttrListMarker.WriteString(merged, sink);
-            sink.Write(html[openGt..afterClose]);
-            lastEmit = markerEnd;
-            advanceTo = markerEnd;
-            return true;
-        }
+        public static bool TryRewriteAt(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo) =>
+            AttrListElementRewriter.TryRewriteInlinePaired(html, lt, sink, ref lastEmit, out advanceTo);
     }
 }

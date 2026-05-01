@@ -321,19 +321,7 @@ internal static class SmartSymbolsRewriter
     private static bool TryCareOf(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        if (!AsciiWordBoundary.IsBefore(source, offset))
-        {
-            return false;
-        }
-
-        if (offset + SuffixSecondByteOffset >= source.Length
-            || source[offset + 1] is not (byte)'/'
-            || source[offset + SuffixSecondByteOffset] is not (byte)'o' and not (byte)'O')
-        {
-            return false;
-        }
-
-        if (!AsciiWordBoundary.IsAfter(source, offset + TripleTokenLength))
+        if (!AsciiWordBoundary.TryMatchBoundedIgnoreAsciiCase(source, offset, "c/o"u8))
         {
             return false;
         }
@@ -352,18 +340,10 @@ internal static class SmartSymbolsRewriter
     private static bool TryFractionStartingOne(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        if (!AsciiWordBoundary.IsBefore(source, offset)
-            || offset + SuffixSecondByteOffset >= source.Length
-            || source[offset + 1] is not (byte)'/'
-            || !AsciiWordBoundary.IsAfter(source, offset + TripleTokenLength))
+        var glyph = source[offset..] switch
         {
-            return false;
-        }
-
-        var glyph = source[offset + SuffixSecondByteOffset] switch
-        {
-            (byte)'2' => OneHalf,
-            (byte)'4' => OneQuarter,
+            _ when AsciiWordBoundary.TryMatchBounded(source, offset, "1/2"u8) => OneHalf,
+            _ when AsciiWordBoundary.TryMatchBounded(source, offset, "1/4"u8) => OneQuarter,
             _ => default,
         };
 
@@ -386,11 +366,7 @@ internal static class SmartSymbolsRewriter
     private static bool TryThreeQuarters(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        if (!AsciiWordBoundary.IsBefore(source, offset)
-            || offset + SuffixSecondByteOffset >= source.Length
-            || source[offset + 1] is not (byte)'/'
-            || source[offset + SuffixSecondByteOffset] is not (byte)'4'
-            || !AsciiWordBoundary.IsAfter(source, offset + TripleTokenLength))
+        if (!AsciiWordBoundary.TryMatchBounded(source, offset, "3/4"u8))
         {
             return false;
         }

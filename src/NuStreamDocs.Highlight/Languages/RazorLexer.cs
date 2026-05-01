@@ -43,20 +43,14 @@ public static partial class RazorLexer
         new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
         {
             // Markup state — HTML + Razor entry tokens.
-            [Lexer.RootState] =
-            [
-                new(LanguageCommon.WhitespaceWithNewlines(), TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst },
+            [Lexer.RootState] = MarkupRootRules.Build(
+                new(TextRegex(), TokenClass.Text, NextState: null),
                 new(CommentRegex(), TokenClass.CommentMulti, NextState: null) { FirstChars = LanguageCommon.AtFirst },
                 new(EscapedAtRegex(), TokenClass.Text, NextState: null) { FirstChars = LanguageCommon.AtFirst },
                 new(BlockDirectiveRegex(), TokenClass.KeywordDeclaration, CSharpStateName) { FirstChars = LanguageCommon.AtFirst },
                 new(ControlDirectiveRegex(), TokenClass.Keyword, CSharpStateName) { FirstChars = LanguageCommon.AtFirst },
                 new(BraceBlockOpenRegex(), TokenClass.Punctuation, CSharpStateName) { FirstChars = LanguageCommon.AtFirst },
-                new(InlineExpressionRegex(), TokenClass.Name, NextState: null) { FirstChars = LanguageCommon.AtFirst },
-                new(LanguageCommon.EntityReference(), TokenClass.StringEscape, NextState: null) { FirstChars = LanguageCommon.EntityFirst },
-                new(LanguageCommon.AngleOpen(), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst },
-                new(LanguageCommon.AngleOpenSlash(), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst },
-                new(TextRegex(), TokenClass.Text, NextState: null),
-            ],
+                new(InlineExpressionRegex(), TokenClass.Name, NextState: null) { FirstChars = LanguageCommon.AtFirst }),
 
             ["tag"] = MarkupTagRules.Build(),
 

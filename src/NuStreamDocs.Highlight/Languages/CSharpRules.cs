@@ -60,28 +60,29 @@ internal static partial class CSharpRules
     /// <summary>Builds the C# rule list. Order matters — doc comments must precede line comments.</summary>
     /// <returns>Ordered rule list classifying C# tokens with Pygments-shape CSS classes.</returns>
     public static LexerRule[] Build() =>
-    [
-        new(WhitespaceRegex(), TokenClass.Whitespace, NextState: null) { FirstChars = WhitespaceFirst },
+        LanguageRuleBuilder.BuildCStyleRules(
+            new(
+                new(WhitespaceRegex(), TokenClass.Whitespace, NextState: null) { FirstChars = WhitespaceFirst },
 
-        // /// must precede // so the doc-comment longer prefix wins.
-        new(DocCommentRegex(), TokenClass.CommentSpecial, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
-        new(LanguageCommon.LineComment(), TokenClass.CommentSingle, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
-        new(LanguageCommon.BlockComment(), TokenClass.CommentMulti, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
-        new(PreprocessorRegex(), TokenClass.CommentPreproc, NextState: null) { FirstChars = PreprocessorFirst },
-        new(VerbatimStringRegex(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.AtFirst },
-        new(LanguageCommon.DoubleQuotedStringWithEscapes(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
-        new(CharRegex(), TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
-        new(HexNumberRegex(), TokenClass.NumberHex, NextState: null) { FirstChars = LanguageCommon.HexFirst },
-        new(FloatNumberRegex(), TokenClass.NumberFloat, NextState: null) { FirstChars = LanguageCommon.DigitFirst },
-        new(IntNumberRegex(), TokenClass.NumberInteger, NextState: null) { FirstChars = LanguageCommon.IntegerFirst },
-        new(KeywordConstantRegex(), TokenClass.KeywordConstant, NextState: null) { FirstChars = KeywordConstantFirst },
-        new(KeywordTypeRegex(), TokenClass.KeywordType, NextState: null) { FirstChars = KeywordTypeFirst },
-        new(KeywordDeclarationRegex(), TokenClass.KeywordDeclaration, NextState: null) { FirstChars = KeywordDeclarationFirst },
-        new(KeywordRegex(), TokenClass.Keyword, NextState: null) { FirstChars = KeywordFirst },
-        new(IdentifierRegex(), TokenClass.Name, NextState: null) { FirstChars = IdentifierFirst },
-        new(OperatorRegex(), TokenClass.Operator, NextState: null) { FirstChars = OperatorFirst },
-        new(LanguageCommon.CCurlyPunctuation(), TokenClass.Punctuation, NextState: null) { FirstChars = LanguageCommon.CCurlyPunctuationFirst },
-    ];
+                // /// must precede // so the doc-comment longer prefix wins.
+                new(DocCommentRegex(), TokenClass.CommentSpecial, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
+                new(LanguageCommon.LineComment(), TokenClass.CommentSingle, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
+                new(LanguageCommon.BlockComment(), TokenClass.CommentMulti, NextState: null) { FirstChars = LanguageCommon.SlashFirst },
+                new(PreprocessorRegex(), TokenClass.CommentPreproc, NextState: null) { FirstChars = PreprocessorFirst },
+                new(VerbatimStringRegex(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.AtFirst },
+                new(LanguageCommon.DoubleQuotedStringWithEscapes(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
+                new(CharRegex(), TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
+                null,
+                new(HexNumberRegex(), TokenClass.NumberHex, NextState: null) { FirstChars = LanguageCommon.HexFirst },
+                new(FloatNumberRegex(), TokenClass.NumberFloat, NextState: null) { FirstChars = LanguageCommon.DigitFirst },
+                new(IntNumberRegex(), TokenClass.NumberInteger, NextState: null) { FirstChars = LanguageCommon.IntegerFirst },
+                new(KeywordConstantRegex(), TokenClass.KeywordConstant, NextState: null) { FirstChars = KeywordConstantFirst },
+                new(KeywordTypeRegex(), TokenClass.KeywordType, NextState: null) { FirstChars = KeywordTypeFirst },
+                new(KeywordDeclarationRegex(), TokenClass.KeywordDeclaration, NextState: null) { FirstChars = KeywordDeclarationFirst },
+                new(KeywordRegex(), TokenClass.Keyword, NextState: null) { FirstChars = KeywordFirst },
+                new(IdentifierRegex(), TokenClass.Name, NextState: null) { FirstChars = IdentifierFirst },
+                new(OperatorRegex(), TokenClass.Operator, NextState: null) { FirstChars = OperatorFirst },
+                new(LanguageCommon.CCurlyPunctuation(), TokenClass.Punctuation, NextState: null) { FirstChars = LanguageCommon.CCurlyPunctuationFirst }));
 
     [GeneratedRegex(@"\G[ \t]+", RegexOptions.Compiled)]
     private static partial Regex WhitespaceRegex();

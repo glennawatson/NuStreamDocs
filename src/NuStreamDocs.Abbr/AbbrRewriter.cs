@@ -36,9 +36,7 @@ internal static class AbbrRewriter
         }
 
         // Sort tokens longest-first so a multi-word abbr beats a sub-word match.
-        var tokens = new string[defs.Count];
-        defs.Keys.CopyTo(tokens, 0);
-        Array.Sort(tokens, static (a, b) => b.Length.CompareTo(a.Length));
+        var tokens = BuildTokens(defs);
 
         WrapOccurrences(stripped, tokens, defs, writer);
     }
@@ -113,16 +111,16 @@ internal static class AbbrRewriter
     /// <param name="tokens">Tokens sorted longest-first.</param>
     /// <param name="defs">Token-to-definition map.</param>
     /// <param name="writer">Sink.</param>
-    private static void WrapOccurrences(ReadOnlySpan<byte> source, string[] tokens, Dictionary<string, string> defs, IBufferWriter<byte> writer)
+    private static void WrapOccurrences(ReadOnlySpan<byte> source, AbbrToken[] tokens, Dictionary<string, string> defs, IBufferWriter<byte> writer)
     {
         CodeAwareRewriter.Run(source, writer, TryWrap);
 
         bool TryWrap(ReadOnlySpan<byte> s, int offset, IBufferWriter<byte> w, out int consumed)
         {
-            if (AsciiWordBoundary.IsBefore(s, offset) && TryMatchAnyToken(s, offset, tokens, out var matched))
+            if (TryMatchAnyToken(s, offset, tokens, out var matched))
             {
-                EmitAbbr(matched, defs[matched], w);
-                consumed = Encoding.UTF8.GetByteCount(matched);
+                EmitAbbr(matched.Text, defs[matched.Text], w);
+                consumed = matched.Bytes.Length;
                 return true;
             }
 
@@ -137,41 +135,12 @@ internal static class AbbrRewriter
     /// <param name="tokens">Tokens sorted longest-first.</param>
     /// <param name="matched">The first matching token, when found.</param>
     /// <returns>True when a token matched at the current position with a trailing word boundary.</returns>
-    private static bool TryMatchAnyToken(ReadOnlySpan<byte> source, int offset, string[] tokens, out string matched)
+    private static bool TryMatchAnyToken(ReadOnlySpan<byte> source, int offset, AbbrToken[] tokens, out AbbrToken matched)
     {
-        matched = string.Empty;
-
-        // Hoist one stack buffer outside the loop sized to the longest token's
-        // UTF-8 byte length so per-iteration stack growth stays flat. Falls
-        // back to the heap when any single token exceeds the safe stack budget.
-        var maxTokenBytes = 0;
+        matched = default;
         for (var t = 0; t < tokens.Length; t++)
         {
-            var n = Encoding.UTF8.GetByteCount(tokens[t]);
-            if (n > maxTokenBytes)
-            {
-                maxTokenBytes = n;
-            }
-        }
-
-        var probe = maxTokenBytes <= 256 ? stackalloc byte[256] : new byte[maxTokenBytes];
-        for (var t = 0; t < tokens.Length; t++)
-        {
-            var tokenBytes = Encoding.UTF8.GetByteCount(tokens[t]);
-            if (offset + tokenBytes > source.Length)
-            {
-                continue;
-            }
-
-            var slot = probe[..tokenBytes];
-            Encoding.UTF8.GetBytes(tokens[t], slot);
-
-            if (!source.Slice(offset, tokenBytes).SequenceEqual(slot))
-            {
-                continue;
-            }
-
-            if (!AsciiWordBoundary.IsAfter(source, offset + tokenBytes))
+            if (!AsciiWordBoundary.TryMatchBounded(source, offset, tokens[t].Bytes))
             {
                 continue;
             }
@@ -181,6 +150,24 @@ internal static class AbbrRewriter
         }
 
         return false;
+    }
+
+    /// <summary>Builds the sorted abbreviation-token table with cached UTF-8 bytes.</summary>
+    /// <param name="defs">Definition map.</param>
+    /// <returns>Tokens sorted longest-first by UTF-8 byte length.</returns>
+    private static AbbrToken[] BuildTokens(Dictionary<string, string> defs)
+    {
+        var tokens = new AbbrToken[defs.Count];
+        var index = 0;
+        using var enumerator = defs.Keys.GetEnumerator();
+        while (enumerator.MoveNext())
+        {
+            var text = enumerator.Current;
+            tokens[index++] = new(text, Encoding.UTF8.GetBytes(text));
+        }
+
+        Array.Sort(tokens, static (a, b) => b.Bytes.Length.CompareTo(a.Bytes.Length));
+        return tokens;
     }
 
     /// <summary>Writes the <c>&lt;abbr title="…"&gt;token&lt;/abbr&gt;</c> wrapper.</summary>
@@ -225,4 +212,7 @@ internal static class AbbrRewriter
 
         return line[..end];
     }
+
+    /// <summary>Cached abbreviation token text plus its UTF-8 bytes.</summary>
+    private readonly record struct AbbrToken(string Text, byte[] Bytes);
 }
