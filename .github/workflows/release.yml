@@ -62,7 +62,7 @@ jobs:
         run: dotnet pack src/NuStreamDocs.slnx --no-build --configuration Release -o packages
 
       - name: Sign packages with SSL.com eSigner
-        uses: SSLcom/esigner-codesign@v1.3.2
+        uses: SSLcom/esigner-codesign@cf5f6c1d38ad10f47e3ed9aca873f429b1a8d85b # v1.3.2
         with:
           command: batch_sign
           username: ${{ secrets.ES_USERNAME }}
@@ -82,7 +82,7 @@ jobs:
           if-no-files-found: error
 
       - name: NuGet login (OIDC trusted publishing)
-        uses: NuGet/login@v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         id: nuget-login
         with:
           user: ${{ secrets.NUGET_USER }}
