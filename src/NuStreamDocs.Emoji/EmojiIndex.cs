@@ -2,176 +2,510 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NuStreamDocs.Emoji;
 
 /// <summary>
-/// Built-in shortcode → Unicode glyph map. Built once at startup
-/// as a <see cref="FrozenDictionary{TKey, TValue}"/> so the
-/// rewriter's per-page lookups stay branch-free in the hot path.
+/// Built-in shortcode → UTF-8 glyph table. Lookups operate on raw
+/// <see cref="ReadOnlySpan{T}"/> byte slices so the rewriter never
+/// allocates a <see cref="string"/> for the shortcode body or
+/// re-encodes the glyph on emit — the per-shortcode hot path is one
+/// vectorised <see cref="MemoryExtensions.SequenceEqual{T}(ReadOnlySpan{T}, ReadOnlySpan{T})"/>
+/// per candidate against a compile-time <c>"…"u8</c> key, returning the
+/// glyph as another compile-time <c>"…"u8</c> literal.
 /// </summary>
 /// <remarks>
-/// The seed list focuses on the ~80 shortcodes that account for
-/// the bulk of real-world Markdown usage (GitHub issue threads,
-/// release notes, blog posts). Project consumers that need the
-/// full Twemoji set can register additional plugins after this
-/// one in the preprocessor chain — unmatched shortcodes pass
-/// through verbatim.
+/// Coverage targets the high-frequency Twemoji subset that accounts for
+/// the bulk of real-world Markdown usage (issue threads, release notes,
+/// blog posts, status pages). Project consumers that need the full
+/// ~1500-entry Twemoji set can register additional plugins after this
+/// one in the preprocessor chain — unmatched shortcodes pass through
+/// verbatim.
 /// </remarks>
 internal static class EmojiIndex
 {
-    /// <summary>Lookup table keyed on the shortcode without colons.</summary>
-    private static readonly FrozenDictionary<string, string> Map = BuildMap();
-
     /// <summary>Tries to resolve <paramref name="shortcode"/> against the index.</summary>
-    /// <param name="shortcode">Shortcode without the surrounding colons.</param>
-    /// <param name="glyph">Resolved Unicode glyph on success.</param>
+    /// <param name="shortcode">UTF-8 shortcode bytes (without the surrounding colons).</param>
+    /// <param name="glyph">Resolved UTF-8 glyph bytes on success.</param>
     /// <returns>True when the shortcode is a known alias.</returns>
-    public static bool TryGet(string shortcode, out string glyph) => Map.TryGetValue(shortcode, out glyph!);
-
-    /// <summary>Builds the alias map by composing the per-category seed sets.</summary>
-    /// <returns>Frozen dictionary keyed on the shortcode.</returns>
-    private static FrozenDictionary<string, string> BuildMap()
+    public static bool TryGet(ReadOnlySpan<byte> shortcode, out ReadOnlySpan<byte> glyph)
     {
-        var seed = new Dictionary<string, string>(StringComparer.Ordinal);
-        SeedSmileys(seed);
-        SeedSymbols(seed);
-        SeedHands(seed);
-        SeedCelebration(seed);
-        SeedStatus(seed);
-        SeedDevEngineering(seed);
-        SeedArrows(seed);
-        return seed.ToFrozenDictionary(StringComparer.Ordinal);
+        glyph = MatchGlyph(shortcode);
+        return glyph.Length > 0;
     }
 
-    /// <summary>Registers smiley-face shortcodes.</summary>
-    /// <param name="seed">Mutable seed dictionary.</param>
-    private static void SeedSmileys(Dictionary<string, string> seed)
+    /// <summary>Matches <paramref name="shortcode"/> against the curated Twemoji subset.</summary>
+    /// <param name="shortcode">UTF-8 shortcode bytes.</param>
+    /// <returns>UTF-8 glyph bytes on match, or an empty span on miss.</returns>
+    [SuppressMessage(
+        "Sonar Code Smell",
+        "S1541:Methods should not be too complex",
+        Justification = "Single switch over a closed shortcode vocabulary; alternative table dispatch only relocates the data.")]
+    [SuppressMessage(
+        "Sonar Code Smell",
+        "S138:Methods should not have too many lines",
+        Justification = "Flat shortcode-to-glyph table; splitting by category trades clarity for plumbing.")]
+    private static ReadOnlySpan<byte> MatchGlyph(ReadOnlySpan<byte> shortcode) => shortcode switch
     {
-        seed["smile"] = "😄";
-        seed["grin"] = "😁";
-        seed["joy"] = "😂";
-        seed["rofl"] = "🤣";
-        seed["wink"] = "😉";
-        seed["blush"] = "😊";
-        seed["heart_eyes"] = "😍";
-        seed["thinking"] = "🤔";
-        seed["sob"] = "😭";
-        seed["cry"] = "😢";
-        seed["scream"] = "😱";
-        seed["angry"] = "😠";
-        seed["rage"] = "😡";
-        seed["sleeping"] = "😴";
-        seed["sweat_smile"] = "😅";
-        seed["smirk"] = "😏";
-        seed["expressionless"] = "😑";
-        seed["neutral_face"] = "😐";
-    }
+        // Smileys.
+        _ when shortcode.SequenceEqual("smile"u8) => "😄"u8,
+        _ when shortcode.SequenceEqual("smiley"u8) => "😃"u8,
+        _ when shortcode.SequenceEqual("grin"u8) => "😁"u8,
+        _ when shortcode.SequenceEqual("grinning"u8) => "😀"u8,
+        _ when shortcode.SequenceEqual("joy"u8) => "😂"u8,
+        _ when shortcode.SequenceEqual("rofl"u8) => "🤣"u8,
+        _ when shortcode.SequenceEqual("wink"u8) => "😉"u8,
+        _ when shortcode.SequenceEqual("blush"u8) => "😊"u8,
+        _ when shortcode.SequenceEqual("heart_eyes"u8) => "😍"u8,
+        _ when shortcode.SequenceEqual("kissing_heart"u8) => "😘"u8,
+        _ when shortcode.SequenceEqual("kissing"u8) => "😗"u8,
+        _ when shortcode.SequenceEqual("yum"u8) => "😋"u8,
+        _ when shortcode.SequenceEqual("stuck_out_tongue"u8) => "😛"u8,
+        _ when shortcode.SequenceEqual("stuck_out_tongue_winking_eye"u8) => "😜"u8,
+        _ when shortcode.SequenceEqual("zany_face"u8) => "🤪"u8,
+        _ when shortcode.SequenceEqual("face_with_raised_eyebrow"u8) => "🤨"u8,
+        _ when shortcode.SequenceEqual("monocle_face"u8) => "🧐"u8,
+        _ when shortcode.SequenceEqual("nerd_face"u8) => "🤓"u8,
+        _ when shortcode.SequenceEqual("sunglasses"u8) => "😎"u8,
+        _ when shortcode.SequenceEqual("star_struck"u8) => "🤩"u8,
+        _ when shortcode.SequenceEqual("partying_face"u8) => "🥳"u8,
+        _ when shortcode.SequenceEqual("thinking"u8) => "🤔"u8,
+        _ when shortcode.SequenceEqual("zipper_mouth_face"u8) => "🤐"u8,
+        _ when shortcode.SequenceEqual("face_with_hand_over_mouth"u8) => "🤭"u8,
+        _ when shortcode.SequenceEqual("shushing_face"u8) => "🤫"u8,
+        _ when shortcode.SequenceEqual("lying_face"u8) => "🤥"u8,
+        _ when shortcode.SequenceEqual("expressionless"u8) => "😑"u8,
+        _ when shortcode.SequenceEqual("neutral_face"u8) => "😐"u8,
+        _ when shortcode.SequenceEqual("no_mouth"u8) => "😶"u8,
+        _ when shortcode.SequenceEqual("smirk"u8) => "😏"u8,
+        _ when shortcode.SequenceEqual("unamused"u8) => "😒"u8,
+        _ when shortcode.SequenceEqual("rolling_eyes"u8) => "🙄"u8,
+        _ when shortcode.SequenceEqual("grimacing"u8) => "😬"u8,
+        _ when shortcode.SequenceEqual("flushed"u8) => "😳"u8,
+        _ when shortcode.SequenceEqual("disappointed"u8) => "😞"u8,
+        _ when shortcode.SequenceEqual("worried"u8) => "😟"u8,
+        _ when shortcode.SequenceEqual("confused"u8) => "😕"u8,
+        _ when shortcode.SequenceEqual("slightly_frowning_face"u8) => "🙁"u8,
+        _ when shortcode.SequenceEqual("persevere"u8) => "😣"u8,
+        _ when shortcode.SequenceEqual("pensive"u8) => "😔"u8,
+        _ when shortcode.SequenceEqual("tired_face"u8) => "😫"u8,
+        _ when shortcode.SequenceEqual("weary"u8) => "😩"u8,
+        _ when shortcode.SequenceEqual("yawning_face"u8) => "🥱"u8,
+        _ when shortcode.SequenceEqual("triumph"u8) => "😤"u8,
+        _ when shortcode.SequenceEqual("rage"u8) => "😡"u8,
+        _ when shortcode.SequenceEqual("angry"u8) => "😠"u8,
+        _ when shortcode.SequenceEqual("cursing_face"u8) => "🤬"u8,
+        _ when shortcode.SequenceEqual("face_with_symbols_over_mouth"u8) => "🤬"u8,
+        _ when shortcode.SequenceEqual("exploding_head"u8) => "🤯"u8,
+        _ when shortcode.SequenceEqual("hot_face"u8) => "🥵"u8,
+        _ when shortcode.SequenceEqual("cold_face"u8) => "🥶"u8,
+        _ when shortcode.SequenceEqual("woozy_face"u8) => "🥴"u8,
+        _ when shortcode.SequenceEqual("dizzy_face"u8) => "😵"u8,
+        _ when shortcode.SequenceEqual("face_with_spiral_eyes"u8) => "\U0001F635\u200D\U0001F4AB"u8,
+        _ when shortcode.SequenceEqual("nauseated_face"u8) => "🤢"u8,
+        _ when shortcode.SequenceEqual("vomiting"u8) => "🤮"u8,
+        _ when shortcode.SequenceEqual("sneezing_face"u8) => "🤧"u8,
+        _ when shortcode.SequenceEqual("face_with_thermometer"u8) => "🤒"u8,
+        _ when shortcode.SequenceEqual("mask"u8) => "😷"u8,
+        _ when shortcode.SequenceEqual("sleeping"u8) => "😴"u8,
+        _ when shortcode.SequenceEqual("sleepy"u8) => "😪"u8,
+        _ when shortcode.SequenceEqual("sweat_smile"u8) => "😅"u8,
+        _ when shortcode.SequenceEqual("sweat"u8) => "😓"u8,
+        _ when shortcode.SequenceEqual("cold_sweat"u8) => "😰"u8,
+        _ when shortcode.SequenceEqual("cry"u8) => "😢"u8,
+        _ when shortcode.SequenceEqual("sob"u8) => "😭"u8,
+        _ when shortcode.SequenceEqual("scream"u8) => "😱"u8,
+        _ when shortcode.SequenceEqual("fearful"u8) => "😨"u8,
+        _ when shortcode.SequenceEqual("anguished"u8) => "😧"u8,
+        _ when shortcode.SequenceEqual("hushed"u8) => "😯"u8,
+        _ when shortcode.SequenceEqual("astonished"u8) => "😲"u8,
+        _ when shortcode.SequenceEqual("open_mouth"u8) => "😮"u8,
+        _ when shortcode.SequenceEqual("face_with_monocle"u8) => "🧐"u8,
+        _ when shortcode.SequenceEqual("upside_down_face"u8) => "🙃"u8,
+        _ when shortcode.SequenceEqual("relieved"u8) => "😌"u8,
+        _ when shortcode.SequenceEqual("smiling_face_with_tear"u8) => "🥲"u8,
+        _ when shortcode.SequenceEqual("pleading_face"u8) => "🥺"u8,
+        _ when shortcode.SequenceEqual("smiling_imp"u8) => "😈"u8,
+        _ when shortcode.SequenceEqual("imp"u8) => "👿"u8,
+        _ when shortcode.SequenceEqual("japanese_ogre"u8) => "👹"u8,
+        _ when shortcode.SequenceEqual("ghost"u8) => "👻"u8,
+        _ when shortcode.SequenceEqual("skull"u8) => "💀"u8,
+        _ when shortcode.SequenceEqual("skull_and_crossbones"u8) => "☠️"u8,
+        _ when shortcode.SequenceEqual("alien"u8) => "👽"u8,
+        _ when shortcode.SequenceEqual("space_invader"u8) => "👾"u8,
+        _ when shortcode.SequenceEqual("robot"u8) => "🤖"u8,
+        _ when shortcode.SequenceEqual("poop"u8) => "💩"u8,
 
-    /// <summary>Registers heart and visual-effect shortcodes.</summary>
-    /// <param name="seed">Mutable seed dictionary.</param>
-    private static void SeedSymbols(Dictionary<string, string> seed)
-    {
-        seed["heart"] = "❤️";
-        seed["broken_heart"] = "💔";
-        seed["sparkles"] = "✨";
-        seed["fire"] = "🔥";
-        seed["star"] = "⭐";
-        seed["star2"] = "🌟";
-        seed["dizzy"] = "💫";
-        seed["100"] = "💯";
-        seed["zzz"] = "💤";
-        seed["boom"] = "💥";
-    }
+        // Hands and body.
+        _ when shortcode.SequenceEqual("thumbsup"u8) => "👍"u8,
+        _ when shortcode.SequenceEqual("+1"u8) => "👍"u8,
+        _ when shortcode.SequenceEqual("thumbsdown"u8) => "👎"u8,
+        _ when shortcode.SequenceEqual("-1"u8) => "👎"u8,
+        _ when shortcode.SequenceEqual("ok_hand"u8) => "👌"u8,
+        _ when shortcode.SequenceEqual("pinching_hand"u8) => "🤏"u8,
+        _ when shortcode.SequenceEqual("victory"u8) => "✌️"u8,
+        _ when shortcode.SequenceEqual("crossed_fingers"u8) => "🤞"u8,
+        _ when shortcode.SequenceEqual("love_you_gesture"u8) => "🤟"u8,
+        _ when shortcode.SequenceEqual("metal"u8) => "🤘"u8,
+        _ when shortcode.SequenceEqual("call_me_hand"u8) => "🤙"u8,
+        _ when shortcode.SequenceEqual("point_left"u8) => "👈"u8,
+        _ when shortcode.SequenceEqual("point_right"u8) => "👉"u8,
+        _ when shortcode.SequenceEqual("point_up"u8) => "👆"u8,
+        _ when shortcode.SequenceEqual("point_down"u8) => "👇"u8,
+        _ when shortcode.SequenceEqual("middle_finger"u8) => "🖕"u8,
+        _ when shortcode.SequenceEqual("raised_hand"u8) => "✋"u8,
+        _ when shortcode.SequenceEqual("vulcan_salute"u8) => "🖖"u8,
+        _ when shortcode.SequenceEqual("wave"u8) => "👋"u8,
+        _ when shortcode.SequenceEqual("clap"u8) => "👏"u8,
+        _ when shortcode.SequenceEqual("raised_hands"u8) => "🙌"u8,
+        _ when shortcode.SequenceEqual("open_hands"u8) => "👐"u8,
+        _ when shortcode.SequenceEqual("handshake"u8) => "🤝"u8,
+        _ when shortcode.SequenceEqual("pray"u8) => "🙏"u8,
+        _ when shortcode.SequenceEqual("muscle"u8) => "💪"u8,
+        _ when shortcode.SequenceEqual("eyes"u8) => "👀"u8,
+        _ when shortcode.SequenceEqual("eye"u8) => "👁️"u8,
+        _ when shortcode.SequenceEqual("ear"u8) => "👂"u8,
+        _ when shortcode.SequenceEqual("nose"u8) => "👃"u8,
+        _ when shortcode.SequenceEqual("brain"u8) => "🧠"u8,
+        _ when shortcode.SequenceEqual("see_no_evil"u8) => "🙈"u8,
+        _ when shortcode.SequenceEqual("hear_no_evil"u8) => "🙉"u8,
+        _ when shortcode.SequenceEqual("speak_no_evil"u8) => "🙊"u8,
 
-    /// <summary>Registers hand- and body-gesture shortcodes.</summary>
-    /// <param name="seed">Mutable seed dictionary.</param>
-    private static void SeedHands(Dictionary<string, string> seed)
-    {
-        seed["thumbsup"] = "👍";
-        seed["thumbsdown"] = "👎";
-        seed["+1"] = "👍";
-        seed["-1"] = "👎";
-        seed["wave"] = "👋";
-        seed["clap"] = "👏";
-        seed["pray"] = "🙏";
-        seed["raised_hands"] = "🙌";
-        seed["muscle"] = "💪";
-        seed["ok_hand"] = "👌";
-        seed["point_right"] = "👉";
-        seed["point_left"] = "👈";
-        seed["point_up"] = "👆";
-        seed["point_down"] = "👇";
-        seed["eyes"] = "👀";
-        seed["see_no_evil"] = "🙈";
-    }
+        // Hearts and visual effects.
+        _ when shortcode.SequenceEqual("heart"u8) => "❤️"u8,
+        _ when shortcode.SequenceEqual("orange_heart"u8) => "🧡"u8,
+        _ when shortcode.SequenceEqual("yellow_heart"u8) => "💛"u8,
+        _ when shortcode.SequenceEqual("green_heart"u8) => "💚"u8,
+        _ when shortcode.SequenceEqual("blue_heart"u8) => "💙"u8,
+        _ when shortcode.SequenceEqual("purple_heart"u8) => "💜"u8,
+        _ when shortcode.SequenceEqual("black_heart"u8) => "🖤"u8,
+        _ when shortcode.SequenceEqual("white_heart"u8) => "🤍"u8,
+        _ when shortcode.SequenceEqual("brown_heart"u8) => "🤎"u8,
+        _ when shortcode.SequenceEqual("broken_heart"u8) => "💔"u8,
+        _ when shortcode.SequenceEqual("two_hearts"u8) => "💕"u8,
+        _ when shortcode.SequenceEqual("sparkling_heart"u8) => "💖"u8,
+        _ when shortcode.SequenceEqual("growing_heart"u8) => "💗"u8,
+        _ when shortcode.SequenceEqual("heartpulse"u8) => "💓"u8,
+        _ when shortcode.SequenceEqual("revolving_hearts"u8) => "💞"u8,
+        _ when shortcode.SequenceEqual("cupid"u8) => "💘"u8,
+        _ when shortcode.SequenceEqual("gift_heart"u8) => "💝"u8,
+        _ when shortcode.SequenceEqual("heart_decoration"u8) => "💟"u8,
+        _ when shortcode.SequenceEqual("sparkles"u8) => "✨"u8,
+        _ when shortcode.SequenceEqual("fire"u8) => "🔥"u8,
+        _ when shortcode.SequenceEqual("star"u8) => "⭐"u8,
+        _ when shortcode.SequenceEqual("star2"u8) => "🌟"u8,
+        _ when shortcode.SequenceEqual("dizzy"u8) => "💫"u8,
+        _ when shortcode.SequenceEqual("100"u8) => "💯"u8,
+        _ when shortcode.SequenceEqual("zzz"u8) => "💤"u8,
+        _ when shortcode.SequenceEqual("boom"u8) => "💥"u8,
+        _ when shortcode.SequenceEqual("collision"u8) => "💥"u8,
+        _ when shortcode.SequenceEqual("anger"u8) => "💢"u8,
+        _ when shortcode.SequenceEqual("droplet"u8) => "💧"u8,
+        _ when shortcode.SequenceEqual("sweat_drops"u8) => "💦"u8,
+        _ when shortcode.SequenceEqual("dash"u8) => "💨"u8,
+        _ when shortcode.SequenceEqual("speech_balloon"u8) => "💬"u8,
+        _ when shortcode.SequenceEqual("thought_balloon"u8) => "💭"u8,
 
-    /// <summary>Registers celebration / award shortcodes.</summary>
-    /// <param name="seed">Mutable seed dictionary.</param>
-    private static void SeedCelebration(Dictionary<string, string> seed)
-    {
-        seed["tada"] = "🎉";
-        seed["confetti_ball"] = "🎊";
-        seed["balloon"] = "🎈";
-        seed["gift"] = "🎁";
-        seed["trophy"] = "🏆";
-        seed["medal"] = "🏅";
-        seed["rocket"] = "🚀";
-    }
+        // Celebration and award.
+        _ when shortcode.SequenceEqual("tada"u8) => "🎉"u8,
+        _ when shortcode.SequenceEqual("confetti_ball"u8) => "🎊"u8,
+        _ when shortcode.SequenceEqual("balloon"u8) => "🎈"u8,
+        _ when shortcode.SequenceEqual("birthday"u8) => "🎂"u8,
+        _ when shortcode.SequenceEqual("cake"u8) => "🍰"u8,
+        _ when shortcode.SequenceEqual("gift"u8) => "🎁"u8,
+        _ when shortcode.SequenceEqual("ribbon"u8) => "🎀"u8,
+        _ when shortcode.SequenceEqual("trophy"u8) => "🏆"u8,
+        _ when shortcode.SequenceEqual("medal"u8) => "🏅"u8,
+        _ when shortcode.SequenceEqual("first_place_medal"u8) => "🥇"u8,
+        _ when shortcode.SequenceEqual("second_place_medal"u8) => "🥈"u8,
+        _ when shortcode.SequenceEqual("third_place_medal"u8) => "🥉"u8,
+        _ when shortcode.SequenceEqual("rocket"u8) => "🚀"u8,
+        _ when shortcode.SequenceEqual("flying_saucer"u8) => "🛸"u8,
+        _ when shortcode.SequenceEqual("crown"u8) => "👑"u8,
 
-    /// <summary>Registers status / annotation shortcodes commonly used in docs and changelogs.</summary>
-    /// <param name="seed">Mutable seed dictionary.</param>
-    private static void SeedStatus(Dictionary<string, string> seed)
-    {
-        seed["warning"] = "⚠️";
-        seed["white_check_mark"] = "✅";
-        seed["heavy_check_mark"] = "✔️";
-        seed["x"] = "❌";
-        seed["heavy_multiplication_x"] = "✖️";
-        seed["bangbang"] = "‼️";
-        seed["question"] = "❓";
-        seed["exclamation"] = "❗";
-        seed["bulb"] = "💡";
-        seed["information_source"] = "ℹ️";
-        seed["rotating_light"] = "🚨";
-        seed["no_entry"] = "⛔";
-        seed["construction"] = "🚧";
-    }
+        // Status and annotation.
+        _ when shortcode.SequenceEqual("warning"u8) => "⚠️"u8,
+        _ when shortcode.SequenceEqual("white_check_mark"u8) => "✅"u8,
+        _ when shortcode.SequenceEqual("heavy_check_mark"u8) => "✔️"u8,
+        _ when shortcode.SequenceEqual("ballot_box_with_check"u8) => "☑️"u8,
+        _ when shortcode.SequenceEqual("x"u8) => "❌"u8,
+        _ when shortcode.SequenceEqual("heavy_multiplication_x"u8) => "✖️"u8,
+        _ when shortcode.SequenceEqual("negative_squared_cross_mark"u8) => "❎"u8,
+        _ when shortcode.SequenceEqual("bangbang"u8) => "‼️"u8,
+        _ when shortcode.SequenceEqual("interrobang"u8) => "⁉️"u8,
+        _ when shortcode.SequenceEqual("question"u8) => "❓"u8,
+        _ when shortcode.SequenceEqual("grey_question"u8) => "❔"u8,
+        _ when shortcode.SequenceEqual("exclamation"u8) => "❗"u8,
+        _ when shortcode.SequenceEqual("grey_exclamation"u8) => "❕"u8,
+        _ when shortcode.SequenceEqual("bulb"u8) => "💡"u8,
+        _ when shortcode.SequenceEqual("information_source"u8) => "ℹ️"u8,
+        _ when shortcode.SequenceEqual("rotating_light"u8) => "🚨"u8,
+        _ when shortcode.SequenceEqual("no_entry"u8) => "⛔"u8,
+        _ when shortcode.SequenceEqual("no_entry_sign"u8) => "🚫"u8,
+        _ when shortcode.SequenceEqual("construction"u8) => "🚧"u8,
+        _ when shortcode.SequenceEqual("biohazard"u8) => "☣️"u8,
+        _ when shortcode.SequenceEqual("radioactive"u8) => "☢️"u8,
 
-    /// <summary>Registers developer / engineering shortcodes.</summary>
-    /// <param name="seed">Mutable seed dictionary.</param>
-    private static void SeedDevEngineering(Dictionary<string, string> seed)
-    {
-        seed["bug"] = "🐛";
-        seed["wrench"] = "🔧";
-        seed["hammer"] = "🔨";
-        seed["gear"] = "⚙️";
-        seed["package"] = "📦";
-        seed["computer"] = "💻";
-        seed["floppy_disk"] = "💾";
-        seed["lock"] = "🔒";
-        seed["unlock"] = "🔓";
-        seed["key"] = "🔑";
-        seed["mag"] = "🔍";
-        seed["memo"] = "📝";
-        seed["books"] = "📚";
-        seed["clipboard"] = "📋";
-        seed["link"] = "🔗";
-        seed["pushpin"] = "📌";
-        seed["zap"] = "⚡";
-        seed["recycle"] = "♻️";
-    }
+        // Developer and engineering.
+        _ when shortcode.SequenceEqual("bug"u8) => "🐛"u8,
+        _ when shortcode.SequenceEqual("ant"u8) => "🐜"u8,
+        _ when shortcode.SequenceEqual("spider"u8) => "🕷️"u8,
+        _ when shortcode.SequenceEqual("wrench"u8) => "🔧"u8,
+        _ when shortcode.SequenceEqual("hammer"u8) => "🔨"u8,
+        _ when shortcode.SequenceEqual("hammer_and_wrench"u8) => "🛠️"u8,
+        _ when shortcode.SequenceEqual("nut_and_bolt"u8) => "🔩"u8,
+        _ when shortcode.SequenceEqual("gear"u8) => "⚙️"u8,
+        _ when shortcode.SequenceEqual("toolbox"u8) => "🧰"u8,
+        _ when shortcode.SequenceEqual("package"u8) => "📦"u8,
+        _ when shortcode.SequenceEqual("computer"u8) => "💻"u8,
+        _ when shortcode.SequenceEqual("desktop_computer"u8) => "🖥️"u8,
+        _ when shortcode.SequenceEqual("keyboard"u8) => "⌨️"u8,
+        _ when shortcode.SequenceEqual("printer"u8) => "🖨️"u8,
+        _ when shortcode.SequenceEqual("trackball"u8) => "🖲️"u8,
+        _ when shortcode.SequenceEqual("computer_mouse"u8) => "🖱️"u8,
+        _ when shortcode.SequenceEqual("floppy_disk"u8) => "💾"u8,
+        _ when shortcode.SequenceEqual("cd"u8) => "💿"u8,
+        _ when shortcode.SequenceEqual("dvd"u8) => "📀"u8,
+        _ when shortcode.SequenceEqual("minidisc"u8) => "💽"u8,
+        _ when shortcode.SequenceEqual("battery"u8) => "🔋"u8,
+        _ when shortcode.SequenceEqual("electric_plug"u8) => "🔌"u8,
+        _ when shortcode.SequenceEqual("lock"u8) => "🔒"u8,
+        _ when shortcode.SequenceEqual("unlock"u8) => "🔓"u8,
+        _ when shortcode.SequenceEqual("lock_with_ink_pen"u8) => "🔏"u8,
+        _ when shortcode.SequenceEqual("closed_lock_with_key"u8) => "🔐"u8,
+        _ when shortcode.SequenceEqual("key"u8) => "🔑"u8,
+        _ when shortcode.SequenceEqual("old_key"u8) => "🗝️"u8,
+        _ when shortcode.SequenceEqual("mag"u8) => "🔍"u8,
+        _ when shortcode.SequenceEqual("mag_right"u8) => "🔎"u8,
+        _ when shortcode.SequenceEqual("memo"u8) => "📝"u8,
+        _ when shortcode.SequenceEqual("pencil"u8) => "✏️"u8,
+        _ when shortcode.SequenceEqual("pencil2"u8) => "✏️"u8,
+        _ when shortcode.SequenceEqual("black_nib"u8) => "✒️"u8,
+        _ when shortcode.SequenceEqual("paperclip"u8) => "📎"u8,
+        _ when shortcode.SequenceEqual("scissors"u8) => "✂️"u8,
+        _ when shortcode.SequenceEqual("books"u8) => "📚"u8,
+        _ when shortcode.SequenceEqual("book"u8) => "📖"u8,
+        _ when shortcode.SequenceEqual("notebook"u8) => "📓"u8,
+        _ when shortcode.SequenceEqual("page_facing_up"u8) => "📄"u8,
+        _ when shortcode.SequenceEqual("page_with_curl"u8) => "📃"u8,
+        _ when shortcode.SequenceEqual("scroll"u8) => "📜"u8,
+        _ when shortcode.SequenceEqual("clipboard"u8) => "📋"u8,
+        _ when shortcode.SequenceEqual("file_folder"u8) => "📁"u8,
+        _ when shortcode.SequenceEqual("open_file_folder"u8) => "📂"u8,
+        _ when shortcode.SequenceEqual("card_index_dividers"u8) => "🗂️"u8,
+        _ when shortcode.SequenceEqual("date"u8) => "📅"u8,
+        _ when shortcode.SequenceEqual("calendar"u8) => "📆"u8,
+        _ when shortcode.SequenceEqual("chart_with_upwards_trend"u8) => "📈"u8,
+        _ when shortcode.SequenceEqual("chart_with_downwards_trend"u8) => "📉"u8,
+        _ when shortcode.SequenceEqual("bar_chart"u8) => "📊"u8,
+        _ when shortcode.SequenceEqual("link"u8) => "🔗"u8,
+        _ when shortcode.SequenceEqual("paperclips"u8) => "🖇️"u8,
+        _ when shortcode.SequenceEqual("pushpin"u8) => "📌"u8,
+        _ when shortcode.SequenceEqual("round_pushpin"u8) => "📍"u8,
+        _ when shortcode.SequenceEqual("triangular_ruler"u8) => "📐"u8,
+        _ when shortcode.SequenceEqual("straight_ruler"u8) => "📏"u8,
+        _ when shortcode.SequenceEqual("zap"u8) => "⚡"u8,
+        _ when shortcode.SequenceEqual("recycle"u8) => "♻️"u8,
+        _ when shortcode.SequenceEqual("infinity"u8) => "♾️"u8,
+        _ when shortcode.SequenceEqual("hourglass"u8) => "⌛"u8,
+        _ when shortcode.SequenceEqual("hourglass_flowing_sand"u8) => "⏳"u8,
+        _ when shortcode.SequenceEqual("watch"u8) => "⌚"u8,
+        _ when shortcode.SequenceEqual("alarm_clock"u8) => "⏰"u8,
+        _ when shortcode.SequenceEqual("stopwatch"u8) => "⏱️"u8,
+        _ when shortcode.SequenceEqual("timer_clock"u8) => "⏲️"u8,
+        _ when shortcode.SequenceEqual("test_tube"u8) => "🧪"u8,
+        _ when shortcode.SequenceEqual("petri_dish"u8) => "🧫"u8,
+        _ when shortcode.SequenceEqual("dna"u8) => "🧬"u8,
+        _ when shortcode.SequenceEqual("microscope"u8) => "🔬"u8,
+        _ when shortcode.SequenceEqual("telescope"u8) => "🔭"u8,
+        _ when shortcode.SequenceEqual("satellite"u8) => "🛰️"u8,
+        _ when shortcode.SequenceEqual("magnet"u8) => "🧲"u8,
+        _ when shortcode.SequenceEqual("compass"u8) => "🧭"u8,
+        _ when shortcode.SequenceEqual("balance_scale"u8) => "⚖️"u8,
 
-    /// <summary>Registers directional-arrow shortcodes.</summary>
-    /// <param name="seed">Mutable seed dictionary.</param>
-    private static void SeedArrows(Dictionary<string, string> seed)
-    {
-        seed["arrow_up"] = "⬆️";
-        seed["arrow_down"] = "⬇️";
-        seed["arrow_left"] = "⬅️";
-        seed["arrow_right"] = "➡️";
-        seed["arrows_clockwise"] = "🔃";
-        seed["repeat"] = "🔁";
-    }
+        // Directional and process arrows.
+        _ when shortcode.SequenceEqual("arrow_up"u8) => "⬆️"u8,
+        _ when shortcode.SequenceEqual("arrow_down"u8) => "⬇️"u8,
+        _ when shortcode.SequenceEqual("arrow_left"u8) => "⬅️"u8,
+        _ when shortcode.SequenceEqual("arrow_right"u8) => "➡️"u8,
+        _ when shortcode.SequenceEqual("arrow_upper_left"u8) => "↖️"u8,
+        _ when shortcode.SequenceEqual("arrow_upper_right"u8) => "↗️"u8,
+        _ when shortcode.SequenceEqual("arrow_lower_left"u8) => "↙️"u8,
+        _ when shortcode.SequenceEqual("arrow_lower_right"u8) => "↘️"u8,
+        _ when shortcode.SequenceEqual("arrow_up_down"u8) => "↕️"u8,
+        _ when shortcode.SequenceEqual("left_right_arrow"u8) => "↔️"u8,
+        _ when shortcode.SequenceEqual("leftwards_arrow_with_hook"u8) => "↩️"u8,
+        _ when shortcode.SequenceEqual("arrow_right_hook"u8) => "↪️"u8,
+        _ when shortcode.SequenceEqual("arrow_heading_up"u8) => "⤴️"u8,
+        _ when shortcode.SequenceEqual("arrow_heading_down"u8) => "⤵️"u8,
+        _ when shortcode.SequenceEqual("arrows_clockwise"u8) => "🔃"u8,
+        _ when shortcode.SequenceEqual("arrows_counterclockwise"u8) => "🔄"u8,
+        _ when shortcode.SequenceEqual("repeat"u8) => "🔁"u8,
+        _ when shortcode.SequenceEqual("repeat_one"u8) => "🔂"u8,
+        _ when shortcode.SequenceEqual("twisted_rightwards_arrows"u8) => "🔀"u8,
+
+        // Weather and nature.
+        _ when shortcode.SequenceEqual("sun"u8) => "☀️"u8,
+        _ when shortcode.SequenceEqual("sunny"u8) => "☀️"u8,
+        _ when shortcode.SequenceEqual("partly_sunny"u8) => "⛅"u8,
+        _ when shortcode.SequenceEqual("cloud"u8) => "☁️"u8,
+        _ when shortcode.SequenceEqual("rainbow"u8) => "🌈"u8,
+        _ when shortcode.SequenceEqual("snowflake"u8) => "❄️"u8,
+        _ when shortcode.SequenceEqual("snowman"u8) => "⛄"u8,
+        _ when shortcode.SequenceEqual("comet"u8) => "☄️"u8,
+        _ when shortcode.SequenceEqual("crescent_moon"u8) => "🌙"u8,
+        _ when shortcode.SequenceEqual("first_quarter_moon"u8) => "🌓"u8,
+        _ when shortcode.SequenceEqual("full_moon"u8) => "🌕"u8,
+        _ when shortcode.SequenceEqual("new_moon"u8) => "🌑"u8,
+        _ when shortcode.SequenceEqual("earth_americas"u8) => "🌎"u8,
+        _ when shortcode.SequenceEqual("earth_africa"u8) => "🌍"u8,
+        _ when shortcode.SequenceEqual("earth_asia"u8) => "🌏"u8,
+        _ when shortcode.SequenceEqual("ocean"u8) => "🌊"u8,
+        _ when shortcode.SequenceEqual("evergreen_tree"u8) => "🌲"u8,
+        _ when shortcode.SequenceEqual("deciduous_tree"u8) => "🌳"u8,
+        _ when shortcode.SequenceEqual("palm_tree"u8) => "🌴"u8,
+        _ when shortcode.SequenceEqual("cactus"u8) => "🌵"u8,
+        _ when shortcode.SequenceEqual("seedling"u8) => "🌱"u8,
+        _ when shortcode.SequenceEqual("herb"u8) => "🌿"u8,
+        _ when shortcode.SequenceEqual("four_leaf_clover"u8) => "🍀"u8,
+        _ when shortcode.SequenceEqual("leaves"u8) => "🍃"u8,
+        _ when shortcode.SequenceEqual("rose"u8) => "🌹"u8,
+        _ when shortcode.SequenceEqual("sunflower"u8) => "🌻"u8,
+        _ when shortcode.SequenceEqual("tulip"u8) => "🌷"u8,
+        _ when shortcode.SequenceEqual("hibiscus"u8) => "🌺"u8,
+        _ when shortcode.SequenceEqual("blossom"u8) => "🌼"u8,
+        _ when shortcode.SequenceEqual("cherry_blossom"u8) => "🌸"u8,
+
+        // Animals.
+        _ when shortcode.SequenceEqual("dog"u8) => "🐶"u8,
+        _ when shortcode.SequenceEqual("cat"u8) => "🐱"u8,
+        _ when shortcode.SequenceEqual("mouse"u8) => "🐭"u8,
+        _ when shortcode.SequenceEqual("hamster"u8) => "🐹"u8,
+        _ when shortcode.SequenceEqual("rabbit"u8) => "🐰"u8,
+        _ when shortcode.SequenceEqual("fox"u8) => "🦊"u8,
+        _ when shortcode.SequenceEqual("bear"u8) => "🐻"u8,
+        _ when shortcode.SequenceEqual("panda"u8) => "🐼"u8,
+        _ when shortcode.SequenceEqual("koala"u8) => "🐨"u8,
+        _ when shortcode.SequenceEqual("tiger"u8) => "🐯"u8,
+        _ when shortcode.SequenceEqual("lion"u8) => "🦁"u8,
+        _ when shortcode.SequenceEqual("cow"u8) => "🐮"u8,
+        _ when shortcode.SequenceEqual("pig"u8) => "🐷"u8,
+        _ when shortcode.SequenceEqual("frog"u8) => "🐸"u8,
+        _ when shortcode.SequenceEqual("monkey"u8) => "🐵"u8,
+        _ when shortcode.SequenceEqual("chicken"u8) => "🐔"u8,
+        _ when shortcode.SequenceEqual("penguin"u8) => "🐧"u8,
+        _ when shortcode.SequenceEqual("bird"u8) => "🐦"u8,
+        _ when shortcode.SequenceEqual("eagle"u8) => "🦅"u8,
+        _ when shortcode.SequenceEqual("owl"u8) => "🦉"u8,
+        _ when shortcode.SequenceEqual("duck"u8) => "🦆"u8,
+        _ when shortcode.SequenceEqual("turtle"u8) => "🐢"u8,
+        _ when shortcode.SequenceEqual("snake"u8) => "🐍"u8,
+        _ when shortcode.SequenceEqual("octopus"u8) => "🐙"u8,
+        _ when shortcode.SequenceEqual("whale"u8) => "🐳"u8,
+        _ when shortcode.SequenceEqual("dolphin"u8) => "🐬"u8,
+        _ when shortcode.SequenceEqual("fish"u8) => "🐟"u8,
+        _ when shortcode.SequenceEqual("shark"u8) => "🦈"u8,
+        _ when shortcode.SequenceEqual("crocodile"u8) => "🐊"u8,
+        _ when shortcode.SequenceEqual("dragon"u8) => "🐉"u8,
+        _ when shortcode.SequenceEqual("dragon_face"u8) => "🐲"u8,
+        _ when shortcode.SequenceEqual("unicorn"u8) => "🦄"u8,
+        _ when shortcode.SequenceEqual("horse"u8) => "🐴"u8,
+        _ when shortcode.SequenceEqual("zebra"u8) => "🦓"u8,
+        _ when shortcode.SequenceEqual("giraffe"u8) => "🦒"u8,
+        _ when shortcode.SequenceEqual("elephant"u8) => "🐘"u8,
+        _ when shortcode.SequenceEqual("butterfly"u8) => "🦋"u8,
+        _ when shortcode.SequenceEqual("bee"u8) => "🐝"u8,
+        _ when shortcode.SequenceEqual("snail"u8) => "🐌"u8,
+        _ when shortcode.SequenceEqual("paw_prints"u8) => "🐾"u8,
+
+        // Food and drink.
+        _ when shortcode.SequenceEqual("coffee"u8) => "☕"u8,
+        _ when shortcode.SequenceEqual("tea"u8) => "🍵"u8,
+        _ when shortcode.SequenceEqual("beer"u8) => "🍺"u8,
+        _ when shortcode.SequenceEqual("beers"u8) => "🍻"u8,
+        _ when shortcode.SequenceEqual("wine_glass"u8) => "🍷"u8,
+        _ when shortcode.SequenceEqual("cocktail"u8) => "🍸"u8,
+        _ when shortcode.SequenceEqual("champagne"u8) => "🍾"u8,
+        _ when shortcode.SequenceEqual("clinking_glasses"u8) => "🥂"u8,
+        _ when shortcode.SequenceEqual("milk_glass"u8) => "🥛"u8,
+        _ when shortcode.SequenceEqual("baby_bottle"u8) => "🍼"u8,
+        _ when shortcode.SequenceEqual("apple"u8) => "🍎"u8,
+        _ when shortcode.SequenceEqual("green_apple"u8) => "🍏"u8,
+        _ when shortcode.SequenceEqual("banana"u8) => "🍌"u8,
+        _ when shortcode.SequenceEqual("grapes"u8) => "🍇"u8,
+        _ when shortcode.SequenceEqual("strawberry"u8) => "🍓"u8,
+        _ when shortcode.SequenceEqual("watermelon"u8) => "🍉"u8,
+        _ when shortcode.SequenceEqual("peach"u8) => "🍑"u8,
+        _ when shortcode.SequenceEqual("cherries"u8) => "🍒"u8,
+        _ when shortcode.SequenceEqual("lemon"u8) => "🍋"u8,
+        _ when shortcode.SequenceEqual("pineapple"u8) => "🍍"u8,
+        _ when shortcode.SequenceEqual("avocado"u8) => "🥑"u8,
+        _ when shortcode.SequenceEqual("tomato"u8) => "🍅"u8,
+        _ when shortcode.SequenceEqual("eggplant"u8) => "🍆"u8,
+        _ when shortcode.SequenceEqual("carrot"u8) => "🥕"u8,
+        _ when shortcode.SequenceEqual("corn"u8) => "🌽"u8,
+        _ when shortcode.SequenceEqual("hot_pepper"u8) => "🌶️"u8,
+        _ when shortcode.SequenceEqual("pizza"u8) => "🍕"u8,
+        _ when shortcode.SequenceEqual("hamburger"u8) => "🍔"u8,
+        _ when shortcode.SequenceEqual("hotdog"u8) => "🌭"u8,
+        _ when shortcode.SequenceEqual("taco"u8) => "🌮"u8,
+        _ when shortcode.SequenceEqual("burrito"u8) => "🌯"u8,
+        _ when shortcode.SequenceEqual("sushi"u8) => "🍣"u8,
+        _ when shortcode.SequenceEqual("ramen"u8) => "🍜"u8,
+        _ when shortcode.SequenceEqual("rice_ball"u8) => "🍙"u8,
+        _ when shortcode.SequenceEqual("doughnut"u8) => "🍩"u8,
+        _ when shortcode.SequenceEqual("cookie"u8) => "🍪"u8,
+        _ when shortcode.SequenceEqual("chocolate_bar"u8) => "🍫"u8,
+        _ when shortcode.SequenceEqual("candy"u8) => "🍬"u8,
+        _ when shortcode.SequenceEqual("ice_cream"u8) => "🍨"u8,
+
+        // Travel and transport.
+        _ when shortcode.SequenceEqual("car"u8) => "🚗"u8,
+        _ when shortcode.SequenceEqual("taxi"u8) => "🚕"u8,
+        _ when shortcode.SequenceEqual("bus"u8) => "🚌"u8,
+        _ when shortcode.SequenceEqual("train"u8) => "🚆"u8,
+        _ when shortcode.SequenceEqual("bullettrain_side"u8) => "🚄"u8,
+        _ when shortcode.SequenceEqual("airplane"u8) => "✈️"u8,
+        _ when shortcode.SequenceEqual("helicopter"u8) => "🚁"u8,
+        _ when shortcode.SequenceEqual("ship"u8) => "🚢"u8,
+        _ when shortcode.SequenceEqual("sailboat"u8) => "⛵"u8,
+        _ when shortcode.SequenceEqual("anchor"u8) => "⚓"u8,
+        _ when shortcode.SequenceEqual("bike"u8) => "🚲"u8,
+        _ when shortcode.SequenceEqual("motorcycle"u8) => "🏍️"u8,
+        _ when shortcode.SequenceEqual("scooter"u8) => "🛴"u8,
+        _ when shortcode.SequenceEqual("traffic_light"u8) => "🚦"u8,
+        _ when shortcode.SequenceEqual("vertical_traffic_light"u8) => "🚥"u8,
+        _ when shortcode.SequenceEqual("fuel_pump"u8) => "⛽"u8,
+        _ when shortcode.SequenceEqual("globe_with_meridians"u8) => "🌐"u8,
+        _ when shortcode.SequenceEqual("world_map"u8) => "🗺️"u8,
+
+        // Music and instruments.
+        _ when shortcode.SequenceEqual("musical_note"u8) => "🎵"u8,
+        _ when shortcode.SequenceEqual("notes"u8) => "🎶"u8,
+        _ when shortcode.SequenceEqual("microphone"u8) => "🎤"u8,
+        _ when shortcode.SequenceEqual("studio_microphone"u8) => "🎙️"u8,
+        _ when shortcode.SequenceEqual("headphones"u8) => "🎧"u8,
+        _ when shortcode.SequenceEqual("guitar"u8) => "🎸"u8,
+        _ when shortcode.SequenceEqual("musical_keyboard"u8) => "🎹"u8,
+        _ when shortcode.SequenceEqual("trumpet"u8) => "🎺"u8,
+        _ when shortcode.SequenceEqual("violin"u8) => "🎻"u8,
+        _ when shortcode.SequenceEqual("drum"u8) => "🥁"u8,
+
+        // Sports.
+        _ when shortcode.SequenceEqual("soccer"u8) => "⚽"u8,
+        _ when shortcode.SequenceEqual("basketball"u8) => "🏀"u8,
+        _ when shortcode.SequenceEqual("football"u8) => "🏈"u8,
+        _ when shortcode.SequenceEqual("baseball"u8) => "⚾"u8,
+        _ when shortcode.SequenceEqual("tennis"u8) => "🎾"u8,
+        _ when shortcode.SequenceEqual("volleyball"u8) => "🏐"u8,
+        _ when shortcode.SequenceEqual("rugby_football"u8) => "🏉"u8,
+        _ when shortcode.SequenceEqual("8ball"u8) => "🎱"u8,
+        _ when shortcode.SequenceEqual("dart"u8) => "🎯"u8,
+        _ when shortcode.SequenceEqual("bowling"u8) => "🎳"u8,
+        _ when shortcode.SequenceEqual("ping_pong"u8) => "🏓"u8,
+        _ when shortcode.SequenceEqual("badminton"u8) => "🏸"u8,
+
+        _ => default,
+    };
 }

@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
-using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Emoji;
@@ -51,14 +49,13 @@ internal static class EmojiRewriter
             return false;
         }
 
-        var name = Encoding.UTF8.GetString(source[bodyStart..bodyEnd]);
-        if (!EmojiIndex.TryGet(name, out var glyph))
+        if (!EmojiIndex.TryGet(source[bodyStart..bodyEnd], out var glyph))
         {
             return false;
         }
 
         writer.Write("<span class=\"twemoji\">"u8);
-        Utf8StringWriter.Write(writer, glyph);
+        writer.Write(glyph);
         writer.Write("</span>"u8);
         consumed = bodyEnd + 1 - offset;
         return true;

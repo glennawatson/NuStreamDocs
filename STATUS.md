@@ -8,9 +8,6 @@ ship; the file is meant to stay short.
 
 ## mkdocs / Material gaps
 
-- **Emoji index expansion.** Built-in dictionary covers ~80 popular
-  shortcodes; full Twemoji set is ~1500. Data-only — drop more entries
-  into `EmojiIndex.BuildMap`.
 - **Social cards.** Deferred until SkiaSharp 4 lands (avoids the v3
   AOT/ABI churn).
 
@@ -45,9 +42,6 @@ ship; the file is meant to stay short.
 
 ## Active task-list items
 
-- **#43 — pymdownx parity.** See the emoji index gap above; everything
-  else in the pymdownx ecosystem (snippets section markers, betterem,
-  superfences, magic-link, …) is shipped.
 - **#77 — combined slice.** Content flags + redirect-maps + search
   tuning. In-progress slice spanning Sitemap, Search, and the
   redirects emitter.
