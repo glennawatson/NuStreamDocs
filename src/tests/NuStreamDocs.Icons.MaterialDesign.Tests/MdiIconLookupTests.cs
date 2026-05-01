@@ -98,15 +98,41 @@ public class MdiIconLookupTests
         await Assert.That(output).IsEqualTo("Use <span class=\"material-symbols-outlined\">not_in_bundle</span> here");
     }
 
-    /// <summary>Default bundle (when no embedded blob is present) hands out an empty lookup so resolvers fall through.</summary>
+    /// <summary>Default bundle is populated with the embedded MDI catalogue.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task DefaultBundleIsEmptyWhenResourceIsMissing()
+    public async Task DefaultBundleHasFullMdiCatalogue()
     {
-        // Initial commit ships no blob; this test pins the contract so we notice if a future stub
-        // accidentally seeds entries the build doesn't actually have.
         var bundle = MdiIconBundle.Default;
-        await Assert.That(bundle.Count).IsEqualTo(0);
+
+        // Sanity floor — the upstream catalogue has been > 7000 icons since 2023; this guards against
+        // an empty / partial bundle slipping through on regen.
+        await Assert.That(bundle.Count).IsGreaterThan(6000);
+    }
+
+    /// <summary>The icon names rxui's docs use today resolve through the default bundle.</summary>
+    /// <param name="iconName">MDI icon name (kebab-case, no <c>material-</c> prefix).</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("rocket-launch")]
+    [Arguments("source-branch")]
+    [Arguments("test-tube")]
+    [Arguments("monitor-cellphone")]
+    [Arguments("puzzle-outline")]
+    [Arguments("script-text-outline")]
+    [Arguments("book-open-page-variant-outline")]
+    [Arguments("account-group-outline")]
+    [Arguments("weather-night")]
+    [Arguments("weather-sunny")]
+    public async Task RxuiUsedIconsResolveInDefaultBundle(string iconName)
+    {
+        var bundle = MdiIconBundle.Default;
+        var bytes = Encoding.UTF8.GetBytes(iconName);
+        var found = bundle.TryGet(bytes, out var svg);
+        var nonEmpty = svg.Length > 0;
+
+        await Assert.That(found).IsTrue();
+        await Assert.That(nonEmpty).IsTrue();
     }
 
     /// <summary>Resolves <paramref name="name"/> against <paramref name="lookup"/> and decodes the result before any await.</summary>
