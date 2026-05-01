@@ -101,12 +101,11 @@ public class MdiIconLookupTests
     /// <summary>Default bundle is populated with the embedded MDI catalogue.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task DefaultBundleHasFullMdiCatalogue()
-    {
+    public async Task DefaultBundleHasFullMdiCatalogue() =>
+
         // Sanity floor — the upstream catalogue has been > 7000 icons since 2023; guards against
         // an empty / partial bundle slipping through on regen.
         await Assert.That(MdiIconBundle.Count).IsGreaterThan(6000);
-    }
 
     /// <summary>The icon names rxui's docs use today resolve through the default bundle.</summary>
     /// <param name="iconName">MDI icon name (kebab-case, no <c>material-</c> prefix).</param>

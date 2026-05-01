@@ -37,19 +37,34 @@ public static class IconShortcodeRewriter
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass, IIconResolver? resolver)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        var classBytes = materialIconClass.ToArray();
-        var localResolver = resolver;
-        CodeAwareRewriter.Run(source, writer, TryProbe);
-
-        bool TryProbe(ReadOnlySpan<byte> s, int offset, IBufferWriter<byte> w, out int consumed)
+        var i = 0;
+        while (i < source.Length)
         {
-            if (s[offset] is (byte)':')
+            if (MarkdownCodeScanner.AtLineStart(source, i) && MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
             {
-                return TryRewriteShortcode(s, offset, w, classBytes, localResolver, out consumed);
+                writer.Write(source[i..fenceEnd]);
+                i = fenceEnd;
+                continue;
             }
 
-            consumed = 0;
-            return false;
+            if (source[i] is (byte)'`')
+            {
+                var inlineEnd = MarkdownCodeScanner.ConsumeInlineCode(source, i);
+                writer.Write(source[i..inlineEnd]);
+                i = inlineEnd;
+                continue;
+            }
+
+            if (source[i] is (byte)':' && TryRewriteShortcode(source, i, writer, materialIconClass, resolver, out var consumed))
+            {
+                i += consumed;
+                continue;
+            }
+
+            var dst = writer.GetSpan(1);
+            dst[0] = source[i];
+            writer.Advance(1);
+            i++;
         }
     }
 

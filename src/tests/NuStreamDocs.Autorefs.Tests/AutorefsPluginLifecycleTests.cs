@@ -12,10 +12,7 @@ public class AutorefsPluginLifecycleTests
     /// <summary>OnConfigureAsync is a no-op that completes synchronously.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync()
-    {
-        await new AutorefsPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
-    }
+    public async Task OnConfigureAsync() => await new AutorefsPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnRenderPageAsync collects heading IDs into the registry.</summary>
     /// <returns>Async test.</returns>

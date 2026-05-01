@@ -219,10 +219,7 @@ public class AnchorBytesTests
     [Arguments("<a href=\"javascript:void(0)\">x</a>")]
     [Arguments("<a href=\"#section\">x</a>")]
     [Arguments("<a href=\"./relative\">x</a>")]
-    public async Task NonHttpSchemesUntouched(string html)
-    {
-        await Assert.That(Rewrite(html, addRel: true, addTarget: true)).IsEqualTo(html);
-    }
+    public async Task NonHttpSchemesUntouched(string html) => await Assert.That(Rewrite(html, addRel: true, addTarget: true)).IsEqualTo(html);
 
     /// <summary>Helper that runs the byte rewrite and decodes the result.</summary>
     /// <param name="html">Input HTML.</param>

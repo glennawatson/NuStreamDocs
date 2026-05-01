@@ -18,10 +18,7 @@ public class OptimisePluginLifecycleTests
     /// <summary>OptimisePlugin.OnConfigureAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OptimiseOnConfigureAsync()
-    {
-        await new OptimisePlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
-    }
+    public async Task OptimiseOnConfigureAsync() => await new OptimisePlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
 
     /// <summary>OptimisePlugin.OnRenderPageAsync no-ops on plain HTML.</summary>
     /// <returns>Async test.</returns>
@@ -45,18 +42,12 @@ public class OptimisePluginLifecycleTests
     /// <summary>HtmlMinifyPlugin.OnConfigureAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HtmlMinifyOnConfigureAsync()
-    {
-        await new HtmlMinifyPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
-    }
+    public async Task HtmlMinifyOnConfigureAsync() => await new HtmlMinifyPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
 
     /// <summary>HtmlMinifyPlugin.OnFinaliseAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HtmlMinifyOnFinaliseAsync()
-    {
-        await new HtmlMinifyPlugin().OnFinaliseAsync(new("/out"), CancellationToken.None);
-    }
+    public async Task HtmlMinifyOnFinaliseAsync() => await new HtmlMinifyPlugin().OnFinaliseAsync(new("/out"), CancellationToken.None);
 
     /// <summary>Disposable scratch directory.</summary>
     private sealed class ScratchDir : IDisposable

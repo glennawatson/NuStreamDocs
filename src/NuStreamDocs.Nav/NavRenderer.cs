@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Nav;
 
@@ -30,9 +30,6 @@ namespace NuStreamDocs.Nav;
 /// </remarks>
 internal static class NavRenderer
 {
-    /// <summary>Length of the <c>.md</c> extension stripped when computing served URLs.</summary>
-    private const int MarkdownExtensionLength = 3;
-
     /// <summary>Emits the full nav tree for <paramref name="currentPageUrl"/>, marking the active branch.</summary>
     /// <param name="root">Nav tree root.</param>
     /// <param name="currentPageUrl">URL of the page being rendered, forward-slashed (<c>guide/intro.html</c>).</param>
@@ -43,8 +40,9 @@ internal static class NavRenderer
         ArgumentException.ThrowIfNullOrEmpty(currentPageUrl);
         ArgumentNullException.ThrowIfNull(writer);
 
-        var activeAncestors = CollectActiveAncestors(root, currentPageUrl);
-        WriteList(writer, root.Children, currentPageUrl, activeAncestors, prune: false);
+        EnsureParentsAttached(root);
+        var activeNode = FindActiveNode(root, currentPageUrl);
+        WriteList(writer, root.Children, activeNode, prune: false);
     }
 
     /// <summary>Emits the pruned nav for <paramref name="currentPageUrl"/>: only the active branch and its immediate context.</summary>
@@ -57,68 +55,73 @@ internal static class NavRenderer
         ArgumentException.ThrowIfNullOrEmpty(currentPageUrl);
         ArgumentNullException.ThrowIfNull(writer);
 
-        var activeAncestors = CollectActiveAncestors(root, currentPageUrl);
-        WriteList(writer, root.Children, currentPageUrl, activeAncestors, prune: true);
+        EnsureParentsAttached(root);
+        var activeNode = FindActiveNode(root, currentPageUrl);
+        WriteList(writer, root.Children, activeNode, prune: true);
     }
 
-    /// <summary>Returns the set of nodes that lie on the path from the root to the page matching <paramref name="currentPageUrl"/>.</summary>
+    /// <summary>Attaches parent links when the tree was built manually in tests rather than via <see cref="NavTreeBuilder"/>.</summary>
     /// <param name="root">Nav root.</param>
-    /// <param name="currentPageUrl">Active page URL.</param>
-    /// <returns>Identity-set of active ancestors; empty when the page is not in the tree.</returns>
-    private static HashSet<NavNode> CollectActiveAncestors(NavNode root, string currentPageUrl)
+    private static void EnsureParentsAttached(NavNode root)
     {
-        var set = new HashSet<NavNode>();
-        FindActivePath(root, currentPageUrl, set);
-        return set;
-    }
-
-    /// <summary>Depth-first search that records every ancestor of the active page in <paramref name="ancestors"/>.</summary>
-    /// <param name="node">Current node.</param>
-    /// <param name="currentPageUrl">Active page URL.</param>
-    /// <param name="ancestors">Accumulator.</param>
-    /// <returns>True when the active page sits in this subtree.</returns>
-    private static bool FindActivePath(NavNode node, string currentPageUrl, HashSet<NavNode> ancestors)
-    {
-        if ((!node.IsSection && PathMatches(node.RelativePath, currentPageUrl)) ||
-            (node.IsSection && node.IndexPath.Length > 0 && PathMatches(node.IndexPath, currentPageUrl)))
+        if (root.Children is not [var firstChild, ..] || ReferenceEquals(firstChild.Parent, root))
         {
-            ancestors.Add(node);
-            return true;
+            return;
         }
 
-        for (var i = 0; i < node.Children.Length; i++)
+        root.AttachParents();
+    }
+
+    /// <summary>Returns the node representing <paramref name="currentPageUrl"/>, or null when the page is not in the tree.</summary>
+    /// <param name="root">Nav root.</param>
+    /// <param name="currentPageUrl">Active page URL.</param>
+    /// <returns>The active node, or null when not found.</returns>
+    private static NavNode? FindActiveNode(NavNode root, string currentPageUrl)
+    {
+        if ((!root.IsSection && string.Equals(root.RelativeUrl, currentPageUrl, StringComparison.Ordinal)) ||
+            (root.IsSection && root.IndexUrl.Length > 0 && string.Equals(root.IndexUrl, currentPageUrl, StringComparison.Ordinal)))
         {
-            if (!FindActivePath(node.Children[i], currentPageUrl, ancestors))
+            return root;
+        }
+
+        for (var i = 0; i < root.Children.Length; i++)
+        {
+            var active = FindActiveNode(root.Children[i], currentPageUrl);
+            if (active is not null)
             {
-                continue;
+                return active;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Returns true when <paramref name="node"/> is the active node or an ancestor of it.</summary>
+    /// <param name="node">Candidate node.</param>
+    /// <param name="activeNode">Active node, if any.</param>
+    /// <returns>True when <paramref name="node"/> lies on the active branch.</returns>
+    private static bool IsActiveBranchNode(NavNode node, NavNode? activeNode)
+    {
+        var current = activeNode;
+        while (current is not null)
+        {
+            if (ReferenceEquals(current, node))
+            {
+                return true;
             }
 
-            ancestors.Add(node);
-            return true;
+            current = current.Parent;
         }
 
         return false;
     }
 
-    /// <summary>True when a nav node's source path matches the rendered URL.</summary>
-    /// <param name="navPath">Source-relative path stored on the node (e.g. <c>guide/intro.md</c>).</param>
-    /// <param name="pageUrl">Site-relative URL (e.g. <c>guide/intro.html</c>).</param>
-    /// <returns>True on match.</returns>
-    private static bool PathMatches(string navPath, string pageUrl)
-    {
-        var asUrl = navPath.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-            ? $"{navPath.AsSpan(0, navPath.Length - MarkdownExtensionLength)}.html"
-            : navPath;
-        return string.Equals(asUrl, pageUrl, StringComparison.Ordinal);
-    }
-
     /// <summary>Writes one <c>&lt;ul class="md-nav__list"&gt;</c> with <paramref name="items"/> as <c>&lt;li&gt;</c>s.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="items">Child items to render.</param>
-    /// <param name="currentPageUrl">Active page URL.</param>
-    /// <param name="activeAncestors">Pre-computed active branch.</param>
+    /// <param name="activeNode">Active node for the current page, if any.</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
-    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, string currentPageUrl, HashSet<NavNode> activeAncestors, bool prune)
+    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, NavNode? activeNode, bool prune)
     {
         if (items.Length == 0)
         {
@@ -128,7 +131,7 @@ internal static class NavRenderer
         WriteUtf8(writer, "<ul class=\"md-nav__list\">"u8);
         for (var i = 0; i < items.Length; i++)
         {
-            WriteItem(writer, items[i], currentPageUrl, activeAncestors, prune);
+            WriteItem(writer, items[i], activeNode, prune);
         }
 
         WriteUtf8(writer, "</ul>"u8);
@@ -137,17 +140,16 @@ internal static class NavRenderer
     /// <summary>Writes one <c>&lt;li&gt;</c> for either a section or a leaf page.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="node">Node to render.</param>
-    /// <param name="currentPageUrl">Active page URL.</param>
-    /// <param name="activeAncestors">Pre-computed active branch.</param>
+    /// <param name="activeNode">Active node for the current page, if any.</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
-    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, string currentPageUrl, HashSet<NavNode> activeAncestors, bool prune)
+    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, NavNode? activeNode, bool prune)
     {
-        var active = activeAncestors.Contains(node);
+        var active = IsActiveBranchNode(node, activeNode);
         WriteUtf8(writer, active ? "<li class=\"md-nav__item md-nav__item--active\">"u8 : "<li class=\"md-nav__item\">"u8);
 
         if (node.IsSection)
         {
-            WriteSection(writer, node, currentPageUrl, activeAncestors, prune, active);
+            WriteSection(writer, node, activeNode, prune, active);
         }
         else
         {
@@ -160,16 +162,15 @@ internal static class NavRenderer
     /// <summary>Writes a section node's label + nested list.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="node">Section node.</param>
-    /// <param name="currentPageUrl">Active page URL.</param>
-    /// <param name="activeAncestors">Active ancestors.</param>
+    /// <param name="activeNode">Active node for the current page, if any.</param>
     /// <param name="prune">When true, render children only when the section is on the active branch.</param>
     /// <param name="active">True when the section sits on the active branch.</param>
-    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, string currentPageUrl, HashSet<NavNode> activeAncestors, bool prune, bool active)
+    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, NavNode? activeNode, bool prune, bool active)
     {
         if (node.IndexPath.Length > 0)
         {
             WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
-            WriteString(writer, ToPageUrl(node.IndexPath));
+            WriteString(writer, node.IndexUrl);
             WriteUtf8(writer, "\">"u8);
             WriteString(writer, node.Title);
             WriteUtf8(writer, "</a>"u8);
@@ -187,7 +188,7 @@ internal static class NavRenderer
             return;
         }
 
-        WriteList(writer, node.Children, currentPageUrl, activeAncestors, prune);
+        WriteList(writer, node.Children, activeNode, prune);
     }
 
     /// <summary>Writes a leaf node's anchor.</summary>
@@ -197,19 +198,11 @@ internal static class NavRenderer
     private static void WriteLeaf(IBufferWriter<byte> writer, NavNode node, bool active)
     {
         WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
-        WriteString(writer, ToPageUrl(node.RelativePath));
+        WriteString(writer, node.RelativeUrl);
         WriteUtf8(writer, "\">"u8);
         WriteString(writer, node.Title);
         WriteUtf8(writer, "</a>"u8);
     }
-
-    /// <summary>Translates a nav node's source-relative <c>.md</c> path to the served URL.</summary>
-    /// <param name="navPath">Source-relative path.</param>
-    /// <returns>Page-relative URL.</returns>
-    private static string ToPageUrl(string navPath) =>
-        navPath.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-            ? $"{navPath.AsSpan(0, navPath.Length - MarkdownExtensionLength)}.html"
-            : navPath;
 
     /// <summary>Bulk-writes UTF-8 bytes into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
@@ -224,15 +217,5 @@ internal static class NavRenderer
     /// <summary>UTF-8-encodes <paramref name="value"/> directly into the writer's span.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="value">String.</param>
-    private static void WriteString(IBufferWriter<byte> writer, string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return;
-        }
-
-        var dst = writer.GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length));
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        writer.Advance(written);
-    }
+    private static void WriteString(IBufferWriter<byte> writer, string value) => Utf8StringWriter.Write(writer, value);
 }

@@ -79,6 +79,7 @@ internal static class NavTreeBuilder
             ReportOrphanPages(inputRoot, root, matcher, logger);
         }
 
+        root.AttachParents();
         return root;
     }
 

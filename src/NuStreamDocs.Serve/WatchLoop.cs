@@ -172,8 +172,5 @@ internal sealed class WatchLoop : IDisposable
     /// <summary>FileSystemWatcher error handler — buffer overflows and similar.</summary>
     /// <param name="sender">Sender.</param>
     /// <param name="e">Error args.</param>
-    private void OnError(object sender, ErrorEventArgs e)
-    {
-        ServeLoggingHelper.LogWatchError(_logger, e.GetException());
-    }
+    private void OnError(object sender, ErrorEventArgs e) => ServeLoggingHelper.LogWatchError(_logger, e.GetException());
 }
