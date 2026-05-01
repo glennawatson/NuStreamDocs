@@ -192,6 +192,7 @@ Every plugin ships in its own NuGet so you only pay for what you use.
 | Package | Builder | What |
 |---|---|---|
 | `NuStreamDocs.Macros` | `.UseMacros()` | Variable substitution. `{{ name }}` markers in markdown resolve through a host-supplied `Dictionary<string, string>`. Skips fenced + inline code regions. Closes the mkdocs-macros gap (variable substitution slice). |
+| `NuStreamDocs.Bibliography` | `.UseBibliography()` | Pandoc-style citations — `[@key]` / `[@key, p 23]` / `[@a; @b]` markers resolve through a `BibliographyDatabase` (fluent builder, CSL-JSON loader). Emits a numbered footnote per citation plus a bibliography section. Ships **AGLC4** (Australian Guide to Legal Citation, 4th ed) as the v1 style; CSL-aware data model so other styles slot in. Byte-level UTF-8, zero-string-alloc on the format hot path. |
 
 ### Markdown syntax extensions (à la carte)
 
@@ -205,7 +206,7 @@ Each is a separate assembly so you only pull what you use:
 | `NuStreamDocs.Keys` | `.UseKeys()` | `++ctrl+alt+del++` → keyboard `<span>` |
 | `NuStreamDocs.MagicLink` | `.UseMagicLink()` | Bare URLs become autolinks |
 | `NuStreamDocs.SmartSymbols` | `.UseSmartSymbols()` | © ® ™, c/o, ±, ≠, → … |
-| `NuStreamDocs.Snippets` | `.UseSnippets()` | `--8<-- "file"` includes |
+| `NuStreamDocs.Snippets` | `.UseSnippets()` | Whole-file (`--8<-- "file"`) and section (`--8<-- "file#name"`) includes. Section boundaries inside snippet files use HTML comments — `<!-- @section name -->` / `<!-- @endsection -->` — invisible in any CommonMark renderer even when the plugin isn't loaded. |
 | `NuStreamDocs.SuperFences` | `.UseSuperFences()` | Custom-fence dispatcher (auto-discovers fence handlers) |
 
 ### Site emitters
@@ -218,6 +219,7 @@ Each is a separate assembly so you only pull what you use:
 | `NuStreamDocs.Metadata` | `.UseMetadata()` | Directory-level (`_meta.yml`) + sidecar (`page.meta.yml`) frontmatter merging (Statiq-inspired) |
 | `NuStreamDocs.Autorefs` | `.UseAutorefs()` | `@autoref:ID` rewriting against collected heading anchors |
 | `NuStreamDocs.Xrefs` | `.UseXrefs()` | DocFX-style `xrefmap.json` emit + import |
+| `NuStreamDocs.SphinxInventory` | `.UseSphinxInventory()` | Sphinx-compatible `objects.inv` emitter. Snapshots the shared autorefs registry at finalise time and writes a v2 inventory file (zlib-compressed body) so external Sphinx sites can intersphinx-link into NuStreamDocs builds. |
 
 ### Quality / validation
 
@@ -245,7 +247,8 @@ Each is a separate assembly so you only pull what you use:
 |---|---|---|
 | `NuStreamDocs.Mermaid` | `.UseMermaid()` | Retag fenced `mermaid` blocks for the Mermaid runtime. |
 | `NuStreamDocs.Lightbox` | `.UseLightbox()` | glightbox: wraps content images in lightbox triggers, ships glightbox CSS/JS. |
-| `NuStreamDocs.Icons.Material` | `.UseMaterialIcons()` | Google Material Icons / Material Symbols (Outlined/Rounded/Sharp). |
+| `NuStreamDocs.Icons.Material` | `.UseMaterialIcons()` | Google Material Icons / Material Symbols (Outlined/Rounded/Sharp) — emits the stylesheet `<link>` so font-ligature spans render. |
+| `NuStreamDocs.Icons.MaterialDesign` | `new MdiIconResolver()` | **Inline-SVG** Material Design Icons (Pictogrammers MDI, ~7,400 icons). Plugs into the icon-shortcode rewriter as an `IIconResolver` so `:material-foo:` shortcodes inline the actual SVG path data — matches what mkdocs-material emits and works for the much larger MDI namespace (which Google Material Symbols doesn't fully cover). Path data is baked into a generated bucket-by-length switch; zero startup cost, ~50 ns lookup. |
 | `NuStreamDocs.Icons.FontAwesome` | `.UseFontAwesome()` | Font Awesome Free from a configurable CDN. |
 
 ### Privacy & optimisation
@@ -361,6 +364,150 @@ await new DocBuilder()
     })
     .BuildAsync();
 ```
+
+### Academic / scientific docs with citations
+
+```csharp
+using NuStreamDocs.Bibliography;
+using NuStreamDocs.Bibliography.Model;
+
+await new DocBuilder()
+    .WithInput("docs")
+    .WithOutput("site")
+    .UseMaterialTheme()
+    .UseNav()
+    .UseBibliography(db =>
+        db.AddCase("mabo", "Mabo v Queensland (No 2)", "(1992) 175 CLR 1", 1992)
+          .AddBook("gummow", "Change and Continuity",
+                   PersonName.Of("William", "Gummow"),
+                   2018, "Federation Press"))
+    .BuildAsync();
+```
+
+Now `[@mabo]` and `[@gummow, p 23]` markers in markdown rewrite into
+numbered footnote refs that resolve through the database; a `## Bibliography`
+section is appended per page. AGLC4 is the default style.
+
+For larger bibliographies, load from CSL-JSON (the canonical pandoc /
+Zotero export shape):
+
+```csharp
+using NuStreamDocs.Bibliography.Csl;
+
+var entries = CslJsonLoader.LoadFile("references.json");
+var db = new BibliographyDatabaseBuilder();
+foreach (var e in entries) { db.Add(e); }
+
+builder.UseBibliography(new BibliographyOptions(
+    db.Build(),
+    Aglc4Style.Instance,
+    WarnOnMissing: true));
+```
+
+### Material Design Icons inline (mkdocs-material parity)
+
+`:material-rocket-launch:` and friends emit the actual MDI SVG inlined
+into the page — same shape mkdocs-material produces. Pass the resolver
+to `UseMaterialTheme` (or `UseMaterial3Theme`) and the theme wires it
+into its icon-shortcode plugin:
+
+```csharp
+using NuStreamDocs.Icons.MaterialDesign;
+using NuStreamDocs.Theme.Material;
+
+await new DocBuilder()
+    .WithInput("docs")
+    .WithOutput("site")
+    .UseMaterialTheme(new MdiIconResolver())
+    .BuildAsync();
+```
+
+Same overload exists on `UseMaterial3Theme` for the Material 3 theme.
+Names that aren't in the MDI catalogue fall back to a Google Material
+font-ligature span automatically. The full ~7,400-icon catalogue is
+baked into the assembly as `"…"u8` literals — no resource decode, no
+runtime dictionary build.
+
+### Cross-link with a Sphinx site
+
+```csharp
+using NuStreamDocs.Autorefs;
+using NuStreamDocs.SphinxInventory;
+
+var registry = new AutorefsRegistry();
+
+await new DocBuilder()
+    .WithInput("docs")
+    .WithOutput("site")
+    .UseMaterialTheme()
+    .UseAutorefs(registry)
+    .UseSphinxInventory(registry, new SphinxInventoryOptions(
+        ProjectName: "MyDocs",
+        Version: "1.0.0",
+        OutputFileName: "objects.inv"))
+    .BuildAsync();
+```
+
+Emits `objects.inv` at the site root; an external Sphinx site that
+adds your URL to its `intersphinx_mapping` can now `:any:`-link to
+every UID your build registered.
+
+### Reusable snippets with section markers
+
+`docs/_partials/api-warning.md`:
+
+```markdown
+This page is regenerated from upstream metadata.
+
+<!-- @section breaking -->
+
+!!! warning "Breaking change"
+    The 2.0 release removes the synchronous overloads.
+    See the [migration guide](../migration/v2.md).
+
+<!-- @endsection -->
+
+<!-- @section deprecated -->
+
+!!! info "Soft-deprecated"
+    Will be removed in 3.0; use the async overload.
+
+<!-- @endsection -->
+```
+
+In any page:
+
+```markdown
+--8<-- "_partials/api-warning.md#breaking"
+```
+
+Only the marked section is spliced in. Section markers are HTML
+comments — invisible if the snippets plugin is disabled, no leftover
+sigils in the rendered output.
+
+### Repeated values via macros
+
+```csharp
+using NuStreamDocs.Macros;
+
+await new DocBuilder()
+    .WithInput("docs")
+    .WithOutput("site")
+    .UseMacros(opts => opts with
+    {
+        Variables = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["project"] = "ReactiveUI",
+            ["version"] = "20.0.0",
+            ["min_dotnet"] = ".NET 9.0",
+        },
+    })
+    .BuildAsync();
+```
+
+`{{ project }}` / `{{ version }}` / `{{ min_dotnet }}` markers in
+markdown resolve at preprocess time. Skips fenced + inline code
+regions automatically.
 
 ### Live-reload dev loop
 
