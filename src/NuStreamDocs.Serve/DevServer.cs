@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.WebSockets;
 using System.Text;
@@ -27,7 +28,11 @@ internal static class DevServer
     /// <summary>Path of the websocket endpoint browsers connect to.</summary>
     private const string LiveReloadPath = "/__livereload";
 
-    /// <summary>Reload script the middleware injects just before <c>&lt;/body&gt;</c>.</summary>
+    /// <summary>
+    /// Injected JavaScript snippet used to enable live-reload functionality in served HTML pages.
+    /// This script establishes a WebSocket connection to the server at the live-reload endpoint
+    /// and listens for messages instructing the browser to reload the page.
+    /// </summary>
     private const string ReloadScript =
         "<script>(function(){"
         + "var s=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'" + LiveReloadPath + "');"
@@ -51,7 +56,7 @@ internal static class DevServer
     /// <param name="outputRoot">Directory to serve as static content.</param>
     /// <param name="options">Watch + serve options.</param>
     /// <param name="broker">LiveReload connection registry.</param>
-    /// <param name="cancellationToken">Cancellation token; cancellation triggers graceful shutdown.</param>
+    /// <param name="cancellationToken">Cancellation token; cancellation triggers a graceful shutdown.</param>
     /// <returns>Started <see cref="WebApplication"/>.</returns>
     public static async Task<WebApplication> StartAsync(string outputRoot, WatchAndServeOptions options, LiveReloadBroker broker, CancellationToken cancellationToken)
     {
@@ -67,6 +72,10 @@ internal static class DevServer
     /// <summary>Builds the bind URL from <paramref name="options"/>.</summary>
     /// <param name="options">Options.</param>
     /// <returns>URL string suitable for <see cref="HostingAbstractionsWebHostBuilderExtensions.UseUrls"/>.</returns>
+    [SuppressMessage(
+        "Justification",
+        "S5332: Using http protocol is insecure. Use https instead.",
+        Justification = "Local dev only.")]
     public static string BuildUrl(WatchAndServeOptions options) =>
         string.Create(CultureInfo.InvariantCulture, $"http://{options.Host}:{options.Port}");
 
