@@ -26,17 +26,26 @@ public static class IconShortcodeRewriter
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="materialIconClass">UTF-8 class name to use for <c>:material-…:</c> shortcodes (e.g. <c>material-icons</c> or <c>material-symbols-outlined</c>).</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass)
+    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass) =>
+        Rewrite(source, writer, materialIconClass, resolver: null);
+
+    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>, consulting <paramref name="resolver"/> before falling back to the font-ligature span.</summary>
+    /// <param name="source">UTF-8 markdown bytes.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="materialIconClass">UTF-8 class name for <c>:material-…:</c> shortcodes that fall through to the ligature path.</param>
+    /// <param name="resolver">Optional inline-SVG resolver; when supplied and a hit is returned, the SVG body is inlined verbatim instead of emitting a span.</param>
+    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass, IIconResolver? resolver)
     {
         ArgumentNullException.ThrowIfNull(writer);
         var classBytes = materialIconClass.ToArray();
+        var localResolver = resolver;
         CodeAwareRewriter.Run(source, writer, TryProbe);
 
         bool TryProbe(ReadOnlySpan<byte> s, int offset, IBufferWriter<byte> w, out int consumed)
         {
             if (s[offset] is (byte)':')
             {
-                return TryRewriteShortcode(s, offset, w, classBytes, out consumed);
+                return TryRewriteShortcode(s, offset, w, classBytes, localResolver, out consumed);
             }
 
             consumed = 0;
@@ -49,9 +58,10 @@ public static class IconShortcodeRewriter
     /// <param name="offset">Cursor on the leading <c>:</c>.</param>
     /// <param name="writer">Sink.</param>
     /// <param name="materialIconClass">Class to emit for Material shortcodes.</param>
+    /// <param name="resolver">Optional inline-SVG resolver consulted before the font-ligature fallback.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True when a shortcode was rewritten.</returns>
-    private static bool TryRewriteShortcode(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass, out int consumed)
+    private static bool TryRewriteShortcode(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass, IIconResolver? resolver, out int consumed)
     {
         consumed = 0;
         var bodyStart = offset + 1;
@@ -67,7 +77,7 @@ public static class IconShortcodeRewriter
         }
 
         var body = source[bodyStart..bodyEnd];
-        if (!TryEmitMaterial(body, writer, materialIconClass) && !TryEmitFontAwesome(body, writer))
+        if (!TryEmitMaterial(body, writer, materialIconClass, resolver) && !TryEmitFontAwesome(body, writer))
         {
             return false;
         }
@@ -76,12 +86,13 @@ public static class IconShortcodeRewriter
         return true;
     }
 
-    /// <summary>Emits the Material-icon span for <paramref name="body"/> when it has the <c>material-</c> prefix.</summary>
+    /// <summary>Emits the Material-icon markup for <paramref name="body"/> when it has the <c>material-</c> prefix.</summary>
     /// <param name="body">Shortcode body (between the colons).</param>
     /// <param name="writer">Sink.</param>
     /// <param name="materialIconClass">Class to emit (varies between Material classic and Material3).</param>
+    /// <param name="resolver">Optional inline-SVG resolver consulted before the font-ligature fallback.</param>
     /// <returns>True when matched.</returns>
-    private static bool TryEmitMaterial(ReadOnlySpan<byte> body, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass)
+    private static bool TryEmitMaterial(ReadOnlySpan<byte> body, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass, IIconResolver? resolver)
     {
         if (body.Length <= MaterialPrefixLength || !body.StartsWith("material-"u8))
         {
@@ -89,6 +100,12 @@ public static class IconShortcodeRewriter
         }
 
         var name = body[MaterialPrefixLength..];
+        if (resolver is not null && resolver.TryResolve(name, out var svg) && svg.Length > 0)
+        {
+            writer.Write(svg);
+            return true;
+        }
+
         writer.Write("<span class=\""u8);
         writer.Write(materialIconClass);
         writer.Write("\">"u8);
