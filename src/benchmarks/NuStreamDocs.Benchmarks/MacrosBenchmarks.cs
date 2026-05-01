@@ -39,7 +39,7 @@ public class MacrosBenchmarks
             ["author"] = "Glenn Watson",
             ["year"] = "2026",
         };
-        _plugin = new MacrosPlugin(new MacrosOptions(vars, EscapeHtml: false, WarnOnMissing: false));
+        _plugin = new(new(vars, EscapeHtml: false, WarnOnMissing: false));
     }
 
     /// <summary>Marker-heavy fixture — every <c>{{ name }}</c> resolves through the variable map.</summary>

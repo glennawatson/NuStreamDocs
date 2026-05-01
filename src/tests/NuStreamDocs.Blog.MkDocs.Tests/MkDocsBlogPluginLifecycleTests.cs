@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-
 namespace NuStreamDocs.Blog.MkDocs.Tests;
 
 /// <summary>Lifecycle method coverage for <c>MkDocsBlogPlugin</c>.</summary>
@@ -16,7 +14,7 @@ public class MkDocsBlogPluginLifecycleTests
     {
         using var temp = new ScratchDir();
         Directory.CreateDirectory(Path.Combine(temp.Root, "blog", "posts"));
-        var plugin = new MkDocsBlogPlugin(new MkDocsBlogOptions("blog", "Blog"));
+        var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
         await plugin.OnConfigureAsync(new(default, temp.Root, "/out", []), CancellationToken.None);
     }
 
@@ -25,8 +23,8 @@ public class MkDocsBlogPluginLifecycleTests
     [Test]
     public async Task OnRenderPageAsync()
     {
-        var plugin = new MkDocsBlogPlugin(new MkDocsBlogOptions("blog", "Blog"));
-        await plugin.OnRenderPageAsync(new("p.md", default, new ArrayBufferWriter<byte>(8)), CancellationToken.None);
+        var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
+        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 
     /// <summary>OnFinaliseAsync no-ops.</summary>
@@ -34,7 +32,7 @@ public class MkDocsBlogPluginLifecycleTests
     [Test]
     public async Task OnFinaliseAsync()
     {
-        var plugin = new MkDocsBlogPlugin(new MkDocsBlogOptions("blog", "Blog"));
+        var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
         await plugin.OnFinaliseAsync(new("/out"), CancellationToken.None);
     }
 

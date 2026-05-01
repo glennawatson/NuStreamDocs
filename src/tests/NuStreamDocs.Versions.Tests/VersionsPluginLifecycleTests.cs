@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-
 namespace NuStreamDocs.Versions.Tests;
 
 /// <summary>Lifecycle method coverage for VersionsPlugin.</summary>
@@ -14,7 +12,7 @@ public class VersionsPluginLifecycleTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new VersionsPlugin(new VersionOptions("1.0", "Stable"));
+        var plugin = new VersionsPlugin(new("1.0", "Stable"));
         await Assert.That(plugin.Name).IsEqualTo("versions");
     }
 
@@ -22,11 +20,11 @@ public class VersionsPluginLifecycleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task OnConfigure() =>
-        await new VersionsPlugin(new VersionOptions("1.0", "Stable")).OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+        await new VersionsPlugin(new("1.0", "Stable")).OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnRenderPageAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task OnRender() =>
-        await new VersionsPlugin(new VersionOptions("1.0", "Stable")).OnRenderPageAsync(new("p.md", default, new ArrayBufferWriter<byte>(8)), CancellationToken.None);
+        await new VersionsPlugin(new("1.0", "Stable")).OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
 }

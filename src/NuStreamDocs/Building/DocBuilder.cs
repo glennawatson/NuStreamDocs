@@ -295,7 +295,7 @@ public sealed class DocBuilder
             _inputRoot,
             _outputRoot,
             [.. _plugins],
-            new BuildPipelineOptions(BuildPathFilter(), _logger, _useDirectoryUrls, _includeDrafts),
+            new(BuildPathFilter(), _logger, _useDirectoryUrls, _includeDrafts),
             cancellationToken);
 
     /// <summary>

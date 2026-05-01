@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Autorefs;
 
 namespace NuStreamDocs.Xrefs.Tests;
@@ -26,6 +25,6 @@ public class XrefsPluginCoverageTests
     public async Task OnRenderNoOp()
     {
         var plugin = new XrefsPlugin();
-        await plugin.OnRenderPageAsync(new("p.md", default, new ArrayBufferWriter<byte>(8)), CancellationToken.None);
+        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 }

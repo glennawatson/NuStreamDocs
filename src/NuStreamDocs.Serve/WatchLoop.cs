@@ -46,12 +46,12 @@ internal sealed class WatchLoop : IDisposable
         _ignoreRoot = ignoreRoot is null ? null : Path.GetFullPath(ignoreRoot);
         _debounceMs = debounceMs;
         _logger = logger;
-        _events = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+        _events = Channel.CreateUnbounded<string>(new()
         {
             SingleReader = true,
             SingleWriter = false,
         });
-        _watcher = new FileSystemWatcher(fullInput)
+        _watcher = new(fullInput)
         {
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,

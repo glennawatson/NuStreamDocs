@@ -134,7 +134,7 @@ internal static class CitationMarkerScanner
             return false;
         }
 
-        marker = new CitationMarker(bracketStart, bracketEnd + 1, cites);
+        marker = new(bracketStart, bracketEnd + 1, cites);
         return true;
     }
 
@@ -215,7 +215,7 @@ internal static class CitationMarkerScanner
             consumed = locatorEnd;
         }
 
-        reference = new CitationReference(key, locator);
+        reference = new(key, locator);
         return true;
     }
 
@@ -233,7 +233,7 @@ internal static class CitationMarkerScanner
         var spaceIdx = trimmed.IndexOf((byte)' ');
         if (spaceIdx < 0)
         {
-            return new CitationLocator(LocatorKind.None, Encoding.UTF8.GetString(trimmed));
+            return new(LocatorKind.None, Encoding.UTF8.GetString(trimmed));
         }
 
         var labelBytes = trimmed[..spaceIdx];
@@ -242,7 +242,7 @@ internal static class CitationMarkerScanner
         var value = kind is LocatorKind.Other
             ? $"{Encoding.UTF8.GetString(labelBytes)} {Encoding.UTF8.GetString(valueBytes)}"
             : Encoding.UTF8.GetString(valueBytes);
-        return new CitationLocator(kind, value);
+        return new(kind, value);
     }
 
     /// <summary>Trims ASCII spaces / tabs from both ends of <paramref name="bytes"/>.</summary>

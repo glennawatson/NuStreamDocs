@@ -27,7 +27,7 @@ public class ValidationCorpusTests
 
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
             await Assert.That(corpus.TryGetPage("index.html", out var page)).IsTrue();
-            await Assert.That(page!.InternalLinks).Contains("about.html");
+            await Assert.That(page.InternalLinks).Contains("about.html");
             await Assert.That(page.InternalLinks).DoesNotContain("https://example.com");
             await Assert.That(page.InternalLinks).DoesNotContain("image.png");
             await Assert.That(page.ExternalLinks).Contains("https://example.com");
@@ -55,7 +55,7 @@ public class ValidationCorpusTests
 
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
             await Assert.That(corpus.TryGetPage("index.html", out var page)).IsTrue();
-            await Assert.That(page!.InternalLinks).DoesNotContain("image.png?v=1");
+            await Assert.That(page.InternalLinks).DoesNotContain("image.png?v=1");
             await Assert.That(page.InternalLinks).DoesNotContain("style.css#section");
             await Assert.That(page.InternalLinks).Contains("page.html?q=1");
         }

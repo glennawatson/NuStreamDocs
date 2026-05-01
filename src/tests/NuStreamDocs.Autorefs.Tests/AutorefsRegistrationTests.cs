@@ -25,13 +25,13 @@ public class AutorefsRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseAutorefsRegistryRegisters() =>
-        await Assert.That(new DocBuilder().UseAutorefs(new AutorefsRegistry())).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseAutorefs(new())).IsTypeOf<DocBuilder>();
 
     /// <summary>UseAutorefs(registry, logger) registers.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseAutorefsRegistryLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseAutorefs(new AutorefsRegistry(), NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseAutorefs(new(), NullLogger.Instance)).IsTypeOf<DocBuilder>();
 
     /// <summary>UseAutorefs rejects null builder.</summary>
     /// <returns>Async test.</returns>
@@ -56,7 +56,7 @@ public class AutorefsRegistrationTests
     [Test]
     public async Task UseAutorefsRejectsNullLogger()
     {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseAutorefs(new AutorefsRegistry(), null!));
+        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseAutorefs(new(), null!));
         await Assert.That(ex).IsNotNull();
     }
 }

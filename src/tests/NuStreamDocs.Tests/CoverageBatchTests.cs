@@ -16,7 +16,7 @@ public class CoverageBatchTests
     public async Task ContentHasherEmptyHex()
     {
         var empty = ContentHasher.EmptyHex();
-        await Assert.That(empty).IsEqualTo(new string('0', empty.Length));
+        await Assert.That(empty).IsEqualTo(new('0', empty.Length));
         await Assert.That(empty.Length).IsGreaterThan(0);
     }
 
@@ -39,7 +39,7 @@ public class CoverageBatchTests
         try
         {
             var manifest = BuildManifest.Empty();
-            manifest.Replace([new ManifestEntry("a.md", "deadbeef", 42L)]);
+            manifest.Replace([new("a.md", "deadbeef", 42L)]);
             await manifest.SaveAsync(dir, CancellationToken.None);
             await Assert.That(manifest.Count).IsEqualTo(1);
 

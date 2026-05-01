@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Autorefs;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Xrefs.Tests;
@@ -51,7 +50,7 @@ public class XrefsRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseXrefsWithRegistryRegisters() =>
-        await Assert.That(new DocBuilder().UseXrefs(new AutorefsRegistry(), XrefsOptions.Default)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseXrefs(new(), XrefsOptions.Default)).IsTypeOf<DocBuilder>();
 
     /// <summary>UseXrefs rejects null builder.</summary>
     /// <returns>Async test.</returns>

@@ -23,7 +23,7 @@ public class MetadataPluginLifecycleTests
     public async Task OnRenderPageAsync()
     {
         var plugin = new MetadataPlugin();
-        await plugin.OnRenderPageAsync(new("p.md", default, new ArrayBufferWriter<byte>(8)), CancellationToken.None);
+        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 
     /// <summary>OnFinaliseAsync is a no-op.</summary>

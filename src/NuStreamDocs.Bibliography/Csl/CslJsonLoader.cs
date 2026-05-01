@@ -170,7 +170,7 @@ internal static class CslJsonLoader
         var i = 0;
         foreach (var item in array.EnumerateArray())
         {
-            result[i++] = new PersonName(
+            result[i++] = new(
                 Family: GetString(item, "family"u8),
                 Given: GetString(item, "given"u8),
                 Suffix: GetString(item, "suffix"u8),

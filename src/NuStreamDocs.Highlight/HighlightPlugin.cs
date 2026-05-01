@@ -300,7 +300,7 @@ public sealed class HighlightPlugin : IDocPlugin
         }
 
         Write(writer, "<span class=\"filename\">"u8);
-        NuStreamDocs.Html.HtmlEscape.EscapeText(title, writer);
+        Html.HtmlEscape.EscapeText(title, writer);
         Write(writer, "</span>"u8);
     }
 

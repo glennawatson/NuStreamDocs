@@ -63,6 +63,6 @@ internal static class AnchorAttributeFinder
         }
 
         var valEnd = valStart + endQuoteRel;
-        return new NamedAttribute(p, valEnd + 1, valStart, valEnd);
+        return new(p, valEnd + 1, valStart, valEnd);
     }
 }

@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-
 namespace NuStreamDocs.Sitemap.Tests;
 
 /// <summary>Lifecycle method coverage for NotFoundPlugin.</summary>
@@ -28,5 +26,5 @@ public class NotFoundPluginLifecycleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task OnRender() =>
-        await new NotFoundPlugin().OnRenderPageAsync(new("p.md", default, new ArrayBufferWriter<byte>(8)), CancellationToken.None);
+        await new NotFoundPlugin().OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
 }

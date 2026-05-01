@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-
 namespace NuStreamDocs.LinkValidator.Tests;
 
 /// <summary>Lifecycle method coverage for <c>LinkValidatorPlugin</c>.</summary>
@@ -22,7 +20,7 @@ public class LinkValidatorPluginLifecycleTests
     [Test]
     public async Task OnRenderPageAsync()
     {
-        await new LinkValidatorPlugin().OnRenderPageAsync(new("p.md", default, new ArrayBufferWriter<byte>(8)), CancellationToken.None);
+        await new LinkValidatorPlugin().OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 
     /// <summary>OnFinaliseAsync drives RunAsync against an empty output directory.</summary>

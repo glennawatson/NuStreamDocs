@@ -50,9 +50,9 @@ public class IconShortcodeBenchmarks
         _resolverHit = Encoding.UTF8.GetBytes("rocket-launch");
         _resolverMiss = Encoding.UTF8.GetBytes("definitely-not-a-real-icon-name");
 
-        _mdiResolver = new MdiIconResolver();
-        _withMdi = new IconShortcodePlugin(_mdiResolver);
-        _ligatureOnly = new IconShortcodePlugin();
+        _mdiResolver = new();
+        _withMdi = new(_mdiResolver);
+        _ligatureOnly = new();
     }
 
     /// <summary>MDI resolver hot-path — direct <c>TryResolve</c> for a known hit.</summary>

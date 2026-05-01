@@ -49,7 +49,7 @@ public class AutorefsRewriterFileWalkTests
     public async Task RewriteAllMissingDirectory()
     {
         var path = Path.Combine(Path.GetTempPath(), "smkd-ar-missing-" + Guid.NewGuid().ToString("N"));
-        await Assert.That(AutorefsRewriter.RewriteAll(path, new AutorefsRegistry())).IsEqualTo(0);
+        await Assert.That(AutorefsRewriter.RewriteAll(path, new())).IsEqualTo(0);
     }
 
     /// <summary>RewriteAll(logger) on a non-existent directory returns zeros.</summary>
@@ -58,7 +58,7 @@ public class AutorefsRewriterFileWalkTests
     public async Task RewriteAllLoggedMissingDirectory()
     {
         var path = Path.Combine(Path.GetTempPath(), "smkd-ar-missing-" + Guid.NewGuid().ToString("N"));
-        var (r, m) = AutorefsRewriter.RewriteAll(path, new AutorefsRegistry(), NullLogger.Instance);
+        var (r, m) = AutorefsRewriter.RewriteAll(path, new(), NullLogger.Instance);
         await Assert.That(r).IsEqualTo(0);
         await Assert.That(m).IsEqualTo(0);
     }
@@ -71,7 +71,7 @@ public class AutorefsRewriterFileWalkTests
         using var temp = new ScratchDir();
         var path = Path.Combine(temp.Root, "plain.html");
         await File.WriteAllTextAsync(path, "<p>plain</p>");
-        await Assert.That(AutorefsRewriter.RewriteOne(path, new AutorefsRegistry())).IsFalse();
+        await Assert.That(AutorefsRewriter.RewriteOne(path, new())).IsFalse();
     }
 
     /// <summary>RewriteOne returns false when the markers don't resolve (file unchanged).</summary>
@@ -82,7 +82,7 @@ public class AutorefsRewriterFileWalkTests
         using var temp = new ScratchDir();
         var path = Path.Combine(temp.Root, "missing.html");
         await File.WriteAllTextAsync(path, "<a href=\"@autoref:NotInRegistry\">x</a>");
-        await Assert.That(AutorefsRewriter.RewriteOne(path, new AutorefsRegistry())).IsFalse();
+        await Assert.That(AutorefsRewriter.RewriteOne(path, new())).IsFalse();
     }
 
     /// <summary>RewriteOne returns true when at least one marker resolves.</summary>
@@ -106,7 +106,7 @@ public class AutorefsRewriterFileWalkTests
     public async Task RewriteOneRejectsEmptyPath()
     {
         var ex = Assert.Throws<ArgumentException>(static () =>
-            AutorefsRewriter.RewriteOne(string.Empty, new AutorefsRegistry()));
+            AutorefsRewriter.RewriteOne(string.Empty, new()));
         await Assert.That(ex).IsNotNull();
     }
 
@@ -116,7 +116,7 @@ public class AutorefsRewriterFileWalkTests
     public async Task RewriteAllRejectsEmptyPath()
     {
         var ex = Assert.Throws<ArgumentException>(static () =>
-            AutorefsRewriter.RewriteAll(string.Empty, new AutorefsRegistry()));
+            AutorefsRewriter.RewriteAll(string.Empty, new()));
         await Assert.That(ex).IsNotNull();
     }
 

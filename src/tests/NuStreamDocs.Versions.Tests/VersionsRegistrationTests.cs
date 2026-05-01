@@ -77,7 +77,7 @@ public class VersionsRegistrationTests
     public async Task UseVersionsRejectsNullBuilder()
     {
         var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderVersionsExtensions.UseVersions(null!, new VersionOptions("1.0", "X")));
+            DocBuilderVersionsExtensions.UseVersions(null!, new("1.0", "X")));
         await Assert.That(ex).IsNotNull();
     }
 

@@ -120,7 +120,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             var editUrl = ResolveEditUrl(context.RelativePath);
             var neighbours = ResolveNeighbours(context.RelativePath);
             var data = new TemplateData(
-                new Dictionary<string, ReadOnlyMemory<byte>>(14, StringComparer.Ordinal)
+                new(14, StringComparer.Ordinal)
                 {
                     ["language"] = _languageBytes,
                     ["site_name"] = _siteNameBytes,
@@ -131,8 +131,8 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     ["copyright"] = _copyrightBytes,
                     ["repo_url"] = _repoUrlBytes,
                     ["edit_url"] = ToUtf8(editUrl),
-                    ["scroll_to_top"] = _options.EnableScrollToTop ? TruthyBytes : default,
-                    ["toc_follow"] = _options.EnableTocFollow ? TruthyBytes : default,
+                    ["scroll_to_top"] = _options.EnableScrollToTop ? TruthyBytes : null,
+                    ["toc_follow"] = _options.EnableTocFollow ? TruthyBytes : null,
                     ["prev_url"] = ToUtf8(NeighbourUrl(neighbours.PreviousPath)),
                     ["prev_title"] = ToUtf8(neighbours.PreviousTitle),
                     ["next_url"] = ToUtf8(NeighbourUrl(neighbours.NextPath)),

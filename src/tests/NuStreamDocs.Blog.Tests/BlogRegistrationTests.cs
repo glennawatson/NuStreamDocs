@@ -14,7 +14,7 @@ public class BlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new WyamBlogPlugin(new WyamBlogOptions("posts", "Blog")).Name).IsEqualTo("wyam-blog");
+        await Assert.That(new WyamBlogPlugin(new("posts", "Blog")).Name).IsEqualTo("wyam-blog");
 
     /// <summary>2-arg ctor enables EmitTagArchives.</summary>
     /// <returns>Async test.</returns>
@@ -36,13 +36,13 @@ public class BlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseWyamBlogRegisters() =>
-        await Assert.That(new DocBuilder().UseWyamBlog(new WyamBlogOptions("posts", "Blog"))).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", "Blog"))).IsTypeOf<DocBuilder>();
 
     /// <summary>UseWyamBlog(options, logger) registers.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseWyamBlogLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseWyamBlog(new WyamBlogOptions("posts", "Blog"), NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", "Blog"), NullLogger.Instance)).IsTypeOf<DocBuilder>();
 
     /// <summary>UseWyamBlog rejects null builder.</summary>
     /// <returns>Async test.</returns>
@@ -50,7 +50,7 @@ public class BlogRegistrationTests
     public async Task UseWyamBlogRejectsNullBuilder()
     {
         var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderBlogExtensions.UseWyamBlog(null!, new WyamBlogOptions("posts", "Blog")));
+            DocBuilderBlogExtensions.UseWyamBlog(null!, new("posts", "Blog")));
         await Assert.That(ex).IsNotNull();
     }
 
@@ -69,7 +69,7 @@ public class BlogRegistrationTests
     public async Task UseWyamBlogRejectsNullLogger()
     {
         var ex = Assert.Throws<ArgumentNullException>(static () =>
-            new DocBuilder().UseWyamBlog(new WyamBlogOptions("posts", "Blog"), null!));
+            new DocBuilder().UseWyamBlog(new("posts", "Blog"), null!));
         await Assert.That(ex).IsNotNull();
     }
 }

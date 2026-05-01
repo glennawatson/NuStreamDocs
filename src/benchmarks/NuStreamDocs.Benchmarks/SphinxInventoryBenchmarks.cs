@@ -49,7 +49,7 @@ public class SphinxInventoryBenchmarks
             registry.Register("Symbol_" + idx, "api/Symbol_" + idx + ".html", fragment: null);
         }
 
-        _plugin = new SphinxInventoryPlugin(registry);
+        _plugin = new(registry);
     }
 
     /// <summary>Allocates the per-iteration output directory.</summary>
@@ -87,7 +87,7 @@ public class SphinxInventoryBenchmarks
     public async ValueTask<long> FinaliseEmit()
     {
         var ctx = new PluginFinaliseContext(_outputDir);
-        await _plugin.OnFinaliseAsync(ctx, default).ConfigureAwait(false);
+        await _plugin.OnFinaliseAsync(ctx, CancellationToken.None).ConfigureAwait(false);
         return new FileInfo(Path.Combine(_outputDir, "objects.inv")).Length;
     }
 }

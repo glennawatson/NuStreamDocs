@@ -56,12 +56,12 @@ public class SnippetsBenchmarks
         _sectionSource = BuildRepeated("--8<-- \"sectioned.md#example\"\n");
         _noMarkerSource = BuildRepeated("Plain markdown line with no include directive anywhere here.\n");
 
-        _plugin = new SnippetsPlugin(_baseDir);
+        _plugin = new(_baseDir);
 
         // The plugin captures _baseDir lazily on OnConfigureAsync; force it now so the
         // benchmark only measures the per-page rewrite cost.
-        var ctx = new NuStreamDocs.Plugins.PluginConfigureContext(default, _baseDir, _baseDir, []);
-        await _plugin.OnConfigureAsync(ctx, default).ConfigureAwait(false);
+        var ctx = new PluginConfigureContext(default, _baseDir, _baseDir, []);
+        await _plugin.OnConfigureAsync(ctx, CancellationToken.None).ConfigureAwait(false);
     }
 
     /// <summary>Cleans up the snippet fixtures.</summary>

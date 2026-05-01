@@ -95,7 +95,7 @@ internal static class NavTreeBuilder
         var navPaths = CollectNavLeafPaths(root);
         var orphans = new List<string>();
 
-        var matchResult = matcher.Execute(new Microsoft.Extensions.FileSystemGlobbing.Abstractions.DirectoryInfoWrapper(new DirectoryInfo(inputRoot)));
+        var matchResult = matcher.Execute(new Microsoft.Extensions.FileSystemGlobbing.Abstractions.DirectoryInfoWrapper(new(inputRoot)));
         foreach (var file in matchResult.Files)
         {
             var rel = file.Path.Replace('\\', '/');

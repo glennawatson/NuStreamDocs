@@ -45,7 +45,7 @@ public class BibliographyBenchmarks
             .AddBook("gummow", "Change and Continuity", PersonName.Of("William", "Gummow"), 2018, "Federation Press")
             .AddLegislation("hca", "High Court of Australia Act 1979", "Cth", 1979)
             .Build();
-        _plugin = new BibliographyPlugin(new BibliographyOptions(db, Aglc4Style.Instance, WarnOnMissing: false));
+        _plugin = new(new(db, Aglc4Style.Instance, WarnOnMissing: false));
     }
 
     /// <summary>Marker-heavy fixture — every <c>[@key]</c> resolves and gets rewritten plus a bibliography section appended.</summary>

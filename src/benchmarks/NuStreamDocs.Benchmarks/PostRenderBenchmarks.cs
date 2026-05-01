@@ -66,8 +66,8 @@ public class PostRenderBenchmarks
         _assetAttrHtml = Repeat("<img src=\"https://cdn.example/a.png\"><link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">");
         _srcsetHtml = Repeat("<img srcset=\"https://cdn.example/a.png 1x, https://cdn.example/b.png 2x, https://cdn.example/c.png 3x\">");
         _inlineStyleHtml = Repeat("<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>");
-        _registry = new ExternalAssetRegistry("local");
-        _filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
+        _registry = new("local");
+        _filter = new(hostsToSkip: null, hostsAllowed: null);
     }
 
     /// <summary>Benchmark for <c>AttrListPlugin</c>'s post-render rewrite.</summary>

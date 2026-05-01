@@ -68,7 +68,7 @@ public class HtmlSnapshotRewriterTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NullWriterThrows() =>
-        await Assert.That(() => HtmlSnapshotRewriter.Rewrite<int>(null!, 0, (_, _, _) => { })).Throws<ArgumentNullException>();
+        await Assert.That(() => HtmlSnapshotRewriter.Rewrite(null!, 0, (_, _, _) => { })).Throws<ArgumentNullException>();
 
     /// <summary>Null callback throws.</summary>
     /// <returns>Async test.</returns>
@@ -77,7 +77,7 @@ public class HtmlSnapshotRewriterTests
     {
         var writer = new ArrayBufferWriter<byte>();
         WriteUtf8(writer, "x");
-        await Assert.That(() => HtmlSnapshotRewriter.Rewrite<int>(writer, 0, null!)).Throws<ArgumentNullException>();
+        await Assert.That(() => HtmlSnapshotRewriter.Rewrite(writer, 0, null!)).Throws<ArgumentNullException>();
     }
 
     /// <summary>UTF-8 encodes <paramref name="value"/> directly into <paramref name="writer"/>.</summary>

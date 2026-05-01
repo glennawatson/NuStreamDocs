@@ -28,7 +28,7 @@ public class TocFragmentRendererTests
         var html = "<h1>x</h1>"u8.ToArray();
         var headings = HeadingScanner.Scan(html);
         var sink = new ArrayBufferWriter<byte>();
-        TocFragmentRenderer.Render(html, headings, new TocOptions(MinLevel: 2, MaxLevel: 6, PermalinkSymbol: "#", MarkerSubstitute: false), sink);
+        TocFragmentRenderer.Render(html, headings, new(MinLevel: 2, MaxLevel: 6, PermalinkSymbol: "#", MarkerSubstitute: false), sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
 

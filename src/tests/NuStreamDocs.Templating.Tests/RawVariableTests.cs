@@ -17,7 +17,7 @@ public class RawVariableTests
     {
         var template = Template.Compile("hi {{&name}} bye"u8);
         var data = new TemplateData(
-            new Dictionary<string, ReadOnlyMemory<byte>>(StringComparer.Ordinal)
+            new(StringComparer.Ordinal)
             {
                 ["name"] = "<b>X</b>"u8.ToArray(),
             },

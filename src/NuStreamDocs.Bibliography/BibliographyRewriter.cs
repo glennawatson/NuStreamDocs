@@ -97,7 +97,7 @@ internal static class BibliographyRewriter
             markerNumbers[i] = numbers;
         }
 
-        return new Assignments(
+        return new(
             UsedNumbers: locatorByNum.Count - 1,
             MarkerNumbers: markerNumbers,
             UniqueOrder: unique,

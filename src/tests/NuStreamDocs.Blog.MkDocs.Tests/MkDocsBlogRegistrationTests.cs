@@ -14,7 +14,7 @@ public class MkDocsBlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new MkDocsBlogPlugin(new MkDocsBlogOptions("blog", "Blog")).Name).IsEqualTo("mkdocs-blog");
+        await Assert.That(new MkDocsBlogPlugin(new("blog", "Blog")).Name).IsEqualTo("mkdocs-blog");
 
     /// <summary>2-arg ctor enables EmitCategoryArchives.</summary>
     /// <returns>Async test.</returns>
@@ -36,13 +36,13 @@ public class MkDocsBlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseMkDocsBlogRegisters() =>
-        await Assert.That(new DocBuilder().UseMkDocsBlog(new MkDocsBlogOptions("blog", "Blog"))).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseMkDocsBlog(new("blog", "Blog"))).IsTypeOf<DocBuilder>();
 
     /// <summary>UseMkDocsBlog(options, logger) registers.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseMkDocsBlogLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseMkDocsBlog(new MkDocsBlogOptions("blog", "Blog"), NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseMkDocsBlog(new("blog", "Blog"), NullLogger.Instance)).IsTypeOf<DocBuilder>();
 
     /// <summary>UseMkDocsBlog rejects null builder.</summary>
     /// <returns>Async test.</returns>
@@ -50,7 +50,7 @@ public class MkDocsBlogRegistrationTests
     public async Task UseMkDocsBlogRejectsNullBuilder()
     {
         var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderMkDocsBlogExtensions.UseMkDocsBlog(null!, new MkDocsBlogOptions("blog", "Blog")));
+            DocBuilderMkDocsBlogExtensions.UseMkDocsBlog(null!, new("blog", "Blog")));
         await Assert.That(ex).IsNotNull();
     }
 

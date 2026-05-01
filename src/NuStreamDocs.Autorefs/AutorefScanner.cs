@@ -44,7 +44,7 @@ internal static class AutorefScanner
         var markerStart = cursor + idx;
         var idStart = markerStart + Marker.Length;
         var idEnd = FindIdEnd(source, idStart);
-        match = new AutorefMatch(markerStart, idStart, idEnd);
+        match = new(markerStart, idStart, idEnd);
         return true;
     }
 

@@ -48,7 +48,7 @@ public sealed class BibliographyDatabaseBuilder
     public BibliographyDatabaseBuilder AddBook(string id, string title, PersonName author, int year, string publisher)
     {
         ArgumentNullException.ThrowIfNull(author);
-        return Add(new CitationEntry
+        return Add(new()
         {
             Id = id,
             Type = EntryType.Book,
@@ -71,7 +71,7 @@ public sealed class BibliographyDatabaseBuilder
     public BibliographyDatabaseBuilder AddArticle(string id, string title, PersonName author, int year, string journal, string volume, string page)
     {
         ArgumentNullException.ThrowIfNull(author);
-        return Add(new CitationEntry
+        return Add(new()
         {
             Id = id,
             Type = EntryType.ArticleJournal,
@@ -91,7 +91,7 @@ public sealed class BibliographyDatabaseBuilder
     /// <param name="year">Decision year.</param>
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder AddCase(string id, string name, string lawReportSeries, int year) =>
-        Add(new CitationEntry
+        Add(new()
         {
             Id = id,
             Type = EntryType.LegalCase,
@@ -107,7 +107,7 @@ public sealed class BibliographyDatabaseBuilder
     /// <param name="year">Year of enactment.</param>
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder AddLegislation(string id, string title, string jurisdiction, int year) =>
-        Add(new CitationEntry
+        Add(new()
         {
             Id = id,
             Type = EntryType.Legislation,

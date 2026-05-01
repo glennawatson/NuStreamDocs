@@ -201,7 +201,7 @@ internal static class AbbrRewriter
     private static void WriteHtmlEscaped(IBufferWriter<byte> writer, string value)
     {
         var bytes = Encoding.UTF8.GetByteCount(value);
-        Span<byte> buffer = bytes <= 256 ? stackalloc byte[bytes] : new byte[bytes];
+        var buffer = bytes <= 256 ? stackalloc byte[bytes] : new byte[bytes];
         Encoding.UTF8.GetBytes(value, buffer);
 
         var runStart = 0;

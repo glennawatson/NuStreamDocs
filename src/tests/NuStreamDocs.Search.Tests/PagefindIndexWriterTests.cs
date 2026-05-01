@@ -27,7 +27,7 @@ public class PagefindIndexWriterTests
         using var dir = new TempDir();
         PagefindIndexWriter.Write(
             dir.Root,
-            [new SearchDocument("abc_123", [.. "T"u8], [.. "B"u8])]);
+            [new("abc_123", [.. "T"u8], [.. "B"u8])]);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "pagefind-records", "abc_123.json"))).IsTrue();
     }
 
@@ -39,7 +39,7 @@ public class PagefindIndexWriterTests
         using var dir = new TempDir();
         PagefindIndexWriter.Write(
             dir.Root,
-            [new SearchDocument("a/b.html", [.. "T"u8], [.. "B"u8])]);
+            [new("a/b.html", [.. "T"u8], [.. "B"u8])]);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "pagefind-records", "a-b-html.json"))).IsTrue();
     }
 
@@ -51,7 +51,7 @@ public class PagefindIndexWriterTests
         using var dir = new TempDir();
         PagefindIndexWriter.Write(
             dir.Root,
-            [new SearchDocument(string.Empty, [.. "T"u8], [.. "B"u8])]);
+            [new(string.Empty, [.. "T"u8], [.. "B"u8])]);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "pagefind-records", "page-0.json"))).IsTrue();
     }
 
@@ -63,7 +63,7 @@ public class PagefindIndexWriterTests
         using var dir = new TempDir();
         PagefindIndexWriter.Write(
             dir.Root,
-            [new SearchDocument("page", [.. "Hi"u8], [.. "Body"u8])]);
+            [new("page", [.. "Hi"u8], [.. "Body"u8])]);
         var record = await File.ReadAllTextAsync(Path.Combine(dir.Root, "pagefind-records", "page.json"));
         await Assert.That(record).Contains("\"url\":\"page\"");
         await Assert.That(record).Contains("\"title\":\"Hi\"");

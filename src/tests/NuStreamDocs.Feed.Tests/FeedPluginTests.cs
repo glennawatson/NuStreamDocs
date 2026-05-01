@@ -15,7 +15,7 @@ public class FeedPluginTests
     [Test]
     public async Task TwoArgCtor()
     {
-        var plugin = new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"), TimeProvider.System);
+        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), TimeProvider.System);
         await Assert.That(plugin.Name).IsEqualTo("feed");
     }
 
@@ -23,7 +23,7 @@ public class FeedPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task OnConfigureAsyncSucceeds() =>
-        await new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"))
+        await new FeedPlugin(new("https://x.test/", "T", "D", "blog"))
             .OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnRenderPageAsync is a no-op.</summary>
@@ -32,7 +32,7 @@ public class FeedPluginTests
     public async Task OnRenderPageAsyncSucceeds()
     {
         var sink = new ArrayBufferWriter<byte>(8);
-        await new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"))
+        await new FeedPlugin(new("https://x.test/", "T", "D", "blog"))
             .OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
     }
 
@@ -42,7 +42,7 @@ public class FeedPluginTests
     public async Task OnFinaliseAsyncEmptyDirSucceeds()
     {
         using var dir = new TempDir();
-        var plugin = new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"));
+        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
         await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
         await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
     }
@@ -67,7 +67,7 @@ public class FeedPluginTests
     public async Task EmptyInputRootShortCircuits()
     {
         using var dir = new TempDir();
-        var plugin = new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"));
+        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
         await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
         await Assert.That(Directory.GetFiles(dir.Root, "*", SearchOption.AllDirectories)).IsEmpty();
     }
@@ -79,7 +79,7 @@ public class FeedPluginTests
     {
         using var dir = new TempDir();
         Directory.CreateDirectory(Path.Combine(dir.Root, "blog"));
-        var plugin = new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"));
+        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
         await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
         await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
@@ -97,8 +97,8 @@ public class FeedPluginTests
             Path.Combine(posts, "2026-04-01-hello.md"),
             "---\ntitle: Hi\n---\nbody\n");
 
-        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
-        var plugin = new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"), clock);
+        var clock = new FakeTimeProvider(new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
+        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), clock);
         await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
         await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
 
@@ -110,14 +110,14 @@ public class FeedPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NullTimeProviderThrows() =>
-        await Assert.That(() => new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"), null!))
+        await Assert.That(() => new FeedPlugin(new("https://x.test/", "T", "D", "blog"), null!))
             .Throws<ArgumentNullException>();
 
     /// <summary>Null logger rejected by the three-arg ctor.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NullLoggerThrows() =>
-        await Assert.That(() => new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"), TimeProvider.System, null!))
+        await Assert.That(() => new FeedPlugin(new("https://x.test/", "T", "D", "blog"), TimeProvider.System, null!))
             .Throws<ArgumentNullException>();
 
     /// <summary>Three-arg ctor accepts an explicit logger.</summary>
@@ -125,7 +125,7 @@ public class FeedPluginTests
     [Test]
     public async Task ThreeArgCtorAcceptsLogger()
     {
-        var plugin = new FeedPlugin(new FeedOptions("https://x.test/", "T", "D", "blog"), TimeProvider.System, NullLogger.Instance);
+        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), TimeProvider.System, NullLogger.Instance);
         await Assert.That(plugin.Name).IsEqualTo("feed");
     }
 

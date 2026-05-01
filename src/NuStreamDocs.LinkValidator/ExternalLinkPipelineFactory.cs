@@ -5,7 +5,6 @@
 using System.Threading.RateLimiting;
 using Polly;
 using Polly.RateLimiting;
-using Polly.Retry;
 
 namespace NuStreamDocs.LinkValidator;
 
@@ -28,7 +27,7 @@ internal static class ExternalLinkPipelineFactory
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 }).AcquireAsync(permitCount: 1, args.Context.CancellationToken),
             })
-            .AddRetry(new RetryStrategyOptions
+            .AddRetry(new()
             {
                 MaxRetryAttempts = options.MaxRetries,
                 Delay = TimeSpan.FromSeconds(1),

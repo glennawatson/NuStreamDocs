@@ -47,7 +47,7 @@ public class MacrosScannerTests
     [Test]
     public async Task FencedCodeIsSkipped()
     {
-        const string input = """
+        const string Input = """
             Hello {{ name }}.
 
             ```python
@@ -56,7 +56,7 @@ public class MacrosScannerTests
 
             And {{ name }} again.
             """;
-        var output = Rewrite(input, new() { ["name"] = "x" });
+        var output = Rewrite(Input, new() { ["name"] = "x" });
         await Assert.That(output).Contains("Hello x.");
         await Assert.That(output).Contains("print(\"{{ name }}\")");
         await Assert.That(output).Contains("And x again.");
@@ -128,9 +128,9 @@ public class MacrosScannerTests
     public async Task PluginNoVariablesIsNoOp()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        const string input = "Hello {{ name }}.";
-        new MacrosPlugin().Preprocess(Encoding.UTF8.GetBytes(input), sink);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(input);
+        const string Input = "Hello {{ name }}.";
+        new MacrosPlugin().Preprocess(Encoding.UTF8.GetBytes(Input), sink);
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Input);
     }
 
     /// <summary>WarnOnMissing fires the missing callback (verified via the public delegate path).</summary>
@@ -142,7 +142,7 @@ public class MacrosScannerTests
         var sink = new ArrayBufferWriter<byte>(64);
         MacrosScanner.Rewrite(
             "Hi {{ name }}, {{ other }}"u8,
-            (ReadOnlySpan<byte> n, out string v) =>
+            (n, out v) =>
             {
                 if (n.SequenceEqual("name"u8))
                 {

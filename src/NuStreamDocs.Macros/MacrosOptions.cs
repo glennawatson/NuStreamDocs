@@ -17,7 +17,7 @@ public sealed record MacrosOptions(
 {
     /// <summary>Gets the default option set — empty variables map, no escaping, no warnings.</summary>
     public static MacrosOptions Default { get; } = new(
-        Variables: new Dictionary<string, string>(StringComparer.Ordinal),
+        Variables: new(StringComparer.Ordinal),
         EscapeHtml: false,
         WarnOnMissing: false);
 }

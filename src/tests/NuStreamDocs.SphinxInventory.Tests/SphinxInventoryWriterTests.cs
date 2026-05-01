@@ -19,7 +19,7 @@ public class SphinxInventoryWriterTests
     public async Task HeaderIsCanonicalSphinxV2()
     {
         using var fixture = new InventoryFixture();
-        SphinxInventoryWriter.Write(fixture.Path, new SphinxInventoryOptions("MyDocs", "1.2.3", "objects.inv"), []);
+        SphinxInventoryWriter.Write(fixture.Path, new("MyDocs", "1.2.3", "objects.inv"), []);
         var bytes = await File.ReadAllBytesAsync(fixture.Path);
         var header = ReadHeaderText(bytes, out _);
         await Assert.That(header).IsEqualTo(
@@ -67,9 +67,9 @@ public class SphinxInventoryWriterTests
         using var fixture = new InventoryFixture();
         var registry = new AutorefsRegistry();
         registry.Register("Foo", "api/Foo.html", fragment: null);
-        var plugin = new SphinxInventoryPlugin(registry, new SphinxInventoryOptions("X", string.Empty, "objects.inv"));
+        var plugin = new SphinxInventoryPlugin(registry, new("X", string.Empty, "objects.inv"));
         var context = new PluginFinaliseContext(fixture.Directory);
-        await plugin.OnFinaliseAsync(context, default);
+        await plugin.OnFinaliseAsync(context, CancellationToken.None);
 
         var path = Path.Combine(fixture.Directory, "objects.inv");
         await Assert.That(File.Exists(path)).IsTrue();

@@ -162,7 +162,7 @@ public class RxuiCorpusBenchmarks
             .WithOutput(_outputRoot)
             .UseMacros(opts => opts with
             {
-                Variables = new Dictionary<string, string>(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
+                Variables = new(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
             })
             .BuildAsync()
             .GetAwaiter()
@@ -189,7 +189,7 @@ public class RxuiCorpusBenchmarks
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
-            .UsePlugin(new NuStreamDocs.Theme.Material.IconShortcode.IconShortcodePlugin(resolver))
+            .UsePlugin(new Theme.Material.IconShortcode.IconShortcodePlugin(resolver))
             .BuildAsync()
             .GetAwaiter()
             .GetResult();
@@ -224,7 +224,7 @@ public class RxuiCorpusBenchmarks
             .UseSnippets()
             .UseMacros(opts => opts with
             {
-                Variables = new Dictionary<string, string>(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
+                Variables = new(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
             })
             .UseBibliography(BibliographyOptions.Default)
             .UseCommonMarkdownExtensions()
@@ -234,7 +234,7 @@ public class RxuiCorpusBenchmarks
             .UseSearch()
             .UseMermaid()
             .UseSphinxInventory(registry)
-            .UsePlugin(new NuStreamDocs.Theme.Material.IconShortcode.IconShortcodePlugin(iconResolver))
+            .UsePlugin(new Theme.Material.IconShortcode.IconShortcodePlugin(iconResolver))
             .BuildAsync()
             .GetAwaiter()
             .GetResult();

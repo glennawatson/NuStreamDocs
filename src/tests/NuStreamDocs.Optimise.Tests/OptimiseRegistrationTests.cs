@@ -52,7 +52,7 @@ public class OptimiseRegistrationTests
     [Test]
     public async Task HtmlMinifyOnRenderPage()
     {
-        var sink = new System.Buffers.ArrayBufferWriter<byte>(64);
+        var sink = new ArrayBufferWriter<byte>(64);
         sink.Write("<p>   spaces   </p>"u8);
         await new HtmlMinifyPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
         await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).DoesNotContain("   spaces   ");

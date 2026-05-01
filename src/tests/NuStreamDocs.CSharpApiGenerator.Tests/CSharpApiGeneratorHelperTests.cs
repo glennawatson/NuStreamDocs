@@ -53,7 +53,7 @@ public class CSharpApiGeneratorHelperTests
     public async Task BuildManifestJsonShape()
     {
         var bytes = AssemblySourceFactory.BuildManifestJson(
-            new NuGetPackagesInput([new("Foo", "1.2.3"), new("Bar", "4.5")], "/cache"));
+            new([new("Foo", "1.2.3"), new("Bar", "4.5")], "/cache"));
         var json = Encoding.UTF8.GetString(bytes);
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;

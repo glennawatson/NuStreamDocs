@@ -16,7 +16,7 @@ public class ConfigReaderJsonPipelineTests
     [Test]
     public async Task SyncReadInvokesConverterAndParsesJson()
     {
-        ReadOnlySpan<byte> source = "irrelevant"u8;
+        var source = "irrelevant"u8;
         var config = ConfigReaderJsonPipeline.Read(source, WriteSiteNameJson);
         await Assert.That(config.SiteName).IsEqualTo("FromHelper");
     }
@@ -42,7 +42,7 @@ public class ConfigReaderJsonPipelineTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task AsyncReadNullStreamThrows() =>
-        await Assert.That(() =>
+        await Assert.That(static () =>
             ConfigReaderJsonPipeline.ReadAsync(null!, WriteSiteNameJsonAsync, CancellationToken.None))
             .Throws<ArgumentNullException>();
 
@@ -51,10 +51,14 @@ public class ConfigReaderJsonPipelineTests
     [Test]
     public async Task AsyncReadNullConverterThrows()
     {
-        await using var stream = new MemoryStream();
-        await Assert.That(() =>
-            ConfigReaderJsonPipeline.ReadAsync(stream, null!, CancellationToken.None))
-            .Throws<ArgumentNullException>();
+        var stream = new MemoryStream();
+        await Assert.That(async () =>
+        {
+            await using (stream)
+            {
+                await ConfigReaderJsonPipeline.ReadAsync(stream, null!, CancellationToken.None);
+            }
+        }).Throws<ArgumentNullException>();
     }
 
     /// <summary>Test span converter that emits a fixed site_name JSON document.</summary>
