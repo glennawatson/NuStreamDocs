@@ -276,19 +276,23 @@ checklists, mark, caret/tilde, critic-markup, inline-hilite, markdown-in-html).
 You can also opt-in individually:
 
 ```csharp
-.UseAdmonitions()
-.UseTabs()
-.UseDetails()
-.UseFootnotes()
-.UseDefinitionLists()
-.UseAttrList()
-.UseTables()
-.UseCheckLists()
-.UseMark()
-.UseCaretTilde()
-.UseCriticMarkup()
-.UseInlineHilite()
-.UseMarkdownInHtml()
+await new DocBuilder()
+    .WithInput("docs")
+    .WithOutput("site")
+    .UseAdmonitions()
+    .UseTabs()
+    .UseDetails()
+    .UseFootnotes()
+    .UseDefinitionLists()
+    .UseAttrList()
+    .UseTables()
+    .UseCheckLists()
+    .UseMark()
+    .UseCaretTilde()
+    .UseCriticMarkup()
+    .UseInlineHilite()
+    .UseMarkdownInHtml()
+    .BuildAsync();
 ```
 
 ---
