@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using static NuStreamDocs.Markdown.Common.MarkdownCodeScanner;
 
@@ -118,7 +119,7 @@ internal static class AbbrRewriter
 
         bool TryWrap(ReadOnlySpan<byte> s, int offset, IBufferWriter<byte> w, out int consumed)
         {
-            if (IsWordBoundaryBefore(s, offset) && TryMatchAnyToken(s, offset, tokens, out var matched))
+            if (AsciiWordBoundary.IsBefore(s, offset) && TryMatchAnyToken(s, offset, tokens, out var matched))
             {
                 EmitAbbr(matched, defs[matched], w);
                 consumed = Encoding.UTF8.GetByteCount(matched);
@@ -170,7 +171,7 @@ internal static class AbbrRewriter
                 continue;
             }
 
-            if (!IsWordBoundaryAfter(source, offset + tokenBytes))
+            if (!AsciiWordBoundary.IsAfter(source, offset + tokenBytes))
             {
                 continue;
             }
@@ -191,7 +192,7 @@ internal static class AbbrRewriter
         writer.Write("<abbr title=\""u8);
         WriteHtmlEscaped(writer, definition);
         writer.Write("\">"u8);
-        WriteUtf8(writer, token);
+        Utf8StringWriter.Write(writer, token);
         writer.Write("</abbr>"u8);
     }
 
@@ -203,78 +204,8 @@ internal static class AbbrRewriter
         var bytes = Encoding.UTF8.GetByteCount(value);
         var buffer = bytes <= 256 ? stackalloc byte[bytes] : new byte[bytes];
         Encoding.UTF8.GetBytes(value, buffer);
-
-        var runStart = 0;
-        for (var i = 0; i < buffer.Length; i++)
-        {
-            var entity = EntityFor(buffer[i]);
-            if (entity.IsEmpty)
-            {
-                continue;
-            }
-
-            if (i > runStart)
-            {
-                writer.Write(buffer[runStart..i]);
-            }
-
-            writer.Write(entity);
-            runStart = i + 1;
-        }
-
-        if (runStart >= buffer.Length)
-        {
-            return;
-        }
-
-        writer.Write(buffer[runStart..]);
+        XmlEntityEscaper.WriteEscaped(writer, buffer, XmlEntityEscaper.Mode.HtmlAttribute);
     }
-
-    /// <summary>Returns the HTML entity bytes for <paramref name="b"/>; an empty span when <paramref name="b"/> is plain.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>Entity bytes or empty.</returns>
-    private static ReadOnlySpan<byte> EntityFor(byte b) => b switch
-    {
-        (byte)'"' => "&quot;"u8,
-        (byte)'&' => "&amp;"u8,
-        (byte)'<' => "&lt;"u8,
-        (byte)'>' => "&gt;"u8,
-        _ => default,
-    };
-
-    /// <summary>Encodes a UTF-16 string to UTF-8 in <paramref name="writer"/>.</summary>
-    /// <param name="writer">Sink.</param>
-    /// <param name="value">Value.</param>
-    private static void WriteUtf8(IBufferWriter<byte> writer, string value)
-    {
-        var max = Encoding.UTF8.GetMaxByteCount(value.Length);
-        var dst = writer.GetSpan(max);
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        writer.Advance(written);
-    }
-
-    /// <summary>Returns true when <paramref name="offset"/> is at a word boundary on its left.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="offset">Position to test.</param>
-    /// <returns>True when boundary holds.</returns>
-    private static bool IsWordBoundaryBefore(ReadOnlySpan<byte> source, int offset) =>
-        offset is 0 || !IsWordByte(source[offset - 1]);
-
-    /// <summary>Returns true when <paramref name="offset"/> is at a word boundary on its right.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="offset">Position to test.</param>
-    /// <returns>True when boundary holds.</returns>
-    private static bool IsWordBoundaryAfter(ReadOnlySpan<byte> source, int offset) =>
-        offset >= source.Length || !IsWordByte(source[offset]);
-
-    /// <summary>Returns true when <paramref name="b"/> is an ASCII identifier byte.</summary>
-    /// <param name="b">UTF-8 byte.</param>
-    /// <returns>True when classed as a word byte.</returns>
-    private static bool IsWordByte(byte b) =>
-        b is >= (byte)'0' and <= (byte)'9'
-          or >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or (byte)'_';
 
     /// <summary>Strips a trailing <c>\n</c> (or <c>\r\n</c>) from <paramref name="line"/> if present.</summary>
     /// <param name="line">Candidate line.</param>

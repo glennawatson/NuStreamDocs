@@ -4,9 +4,9 @@
 
 using System.Buffers;
 using System.Buffers.Text;
-using System.Text;
 using NuStreamDocs.Bibliography.Model;
 using NuStreamDocs.Bibliography.Styles;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Bibliography;
 
@@ -170,7 +170,7 @@ internal static class BibliographyRewriter
             var entry = assignments.EntryByNumber[n];
             var locator = assignments.LocatorByNumber[n];
             Write(writer, FootnotePrefix);
-            WriteUtf8(entry.Id, writer);
+            Utf8StringWriter.Write(writer, entry.Id);
             Write(writer, "]: "u8);
             style.WriteFootnote(entry, locator, writer);
             Write(writer, "\n"u8);
@@ -197,22 +197,6 @@ internal static class BibliographyRewriter
             style.WriteBibliography(assignments.UniqueOrder[i], writer);
             Write(writer, "\n"u8);
         }
-    }
-
-    /// <summary>Encodes <paramref name="value"/> directly to UTF-8 in the sink.</summary>
-    /// <param name="value">Source string.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    private static void WriteUtf8(string value, IBufferWriter<byte> writer)
-    {
-        if (value.Length is 0)
-        {
-            return;
-        }
-
-        var max = Encoding.UTF8.GetMaxByteCount(value.Length);
-        var dst = writer.GetSpan(max);
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        writer.Advance(written);
     }
 
     /// <summary>Writes an integer as ASCII via <see cref="Utf8Formatter"/>.</summary>

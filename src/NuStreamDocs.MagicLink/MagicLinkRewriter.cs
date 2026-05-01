@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Markdown.Common;
 using static NuStreamDocs.Markdown.Common.MarkdownCodeScanner;
 
 namespace NuStreamDocs.MagicLink;
@@ -86,7 +87,7 @@ internal static class MagicLinkRewriter
     private static bool TryRewriteUrl(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        if (!IsWordBoundaryBefore(source, offset))
+        if (!AsciiWordBoundary.IsBefore(source, offset))
         {
             return false;
         }
@@ -205,22 +206,6 @@ internal static class MagicLinkRewriter
 
         return end;
     }
-
-    /// <summary>Returns true when <paramref name="offset"/> is at a word boundary on its left.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="offset">Position to test.</param>
-    /// <returns>True when boundary holds.</returns>
-    private static bool IsWordBoundaryBefore(ReadOnlySpan<byte> source, int offset) =>
-        offset is 0 || !IsWordByte(source[offset - 1]);
-
-    /// <summary>Returns true when <paramref name="b"/> is an ASCII identifier byte.</summary>
-    /// <param name="b">UTF-8 byte.</param>
-    /// <returns>True when classed as a word byte.</returns>
-    private static bool IsWordByte(byte b) =>
-        b is >= (byte)'0' and <= (byte)'9'
-          or >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or (byte)'_';
 
     /// <summary>Consumes through a <c>&lt;…&gt;</c> span (autolink or HTML); advances past the closing <c>&gt;</c>.</summary>
     /// <param name="source">UTF-8 source.</param>

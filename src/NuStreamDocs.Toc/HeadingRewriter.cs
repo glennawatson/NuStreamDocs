@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Toc;
 
@@ -72,7 +73,7 @@ internal static class HeadingRewriter
 
             // Emit permalink anchor.
             Write(writer, PermalinkPrefix);
-            WriteUtf8(writer, h.Slug);
+            Utf8StringWriter.Write(writer, h.Slug);
             Write(writer, PermalinkMid);
             Write(writer, permalinkBytes);
             Write(writer, PermalinkSuffix);
@@ -104,7 +105,7 @@ internal static class HeadingRewriter
         const int TagPrefixLength = 3; // "<hN"
         Write(writer, openTag[..TagPrefixLength]);
         Write(writer, IdAttrPrefix);
-        WriteUtf8(writer, heading.Slug);
+        Utf8StringWriter.Write(writer, heading.Slug);
         Write(writer, IdAttrSuffix);
         Write(writer, openTag[TagPrefixLength..]);
     }
@@ -122,21 +123,5 @@ internal static class HeadingRewriter
         var dst = writer.GetSpan(bytes.Length);
         bytes.CopyTo(dst);
         writer.Advance(bytes.Length);
-    }
-
-    /// <summary>Encodes a UTF-16 string as UTF-8 directly into <paramref name="writer"/>.</summary>
-    /// <param name="writer">Target writer.</param>
-    /// <param name="value">String to encode.</param>
-    private static void WriteUtf8(IBufferWriter<byte> writer, string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return;
-        }
-
-        var max = Encoding.UTF8.GetMaxByteCount(value.Length);
-        var dst = writer.GetSpan(max);
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        writer.Advance(written);
     }
 }

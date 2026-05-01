@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.IO.Compression;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.SphinxInventory;
 
@@ -114,25 +115,9 @@ internal static class SphinxInventoryWriter
     /// <param name="url">Resolved URL.</param>
     private static void WriteEntry(IBufferWriter<byte> sink, string name, string url)
     {
-        WriteUtf8(sink, name);
+        Utf8StringWriter.Write(sink, name);
         sink.Write(EntryMiddle);
-        WriteUtf8(sink, url);
+        Utf8StringWriter.Write(sink, url);
         sink.Write(EntryTrailer);
-    }
-
-    /// <summary>Encodes <paramref name="value"/> as UTF-8 directly into <paramref name="sink"/>.</summary>
-    /// <param name="sink">Sink.</param>
-    /// <param name="value">String.</param>
-    private static void WriteUtf8(IBufferWriter<byte> sink, string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return;
-        }
-
-        var max = Encoding.UTF8.GetMaxByteCount(value.Length);
-        var dst = sink.GetSpan(max);
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        sink.Advance(written);
     }
 }

@@ -321,7 +321,7 @@ internal static class SmartSymbolsRewriter
     private static bool TryCareOf(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        if (!IsWordBoundaryBefore(source, offset))
+        if (!AsciiWordBoundary.IsBefore(source, offset))
         {
             return false;
         }
@@ -333,7 +333,7 @@ internal static class SmartSymbolsRewriter
             return false;
         }
 
-        if (!IsWordBoundaryAfter(source, offset + TripleTokenLength))
+        if (!AsciiWordBoundary.IsAfter(source, offset + TripleTokenLength))
         {
             return false;
         }
@@ -352,10 +352,10 @@ internal static class SmartSymbolsRewriter
     private static bool TryFractionStartingOne(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        if (!IsWordBoundaryBefore(source, offset)
+        if (!AsciiWordBoundary.IsBefore(source, offset)
             || offset + SuffixSecondByteOffset >= source.Length
             || source[offset + 1] is not (byte)'/'
-            || !IsWordBoundaryAfter(source, offset + TripleTokenLength))
+            || !AsciiWordBoundary.IsAfter(source, offset + TripleTokenLength))
         {
             return false;
         }
@@ -386,11 +386,11 @@ internal static class SmartSymbolsRewriter
     private static bool TryThreeQuarters(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        if (!IsWordBoundaryBefore(source, offset)
+        if (!AsciiWordBoundary.IsBefore(source, offset)
             || offset + SuffixSecondByteOffset >= source.Length
             || source[offset + 1] is not (byte)'/'
             || source[offset + SuffixSecondByteOffset] is not (byte)'4'
-            || !IsWordBoundaryAfter(source, offset + TripleTokenLength))
+            || !AsciiWordBoundary.IsAfter(source, offset + TripleTokenLength))
         {
             return false;
         }
@@ -399,27 +399,4 @@ internal static class SmartSymbolsRewriter
         consumed = TripleTokenLength;
         return true;
     }
-
-    /// <summary>Returns true when the byte at <paramref name="offset"/> sits at a word boundary on its left.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="offset">Position to check.</param>
-    /// <returns>True when boundary holds.</returns>
-    private static bool IsWordBoundaryBefore(ReadOnlySpan<byte> source, int offset) =>
-        offset is 0 || !IsWordByte(source[offset - 1]);
-
-    /// <summary>Returns true when the byte at <paramref name="offset"/> sits at a word boundary on its right.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="offset">Position to check (one past the matched run).</param>
-    /// <returns>True when boundary holds.</returns>
-    private static bool IsWordBoundaryAfter(ReadOnlySpan<byte> source, int offset) =>
-        offset >= source.Length || !IsWordByte(source[offset]);
-
-    /// <summary>Returns true when <paramref name="b"/> is an ASCII identifier byte (letter, digit, underscore).</summary>
-    /// <param name="b">UTF-8 byte.</param>
-    /// <returns>True when classed as a word byte.</returns>
-    private static bool IsWordByte(byte b) =>
-        b is >= (byte)'0' and <= (byte)'9'
-          or >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or (byte)'_';
 }

@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Keys;
@@ -101,9 +102,9 @@ internal static class KeysRewriter
         if (KeyNames.TryGet(lookup, out var entry))
         {
             writer.Write("<kbd class=\"key-"u8);
-            WriteUtf8(writer, entry.ClassSuffix);
+            Utf8StringWriter.Write(writer, entry.ClassSuffix);
             writer.Write("\">"u8);
-            WriteUtf8(writer, entry.Label);
+            Utf8StringWriter.Write(writer, entry.Label);
             writer.Write("</kbd>"u8);
             return;
         }
@@ -129,17 +130,6 @@ internal static class KeysRewriter
         }
 
         writer.Advance(text.Length);
-    }
-
-    /// <summary>Encodes a UTF-16 string into <paramref name="writer"/> as UTF-8.</summary>
-    /// <param name="writer">Sink.</param>
-    /// <param name="value">String to encode.</param>
-    private static void WriteUtf8(IBufferWriter<byte> writer, string value)
-    {
-        var max = Encoding.UTF8.GetMaxByteCount(value.Length);
-        var dst = writer.GetSpan(max);
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        writer.Advance(written);
     }
 
     /// <summary>Searches for the matching <c>++</c> on the same line.</summary>
