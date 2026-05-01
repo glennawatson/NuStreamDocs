@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Serve</PackageId>
+    <Description>Watch + dev-server plugin for NuStreamDocs. Wraps DocBuilder.BuildAsync in a long-running watch loop: rebuilds on file change (FileSystemWatcher with debouncing) and serves the output directory over Kestrel with a LiveReload websocket so connected browsers refresh automatically. AOT-compatible — uses WebApplication.CreateSlimBuilder + middleware routing, no reflection-based DI.</Description>
+    <RootNamespace>NuStreamDocs.Serve</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Serve.Tests" />
+  </ItemGroup>
+
+</Project>

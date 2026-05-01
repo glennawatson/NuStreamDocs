@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>NuStreamDocs.Serve.Tests</RootNamespace>
+    <!-- Suppress the FrameworkReference("Microsoft.AspNetCore.App") that
+         NuStreamDocs.Serve declares. WatchLoopTests only exercise the
+         FileSystemWatcher-based loop; the AspNetCore types stay in
+         DevServer / LiveReloadBroker which the tests don't touch. -->
+    <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NuStreamDocs.Serve\NuStreamDocs.Serve.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>

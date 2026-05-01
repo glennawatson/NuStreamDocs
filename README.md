@@ -219,6 +219,12 @@ Each is a separate assembly so you only pull what you use:
 |---|---|---|
 | `NuStreamDocs.LinkValidator` | `.UseLinkValidator()` | Strict-mode link checker. Internal: relative + anchors + nav/disk consistency (mkdocs `--strict`). External: HTTP HEAD via Polly with host-batched throttling/retry. |
 
+### Dev experience
+
+| Package | Builder | What |
+|---|---|---|
+| `NuStreamDocs.Serve` | `.WatchAndServeAsync()` | Long-running watch + dev-server loop. FileSystemWatcher with debounced rebuild + Kestrel-hosted static file server + LiveReload websocket so connected browsers refresh on every successful rebuild. |
+
 ### Blog & syndication
 
 | Package | Builder | What |
@@ -350,6 +356,26 @@ await new DocBuilder()
     .BuildAsync();
 ```
 
+### Live-reload dev loop
+
+```csharp
+using NuStreamDocs.Serve;
+
+await new DocBuilder()
+    .WithInput("docs")
+    .WithOutput("site")
+    .UseMaterialTheme()
+    .UseNav()
+    .UseSearch()
+    .UseHighlight()
+    .WatchAndServeAsync(opts => opts with { OpenBrowser = true });
+```
+
+Runs the initial build, starts Kestrel on `http://127.0.0.1:8000`, and
+watches `docs/` for changes. Each save triggers a debounced rebuild and
+sends a reload signal over a websocket so connected browsers refresh
+automatically.
+
 ### Custom plugin
 
 ```csharp
@@ -414,6 +440,7 @@ options-customiser+logger).
 | **`NuStreamDocs.Privacy`** | `.UsePrivacy()` | Localises external assets (img/link/script) under `assets/external/`; rewrites HTML to local paths. Byte-level UTF-8 throughout. |
 | **`NuStreamDocs.Optimise`** | `.UseOptimise()`, `.UseHtmlMinify()` | Output optimiser. HTML minify pass + pre-compressed `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). |
 | **`NuStreamDocs.LinkValidator`** | `.UseLinkValidator()` | Strict link validator. Internal mode (relative + anchors + nav/disk consistency); optional external HTTP-HEAD mode via Polly with host-batched throttling and retry. |
+| **`NuStreamDocs.Serve`** | `.WatchAndServeAsync()` | Watch + dev-server. Initial build, then a long-running loop: FileSystemWatcher + debounce → rebuild → signal connected browsers via LiveReload websocket. Kestrel-hosted; not AOT-compatible (opt-in package, separate from the AOT-clean core). |
 | **`NuStreamDocs.Versions`** | `.UseVersions()` | mike-equivalent versioning. Publishes a `versions.json` manifest themes can render a selector against. |
 | **`NuStreamDocs.Sitemap`** | `.UseSitemap()`, `.UseNotFoundPage()`, `.UseRedirects()` | Site-level emitters — sitemap.xml + robots.txt, default 404 page, redirect stubs. |
 | **`NuStreamDocs.Tags`** | `.UseTags()` | Collects per-page `tags:` frontmatter; emits a tags index plus per-tag listing pages. |

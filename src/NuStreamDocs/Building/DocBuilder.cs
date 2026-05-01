@@ -65,6 +65,12 @@ public sealed class DocBuilder
     /// <summary>Gets a value indicating whether <c>draft: true</c> pages are emitted.</summary>
     public bool IncludeDraftsEnabled => _includeDrafts;
 
+    /// <summary>Gets the configured input docs root (defaults to <c>./docs</c>).</summary>
+    public string InputRoot => _inputRoot;
+
+    /// <summary>Gets the configured output site root (defaults to <c>./site</c>).</summary>
+    public string OutputRoot => _outputRoot;
+
     /// <summary>Enables the directory-URL output shape (<c>foo/index.html</c> + <c>foo/</c> links).</summary>
     /// <returns>This builder for chaining.</returns>
     public DocBuilder UseDirectoryUrls()

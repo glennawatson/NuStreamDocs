@@ -13,6 +13,8 @@
   </Folder>
   <Project Path="NuStreamDocs.Templating/NuStreamDocs.Templating.csproj" />
   <Project Path="NuStreamDocs/NuStreamDocs.csproj" />
+  <Project Path="NuStreamDocs.Serve/NuStreamDocs.Serve.csproj" />
+  <Project Path="tests/NuStreamDocs.Serve.Tests/NuStreamDocs.Serve.Tests.csproj" />
   <Project Path="NuStreamDocs.Config.MkDocs/NuStreamDocs.Config.MkDocs.csproj" />
   <Project Path="NuStreamDocs.Config.Zensical/NuStreamDocs.Config.Zensical.csproj" />
   <Project Path="NuStreamDocs.Nav/NuStreamDocs.Nav.csproj" />
