@@ -11,10 +11,6 @@
     <ProjectReference Include="..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('mdi-icons.bin')">
-    <EmbeddedResource Include="mdi-icons.bin" />
-  </ItemGroup>
-
   <ItemGroup>
     <InternalsVisibleTo Include="NuStreamDocs.Icons.MaterialDesign.Tests" />
   </ItemGroup>

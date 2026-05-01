@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Text;
-using NuStreamDocs.Macros;
 
 namespace NuStreamDocs.Macros.Tests;
 

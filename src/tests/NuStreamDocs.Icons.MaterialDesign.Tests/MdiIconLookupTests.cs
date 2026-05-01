@@ -103,11 +103,9 @@ public class MdiIconLookupTests
     [Test]
     public async Task DefaultBundleHasFullMdiCatalogue()
     {
-        var bundle = MdiIconBundle.Default;
-
-        // Sanity floor — the upstream catalogue has been > 7000 icons since 2023; this guards against
+        // Sanity floor — the upstream catalogue has been > 7000 icons since 2023; guards against
         // an empty / partial bundle slipping through on regen.
-        await Assert.That(bundle.Count).IsGreaterThan(6000);
+        await Assert.That(MdiIconBundle.Count).IsGreaterThan(6000);
     }
 
     /// <summary>The icon names rxui's docs use today resolve through the default bundle.</summary>
@@ -126,9 +124,8 @@ public class MdiIconLookupTests
     [Arguments("weather-sunny")]
     public async Task RxuiUsedIconsResolveInDefaultBundle(string iconName)
     {
-        var bundle = MdiIconBundle.Default;
         var bytes = Encoding.UTF8.GetBytes(iconName);
-        var found = bundle.TryGet(bytes, out var svg);
+        var found = MdiIconBundle.TryGet(bytes, out var svg);
         var nonEmpty = svg.Length > 0;
 
         await Assert.That(found).IsTrue();
