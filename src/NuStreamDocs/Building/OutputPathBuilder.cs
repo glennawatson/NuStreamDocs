@@ -17,11 +17,17 @@ internal static class OutputPathBuilder
     /// <summary>Length of the replacement <c>.html</c> extension.</summary>
     private const int HtmlExtensionLength = 5;
 
+    /// <summary>Length of the trailing <c>/index.html</c> appended to directory-URL outputs (separator + 'index.html').</summary>
+    private const int IndexHtmlSuffixLength = 11;
+
     /// <summary>Source extension recognised by the path mapper.</summary>
     private const string MarkdownExtension = ".md";
 
     /// <summary>Replacement extension written into the output path.</summary>
     private const string HtmlExtension = ".html";
+
+    /// <summary>Trailing <c>index.html</c> file name (without leading separator).</summary>
+    private const string IndexHtml = "index.html";
 
     /// <summary>Flat-URL form: <c>foo.md</c> → <c>foo.html</c>; everything else passes through.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
@@ -61,7 +67,13 @@ internal static class OutputPathBuilder
             return ForFlatUrls(outputRoot, relativePath);
         }
 
-        return Path.Combine(outputRoot, stem.ToString(), "index.html");
+        var stemLength = stem.Length;
+        var totalLength = outputRoot.Length + 1 + stemLength + IndexHtmlSuffixLength;
+        var separator = Path.DirectorySeparatorChar;
+        return string.Create(
+            totalLength,
+            (outputRoot, relativePath, stemLength, separator),
+            static (span, state) => WriteDirectoryUrlPath(span, state));
     }
 
     /// <summary>Writes the flat-URL output path bytes into <paramref name="span"/>.</summary>
@@ -79,5 +91,18 @@ internal static class OutputPathBuilder
         }
 
         HtmlExtension.AsSpan().CopyTo(tail[state.Keep..]);
+    }
+
+    /// <summary>Writes a directory-URL output path (<c>outputRoot/sep/stem/sep/index.html</c>) into <paramref name="span"/>.</summary>
+    /// <param name="span">Pre-sized destination span.</param>
+    /// <param name="state">Tuple of (outputRoot, relativePath, stemLength, separator).</param>
+    private static void WriteDirectoryUrlPath(in Span<char> span, (string Root, string Rel, int StemLen, char Sep) state)
+    {
+        state.Root.AsSpan().CopyTo(span);
+        span[state.Root.Length] = state.Sep;
+        var afterRoot = span[(state.Root.Length + 1)..];
+        state.Rel.AsSpan(0, state.StemLen).CopyTo(afterRoot);
+        afterRoot[state.StemLen] = state.Sep;
+        IndexHtml.AsSpan().CopyTo(afterRoot[(state.StemLen + 1)..]);
     }
 }
