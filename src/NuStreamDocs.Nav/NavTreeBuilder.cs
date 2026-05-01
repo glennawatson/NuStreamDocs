@@ -91,18 +91,33 @@ internal static class NavTreeBuilder
     /// <param name="root">Built nav tree.</param>
     /// <param name="matcher">Glob matcher used for the nav build.</param>
     /// <param name="logger">Target logger.</param>
-    private static void ReportOrphanPages(string inputRoot, NavNode root, Matcher matcher, ILogger logger)
+    private static void ReportOrphanPages(string inputRoot, NavNode root, Matcher? matcher, ILogger logger)
     {
         var navPaths = CollectNavLeafPaths(root);
         var orphans = new List<string>();
 
-        var matchResult = matcher.Execute(new Microsoft.Extensions.FileSystemGlobbing.Abstractions.DirectoryInfoWrapper(new(inputRoot)));
-        foreach (var file in matchResult.Files)
+        if (matcher is null)
         {
-            var rel = file.Path.Replace('\\', '/');
-            if (!navPaths.Contains(rel))
+            // No glob filters configured; orphan candidates are every .md file under the root.
+            foreach (var file in Directory.EnumerateFiles(inputRoot, "*" + MarkdownExtension, SearchOption.AllDirectories))
             {
-                orphans.Add(rel);
+                var rel = NavPathHelper.ToForwardSlashRelative(inputRoot, file);
+                if (!navPaths.Contains(rel))
+                {
+                    orphans.Add(rel);
+                }
+            }
+        }
+        else
+        {
+            var matchResult = matcher.Execute(new Microsoft.Extensions.FileSystemGlobbing.Abstractions.DirectoryInfoWrapper(new(inputRoot)));
+            foreach (var file in matchResult.Files)
+            {
+                var rel = file.Path.Replace('\\', '/');
+                if (!navPaths.Contains(rel))
+                {
+                    orphans.Add(rel);
+                }
             }
         }
 
@@ -205,11 +220,23 @@ internal static class NavTreeBuilder
 
     /// <summary>Builds a glob matcher from the include/exclude lists.</summary>
     /// <param name="options">Plugin options.</param>
-    /// <returns>A configured <see cref="Matcher"/>; matches all <c>.md</c> when no includes are given.</returns>
-    private static Matcher BuildMatcher(in NavOptions options)
+    /// <returns>
+    /// A configured <see cref="Matcher"/>, or <c>null</c> when no caller-supplied
+    /// include/exclude patterns were set — every <c>.md</c> matches and the
+    /// matcher would just add cost on the per-file path.
+    /// </returns>
+    private static Matcher? BuildMatcher(in NavOptions options)
     {
+        // Fast path: caller didn't supply any glob filters. The directory walk already restricts
+        // to *.md so there's nothing for a default include of "**/*.md" to additionally filter.
+        // Skipping the matcher cuts ~13K Match() calls on the rxui corpus.
+        if (options.Includes.Length is 0 && options.Excludes.Length is 0)
+        {
+            return null;
+        }
+
         var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
-        if (options.Includes.Length == 0)
+        if (options.Includes.Length is 0)
         {
             matcher.AddInclude("**/*" + MarkdownExtension);
         }
@@ -238,12 +265,12 @@ internal static class NavTreeBuilder
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for prune diagnostics.</param>
     /// <returns>The section node for <paramref name="directory"/>, or null when a <c>.pages</c> override hides the section.</returns>
-    private static NavNode? BuildSection(string root, string directory, Matcher matcher, in NavOptions options, ILogger logger)
+    private static NavNode? BuildSection(string root, string directory, Matcher? matcher, in NavOptions options, ILogger logger)
     {
         var pagesOverride = PagesFileReader.ReadOrEmpty(Path.Combine(directory, PagesFileName));
         if (pagesOverride.Hide && directory != root)
         {
-            var hiddenRelative = Path.GetRelativePath(root, directory).Replace('\\', '/');
+            var hiddenRelative = NavPathHelper.ToForwardSlashRelative(root, directory);
             NavLoggingHelper.LogNavPruned(logger, hiddenRelative, ".pages hide:true");
             return null;
         }
@@ -281,7 +308,7 @@ internal static class NavTreeBuilder
 
             var sectionRelative = directory == root
                 ? string.Empty
-                : Path.GetRelativePath(root, directory).Replace('\\', '/');
+                : NavPathHelper.ToForwardSlashRelative(root, directory);
 
             return new(sectionTitle, sectionRelative, isSection: true, children, indexPath);
         }
@@ -369,18 +396,21 @@ internal static class NavTreeBuilder
     /// <param name="buffer">Destination buffer; rented by the caller.</param>
     /// <param name="logger">Logger for prune diagnostics.</param>
     /// <returns>Number of pages written into <paramref name="buffer"/>.</returns>
-    private static int AppendPages(string root, string directory, string[] files, Matcher matcher, NavNode[] buffer, ILogger logger)
+    private static int AppendPages(string root, string directory, string[] files, Matcher? matcher, NavNode[] buffer, ILogger logger)
     {
         var count = 0;
         for (var i = 0; i < files.Length; i++)
         {
             var file = files[i];
-            var relative = Path.GetRelativePath(root, file).Replace('\\', '/');
-            var match = matcher.Match(relative);
-            if (!match.HasMatches)
+            var relative = NavPathHelper.ToForwardSlashRelative(root, file);
+            if (matcher is not null)
             {
-                NavLoggingHelper.LogNavPruned(logger, relative, "glob excluded");
-                continue;
+                var match = matcher.Match(relative);
+                if (!match.HasMatches)
+                {
+                    NavLoggingHelper.LogNavPruned(logger, relative, "glob excluded");
+                    continue;
+                }
             }
 
             var flags = FrontmatterFlagReader.Read(file);
@@ -406,7 +436,7 @@ internal static class NavTreeBuilder
     /// <param name="buffer">Destination buffer; rented by the caller.</param>
     /// <param name="logger">Logger for prune diagnostics.</param>
     /// <returns>Number of sections written into <paramref name="buffer"/>.</returns>
-    private static int AppendSections(string root, string[] subdirectories, Matcher matcher, in NavOptions options, NavNode[] buffer, ILogger logger)
+    private static int AppendSections(string root, string[] subdirectories, Matcher? matcher, in NavOptions options, NavNode[] buffer, ILogger logger)
     {
         var count = 0;
         for (var i = 0; i < subdirectories.Length; i++)
