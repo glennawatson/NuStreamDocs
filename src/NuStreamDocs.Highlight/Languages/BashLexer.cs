@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Collections.Frozen;
-using System.Text.RegularExpressions;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -16,41 +15,43 @@ namespace NuStreamDocs.Highlight.Languages;
 /// operators. Heredocs and process substitution are out of scope for
 /// the first cut.
 /// </remarks>
-public static partial class BashLexer
+public static class BashLexer
 {
-    /// <summary>Pattern alternation for shell keywords.</summary>
-    private const string Keywords =
-        "if|then|else|elif|fi|case|esac|for|select|while|until|do|done|in|" +
-        "function|return|break|continue|exit|export|local|readonly|declare|" +
-        "typeset|unset|shift|trap|wait|exec|eval|set|test";
+    /// <summary>Shell keywords recognised as <see cref="TokenClass.Keyword"/>.</summary>
+    private static readonly FrozenSet<string> Keywords = FrozenSet.ToFrozenSet(
+        [
+            "if", "then", "else", "elif", "fi", "case", "esac", "for", "select",
+            "while", "until", "do", "done", "in", "function", "return", "break",
+            "continue", "exit", "export", "local", "readonly", "declare", "typeset",
+            "unset", "shift", "trap", "wait", "exec", "eval", "set", "test",
+        ],
+        StringComparer.Ordinal);
 
-    /// <summary>Pattern alternation for common shell builtins.</summary>
-    private const string Builtins =
-        "echo|printf|read|cd|pwd|pushd|popd|dirs|let|alias|unalias|" +
-        "source|history|jobs|kill|fg|bg|umask|true|false|type|command|" +
-        "builtin|hash|times|getopts";
+    /// <summary>Common shell builtins recognised as <see cref="TokenClass.NameBuiltin"/>.</summary>
+    private static readonly FrozenSet<string> Builtins = FrozenSet.ToFrozenSet(
+        [
+            "echo", "printf", "read", "cd", "pwd", "pushd", "popd", "dirs", "let",
+            "alias", "unalias", "source", "history", "jobs", "kill", "fg", "bg",
+            "umask", "true", "false", "type", "command", "builtin", "hash", "times",
+            "getopts",
+        ],
+        StringComparer.Ordinal);
 
-    /// <summary>First-char set for whitespace runs.</summary>
-    private static readonly SearchValues<char> WhitespaceFirst = SearchValues.Create(" \t\r\n");
+    /// <summary>Operators sorted by descending length so longer alternations win against shorter prefixes.</summary>
+    private static readonly string[] Operators =
+    [
+        "&&", "||", "<<", ">>", "<=", ">=", "==", "!=", "=~",
+        "<", ">", "+", "-", "*", "/", "%", "&", "|", "!", "~", "=", "?",
+    ];
 
     /// <summary>First-char set for <c>#</c>-prefixed comments.</summary>
     private static readonly SearchValues<char> CommentFirst = SearchValues.Create("#");
 
-    /// <summary>First-char set for single-quoted string literals.</summary>
-    private static readonly SearchValues<char> SingleQuoteFirst = SearchValues.Create("'");
-
-    /// <summary>First-char set for double-quoted string literals.</summary>
-    private static readonly SearchValues<char> DoubleQuoteFirst = SearchValues.Create("\"");
-
-    /// <summary>First-char set for numeric literals.</summary>
-    private static readonly SearchValues<char> DigitFirst = SearchValues.Create("0123456789");
-
     /// <summary>First-char set for variable substitutions (<c>$name</c>, <c>${name}</c>).</summary>
     private static readonly SearchValues<char> DollarFirst = SearchValues.Create("$");
 
-    /// <summary>First-char set for identifier-shaped tokens (keywords, builtins, names).</summary>
-    private static readonly SearchValues<char> IdentifierFirst = SearchValues.Create(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
+    /// <summary>Single special-character names allowed after a bare <c>$</c> (<c>$1</c>, <c>$@</c>, <c>$?</c>, …).</summary>
+    private static readonly SearchValues<char> DollarSpecial = SearchValues.Create("0123456789#?!_*@-");
 
     /// <summary>First-char set for shell operators.</summary>
     private static readonly SearchValues<char> OperatorFirst = SearchValues.Create("&|<>=!+-*/%~?");
@@ -63,56 +64,77 @@ public static partial class BashLexer
         "bash",
         new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
         {
-            [Lexer.RootState] =
-            [
-                new(WhitespaceRegex(), TokenClass.Whitespace, NextState: null) { FirstChars = WhitespaceFirst },
-                new(CommentRegex(), TokenClass.CommentSingle, NextState: null) { FirstChars = CommentFirst },
-                new(SingleStringRegex(), TokenClass.StringSingle, NextState: null) { FirstChars = SingleQuoteFirst },
-                new(DoubleStringRegex(), TokenClass.StringDouble, NextState: null) { FirstChars = DoubleQuoteFirst },
-                new(NumberRegex(), TokenClass.NumberInteger, NextState: null) { FirstChars = DigitFirst },
-                new(VariableBracedRegex(), TokenClass.Name, NextState: null) { FirstChars = DollarFirst },
-                new(VariableSimpleRegex(), TokenClass.Name, NextState: null) { FirstChars = DollarFirst },
-                new(KeywordRegex(), TokenClass.Keyword, NextState: null) { FirstChars = IdentifierFirst },
-                new(BuiltinRegex(), TokenClass.NameBuiltin, NextState: null) { FirstChars = IdentifierFirst },
-                new(IdentifierRegex(), TokenClass.Name, NextState: null) { FirstChars = IdentifierFirst },
-                new(OperatorRegex(), TokenClass.Operator, NextState: null) { FirstChars = OperatorFirst },
-                new(PunctuationRegex(), TokenClass.Punctuation, NextState: null) { FirstChars = PunctuationFirst },
+            [Lexer.RootState] = [
+
+                // [ \t\r\n]+ whitespace runs.
+                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, NextState: null) { FirstChars = TokenMatchers.AsciiWhitespaceWithNewlines },
+
+                // # line comment to end-of-line.
+                new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, NextState: null) { FirstChars = CommentFirst },
+
+                // '...' single-quoted string (no escapes).
+                new(TokenMatchers.MatchSingleQuotedNoEscape, TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
+
+                // "..." double-quoted string with backslash escapes.
+                new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
+
+                // [0-9]+ integer literal.
+                new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, NextState: null) { FirstChars = TokenMatchers.AsciiDigits },
+
+                // ${...} braced variable substitution — must precede the simple-variable rule.
+                new(MatchBracedVariable, TokenClass.Name, NextState: null) { FirstChars = DollarFirst },
+
+                // $name or $1 / $@ / $? simple variable.
+                new(MatchSimpleVariable, TokenClass.Name, NextState: null) { FirstChars = DollarFirst },
+
+                // Shell keyword (if, then, else, for, while, ...).
+                new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, NextState: null) { FirstChars = TokenMatchers.AsciiIdentifierStart },
+
+                // Shell builtin (echo, printf, cd, ...).
+                new(static slice => TokenMatchers.MatchKeyword(slice, Builtins), TokenClass.NameBuiltin, NextState: null) { FirstChars = TokenMatchers.AsciiIdentifierStart },
+
+                // [A-Za-z_][A-Za-z0-9_]* identifier — falls through after keyword + builtin.
+                new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, NextState: null) { FirstChars = TokenMatchers.AsciiIdentifierStart },
+
+                // Operator alternation (longest-first): &&, ||, <<, >>, <=, >=, ==, !=, =~, single chars.
+                new(static slice => TokenMatchers.MatchLongestLiteral(slice, Operators), TokenClass.Operator, NextState: null) { FirstChars = OperatorFirst },
+
+                // Single-character punctuation: ( ) { } [ ] ; , . :
+                new(static slice => TokenMatchers.MatchSingleCharOf(slice, PunctuationFirst), TokenClass.Punctuation, NextState: null) { FirstChars = PunctuationFirst },
             ],
         }.ToFrozenDictionary(StringComparer.Ordinal));
 
-    [GeneratedRegex(@"\G[ \t\r\n]+", RegexOptions.Compiled)]
-    private static partial Regex WhitespaceRegex();
+    /// <summary><c>${...}</c> braced variable substitution.</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <returns>Length matched.</returns>
+    private static int MatchBracedVariable(ReadOnlySpan<char> slice)
+    {
+        if (slice is [] || slice[0] is not '$')
+        {
+            return 0;
+        }
 
-    [GeneratedRegex(@"\G\#[^\r\n]*", RegexOptions.Compiled)]
-    private static partial Regex CommentRegex();
+        var bracket = TokenMatchers.MatchBracketedBlock(slice[1..], '{', '}');
+        return bracket is 0 ? 0 : 1 + bracket;
+    }
 
-    [GeneratedRegex(@"\G'[^']*'", RegexOptions.Compiled)]
-    private static partial Regex SingleStringRegex();
+    /// <summary><c>$identifier</c> or <c>$specialChar</c>.</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <returns>Length matched.</returns>
+    private static int MatchSimpleVariable(ReadOnlySpan<char> slice)
+    {
+        const int DollarPlusOne = 2;
+        if (slice.Length < DollarPlusOne || slice[0] is not '$')
+        {
+            return 0;
+        }
 
-    [GeneratedRegex("\\G\"(?:\\\\.|[^\"\\\\])*\"", RegexOptions.Compiled)]
-    private static partial Regex DoubleStringRegex();
+        var ident = TokenMatchers.MatchAsciiIdentifier(slice[1..]);
+        if (ident > 0)
+        {
+            return 1 + ident;
+        }
 
-    [GeneratedRegex(@"\G[0-9]+", RegexOptions.Compiled)]
-    private static partial Regex NumberRegex();
-
-    [GeneratedRegex(@"\G\$\{[^}]*\}", RegexOptions.Compiled)]
-    private static partial Regex VariableBracedRegex();
-
-    [GeneratedRegex(@"\G\$[A-Za-z_][A-Za-z0-9_]*|\$[\d#?!_*@-]", RegexOptions.Compiled)]
-    private static partial Regex VariableSimpleRegex();
-
-    [GeneratedRegex(@"\G(?:" + Keywords + @")\b", RegexOptions.Compiled)]
-    private static partial Regex KeywordRegex();
-
-    [GeneratedRegex(@"\G(?:" + Builtins + @")\b", RegexOptions.Compiled)]
-    private static partial Regex BuiltinRegex();
-
-    [GeneratedRegex(@"\G[A-Za-z_][A-Za-z0-9_]*", RegexOptions.Compiled)]
-    private static partial Regex IdentifierRegex();
-
-    [GeneratedRegex(@"\G(?:&&|\|\||<<|>>|<=|>=|==|!=|=~|<|>|\+|-|\*|/|%|&|\||!|~|=|\?)", RegexOptions.Compiled)]
-    private static partial Regex OperatorRegex();
-
-    [GeneratedRegex(@"\G[\(\)\{\}\[\];,.:]", RegexOptions.Compiled)]
-    private static partial Regex PunctuationRegex();
+        return DollarSpecial.Contains(slice[1]) ? DollarPlusOne : 0;
+    }
 }

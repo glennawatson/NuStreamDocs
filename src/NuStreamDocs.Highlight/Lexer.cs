@@ -17,13 +17,12 @@ namespace NuStreamDocs.Highlight;
 /// <see cref="TokenClass.Text"/> classification — guarantees forward progress
 /// and never throws.
 /// <para>
-/// Built-in lexers compile every pattern via <c>[GeneratedRegex]</c>
-/// partial methods, so the lexer instance is reused across every fenced
-/// block on every page without per-call allocation. The hot path uses
-/// <see cref="System.Text.RegularExpressions.Regex.EnumerateMatches(ReadOnlySpan{char})"/>
-/// instead of <c>Regex.Match</c> to avoid the per-token <c>Match</c>-object
-/// allocation, and the per-call state stack is rented from a thread-static
-/// cache so a typical call allocates nothing.
+/// Built-in lexers ship <see cref="LexerRule.Matcher"/> methods backed
+/// by <see cref="TokenMatchers"/>, so the lexer instance is reused
+/// across every fenced block on every page without per-call allocation.
+/// Each matcher is a static method that returns the matched length.
+/// The per-call state stack is rented from a thread-static cache so a
+/// typical call allocates nothing.
 /// </para>
 /// </remarks>
 public sealed class Lexer
@@ -104,10 +103,30 @@ public sealed class Lexer
         var stack = RentStack();
         try
         {
+            // Cache the current state's rule array across token steps and only refetch
+            // when the top of the state stack changes. State names are interned
+            // string-literal constants, so a reference compare is enough to detect
+            // a transition. Cuts the FrozenDictionary lookup out of the per-token
+            // hot path — for single-state lexers (most), the dict is consulted once
+            // for the whole file.
             var pos = 0;
+            string? cachedStateName = null;
+            LexerRule[]? cachedRules = null;
             while (pos < source.Length)
             {
-                pos = StepOnce(source, pos, stack, state, onToken);
+                var currentState = stack.Peek();
+                if (!ReferenceEquals(currentState, cachedStateName))
+                {
+                    cachedStateName = currentState;
+                    if (!States.TryGetValue(currentState, out cachedRules))
+                    {
+                        // Unknown state — emit the rest as text and stop.
+                        onToken(state, pos, source.Length - pos, TokenClass.Text);
+                        return;
+                    }
+                }
+
+                pos = StepOnce(source, pos, cachedRules!, stack, state, onToken);
             }
         }
         finally
@@ -166,19 +185,13 @@ public sealed class Lexer
     /// <typeparam name="TState">Caller-supplied state shape.</typeparam>
     /// <param name="source">Full source string.</param>
     /// <param name="pos">Cursor.</param>
+    /// <param name="rules">Rule list for the current state — looked up by the caller and cached across steps.</param>
     /// <param name="stateStack">Mutable state stack.</param>
     /// <param name="state">State threaded through the callback.</param>
     /// <param name="onToken">Token sink.</param>
     /// <returns>Next cursor position.</returns>
-    private int StepOnce<TState>(string source, int pos, Stack<string> stateStack, TState state, TokenSink<TState> onToken)
+    private static int StepOnce<TState>(string source, int pos, LexerRule[] rules, Stack<string> stateStack, TState state, TokenSink<TState> onToken)
     {
-        if (!States.TryGetValue(stateStack.Peek(), out var rules))
-        {
-            // Unknown state — emit the rest as text and stop.
-            onToken(state, pos, source.Length - pos, TokenClass.Text);
-            return source.Length;
-        }
-
         var slice = source.AsSpan(pos);
         var first = slice[0];
         for (var i = 0; i < rules.Length; i++)
@@ -186,30 +199,28 @@ public sealed class Lexer
             var rule = rules[i];
 
             // First-character dispatch: rules whose start-set doesn't include the cursor
-            // character are skipped without invoking the regex. Rules without a hint
-            // (FirstChars == null) keep the original always-try behaviour.
+            // character are skipped without invoking the matcher. Rules without a hint
+            // (FirstChars == null) always run the matcher.
             if (rule.FirstChars is { } firstChars && !firstChars.Contains(first))
             {
                 continue;
             }
 
-            // EnumerateMatches yields ValueMatch (a struct) instead of allocating a Match object per
-            // call. Patterns are anchored with \G, so the only valid match is at slice offset 0.
-            var enumerator = rule.Pattern.EnumerateMatches(slice);
-            if (!enumerator.MoveNext())
+            // Line-anchored rules only fire at start-of-input or after a line terminator.
+            if (rule.RequiresLineStart && pos > 0 && source[pos - 1] is not ('\n' or '\r'))
             {
                 continue;
             }
 
-            var current = enumerator.Current;
-            if (current.Index != 0 || current.Length is 0)
+            var matched = rule.Match(slice);
+            if (matched is 0)
             {
                 continue;
             }
 
-            onToken(state, pos, current.Length, rule.TokenClass);
+            onToken(state, pos, matched, rule.TokenClass);
             ApplyTransition(rule.NextState, stateStack);
-            return pos + current.Length;
+            return pos + matched;
         }
 
         // No rule matched — emit the cursor character as plain text so the walker always makes forward progress.

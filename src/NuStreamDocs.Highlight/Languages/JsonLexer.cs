@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Collections.Frozen;
-using System.Text.RegularExpressions;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -16,11 +15,8 @@ namespace NuStreamDocs.Highlight.Languages;
 /// (CSS class <c>nt</c>); we fold those into <see cref="TokenClass.NameAttribute"/>
 /// (CSS class <c>na</c>) which existing themes also style.
 /// </remarks>
-public static partial class JsonLexer
+public static class JsonLexer
 {
-    /// <summary>First-char set for whitespace runs.</summary>
-    private static readonly SearchValues<char> WhitespaceFirst = SearchValues.Create(" \t\r\n");
-
     /// <summary>First-char set for string-shaped tokens (keys + values).</summary>
     private static readonly SearchValues<char> QuoteFirst = SearchValues.Create("\"");
 
@@ -33,41 +29,38 @@ public static partial class JsonLexer
     /// <summary>First-char set for structural punctuation.</summary>
     private static readonly SearchValues<char> PunctuationFirst = SearchValues.Create("{}[],:");
 
+    /// <summary>Set of recognised JSON keyword constants.</summary>
+    private static readonly FrozenSet<string> KeywordConstants = FrozenSet.ToFrozenSet(
+        ["true", "false", "null"],
+        StringComparer.Ordinal);
+
     /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = new(
         "json",
         new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
         {
-            [Lexer.RootState] =
-            [
-                new(WhitespaceRegex(), TokenClass.Whitespace, NextState: null) { FirstChars = WhitespaceFirst },
-                new(KeyRegex(), TokenClass.NameAttribute, NextState: null) { FirstChars = QuoteFirst },
-                new(StringRegex(), TokenClass.StringDouble, NextState: null) { FirstChars = QuoteFirst },
-                new(FloatRegex(), TokenClass.NumberFloat, NextState: null) { FirstChars = NumberFirst },
-                new(IntegerRegex(), TokenClass.NumberInteger, NextState: null) { FirstChars = NumberFirst },
-                new(KeywordConstantRegex(), TokenClass.KeywordConstant, NextState: null) { FirstChars = KeywordFirst },
-                new(PunctuationRegex(), TokenClass.Punctuation, NextState: null) { FirstChars = PunctuationFirst },
+            [Lexer.RootState] = [
+
+                // [ \t\r\n]+ whitespace runs.
+                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, NextState: null) { FirstChars = TokenMatchers.AsciiWhitespaceWithNewlines },
+
+                // "..." string followed by ":" — property key. Must precede the plain string rule.
+                new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, NextState: null) { FirstChars = QuoteFirst },
+
+                // "..." string value with backslash escapes.
+                new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, NextState: null) { FirstChars = QuoteFirst },
+
+                // -?\d+\.\d+([eE][+-]?\d+)? float literal — must precede the integer rule.
+                new(TokenMatchers.MatchSignedAsciiFloat, TokenClass.NumberFloat, NextState: null) { FirstChars = NumberFirst },
+
+                // -?\d+ integer literal.
+                new(TokenMatchers.MatchSignedAsciiInteger, TokenClass.NumberInteger, NextState: null) { FirstChars = NumberFirst },
+
+                // true / false / null keyword constant.
+                new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, NextState: null) { FirstChars = KeywordFirst },
+
+                // Single-character structural punctuation: { } [ ] , :
+                new(static slice => TokenMatchers.MatchSingleCharOf(slice, PunctuationFirst), TokenClass.Punctuation, NextState: null) { FirstChars = PunctuationFirst },
             ],
         }.ToFrozenDictionary(StringComparer.Ordinal));
-
-    [GeneratedRegex(@"\G[ \t\r\n]+", RegexOptions.Compiled)]
-    private static partial Regex WhitespaceRegex();
-
-    [GeneratedRegex("\\G\"(?:\\\\.|[^\"\\\\])*\"(?=\\s*:)", RegexOptions.Compiled)]
-    private static partial Regex KeyRegex();
-
-    [GeneratedRegex("\\G\"(?:\\\\.|[^\"\\\\])*\"", RegexOptions.Compiled)]
-    private static partial Regex StringRegex();
-
-    [GeneratedRegex(@"\G-?[0-9]+\.[0-9]+(?:[eE][+-]?[0-9]+)?", RegexOptions.Compiled)]
-    private static partial Regex FloatRegex();
-
-    [GeneratedRegex(@"\G-?[0-9]+", RegexOptions.Compiled)]
-    private static partial Regex IntegerRegex();
-
-    [GeneratedRegex(@"\G(?:true|false|null)\b", RegexOptions.Compiled)]
-    private static partial Regex KeywordConstantRegex();
-
-    [GeneratedRegex(@"\G[\{\}\[\],:]", RegexOptions.Compiled)]
-    private static partial Regex PunctuationRegex();
 }

@@ -20,11 +20,21 @@ internal static class MarkupRootRules
         }
 
         var index = leadingRules.Length;
-        output[index++] = new(LanguageCommon.EntityReference(), TokenClass.StringEscape, NextState: null) { FirstChars = LanguageCommon.EntityFirst };
-        output[index++] = new(LanguageCommon.AngleOpen(), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst };
-        output[index++] = new(LanguageCommon.AngleOpenSlash(), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst };
+
+        // &name; / &#nnn; entity reference.
+        output[index++] = new(LanguageCommon.EntityReference, TokenClass.StringEscape, NextState: null) { FirstChars = LanguageCommon.EntityFirst };
+
+        // < tag-open — pushes the tag state.
+        output[index++] = new(static slice => TokenMatchers.MatchSingleCharOf(slice, LanguageCommon.AngleOpenFirst), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst };
+
+        // </ closing-tag-open — pushes the tag state.
+        output[index++] = new(LanguageCommon.AngleOpenSlash, TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst };
+
+        // Language-specific text-fallback rule (matches everything outside tags + entities).
         output[index++] = textRule;
-        output[index] = new(LanguageCommon.WhitespaceWithNewlines(), TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst };
+
+        // [ \t\r\n]+ whitespace runs — moved to the front by MoveWhitespaceFirst so it wins before the text rule.
+        output[index] = new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst };
 
         MoveWhitespaceFirst(output);
         return output;

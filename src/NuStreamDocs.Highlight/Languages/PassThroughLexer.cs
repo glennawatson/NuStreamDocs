@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Frozen;
-using System.Text.RegularExpressions;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -19,7 +18,7 @@ namespace NuStreamDocs.Highlight.Languages;
 /// classification is missing. Replacing the placeholder with a real
 /// rule list lights up styling without any consumer-visible change.
 /// </remarks>
-public static partial class PassThroughLexer
+public static class PassThroughLexer
 {
     /// <summary>Builds a pass-through lexer for <paramref name="languageName"/>.</summary>
     /// <param name="languageName">Language identifier the registry will key on.</param>
@@ -29,13 +28,12 @@ public static partial class PassThroughLexer
         ArgumentException.ThrowIfNullOrEmpty(languageName);
         var states = new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
         {
-            [Lexer.RootState] = [new(AnyCharRegex(), TokenClass.Text, NextState: null)],
+            [Lexer.RootState] = [
+
+                // Consume one character per step — every character is classified as plain text.
+                new(static slice => slice is [_, ..] ? 1 : 0, TokenClass.Text, NextState: null),
+            ],
         }.ToFrozenDictionary(StringComparer.Ordinal);
         return new(languageName, states);
     }
-
-    /// <summary>Cursor-anchored single-character matcher shared across every pass-through lexer.</summary>
-    /// <returns>The compiled regex.</returns>
-    [GeneratedRegex(@"\G[\s\S]", RegexOptions.Compiled | RegexOptions.CultureInvariant)]
-    private static partial Regex AnyCharRegex();
 }

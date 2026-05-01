@@ -9,17 +9,33 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </summary>
 internal static class MarkupTagRules
 {
-    /// <summary>Builds the shared tag-state rule list, with attributes before tag names so the lookahead-based attribute regex wins.</summary>
+    /// <summary>Builds the shared tag-state rule list. Attributes precede tag names so the lookahead-based attribute matcher wins.</summary>
     /// <returns>Rule list.</returns>
     public static LexerRule[] Build() =>
     [
-        new(LanguageCommon.WhitespaceWithNewlines(), TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst },
-        new(LanguageCommon.AttributeName(), TokenClass.NameAttribute, NextState: null) { FirstChars = LanguageCommon.AttributeNameFirst },
-        new(LanguageCommon.TagName(), TokenClass.NameClass, NextState: null) { FirstChars = LanguageCommon.TagNameFirst },
-        new(LanguageCommon.EqualsSign(), TokenClass.Operator, NextState: null) { FirstChars = LanguageCommon.EqualsFirst },
-        new(LanguageCommon.DoubleQuotedStringNoEscape(), TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
-        new(LanguageCommon.SingleQuotedStringNoEscape(), TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
-        new(LanguageCommon.SelfClose(), TokenClass.Punctuation, LexerRule.StatePop) { FirstChars = LanguageCommon.SlashFirst },
-        new(LanguageCommon.AngleClose(), TokenClass.Punctuation, LexerRule.StatePop) { FirstChars = LanguageCommon.AngleCloseFirst },
+
+        // [ \t\r\n]+ whitespace runs.
+        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst },
+
+        // attribute-name with '=' lookahead — must precede the tag-name rule.
+        new(LanguageCommon.AttributeName, TokenClass.NameAttribute, NextState: null) { FirstChars = LanguageCommon.AttributeNameFirst },
+
+        // Tag name (XML name grammar).
+        new(LanguageCommon.TagName, TokenClass.NameClass, NextState: null) { FirstChars = LanguageCommon.TagNameFirst },
+
+        // '=' attribute separator.
+        new(static slice => TokenMatchers.MatchSingleCharOf(slice, LanguageCommon.EqualsFirst), TokenClass.Operator, NextState: null) { FirstChars = LanguageCommon.EqualsFirst },
+
+        // "..." double-quoted attribute value (no escapes).
+        new(LanguageCommon.DoubleQuotedStringNoEscape, TokenClass.StringDouble, NextState: null) { FirstChars = LanguageCommon.DoubleQuoteFirst },
+
+        // '...' single-quoted attribute value (no escapes).
+        new(TokenMatchers.MatchSingleQuotedNoEscape, TokenClass.StringSingle, NextState: null) { FirstChars = LanguageCommon.SingleQuoteFirst },
+
+        // /> self-closing-tag terminator — pops back to root.
+        new(LanguageCommon.SelfClose, TokenClass.Punctuation, LexerRule.StatePop) { FirstChars = LanguageCommon.SlashFirst },
+
+        // > tag-close — pops back to root.
+        new(static slice => TokenMatchers.MatchSingleCharOf(slice, LanguageCommon.AngleCloseFirst), TokenClass.Punctuation, LexerRule.StatePop) { FirstChars = LanguageCommon.AngleCloseFirst },
     ];
 }
