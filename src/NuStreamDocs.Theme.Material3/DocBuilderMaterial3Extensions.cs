@@ -19,7 +19,12 @@ public static class DocBuilderMaterial3Extensions
 
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with default options + the Material3 icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="iconResolver">Optional inline-icon resolver (e.g. <c>NuStreamDocs.Icons.MaterialDesign.MdiIconResolver</c>) consulted for <c>:material-foo:</c> shortcodes before the font-ligature fallback.</param>
+    /// <param name="iconResolver">
+    /// Optional inline-icon resolver (e.g.
+    /// <c>NuStreamDocs.Icons.MaterialDesign.MdiIconResolver</c>)
+    /// consulted for <c>:material-foo:</c> shortcodes before the
+    /// font-ligature fallback.
+    /// </param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMaterial3Theme(this DocBuilder builder, IIconResolver? iconResolver)
     {
