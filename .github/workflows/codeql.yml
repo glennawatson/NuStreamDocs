@@ -1,0 +1,78 @@
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '17 9 * * 2'
+
+permissions:
+  security-events: write
+  contents: read
+  packages: read
+  actions: read
+
+jobs:
+  analyze-csharp:
+    name: Analyze C#
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE: 1
+      # CodeQL builds are not shipped, so a static override skips MinVer's
+      # per-project git walk during evaluation.
+      MINVERVERSIONOVERRIDE: 0.0.0-codeql.0+${{ github.sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: csharp
+          build-mode: manual
+          queries: security-extended
+
+      - name: Restore
+        working-directory: src
+        run: dotnet restore NuStreamDocs.slnx
+
+      - name: Build
+        working-directory: src
+        run: dotnet build NuStreamDocs.slnx --no-restore --configuration Release
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:csharp"
+
+  analyze-actions:
+    name: Analyze GitHub Actions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: actions
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:actions"

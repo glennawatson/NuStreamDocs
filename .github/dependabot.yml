@@ -4,8 +4,8 @@
 # Groupings keep PR volume manageable: bumps that share a release cadence
 # land together. Group order matters — Dependabot assigns each package
 # to the first group whose patterns match, so narrower groups
-# (sourcedocparser, analyzers, test-stack) are listed before the
-# catch-all microsoft group.
+# (sourcedocparser, analyzers, polly, perf-tooling, test-stack) are
+# listed before the catch-all microsoft group.
 
 version: 2
 updates:
@@ -26,13 +26,22 @@ updates:
           - "Roslynator.*"
           - "SonarAnalyzer.*"
           - "Blazor.Common.*"
+      polly:
+        patterns:
+          - "Polly*"
+      perf-tooling:
+        # Benchmarking and allocation-reporting dependencies tend to move
+        # together and are only consumed by the perf harness / tooling.
+        patterns:
+          - "BenchmarkDotNet*"
+          - "Microsoft.Diagnostics.Tracing.TraceEvent"
       test-stack:
         patterns:
           - "TUnit*"
           - "Verify.TUnit"
           - "NSubstitute"
           - "Microsoft.Testing.*"
-          - "BenchmarkDotNet*"
+          - "Microsoft.Extensions.TimeProvider.Testing"
       microsoft:
         # Catch-all for the rest of the Microsoft / System extensions we
         # ride on (Microsoft.Extensions.*, Microsoft.SourceLink.*,
@@ -46,7 +55,14 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-      actions:
+      core-actions:
         patterns:
           - "actions/*"
           - "dotnet/*"
+          - "github/*"
+      release-actions:
+        # Release-only vendor actions should land together so signing /
+        # publishing workflow changes stay in one PR.
+        patterns:
+          - "SSLcom/*"
+          - "NuGet/*"
