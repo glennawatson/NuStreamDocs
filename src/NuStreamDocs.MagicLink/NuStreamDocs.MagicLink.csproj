@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.MagicLink</PackageId>
-    <Description>Magic-link plugin for NuStreamDocs. Implements pymdownx.magiclink default behaviour — wraps bare http(s)/ftp(s)/mailto/www URLs in CommonMark autolink brackets so the inline renderer emits anchor tags.</Description>
+    <Description>Magic-link plugin for NuStreamDocs. Implements pymdownx.magiclink default behavior — wraps bare http(s)/ftp(s)/mailto/www URLs in CommonMark autolink brackets so the inline renderer emits anchor tags.</Description>
     <RootNamespace>NuStreamDocs.MagicLink</RootNamespace>
   </PropertyGroup>
 

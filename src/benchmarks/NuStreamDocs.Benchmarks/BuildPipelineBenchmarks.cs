@@ -15,7 +15,7 @@ using NuStreamDocs.Privacy;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>End-to-end <c>DocBuilder</c> benchmarks across plugin combinations, against a synthesised on-disk corpus.</summary>
+/// <summary>End-to-end <c>DocBuilder</c> benchmarks across plugin combinations, against a synthesized on-disk corpus.</summary>
 /// <remarks>
 /// The synthetic corpus is built once per parameter set under
 /// <c>Path.GetTempPath</c> in <c>GlobalSetup</c> and torn

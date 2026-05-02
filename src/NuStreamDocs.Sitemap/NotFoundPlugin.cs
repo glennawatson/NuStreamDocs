@@ -8,7 +8,7 @@ namespace NuStreamDocs.Sitemap;
 
 /// <summary>
 /// Emits a default <c>404.html</c> at the site root in
-/// <see cref="OnFinaliseAsync"/> when no <c>404.html</c> already exists
+/// <see cref="OnFinalizeAsync"/> when no <c>404.html</c> already exists
 /// — typically because the docs tree has no <c>404.md</c> source.
 /// Sites that ship their own <c>404.md</c> will see that page
 /// already in the output and this plugin no-ops.
@@ -62,7 +62,7 @@ public sealed class NotFoundPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         var path = Path.Combine(context.OutputRoot, "404.html");
         if (File.Exists(path))

@@ -4,7 +4,7 @@
 
 namespace NuStreamDocs.Search;
 
-/// <summary>Index-on-disk compression knob honoured by <see cref="SearchPlugin"/>.</summary>
+/// <summary>Index-on-disk compression knob honored by <see cref="SearchPlugin"/>.</summary>
 public enum SearchCompression
 {
     /// <summary>No compression — emit the index as plain UTF-8 JSON. Largest file, fastest write, easiest to inspect.</summary>

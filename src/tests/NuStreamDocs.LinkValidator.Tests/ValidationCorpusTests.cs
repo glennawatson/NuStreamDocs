@@ -27,12 +27,12 @@ public class ValidationCorpusTests
 
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
             await Assert.That(corpus.TryGetPage("index.html", out var page)).IsTrue();
-            await Assert.That(page.InternalLinks).Contains("about.html");
-            await Assert.That(page.InternalLinks).DoesNotContain("https://example.com");
-            await Assert.That(page.InternalLinks).DoesNotContain("image.png");
-            await Assert.That(page.ExternalLinks).Contains("https://example.com");
-            await Assert.That(page.ExternalLinks).Contains("http://x.test");
-            await Assert.That(page.ExternalLinks).Contains("https://cdn.test/x.jpg");
+            await Assert.That(ContainsBytes(page.InternalLinks, "about.html"u8)).IsTrue();
+            await Assert.That(ContainsBytes(page.InternalLinks, "https://example.com"u8)).IsFalse();
+            await Assert.That(ContainsBytes(page.InternalLinks, "image.png"u8)).IsFalse();
+            await Assert.That(ContainsBytes(page.ExternalLinks, "https://example.com"u8)).IsTrue();
+            await Assert.That(ContainsBytes(page.ExternalLinks, "http://x.test"u8)).IsTrue();
+            await Assert.That(ContainsBytes(page.ExternalLinks, "https://cdn.test/x.jpg"u8)).IsTrue();
         }
         finally
         {
@@ -55,9 +55,9 @@ public class ValidationCorpusTests
 
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
             await Assert.That(corpus.TryGetPage("index.html", out var page)).IsTrue();
-            await Assert.That(page.InternalLinks).DoesNotContain("image.png?v=1");
-            await Assert.That(page.InternalLinks).DoesNotContain("style.css#section");
-            await Assert.That(page.InternalLinks).Contains("page.html?q=1");
+            await Assert.That(ContainsBytes(page.InternalLinks, "image.png?v=1"u8)).IsFalse();
+            await Assert.That(ContainsBytes(page.InternalLinks, "style.css#section"u8)).IsFalse();
+            await Assert.That(ContainsBytes(page.InternalLinks, "page.html?q=1"u8)).IsTrue();
         }
         finally
         {
@@ -110,5 +110,22 @@ public class ValidationCorpusTests
         var dir = Path.Combine(Path.GetTempPath(), "smd-vc-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(dir);
         return dir;
+    }
+
+    /// <summary>Tests whether <paramref name="haystack"/> holds a byte array equal to <paramref name="needle"/>.</summary>
+    /// <param name="haystack">Byte array list.</param>
+    /// <param name="needle">UTF-8 bytes to search for.</param>
+    /// <returns>True when found.</returns>
+    private static bool ContainsBytes(byte[][] haystack, ReadOnlySpan<byte> needle)
+    {
+        for (var i = 0; i < haystack.Length; i++)
+        {
+            if (haystack[i].AsSpan().SequenceEqual(needle))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

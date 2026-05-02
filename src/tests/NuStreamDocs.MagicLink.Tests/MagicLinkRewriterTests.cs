@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.MagicLink.Tests;
 
-/// <summary>Behaviour tests for <c>MagicLinkRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>MagicLinkRewriter</c>.</summary>
 public class MagicLinkRewriterTests
 {
     /// <summary>Bare <c>https://</c> URLs are wrapped in autolink brackets.</summary>

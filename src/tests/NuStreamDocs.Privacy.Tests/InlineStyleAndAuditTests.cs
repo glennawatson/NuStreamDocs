@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
 
-/// <summary>Behaviour tests for inline <c>&lt;style&gt;</c> rewriting, audit-only mode, and allow/skip-list semantics.</summary>
+/// <summary>Behavior tests for inline <c>&lt;style&gt;</c> rewriting, audit-only mode, and allow/skip-list semantics.</summary>
 public class InlineStyleAndAuditTests
 {
     /// <summary>Filter that accepts every host.</summary>
@@ -37,13 +37,13 @@ public class InlineStyleAndAuditTests
         await Assert.That(audit.Keys).Contains("https://example.com/y.png");
     }
 
-    /// <summary>An empty allow-list defaults to "localise everything not on the skip list".</summary>
+    /// <summary>An empty allow-list defaults to "localize everything not on the skip list".</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task EmptyAllowListLocalisesEverything()
+    public async Task EmptyAllowListLocalizesEverything()
     {
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        await Assert.That(filter.ShouldLocalise("https://anything.example/x.png")).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://anything.example/x.png")).IsTrue();
     }
 
     /// <summary>A non-empty allow-list excludes hosts not on it.</summary>
@@ -52,8 +52,8 @@ public class InlineStyleAndAuditTests
     public async Task AllowListExcludesUnlistedHosts()
     {
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: ["allowed.example"]);
-        await Assert.That(filter.ShouldLocalise("https://allowed.example/x.png")).IsTrue();
-        await Assert.That(filter.ShouldLocalise("https://other.example/x.png")).IsFalse();
+        await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png")).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://other.example/x.png")).IsFalse();
     }
 
     /// <summary>The skip-list wins over the allow-list when both contain the same host.</summary>
@@ -62,6 +62,6 @@ public class InlineStyleAndAuditTests
     public async Task SkipListWinsOverAllowList()
     {
         var filter = new HostFilter(hostsToSkip: ["x.example"], hostsAllowed: ["x.example"]);
-        await Assert.That(filter.ShouldLocalise("https://x.example/anything")).IsFalse();
+        await Assert.That(filter.ShouldLocalize("https://x.example/anything")).IsFalse();
     }
 }

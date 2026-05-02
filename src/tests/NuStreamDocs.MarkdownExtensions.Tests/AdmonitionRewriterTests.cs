@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Admonitions;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>AdmonitionRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>AdmonitionRewriter</c>.</summary>
 public class AdmonitionRewriterTests
 {
     /// <summary>An untitled <c>!!! note</c> block becomes a div with a title-cased default summary.</summary>

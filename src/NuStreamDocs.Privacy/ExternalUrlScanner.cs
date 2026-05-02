@@ -29,7 +29,7 @@ internal static class ExternalUrlScanner
     public static bool MayHaveExternalUrls(ReadOnlySpan<byte> html) =>
         html.IndexOf("http"u8) >= 0;
 
-    /// <summary>Records every external URL <see cref="Rewrite"/> would have localised, without modifying <paramref name="html"/>.</summary>
+    /// <summary>Records every external URL <see cref="Rewrite"/> would have localized, without modifying <paramref name="html"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="filter">Host filter.</param>
     /// <param name="auditSet">Concurrent set the URLs are added to (the value is unused).</param>

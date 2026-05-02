@@ -23,7 +23,7 @@ namespace NuStreamDocs.Nav;
 /// </remarks>
 internal static class NavTreeBuilder
 {
-    /// <summary>Markdown extension recognised when building the nav tree.</summary>
+    /// <summary>Markdown extension recognized when building the nav tree.</summary>
     private const string MarkdownExtension = ".md";
 
     /// <summary>File name of the literate-nav override (<c>.pages</c>) read from each section directory.</summary>

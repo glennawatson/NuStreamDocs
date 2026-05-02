@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Autorefs.Tests;
 
-/// <summary>Behaviour tests for <c>AutorefsRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>AutorefsRewriter</c>.</summary>
 public class AutorefsRewriterTests
 {
     /// <summary>Resolved markers get substituted with the registered URL.</summary>

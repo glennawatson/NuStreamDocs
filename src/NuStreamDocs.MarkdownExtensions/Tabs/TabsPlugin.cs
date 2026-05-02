@@ -10,7 +10,7 @@ namespace NuStreamDocs.MarkdownExtensions.Tabs;
 
 /// <summary>
 /// Content-tabs plugin. Rewrites consecutive <c>=== "Title"</c>
-/// blocks into a Material-flavoured tabbed group (radio-button
+/// blocks into a Material-flavored tabbed group (radio-button
 /// driven, no JavaScript) before the markdown renderer runs.
 /// </summary>
 public sealed class TabsPlugin : MarkdownAssetPluginBase

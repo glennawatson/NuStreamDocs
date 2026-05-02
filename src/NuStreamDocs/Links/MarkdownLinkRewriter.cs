@@ -18,7 +18,7 @@ internal static class MarkdownLinkRewriter
     /// <summary>ASCII offset to convert an upper-case letter to lower-case.</summary>
     private const int AsciiUpperToLowerOffset = 32;
 
-    /// <summary>Recognised absolute-URL prefixes; matches in <see cref="StartsWithAbsoluteScheme"/> trigger pass-through.</summary>
+    /// <summary>Recognized absolute-URL prefixes; matches in <see cref="StartsWithAbsoluteScheme"/> trigger pass-through.</summary>
     private static readonly byte[][] AbsoluteSchemes =
     [
         [.. "http://"u8],

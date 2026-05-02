@@ -16,7 +16,7 @@ namespace NuStreamDocs.Feed;
 /// <remarks>
 /// Reuses <see cref="BlogPostScanner"/> as the post source so the
 /// same authoring directory powers the rendered blog and the feeds.
-/// Generation runs in <see cref="OnFinaliseAsync"/> so any blog plugin
+/// Generation runs in <see cref="OnFinalizeAsync"/> so any blog plugin
 /// that may have rewritten / appended posts has finished first.
 /// </remarks>
 public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger) : IDocPlugin
@@ -30,7 +30,7 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     /// <summary>Logger for diagnostics.</summary>
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    /// <summary>Captured input root from the configure phase; required by finalise.</summary>
+    /// <summary>Captured input root from the configure phase; required by finalize.</summary>
     private string _inputRoot = string.Empty;
 
     /// <summary>Initializes a new instance of the <see cref="FeedPlugin"/> class.</summary>
@@ -68,7 +68,7 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         if (_options.Formats == FeedFormats.None || string.IsNullOrEmpty(_inputRoot))

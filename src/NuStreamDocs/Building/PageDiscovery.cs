@@ -12,14 +12,14 @@ namespace NuStreamDocs.Building;
 /// </summary>
 /// <remarks>
 /// Backed by <see cref="Directory.EnumerateFiles(string, string, SearchOption)"/>,
-/// which yields entries lazily so the discover stage never materialises
+/// which yields entries lazily so the discover stage never materializes
 /// the full file list — even on large projects memory stays flat.
 /// Filtering / glob exclude is applied per-item
 /// during the walk, again to avoid an intermediate list.
 /// </remarks>
 public static class PageDiscovery
 {
-    /// <summary>Markdown extension the discovery walker recognises.</summary>
+    /// <summary>Markdown extension the discovery walker recognizes.</summary>
     private const string MarkdownExtension = ".md";
 
     /// <summary>Enumerates markdown pages under <paramref name="inputRoot"/> without cancellation support.</summary>

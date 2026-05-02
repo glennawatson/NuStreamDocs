@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
 
-/// <summary>Behaviour tests for <c>CssUrlRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>CssUrlRewriter</c>.</summary>
 public class CssUrlRewriterTests
 {
     /// <summary>An absolute http(s) URL inside <c>url()</c> is registered and rewritten to the local path.</summary>

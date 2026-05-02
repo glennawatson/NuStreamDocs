@@ -13,7 +13,7 @@ namespace NuStreamDocs.Privacy;
 /// </summary>
 /// <remarks>
 /// Per-page <see cref="PrivacyPlugin"/> hooks register URLs as they
-/// scan rendered HTML; the finalise pass enumerates the registry to
+/// scan rendered HTML; the finalize pass enumerates the registry to
 /// download every unique URL once.
 /// </remarks>
 internal sealed class ExternalAssetRegistry
@@ -21,7 +21,7 @@ internal sealed class ExternalAssetRegistry
     /// <summary>Length in bytes of the xxHash3 digest used to derive filenames.</summary>
     private const int HashByteLength = 8;
 
-    /// <summary>Directory under the output root where externalised assets live.</summary>
+    /// <summary>Directory under the output root where externalized assets live.</summary>
     private readonly string _assetDirectory;
 
     /// <summary>Concurrent URL → local-relative-path map.</summary>
@@ -89,7 +89,7 @@ internal sealed class ExternalAssetRegistry
 
     /// <summary>Pulls the file extension (including the leading dot) off the URL's path component.</summary>
     /// <param name="url">External URL.</param>
-    /// <returns>Extension (with leading dot) or an empty string when none is recognisable.</returns>
+    /// <returns>Extension (with leading dot) or an empty string when none is recognizable.</returns>
     private static string ExtractExtension(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))

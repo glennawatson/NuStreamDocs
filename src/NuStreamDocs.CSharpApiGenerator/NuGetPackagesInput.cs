@@ -6,12 +6,12 @@ namespace NuStreamDocs.CSharpApiGenerator;
 
 /// <summary>
 /// Fetches a caller-supplied list of NuGet packages directly — no
-/// on-disk manifest required. The plugin synthesises a transient
+/// on-disk manifest required. The plugin synthesizes a transient
 /// manifest in a scratch subdirectory of <paramref name="ApiCachePath"/>
 /// before handing off to <c>NuGetAssemblySource</c>.
 /// </summary>
 /// <param name="Packages">Packages to fetch.</param>
-/// <param name="ApiCachePath">Destination root for fetched packages and the synthesised manifest.</param>
+/// <param name="ApiCachePath">Destination root for fetched packages and the synthesized manifest.</param>
 /// <param name="TfmPreference">Ordered list of preferred TFMs. Empty falls back to <see cref="DefaultTfmPreference"/>.</param>
 public sealed record NuGetPackagesInput(
     NuGetPackageReference[] Packages,

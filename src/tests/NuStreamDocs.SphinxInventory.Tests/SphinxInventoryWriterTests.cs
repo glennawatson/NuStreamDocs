@@ -59,17 +59,17 @@ public class SphinxInventoryWriterTests
         await Assert.That(body).IsEqualTo(string.Empty);
     }
 
-    /// <summary>Plugin emits the file at finalise time using the shared registry.</summary>
+    /// <summary>Plugin emits the file at finalize time using the shared registry.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PluginEmitsFileAtFinalise()
+    public async Task PluginEmitsFileAtFinalize()
     {
         using var fixture = new InventoryFixture();
         var registry = new AutorefsRegistry();
         registry.Register("Foo", "api/Foo.html", fragment: null);
         var plugin = new SphinxInventoryPlugin(registry, new("X", string.Empty, "objects.inv"));
-        var context = new PluginFinaliseContext(fixture.Directory);
-        await plugin.OnFinaliseAsync(context, CancellationToken.None);
+        var context = new PluginFinalizeContext(fixture.Directory);
+        await plugin.OnFinalizeAsync(context, CancellationToken.None);
 
         var path = Path.Combine(fixture.Directory, "objects.inv");
         await Assert.That(File.Exists(path)).IsTrue();

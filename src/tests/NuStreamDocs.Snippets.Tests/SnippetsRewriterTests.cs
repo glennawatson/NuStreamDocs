@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Snippets.Tests;
 
-/// <summary>Behaviour tests for <c>SnippetsRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>SnippetsRewriter</c>.</summary>
 public class SnippetsRewriterTests
 {
     /// <summary>A simple include splices the file contents inline.</summary>

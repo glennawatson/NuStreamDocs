@@ -6,7 +6,7 @@ using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>PathFilter</c>.</summary>
+/// <summary>Behavior tests for <c>PathFilter</c>.</summary>
 public class PathFilterTests
 {
     /// <summary>The empty filter keeps everything and reports no rules.</summary>

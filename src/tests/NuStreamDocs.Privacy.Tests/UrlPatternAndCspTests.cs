@@ -10,7 +10,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Privacy.Tests;
 
-/// <summary>Behaviour tests for <c>UrlPatternMatcher</c>, URL-level filter rules, and <c>CspHashCollector</c>.</summary>
+/// <summary>Behavior tests for <c>UrlPatternMatcher</c>, URL-level filter rules, and <c>CspHashCollector</c>.</summary>
 public class UrlPatternAndCspTests
 {
     /// <summary><c>*</c> matches any sequence of characters and <c>?</c> matches one.</summary>
@@ -34,9 +34,9 @@ public class UrlPatternAndCspTests
             hostsAllowed: ["allowed.example"],
             includePatterns: ["https://other.example/css*"],
             excludePatterns: null);
-        await Assert.That(filter.ShouldLocalise("https://allowed.example/x.png")).IsTrue();
-        await Assert.That(filter.ShouldLocalise("https://other.example/css/main.css")).IsTrue();
-        await Assert.That(filter.ShouldLocalise("https://other.example/recaptcha/x")).IsFalse();
+        await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png")).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://other.example/css/main.css")).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://other.example/recaptcha/x")).IsFalse();
     }
 
     /// <summary>An exclude pattern wins over a host that would otherwise pass.</summary>
@@ -49,8 +49,8 @@ public class UrlPatternAndCspTests
             hostsAllowed: null,
             includePatterns: null,
             excludePatterns: ["https://*.googleapis.com/recaptcha/*"]);
-        await Assert.That(filter.ShouldLocalise("https://fonts.googleapis.com/css")).IsTrue();
-        await Assert.That(filter.ShouldLocalise("https://fonts.googleapis.com/recaptcha/x")).IsFalse();
+        await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/css")).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/recaptcha/x")).IsFalse();
     }
 
     /// <summary>Inline <c>&lt;style&gt;</c> bodies produce stable SHA-256 hashes formatted for CSP.</summary>
@@ -83,7 +83,7 @@ public class UrlPatternAndCspTests
         await Assert.That(scripts).IsEmpty();
     }
 
-    /// <summary>End-to-end: PrivacyPlugin.OnRenderPage feeds the CSP collector and OnFinalise emits the manifest.</summary>
+    /// <summary>End-to-end: PrivacyPlugin.OnRenderPage feeds the CSP collector and OnFinalize emits the manifest.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task PrivacyPluginEmitsCspManifest()
@@ -102,8 +102,8 @@ public class UrlPatternAndCspTests
             var render = new PluginRenderContext("page.md", html, sink);
             await plugin.OnRenderPageAsync(render, CancellationToken.None);
 
-            var finalise = new PluginFinaliseContext(outputRoot);
-            await plugin.OnFinaliseAsync(finalise, CancellationToken.None);
+            var finalize = new PluginFinalizeContext(outputRoot);
+            await plugin.OnFinalizeAsync(finalize, CancellationToken.None);
 
             var manifest = await File.ReadAllTextAsync(Path.Combine(outputRoot, "csp-hashes.json"));
             await Assert.That(manifest).Contains("\"styleSrc\"");

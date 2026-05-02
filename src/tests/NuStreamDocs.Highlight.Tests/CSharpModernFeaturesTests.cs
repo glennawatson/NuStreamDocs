@@ -6,7 +6,7 @@ using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight.Tests;
 
-/// <summary>Tests covering the C# 11–15 syntax forms <see cref="CSharpLexer"/> recognises.</summary>
+/// <summary>Tests covering the C# 11–15 syntax forms <see cref="CSharpLexer"/> recognizes.</summary>
 public class CSharpModernFeaturesTests
 {
     /// <summary><c>"""..."""</c> raw string literals are highlighted as a single string-double token.</summary>
@@ -57,7 +57,7 @@ public class CSharpModernFeaturesTests
         await Assert.That(html.Contains("$&quot;&quot;&quot;line: {value}&quot;&quot;&quot;", StringComparison.Ordinal)).IsTrue();
     }
 
-    /// <summary>Double-dollar raw interpolated <c>$$"""..."""</c> is recognised.</summary>
+    /// <summary>Double-dollar raw interpolated <c>$$"""..."""</c> is recognized.</summary>
     /// <returns>Async task.</returns>
     [Test]
     public async Task DoubleDollarRawInterpolatedString_is_classified_as_string()
@@ -69,7 +69,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>scoped</c> is highlighted as a declaration-keyword (parameter / local modifier).</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task ScopedKeyword_is_recognised()
+    public async Task ScopedKeyword_is_recognized()
     {
         var html = CSharpLexer.Instance.Render("void M(scoped ref int x) { }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">scoped</span>", StringComparison.Ordinal)).IsTrue();
@@ -78,7 +78,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>init</c> is highlighted as a declaration-keyword.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task InitKeyword_is_recognised()
+    public async Task InitKeyword_is_recognized()
     {
         var html = CSharpLexer.Instance.Render("public int X { get; init; }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">init</span>", StringComparison.Ordinal)).IsTrue();
@@ -87,7 +87,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>field</c> contextual keyword is highlighted as a keyword inside both arrow-body and block-body accessors.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task FieldKeyword_is_recognised_in_accessor_bodies()
+    public async Task FieldKeyword_is_recognized_in_accessor_bodies()
     {
         var html = CSharpLexer.Instance.Render("public int X { get => field; set => field = value; }"u8);
         await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsTrue();
@@ -117,7 +117,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>extension</c> declaration keyword for C# 14 extension blocks.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task ExtensionKeyword_is_recognised()
+    public async Task ExtensionKeyword_is_recognized()
     {
         var html = CSharpLexer.Instance.Render("extension(string str) { public bool IsEmpty => str.Length is 0; }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">extension</span>", StringComparison.Ordinal)).IsTrue();
@@ -126,7 +126,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>union</c> declaration keyword for the discriminated-union proposal.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task UnionKeyword_is_recognised()
+    public async Task UnionKeyword_is_recognized()
     {
         var html = CSharpLexer.Instance.Render("union Result { Ok, Error }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">union</span>", StringComparison.Ordinal)).IsTrue();
@@ -135,7 +135,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>allows</c> contextual keyword in <c>where T : allows ref struct</c> generic constraints.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task AllowsKeyword_is_recognised()
+    public async Task AllowsKeyword_is_recognized()
     {
         var html = CSharpLexer.Instance.Render("void M<T>() where T : allows ref struct { }"u8);
         await Assert.That(html.Contains("<span class=\"k\">allows</span>", StringComparison.Ordinal)).IsTrue();
@@ -144,7 +144,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>notnull</c> generic constraint.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task NotnullKeyword_is_recognised()
+    public async Task NotnullKeyword_is_recognized()
     {
         var html = CSharpLexer.Instance.Render("void M<T>() where T : notnull { }"u8);
         await Assert.That(html.Contains("<span class=\"k\">notnull</span>", StringComparison.Ordinal)).IsTrue();
@@ -153,7 +153,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>unmanaged</c> generic constraint.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task UnmanagedKeyword_is_recognised()
+    public async Task UnmanagedKeyword_is_recognized()
     {
         var html = CSharpLexer.Instance.Render("void M<T>() where T : unmanaged { }"u8);
         await Assert.That(html.Contains("<span class=\"k\">unmanaged</span>", StringComparison.Ordinal)).IsTrue();
@@ -162,7 +162,7 @@ public class CSharpModernFeaturesTests
     /// <summary><c>dynamic</c> is highlighted as a built-in type keyword.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task DynamicKeyword_is_recognised_as_type()
+    public async Task DynamicKeyword_is_recognized_as_type()
     {
         var html = CSharpLexer.Instance.Render("dynamic x = 1;"u8);
         await Assert.That(html.Contains("<span class=\"kt\">dynamic</span>", StringComparison.Ordinal)).IsTrue();
@@ -182,7 +182,7 @@ public class CSharpModernFeaturesTests
     /// <summary>Primary constructor declaration: <c>public class Point(int X, int Y)</c>.</summary>
     /// <returns>Async task.</returns>
     [Test]
-    public async Task PrimaryConstructor_keywords_recognised()
+    public async Task PrimaryConstructor_keywords_recognized()
     {
         var html = CSharpLexer.Instance.Render("public class Point(int X, int Y);"u8);
         await Assert.That(html.Contains("<span class=\"kd\">public</span>", StringComparison.Ordinal)).IsTrue();

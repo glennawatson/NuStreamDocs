@@ -10,7 +10,7 @@ namespace NuStreamDocs.Sitemap;
 /// <summary>
 /// Sitemap plugin. Collects every rendered page's URL during the
 /// build and writes <c>sitemap.xml</c> + <c>robots.txt</c> to the
-/// output root in <see cref="OnFinaliseAsync"/>.
+/// output root in <see cref="OnFinalizeAsync"/>.
 /// </summary>
 /// <remarks>
 /// Requires <c>site_url</c> in the config — without it the URLs in
@@ -20,7 +20,7 @@ namespace NuStreamDocs.Sitemap;
 /// </remarks>
 public sealed class SitemapPlugin : IDocPlugin
 {
-    /// <summary>Per-page entries collected during the build; drained at finalise time.</summary>
+    /// <summary>Per-page entries collected during the build; drained at finalize time.</summary>
     private readonly ConcurrentQueue<string> _entries = [];
 
     /// <summary>Resolved canonical site URL (with trailing slash) captured at configure time; null when missing.</summary>
@@ -32,7 +32,7 @@ public sealed class SitemapPlugin : IDocPlugin
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
-        _baseUrl = NormaliseBaseUrl(context.Config.SiteUrl);
+        _baseUrl = NormalizeBaseUrl(context.Config.SiteUrl);
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }
@@ -53,7 +53,7 @@ public sealed class SitemapPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         if (_baseUrl is null || _entries.IsEmpty)
@@ -69,10 +69,10 @@ public sealed class SitemapPlugin : IDocPlugin
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>Normalises <paramref name="raw"/> to an absolute base URL with a trailing slash, or returns <c>null</c> when unusable.</summary>
+    /// <summary>Normalizes <paramref name="raw"/> to an absolute base URL with a trailing slash, or returns <c>null</c> when unusable.</summary>
     /// <param name="raw">The configured <c>site_url</c>.</param>
-    /// <returns>Normalised base URL or <c>null</c>.</returns>
-    private static string? NormaliseBaseUrl(string? raw)
+    /// <returns>Normalized base URL or <c>null</c>.</returns>
+    private static string? NormalizeBaseUrl(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
         {

@@ -16,7 +16,7 @@ namespace NuStreamDocs.Privacy.Tests;
 /// </summary>
 public class UrlBytesTests
 {
-    /// <summary>Mixed-case <c>SRC=</c> / <c>HREF=</c> attribute names are recognised.</summary>
+    /// <summary>Mixed-case <c>SRC=</c> / <c>HREF=</c> attribute names are recognized.</summary>
     /// <param name="html">Input.</param>
     /// <returns>Async test.</returns>
     [Test]
@@ -117,10 +117,10 @@ public class UrlBytesTests
         await Assert.That(output).Contains(" 2x");
     }
 
-    /// <summary>Srcset value with no localisable URLs is left untouched (no rewrite happens).</summary>
+    /// <summary>Srcset value with no localizable URLs is left untouched (no rewrite happens).</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task SrcsetNoLocaliseUnchanged()
+    public async Task SrcsetNoLocalizeUnchanged()
     {
         var registry = new ExternalAssetRegistry("assets/external");
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: ["other.test"]);
@@ -148,7 +148,7 @@ public class UrlBytesTests
         await Assert.That(output).Contains("url(https://cdn.test/after.png)");
     }
 
-    /// <summary>Style tag attribute (<c>&lt;style type="..."&gt;</c>) is recognised; body URLs rewrite.</summary>
+    /// <summary>Style tag attribute (<c>&lt;style type="..."&gt;</c>) is recognized; body URLs rewrite.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task StyleTagWithAttributesStillMatches()

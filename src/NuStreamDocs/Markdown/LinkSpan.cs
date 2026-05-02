@@ -8,7 +8,7 @@ using NuStreamDocs.Html;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Inline-link handler. Recognises <c>[label](href)</c> and emits a
+/// Inline-link handler. Recognizes <c>[label](href)</c> and emits a
 /// matching <c>&lt;a&gt;</c> element with the href HTML-escaped.
 /// </summary>
 internal static class LinkSpan

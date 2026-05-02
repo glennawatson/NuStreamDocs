@@ -14,12 +14,12 @@ namespace NuStreamDocs.Plugins;
 /// (admonitions, tabs, details, mermaid) and icon plugins that need
 /// to drop a stylesheet or script into the output tree without owning
 /// a theme of their own. Theme plugins discover providers during
-/// <see cref="IDocPlugin.OnFinaliseAsync"/> by walking
+/// <see cref="IDocPlugin.OnFinalizeAsync"/> by walking
 /// <see cref="PluginConfigureContext.Plugins"/> and write each
 /// <c>(relativePath, bytes)</c> tuple under the output root.
 /// <para>
 /// Both <c>NuStreamDocs.Theme.Material</c> and
-/// <c>NuStreamDocs.Theme.Material3</c> honour this contract, so a
+/// <c>NuStreamDocs.Theme.Material3</c> honor this contract, so a
 /// markdown-extension plugin written once works under either theme
 /// without recompilation.
 /// </para>

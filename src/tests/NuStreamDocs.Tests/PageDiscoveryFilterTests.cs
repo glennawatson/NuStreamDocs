@@ -6,13 +6,13 @@ using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>End-to-end tests that <c>PageDiscovery</c> honours <c>PathFilter</c>.</summary>
+/// <summary>End-to-end tests that <c>PageDiscovery</c> honors <c>PathFilter</c>.</summary>
 public class PageDiscoveryFilterTests
 {
     /// <summary>Excluded paths never appear in the discovered stream.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task DiscoveryHonoursExclude()
+    public async Task DiscoveryHonorsExclude()
     {
         var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
         try
@@ -41,7 +41,7 @@ public class PageDiscoveryFilterTests
     /// <summary>Includes restrict the discovered stream to matching paths only.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task DiscoveryHonoursInclude()
+    public async Task DiscoveryHonorsInclude()
     {
         var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
         try

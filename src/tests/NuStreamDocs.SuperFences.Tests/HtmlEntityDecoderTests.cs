@@ -10,7 +10,7 @@ namespace NuStreamDocs.SuperFences.Tests;
 /// <summary>Branch-coverage tests for the SuperFences HtmlEntityDecoder.</summary>
 public class HtmlEntityDecoderTests
 {
-    /// <summary>Each recognised entity decodes to its source byte.</summary>
+    /// <summary>Each recognized entity decodes to its source byte.</summary>
     /// <param name="encoded">Encoded source.</param>
     /// <param name="expected">Decoded output.</param>
     /// <returns>Async test.</returns>
@@ -22,7 +22,7 @@ public class HtmlEntityDecoderTests
     [Arguments("&#39;", "'")]
     [Arguments("a&lt;b&gt;c", "a<b>c")]
     [Arguments("&amp;&amp;", "&&")]
-    public async Task RecognisedEntitiesDecode(string encoded, string expected)
+    public async Task RecognizedEntitiesDecode(string encoded, string expected)
     {
         var decoded = HtmlEntityDecoder.Decode(Encoding.UTF8.GetBytes(encoded));
         await Assert.That(Encoding.UTF8.GetString(decoded)).IsEqualTo(expected);
@@ -42,7 +42,7 @@ public class HtmlEntityDecoderTests
     }
 
     /// <summary>Unknown entities are passed through one byte at a time.</summary>
-    /// <param name="source">Source containing an unrecognised entity.</param>
+    /// <param name="source">Source containing an unrecognized entity.</param>
     /// <returns>Async test.</returns>
     [Test]
     [Arguments("&unknown;")]

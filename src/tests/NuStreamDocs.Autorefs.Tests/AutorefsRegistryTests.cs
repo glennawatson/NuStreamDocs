@@ -4,7 +4,7 @@
 
 namespace NuStreamDocs.Autorefs.Tests;
 
-/// <summary>Behaviour tests for <c>AutorefsRegistry</c>.</summary>
+/// <summary>Behavior tests for <c>AutorefsRegistry</c>.</summary>
 public class AutorefsRegistryTests
 {
     /// <summary>Registering with a fragment yields a hash-suffixed URL.</summary>

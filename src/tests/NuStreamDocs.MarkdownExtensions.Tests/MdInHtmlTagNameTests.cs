@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.MdInHtml;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Parameterised tag-name + attribute-value coverage for MdInHtmlRewriter.</summary>
+/// <summary>Parameterized tag-name + attribute-value coverage for MdInHtmlRewriter.</summary>
 public class MdInHtmlTagNameTests
 {
     /// <summary>Common block tags carrying <c>markdown="1"</c> all rewrite.</summary>
@@ -26,17 +26,17 @@ public class MdInHtmlTagNameTests
     public async Task BlockTagsRewrite(string tag) =>
         await Assert.That(Rewrite($"<{tag} markdown=\"1\">x</{tag}>")).Contains("\n\nx\n\n");
 
-    /// <summary>Recognised attribute values trigger rewrite.</summary>
+    /// <summary>Recognized attribute values trigger rewrite.</summary>
     /// <param name="value">Markdown attribute value.</param>
     /// <returns>Async test.</returns>
     [Test]
     [Arguments("1")]
     [Arguments("block")]
     [Arguments("span")]
-    public async Task RecognisedAttributeValues(string value) =>
+    public async Task RecognizedAttributeValues(string value) =>
         await Assert.That(Rewrite($"<div markdown=\"{value}\">x</div>")).Contains("\n\nx\n\n");
 
-    /// <summary>Unrecognised attribute values are passed through.</summary>
+    /// <summary>Unrecognized attribute values are passed through.</summary>
     /// <param name="value">Unsupported value.</param>
     /// <returns>Async test.</returns>
     [Test]
@@ -45,7 +45,7 @@ public class MdInHtmlTagNameTests
     [Arguments("true")]
     [Arguments("on")]
     [Arguments("")]
-    public async Task UnrecognisedValuesPassThrough(string value) =>
+    public async Task UnrecognizedValuesPassThrough(string value) =>
         await Assert.That(Rewrite($"<div markdown=\"{value}\">x</div>"))
             .IsEqualTo($"<div markdown=\"{value}\">x</div>");
 

@@ -14,7 +14,7 @@ namespace NuStreamDocs.Links;
 /// non-Markdown hrefs are passed through unchanged.
 /// </summary>
 /// <remarks>
-/// Honours the directory-URL toggle: when constructed with
+/// Honors the directory-URL toggle: when constructed with
 /// <c>useDirectoryUrls = true</c>, or when the config seen during
 /// <see cref="OnConfigureAsync"/> sets <c>use_directory_urls: true</c>,
 /// hrefs become <c>foo/</c> instead of <c>foo.html</c> and
@@ -64,7 +64,7 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;

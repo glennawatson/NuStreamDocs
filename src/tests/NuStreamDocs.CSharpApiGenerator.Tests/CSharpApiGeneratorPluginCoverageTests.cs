@@ -9,7 +9,7 @@ using SourceDocParser.Model;
 
 namespace NuStreamDocs.CSharpApiGenerator.Tests;
 
-/// <summary>Coverage for CSharpApiGeneratorPlugin Name + OnRender + OnFinalise, FromSource, CustomInput, builder extensions.</summary>
+/// <summary>Coverage for CSharpApiGeneratorPlugin Name + OnRender + OnFinalize, FromSource, CustomInput, builder extensions.</summary>
 public class CSharpApiGeneratorPluginCoverageTests
 {
     /// <summary>Name returns the registered string.</summary>
@@ -30,13 +30,13 @@ public class CSharpApiGeneratorPluginCoverageTests
         await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 
-    /// <summary>OnFinaliseAsync is a no-op.</summary>
+    /// <summary>OnFinalizeAsync is a no-op.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseNoOp()
+    public async Task OnFinalizeNoOp()
     {
         var plugin = new CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
-        await plugin.OnFinaliseAsync(new("/out"), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new("/out"), CancellationToken.None);
     }
 
     /// <summary>CustomInput stores the supplied source.</summary>

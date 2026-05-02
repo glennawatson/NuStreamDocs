@@ -10,7 +10,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.LinkValidator;
 
 /// <summary>
-/// Plugin that runs the link validator at build finalise. Builds a
+/// Plugin that runs the link validator at build finalize. Builds a
 /// single corpus in one parallel pass, then runs both validators
 /// against it.
 /// </summary>
@@ -18,7 +18,7 @@ namespace NuStreamDocs.LinkValidator;
 /// Mirror of the rxui website's source-link validator slot; takes
 /// <see cref="LinkValidatorOptions"/> and writes diagnostic lines to
 /// stderr. Fails the process via the captured exit code only when
-/// the relevant strict flag is on, matching mkdocs' behaviour.
+/// the relevant strict flag is on, matching mkdocs' behavior.
 /// </remarks>
 public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpClient>? httpClientFactory, ILogger logger) : IDocPlugin
 {
@@ -78,7 +78,7 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         LastDiagnostics = await RunAsync(context.OutputRoot, cancellationToken).ConfigureAwait(false);
         ReportToConsole(LastDiagnostics);

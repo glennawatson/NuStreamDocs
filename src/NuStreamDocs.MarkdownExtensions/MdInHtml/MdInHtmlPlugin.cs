@@ -11,7 +11,7 @@ namespace NuStreamDocs.MarkdownExtensions.MdInHtml;
 
 /// <summary>
 /// Markdown-in-HTML plugin (Markdown Extra <c>md_in_html</c>).
-/// Recognises HTML block-level tags carrying
+/// Recognizes HTML block-level tags carrying
 /// <c>markdown="1"</c> / <c>markdown="block"</c>, strips the
 /// attribute, and pads the inner content with blank lines so the
 /// CommonMark block parser ends the surrounding HTML block early

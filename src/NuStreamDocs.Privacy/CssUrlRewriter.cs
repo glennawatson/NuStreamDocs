@@ -63,7 +63,7 @@ internal static class CssUrlRewriter
             }
 
             var raw = Encoding.UTF8.GetString(rawSlice);
-            if (!TryResolveAbsolute(raw, cssBaseUri, out var absolute) || !filter.ShouldLocalise(absolute))
+            if (!TryResolveAbsolute(raw, cssBaseUri, out var absolute) || !filter.ShouldLocalize(absolute))
             {
                 cursor = afterToken;
                 continue;

@@ -7,7 +7,7 @@ using NuStreamDocs.Links;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>MarkdownLinkRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>MarkdownLinkRewriter</c>.</summary>
 public class MarkdownLinkRewriterTests
 {
     /// <summary>A relative <c>.md</c> href is rewritten to <c>.html</c>.</summary>

@@ -29,7 +29,7 @@ internal static class CssUrlBytes
     /// <summary>Gets the lowercase <c>https://</c> scheme.</summary>
     private static ReadOnlySpan<byte> HttpsScheme => "https://"u8;
 
-    /// <summary>Walks <paramref name="source"/>, copying through verbatim, but rewriting every <c>url(...)</c> token whose URL the registry localises.</summary>
+    /// <summary>Walks <paramref name="source"/>, copying through verbatim, but rewriting every <c>url(...)</c> token whose URL the registry localizes.</summary>
     /// <param name="source">UTF-8 source span.</param>
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
@@ -63,7 +63,7 @@ internal static class CssUrlBytes
         }
 
         var url = Encoding.UTF8.GetString(source[urlStart..urlEnd]);
-        if (!ctx.Filter.ShouldLocalise(url))
+        if (!ctx.Filter.ShouldLocalize(url))
         {
             advanceTo = tokenEnd;
             return false;
@@ -92,7 +92,7 @@ internal static class CssUrlBytes
         }
 
         var url = Encoding.UTF8.GetString(source[urlStart..urlEnd]);
-        if (audit.Filter.ShouldLocalise(url))
+        if (audit.Filter.ShouldLocalize(url))
         {
             audit.Set.TryAdd(url, 0);
         }

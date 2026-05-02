@@ -16,12 +16,12 @@ namespace NuStreamDocs.Privacy;
 /// Privacy plugin. Detects external <c>http(s)://</c> assets
 /// referenced from rendered pages, rewrites the references to local
 /// paths under <see cref="PrivacyOptions.AssetDirectory"/>, and
-/// downloads each unique URL once at finalise time.
+/// downloads each unique URL once at finalize time.
 /// </summary>
 /// <remarks>
 /// Per-page <see cref="OnRenderPageAsync"/> rewrites the page HTML in
 /// place; URL-to-local-path mappings accumulate in a thread-safe
-/// registry. <see cref="OnFinaliseAsync"/> drives the actual HTTP fetches
+/// registry. <see cref="OnFinalizeAsync"/> drives the actual HTTP fetches
 /// in parallel. Already-downloaded assets (cache hits on subsequent
 /// builds) skip the network entirely.
 /// <para>
@@ -146,7 +146,7 @@ public sealed class PrivacyPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         var root = _outputRoot is [] ? context.OutputRoot : _outputRoot;
         if (!_options.Enabled || root is [])
@@ -155,7 +155,7 @@ public sealed class PrivacyPlugin : IDocPlugin
         }
 
         var registrySnapshot = _registry.UrlsSnapshot();
-        PrivacyLoggingHelper.LogLocalisationStart(_logger, registrySnapshot.Length, root);
+        PrivacyLoggingHelper.LogLocalizationStart(_logger, registrySnapshot.Length, root);
 
         var cacheRoot = ResolveCacheRoot(root);
         var settings = new ExternalAssetDownloader.DownloadSettings(
@@ -170,7 +170,7 @@ public sealed class PrivacyPlugin : IDocPlugin
 
         WriteManifestIfRequested(root);
         WriteCspManifestIfRequested(root);
-        PrivacyLoggingHelper.LogFinaliseSummary(_logger, registrySnapshot.Length - failures.Length, failures.Length, cachedCount: 0);
+        PrivacyLoggingHelper.LogFinalizeSummary(_logger, registrySnapshot.Length - failures.Length, failures.Length, cachedCount: 0);
         ThrowIfRequested(failures);
     }
 

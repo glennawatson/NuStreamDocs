@@ -8,13 +8,12 @@ namespace NuStreamDocs.Toc;
 /// A heading the <see cref="HeadingScanner"/> located in rendered HTML.
 /// </summary>
 /// <remarks>
-/// All offsets index into the original UTF-8 byte snapshot. The
-/// scanner records the open-tag span (so the rewriter can splice in
-/// an <c>id</c> attribute) and the close-tag offset (so the rewriter
-/// can insert the permalink anchor immediately before <c>&lt;/hN&gt;</c>).
-/// <see cref="ExistingId"/> is non-empty when the heading already had
-/// an <c>id</c> attribute the scanner detected — in that case the
-/// slugifier preserves the existing value.
+/// All offsets index into the original UTF-8 byte snapshot. Existing
+/// <c>id</c> attribute values are stored as offset+length so the
+/// scanner never UTF-8 decodes them; the slug is computed once into a
+/// byte array (always ASCII per the slug rule) so the rewrite and TOC
+/// fragment passes can splice it back into the output stream without
+/// any further allocation or transcoding.
 /// </remarks>
 /// <param name="Level">Heading level (1..6).</param>
 /// <param name="OpenTagStart">Byte offset of the <c>&lt;</c> in the open tag.</param>
@@ -22,8 +21,9 @@ namespace NuStreamDocs.Toc;
 /// <param name="CloseTagStart">Byte offset of the <c>&lt;</c> in the close tag.</param>
 /// <param name="TextStart">Byte offset of the first byte of inner content.</param>
 /// <param name="TextEnd">Byte offset just past the last byte of inner content.</param>
-/// <param name="ExistingId">Existing <c>id</c> attribute value, or empty when the heading had none.</param>
-/// <param name="Slug">Final slug assigned by <see cref="HeadingSlugifier"/>; empty until that pass runs.</param>
+/// <param name="ExistingIdStart">Byte offset of an existing <c>id</c> attribute value, or <c>-1</c> when none.</param>
+/// <param name="ExistingIdLength">Length of the existing <c>id</c> attribute value, or <c>0</c> when none.</param>
+/// <param name="Slug">Final slug bytes assigned by <see cref="HeadingSlugifier"/>; ASCII per the slug rule. Empty until that pass runs.</param>
 internal readonly record struct Heading(
     int Level,
     int OpenTagStart,
@@ -31,5 +31,16 @@ internal readonly record struct Heading(
     int CloseTagStart,
     int TextStart,
     int TextEnd,
-    string ExistingId,
-    string Slug);
+    int ExistingIdStart,
+    int ExistingIdLength,
+    byte[] Slug)
+{
+    /// <summary>Gets a value indicating whether the scanner found an existing <c>id</c> attribute on this heading's open tag.</summary>
+    public bool HasExistingId => ExistingIdLength > 0;
+
+    /// <summary>Returns the bytes of the existing <c>id</c> attribute value, sliced from <paramref name="html"/>.</summary>
+    /// <param name="html">Original HTML snapshot.</param>
+    /// <returns>The id bytes, or an empty span when no existing id was found.</returns>
+    public ReadOnlySpan<byte> ExistingIdBytes(ReadOnlySpan<byte> html) =>
+        ExistingIdLength is 0 ? default : html.Slice(ExistingIdStart, ExistingIdLength);
+}

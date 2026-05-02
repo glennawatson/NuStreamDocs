@@ -6,7 +6,7 @@ using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight.Tests;
 
-/// <summary>Behaviour tests for the C# lexer + emitter.</summary>
+/// <summary>Behavior tests for the C# lexer + emitter.</summary>
 public class CSharpLexerTests
 {
     /// <summary>A keyword followed by an identifier and string lights up with Pygments classes.</summary>

@@ -63,7 +63,7 @@ public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkd
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;

@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.DefList;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>DefListRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>DefListRewriter</c>.</summary>
 public class DefListRewriterTests
 {
     /// <summary>A term followed by a definition becomes a <c>&lt;dl&gt;</c> with one <c>&lt;dt&gt;</c>/<c>&lt;dd&gt;</c> pair.</summary>

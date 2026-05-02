@@ -111,13 +111,13 @@ public class SearchPluginTests
         await Assert.That(Encoding.UTF8.GetString(docs[0].Text)).Contains("foo");
     }
 
-    /// <summary>OnFinaliseAsync with an empty output root is a silent no-op.</summary>
+    /// <summary>OnFinalizeAsync with an empty output root is a silent no-op.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseEmptyRootNoOp()
+    public async Task OnFinalizeEmptyRootNoOp()
     {
         var plugin = new SearchPlugin();
-        await plugin.OnFinaliseAsync(new(string.Empty), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(string.Empty), CancellationToken.None);
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
 
@@ -133,7 +133,7 @@ public class SearchPluginTests
 
         await plugin.OnConfigureAsync(new(default, fixture.Root, fixture.Root, []), CancellationToken.None);
         await plugin.OnRenderPageAsync(new("a.md", default, html), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
 
         var json = Path.Combine(fixture.Root, "search", "search_index.json");
         await Assert.That(File.Exists(json + ".gz")).IsTrue();
@@ -152,7 +152,7 @@ public class SearchPluginTests
 
         await plugin.OnConfigureAsync(new(default, fixture.Root, fixture.Root, []), CancellationToken.None);
         await plugin.OnRenderPageAsync(new("a.md", default, html), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
 
         var json = Path.Combine(fixture.Root, "search", "search_index.json");
         await Assert.That(File.Exists(json + ".gz")).IsTrue();

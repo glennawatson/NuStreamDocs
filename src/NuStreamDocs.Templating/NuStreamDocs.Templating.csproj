@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Templating</PackageId>
-    <Description>Span and UTF-8 byte oriented Mustache-style template engine for NuStreamDocs. Templates compile once to a flat instruction list and render directly to IBufferWriter&lt;byte&gt; without ever materialising strings.</Description>
+    <Description>Span and UTF-8 byte oriented Mustache-style template engine for NuStreamDocs. Templates compile once to a flat instruction list and render directly to IBufferWriter&lt;byte&gt; without ever materializing strings.</Description>
     <RootNamespace>NuStreamDocs.Templating</RootNamespace>
   </PropertyGroup>
 

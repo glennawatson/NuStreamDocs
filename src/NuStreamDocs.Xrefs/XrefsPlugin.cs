@@ -20,7 +20,7 @@ namespace NuStreamDocs.Xrefs;
 /// the same <c>@autoref:</c> rewrite path the local registry uses.
 /// </para>
 /// <para>
-/// At <see cref="OnFinaliseAsync"/> the plugin snapshots the same
+/// At <see cref="OnFinalizeAsync"/> the plugin snapshots the same
 /// registry and writes <c>xrefmap.json</c> at the site root. Because
 /// imports were registered with their absolute base URLs, downstream
 /// consumers of the emitted map see only this site's contributions
@@ -90,7 +90,7 @@ public sealed class XrefsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         if (!_options.EmitMap)

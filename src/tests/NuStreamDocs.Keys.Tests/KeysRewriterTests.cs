@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Keys.Tests;
 
-/// <summary>Behaviour tests for <c>KeysRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>KeysRewriter</c>.</summary>
 public class KeysRewriterTests
 {
     /// <summary>Three-key shortcut emits the full keys span.</summary>
@@ -30,7 +30,7 @@ public class KeysRewriterTests
     /// <summary>Aliases (cmd/command, esc/escape) collapse to the same canonical class.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task AliasesNormaliseToCanonicalClass()
+    public async Task AliasesNormalizeToCanonicalClass()
     {
         await Assert.That(Rewrite("++command++"))
             .IsEqualTo("<span class=\"keys\"><kbd class=\"key-cmd\">Cmd</kbd></span>");
@@ -38,7 +38,7 @@ public class KeysRewriterTests
             .IsEqualTo("<span class=\"keys\"><kbd class=\"key-escape\">Esc</kbd></span>");
     }
 
-    /// <summary>Unknown tokens render literally with a sanitised class.</summary>
+    /// <summary>Unknown tokens render literally with a sanitized class.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnknownTokenRendersLiterally() =>

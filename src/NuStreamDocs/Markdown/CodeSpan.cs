@@ -8,7 +8,7 @@ using NuStreamDocs.Html;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Code-span handler. Recognises matching backtick fences of any length
+/// Code-span handler. Recognizes matching backtick fences of any length
 /// (<c>`x`</c>, <c>``x`y``</c>) and emits a <c>&lt;code&gt;</c>
 /// element with the inner bytes HTML-escaped.
 /// </summary>

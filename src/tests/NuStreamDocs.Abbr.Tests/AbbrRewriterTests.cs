@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Abbr.Tests;
 
-/// <summary>Behaviour tests for <c>AbbrRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>AbbrRewriter</c>.</summary>
 public class AbbrRewriterTests
 {
     /// <summary>A simple definition is removed and every occurrence wrapped.</summary>
@@ -42,7 +42,7 @@ public class AbbrRewriterTests
     /// <summary>Occurrences inside fenced-code blocks are not wrapped.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task FencedCodeIsHonoured()
+    public async Task FencedCodeIsHonored()
     {
         const string Source = "*[HTML]: HyperText\nUse HTML.\n```\nHTML inside code\n```\nAfter HTML.";
         await Assert.That(Rewrite(Source))
@@ -52,7 +52,7 @@ public class AbbrRewriterTests
     /// <summary>Occurrences inside inline-code spans are not wrapped.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task InlineCodeIsHonoured()
+    public async Task InlineCodeIsHonored()
     {
         const string Source = "*[HTML]: HyperText\nThe `HTML` literal vs HTML wrapping.";
         await Assert.That(Rewrite(Source))

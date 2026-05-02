@@ -23,7 +23,7 @@ ship; the file is meant to stay short.
 
 ## Statiq gaps
 
-- **Image pipeline.** `Optimise` does compression; resize +
+- **Image pipeline.** `Optimize` does compression; resize +
   responsive-srcset emission is not yet wired. Statiq users expect
   this as a first-class step.
 
@@ -35,7 +35,7 @@ ship; the file is meant to stay short.
 - **End-to-end Material golden-fixture test.** Plugin-level integration
   tests are green; we don't yet have an HTML golden comparable to
   `ZensicalRenderSmokeTests` on the parser side. Only existing snapshot
-  test is `HtmlSnapshotRewriterTests` in the Optimise project.
+  test is `HtmlSnapshotRewriterTests` in the Optimize project.
 - **Public-API surface review for 1.0.** Audit pass needed before
   tagging — concrete-collection rules, params-array boundaries, plugin
   contract shape.

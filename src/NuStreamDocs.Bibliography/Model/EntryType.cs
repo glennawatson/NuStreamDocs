@@ -38,7 +38,7 @@ public enum EntryType
     /// <summary>International treaty (CSL <c>treaty</c>) — AGLC4 "Treaty".</summary>
     Treaty,
 
-    /// <summary>Government / organisational report (CSL <c>report</c>).</summary>
+    /// <summary>Government / organizational report (CSL <c>report</c>).</summary>
     Report,
 
     /// <summary>Conference paper / talk (CSL <c>paper-conference</c>).</summary>

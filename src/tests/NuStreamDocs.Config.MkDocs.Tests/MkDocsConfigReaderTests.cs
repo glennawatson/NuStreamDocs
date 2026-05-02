@@ -24,15 +24,15 @@ public class MkDocsConfigReaderTests
         await Assert.That(config.ThemeName).IsEqualTo("material");
     }
 
-    /// <summary>The .yml extension should be recognised; .toml should not.</summary>
+    /// <summary>The .yml extension should be recognized; .toml should not.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task RecognisesYamlExtensions()
+    public async Task RecognizesYamlExtensions()
     {
         var reader = new MkDocsConfigReader();
-        await Assert.That(reader.RecognisesExtension(".yml")).IsTrue();
-        await Assert.That(reader.RecognisesExtension(".yaml")).IsTrue();
-        await Assert.That(reader.RecognisesExtension(".toml")).IsFalse();
+        await Assert.That(reader.RecognizesExtension(".yml")).IsTrue();
+        await Assert.That(reader.RecognizesExtension(".yaml")).IsTrue();
+        await Assert.That(reader.RecognizesExtension(".toml")).IsFalse();
     }
 
     /// <summary>The async stream overload should produce the same result as the span overload.</summary>

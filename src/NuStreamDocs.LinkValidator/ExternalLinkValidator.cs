@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Text;
 using Polly;
 
 namespace NuStreamDocs.LinkValidator;
@@ -59,19 +60,30 @@ public static class ExternalLinkValidator
     /// <summary>Buckets every external URL in the corpus by its host, recording each occurrence's source page.</summary>
     /// <param name="corpus">Corpus.</param>
     /// <returns>Map from host to per-URL hit list.</returns>
+    /// <remarks>
+    /// The corpus stores URLs as raw UTF-8 byte arrays; the
+    /// <see cref="Uri"/> ctor and the per-host <see cref="Dictionary{TKey, TValue}"/>
+    /// key both need strings, so this bucketing pass is the
+    /// decode-to-string boundary for external links. Pages whose URL
+    /// is invalid don't pay the page-URL string cost.
+    /// </remarks>
     internal static Dictionary<string, List<ExternalHit>> BucketByHost(ValidationCorpus corpus)
     {
         var map = new Dictionary<string, List<ExternalHit>>(StringComparer.OrdinalIgnoreCase);
         for (var p = 0; p < corpus.Pages.Length; p++)
         {
             var page = corpus.Pages[p];
+            string? sourcePageString = null;
             for (var i = 0; i < page.ExternalLinks.Length; i++)
             {
-                var url = page.ExternalLinks[i];
+                var urlBytes = page.ExternalLinks[i];
+                var url = Encoding.UTF8.GetString(urlBytes);
                 if (!Uri.TryCreate(url, UriKind.Absolute, out var parsed))
                 {
                     continue;
                 }
+
+                sourcePageString ??= Encoding.UTF8.GetString(page.PageUrl);
 
                 var host = parsed.Host;
                 if (!map.TryGetValue(host, out var bucket))
@@ -80,7 +92,7 @@ public static class ExternalLinkValidator
                     map[host] = bucket;
                 }
 
-                bucket.Add(new(page.PageUrl, url, parsed));
+                bucket.Add(new(sourcePageString, url, parsed));
             }
         }
 

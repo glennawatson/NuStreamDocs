@@ -7,7 +7,7 @@ using NuStreamDocs.MarkdownExtensions.AttrList;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>AttrListRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>AttrListRewriter</c>.</summary>
 public class AttrListRewriterTests
 {
     /// <summary>A heading with a trailing <c>{: #id .class }</c> token lifts both onto the opening tag.</summary>

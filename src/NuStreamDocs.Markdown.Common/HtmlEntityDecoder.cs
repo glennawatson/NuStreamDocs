@@ -81,7 +81,7 @@ public static class HtmlEntityDecoder
         return [.. sink.WrittenSpan];
     }
 
-    /// <summary>Matches the leading entity in <paramref name="slice"/> against the recognised set.</summary>
+    /// <summary>Matches the leading entity in <paramref name="slice"/> against the recognized set.</summary>
     /// <param name="slice">Bytes starting at the leading <c>&amp;</c>.</param>
     /// <returns>A tuple of <c>(replacementByte, entityLength)</c>; <c>length</c> is 0 when no entity matched.</returns>
     private static (byte Replacement, int Length) MatchEntity(ReadOnlySpan<byte> slice)

@@ -20,7 +20,7 @@ public class BlockScannerBranchTests
         await Assert.That(blocks.Length).IsEqualTo(0);
     }
 
-    /// <summary>ATX heading levels 1..6 and "too deep" 7 hashes are recognised differently.</summary>
+    /// <summary>ATX heading levels 1..6 and "too deep" 7 hashes are recognized differently.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task AtxHeadingLevels()

@@ -15,7 +15,7 @@ public sealed class MkDocsConfigReader : IConfigReader
     public string FormatName => "mkdocs";
 
     /// <inheritdoc/>
-    public bool RecognisesExtension(ReadOnlySpan<char> extension) =>
+    public bool RecognizesExtension(ReadOnlySpan<char> extension) =>
         extension.Equals(".yml", StringComparison.OrdinalIgnoreCase) ||
         extension.Equals(".yaml", StringComparison.OrdinalIgnoreCase);
 

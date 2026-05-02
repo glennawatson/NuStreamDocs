@@ -13,7 +13,7 @@ namespace NuStreamDocs.Config.Zensical;
 /// <remarks>
 /// Span-based; consumes <see cref="ReadOnlySpan{Byte}"/> and writes
 /// through a caller-supplied <see cref="Utf8JsonWriter"/> with no
-/// UTF-16 round trip. Recognised:
+/// UTF-16 round trip. Recognized:
 /// <list type="bullet">
 /// <item>top-level <c>key = value</c> entries (string, int, bool),</item>
 /// <item><c>[table]</c> headers introducing nested objects,</item>
@@ -78,7 +78,7 @@ public static class TomlToJson
             pos = nextLine;
         }
 
-        Finalise(json, openTables);
+        Finalize(json, openTables);
     }
 
     /// <summary>
@@ -105,13 +105,13 @@ public static class TomlToJson
             (hasLine, line) = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        Finalise(json, openTables);
+        Finalize(json, openTables);
     }
 
     /// <summary>Closes any tables left open and writes the root close.</summary>
     /// <param name="json">JSON sink.</param>
     /// <param name="openTables">Number of currently-open table objects.</param>
-    private static void Finalise(Utf8JsonWriter json, int openTables)
+    private static void Finalize(Utf8JsonWriter json, int openTables)
     {
         for (var i = 0; i < openTables; i++)
         {

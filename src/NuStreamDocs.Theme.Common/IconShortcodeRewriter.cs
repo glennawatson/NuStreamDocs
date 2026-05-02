@@ -9,7 +9,7 @@ namespace NuStreamDocs.Theme.Common;
 
 /// <summary>
 /// Stateless UTF-8 icon-shortcode rewriter for Material-classic and Material 3.
-/// Recognises <c>:material-{name}:</c> and
+/// Recognizes <c>:material-{name}:</c> and
 /// <c>:fontawesome-{style}-{name}:</c> shortcodes and emits the
 /// span / <c>i</c>-tag shapes the bundled icon-font stylesheets
 /// expect. Fenced and inline code pass through verbatim.
@@ -22,7 +22,7 @@ public static class IconShortcodeRewriter
     /// <summary>Length of the <c>fontawesome-</c> prefix.</summary>
     private const int FontAwesomePrefixLength = 12;
 
-    /// <summary>Bytes that interrupt the bulk-copy fast path — backtick (inline code), colon (shortcode), newline (potential fence start). Cached so the IndexOfAny is vectorised.</summary>
+    /// <summary>Bytes that interrupt the bulk-copy fast path — backtick (inline code), colon (shortcode), newline (potential fence start). Cached so the IndexOfAny is vectorized.</summary>
     private static readonly SearchValues<byte> InterestingBytes = SearchValues.Create("`:\n"u8);
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>, emitting <paramref name="materialIconClass"/> for Material shortcodes.</summary>
@@ -90,7 +90,7 @@ public static class IconShortcodeRewriter
         }
     }
 
-    /// <summary>Tries to match a recognised icon shortcode at <paramref name="offset"/>.</summary>
+    /// <summary>Tries to match a recognized icon shortcode at <paramref name="offset"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Cursor on the leading <c>:</c>.</param>
     /// <param name="writer">Sink.</param>
@@ -169,7 +169,7 @@ public static class IconShortcodeRewriter
         }
 
         var style = rest[..styleEnd];
-        if (!IsRecognisedFontAwesomeStyle(style))
+        if (!IsRecognizedFontAwesomeStyle(style))
         {
             return false;
         }
@@ -183,10 +183,10 @@ public static class IconShortcodeRewriter
         return true;
     }
 
-    /// <summary>Returns true when <paramref name="style"/> is one of the recognised FontAwesome family names.</summary>
+    /// <summary>Returns true when <paramref name="style"/> is one of the recognized FontAwesome family names.</summary>
     /// <param name="style">Bytes between <c>fontawesome-</c> and the icon name.</param>
-    /// <returns>True for a recognised style.</returns>
-    private static bool IsRecognisedFontAwesomeStyle(ReadOnlySpan<byte> style) =>
+    /// <returns>True for a recognized style.</returns>
+    private static bool IsRecognizedFontAwesomeStyle(ReadOnlySpan<byte> style) =>
         style.SequenceEqual("solid"u8)
         || style.SequenceEqual("regular"u8)
         || style.SequenceEqual("brands"u8)

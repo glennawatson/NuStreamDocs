@@ -8,7 +8,7 @@ namespace NuStreamDocs.Markdown;
 /// CommonMark block-level construct identified by the scanner.
 /// </summary>
 /// <remarks>
-/// Plain <see langword="int"/> backing — Sonar's default analyser
+/// Plain <see langword="int"/> backing — Sonar's default analyzer
 /// rejects byte-backed enums even though the descriptors are kept
 /// pooled.
 /// </remarks>

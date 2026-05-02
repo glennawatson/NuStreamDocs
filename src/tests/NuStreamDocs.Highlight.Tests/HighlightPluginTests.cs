@@ -99,11 +99,11 @@ public class HighlightPluginTests
         await Assert.That(output).Contains("<button class=\"md-clipboard");
     }
 
-    /// <summary>OnFinaliseAsync is a no-op.</summary>
+    /// <summary>OnFinalizeAsync is a no-op.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseAsyncNoOp() =>
-        await new HighlightPlugin().OnFinaliseAsync(new("/out"), CancellationToken.None);
+    public async Task OnFinalizeAsyncNoOp() =>
+        await new HighlightPlugin().OnFinalizeAsync(new("/out"), CancellationToken.None);
 
     /// <summary>UseHighlight() registers.</summary>
     /// <returns>Async test.</returns>

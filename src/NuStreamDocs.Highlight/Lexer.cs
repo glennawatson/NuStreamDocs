@@ -9,7 +9,7 @@ namespace NuStreamDocs.Highlight;
 /// </summary>
 /// <remarks>
 /// A lexer is an array of <see cref="LexerRule"/> arrays indexed by
-/// integer state id; <see cref="Tokenise(ReadOnlySpan{byte}, TokenSink)"/>
+/// integer state id; <see cref="Tokenize(ReadOnlySpan{byte}, TokenSink)"/>
 /// walks the input once, advancing the cursor past the longest rule that
 /// matches at each position. On no match the cursor advances by one byte
 /// with the <see cref="TokenClass.Text"/> classification — guarantees
@@ -34,7 +34,7 @@ public sealed class Lexer
     /// <summary>Cap above which a parked stack is dropped instead of cached, so a pathological corpus doesn't pin a worker's stack forever.</summary>
     private const int StateStackMaxCachedCapacity = 64;
 
-    /// <summary>Per-thread parked state stack reused across <see cref="Tokenise(ReadOnlySpan{byte}, TokenSink)"/> calls on the same worker.</summary>
+    /// <summary>Per-thread parked state stack reused across <see cref="Tokenize(ReadOnlySpan{byte}, TokenSink)"/> calls on the same worker.</summary>
     [ThreadStatic]
     private static Stack<int>? _stateStackCache;
 
@@ -54,7 +54,7 @@ public sealed class Lexer
         States = states;
     }
 
-    /// <summary>Per-token callback invoked by <see cref="Tokenise(ReadOnlySpan{byte}, TokenSink)"/>.</summary>
+    /// <summary>Per-token callback invoked by <see cref="Tokenize(ReadOnlySpan{byte}, TokenSink)"/>.</summary>
     /// <param name="offset">UTF-8 byte offset of the token in the source span.</param>
     /// <param name="length">UTF-8 byte length of the token.</param>
     /// <param name="tokenClass">Classification.</param>
@@ -77,10 +77,10 @@ public sealed class Lexer
     /// <summary>Walks <paramref name="source"/> once, calling <paramref name="onToken"/> for each emitted token.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="onToken">Callback invoked with offset, length, and classification.</param>
-    public void Tokenise(ReadOnlySpan<byte> source, TokenSink onToken)
+    public void Tokenize(ReadOnlySpan<byte> source, TokenSink onToken)
     {
         ArgumentNullException.ThrowIfNull(onToken);
-        Tokenise(source, onToken, static (sink, offset, length, cls) => sink(offset, length, cls));
+        Tokenize(source, onToken, static (sink, offset, length, cls) => sink(offset, length, cls));
     }
 
     /// <summary>Walks <paramref name="source"/> once, calling <paramref name="onToken"/> with the caller-supplied <paramref name="state"/> for each emitted token.</summary>
@@ -88,7 +88,7 @@ public sealed class Lexer
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="state">State threaded through every callback invocation.</param>
     /// <param name="onToken">Callback invoked per token.</param>
-    public void Tokenise<TState>(ReadOnlySpan<byte> source, TState state, TokenSink<TState> onToken)
+    public void Tokenize<TState>(ReadOnlySpan<byte> source, TState state, TokenSink<TState> onToken)
     {
         ArgumentNullException.ThrowIfNull(onToken);
         if (source.Length is 0)
@@ -133,7 +133,7 @@ public sealed class Lexer
     }
 
     /// <summary>Rents a state stack from the per-thread cache (or creates one), pre-seeded with the root state id.</summary>
-    /// <returns>An initialised stack.</returns>
+    /// <returns>An initialized stack.</returns>
     private static Stack<int> RentStack()
     {
         var stack = _stateStackCache ?? new Stack<int>(StateStackInitialCapacity);

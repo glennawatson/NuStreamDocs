@@ -25,13 +25,13 @@ public class AutorefsPluginLifecycleTests
         await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
     }
 
-    /// <summary>OnFinaliseAsync runs even when the registry is empty.</summary>
+    /// <summary>OnFinalizeAsync runs even when the registry is empty.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseAsyncEmpty()
+    public async Task OnFinalizeAsyncEmpty()
     {
         using var temp = new TempDir();
-        await new AutorefsPlugin().OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await new AutorefsPlugin().OnFinalizeAsync(new(temp.Root), CancellationToken.None);
     }
 
     /// <summary>Disposable scratch directory.</summary>

@@ -16,7 +16,7 @@ namespace NuStreamDocs.Sitemap;
 /// </summary>
 /// <remarks>
 /// Mirrors the <c>mkdocs-redirects</c> plugin shape. Mappings come
-/// from three sources, merged at finalise time: the registration-time
+/// from three sources, merged at finalize time: the registration-time
 /// <c>(from, to)</c> tuples, an optional <c>redirects.yml</c> file at
 /// the input root (top-level <c>from: to</c> mapping), and per-page
 /// <c>aliases:</c> frontmatter lists (each alias becomes a redirect
@@ -51,7 +51,7 @@ public sealed class RedirectsPlugin : IDocPlugin
 
     /// <summary>Initializes a new instance of the <see cref="RedirectsPlugin"/> class with explicit options and static entries.</summary>
     /// <param name="options">Plugin options.</param>
-    /// <param name="entries">Static tuples of <c>(fromPath, toUrl)</c> merged with config-file and alias entries at finalise.</param>
+    /// <param name="entries">Static tuples of <c>(fromPath, toUrl)</c> merged with config-file and alias entries at finalize.</param>
     public RedirectsPlugin(in RedirectsOptions options, (string From, string To)[] entries)
     {
         ArgumentNullException.ThrowIfNull(entries);
@@ -96,7 +96,7 @@ public sealed class RedirectsPlugin : IDocPlugin
         var pageUrl = ToHtmlUrl(context.RelativePath);
         for (var i = 0; i < aliases.Length; i++)
         {
-            var alias = NormaliseAlias(aliases[i]);
+            var alias = NormalizeAlias(aliases[i]);
             if (alias.Length > 0)
             {
                 _aliases[alias] = pageUrl;
@@ -107,7 +107,7 @@ public sealed class RedirectsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         var merged = new Dictionary<string, string>(_seed.Count + _aliases.Count, StringComparer.Ordinal);
         foreach (var entry in _seed)
@@ -297,10 +297,10 @@ public sealed class RedirectsPlugin : IDocPlugin
         return withoutExt.Replace('\\', '/');
     }
 
-    /// <summary>Normalises an alias entry to a forward-slashed path with an <c>.html</c> extension.</summary>
+    /// <summary>Normalizes an alias entry to a forward-slashed path with an <c>.html</c> extension.</summary>
     /// <param name="alias">Raw alias value.</param>
-    /// <returns>Normalised alias path.</returns>
-    private static string NormaliseAlias(string alias)
+    /// <returns>Normalized alias path.</returns>
+    private static string NormalizeAlias(string alias)
     {
         if (string.IsNullOrWhiteSpace(alias))
         {

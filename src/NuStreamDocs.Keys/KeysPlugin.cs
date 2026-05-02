@@ -25,8 +25,8 @@ namespace NuStreamDocs.Keys;
 ///   &lt;kbd class="key-delete"&gt;Delete&lt;/kbd&gt;
 /// &lt;/span&gt;
 /// </code>
-/// Unrecognised key tokens still render through with their literal
-/// label and a sanitised class derived from the token bytes.
+/// Unrecognized key tokens still render through with their literal
+/// label and a sanitized class derived from the token bytes.
 /// </remarks>
 public sealed class KeysPlugin : DocPluginBase, IMarkdownPreprocessor
 {

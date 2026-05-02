@@ -11,7 +11,7 @@ namespace NuStreamDocs.Yaml;
 /// of one or more top-level frontmatter keys into an
 /// <see cref="IBufferWriter{T}"/> sink. Used by the search plugin to fold
 /// caller-selected frontmatter fields (title, summary, tags, author…) into
-/// each page's searchable text without materialising a string.
+/// each page's searchable text without materializing a string.
 /// </summary>
 public static class FrontmatterValueExtractor
 {

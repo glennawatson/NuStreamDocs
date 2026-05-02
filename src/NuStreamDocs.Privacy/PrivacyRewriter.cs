@@ -42,7 +42,7 @@ internal static class PrivacyRewriter
         ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(sink);
 
-        // Materialise once so we can swap byte[] references between stages —
+        // Materialize once so we can swap byte[] references between stages —
         // ReadOnlySpan<byte> can't escape stages (it's a ref struct).
         var current = html.ToArray();
         var changed = false;

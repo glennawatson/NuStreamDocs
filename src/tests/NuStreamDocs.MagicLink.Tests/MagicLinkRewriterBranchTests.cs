@@ -10,7 +10,7 @@ namespace NuStreamDocs.MagicLink.Tests;
 /// <summary>Branch-coverage edge cases for MagicLinkRewriter.</summary>
 public class MagicLinkRewriterBranchTests
 {
-    /// <summary>Each recognised scheme is wrapped.</summary>
+    /// <summary>Each recognized scheme is wrapped.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SchemesWrapped()

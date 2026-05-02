@@ -25,14 +25,14 @@ public class ZensicalConfigReaderTests
         await Assert.That(config.ThemeName).IsEqualTo("material");
     }
 
-    /// <summary>The .toml extension should be recognised; .yml should not.</summary>
+    /// <summary>The .toml extension should be recognized; .yml should not.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task RecognisesTomlExtensions()
+    public async Task RecognizesTomlExtensions()
     {
         var reader = new ZensicalConfigReader();
-        await Assert.That(reader.RecognisesExtension(".toml")).IsTrue();
-        await Assert.That(reader.RecognisesExtension(".yml")).IsFalse();
+        await Assert.That(reader.RecognizesExtension(".toml")).IsTrue();
+        await Assert.That(reader.RecognizesExtension(".yml")).IsFalse();
     }
 
     /// <summary>Streaming overload should match the span overload byte-for-byte.</summary>

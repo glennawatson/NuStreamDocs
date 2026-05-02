@@ -29,7 +29,7 @@ namespace NuStreamDocs.Benchmarks;
 /// <para>
 /// Each method holds onto a synthetic input that's representative of one
 /// pipeline phase. The profiler captures every allocation tick during the
-/// timed body, so the resulting trace is the place to look when optimising
+/// timed body, so the resulting trace is the place to look when optimizing
 /// per-page allocations.
 /// </para>
 /// </remarks>

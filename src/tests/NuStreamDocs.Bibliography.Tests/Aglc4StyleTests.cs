@@ -30,7 +30,7 @@ public class Aglc4StyleTests
             .IsEqualTo("William Gummow, *Change and Continuity* (Federation Press, 2018)");
     }
 
-    /// <summary>Cases italicise the case name and append the law-report series.</summary>
+    /// <summary>Cases italicize the case name and append the law-report series.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CaseRendersWithSeries()
@@ -46,7 +46,7 @@ public class Aglc4StyleTests
         await Assert.That(RenderBibliography(entry)).IsEqualTo("*Mabo v Queensland (No 2)* (1992) 175 CLR 1");
     }
 
-    /// <summary>Articles wrap title in single quotes and italicise the journal.</summary>
+    /// <summary>Articles wrap title in single quotes and italicize the journal.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ArticleRendersWithSingleQuotedTitle()
@@ -69,7 +69,7 @@ public class Aglc4StyleTests
         await Assert.That(output).Contains("200");
     }
 
-    /// <summary>Legislation italicises the title and includes jurisdiction.</summary>
+    /// <summary>Legislation italicizes the title and includes jurisdiction.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task LegislationRendersAglc4Form()

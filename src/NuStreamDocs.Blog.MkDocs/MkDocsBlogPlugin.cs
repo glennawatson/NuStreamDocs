@@ -15,7 +15,7 @@ namespace NuStreamDocs.Blog.MkDocs;
 /// </summary>
 /// <remarks>
 /// Reuses the Wyam parser pipeline from <see cref="NuStreamDocs.Blog"/>;
-/// the only behavioural difference is the directory layout — posts
+/// the only behavioral difference is the directory layout — posts
 /// nest under <c>blog/posts/</c> and the category archive lives under
 /// <c>blog/category/</c>. Frontmatter still uses Tags and Author so
 /// the same authoring tooling works against both variants.
@@ -64,7 +64,7 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;

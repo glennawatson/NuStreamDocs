@@ -9,7 +9,7 @@ using Polly;
 namespace NuStreamDocs.Privacy;
 
 /// <summary>
-/// Parallel HTTP downloader for the externalised assets registered
+/// Parallel HTTP downloader for the externalized assets registered
 /// during <see cref="PrivacyPlugin.OnRenderPageAsync"/>.
 /// </summary>
 /// <remarks>

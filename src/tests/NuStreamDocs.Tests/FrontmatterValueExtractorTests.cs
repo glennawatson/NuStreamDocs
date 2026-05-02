@@ -8,7 +8,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>FrontmatterValueExtractor</c>.</summary>
+/// <summary>Behavior tests for <c>FrontmatterValueExtractor</c>.</summary>
 public class FrontmatterValueExtractorTests
 {
     /// <summary>An inline scalar value is appended preceded by a space.</summary>
@@ -32,7 +32,7 @@ public class FrontmatterValueExtractorTests
         await Assert.That(Extract("---\nsummary: Lead\n  more\n---\nbody", "summary"))
             .IsEqualTo(" Lead more");
 
-    /// <summary>An unrecognised key is silently skipped.</summary>
+    /// <summary>An unrecognized key is silently skipped.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnknownKeyIsSilent() =>

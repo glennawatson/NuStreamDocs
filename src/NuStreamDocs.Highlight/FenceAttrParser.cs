@@ -8,13 +8,13 @@ namespace NuStreamDocs.Highlight;
 
 /// <summary>
 /// Parses the per-block fence-info string the markdown emitter passes
-/// through as <c>data-info</c>. Recognises the mkdocs-material /
+/// through as <c>data-info</c>. Recognizes the mkdocs-material /
 /// pymdownx-superfences shape — space-separated <c>key="value"</c>
 /// pairs (quoted) or bare <c>key=value</c> tokens.
 /// </summary>
 internal static class FenceAttrParser
 {
-    /// <summary>Bytes that may start a recognised attribute (case-sensitive lower-ASCII first letters).</summary>
+    /// <summary>Bytes that may start a recognized attribute (case-sensitive lower-ASCII first letters).</summary>
     private static readonly SearchValues<byte> AttrStarts = SearchValues.Create("htl"u8);
 
     /// <summary>Tries to find a <c>title</c> attribute value in <paramref name="info"/>.</summary>

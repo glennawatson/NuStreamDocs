@@ -50,7 +50,7 @@ public class PreprocessorPipelineTests
     /// <summary>Multi-plugin chain skips fenced-code regions consistently across passes.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task FencedCodeIsHonouredAcrossEveryPass()
+    public async Task FencedCodeIsHonoredAcrossEveryPass()
     {
         var smart = new SmartSymbolsPlugin();
         var magic = new MagicLinkPlugin();

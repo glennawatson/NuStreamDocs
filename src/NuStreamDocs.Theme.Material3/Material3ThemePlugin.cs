@@ -8,7 +8,7 @@ namespace NuStreamDocs.Theme.Material3;
 
 /// <summary>
 /// Plugin that wraps every rendered page in the Material 3 shell and
-/// writes the theme's static assets at finalisation time.
+/// writes the theme's static assets at finalization time.
 /// </summary>
 public sealed class Material3ThemePlugin : ThemePluginBase<Material3Theme, Material3ThemeOptions>
 {

@@ -9,7 +9,7 @@ namespace NuStreamDocs.Plugins;
 /// contribution into the output tree.
 /// </summary>
 /// <remarks>
-/// Theme plugins call this once during <see cref="IDocPlugin.OnFinaliseAsync"/>
+/// Theme plugins call this once during <see cref="IDocPlugin.OnFinalizeAsync"/>
 /// alongside their own static-asset emit, so markdown-extension and
 /// icon plugins work uniformly under both Material and Material 3
 /// themes.

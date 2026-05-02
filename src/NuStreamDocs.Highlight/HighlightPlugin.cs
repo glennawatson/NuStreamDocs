@@ -83,7 +83,7 @@ public sealed class HighlightPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;
@@ -145,7 +145,7 @@ public sealed class HighlightPlugin : IDocPlugin
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Walks <paramref name="source"/>, copying through verbatim and substituting highlighted bodies for every recognised <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block.</summary>
+    /// <summary>Walks <paramref name="source"/>, copying through verbatim and substituting highlighted bodies for every recognized <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block.</summary>
     /// <param name="source">Snapshot of the rendered HTML.</param>
     /// <param name="writer">UTF-8 sink (the original page buffer).</param>
     private void Highlight(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

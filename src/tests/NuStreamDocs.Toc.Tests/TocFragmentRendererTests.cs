@@ -39,7 +39,7 @@ public class TocFragmentRendererTests
     {
         var html = "<h2 id=\"a\">A &amp; B &gt; C</h2><h3 id=\"b\">child</h3><h2 id=\"c\">D</h2>"u8.ToArray();
         var headings = HeadingScanner.Scan(html);
-        var slugged = headings.Select(h => h with { Slug = h.ExistingId }).ToArray();
+        var slugged = headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() }).ToArray();
         var sink = new ArrayBufferWriter<byte>();
         TocFragmentRenderer.Render(html, slugged, TocOptions.Default, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);

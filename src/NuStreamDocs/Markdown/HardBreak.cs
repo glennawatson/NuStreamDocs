@@ -7,7 +7,7 @@ using System.Buffers;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Hard-break handler. Recognises two-or-more trailing spaces before a
+/// Hard-break handler. Recognizes two-or-more trailing spaces before a
 /// newline and emits <c>&lt;br /&gt;\n</c>.
 /// </summary>
 internal static class HardBreak

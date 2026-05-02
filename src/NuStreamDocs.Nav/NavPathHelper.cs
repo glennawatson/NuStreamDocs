@@ -26,7 +26,7 @@ internal static class NavPathHelper
     /// <summary>Computes <paramref name="path"/>'s source-relative location under <paramref name="root"/> with forward-slash separators in a single allocation.</summary>
     /// <param name="root">Absolute docs root.</param>
     /// <param name="path">Absolute path under <paramref name="root"/> (file or directory).</param>
-    /// <returns>The relative path, slash-normalised. Empty when <paramref name="path"/> equals <paramref name="root"/>.</returns>
+    /// <returns>The relative path, slash-normalized. Empty when <paramref name="path"/> equals <paramref name="root"/>.</returns>
     public static string ToForwardSlashRelative(string root, string path)
     {
         ArgumentNullException.ThrowIfNull(root);
@@ -34,7 +34,7 @@ internal static class NavPathHelper
 
         if (TryFastPathSlice(root, path, out var sliceStart))
         {
-            return CreateNormalised(path, sliceStart);
+            return CreateNormalized(path, sliceStart);
         }
 
         // Fallback for cross-mount / weird casing — pay the two-string tax only here.
@@ -86,8 +86,8 @@ internal static class NavPathHelper
     /// <summary>Allocates the relative path with <c>\</c> rewritten to <c>/</c> via a single <see cref="string.Create{TState}(int, TState, System.Buffers.SpanAction{char, TState})"/> call.</summary>
     /// <param name="path">Original absolute path.</param>
     /// <param name="sliceStart">Offset just past the root + separator.</param>
-    /// <returns>The relative path, slash-normalised.</returns>
-    private static string CreateNormalised(string path, int sliceStart)
+    /// <returns>The relative path, slash-normalized.</returns>
+    private static string CreateNormalized(string path, int sliceStart)
     {
         var length = path.Length - sliceStart;
         if (length <= 0)

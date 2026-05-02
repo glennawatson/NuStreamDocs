@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Footnotes;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>FootnotesRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>FootnotesRewriter</c>.</summary>
 public class FootnotesRewriterTests
 {
     /// <summary>An inline reference is rewritten to a numbered superscript link.</summary>

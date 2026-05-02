@@ -6,7 +6,7 @@ using NuStreamDocs.Blog.Common;
 
 namespace NuStreamDocs.Blog.Tests;
 
-/// <summary>Behaviour tests for <c>WyamFrontmatterReader</c>.</summary>
+/// <summary>Behavior tests for <c>WyamFrontmatterReader</c>.</summary>
 public class WyamFrontmatterReaderTests
 {
     /// <summary>Parses the rxui Announcements frontmatter shape.</summary>

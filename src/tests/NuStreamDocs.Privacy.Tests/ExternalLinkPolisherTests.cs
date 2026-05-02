@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
 
-/// <summary>Behaviour tests for <c>ExternalLinkPolisher</c>.</summary>
+/// <summary>Behavior tests for <c>ExternalLinkPolisher</c>.</summary>
 public class ExternalLinkPolisherTests
 {
     /// <summary>An external anchor without a <c>rel</c> attribute gains <c>rel="noopener noreferrer"</c>.</summary>

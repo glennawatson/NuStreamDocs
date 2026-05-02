@@ -8,7 +8,7 @@ using NuStreamDocs.Bibliography.Model;
 namespace NuStreamDocs.Bibliography.Styles.Aglc4;
 
 /// <summary>AGLC4 formatter for <see cref="EntryType.Legislation"/>.</summary>
-/// <remarks>Form: <c>*Title (Year)* (Jurisdiction)</c>. Year is part of the italicised title in AGLC4.</remarks>
+/// <remarks>Form: <c>*Title (Year)* (Jurisdiction)</c>. Year is part of the italicized title in AGLC4.</remarks>
 internal static class Aglc4Legislation
 {
     /// <summary>Writes the citation per AGLC4 legislation rules directly to <paramref name="writer"/>.</summary>

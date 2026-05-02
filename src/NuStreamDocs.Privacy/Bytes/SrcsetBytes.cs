@@ -21,7 +21,7 @@ internal static class SrcsetBytes
     /// <summary>Gets the lowercase <c>srcset</c> attribute name.</summary>
     private static ReadOnlySpan<byte> Srcset => "srcset"u8;
 
-    /// <summary>Walks <paramref name="html"/>, copying through verbatim, but rewriting every <c>srcset</c> attribute the registry localises.</summary>
+    /// <summary>Walks <paramref name="html"/>, copying through verbatim, but rewriting every <c>srcset</c> attribute the registry localizes.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
@@ -45,7 +45,7 @@ internal static class SrcsetBytes
     /// <param name="sink">UTF-8 sink.</param>
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
-    /// <returns>True when the srcset was rewritten with at least one localised URL.</returns>
+    /// <returns>True when the srcset was rewritten with at least one localized URL.</returns>
     private static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
     {
         if (!TryMatchHeader(html, p, out var valueStart, out var valueEnd, out _))
@@ -105,7 +105,7 @@ internal static class SrcsetBytes
     /// <param name="value">Raw srcset value.</param>
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    /// <returns>True when at least one entry was localised.</returns>
+    /// <returns>True when at least one entry was localized.</returns>
     private static bool WriteRewrittenValue(ReadOnlySpan<byte> value, in UrlRewriteContext ctx, ArrayBufferWriter<byte> sink)
     {
         var anyChanged = false;
@@ -135,7 +135,7 @@ internal static class SrcsetBytes
     /// <param name="entry">One <c>url descriptor</c> entry.</param>
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    /// <returns>True when localisation happened.</returns>
+    /// <returns>True when localization happened.</returns>
     private static bool WriteOneEntry(ReadOnlySpan<byte> entry, in UrlRewriteContext ctx, ArrayBufferWriter<byte> sink)
     {
         var leading = SkipLeadingWhitespace(entry);
@@ -147,7 +147,7 @@ internal static class SrcsetBytes
         }
 
         var url = Encoding.UTF8.GetString(entry[leading..urlEnd]);
-        if (!ctx.Filter.ShouldLocalise(url))
+        if (!ctx.Filter.ShouldLocalize(url))
         {
             sink.Write(entry);
             return false;
@@ -176,7 +176,7 @@ internal static class SrcsetBytes
         }
 
         var url = Encoding.UTF8.GetString(entry[leading..urlEnd]);
-        if (!audit.Filter.ShouldLocalise(url))
+        if (!audit.Filter.ShouldLocalize(url))
         {
             return;
         }

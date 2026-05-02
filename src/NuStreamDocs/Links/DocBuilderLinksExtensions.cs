@@ -9,7 +9,7 @@ namespace NuStreamDocs.Links;
 /// <summary>Builder-extension surface for the link-rewriter plugins.</summary>
 public static class DocBuilderLinksExtensions
 {
-    /// <summary>Registers <see cref="MarkdownLinkRewriterPlugin"/> with config-driven directory-URL behaviour.</summary>
+    /// <summary>Registers <see cref="MarkdownLinkRewriterPlugin"/> with config-driven directory-URL behavior.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMarkdownLinks(this DocBuilder builder)

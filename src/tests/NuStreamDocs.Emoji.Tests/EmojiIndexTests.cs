@@ -7,7 +7,7 @@ using System.Text;
 namespace NuStreamDocs.Emoji.Tests;
 
 /// <summary>
-/// Parameterised coverage of <see cref="EmojiIndex"/> — one row per
+/// Parameterized coverage of <see cref="EmojiIndex"/> — one row per
 /// shortcode in the curated table. Each case exercises both the byte
 /// API directly and the rewriter end-to-end so a regression in either
 /// the table data or the dispatch wiring surfaces here.

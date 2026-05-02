@@ -61,7 +61,7 @@ public static class BlogPostScanner
         return array;
     }
 
-    /// <summary>Reads one post file and returns its <see cref="BlogPost"/>; returns null when the file is not a recognisable post.</summary>
+    /// <summary>Reads one post file and returns its <see cref="BlogPost"/>; returns null when the file is not a recognizable post.</summary>
     /// <param name="absolutePath">Absolute path to the post file.</param>
     /// <param name="docsRoot">Absolute docs root.</param>
     /// <returns>The parsed post, or null when the file isn't a Wyam-style post.</returns>
@@ -87,9 +87,9 @@ public static class BlogPostScanner
         var fm = WyamFrontmatterReader.Parse(markdown);
 
         var published = fm.Published == default ? fileDate : fm.Published;
-        var title = string.IsNullOrEmpty(fm.Title) ? Humanise(slug) : fm.Title;
+        var title = string.IsNullOrEmpty(fm.Title) ? Humanize(slug) : fm.Title;
         var excerpt = ExtractExcerpt(markdown, fm.BodyStartOffset);
-        var relativePath = NormaliseRelativePath(Path.GetRelativePath(docsRoot, absolutePath));
+        var relativePath = NormalizeRelativePath(Path.GetRelativePath(docsRoot, absolutePath));
         var tags = fm.Tags ?? [];
 
         return new(relativePath, slug, title, fm.Author, published, tags, excerpt);
@@ -135,21 +135,21 @@ public static class BlogPostScanner
     /// <summary>Title-cases <c>my-cool-post</c> into <c>My Cool Post</c> as a fallback when no Title frontmatter is present.</summary>
     /// <param name="slug">Hyphen-separated slug.</param>
     /// <returns>Spaced title-case rendering.</returns>
-    private static string Humanise(string slug)
+    private static string Humanize(string slug)
     {
-        var outputLength = GetHumanisedLength(slug);
+        var outputLength = GetHumanizedLength(slug);
         if (outputLength is 0)
         {
             return string.Empty;
         }
 
-        return string.Create(outputLength, slug, static (dst, source) => WriteHumanised(dst, source));
+        return string.Create(outputLength, slug, static (dst, source) => WriteHumanized(dst, source));
     }
 
-    /// <summary>Counts the characters needed for the humanised title.</summary>
+    /// <summary>Counts the characters needed for the humanized title.</summary>
     /// <param name="slug">Hyphen-separated slug.</param>
     /// <returns>Output length.</returns>
-    private static int GetHumanisedLength(string slug)
+    private static int GetHumanizedLength(string slug)
     {
         var outputLength = 0;
         var pendingSpace = false;
@@ -173,10 +173,10 @@ public static class BlogPostScanner
         return outputLength;
     }
 
-    /// <summary>Writes the humanised title into <paramref name="destination"/>.</summary>
+    /// <summary>Writes the humanized title into <paramref name="destination"/>.</summary>
     /// <param name="destination">Destination span.</param>
     /// <param name="source">Hyphen-separated slug.</param>
-    private static void WriteHumanised(Span<char> destination, string source)
+    private static void WriteHumanized(Span<char> destination, string source)
     {
         var write = 0;
         var titleCaseNext = true;
@@ -202,10 +202,10 @@ public static class BlogPostScanner
         }
     }
 
-    /// <summary>Normalises a source-relative path to forward slashes.</summary>
-    /// <param name="relativePath">Path to normalise.</param>
+    /// <summary>Normalizes a source-relative path to forward slashes.</summary>
+    /// <param name="relativePath">Path to normalize.</param>
     /// <returns>Forward-slashed path.</returns>
-    private static string NormaliseRelativePath(string relativePath)
+    private static string NormalizeRelativePath(string relativePath)
     {
         if (!relativePath.AsSpan().Contains('\\'))
         {

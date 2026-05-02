@@ -10,7 +10,7 @@ namespace NuStreamDocs.Highlight;
 /// <summary>Drives a <see cref="Lexer"/> over a UTF-8 byte source and writes the classed HTML directly into a UTF-8 sink.</summary>
 public static class HighlightEmitter
 {
-    /// <summary>Tokenises <paramref name="source"/> through <paramref name="lexer"/> and writes the classed token stream into <paramref name="writer"/>.</summary>
+    /// <summary>Tokenizes <paramref name="source"/> through <paramref name="lexer"/> and writes the classed token stream into <paramref name="writer"/>.</summary>
     /// <param name="lexer">Compiled lexer.</param>
     /// <param name="source">UTF-8 source bytes — accepts a <c>byte[]</c>, an array slice, or any other backing.</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -20,7 +20,7 @@ public static class HighlightEmitter
         ArgumentNullException.ThrowIfNull(writer);
 
         var state = new EmitState(source, writer);
-        lexer.Tokenise(source.Span, state, EmitFromState);
+        lexer.Tokenize(source.Span, state, EmitFromState);
     }
 
     /// <summary>Static <see cref="Lexer.TokenSink{TState}"/> emitting one token from <paramref name="state"/>; method-group avoids the per-call closure alloc.</summary>
@@ -66,7 +66,7 @@ public static class HighlightEmitter
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Per-<see cref="Emit"/> state struct threaded through <see cref="Lexer.Tokenise{T}"/> so the callback can stay static.</summary>
+    /// <summary>Per-<see cref="Emit"/> state struct threaded through <see cref="Lexer.Tokenize{T}"/> so the callback can stay static.</summary>
     /// <param name="Source">Source bytes (held as <see cref="ReadOnlyMemory{T}"/> so the static callback can re-slice without capturing a span).</param>
     /// <param name="Writer">UTF-8 sink.</param>
     private readonly record struct EmitState(ReadOnlyMemory<byte> Source, IBufferWriter<byte> Writer);

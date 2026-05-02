@@ -9,7 +9,7 @@ namespace NuStreamDocs.Tags;
 
 /// <summary>
 /// Reads the <c>tags:</c> field from a page's YAML frontmatter.
-/// Recognises both inline (<c>tags: [a, b]</c>) and block-list
+/// Recognizes both inline (<c>tags: [a, b]</c>) and block-list
 /// (<c>tags:\n  - a\n  - b</c>) shapes; returns an empty array
 /// when no frontmatter or no tag field is present.
 /// </summary>

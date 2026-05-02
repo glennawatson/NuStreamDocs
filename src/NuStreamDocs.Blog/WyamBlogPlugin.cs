@@ -65,7 +65,7 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : ID
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Mermaid.Tests;
 
-/// <summary>Behaviour tests for <c>MermaidRetagger</c>.</summary>
+/// <summary>Behavior tests for <c>MermaidRetagger</c>.</summary>
 public class MermaidRetaggerTests
 {
     /// <summary>HTML containing a fenced mermaid block is flagged for retagging.</summary>

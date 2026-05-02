@@ -17,14 +17,14 @@ public class LinkValidatorPluginLifecycleTests
     [Test]
     public async Task OnRenderPageAsync() => await new LinkValidatorPlugin().OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
 
-    /// <summary>OnFinaliseAsync drives RunAsync against an empty output directory.</summary>
+    /// <summary>OnFinalizeAsync drives RunAsync against an empty output directory.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseAsyncEmpty()
+    public async Task OnFinalizeAsyncEmpty()
     {
         using var temp = new ScratchDir();
         var plugin = new LinkValidatorPlugin();
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
         await Assert.That(plugin.LastDiagnostics).IsNotNull();
     }
 

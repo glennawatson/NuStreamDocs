@@ -25,7 +25,7 @@ namespace NuStreamDocs.Serve;
 /// </remarks>
 public static class DocBuilderServeExtensions
 {
-    /// <summary>Runs an initial build, starts the dev server, then loops on file-system changes — rebuilding and signalling connected browsers.</summary>
+    /// <summary>Runs an initial build, starts the dev server, then loops on file-system changes — rebuilding and signaling connected browsers.</summary>
     /// <param name="builder">Configured builder.</param>
     /// <returns>Async task that completes when the loop exits.</returns>
     public static Task WatchAndServeAsync(this DocBuilder builder) =>
@@ -38,9 +38,9 @@ public static class DocBuilderServeExtensions
     public static Task WatchAndServeAsync(this DocBuilder builder, CancellationToken cancellationToken) =>
         WatchAndServeAsync(builder, WatchAndServeOptions.Default, NullLogger.Instance, cancellationToken);
 
-    /// <summary>Runs the watch + serve loop with options-customisation.</summary>
+    /// <summary>Runs the watch + serve loop with options-customization.</summary>
     /// <param name="builder">Configured builder.</param>
-    /// <param name="configure">Function that receives <see cref="WatchAndServeOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="WatchAndServeOptions.Default"/> and returns the customized set.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
     public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, CancellationToken cancellationToken)
@@ -51,7 +51,7 @@ public static class DocBuilderServeExtensions
 
     /// <summary>Runs the watch + serve loop with options + logger.</summary>
     /// <param name="builder">Configured builder.</param>
-    /// <param name="configure">Options customisation.</param>
+    /// <param name="configure">Options customization.</param>
     /// <param name="logger">Logger that receives lifecycle events.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>

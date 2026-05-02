@@ -11,7 +11,7 @@ namespace NuStreamDocs.Search;
 /// <param name="MinTokenLength">Tokens shorter than this are dropped from the index. Reduces index size on natural-language pages without harming recall.</param>
 /// <param name="SearchableFrontmatterKeys">Frontmatter keys whose values are folded into each page's searchable text (e.g. <c>["author", "summary"]</c>). Empty for body-only indexing.</param>
 /// <param name="ExtraStopwords">Additional stopwords appended to the language defaults; tokens matching any of these are dropped from the index.</param>
-/// <param name="Compression">Sibling-compression knob honoured by the index writer.</param>
+/// <param name="Compression">Sibling-compression knob honored by the index writer.</param>
 public readonly record struct SearchOptions(
     SearchFormat Format,
     string OutputSubdirectory,

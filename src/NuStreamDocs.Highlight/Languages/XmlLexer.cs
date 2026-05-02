@@ -7,9 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace NuStreamDocs.Highlight.Languages;
 
-/// <summary>XML/HTML lexer modelled on Pygments' <c>HtmlLexer</c> shape.</summary>
+/// <summary>XML/HTML lexer modeled on Pygments' <c>HtmlLexer</c> shape.</summary>
 /// <remarks>
-/// Two-state machine: root walks document text and recognises tag
+/// Two-state machine: root walks document text and recognizes tag
 /// opens / comments / DOCTYPE / CDATA; the tag state handles attribute
 /// names, equals, and quoted values before popping back at <c>&gt;</c>
 /// or <c>/&gt;</c>.

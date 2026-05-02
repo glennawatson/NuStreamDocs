@@ -14,7 +14,7 @@ public class PrivacyPluginLifecycleTests
     /// <summary>A markdown page with an absolute <c>img</c> URL ends up referencing the local copy and the asset bytes are present on disk.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task LocalisesExternalImageOnBuild()
+    public async Task LocalizesExternalImageOnBuild()
     {
         using var fixture = TempSite.Create();
         var server = new LoopbackHttpServer();
@@ -37,9 +37,9 @@ public class PrivacyPluginLifecycleTests
             await Assert.That(rendered).Contains("/assets/external/");
             await Assert.That(rendered).DoesNotContain(pageUrl);
 
-            var localised = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
-            await Assert.That(localised).HasSingleItem();
-            var bytes = await File.ReadAllBytesAsync(localised[0]);
+            var localized = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
+            await Assert.That(localized).HasSingleItem();
+            var bytes = await File.ReadAllBytesAsync(localized[0]);
             await Assert.That(Encoding.UTF8.GetString(bytes)).IsEqualTo(AssetText);
         }
     }
@@ -94,13 +94,13 @@ public class PrivacyPluginLifecycleTests
                 .UsePrivacy()
                 .BuildAsync();
 
-            var localised = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
-            await Assert.That(localised.Length).IsEqualTo(2);
+            var localized = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
+            await Assert.That(localized.Length).IsEqualTo(2);
 
-            var fontFile = localised.First(static f => f.EndsWith(".woff2", StringComparison.Ordinal));
+            var fontFile = localized.First(static f => f.EndsWith(".woff2", StringComparison.Ordinal));
             await Assert.That(await File.ReadAllTextAsync(fontFile)).IsEqualTo(FontBytes);
 
-            var cssFile = localised.First(static f => f.EndsWith(".css", StringComparison.Ordinal));
+            var cssFile = localized.First(static f => f.EndsWith(".css", StringComparison.Ordinal));
             var rewrittenCss = await File.ReadAllTextAsync(cssFile);
             await Assert.That(rewrittenCss).Contains("/assets/external/");
             await Assert.That(rewrittenCss).DoesNotContain(fontUrl);
@@ -195,8 +195,8 @@ public class PrivacyPluginLifecycleTests
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
-            var localised = Directory.GetFiles(Path.Combine(freshOutput, "assets", "external"));
-            await Assert.That(localised).HasSingleItem();
+            var localized = Directory.GetFiles(Path.Combine(freshOutput, "assets", "external"));
+            await Assert.That(localized).HasSingleItem();
         }
     }
 
@@ -222,8 +222,8 @@ public class PrivacyPluginLifecycleTests
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/flaky.png")).IsEqualTo(2);
-            var localised = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
-            await Assert.That(localised).HasSingleItem();
+            var localized = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
+            await Assert.That(localized).HasSingleItem();
         }
     }
 

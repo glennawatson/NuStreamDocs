@@ -128,7 +128,7 @@ internal static class CSharpRules
     /// <summary>Accessor opener keyword set — <c>get</c>, <c>set</c>, <c>init</c>. Triggers the property-accessor state when followed by <c>{</c> or <c>=&gt;</c>.</summary>
     private static readonly ByteKeywordSet AccessorOpeners = ByteKeywordSet.Create("get", "set", "init");
 
-    /// <summary>Keywords recognised only inside a property accessor body — <c>field</c> (C# 13 backing-field) and <c>value</c> (setter-parameter).</summary>
+    /// <summary>Keywords recognized only inside a property accessor body — <c>field</c> (C# 13 backing-field) and <c>value</c> (setter-parameter).</summary>
     private static readonly ByteKeywordSet AccessorContextualKeywords = ByteKeywordSet.Create("field", "value");
 
     /// <summary>First-byte set for the accessor contextual keywords (<c>field</c> / <c>value</c>).</summary>
@@ -367,7 +367,7 @@ internal static class CSharpRules
             TokenClass.KeywordDeclaration,
             LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst };
 
-        // field / value — only recognised inside an accessor body.
+        // field / value — only recognized inside an accessor body.
         if (includeAccessorContextualKeywords)
         {
             rules[i++] = new(

@@ -4,7 +4,7 @@
 
 namespace NuStreamDocs.CSharpApiGenerator.Tests;
 
-/// <summary>Behaviour tests for <c>CSharpApiGeneratorOptions</c>.</summary>
+/// <summary>Behavior tests for <c>CSharpApiGeneratorOptions</c>.</summary>
 public class CSharpApiGeneratorOptionsTests
 {
     /// <summary>The factory uses the documented default subdirectory.</summary>

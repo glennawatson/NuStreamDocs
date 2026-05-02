@@ -10,10 +10,10 @@ namespace NuStreamDocs.Markdown;
 /// Greedy emphasis / strong handler.
 /// </summary>
 /// <remarks>
-/// Recognises <c>*em*</c>, <c>**strong**</c>, and the triple
+/// Recognizes <c>*em*</c>, <c>**strong**</c>, and the triple
 /// <c>***both***</c> shape (and the underscore equivalents) by
 /// probing the longest legal form first and falling back when no
-/// matching close run is available. Underscore emphasis honours
+/// matching close run is available. Underscore emphasis honors
 /// CommonMark's intra-word rule: a <c>_</c> open or close
 /// surrounded by word bytes on both sides is rejected, so
 /// identifiers like <c>foo_bar_baz</c> never trigger emphasis.

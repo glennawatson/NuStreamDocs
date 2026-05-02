@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Lightbox.Tests;
 
-/// <summary>Behaviour tests for <c>LightboxPlugin</c>.</summary>
+/// <summary>Behavior tests for <c>LightboxPlugin</c>.</summary>
 public class LightboxPluginTests
 {
     /// <summary>Head extras emit the configured CSS link and JS bootstrap.</summary>

@@ -109,9 +109,9 @@ internal static class KeysRewriter
             return;
         }
 
-        // Unknown token: derive a sanitised class from the lower-cased lookup string and emit the literal label.
+        // Unknown token: derive a sanitized class from the lower-cased lookup string and emit the literal label.
         writer.Write("<kbd class=\"key-"u8);
-        WriteSanitisedClass(writer, lookup);
+        WriteSanitizedClass(writer, lookup);
         writer.Write("\">"u8);
         writer.Write(token);
         writer.Write("</kbd>"u8);
@@ -120,7 +120,7 @@ internal static class KeysRewriter
     /// <summary>Writes <paramref name="text"/> as UTF-8, replacing non-class-safe ASCII with <c>-</c>.</summary>
     /// <param name="writer">Sink.</param>
     /// <param name="text">Lower-cased token text.</param>
-    private static void WriteSanitisedClass(IBufferWriter<byte> writer, string text)
+    private static void WriteSanitizedClass(IBufferWriter<byte> writer, string text)
     {
         var dst = writer.GetSpan(text.Length);
         for (var i = 0; i < text.Length; i++)

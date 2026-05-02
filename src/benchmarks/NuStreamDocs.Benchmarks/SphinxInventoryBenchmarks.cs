@@ -81,13 +81,13 @@ public class SphinxInventoryBenchmarks
         }
     }
 
-    /// <summary>End-to-end finalise — encodes the registry, deflate-compresses the body, writes <c>objects.inv</c>.</summary>
+    /// <summary>End-to-end finalize — encodes the registry, deflate-compresses the body, writes <c>objects.inv</c>.</summary>
     /// <returns>Bytes written to disk.</returns>
     [Benchmark]
-    public async ValueTask<long> FinaliseEmit()
+    public async ValueTask<long> FinalizeEmit()
     {
-        var ctx = new PluginFinaliseContext(_outputDir);
-        await _plugin.OnFinaliseAsync(ctx, CancellationToken.None).ConfigureAwait(false);
+        var ctx = new PluginFinalizeContext(_outputDir);
+        await _plugin.OnFinalizeAsync(ctx, CancellationToken.None).ConfigureAwait(false);
         return new FileInfo(Path.Combine(_outputDir, "objects.inv")).Length;
     }
 }

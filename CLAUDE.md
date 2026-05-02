@@ -8,7 +8,7 @@
   - `src/NuStreamDocs/` — Core markdown/render pipeline, template engine, plugin contracts, caching, and shared helpers. AOT-clean and dependency-light.
   - `src/NuStreamDocs.Config.MkDocs/` + `src/NuStreamDocs.Config.Zensical/` — config readers for mkdocs-style YAML and Zensical TOML shapes.
   - `src/NuStreamDocs.Theme.Material/` + `src/NuStreamDocs.Theme.Material3/` — embedded theme shells and static assets.
-  - Feature/plugin assemblies live alongside the core (`NuStreamDocs.Nav`, `NuStreamDocs.Autorefs`, `NuStreamDocs.Search`, `NuStreamDocs.Privacy`, `NuStreamDocs.Blog`, `NuStreamDocs.Feed`, `NuStreamDocs.Highlight`, `NuStreamDocs.Mermaid`, `NuStreamDocs.Lightbox`, `NuStreamDocs.Optimise`, `NuStreamDocs.Versions`, icon packs, etc.).
+  - Feature/plugin assemblies live alongside the core (`NuStreamDocs.Nav`, `NuStreamDocs.Autorefs`, `NuStreamDocs.Search`, `NuStreamDocs.Privacy`, `NuStreamDocs.Blog`, `NuStreamDocs.Feed`, `NuStreamDocs.Highlight`, `NuStreamDocs.Mermaid`, `NuStreamDocs.Lightbox`, `NuStreamDocs.Optimize`, `NuStreamDocs.Versions`, icon packs, etc.).
 - **Test projects:**
   - `src/tests/NuStreamDocs.Tests/` — core parser/emitter/pipeline unit tests.
   - Feature-specific tests sit beside their assemblies under `src/tests/` (`NuStreamDocs.Nav.Tests`, `NuStreamDocs.Privacy.Tests`, `NuStreamDocs.Theme.Material.Tests`, `NuStreamDocs.Theme.Material3.Tests`, config-reader tests, etc.).
@@ -104,6 +104,7 @@ This repository currently uses TUnit/MTP-focused project tests under `src/tests/
 - Logging is source-generated `[LoggerMessage]` partial methods on `ILogger` parameters — no `logger.LogInformation("...")` direct calls (CA1848). Expensive argument expressions go behind `LogInvokerHelper.Invoke(...)` to gate evaluation on `IsEnabled`.
 - Public concrete classes that have an interface counterpart (`MetadataExtractor`/`IMetadataExtractor`, `NuGetFetcher`/`INuGetFetcher`, `SourceLinkValidator`/`ISourceLinkValidator`) keep their private helpers + `[LoggerMessage]` partials `static`; only the public entry point is instance.
 - Path-typed public APIs use `string`, never `Nuke.Common.IO.AbsolutePath` — the libraries don't take a Nuke dependency. Validate with `ArgumentException.ThrowIfNullOrWhiteSpace`.
+- **US English in all identifiers, XML docs, comments, log/diagnostic messages, and commit messages** — use the US `-ize`/`-yze`/`-or` forms (`Normalize`/`Serialize`/`Initialize`/`Analyze`/`Color`/`Behavior`), never the UK `-ise`/`-yse`/`-our` forms. The `.editorconfig`, analyzer rule names, and the BCL itself are US English; mixing dialects produces inconsistent symbol casing in tooling search.
 
 ## Style guide reference
 
@@ -117,7 +118,7 @@ wins inside `src/NuStreamDocs/` and the project's plugin assemblies.
 
 ## Performance & Idiomatic C# Rules
 
-These rules apply to **production code** (everything under `src/` that isn't a test project). Test projects (`src/tests/**`) are exempt from the allocation-discipline rules — `foreach`, LINQ, and `List<T>` are fine in tests where readability beats micro-optimisation. The pattern-matching, switch-expression, and list-pattern rules still apply to tests because they're style-not-perf.
+These rules apply to **production code** (everything under `src/` that isn't a test project). Test projects (`src/tests/**`) are exempt from the allocation-discipline rules — `foreach`, LINQ, and `List<T>` are fine in tests where readability beats micro-optimization. The pattern-matching, switch-expression, and list-pattern rules still apply to tests because they're style-not-perf.
 
 ### Pattern matching & flow control
 
@@ -130,7 +131,7 @@ These rules apply to **production code** (everything under `src/` that isn't a t
 ### Allocation discipline
 
 - **Zero-LINQ policy.** No `System.Linq` in production code. LINQ pulls in lambdas + iterators on every call. Use plain `for` loops.
-- **Avoid `foreach` whenever a `for` loop with an indexer works.** `foreach` over `IEnumerable<T>` boxes/allocates an enumerator; even on `List<T>`/`Dictionary<T,U>` it allocates a struct enumerator the JIT often can't elide. Use `for (var i = 0; i < x.Length; i++)` on arrays / `Span<T>` / `ReadOnlySpan<T>`. Only use `foreach` when iterating a type that genuinely lacks an indexer (e.g. `HashSet<T>`) and you've considered materialising it to an array first.
+- **Avoid `foreach` whenever a `for` loop with an indexer works.** `foreach` over `IEnumerable<T>` boxes/allocates an enumerator; even on `List<T>`/`Dictionary<T,U>` it allocates a struct enumerator the JIT often can't elide. Use `for (var i = 0; i < x.Length; i++)` on arrays / `Span<T>` / `ReadOnlySpan<T>`. Only use `foreach` when iterating a type that genuinely lacks an indexer (e.g. `HashSet<T>`) and you've considered materializing it to an array first.
 - **Arrays over `List<T>`** when the final length is known up front. Pre-size and write by index. Reserve `List<T>` for genuinely unbounded growth, and pre-size with a capacity hint.
 - **`Span<char>` / `ReadOnlySpan<char>` + range expressions** for prefix checks, slicing, parsing — never allocate a temporary `string` to call `.StartsWith` / `.Substring`.
 - **UTF-8 string literals (`"..."u8`)** in JSON / byte-level parsing paths to skip the UTF-16 → UTF-8 round-trip. Default for `Utf8JsonReader` / `Utf8JsonWriter` property names and any byte-sequence comparisons.
@@ -150,14 +151,14 @@ These rules apply to **production code** (everything under `src/` that isn't a t
 
 ### API shape
 
-- **No default parameter values.** Provide explicit overloads instead. Default values bake the constant into every caller's call-site IL — bumping it later requires a recompile of every consumer, and combinations of defaults make refactors and analyser fixes opaque. One overload per legal call shape; each one delegates to the most-specific overload that takes everything explicitly.
+- **No default parameter values.** Provide explicit overloads instead. Default values bake the constant into every caller's call-site IL — bumping it later requires a recompile of every consumer, and combinations of defaults make refactors and analyzer fixes opaque. One overload per legal call shape; each one delegates to the most-specific overload that takes everything explicitly.
 
 ### Properties
 
-- **C# 14 `field` keyword.** When you need a backing field with extra logic (lazy init, validation, change-tracking), use the contextual `field` keyword inside the property accessors instead of declaring a separate `_name` field. The compiler synthesises the storage; the property remains the only public surface.
+- **C# 14 `field` keyword.** When you need a backing field with extra logic (lazy init, validation, change-tracking), use the contextual `field` keyword inside the property accessors instead of declaring a separate `_name` field. The compiler synthesizes the storage; the property remains the only public surface.
 
   **Valid reasons to keep an explicit backing field**:
-  - **`ref`-passing APIs** — `Interlocked.Increment(ref _counter)`, `Volatile.Read(ref _state)`, `Unsafe.As<T>(ref _slot)`. Property accessors can't expose `ref` to their synthesised storage, so atomic counters and lock-free state machines need a real field. Document this with a one-line `<remarks>` or comment when you do it.
+  - **`ref`-passing APIs** — `Interlocked.Increment(ref _counter)`, `Volatile.Read(ref _state)`, `Unsafe.As<T>(ref _slot)`. Property accessors can't expose `ref` to their synthesized storage, so atomic counters and lock-free state machines need a real field. Document this with a one-line `<remarks>` or comment when you do it.
   - **Constructor assignment that must bypass setter logic** (validation, change notification, parent wiring).
   - **Storage referenced from a method outside the property** (rare; usually a sign the property is the wrong shape).
 
@@ -202,12 +203,12 @@ These rules apply to **production code** (everything under `src/` that isn't a t
 
 ### Suppressions
 
-- **Fix the code, don't silence the rule.** Refactor the call site rather than reaching for an attribute. The analyser set in this repo (StyleCop, Roslynator, SonarAnalyzer, .NET CA, Blazor.Common) catches real perf and correctness issues; suppressing is the last resort.
+- **Fix the code, don't silence the rule.** Refactor the call site rather than reaching for an attribute. The analyzer set in this repo (StyleCop, Roslynator, SonarAnalyzer, .NET CA, Blazor.Common) catches real perf and correctness issues; suppressing is the last resort.
 - **When suppression is genuinely correct, use `[SuppressMessage]` with a `Justification`.** Per-symbol attribute on the smallest enclosing member: `[SuppressMessage("Category", "RuleId", Justification = "Why this case is intentional.")]`. Project-wide `<NoWarn>` is acceptable only for bulk patterns scoped to a project (e.g. `CA1812` across an entire test project) and must carry a comment in the .csproj explaining the scope.
 
 ### Collections continued
 
-- **Collection expressions `[..]` first.** When materialising into a final shape (`T[]`, `Span<T>`, `ReadOnlySpan<T>`, `ImmutableArray<T>`), use `[..source]`/`[a, b, ..tail]` and let the compiler pick the optimal layout — including `[]` for empty.
+- **Collection expressions `[..]` first.** When materializing into a final shape (`T[]`, `Span<T>`, `ReadOnlySpan<T>`, `ImmutableArray<T>`), use `[..source]`/`[a, b, ..tail]` and let the compiler pick the optimal layout — including `[]` for empty.
 - **`List<T>` only when the final size is unknown.** If you can compute or upper-bound the count up front, allocate `new T[count]` (or a pooled rental) and write by index. When `List<T>` is unavoidable, **always pass a `capacity` to the constructor**: `new List<T>(expectedCount)`. Capacity-less `new List<T>()` doubles its backing array on every overflow and shows up in allocation profiles immediately.
 
 ### Type design
@@ -217,9 +218,9 @@ These rules apply to **production code** (everything under `src/` that isn't a t
 - **`sealed record` (class)** when the record participates in inheritance hierarchies (e.g. `ApiObjectType : ApiType`) or holds many fields.
 - **Static helpers** for stateless functions; only the public entry-point class is instance-shaped (already documented above).
 - **Singleton comparers (`private sealed class XComparer : IComparer<T>` with `public static readonly XComparer Instance`)** instead of allocating a fresh comparer / lambda per `Array.Sort` call.
-- **Entry-point classes, not top-level statements.** Every executable project (`NuStreamDocs.Benchmarks`, future tools, future user-facing examples under `src/examples/`) defines a proper `public static class Program` with a `public static [Task<]int[>] Main(string[] args)` method in its own file. No file-scoped top-level statements — keeps stack traces readable, makes `Program` reachable from tests, and avoids the synthesised partial that StyleCop/Sonar flag.
+- **Entry-point classes, not top-level statements.** Every executable project (`NuStreamDocs.Benchmarks`, future tools, future user-facing examples under `src/examples/`) defines a proper `public static class Program` with a `public static [Task<]int[>] Main(string[] args)` method in its own file. No file-scoped top-level statements — keeps stack traces readable, makes `Program` reachable from tests, and avoids the synthesized partial that StyleCop/Sonar flag.
 - **`internal static` helpers** for stateless cross-type utilities (`NavBuilder.ToArray`, `MarkdownIo.ReadAsync`, etc.). Group by responsibility, not by feature. Keep the public surface narrow.
-- **Most methods static.** A method that doesn't touch `this` should be `static` — fewer hidden allocations, clearer call sites, devirtualisation comes free. Reserve instance methods for the **outer layer**: the public façade types that hold genuine per-instance state (`DocBuilder`, plugin instances). Inner-layer parsers, emitters, and helpers are static `Scan` / `Emit` / `Render` style methods. If a class ends up with only static methods, mark the class `static` too.
+- **Most methods static.** A method that doesn't touch `this` should be `static` — fewer hidden allocations, clearer call sites, devirtualization comes free. Reserve instance methods for the **outer layer**: the public façade types that hold genuine per-instance state (`DocBuilder`, plugin instances). Inner-layer parsers, emitters, and helpers are static `Scan` / `Emit` / `Render` style methods. If a class ends up with only static methods, mark the class `static` too.
 
 ### When in doubt
 
@@ -245,7 +246,7 @@ Use the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0
 - **Issue links**: `Closes #N` / `Refs #N` in footers.
 - **No `Co-Authored-By` trailer** in this repo (separate rule, also still applies).
 
-Pick the type from what the commit *changes*, not what triggered it. Reorganising code that ships no behaviour change is `refactor`, even when motivated by a perf review. Adding a benchmark is `test`. A perf win the diff actually delivers is `perf`. `chore` is the catch-all only when nothing else fits.
+Pick the type from what the commit *changes*, not what triggered it. Reorganizing code that ships no behavior change is `refactor`, even when motivated by a perf review. Adding a benchmark is `test`. A perf win the diff actually delivers is `perf`. `chore` is the catch-all only when nothing else fits.
 
 The full type table + worked examples (including the `perf` shape with benchmark numbers in the body) are in [CONTRIBUTING.md](CONTRIBUTING.md#commit-style).
 

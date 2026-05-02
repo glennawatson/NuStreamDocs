@@ -8,7 +8,7 @@ using NuStreamDocs.Blog.Common;
 
 namespace NuStreamDocs.Feed.Tests;
 
-/// <summary>Behaviour tests for <c>FeedWriter</c>.</summary>
+/// <summary>Behavior tests for <c>FeedWriter</c>.</summary>
 public class FeedWriterTests
 {
     /// <summary>The RSS document validates as XML and lists every supplied post.</summary>

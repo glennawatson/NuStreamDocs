@@ -22,7 +22,7 @@ namespace NuStreamDocs.Config;
 /// <param name="SiteUrl">Canonical site URL (optional).</param>
 /// <param name="ThemeName">Theme identifier (e.g. <c>material</c>, <c>zensical</c>).</param>
 /// <param name="Nav">Flat list of nav entries; nested groups will be added later.</param>
-/// <param name="UseDirectoryUrls">When true, pages emit as <c>foo/index.html</c> and links resolve to <c>foo/</c>; matches mkdocs' default behaviour.</param>
+/// <param name="UseDirectoryUrls">When true, pages emit as <c>foo/index.html</c> and links resolve to <c>foo/</c>; matches mkdocs' default behavior.</param>
 public readonly record struct MkDocsConfig(
     string SiteName,
     string? SiteUrl,

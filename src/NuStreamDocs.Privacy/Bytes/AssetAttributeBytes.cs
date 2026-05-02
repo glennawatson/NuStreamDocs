@@ -33,7 +33,7 @@ internal static class AssetAttributeBytes
     /// <summary>Gets the lowercase <c>https://</c> scheme.</summary>
     private static ReadOnlySpan<byte> HttpsScheme => "https://"u8;
 
-    /// <summary>Walks <paramref name="html"/>, copying through verbatim, but rewriting every <c>src</c>/<c>href</c> URL the registry localises.</summary>
+    /// <summary>Walks <paramref name="html"/>, copying through verbatim, but rewriting every <c>src</c>/<c>href</c> URL the registry localizes.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="ctx">URL-rewrite context (filter + registry).</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
@@ -50,7 +50,7 @@ internal static class AssetAttributeBytes
         UrlScanLoop.RunAudit(html, AttrStart, audit, TryAuditAt);
     }
 
-    /// <summary>Attempts to rewrite an asset-attribute URL at <paramref name="p"/>; emits prefix + rewritten URL into <paramref name="sink"/> when localised.</summary>
+    /// <summary>Attempts to rewrite an asset-attribute URL at <paramref name="p"/>; emits prefix + rewritten URL into <paramref name="sink"/> when localized.</summary>
     /// <param name="html">UTF-8 source.</param>
     /// <param name="p">Candidate offset.</param>
     /// <param name="ctx">URL-rewrite context.</param>
@@ -67,7 +67,7 @@ internal static class AssetAttributeBytes
         }
 
         var url = Encoding.UTF8.GetString(html[urlStart..urlEnd]);
-        if (!ctx.Filter.ShouldLocalise(url))
+        if (!ctx.Filter.ShouldLocalize(url))
         {
             advanceTo = urlEnd;
             return false;
@@ -100,7 +100,7 @@ internal static class AssetAttributeBytes
         }
 
         var url = Encoding.UTF8.GetString(html[urlStart..urlEnd]);
-        if (audit.Filter.ShouldLocalise(url))
+        if (audit.Filter.ShouldLocalize(url))
         {
             audit.Set.TryAdd(url, 0);
         }

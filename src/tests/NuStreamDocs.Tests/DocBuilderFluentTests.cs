@@ -162,7 +162,7 @@ public class DocBuilderFluentTests
         await Assert.That(ex).IsNotNull();
     }
 
-    /// <summary>FindConfigReader returns null when no reader recognises the extension.</summary>
+    /// <summary>FindConfigReader returns null when no reader recognizes the extension.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task FindConfigReaderMiss() =>
@@ -196,7 +196,7 @@ public class DocBuilderFluentTests
         public string FormatName => "stub";
 
         /// <inheritdoc/>
-        public bool RecognisesExtension(ReadOnlySpan<char> ext) => ext.SequenceEqual(extension);
+        public bool RecognizesExtension(ReadOnlySpan<char> ext) => ext.SequenceEqual(extension);
 
         /// <inheritdoc/>
         public MkDocsConfig Read(ReadOnlySpan<byte> utf8Source) => new("Site", null, "material", []);

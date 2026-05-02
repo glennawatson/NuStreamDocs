@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.CheckList;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>CheckListRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>CheckListRewriter</c>.</summary>
 public class CheckListRewriterTests
 {
     /// <summary>An unchecked task line gains a disabled checkbox input.</summary>

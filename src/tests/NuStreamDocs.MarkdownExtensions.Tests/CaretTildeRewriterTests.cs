@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.CaretTilde;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>CaretTildeRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>CaretTildeRewriter</c>.</summary>
 public class CaretTildeRewriterTests
 {
     /// <summary>Single carets become <c>&lt;sup&gt;</c>.</summary>

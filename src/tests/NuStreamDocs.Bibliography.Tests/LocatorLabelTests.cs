@@ -19,7 +19,7 @@ public class LocatorLabelTests
         await Assert.That(LocatorLabel.Classify("page"u8)).IsEqualTo(LocatorKind.Page);
     }
 
-    /// <summary>Mixed-case input is normalised to the same kind.</summary>
+    /// <summary>Mixed-case input is normalized to the same kind.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UppercaseFolds()

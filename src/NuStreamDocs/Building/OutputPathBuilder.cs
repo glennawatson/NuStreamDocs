@@ -20,7 +20,7 @@ internal static class OutputPathBuilder
     /// <summary>Length of the trailing <c>/index.html</c> appended to directory-URL outputs (separator + 'index.html').</summary>
     private const int IndexHtmlSuffixLength = 11;
 
-    /// <summary>Source extension recognised by the path mapper.</summary>
+    /// <summary>Source extension recognized by the path mapper.</summary>
     private const string MarkdownExtension = ".md";
 
     /// <summary>Replacement extension written into the output path.</summary>

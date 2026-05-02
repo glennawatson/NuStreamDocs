@@ -62,7 +62,7 @@ public static class PagefindIndexWriter
 
     /// <summary>Writes one per-page record JSON.</summary>
     /// <param name="path">Absolute output path.</param>
-    /// <param name="doc">Document to serialise.</param>
+    /// <param name="doc">Document to serialize.</param>
     private static void WriteRecord(string path, in SearchDocument doc)
     {
         using var stream = File.Create(path);

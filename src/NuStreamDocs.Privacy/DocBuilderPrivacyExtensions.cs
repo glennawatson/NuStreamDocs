@@ -20,7 +20,7 @@ public static class DocBuilderPrivacyExtensions
 
     /// <summary>Registers <see cref="PrivacyPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="PrivacyOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="PrivacyOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePrivacy(this DocBuilder builder, Func<PrivacyOptions, PrivacyOptions> configure)
     {
@@ -32,7 +32,7 @@ public static class DocBuilderPrivacyExtensions
 
     /// <summary>Registers <see cref="PrivacyPlugin"/> with caller-tweaked options and a logger.</summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="PrivacyOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="PrivacyOptions.Default"/> and returns the customized set.</param>
     /// <param name="logger">Logger to receive privacy diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePrivacy(this DocBuilder builder, Func<PrivacyOptions, PrivacyOptions> configure, ILogger logger)

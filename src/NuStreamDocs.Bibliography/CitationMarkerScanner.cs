@@ -31,10 +31,10 @@ internal static class CitationMarkerScanner
     /// <summary>Length of the <c>[@</c> opening sequence — keeps the bounds-check magic-number-free.</summary>
     private const int MarkerOpenLength = 2;
 
-    /// <summary>Bytes that may contain a marker open (<c>[</c>) — single-byte SearchValue keeps the scan vectorised.</summary>
+    /// <summary>Bytes that may contain a marker open (<c>[</c>) — single-byte SearchValue keeps the scan vectorized.</summary>
     private static readonly SearchValues<byte> OpenChar = SearchValues.Create("["u8);
 
-    /// <summary>Walks <paramref name="source"/> and yields one marker per recognised <c>[@key…]</c> span.</summary>
+    /// <summary>Walks <paramref name="source"/> and yields one marker per recognized <c>[@key…]</c> span.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <returns>Markers in source order; empty when none.</returns>
     public static IReadOnlyList<CitationMarker> Find(ReadOnlySpan<byte> source)

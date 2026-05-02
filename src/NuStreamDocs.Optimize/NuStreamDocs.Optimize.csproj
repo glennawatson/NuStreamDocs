@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Optimize</PackageId>
+    <Description>Output-pass optimizer for NuStreamDocs. Walks the emitted site tree and produces precompressed sibling artifacts (.gz / .br) so a static web server can serve compressed responses without doing the work at request time. Uses the .NET 10 truly-async GZip / Brotli stream APIs.</Description>
+    <RootNamespace>NuStreamDocs.Optimize</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Optimize.Tests" />
+  </ItemGroup>
+
+</Project>

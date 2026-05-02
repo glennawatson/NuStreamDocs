@@ -30,7 +30,7 @@ namespace NuStreamDocs.Caching;
 public sealed class BoundedCache<TKey, TValue>
     where TKey : notnull
 {
-    /// <summary>Synchronisation root.</summary>
+    /// <summary>Synchronization root.</summary>
     private readonly Lock _gate = new();
 
     /// <summary>LRU recency list; Most-recently-used at the head.</summary>

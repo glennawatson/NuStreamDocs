@@ -6,7 +6,7 @@ using NuStreamDocs.Building;
 
 namespace NuStreamDocs.CSharpApiGenerator.Tests;
 
-/// <summary>Behaviour tests for <c>DocBuilderCSharpApiGeneratorExtensions</c>.</summary>
+/// <summary>Behavior tests for <c>DocBuilderCSharpApiGeneratorExtensions</c>.</summary>
 public class DocBuilderCSharpApiGeneratorExtensionsTests
 {
     /// <summary>The extension returns the same builder so the call chains.</summary>

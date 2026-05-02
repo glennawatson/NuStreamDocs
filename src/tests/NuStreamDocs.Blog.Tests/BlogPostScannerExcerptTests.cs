@@ -6,7 +6,7 @@ using NuStreamDocs.Blog.Common;
 
 namespace NuStreamDocs.Blog.Tests;
 
-/// <summary>Branch-coverage tests for BlogPostScanner excerpt + humanise paths.</summary>
+/// <summary>Branch-coverage tests for BlogPostScanner excerpt + humanize paths.</summary>
 public class BlogPostScannerExcerptTests
 {
     /// <summary>Post with no body returns an empty excerpt.</summary>
@@ -63,10 +63,10 @@ public class BlogPostScannerExcerptTests
         await Assert.That(posts[0].Excerpt).IsEqualTo("Inline post with no trailing newline");
     }
 
-    /// <summary>Multi-word slug humanises to title case with spaces.</summary>
+    /// <summary>Multi-word slug humanizes to title case with spaces.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HumaniseMultipleHyphens()
+    public async Task HumanizeMultipleHyphens()
     {
         using var temp = new ScratchDir();
         await File.WriteAllTextAsync(
@@ -79,7 +79,7 @@ public class BlogPostScannerExcerptTests
     /// <summary>Slug with consecutive hyphens collapses spaces.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HumaniseConsecutiveHyphens()
+    public async Task HumanizeConsecutiveHyphens()
     {
         using var temp = new ScratchDir();
         await File.WriteAllTextAsync(

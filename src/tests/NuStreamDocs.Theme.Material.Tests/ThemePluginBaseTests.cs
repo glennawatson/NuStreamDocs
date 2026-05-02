@@ -83,10 +83,10 @@ public class ThemePluginBaseTests
         await Assert.That(html).DoesNotContain("edit/main/docs");
     }
 
-    /// <summary>Trailing slashes on RepoUrl are normalised to a single separator.</summary>
+    /// <summary>Trailing slashes on RepoUrl are normalized to a single separator.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task RepoUrlTrailingSlashNormalised()
+    public async Task RepoUrlTrailingSlashNormalized()
     {
         using var fixture = TempBuildTree.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
@@ -255,6 +255,6 @@ public class ThemePluginBaseTests
         public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
         /// <inheritdoc/>
-        public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 }

@@ -10,7 +10,7 @@ namespace NuStreamDocs.Tags;
 
 /// <summary>
 /// Tags plugin. Scans each page's <c>tags:</c> frontmatter during
-/// the build, collects tag → pages, and at finalise emits a
+/// the build, collects tag → pages, and at finalize emits a
 /// tags-index page (<c>tags/index.html</c>) plus one listing page
 /// per distinct tag (<c>tags/{slug}.html</c>).
 /// </summary>
@@ -22,7 +22,7 @@ namespace NuStreamDocs.Tags;
 /// </remarks>
 public sealed class TagsPlugin : IDocPlugin
 {
-    /// <summary>Per-page entries collected during the build; drained at finalise time.</summary>
+    /// <summary>Per-page entries collected during the build; drained at finalize time.</summary>
     private readonly ConcurrentQueue<TagEntry> _entries = [];
 
     /// <summary>Plugin options.</summary>
@@ -70,7 +70,7 @@ public sealed class TagsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         if (_entries.IsEmpty)

@@ -42,10 +42,10 @@ public static class Program
     /// <summary>Highest printable ASCII byte — bytes at or above this (i.e. DEL + non-ASCII) get hex-escaped.</summary>
     private const byte LastPrintableAsciiByte = 0x7E;
 
-    /// <summary>Sonar analyser category — repeated across every suppression we emit.</summary>
+    /// <summary>Sonar analyzer category — repeated across every suppression we emit.</summary>
     private const string SonarCategory = "Sonar Code Smell";
 
-    /// <summary>StyleCop analyser category — repeated across every suppression we emit.</summary>
+    /// <summary>StyleCop analyzer category — repeated across every suppression we emit.</summary>
     private const string StyleCopCategory = "StyleCop";
 
     /// <summary>Entry point.</summary>
@@ -312,7 +312,7 @@ public static class Program
             """).ConfigureAwait(false);
     }
 
-    /// <summary>Emits the per-class <c>[SuppressMessage]</c> attributes covering the analyser noise that doesn't apply to a generated catalogue.</summary>
+    /// <summary>Emits the per-class <c>[SuppressMessage]</c> attributes covering the analyzer noise that doesn't apply to a generated catalogue.</summary>
     /// <param name="writer">Source writer.</param>
     /// <returns>Task tracking the writes.</returns>
     private static async Task EmitSuppressionsAsync(TextWriter writer)

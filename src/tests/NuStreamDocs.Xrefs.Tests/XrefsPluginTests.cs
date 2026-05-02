@@ -12,7 +12,7 @@ public class XrefsPluginTests
     /// <summary>The plugin emits an xrefmap covering every entry in the shared registry.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task FinaliseEmitsRegistrySnapshot()
+    public async Task FinalizeEmitsRegistrySnapshot()
     {
         using var temp = TempDir.Create();
         var registry = new AutorefsRegistry();
@@ -20,7 +20,7 @@ public class XrefsPluginTests
         registry.Register("Foo.Baz", "api/Foo.Baz.html", fragment: null);
         var plugin = new XrefsPlugin(registry, XrefsOptions.Default);
 
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         var bytes = await File.ReadAllBytesAsync(Path.Combine(temp.Root, "xrefmap.json"));
         var payload = XrefMapReader.Read(bytes);
@@ -50,10 +50,10 @@ public class XrefsPluginTests
         await Assert.That(url).IsEqualTo("https://docs.microsoft.com/dotnet/api/System.String.html");
     }
 
-    /// <summary>An imported file's <c>baseUrl</c> is honoured when no override is supplied.</summary>
+    /// <summary>An imported file's <c>baseUrl</c> is honored when no override is supplied.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task EmbeddedBaseUrlIsHonoured()
+    public async Task EmbeddedBaseUrlIsHonored()
     {
         using var temp = TempDir.Create();
         var importPath = Path.Combine(temp.Root, "external.json");
@@ -72,7 +72,7 @@ public class XrefsPluginTests
         await Assert.That(url).IsEqualTo("https://example.com/docs/api/Foo.html");
     }
 
-    /// <summary>EmitMap=false skips the xrefmap.json file write at finalise time.</summary>
+    /// <summary>EmitMap=false skips the xrefmap.json file write at finalize time.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmitMapFalseSkipsFileWrite()
@@ -83,7 +83,7 @@ public class XrefsPluginTests
         var options = XrefsOptions.Default with { EmitMap = false };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "xrefmap.json"))).IsFalse();
     }

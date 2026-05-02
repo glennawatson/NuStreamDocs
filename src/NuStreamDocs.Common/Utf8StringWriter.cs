@@ -10,7 +10,7 @@ namespace NuStreamDocs.Common;
 
 /// <summary>
 /// Direct UTF-16 → UTF-8 helpers that both <c>TagsIndexWriter</c> and
-/// <c>BlogIndexEmitter</c> reach for when emitting HTML/JSON. Centralised
+/// <c>BlogIndexEmitter</c> reach for when emitting HTML/JSON. Centralized
 /// here so the duplication-detector stops flagging the per-emitter copies.
 /// </summary>
 public static class Utf8StringWriter
@@ -30,6 +30,22 @@ public static class Utf8StringWriter
         var dst = writer.GetSpan(max);
         var written = Encoding.UTF8.GetBytes(value, dst);
         writer.Advance(written);
+    }
+
+    /// <summary>Bulk-copies <paramref name="bytes"/> into <paramref name="writer"/>, skipping the empty case so backing implementations are not asked for a zero-length span.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="bytes">Bytes to copy; an empty span is a no-op.</param>
+    public static void Write(IBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        if (bytes.IsEmpty)
+        {
+            return;
+        }
+
+        var dst = writer.GetSpan(bytes.Length);
+        bytes.CopyTo(dst);
+        writer.Advance(bytes.Length);
     }
 
     /// <summary>Writes <paramref name="value"/> as ASCII digits into <paramref name="writer"/>.</summary>

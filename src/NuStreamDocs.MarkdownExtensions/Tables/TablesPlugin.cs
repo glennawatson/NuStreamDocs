@@ -9,7 +9,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.Tables;
 
 /// <summary>
-/// GitHub-flavoured tables plugin. Rewrites pipe-delimited table
+/// GitHub-flavored tables plugin. Rewrites pipe-delimited table
 /// blocks into <c>&lt;table&gt;</c> HTML before the markdown
 /// renderer runs.
 /// </summary>

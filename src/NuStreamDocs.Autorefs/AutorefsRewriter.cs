@@ -16,7 +16,7 @@ namespace NuStreamDocs.Autorefs;
 /// <remarks>
 /// The marker syntax is whatever a renderer or theme plugin emits:
 /// <c>href="@autoref:System.String"</c> on an anchor, for example.
-/// On finalise we walk every <c>.html</c> in the output tree, scan for
+/// On finalize we walk every <c>.html</c> in the output tree, scan for
 /// the prefix, and substitute the resolved URL. Unresolved IDs are
 /// left in place — surfacing them in the output makes the missing
 /// reference obvious to a reader and to a strict-mode CI gate.

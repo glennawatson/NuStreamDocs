@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Toc.Logging;
 
@@ -11,7 +12,7 @@ namespace NuStreamDocs.Toc;
 
 /// <summary>
 /// Per-page table-of-contents and permalink-anchor plugin, mirroring
-/// the mkdocs <c>toc</c> markdown extension's runtime behaviour.
+/// the mkdocs <c>toc</c> markdown extension's runtime behavior.
 /// </summary>
 /// <remarks>
 /// During <see cref="OnRenderPageAsync"/>:
@@ -122,26 +123,11 @@ public sealed class TocPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;
         return ValueTask.CompletedTask;
-    }
-
-    /// <summary>Bulk-write helper.</summary>
-    /// <param name="writer">Sink.</param>
-    /// <param name="bytes">Bytes.</param>
-    private static void Write(ArrayBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
-    {
-        if (bytes.IsEmpty)
-        {
-            return;
-        }
-
-        var dst = writer.GetSpan(bytes.Length);
-        bytes.CopyTo(dst);
-        writer.Advance(bytes.Length);
     }
 
     /// <summary>Locates the TOC marker in the freshly-rewritten body and substitutes the fragment.</summary>
@@ -167,9 +153,9 @@ public sealed class TocPlugin : IDocPlugin
             var prefix = snapshot[..markerIndex];
             var suffix = snapshot[(markerIndex + MarkerBytes.Length)..];
 
-            Write(html, prefix);
+            Utf8StringWriter.Write(html, prefix);
             TocFragmentRenderer.Render(snapshot, headings, in _options, html);
-            Write(html, suffix);
+            Utf8StringWriter.Write(html, suffix);
         }
         finally
         {

@@ -157,7 +157,7 @@ public class TokenMatchersTests
     public async Task MatchSingleQuotedNoEscape_handles_closing_quote(string input, int expected) =>
         await Assert.That(TokenMatchers.MatchSingleQuotedNoEscape(UTF8.GetBytes(input))).IsEqualTo(expected);
 
-    /// <summary>Double-quoted with backslash escape recognises <c>\"</c> as an embedded quote.</summary>
+    /// <summary>Double-quoted with backslash escape recognizes <c>\"</c> as an embedded quote.</summary>
     /// <param name="input">Input string.</param>
     /// <param name="expected">Expected matched length.</param>
     /// <returns>Async task.</returns>
@@ -197,7 +197,7 @@ public class TokenMatchersTests
     public async Task MatchBracketedBlock_consumes_paired_delimiters(string input, char open, char close, int expected) =>
         await Assert.That(TokenMatchers.MatchBracketedBlock(UTF8.GetBytes(input), (byte)open, (byte)close)).IsEqualTo(expected);
 
-    /// <summary>Newline matcher recognises CRLF, lone CR, and lone LF.</summary>
+    /// <summary>Newline matcher recognizes CRLF, lone CR, and lone LF.</summary>
     /// <param name="input">Input string.</param>
     /// <param name="expected">Expected matched length.</param>
     /// <returns>Async task.</returns>
@@ -234,7 +234,7 @@ public class TokenMatchersTests
     public async Task MatchRunUntilAny_html_text(string input, int expected) =>
         await Assert.That(TokenMatchers.MatchRunUntilAny(UTF8.GetBytes(input), MarkupTextStop)).IsEqualTo(expected);
 
-    /// <summary>Hex literal matcher recognises <c>0x</c>/<c>0X</c> + body + optional suffix.</summary>
+    /// <summary>Hex literal matcher recognizes <c>0x</c>/<c>0X</c> + body + optional suffix.</summary>
     /// <param name="input">Input string.</param>
     /// <param name="expected">Expected matched length.</param>
     /// <returns>Async task.</returns>
@@ -286,7 +286,7 @@ public class TokenMatchersTests
     public async Task MatchKeyword_word_boundary(string input, int expected) =>
         await Assert.That(TokenMatchers.MatchKeyword(UTF8.GetBytes(input), JsonKeywords)).IsEqualTo(expected);
 
-    /// <summary>Keyword (case-insensitive) recognises any case combination.</summary>
+    /// <summary>Keyword (case-insensitive) recognizes any case combination.</summary>
     /// <param name="input">Input string.</param>
     /// <param name="expected">Expected matched length.</param>
     /// <returns>Async task.</returns>
@@ -310,7 +310,7 @@ public class TokenMatchersTests
     public async Task MatchLongestLiteral_prefers_longer_match(string input, int expected) =>
         await Assert.That(TokenMatchers.MatchLongestLiteral(UTF8.GetBytes(input), ShortOperators)).IsEqualTo(expected);
 
-    /// <summary>Double-quoted-key recognises a quoted string followed by optional whitespace and <c>:</c>.</summary>
+    /// <summary>Double-quoted-key recognizes a quoted string followed by optional whitespace and <c>:</c>.</summary>
     /// <param name="input">Input string.</param>
     /// <param name="expected">Expected matched length.</param>
     /// <returns>Async task.</returns>
@@ -322,7 +322,7 @@ public class TokenMatchersTests
     public async Task MatchDoubleQuotedKey_requires_colon_lookahead(string input, int expected) =>
         await Assert.That(TokenMatchers.MatchDoubleQuotedKey(UTF8.GetBytes(input))).IsEqualTo(expected);
 
-    /// <summary>Raw quoted strings honour the matched-opener-count rule — N opening quotes match exactly N closing quotes.</summary>
+    /// <summary>Raw quoted strings honor the matched-opener-count rule — N opening quotes match exactly N closing quotes.</summary>
     /// <param name="input">Input string.</param>
     /// <param name="minQuotes">Minimum opening / closing quote run.</param>
     /// <param name="expected">Expected matched length.</param>

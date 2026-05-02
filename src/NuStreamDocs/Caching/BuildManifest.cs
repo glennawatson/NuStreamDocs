@@ -110,7 +110,7 @@ public sealed class BuildManifest
     /// <remarks>
     /// <see cref="ConcurrentQueue{T}.ToArray"/> performs a single pre-sized
     /// allocation off the queue's segmented backing storage — cheaper than
-    /// the <c>[.. bag]</c> spread that materialises through an enumerator.
+    /// the <c>[.. bag]</c> spread that materializes through an enumerator.
     /// </remarks>
     public void Replace(ConcurrentQueue<ManifestEntry> updated)
     {
@@ -213,7 +213,7 @@ public sealed class BuildManifest
         return array.GetArrayLength() > 0;
     }
 
-    /// <summary>Materialises every well-formed entry from the JSON array.</summary>
+    /// <summary>Materializes every well-formed entry from the JSON array.</summary>
     /// <param name="entries">Entries JSON array.</param>
     /// <param name="buffer">Destination buffer sized to the array length.</param>
     /// <returns>Number of entries written.</returns>

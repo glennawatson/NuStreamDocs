@@ -8,10 +8,10 @@ using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material.Tests;
 
-/// <summary>Behaviour tests for <c>IconShortcodeRewriter</c> in the Material classic theme.</summary>
+/// <summary>Behavior tests for <c>IconShortcodeRewriter</c> in the Material classic theme.</summary>
 public class IconShortcodeRewriterTests
 {
-    /// <summary><c>:material-foo:</c> emits a Material classic icon-font span (with hyphens normalised to underscores for ligatures).</summary>
+    /// <summary><c>:material-foo:</c> emits a Material classic icon-font span (with hyphens normalized to underscores for ligatures).</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task MaterialShortcodeRendersIconFontSpan()

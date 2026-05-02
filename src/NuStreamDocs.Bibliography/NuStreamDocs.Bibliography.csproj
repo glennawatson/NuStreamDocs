@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Bibliography</PackageId>
-    <Description>Pandoc-style citation + bibliography plugin for NuStreamDocs. Reads a CSL-JSON source file, finds [@key] / [@key, p 23] / [@a; @b] markers in markdown, and emits formatted citations + a categorised bibliography list at the end of each page. Ships with IEEE (numbered) and APA (author-year) styles; internal model uses CSL vocabulary so a future CSL backend slots in. AOT-clean.</Description>
+    <Description>Pandoc-style citation + bibliography plugin for NuStreamDocs. Reads a CSL-JSON source file, finds [@key] / [@key, p 23] / [@a; @b] markers in markdown, and emits formatted citations + a categorized bibliography list at the end of each page. Ships with IEEE (numbered) and APA (author-year) styles; internal model uses CSL vocabulary so a future CSL backend slots in. AOT-clean.</Description>
     <RootNamespace>NuStreamDocs.Bibliography</RootNamespace>
   </PropertyGroup>
 

@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\NuStreamDocs.Theme.Material\NuStreamDocs.Theme.Material.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Autorefs\NuStreamDocs.Autorefs.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.LinkValidator\NuStreamDocs.LinkValidator.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Bibliography\NuStreamDocs.Bibliography.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Macros\NuStreamDocs.Macros.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Snippets\NuStreamDocs.Snippets.csproj" />

@@ -9,12 +9,12 @@ namespace NuStreamDocs.Privacy.Logging;
 /// </summary>
 internal static partial class PrivacyLoggingHelper
 {
-    /// <summary>Logs the start of asset localisation.</summary>
+    /// <summary>Logs the start of asset localization.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="assetCount">Distinct external assets discovered.</param>
     /// <param name="outputRoot">Site output root.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy localisation starting: {AssetCount} external asset(s) for {OutputRoot}")]
-    public static partial void LogLocalisationStart(ILogger logger, int assetCount, string outputRoot);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy localization starting: {AssetCount} external asset(s) for {OutputRoot}")]
+    public static partial void LogLocalizationStart(ILogger logger, int assetCount, string outputRoot);
 
     /// <summary>Logs a successful per-asset download.</summary>
     /// <param name="logger">Target logger.</param>
@@ -37,13 +37,13 @@ internal static partial class PrivacyLoggingHelper
     [LoggerMessage(Level = LogLevel.Debug, Message = "Privacy cache hit for {Url} from {CachePath}")]
     public static partial void LogCacheHit(ILogger logger, string url, string cachePath);
 
-    /// <summary>Logs the localisation summary.</summary>
+    /// <summary>Logs the localization summary.</summary>
     /// <param name="logger">Target logger.</param>
-    /// <param name="localisedCount">Assets successfully written to the output root.</param>
+    /// <param name="localizedCount">Assets successfully written to the output root.</param>
     /// <param name="failedCount">Assets that exhausted retries.</param>
     /// <param name="cachedCount">Assets satisfied from the on-disk cache.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy finalise: {LocalisedCount} localised, {FailedCount} failed, {CachedCount} cached")]
-    public static partial void LogFinaliseSummary(ILogger logger, int localisedCount, int failedCount, int cachedCount);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy finalize: {LocalizedCount} localized, {FailedCount} failed, {CachedCount} cached")]
+    public static partial void LogFinalizeSummary(ILogger logger, int localizedCount, int failedCount, int cachedCount);
 
     /// <summary>Logs an audit-mode manifest write.</summary>
     /// <param name="logger">Target logger.</param>

@@ -8,7 +8,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 
 /// <summary>Builder extension that registers the C# reference plugin.</summary>
 /// <remarks>
-/// Two flavours: <c>UseCSharpApiGenerator</c> respects the
+/// Two flavors: <c>UseCSharpApiGenerator</c> respects the
 /// <see cref="CSharpApiGeneratorOptions.Mode"/> field on the supplied
 /// options (defaults to <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>);
 /// <c>UseCSharpApiGeneratorDirect</c> is a sugar overload that flips the

@@ -27,13 +27,13 @@ public class MkDocsBlogPluginLifecycleTests
         await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 
-    /// <summary>OnFinaliseAsync no-ops.</summary>
+    /// <summary>OnFinalizeAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseAsync()
+    public async Task OnFinalizeAsync()
     {
         var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
-        await plugin.OnFinaliseAsync(new("/out"), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new("/out"), CancellationToken.None);
     }
 
     /// <summary>Disposable scratch directory.</summary>

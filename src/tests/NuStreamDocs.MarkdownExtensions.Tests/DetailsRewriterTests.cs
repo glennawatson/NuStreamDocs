@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Details;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>DetailsRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>DetailsRewriter</c>.</summary>
 public class DetailsRewriterTests
 {
     /// <summary>A collapsed <c>???</c> block becomes a closed-by-default details element.</summary>

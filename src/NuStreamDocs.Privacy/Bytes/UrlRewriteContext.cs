@@ -5,6 +5,6 @@
 namespace NuStreamDocs.Privacy.Bytes;
 
 /// <summary>Read-only context bundle passed down to URL byte rewriters so each scanner takes a single parameter.</summary>
-/// <param name="Filter">Host filter that decides which URLs to localise.</param>
+/// <param name="Filter">Host filter that decides which URLs to localize.</param>
 /// <param name="Registry">URL registry that returns the local rewrite path.</param>
 internal readonly record struct UrlRewriteContext(HostFilter Filter, ExternalAssetRegistry Registry);

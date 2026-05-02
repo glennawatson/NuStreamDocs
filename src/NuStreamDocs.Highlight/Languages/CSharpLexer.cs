@@ -6,13 +6,13 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>C# lexer.</summary>
 /// <remarks>
-/// Modelled on Pygments' <c>CSharpLexer</c>; rules live in
+/// Modeled on Pygments' <c>CSharpLexer</c>; rules live in
 /// <see cref="CSharpRules"/> so embedded-language scenarios
 /// (Razor's <c>@code</c> blocks, future Blazor components) classify
 /// the same tokens with the same Pygments-shape CSS classes.
 /// <para>
 /// Three states: root, block-accessor, arrow-accessor. The two accessor
-/// states recognise <c>field</c> and <c>value</c> as keywords so the
+/// states recognize <c>field</c> and <c>value</c> as keywords so the
 /// C# 13 backing-field syntax highlights correctly inside property
 /// accessors — but those names stay as plain identifiers everywhere
 /// else.

@@ -86,7 +86,7 @@ internal static class SmartSymbolsRewriter
     private static bool TrySubstitute(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
     {
         consumed = 0;
-        var first = NormaliseFirstByte(source[offset]);
+        var first = NormalizeFirstByte(source[offset]);
         return first switch
         {
             (byte)'(' => TryParenSymbol(source, offset, writer, out consumed),
@@ -101,7 +101,7 @@ internal static class SmartSymbolsRewriter
     /// <summary>Folds case-variants and the <c>3</c>/<c>1</c> fraction-leading digits to a single dispatch byte.</summary>
     /// <param name="b">First byte of the candidate token.</param>
     /// <returns>Canonical dispatch byte.</returns>
-    private static byte NormaliseFirstByte(byte b) => b switch
+    private static byte NormalizeFirstByte(byte b) => b switch
     {
         (byte)'C' => (byte)'c',
         (byte)'3' => (byte)'1',

@@ -29,9 +29,9 @@ public static class DocBuilderMacrosExtensions
         return builder.UsePlugin(new MacrosPlugin());
     }
 
-    /// <summary>Registers <see cref="MacrosPlugin"/> with options-customisation.</summary>
+    /// <summary>Registers <see cref="MacrosPlugin"/> with options-customization.</summary>
     /// <param name="builder">Builder.</param>
-    /// <param name="configure">Function that receives <see cref="MacrosOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="MacrosOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMacros(this DocBuilder builder, Func<MacrosOptions, MacrosOptions> configure)
     {
@@ -43,7 +43,7 @@ public static class DocBuilderMacrosExtensions
 
     /// <summary>Registers <see cref="MacrosPlugin"/> with options + logger.</summary>
     /// <param name="builder">Builder.</param>
-    /// <param name="configure">Options customisation.</param>
+    /// <param name="configure">Options customization.</param>
     /// <param name="logger">Logger that receives missing-variable warnings.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMacros(this DocBuilder builder, Func<MacrosOptions, MacrosOptions> configure, ILogger logger)

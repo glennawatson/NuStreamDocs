@@ -34,7 +34,7 @@ public sealed record VersionOptions(string Version, string Title, string[] Alias
         ArgumentNullException.ThrowIfNull(Aliases);
     }
 
-    /// <summary>Materialises the option set as a <see cref="VersionEntry"/>.</summary>
+    /// <summary>Materializes the option set as a <see cref="VersionEntry"/>.</summary>
     /// <returns>The matching entry.</returns>
     public VersionEntry ToEntry() => new(Version, Title, Aliases);
 }

@@ -257,7 +257,7 @@ public sealed class DocBuilder
     /// <remarks>
     /// Each format ships in its own assembly and is registered through
     /// the assembly's <c>Use{Format}Config()</c> extension. The first
-    /// reader whose <see cref="IConfigReader.RecognisesExtension"/>
+    /// reader whose <see cref="IConfigReader.RecognizesExtension"/>
     /// returns true is used at config-load time.
     /// </remarks>
     public DocBuilder UseConfigReader(IConfigReader reader)
@@ -269,12 +269,12 @@ public sealed class DocBuilder
 
     /// <summary>Returns the first registered reader whose extension matches, or null.</summary>
     /// <param name="extension">File extension including the leading dot, lowercase.</param>
-    /// <returns>The matching reader, or null when none recognises the extension.</returns>
+    /// <returns>The matching reader, or null when none recognizes the extension.</returns>
     public IConfigReader? FindConfigReader(ReadOnlySpan<char> extension)
     {
         for (var i = 0; i < _configReaders.Count; i++)
         {
-            if (_configReaders[i].RecognisesExtension(extension))
+            if (_configReaders[i].RecognizesExtension(extension))
             {
                 return _configReaders[i];
             }

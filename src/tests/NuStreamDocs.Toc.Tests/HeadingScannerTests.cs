@@ -30,7 +30,7 @@ public class HeadingScannerTests
         await Assert.That(headings.Length).IsEqualTo(0);
     }
 
-    /// <summary>Existing id attribute is captured.</summary>
+    /// <summary>Existing id attribute is captured as offset+length into the original snapshot.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task CapturesExistingId()
@@ -38,7 +38,8 @@ public class HeadingScannerTests
         var html = "<h2 id=\"intro\" class=\"x\">Hello</h2>"u8.ToArray();
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        await Assert.That(headings[0].ExistingId).IsEqualTo("intro");
+        await Assert.That(headings[0].HasExistingId).IsTrue();
+        await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("intro"u8)).IsTrue();
     }
 
     /// <summary>Heading level out of range is ignored.</summary>
@@ -61,5 +62,17 @@ public class HeadingScannerTests
         var headings = HeadingScanner.Scan(html);
         var text = HeadingScanner.DecodeText(html, in headings[0]);
         await Assert.That(text).IsEqualTo("Hello World");
+    }
+
+    /// <summary>DecodeTextInto streams the stripped text bytes without UTF-16 transcoding.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task DecodeTextIntoEmitsBytes()
+    {
+        var html = "<h2>Hello <code>World</code></h2>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
+        var sink = new System.Buffers.ArrayBufferWriter<byte>(32);
+        HeadingScanner.DecodeTextInto(html, in headings[0], sink);
+        await Assert.That(sink.WrittenSpan.SequenceEqual("Hello World"u8)).IsTrue();
     }
 }

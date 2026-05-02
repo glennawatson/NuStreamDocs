@@ -29,6 +29,9 @@ public class TocBenchmarks
     /// <summary>Pre-built scan result so the rewrite/fragment benchmarks don't repeat the scan cost.</summary>
     private Heading[] _slugged = [];
 
+    /// <summary>Pre-built scan result without slugs assigned, used by the AssignSlugs micro-benchmark.</summary>
+    private Heading[] _scanned = [];
+
     /// <summary>Gets or sets the synthetic heading count for the current iteration.</summary>
     [Params(SmallHeadings, MediumHeadings, LargeHeadings)]
     public int HeadingCount { get; set; }
@@ -49,9 +52,19 @@ public class TocBenchmarks
         }
 
         _html = Encoding.UTF8.GetBytes(sb.ToString());
-        var headings = HeadingScanner.Scan(_html);
-        _slugged = HeadingSlugifier.AssignSlugs(_html, headings).Slugged;
+        _scanned = HeadingScanner.Scan(_html);
+        _slugged = HeadingSlugifier.AssignSlugs(_html, _scanned).Slugged;
     }
+
+    /// <summary>Benchmark for <c>HeadingSlugifier.AssignSlugs</c> — exercises text decode + byte slugify + dedup map for the whole page.</summary>
+    /// <returns>The slugged heading count.</returns>
+    [Benchmark]
+    public int AssignSlugs() => HeadingSlugifier.AssignSlugs(_html, _scanned).Slugged.Length;
+
+    /// <summary>Benchmark for the byte-only <c>SlugifyToBytes</c> hot path used by <c>AssignSlugs</c> for headings without an existing id.</summary>
+    /// <returns>The slug byte length.</returns>
+    [Benchmark]
+    public int SlugifyToBytes() => HeadingSlugifier.SlugifyToBytes("Some Heading Title 42"u8).Length;
 
     /// <summary>Benchmark for <c>HeadingScanner.Scan(ReadOnlySpan{byte})</c>.</summary>
     /// <returns>The scanned heading count.</returns>

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
 
-/// <summary>Behaviour tests for <c>ExternalUrlScanner</c>.</summary>
+/// <summary>Behavior tests for <c>ExternalUrlScanner</c>.</summary>
 public class ExternalUrlScannerTests
 {
     /// <summary>Filter that allows every host (no skip, no allow-list).</summary>

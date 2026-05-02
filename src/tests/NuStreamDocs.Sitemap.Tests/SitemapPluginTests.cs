@@ -11,7 +11,7 @@ namespace NuStreamDocs.Sitemap.Tests;
 /// <summary>Lifecycle tests for <c>SitemapPlugin</c>, <c>NotFoundPlugin</c>, and <c>RedirectsPlugin</c> registrations.</summary>
 public class SitemapPluginTests
 {
-    /// <summary>End-to-end finalise emits sitemap.xml + robots.txt when SiteUrl is configured.</summary>
+    /// <summary>End-to-end finalize emits sitemap.xml + robots.txt when SiteUrl is configured.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SitemapEmitsBothFiles()
@@ -24,13 +24,13 @@ public class SitemapPluginTests
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new("guide/intro.md", default, sink), CancellationToken.None);
         await plugin.OnRenderPageAsync(new("index.md", default, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "robots.txt"))).IsTrue();
     }
 
-    /// <summary>Without a SiteUrl the plugin no-ops at finalise.</summary>
+    /// <summary>Without a SiteUrl the plugin no-ops at finalize.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SitemapNoOpsWithoutSiteUrl()
@@ -42,7 +42,7 @@ public class SitemapPluginTests
 
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new("any.md", default, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();
     }
@@ -59,7 +59,7 @@ public class SitemapPluginTests
 
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new(string.Empty, default, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         // No entries → no sitemap written.
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();

@@ -16,7 +16,7 @@ namespace NuStreamDocs.Metadata;
 /// </summary>
 internal static class MetadataCollector
 {
-    /// <summary>Markdown extension recognised by the walk.</summary>
+    /// <summary>Markdown extension recognized by the walk.</summary>
     private const string MarkdownExtension = ".md";
 
     /// <summary>Builds a registry for <paramref name="inputRoot"/> using <paramref name="options"/>.</summary>
@@ -70,7 +70,7 @@ internal static class MetadataCollector
     /// <param name="directory">Directory currently being walked.</param>
     /// <param name="directoryStack">All directory-metadata files keyed by absolute directory.</param>
     /// <param name="sidecarSuffix">Per-page sidecar suffix.</param>
-    /// <param name="byPath">Accumulator keyed by forward-slash-normalised relative path.</param>
+    /// <param name="byPath">Accumulator keyed by forward-slash-normalized relative path.</param>
     private static void Walk(string root, string directory, Dictionary<string, byte[]> directoryStack, string sidecarSuffix, Dictionary<string, byte[]> byPath)
     {
         var inheritedChain = CollectInheritedChain(root, directory, directoryStack);

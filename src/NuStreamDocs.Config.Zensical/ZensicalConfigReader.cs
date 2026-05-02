@@ -6,7 +6,7 @@ namespace NuStreamDocs.Config.Zensical;
 
 /// <summary>
 /// <see cref="IConfigReader"/> implementation that reads
-/// Zensical-flavoured <c>zensical.toml</c> via the in-house TOML to
+/// Zensical-flavored <c>zensical.toml</c> via the in-house TOML to
 /// UTF-8 JSON pipeline.
 /// </summary>
 /// <remarks>
@@ -20,7 +20,7 @@ public sealed class ZensicalConfigReader : IConfigReader
     public string FormatName => "zensical";
 
     /// <inheritdoc/>
-    public bool RecognisesExtension(ReadOnlySpan<char> extension) =>
+    public bool RecognizesExtension(ReadOnlySpan<char> extension) =>
         extension.Equals(".toml", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc/>

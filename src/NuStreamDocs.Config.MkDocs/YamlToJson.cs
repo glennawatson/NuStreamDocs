@@ -120,7 +120,7 @@ public static class YamlToJson
         }
     }
 
-    /// <summary>Initialises the synthetic root-mapping frame.</summary>
+    /// <summary>Initializes the synthetic root-mapping frame.</summary>
     /// <param name="json">JSON sink.</param>
     /// <param name="stack">Container-frame stack.</param>
     /// <returns>Initial stack depth.</returns>
@@ -151,7 +151,7 @@ public static class YamlToJson
         contentEnd = lf > 0 && yaml[lfAbs - 1] == Cr ? lfAbs - 1 : lfAbs;
     }
 
-    /// <summary>Routes one YAML line through the line-shape recogniser.</summary>
+    /// <summary>Routes one YAML line through the line-shape recognizer.</summary>
     /// <param name="line">Source line (no terminator).</param>
     /// <param name="json">JSON sink.</param>
     /// <param name="stack">Container-frame stack.</param>

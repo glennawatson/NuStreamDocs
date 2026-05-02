@@ -11,7 +11,7 @@ namespace NuStreamDocs.Emoji;
 /// <see cref="ReadOnlySpan{T}"/> byte slices so the rewriter never
 /// allocates a <see cref="string"/> for the shortcode body or
 /// re-encodes the glyph on emit — the per-shortcode hot path is one
-/// vectorised <see cref="MemoryExtensions.SequenceEqual{T}(ReadOnlySpan{T}, ReadOnlySpan{T})"/>
+/// vectorized <see cref="MemoryExtensions.SequenceEqual{T}(ReadOnlySpan{T}, ReadOnlySpan{T})"/>
 /// per candidate against a compile-time <c>"…"u8</c> key, returning the
 /// glyph as another compile-time <c>"…"u8</c> literal.
 /// </summary>

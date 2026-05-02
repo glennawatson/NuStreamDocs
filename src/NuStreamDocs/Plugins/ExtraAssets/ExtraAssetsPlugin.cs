@@ -82,7 +82,7 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;

@@ -163,7 +163,7 @@ public static class RazorLexer
 
     /// <summary><c>@</c> followed by a keyword from <paramref name="set"/> followed by a non-identifier-continue boundary.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <param name="set">Recognised keyword set.</param>
+    /// <param name="set">Recognized keyword set.</param>
     /// <returns>Length matched on success, <c>0</c> otherwise.</returns>
     private static int MatchAtKeyword(ReadOnlySpan<byte> slice, ByteKeywordSet set)
     {

@@ -10,7 +10,7 @@ using NuStreamDocs.Theme.Common;
 namespace NuStreamDocs.Theme.Material3.IconShortcode;
 
 /// <summary>
-/// Material3 icon shortcode preprocessor. Recognises
+/// Material3 icon shortcode preprocessor. Recognizes
 /// <c>:material-foo:</c> Material Symbols shortcodes and
 /// <c>:fontawesome-{style}-foo:</c> Font Awesome shortcodes and
 /// rewrites them into the markup the Material3 stylesheets render.

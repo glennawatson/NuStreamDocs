@@ -8,7 +8,7 @@ namespace NuStreamDocs.Metadata;
 
 /// <summary>
 /// Read-only lookup of "extra frontmatter to inject" per relative
-/// page path. Keys are forward-slash-normalised paths (e.g.
+/// page path. Keys are forward-slash-normalized paths (e.g.
 /// <c>guide/intro.md</c>); values are the merged YAML body bytes
 /// (no surrounding <c>---</c> delimiters, ASCII top-level keys only).
 /// </summary>
@@ -25,7 +25,7 @@ internal sealed class MetadataRegistry(FrozenDictionary<string, byte[]> byPath)
     public static MetadataRegistry Empty { get; } = new(FrozenDictionary<string, byte[]>.Empty);
 
     /// <summary>Looks up the merged-body bytes for <paramref name="relativePath"/>, or returns an empty span when nothing to inject.</summary>
-    /// <param name="relativePath">Forward-slash-normalised page path.</param>
+    /// <param name="relativePath">Forward-slash-normalized page path.</param>
     /// <returns>Merged YAML body bytes (no <c>---</c> delimiters); empty when absent.</returns>
     public ReadOnlySpan<byte> ExtraFor(string relativePath) =>
         byPath.TryGetValue(relativePath, out var bytes) ? bytes : [];

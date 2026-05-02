@@ -20,7 +20,7 @@ public static class DocBuilderMaterialIconsExtensions
 
     /// <summary>Registers <see cref="MaterialIconsPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="MaterialIconsOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="MaterialIconsOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMaterialIcons(this DocBuilder builder, Func<MaterialIconsOptions, MaterialIconsOptions> configure)
     {

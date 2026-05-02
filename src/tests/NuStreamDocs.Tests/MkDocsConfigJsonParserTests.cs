@@ -7,7 +7,7 @@ using NuStreamDocs.Config;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>MkDocsConfigJsonParser</c>.</summary>
+/// <summary>Behavior tests for <c>MkDocsConfigJsonParser</c>.</summary>
 public class MkDocsConfigJsonParserTests
 {
     /// <summary>An empty object yields all defaults.</summary>

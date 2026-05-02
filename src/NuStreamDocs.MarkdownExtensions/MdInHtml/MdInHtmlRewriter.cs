@@ -90,7 +90,7 @@ internal static class MdInHtmlRewriter
     /// <param name="openTagEnd">Offset just past the closing <c>&gt;</c> on success.</param>
     /// <param name="attrStart">Inclusive start of the <c>markdown="…"</c> attribute on success (including the leading whitespace).</param>
     /// <param name="attrEnd">Exclusive end of the <c>markdown="…"</c> attribute on success.</param>
-    /// <returns>True when the tag carries a recognised <c>markdown</c> attribute value.</returns>
+    /// <returns>True when the tag carries a recognized <c>markdown</c> attribute value.</returns>
     private static bool TryParseOpenTag(ReadOnlySpan<byte> source, int offset, out ReadOnlySpan<byte> name, out int openTagEnd, out int attrStart, out int attrEnd)
     {
         name = default;
@@ -167,7 +167,7 @@ internal static class MdInHtmlRewriter
             }
 
             var value = attrs.Slice(valueStart, valueRel);
-            if (!IsRecognisedMarkdownValue(value))
+            if (!IsRecognizedMarkdownValue(value))
             {
                 continue;
             }
@@ -187,17 +187,17 @@ internal static class MdInHtmlRewriter
     private static bool IsAttributeBoundary(ReadOnlySpan<byte> span, int offset) =>
         span[offset] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n';
 
-    /// <summary>Returns true when <paramref name="value"/> is one of the recognised <c>markdown</c> attribute values.</summary>
+    /// <summary>Returns true when <paramref name="value"/> is one of the recognized <c>markdown</c> attribute values.</summary>
     /// <param name="value">Attribute value bytes.</param>
     /// <returns>True for <c>1</c>, <c>block</c>, or <c>span</c>.</returns>
-    private static bool IsRecognisedMarkdownValue(ReadOnlySpan<byte> value) =>
+    private static bool IsRecognizedMarkdownValue(ReadOnlySpan<byte> value) =>
         value.SequenceEqual("1"u8)
         || value.SequenceEqual("block"u8)
         || value.SequenceEqual("span"u8);
 
     /// <summary>Finds the matching close tag for <paramref name="name"/>, accounting for nested same-name tags.</summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <param name="name">Tag name to match (case-sensitive — HTML5 normalisation isn't required for the conservative blocks we handle).</param>
+    /// <param name="name">Tag name to match (case-sensitive — HTML5 normalization isn't required for the conservative blocks we handle).</param>
     /// <param name="from">Search-start offset (just past the open tag's <c>&gt;</c>).</param>
     /// <param name="closeStart">Offset of the close tag's leading <c>&lt;</c>.</param>
     /// <param name="closeEnd">Offset just past the close tag's <c>&gt;</c>.</param>

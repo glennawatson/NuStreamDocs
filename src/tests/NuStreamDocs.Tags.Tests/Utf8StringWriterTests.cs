@@ -40,6 +40,45 @@ public class Utf8StringWriterTests
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
 
+    /// <summary>Bulk-byte Write copies the input span verbatim.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteByteSpanCopies()
+    {
+        var sink = new ArrayBufferWriter<byte>();
+        Utf8StringWriter.Write(sink, "hello-world"u8);
+        await Assert.That(sink.WrittenSpan.SequenceEqual("hello-world"u8)).IsTrue();
+    }
+
+    /// <summary>Bulk-byte Write of an empty span advances no bytes.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteByteSpanEmptyNoOp()
+    {
+        var sink = new ArrayBufferWriter<byte>();
+        Utf8StringWriter.Write(sink, default(ReadOnlySpan<byte>));
+        await Assert.That(sink.WrittenCount).IsEqualTo(0);
+    }
+
+    /// <summary>Sequential byte-span writes concatenate without intermediate transcoding.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteByteSpanSequentialConcatenates()
+    {
+        var sink = new ArrayBufferWriter<byte>();
+        Utf8StringWriter.Write(sink, "<a "u8);
+        Utf8StringWriter.Write(sink, "href=\"#x\""u8);
+        Utf8StringWriter.Write(sink, ">"u8);
+        await Assert.That(sink.WrittenSpan.SequenceEqual("<a href=\"#x\">"u8)).IsTrue();
+    }
+
+    /// <summary>Bulk-byte Write null-checks its sink.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteByteSpanNullSinkThrows() =>
+        await Assert.That(() => Utf8StringWriter.Write(null!, "x"u8))
+            .Throws<ArgumentNullException>();
+
     /// <summary>WriteInt32 emits ASCII digits.</summary>
     /// <param name="value">Integer.</param>
     /// <param name="expected">Expected ASCII rendering.</param>

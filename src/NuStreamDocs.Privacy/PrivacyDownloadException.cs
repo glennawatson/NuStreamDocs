@@ -5,7 +5,7 @@
 namespace NuStreamDocs.Privacy;
 
 /// <summary>
-/// Thrown from <see cref="PrivacyPlugin"/>'s finalise hook when one or
+/// Thrown from <see cref="PrivacyPlugin"/>'s finalize hook when one or
 /// more external assets failed to download and
 /// <see cref="PrivacyOptions.FailOnError"/> is set.
 /// </summary>

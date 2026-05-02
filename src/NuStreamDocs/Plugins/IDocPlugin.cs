@@ -44,8 +44,8 @@ public interface IDocPlugin
     ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken);
 
     /// <summary>Hook fired after every page has been emitted.</summary>
-    /// <param name="context">Per-build finalisation state (search index, sitemap, feed writers).</param>
+    /// <param name="context">Per-build finalization state (search index, sitemap, feed writers).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="ValueTask"/> tracking the hook.</returns>
-    ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken);
+    ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken);
 }

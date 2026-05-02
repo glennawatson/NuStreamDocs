@@ -18,7 +18,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <remarks>
 /// Each wrapped source is walked sequentially; cancellation is checked
 /// between sources so a hung NuGet fetch on the second source still
-/// honours <see cref="CancellationToken"/>.
+/// honors <see cref="CancellationToken"/>.
 /// </remarks>
 /// <param name="sources">Sources to concatenate, walked in order.</param>
 internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAssemblySource

@@ -8,7 +8,7 @@ namespace NuStreamDocs.Highlight.Languages;
 /// <remarks>
 /// This runs only at lexer construction time, so the abstraction helps us
 /// share the ordered rule-array shape across languages without affecting the
-/// hot tokenisation path.
+/// hot tokenization path.
 /// </remarks>
 internal readonly record struct CStyleRuleSet(
     LexerRule Whitespace,

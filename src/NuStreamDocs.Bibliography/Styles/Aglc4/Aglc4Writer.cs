@@ -64,10 +64,10 @@ internal static class Aglc4Writer
         WriteBytes(buffer[..written], writer);
     }
 
-    /// <summary>Writes a parenthesised year suffix when the year is non-zero (e.g. <c> (1992)</c>).</summary>
+    /// <summary>Writes a parenthesized year suffix when the year is non-zero (e.g. <c> (1992)</c>).</summary>
     /// <param name="year">Year value; 0 means unknown.</param>
     /// <param name="writer">Sink.</param>
-    public static void WriteParenthesisedYear(int year, IBufferWriter<byte> writer)
+    public static void WriteParenthesizedYear(int year, IBufferWriter<byte> writer)
     {
         if (year is 0)
         {

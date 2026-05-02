@@ -8,7 +8,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.SphinxInventory;
 
 /// <summary>
-/// Emits a Sphinx-compatible <c>objects.inv</c> file at finalise time
+/// Emits a Sphinx-compatible <c>objects.inv</c> file at finalize time
 /// so external Sphinx sites can intersphinx-link into the build's
 /// rendered output.
 /// </summary>
@@ -46,7 +46,7 @@ public sealed class SphinxInventoryPlugin : IDocPlugin
         _options = options;
     }
 
-    /// <summary>Gets the shared registry the plugin reads from at finalise time.</summary>
+    /// <summary>Gets the shared registry the plugin reads from at finalize time.</summary>
     public AutorefsRegistry Registry { get; }
 
     /// <inheritdoc/>
@@ -69,7 +69,7 @@ public sealed class SphinxInventoryPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
 

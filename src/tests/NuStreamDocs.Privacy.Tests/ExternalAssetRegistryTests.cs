@@ -7,7 +7,7 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Branch-coverage tests for ExternalAssetRegistry.</summary>
 public class ExternalAssetRegistryTests
 {
-    /// <summary>Recognised file extensions are preserved on the local path.</summary>
+    /// <summary>Recognized file extensions are preserved on the local path.</summary>
     /// <param name="url">Source URL.</param>
     /// <param name="expectedExt">Expected suffix on the registered path.</param>
     /// <returns>Async test.</returns>
@@ -16,7 +16,7 @@ public class ExternalAssetRegistryTests
     [Arguments("https://x.test/a/b.css", ".css")]
     [Arguments("https://x.test/a.WOFF2", ".WOFF2")]
     [Arguments("https://x.test/a.svg?v=1", ".svg")]
-    public async Task RecognisedExtensionPreserved(string url, string expectedExt)
+    public async Task RecognizedExtensionPreserved(string url, string expectedExt)
     {
         var registry = new ExternalAssetRegistry("assets/external");
         var local = registry.GetOrAdd(url);
@@ -24,7 +24,7 @@ public class ExternalAssetRegistryTests
         await Assert.That(local).StartsWith("assets/external/");
     }
 
-    /// <summary>Paths without a recognised extension drop to a hash-only filename.</summary>
+    /// <summary>Paths without a recognized extension drop to a hash-only filename.</summary>
     /// <param name="url">Source URL.</param>
     /// <returns>Async test.</returns>
     [Test]

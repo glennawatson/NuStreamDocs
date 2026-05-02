@@ -10,7 +10,7 @@ namespace NuStreamDocs.Autorefs;
 
 /// <summary>
 /// Plugin that collects heading anchor IDs during render and rewrites
-/// <c>@autoref:ID</c> markers in the emitted HTML at finalise.
+/// <c>@autoref:ID</c> markers in the emitted HTML at finalize.
 /// </summary>
 /// <remarks>
 /// Theme plugins, API-generator plugins, and citation plugins all
@@ -75,7 +75,7 @@ public sealed class AutorefsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         AutorefsLoggingHelper.LogResolutionStart(_logger, Registry.Count);

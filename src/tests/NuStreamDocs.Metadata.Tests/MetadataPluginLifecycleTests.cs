@@ -23,10 +23,10 @@ public class MetadataPluginLifecycleTests
         await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 
-    /// <summary>OnFinaliseAsync is a no-op.</summary>
+    /// <summary>OnFinalizeAsync is a no-op.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseAsync() => await new MetadataPlugin().OnFinaliseAsync(new("/out"), CancellationToken.None);
+    public async Task OnFinalizeAsync() => await new MetadataPlugin().OnFinalizeAsync(new("/out"), CancellationToken.None);
 
     /// <summary>Preprocess (single-arg overload) passes the source through.</summary>
     /// <returns>Async test.</returns>

@@ -12,7 +12,7 @@ namespace NuStreamDocs.Markdown;
 /// </summary>
 /// <remarks>
 /// Walks one block's inner UTF-8 byte slice and emits HTML straight to
-/// an <see cref="IBufferWriter{T}"/>. No string materialisation; no
+/// an <see cref="IBufferWriter{T}"/>. No string materialization; no
 /// allocations on the happy path. Supports the inline subset every
 /// markdown document uses heavily:
 /// <list type="bullet">

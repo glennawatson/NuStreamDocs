@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace NuStreamDocs.LinkValidator;
 
@@ -13,11 +14,25 @@ namespace NuStreamDocs.LinkValidator;
 /// <remarks>
 /// Mirrors the surface of <c>mkdocs --strict</c>: relative-link
 /// resolution and same-page heading-anchor checking, plus
-/// cross-page anchor resolution on top. Reads only from the
-/// already-populated corpus — no disk I/O.
+/// cross-page anchor resolution on top. Path math runs entirely on
+/// UTF-8 byte arrays — the source-page URL, link target, and
+/// fragment never UTF-16 round-trip during resolution; UTF-8 → string
+/// is deferred to the moment a diagnostic message is composed.
 /// </remarks>
 public static class InternalLinkValidator
 {
+    /// <summary>Hash byte that separates a link target from its fragment.</summary>
+    private const byte HashByte = (byte)'#';
+
+    /// <summary>Forward-slash byte used everywhere as the path separator.</summary>
+    private const byte SlashByte = (byte)'/';
+
+    /// <summary>Gets the two-byte parent-segment marker.</summary>
+    private static ReadOnlySpan<byte> DotDot => ".."u8;
+
+    /// <summary>Gets the one-byte current-segment marker.</summary>
+    private static ReadOnlySpan<byte> Dot => "."u8;
+
     /// <summary>Runs the validator and returns the full diagnostic set.</summary>
     /// <param name="corpus">The pre-built corpus.</param>
     /// <param name="parallelism">Maximum parallel page checks.</param>
@@ -56,7 +71,7 @@ public static class InternalLinkValidator
         for (var i = 0; i < page.InternalLinks.Length; i++)
         {
             var link = page.InternalLinks[i];
-            if (string.IsNullOrEmpty(link))
+            if (link is { Length: 0 })
             {
                 continue;
             }
@@ -68,102 +83,193 @@ public static class InternalLinkValidator
     /// <summary>Resolves one link against the corpus and reports any miss.</summary>
     /// <param name="corpus">The corpus.</param>
     /// <param name="source">Source page.</param>
-    /// <param name="link">Raw href value.</param>
+    /// <param name="link">Raw href bytes.</param>
     /// <param name="sink">Diagnostic accumulator.</param>
-    private static void ResolveAndReport(ValidationCorpus corpus, PageLinks source, string link, ConcurrentBag<LinkDiagnostic> sink)
+    private static void ResolveAndReport(ValidationCorpus corpus, PageLinks source, byte[] link, ConcurrentBag<LinkDiagnostic> sink)
     {
-        var (target, fragment) = SplitTarget(link);
+        var span = link.AsSpan();
+        var hash = span.IndexOf(HashByte);
+        var target = hash < 0 ? span : span[..hash];
+        var fragment = hash < 0 ? default : span[(hash + 1)..];
 
         // Pure same-page anchor: #id
-        if (target.Length == 0)
+        if (target.IsEmpty)
         {
-            if (fragment.Length > 0 && !source.AnchorIds.Contains(fragment))
+            if (!fragment.IsEmpty && !ContainsAnchor(source.AnchorIds, fragment))
             {
-                sink.Add(new(source.PageUrl, link, LinkSeverity.Error, $"Same-page anchor '#{fragment}' has no matching heading id."));
+                sink.Add(BuildDiagnostic(source.PageUrl, link, $"Same-page anchor '#{Encoding.UTF8.GetString(fragment)}' has no matching heading id."));
             }
 
             return;
         }
 
-        var resolved = Resolve(source.PageUrl, target);
+        var resolved = ResolveTarget(source.PageUrl, target);
         if (!corpus.TryGetPage(resolved, out var page))
         {
-            sink.Add(new(source.PageUrl, link, LinkSeverity.Error, $"Internal link target '{resolved}' is not in the site."));
+            sink.Add(BuildDiagnostic(source.PageUrl, link, $"Internal link target '{Encoding.UTF8.GetString(resolved)}' is not in the site."));
             return;
         }
 
-        if (fragment.Length == 0 || page.AnchorIds.Contains(fragment))
+        if (fragment.IsEmpty || ContainsAnchor(page.AnchorIds, fragment))
         {
             return;
         }
 
-        sink.Add(new(source.PageUrl, link, LinkSeverity.Error, $"Anchor '#{fragment}' on '{resolved}' has no matching heading id."));
+        sink.Add(BuildDiagnostic(source.PageUrl, link, $"Anchor '#{Encoding.UTF8.GetString(fragment)}' on '{Encoding.UTF8.GetString(resolved)}' has no matching heading id."));
     }
 
-    /// <summary>Splits a raw link into (path, fragment).</summary>
-    /// <param name="link">Raw href value.</param>
-    /// <returns>Tuple of path-without-hash and fragment.</returns>
-    private static (string Target, string Fragment) SplitTarget(string link)
-    {
-        var hash = link.IndexOf('#', StringComparison.Ordinal);
-        return hash < 0
-            ? (link, string.Empty)
-            : (link[..hash], link[(hash + 1)..]);
-    }
+    /// <summary>Looks up a fragment span in <paramref name="anchors"/>.</summary>
+    /// <param name="anchors">The anchor-id set.</param>
+    /// <param name="fragment">Fragment bytes (no leading <c>#</c>).</param>
+    /// <returns>True when the set contains the fragment.</returns>
+    /// <remarks>
+    /// HashSet lacks a span-keyed lookup so this allocates a byte
+    /// array per query; the cost is bounded by the per-page
+    /// fragment-link count which is typically near zero.
+    /// </remarks>
+    private static bool ContainsAnchor(HashSet<byte[]> anchors, ReadOnlySpan<byte> fragment) =>
+        anchors.Contains(fragment.ToArray());
 
-    /// <summary>Resolves <paramref name="target"/> relative to <paramref name="sourcePage"/>.</summary>
-    /// <param name="sourcePage">Source page URL.</param>
-    /// <param name="target">Target path (no fragment).</param>
-    /// <returns>Forward-slashed site-relative URL.</returns>
-    private static string Resolve(string sourcePage, string target)
+    /// <summary>Composes a diagnostic at the string boundary.</summary>
+    /// <param name="sourcePageBytes">Source-page URL bytes.</param>
+    /// <param name="linkBytes">Raw link bytes.</param>
+    /// <param name="message">Composed message.</param>
+    /// <returns>The diagnostic.</returns>
+    private static LinkDiagnostic BuildDiagnostic(byte[] sourcePageBytes, byte[] linkBytes, string message) =>
+        new(
+            Encoding.UTF8.GetString(sourcePageBytes),
+            Encoding.UTF8.GetString(linkBytes),
+            LinkSeverity.Error,
+            message);
+
+    /// <summary>Resolves <paramref name="target"/> relative to <paramref name="sourcePage"/>, returning the canonical site-relative bytes.</summary>
+    /// <param name="sourcePage">Source page URL bytes.</param>
+    /// <param name="target">Target path bytes (no fragment).</param>
+    /// <returns>Forward-slashed site-relative URL bytes.</returns>
+    private static byte[] ResolveTarget(ReadOnlySpan<byte> sourcePage, ReadOnlySpan<byte> target)
     {
-        if (target.StartsWith('/'))
+        if (target is [SlashByte, ..])
         {
-            return target.TrimStart('/');
+            return TrimLeadingSlashes(target).ToArray();
         }
 
-        var sourceDir = GetDirectory(sourcePage);
-        var combined = string.IsNullOrEmpty(sourceDir) ? target : sourceDir + "/" + target;
-        return Normalise(combined);
-    }
-
-    /// <summary>Returns the directory portion of <paramref name="pageUrl"/>, or empty when at the root.</summary>
-    /// <param name="pageUrl">Page URL.</param>
-    /// <returns>Directory prefix (no trailing slash).</returns>
-    private static string GetDirectory(string pageUrl)
-    {
-        var slash = pageUrl.LastIndexOf('/');
-        return slash < 0 ? string.Empty : pageUrl[..slash];
-    }
-
-    /// <summary>Collapses <c>./</c> and <c>../</c> segments.</summary>
-    /// <param name="path">Forward-slashed path.</param>
-    /// <returns>Normalised path.</returns>
-    private static string Normalise(string path)
-    {
-        var segments = path.Split('/');
-        var stack = new List<string>(segments.Length);
-        for (var i = 0; i < segments.Length; i++)
+        var sourceDirLen = LastSlashIndex(sourcePage);
+        if (sourceDirLen < 0)
         {
-            var s = segments[i];
-            if (s.Length == 0 || s == ".")
-            {
-                continue;
-            }
-
-            if (s == "..")
-            {
-                if (stack is [_, ..])
-                {
-                    stack.RemoveAt(stack.Count - 1);
-                }
-
-                continue;
-            }
-
-            stack.Add(s);
+            return Normalize(target);
         }
 
-        return string.Join('/', stack);
+        // Compose sourceDir + '/' + target into one buffer for a single Normalize pass.
+        var combinedLen = sourceDirLen + 1 + target.Length;
+        var combined = new byte[combinedLen];
+        sourcePage[..sourceDirLen].CopyTo(combined);
+        combined[sourceDirLen] = SlashByte;
+        target.CopyTo(combined.AsSpan(sourceDirLen + 1));
+        return Normalize(combined);
+    }
+
+    /// <summary>Returns the index of the last <c>/</c> in <paramref name="path"/>, or <c>-1</c> when none.</summary>
+    /// <param name="path">Path bytes.</param>
+    /// <returns>Index, or -1.</returns>
+    private static int LastSlashIndex(ReadOnlySpan<byte> path) => path.LastIndexOf(SlashByte);
+
+    /// <summary>Strips any leading <c>/</c> bytes.</summary>
+    /// <param name="path">Path bytes.</param>
+    /// <returns>The trimmed slice.</returns>
+    private static ReadOnlySpan<byte> TrimLeadingSlashes(ReadOnlySpan<byte> path)
+    {
+        var i = 0;
+        while (i < path.Length && path[i] is SlashByte)
+        {
+            i++;
+        }
+
+        return path[i..];
+    }
+
+    /// <summary>Collapses <c>./</c> and <c>../</c> segments into a canonical site-relative byte sequence.</summary>
+    /// <param name="path">Source path (caller-owned bytes).</param>
+    /// <returns>The normalized bytes (always a fresh array).</returns>
+    private static byte[] Normalize(ReadOnlySpan<byte> path)
+    {
+        if (path.IsEmpty)
+        {
+            return [];
+        }
+
+        var segments = new List<(int Start, int Length)>(8);
+        CollectSegments(path, segments);
+        return segments is []
+            ? []
+            : JoinSegments(path, segments);
+    }
+
+    /// <summary>Walks <paramref name="path"/> and pushes surviving segment ranges into <paramref name="segments"/>, applying <c>.</c> / <c>..</c> rules.</summary>
+    /// <param name="path">Source path bytes.</param>
+    /// <param name="segments">Accumulator (mutated).</param>
+    private static void CollectSegments(ReadOnlySpan<byte> path, List<(int Start, int Length)> segments)
+    {
+        var cursor = 0;
+        while (cursor <= path.Length)
+        {
+            var rel = path[cursor..].IndexOf(SlashByte);
+            var end = rel < 0 ? path.Length : cursor + rel;
+            ApplySegment(path, cursor, end - cursor, segments);
+            cursor = end + 1;
+        }
+    }
+
+    /// <summary>Applies a single <c>(start, length)</c> segment to <paramref name="segments"/> per the <c>.</c> / <c>..</c> rules.</summary>
+    /// <param name="path">Source path bytes.</param>
+    /// <param name="start">Segment start.</param>
+    /// <param name="length">Segment length.</param>
+    /// <param name="segments">Accumulator (mutated).</param>
+    private static void ApplySegment(ReadOnlySpan<byte> path, int start, int length, List<(int Start, int Length)> segments)
+    {
+        if (length is 0 || path.Slice(start, length).SequenceEqual(Dot))
+        {
+            return;
+        }
+
+        if (path.Slice(start, length).SequenceEqual(DotDot))
+        {
+            if (segments is [_, ..])
+            {
+                segments.RemoveAt(segments.Count - 1);
+            }
+
+            return;
+        }
+
+        segments.Add((start, length));
+    }
+
+    /// <summary>Concatenates <paramref name="segments"/> with <c>/</c> separators into a fresh byte array.</summary>
+    /// <param name="path">Source path bytes the segments index into.</param>
+    /// <param name="segments">Surviving segment ranges.</param>
+    /// <returns>The joined bytes.</returns>
+    private static byte[] JoinSegments(ReadOnlySpan<byte> path, List<(int Start, int Length)> segments)
+    {
+        var totalLen = segments.Count - 1;
+        for (var i = 0; i < segments.Count; i++)
+        {
+            totalLen += segments[i].Length;
+        }
+
+        var output = new byte[totalLen];
+        var write = 0;
+        for (var i = 0; i < segments.Count; i++)
+        {
+            if (i > 0)
+            {
+                output[write++] = SlashByte;
+            }
+
+            var (start, length) = segments[i];
+            path.Slice(start, length).CopyTo(output.AsSpan(write, length));
+            write += length;
+        }
+
+        return output;
     }
 }

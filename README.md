@@ -145,7 +145,7 @@ new DocBuilder()
   (with options, logger, dependencies). All of the convenience `Use*`
   extension methods route through this.
 - **Order is preserved**, but each plugin declares its own pipeline phase
-  (`OnConfigure` / `OnRenderPage` / `OnFinalise`), so most ordering is
+  (`OnConfigure` / `OnRenderPage` / `OnFinalize`), so most ordering is
   automatic.
 - **Plugins are pluggable units**, not magical reflection scans. If you want
   a custom plugin, write one `IDocPlugin` and `.UsePlugin(myPlugin)`.
@@ -167,7 +167,7 @@ Pick exactly one theme assembly:
 .UseMaterial3Theme()
 ```
 
-Both themes honour the same `IStaticAssetProvider` /
+Both themes honor the same `IStaticAssetProvider` /
 `IHeadExtraProvider` contracts, so any plugin written once works under either
 theme without recompilation.
 
@@ -219,7 +219,7 @@ Each is a separate assembly so you only pull what you use:
 | `NuStreamDocs.Metadata` | `.UseMetadata()` | Directory-level (`_meta.yml`) + sidecar (`page.meta.yml`) frontmatter merging (Statiq-inspired) |
 | `NuStreamDocs.Autorefs` | `.UseAutorefs()` | `@autoref:ID` rewriting against collected heading anchors |
 | `NuStreamDocs.Xrefs` | `.UseXrefs()` | DocFX-style `xrefmap.json` emit + import |
-| `NuStreamDocs.SphinxInventory` | `.UseSphinxInventory()` | Sphinx-compatible `objects.inv` emitter. Snapshots the shared autorefs registry at finalise time and writes a v2 inventory file (zlib-compressed body) so external Sphinx sites can intersphinx-link into NuStreamDocs builds. |
+| `NuStreamDocs.SphinxInventory` | `.UseSphinxInventory()` | Sphinx-compatible `objects.inv` emitter. Snapshots the shared autorefs registry at finalize time and writes a v2 inventory file (zlib-compressed body) so external Sphinx sites can intersphinx-link into NuStreamDocs builds. |
 
 ### Quality / validation
 
@@ -237,8 +237,8 @@ Each is a separate assembly so you only pull what you use:
 
 | Package | Builder | What |
 |---|---|---|
-| `NuStreamDocs.Blog` | `.UseWyamBlog()` | Wyam-flavoured blog: `YYYY-MM-DD-slug.md` + Wyam frontmatter (NoTitle/IsBlog/Title/Tags/Author/Published). |
-| `NuStreamDocs.Blog.MkDocs` | `.UseMkDocsBlog()` | mkdocs-material flavoured: posts under `blog/posts/` with categories/date/authors frontmatter. |
+| `NuStreamDocs.Blog` | `.UseWyamBlog()` | Wyam-flavored blog: `YYYY-MM-DD-slug.md` + Wyam frontmatter (NoTitle/IsBlog/Title/Tags/Author/Published). |
+| `NuStreamDocs.Blog.MkDocs` | `.UseMkDocsBlog()` | mkdocs-material flavored: posts under `blog/posts/` with categories/date/authors frontmatter. |
 | `NuStreamDocs.Feed` | `.UseFeed()` | RSS 2.0 / Atom feed generation off the same blog scanner. |
 
 ### Media
@@ -251,12 +251,12 @@ Each is a separate assembly so you only pull what you use:
 | `NuStreamDocs.Icons.MaterialDesign` | `new MdiIconResolver()` | **Inline-SVG** Material Design Icons (Pictogrammers MDI, ~7,400 icons). Plugs into the icon-shortcode rewriter as an `IIconResolver` so `:material-foo:` shortcodes inline the actual SVG path data — matches what mkdocs-material emits and works for the much larger MDI namespace (which Google Material Symbols doesn't fully cover). Path data is baked into a generated bucket-by-length switch; zero startup cost, ~50 ns lookup. |
 | `NuStreamDocs.Icons.FontAwesome` | `.UseFontAwesome()` | Font Awesome Free from a configurable CDN. |
 
-### Privacy & optimisation
+### Privacy & optimization
 
 | Package | Builder | What |
 |---|---|---|
-| `NuStreamDocs.Privacy` | `.UsePrivacy()` | Localises external assets under `assets/external/` and rewrites HTML to point at the local copies. Byte-level UTF-8 throughout. |
-| `NuStreamDocs.Optimise` | `.UseOptimise()`, `.UseHtmlMinify()` | Pre-compresses emitted output as `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). HTML minify pass. |
+| `NuStreamDocs.Privacy` | `.UsePrivacy()` | Localizes external assets under `assets/external/` and rewrites HTML to point at the local copies. Byte-level UTF-8 throughout. |
+| `NuStreamDocs.Optimize` | `.UseOptimize()`, `.UseHtmlMinify()` | Pre-compresses emitted output as `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). HTML minify pass. |
 
 ### C# API reference
 
@@ -345,9 +345,9 @@ await new DocBuilder()
     .UseToc()
     .UseHighlight()
     .UseSearch()
-    .UsePrivacy()                                  // localise external assets
+    .UsePrivacy()                                  // localize external assets
     .UseHtmlMinify()
-    .UseOptimise()                                 // pre-compressed .gz / .br
+    .UseOptimize()                                 // pre-compressed .gz / .br
     .BuildAsync();
 ```
 
@@ -545,7 +545,7 @@ public sealed class WordCountPlugin : IDocPlugin
         // inspect ctx.Html, append a <footer> with the word count, etc.
         return default;
     }
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext ctx, CancellationToken ct) => default;
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext ctx, CancellationToken ct) => default;
 }
 
 // in Program.cs
@@ -573,8 +573,8 @@ the source of truth — config files are convenience translators on top.
 ## Module reference
 
 Every assembly. The `Builder` column shows the canonical extension method on
-`DocBuilder`; multiple overloads exist (no-arg, options-customiser,
-options-customiser+logger).
+`DocBuilder`; multiple overloads exist (no-arg, options-customizer,
+options-customizer+logger).
 
 | Assembly | Builder | Description |
 |---|---|---|
@@ -586,7 +586,7 @@ options-customiser+logger).
 | **`NuStreamDocs.Theme.Material`** | `.UseMaterialTheme()` | Material-styled theme. Mustache page template + Material CSS/JS bundle, all embedded. |
 | **`NuStreamDocs.Theme.Material3`** | `.UseMaterial3Theme()` | Material Design 3 theme — design-token-driven (color roles, shape, typography, elevation). |
 | **`NuStreamDocs.Config.MkDocs`** | `.UseMkDocsConfig()` | mkdocs.yml reader. Hand-rolled span / UTF-8 YAML→JSON pipeline; never round-trips through strings. |
-| **`NuStreamDocs.Config.Zensical`** | `.UseZensicalConfig()` | Zensical-flavoured TOML config reader. Span-based and AOT-clean. |
+| **`NuStreamDocs.Config.Zensical`** | `.UseZensicalConfig()` | Zensical-flavored TOML config reader. Span-based and AOT-clean. |
 | **`NuStreamDocs.Nav`** | `.UseNav()` | Rich navigation: glob includes, ordering hints, hidden sections, `.pages` overrides, multi-level rewrites, `navigation.prune`, orphan-page warnings. |
 | **`NuStreamDocs.Toc`** | `.UseToc()` | Per-page table of contents and permalink heading anchors. |
 | **`NuStreamDocs.Search`** | `.UseSearch()` | Build-time search index. Pagefind-compatible sharded index by default; Lunr-compatible JSON alt. |
@@ -594,8 +594,8 @@ options-customiser+logger).
 | **`NuStreamDocs.MarkdownExtensions`** | `.UseCommonMarkdownExtensions()` | Common Markdown block + inline extensions — admonitions, tabs, details, checklists, mark, footnotes, definition lists, attr-list, etc. |
 | **`NuStreamDocs.Mermaid`** | `.UseMermaid()` | Retags fenced `mermaid` blocks; pulls the Mermaid runtime into the head. |
 | **`NuStreamDocs.Lightbox`** | `.UseLightbox()` | glightbox image lightbox — adds glightbox CSS/JS and wraps content images. |
-| **`NuStreamDocs.Privacy`** | `.UsePrivacy()` | Localises external assets (img/link/script) under `assets/external/`; rewrites HTML to local paths. Byte-level UTF-8 throughout. |
-| **`NuStreamDocs.Optimise`** | `.UseOptimise()`, `.UseHtmlMinify()` | Output optimiser. HTML minify pass + pre-compressed `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). |
+| **`NuStreamDocs.Privacy`** | `.UsePrivacy()` | Localizes external assets (img/link/script) under `assets/external/`; rewrites HTML to local paths. Byte-level UTF-8 throughout. |
+| **`NuStreamDocs.Optimize`** | `.UseOptimize()`, `.UseHtmlMinify()` | Output optimizer. HTML minify pass + pre-compressed `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). |
 | **`NuStreamDocs.LinkValidator`** | `.UseLinkValidator()` | Strict link validator. Internal mode (relative + anchors + nav/disk consistency); optional external HTTP-HEAD mode via Polly with host-batched throttling and retry. |
 | **`NuStreamDocs.Serve`** | `.WatchAndServeAsync()` | Watch + dev-server. Initial build, then a long-running loop: FileSystemWatcher + debounce → rebuild → signal connected browsers via LiveReload websocket. Kestrel-hosted; not AOT-compatible (opt-in package, separate from the AOT-clean core). |
 | **`NuStreamDocs.Versions`** | `.UseVersions()` | mike-equivalent versioning. Publishes a `versions.json` manifest themes can render a selector against. |
@@ -603,7 +603,7 @@ options-customiser+logger).
 | **`NuStreamDocs.Tags`** | `.UseTags()` | Collects per-page `tags:` frontmatter; emits a tags index plus per-tag listing pages. |
 | **`NuStreamDocs.Metadata`** | `.UseMetadata()` | Directory-level (`_meta.yml`) + sidecar (`page.meta.yml`) frontmatter merging spliced into pages before render. Inspired by Statiq's directory/sidecar/computed metadata model. |
 | **`NuStreamDocs.Autorefs`** | `.UseAutorefs()` | Cross-document reference resolver. Collects heading anchor IDs during render; rewrites `@autoref:ID` markers to the resolved page URL + fragment. |
-| **`NuStreamDocs.Xrefs`** | `.UseXrefs()` | DocFX-style xrefmap. Emits `xrefmap.json` at finalise; optionally consumes external xrefmaps at configure. Resolves cross-site UIDs via Autorefs. |
+| **`NuStreamDocs.Xrefs`** | `.UseXrefs()` | DocFX-style xrefmap. Emits `xrefmap.json` at finalize; optionally consumes external xrefmaps at configure. Resolves cross-site UIDs via Autorefs. |
 | **`NuStreamDocs.SuperFences`** | `.UseSuperFences()` | Custom-fence dispatcher. Auto-discovers `ICustomFenceHandler` plugins and rewrites `<pre><code class="language-X">` blocks claimed by a registered handler. |
 | **`NuStreamDocs.Snippets`** | `.UseSnippets()` | pymdownx.snippets — `--8<-- "file"` includes spliced inline at preprocess time. |
 | **`NuStreamDocs.Macros`** | `.UseMacros()` | mkdocs-macros-equivalent variable substitution. `{{ name }}` markers resolve through a host-supplied dictionary; fenced and inline code regions pass through untouched. Optional HTML escaping; optional `Warning`-level logging for unresolved names. |
@@ -669,12 +669,12 @@ same corpus needs minutes for a cold build.
   per-pipeline `PageBuilderPool`. Per-page steady-state allocation on
   the rxui corpus is ~3 KB / page.
 - **`SearchValues<byte>`** for delimiter scans — `IndexOfAny` runs
-  vectorised on the actual SIMD path your CPU has.
+  vectorized on the actual SIMD path your CPU has.
 
 ### Native AOT-ready
 
 The library assemblies build with `IsAotCompatible=true` and the trim
-analyser enabled. Reflection-using dependencies (BenchmarkDotNet, Verify)
+analyzer enabled. Reflection-using dependencies (BenchmarkDotNet, Verify)
 are quarantined to test + benchmark projects only. Your published binary
 can be a single ~30 MB native executable that starts in milliseconds —
 useful for CI containers and local pre-commit hooks where startup
@@ -751,7 +751,7 @@ they put their work under licenses that let us learn from them.
 
 - **[Zensical](https://zensical.org/)** ([repo](https://github.com/zensical/zensical)) — MIT.
   The Rust + Python successor to mkdocs-material. We use Zensical as the
-  behavioural reference for nav / search / blog / privacy plugins, and
+  behavioral reference for nav / search / blog / privacy plugins, and
   for the Zensical TOML config shape. Thanks to the Zensical maintainers.
 
 - **[Statiq.Framework](https://www.statiq.dev/)** ([repo](https://github.com/statiqdev/Statiq.Framework)) — MIT.

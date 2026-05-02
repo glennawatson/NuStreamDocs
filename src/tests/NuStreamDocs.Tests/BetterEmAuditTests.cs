@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Pins the core inline-emphasis renderer's behaviour against a fixed list of bold / italic / underscore edge cases.</summary>
+/// <summary>Pins the core inline-emphasis renderer's behavior against a fixed list of bold / italic / underscore edge cases.</summary>
 public class BetterEmAuditTests
 {
     /// <summary><c>**bold**</c> and <c>__bold__</c> both render as <c>&lt;strong&gt;</c>.</summary>

@@ -7,7 +7,7 @@ using NuStreamDocs.Config;
 
 namespace NuStreamDocs.Sitemap.Tests;
 
-/// <summary>Behaviour tests for <c>RedirectsPlugin</c> covering config file + frontmatter alias paths.</summary>
+/// <summary>Behavior tests for <c>RedirectsPlugin</c> covering config file + frontmatter alias paths.</summary>
 public class RedirectsPluginTests
 {
     /// <summary>A redirects.yml file is loaded and merged into the redirect map.</summary>
@@ -24,7 +24,7 @@ public class RedirectsPluginTests
         var plugin = new RedirectsPlugin();
         var config = new MkDocsConfig("Site", null, "material", []);
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(output.Root, "legacy", "page.html"))).IsTrue();
@@ -46,7 +46,7 @@ public class RedirectsPluginTests
         var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("guide/intro.md", bytes, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         var aliasHtml = await File.ReadAllTextAsync(Path.Combine(output.Root, "old", "page.html"));
         await Assert.That(aliasHtml).Contains("guide/intro.html");
@@ -68,16 +68,16 @@ public class RedirectsPluginTests
         var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("page.md", bytes, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(output.Root, "prev.html"))).IsTrue();
     }
 
-    /// <summary>Aliases ending in <c>/</c> are normalised to <c>index.html</c>.</summary>
+    /// <summary>Aliases ending in <c>/</c> are normalized to <c>index.html</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task TrailingSlashAliasNormalisesToIndex()
+    public async Task TrailingSlashAliasNormalizesToIndex()
     {
         using var input = new RedirectsTempDir();
         using var output = new RedirectsTempDir();
@@ -90,7 +90,7 @@ public class RedirectsPluginTests
         var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("page.md", bytes, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "section", "index.html"))).IsTrue();
     }
@@ -112,7 +112,7 @@ public class RedirectsPluginTests
         var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("page.md", bytes, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "skipped.html"))).IsFalse();
     }
@@ -133,7 +133,7 @@ public class RedirectsPluginTests
         var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("loses.md", bytes, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         var html = await File.ReadAllTextAsync(Path.Combine(output.Root, "old.html"));
         await Assert.That(html).Contains("/wins.html");
@@ -153,7 +153,7 @@ public class RedirectsPluginTests
 
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new("page.md", System.Text.Encoding.UTF8.GetBytes("just body"), sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         // No stubs written.
         await Assert.That(Directory.GetFiles(output.Root)).IsEmpty();
@@ -175,7 +175,7 @@ public class RedirectsPluginTests
         var plugin = new RedirectsPlugin(("good.html", "/dest.html"), (string.Empty, "/x"), ("from", "  "), ("   ", "   "));
         var config = new MkDocsConfig("Site", null, "material", []);
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "good.html"))).IsTrue();
         await Assert.That(Directory.GetFiles(output.Root).Length).IsEqualTo(1);
@@ -191,7 +191,7 @@ public class RedirectsPluginTests
         var plugin = new RedirectsPlugin();
         var config = new MkDocsConfig("Site", null, "material", []);
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(Directory.GetFiles(output.Root)).IsEmpty();
     }
@@ -208,7 +208,7 @@ public class RedirectsPluginTests
         var plugin = new RedirectsPlugin(RedirectsOptions.Default with { LoadConfigFile = false }, []);
         var config = new MkDocsConfig("Site", null, "material", []);
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsFalse();
     }
@@ -216,7 +216,7 @@ public class RedirectsPluginTests
     /// <summary>An alias with no extension picks up <c>.html</c>; one already ending <c>.html</c> is left intact.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task AliasExtensionNormalisation()
+    public async Task AliasExtensionNormalization()
     {
         using var input = new RedirectsTempDir();
         using var output = new RedirectsTempDir();
@@ -227,7 +227,7 @@ public class RedirectsPluginTests
         var source = "---\naliases: [bare, already.html, with-ext.HTML]\n---\nbody"u8.ToArray();
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new("page.md", source, sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "bare.html"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(output.Root, "already.html"))).IsTrue();
@@ -244,7 +244,7 @@ public class RedirectsPluginTests
         var plugin = new RedirectsPlugin(("from.html", "/dst?a=1&b=\"2\"<3>"));
         var config = new MkDocsConfig("Site", null, "material", []);
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(output.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         var stub = await File.ReadAllTextAsync(Path.Combine(output.Root, "from.html"));
         await Assert.That(stub).Contains("&amp;");

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Nav.Tests;
 
-/// <summary>Behaviour tests for <c>PagesFileReader</c>.</summary>
+/// <summary>Behavior tests for <c>PagesFileReader</c>.</summary>
 public class PagesFileReaderTests
 {
     /// <summary>A bare <c>title:</c> scalar populates <c>PagesFile.Title</c>.</summary>

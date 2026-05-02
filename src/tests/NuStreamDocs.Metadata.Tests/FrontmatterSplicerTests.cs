@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Metadata.Tests;
 
-/// <summary>Behaviour tests for <c>FrontmatterSplicer</c>.</summary>
+/// <summary>Behavior tests for <c>FrontmatterSplicer</c>.</summary>
 public class FrontmatterSplicerTests
 {
     /// <summary>Empty inherited bytes pass the source through unchanged.</summary>

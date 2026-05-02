@@ -6,10 +6,10 @@ using NuStreamDocs.Caching;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Parameterised tests for BuildManifest.LoadAsync's parse-rejection branches.</summary>
+/// <summary>Parameterized tests for BuildManifest.LoadAsync's parse-rejection branches.</summary>
 public class BuildManifestParseTests
 {
-    /// <summary>Parameterised cases covering every shape that must yield an empty manifest.</summary>
+    /// <summary>Parameterized cases covering every shape that must yield an empty manifest.</summary>
     /// <param name="json">On-disk manifest contents.</param>
     /// <returns>Async test.</returns>
     [Test]

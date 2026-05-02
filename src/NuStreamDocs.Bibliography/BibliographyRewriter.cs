@@ -11,7 +11,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Bibliography;
 
 /// <summary>
-/// Walks markdown source, replaces every recognised <c>[@key]</c> with
+/// Walks markdown source, replaces every recognized <c>[@key]</c> with
 /// the style's in-text marker (a numbered footnote reference for
 /// AGLC4), and appends a Bibliography section listing every cited
 /// source in citation order. All output is byte-by-byte — no

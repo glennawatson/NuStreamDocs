@@ -13,7 +13,7 @@ namespace NuStreamDocs.Markdown;
 /// Walks the source as <see cref="ReadOnlySpan{Byte}"/> and emits one
 /// <see cref="BlockSpan"/> per line into a caller-supplied
 /// <see cref="IBufferWriter{T}"/>. No per-line allocations; no string
-/// materialisation. Multi-line block grouping (paragraph absorption,
+/// materialization. Multi-line block grouping (paragraph absorption,
 /// list-item bodies, block-quote stitching) is a downstream concern —
 /// the inline parser and emitter walk the line stream and merge as
 /// needed.
@@ -26,7 +26,7 @@ namespace NuStreamDocs.Markdown;
 /// </remarks>
 public static class BlockScanner
 {
-    /// <summary>Maximum heading level recognised by CommonMark ATX rules.</summary>
+    /// <summary>Maximum heading level recognized by CommonMark ATX rules.</summary>
     private const int MaxAtxLevel = 6;
 
     /// <summary>Loop bound for the leading-hash count.</summary>
@@ -85,7 +85,7 @@ public static class BlockScanner
 
     /// <summary>
     /// Scans <paramref name="utf8"/> and writes one <see cref="BlockSpan"/> per
-    /// recognised line to <paramref name="writer"/>.
+    /// recognized line to <paramref name="writer"/>.
     /// </summary>
     /// <param name="utf8">UTF-8 source buffer (no BOM expected).</param>
     /// <param name="writer">Sink for emitted block descriptors.</param>
@@ -287,7 +287,7 @@ public static class BlockScanner
         return i;
     }
 
-    /// <summary>Recognises an ATX heading line.</summary>
+    /// <summary>Recognizes an ATX heading line.</summary>
     /// <param name="body">Indent-trimmed line.</param>
     /// <param name="level">Heading level on success.</param>
     /// <returns>True when <paramref name="body"/> is a valid ATX heading.</returns>
@@ -319,7 +319,7 @@ public static class BlockScanner
         return true;
     }
 
-    /// <summary>Recognises an open fenced-code-block line and stamps the fence state.</summary>
+    /// <summary>Recognizes an open fenced-code-block line and stamps the fence state.</summary>
     /// <param name="body">Indent-trimmed line.</param>
     /// <param name="fence">Fence state to populate on success.</param>
     /// <param name="level">Fence run length on success.</param>
@@ -362,7 +362,7 @@ public static class BlockScanner
         return true;
     }
 
-    /// <summary>Recognises a thematic-break line (<c>---</c>, <c>***</c>, <c>___</c>).</summary>
+    /// <summary>Recognizes a thematic-break line (<c>---</c>, <c>***</c>, <c>___</c>).</summary>
     /// <param name="body">Indent-trimmed line.</param>
     /// <returns>True when the line is a thematic break.</returns>
     private static bool TryClassifyThematicBreak(ReadOnlySpan<byte> body)
@@ -392,7 +392,7 @@ public static class BlockScanner
         return run >= ThematicMinimum;
     }
 
-    /// <summary>Recognises a setext underline (<c>===</c> or <c>---</c>).</summary>
+    /// <summary>Recognizes a setext underline (<c>===</c> or <c>---</c>).</summary>
     /// <param name="body">Indent-trimmed line.</param>
     /// <param name="level">1 for <c>=</c>, 2 for <c>-</c>.</param>
     /// <returns>True when <paramref name="body"/> is a setext underline.</returns>
@@ -423,7 +423,7 @@ public static class BlockScanner
         return true;
     }
 
-    /// <summary>Recognises a list-item marker.</summary>
+    /// <summary>Recognizes a list-item marker.</summary>
     /// <param name="body">Indent-trimmed line.</param>
     /// <param name="level">List-marker length on success.</param>
     /// <returns>True when the line opens a list item.</returns>
@@ -444,7 +444,7 @@ public static class BlockScanner
         return TryClassifyOrderedItem(body, out level);
     }
 
-    /// <summary>Recognises a bullet list-item marker (<c>-</c>, <c>*</c>, <c>+</c>).</summary>
+    /// <summary>Recognizes a bullet list-item marker (<c>-</c>, <c>*</c>, <c>+</c>).</summary>
     /// <param name="body">Indent-trimmed line, first byte already a bullet marker.</param>
     /// <param name="level">Marker length (always 1) on success.</param>
     /// <returns>True when the line is a bullet item.</returns>
@@ -460,7 +460,7 @@ public static class BlockScanner
         return true;
     }
 
-    /// <summary>Recognises an ordered list-item marker (digits + <c>.</c>/<c>)</c>).</summary>
+    /// <summary>Recognizes an ordered list-item marker (digits + <c>.</c>/<c>)</c>).</summary>
     /// <param name="body">Indent-trimmed line, first byte already a digit.</param>
     /// <param name="level">Marker length (digit count + delimiter) on success.</param>
     /// <returns>True when the line is an ordered list item.</returns>

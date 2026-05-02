@@ -33,7 +33,7 @@ public class BlogSlugifierTests
     public async Task SpacesAndSlashesBecomeHyphens() =>
         await Assert.That(BlogSlugifier.Slugify("foo bar/baz", "fb")).IsEqualTo("foo-bar-baz");
 
-    /// <summary>Unrecognised characters are dropped.</summary>
+    /// <summary>Unrecognized characters are dropped.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task PunctuationDropped() =>

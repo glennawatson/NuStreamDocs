@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Arithmatex.Tests;
 
-/// <summary>Behaviour tests for <c>ArithmatexRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>ArithmatexRewriter</c>.</summary>
 public class ArithmatexRewriterTests
 {
     /// <summary>Inline <c>$x$</c> wraps in <c>&lt;span class="arithmatex"&gt;\(x\)&lt;/span&gt;</c>.</summary>

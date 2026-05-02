@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
 
-/// <summary>Behaviour tests for <c>ExternalUrlScanner</c>'s <c>srcset</c> handling.</summary>
+/// <summary>Behavior tests for <c>ExternalUrlScanner</c>'s <c>srcset</c> handling.</summary>
 public class SrcsetRewriteTests
 {
     /// <summary>Filter that allows every host.</summary>

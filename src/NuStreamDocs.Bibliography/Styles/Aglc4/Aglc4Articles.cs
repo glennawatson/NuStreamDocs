@@ -26,7 +26,7 @@ internal static class Aglc4Articles
         Aglc4Writer.WriteString(entry.Title, writer);
         Aglc4Writer.WriteBytes("'"u8, writer);
 
-        Aglc4Writer.WriteParenthesisedYear(entry.Year, writer);
+        Aglc4Writer.WriteParenthesizedYear(entry.Year, writer);
 
         if (!string.IsNullOrEmpty(entry.Volume))
         {

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.SmartSymbols.Tests;
 
-/// <summary>Behaviour tests for <c>SmartSymbolsRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>SmartSymbolsRewriter</c>.</summary>
 public class SmartSymbolsRewriterTests
 {
     /// <summary><c>(c)</c>, <c>(r)</c>, <c>(tm)</c> rewrite to their Unicode glyphs.</summary>

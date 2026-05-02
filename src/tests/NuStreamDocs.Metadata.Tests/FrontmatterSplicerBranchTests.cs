@@ -35,7 +35,7 @@ public class FrontmatterSplicerBranchTests
     /// <summary>Inherited extra without trailing newline still emits a newline before the closing fence.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NoTrailingNewlineNormalised()
+    public async Task NoTrailingNewlineNormalized()
     {
         var sink = new ArrayBufferWriter<byte>();
         FrontmatterSplicer.Splice("body"u8, "title: A"u8, sink);
@@ -84,7 +84,7 @@ public class FrontmatterSplicerBranchTests
         await Assert.That(output).StartsWith("---\nk: v\n---\n");
     }
 
-    /// <summary>CRLF frontmatter is recognised.</summary>
+    /// <summary>CRLF frontmatter is recognized.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CrlfFrontmatter()

@@ -7,7 +7,7 @@ using NuStreamDocs.Caching;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>BoundedCache{TKey, TValue}</c>.</summary>
+/// <summary>Behavior tests for <c>BoundedCache{TKey, TValue}</c>.</summary>
 public class BoundedCacheTests
 {
     /// <summary>Adding past <c>Capacity</c> evicts the least-recently-used entry.</summary>

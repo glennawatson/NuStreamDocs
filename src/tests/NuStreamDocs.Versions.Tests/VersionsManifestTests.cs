@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Versions.Tests;
 
-/// <summary>Behaviour tests for <c>VersionsManifest</c>.</summary>
+/// <summary>Behavior tests for <c>VersionsManifest</c>.</summary>
 public class VersionsManifestTests
 {
     /// <summary>A round-trip via UTF-8 preserves the entries.</summary>

@@ -32,8 +32,8 @@ public interface IConfigReader
 
     /// <summary>Returns true when this reader can handle a file with <paramref name="extension"/>.</summary>
     /// <param name="extension">File extension including the leading dot, lowercase (e.g. <c>.yml</c>).</param>
-    /// <returns>True when the reader recognises the extension.</returns>
-    bool RecognisesExtension(ReadOnlySpan<char> extension);
+    /// <returns>True when the reader recognizes the extension.</returns>
+    bool RecognizesExtension(ReadOnlySpan<char> extension);
 
     /// <summary>Parses the file contents into a <see cref="MkDocsConfig"/>.</summary>
     /// <param name="utf8Source">UTF-8 file bytes.</param>
@@ -47,7 +47,7 @@ public interface IConfigReader
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The parsed config.</returns>
     /// <remarks>
-    /// Default behaviour materialises the stream into a pooled
+    /// Default behavior materializes the stream into a pooled
     /// <c>byte[]</c> and forwards to <see cref="Read(System.ReadOnlySpan{byte})"/>.
     /// Override on implementations that can parse incrementally.
     /// </remarks>

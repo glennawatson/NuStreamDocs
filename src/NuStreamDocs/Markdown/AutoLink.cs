@@ -8,7 +8,7 @@ using NuStreamDocs.Html;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Autolink handler. Recognises <c>&lt;https://...&gt;</c> /
+/// Autolink handler. Recognizes <c>&lt;https://...&gt;</c> /
 /// <c>&lt;mailto:...&gt;</c> / any scheme followed by <c>://</c>.
 /// </summary>
 internal static class AutoLink

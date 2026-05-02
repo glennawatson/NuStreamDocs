@@ -62,7 +62,7 @@ internal static class NavRenderer
         WriteList(writer, root.Children, activeBranch, prune: true);
     }
 
-    /// <summary>Materialises the active-ancestor chain into a small reference-equality set.</summary>
+    /// <summary>Materializes the active-ancestor chain into a small reference-equality set.</summary>
     /// <param name="activeNode">Active node, or null when no page is active.</param>
     /// <returns>Set of nodes on the active branch — empty when there is no active node.</returns>
     /// <remarks>

@@ -15,7 +15,7 @@ namespace NuStreamDocs.Search;
 
 /// <summary>
 /// Search-index plugin. Gathers per-page text during render, writes
-/// the chosen format at finalise, and contributes a discovery
+/// the chosen format at finalize, and contributes a discovery
 /// <c>&lt;meta&gt;</c> tag to <c>&lt;head&gt;</c> so theme JS knows
 /// where to fetch the index.
 /// </summary>
@@ -94,7 +94,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         var root = _outputRoot is [] ? context.OutputRoot : _outputRoot;
         if (root is [])

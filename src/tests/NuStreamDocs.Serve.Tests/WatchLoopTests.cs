@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace NuStreamDocs.Serve.Tests;
 
-/// <summary>Tests for <see cref="WatchLoop"/> debounce behaviour.</summary>
+/// <summary>Tests for <see cref="WatchLoop"/> debounce behavior.</summary>
 public class WatchLoopTests
 {
     /// <summary>Touching files in quick succession yields a single debounced batch.</summary>

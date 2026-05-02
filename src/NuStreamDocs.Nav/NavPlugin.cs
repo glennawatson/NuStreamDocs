@@ -43,7 +43,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>The nav tree built during <see cref="OnConfigureAsync"/>; null until then.</summary>
     private NavNode? _root;
 
-    /// <summary>Linearised leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(string)"/> call.</summary>
+    /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(string)"/> call.</summary>
     private NavNode[]? _orderedLeaves;
 
     /// <summary>Path → index lookup over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
@@ -139,7 +139,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
 
     /// <inheritdoc/>
     /// <remarks>Sitemap emission lands alongside the offline + feed plugins.</remarks>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;
@@ -178,14 +178,14 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <returns>The nav root, or null when <see cref="OnConfigureAsync"/> has not yet run.</returns>
     internal NavNode? GetRoot() => _root;
 
-    /// <summary>Builds the linearised leaves, path index, and section spans for <paramref name="root"/> in one pass.</summary>
+    /// <summary>Builds the linearized leaves, path index, and section spans for <paramref name="root"/> in one pass.</summary>
     /// <param name="root">Nav tree root.</param>
     /// <returns>The three index pieces.</returns>
     private static (NavNode[] Leaves, Dictionary<string, int> Index, (int Start, int End)[] Spans) BuildIndex(NavNode root)
     {
         var leaves = new List<NavNode>();
         var spans = new List<(int Start, int End)>();
-        Linearise(root, leaves, spans, 0);
+        Linearize(root, leaves, spans, 0);
 
         // Any leaf that bubbled all the way up to the root section is still
         // sentinel-marked; bind it to the root's full span.
@@ -212,7 +212,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <param name="leaves">Leaf accumulator.</param>
     /// <param name="spans">Per-leaf enclosing-section span accumulator.</param>
     /// <param name="enclosingStart">Start index of the closest enclosing section.</param>
-    private static void Linearise(
+    private static void Linearize(
         NavNode node,
         List<NavNode> leaves,
         List<(int Start, int End)> spans,
@@ -236,7 +236,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         var thisStart = leaves.Count;
         for (var i = 0; i < node.Children.Length; i++)
         {
-            Linearise(node.Children[i], leaves, spans, thisStart);
+            Linearize(node.Children[i], leaves, spans, thisStart);
         }
 
         var thisEnd = leaves.Count;

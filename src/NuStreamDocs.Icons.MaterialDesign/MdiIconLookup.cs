@@ -29,7 +29,7 @@ public sealed class MdiIconLookup
     /// <summary>Frozen <c>name → (blobOffset, blobLength)</c> map.</summary>
     private readonly FrozenDictionary<byte[], (int Offset, int Length)> _index;
 
-    /// <summary>Alt-lookup that takes <see cref="ReadOnlySpan{T}"/> name spans without materialising a <c>byte[]</c>.</summary>
+    /// <summary>Alt-lookup that takes <see cref="ReadOnlySpan{T}"/> name spans without materializing a <c>byte[]</c>.</summary>
     private readonly FrozenDictionary<byte[], (int Offset, int Length)>.AlternateLookup<ReadOnlySpan<byte>> _altLookup;
 
     /// <summary>Initializes a new instance of the <see cref="MdiIconLookup"/> class.</summary>

@@ -4,7 +4,7 @@
 
 namespace NuStreamDocs.Autorefs.Tests;
 
-/// <summary>Behaviour tests for <c>HeadingIdScanner</c>.</summary>
+/// <summary>Behavior tests for <c>HeadingIdScanner</c>.</summary>
 public class HeadingIdScannerTests
 {
     /// <summary>Each heading-with-id contributes one entry to the registry.</summary>

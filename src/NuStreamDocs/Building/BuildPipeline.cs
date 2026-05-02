@@ -29,7 +29,7 @@ namespace NuStreamDocs.Building;
 /// <item>fires <see cref="IDocPlugin.OnRenderPageAsync"/> on every plugin,</item>
 /// <item>writes the bytes to the output path and records the new entry.</item>
 /// </list>
-/// Plugin <c>OnConfigure</c> + <c>OnFinalise</c> are invoked once,
+/// Plugin <c>OnConfigure</c> + <c>OnFinalize</c> are invoked once,
 /// outside the parallel section.
 /// <para>
 /// The freshly-recorded entries replace the on-disk manifest at the
@@ -139,7 +139,7 @@ public static class BuildPipeline
         previous.Replace(fresh);
         await previous.SaveAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
 
-        await FireOnFinaliseAsync(plugins, outputRoot, cancellationToken).ConfigureAwait(false);
+        await FireOnFinalizeAsync(plugins, outputRoot, cancellationToken).ConfigureAwait(false);
         stopwatch.Stop();
         BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, stopwatch.ElapsedMilliseconds);
         return processed;
@@ -300,7 +300,7 @@ public static class BuildPipeline
                 continue;
             }
 
-            // Vectorised marker probe — preprocessors override NeedsRewrite to do an IndexOf
+            // Vectorized marker probe — preprocessors override NeedsRewrite to do an IndexOf
             // for their distinctive bytes. When no markers exist anywhere in the source we
             // skip both the rewriter and the buffer swap, leaving `current` pointing at the
             // previous pass's output.
@@ -380,17 +380,17 @@ public static class BuildPipeline
         }
     }
 
-    /// <summary>Fires <see cref="IDocPlugin.OnFinaliseAsync"/> on every plugin.</summary>
+    /// <summary>Fires <see cref="IDocPlugin.OnFinalizeAsync"/> on every plugin.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task that completes when every plugin's finalise hook has settled.</returns>
-    private static async Task FireOnFinaliseAsync(IDocPlugin[] plugins, string outputRoot, CancellationToken cancellationToken)
+    /// <returns>A task that completes when every plugin's finalize hook has settled.</returns>
+    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, string outputRoot, CancellationToken cancellationToken)
     {
-        var context = new PluginFinaliseContext(outputRoot);
+        var context = new PluginFinalizeContext(outputRoot);
         for (var i = 0; i < plugins.Length; i++)
         {
-            await plugins[i].OnFinaliseAsync(context, cancellationToken).ConfigureAwait(false);
+            await plugins[i].OnFinalizeAsync(context, cancellationToken).ConfigureAwait(false);
         }
     }
 }

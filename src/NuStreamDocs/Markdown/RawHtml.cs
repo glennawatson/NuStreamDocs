@@ -13,11 +13,11 @@ namespace NuStreamDocs.Markdown;
 /// Detects open tags, closing tags, self-closing tags, and HTML comments
 /// inline within a paragraph or other block, and emits them verbatim
 /// (no entity escaping). Falls back to <c>false</c> when the byte at the
-/// cursor doesn't begin a recognised raw-HTML construct, leaving the
+/// cursor doesn't begin a recognized raw-HTML construct, leaving the
 /// caller to treat <c>&lt;</c> as literal text.
 /// <para>
 /// Implemented as a small hand-rolled scanner — no regex, no
-/// allocations on the happy path. The recognised forms are:
+/// allocations on the happy path. The recognized forms are:
 /// <list type="bullet">
 /// <item><c>&lt;tag attr="val"&gt;</c> open tag,</item>
 /// <item><c>&lt;tag /&gt;</c> self-closing tag,</item>
@@ -105,7 +105,7 @@ internal static class RawHtml
     /// <summary>Locates the end of an open / self-closing tag starting at <paramref name="start"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="start">Cursor at the leading <c>&lt;</c>.</param>
-    /// <returns>Exclusive end offset, or -1 when no tag is recognised.</returns>
+    /// <returns>Exclusive end offset, or -1 when no tag is recognized.</returns>
     private static int FindOpenTagEnd(ReadOnlySpan<byte> source, int start)
     {
         var p = start + 1;
@@ -146,7 +146,7 @@ internal static class RawHtml
     /// <summary>Locates the end of a close tag starting at <paramref name="start"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="start">Cursor at the leading <c>&lt;</c>.</param>
-    /// <returns>Exclusive end offset, or -1 when no close tag is recognised.</returns>
+    /// <returns>Exclusive end offset, or -1 when no close tag is recognized.</returns>
     private static int FindCloseTagEnd(ReadOnlySpan<byte> source, int start)
     {
         var p = start + 2;
@@ -178,7 +178,7 @@ internal static class RawHtml
     /// <summary>Locates the end of an HTML comment starting at <paramref name="start"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="start">Cursor at the leading <c>&lt;</c>.</param>
-    /// <returns>Exclusive end offset, or -1 when no comment is recognised.</returns>
+    /// <returns>Exclusive end offset, or -1 when no comment is recognized.</returns>
     private static int FindCommentEnd(ReadOnlySpan<byte> source, int start)
     {
         if (start + MinHtmlCommentLength > source.Length

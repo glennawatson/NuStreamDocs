@@ -53,7 +53,7 @@ public class AnchorBytesTests
         await Assert.That(Rewrite(Html, addRel: true, addTarget: true)).IsEqualTo(Html);
     }
 
-    /// <summary>Mixed-case tag name <c>&lt;A&gt;</c> is recognised case-insensitively (HTML is case-insensitive on tag names).</summary>
+    /// <summary>Mixed-case tag name <c>&lt;A&gt;</c> is recognized case-insensitively (HTML is case-insensitive on tag names).</summary>
     /// <param name="html">Input.</param>
     /// <returns>Async test.</returns>
     [Test]
@@ -197,7 +197,7 @@ public class AnchorBytesTests
     {
         const string Html = "<a href=\"https://example.com>x</a>";
 
-        // We can't validate href, so the scan won't recognise this as external.
+        // We can't validate href, so the scan won't recognize this as external.
         var output = Rewrite(Html, addRel: true, addTarget: true);
         await Assert.That(output.Contains("rel=\"noopener noreferrer\"", StringComparison.Ordinal)).IsFalse();
     }

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.SphinxInventory</PackageId>
-    <Description>Sphinx-compatible objects.inv inventory emitter for NuStreamDocs. Snapshots the Autorefs registry at finalise time and writes a v2 inventory file (zlib-compressed body) so external Sphinx sites can intersphinx-link into NuStreamDocs builds.</Description>
+    <Description>Sphinx-compatible objects.inv inventory emitter for NuStreamDocs. Snapshots the Autorefs registry at finalize time and writes a v2 inventory file (zlib-compressed body) so external Sphinx sites can intersphinx-link into NuStreamDocs builds.</Description>
     <RootNamespace>NuStreamDocs.SphinxInventory</RootNamespace>
   </PropertyGroup>
 

@@ -25,7 +25,7 @@ public class MixedContentBytesTests
         await Assert.That(output).IsEqualTo("<a href=\"https://example.com/p\">x</a>");
     }
 
-    /// <summary>Mixed-case attribute names are recognised case-insensitively (HTML is case-insensitive on tag/attr names).</summary>
+    /// <summary>Mixed-case attribute names are recognized case-insensitively (HTML is case-insensitive on tag/attr names).</summary>
     /// <param name="html">Input.</param>
     /// <param name="expected">Expected output.</param>
     /// <returns>Async test.</returns>
@@ -36,7 +36,7 @@ public class MixedContentBytesTests
     [Arguments("<img Src=\"http://example.com/a.png\">", "<img Src=\"https://example.com/a.png\">")]
     public async Task AttributeNameCaseInsensitive(string html, string expected) => await Assert.That(Rewrite(html)).IsEqualTo(expected);
 
-    /// <summary>The <c>http://</c> scheme itself is matched only in lowercase — uppercase is left untouched (browsers normalise it; we don't).</summary>
+    /// <summary>The <c>http://</c> scheme itself is matched only in lowercase — uppercase is left untouched (browsers normalize it; we don't).</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UppercaseSchemeIsNotTouched()
@@ -85,7 +85,7 @@ public class MixedContentBytesTests
         await Assert.That(output).IsEqualTo("<a href='https://example.com'>x");
     }
 
-    /// <summary>Unquoted attribute values are NOT recognised (the regex required quotes; the byte scanner matches that behaviour).</summary>
+    /// <summary>Unquoted attribute values are NOT recognized (the regex required quotes; the byte scanner matches that behavior).</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnquotedValueIsLeftAlone()
@@ -176,7 +176,7 @@ public class MixedContentBytesTests
         // thing is no out-of-range read on the truncated buffer.
         await Assert.That(Rewrite("<a href=\"http://")).IsEqualTo("<a href=\"https://");
 
-    /// <summary>Public end-to-end: <see cref="ExternalLinkPolisher.UpgradeMixedContent(string)"/> still mirrors the byte path's behaviour.</summary>
+    /// <summary>Public end-to-end: <see cref="ExternalLinkPolisher.UpgradeMixedContent(string)"/> still mirrors the byte path's behavior.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task PublicStringApiMirrorsByteApi()

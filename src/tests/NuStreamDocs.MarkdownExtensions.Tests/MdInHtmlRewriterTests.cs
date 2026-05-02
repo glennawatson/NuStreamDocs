@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.MdInHtml;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>MdInHtmlRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>MdInHtmlRewriter</c>.</summary>
 public class MdInHtmlRewriterTests
 {
     /// <summary>A <c>markdown="1"</c> attribute is stripped and blank lines pad the body.</summary>
@@ -52,10 +52,10 @@ public class MdInHtmlRewriterTests
         await Assert.That(Rewrite(Source)).IsEqualTo(Expected);
     }
 
-    /// <summary>A non-recognised <c>markdown</c> value (e.g. <c>0</c>) leaves the tag alone.</summary>
+    /// <summary>A non-recognized <c>markdown</c> value (e.g. <c>0</c>) leaves the tag alone.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task UnrecognisedValueIsIgnored()
+    public async Task UnrecognizedValueIsIgnored()
     {
         const string Source = "<div markdown=\"0\">leave me</div>";
         await Assert.That(Rewrite(Source)).IsEqualTo(Source);
@@ -120,13 +120,13 @@ public class MdInHtmlRewriterTests
     public async Task NoMatchingCloseTag() =>
         await Assert.That(Rewrite("<div markdown=\"1\">body")).Contains("markdown=\"1\"");
 
-    /// <summary>Unquoted markdown attribute is not recognised.</summary>
+    /// <summary>Unquoted markdown attribute is not recognized.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnquotedAttribute() =>
         await Assert.That(Rewrite("<div markdown=1>x</div>")).IsEqualTo("<div markdown=1>x</div>");
 
-    /// <summary>Close tag with whitespace inside the angle bracket is recognised.</summary>
+    /// <summary>Close tag with whitespace inside the angle bracket is recognized.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CloseTagWithWhitespace() =>
@@ -156,7 +156,7 @@ public class MdInHtmlRewriterTests
     public async Task SelfClosingNotRewritten() =>
         await Assert.That(Rewrite("<br markdown=\"1\"/>")).Contains("markdown=\"1\"");
 
-    /// <summary>Tag whose name continues with digits and hyphens is recognised.</summary>
+    /// <summary>Tag whose name continues with digits and hyphens is recognized.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TagNameWithDigitsAndHyphens() =>

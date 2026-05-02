@@ -8,13 +8,13 @@ namespace NuStreamDocs.Theme.Material;
 
 /// <summary>
 /// Plugin that wraps every rendered page in the Material theme shell
-/// and writes the theme's static assets at finalisation time.
+/// and writes the theme's static assets at finalization time.
 /// </summary>
 /// <remarks>
 /// The render hook takes the markdown-rendered HTML body
 /// the core pipeline already produced, drops it into the
 /// <c>{{{body}}}</c> slot of the Mustache page template, and rewrites
-/// the page-output buffer in place. The finalise hook writes
+/// the page-output buffer in place. The finalize hook writes
 /// the static asset bundle only when the option set selects
 /// <see cref="MaterialAssetSource.Embedded"/>; the CDN mode skips the
 /// write so the deploy artefact stays light.

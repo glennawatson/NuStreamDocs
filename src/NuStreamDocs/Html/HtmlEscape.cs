@@ -13,7 +13,7 @@ namespace NuStreamDocs.Html;
 /// </summary>
 /// <remarks>
 /// Operates entirely on bytes — no string/UTF-16 round trip. The hot
-/// path advances over runs of unescaped bytes via vectorised
+/// path advances over runs of unescaped bytes via vectorized
 /// <c>IndexOfAny(SearchValues&lt;byte&gt;)</c> and writes them in bulk to
 /// the destination, falling through to a per-byte switch only at
 /// escape points.

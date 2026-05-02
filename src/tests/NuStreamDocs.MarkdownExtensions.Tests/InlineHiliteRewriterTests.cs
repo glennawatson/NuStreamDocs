@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.InlineHilite;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>InlineHiliteRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>InlineHiliteRewriter</c>.</summary>
 public class InlineHiliteRewriterTests
 {
     /// <summary>A <c>`#!python …`</c> span emits a language-classed <c>code</c> tag.</summary>

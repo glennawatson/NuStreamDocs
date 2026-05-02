@@ -8,7 +8,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Nav.Tests;
 
-/// <summary>Behaviour tests for nav rendering, including <c>navigation.prune</c>.</summary>
+/// <summary>Behavior tests for nav rendering, including <c>navigation.prune</c>.</summary>
 public class NavRendererTests
 {
     /// <summary>The full renderer emits every page even when the active page is deep in the tree.</summary>

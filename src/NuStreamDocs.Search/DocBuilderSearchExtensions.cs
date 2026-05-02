@@ -20,7 +20,7 @@ public static class DocBuilderSearchExtensions
 
     /// <summary>Registers <see cref="SearchPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="SearchOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="SearchOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSearch(this DocBuilder builder, Func<SearchOptions, SearchOptions> configure)
     {

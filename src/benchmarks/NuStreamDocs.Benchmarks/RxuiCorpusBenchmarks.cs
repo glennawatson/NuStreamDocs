@@ -204,7 +204,7 @@ public class RxuiCorpusBenchmarks
             .GetResult();
     }
 
-    /// <summary>Build with the Sphinx-inventory finalise emitter (drives the autorefs registry snapshot path).</summary>
+    /// <summary>Build with the Sphinx-inventory finalize emitter (drives the autorefs registry snapshot path).</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
     public int WithSphinxInventory()

@@ -72,8 +72,8 @@ public static class VersionsManifest
         File.WriteAllBytes(Path.Combine(parentDir, FileName), [.. sink.WrittenSpan]);
     }
 
-    /// <summary>Serialises the entries into <paramref name="sink"/> as a JSON array.</summary>
-    /// <param name="entries">Entries to serialise.</param>
+    /// <summary>Serializes the entries into <paramref name="sink"/> as a JSON array.</summary>
+    /// <param name="entries">Entries to serialize.</param>
     /// <param name="sink">Buffer writer.</param>
     public static void WriteToUtf8(VersionEntry[] entries, IBufferWriter<byte> sink)
     {
@@ -185,7 +185,7 @@ public static class VersionsManifest
 
     /// <summary>Writes one entry as a <c>{ version, title, aliases }</c> object.</summary>
     /// <param name="writer">Json writer.</param>
-    /// <param name="entry">Entry to serialise.</param>
+    /// <param name="entry">Entry to serialize.</param>
     private static void WriteEntry(Utf8JsonWriter writer, in VersionEntry entry)
     {
         writer.WriteStartObject();

@@ -11,16 +11,16 @@ namespace NuStreamDocs.CSharpApiGenerator;
 
 /// <summary>
 /// Builds an <see cref="IAssemblySource"/> from one or more
-/// <see cref="CSharpApiGeneratorInput"/> shapes. Centralises the
+/// <see cref="CSharpApiGeneratorInput"/> shapes. Centralizes the
 /// per-shape dispatch so <see cref="CSharpApiGenerator"/>'s public
 /// entry points stay shape-agnostic.
 /// </summary>
 internal static class AssemblySourceFactory
 {
-    /// <summary>Synthesised-manifest scratch directory name created under the supplied cache root.</summary>
-    private const string SynthesisedManifestDirectory = ".csharp-apigen-manifest";
+    /// <summary>Synthesized-manifest scratch directory name created under the supplied cache root.</summary>
+    private const string SynthesizedManifestDirectory = ".csharp-apigen-manifest";
 
-    /// <summary>Synthesised manifest filename matching the on-disk format <c>NuGetAssemblySource</c> reads.</summary>
+    /// <summary>Synthesized manifest filename matching the on-disk format <c>NuGetAssemblySource</c> reads.</summary>
     private const string ManifestFileName = "nuget-packages.json";
 
     /// <summary>
@@ -62,7 +62,7 @@ internal static class AssemblySourceFactory
     };
 
     /// <summary>
-    /// Synthesises a transient <c>nuget-packages.json</c> under <paramref name="input"/>'s cache path and
+    /// Synthesizes a transient <c>nuget-packages.json</c> under <paramref name="input"/>'s cache path and
     /// returns a <see cref="NuGetAssemblySource"/> pointing at the scratch directory.
     /// </summary>
     /// <param name="input">Inline-package input.</param>
@@ -70,7 +70,7 @@ internal static class AssemblySourceFactory
     /// <returns>A source ready to walk.</returns>
     internal static NuGetAssemblySource CreateFromPackages(NuGetPackagesInput input, ILogger logger)
     {
-        var scratch = Path.Combine(input.ApiCachePath, SynthesisedManifestDirectory);
+        var scratch = Path.Combine(input.ApiCachePath, SynthesizedManifestDirectory);
         Directory.CreateDirectory(scratch);
         var manifestPath = Path.Combine(scratch, ManifestFileName);
         File.WriteAllBytes(manifestPath, BuildManifestJson(input));

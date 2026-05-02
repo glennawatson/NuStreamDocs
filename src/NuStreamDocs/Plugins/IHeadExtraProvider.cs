@@ -20,7 +20,7 @@ namespace NuStreamDocs.Plugins;
 /// concatenated bytes to the page template's <c>head_extras</c> slot.
 /// <para>
 /// Implementations stay AOT-clean: write directly to the supplied
-/// <see cref="IBufferWriter{T}"/> without materialising strings.
+/// <see cref="IBufferWriter{T}"/> without materializing strings.
 /// </para>
 /// </remarks>
 public interface IHeadExtraProvider

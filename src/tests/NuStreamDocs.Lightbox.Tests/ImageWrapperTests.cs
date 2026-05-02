@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Lightbox.Tests;
 
-/// <summary>Behaviour tests for <c>ImageWrapper</c>.</summary>
+/// <summary>Behavior tests for <c>ImageWrapper</c>.</summary>
 public class ImageWrapperTests
 {
     /// <summary>Standalone images get wrapped in a glightbox anchor.</summary>

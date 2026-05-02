@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Tags.Tests;
 
-/// <summary>Behaviour tests for <c>TagsFrontmatterReader</c>.</summary>
+/// <summary>Behavior tests for <c>TagsFrontmatterReader</c>.</summary>
 public class TagsFrontmatterReaderTests
 {
     /// <summary>Inline list shape (<c>tags: [a, b]</c>) is parsed.</summary>

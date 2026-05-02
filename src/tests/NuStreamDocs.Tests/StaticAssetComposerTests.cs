@@ -73,7 +73,7 @@ public class StaticAssetComposerTests
         public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
         /// <inheritdoc/>
-        public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 
     /// <summary>Plugin that does not implement IStaticAssetProvider.</summary>
@@ -89,7 +89,7 @@ public class StaticAssetComposerTests
         public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
         /// <inheritdoc/>
-        public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 
     /// <summary>Disposable scratch directory.</summary>

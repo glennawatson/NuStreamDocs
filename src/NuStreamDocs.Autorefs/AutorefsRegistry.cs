@@ -16,7 +16,7 @@ namespace NuStreamDocs.Autorefs;
 /// <see cref="Register"/> from any worker. Resolution happens after
 /// the pass when <see cref="AutorefsPlugin"/> rewrites
 /// <c>@autoref:ID</c> markers in the emitted HTML, so the registry
-/// only needs to be settled by <see cref="Plugins.IDocPlugin.OnFinaliseAsync"/>
+/// only needs to be settled by <see cref="Plugins.IDocPlugin.OnFinalizeAsync"/>
 /// time.
 /// <para>
 /// Last write wins: if two pages register the same ID, the later one
@@ -73,10 +73,10 @@ public sealed class AutorefsRegistry
         ArgumentException.ThrowIfNullOrEmpty(id);
         ArgumentException.ThrowIfNullOrEmpty(pageRelativeUrl);
 
-        // Normalise empty fragments to null so downstream composition
+        // Normalize empty fragments to null so downstream composition
         // can branch on null alone, not "" vs null.
-        var normalisedFragment = string.IsNullOrEmpty(fragment) ? null : fragment;
-        _anchors[id] = new(pageRelativeUrl, normalisedFragment);
+        var normalizedFragment = string.IsNullOrEmpty(fragment) ? null : fragment;
+        _anchors[id] = new(pageRelativeUrl, normalizedFragment);
     }
 
     /// <summary>Resolves an ID to its full URL.</summary>

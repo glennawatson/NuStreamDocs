@@ -28,7 +28,7 @@ public class ByteHelpersTests
     [Arguments((byte)'.', false)]
     [Arguments((byte)'{', false)]
     [Arguments((byte)0x80, false)]
-    public async Task IsAsciiIdentifierByteRecognisesIdentifierBytes(byte b, bool expected) => await Assert.That(AsciiByteHelpers.IsAsciiIdentifierByte(b)).IsEqualTo(expected);
+    public async Task IsAsciiIdentifierByteRecognizesIdentifierBytes(byte b, bool expected) => await Assert.That(AsciiByteHelpers.IsAsciiIdentifierByte(b)).IsEqualTo(expected);
 
     /// <summary>ASCII whitespace covers SP / HT / CR / LF only.</summary>
     /// <param name="b">Input byte.</param>

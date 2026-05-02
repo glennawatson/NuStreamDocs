@@ -4,7 +4,7 @@
 
 namespace NuStreamDocs.Sitemap.Tests;
 
-/// <summary>Behaviour tests for <c>SitemapWriter</c> and <c>NotFoundPlugin</c>.</summary>
+/// <summary>Behavior tests for <c>SitemapWriter</c> and <c>NotFoundPlugin</c>.</summary>
 public class SitemapWriterTests
 {
     /// <summary>Maps <c>foo.md</c> to <c>foo.html</c>.</summary>
@@ -14,10 +14,10 @@ public class SitemapWriterTests
         await Assert.That(SitemapWriter.RelativePathToUrlPath("guide/intro.md"))
             .IsEqualTo("guide/intro.html");
 
-    /// <summary>Backslashes are normalised to forward slashes.</summary>
+    /// <summary>Backslashes are normalized to forward slashes.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task RelativePathToUrlPathNormalisesSeparators() =>
+    public async Task RelativePathToUrlPathNormalizesSeparators() =>
         await Assert.That(SitemapWriter.RelativePathToUrlPath("guide\\intro.md"))
             .IsEqualTo("guide/intro.html");
 
@@ -61,7 +61,7 @@ public class SitemapWriterTests
     {
         using var fixture = new TempDirectory();
         var plugin = new NotFoundPlugin();
-        await plugin.OnFinaliseAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
 
         var path = Path.Combine(fixture.Root, "404.html");
         await Assert.That(File.Exists(path)).IsTrue();
@@ -79,7 +79,7 @@ public class SitemapWriterTests
         await File.WriteAllTextAsync(path, "user content");
 
         var plugin = new NotFoundPlugin();
-        await plugin.OnFinaliseAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
 
         await Assert.That(await File.ReadAllTextAsync(path)).IsEqualTo("user content");
     }
@@ -91,7 +91,7 @@ public class SitemapWriterTests
     {
         using var fixture = new TempDirectory();
         var plugin = new RedirectsPlugin(("old.html", "/new.html"), ("legacy/page.html", "/guide/intro.html"));
-        await plugin.OnFinaliseAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "old.html"));
         await Assert.That(html).Contains("<meta http-equiv=\"refresh\" content=\"0; url=/new.html\">");

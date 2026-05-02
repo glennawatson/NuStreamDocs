@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Toc;
 
@@ -15,7 +16,7 @@ namespace NuStreamDocs.Toc;
 /// The output structure is a strict nested <c>&lt;ul&gt;</c>/<c>&lt;li&gt;</c>
 /// tree. Each list item carries an anchor pointing at the heading
 /// id; nested headings open a child <c>&lt;ul&gt;</c>. The renderer
-/// honours <see cref="TocOptions.MinLevel"/> / <see cref="TocOptions.MaxLevel"/>
+/// honors <see cref="TocOptions.MinLevel"/> / <see cref="TocOptions.MaxLevel"/>
 /// to decide which headings appear in the rendered fragment — out
 /// of range headings are simply skipped (their permalink anchors
 /// are still emitted by <see cref="HeadingRewriter"/>).
@@ -78,7 +79,7 @@ internal static class TocFragmentRenderer
             return;
         }
 
-        Write(writer, NavOpen);
+        Utf8StringWriter.Write(writer, NavOpen);
 
         // Stack tracks the levels of currently-open <li> items (parent chain).
         // Invariants:
@@ -100,14 +101,14 @@ internal static class TocFragmentRenderer
         {
             if (!first)
             {
-                Write(writer, UlClose);
+                Utf8StringWriter.Write(writer, UlClose);
             }
 
-            Write(writer, LiClose);
+            Utf8StringWriter.Write(writer, LiClose);
             first = false;
         }
 
-        Write(writer, NavClose);
+        Utf8StringWriter.Write(writer, NavClose);
     }
 
     /// <summary>Closes/opens nesting around <paramref name="heading"/> and emits its list item.</summary>
@@ -125,21 +126,21 @@ internal static class TocFragmentRenderer
         while (stack.TryPeek(out var top) && top >= heading.Level)
         {
             stack.Pop();
-            Write(writer, LiClose);
+            Utf8StringWriter.Write(writer, LiClose);
 
             // Only close a nested <ul> when we're leaving a level that
             // was actually nested under another <li>. The outer <ul>
             // is owned by NavOpen / NavClose.
             if (top > heading.Level && stack.Count is not 0)
             {
-                Write(writer, UlClose);
+                Utf8StringWriter.Write(writer, UlClose);
             }
         }
 
         // If we're deeper than the current parent, open a child <ul> inside its <li>.
         if (stack.TryPeek(out var parentLevel) && parentLevel < heading.Level)
         {
-            Write(writer, UlOpen);
+            Utf8StringWriter.Write(writer, UlOpen);
         }
 
         EmitItem(snapshot, in heading, writer);
@@ -152,12 +153,12 @@ internal static class TocFragmentRenderer
     /// <param name="writer">Sink.</param>
     private static void EmitItem(ReadOnlySpan<byte> snapshot, in Heading heading, IBufferWriter<byte> writer)
     {
-        Write(writer, LiOpen);
-        Write(writer, AnchorOpenStart);
-        WriteSlug(writer, heading.Slug);
-        Write(writer, AnchorOpenEnd);
+        Utf8StringWriter.Write(writer, LiOpen);
+        Utf8StringWriter.Write(writer, AnchorOpenStart);
+        Utf8StringWriter.Write(writer, heading.Slug);
+        Utf8StringWriter.Write(writer, AnchorOpenEnd);
         WriteEscapedTitle(writer, snapshot[heading.TextStart..heading.TextEnd]);
-        Write(writer, AnchorClose);
+        Utf8StringWriter.Write(writer, AnchorClose);
     }
 
     /// <summary>Streams the heading inner text into <paramref name="writer"/>, stripping nested tags and escaping HTML-special bytes inline.</summary>
@@ -214,10 +215,10 @@ internal static class TocFragmentRenderer
 
             if (i > runStart)
             {
-                Write(writer, text[runStart..i]);
+                Utf8StringWriter.Write(writer, text[runStart..i]);
             }
 
-            Write(writer, entity);
+            Utf8StringWriter.Write(writer, entity);
             runStart = i + 1;
         }
 
@@ -226,7 +227,7 @@ internal static class TocFragmentRenderer
             return;
         }
 
-        Write(writer, text[runStart..]);
+        Utf8StringWriter.Write(writer, text[runStart..]);
     }
 
     /// <summary>Returns the entity span for a special byte; an empty span when the byte is plain.</summary>
@@ -239,21 +240,6 @@ internal static class TocFragmentRenderer
         (byte)'"' => EntityQuot,
         _ => default,
     };
-
-    /// <summary>Encodes a slug (ASCII per the slugifier contract) into <paramref name="writer"/>.</summary>
-    /// <param name="writer">Sink.</param>
-    /// <param name="slug">Slug string; ASCII-only.</param>
-    private static void WriteSlug(IBufferWriter<byte> writer, string slug)
-    {
-        if (string.IsNullOrEmpty(slug))
-        {
-            return;
-        }
-
-        var dst = writer.GetSpan(System.Text.Encoding.UTF8.GetMaxByteCount(slug.Length));
-        var written = System.Text.Encoding.UTF8.GetBytes(slug, dst);
-        writer.Advance(written);
-    }
 
     /// <summary>Filters headings by level range.</summary>
     /// <param name="headings">Source list.</param>
@@ -287,20 +273,5 @@ internal static class TocFragmentRenderer
         }
 
         return result;
-    }
-
-    /// <summary>Bulk-writes raw bytes into <paramref name="writer"/>.</summary>
-    /// <param name="writer">Sink.</param>
-    /// <param name="bytes">Bytes.</param>
-    private static void Write(IBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
-    {
-        if (bytes.IsEmpty)
-        {
-            return;
-        }
-
-        var dst = writer.GetSpan(bytes.Length);
-        bytes.CopyTo(dst);
-        writer.Advance(bytes.Length);
     }
 }

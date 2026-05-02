@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Tabs;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>TabsRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>TabsRewriter</c>.</summary>
 public class TabsRewriterTests
 {
     /// <summary>Two consecutive openers form a single tabbed-set with one input/label pair per tab.</summary>

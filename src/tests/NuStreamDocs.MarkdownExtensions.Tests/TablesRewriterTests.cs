@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Tables;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>TablesRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>TablesRewriter</c>.</summary>
 public class TablesRewriterTests
 {
     /// <summary>A header + separator + body row produces a complete <c>&lt;table&gt;</c>.</summary>

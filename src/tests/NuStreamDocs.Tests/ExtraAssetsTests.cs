@@ -10,7 +10,7 @@ using NuStreamDocs.Plugins.ExtraAssets;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>ExtraAssetsPlugin</c>.</summary>
+/// <summary>Behavior tests for <c>ExtraAssetsPlugin</c>.</summary>
 public class ExtraAssetsTests
 {
     /// <summary>Repeated <c>AddExtraCss</c> calls fold onto a single plugin instance.</summary>
@@ -27,7 +27,7 @@ public class ExtraAssetsTests
                 .AddExtraCssInline("one.css", [.. "a { color: red }"u8])
                 .AddExtraCssInline("two.css", [.. "b { color: blue }"u8]);
 
-            // Trigger configure so head fragment + asset list materialise.
+            // Trigger configure so head fragment + asset list materialize.
             await builder.BuildAsync();
 
             var plugin = ExtractPlugin(builder);

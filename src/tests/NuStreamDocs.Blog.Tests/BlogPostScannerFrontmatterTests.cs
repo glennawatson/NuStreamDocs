@@ -6,7 +6,7 @@ using NuStreamDocs.Blog.Common;
 
 namespace NuStreamDocs.Blog.Tests;
 
-/// <summary>Parameterised frontmatter combinations for BlogPostScanner.</summary>
+/// <summary>Parameterized frontmatter combinations for BlogPostScanner.</summary>
 public class BlogPostScannerFrontmatterTests
 {
     /// <summary>Each title shape (inline, quoted, with-symbols) flows through to BlogPost.Title.</summary>

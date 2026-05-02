@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Emoji.Tests;
 
-/// <summary>Behaviour tests for <c>EmojiRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>EmojiRewriter</c>.</summary>
 public class EmojiRewriterTests
 {
     /// <summary>A known shortcode wraps in a twemoji span.</summary>

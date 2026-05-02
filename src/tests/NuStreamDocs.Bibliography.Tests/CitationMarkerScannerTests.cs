@@ -12,7 +12,7 @@ public class CitationMarkerScannerTests
     /// <summary>A bare <c>[@key]</c> marker is captured with the right span.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task SingleKeyIsRecognised()
+    public async Task SingleKeyIsRecognized()
     {
         var markers = CitationMarkerScanner.Find("see [@mabo] for context"u8);
         await Assert.That(markers).HasSingleItem();
@@ -73,7 +73,7 @@ public class CitationMarkerScannerTests
         await Assert.That(markers[0].Cites[0].Locator.Value).IsEqualTo("23-25");
     }
 
-    /// <summary>An unrecognised label round-trips through <see cref="LocatorKind.Other"/>.</summary>
+    /// <summary>An unrecognized label round-trips through <see cref="LocatorKind.Other"/>.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnknownLabelIsOther()

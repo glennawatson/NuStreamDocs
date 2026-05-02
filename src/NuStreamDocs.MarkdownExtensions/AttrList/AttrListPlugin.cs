@@ -8,7 +8,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.AttrList;
 
 /// <summary>
-/// Block-level attr-list plugin. Recognises a trailing
+/// Block-level attr-list plugin. Recognizes a trailing
 /// <c>{: #id .class key=value}</c> token at the end of a block
 /// element's text and lifts its tokens into HTML attributes on the
 /// element's opening tag (the equivalent of pmdownx <c>attr_list</c>'s

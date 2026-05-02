@@ -63,14 +63,14 @@ public class DocBuilderBulkExtensionsTests
         await Assert.That(ex).IsNotNull();
     }
 
-    /// <summary>Stub config reader that recognises a single extension.</summary>
+    /// <summary>Stub config reader that recognizes a single extension.</summary>
     private sealed class TestConfigReader(string extension) : IConfigReader
     {
         /// <inheritdoc/>
         public string FormatName => "test";
 
         /// <inheritdoc/>
-        public bool RecognisesExtension(ReadOnlySpan<char> ext) => ext.SequenceEqual(extension);
+        public bool RecognizesExtension(ReadOnlySpan<char> ext) => ext.SequenceEqual(extension);
 
         /// <inheritdoc/>
         public MkDocsConfig Read(ReadOnlySpan<byte> utf8Source) => new("Site", null, "material", []);

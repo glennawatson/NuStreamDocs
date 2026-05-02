@@ -21,8 +21,8 @@ internal sealed class CountingPlugin : IDocPlugin
     /// <summary>Backing counter for <c>PageHits</c>; touched via <c>Interlocked</c>.</summary>
     private int _pageHits;
 
-    /// <summary>Backing counter for <c>FinaliseHits</c>; touched via <c>Interlocked</c>.</summary>
-    private int _finaliseHits;
+    /// <summary>Backing counter for <c>FinalizeHits</c>; touched via <c>Interlocked</c>.</summary>
+    private int _finalizeHits;
 
     /// <inheritdoc/>
     public string Name => "counting";
@@ -33,8 +33,8 @@ internal sealed class CountingPlugin : IDocPlugin
     /// <summary>Gets the number of times <c>OnRenderPageAsync</c> was invoked.</summary>
     public int PageHits => Volatile.Read(ref _pageHits);
 
-    /// <summary>Gets the number of times <c>OnFinaliseAsync</c> was invoked.</summary>
-    public int FinaliseHits => Volatile.Read(ref _finaliseHits);
+    /// <summary>Gets the number of times <c>OnFinalizeAsync</c> was invoked.</summary>
+    public int FinalizeHits => Volatile.Read(ref _finalizeHits);
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
@@ -55,11 +55,11 @@ internal sealed class CountingPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;
-        Interlocked.Increment(ref _finaliseHits);
+        Interlocked.Increment(ref _finalizeHits);
         return ValueTask.CompletedTask;
     }
 }

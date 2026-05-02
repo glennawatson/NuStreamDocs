@@ -46,7 +46,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>UTF-8 head-extras HTML assembled during <see cref="OnConfigureAsync"/>; empty until it runs.</summary>
     private byte[] _headExtras = [];
 
-    /// <summary>Plugin list captured during <see cref="OnConfigureAsync"/> for static-asset composition at finalise time.</summary>
+    /// <summary>Plugin list captured during <see cref="OnConfigureAsync"/> for static-asset composition at finalize time.</summary>
     private IDocPlugin[] _plugins = [];
 
     /// <summary>First registered nav-neighbour provider, captured during <see cref="OnConfigureAsync"/>; null when none was registered.</summary>
@@ -152,7 +152,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         var root = _outputRoot is [] ? context.OutputRoot : _outputRoot;
         if (root is [])

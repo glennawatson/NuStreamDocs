@@ -9,7 +9,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Lightbox;
 
 /// <summary>
-/// Plugin that pulls in glightbox for image lightbox behaviour and
+/// Plugin that pulls in glightbox for image lightbox behavior and
 /// optionally wraps content images in lightbox triggers.
 /// </summary>
 public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider

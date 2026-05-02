@@ -23,8 +23,9 @@ public class HeadingScannerBranchTests
     [Test]
     public async Task SingleQuotedId()
     {
-        var headings = HeadingScanner.Scan("<h2 id='single'>x</h2>"u8.ToArray());
-        await Assert.That(headings[0].ExistingId).IsEqualTo("single");
+        var html = "<h2 id='single'>x</h2>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("single"u8)).IsTrue();
     }
 
     /// <summary>Quoted id without a closing quote yields an empty existing id.</summary>
@@ -32,9 +33,10 @@ public class HeadingScannerBranchTests
     [Test]
     public async Task UnclosedQuoteId()
     {
-        var headings = HeadingScanner.Scan("<h2 id=\"never\">body</h2>"u8.ToArray());
+        var html = "<h2 id=\"never\">body</h2>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        await Assert.That(headings[0].ExistingId).IsEqualTo("never");
+        await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("never"u8)).IsTrue();
     }
 
     /// <summary>Unquoted id attribute is captured up to whitespace or close.</summary>
@@ -42,9 +44,10 @@ public class HeadingScannerBranchTests
     [Test]
     public async Task UnquotedId()
     {
-        var headings = HeadingScanner.Scan("<h2 id=plain class=x>body</h2>"u8.ToArray());
+        var html = "<h2 id=plain class=x>body</h2>"u8.ToArray();
+        var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        await Assert.That(headings[0].ExistingId).IsEqualTo("plain");
+        await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("plain"u8)).IsTrue();
     }
 
     /// <summary>DecodeText with body containing an unclosed inner tag returns the prefix.</summary>

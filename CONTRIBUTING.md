@@ -34,7 +34,7 @@ Test projects relax the allocation rules but keep the style rules.
   `EnableAotAnalyzer=true`. Reflection-using deps (BenchmarkDotNet) are
   isolated to their own assembly.
 - **UTF-8 in, UTF-8 out.** `ReadOnlySpan<byte>` for input,
-  `IBufferWriter<byte>` for output. No `string` materialisation in
+  `IBufferWriter<byte>` for output. No `string` materialization in
   parse, escape, or emit. UTF-8 string literals (`"..."u8`) for tag
   fragments and JSON property names.
 - **Bounded caches only.** Anything cache-shaped is size and age capped
@@ -96,7 +96,7 @@ Test projects relax the allocation rules but keep the style rules.
   array through an `internal static` helper (e.g. `NavBuilder.ToArray`)
   that rents from `ArrayPool<T>` where the upper bound is known.
 - **Collection expressions `[..]` first; never `.ToArray()`.** When
-  materialising into a final `T[]` / span / immutable array, write
+  materializing into a final `T[]` / span / immutable array, write
   `[..source]`, `[a, b, ..tail]`, `[]` and let the compiler pick the
   layout — it's cheaper than `.ToArray()` (no boxed enumerator on
   `IEnumerable<T>`, optimal pool/array choice, span paths inlined).
@@ -137,7 +137,7 @@ Test projects relax the allocation rules but keep the style rules.
   freeze pass is *expensive at build time*; it pays back only when
   the table is then read many times. Reach for `Frozen*` only when
   *all* of these are true:
-    1. **Built once or very rarely** — startup, configure, finalise;
+    1. **Built once or very rarely** — startup, configure, finalize;
        not on the per-page hot path.
     2. **Queried many times afterward** — across pages or across
        parallel workers.
@@ -170,6 +170,13 @@ Test projects relax the allocation rules but keep the style rules.
 
 ### Style
 
+- **US English in identifiers and prose.** Type names, member names,
+  XML docs, comments, log/diagnostic messages, and commit messages
+  use US spelling. Examples: `Normalize` (not the UK `-ise` form),
+  `Serialize`, `Initialize`, `Color` (not `Color`), `Behavior`
+  (not `Behavior`). The `.editorconfig`,
+  analyzer rule names, and the BCL itself are US English; mixing
+  dialects splits casing across tooling search.
 - **`var` for locals; targeted `new()` for typed slots.** Always
   `var x = ...` for locals; never repeat the type on both sides
   (`Foo x = new Foo()` is banned — use `var x = new Foo()` or
@@ -252,7 +259,7 @@ Test projects relax the allocation rules but keep the style rules.
 - **Collection expressions first.** Prefer `[]`, `[a, b]`, and
   `[..source]` over `new[] { ... }`, ad-hoc array construction, and
   `.ToArray()` snapshots. This is the default syntax for final
-  materialisation, static tables, span/array literals, and collection
+  materialization, static tables, span/array literals, and collection
   snapshots.
 - **Prefer `params` collections for fan-in APIs.** For APIs whose job is
   "accept several values and iterate once" — builder helpers, plugin
@@ -279,9 +286,9 @@ Test projects relax the allocation rules but keep the style rules.
 - **One type per file.** Splits matching the StyleCop default keep
   greps fast and diffs small.
 
-### Analysers and suppressions
+### Analyzers and suppressions
 
-- **Fix the code, don't silence the rule.** The analyser set
+- **Fix the code, don't silence the rule.** The analyzer set
   (StyleCop, Roslynator, SonarAnalyzer, .NET CA, Blazor.Common)
   catches real perf and correctness issues; suppressing is the last
   resort.
@@ -384,7 +391,7 @@ parameter values; the general C# guide allows them).
   noun — never lean on `Item1` / `Item2`. Same when destructuring a
   tuple parameter or local: pick names that read at the call site
   (`var (key, items) = pair;`).
-- **Nullable reference types are on** project-wide; honour the
+- **Nullable reference types are on** project-wide; honor the
   warnings.
 - **Range / index expressions** (`x[..n]`, `x[^1]`) for slicing.
   `Substring`, `Skip`, `Take` are last-resort.
@@ -397,7 +404,7 @@ parameter values; the general C# guide allows them).
   semantics. `readonly record struct` is the default for small
   immutable shapes.
 - **`init`-only setters** for properties that should only be set
-  during initialisation when a record is the wrong shape.
+  during initialization when a record is the wrong shape.
 - **Target-typed `new()`** when the variable's type is already on the
   left (`Foo f = new(args)`); `var f = new Foo(args)` when the type
   reads from the right.
@@ -408,7 +415,7 @@ parameter values; the general C# guide allows them).
 - **Raw string literals** (`""" ... """`) for multi-line / regex /
   JSON content; never escape-soup.
 - **`required` modifier** on members that must be set during
-  initialisation.
+  initialization.
 - **Primary constructors** for outer-layer façade types where the
   parameters become fields directly used in the body. Avoid them on
   hot-path types where storage layout matters or you need explicit
@@ -448,7 +455,7 @@ generators, bots) can group changes by intent.
 | `feat` | A new user-visible feature (a new plugin, a new builder method, etc.). |
 | `fix` | A bug fix. |
 | `perf` | A change that improves performance — typically backed by a benchmark number in the body. |
-| `refactor` | An internal restructure that doesn't change behaviour. |
+| `refactor` | An internal restructure that doesn't change behavior. |
 | `docs` | README / CONTRIBUTING / xmldoc / inline-comment changes. |
 | `test` | Adding or fixing tests, with no production-code change. |
 | `build` | Changes to the build system, MSBuild props, NuGet packaging, embedded resources. |
@@ -511,7 +518,7 @@ Refs #210
 ```
 
 ```
-refactor(markdown-extensions): centralise marker probes in
+refactor(markdown-extensions): centralize marker probes in
 NuStreamDocs.Markdown.Common.MarkdownMarkerProbes
 
 Was: each plugin had its own IndexOf("..."u8) NeedsRewrite override.

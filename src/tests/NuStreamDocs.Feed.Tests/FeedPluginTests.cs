@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace NuStreamDocs.Feed.Tests;
 
-/// <summary>Tests for FeedPlugin's lifecycle hooks and OnFinaliseAsync conditionals.</summary>
+/// <summary>Tests for FeedPlugin's lifecycle hooks and OnFinalizeAsync conditionals.</summary>
 public class FeedPluginTests
 {
     /// <summary>Two-arg constructor sets defaults.</summary>
@@ -36,18 +36,18 @@ public class FeedPluginTests
             .OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
     }
 
-    /// <summary>OnFinaliseAsync runs against an empty output dir without error.</summary>
+    /// <summary>OnFinalizeAsync runs against an empty output dir without error.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseAsyncEmptyDirSucceeds()
+    public async Task OnFinalizeAsyncEmptyDirSucceeds()
     {
         using var dir = new TempDir();
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
         await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
     }
 
-    /// <summary>FeedFormats.None short-circuits OnFinaliseAsync without writing anything.</summary>
+    /// <summary>FeedFormats.None short-circuits OnFinalizeAsync without writing anything.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task FormatsNoneShortCircuits()
@@ -56,19 +56,19 @@ public class FeedPluginTests
         var opts = new FeedOptions("https://x.test/", "T", "D", "blog") { Formats = FeedFormats.None };
         var plugin = new FeedPlugin(opts);
         await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsFalse();
     }
 
-    /// <summary>An empty input root short-circuits OnFinaliseAsync.</summary>
+    /// <summary>An empty input root short-circuits OnFinalizeAsync.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptyInputRootShortCircuits()
     {
         using var dir = new TempDir();
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
         await Assert.That(Directory.GetFiles(dir.Root, "*", SearchOption.AllDirectories)).IsEmpty();
     }
 
@@ -81,7 +81,7 @@ public class FeedPluginTests
         Directory.CreateDirectory(Path.Combine(dir.Root, "blog"));
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
         await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
     }
 
@@ -100,7 +100,7 @@ public class FeedPluginTests
         var clock = new FakeTimeProvider(new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), clock);
         await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(dir.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsTrue();

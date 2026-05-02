@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.CriticMarkup;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>CriticMarkupRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>CriticMarkupRewriter</c>.</summary>
 public class CriticMarkupRewriterTests
 {
     /// <summary><c>{++text++}</c> renders as <c>&lt;ins&gt;</c>.</summary>

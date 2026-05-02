@@ -19,7 +19,7 @@ namespace NuStreamDocs.MagicLink;
 /// Mirrors the URL-autolink slice of pymdownx.magiclink. Provider-
 /// specific shortcodes (<c>@user</c>, <c>repo#123</c>, commit
 /// hashes) require an explicit GitHub/GitLab provider hook and
-/// are not in scope for the default-on behaviour Zensical enables
+/// are not in scope for the default-on behavior Zensical enables
 /// out of the box.
 /// </remarks>
 public sealed class MagicLinkPlugin : DocPluginBase, IMarkdownPreprocessor

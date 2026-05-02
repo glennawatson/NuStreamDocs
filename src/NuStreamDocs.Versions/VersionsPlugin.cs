@@ -16,7 +16,7 @@ namespace NuStreamDocs.Versions;
 /// The user is expected to point the build at a version-specific
 /// subdirectory (e.g. <c>builder.WithOutput("./site/0.4.2")</c>); the
 /// plugin then upserts the version's entry into <c>./site/versions.json</c>
-/// during <see cref="OnFinaliseAsync"/>. This keeps each version's content
+/// during <see cref="OnFinalizeAsync"/>. This keeps each version's content
 /// isolated and lets a deploy script swap the parent symlink atomically.
 /// </remarks>
 public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDocPlugin
@@ -54,7 +54,7 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDo
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         var parentDir = Path.GetDirectoryName(context.OutputRoot.TrimEnd('/', '\\'));

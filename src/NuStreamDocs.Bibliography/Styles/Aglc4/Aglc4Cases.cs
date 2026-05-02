@@ -39,6 +39,6 @@ internal static class Aglc4Cases
             return;
         }
 
-        Aglc4Writer.WriteParenthesisedYear(entry.Year, writer);
+        Aglc4Writer.WriteParenthesizedYear(entry.Year, writer);
     }
 }

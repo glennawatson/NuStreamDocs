@@ -9,10 +9,10 @@ namespace NuStreamDocs.Versions.Tests;
 /// <summary>End-to-end tests for <c>VersionsPlugin</c>.</summary>
 public class VersionsPluginTests
 {
-    /// <summary>OnFinalise writes the manifest into the parent of the output root.</summary>
+    /// <summary>OnFinalize writes the manifest into the parent of the output root.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task OnFinaliseWritesManifest()
+    public async Task OnFinalizeWritesManifest()
     {
         var siteRoot = Path.Combine(Path.GetTempPath(), "smd-vplugin-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
         var versionRoot = Path.Combine(siteRoot, "0.4.2");
@@ -21,8 +21,8 @@ public class VersionsPluginTests
         try
         {
             var plugin = new VersionsPlugin(VersionOptions.Latest("0.4.2", "0.4 (latest)"));
-            var context = new PluginFinaliseContext(versionRoot);
-            await plugin.OnFinaliseAsync(context, CancellationToken.None);
+            var context = new PluginFinalizeContext(versionRoot);
+            await plugin.OnFinalizeAsync(context, CancellationToken.None);
 
             var entries = VersionsManifest.Read(siteRoot);
             await Assert.That(entries.Count).IsEqualTo(1);
@@ -48,10 +48,10 @@ public class VersionsPluginTests
         {
             var first = new VersionsPlugin(new("0.4.2", "0.4 (initial)"));
             var second = new VersionsPlugin(new("0.4.2", "0.4 (refreshed)", ["latest"]));
-            var context = new PluginFinaliseContext(versionRoot);
+            var context = new PluginFinalizeContext(versionRoot);
 
-            await first.OnFinaliseAsync(context, CancellationToken.None);
-            await second.OnFinaliseAsync(context, CancellationToken.None);
+            await first.OnFinalizeAsync(context, CancellationToken.None);
+            await second.OnFinalizeAsync(context, CancellationToken.None);
 
             var entries = VersionsManifest.Read(siteRoot);
             await Assert.That(entries.Count).IsEqualTo(1);

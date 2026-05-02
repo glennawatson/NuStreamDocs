@@ -7,11 +7,11 @@ using System.Text;
 
 namespace NuStreamDocs.MagicLink.Tests;
 
-/// <summary>Parameterised tests for MagicLinkRewriter scheme + trailing-punctuation handling.</summary>
+/// <summary>Parameterized tests for MagicLinkRewriter scheme + trailing-punctuation handling.</summary>
 public class MagicLinkSchemeTests
 {
-    /// <summary>Each recognised scheme produces an autolink.</summary>
-    /// <param name="url">URL with a recognised scheme.</param>
+    /// <summary>Each recognized scheme produces an autolink.</summary>
+    /// <param name="url">URL with a recognized scheme.</param>
     /// <returns>Async test.</returns>
     [Test]
     [Arguments("https://x.test")]
@@ -19,7 +19,7 @@ public class MagicLinkSchemeTests
     [Arguments("ftps://x.test/file")]
     [Arguments("ftp://x.test/file")]
     [Arguments("mailto:user@x.test")]
-    public async Task RecognisedSchemesWrap(string url) =>
+    public async Task RecognizedSchemesWrap(string url) =>
         await Assert.That(Rewrite($"see {url} here")).Contains($"<{url}>");
 
     /// <summary>Trailing punctuation is peeled off the wrapped URL.</summary>

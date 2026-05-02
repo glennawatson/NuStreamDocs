@@ -49,7 +49,7 @@ public class BuildPipelineTests
         await Assert.That(rendered).IsEqualTo(2);
         await Assert.That(counter.PageHits).IsEqualTo(2);
         await Assert.That(counter.ConfigureHits).IsEqualTo(1);
-        await Assert.That(counter.FinaliseHits).IsEqualTo(1);
+        await Assert.That(counter.FinalizeHits).IsEqualTo(1);
     }
 
     /// <summary>Drafts are excluded by default.</summary>
@@ -163,7 +163,7 @@ public class BuildPipelineTests
         public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
         /// <inheritdoc/>
-        public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 
     /// <summary>Test preprocessor that replaces every <c>B</c> with <c>C</c>.</summary>
@@ -190,6 +190,6 @@ public class BuildPipelineTests
         public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
         /// <inheritdoc/>
-        public ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 }

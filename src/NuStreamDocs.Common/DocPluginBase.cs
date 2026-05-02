@@ -40,7 +40,7 @@ public abstract class DocPluginBase : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public virtual ValueTask OnFinaliseAsync(PluginFinaliseContext context, CancellationToken cancellationToken)
+    public virtual ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;

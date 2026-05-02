@@ -34,7 +34,7 @@
   <Project Path="NuStreamDocs.Blog/NuStreamDocs.Blog.csproj" />
   <Project Path="NuStreamDocs.Blog.MkDocs/NuStreamDocs.Blog.MkDocs.csproj" />
   <Project Path="NuStreamDocs.Feed/NuStreamDocs.Feed.csproj" />
-  <Project Path="NuStreamDocs.Optimise/NuStreamDocs.Optimise.csproj" />
+  <Project Path="NuStreamDocs.Optimize/NuStreamDocs.Optimize.csproj" />
   <Project Path="NuStreamDocs.LinkValidator/NuStreamDocs.LinkValidator.csproj" />
   <Project Path="NuStreamDocs.Highlight/NuStreamDocs.Highlight.csproj" />
   <Project Path="NuStreamDocs.Markdown.Common/NuStreamDocs.Markdown.Common.csproj" />
@@ -75,7 +75,7 @@
     <Project Path="tests/NuStreamDocs.Blog.Tests/NuStreamDocs.Blog.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Blog.MkDocs.Tests/NuStreamDocs.Blog.MkDocs.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Feed.Tests/NuStreamDocs.Feed.Tests.csproj" />
-    <Project Path="tests/NuStreamDocs.Optimise.Tests/NuStreamDocs.Optimise.Tests.csproj" />
+    <Project Path="tests/NuStreamDocs.Optimize.Tests/NuStreamDocs.Optimize.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.LinkValidator.Tests/NuStreamDocs.LinkValidator.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Highlight.Tests/NuStreamDocs.Highlight.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.MarkdownExtensions.Tests/NuStreamDocs.MarkdownExtensions.Tests.csproj" />

@@ -6,7 +6,7 @@ using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight.Tests;
 
-/// <summary>Behaviour tests for the XML/HTML and TypeScript lexers.</summary>
+/// <summary>Behavior tests for the XML/HTML and TypeScript lexers.</summary>
 public class XmlAndTypeScriptTests
 {
     /// <summary>An XML tag classifies its name as <c>nc</c> and angle brackets as <c>p</c>.</summary>

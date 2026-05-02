@@ -9,7 +9,7 @@ using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>Throughput + allocation benchmarks for the syntax-highlight emitter, parameterised over the production lexers.</summary>
+/// <summary>Throughput + allocation benchmarks for the syntax-highlight emitter, parameterized over the production lexers.</summary>
 [MemoryDiagnoser]
 public class HighlightBenchmarks
 {

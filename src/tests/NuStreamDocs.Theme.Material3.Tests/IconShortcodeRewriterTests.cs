@@ -8,7 +8,7 @@ using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material3.Tests;
 
-/// <summary>Behaviour tests for <c>IconShortcodeRewriter</c> in the Material3 theme.</summary>
+/// <summary>Behavior tests for <c>IconShortcodeRewriter</c> in the Material3 theme.</summary>
 public class IconShortcodeRewriterTests
 {
     /// <summary><c>:material-foo:</c> emits the Material3 variable-font span.</summary>

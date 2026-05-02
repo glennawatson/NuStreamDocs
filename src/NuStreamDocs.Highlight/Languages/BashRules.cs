@@ -13,7 +13,7 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </summary>
 internal static class BashRules
 {
-    /// <summary>Shell keywords recognised as <see cref="TokenClass.Keyword"/>.</summary>
+    /// <summary>Shell keywords recognized as <see cref="TokenClass.Keyword"/>.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
         "if",
         "then",
@@ -48,7 +48,7 @@ internal static class BashRules
         "set",
         "test");
 
-    /// <summary>Common shell builtins recognised as <see cref="TokenClass.NameBuiltin"/>.</summary>
+    /// <summary>Common shell builtins recognized as <see cref="TokenClass.NameBuiltin"/>.</summary>
     private static readonly ByteKeywordSet Builtins = ByteKeywordSet.Create(
         "echo",
         "printf",

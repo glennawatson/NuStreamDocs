@@ -37,7 +37,7 @@ public class TagsPluginTests
         var sink = new ArrayBufferWriter<byte>(8);
         sink.Write("<p>no tags</p>"u8);
         await plugin.OnRenderPageAsync(new("notag.md", "no frontmatter"u8.ToArray(), sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
     }
@@ -61,7 +61,7 @@ public class TagsPluginTests
         sink2.Write("<h1>Second</h1>"u8);
         await plugin.OnRenderPageAsync(new("second.md", Encoding.UTF8.GetBytes(Source2), sink2), CancellationToken.None);
 
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         var indexHtml = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "index.html"));
         await Assert.That(indexHtml).Contains("alpha");
@@ -85,7 +85,7 @@ public class TagsPluginTests
         var sink = new ArrayBufferWriter<byte>(64);
         sink.Write("<p>just body, no h1</p>"u8);
         await plugin.OnRenderPageAsync(new("only.md", Encoding.UTF8.GetBytes(Source), sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         // Fallback is the URL.
         var soloHtml = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "solo.html"));
@@ -95,7 +95,7 @@ public class TagsPluginTests
     /// <summary>Custom options write to a different subdirectory and index filename.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task CustomOptionsHonoured()
+    public async Task CustomOptionsHonored()
     {
         using var temp = new TagsTempDir();
         var options = new TagsOptions("topics", "all.html");
@@ -106,13 +106,13 @@ public class TagsPluginTests
         var sink = new ArrayBufferWriter<byte>(64);
         sink.Write("<h1>Page</h1>"u8);
         await plugin.OnRenderPageAsync(new("p.md", Encoding.UTF8.GetBytes(Source), sink), CancellationToken.None);
-        await plugin.OnFinaliseAsync(new(temp.Root), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "topics", "all.html"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "topics", "foo.html"))).IsTrue();
     }
 
-    /// <summary>RelativePathToUrlPath swaps <c>.md</c> for <c>.html</c> and normalises separators.</summary>
+    /// <summary>RelativePathToUrlPath swaps <c>.md</c> for <c>.html</c> and normalizes separators.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>

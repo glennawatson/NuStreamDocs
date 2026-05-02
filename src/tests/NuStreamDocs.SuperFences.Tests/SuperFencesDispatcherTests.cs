@@ -9,7 +9,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SuperFences.Tests;
 
-/// <summary>Behaviour tests for <c>SuperFencesDispatcher</c>.</summary>
+/// <summary>Behavior tests for <c>SuperFencesDispatcher</c>.</summary>
 public class SuperFencesDispatcherTests
 {
     /// <summary>A fence whose language matches a registered handler is replaced wholesale.</summary>

@@ -8,7 +8,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>FrontmatterFlagReader</c>.</summary>
+/// <summary>Behavior tests for <c>FrontmatterFlagReader</c>.</summary>
 public class FrontmatterFlagReaderTests
 {
     /// <summary><c>draft: true</c> sets the Draft flag.</summary>

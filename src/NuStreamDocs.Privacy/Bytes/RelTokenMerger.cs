@@ -21,7 +21,7 @@ internal static class RelTokenMerger
     /// <summary>Number of <see cref="int"/> slots per (start,end) range entry.</summary>
     private const int RangeStride = 2;
 
-    /// <summary>Emits <paramref name="existing"/> followed by any tokens from <paramref name="extra"/> that aren't already present, normalising to single-space separators.</summary>
+    /// <summary>Emits <paramref name="existing"/> followed by any tokens from <paramref name="extra"/> that aren't already present, normalizing to single-space separators.</summary>
     /// <param name="existing">Current <c>rel</c> value (may contain irregular whitespace).</param>
     /// <param name="extra">Extra tokens to merge in.</param>
     /// <param name="sink">UTF-8 sink that receives the merged token list.</param>

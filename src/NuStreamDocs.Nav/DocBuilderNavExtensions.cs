@@ -34,7 +34,7 @@ public static class DocBuilderNavExtensions
 
     /// <summary>Registers <see cref="NavPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="NavOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="NavOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseNav(this DocBuilder builder, Func<NavOptions, NavOptions> configure)
     {
@@ -46,7 +46,7 @@ public static class DocBuilderNavExtensions
 
     /// <summary>Registers <see cref="NavPlugin"/> with caller-tweaked options and a logger.</summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="NavOptions.Default"/> and returns the customised set.</param>
+    /// <param name="configure">Function that receives <see cref="NavOptions.Default"/> and returns the customized set.</param>
     /// <param name="logger">Logger forwarded to the plugin.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseNav(this DocBuilder builder, Func<NavOptions, NavOptions> configure, ILogger logger)

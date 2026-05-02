@@ -7,7 +7,7 @@ namespace NuStreamDocs.Privacy;
 /// <summary>
 /// Per-URL gate combining the host-level and URL-pattern allow / skip
 /// rules from <see cref="PrivacyOptions"/> into a single
-/// <see cref="ShouldLocalise(string)"/> check.
+/// <see cref="ShouldLocalize(string)"/> check.
 /// </summary>
 /// <remarks>
 /// Decision order:
@@ -19,15 +19,15 @@ namespace NuStreamDocs.Privacy;
 /// <item>Accept when the host is on the allow list (when any hosts are configured).</item>
 /// <item>Accept when neither allow-side rule is configured.</item>
 /// </list>
-/// All host lookups are case-insensitive; patterns honour the simple
+/// All host lookups are case-insensitive; patterns honor the simple
 /// <c>*</c>/<c>?</c> glob semantics in <see cref="UrlPatternMatcher"/>.
 /// </remarks>
 internal sealed class HostFilter
 {
-    /// <summary>Hosts the user has explicitly opted-out of localising. Per-instance and small (typically &lt; 32 entries), so a plain <see cref="HashSet{T}"/> is the right shape.</summary>
+    /// <summary>Hosts the user has explicitly opted-out of localizing. Per-instance and small (typically &lt; 32 entries), so a plain <see cref="HashSet{T}"/> is the right shape.</summary>
     private readonly HashSet<string> _hostsToSkip;
 
-    /// <summary>Hosts the user has explicitly opted in (when non-empty, restricts the localise set to this list). Per-instance and small, plain <see cref="HashSet{T}"/>.</summary>
+    /// <summary>Hosts the user has explicitly opted in (when non-empty, restricts the localize set to this list). Per-instance and small, plain <see cref="HashSet{T}"/>.</summary>
     private readonly HashSet<string> _hostsAllowed;
 
     /// <summary>URL-level include patterns; non-empty broadens the allow set beyond <see cref="_hostsAllowed"/>.</summary>
@@ -65,8 +65,8 @@ internal sealed class HostFilter
 
     /// <summary>Returns true when <paramref name="url"/> is an absolute http(s) URL whose host passes the configured allow/skip rules.</summary>
     /// <param name="url">Candidate URL.</param>
-    /// <returns>True when the URL should be localised.</returns>
-    public bool ShouldLocalise(string url)
+    /// <returns>True when the URL should be localized.</returns>
+    public bool ShouldLocalize(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https"))
         {

@@ -7,7 +7,7 @@ using NuStreamDocs.Links;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Behaviour tests for <c>MarkdownLinkRewriter</c> in the directory-URL mode.</summary>
+/// <summary>Behavior tests for <c>MarkdownLinkRewriter</c> in the directory-URL mode.</summary>
 public class MarkdownLinkRewriterDirectoryUrlsTests
 {
     /// <summary>Plain <c>foo.md</c> rewrites to <c>foo/</c>.</summary>

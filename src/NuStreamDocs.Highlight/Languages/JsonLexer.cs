@@ -28,7 +28,7 @@ public static class JsonLexer
     /// <summary>First-byte set for structural punctuation.</summary>
     private static readonly SearchValues<byte> PunctuationFirst = SearchValues.Create("{}[],:"u8);
 
-    /// <summary>Set of recognised JSON keyword constants.</summary>
+    /// <summary>Set of recognized JSON keyword constants.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create("true", "false", "null");
 
     /// <summary>Gets the singleton lexer instance.</summary>

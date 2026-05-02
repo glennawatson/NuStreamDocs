@@ -67,13 +67,13 @@ public class MarkdownLinkRewriterPluginTests
         await Assert.That(output).DoesNotContain("intro.html");
     }
 
-    /// <summary>OnFinaliseAsync is a no-op.</summary>
+    /// <summary>OnFinalizeAsync is a no-op.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinaliseAsyncNoOp()
+    public async Task OnFinalizeAsyncNoOp()
     {
         var plugin = new MarkdownLinkRewriterPlugin();
-        await plugin.OnFinaliseAsync(new("/out"), CancellationToken.None);
+        await plugin.OnFinalizeAsync(new("/out"), CancellationToken.None);
     }
 
     /// <summary>UseMarkdownLinks() registers the plugin.</summary>

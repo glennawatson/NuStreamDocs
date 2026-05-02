@@ -15,7 +15,7 @@ public enum MaterialAssetSource
     /// </summary>
     /// <remarks>
     /// The plugin writes <c>{output}/assets/stylesheets/material.min.css</c>
-    /// (and friends) at finalisation time, and the page template
+    /// (and friends) at finalization time, and the page template
     /// references them with a relative path. The build is fully self
     /// contained — no external network access at view time.
     /// </remarks>

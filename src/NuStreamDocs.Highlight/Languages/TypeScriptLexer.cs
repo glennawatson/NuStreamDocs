@@ -8,7 +8,7 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>TypeScript lexer (also covers JavaScript via <see cref="JavaScriptLexer"/> reuse).</summary>
 /// <remarks>
-/// Modelled on Pygments' <c>TypeScriptLexer</c> shape. Single-state
+/// Modeled on Pygments' <c>TypeScriptLexer</c> shape. Single-state
 /// machine — the language is regular enough that the cursor advances
 /// past one token per cycle without ever stacking states. Template
 /// literals and JSX are deliberately deferred; everything else

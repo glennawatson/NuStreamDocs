@@ -34,7 +34,7 @@ internal static partial class ServeLoggingHelper
     [LoggerMessage(
         EventId = 8003,
         Level = LogLevel.Information,
-        Message = "Rebuilt in {ElapsedMs} ms; signalled {ConnectedClients} connected client(s)")]
+        Message = "Rebuilt in {ElapsedMs} ms; signaled {ConnectedClients} connected client(s)")]
     public static partial void LogRebuildComplete(ILogger logger, long elapsedMs, int connectedClients);
 
     /// <summary>Logs a failed rebuild — the server stays up, the next save retries.</summary>

@@ -62,7 +62,7 @@ public sealed record CSharpApiGeneratorOptions(
 
     /// <summary>Builds an options record for the inline-NuGet-packages shape.</summary>
     /// <param name="packages">Packages to fetch.</param>
-    /// <param name="apiCachePath">Destination root for fetched packages and the synthesised manifest.</param>
+    /// <param name="apiCachePath">Destination root for fetched packages and the synthesized manifest.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
     public static CSharpApiGeneratorOptions FromPackages(NuGetPackageReference[] packages, string apiCachePath) =>
         From(new NuGetPackagesInput(packages, apiCachePath));

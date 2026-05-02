@@ -10,12 +10,12 @@ namespace NuStreamDocs.Yaml;
 /// Byte-level UTF-8 helpers for the small slice of YAML the
 /// NuStreamDocs plugins actually parse — frontmatter delimiter walks,
 /// top-level key inspection, scalar / list-token unquoting, and
-/// trim-with-newlines. Centralised here because Tags, Nav, and
+/// trim-with-newlines. Centralized here because Tags, Nav, and
 /// Metadata had been growing near-identical copies of every helper.
 /// </summary>
 public static class YamlByteScanner
 {
-    /// <summary>Whitespace bytes recognised inline (space + tab + carriage return).</summary>
+    /// <summary>Whitespace bytes recognized inline (space + tab + carriage return).</summary>
     private static readonly SearchValues<byte> InlineWhitespace = SearchValues.Create(" \t\r"u8);
 
     /// <summary>Gets the UTF-8 bytes of the YAML frontmatter delimiter line (<c>---</c>).</summary>

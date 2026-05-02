@@ -30,7 +30,7 @@ public class BlogPostScannerBranchCoverageTests
         await Assert.That(BlogPostScanner.Scan(temp.Root, temp.Root).Length).IsEqualTo(0);
     }
 
-    /// <summary>Posts with frontmatter title use it; posts without get humanised slug.</summary>
+    /// <summary>Posts with frontmatter title use it; posts without get humanized slug.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ScanProducesPosts()

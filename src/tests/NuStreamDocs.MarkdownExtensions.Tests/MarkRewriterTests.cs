@@ -8,7 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Mark;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>Behaviour tests for <c>MarkRewriter</c>.</summary>
+/// <summary>Behavior tests for <c>MarkRewriter</c>.</summary>
 public class MarkRewriterTests
 {
     /// <summary>A matched <c>==text==</c> span becomes a <c>&lt;mark&gt;</c> element.</summary>
