@@ -57,6 +57,48 @@ public class AttrListRewriterTests
         await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsFalse();
     }
 
+    /// <summary>The mkdocs-material shorthand <c>{ .class }</c> (open-brace + space, no colon) is recognized.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SpaceFormLiftsClass()
+    {
+        var output = Rewrite("<p><a href=\"/get-started/\">Get started</a>{ .md-button .md-button--primary }</p>");
+        await Assert.That(output).Contains("<a href=\"/get-started/\" class=\"md-button md-button--primary\">Get started</a>");
+        await Assert.That(output).DoesNotContain("{ .md-button");
+    }
+
+    /// <summary>The space form lifts a key/value pair onto a paired inline element.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SpaceFormLiftsInlinePairedKeyValue()
+    {
+        var output = Rewrite("<p><a href=\"https://x.test\">here</a>{ target=\"_blank\" }</p>");
+        await Assert.That(output).Contains("<a href=\"https://x.test\" target=\"_blank\">here</a>");
+        await Assert.That(output).DoesNotContain("{ target=");
+    }
+
+    /// <summary>The space form lifts <c>#id</c> tokens onto block elements.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SpaceFormLiftsBlockId()
+    {
+        var output = Rewrite("<h1>Heading { #intro }</h1>");
+        await Assert.That(output).Contains("id=\"intro\"");
+    }
+
+    /// <summary>An incidental <c>{ </c> in a code block (no attr-list lead bytes after the brace) is left alone.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task IncidentalBraceInCodeBlockIsIgnored()
+    {
+        // The gate is permissive (any `{ ` triggers it) but the per-position matcher rejects
+        // because `{ foo:` parses as kv-pair rather than an attr-list lead, and the body
+        // contains a closing tag's `<` before the marker would close.
+        const string Html = "<pre><code>var x = { foo: 1 };</code></pre>";
+        var output = Rewrite(Html);
+        await Assert.That(output).IsEqualTo(Html);
+    }
+
     /// <summary>Helper that runs the rewriter and returns the string result.</summary>
     /// <param name="source">HTML input.</param>
     /// <returns>Rewritten HTML.</returns>

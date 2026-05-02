@@ -5,6 +5,7 @@
 using System.Buffers;
 using NuStreamDocs.Html;
 using NuStreamDocs.Markdown;
+using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs;
 
@@ -31,6 +32,15 @@ public static class MarkdownRenderer
     public static void Render(ReadOnlySpan<byte> markdown, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
+
+        // Skip past any leading YAML frontmatter so the `---` opener and
+        // its key-value lines don't render as a thematic break + paragraphs.
+        // Frontmatter is contract-level metadata for the build pipeline; it
+        // should never reach the block scanner.
+        if (YamlByteScanner.TryFindFrontmatter(markdown, out _, out var bodyStart))
+        {
+            markdown = markdown[bodyStart..];
+        }
 
         var blockBuffer = _blockBufferCache;
         _blockBufferCache = null;

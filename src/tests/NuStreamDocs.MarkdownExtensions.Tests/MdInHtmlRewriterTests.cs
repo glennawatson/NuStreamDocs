@@ -180,6 +180,45 @@ public class MdInHtmlRewriterTests
     public async Task MarkdownAttrUnclosedQuote() =>
         await Assert.That(Rewrite("<div markdown=\"1>body</div>")).IsEqualTo("<div markdown=\"1>body</div>");
 
+    /// <summary>Bare <c>markdown</c> attribute (no value) is recognised and stripped — the shorthand mkdocs-material conventions emit, e.g. <c>&lt;div class="grid cards" markdown&gt;</c>.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BareMarkdownAttributeIsRecognised()
+    {
+        const string Source = "<div markdown>**bold**</div>";
+        const string Expected = "<div>\n\n**bold**\n\n</div>";
+        await Assert.That(Rewrite(Source)).IsEqualTo(Expected);
+    }
+
+    /// <summary>Bare <c>markdown</c> at end of attribute area, after another attribute, is recognised.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BareMarkdownAfterClassAttribute()
+    {
+        const string Source = "<div class=\"grid cards\" markdown>**bold**</div>";
+        const string Expected = "<div class=\"grid cards\">\n\n**bold**\n\n</div>";
+        await Assert.That(Rewrite(Source)).IsEqualTo(Expected);
+    }
+
+    /// <summary>Bare <c>markdown</c> followed by another attribute is recognised.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BareMarkdownFollowedByAnotherAttribute()
+    {
+        const string Source = "<div markdown class=\"hero\">x</div>";
+        const string Expected = "<div class=\"hero\">\n\nx\n\n</div>";
+        await Assert.That(Rewrite(Source)).IsEqualTo(Expected);
+    }
+
+    /// <summary>Attribute with a name that *starts* with <c>markdown</c> (e.g. <c>markdownish</c>) is left alone.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task AttributeNameContainingMarkdownIsNotMatched()
+    {
+        const string Source = "<div markdownish=\"1\">x</div>";
+        await Assert.That(Rewrite(Source)).IsEqualTo(Source);
+    }
+
     /// <summary>Rewrites <paramref name="input"/> via <c>MdInHtmlRewriter</c>.</summary>
     /// <param name="input">Markdown source.</param>
     /// <returns>Rewritten text.</returns>

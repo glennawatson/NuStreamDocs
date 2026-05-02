@@ -192,7 +192,7 @@ internal static class AttrListElementRewriter
         suffixStart = -1;
 
         var inner = html[innerStart..closeStart];
-        var rel = inner.IndexOf(AttrListMarker.OpenMarker);
+        var rel = AttrListMarker.IndexOfOpener(inner);
         if (rel < 0)
         {
             return false;

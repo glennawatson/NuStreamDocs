@@ -26,6 +26,43 @@ internal static partial class BuildPipelineLoggingHelper
     [LoggerMessage(Level = LogLevel.Information, Message = "Build complete: {PageCount} page(s) processed, {CacheHits} cache hit(s), elapsed={ElapsedMs}ms")]
     public static partial void LogBuildComplete(ILogger logger, int pageCount, int cacheHits, long elapsedMs);
 
+    /// <summary>Logs entry into the configure phase before any plugin's <c>OnConfigureAsync</c> fires.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginCount">Number of plugins to configure.</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Configuring {PluginCount} plugin(s)...")]
+    public static partial void LogConfigureStart(ILogger logger, int pluginCount);
+
+    /// <summary>Logs the start of one plugin's <c>OnConfigureAsync</c> hook.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginName">Plugin name (<see cref="NuStreamDocs.Plugins.IDocPlugin.Name"/>).</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Configuring plugin: {PluginName}")]
+    public static partial void LogPluginConfigure(ILogger logger, string pluginName);
+
+    /// <summary>Logs entry into the parallel render phase.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="parallelism">Effective <see cref="System.Threading.Tasks.ParallelOptions.MaxDegreeOfParallelism"/>.</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Rendering pages (parallelism={Parallelism})...")]
+    public static partial void LogRenderStart(ILogger logger, int parallelism);
+
+    /// <summary>Logs the end of the parallel render phase.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pageCount">Pages processed in this phase.</param>
+    /// <param name="elapsedMs">Phase duration in milliseconds.</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Render complete: {PageCount} page(s) in {ElapsedMs}ms")]
+    public static partial void LogRenderComplete(ILogger logger, int pageCount, long elapsedMs);
+
+    /// <summary>Logs entry into the finalize phase before any plugin's <c>OnFinalizeAsync</c> fires.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginCount">Number of plugins to finalize.</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Finalizing {PluginCount} plugin(s)...")]
+    public static partial void LogFinalizeStart(ILogger logger, int pluginCount);
+
+    /// <summary>Logs the start of one plugin's <c>OnFinalizeAsync</c> hook.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginName">Plugin name.</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Finalizing plugin: {PluginName}")]
+    public static partial void LogPluginFinalize(ILogger logger, string pluginName);
+
     /// <summary>Logs a per-page completion at debug level.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="relativePath">Page relative path.</param>

@@ -106,7 +106,7 @@ public static class BuildPipeline
         // single right-sized allocation rather than the [.. bag] enumerator copy.
         var fresh = new ConcurrentQueue<ManifestEntry>();
 
-        await FireOnConfigureAsync(plugins, inputRoot, outputRoot, cancellationToken).ConfigureAwait(false);
+        await FireOnConfigureAsync(plugins, inputRoot, outputRoot, cancellationToken, log).ConfigureAwait(false);
 
         var processed = 0;
         var cacheHits = 0;
@@ -116,6 +116,8 @@ public static class BuildPipeline
             MaxDegreeOfParallelism = DefaultParallelism,
         };
 
+        BuildPipelineLoggingHelper.LogRenderStart(log, parallelOptions.MaxDegreeOfParallelism);
+        var renderStarted = stopwatch.ElapsedMilliseconds;
         await Parallel.ForEachAsync(
             PageDiscovery.EnumerateAsync(inputRoot, filter, cancellationToken),
             parallelOptions,
@@ -137,10 +139,12 @@ public static class BuildPipeline
                 BuildPipelineLoggingHelper.LogPageProcessed(log, item.RelativePath, hit);
             }).ConfigureAwait(false);
 
+        BuildPipelineLoggingHelper.LogRenderComplete(log, processed, stopwatch.ElapsedMilliseconds - renderStarted);
+
         previous.Replace(fresh);
         await previous.SaveAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
 
-        await FireOnFinalizeAsync(plugins, outputRoot, cancellationToken).ConfigureAwait(false);
+        await FireOnFinalizeAsync(plugins, outputRoot, cancellationToken, log).ConfigureAwait(false);
         stopwatch.Stop();
         BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, stopwatch.ElapsedMilliseconds);
         return processed;
@@ -371,12 +375,15 @@ public static class BuildPipeline
     /// <param name="inputRoot">Absolute input root.</param>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="log">Logger for phase + per-plugin progress.</param>
     /// <returns>A task that completes when every plugin's configure hook has settled.</returns>
-    private static async Task FireOnConfigureAsync(IDocPlugin[] plugins, string inputRoot, string outputRoot, CancellationToken cancellationToken)
+    private static async Task FireOnConfigureAsync(IDocPlugin[] plugins, string inputRoot, string outputRoot, CancellationToken cancellationToken, ILogger log)
     {
         var context = new PluginConfigureContext(default, inputRoot, outputRoot, plugins);
+        BuildPipelineLoggingHelper.LogConfigureStart(log, plugins.Length);
         for (var i = 0; i < plugins.Length; i++)
         {
+            BuildPipelineLoggingHelper.LogPluginConfigure(log, plugins[i].Name);
             await plugins[i].OnConfigureAsync(context, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -385,12 +392,15 @@ public static class BuildPipeline
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="log">Logger for phase + per-plugin progress.</param>
     /// <returns>A task that completes when every plugin's finalize hook has settled.</returns>
-    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, string outputRoot, CancellationToken cancellationToken)
+    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, string outputRoot, CancellationToken cancellationToken, ILogger log)
     {
         var context = new PluginFinalizeContext(outputRoot);
+        BuildPipelineLoggingHelper.LogFinalizeStart(log, plugins.Length);
         for (var i = 0; i < plugins.Length; i++)
         {
+            BuildPipelineLoggingHelper.LogPluginFinalize(log, plugins[i].Name);
             await plugins[i].OnFinalizeAsync(context, cancellationToken).ConfigureAwait(false);
         }
     }

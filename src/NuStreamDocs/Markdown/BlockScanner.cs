@@ -83,6 +83,102 @@ public static class BlockScanner
     /// <summary>Greater-than block-quote marker.</summary>
     private const byte Gt = (byte)'>';
 
+    /// <summary>ASCII case-fold bit; OR-ing with this on an ASCII letter yields its lowercase form.</summary>
+    private const byte AsciiCaseBit = 0x20;
+
+    /// <summary>Maximum length of any recognized HTML-block tag name (<c>blockquote</c> = 10 letters; rounded up).</summary>
+    private const int MaxTagNameLength = 11;
+
+    /// <summary>Lowercased UTF-8 byte arrays for every Type 6 tag name (CommonMark spec § 4.6 whitelist).</summary>
+    private static readonly byte[][] Type6Tags =
+    [
+        "address"u8.ToArray(),
+        "article"u8.ToArray(),
+        "aside"u8.ToArray(),
+        "base"u8.ToArray(),
+        "basefont"u8.ToArray(),
+        "blockquote"u8.ToArray(),
+        "body"u8.ToArray(),
+        "caption"u8.ToArray(),
+        "center"u8.ToArray(),
+        "col"u8.ToArray(),
+        "colgroup"u8.ToArray(),
+        "dd"u8.ToArray(),
+        "details"u8.ToArray(),
+        "dialog"u8.ToArray(),
+        "dir"u8.ToArray(),
+        "div"u8.ToArray(),
+        "dl"u8.ToArray(),
+        "dt"u8.ToArray(),
+        "fieldset"u8.ToArray(),
+        "figcaption"u8.ToArray(),
+        "figure"u8.ToArray(),
+        "footer"u8.ToArray(),
+        "form"u8.ToArray(),
+        "frame"u8.ToArray(),
+        "frameset"u8.ToArray(),
+        "h1"u8.ToArray(),
+        "h2"u8.ToArray(),
+        "h3"u8.ToArray(),
+        "h4"u8.ToArray(),
+        "h5"u8.ToArray(),
+        "h6"u8.ToArray(),
+        "head"u8.ToArray(),
+        "header"u8.ToArray(),
+        "hr"u8.ToArray(),
+        "html"u8.ToArray(),
+        "iframe"u8.ToArray(),
+        "legend"u8.ToArray(),
+        "li"u8.ToArray(),
+        "link"u8.ToArray(),
+        "main"u8.ToArray(),
+        "menu"u8.ToArray(),
+        "menuitem"u8.ToArray(),
+        "nav"u8.ToArray(),
+        "noframes"u8.ToArray(),
+        "ol"u8.ToArray(),
+        "optgroup"u8.ToArray(),
+        "option"u8.ToArray(),
+        "p"u8.ToArray(),
+        "param"u8.ToArray(),
+        "search"u8.ToArray(),
+        "section"u8.ToArray(),
+        "source"u8.ToArray(),
+        "summary"u8.ToArray(),
+        "table"u8.ToArray(),
+        "tbody"u8.ToArray(),
+        "td"u8.ToArray(),
+        "tfoot"u8.ToArray(),
+        "th"u8.ToArray(),
+        "thead"u8.ToArray(),
+        "title"u8.ToArray(),
+        "tr"u8.ToArray(),
+        "track"u8.ToArray(),
+        "ul"u8.ToArray(),
+    ];
+
+    /// <summary>Open HTML-block kind. <see cref="None"/> means no block is currently open.</summary>
+    private enum HtmlBlockKind
+    {
+        /// <summary>No HTML block currently open.</summary>
+        None = 0,
+
+        /// <summary>Type 1 — <c>&lt;pre&gt;</c>; closes on <c>&lt;/pre&gt;</c> on any line.</summary>
+        Pre,
+
+        /// <summary>Type 1 — <c>&lt;script&gt;</c>; closes on <c>&lt;/script&gt;</c>.</summary>
+        Script,
+
+        /// <summary>Type 1 — <c>&lt;style&gt;</c>; closes on <c>&lt;/style&gt;</c>.</summary>
+        Style,
+
+        /// <summary>Type 1 — <c>&lt;textarea&gt;</c>; closes on <c>&lt;/textarea&gt;</c>.</summary>
+        Textarea,
+
+        /// <summary>Type 6 — recognized block-level tag; closes on the next blank line.</summary>
+        Type6,
+    }
+
     /// <summary>
     /// Scans <paramref name="utf8"/> and writes one <see cref="BlockSpan"/> per
     /// recognized line to <paramref name="writer"/>.
@@ -95,6 +191,7 @@ public static class BlockScanner
         ArgumentNullException.ThrowIfNull(writer);
 
         var fence = default(FenceState);
+        var html = default(HtmlBlockState);
         var count = 0;
         var pos = 0;
         while (pos < utf8.Length)
@@ -103,7 +200,7 @@ public static class BlockScanner
             ReadLineExtents(utf8, pos, out var contentEnd, out var nextLine);
 
             var line = utf8[lineStart..contentEnd];
-            var kind = ClassifyLine(line, ref fence, out var level);
+            var kind = ClassifyLine(line, ref fence, ref html, out var level);
 
             var span = writer.GetSpan(1);
             span[0] = new(kind, lineStart, contentEnd - lineStart, level);
@@ -136,18 +233,24 @@ public static class BlockScanner
         contentEnd = lfOffset > 0 && utf8[lfAbs - 1] == Cr ? lfAbs - 1 : lfAbs;
     }
 
-    /// <summary>Classifies one already-trimmed-of-line-break line, with fence state.</summary>
+    /// <summary>Classifies one already-trimmed-of-line-break line, with fence + html-block state.</summary>
     /// <param name="line">UTF-8 bytes of the line.</param>
     /// <param name="fence">Open fence state, mutated when this line opens or closes a fence.</param>
+    /// <param name="html">Open html-block state, mutated when this line opens or closes a CommonMark HTML block.</param>
     /// <param name="level">Heading level / fence length / list indent populated on return.</param>
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
-    private static BlockKind ClassifyLine(ReadOnlySpan<byte> line, ref FenceState fence, out int level)
+    private static BlockKind ClassifyLine(ReadOnlySpan<byte> line, ref FenceState fence, ref HtmlBlockState html, out int level)
     {
         level = 0;
 
         if (fence.IsOpen)
         {
             return ClassifyInsideFence(line, ref fence, out level);
+        }
+
+        if (html.IsOpen)
+        {
+            return ClassifyInsideHtmlBlock(line, ref html);
         }
 
         if (line.IsEmpty)
@@ -162,15 +265,16 @@ public static class BlockScanner
             return BlockKind.IndentedCode;
         }
 
-        return ClassifyContentLine(line[indent..], ref fence, out level);
+        return ClassifyContentLine(line[indent..], ref fence, ref html, out level);
     }
 
     /// <summary>Classifies the indent-trimmed body of a content line.</summary>
     /// <param name="body">Indent-trimmed line.</param>
     /// <param name="fence">Open fence state to populate when this line opens a fence.</param>
+    /// <param name="html">Open html-block state to populate when this line opens an HTML block.</param>
     /// <param name="level">Heading level / fence length / list indent populated on return.</param>
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
-    private static BlockKind ClassifyContentLine(ReadOnlySpan<byte> body, ref FenceState fence, out int level)
+    private static BlockKind ClassifyContentLine(ReadOnlySpan<byte> body, ref FenceState fence, ref HtmlBlockState html, out int level)
     {
         level = 0;
         if (body.IsEmpty)
@@ -181,6 +285,11 @@ public static class BlockScanner
         if (TryClassifyFenceOpen(body, ref fence, out level))
         {
             return BlockKind.FencedCode;
+        }
+
+        if (TryClassifyHtmlBlockOpen(body, ref html))
+        {
+            return BlockKind.HtmlBlock;
         }
 
         if (TryClassifyAtxHeading(body, out level))
@@ -488,10 +597,287 @@ public static class BlockScanner
         return true;
     }
 
+    /// <summary>Recognizes a CommonMark HTML-block opener at <paramref name="body"/>.</summary>
+    /// <param name="body">Indent-trimmed line, leading byte already known to be <c>&lt;</c> when the open is real.</param>
+    /// <param name="html">State to populate on success.</param>
+    /// <returns>True when the line opens an HTML block.</returns>
+    /// <remarks>
+    /// CommonMark spec § 4.6 defines seven HTML-block kinds. This implementation covers Type 1
+    /// (specific tags whose content is verbatim until a matching close tag) and Type 6 (a fixed
+    /// list of block-level tag names whose block ends at the next blank line). Types 2–5 (HTML
+    /// comment, processing instruction, declaration, CDATA) and Type 7 (any other complete tag
+    /// shape) are not yet handled — they don't surface in the API-page output the renderer was
+    /// failing on.
+    /// </remarks>
+    private static bool TryClassifyHtmlBlockOpen(ReadOnlySpan<byte> body, ref HtmlBlockState html)
+    {
+        Span<byte> tagBuffer = stackalloc byte[MaxTagNameLength];
+        var tag = ExtractOpenerTagName(body, tagBuffer);
+        if (tag.IsEmpty)
+        {
+            return false;
+        }
+
+        var type1 = MapType1Tag(tag);
+        if (type1 is not HtmlBlockKind.None)
+        {
+            html = new(type1);
+            return true;
+        }
+
+        if (!IsType6Tag(tag))
+        {
+            return false;
+        }
+
+        html = new(HtmlBlockKind.Type6);
+        return true;
+    }
+
+    /// <summary>Extracts the lowercased tag name from a candidate HTML-block opener line into <paramref name="lowercaseBuffer"/>.</summary>
+    /// <param name="body">Indent-trimmed line; must start with <c>&lt;</c> for a successful match.</param>
+    /// <param name="lowercaseBuffer">Caller-owned scratch buffer (typically <c>stackalloc byte[<see cref="MaxTagNameLength"/>]</c>); the returned span is a slice of this buffer.</param>
+    /// <returns>Lowercased tag-name slice (zero-length when the line isn't an HTML tag opener).</returns>
+    private static ReadOnlySpan<byte> ExtractOpenerTagName(ReadOnlySpan<byte> body, Span<byte> lowercaseBuffer)
+    {
+        if (body.Length < 2 || body[0] != (byte)'<')
+        {
+            return default;
+        }
+
+        var tagStart = body[1] is (byte)'/' ? 2 : 1;
+        return tagStart >= body.Length ? default : ExtractTagName(body, tagStart, lowercaseBuffer);
+    }
+
+    /// <summary>Maps a lowercased tag name to its <see cref="HtmlBlockKind"/> when it's one of the four CommonMark Type 1 tags; otherwise returns <see cref="HtmlBlockKind.None"/>.</summary>
+    /// <param name="tag">Lowercased ASCII tag-name slice.</param>
+    /// <returns>The matching kind or <see cref="HtmlBlockKind.None"/>.</returns>
+    private static HtmlBlockKind MapType1Tag(ReadOnlySpan<byte> tag)
+    {
+        if (tag.SequenceEqual("pre"u8))
+        {
+            return HtmlBlockKind.Pre;
+        }
+
+        if (tag.SequenceEqual("script"u8))
+        {
+            return HtmlBlockKind.Script;
+        }
+
+        if (tag.SequenceEqual("style"u8))
+        {
+            return HtmlBlockKind.Style;
+        }
+
+        if (tag.SequenceEqual("textarea"u8))
+        {
+            return HtmlBlockKind.Textarea;
+        }
+
+        return HtmlBlockKind.None;
+    }
+
+    /// <summary>Returns the lower-cased ASCII tag name starting at <paramref name="offset"/>; empty when the bytes don't form a valid tag-name start.</summary>
+    /// <param name="body">Indent-trimmed line.</param>
+    /// <param name="offset">Offset just after <c>&lt;</c> (or <c>&lt;/</c>).</param>
+    /// <param name="lowercaseBuffer">Caller-owned scratch buffer (typically <c>stackalloc</c>); the returned span slices into this buffer.</param>
+    /// <returns>Lowercased ASCII slice of the tag name (zero-length when invalid).</returns>
+    private static ReadOnlySpan<byte> ExtractTagName(ReadOnlySpan<byte> body, int offset, Span<byte> lowercaseBuffer)
+    {
+        if (offset >= body.Length || !IsAsciiLetter(body[offset]))
+        {
+            return default;
+        }
+
+        var end = offset;
+        while (end < body.Length && IsTagNameContinue(body[end]))
+        {
+            end++;
+        }
+
+        var length = end - offset;
+        if (length > lowercaseBuffer.Length || !IsValidTagTerminator(body, end))
+        {
+            return default;
+        }
+
+        return CopyToLowercaseBuffer(body.Slice(offset, length), lowercaseBuffer);
+    }
+
+    /// <summary>Returns true when the byte at <paramref name="offset"/> in <paramref name="body"/> (or end-of-line) terminates a tag name validly (whitespace, <c>&gt;</c>, <c>/</c>).</summary>
+    /// <param name="body">Source line.</param>
+    /// <param name="offset">Position just past the tag-name characters.</param>
+    /// <returns>True for a valid terminator.</returns>
+    private static bool IsValidTagTerminator(ReadOnlySpan<byte> body, int offset)
+    {
+        var nextByte = offset < body.Length ? body[offset] : (byte)'>';
+        return nextByte is (byte)' ' or (byte)'\t' or (byte)'>' or (byte)'/' or (byte)'\r' or (byte)'\n';
+    }
+
+    /// <summary>Copies <paramref name="source"/> into <paramref name="dst"/>, ASCII-folding A-Z into a-z.</summary>
+    /// <param name="source">Source slice (caller has already bounded length to <paramref name="dst"/>'s length).</param>
+    /// <param name="dst">Destination buffer (caller-owned; typically a <c>stackalloc</c>).</param>
+    /// <returns>Span over the populated prefix of <paramref name="dst"/>.</returns>
+    private static ReadOnlySpan<byte> CopyToLowercaseBuffer(ReadOnlySpan<byte> source, Span<byte> dst)
+    {
+        for (var i = 0; i < source.Length; i++)
+        {
+            var b = source[i];
+            dst[i] = b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+        }
+
+        return dst[..source.Length];
+    }
+
+    /// <summary>Classifies a line while an HTML block is open — checks the close condition for the active <see cref="HtmlBlockKind"/> and clears <paramref name="html"/> on close.</summary>
+    /// <param name="line">Raw line bytes (leading indent preserved — HTML blocks don't strip indent).</param>
+    /// <param name="html">Open html-block state; reset to default when this line closes the block.</param>
+    /// <returns>Always <see cref="BlockKind.HtmlBlockContent"/>; the closing line is part of the block (Type 1) or already excluded by the caller (Type 6).</returns>
+    private static BlockKind ClassifyInsideHtmlBlock(ReadOnlySpan<byte> line, ref HtmlBlockState html) =>
+        html.Kind is HtmlBlockKind.Type6
+            ? ClassifyInsideType6Block(line, ref html)
+            : ClassifyInsideType1Block(line, ref html);
+
+    /// <summary>Classifies a line inside an open Type-6 HTML block; closes on a blank line.</summary>
+    /// <param name="line">Line bytes.</param>
+    /// <param name="html">Open state; reset to default when the block closes.</param>
+    /// <returns><see cref="BlockKind.Blank"/> on close, otherwise <see cref="BlockKind.HtmlBlockContent"/>.</returns>
+    private static BlockKind ClassifyInsideType6Block(ReadOnlySpan<byte> line, ref HtmlBlockState html)
+    {
+        if (line.IsEmpty || IsAllWhitespace(line))
+        {
+            html = default;
+            return BlockKind.Blank;
+        }
+
+        return BlockKind.HtmlBlockContent;
+    }
+
+    /// <summary>Classifies a line inside an open Type-1 HTML block; closes on a case-insensitive match for the active tag's close form.</summary>
+    /// <param name="line">Line bytes.</param>
+    /// <param name="html">Open state; reset to default when the block closes (the closing line is still part of the block).</param>
+    /// <returns>Always <see cref="BlockKind.HtmlBlockContent"/>.</returns>
+    private static BlockKind ClassifyInsideType1Block(ReadOnlySpan<byte> line, ref HtmlBlockState html)
+    {
+        var closeNeedle = Type1CloseNeedle(html.Kind);
+        if (closeNeedle.Length > 0 && IndexOfIgnoreCase(line, closeNeedle) >= 0)
+        {
+            html = default;
+        }
+
+        return BlockKind.HtmlBlockContent;
+    }
+
+    /// <summary>Maps a Type-1 <see cref="HtmlBlockKind"/> to its lowercased close-tag bytes.</summary>
+    /// <param name="kind">Active block kind.</param>
+    /// <returns>Lowercased close-tag bytes, or empty when <paramref name="kind"/> isn't a Type-1 kind.</returns>
+    private static ReadOnlySpan<byte> Type1CloseNeedle(HtmlBlockKind kind) => kind switch
+    {
+        HtmlBlockKind.Pre => "</pre>"u8,
+        HtmlBlockKind.Script => "</script>"u8,
+        HtmlBlockKind.Style => "</style>"u8,
+        HtmlBlockKind.Textarea => "</textarea>"u8,
+        _ => default,
+    };
+
+    /// <summary>Case-insensitive ASCII <see cref="MemoryExtensions.IndexOf{T}(ReadOnlySpan{T}, ReadOnlySpan{T})"/> for the close-tag needles.</summary>
+    /// <param name="haystack">Search target.</param>
+    /// <param name="lowerNeedle">Lowercase ASCII needle.</param>
+    /// <returns>Offset of first match or -1.</returns>
+    private static int IndexOfIgnoreCase(ReadOnlySpan<byte> haystack, ReadOnlySpan<byte> lowerNeedle)
+    {
+        if (lowerNeedle.IsEmpty || haystack.Length < lowerNeedle.Length)
+        {
+            return -1;
+        }
+
+        for (var i = 0; i + lowerNeedle.Length <= haystack.Length; i++)
+        {
+            if (MatchesIgnoreCase(haystack[i..], lowerNeedle))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>Returns true when the leading <paramref name="lowerNeedle"/>.Length bytes of <paramref name="haystack"/> equal <paramref name="lowerNeedle"/> ignoring ASCII case.</summary>
+    /// <param name="haystack">Search target (must be at least <paramref name="lowerNeedle"/>.Length bytes).</param>
+    /// <param name="lowerNeedle">Lowercase ASCII needle.</param>
+    /// <returns>True on case-insensitive prefix match.</returns>
+    private static bool MatchesIgnoreCase(ReadOnlySpan<byte> haystack, ReadOnlySpan<byte> lowerNeedle)
+    {
+        for (var j = 0; j < lowerNeedle.Length; j++)
+        {
+            var h = haystack[j];
+            var lowered = h is >= (byte)'A' and <= (byte)'Z' ? (byte)(h | AsciiCaseBit) : h;
+            if (lowered != lowerNeedle[j])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>True when every byte in <paramref name="line"/> is ASCII whitespace.</summary>
+    /// <param name="line">Line bytes.</param>
+    /// <returns>True when the line is whitespace-only.</returns>
+    private static bool IsAllWhitespace(ReadOnlySpan<byte> line)
+    {
+        for (var i = 0; i < line.Length; i++)
+        {
+            if (line[i] is not (Sp or Tab or Cr or Lf))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>True when <paramref name="b"/> is an ASCII letter.</summary>
+    /// <param name="b">Candidate byte.</param>
+    /// <returns>True when in [A-Za-z].</returns>
+    private static bool IsAsciiLetter(byte b) =>
+        b is (>= (byte)'A' and <= (byte)'Z') or (>= (byte)'a' and <= (byte)'z');
+
+    /// <summary>True when <paramref name="b"/> can continue an HTML tag name.</summary>
+    /// <param name="b">Candidate byte.</param>
+    /// <returns>True for letters, digits, or hyphens.</returns>
+    private static bool IsTagNameContinue(byte b) =>
+        IsAsciiLetter(b) || b is (>= (byte)'0' and <= (byte)'9') or (byte)'-';
+
+    /// <summary>True when <paramref name="tag"/> matches one of the CommonMark Type 6 block-level tags.</summary>
+    /// <param name="tag">Lowercased ASCII tag-name slice.</param>
+    /// <returns>True for any tag in the spec's Type 6 whitelist.</returns>
+    /// <remarks>The full Type 6 list per CommonMark spec § 4.6.</remarks>
+    private static bool IsType6Tag(ReadOnlySpan<byte> tag)
+    {
+        var tags = Type6Tags;
+        for (var i = 0; i < tags.Length; i++)
+        {
+            if (tag.SequenceEqual(tags[i]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>Open-fence state held across lines during a single scan.</summary>
     private readonly record struct FenceState(byte Marker, int Length)
     {
         /// <summary>Gets a value indicating whether a fence is currently open.</summary>
         public bool IsOpen => Length > 0;
+    }
+
+    /// <summary>Open-html-block state held across lines during a single scan.</summary>
+    private readonly record struct HtmlBlockState(HtmlBlockKind Kind)
+    {
+        /// <summary>Gets a value indicating whether an HTML block is currently open.</summary>
+        public bool IsOpen => Kind is not HtmlBlockKind.None;
     }
 }

@@ -20,29 +20,50 @@ internal static class AttrListMarker
     /// <summary>Sentinel start offset signalling "no token captured".</summary>
     private const int NoOffset = -1;
 
-    /// <summary>Gets the UTF-8 bytes for the opening <c>{:</c> marker.</summary>
+    /// <summary>Gets the UTF-8 bytes for the canonical Python-Markdown <c>{:</c> opening marker.</summary>
     public static ReadOnlySpan<byte> OpenMarker => "{:"u8;
 
-    /// <summary>Tries to match an optional-whitespace + <c>{: ... }</c> token starting exactly at <paramref name="p"/>.</summary>
+    /// <summary>Returns the earliest opener offset (<c>{:</c> or <c>{ </c>) within <paramref name="span"/>, or -1 when neither is present.</summary>
+    /// <param name="span">UTF-8 search span.</param>
+    /// <returns>Earliest opener offset or -1.</returns>
+    /// <remarks>The caller still re-validates via <see cref="TryMatchMarker"/> so the lead-byte lookahead applies.</remarks>
+    public static int IndexOfOpener(ReadOnlySpan<byte> span)
+    {
+        var colonForm = span.IndexOf(OpenMarker);
+        var spaceForm = span.IndexOf("{ "u8);
+        return MinNonNegative(colonForm, spaceForm);
+    }
+
+    /// <summary>Tries to match an optional-whitespace + <c>{:&#160;… }</c> / <c>{ … }</c> token starting at or just after <paramref name="p"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="p">Candidate offset (typically just after the closing <c>&gt;</c> or <c>&lt;/tag&gt;</c>).</param>
     /// <param name="contentStart">First byte of the inner attr-list text on success.</param>
     /// <param name="contentEnd">Offset of the closing <c>}</c> on success.</param>
     /// <param name="markerEnd">Offset just past the closing <c>}</c> on success.</param>
     /// <returns>True when a well-formed marker was found.</returns>
+    /// <remarks>
+    /// Accepts two opener shapes:
+    /// <list type="bullet">
+    ///   <item><description>The canonical Python-Markdown form <c>{: …}</c>.</description></item>
+    ///   <item><description>The mkdocs-material shorthand <c>{ … }</c> (open-brace plus inner whitespace, no colon)
+    ///     where the inner content starts with one of <c>.</c>, <c>#</c>, an ASCII-letter
+    ///     attribute-name byte, or another whitespace/closing brace. The shape rules out the
+    ///     overwhelming majority of code-block uses of <c>{</c> while still catching the
+    ///     leading-space form mkdocs-material conventions emit.</description></item>
+    /// </list>
+    /// </remarks>
     public static bool TryMatchMarker(ReadOnlySpan<byte> source, int p, out int contentStart, out int contentEnd, out int markerEnd)
     {
         contentStart = NoOffset;
         contentEnd = NoOffset;
         markerEnd = NoOffset;
 
-        var afterWs = AsciiByteHelpers.SkipWhitespace(source, p);
-        if (afterWs + OpenMarker.Length >= source.Length || !source[afterWs..].StartsWith(OpenMarker))
+        if (!TryMatchOpener(source, p, out var afterOpener))
         {
             return false;
         }
 
-        var inside = AsciiByteHelpers.SkipWhitespace(source, afterWs + OpenMarker.Length);
+        var inside = AsciiByteHelpers.SkipWhitespace(source, afterOpener);
         var closeRel = source[inside..].IndexOf((byte)'}');
         if (closeRel < 0)
         {
@@ -464,6 +485,68 @@ internal static class AttrListMarker
         }
 
         Utf8StringWriter.Write(sink, source.Slice(range.Start, range.Length));
+    }
+
+    /// <summary>Matches the opener portion (up to and including the colon-or-whitespace after the brace) at or just after <paramref name="p"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="p">Candidate offset.</param>
+    /// <param name="afterOpener">Offset just past the matched opener bytes.</param>
+    /// <returns>True when a recognized opener shape was found.</returns>
+    private static bool TryMatchOpener(ReadOnlySpan<byte> source, int p, out int afterOpener)
+    {
+        afterOpener = NoOffset;
+        var afterWs = AsciiByteHelpers.SkipWhitespace(source, p);
+        if (afterWs + 1 >= source.Length || source[afterWs] is not (byte)'{')
+        {
+            return false;
+        }
+
+        var afterBrace = afterWs + 1;
+        var nextByte = source[afterBrace];
+
+        if (nextByte is (byte)':')
+        {
+            afterOpener = afterBrace + 1;
+            return true;
+        }
+
+        if (!AsciiByteHelpers.IsAsciiWhitespace(nextByte) || !LooksLikeAttrListInner(source, afterBrace))
+        {
+            return false;
+        }
+
+        afterOpener = afterBrace;
+        return true;
+    }
+
+    /// <summary>Returns the smaller of two offsets, treating -1 as "not found".</summary>
+    /// <param name="a">First offset.</param>
+    /// <param name="b">Second offset.</param>
+    /// <returns>The smaller non-negative offset, or -1 when both are -1.</returns>
+    private static int MinNonNegative(int a, int b) =>
+        (a, b) switch
+        {
+            (< 0, < 0) => -1,
+            (< 0, _) => b,
+            (_, < 0) => a,
+            _ => Math.Min(a, b),
+        };
+
+    /// <summary>Returns true when the bytes after <paramref name="p"/> look like attr-list inner content.</summary>
+    /// <remarks>The lead byte must be one of <c>}</c> (empty marker), <c>.</c>, <c>#</c>, or an attribute-name start byte. Rules out incidental <c>{ </c> usage in code blocks / templates.</remarks>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="p">Offset just past the opening brace (must already be ASCII whitespace).</param>
+    /// <returns>True when an attr-list lead byte follows the post-brace whitespace.</returns>
+    private static bool LooksLikeAttrListInner(ReadOnlySpan<byte> source, int p)
+    {
+        var afterInnerWs = AsciiByteHelpers.SkipWhitespace(source, p);
+        if (afterInnerWs >= source.Length)
+        {
+            return false;
+        }
+
+        var lead = source[afterInnerWs];
+        return lead is (byte)'}' or (byte)'.' or (byte)'#' || IsAttrNameStart(lead);
     }
 
     /// <summary>Trims trailing whitespace bytes from a range.</summary>

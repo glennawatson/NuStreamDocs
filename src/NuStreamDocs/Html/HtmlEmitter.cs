@@ -104,6 +104,13 @@ public static class HtmlEmitter
                     break;
                 }
 
+                case BlockKind.HtmlBlock:
+                case BlockKind.HtmlBlockContent:
+                {
+                    EmitHtmlBlockLine(source, block, writer);
+                    break;
+                }
+
                 case BlockKind.Blank:
                 case BlockKind.None:
                 {
@@ -247,6 +254,17 @@ public static class HtmlEmitter
     {
         var line = source.Slice(block.Start, block.Length);
         HtmlEscape.EscapeText(line, writer);
+        Write("\n"u8, writer);
+    }
+
+    /// <summary>Writes one line of an HTML block verbatim — no inline render, no escape.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="block">Line block descriptor.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void EmitHtmlBlockLine(ReadOnlySpan<byte> source, in BlockSpan block, IBufferWriter<byte> writer)
+    {
+        var line = source.Slice(block.Start, block.Length);
+        Write(line, writer);
         Write("\n"u8, writer);
     }
 

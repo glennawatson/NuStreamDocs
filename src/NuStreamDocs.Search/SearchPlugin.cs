@@ -151,10 +151,10 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
             _ => "/" + _options.OutputSubdirectory + "/pagefind-entry.json",
         };
 
-        HeadExtraWriter.WriteUtf8(writer, "<meta name=\"sourcemkdoc:search-format\" content=\""u8);
+        HeadExtraWriter.WriteUtf8(writer, "<meta name=\"nustreamdocs:search-format\" content=\""u8);
         HeadExtraWriter.WriteString(writer, FormatName(_options.Format));
         HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
-        HeadExtraWriter.WriteUtf8(writer, "<meta name=\"sourcemkdoc:search-index\" content=\""u8);
+        HeadExtraWriter.WriteUtf8(writer, "<meta name=\"nustreamdocs:search-index\" content=\""u8);
         HeadExtraWriter.WriteString(writer, manifestPath);
         HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
     }

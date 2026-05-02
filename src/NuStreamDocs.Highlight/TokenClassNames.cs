@@ -10,8 +10,9 @@ namespace NuStreamDocs.Highlight;
 /// taxonomy: <c>k</c>, <c>kc</c>, <c>kt</c>, <c>kd</c>, <c>s</c>,
 /// <c>s1</c>, <c>s2</c>, <c>se</c>, <c>n</c>, <c>nf</c>, <c>nc</c>,
 /// <c>nb</c>, <c>na</c>, <c>o</c>, <c>p</c>, <c>mi</c>, <c>mf</c>,
-/// <c>mh</c>, <c>c1</c>, <c>cm</c>, <c>cs</c>, <c>cp</c>. Themes that
-/// style Pygments output target these classes verbatim.
+/// <c>mh</c>, <c>c1</c>, <c>cm</c>, <c>cs</c>, <c>cp</c>,
+/// <c>gi</c>, <c>gd</c>, <c>gh</c>, <c>gu</c>. Themes that style
+/// Pygments output target these classes verbatim.
 /// </remarks>
 public static class TokenClassNames
 {
@@ -66,6 +67,10 @@ public static class TokenClassNames
         table[(int)TokenClass.CommentMulti] = [.. "cm"u8];
         table[(int)TokenClass.CommentSpecial] = [.. "cs"u8];
         table[(int)TokenClass.CommentPreproc] = [.. "cp"u8];
+        table[(int)TokenClass.DiffAddedLine] = [.. "gi"u8];
+        table[(int)TokenClass.DiffRemovedLine] = [.. "gd"u8];
+        table[(int)TokenClass.DiffFileHeader] = [.. "gh"u8];
+        table[(int)TokenClass.DiffHunkHeader] = [.. "gu"u8];
         return table;
     }
 }

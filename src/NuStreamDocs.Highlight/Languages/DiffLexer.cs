@@ -9,15 +9,15 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>Unified-diff lexer.</summary>
 /// <remarks>
-/// Pygments classifies diff lines into <c>Generic.Inserted</c> (<c>gi</c>),
-/// <c>Generic.Deleted</c> (<c>gd</c>), <c>Generic.Subheading</c> (<c>gu</c>)
-/// and <c>Generic.Heading</c> (<c>gh</c>). To stay within the existing
-/// taxonomy without adding new enum values, we map:
+/// Each diff-line shape gets its own descriptive token class; the CSS
+/// short forms still match Pygments' taxonomy so existing themes
+/// (mkdocs-material, the default Pygments stylesheets, GitHub's diff
+/// styling) light up unchanged:
 /// <list type="bullet">
-/// <item>added (<c>+...</c>) → <see cref="TokenClass.StringEscape"/> (<c>se</c>) — themes pick a green tone</item>
-/// <item>removed (<c>-...</c>) → <see cref="TokenClass.CommentPreproc"/> (<c>cp</c>)</item>
-/// <item>hunk header (<c>@@</c>) → <see cref="TokenClass.CommentSpecial"/> (<c>cs</c>)</item>
-/// <item>file header (<c>---</c>/<c>+++</c>) → <see cref="TokenClass.CommentMulti"/> (<c>cm</c>)</item>
+/// <item>added (<c>+...</c>) → <see cref="TokenClass.DiffAddedLine"/> (<c>gi</c>)</item>
+/// <item>removed (<c>-...</c>) → <see cref="TokenClass.DiffRemovedLine"/> (<c>gd</c>)</item>
+/// <item>hunk header (<c>@@ ... @@</c>) → <see cref="TokenClass.DiffHunkHeader"/> (<c>gu</c>)</item>
+/// <item>file header (<c>---</c> / <c>+++</c> / <c>diff …</c> / <c>index …</c> / <c>Only in …</c>) → <see cref="TokenClass.DiffFileHeader"/> (<c>gh</c>)</item>
 /// </list>
 /// </remarks>
 public static class DiffLexer
@@ -62,7 +62,7 @@ public static class DiffLexer
                 static slice => TokenMatchers.MatchPrefixedLineLongest(
                     slice,
                     FileHeaderPrefixes),
-                TokenClass.CommentMulti,
+                TokenClass.DiffFileHeader,
                 LexerRule.NoStateChange)
             {
                 FirstBytes = FileHeaderFirst,
@@ -72,7 +72,7 @@ public static class DiffLexer
             // Hunk header: @@ ... line.
             new(
                 static slice => TokenMatchers.MatchPrefixedLine(slice, (byte)'@', (byte)'@'),
-                TokenClass.CommentSpecial,
+                TokenClass.DiffHunkHeader,
                 LexerRule.NoStateChange)
             {
                 FirstBytes = HunkFirst,
@@ -82,7 +82,7 @@ public static class DiffLexer
             // Added line: + ... line.
             new(
                 static slice => TokenMatchers.MatchPrefixedLine(slice, (byte)'+'),
-                TokenClass.StringEscape,
+                TokenClass.DiffAddedLine,
                 LexerRule.NoStateChange)
             {
                 FirstBytes = AddedFirst,
@@ -92,7 +92,7 @@ public static class DiffLexer
             // Removed line: - ... line.
             new(
                 static slice => TokenMatchers.MatchPrefixedLine(slice, (byte)'-'),
-                TokenClass.CommentPreproc,
+                TokenClass.DiffRemovedLine,
                 LexerRule.NoStateChange)
             {
                 FirstBytes = RemovedFirst,

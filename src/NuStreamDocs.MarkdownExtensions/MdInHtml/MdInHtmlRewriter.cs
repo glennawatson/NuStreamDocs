@@ -130,54 +130,88 @@ internal static class MdInHtmlRewriter
         return true;
     }
 
-    /// <summary>Locates a <c>markdown="…"</c> attribute inside the attribute area of an open tag.</summary>
+    /// <summary>Locates a <c>markdown</c> / <c>markdown="…"</c> attribute inside the attribute area of an open tag.</summary>
     /// <param name="attrs">Attribute span (the bytes between the tag name and the closing <c>&gt;</c>).</param>
     /// <param name="relStart">Relative start of the attribute (including the leading whitespace).</param>
-    /// <param name="relEnd">Relative end of the attribute (just past the closing quote).</param>
+    /// <param name="relEnd">Relative end of the attribute (just past the closing quote, or just past the bare token).</param>
     /// <returns>True when an attribute was found.</returns>
+    /// <remarks>
+    /// Recognizes both the quoted form (<c>markdown="1"</c> / <c>"block"</c> / <c>"span"</c>) and
+    /// the bare-attribute form (<c>markdown</c> with no <c>=</c>, treated as <c>markdown="1"</c>).
+    /// The bare form is the shorthand mkdocs-material conventions emit (e.g.
+    /// <c>&lt;div class="grid cards" markdown&gt;</c>).
+    /// </remarks>
     private static bool TryFindMarkdownAttribute(ReadOnlySpan<byte> attrs, out int relStart, out int relEnd)
     {
         relStart = 0;
         relEnd = 0;
-        var needle = "markdown="u8;
-        for (var i = 0; i < attrs.Length - needle.Length; i++)
+        var token = "markdown"u8;
+        for (var i = 0; i + token.Length <= attrs.Length; i++)
         {
-            if (!IsAttributeBoundary(attrs, i))
+            if (!IsAttributeBoundary(attrs, i) || !attrs[(i + 1)..].StartsWith(token))
             {
                 continue;
             }
 
-            var afterWhitespace = i + 1;
-            if (!attrs[afterWhitespace..].StartsWith(needle))
+            if (TryMatchAttributeFromTokenStart(attrs, i, token.Length, out relEnd))
             {
-                continue;
+                relStart = i;
+                return true;
             }
-
-            var quoteStart = afterWhitespace + needle.Length;
-            if (quoteStart >= attrs.Length || attrs[quoteStart] is not (byte)'"')
-            {
-                continue;
-            }
-
-            var valueStart = quoteStart + QuoteLength;
-            var valueRel = attrs[valueStart..].IndexOf((byte)'"');
-            if (valueRel < 0)
-            {
-                continue;
-            }
-
-            var value = attrs.Slice(valueStart, valueRel);
-            if (!IsRecognizedMarkdownValue(value))
-            {
-                continue;
-            }
-
-            relStart = i;
-            relEnd = valueStart + valueRel + QuoteLength;
-            return true;
         }
 
         return false;
+    }
+
+    /// <summary>Continues parsing from the byte just past <c>markdown</c> — accepts the bare form, the quoted form, or rejects when the byte is part of a longer attribute name.</summary>
+    /// <param name="attrs">Attribute span.</param>
+    /// <param name="boundaryOffset">Offset of the leading whitespace before <c>markdown</c>.</param>
+    /// <param name="tokenLength">Length of the literal <c>markdown</c> token.</param>
+    /// <param name="relEnd">Exclusive end of the matched attribute on success.</param>
+    /// <returns>True when a recognized <c>markdown</c> attribute was matched.</returns>
+    private static bool TryMatchAttributeFromTokenStart(ReadOnlySpan<byte> attrs, int boundaryOffset, int tokenLength, out int relEnd)
+    {
+        relEnd = 0;
+        var afterToken = boundaryOffset + 1 + tokenLength;
+        if (afterToken >= attrs.Length || IsAttributeBoundary(attrs, afterToken))
+        {
+            // Token sits flush against `>` (afterToken == attrs.Length) or
+            // followed by whitespace — both are the bare form.
+            relEnd = afterToken;
+            return true;
+        }
+
+        if (attrs[afterToken] is not (byte)'=')
+        {
+            // `markdownish`, `markdown-foo` — not our attribute.
+            return false;
+        }
+
+        return TryMatchQuotedValue(attrs, afterToken + 1, out relEnd);
+    }
+
+    /// <summary>Attempts to match <c>"value"</c> at <paramref name="quoteStart"/> where the value is one of the recognized markdown-attribute values.</summary>
+    /// <param name="attrs">Attribute span.</param>
+    /// <param name="quoteStart">Offset of the expected opening <c>"</c>.</param>
+    /// <param name="relEnd">Exclusive end of the matched attribute on success.</param>
+    /// <returns>True on match.</returns>
+    private static bool TryMatchQuotedValue(ReadOnlySpan<byte> attrs, int quoteStart, out int relEnd)
+    {
+        relEnd = 0;
+        if (quoteStart >= attrs.Length || attrs[quoteStart] is not (byte)'"')
+        {
+            return false;
+        }
+
+        var valueStart = quoteStart + QuoteLength;
+        var valueRel = attrs[valueStart..].IndexOf((byte)'"');
+        if (valueRel < 0 || !IsRecognizedMarkdownValue(attrs.Slice(valueStart, valueRel)))
+        {
+            return false;
+        }
+
+        relEnd = valueStart + valueRel + QuoteLength;
+        return true;
     }
 
     /// <summary>Returns true when the byte at <paramref name="offset"/> is whitespace separating attributes.</summary>

@@ -44,15 +44,25 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
     }
 
-    /// <summary>Diff classifies hunk headers, additions, and deletions distinctly.</summary>
+    /// <summary>Diff classifies hunk headers, additions, and deletions to Pygments' Generic.* CSS classes (<c>gi</c> / <c>gd</c> / <c>gu</c>).</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task DiffClassifiesAddedRemovedAndHunkHeader()
     {
         var html = DiffLexer.Instance.Render("@@ -1 +1 @@\n-old\n+new\n"u8);
-        await Assert.That(html.Contains("<span class=\"cs\">@@ -1 +1 @@</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"se\">+new</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"cp\">-old</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"gu\">@@ -1 +1 @@</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"gi\">+new</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"gd\">-old</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>Diff classifies file-header lines as <see cref="TokenClass.DiffFileHeader"/> (<c>gh</c>) — covers <c>---</c>, <c>+++</c>, <c>diff …</c>, <c>index …</c>, <c>Only in …</c>.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task DiffClassifiesFileHeader()
+    {
+        var html = DiffLexer.Instance.Render("--- a/Old.cs\n+++ b/New.cs\n@@ -1 +1 @@\n"u8);
+        await Assert.That(html.Contains("<span class=\"gh\">--- a/Old.cs</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"gh\">+++ b/New.cs</span>", StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Razor classifies inline <c>@var</c> expressions and switches into C# inside <c>@{ … }</c> blocks.</summary>
@@ -64,5 +74,60 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"n\">@Model.Name</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">var</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">42</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>F# classifies the <c>let</c>/<c>fun</c>/<c>match</c> keywords, identifiers, and the pipe operator.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FSharpClassifiesKeywordsAndPipe()
+    {
+        var html = FSharpLexer.Instance.Render("let square x = x * x\nlet result = [1; 2; 3] |> List.map square\n"u8);
+        await Assert.That(html.Contains("<span class=\"k\">let</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"o\">|&gt;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"n\">List</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>F# classifies <c>fun</c> lambda syntax (the rxui homepage hero sample) and the <c>-&gt;</c> arrow operator.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FSharpClassifiesFunLambda()
+    {
+        var html = FSharpLexer.Instance.Render("this.WhenAnyValue(fun x -> x.SearchQuery)"u8);
+        await Assert.That(html.Contains("<span class=\"k\">fun</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"o\">-&gt;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"n\">WhenAnyValue</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>F# classifies <c>true</c>/<c>false</c>/<c>null</c> as constants and primitives in the Pygments F# whitelist (<c>bool</c>, <c>string</c>, <c>list</c>, …) as type keywords.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FSharpClassifiesConstantsAndPrimitives()
+    {
+        var html = FSharpLexer.Instance.Render("let active : bool = true\nlet items : list = []\n"u8);
+        await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"kt\">bool</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"kt\">list</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>F# block-comment <c>(* ... *)</c>, line comment <c>//</c>, and doc comment <c>///</c> all classify into the appropriate comment subclasses.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FSharpClassifiesAllCommentStyles()
+    {
+        var html = FSharpLexer.Instance.Render("/// doc\n// line\n(* block *)\nlet x = 1"u8);
+        await Assert.That(html.Contains("<span class=\"cs\">/// doc</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"c1\">// line</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"cm\">(* block *)</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>F# word operators <c>and</c>/<c>or</c>/<c>not</c> classify as operators (Pygments parity), not as identifiers.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FSharpClassifiesWordOperators()
+    {
+        var html = FSharpLexer.Instance.Render("if not (a and b or c) then 1 else 0"u8);
+        await Assert.That(html.Contains("<span class=\"o\">not</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"o\">and</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"o\">or</span>", StringComparison.Ordinal)).IsTrue();
     }
 }

@@ -29,13 +29,24 @@ internal static class AttrListRewriter
     /// <returns>True when at least one rewrite happened.</returns>
     private delegate bool ByteStage(ReadOnlySpan<byte> source, IBufferWriter<byte> sink);
 
-    /// <summary>Gets the UTF-8 marker the text must contain for any rewrite to happen.</summary>
-    private static ReadOnlySpan<byte> Marker => "{:"u8;
-
-    /// <summary>Returns true when <paramref name="html"/> contains at least one <c>{:</c> marker.</summary>
+    /// <summary>Returns true when <paramref name="html"/> may contain an attr-list marker.</summary>
     /// <param name="html">Page HTML span.</param>
-    /// <returns>True when a candidate exists.</returns>
-    public static bool NeedsRewrite(ReadOnlySpan<byte> html) => html.IndexOf(Marker) >= 0;
+    /// <returns>True when one of the recognized opener byte-sequences appears anywhere in the
+    /// document; the per-position matchers in <see cref="AttrListMarker.TryMatchMarker"/> apply
+    /// the full position + shape check.</returns>
+    /// <remarks>
+    /// Two vectorized <see cref="System.MemoryExtensions.IndexOf{T}(System.ReadOnlySpan{T}, System.ReadOnlySpan{T})"/>
+    /// probes — canonical Python-Markdown <c>{:</c> anywhere, or the mkdocs-material shorthand
+    /// <c>{ </c> (open-brace + whitespace) which catches both the trailing-after-tag form
+    /// (<c>&lt;a&gt;text&lt;/a&gt;{ .class }</c>) and the in-body form
+    /// (<c>&lt;h1&gt;Heading { #id }&lt;/h1&gt;</c>). Pages whose only braces live in code
+    /// blocks <i>without</i> a following whitespace (e.g. <c>{foo:1}</c> JSON) skip all three
+    /// byte-stage scanners; the per-position matchers reject false positives where the gate
+    /// over-matches.
+    /// </remarks>
+    public static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
+        html.IndexOf("{:"u8) >= 0
+        || html.IndexOf("{ "u8) >= 0;
 
     /// <summary>Rewrites every block- and inline-level attr-list token in <paramref name="html"/> directly into <paramref name="sink"/>.</summary>
     /// <param name="html">Page HTML span.</param>

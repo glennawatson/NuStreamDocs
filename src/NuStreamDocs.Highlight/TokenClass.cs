@@ -86,4 +86,16 @@ public enum TokenClass
 
     /// <summary>Preprocessor directive.</summary>
     CommentPreproc,
+
+    /// <summary>Diff-format added line (<c>+ ...</c>); rendered as Pygments' <c>gi</c> CSS class.</summary>
+    DiffAddedLine,
+
+    /// <summary>Diff-format removed line (<c>- ...</c>); rendered as Pygments' <c>gd</c> CSS class.</summary>
+    DiffRemovedLine,
+
+    /// <summary>Diff-format file header (<c>--- a/file</c>, <c>+++ b/file</c>, <c>diff …</c>, <c>index …</c>); rendered as Pygments' <c>gh</c> CSS class.</summary>
+    DiffFileHeader,
+
+    /// <summary>Diff-format hunk header (<c>@@ … @@</c>); rendered as Pygments' <c>gu</c> CSS class.</summary>
+    DiffHunkHeader,
 }

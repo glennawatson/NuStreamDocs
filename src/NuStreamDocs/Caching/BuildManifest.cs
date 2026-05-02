@@ -37,7 +37,7 @@ public sealed class BuildManifest
     private BuildManifest(Dictionary<string, ManifestEntry> entries) => _entries = entries;
 
     /// <summary>Gets the file name written under the output root.</summary>
-    public static string FileName => ".sourcemkdoc.manifest.json";
+    public static string FileName => ".nustreamdocs.manifest.json";
 
     /// <summary>Gets the number of entries currently tracked.</summary>
     public int Count => _entries.Count;

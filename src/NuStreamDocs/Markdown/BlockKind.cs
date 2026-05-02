@@ -46,4 +46,11 @@ public enum BlockKind
 
     /// <summary>Default text container.</summary>
     Paragraph,
+
+    /// <summary>Opening line of a CommonMark HTML block (Type 1 or Type 6).</summary>
+    /// <remarks>Type 1 covers <c>&lt;pre&gt;</c> / <c>&lt;script&gt;</c> / <c>&lt;style&gt;</c> / <c>&lt;textarea&gt;</c>; Type 6 covers a fixed list of block-level tag names.</remarks>
+    HtmlBlock,
+
+    /// <summary>Continuation line inside an open HTML block; emitted verbatim by the renderer.</summary>
+    HtmlBlockContent,
 }
