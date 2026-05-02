@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
 
 namespace NuStreamDocs.Templating;
 
@@ -64,7 +63,7 @@ public sealed class Template
     /// <param name="data">Root data scope.</param>
     /// <param name="partials">Map of partial-name to compiled <see cref="Template"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public void Render(TemplateData data, FrozenDictionary<string, Template> partials, IBufferWriter<byte> writer)
+    public void Render(TemplateData data, Dictionary<string, Template> partials, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(data);
         ArgumentNullException.ThrowIfNull(partials);

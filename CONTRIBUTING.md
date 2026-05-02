@@ -173,10 +173,24 @@ Test projects relax the allocation rules but keep the style rules.
 - **US English in identifiers and prose.** Type names, member names,
   XML docs, comments, log/diagnostic messages, and commit messages
   use US spelling. Examples: `Normalize` (not the UK `-ise` form),
-  `Serialize`, `Initialize`, `Color` (not `Color`), `Behavior`
-  (not `Behavior`). The `.editorconfig`,
+  `Serialize`, `Initialize`, `Color` (not `Colour`), `Behavior`
+  (not `Behaviour`). The `.editorconfig`,
   analyzer rule names, and the BCL itself are US English; mixing
   dialects splits casing across tooling search.
+- **`<summary>` says what; `<remarks>` says how.** Every public *and*
+  internal type, method, and property is documented with a
+  `<summary>` that describes *what it does* — never how it does it.
+  Implementation detail (which collection backs it, what algorithm
+  is used, table sizes, hashing strategy, GC behaviour, whether
+  it's pooled / cached / lazy) goes in `<remarks>`. Compare:
+  - **Wrong:** `Byte-keyed icon lookup backed by a Dictionary&lt;byte[], (int, int)&gt; over a concatenated SVG blob with an IAlternateEqualityComparer for span lookups…`
+  - **Right:** `Resolves a Material Design icon name to its SVG path-data bytes.`
+  - **Wrong:** `Returns the local path for the URL — xxHash3-keyed concurrent dictionary lookup, falling back to BuildLocalPath on miss.`
+  - **Right:** `Returns the local path for the URL.`
+  When an internal method's algorithm is genuinely non-obvious and
+  worth documenting (a workaround, a perf-driven choice, a load-
+  bearing invariant), put that explanation in a `<remarks>` block —
+  never let it leak into the `<summary>`.
 - **`var` for locals; targeted `new()` for typed slots.** Always
   `var x = ...` for locals; never repeat the type on both sides
   (`Foo x = new Foo()` is banned — use `var x = new Foo()` or

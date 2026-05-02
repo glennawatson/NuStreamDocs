@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Collections.Frozen;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -17,7 +16,7 @@ namespace NuStreamDocs.LinkValidator;
 /// <remarks>
 /// Built via <see cref="BuildAsync"/> at finalize time. All keys and
 /// values are raw UTF-8 byte arrays; the corpus is keyed on a
-/// byte-array <see cref="FrozenDictionary{TKey, TValue}"/> with
+/// byte-array <see cref="Dictionary{TKey, TValue}"/> with
 /// <see cref="ByteArrayComparer"/> so the validator's per-link
 /// resolution does no UTF-16 transcoding.
 /// </remarks>
@@ -35,11 +34,11 @@ public sealed class ValidationCorpus
     ];
 
     /// <summary>Pages keyed by site-relative URL bytes (forward-slashed UTF-8).</summary>
-    private readonly FrozenDictionary<byte[], PageLinks> _pages;
+    private readonly Dictionary<byte[], PageLinks> _pages;
 
     /// <summary>Initializes a new instance of the <see cref="ValidationCorpus"/> class.</summary>
     /// <param name="pages">Pages keyed by URL bytes.</param>
-    private ValidationCorpus(FrozenDictionary<byte[], PageLinks> pages) => _pages = pages;
+    private ValidationCorpus(Dictionary<byte[], PageLinks> pages) => _pages = pages;
 
     /// <summary>Gets every page in the corpus.</summary>
     public PageLinks[] Pages { get; private init; } = [];
@@ -73,8 +72,8 @@ public sealed class ValidationCorpus
                 pages[pageUrlBytes] = ScanPage(pageUrlBytes, bytes);
             }).ConfigureAwait(false);
 
-        var frozen = pages.ToFrozenDictionary(ByteArrayComparer.Instance);
-        return new(frozen) { Pages = [.. frozen.Values] };
+        var snapshot = new Dictionary<byte[], PageLinks>(pages, ByteArrayComparer.Instance);
+        return new(snapshot) { Pages = [.. snapshot.Values] };
     }
 
     /// <summary>Tests whether a page exists at <paramref name="pageUrl"/>.</summary>

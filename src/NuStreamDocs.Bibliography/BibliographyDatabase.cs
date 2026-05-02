@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
 using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography;
@@ -10,14 +9,12 @@ namespace NuStreamDocs.Bibliography;
 /// <summary>
 /// Read-mostly lookup of <see cref="CitationEntry"/> records keyed by
 /// <see cref="CitationEntry.Id"/>. Built once at configure time and
-/// queried on every <c>[@key]</c> resolution; backed by a
-/// <see cref="FrozenDictionary{TKey, TValue}"/> so the per-citation
-/// lookup is a near-constant probe with no GC churn.
+/// queried on every <c>[@key]</c> resolution.
 /// </summary>
 public sealed class BibliographyDatabase
 {
-    /// <summary>Frozen lookup; built once, queried many times.</summary>
-    private readonly FrozenDictionary<string, CitationEntry> _byId;
+    /// <summary>Citation lookup; built once at configure, queried per [@key].</summary>
+    private readonly Dictionary<string, CitationEntry> _byId;
 
     /// <summary>Stable insertion-order array used by the bibliography emitter.</summary>
     private readonly CitationEntry[] _ordered;
@@ -43,7 +40,7 @@ public sealed class BibliographyDatabase
             }
         }
 
-        _byId = dict.ToFrozenDictionary(StringComparer.Ordinal);
+        _byId = dict;
     }
 
     /// <summary>Gets the empty database — useful as the default option set.</summary>

@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
 using NuStreamDocs.Templating;
 
 namespace NuStreamDocs.Theme.Common;
@@ -33,8 +32,8 @@ public static class ThemeModelLoader
 
     /// <summary>Compiles the standard <c>partials/*.mustache</c> set.</summary>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
-    /// <returns>A frozen lookup keyed by the partial stem name.</returns>
-    public static FrozenDictionary<string, Template> LoadStandardPartials(Func<string, byte[]> readBytes)
+    /// <returns>An ordinal-keyed lookup keyed by the partial stem name.</returns>
+    public static Dictionary<string, Template> LoadStandardPartials(Func<string, byte[]> readBytes)
     {
         ArgumentNullException.ThrowIfNull(readBytes);
 
@@ -45,7 +44,7 @@ public static class ThemeModelLoader
             working[name] = Template.Compile(readBytes("partials/" + name + ".mustache"));
         }
 
-        return working.ToFrozenDictionary(StringComparer.Ordinal);
+        return working;
     }
 
     /// <summary>Loads every static asset listed in <paramref name="staticAssetPaths"/>.</summary>

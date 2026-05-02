@@ -15,7 +15,7 @@ namespace NuStreamDocs.Templating;
 /// <para>
 /// Backed by plain <see cref="Dictionary{TKey, TValue}"/> keyed ordinally. The data
 /// scope is per-render and small (typically ≤ 32 entries each for scalars and
-/// sections), so the freeze cost of <c>FrozenDictionary</c> wouldn't repay itself —
+/// sections), so the freeze cost of <c>Dictionary</c> wouldn't repay itself —
 /// `Dictionary` lookup is already O(1) and the per-render shaping cost dominates
 /// any constant-factor difference.
 /// </para>

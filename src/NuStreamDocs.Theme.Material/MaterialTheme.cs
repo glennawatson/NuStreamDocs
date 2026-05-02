@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
 using System.Collections.ObjectModel;
 using NuStreamDocs.Templating;
 using NuStreamDocs.Theme.Common;
@@ -38,7 +37,7 @@ public sealed class MaterialTheme : IThemePackage
     /// <param name="page">Compiled top-level page template.</param>
     /// <param name="partials">Compiled partial templates.</param>
     /// <param name="staticAssets">Static-asset bundle keyed by relative path.</param>
-    private MaterialTheme(Template page, FrozenDictionary<string, Template> partials, Dictionary<string, byte[]> staticAssets)
+    private MaterialTheme(Template page, Dictionary<string, Template> partials, Dictionary<string, byte[]> staticAssets)
     {
         Page = page;
         Partials = partials;
@@ -50,7 +49,7 @@ public sealed class MaterialTheme : IThemePackage
     public Template Page { get; }
 
     /// <summary>Gets the compiled partial registry, keyed by partial name. Built once at theme load and probed repeatedly across page renders, so freezing pays off here.</summary>
-    public FrozenDictionary<string, Template> Partials { get; }
+    public Dictionary<string, Template> Partials { get; }
 
     /// <summary>
     /// Gets the static-asset map, keyed by relative output path. Plain

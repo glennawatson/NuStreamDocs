@@ -25,7 +25,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : ID
 
     /// <summary>
     /// Lookup of compressible extensions; per-instance and small (~7 entries by default),
-    /// so a plain <see cref="HashSet{T}"/> outperforms <c>FrozenSet</c> here — the freeze
+    /// so a plain <see cref="HashSet{T}"/> outperforms <c>HashSet</c> here — the freeze
     /// cost wouldn't repay itself at this volume.
     /// </summary>
     private readonly HashSet<string> _extensionLookup = new((options ?? throw new ArgumentNullException(nameof(options))).Extensions, StringComparer.OrdinalIgnoreCase);

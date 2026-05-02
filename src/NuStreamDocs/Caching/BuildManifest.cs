@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Collections.Frozen;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 
 namespace NuStreamDocs.Caching;
@@ -20,7 +20,7 @@ namespace NuStreamDocs.Caching;
 /// readable, diffable, schema-loose. Read via <see cref="JsonDocument"/>
 /// (no reflection) so the AOT-clean rule holds; written via
 /// <see cref="Utf8JsonWriter"/> straight to <c>FileStream</c>.
-/// In-memory the entries live in a <see cref="FrozenDictionary{TKey,TValue}"/>
+/// In-memory the entries live in a <see cref="Dictionary{TKey,TValue}"/>
 /// keyed by relative path for O(1) lookup during the parallel render
 /// stage.
 /// </remarks>
@@ -30,11 +30,11 @@ public sealed class BuildManifest
     private const int SchemaVersion = 1;
 
     /// <summary>Relative-path → entry lookup, frozen for read-mostly access.</summary>
-    private FrozenDictionary<string, ManifestEntry> _entries;
+    private Dictionary<string, ManifestEntry> _entries;
 
     /// <summary>Initializes a new instance of the <see cref="BuildManifest"/> class.</summary>
     /// <param name="entries">Entries to seed the manifest with.</param>
-    private BuildManifest(FrozenDictionary<string, ManifestEntry> entries) => _entries = entries;
+    private BuildManifest(Dictionary<string, ManifestEntry> entries) => _entries = entries;
 
     /// <summary>Gets the file name written under the output root.</summary>
     public static string FileName => ".sourcemkdoc.manifest.json";
@@ -45,7 +45,7 @@ public sealed class BuildManifest
     /// <summary>Returns an empty manifest.</summary>
     /// <returns>A manifest with no entries.</returns>
     public static BuildManifest Empty() =>
-        new(FrozenDictionary<string, ManifestEntry>.Empty);
+        new(EmptyCollections.DictionaryFor<string, ManifestEntry>());
 
     /// <summary>
     /// Loads the manifest from <paramref name="outputRoot"/>; returns an

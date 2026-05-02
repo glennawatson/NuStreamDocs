@@ -2,20 +2,17 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
-
 namespace NuStreamDocs.Keys;
 
 /// <summary>
 /// Static map of the common pymdownx.keys aliases to their
-/// canonical class slug + display label. Built once at startup as
-/// a <see cref="FrozenDictionary{TKey, TValue}"/> so per-page
-/// lookups stay branch-free in the rewriter hot path.
+/// canonical class slug + display label. Built once at startup so
+/// per-page lookups don't pay any setup cost.
 /// </summary>
 internal static class KeyNames
 {
     /// <summary>Lookup table keyed on the lower-case token from the source markup.</summary>
-    private static readonly FrozenDictionary<string, KeyEntry> Map = BuildMap();
+    private static readonly Dictionary<string, KeyEntry> Map = BuildMap();
 
     /// <summary>Tries to resolve <paramref name="token"/> against the alias map.</summary>
     /// <param name="token">Lower-case token from the source markup.</param>
@@ -24,10 +21,9 @@ internal static class KeyNames
     public static bool TryGet(string token, out KeyEntry entry) => Map.TryGetValue(token, out entry);
 
     /// <summary>Builds the alias map.</summary>
-    /// <returns>Frozen dictionary keyed on the alias.</returns>
-    private static FrozenDictionary<string, KeyEntry> BuildMap()
-    {
-        var seed = new Dictionary<string, KeyEntry>(StringComparer.Ordinal)
+    /// <returns>Ordinal-keyed dictionary keyed on the alias.</returns>
+    private static Dictionary<string, KeyEntry> BuildMap() =>
+        new(StringComparer.Ordinal)
         {
             // modifiers
             ["ctrl"] = new("ctrl", "Ctrl"),
@@ -92,7 +88,4 @@ internal static class KeyNames
             ["f11"] = new("f11", "F11"),
             ["f12"] = new("f12", "F12"),
         };
-
-        return seed.ToFrozenDictionary(StringComparer.Ordinal);
-    }
 }

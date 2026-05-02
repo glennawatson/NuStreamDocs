@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Metadata;
@@ -41,7 +40,7 @@ internal static class MetadataCollector
             return MetadataRegistry.Empty;
         }
 
-        return new(byPath.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase));
+        return new(byPath);
     }
 
     /// <summary>Reads every <paramref name="directoryFile"/> rooted at <paramref name="inputRoot"/> into a path → bytes dictionary, used as a fast lookup during the walk.</summary>

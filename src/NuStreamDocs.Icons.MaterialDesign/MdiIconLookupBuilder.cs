@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
 using System.Text;
 
 namespace NuStreamDocs.Icons.MaterialDesign;
@@ -49,7 +48,6 @@ public sealed class MdiIconLookupBuilder
     }
 
     /// <summary>Builds the immutable lookup.</summary>
-    /// <returns>The frozen <see cref="MdiIconLookup"/>.</returns>
-    public MdiIconLookup Build() =>
-        new([.. _blob], _entries.ToFrozenDictionary(ByteArrayKeyComparer.Instance));
+    /// <returns>The composed <see cref="MdiIconLookup"/>.</returns>
+    public MdiIconLookup Build() => new([.. _blob], _entries);
 }

@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="NuStreamDocs.SuperFences.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks" />
   </ItemGroup>
 
 </Project>

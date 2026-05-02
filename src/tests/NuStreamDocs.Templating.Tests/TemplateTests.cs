@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
 using System.Text;
 
 namespace NuStreamDocs.Templating.Tests;
@@ -94,7 +93,7 @@ public class TemplateTests
         var partials = new Dictionary<string, Template>(StringComparer.Ordinal)
         {
             ["greeting"] = partial,
-        }.ToFrozenDictionary(StringComparer.Ordinal);
+        };
         var data = Build([("name", "world")], []);
         var html = RenderWithPartials("hi {{> greeting}}"u8, data, partials);
         await Assert.That(html).IsEqualTo("hi world!");
@@ -105,7 +104,7 @@ public class TemplateTests
     [Test]
     public async Task UnknownPartialRendersEmpty()
     {
-        var partials = new Dictionary<string, Template>(StringComparer.Ordinal).ToFrozenDictionary(StringComparer.Ordinal);
+        var partials = new Dictionary<string, Template>(StringComparer.Ordinal);
         var html = RenderWithPartials("a{{> missing}}b"u8, TemplateData.Empty, partials);
         await Assert.That(html).IsEqualTo("ab");
     }
@@ -146,7 +145,7 @@ public class TemplateTests
     private static string RenderWithPartials(
         ReadOnlySpan<byte> source,
         TemplateData data,
-        FrozenDictionary<string, Template> partials)
+        Dictionary<string, Template> partials)
     {
         var template = Template.Compile(source);
         var writer = new ArrayBufferWriter<byte>();
