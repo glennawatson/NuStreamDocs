@@ -71,6 +71,7 @@ public static class CSharpApiGenerator
         await extractor.RunAsync(source, outputRoot, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
         stopwatch.Stop();
 
+        ReleaseExtractorResources(source, extractor, emitter);
         CSharpApiGeneratorLoggingHelper.LogGeneratorComplete(resolvedLogger, totalTypes: 0, totalPages: 0, stopwatch.ElapsedMilliseconds);
         return outputRoot;
     }
@@ -104,6 +105,7 @@ public static class CSharpApiGenerator
         var result = await extractor.ExtractAsync(source, resolvedLogger, cancellationToken).ConfigureAwait(false);
         stopwatch.Stop();
 
+        ReleaseExtractorResources(source, extractor, emitter: null);
         CSharpApiGeneratorLoggingHelper.LogDirectExtractComplete(resolvedLogger, result.CanonicalTypes.Length, result.SourceLinks.Length, stopwatch.ElapsedMilliseconds);
         return result;
     }
@@ -138,4 +140,27 @@ public static class CSharpApiGenerator
         CustomInput => "custom-source",
         _ => input.GetType().Name,
     };
+
+    /// <summary>Disposes the SourceDocParser pieces that own external resources (NuGet HTTP client, Roslyn workspaces, etc.) at the end of the hot phase.</summary>
+    /// <param name="source">The assembly source to release.</param>
+    /// <param name="extractor">The metadata extractor; disposed when <see cref="IDisposable"/>-shaped.</param>
+    /// <param name="emitter">The documentation emitter; disposed when <see cref="IDisposable"/>-shaped.</param>
+    /// <remarks>
+    /// As of SourceDocParser 1.5.0 the NuGet path correctly disposes its shared
+    /// <see cref="HttpClient"/> when the <see cref="IAssemblySource"/> is disposed, so the
+    /// post-completion shutdown wait disappears entirely. The <c>as IDisposable</c> probe is
+    /// defensive — it covers the older library versions and any future shape that adds a
+    /// disposable to one of the three roles.
+    /// </remarks>
+    private static void ReleaseExtractorResources(IAssemblySource source, MetadataExtractor extractor, IDocumentationEmitter? emitter)
+    {
+        DisposeIfPossible(source);
+        DisposeIfPossible(extractor);
+        DisposeIfPossible(emitter);
+    }
+
+    /// <summary>Calls <see cref="IDisposable.Dispose"/> when <paramref name="value"/> implements it; otherwise no-ops.</summary>
+    /// <param name="value">Candidate object.</param>
+    private static void DisposeIfPossible(object? value) =>
+        (value as IDisposable)?.Dispose();
 }
