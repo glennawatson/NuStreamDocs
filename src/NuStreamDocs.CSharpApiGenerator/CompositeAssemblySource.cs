@@ -21,7 +21,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// honors <see cref="CancellationToken"/>.
 /// </remarks>
 /// <param name="sources">Sources to concatenate, walked in order.</param>
-internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAssemblySource
+internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAssemblySource, IDisposable
 {
     /// <summary>Wrapped sources, walked in this order.</summary>
     private readonly IAssemblySource[] _sources = sources ?? throw new ArgumentNullException(nameof(sources));
@@ -39,6 +39,20 @@ internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAsse
             {
                 yield return group;
             }
+        }
+    }
+
+    /// <summary>Disposes every wrapped source that implements <see cref="IDisposable"/>.</summary>
+    /// <remarks>
+    /// Walked in declaration order so each inner source releases its own external resources
+    /// (NuGet <see cref="HttpClient"/>, file handles, ...). Sources that don't implement
+    /// <see cref="IDisposable"/> are left alone.
+    /// </remarks>
+    public void Dispose()
+    {
+        for (var i = 0; i < _sources.Length; i++)
+        {
+            (_sources[i] as IDisposable)?.Dispose();
         }
     }
 }
