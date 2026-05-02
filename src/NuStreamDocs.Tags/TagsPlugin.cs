@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tags;
@@ -84,11 +84,11 @@ public sealed class TagsPlugin : IDocPlugin
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>Pulls a heading-1 text out of the rendered HTML to use as the page title; falls back to <paramref name="fallback"/>.</summary>
+    /// <summary>Pulls the heading-1 text out of the rendered HTML to use as the page title; falls back to <paramref name="fallback"/>.</summary>
     /// <param name="html">UTF-8 rendered HTML.</param>
-    /// <param name="fallback">Default title when no <c>&lt;h1&gt;</c> is found.</param>
-    /// <returns>The page title.</returns>
-    private static string ExtractTitle(ReadOnlySpan<byte> html, string fallback)
+    /// <param name="fallback">Default UTF-8 title bytes when no <c>&lt;h1&gt;</c> is found.</param>
+    /// <returns>The page title bytes.</returns>
+    private static byte[] ExtractTitle(ReadOnlySpan<byte> html, byte[] fallback)
     {
         var openRel = html.IndexOf("<h1"u8);
         if (openRel < 0)
@@ -109,6 +109,7 @@ public sealed class TagsPlugin : IDocPlugin
             return fallback;
         }
 
-        return Encoding.UTF8.GetString(html.Slice(bodyStart, bodyEnd)).Trim();
+        var titleSpan = AsciiByteHelpers.TrimAsciiWhitespace(html.Slice(bodyStart, bodyEnd));
+        return titleSpan.IsEmpty ? fallback : titleSpan.ToArray();
     }
 }

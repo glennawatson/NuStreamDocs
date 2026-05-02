@@ -89,23 +89,4 @@ public class AutorefScannerTests
         await Assert.That(atEnd).IsEqualTo(bytes.Length);
         await Assert.That(pastEnd).IsEqualTo(bytes.Length);
     }
-
-    /// <summary>DecodeId returns the captured ID as a UTF-16 string.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task DecodeIdRoundtrips()
-    {
-        var src = "@autoref:System.String "u8;
-        AutorefScanner.TryFindNext(src, 0, out var match);
-        await Assert.That(AutorefScanner.DecodeId(src, match)).IsEqualTo("System.String");
-    }
-
-    /// <summary>DecodeId on an empty match returns an empty string.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task DecodeIdEmpty()
-    {
-        var match = new AutorefMatch(0, 5, 5);
-        await Assert.That(AutorefScanner.DecodeId("anything"u8, match)).IsEqualTo(string.Empty);
-    }
 }

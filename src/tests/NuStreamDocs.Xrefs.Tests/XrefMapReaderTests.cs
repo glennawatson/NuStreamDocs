@@ -23,7 +23,7 @@ public class XrefMapReaderTests
     {
         var json = """{"baseUrl": "https://docs.test/"}"""u8;
         var payload = XrefMapReader.Read(json);
-        await Assert.That(payload.BaseUrl).IsEqualTo("https://docs.test/");
+        await Assert.That(payload.BaseUrl.AsSpan().SequenceEqual("https://docs.test/"u8)).IsTrue();
     }
 
     /// <summary>Unknown top-level keys are skipped.</summary>
@@ -33,7 +33,7 @@ public class XrefMapReaderTests
     {
         var json = """{"version":1,"baseUrl":"/x/","extra":{"deep":[1,2]},"references":[{"uid":"A","href":"/a"}]}"""u8;
         var payload = XrefMapReader.Read(json);
-        await Assert.That(payload.BaseUrl).IsEqualTo("/x/");
+        await Assert.That(payload.BaseUrl.AsSpan().SequenceEqual("/x/"u8)).IsTrue();
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
     }
 
@@ -52,7 +52,7 @@ public class XrefMapReaderTests
             """u8;
         var payload = XrefMapReader.Read(json);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
-        await Assert.That(payload.Entries[0].Uid).IsEqualTo("A");
+        await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("A"u8)).IsTrue();
     }
 
     /// <summary>Non-object items inside the references array are skipped.</summary>
@@ -87,7 +87,7 @@ public class XrefMapReaderTests
                    """u8.ToArray();
         var payload = XrefMapReader.Read(json);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
-        await Assert.That(payload.Entries[0].Uid).IsEqualTo("X");
-        await Assert.That(payload.Entries[0].Href).IsEqualTo("/x.html");
+        await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("X"u8)).IsTrue();
+        await Assert.That(payload.Entries[0].Href.AsSpan().SequenceEqual("/x.html"u8)).IsTrue();
     }
 }

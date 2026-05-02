@@ -17,7 +17,7 @@ public class SrcsetRewriteTests
     [Test]
     public async Task RewritesSingleUrlSrcset()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite("<img srcset=\"https://example.com/x.png\">", registry);
         await Assert.That(output).Contains("srcset=\"/assets/external/");
         await Assert.That(output).DoesNotContain("https://example.com/x.png");
@@ -28,7 +28,7 @@ public class SrcsetRewriteTests
     [Test]
     public async Task RewritesMultiUrlSrcsetPreservingDescriptors()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite(
             "<img srcset=\"https://example.com/a.png 1x, https://example.com/b.png 2x\">",
             registry);
@@ -43,7 +43,7 @@ public class SrcsetRewriteTests
     [Test]
     public async Task PreservesWidthDescriptors()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite(
             "<img srcset=\"https://example.com/sm.jpg 480w, https://example.com/lg.jpg 1080w\">",
             registry);
@@ -56,7 +56,7 @@ public class SrcsetRewriteTests
     [Test]
     public async Task LeavesRelativeUrlsAloneInSrcset()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite("<img srcset=\"/local/x.png 1x\">", registry);
         await Assert.That(output).IsEqualTo("<img srcset=\"/local/x.png 1x\">");
     }

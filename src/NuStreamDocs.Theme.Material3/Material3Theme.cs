@@ -28,7 +28,7 @@ public sealed class Material3Theme : IThemePackage
     /// <param name="page">Compiled top-level page template.</param>
     /// <param name="partials">Compiled partial templates.</param>
     /// <param name="staticAssets">Static-asset bundle keyed by relative path.</param>
-    private Material3Theme(Template page, Dictionary<string, Template> partials, Dictionary<string, byte[]> staticAssets)
+    private Material3Theme(Template page, Dictionary<byte[], Template> partials, Dictionary<string, byte[]> staticAssets)
     {
         Page = page;
         Partials = partials;
@@ -39,8 +39,9 @@ public sealed class Material3Theme : IThemePackage
     /// <summary>Gets the compiled top-level page template.</summary>
     public Template Page { get; }
 
-    /// <summary>Gets the compiled partial registry, keyed by partial name. Built once at theme load and probed repeatedly across page renders, so freezing pays off here.</summary>
-    public Dictionary<string, Template> Partials { get; }
+    /// <summary>Gets the compiled partial registry, keyed by UTF-8 partial-name bytes.</summary>
+    /// <remarks>Built once at theme load and probed repeatedly across page renders via the byte-keyed alternate-lookup pattern.</remarks>
+    public Dictionary<byte[], Template> Partials { get; }
 
     /// <summary>
     /// Gets the static-asset map, keyed by relative output path. Plain

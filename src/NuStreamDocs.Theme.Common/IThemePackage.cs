@@ -14,8 +14,9 @@ public interface IThemePackage
     /// <summary>Gets the compiled top-level page template.</summary>
     Template Page { get; }
 
-    /// <summary>Gets the compiled partial registry keyed by partial name.</summary>
-    Dictionary<string, Template> Partials { get; }
+    /// <summary>Gets the compiled partial registry keyed by UTF-8 partial-name bytes.</summary>
+    /// <remarks>The renderer probes via the byte-keyed alternate-lookup pattern so per-partial dispatch never allocates a string.</remarks>
+    Dictionary<byte[], Template> Partials { get; }
 
     /// <summary>Gets the static assets as an indexable snapshot for write-out loops.</summary>
     (string RelativePath, byte[] Bytes)[] StaticAssetEntries { get; }

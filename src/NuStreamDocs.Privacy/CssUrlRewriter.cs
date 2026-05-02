@@ -65,7 +65,15 @@ internal static class CssUrlRewriter
             }
 
             var raw = Encoding.UTF8.GetString(rawSlice);
-            if (!TryResolveAbsolute(raw, cssBaseUri, out var absolute) || !filter.ShouldLocalize(absolute))
+            if (!TryResolveAbsolute(raw, cssBaseUri, out var absolute))
+            {
+                cursor = afterToken;
+                continue;
+            }
+
+            // One UTF-8 encode for the resolved absolute URL — feeds both the host filter and the registry insert.
+            var absoluteBytes = Encoding.UTF8.GetBytes(absolute);
+            if (!filter.ShouldLocalize(absoluteBytes))
             {
                 cursor = afterToken;
                 continue;
@@ -73,7 +81,7 @@ internal static class CssUrlRewriter
 
             // Emit everything from lastEmit up to the start of this url() token, then the rewritten form.
             sink.Write(span[lastEmit..tokenStart]);
-            var local = registry.GetOrAdd(absolute);
+            var localBytes = registry.GetOrAdd(absoluteBytes);
             sink.Write("url("u8);
             if (quote is not 0)
             {
@@ -82,7 +90,7 @@ internal static class CssUrlRewriter
             }
 
             sink.Write("/"u8);
-            sink.Write(Encoding.UTF8.GetBytes(local));
+            sink.Write(localBytes);
             if (quote is not 0)
             {
                 Span<byte> q = [quote];

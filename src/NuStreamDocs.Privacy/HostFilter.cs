@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
@@ -28,26 +27,26 @@ internal sealed class HostFilter
     private readonly UrlPatternMatcher _excludePatterns;
 
     /// <summary>Initializes a new instance of the <see cref="HostFilter"/> class.</summary>
-    /// <param name="hostsToSkip">Skip list (may be empty).</param>
-    /// <param name="hostsAllowed">Allow list (empty means "everything not on the skip list").</param>
-    public HostFilter(string[]? hostsToSkip, string[]? hostsAllowed)
+    /// <param name="hostsToSkip">UTF-8 skip list (may be null/empty).</param>
+    /// <param name="hostsAllowed">UTF-8 allow list (empty means "everything not on the skip list").</param>
+    public HostFilter(byte[][]? hostsToSkip, byte[][]? hostsAllowed)
         : this(hostsToSkip, hostsAllowed, includePatterns: null, excludePatterns: null)
     {
     }
 
     /// <summary>Initializes a new instance of the <see cref="HostFilter"/> class.</summary>
-    /// <param name="hostsToSkip">Skip list (may be empty).</param>
-    /// <param name="hostsAllowed">Allow list (empty means "everything not on the skip list").</param>
-    /// <param name="includePatterns">URL-level include glob patterns (empty disables).</param>
-    /// <param name="excludePatterns">URL-level exclude glob patterns (empty disables).</param>
+    /// <param name="hostsToSkip">UTF-8 skip list (may be null/empty).</param>
+    /// <param name="hostsAllowed">UTF-8 allow list (empty means "everything not on the skip list").</param>
+    /// <param name="includePatterns">UTF-8 URL-level include glob patterns (empty disables).</param>
+    /// <param name="excludePatterns">UTF-8 URL-level exclude glob patterns (empty disables).</param>
     public HostFilter(
-        string[]? hostsToSkip,
-        string[]? hostsAllowed,
-        string[]? includePatterns,
-        string[]? excludePatterns)
+        byte[][]? hostsToSkip,
+        byte[][]? hostsAllowed,
+        byte[][]? includePatterns,
+        byte[][]? excludePatterns)
     {
-        _hostsToSkipBytes = ToLowerUtf8Array(hostsToSkip);
-        _hostsAllowedBytes = ToLowerUtf8Array(hostsAllowed);
+        _hostsToSkipBytes = ToLowerCopy(hostsToSkip);
+        _hostsAllowedBytes = ToLowerCopy(hostsAllowed);
         _hasAllowedHosts = _hostsAllowedBytes.Length > 0;
         _includePatterns = new(includePatterns);
         _excludePatterns = new(excludePatterns);
@@ -68,19 +67,12 @@ internal sealed class HostFilter
             return false;
         }
 
-        // URL-level pattern matching is char-based; decode once when patterns are configured.
-        if (!_excludePatterns.HasPatterns && !_includePatterns.HasPatterns)
-        {
-            return !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);
-        }
-
-        var url = Encoding.UTF8.GetString(urlBytes);
-        if (_excludePatterns.IsMatch(url))
+        if (_excludePatterns.HasPatterns && _excludePatterns.IsMatch(urlBytes))
         {
             return false;
         }
 
-        if (_includePatterns.HasPatterns && _includePatterns.IsMatch(url))
+        if (_includePatterns.HasPatterns && _includePatterns.IsMatch(urlBytes))
         {
             return true;
         }
@@ -88,36 +80,30 @@ internal sealed class HostFilter
         return !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);
     }
 
-    /// <summary>String adapter for callers outside the byte hot path (tests, configure-time validators).</summary>
-    /// <param name="url">Candidate URL string.</param>
-    /// <returns>True when the URL should be localized.</returns>
-    /// <remarks>
-    /// Encodes <paramref name="url"/> into a stack-or-pool buffer via
-    /// <see cref="Utf8StackBuffer"/> and delegates to the byte overload —
-    /// single UTF-8 encode per call, zero heap allocation when the URL
-    /// fits in the stack buffer.
-    /// </remarks>
-    public bool ShouldLocalize(string url)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(url);
-        using var buf = new Utf8StackBuffer(url, stackalloc byte[Utf8StackBuffer.StackSize]);
-        return ShouldLocalize(buf.Bytes);
-    }
-
-    /// <summary>Lower-cases a host array and encodes each entry to UTF-8 bytes, returning <c>[]</c> when the input is null/empty.</summary>
-    /// <param name="hosts">Host names; may be null.</param>
-    /// <returns>Pre-encoded lowercase byte arrays.</returns>
-    private static byte[][] ToLowerUtf8Array(string[]? hosts)
+    /// <summary>Returns a fresh ASCII-lowercased copy of <paramref name="hosts"/>; <c>[]</c> when the input is null/empty.</summary>
+    /// <param name="hosts">UTF-8 host names; may be null.</param>
+    /// <returns>Lowercased byte arrays.</returns>
+    /// <remarks>The byte path uses the lowercase form as the comparand for <see cref="AsciiByteHelpers.EqualsIgnoreAsciiCase"/>, which expects its second argument lowercase.</remarks>
+    private static byte[][] ToLowerCopy(byte[][]? hosts)
     {
         if (hosts is null or [])
         {
             return [];
         }
 
+        const byte AsciiCaseBit = 0x20;
         var result = new byte[hosts.Length][];
         for (var i = 0; i < hosts.Length; i++)
         {
-            result[i] = Encoding.UTF8.GetBytes(hosts[i].ToLowerInvariant());
+            var src = hosts[i];
+            var dst = new byte[src.Length];
+            for (var j = 0; j < src.Length; j++)
+            {
+                var b = src[j];
+                dst[j] = b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+            }
+
+            result[i] = dst;
         }
 
         return result;

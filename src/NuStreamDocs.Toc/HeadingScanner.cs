@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Toc;
@@ -119,31 +118,6 @@ internal static class HeadingScanner
         }
 
         Utf8StringWriter.Write(sink, inner[runStart..]);
-    }
-
-    /// <summary>Decodes the inner text content of <paramref name="heading"/> as a string, with whitespace trimmed.</summary>
-    /// <param name="html">Original HTML snapshot.</param>
-    /// <param name="heading">Heading record.</param>
-    /// <returns>Plain-text body with HTML tags stripped and surrounding whitespace removed.</returns>
-    /// <remarks>
-    /// Convenience overload for diagnostics and tests; the production
-    /// slug pipeline goes through <see cref="DecodeTextInto"/> + the
-    /// byte-level slugifier and never allocates a string.
-    /// </remarks>
-    public static string DecodeText(ReadOnlySpan<byte> html, in Heading heading)
-    {
-        var inner = html[heading.TextStart..heading.TextEnd];
-        if (inner.IsEmpty)
-        {
-            return string.Empty;
-        }
-
-        using var rental = PageBuilderPool.Rent(inner.Length);
-        var buffer = rental.Writer;
-        DecodeTextInto(html, in heading, buffer);
-        return buffer.WrittenCount is 0
-            ? string.Empty
-            : Encoding.UTF8.GetString(buffer.WrittenSpan).Trim();
     }
 
     /// <summary>Finds the next <c>&lt;/hN&gt;</c> close tag.</summary>

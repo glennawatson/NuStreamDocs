@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Templating;
@@ -42,7 +42,7 @@ internal static class TemplateRenderer
         ReadOnlySpan<byte> source,
         in ReadOnlySpan<TemplateInstruction> instructions,
         TemplateData root,
-        Dictionary<string, Template>? partials,
+        Dictionary<byte[], Template>? partials,
         IBufferWriter<byte> writer)
     {
         var scopeBuffer = ArrayPool<TemplateData>.Shared.Rent(EstimateDepth(instructions.Length));
@@ -82,7 +82,7 @@ internal static class TemplateRenderer
         ReadOnlySpan<byte> source,
         in ReadOnlySpan<TemplateInstruction> instructions,
         ref RenderState state,
-        Dictionary<string, Template>? partials,
+        Dictionary<byte[], Template>? partials,
         int ip,
         IBufferWriter<byte> writer)
     {
@@ -261,7 +261,7 @@ internal static class TemplateRenderer
         in TemplateInstruction instr,
         TemplateData[] scopes,
         int depth,
-        Dictionary<string, Template>? partials,
+        Dictionary<byte[], Template>? partials,
         int ip,
         IBufferWriter<byte> writer)
     {
@@ -271,8 +271,7 @@ internal static class TemplateRenderer
         }
 
         var key = source.Slice(instr.Start, instr.Length);
-        var name = Encoding.UTF8.GetString(key);
-        if (!partials.TryGetValue(name, out var template))
+        if (!partials.TryGetValueByUtf8(key, out var template))
         {
             return ip + 1;
         }

@@ -15,9 +15,9 @@ public class PersonNameTests
     public async Task Institutional_creates_literal_name()
     {
         var name = PersonName.Institutional("The High Court");
-        await Assert.That(name.Literal).IsEqualTo("The High Court");
+        await Assert.That(name.Literal.AsSpan().SequenceEqual("The High Court"u8)).IsTrue();
         await Assert.That(name.IsInstitutional).IsTrue();
-        await Assert.That(name.Given).IsEmpty();
-        await Assert.That(name.Family).IsEmpty();
+        await Assert.That(name.Given.Length).IsEqualTo(0);
+        await Assert.That(name.Family.Length).IsEqualTo(0);
     }
 }

@@ -4,7 +4,7 @@
 
 using System.Buffers;
 using System.Buffers.Text;
-using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown;
 using NuStreamDocs.Markdown.Common;
 
@@ -51,7 +51,7 @@ internal static class FootnotesRewriter
                 && TryParseDefinition(source, i, out var idStart, out var idLen, out var bodyStart, out var bodyEnd, out var blockEnd))
             {
                 defs.Add(new(
-                    Encoding.UTF8.GetString(source.Slice(idStart, idLen)),
+                    source.Slice(idStart, idLen).ToArray(),
                     [.. source[bodyStart..bodyEnd]]));
                 i = blockEnd;
                 continue;
@@ -113,7 +113,7 @@ internal static class FootnotesRewriter
 
         bodyStart = p;
         var lineEnd = MarkdownCodeScanner.LineEnd(source, p);
-        bodyEnd = TrimTerminator(source, bodyStart, lineEnd);
+        bodyEnd = bodyStart + AsciiByteHelpers.TrimTrailingNewline(source[bodyStart..lineEnd]).Length;
         blockEnd = lineEnd;
         return true;
     }
@@ -145,26 +145,6 @@ internal static class FootnotesRewriter
         idLen = p - idStart;
         afterId = p;
         return idLen > 0;
-    }
-
-    /// <summary>Strips trailing CR/LF bytes from <c>[start, end)</c>.</summary>
-    /// <param name="source">UTF-8 source bytes.</param>
-    /// <param name="start">Inclusive start.</param>
-    /// <param name="end">Exclusive end.</param>
-    /// <returns>Adjusted exclusive end.</returns>
-    private static int TrimTerminator(ReadOnlySpan<byte> source, int start, int end)
-    {
-        if (end > start && source[end - 1] == (byte)'\n')
-        {
-            end--;
-        }
-
-        if (end > start && source[end - 1] == (byte)'\r')
-        {
-            end--;
-        }
-
-        return end;
     }
 
     /// <summary>Tries to parse an inline <c>[^id]</c> reference at <paramref name="offset"/>.</summary>
@@ -206,12 +186,11 @@ internal static class FootnotesRewriter
     /// <param name="writer">UTF-8 sink.</param>
     private static void EmitReference(ReadOnlySpan<byte> id, List<Definition> defs, IBufferWriter<byte> writer)
     {
-        var idString = Encoding.UTF8.GetString(id);
-        var index = IndexOf(defs, idString);
+        var index = IndexOf(defs, id);
         if (index < 0)
         {
             // Forward reference: keep order by registering a placeholder.
-            defs.Add(new(idString, []));
+            defs.Add(new(id.ToArray(), []));
             index = defs.Count - 1;
         }
 
@@ -235,11 +214,11 @@ internal static class FootnotesRewriter
         {
             var def = defs[i];
             writer.Write("<li id=\"fn-"u8);
-            writer.Write(Encoding.UTF8.GetBytes(def.Id));
+            writer.Write(def.Id);
             writer.Write("\">"u8);
             InlineRenderer.Render(def.Body, writer);
             writer.Write(" <a href=\"#fnref-"u8);
-            writer.Write(Encoding.UTF8.GetBytes(def.Id));
+            writer.Write(def.Id);
             writer.Write("\">↩</a></li>\n"u8);
         }
 
@@ -248,13 +227,13 @@ internal static class FootnotesRewriter
 
     /// <summary>Linear-search for a definition by id.</summary>
     /// <param name="defs">Definition list.</param>
-    /// <param name="id">Id to find.</param>
+    /// <param name="id">Id bytes to find.</param>
     /// <returns>Index, or -1 when absent.</returns>
-    private static int IndexOf(List<Definition> defs, string id)
+    private static int IndexOf(List<Definition> defs, ReadOnlySpan<byte> id)
     {
         for (var i = 0; i < defs.Count; i++)
         {
-            if (string.Equals(defs[i].Id, id, StringComparison.Ordinal))
+            if (id.SequenceEqual(defs[i].Id))
             {
                 return i;
             }
@@ -278,7 +257,7 @@ internal static class FootnotesRewriter
     }
 
     /// <summary>One footnote definition record.</summary>
-    /// <param name="Id">Footnote id (the token between <c>[^</c> and <c>]</c>).</param>
+    /// <param name="Id">UTF-8 footnote id bytes (the token between <c>[^</c> and <c>]</c>).</param>
     /// <param name="Body">UTF-8 definition body bytes.</param>
-    private sealed record Definition(string Id, byte[] Body);
+    private sealed record Definition(byte[] Id, byte[] Body);
 }

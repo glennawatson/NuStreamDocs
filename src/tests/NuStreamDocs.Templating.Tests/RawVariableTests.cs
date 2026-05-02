@@ -17,9 +17,9 @@ public class RawVariableTests
     {
         var template = Template.Compile("hi {{&name}} bye"u8);
         var data = new TemplateData(
-            new(StringComparer.Ordinal)
+            new(Common.ByteArrayComparer.Instance)
             {
-                ["name"] = "<b>X</b>"u8.ToArray(),
+                ["name"u8.ToArray()] = "<b>X</b>"u8.ToArray(),
             },
             sections: null);
         var sink = new ArrayBufferWriter<byte>();

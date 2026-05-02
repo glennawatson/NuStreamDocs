@@ -6,7 +6,6 @@ using System.Buffers;
 using System.Text;
 using NuStreamDocs.Autorefs.Logging;
 using NuStreamDocs.Common;
-using NuStreamDocs.Logging;
 
 namespace NuStreamDocs.Autorefs;
 
@@ -166,38 +165,60 @@ public static class AutorefsRewriter
             }
 
             sink.Write(source[cursor..match.MarkerStart]);
-
-            var id = AutorefScanner.DecodeId(source, match);
-            if (id.Length > 0 && registry.TryResolve(id, out var url))
-            {
-                sink.Write(Encoding.UTF8.GetBytes(url));
-                changed = true;
-                totals.Resolved++;
-                if (logger is not null)
-                {
-                    LogInvokerHelper.Invoke(
-                        logger,
-                        LogLevel.Debug,
-                        id,
-                        url,
-                        static (l, i, u) => AutorefsLoggingHelper.LogReferenceResolved(l, i, u));
-                }
-            }
-            else
-            {
-                // Unresolved marker stays verbatim — the missing reference is then visible in the output for diagnosis.
-                sink.Write(source[match.MarkerStart..match.IdEnd]);
-                totals.Missing++;
-                if (logger is not null && sourcePage is not null)
-                {
-                    AutorefsLoggingHelper.LogReferenceUnresolved(logger, id, sourcePage);
-                }
-            }
-
+            changed |= EmitOneMatch(source, in match, registry, sink, logger, sourcePage, ref totals);
             cursor = match.IdEnd;
         }
 
         return changed;
+    }
+
+    /// <summary>Emits one matched <c>@autoref:ID</c> — resolved bytes when the registry hits, or the original marker bytes when it misses.</summary>
+    /// <param name="source">UTF-8 input.</param>
+    /// <param name="match">Match offsets covering the marker + ID.</param>
+    /// <param name="registry">Registry to resolve against.</param>
+    /// <param name="sink">Output sink.</param>
+    /// <param name="logger">Optional logger.</param>
+    /// <param name="sourcePage">Page identifier for unresolved warnings.</param>
+    /// <param name="totals">Resolved / missing accumulator.</param>
+    /// <returns>True when the marker resolved.</returns>
+    private static bool EmitOneMatch(
+        ReadOnlySpan<byte> source,
+        in AutorefMatch match,
+        AutorefsRegistry registry,
+        IBufferWriter<byte> sink,
+        ILogger? logger,
+        string? sourcePage,
+        ref RewriteTotals totals)
+    {
+        var idLength = match.IdEnd - match.IdStart;
+        var idSpan = idLength > 0 ? source.Slice(match.IdStart, idLength) : default;
+        if (idLength > 0 && registry.TryResolveInto(idSpan, sink))
+        {
+            totals.Resolved++;
+            if (logger is not null)
+            {
+                // Logger source-gen wants strings — pay the per-event decode + double-resolve cold path only when
+                // a logger is actually attached. The hot path (no logger) stays purely on bytes.
+                var idStr = Encoding.UTF8.GetString(idSpan);
+                if (registry.TryResolve(idStr, out var urlStr))
+                {
+                    AutorefsLoggingHelper.LogReferenceResolved(logger, idStr, urlStr);
+                }
+            }
+
+            return true;
+        }
+
+        // Unresolved marker stays verbatim — the missing reference is then visible in the output for diagnosis.
+        sink.Write(source[match.MarkerStart..match.IdEnd]);
+        totals.Missing++;
+        if (logger is null || sourcePage is null)
+        {
+            return false;
+        }
+
+        AutorefsLoggingHelper.LogReferenceUnresolved(logger, Encoding.UTF8.GetString(idSpan), sourcePage);
+        return false;
     }
 
     /// <summary>Per-pass resolved / missing counters threaded through the core loop.</summary>

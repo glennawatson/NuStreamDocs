@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Text;
 using NuStreamDocs.Privacy.Logging;
 using Polly;
 
@@ -68,9 +69,11 @@ internal static class ExternalAssetDownloader
             var pendingBuffer = new List<(string Url, string LocalPath)>(snapshot.Length);
             for (var i = 0; i < snapshot.Length; i++)
             {
-                if (processed.Add(snapshot[i].Url))
+                // Decode at the use site — Uri.TryCreate + Path.Combine are the natural string boundary downstream.
+                var url = Encoding.UTF8.GetString(snapshot[i].Url);
+                if (processed.Add(url))
                 {
-                    pendingBuffer.Add(snapshot[i]);
+                    pendingBuffer.Add((url, Encoding.UTF8.GetString(snapshot[i].LocalPath)));
                 }
             }
 

@@ -53,6 +53,14 @@ internal static class DevServer
     /// <summary>Gets the reload-script bytes the injection middleware splices into HTML responses.</summary>
     public static ReadOnlySpan<byte> ReloadScriptMarker => ReloadScriptBytes;
 
+    /// <summary>Gets the reload-script bytes as a <see cref="ReadOnlyMemory{T}"/>.</summary>
+    /// <remarks>
+    /// Async writers hand it to
+    /// <see cref="System.IO.Stream.WriteAsync(System.ReadOnlyMemory{byte}, System.Threading.CancellationToken)"/>
+    /// without a per-call <c>ToArray</c> copy.
+    /// </remarks>
+    public static ReadOnlyMemory<byte> ReloadScriptMemory => ReloadScriptBytes;
+
     /// <summary>Builds and starts the AOT-friendly <see cref="WebApplication"/> bound to <paramref name="options"/>.</summary>
     /// <param name="outputRoot">Directory to serve as static content.</param>
     /// <param name="options">Watch + serve options.</param>

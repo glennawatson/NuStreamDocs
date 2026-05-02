@@ -47,10 +47,10 @@ public sealed class PrivacyPlugin : IDocPlugin
     private readonly ConcurrentDictionary<byte[], byte> _auditedUrls = new(ByteArrayComparer.Instance);
 
     /// <summary>Inline style hashes accumulated when <see cref="PrivacyOptions.GenerateCspManifest"/> is on.</summary>
-    private readonly ConcurrentDictionary<string, byte> _styleHashes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<byte[], byte> _styleHashes = new(ByteArrayComparer.Instance);
 
     /// <summary>Inline script hashes accumulated when <see cref="PrivacyOptions.GenerateCspManifest"/> is on.</summary>
-    private readonly ConcurrentDictionary<string, byte> _scriptHashes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<byte[], byte> _scriptHashes = new(ByteArrayComparer.Instance);
 
     /// <summary>Logger captured at construction; defaults to <see cref="NullLogger.Instance"/> when no logger is supplied.</summary>
     private readonly ILogger _logger;
@@ -79,16 +79,21 @@ public sealed class PrivacyPlugin : IDocPlugin
         ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _filter = new(options.HostsToSkip, options.HostsAllowed, options.UrlIncludePatterns, options.UrlExcludePatterns);
-        _registry = new(options.AssetDirectory is [] ? PrivacyOptions.Default.AssetDirectory : options.AssetDirectory);
+        var dirBytes = options.AssetDirectory is [] ? PrivacyOptions.Default.AssetDirectory : options.AssetDirectory;
+        _registry = new(dirBytes);
         _logger = logger;
     }
 
     /// <inheritdoc/>
     public string Name => "privacy";
 
-    /// <summary>Gets the snapshot of external URLs the plugin has seen so far. Populated on every build; in audit mode it's the only output, in normal mode it's a side-channel for tooling.</summary>
-    public string[] AuditedUrls =>
-        GetAuditedUrlsSnapshot();
+    /// <summary>Gets the snapshot of external URLs the plugin has seen so far as UTF-8 byte arrays.</summary>
+    /// <remarks>
+    /// Populated on every build; in audit mode it's the only output, in normal mode it's a side-channel
+    /// for tooling. UTF-8 by default — consumers that want strings can decode via the
+    /// <see cref="DocBuilderPrivacyExtensions.AuditedUrlsAsStrings"/> extension.
+    /// </remarks>
+    public byte[][] AuditedUrls => GetAuditedUrlBytesSnapshot();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
@@ -155,8 +160,8 @@ public sealed class PrivacyPlugin : IDocPlugin
             return;
         }
 
-        var registrySnapshot = _registry.UrlsSnapshot();
-        PrivacyLoggingHelper.LogLocalizationStart(_logger, registrySnapshot.Length, root);
+        var registeredCount = _registry.Count;
+        PrivacyLoggingHelper.LogLocalizationStart(_logger, registeredCount, root);
 
         var cacheRoot = ResolveCacheRoot(root);
         var settings = new ExternalAssetDownloader.DownloadSettings(
@@ -171,21 +176,21 @@ public sealed class PrivacyPlugin : IDocPlugin
 
         WriteManifestIfRequested(root);
         WriteCspManifestIfRequested(root);
-        PrivacyLoggingHelper.LogFinalizeSummary(_logger, registrySnapshot.Length - failures.Length, failures.Length, cachedCount: 0);
+        PrivacyLoggingHelper.LogFinalizeSummary(_logger, registeredCount - failures.Length, failures.Length, cachedCount: 0);
         ThrowIfRequested(failures);
     }
 
     /// <summary>Writes the keys of <paramref name="hashes"/> as a sorted JSON array.</summary>
     /// <param name="json">JSON writer.</param>
     /// <param name="hashes">Concurrent hash set.</param>
-    private static void WriteHashArray(Utf8JsonWriter json, ConcurrentDictionary<string, byte> hashes)
+    private static void WriteHashArray(Utf8JsonWriter json, ConcurrentDictionary<byte[], byte> hashes)
     {
         json.WriteStartArray();
-        string[] ordered = [.. hashes.Keys];
-        Array.Sort(ordered, StringComparer.Ordinal);
-        for (var i = 0; i < ordered.Length; i++)
+        byte[][] keys = [.. hashes.Keys];
+        Array.Sort(keys, ByteArrayComparer.Instance);
+        for (var i = 0; i < keys.Length; i++)
         {
-            json.WriteStringValue(ordered[i]);
+            json.WriteStringValue(keys[i]);
         }
 
         json.WriteEndArray();
@@ -207,13 +212,23 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <param name="outputRoot">Absolute output root.</param>
     private void WriteManifestIfRequested(string outputRoot)
     {
-        var path = _options.AuditManifestPath;
-        if (path is [])
+        var pathBytes = _options.AuditManifestPath;
+        if (pathBytes is [])
         {
             return;
         }
 
-        var target = Path.Combine(outputRoot, path.Replace('/', Path.DirectorySeparatorChar));
+        Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
+        Encoding.UTF8.GetChars(pathBytes, pathChars);
+        for (var i = 0; i < pathChars.Length; i++)
+        {
+            if (pathChars[i] is '/')
+            {
+                pathChars[i] = Path.DirectorySeparatorChar;
+            }
+        }
+
+        var target = Path.Combine(outputRoot, new string(pathChars));
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
 
         using var stream = File.Create(target);
@@ -222,7 +237,7 @@ public sealed class PrivacyPlugin : IDocPlugin
         json.WriteBoolean("auditOnly"u8, _options.AuditOnly);
         json.WritePropertyName("urls"u8);
         json.WriteStartArray();
-        var auditedUrls = GetAuditedUrlsSnapshot();
+        var auditedUrls = GetAuditedUrlBytesSnapshot();
         for (var i = 0; i < auditedUrls.Length; i++)
         {
             json.WriteStringValue(auditedUrls[i]);
@@ -238,12 +253,23 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <param name="outputRoot">Absolute output root.</param>
     private void WriteCspManifestIfRequested(string outputRoot)
     {
-        if (!_options.GenerateCspManifest || _options.CspManifestPath is [])
+        var pathBytes = _options.CspManifestPath;
+        if (!_options.GenerateCspManifest || pathBytes is [])
         {
             return;
         }
 
-        var target = Path.Combine(outputRoot, _options.CspManifestPath.Replace('/', Path.DirectorySeparatorChar));
+        Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
+        Encoding.UTF8.GetChars(pathBytes, pathChars);
+        for (var i = 0; i < pathChars.Length; i++)
+        {
+            if (pathChars[i] is '/')
+            {
+                pathChars[i] = Path.DirectorySeparatorChar;
+            }
+        }
+
+        var target = Path.Combine(outputRoot, new string(pathChars));
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
 
         using var stream = File.Create(target);
@@ -259,27 +285,19 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <summary>Resolves the absolute cache root, falling back to <c>{outputRoot}/.cache/privacy</c> when the option is empty.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <returns>Absolute cache directory.</returns>
-    private string ResolveCacheRoot(string outputRoot) =>
-        _options.CacheDirectory is []
-            ? Path.Combine(outputRoot, ".cache", "privacy")
-            : _options.CacheDirectory;
-
-    /// <summary>Builds a snapshot of the audited URLs, decoding from byte storage at the diagnostic boundary.</summary>
-    /// <returns>Right-sized URL array.</returns>
-    private string[] GetAuditedUrlsSnapshot()
+    private string ResolveCacheRoot(string outputRoot)
     {
-        if (!_options.AuditOnly)
+        if (_options.CacheDirectory is [])
         {
-            return _registry.UrlsSnapshot();
+            return Path.Combine(outputRoot, ".cache", "privacy");
         }
 
-        byte[][] keys = [.. _auditedUrls.Keys];
-        var result = new string[keys.Length];
-        for (var i = 0; i < keys.Length; i++)
-        {
-            result[i] = Encoding.UTF8.GetString(keys[i]);
-        }
-
-        return result;
+        return Encoding.UTF8.GetString(_options.CacheDirectory);
     }
+
+    /// <summary>Builds a snapshot of the audited URLs as UTF-8 byte arrays.</summary>
+    /// <returns>Right-sized URL byte-array snapshot.</returns>
+    /// <remarks>In normal mode the source is the registry of localized URLs; in audit mode it's the audit-only set of detected URLs.</remarks>
+    private byte[][] GetAuditedUrlBytesSnapshot() =>
+        _options.AuditOnly ? [.. _auditedUrls.Keys] : _registry.UrlsSnapshot();
 }

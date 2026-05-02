@@ -78,7 +78,7 @@ public class TocBenchmarks
     public int Rewrite()
     {
         var sink = new ArrayBufferWriter<byte>(_html.Length * 2);
-        HeadingRewriter.Rewrite(_html, _slugged, "¶", sink);
+        HeadingRewriter.Rewrite(_html, _slugged, "¶"u8, sink);
         return sink.WrittenCount;
     }
 

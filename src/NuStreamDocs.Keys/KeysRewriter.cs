@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
-using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Keys;
@@ -19,6 +17,9 @@ internal static class KeysRewriter
 {
     /// <summary>Width of the <c>++</c> opening/closing marker.</summary>
     private const int MarkerLength = 2;
+
+    /// <summary>OR-mask that maps an ASCII uppercase letter to its lowercase form (<c>'A'</c> <c>0x41</c> | <c>0x20</c> = <c>'a'</c> <c>0x61</c>).</summary>
+    private const byte AsciiCaseBit = 0x20;
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
@@ -98,18 +99,27 @@ internal static class KeysRewriter
     /// <param name="writer">Sink.</param>
     private static void EmitKbd(ReadOnlySpan<byte> token, IBufferWriter<byte> writer)
     {
-        var lookup = Encoding.UTF8.GetString(token).ToLowerInvariant();
+        // Pure ASCII fast path: lowercase into a stack buffer, no allocation, then probe the byte-keyed lookup.
+        const int LookupStackLimit = 128;
+        Span<byte> lookupBuf = token.Length <= LookupStackLimit ? stackalloc byte[token.Length] : new byte[token.Length];
+        for (var i = 0; i < token.Length; i++)
+        {
+            var b = token[i];
+            lookupBuf[i] = b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+        }
+
+        var lookup = (ReadOnlySpan<byte>)lookupBuf;
         if (KeyNames.TryGet(lookup, out var entry))
         {
             writer.Write("<kbd class=\"key-"u8);
-            Utf8StringWriter.Write(writer, entry.ClassSuffix);
+            writer.Write(entry.ClassSuffix);
             writer.Write("\">"u8);
-            Utf8StringWriter.Write(writer, entry.Label);
+            writer.Write(entry.Label);
             writer.Write("</kbd>"u8);
             return;
         }
 
-        // Unknown token: derive a sanitized class from the lower-cased lookup string and emit the literal label.
+        // Unknown token: derive a sanitized class from the lower-cased lookup bytes and emit the literal label.
         writer.Write("<kbd class=\"key-"u8);
         WriteSanitizedClass(writer, lookup);
         writer.Write("\">"u8);
@@ -117,16 +127,16 @@ internal static class KeysRewriter
         writer.Write("</kbd>"u8);
     }
 
-    /// <summary>Writes <paramref name="text"/> as UTF-8, replacing non-class-safe ASCII with <c>-</c>.</summary>
+    /// <summary>Writes <paramref name="text"/> as UTF-8, replacing non-class-safe ASCII bytes with <c>-</c> and discarding non-ASCII bytes.</summary>
     /// <param name="writer">Sink.</param>
-    /// <param name="text">Lower-cased token text.</param>
-    private static void WriteSanitizedClass(IBufferWriter<byte> writer, string text)
+    /// <param name="text">Lower-cased UTF-8 token bytes.</param>
+    private static void WriteSanitizedClass(IBufferWriter<byte> writer, ReadOnlySpan<byte> text)
     {
         var dst = writer.GetSpan(text.Length);
         for (var i = 0; i < text.Length; i++)
         {
-            var c = text[i];
-            dst[i] = c is >= 'a' and <= 'z' or >= '0' and <= '9' or '-' ? (byte)c : (byte)'-';
+            var b = text[i];
+            dst[i] = b is >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9' or (byte)'-' ? b : (byte)'-';
         }
 
         writer.Advance(text.Length);

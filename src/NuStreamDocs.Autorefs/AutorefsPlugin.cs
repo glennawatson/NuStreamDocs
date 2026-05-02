@@ -61,6 +61,11 @@ public sealed class AutorefsPlugin : IDocPlugin
     {
         _ = context;
         _ = cancellationToken;
+
+        // Watch-mode rebuilds reuse the plugin instance — drop the previous build's registrations before any
+        // OnRenderPageAsync hook fires. Other plugins register from their per-page hook (which runs strictly
+        // after OnConfigureAsync), so this clear is safe regardless of registration order.
+        Registry.Clear();
         return ValueTask.CompletedTask;
     }
 

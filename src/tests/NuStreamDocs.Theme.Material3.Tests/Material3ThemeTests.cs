@@ -17,8 +17,8 @@ public class Material3ThemeTests
         var theme = Material3Theme.Load();
 
         await Assert.That(theme.Page.InstructionCount).IsGreaterThan(0);
-        await Assert.That(theme.Partials.ContainsKey("header")).IsTrue();
-        await Assert.That(theme.Partials.ContainsKey("sidebar")).IsTrue();
+        await Assert.That(theme.Partials.GetAlternateLookup<ReadOnlySpan<byte>>().ContainsKey("header"u8)).IsTrue();
+        await Assert.That(theme.Partials.GetAlternateLookup<ReadOnlySpan<byte>>().ContainsKey("sidebar"u8)).IsTrue();
         await Assert.That(theme.StaticAssets.ContainsKey("assets/stylesheets/material3.css")).IsTrue();
         await Assert.That(theme.StaticAssets.ContainsKey("assets/javascripts/material3.js")).IsTrue();
     }

@@ -22,7 +22,7 @@ internal static class Aglc4Treaties
 
         Aglc4Writer.WriteParenthesizedYear(entry.Year, writer);
 
-        if (string.IsNullOrEmpty(entry.Note))
+        if (entry.Note.Length is 0)
         {
             return;
         }

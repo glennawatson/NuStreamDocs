@@ -14,5 +14,5 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class BashLexer
 {
     /// <summary>Gets the singleton lexer instance.</summary>
-    public static Lexer Instance { get; } = new("bash", LanguageRuleBuilder.BuildSingleState(BashRules.Build()));
+    public static Lexer Instance { get; } = new(LanguageRuleBuilder.BuildSingleState(BashRules.Build()));
 }

@@ -5,6 +5,6 @@
 namespace NuStreamDocs.Keys;
 
 /// <summary>A single resolved key alias.</summary>
-/// <param name="ClassSuffix">Class-name suffix used in <c>key-<i>suffix</i></c>.</param>
-/// <param name="Label">Display label rendered inside the <c>kbd</c>.</param>
-internal readonly record struct KeyEntry(string ClassSuffix, string Label);
+/// <param name="ClassSuffix">UTF-8 class-name suffix used in <c>key-<i>suffix</i></c>.</param>
+/// <param name="Label">UTF-8 display label rendered inside the <c>kbd</c>.</param>
+internal readonly record struct KeyEntry(byte[] ClassSuffix, byte[] Label);

@@ -34,7 +34,7 @@ internal static class Aglc4Books
     /// <param name="writer">UTF-8 sink.</param>
     private static void WritePublisherBlock(CitationEntry entry, IBufferWriter<byte> writer)
     {
-        var hasPublisher = !string.IsNullOrEmpty(entry.Publisher);
+        var hasPublisher = entry.Publisher.Length > 0;
         var hasYear = entry.Year is not 0;
         if (!hasPublisher && !hasYear)
         {

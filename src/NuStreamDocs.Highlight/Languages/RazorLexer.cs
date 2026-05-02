@@ -130,7 +130,7 @@ public static class RazorLexer
         states[CSharpBlockAccessorStateId] = CSharpRules.BuildBlockAccessorRules(CSharpBlockAccessorStateId);
         states[CSharpArrowAccessorStateId] = CSharpRules.BuildArrowAccessorRules();
 
-        return new("razor", states);
+        return new(states);
     }
 
     /// <summary>Builds the C# state's rule list — closing-brace popper plus the shared C# rules.</summary>

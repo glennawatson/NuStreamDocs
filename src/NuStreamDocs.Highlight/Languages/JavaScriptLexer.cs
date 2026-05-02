@@ -16,6 +16,5 @@ public static class JavaScriptLexer
 {
     /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = new(
-        "javascript",
         LanguageRuleBuilder.BuildSingleState(TypeScriptLexer.BuildRules("javascript")));
 }

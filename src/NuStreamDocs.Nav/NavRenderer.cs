@@ -62,14 +62,14 @@ internal static class NavRenderer
         WriteList(writer, root.Children, activeBranch, prune: true);
     }
 
-    /// <summary>Indexes every node in the tree by URL so per-page rendering can resolve the active node in O(1) instead of walking the whole tree.</summary>
-    /// <remarks>Indexes section <see cref="NavNode.IndexUrl"/> and leaf <see cref="NavNode.RelativeUrl"/> entries.</remarks>
+    /// <summary>Indexes every node in the tree by UTF-8 URL bytes so per-page rendering can resolve the active node in O(1) without re-encoding the lookup key.</summary>
+    /// <remarks>Indexes section <see cref="NavNode.IndexUrlBytes"/> and leaf <see cref="NavNode.RelativeUrlBytes"/> entries.</remarks>
     /// <param name="root">Nav tree root.</param>
-    /// <returns>URL → node map sized to the visited node count.</returns>
-    public static Dictionary<string, NavNode> BuildUrlIndex(NavNode root)
+    /// <returns>UTF-8 URL → node map sized to the visited node count.</returns>
+    public static Dictionary<byte[], NavNode> BuildUrlIndex(NavNode root)
     {
         ArgumentNullException.ThrowIfNull(root);
-        var index = new Dictionary<string, NavNode>(StringComparer.Ordinal);
+        var index = new Dictionary<byte[], NavNode>(ByteArrayComparer.Instance);
         IndexNode(root, index);
         return index;
     }
@@ -77,16 +77,16 @@ internal static class NavRenderer
     /// <summary>Recursive helper for <see cref="BuildUrlIndex"/>.</summary>
     /// <param name="node">Current node.</param>
     /// <param name="index">Accumulator.</param>
-    private static void IndexNode(NavNode node, Dictionary<string, NavNode> index)
+    private static void IndexNode(NavNode node, Dictionary<byte[], NavNode> index)
     {
-        if (!node.IsSection && !string.IsNullOrEmpty(node.RelativeUrl))
+        if (!node.IsSection && node.RelativeUrlBytes.Length > 0)
         {
-            index[node.RelativeUrl] = node;
+            index[node.RelativeUrlBytes] = node;
         }
 
-        if (node.IsSection && !string.IsNullOrEmpty(node.IndexUrl))
+        if (node.IsSection && node.IndexUrlBytes.Length > 0)
         {
-            index[node.IndexUrl] = node;
+            index[node.IndexUrlBytes] = node;
         }
 
         for (var i = 0; i < node.Children.Length; i++)
@@ -189,15 +189,15 @@ internal static class NavRenderer
         if (node.IndexPath.Length > 0)
         {
             WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
-            WriteString(writer, node.IndexUrl);
+            WriteUtf8(writer, node.IndexUrlBytes);
             WriteUtf8(writer, "\">"u8);
-            WriteString(writer, node.Title);
+            WriteUtf8(writer, node.TitleBytes);
             WriteUtf8(writer, "</a>"u8);
         }
         else
         {
             WriteUtf8(writer, "<span class=\"md-nav__link\">"u8);
-            WriteString(writer, node.Title);
+            WriteUtf8(writer, node.TitleBytes);
             WriteUtf8(writer, "</span>"u8);
         }
 
@@ -217,9 +217,9 @@ internal static class NavRenderer
     private static void WriteLeaf(IBufferWriter<byte> writer, NavNode node, bool active)
     {
         WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
-        WriteString(writer, node.RelativeUrl);
+        WriteUtf8(writer, node.RelativeUrlBytes);
         WriteUtf8(writer, "\">"u8);
-        WriteString(writer, node.Title);
+        WriteUtf8(writer, node.TitleBytes);
         WriteUtf8(writer, "</a>"u8);
     }
 
@@ -232,9 +232,4 @@ internal static class NavRenderer
         bytes.CopyTo(dst);
         writer.Advance(bytes.Length);
     }
-
-    /// <summary>UTF-8-encodes <paramref name="value"/> directly into the writer's span.</summary>
-    /// <param name="writer">UTF-8 sink.</param>
-    /// <param name="value">String.</param>
-    private static void WriteString(IBufferWriter<byte> writer, string value) => Utf8StringWriter.Write(writer, value);
 }

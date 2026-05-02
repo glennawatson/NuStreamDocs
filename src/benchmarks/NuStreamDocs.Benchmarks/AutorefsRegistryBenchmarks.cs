@@ -2,14 +2,16 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Globalization;
+using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Autorefs;
 
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>
-/// Per-call cost of <see cref="AutorefsRegistry.Register"/> across the
+/// Per-call cost of <see cref="AutorefsRegistry.Register(string, string, string)"/> across the
 /// two real-world fragment shapes: heading scans (id == fragment so the
 /// stored URL is <c>page#id</c>) and whole-page references (no fragment
 /// so the stored URL is the bare page URL).
@@ -36,11 +38,26 @@ public class AutorefsRegistryBenchmarks
     /// <summary>Large registry — rxui-scale heading inventory.</summary>
     private const int LargeSite = 100_000;
 
+    /// <summary>Initial capacity for the resolve sink — generous enough that no per-iteration grow is observed for typical page-relative URLs.</summary>
+    private const int ResolveSinkCapacity = 128;
+
     /// <summary>Page URL pre-allocated once and reused for every call to remove encode-once-per-call noise.</summary>
     private string[] _pageUrls = [];
 
     /// <summary>IDs pre-allocated once and reused across iterations.</summary>
     private string[] _ids = [];
+
+    /// <summary>UTF-8 page URL bytes — pre-encoded once so the byte-path benches measure dictionary-insert cost only.</summary>
+    private byte[][] _pageUrlBytes = [];
+
+    /// <summary>UTF-8 id bytes — pre-encoded once for the byte-path benches.</summary>
+    private byte[][] _idBytes = [];
+
+    /// <summary>Reusable sink for the byte-path resolve bench.</summary>
+    private ArrayBufferWriter<byte> _resolveSink = null!;
+
+    /// <summary>Registry pre-populated once in setup so the resolve bench measures lookup cost, not insert cost.</summary>
+    private AutorefsRegistry _populatedRegistry = null!;
 
     /// <summary>Registry recreated per iteration so dictionary growth is measured.</summary>
     private AutorefsRegistry _registry = null!;
@@ -49,18 +66,30 @@ public class AutorefsRegistryBenchmarks
     [Params(SmallSite, MidSite, LargeSite)]
     public int EntryCount { get; set; }
 
-    /// <summary>Pre-allocates id + URL strings shared across iterations.</summary>
+    /// <summary>Pre-allocates id + URL strings shared across iterations, plus the UTF-8 byte forms used by the byte-path benches.</summary>
     [GlobalSetup]
     public void Setup()
     {
         _ids = new string[EntryCount];
         _pageUrls = new string[EntryCount];
+        _idBytes = new byte[EntryCount][];
+        _pageUrlBytes = new byte[EntryCount][];
         for (var i = 0; i < EntryCount; i++)
         {
             var idx = i.ToString(CultureInfo.InvariantCulture);
             _ids[i] = "section-" + idx;
-
             _pageUrls[i] = "guide/page-" + (i / HeadingsPerPage).ToString(CultureInfo.InvariantCulture) + ".html";
+            _idBytes[i] = Encoding.UTF8.GetBytes(_ids[i]);
+            _pageUrlBytes[i] = Encoding.UTF8.GetBytes(_pageUrls[i]);
+        }
+
+        _resolveSink = new(ResolveSinkCapacity);
+
+        _populatedRegistry = new(EntryCount);
+        for (var i = 0; i < EntryCount; i++)
+        {
+            var idSpan = (ReadOnlySpan<byte>)_idBytes[i];
+            _populatedRegistry.Register(idSpan, _pageUrlBytes[i], idSpan);
         }
     }
 
@@ -106,5 +135,37 @@ public class AutorefsRegistryBenchmarks
         }
 
         return registry.Count;
+    }
+
+    /// <summary>Heading-scan path through the byte-shaped Register overload.</summary>
+    /// <returns>Final entry count.</returns>
+    /// <remarks>Measures the actual rxui-corpus hot path with no per-call UTF-8 encoding.</remarks>
+    [Benchmark]
+    public int RegisterWithFragmentBytes()
+    {
+        for (var i = 0; i < _idBytes.Length; i++)
+        {
+            var idSpan = (ReadOnlySpan<byte>)_idBytes[i];
+            _registry.Register(idSpan, _pageUrlBytes[i], idSpan);
+        }
+
+        return _registry.Count;
+    }
+
+    /// <summary>Resolves every registered id back through the byte-path resolve into a reused sink.</summary>
+    /// <returns>Total bytes written across the resolve loop.</returns>
+    /// <remarks>Mirrors the cost the autoref rewriter pays per <c>@autoref:ID</c> marker on a finalized page.</remarks>
+    [Benchmark]
+    public int ResolveIntoBytes()
+    {
+        var total = 0;
+        for (var i = 0; i < _idBytes.Length; i++)
+        {
+            _resolveSink.ResetWrittenCount();
+            _populatedRegistry.TryResolveInto(_idBytes[i], _resolveSink);
+            total += _resolveSink.WrittenCount;
+        }
+
+        return total;
     }
 }

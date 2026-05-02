@@ -229,5 +229,5 @@ public static class TypeScriptLexer
 
     /// <summary>Builds the lexer.</summary>
     /// <returns>Configured lexer.</returns>
-    private static Lexer Build() => new("typescript", LanguageRuleBuilder.BuildSingleState(BuildRules("typescript")));
+    private static Lexer Build() => new(LanguageRuleBuilder.BuildSingleState(BuildRules("typescript")));
 }

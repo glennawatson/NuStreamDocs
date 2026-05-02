@@ -176,25 +176,6 @@ public class MixedContentBytesTests
         // thing is no out-of-range read on the truncated buffer.
         await Assert.That(Rewrite("<a href=\"http://")).IsEqualTo("<a href=\"https://");
 
-    /// <summary>Public end-to-end: <see cref="ExternalLinkPolisher.UpgradeMixedContent(string)"/> still mirrors the byte path's behavior.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PublicStringApiMirrorsByteApi()
-    {
-        var output = ExternalLinkPolisher.UpgradeMixedContent("<a href=\"http://example.com\">x</a>");
-        await Assert.That(output).IsEqualTo("<a href=\"https://example.com\">x</a>");
-    }
-
-    /// <summary>Public end-to-end with no rewrites returns the *same* string instance (cheap no-op path).</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PublicStringApiReturnsSameInstanceWhenUnchanged()
-    {
-        const string Input = "<a href=\"https://example.com\">x</a>";
-        var output = ExternalLinkPolisher.UpgradeMixedContent(Input);
-        await Assert.That(ReferenceEquals(Input, output)).IsTrue();
-    }
-
     /// <summary>Helper that runs the byte rewrite and decodes the result.</summary>
     /// <param name="html">Input HTML.</param>
     /// <returns>Rewritten string, or the input when no rewrite happened.</returns>

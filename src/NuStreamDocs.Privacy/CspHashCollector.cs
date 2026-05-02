@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace NuStreamDocs.Privacy;
 
@@ -25,7 +26,7 @@ internal static class CspHashCollector
     /// <param name="html">Page HTML.</param>
     /// <param name="styles">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;style&gt;</c> blocks.</param>
     /// <param name="scripts">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;script&gt;</c> blocks.</param>
-    public static void Collect(ReadOnlySpan<byte> html, ConcurrentDictionary<string, byte> styles, ConcurrentDictionary<string, byte> scripts)
+    public static void Collect(ReadOnlySpan<byte> html, ConcurrentDictionary<byte[], byte> styles, ConcurrentDictionary<byte[], byte> scripts)
     {
         ArgumentNullException.ThrowIfNull(styles);
         ArgumentNullException.ThrowIfNull(scripts);
@@ -39,9 +40,11 @@ internal static class CspHashCollector
     /// <param name="open">Opening-tag prefix (e.g. <c>&lt;style</c>).</param>
     /// <param name="close">Closing tag (e.g. <c>&lt;/style&gt;</c>).</param>
     /// <param name="sink">Output set.</param>
-    private static void ScanBlocks(ReadOnlySpan<byte> html, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close, ConcurrentDictionary<string, byte> sink)
+    private static void ScanBlocks(ReadOnlySpan<byte> html, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close, ConcurrentDictionary<byte[], byte> sink)
     {
         Span<byte> hash = stackalloc byte[SHA256.HashSizeInBytes];
+        const int MaxB64Length = (SHA256.HashSizeInBytes + 2) / 3 * 4;
+        Span<char> chars = stackalloc char[MaxB64Length];
         var cursor = 0;
         while (cursor < html.Length)
         {
@@ -76,7 +79,19 @@ internal static class CspHashCollector
             }
 
             SHA256.HashData(body, hash);
-            sink.TryAdd($"'sha256-{Convert.ToBase64String(hash)}'", 0);
+
+            // Create "'sha256-{base64}'" as bytes
+            const int PrefixLen = 8; // "'sha256-".Length
+            var b64Length = (hash.Length + 2) / 3 * 4;
+            var totalLength = PrefixLen + b64Length + 1; // prefix + b64 + "'"
+            var buffer = new byte[totalLength];
+            "'sha256-"u8.CopyTo(buffer);
+
+            Convert.TryToBase64Chars(hash, chars, out var charsWritten);
+            var bytesWritten = Encoding.UTF8.GetBytes(chars[..charsWritten], buffer.AsSpan(PrefixLen));
+            buffer[PrefixLen + bytesWritten] = (byte)'\'';
+
+            sink.TryAdd(buffer, 0);
         }
     }
 }

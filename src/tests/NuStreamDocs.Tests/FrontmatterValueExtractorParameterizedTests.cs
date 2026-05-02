@@ -75,8 +75,14 @@ public class FrontmatterValueExtractorParameterizedTests
     private static string Extract(string source, params string[] keys)
     {
         var bytes = Encoding.UTF8.GetBytes(source);
+        var keyBytes = new byte[keys.Length][];
+        for (var i = 0; i < keys.Length; i++)
+        {
+            keyBytes[i] = Encoding.UTF8.GetBytes(keys[i]);
+        }
+
         var sink = new ArrayBufferWriter<byte>(64);
-        FrontmatterValueExtractor.AppendKeysTo(bytes, keys, sink);
+        FrontmatterValueExtractor.AppendKeysTo(bytes, keyBytes, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

@@ -148,8 +148,7 @@ internal static class SnippetsRewriter
             return;
         }
 
-        var visitedLookup = visited.GetAlternateLookup<ReadOnlySpan<byte>>();
-        if (visitedLookup.Contains(pathBytes))
+        if (visited.ContainsByUtf8(pathBytes))
         {
             EmitError(writer, "snippet cycle detected"u8, pathBytes);
             return;
@@ -193,8 +192,7 @@ internal static class SnippetsRewriter
     /// <returns>True when the file was resolved (cache hit or successful read); false when an error stub was emitted.</returns>
     private static bool TryGetSnippetBytes(ReadOnlySpan<byte> pathBytes, string baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer, out byte[] bytes)
     {
-        var cacheLookup = fileCache.GetAlternateLookup<ReadOnlySpan<byte>>();
-        if (cacheLookup.TryGetValue(pathBytes, out bytes!))
+        if (fileCache.TryGetValueByUtf8(pathBytes, out bytes!))
         {
             return true;
         }

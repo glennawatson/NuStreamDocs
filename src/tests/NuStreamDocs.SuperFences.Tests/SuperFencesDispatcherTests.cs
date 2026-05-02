@@ -81,7 +81,7 @@ public class SuperFencesDispatcherTests
         var index = new Dictionary<byte[], ICustomFenceHandler>(handlers.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < handlers.Length; i++)
         {
-            index[Encoding.UTF8.GetBytes(handlers[i].Language)] = handlers[i];
+            index[handlers[i].Language.ToArray()] = handlers[i];
         }
 
         var bytes = Encoding.UTF8.GetBytes(input);
@@ -98,7 +98,7 @@ public class SuperFencesDispatcherTests
     private sealed class MermaidStubHandler : ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public string Language => "mermaid";
+        public ReadOnlySpan<byte> Language => "mermaid"u8;
 
         /// <inheritdoc/>
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)
@@ -113,7 +113,7 @@ public class SuperFencesDispatcherTests
     private sealed class MathStubHandler : ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public string Language => "math";
+        public ReadOnlySpan<byte> Language => "math"u8;
 
         /// <inheritdoc/>
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)

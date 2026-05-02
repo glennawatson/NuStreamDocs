@@ -5,6 +5,6 @@
 namespace NuStreamDocs.Xrefs;
 
 /// <summary>Decoded xrefmap document.</summary>
-/// <param name="BaseUrl">Document's <c>baseUrl</c> field (empty when absent).</param>
-/// <param name="Entries">Parsed <c>(uid, href)</c> pairs in source order; entries missing either field are dropped.</param>
-internal readonly record struct XrefMapPayload(string BaseUrl, (string Uid, string Href)[] Entries);
+/// <param name="BaseUrl">UTF-8 bytes of the document's <c>baseUrl</c> field (empty when absent).</param>
+/// <param name="Entries">Parsed <c>(uid, href)</c> UTF-8 byte pairs in source order; entries missing either field are dropped.</param>
+internal readonly record struct XrefMapPayload(byte[] BaseUrl, (byte[] Uid, byte[] Href)[] Entries);

@@ -98,7 +98,7 @@ public class SuperFencesPluginLifecycleTests
         public override string Name => "stub-handler";
 
         /// <inheritdoc/>
-        public string Language => "stub";
+        public ReadOnlySpan<byte> Language => "stub"u8;
 
         /// <inheritdoc/>
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)
@@ -116,7 +116,7 @@ public class SuperFencesPluginLifecycleTests
         public override string Name => "empty-lang";
 
         /// <inheritdoc/>
-        public string Language => string.Empty;
+        public ReadOnlySpan<byte> Language => default;
 
         /// <inheritdoc/>
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)

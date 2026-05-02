@@ -146,11 +146,11 @@ public class MacrosScannerTests
             {
                 if (n.SequenceEqual("name"u8))
                 {
-                    v = "world";
+                    v = "world"u8.ToArray();
                     return true;
                 }
 
-                v = string.Empty;
+                v = [];
                 return false;
             },
             escapeHtml: false,
@@ -168,7 +168,7 @@ public class MacrosScannerTests
     /// <returns>Rewritten markdown.</returns>
     private static string Rewrite(string input, Dictionary<string, string> variables)
     {
-        var plugin = new MacrosPlugin(MacrosOptions.Default with { Variables = variables });
+        var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables));
         var sink = new ArrayBufferWriter<byte>(input.Length * 2);
         plugin.Preprocess(Encoding.UTF8.GetBytes(input), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -180,7 +180,7 @@ public class MacrosScannerTests
     /// <returns>Rewritten markdown.</returns>
     private static string RewriteEscaped(string input, Dictionary<string, string> variables)
     {
-        var plugin = new MacrosPlugin(MacrosOptions.Default with { Variables = variables, EscapeHtml = true });
+        var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables) with { EscapeHtml = true });
         var sink = new ArrayBufferWriter<byte>(input.Length * 2);
         plugin.Preprocess(Encoding.UTF8.GetBytes(input), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);

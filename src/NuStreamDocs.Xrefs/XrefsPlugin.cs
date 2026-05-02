@@ -105,29 +105,37 @@ public sealed class XrefsPlugin : IDocPlugin
     }
 
     /// <summary>Resolves the effective URL prefix for an import — option override beats embedded <c>baseUrl</c>.</summary>
-    /// <param name="optionOverride">Caller-supplied base URL.</param>
-    /// <param name="embedded">Embedded <c>baseUrl</c> from the imported file.</param>
+    /// <param name="optionOverride">Caller-supplied base URL bytes.</param>
+    /// <param name="embedded">Embedded <c>baseUrl</c> bytes from the imported file.</param>
     /// <returns>The effective prefix; empty when neither was set.</returns>
-    private static string ResolvePrefix(string optionOverride, string embedded) =>
-        !string.IsNullOrEmpty(optionOverride) ? optionOverride : embedded;
+    private static byte[] ResolvePrefix(byte[] optionOverride, byte[] embedded) =>
+        optionOverride.Length > 0 ? optionOverride : embedded;
 
-    /// <summary>Joins <paramref name="prefix"/> and <paramref name="suffix"/> with one separating <c>/</c>; passes through when prefix is empty.</summary>
-    /// <param name="prefix">Base URL or path prefix.</param>
-    /// <param name="suffix">Relative href.</param>
-    /// <returns>Combined URL.</returns>
-    private static string Combine(string prefix, string suffix)
+    /// <summary>Joins <paramref name="prefix"/> and <paramref name="suffix"/> bytes with one separating <c>/</c>; passes through when prefix is empty.</summary>
+    /// <param name="prefix">Base URL or path prefix bytes.</param>
+    /// <param name="suffix">Relative href bytes.</param>
+    /// <returns>Combined UTF-8 URL bytes.</returns>
+    private static byte[] CombineBytes(ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> suffix)
     {
-        if (string.IsNullOrEmpty(prefix))
+        if (prefix.IsEmpty)
         {
-            return suffix;
+            return suffix.ToArray();
         }
 
-        if (prefix.EndsWith('/') || suffix.StartsWith('/'))
+        var needsSlash = prefix[^1] is not (byte)'/' && (suffix.IsEmpty || suffix[0] is not (byte)'/');
+        var dst = new byte[prefix.Length + (needsSlash ? 1 : 0) + suffix.Length];
+        prefix.CopyTo(dst);
+        if (needsSlash)
         {
-            return prefix + suffix;
+            dst[prefix.Length] = (byte)'/';
+            suffix.CopyTo(dst.AsSpan(prefix.Length + 1));
+        }
+        else
+        {
+            suffix.CopyTo(dst.AsSpan(prefix.Length));
         }
 
-        return prefix + "/" + suffix;
+        return dst;
     }
 
     /// <summary>Reads <paramref name="source"/> as a local file (when it exists) or fetches it as <c>http(s)://</c>.</summary>
@@ -161,6 +169,12 @@ public sealed class XrefsPlugin : IDocPlugin
         }
     }
 
+    /// <summary>Encodes the option-override base URL to UTF-8 bytes once per import; returns an empty array when the option is unset.</summary>
+    /// <param name="baseUrl">Option-supplied base URL.</param>
+    /// <returns>UTF-8 base-URL bytes.</returns>
+    private static byte[] EncodeImportBaseUrl(string? baseUrl) =>
+        string.IsNullOrEmpty(baseUrl) ? [] : System.Text.Encoding.UTF8.GetBytes(baseUrl);
+
     /// <summary>Fetches one import (local file or remote URL) and registers every entry into <see cref="Registry"/>.</summary>
     /// <param name="import">Import to fetch.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -174,11 +188,12 @@ public sealed class XrefsPlugin : IDocPlugin
         }
 
         var payload = XrefMapReader.Read(bytes);
-        var prefix = ResolvePrefix(import.BaseUrl, payload.BaseUrl);
+        var prefixBytes = ResolvePrefix(EncodeImportBaseUrl(import.BaseUrl), payload.BaseUrl);
         for (var i = 0; i < payload.Entries.Length; i++)
         {
             var (uid, href) = payload.Entries[i];
-            Registry.Register(uid, Combine(prefix, href), fragment: null);
+            var combined = CombineBytes(prefixBytes, href);
+            Registry.Register(uid, combined, fragment: default);
         }
     }
 }

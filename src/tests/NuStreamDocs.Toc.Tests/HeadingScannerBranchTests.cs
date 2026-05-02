@@ -50,7 +50,7 @@ public class HeadingScannerBranchTests
         await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("plain"u8)).IsTrue();
     }
 
-    /// <summary>DecodeText with body containing an unclosed inner tag returns the prefix.</summary>
+    /// <summary>DecodeTextInto with body containing an unclosed inner tag emits the prefix.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DecodeUnclosedInnerTag()
@@ -58,8 +58,9 @@ public class HeadingScannerBranchTests
         var html = "<h2>Hello <code unclosed</h2>"u8.ToArray();
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        var text = HeadingScanner.DecodeText(html, in headings[0]);
-        await Assert.That(text).IsEqualTo("Hello");
+        var sink = new System.Buffers.ArrayBufferWriter<byte>(16);
+        HeadingScanner.DecodeTextInto(html, in headings[0], sink);
+        await Assert.That(sink.WrittenSpan.SequenceEqual("Hello "u8)).IsTrue();
     }
 
     /// <summary>Heading level 0 is rejected.</summary>

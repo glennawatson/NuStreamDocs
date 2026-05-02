@@ -48,4 +48,45 @@ public class AsciiByteHelpersTests
         await Assert.That(AsciiByteHelpers.RunLength(bytes, 3, (byte)'a')).IsEqualTo(0);
         await Assert.That(AsciiByteHelpers.RunLength(bytes, 100, (byte)'a')).IsEqualTo(0);
     }
+
+    /// <summary>ToLowerCaseInvariant converts ASCII to lowercase.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ToLowerCaseInvariantAscii()
+    {
+        var input = "HELLO world!"u8.ToArray();
+        var expected = "hello world!"u8.ToArray();
+        var actual = AsciiByteHelpers.ToLowerCaseInvariant(input);
+        await Assert.That(actual.AsSpan().SequenceEqual(expected)).IsTrue();
+    }
+
+    /// <summary>ToLowerCaseInvariant copies non-ASCII bytes verbatim — only ASCII <c>A</c>-<c>Z</c> are folded.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ToLowerCaseInvariantPreservesNonAscii()
+    {
+        var input = "ΠΣ-Δ"u8.ToArray();
+        var actual = AsciiByteHelpers.ToLowerCaseInvariant(input);
+        await Assert.That(actual.AsSpan().SequenceEqual(input)).IsTrue();
+    }
+
+    /// <summary>ToLowerCaseInvariant on an empty span returns an empty array (no allocation cliff).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ToLowerCaseInvariantEmpty()
+    {
+        var actual = AsciiByteHelpers.ToLowerCaseInvariant(default);
+        await Assert.That(actual.Length).IsEqualTo(0);
+    }
+
+    /// <summary>ToLowerCaseInvariant folds mixed-case ASCII while leaving digits and punctuation untouched.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ToLowerCaseInvariantFoldsMixedAscii()
+    {
+        var input = "Hello-World_123"u8.ToArray();
+        var expected = "hello-world_123"u8.ToArray();
+        var actual = AsciiByteHelpers.ToLowerCaseInvariant(input);
+        await Assert.That(actual.AsSpan().SequenceEqual(expected)).IsTrue();
+    }
 }

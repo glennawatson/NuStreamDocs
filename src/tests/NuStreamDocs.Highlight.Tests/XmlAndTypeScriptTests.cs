@@ -47,10 +47,12 @@ public class XmlAndTypeScriptTests
     [Test]
     public async Task PlaceholderLanguagesResolve()
     {
-        await Assert.That(LexerRegistry.Default.TryGet("rust", out var rust)).IsTrue();
-        await Assert.That(rust!.LanguageName).IsEqualTo("rust");
+        await Assert.That(LexerRegistry.Default.TryGet("rust"u8, out var rust)).IsTrue();
+        await Assert.That(rust).IsNotNull();
+        await Assert.That(rust!).IsAssignableTo<Lexer>();
 
-        await Assert.That(LexerRegistry.Default.TryGet("py", out var python)).IsTrue();
-        await Assert.That(python!.LanguageName).IsEqualTo("python");
+        await Assert.That(LexerRegistry.Default.TryGet("py"u8, out var python)).IsTrue();
+        await Assert.That(python!).IsNotNull();
+        await Assert.That(python!).IsAssignableTo<Lexer>();
     }
 }

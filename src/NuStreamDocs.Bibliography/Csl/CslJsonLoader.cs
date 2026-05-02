@@ -15,11 +15,12 @@ namespace NuStreamDocs.Bibliography.Csl;
 /// path for users who already maintain their bibliography in CSL-JSON.
 /// </summary>
 /// <remarks>
-/// Hot-path notes — property-name lookups all use the UTF-8 overload
-/// of <see cref="JsonElement.TryGetProperty(ReadOnlySpan{byte}, out JsonElement)"/>
-/// with <c>u8</c> string literals so the comparison stays byte-for-byte
-/// with no per-call string interning. <see cref="JsonDocument.Parse(ReadOnlyMemory{byte}, JsonDocumentOptions)"/>
-/// takes the buffer without copying.
+/// Streaming <see cref="Utf8JsonReader"/> walk — no <see cref="JsonDocument"/>,
+/// no <see cref="JsonElement"/>, no <see cref="string"/> allocations for
+/// string values. <see cref="Utf8JsonReader.CopyString(System.Span{byte})"/>
+/// unescapes directly into a fresh <see cref="byte"/> array sized from the
+/// reader's own length hint, so escape-decoding and UTF-8 emission are a
+/// single pass.
 /// </remarks>
 internal static class CslJsonLoader
 {
@@ -38,16 +39,22 @@ internal static class CslJsonLoader
     /// <returns>Parsed entries.</returns>
     public static IReadOnlyList<CitationEntry> Parse(in ReadOnlyMemory<byte> json)
     {
-        using var doc = JsonDocument.Parse(json);
-        if (doc.RootElement.ValueKind is not JsonValueKind.Array)
+        var reader = new Utf8JsonReader(json.Span, isFinalBlock: true, state: default);
+        if (!reader.Read() || reader.TokenType is not JsonTokenType.StartArray)
         {
             return [];
         }
 
-        var entries = new List<CitationEntry>(doc.RootElement.GetArrayLength());
-        foreach (var element in doc.RootElement.EnumerateArray())
+        var entries = new List<CitationEntry>(64);
+        while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
         {
-            if (TryParseEntry(element, out var entry))
+            if (reader.TokenType is not JsonTokenType.StartObject)
+            {
+                reader.Skip();
+                continue;
+            }
+
+            if (TryReadEntry(ref reader, out var entry))
             {
                 entries.Add(entry);
             }
@@ -56,136 +63,542 @@ internal static class CslJsonLoader
         return entries;
     }
 
-    /// <summary>Parses one CSL-JSON object into a <see cref="CitationEntry"/>.</summary>
-    /// <param name="element">JSON object element.</param>
+    /// <summary>Reads one CSL-JSON object into a <see cref="CitationEntry"/>; returns <see langword="false"/> when the entry is missing its <c>id</c>.</summary>
+    /// <param name="reader">Reader positioned on <see cref="JsonTokenType.StartObject"/>.</param>
     /// <param name="entry">Parsed entry on success.</param>
-    /// <returns>True when the element parsed cleanly (id and type present).</returns>
-    private static bool TryParseEntry(in JsonElement element, out CitationEntry entry)
+    /// <returns>True when an entry was produced.</returns>
+    private static bool TryReadEntry(ref Utf8JsonReader reader, out CitationEntry entry)
     {
         entry = null!;
-        if (element.ValueKind is not JsonValueKind.Object)
+        var fields = NewEntryFields();
+        while (reader.Read() && reader.TokenType is not JsonTokenType.EndObject)
+        {
+            if (reader.TokenType is not JsonTokenType.PropertyName)
+            {
+                continue;
+            }
+
+            ReadOneProperty(ref reader, ref fields);
+        }
+
+        if (fields.Id.Length is 0)
         {
             return false;
         }
 
-        if (!element.TryGetProperty("id"u8, out var idElement) || idElement.GetString() is not { Length: > 0 } id)
-        {
-            return false;
-        }
-
-        entry = BuildPrintFields(element, id) with
-        {
-            Court = GetString(element, "authority"u8),
-            Jurisdiction = GetString(element, "jurisdiction"u8),
-            LawReportSeries = GetString(element, "references"u8),
-            MediumNeutralCitation = GetString(element, "number"u8),
-        };
+        entry = BuildEntry(fields);
         return true;
     }
 
-    /// <summary>Builds the print-side fields of a CSL-JSON entry.</summary>
-    /// <param name="element">JSON object element.</param>
-    /// <param name="id">Already-validated <c>id</c>.</param>
-    /// <returns>Entry populated with the non-legal fields.</returns>
-    private static CitationEntry BuildPrintFields(in JsonElement element, string id) => new()
+    /// <summary>Initializes a fresh <see cref="EntryFields"/> with empty arrays for every byte-shaped field so the parser only has to overwrite hits.</summary>
+    /// <returns>A zeroed field bag.</returns>
+    private static EntryFields NewEntryFields() => new()
     {
-        Id = id,
-        Type = ParseType(GetString(element, "type"u8)),
-        Title = GetString(element, "title"u8),
-        ShortTitle = GetString(element, "title-short"u8),
-        Authors = ParseNames(element, "author"u8),
-        Editors = ParseNames(element, "editor"u8),
-        Year = ParseYear(element),
-        ContainerTitle = GetString(element, "container-title"u8),
-        Publisher = GetString(element, "publisher"u8),
-        PublisherPlace = GetString(element, "publisher-place"u8),
-        Volume = GetString(element, "volume"u8),
-        Issue = GetString(element, "issue"u8),
-        Page = GetString(element, "page"u8),
-        Url = GetString(element, "URL"u8),
-        Doi = GetString(element, "DOI"u8),
-        Note = GetString(element, "note"u8),
+        Id = [],
+        Type = EntryType.Other,
+        Title = [],
+        ShortTitle = [],
+        Authors = [],
+        Editors = [],
+        Year = 0,
+        ContainerTitle = [],
+        Publisher = [],
+        PublisherPlace = [],
+        Volume = [],
+        Issue = [],
+        Page = [],
+        Url = [],
+        Doi = [],
+        Note = [],
+        Court = [],
+        Jurisdiction = [],
+        LawReportSeries = [],
+        MediumNeutralCitation = [],
     };
 
-    /// <summary>Maps a CSL <c>type</c> string to our <see cref="EntryType"/> enum.</summary>
-    /// <param name="type">CSL type string (kebab-case).</param>
-    /// <returns>The mapped <see cref="EntryType"/>; <see cref="EntryType.Other"/> when unknown.</returns>
+    /// <summary>Materializes the parsed <see cref="EntryFields"/> bag into a final <see cref="CitationEntry"/>.</summary>
+    /// <param name="fields">Parsed field bag.</param>
+    /// <returns>Frozen entry.</returns>
+    private static CitationEntry BuildEntry(EntryFields fields) => new()
+    {
+        Id = fields.Id,
+        Type = fields.Type,
+        Title = fields.Title,
+        ShortTitle = fields.ShortTitle,
+        Authors = fields.Authors,
+        Editors = fields.Editors,
+        Year = fields.Year,
+        ContainerTitle = fields.ContainerTitle,
+        Publisher = fields.Publisher,
+        PublisherPlace = fields.PublisherPlace,
+        Volume = fields.Volume,
+        Issue = fields.Issue,
+        Page = fields.Page,
+        Url = fields.Url,
+        Doi = fields.Doi,
+        Note = fields.Note,
+        Court = fields.Court,
+        Jurisdiction = fields.Jurisdiction,
+        LawReportSeries = fields.LawReportSeries,
+        MediumNeutralCitation = fields.MediumNeutralCitation,
+    };
+
+    /// <summary>Dispatches one CSL property-name token to its field reader.</summary>
+    /// <param name="reader">Reader positioned on the property-name token.</param>
+    /// <param name="fields">Mutable per-entry field bag.</param>
+    [SuppressMessage(
+        "Major Code Smell",
+        "S138:Methods should not have too many lines",
+        Justification = "Property-name dispatch — one branch per known CSL field, no nested logic.")]
     [SuppressMessage(
         "Sonar Code Smell",
         "S1541:Methods should not be too complex",
-        Justification = "Single switch expression mapping CSL type strings to enum values.")]
-    private static EntryType ParseType(string type) => type switch
+        Justification = "Property-name dispatch — cyclomatic complexity tracks the number of CSL fields, not branching logic.")]
+    [SuppressMessage(
+        "Sonar Code Smell",
+        "S3776:Cognitive Complexity of methods should not be too high",
+        Justification = "Property-name dispatch — one branch per known CSL field, no nested logic.")]
+    private static void ReadOneProperty(ref Utf8JsonReader reader, ref EntryFields fields)
     {
-        "book" => EntryType.Book,
-        "chapter" => EntryType.Chapter,
-        "article-journal" => EntryType.ArticleJournal,
-        "article-magazine" => EntryType.ArticleMagazine,
-        "article-newspaper" => EntryType.ArticleNewspaper,
-        "article" => EntryType.Article,
-        "legal_case" => EntryType.LegalCase,
-        "legislation" => EntryType.Legislation,
-        "treaty" => EntryType.Treaty,
-        "report" => EntryType.Report,
-        "paper-conference" => EntryType.PaperConference,
-        "thesis" => EntryType.Thesis,
-        "webpage" => EntryType.Webpage,
-        "manuscript" => EntryType.Manuscript,
-        _ => EntryType.Other,
-    };
-
-    /// <summary>Reads <c>issued.date-parts[0][0]</c> per CSL-JSON.</summary>
-    /// <param name="element">Entry object.</param>
-    /// <returns>The parsed year, or 0 when absent.</returns>
-    private static int ParseYear(in JsonElement element)
-    {
-        if (!element.TryGetProperty("issued"u8, out var issued)
-            || !issued.TryGetProperty("date-parts"u8, out var parts)
-            || parts.ValueKind is not JsonValueKind.Array
-            || parts.GetArrayLength() is 0)
+        if (reader.ValueTextEquals("id"u8))
         {
-            return 0;
+            fields.Id = ReadStringBytes(ref reader);
+            return;
         }
 
-        var first = parts[0];
-        if (first.ValueKind is not JsonValueKind.Array || first.GetArrayLength() is 0)
+        if (reader.ValueTextEquals("type"u8))
         {
-            return 0;
+            fields.Type = ParseType(ReadStringBytes(ref reader));
+            return;
         }
 
-        return first[0].TryGetInt32(out var year) ? year : 0;
+        if (reader.ValueTextEquals("title"u8))
+        {
+            fields.Title = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("title-short"u8))
+        {
+            fields.ShortTitle = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("author"u8))
+        {
+            fields.Authors = ReadNames(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("editor"u8))
+        {
+            fields.Editors = ReadNames(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("issued"u8))
+        {
+            fields.Year = ReadIssuedYear(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("container-title"u8))
+        {
+            fields.ContainerTitle = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("publisher"u8))
+        {
+            fields.Publisher = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("publisher-place"u8))
+        {
+            fields.PublisherPlace = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("volume"u8))
+        {
+            fields.Volume = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("issue"u8))
+        {
+            fields.Issue = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("page"u8))
+        {
+            fields.Page = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("URL"u8))
+        {
+            fields.Url = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("DOI"u8))
+        {
+            fields.Doi = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("note"u8))
+        {
+            fields.Note = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("authority"u8))
+        {
+            fields.Court = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("jurisdiction"u8))
+        {
+            fields.Jurisdiction = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("references"u8))
+        {
+            fields.LawReportSeries = ReadStringBytes(ref reader);
+            return;
+        }
+
+        if (reader.ValueTextEquals("number"u8))
+        {
+            fields.MediumNeutralCitation = ReadStringBytes(ref reader);
+            return;
+        }
+
+        reader.Read();
+        reader.Skip();
     }
 
-    /// <summary>Parses a CSL name array into our <see cref="PersonName"/>[] shape.</summary>
-    /// <param name="element">Entry object.</param>
-    /// <param name="utf8Property">Property name as UTF-8 (<c>"author"u8</c> / <c>"editor"u8</c>).</param>
-    /// <returns>Parsed names; empty array when absent.</returns>
-    private static PersonName[] ParseNames(in JsonElement element, ReadOnlySpan<byte> utf8Property)
+    /// <summary>Advances past the property-name token and returns the immediately-following string value as fresh UTF-8 bytes.</summary>
+    /// <param name="reader">Reader positioned on the property-name token.</param>
+    /// <returns>UTF-8 bytes; empty when the next token isn't a string.</returns>
+    private static byte[] ReadStringBytes(ref Utf8JsonReader reader)
     {
-        if (!element.TryGetProperty(utf8Property, out var array) || array.ValueKind is not JsonValueKind.Array)
+        reader.Read();
+        if (reader.TokenType is not JsonTokenType.String)
         {
             return [];
         }
 
-        var result = new PersonName[array.GetArrayLength()];
-        var i = 0;
-        foreach (var item in array.EnumerateArray())
+        var maxLength = reader.HasValueSequence ? checked((int)reader.ValueSequence.Length) : reader.ValueSpan.Length;
+        if (maxLength is 0)
         {
-            result[i++] = new(
-                Family: GetString(item, "family"u8),
-                Given: GetString(item, "given"u8),
-                Suffix: GetString(item, "suffix"u8),
-                Literal: GetString(item, "literal"u8));
+            return [];
         }
 
-        return result;
+        var dst = new byte[maxLength];
+        var written = reader.CopyString(dst);
+        return written == dst.Length ? dst : dst[..written];
     }
 
-    /// <summary>Reads a string property; returns empty string when absent or wrong type.</summary>
-    /// <param name="element">JSON object.</param>
-    /// <param name="utf8Property">Property name as UTF-8 — supplied via the <c>u8</c> literal.</param>
-    /// <returns>String value or empty.</returns>
-    private static string GetString(in JsonElement element, ReadOnlySpan<byte> utf8Property) =>
-        element.TryGetProperty(utf8Property, out var value) && value.ValueKind is JsonValueKind.String
-            ? value.GetString() ?? string.Empty
-            : string.Empty;
+    /// <summary>Reads the <c>author</c> / <c>editor</c> array into a <see cref="PersonName"/> array.</summary>
+    /// <param name="reader">Reader positioned on the property-name token.</param>
+    /// <returns>Parsed names; empty array when the value isn't an array.</returns>
+    private static PersonName[] ReadNames(ref Utf8JsonReader reader)
+    {
+        reader.Read();
+        if (reader.TokenType is not JsonTokenType.StartArray)
+        {
+            reader.Skip();
+            return [];
+        }
+
+        var names = new List<PersonName>(8);
+        while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
+        {
+            if (reader.TokenType is not JsonTokenType.StartObject)
+            {
+                reader.Skip();
+                continue;
+            }
+
+            names.Add(ReadName(ref reader));
+        }
+
+        return [.. names];
+    }
+
+    /// <summary>Reads one CSL name object.</summary>
+    /// <param name="reader">Reader positioned on <see cref="JsonTokenType.StartObject"/>.</param>
+    /// <returns>The parsed name.</returns>
+    private static PersonName ReadName(ref Utf8JsonReader reader)
+    {
+        byte[] family = [];
+        byte[] given = [];
+        byte[] suffix = [];
+        byte[] literal = [];
+
+        while (reader.Read() && reader.TokenType is not JsonTokenType.EndObject)
+        {
+            if (reader.TokenType is not JsonTokenType.PropertyName)
+            {
+                continue;
+            }
+
+            if (reader.ValueTextEquals("family"u8))
+            {
+                family = ReadStringBytes(ref reader);
+            }
+            else if (reader.ValueTextEquals("given"u8))
+            {
+                given = ReadStringBytes(ref reader);
+            }
+            else if (reader.ValueTextEquals("suffix"u8))
+            {
+                suffix = ReadStringBytes(ref reader);
+            }
+            else if (reader.ValueTextEquals("literal"u8))
+            {
+                literal = ReadStringBytes(ref reader);
+            }
+            else
+            {
+                reader.Read();
+                reader.Skip();
+            }
+        }
+
+        return new(family, given, suffix, literal);
+    }
+
+    /// <summary>Reads <c>issued.date-parts[0][0]</c> per CSL-JSON.</summary>
+    /// <param name="reader">Reader positioned on the <c>issued</c> property-name token.</param>
+    /// <returns>The parsed year, or 0 when absent.</returns>
+    private static int ReadIssuedYear(ref Utf8JsonReader reader)
+    {
+        reader.Read();
+        if (reader.TokenType is not JsonTokenType.StartObject)
+        {
+            reader.Skip();
+            return 0;
+        }
+
+        var year = 0;
+        while (reader.Read() && reader.TokenType is not JsonTokenType.EndObject)
+        {
+            if (reader.TokenType is not JsonTokenType.PropertyName)
+            {
+                continue;
+            }
+
+            if (reader.ValueTextEquals("date-parts"u8))
+            {
+                year = ReadFirstDatePart(ref reader);
+            }
+            else
+            {
+                reader.Read();
+                reader.Skip();
+            }
+        }
+
+        return year;
+    }
+
+    /// <summary>Reads the first integer of <c>date-parts[0]</c>.</summary>
+    /// <param name="reader">Reader positioned on the <c>date-parts</c> property-name token.</param>
+    /// <returns>The first integer, or 0 when absent / malformed.</returns>
+    private static int ReadFirstDatePart(ref Utf8JsonReader reader)
+    {
+        reader.Read();
+        if (reader.TokenType is not JsonTokenType.StartArray)
+        {
+            reader.Skip();
+            return 0;
+        }
+
+        if (!reader.Read() || reader.TokenType is not JsonTokenType.StartArray)
+        {
+            // Outer array empty or malformed.
+            SkipUntilArrayEnd(ref reader);
+            return 0;
+        }
+
+        var year = 0;
+        if (reader.Read() && reader.TokenType is JsonTokenType.Number && reader.TryGetInt32(out var parsed))
+        {
+            year = parsed;
+        }
+
+        // Drain the inner array.
+        while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
+        {
+            reader.Skip();
+        }
+
+        // Drain any remaining inner-array entries in the outer array.
+        SkipUntilArrayEnd(ref reader);
+        return year;
+    }
+
+    /// <summary>Drains tokens until the outer array's <see cref="JsonTokenType.EndArray"/> is consumed.</summary>
+    /// <param name="reader">Reader.</param>
+    private static void SkipUntilArrayEnd(ref Utf8JsonReader reader)
+    {
+        while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
+        {
+            reader.Skip();
+        }
+    }
+
+    /// <summary>Maps the CSL <c>type</c> bytes to our <see cref="EntryType"/> enum.</summary>
+    /// <param name="type">CSL type bytes (kebab-case).</param>
+    /// <returns>The mapped <see cref="EntryType"/>; <see cref="EntryType.Other"/> when unknown.</returns>
+    [SuppressMessage(
+        "Sonar Code Smell",
+        "S1541:Methods should not be too complex",
+        Justification = "Linear sequence-of-equals checks against UTF-8 literals; intentionally explicit per type.")]
+    private static EntryType ParseType(byte[] type)
+    {
+        var span = (ReadOnlySpan<byte>)type;
+        if (span.SequenceEqual("book"u8))
+        {
+            return EntryType.Book;
+        }
+
+        if (span.SequenceEqual("chapter"u8))
+        {
+            return EntryType.Chapter;
+        }
+
+        if (span.SequenceEqual("article-journal"u8))
+        {
+            return EntryType.ArticleJournal;
+        }
+
+        if (span.SequenceEqual("article-magazine"u8))
+        {
+            return EntryType.ArticleMagazine;
+        }
+
+        if (span.SequenceEqual("article-newspaper"u8))
+        {
+            return EntryType.ArticleNewspaper;
+        }
+
+        if (span.SequenceEqual("article"u8))
+        {
+            return EntryType.Article;
+        }
+
+        if (span.SequenceEqual("legal_case"u8))
+        {
+            return EntryType.LegalCase;
+        }
+
+        if (span.SequenceEqual("legislation"u8))
+        {
+            return EntryType.Legislation;
+        }
+
+        if (span.SequenceEqual("treaty"u8))
+        {
+            return EntryType.Treaty;
+        }
+
+        if (span.SequenceEqual("report"u8))
+        {
+            return EntryType.Report;
+        }
+
+        if (span.SequenceEqual("paper-conference"u8))
+        {
+            return EntryType.PaperConference;
+        }
+
+        if (span.SequenceEqual("thesis"u8))
+        {
+            return EntryType.Thesis;
+        }
+
+        if (span.SequenceEqual("webpage"u8))
+        {
+            return EntryType.Webpage;
+        }
+
+        return span.SequenceEqual("manuscript"u8) ? EntryType.Manuscript : EntryType.Other;
+    }
+
+    /// <summary>Mutable per-entry field bag; passed by <c>ref</c> so the property-name dispatch helper writes through to the enclosing read scope.</summary>
+    [SuppressMessage(
+        "Sonar Code Smell",
+        "S3898:Implement IEquatable in value type",
+        Justification = "Private mutable field bag used only as a parsing scratchpad; equality is never compared.")]
+    private struct EntryFields
+    {
+        /// <summary>Citation id bytes; required.</summary>
+        public byte[] Id;
+
+        /// <summary>CSL <c>type</c>.</summary>
+        public EntryType Type;
+
+        /// <summary>CSL <c>title</c>.</summary>
+        public byte[] Title;
+
+        /// <summary>CSL <c>title-short</c>.</summary>
+        public byte[] ShortTitle;
+
+        /// <summary>CSL <c>author</c> array.</summary>
+        public PersonName[] Authors;
+
+        /// <summary>CSL <c>editor</c> array.</summary>
+        public PersonName[] Editors;
+
+        /// <summary>CSL <c>issued.date-parts[0][0]</c>.</summary>
+        public int Year;
+
+        /// <summary>CSL <c>container-title</c>.</summary>
+        public byte[] ContainerTitle;
+
+        /// <summary>CSL <c>publisher</c>.</summary>
+        public byte[] Publisher;
+
+        /// <summary>CSL <c>publisher-place</c>.</summary>
+        public byte[] PublisherPlace;
+
+        /// <summary>CSL <c>volume</c>.</summary>
+        public byte[] Volume;
+
+        /// <summary>CSL <c>issue</c>.</summary>
+        public byte[] Issue;
+
+        /// <summary>CSL <c>page</c>.</summary>
+        public byte[] Page;
+
+        /// <summary>CSL <c>URL</c>.</summary>
+        public byte[] Url;
+
+        /// <summary>CSL <c>DOI</c>.</summary>
+        public byte[] Doi;
+
+        /// <summary>CSL <c>note</c>.</summary>
+        public byte[] Note;
+
+        /// <summary>CSL <c>authority</c> (AGLC court).</summary>
+        public byte[] Court;
+
+        /// <summary>CSL <c>jurisdiction</c>.</summary>
+        public byte[] Jurisdiction;
+
+        /// <summary>CSL <c>references</c> (AGLC law-report series).</summary>
+        public byte[] LawReportSeries;
+
+        /// <summary>CSL <c>number</c> (AGLC medium-neutral citation).</summary>
+        public byte[] MediumNeutralCitation;
+    }
 }

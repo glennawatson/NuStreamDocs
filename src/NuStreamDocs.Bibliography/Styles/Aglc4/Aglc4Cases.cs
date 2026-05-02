@@ -25,14 +25,14 @@ internal static class Aglc4Cases
         Aglc4Writer.WriteString(entry.Title, writer);
         Aglc4Writer.WriteBytes("*"u8, writer);
 
-        if (!string.IsNullOrEmpty(entry.LawReportSeries))
+        if (entry.LawReportSeries.Length > 0)
         {
             Aglc4Writer.WriteBytes(" "u8, writer);
             Aglc4Writer.WriteString(entry.LawReportSeries, writer);
             return;
         }
 
-        if (!string.IsNullOrEmpty(entry.MediumNeutralCitation))
+        if (entry.MediumNeutralCitation.Length > 0)
         {
             Aglc4Writer.WriteBytes(" "u8, writer);
             Aglc4Writer.WriteString(entry.MediumNeutralCitation, writer);

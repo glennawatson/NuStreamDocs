@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Privacy.Bytes;
 
@@ -49,31 +47,5 @@ internal static class ExternalLinkPolisher
         var sink2 = rental2.Writer;
         var changedAnchors = AnchorBytes.RewriteInto(stage1, options.AddRelNoOpener, options.AddTargetBlank, sink2);
         return changedAnchors ? sink2.WrittenSpan.ToArray() : stage1.ToArray();
-    }
-
-    /// <summary>Rewrites every non-loopback <c>http://</c> URL in <c>src</c>/<c>href</c> attributes of <paramref name="html"/> to <c>https://</c>.</summary>
-    /// <param name="html">Page HTML as a string.</param>
-    /// <returns>Rewritten HTML; the same instance when no URL needed upgrading.</returns>
-    public static string UpgradeMixedContent(string html)
-    {
-        ArgumentNullException.ThrowIfNull(html);
-        var bytes = Encoding.UTF8.GetBytes(html);
-        using var rental = PageBuilderPool.Rent(bytes.Length);
-        var sink = rental.Writer;
-        return MixedContentBytes.RewriteInto(bytes, sink) ? Encoding.UTF8.GetString(sink.WrittenSpan) : html;
-    }
-
-    /// <summary>Adds <c>rel="noopener noreferrer"</c> and/or <c>target="_blank"</c> to every external anchor in <paramref name="html"/>.</summary>
-    /// <param name="html">Page HTML as a string.</param>
-    /// <param name="options">Plugin options; only <see cref="PrivacyOptions.AddRelNoOpener"/> / <see cref="PrivacyOptions.AddTargetBlank"/> are read.</param>
-    /// <returns>Rewritten HTML; the same instance when no anchor matched.</returns>
-    public static string HardenAnchors(string html, in PrivacyOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(html);
-        var bytes = Encoding.UTF8.GetBytes(html);
-        using var rental = PageBuilderPool.Rent(bytes.Length);
-        var sink = rental.Writer;
-        var changed = AnchorBytes.RewriteInto(bytes, options.AddRelNoOpener, options.AddTargetBlank, sink);
-        return changed ? Encoding.UTF8.GetString(sink.WrittenSpan) : html;
     }
 }

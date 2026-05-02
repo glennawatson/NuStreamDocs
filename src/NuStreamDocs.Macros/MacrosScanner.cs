@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Macros;
@@ -18,11 +17,11 @@ internal static class MacrosScanner
     /// <summary>HTML escape rules for the EscapeHtml option (matches the canonical 5-entity set).</summary>
     private static readonly SearchValues<byte> EscapeChars = SearchValues.Create("&<>\"'"u8);
 
-    /// <summary>Lookup callback signature: byte name → string value (true on hit).</summary>
+    /// <summary>Lookup callback signature: UTF-8 name → UTF-8 value (true on hit).</summary>
     /// <param name="name">UTF-8 name bytes.</param>
-    /// <param name="value">Resolved value on hit.</param>
+    /// <param name="value">Resolved UTF-8 value bytes on hit; the dict's stored array, the caller must not mutate.</param>
     /// <returns>True when the lookup succeeded.</returns>
-    public delegate bool Lookup(ReadOnlySpan<byte> name, out string value);
+    public delegate bool Lookup(ReadOnlySpan<byte> name, out byte[] value);
 
     /// <summary>Missing-name callback signature; called for each <c>{{ name }}</c> with no resolved value.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
@@ -214,33 +213,23 @@ internal static class MacrosScanner
           or (byte)'-';
 
     /// <summary>Writes <paramref name="value"/> to <paramref name="writer"/>, optionally HTML-escaping.</summary>
-    /// <param name="value">Resolved string value.</param>
+    /// <param name="value">Resolved UTF-8 value bytes.</param>
     /// <param name="escapeHtml">Whether to escape the 5 entity characters.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitValue(string value, bool escapeHtml, IBufferWriter<byte> writer)
+    private static void EmitValue(ReadOnlySpan<byte> value, bool escapeHtml, IBufferWriter<byte> writer)
     {
-        if (value.Length is 0)
+        if (value.IsEmpty)
         {
             return;
         }
 
-        var max = Encoding.UTF8.GetMaxByteCount(value.Length);
-        var rented = ArrayPool<byte>.Shared.Rent(max);
-        try
+        if (escapeHtml)
         {
-            var written = Encoding.UTF8.GetBytes(value, rented);
-            if (escapeHtml)
-            {
-                EmitEscaped(rented.AsSpan(0, written), writer);
-                return;
-            }
+            EmitEscaped(value, writer);
+            return;
+        }
 
-            Write(writer, rented.AsSpan(0, written));
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(rented);
-        }
+        Write(writer, value);
     }
 
     /// <summary>HTML-escapes <paramref name="value"/> into <paramref name="writer"/>.</summary>

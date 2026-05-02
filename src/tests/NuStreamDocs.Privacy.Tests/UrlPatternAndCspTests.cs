@@ -18,10 +18,10 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task GlobWildcardsMatchExpectedUrls()
     {
-        var matcher = new UrlPatternMatcher(["https://fonts.googleapis.com/css*"]);
-        await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/css")).IsTrue();
-        await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/css?family=Roboto")).IsTrue();
-        await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/recaptcha/foo")).IsFalse();
+        var matcher = new UrlPatternMatcher(["https://fonts.googleapis.com/css*"u8.ToArray()]);
+        await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/css"u8)).IsTrue();
+        await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/css?family=Roboto"u8)).IsTrue();
+        await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/recaptcha/foo"u8)).IsFalse();
     }
 
     /// <summary>An include pattern broadens the allow set even when the host isn't on <c>HostsAllowed</c>.</summary>
@@ -31,12 +31,12 @@ public class UrlPatternAndCspTests
     {
         var filter = new HostFilter(
             hostsToSkip: null,
-            hostsAllowed: ["allowed.example"],
-            includePatterns: ["https://other.example/css*"],
+            hostsAllowed: PrivacyTestHelpers.Utf8("allowed.example"),
+            includePatterns: PrivacyTestHelpers.Utf8("https://other.example/css*"),
             excludePatterns: null);
-        await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png")).IsTrue();
-        await Assert.That(filter.ShouldLocalize("https://other.example/css/main.css")).IsTrue();
-        await Assert.That(filter.ShouldLocalize("https://other.example/recaptcha/x")).IsFalse();
+        await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png"u8)).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://other.example/css/main.css"u8)).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://other.example/recaptcha/x"u8)).IsFalse();
     }
 
     /// <summary>An exclude pattern wins over a host that would otherwise pass.</summary>
@@ -48,9 +48,9 @@ public class UrlPatternAndCspTests
             hostsToSkip: null,
             hostsAllowed: null,
             includePatterns: null,
-            excludePatterns: ["https://*.googleapis.com/recaptcha/*"]);
-        await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/css")).IsTrue();
-        await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/recaptcha/x")).IsFalse();
+            excludePatterns: PrivacyTestHelpers.Utf8("https://*.googleapis.com/recaptcha/*"));
+        await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/css"u8)).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/recaptcha/x"u8)).IsFalse();
     }
 
     /// <summary>Inline <c>&lt;style&gt;</c> bodies produce stable SHA-256 hashes formatted for CSP.</summary>
@@ -58,14 +58,14 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task CspHashCollectorEmitsStableSha256()
     {
-        var styles = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
-        var scripts = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
+        var styles = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
+        var scripts = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
         const string Html = "<style>body{color:red}</style><script>alert(1)</script>";
         CspHashCollector.Collect(Encoding.UTF8.GetBytes(Html), styles, scripts);
 
         await Assert.That(styles).HasSingleItem();
         await Assert.That(scripts).HasSingleItem();
-        await Assert.That(styles.Keys.Single()).StartsWith("'sha256-");
+        await Assert.That(Encoding.UTF8.GetString(styles.Keys.Single())).StartsWith("'sha256-");
 
         // Idempotent: re-running the same input doesn't grow the set.
         CspHashCollector.Collect(Encoding.UTF8.GetBytes(Html), styles, scripts);
@@ -77,8 +77,8 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task CspHashCollectorSkipsEmptyBodies()
     {
-        var styles = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
-        var scripts = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
+        var styles = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
+        var scripts = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
         CspHashCollector.Collect([.. "<script src=\"/x.js\"></script>"u8], styles, scripts);
         await Assert.That(scripts).IsEmpty();
     }

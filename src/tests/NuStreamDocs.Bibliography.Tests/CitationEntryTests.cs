@@ -16,7 +16,7 @@ public class CitationEntryTests
     {
         var entry = new CitationEntry
         {
-            Id = "test",
+            Id = "test"u8.ToArray(),
             Type = EntryType.Book,
             Year = 2026,
             Month = 5,

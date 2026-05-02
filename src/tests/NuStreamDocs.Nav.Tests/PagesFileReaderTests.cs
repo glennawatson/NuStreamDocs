@@ -15,7 +15,7 @@ public class PagesFileReaderTests
     public async Task ReadsTitle()
     {
         var parsed = Parse("title: Custom Section\n");
-        await Assert.That(parsed.Title).IsEqualTo("Custom Section");
+        await Assert.That(Encoding.UTF8.GetString(parsed.Title)).IsEqualTo("Custom Section");
         await Assert.That(parsed.Hide).IsFalse();
         await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(0);
     }
@@ -35,7 +35,7 @@ public class PagesFileReaderTests
     public async Task ReadsBlockNav()
     {
         var parsed = Parse("nav:\n  - intro.md\n  - subsection\n  - reference.md\n");
-        await Assert.That(string.Join('|', parsed.OrderedEntries)).IsEqualTo("intro.md|subsection|reference.md");
+        await Assert.That(JoinEntries(parsed.OrderedEntries)).IsEqualTo("intro.md|subsection|reference.md");
     }
 
     /// <summary>A combined file populates all three fields.</summary>
@@ -45,9 +45,9 @@ public class PagesFileReaderTests
     {
         const string Source = "title: Guide\nhide: false\nnav:\n  - intro.md\n  - advanced.md\n";
         var parsed = Parse(Source);
-        await Assert.That(parsed.Title).IsEqualTo("Guide");
+        await Assert.That(Encoding.UTF8.GetString(parsed.Title)).IsEqualTo("Guide");
         await Assert.That(parsed.Hide).IsFalse();
-        await Assert.That(string.Join('|', parsed.OrderedEntries)).IsEqualTo("intro.md|advanced.md");
+        await Assert.That(JoinEntries(parsed.OrderedEntries)).IsEqualTo("intro.md|advanced.md");
     }
 
     /// <summary>Empty input → <c>PagesFile.Empty</c>-equivalent shape.</summary>
@@ -56,7 +56,7 @@ public class PagesFileReaderTests
     public async Task EmptyInputReturnsDefaults()
     {
         var parsed = Parse(string.Empty);
-        await Assert.That(parsed.Title).IsEqualTo(string.Empty);
+        await Assert.That(parsed.Title.Length).IsEqualTo(0);
         await Assert.That(parsed.Hide).IsFalse();
         await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(0);
     }
@@ -65,4 +65,18 @@ public class PagesFileReaderTests
     /// <param name="text">Source text.</param>
     /// <returns>Parsed <c>PagesFile</c>.</returns>
     private static PagesFile Parse(string text) => PagesFileReader.Parse(Encoding.UTF8.GetBytes(text));
+
+    /// <summary>Decodes <paramref name="entries"/> and joins them with <c>|</c> for compact assertion.</summary>
+    /// <param name="entries">UTF-8 entries.</param>
+    /// <returns>Pipe-joined string.</returns>
+    private static string JoinEntries(byte[][] entries)
+    {
+        var decoded = new string[entries.Length];
+        for (var i = 0; i < entries.Length; i++)
+        {
+            decoded[i] = Encoding.UTF8.GetString(entries[i]);
+        }
+
+        return string.Join('|', decoded);
+    }
 }

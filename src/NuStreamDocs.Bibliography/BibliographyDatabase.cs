@@ -15,18 +15,17 @@ namespace NuStreamDocs.Bibliography;
 /// queried on every <c>[@key]</c> resolution.
 /// </summary>
 /// <remarks>
-/// The hot citation-marker scan resolves keys against a byte-keyed
-/// dictionary so it never round-trips through <see cref="string"/>.
-/// The string-keyed dictionary is kept for the public <see cref="TryGet(string, out CitationEntry)"/>
-/// API and missing-callback wiring.
+/// Storage is byte-keyed (UTF-8 id bytes) so the per-marker scan resolves directly against the
+/// source <see cref="ReadOnlySpan{Byte}"/> via <see cref="Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/>.
+/// The <see cref="TryGet(string, out CitationEntry)"/> string overload encodes once into a stack
+/// buffer and delegates to the byte path — used only by tests and diagnostics.
 /// </remarks>
 public sealed class BibliographyDatabase
 {
-    /// <summary>Citation lookup keyed by string id; built once at configure, queried per public API call.</summary>
-    private readonly Dictionary<string, CitationEntry> _byId;
+    /// <summary>Stack buffer cap for the string-overload encode probe.</summary>
+    private const int IdStackBuffer = 256;
 
-    /// <summary>Byte-keyed lookup populated alongside <see cref="_byId"/>.</summary>
-    /// <remarks>The scanner queries this with the source <see cref="ReadOnlySpan{Byte}"/> directly via <see cref="Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/>.</remarks>
+    /// <summary>Byte-keyed citation lookup; the per-marker scanner probes this directly.</summary>
     private readonly Dictionary<byte[], CitationEntry> _byIdBytes;
 
     /// <summary>Stable insertion-order array used by the bibliography emitter.</summary>
@@ -38,25 +37,21 @@ public sealed class BibliographyDatabase
     {
         ArgumentNullException.ThrowIfNull(entries);
         _ordered = [.. entries];
-        var dict = new Dictionary<string, CitationEntry>(entries.Count, StringComparer.Ordinal);
         var byteDict = new Dictionary<byte[], CitationEntry>(entries.Count, ByteArrayComparer.Instance);
         for (var i = 0; i < _ordered.Length; i++)
         {
             var entry = _ordered[i];
-            if (string.IsNullOrEmpty(entry.Id))
+            if (entry.Id is null or [])
             {
                 throw new ArgumentException("Citation entry id must be non-empty", nameof(entries));
             }
 
-            if (!dict.TryAdd(entry.Id, entry))
+            if (!byteDict.TryAdd(entry.Id, entry))
             {
-                throw new ArgumentException($"Duplicate citation id: {entry.Id}", nameof(entries));
+                throw new ArgumentException($"Duplicate citation id: {Encoding.UTF8.GetString(entry.Id)}", nameof(entries));
             }
-
-            byteDict.Add(Encoding.UTF8.GetBytes(entry.Id), entry);
         }
 
-        _byId = dict;
         _byIdBytes = byteDict;
     }
 
@@ -73,18 +68,26 @@ public sealed class BibliographyDatabase
     /// <param name="id">Citation id.</param>
     /// <param name="entry">Resolved entry on hit.</param>
     /// <returns>True when the id is in the database.</returns>
-    public bool TryGet(string id, [MaybeNullWhen(false)] out CitationEntry entry) =>
-        _byId.TryGetValue(id, out entry);
+    /// <remarks>
+    /// String adapter for the byte-keyed primary path — encodes <paramref name="id"/> into a
+    /// stack-or-pool buffer once and probes via
+    /// <see cref="TryGet(ReadOnlySpan{byte}, out CitationEntry)"/>.
+    /// </remarks>
+    public bool TryGet(string id, [MaybeNullWhen(false)] out CitationEntry entry)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(id);
+        Span<byte> stack = stackalloc byte[IdStackBuffer];
+        var maxBytes = Encoding.UTF8.GetMaxByteCount(id.Length);
+        var buffer = maxBytes <= stack.Length ? stack : new byte[maxBytes];
+        var written = Encoding.UTF8.GetBytes(id, buffer);
+        return TryGet(buffer[..written], out entry);
+    }
 
     /// <summary>Tries to resolve a UTF-8-encoded citation id to its entry.</summary>
     /// <param name="id">Citation id bytes (no <c>@</c> prefix).</param>
     /// <param name="entry">Resolved entry on hit.</param>
     /// <returns>True when the id is in the database.</returns>
-    /// <remarks>
-    /// Probes the byte-keyed dictionary via <see cref="Dictionary{TKey, TValue}.GetAlternateLookup{TAlternateKey}"/>
-    /// + <see cref="ByteArrayComparer"/> so the lookup hashes <paramref name="id"/> directly without
-    /// materializing a <see cref="byte"/> array or a <see cref="string"/>.
-    /// </remarks>
+    /// <remarks>The hot-path lookup; the per-marker scanner probes this directly with the source span.</remarks>
     public bool TryGet(ReadOnlySpan<byte> id, [MaybeNullWhen(false)] out CitationEntry entry) =>
-        _byIdBytes.GetAlternateLookup<ReadOnlySpan<byte>>().TryGetValue(id, out entry);
+        _byIdBytes.TryGetValueByUtf8(id, out entry!);
 }

@@ -14,9 +14,9 @@ namespace NuStreamDocs.Autorefs;
 /// <remarks>
 /// Byte-only walk on top of <see cref="Utf8HtmlScanner"/>: the
 /// renderer's own emitter is the one authoritative source of these
-/// tags so the shape is stable, no full HTML parser is needed. UTF-8
-/// → string conversion is deferred to the registry-insert boundary,
-/// so headings without an <c>id</c> attribute never allocate a string.
+/// tags so the shape is stable, no full HTML parser is needed.
+/// The page URL is encoded once per page; per-heading work then
+/// stays on byte spans and never decodes to <see cref="string"/>.
 /// </remarks>
 public static class HeadingIdScanner
 {
@@ -29,6 +29,9 @@ public static class HeadingIdScanner
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentException.ThrowIfNullOrEmpty(pageRelativeUrl);
 
+        // One UTF-8 encode per page; every heading registered against this page reuses the same byte[].
+        var pageUrlBytes = Encoding.UTF8.GetBytes(pageRelativeUrl);
+
         var cursor = 0;
         while (cursor < html.Length
                && Utf8HtmlScanner.TryFindNextHeadingOpen(html, cursor, out var tagStart, out var tagEnd, out _))
@@ -37,8 +40,8 @@ public static class HeadingIdScanner
             var (idLocalStart, idLength) = Utf8HtmlScanner.FindAttributeValue(openTag, "id"u8);
             if (idLength > 0)
             {
-                var id = Encoding.UTF8.GetString(openTag.Slice(idLocalStart, idLength));
-                registry.Register(id, pageRelativeUrl, id);
+                var idSpan = openTag.Slice(idLocalStart, idLength);
+                registry.Register(idSpan, pageUrlBytes, idSpan);
             }
 
             cursor = tagEnd;

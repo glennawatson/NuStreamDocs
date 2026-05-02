@@ -37,6 +37,6 @@ public static class CSharpLexer
         states[Lexer.RootStateId] = CSharpRules.Build(BlockAccessorStateId, ArrowAccessorStateId);
         states[BlockAccessorStateId] = CSharpRules.BuildBlockAccessorRules(BlockAccessorStateId);
         states[ArrowAccessorStateId] = CSharpRules.BuildArrowAccessorRules();
-        return new("csharp", states);
+        return new(states);
     }
 }

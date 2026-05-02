@@ -166,10 +166,7 @@ public class RxuiCorpusBenchmarks
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
-            .UseMacros(opts => opts with
-            {
-                Variables = new(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
-            })
+            .UseMacros(opts => opts.WithVariable("project", "ReactiveUI"))
             .BuildAsync()
             .GetAwaiter()
             .GetResult();
@@ -228,10 +225,7 @@ public class RxuiCorpusBenchmarks
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseSnippets()
-            .UseMacros(opts => opts with
-            {
-                Variables = new(StringComparer.Ordinal) { ["project"] = "ReactiveUI" },
-            })
+            .UseMacros(opts => opts.WithVariable("project", "ReactiveUI"))
             .UseBibliography(BibliographyOptions.Default)
             .UseCommonMarkdownExtensions()
             .UseHighlight()

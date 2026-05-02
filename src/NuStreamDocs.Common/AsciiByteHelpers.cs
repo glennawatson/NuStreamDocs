@@ -22,9 +22,9 @@ public static class AsciiByteHelpers
     /// <returns>True for identifier bytes.</returns>
     public static bool IsAsciiIdentifierByte(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'_';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'_';
 
     /// <summary>Returns true when <paramref name="b"/> is ASCII whitespace.</summary>
     /// <param name="b">UTF-8 byte.</param>
@@ -67,6 +67,45 @@ public static class AsciiByteHelpers
         }
 
         return p;
+    }
+
+    /// <summary>Trims leading + trailing ASCII whitespace bytes from <paramref name="bytes"/>.</summary>
+    /// <param name="bytes">UTF-8 source.</param>
+    /// <returns>Trimmed slice; empty when <paramref name="bytes"/> contains only whitespace.</returns>
+    public static ReadOnlySpan<byte> TrimAsciiWhitespace(ReadOnlySpan<byte> bytes)
+    {
+        var start = 0;
+        while (start < bytes.Length && IsAsciiWhitespace(bytes[start]))
+        {
+            start++;
+        }
+
+        var end = bytes.Length;
+        while (end > start && IsAsciiWhitespace(bytes[end - 1]))
+        {
+            end--;
+        }
+
+        return bytes[start..end];
+    }
+
+    /// <summary>Strips a trailing CR/LF terminator from <paramref name="line"/>.</summary>
+    /// <param name="line">Candidate line.</param>
+    /// <returns>The line without its trailing newline; <paramref name="line"/> verbatim when no terminator is present.</returns>
+    public static ReadOnlySpan<byte> TrimTrailingNewline(ReadOnlySpan<byte> line)
+    {
+        var end = line.Length;
+        if (end > 0 && line[end - 1] is (byte)'\n')
+        {
+            end--;
+        }
+
+        if (end > 0 && line[end - 1] is (byte)'\r')
+        {
+            end--;
+        }
+
+        return line[..end];
     }
 
     /// <summary>
@@ -135,5 +174,32 @@ public static class AsciiByteHelpers
         var dst = sink.GetSpan(max);
         var written = Encoding.UTF8.GetBytes(value, dst);
         sink.Advance(written);
+    }
+
+    /// <summary>ASCII-lowercases <paramref name="value"/> into a fresh byte array.</summary>
+    /// <param name="value">UTF-8 input; non-ASCII bytes are preserved verbatim.</param>
+    /// <returns>Fresh byte array, same length as <paramref name="value"/>.</returns>
+    /// <remarks>
+    /// Single-pass byte loop with no UTF-8↔char transcoding and no scratch buffer — the only allocation
+    /// is the returned array itself. Folds <c>A</c>-<c>Z</c> to <c>a</c>-<c>z</c> via the ASCII case bit;
+    /// any byte outside that range (including UTF-8 continuation bytes of multi-byte code points) is
+    /// copied through unchanged. Suitable for ASCII-only identifiers (language ids, HTML attribute
+    /// names, host names, etc.) — the only contexts the rest of the codebase actually uses this for.
+    /// </remarks>
+    public static byte[] ToLowerCaseInvariant(ReadOnlySpan<byte> value)
+    {
+        if (value.IsEmpty)
+        {
+            return [];
+        }
+
+        var result = new byte[value.Length];
+        for (var i = 0; i < value.Length; i++)
+        {
+            var b = value[i];
+            result[i] = b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+        }
+
+        return result;
     }
 }

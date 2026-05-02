@@ -61,9 +61,10 @@ public sealed class Template
 
     /// <summary>Renders this template against <paramref name="data"/> resolving partials through <paramref name="partials"/>.</summary>
     /// <param name="data">Root data scope.</param>
-    /// <param name="partials">Map of partial-name to compiled <see cref="Template"/>.</param>
+    /// <param name="partials">UTF-8-byte-keyed map of partial-name to compiled <see cref="Template"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public void Render(TemplateData data, Dictionary<string, Template> partials, IBufferWriter<byte> writer)
+    /// <remarks>The renderer probes <paramref name="partials"/> via <see cref="Dictionary{TKey,TValue}.AlternateLookup{TAlternateKey}"/> so the per-partial lookup never allocates a string.</remarks>
+    public void Render(TemplateData data, Dictionary<byte[], Template> partials, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(data);
         ArgumentNullException.ThrowIfNull(partials);

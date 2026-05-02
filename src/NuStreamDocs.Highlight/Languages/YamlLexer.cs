@@ -14,5 +14,5 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class YamlLexer
 {
     /// <summary>Gets the singleton lexer instance.</summary>
-    public static Lexer Instance { get; } = new("yaml", LanguageRuleBuilder.BuildSingleState(YamlRules.Build()));
+    public static Lexer Instance { get; } = new(LanguageRuleBuilder.BuildSingleState(YamlRules.Build()));
 }

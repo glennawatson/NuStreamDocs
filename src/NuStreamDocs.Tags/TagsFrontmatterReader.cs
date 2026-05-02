@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Tags;
@@ -20,8 +19,8 @@ internal static class TagsFrontmatterReader
 
     /// <summary>Reads tags from <paramref name="source"/>'s frontmatter; returns empty when no frontmatter or no tags field.</summary>
     /// <param name="source">UTF-8 markdown source bytes.</param>
-    /// <returns>A possibly empty array of tag strings.</returns>
-    public static string[] Read(ReadOnlySpan<byte> source)
+    /// <returns>A possibly empty array of UTF-8 tag byte arrays.</returns>
+    public static byte[][] Read(ReadOnlySpan<byte> source)
     {
         if (!YamlByteScanner.TryFindFrontmatter(source, out _, out var bodyStart))
         {
@@ -38,7 +37,7 @@ internal static class TagsFrontmatterReader
         return ParseTagsValue(frontmatter, tagsLineStart);
     }
 
-/// <summary>Finds the offset of a top-level <c>tags:</c> key in the frontmatter span.</summary>
+    /// <summary>Finds the offset of a top-level <c>tags:</c> key in the frontmatter span.</summary>
     /// <param name="frontmatter">UTF-8 frontmatter bytes (between and including the delimiters).</param>
     /// <returns>Offset of the byte immediately after the colon, or -1 when absent.</returns>
     private static int FindTagsLine(ReadOnlySpan<byte> frontmatter)
@@ -64,8 +63,8 @@ internal static class TagsFrontmatterReader
     /// <summary>Decodes a YAML value attached to the <c>tags:</c> key (inline list or block list).</summary>
     /// <param name="frontmatter">UTF-8 frontmatter bytes.</param>
     /// <param name="valueStart">Offset just past the colon.</param>
-    /// <returns>Parsed tag strings, or empty when the value is malformed.</returns>
-    private static string[] ParseTagsValue(ReadOnlySpan<byte> frontmatter, int valueStart)
+    /// <returns>Parsed UTF-8 tag arrays, or empty when the value is malformed.</returns>
+    private static byte[][] ParseTagsValue(ReadOnlySpan<byte> frontmatter, int valueStart)
     {
         var lineEnd = YamlByteScanner.LineEnd(frontmatter, valueStart);
         var inline = YamlByteScanner.TrimWhitespace(frontmatter[valueStart..lineEnd]);
@@ -85,15 +84,15 @@ internal static class TagsFrontmatterReader
 
     /// <summary>Splits a comma-separated inline list (with optional surrounding quotes per token).</summary>
     /// <param name="span">Bytes between the brackets, or the bare scalar.</param>
-    /// <returns>Tag strings.</returns>
-    private static string[] ParseInlineList(ReadOnlySpan<byte> span)
+    /// <returns>UTF-8 tag arrays.</returns>
+    private static byte[][] ParseInlineList(ReadOnlySpan<byte> span)
     {
         if (span.IsEmpty)
         {
             return [];
         }
 
-        var tags = new List<string>(4);
+        var tags = new List<byte[]>(4);
         var cursor = 0;
         while (cursor < span.Length)
         {
@@ -114,10 +113,10 @@ internal static class TagsFrontmatterReader
     /// <summary>Reads a YAML block list (<c>- foo</c> per line) starting at <paramref name="cursor"/> until indentation drops or a non-block line is hit.</summary>
     /// <param name="frontmatter">UTF-8 frontmatter bytes.</param>
     /// <param name="cursor">Offset to start scanning from.</param>
-    /// <returns>Tag strings.</returns>
-    private static string[] ParseBlockList(ReadOnlySpan<byte> frontmatter, int cursor)
+    /// <returns>UTF-8 tag arrays.</returns>
+    private static byte[][] ParseBlockList(ReadOnlySpan<byte> frontmatter, int cursor)
     {
-        var tags = new List<string>(4);
+        var tags = new List<byte[]>(4);
         while (cursor < frontmatter.Length)
         {
             var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
@@ -144,7 +143,7 @@ internal static class TagsFrontmatterReader
     /// <summary>Trims YAML quote markers and whitespace from <paramref name="span"/> and adds the result to <paramref name="tags"/> when non-empty.</summary>
     /// <param name="tags">Destination list.</param>
     /// <param name="span">Token bytes.</param>
-    private static void AppendTag(List<string> tags, ReadOnlySpan<byte> span)
+    private static void AppendTag(List<byte[]> tags, ReadOnlySpan<byte> span)
     {
         var trimmed = YamlByteScanner.TrimWhitespace(span);
         var unquoted = YamlByteScanner.Unquote(trimmed);
@@ -153,6 +152,6 @@ internal static class TagsFrontmatterReader
             return;
         }
 
-        tags.Add(Encoding.UTF8.GetString(unquoted));
+        tags.Add(unquoted.ToArray());
     }
 }

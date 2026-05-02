@@ -33,7 +33,6 @@ public static class JsonLexer
 
     /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = new(
-        "json",
         LanguageRuleBuilder.BuildSingleState([
 
             // [ \t\r\n]+ whitespace runs.

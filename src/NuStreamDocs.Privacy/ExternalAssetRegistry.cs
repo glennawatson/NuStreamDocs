@@ -4,7 +4,6 @@
 
 using System.Collections.Concurrent;
 using System.IO.Hashing;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
@@ -18,8 +17,8 @@ namespace NuStreamDocs.Privacy;
 /// scan rendered HTML; the finalize pass enumerates the registry to
 /// download every unique URL once. Storage is byte-array keyed (with
 /// <see cref="ByteArrayComparer"/>) so hot-path scanners never UTF-16
-/// encode the URL just to register it; <see cref="string"/> shapes are
-/// adapted at the boundary via <see cref="Utf8StackBuffer"/>.
+/// encode the URL just to register it; the downloader's
+/// <see cref="EntriesSnapshot"/> is the only place strings appear.
 /// </remarks>
 internal sealed class ExternalAssetRegistry
 {
@@ -43,11 +42,29 @@ internal sealed class ExternalAssetRegistry
 
     /// <summary>Initializes a new instance of the <see cref="ExternalAssetRegistry"/> class.</summary>
     /// <param name="assetDirectory">Forward-slash relative directory to write under (e.g. <c>assets/external</c>).</param>
-    public ExternalAssetRegistry(string assetDirectory)
+    /// <remarks>Trailing <c>/</c> is trimmed so the per-URL path concatenation always inserts exactly one separator.</remarks>
+    public ExternalAssetRegistry(byte[] assetDirectory)
     {
-        ArgumentException.ThrowIfNullOrEmpty(assetDirectory);
-        _assetDirectoryBytes = Encoding.UTF8.GetBytes(assetDirectory.TrimEnd('/'));
+        ArgumentNullException.ThrowIfNull(assetDirectory);
+        var trimmed = assetDirectory.Length;
+        while (trimmed > 0 && assetDirectory[trimmed - 1] is (byte)'/')
+        {
+            trimmed--;
+        }
+
+        if (trimmed == assetDirectory.Length)
+        {
+            _assetDirectoryBytes = assetDirectory;
+            return;
+        }
+
+        var dst = new byte[trimmed];
+        Array.Copy(assetDirectory, 0, dst, 0, trimmed);
+        _assetDirectoryBytes = dst;
     }
+
+    /// <summary>Gets the current entry count.</summary>
+    public int Count => _urlToLocal.Count;
 
     /// <summary>Returns the local path bytes for <paramref name="urlBytes"/>, registering a new entry on first sight.</summary>
     /// <param name="urlBytes">External URL bytes.</param>
@@ -65,44 +82,28 @@ internal sealed class ExternalAssetRegistry
         return _urlToLocal.GetOrAdd(key, static (k, dir) => BuildLocalPathBytes(k, dir), _assetDirectoryBytes);
     }
 
-    /// <summary>String adapter — encodes <paramref name="url"/> into a stack-or-pool buffer and delegates to the byte overload.</summary>
-    /// <param name="url">External URL string.</param>
-    /// <returns>Forward-slash relative path string.</returns>
-    public string GetOrAdd(string url)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(url);
-        using var buf = new Utf8StackBuffer(url, stackalloc byte[Utf8StackBuffer.StackSize]);
-        var localBytes = GetOrAdd(buf.Bytes);
-        return Encoding.UTF8.GetString(localBytes);
-    }
-
-    /// <summary>Gets a snapshot of the registered <c>(url, localPath)</c> pairs as strings — the boundary the downloader and CSP hash collector cross.</summary>
-    /// <returns>Right-sized snapshot array.</returns>
-    public (string Url, string LocalPath)[] EntriesSnapshot()
+    /// <summary>Gets a snapshot of the registered <c>(url, localPath)</c> byte pairs.</summary>
+    /// <returns>Right-sized snapshot array; both entries are UTF-8 byte arrays the caller must not mutate.</returns>
+    /// <remarks>
+    /// Consumers needing strings (downloader's <see cref="Uri.TryCreate(string?, UriKind, out Uri?)"/>
+    /// + <see cref="Path.Combine(string, string)"/>) decode at the use site; consumers writing
+    /// through <see cref="System.Text.Json.Utf8JsonWriter"/> consume bytes directly.
+    /// </remarks>
+    public (byte[] Url, byte[] LocalPath)[] EntriesSnapshot()
     {
         KeyValuePair<byte[], byte[]>[] snapshot = [.. _urlToLocal];
-        var result = new (string Url, string LocalPath)[snapshot.Length];
+        var result = new (byte[] Url, byte[] LocalPath)[snapshot.Length];
         for (var i = 0; i < snapshot.Length; i++)
         {
-            result[i] = (Encoding.UTF8.GetString(snapshot[i].Key), Encoding.UTF8.GetString(snapshot[i].Value));
+            result[i] = (snapshot[i].Key, snapshot[i].Value);
         }
 
         return result;
     }
 
-    /// <summary>Gets a snapshot of the registered URLs as strings.</summary>
-    /// <returns>Right-sized URL array.</returns>
-    public string[] UrlsSnapshot()
-    {
-        var entries = EntriesSnapshot();
-        var urls = new string[entries.Length];
-        for (var i = 0; i < entries.Length; i++)
-        {
-            urls[i] = entries[i].Url;
-        }
-
-        return urls;
-    }
+    /// <summary>Gets a snapshot of just the registered URLs as UTF-8 byte arrays.</summary>
+    /// <returns>Right-sized URL byte-array snapshot.</returns>
+    public byte[][] UrlsSnapshot() => [.. _urlToLocal.Keys];
 
     /// <summary>Computes the local-path bytes for <paramref name="urlBytes"/> from its xxHash3 digest and original extension.</summary>
     /// <param name="urlBytes">External URL bytes.</param>

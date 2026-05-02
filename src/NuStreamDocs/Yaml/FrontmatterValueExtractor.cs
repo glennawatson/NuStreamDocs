@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 
 namespace NuStreamDocs.Yaml;
 
@@ -22,10 +21,11 @@ public static class FrontmatterValueExtractor
     /// space) to <paramref name="sink"/>.
     /// </summary>
     /// <param name="source">UTF-8 markdown source bytes (frontmatter + body).</param>
-    /// <param name="keys">Top-level keys to extract — caller-supplied set, typically small.</param>
+    /// <param name="keys">Top-level UTF-8 key bytes to extract — caller-supplied set, typically small. Encode once at builder time so per-page extraction does no encoding work.</param>
     /// <param name="sink">UTF-8 sink the matched values are appended into.</param>
-    public static void AppendKeysTo(ReadOnlySpan<byte> source, string[] keys, IBufferWriter<byte> sink)
+    public static void AppendKeysTo(ReadOnlySpan<byte> source, byte[][] keys, IBufferWriter<byte> sink)
     {
+        ArgumentNullException.ThrowIfNull(keys);
         ArgumentNullException.ThrowIfNull(sink);
         if (keys.Length is 0 || !YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
         {
@@ -37,23 +37,23 @@ public static class FrontmatterValueExtractor
         var frontmatter = source[..closerStart];
         for (var k = 0; k < keys.Length; k++)
         {
-            var key = keys[k];
-            if (string.IsNullOrEmpty(key))
+            var keyBytes = keys[k];
+            if (keyBytes is null or [])
             {
                 continue;
             }
 
-            AppendValueIfPresent(frontmatter, key, sink);
+            AppendValueIfPresent(frontmatter, keyBytes, sink);
         }
     }
 
-    /// <summary>Appends the value bytes of the top-level <paramref name="key"/> in <paramref name="frontmatter"/> to <paramref name="sink"/> (preceded by a space delimiter), when present.</summary>
+    /// <summary>Appends the value bytes of the top-level <paramref name="keyBytes"/> in <paramref name="frontmatter"/> to <paramref name="sink"/> when present.</summary>
+    /// <remarks>The appended value is preceded by a single space-byte delimiter.</remarks>
     /// <param name="frontmatter">Frontmatter bytes.</param>
-    /// <param name="key">Key name.</param>
+    /// <param name="keyBytes">UTF-8 key bytes.</param>
     /// <param name="sink">Output sink.</param>
-    private static void AppendValueIfPresent(ReadOnlySpan<byte> frontmatter, string key, IBufferWriter<byte> sink)
+    private static void AppendValueIfPresent(ReadOnlySpan<byte> frontmatter, ReadOnlySpan<byte> keyBytes, IBufferWriter<byte> sink)
     {
-        var keyBytes = Encoding.UTF8.GetBytes(key);
         var cursor = 0;
         while (cursor < frontmatter.Length)
         {

@@ -21,12 +21,12 @@ public class CslJsonLoaderTests
         var entries = CslJsonLoader.Parse(json.ToArray());
         await Assert.That(entries).HasSingleItem();
         var e = entries[0];
-        await Assert.That(e.Id).IsEqualTo("g");
+        await Assert.That(e.Id.AsSpan().SequenceEqual("g"u8)).IsTrue();
         await Assert.That(e.Type).IsEqualTo(EntryType.Book);
-        await Assert.That(e.Title).IsEqualTo("Change and Continuity");
+        await Assert.That(e.Title.AsSpan().SequenceEqual("Change and Continuity"u8)).IsTrue();
         await Assert.That(e.Year).IsEqualTo(2018);
         await Assert.That(e.Authors).HasSingleItem();
-        await Assert.That(e.Authors[0].Family).IsEqualTo("Gummow");
+        await Assert.That(e.Authors[0].Family.AsSpan().SequenceEqual("Gummow"u8)).IsTrue();
     }
 
     /// <summary>A legal case entry maps the CSL <c>legal_case</c> + <c>references</c> fields.</summary>
@@ -39,7 +39,7 @@ public class CslJsonLoaderTests
             """u8;
         var entries = CslJsonLoader.Parse(json.ToArray());
         await Assert.That(entries[0].Type).IsEqualTo(EntryType.LegalCase);
-        await Assert.That(entries[0].LawReportSeries).IsEqualTo("(1992) 175 CLR 1");
+        await Assert.That(entries[0].LawReportSeries.AsSpan().SequenceEqual("(1992) 175 CLR 1"u8)).IsTrue();
     }
 
     /// <summary>Entries without an id are dropped.</summary>
@@ -82,7 +82,7 @@ public class CslJsonLoaderTests
             await File.WriteAllTextAsync(path, """[{"id":"f","type":"book","title":"File"}]""");
             var entries = CslJsonLoader.LoadFile(path);
             await Assert.That(entries).HasSingleItem();
-            await Assert.That(entries[0].Id).IsEqualTo("f");
+            await Assert.That(entries[0].Id.AsSpan().SequenceEqual("f"u8)).IsTrue();
         }
         finally
         {

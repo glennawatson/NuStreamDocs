@@ -20,8 +20,8 @@ public class MaterialThemeTests
         var theme = MaterialTheme.Load();
 
         await Assert.That(theme.Page.InstructionCount).IsGreaterThan(0);
-        await Assert.That(theme.Partials.ContainsKey("header")).IsTrue();
-        await Assert.That(theme.Partials.ContainsKey("sidebar")).IsTrue();
+        await Assert.That(theme.Partials.GetAlternateLookup<ReadOnlySpan<byte>>().ContainsKey("header"u8)).IsTrue();
+        await Assert.That(theme.Partials.GetAlternateLookup<ReadOnlySpan<byte>>().ContainsKey("sidebar"u8)).IsTrue();
         await Assert.That(theme.StaticAssets.ContainsKey("assets/stylesheets/material.min.css")).IsTrue();
     }
 
@@ -32,15 +32,15 @@ public class MaterialThemeTests
     {
         var theme = MaterialTheme.Load();
         var data = new TemplateData(
-            new(StringComparer.Ordinal)
+            new(NuStreamDocs.Common.ByteArrayComparer.Instance)
             {
-                ["language"] = (byte[])[.. "en"u8],
-                ["site_name"] = (byte[])[.. "Test Site"u8],
-                ["site_root"] = (byte[])[.. "/"u8],
-                ["page_title"] = (byte[])[.. "Hi"u8],
-                ["body"] = (byte[])[.. "<h1>Hello</h1>"u8],
-                ["asset_root"] = (byte[])[.. "assets"u8],
-                ["copyright"] = (byte[])[.. ""u8],
+                ["language"u8.ToArray()] = (byte[])[.. "en"u8],
+                ["site_name"u8.ToArray()] = (byte[])[.. "Test Site"u8],
+                ["site_root"u8.ToArray()] = (byte[])[.. "/"u8],
+                ["page_title"u8.ToArray()] = (byte[])[.. "Hi"u8],
+                ["body"u8.ToArray()] = (byte[])[.. "<h1>Hello</h1>"u8],
+                ["asset_root"u8.ToArray()] = (byte[])[.. "assets"u8],
+                ["copyright"u8.ToArray()] = (byte[])[.. ""u8],
             },
             sections: null);
 

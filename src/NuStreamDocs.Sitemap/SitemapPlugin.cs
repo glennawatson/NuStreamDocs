@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Sitemap;
@@ -20,11 +21,11 @@ namespace NuStreamDocs.Sitemap;
 /// </remarks>
 public sealed class SitemapPlugin : IDocPlugin
 {
-    /// <summary>Per-page entries collected during the build; drained at finalize time.</summary>
-    private readonly ConcurrentQueue<string> _entries = [];
+    /// <summary>Per-page UTF-8 URL bytes collected during the build; drained at finalize time.</summary>
+    private readonly ConcurrentQueue<byte[]> _entries = [];
 
-    /// <summary>Resolved canonical site URL (with trailing slash) captured at configure time; null when missing.</summary>
-    private string? _baseUrl;
+    /// <summary>Resolved canonical site URL bytes (with trailing slash) captured at configure time; null when missing.</summary>
+    private byte[]? _baseUrlBytes;
 
     /// <inheritdoc/>
     public string Name => "sitemap";
@@ -32,7 +33,7 @@ public sealed class SitemapPlugin : IDocPlugin
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
-        _baseUrl = NormalizeBaseUrl(context.Config.SiteUrl);
+        _baseUrlBytes = NormalizeBaseUrl(context.Config.SiteUrl);
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }
@@ -56,29 +57,22 @@ public sealed class SitemapPlugin : IDocPlugin
     public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
-        if (_baseUrl is null || _entries.IsEmpty)
+        if (_baseUrlBytes is null || _entries.IsEmpty)
         {
             return ValueTask.CompletedTask;
         }
 
-        string[] snapshot = [.. _entries];
-        Array.Sort(snapshot, StringComparer.Ordinal);
-        SitemapWriter.WriteSitemap(context.OutputRoot, _baseUrl, snapshot);
-        SitemapWriter.WriteRobots(context.OutputRoot, _baseUrl);
+        byte[][] snapshot = [.. _entries];
+        Array.Sort(snapshot, static (a, b) => a.AsSpan().SequenceCompareTo(b));
+        SitemapWriter.WriteSitemap(context.OutputRoot, _baseUrlBytes, snapshot);
+        SitemapWriter.WriteRobots(context.OutputRoot, _baseUrlBytes);
 
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>Normalizes <paramref name="raw"/> to an absolute base URL with a trailing slash, or returns <c>null</c> when unusable.</summary>
+    /// <summary>Normalizes <paramref name="raw"/> to UTF-8 base-URL bytes with a trailing slash, or returns <c>null</c> when unusable.</summary>
     /// <param name="raw">The configured <c>site_url</c>.</param>
-    /// <returns>Normalized base URL or <c>null</c>.</returns>
-    private static string? NormalizeBaseUrl(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return null;
-        }
-
-        return raw.EndsWith('/') ? raw : raw + '/';
-    }
+    /// <returns>Normalized base-URL bytes or <c>null</c>.</returns>
+    private static byte[]? NormalizeBaseUrl(string? raw) =>
+        string.IsNullOrWhiteSpace(raw) ? null : Utf8Encoder.EncodeWithTrailingAscii(raw, (byte)'/');
 }

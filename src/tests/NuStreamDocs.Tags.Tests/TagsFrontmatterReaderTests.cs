@@ -51,12 +51,21 @@ public class TagsFrontmatterReaderTests
 
     /// <summary>Drives bytes through <c>TagsFrontmatterReader.Read</c>.</summary>
     /// <param name="markdown">Source text.</param>
-    /// <returns>Parsed tags.</returns>
-    private static string[] Read(string markdown) =>
+    /// <returns>Parsed UTF-8 tag arrays.</returns>
+    private static byte[][] Read(string markdown) =>
         TagsFrontmatterReader.Read(Encoding.UTF8.GetBytes(markdown));
 
-    /// <summary>Joins <paramref name="tags"/> with <c>|</c> for a flat assertion target.</summary>
-    /// <param name="tags">Source tags.</param>
-    /// <returns>Pipe-delimited representation.</returns>
-    private static string Join(string[] tags) => string.Join('|', tags);
+    /// <summary>Joins <paramref name="tags"/> with <c>|</c> for a flat assertion target — decodes each UTF-8 tag for human-readable failure messages.</summary>
+    /// <param name="tags">Source UTF-8 tag arrays.</param>
+    /// <returns>Pipe-delimited string representation.</returns>
+    private static string Join(byte[][] tags)
+    {
+        var decoded = new string[tags.Length];
+        for (var i = 0; i < tags.Length; i++)
+        {
+            decoded[i] = Encoding.UTF8.GetString(tags[i]);
+        }
+
+        return string.Join('|', decoded);
+    }
 }

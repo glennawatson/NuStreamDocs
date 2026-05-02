@@ -22,7 +22,9 @@ namespace NuStreamDocs.Common;
 public sealed class ByteArrayComparer
     : IEqualityComparer<byte[]>,
       IEqualityComparer,
-      IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>
+      IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>,
+      IComparer<byte[]>,
+      IComparer
 {
     /// <summary>Initializes a new instance of the <see cref="ByteArrayComparer"/> class.</summary>
     private ByteArrayComparer()
@@ -44,6 +46,27 @@ public sealed class ByteArrayComparer
         ArgumentNullException.ThrowIfNull(obj);
         return GetSpanHashCode(obj);
     }
+
+    /// <inheritdoc/>
+    public int Compare(byte[]? x, byte[]? y) =>
+        (x, y) switch
+        {
+            (null, null) => 0,
+            (null, _) => -1,
+            (_, null) => 1,
+            _ => x.AsSpan().SequenceCompareTo(y)
+        };
+
+    /// <inheritdoc/>
+    int IComparer.Compare(object? x, object? y) =>
+        (x, y) switch
+        {
+            (null, null) => 0,
+            (null, _) => -1,
+            (_, null) => 1,
+            (byte[] xb, byte[] yb) => Compare(xb, yb),
+            _ => throw new ArgumentException("Both arguments must be byte arrays.")
+        };
 
     /// <inheritdoc/>
     bool IEqualityComparer.Equals(object? x, object? y) =>

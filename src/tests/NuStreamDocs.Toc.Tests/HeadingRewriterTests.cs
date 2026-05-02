@@ -20,7 +20,7 @@ public class HeadingRewriterTests
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
         var sink = new ArrayBufferWriter<byte>(128);
-        HeadingRewriter.Rewrite(html, slugged, "¶", sink);
+        HeadingRewriter.Rewrite(html, slugged, "¶"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
         await Assert.That(output).Contains("<h2 id=\"hello-world\">");
@@ -38,7 +38,7 @@ public class HeadingRewriterTests
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
         var sink = new ArrayBufferWriter<byte>(128);
-        HeadingRewriter.Rewrite(html, slugged, "#", sink);
+        HeadingRewriter.Rewrite(html, slugged, "#"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
         await Assert.That(output).Contains("<h2 id=\"keep\">");
@@ -60,7 +60,7 @@ public class HeadingRewriterTests
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
         var sink = new ArrayBufferWriter<byte>(128);
-        HeadingRewriter.Rewrite(html, slugged, "¶", sink);
+        HeadingRewriter.Rewrite(html, slugged, "¶"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
         await Assert.That(output).StartsWith("<p>before</p>");

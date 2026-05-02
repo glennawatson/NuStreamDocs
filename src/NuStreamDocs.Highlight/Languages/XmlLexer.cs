@@ -55,6 +55,6 @@ public static class XmlLexer
             new(static slice => TokenMatchers.MatchDelimited(slice, "<?"u8, "?>"u8), TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst });
 
         states[TagStateId] = MarkupTagRules.Build();
-        return new("xml", states);
+        return new(states);
     }
 }

@@ -55,17 +55,6 @@ public class HeadingScannerTests
         await Assert.That(headings[0].Level).IsEqualTo(2);
     }
 
-    /// <summary>DecodeText strips inline tags.</summary>
-    /// <returns>A task representing the asynchronous test.</returns>
-    [Test]
-    public async Task DecodeTextStripsInlineMarkup()
-    {
-        var html = "<h2>Hello <code>World</code></h2>"u8.ToArray();
-        var headings = HeadingScanner.Scan(html);
-        var text = HeadingScanner.DecodeText(html, in headings[0]);
-        await Assert.That(text).IsEqualTo("Hello World");
-    }
-
     /// <summary>DecodeTextInto streams the stripped text bytes without UTF-16 transcoding.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

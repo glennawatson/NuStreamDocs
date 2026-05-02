@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Metadata;
@@ -130,8 +130,7 @@ internal static class FrontmatterSplicer
                 }
 
                 var key = YamlByteScanner.KeyOf(line);
-                var keyString = Encoding.UTF8.GetString(key);
-                if (existingKeys.Contains(keyString))
+                if (existingKeys.ContainsByUtf8(key))
                 {
                     cursor = YamlByteScanner.AdvancePastValue(extra, lineEnd);
                     continue;
@@ -153,12 +152,12 @@ internal static class FrontmatterSplicer
         }
     }
 
-    /// <summary>Collects every top-level key from <paramref name="frontmatter"/> into a fresh hash set.</summary>
+    /// <summary>Collects every top-level key from <paramref name="frontmatter"/> into a fresh byte-keyed hash set.</summary>
     /// <param name="frontmatter">Page frontmatter bytes (including opening <c>---</c>).</param>
-    /// <returns>Top-level keys, ordinal-compared.</returns>
-    private static HashSet<string> CollectKeys(ReadOnlySpan<byte> frontmatter)
+    /// <returns>Top-level UTF-8 key bytes, ordinal-compared via <see cref="ByteArrayComparer.Instance"/>.</returns>
+    private static HashSet<byte[]> CollectKeys(ReadOnlySpan<byte> frontmatter)
     {
-        var keys = new HashSet<string>(StringComparer.Ordinal);
+        var keys = new HashSet<byte[]>(ByteArrayComparer.Instance);
         var cursor = YamlByteScanner.LineEnd(frontmatter, 0);
         while (cursor < frontmatter.Length)
         {
@@ -167,7 +166,7 @@ internal static class FrontmatterSplicer
             if (YamlByteScanner.IsTopLevelKey(line))
             {
                 var key = YamlByteScanner.KeyOf(line);
-                keys.Add(Encoding.UTF8.GetString(key));
+                keys.Add(key.ToArray());
             }
 
             cursor = lineEnd;

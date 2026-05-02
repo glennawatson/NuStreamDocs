@@ -2,7 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Templating;
 
@@ -15,11 +15,10 @@ namespace NuStreamDocs.Templating;
 /// <see cref="TemplateData"/> scopes so iteration is a <c>for</c> loop over an indexed
 /// array — no enumerator allocation.
 /// <para>
-/// Backed by plain <see cref="Dictionary{TKey, TValue}"/> keyed ordinally. The data
-/// scope is per-render and small (typically ≤ 32 entries each for scalars and
-/// sections), so the freeze cost of <c>Dictionary</c> wouldn't repay itself —
-/// `Dictionary` lookup is already O(1) and the per-render shaping cost dominates
-/// any constant-factor difference.
+/// Backed by byte-keyed <see cref="Dictionary{TKey, TValue}"/>s keyed ordinally on the
+/// UTF-8 key bytes. The renderer probes via the
+/// <see cref="Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/> shape so the
+/// per-token resolve never allocates a string for the lookup probe.
 /// </para>
 /// <para>
 /// Scalar lifetimes follow the caller: any <see cref="ReadOnlyMemory{T}"/> the caller
@@ -34,43 +33,43 @@ public sealed class TemplateData
     private static readonly TemplateData[] EmptySections = [];
 
     /// <summary>Empty scalar lookup reused for the empty-data scope.</summary>
-    private static readonly Dictionary<string, ReadOnlyMemory<byte>> EmptyScalars = new(0, StringComparer.Ordinal);
+    private static readonly Dictionary<byte[], ReadOnlyMemory<byte>> EmptyScalars = new(0, ByteArrayComparer.Instance);
 
     /// <summary>Empty section lookup reused for the empty-data scope.</summary>
-    private static readonly Dictionary<string, TemplateData[]> EmptySectionMap = new(0, StringComparer.Ordinal);
+    private static readonly Dictionary<byte[], TemplateData[]> EmptySectionMap = new(0, ByteArrayComparer.Instance);
 
-    /// <summary>Scalar lookup keyed ordinally over UTF-8-decoded keys.</summary>
-    private readonly Dictionary<string, ReadOnlyMemory<byte>> _scalars;
+    /// <summary>Span-keyed alternate lookup over the scalar map.</summary>
+    /// <remarks>The struct holds a reference to the underlying <see cref="Dictionary{TKey, TValue}"/> so it stays alive for the lifetime of this instance.</remarks>
+    private readonly Dictionary<byte[], ReadOnlyMemory<byte>>.AlternateLookup<ReadOnlySpan<byte>> _scalarLookup;
 
-    /// <summary>Section lookup; values are pre-sized arrays of nested scopes.</summary>
-    private readonly Dictionary<string, TemplateData[]> _sections;
+    /// <summary>Span-keyed alternate lookup over the section map.</summary>
+    private readonly Dictionary<byte[], TemplateData[]>.AlternateLookup<ReadOnlySpan<byte>> _sectionLookup;
 
-    /// <summary>Initializes a new instance of the <see cref="TemplateData"/> class.</summary>
-    /// <param name="scalars">Scalar lookup. May be null for the empty case.</param>
-    /// <param name="sections">Section lookup. May be null for the empty case.</param>
-    public TemplateData(Dictionary<string, ReadOnlyMemory<byte>>? scalars, Dictionary<string, TemplateData[]>? sections)
+    /// <summary>Initializes a new instance of the <see cref="TemplateData"/> class with byte-keyed maps.</summary>
+    /// <param name="scalars">UTF-8-byte-keyed scalar lookup. May be null for the empty case.</param>
+    /// <param name="sections">UTF-8-byte-keyed section lookup. May be null for the empty case.</param>
+    public TemplateData(Dictionary<byte[], ReadOnlyMemory<byte>>? scalars, Dictionary<byte[], TemplateData[]>? sections)
     {
-        _scalars = scalars is { Count: > 0 }
-            ? new(scalars, StringComparer.Ordinal)
+        var scalarMap = scalars is { Count: > 0 }
+            ? new Dictionary<byte[], ReadOnlyMemory<byte>>(scalars, ByteArrayComparer.Instance)
             : EmptyScalars;
-        _sections = sections is { Count: > 0 }
-            ? new(sections, StringComparer.Ordinal)
+        var sectionMap = sections is { Count: > 0 }
+            ? new Dictionary<byte[], TemplateData[]>(sections, ByteArrayComparer.Instance)
             : EmptySectionMap;
+        _scalarLookup = scalarMap.AsUtf8Lookup();
+        _sectionLookup = sectionMap.AsUtf8Lookup();
     }
 
     /// <summary>Gets the empty data scope.</summary>
-    public static TemplateData Empty { get; } = new((Dictionary<string, ReadOnlyMemory<byte>>?)null, null);
+    public static TemplateData Empty { get; } = new((Dictionary<byte[], ReadOnlyMemory<byte>>?)null, null);
 
-    /// <summary>
-    /// Tries to read a scalar value by UTF-8 key.
-    /// </summary>
+    /// <summary>Tries to read a scalar value by UTF-8 key.</summary>
     /// <param name="key">UTF-8 key bytes.</param>
     /// <param name="value">UTF-8 value bytes on success.</param>
     /// <returns>True when a scalar exists under <paramref name="key"/>.</returns>
     public bool TryGetScalar(ReadOnlySpan<byte> key, out ReadOnlySpan<byte> value)
     {
-        var name = Encoding.UTF8.GetString(key);
-        if (_scalars.TryGetValue(name, out var bytes))
+        if (_scalarLookup.TryGetValue(key, out var bytes))
         {
             value = bytes.Span;
             return true;
@@ -80,29 +79,22 @@ public sealed class TemplateData
         return false;
     }
 
-    /// <summary>
-    /// Returns the section items for <paramref name="key"/>, or an empty
-    /// array when the key is missing or empty.
-    /// </summary>
+    /// <summary>Returns the section items for <paramref name="key"/>, or an empty array when the key is missing or empty.</summary>
     /// <param name="key">UTF-8 key bytes.</param>
     /// <returns>Section items.</returns>
-    public TemplateData[] GetSection(ReadOnlySpan<byte> key)
-    {
-        var name = Encoding.UTF8.GetString(key);
-        return _sections.GetValueOrDefault(name, EmptySections);
-    }
+    public TemplateData[] GetSection(ReadOnlySpan<byte> key) =>
+        _sectionLookup.TryGetValue(key, out var items) ? items : EmptySections;
 
     /// <summary>True when <paramref name="key"/> resolves to a non-empty section or a non-empty scalar.</summary>
     /// <param name="key">UTF-8 key bytes.</param>
     /// <returns>Truthiness for Mustache section semantics.</returns>
     public bool IsTruthy(ReadOnlySpan<byte> key)
     {
-        var name = Encoding.UTF8.GetString(key);
-        if (_sections.TryGetValue(name, out var items) && items.Length > 0)
+        if (_sectionLookup.TryGetValue(key, out var items) && items.Length > 0)
         {
             return true;
         }
 
-        return _scalars.TryGetValue(name, out var bytes) && bytes.Length > 0;
+        return _scalarLookup.TryGetValue(key, out var bytes) && bytes.Length > 0;
     }
 }

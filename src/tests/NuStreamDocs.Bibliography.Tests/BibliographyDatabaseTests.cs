@@ -75,7 +75,7 @@ public class BibliographyDatabaseTests
         await Assert.That(db.All.Length).IsEqualTo(2);
 
         // BibliographyDatabase preserves insertion order in the _ordered array.
-        await Assert.That(db.All[0].Id).IsEqualTo("b");
-        await Assert.That(db.All[1].Id).IsEqualTo("a");
+        await Assert.That(db.All[0].Id.AsSpan().SequenceEqual("b"u8)).IsTrue();
+        await Assert.That(db.All[1].Id.AsSpan().SequenceEqual("a"u8)).IsTrue();
     }
 }

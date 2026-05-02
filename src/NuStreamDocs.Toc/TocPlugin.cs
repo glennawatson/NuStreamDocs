@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics;
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -36,6 +37,9 @@ public sealed class TocPlugin : IDocPlugin
     /// <summary>Logger.</summary>
     private readonly ILogger _logger;
 
+    /// <summary>UTF-8 bytes of <see cref="TocOptions.PermalinkSymbol"/> — encoded once at construction so the per-page rewrite never re-encodes the glyph.</summary>
+    private readonly byte[] _permalinkSymbolBytes;
+
     /// <summary>Initializes a new instance of the <see cref="TocPlugin"/> class with default options.</summary>
     public TocPlugin()
         : this(TocOptions.Default, NullLogger.Instance)
@@ -57,6 +61,9 @@ public sealed class TocPlugin : IDocPlugin
         ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _logger = logger;
+        _permalinkSymbolBytes = string.IsNullOrEmpty(options.PermalinkSymbol)
+            ? []
+            : Encoding.UTF8.GetBytes(options.PermalinkSymbol);
     }
 
     /// <summary>Gets the marker the theme places where the rendered TOC should land.</summary>
@@ -105,7 +112,7 @@ public sealed class TocPlugin : IDocPlugin
             var (slugged, collisions) = HeadingSlugifier.AssignSlugs(snapshot, headings);
 
             html.ResetWrittenCount();
-            HeadingRewriter.Rewrite(snapshot, slugged, _options.PermalinkSymbol, html);
+            HeadingRewriter.Rewrite(snapshot, slugged, _permalinkSymbolBytes, html);
 
             if (_options.MarkerSubstitute)
             {

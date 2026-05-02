@@ -38,7 +38,7 @@ mermaid.initialize({ startOnLoad: true });
     public override string Name => "mermaid";
 
     /// <inheritdoc/>
-    string ICustomFenceHandler.Language => "mermaid";
+    ReadOnlySpan<byte> ICustomFenceHandler.Language => "mermaid"u8;
 
     /// <inheritdoc/>
     public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)

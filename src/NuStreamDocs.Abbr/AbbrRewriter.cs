@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using static NuStreamDocs.Markdown.Common.MarkdownCodeScanner;
@@ -27,7 +26,7 @@ internal static class AbbrRewriter
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        var defs = new Dictionary<string, string>(StringComparer.Ordinal);
+        var defs = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance);
         var stripped = StripDefinitions(source, defs);
         if (defs.Count is 0)
         {
@@ -43,9 +42,9 @@ internal static class AbbrRewriter
 
     /// <summary>Walks <paramref name="source"/>, recording any abbreviation definition lines into <paramref name="defs"/>, and returns the source with those lines removed.</summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <param name="defs">Definition map populated in place.</param>
+    /// <param name="defs">Definition map populated in place; keyed on the UTF-8 token bytes, value is the UTF-8 trimmed definition body.</param>
     /// <returns>UTF-8 byte array with <c>*[…]: …</c> lines stripped.</returns>
-    private static byte[] StripDefinitions(ReadOnlySpan<byte> source, Dictionary<string, string> defs)
+    private static byte[] StripDefinitions(ReadOnlySpan<byte> source, Dictionary<byte[], byte[]> defs)
     {
         if (source.IsEmpty)
         {
@@ -76,15 +75,15 @@ internal static class AbbrRewriter
 
     /// <summary>Tries to parse <paramref name="line"/> as a <c>*[token]: definition</c> definition line.</summary>
     /// <param name="line">UTF-8 bytes of a single line including any trailing newline.</param>
-    /// <param name="token">Captured token on success.</param>
-    /// <param name="definition">Captured definition (trimmed) on success.</param>
+    /// <param name="token">Captured UTF-8 token bytes on success.</param>
+    /// <param name="definition">Captured UTF-8 definition bytes (trimmed) on success.</param>
     /// <returns>True when <paramref name="line"/> matched.</returns>
-    private static bool TryParseDefinition(ReadOnlySpan<byte> line, out string token, out string definition)
+    private static bool TryParseDefinition(ReadOnlySpan<byte> line, out byte[] token, out byte[] definition)
     {
-        token = string.Empty;
-        definition = string.Empty;
+        token = [];
+        definition = [];
         const int MinDefinitionLength = 5; // "*[X]:" — the smallest legal opener
-        var trimmed = TrimTrailingNewline(line);
+        var trimmed = AsciiByteHelpers.TrimTrailingNewline(line);
         if (trimmed.Length < MinDefinitionLength || trimmed[0] is not (byte)'*' || trimmed[1] is not (byte)'[')
         {
             return false;
@@ -102,17 +101,24 @@ internal static class AbbrRewriter
             return false;
         }
 
-        token = Encoding.UTF8.GetString(trimmed[DefinitionOpenerLength..bracketEnd]);
-        definition = Encoding.UTF8.GetString(trimmed[(bracketEnd + DefinitionOpenerLength)..]).Trim();
-        return token.Length > 0 && definition.Length > 0;
+        var tokenSlice = trimmed[DefinitionOpenerLength..bracketEnd];
+        var defSlice = AsciiByteHelpers.TrimAsciiWhitespace(trimmed[(bracketEnd + DefinitionOpenerLength)..]);
+        if (tokenSlice.IsEmpty || defSlice.IsEmpty)
+        {
+            return false;
+        }
+
+        token = tokenSlice.ToArray();
+        definition = defSlice.ToArray();
+        return true;
     }
 
     /// <summary>Walks <paramref name="source"/> and wraps every word-boundary occurrence of any <paramref name="tokens"/> entry into <c>&lt;abbr&gt;</c>.</summary>
     /// <param name="source">Source with definition lines already stripped.</param>
     /// <param name="tokens">Tokens sorted longest-first.</param>
-    /// <param name="defs">Token-to-definition map.</param>
+    /// <param name="defs">Token-bytes-to-definition-bytes map.</param>
     /// <param name="writer">Sink.</param>
-    private static void WrapOccurrences(ReadOnlySpan<byte> source, AbbrToken[] tokens, Dictionary<string, string> defs, IBufferWriter<byte> writer)
+    private static void WrapOccurrences(ReadOnlySpan<byte> source, byte[][] tokens, Dictionary<byte[], byte[]> defs, IBufferWriter<byte> writer)
     {
         CodeAwareRewriter.Run(source, writer, TryWrap);
 
@@ -120,8 +126,8 @@ internal static class AbbrRewriter
         {
             if (TryMatchAnyToken(s, offset, tokens, out var matched))
             {
-                EmitAbbr(matched.Text, defs[matched.Text], w);
-                consumed = matched.Bytes.Length;
+                EmitAbbr(matched, defs[matched], w);
+                consumed = matched.Length;
                 return true;
             }
 
@@ -136,12 +142,12 @@ internal static class AbbrRewriter
     /// <param name="tokens">Tokens sorted longest-first.</param>
     /// <param name="matched">The first matching token, when found.</param>
     /// <returns>True when a token matched at the current position with a trailing word boundary.</returns>
-    private static bool TryMatchAnyToken(ReadOnlySpan<byte> source, int offset, AbbrToken[] tokens, out AbbrToken matched)
+    private static bool TryMatchAnyToken(ReadOnlySpan<byte> source, int offset, byte[][] tokens, out byte[] matched)
     {
-        matched = default;
+        matched = [];
         for (var t = 0; t < tokens.Length; t++)
         {
-            if (!AsciiWordBoundary.TryMatchBounded(source, offset, tokens[t].Bytes))
+            if (!AsciiWordBoundary.TryMatchBounded(source, offset, tokens[t]))
             {
                 continue;
             }
@@ -153,67 +159,33 @@ internal static class AbbrRewriter
         return false;
     }
 
-    /// <summary>Builds the sorted abbreviation-token table with cached UTF-8 bytes.</summary>
+    /// <summary>Builds the sorted token table from the keys of <paramref name="defs"/>.</summary>
     /// <param name="defs">Definition map.</param>
-    /// <returns>Tokens sorted longest-first by UTF-8 byte length.</returns>
-    private static AbbrToken[] BuildTokens(Dictionary<string, string> defs)
+    /// <returns>Token byte arrays sorted longest-first.</returns>
+    private static byte[][] BuildTokens(Dictionary<byte[], byte[]> defs)
     {
-        var tokens = new AbbrToken[defs.Count];
+        var tokens = new byte[defs.Count][];
         var index = 0;
         using var enumerator = defs.Keys.GetEnumerator();
         while (enumerator.MoveNext())
         {
-            var text = enumerator.Current;
-            tokens[index++] = new(text, Encoding.UTF8.GetBytes(text));
+            tokens[index++] = enumerator.Current;
         }
 
-        Array.Sort(tokens, static (a, b) => b.Bytes.Length.CompareTo(a.Bytes.Length));
+        Array.Sort(tokens, static (a, b) => b.Length.CompareTo(a.Length));
         return tokens;
     }
 
     /// <summary>Writes the <c>&lt;abbr title="…"&gt;token&lt;/abbr&gt;</c> wrapper.</summary>
-    /// <param name="token">Token that matched.</param>
-    /// <param name="definition">Definition text.</param>
+    /// <param name="token">Token bytes that matched.</param>
+    /// <param name="definition">Definition bytes.</param>
     /// <param name="writer">Sink.</param>
-    private static void EmitAbbr(string token, string definition, IBufferWriter<byte> writer)
+    private static void EmitAbbr(ReadOnlySpan<byte> token, ReadOnlySpan<byte> definition, IBufferWriter<byte> writer)
     {
         writer.Write("<abbr title=\""u8);
-        WriteHtmlEscaped(writer, definition);
+        XmlEntityEscaper.WriteEscaped(writer, definition, XmlEntityEscaper.Mode.HtmlAttribute);
         writer.Write("\">"u8);
-        Utf8StringWriter.Write(writer, token);
+        writer.Write(token);
         writer.Write("</abbr>"u8);
     }
-
-    /// <summary>Writes <paramref name="value"/> as UTF-8 with HTML attribute escapes for <c>"</c>, <c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>.</summary>
-    /// <param name="writer">Sink.</param>
-    /// <param name="value">Attribute value.</param>
-    private static void WriteHtmlEscaped(IBufferWriter<byte> writer, string value)
-    {
-        var bytes = Encoding.UTF8.GetByteCount(value);
-        var buffer = bytes <= 256 ? stackalloc byte[bytes] : new byte[bytes];
-        Encoding.UTF8.GetBytes(value, buffer);
-        XmlEntityEscaper.WriteEscaped(writer, buffer, XmlEntityEscaper.Mode.HtmlAttribute);
-    }
-
-    /// <summary>Strips a trailing <c>\n</c> (or <c>\r\n</c>) from <paramref name="line"/> if present.</summary>
-    /// <param name="line">Candidate line.</param>
-    /// <returns>Trimmed line.</returns>
-    private static ReadOnlySpan<byte> TrimTrailingNewline(ReadOnlySpan<byte> line)
-    {
-        var end = line.Length;
-        if (end > 0 && line[end - 1] is (byte)'\n')
-        {
-            end--;
-        }
-
-        if (end > 0 && line[end - 1] is (byte)'\r')
-        {
-            end--;
-        }
-
-        return line[..end];
-    }
-
-    /// <summary>Cached abbreviation token text plus its UTF-8 bytes.</summary>
-    private readonly record struct AbbrToken(string Text, byte[] Bytes);
 }

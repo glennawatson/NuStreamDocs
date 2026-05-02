@@ -96,18 +96,6 @@ public class ExternalLinkPolisherTests
         await Assert.That(output).IsEqualTo(Source);
     }
 
-    /// <summary>HardenAnchors handles string input.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task HardenAnchors_handles_string_input()
-    {
-        const string Source = """<a href="https://example.com">link</a>""";
-        var options = PrivacyOptions.Default with { AddRelNoOpener = true, AddTargetBlank = true };
-        var output = ExternalLinkPolisher.HardenAnchors(Source, options);
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
-        await Assert.That(output).Contains("target=\"_blank\"");
-    }
-
     /// <summary>Helper that runs the polisher and returns the string result.</summary>
     /// <param name="source">HTML input.</param>
     /// <param name="options">Plugin options.</param>

@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Nav.Tests;
@@ -53,9 +54,9 @@ public class NavRendererTests
         var root = BuildSampleTree();
         var index = NavRenderer.BuildUrlIndex(root);
 
-        await Assert.That(index.ContainsKey("guide/intro.html")).IsTrue();
-        await Assert.That(index.ContainsKey("blog/post.html")).IsTrue();
-        await Assert.That(index["guide/intro.html"].Title).IsEqualTo("Intro");
+        await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
+        await Assert.That(index.ContainsKeyByUtf8("blog/post.html"u8)).IsTrue();
+        await Assert.That(index.TryGetValueByUtf8("guide/intro.html"u8, out var introNode) && introNode.Title == "Intro").IsTrue();
     }
 
     /// <summary>BuildUrlIndex includes section index URLs (when present).</summary>
@@ -71,9 +72,9 @@ public class NavRendererTests
 
         var index = NavRenderer.BuildUrlIndex(root);
 
-        await Assert.That(index.ContainsKey("guide/intro.html")).IsTrue();
-        await Assert.That(index.ContainsKey("guide/index.html")).IsTrue();
-        await Assert.That(index["guide/index.html"].Title).IsEqualTo("Guide");
+        await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
+        await Assert.That(index.ContainsKeyByUtf8("guide/index.html"u8)).IsTrue();
+        await Assert.That(index.TryGetValueByUtf8("guide/index.html"u8, out var guideNode) && guideNode.Title == "Guide").IsTrue();
     }
 
     /// <summary>BuildUrlIndex returns an empty dictionary for an empty tree.</summary>

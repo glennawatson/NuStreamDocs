@@ -19,5 +19,5 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class HtmlLexer
 {
     /// <summary>Gets the singleton lexer instance.</summary>
-    public static Lexer Instance { get; } = new("html", XmlLexer.Instance.States);
+    public static Lexer Instance { get; } = new(XmlLexer.Instance.States);
 }

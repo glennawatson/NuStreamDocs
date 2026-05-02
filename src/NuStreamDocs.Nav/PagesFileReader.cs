@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
@@ -39,9 +38,9 @@ internal static class PagesFileReader
     /// <returns>Parsed override; defaults preserved when keys are absent.</returns>
     public static PagesFile Parse(ReadOnlySpan<byte> source)
     {
-        var title = string.Empty;
+        var title = Array.Empty<byte>();
         var hide = false;
-        string[] nav = [];
+        byte[][] nav = [];
 
         var cursor = 0;
         while (cursor < source.Length)
@@ -76,10 +75,10 @@ internal static class PagesFileReader
     /// <summary>Reads a YAML block list starting at <paramref name="cursor"/> until indentation drops or a non-list line is hit.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="cursor">Offset to start scanning from (just past <c>nav:</c>).</param>
-    /// <returns>Entry strings.</returns>
-    private static string[] ReadBlockList(ReadOnlySpan<byte> source, int cursor)
+    /// <returns>Entry bytes.</returns>
+    private static byte[][] ReadBlockList(ReadOnlySpan<byte> source, int cursor)
     {
-        var entries = new List<string>(8);
+        var entries = new List<byte[]>(8);
         while (cursor < source.Length)
         {
             var lineEnd = YamlByteScanner.LineEnd(source, cursor);
@@ -97,7 +96,7 @@ internal static class PagesFileReader
             }
 
             var entry = ReadScalar(YamlByteScanner.TrimLeading(trimmed[1..]));
-            if (!string.IsNullOrEmpty(entry))
+            if (entry.Length > 0)
             {
                 entries.Add(entry);
             }
@@ -110,12 +109,12 @@ internal static class PagesFileReader
 
     /// <summary>Reads a YAML scalar — strips optional quotes and a trailing comment.</summary>
     /// <param name="span">Bytes after the key.</param>
-    /// <returns>Decoded string.</returns>
-    private static string ReadScalar(ReadOnlySpan<byte> span)
+    /// <returns>Decoded bytes; empty when the scalar is absent.</returns>
+    private static byte[] ReadScalar(ReadOnlySpan<byte> span)
     {
         var trimmed = YamlByteScanner.TrimWhitespace(span);
         var unquoted = YamlByteScanner.Unquote(trimmed);
-        return unquoted.IsEmpty ? string.Empty : Encoding.UTF8.GetString(unquoted);
+        return unquoted.IsEmpty ? [] : unquoted.ToArray();
     }
 
     /// <summary>Reads a YAML boolean (true / false / yes / no).</summary>

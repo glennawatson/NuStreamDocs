@@ -21,7 +21,7 @@ public class XrefMapRoundTripTests
         var bytes = await File.ReadAllBytesAsync(map);
         var payload = XrefMapReader.Read(bytes);
 
-        await Assert.That(payload.BaseUrl).IsEqualTo("https://example.com/");
+        await Assert.That(payload.BaseUrl.AsSpan().SequenceEqual("https://example.com/"u8)).IsTrue();
         await Assert.That(payload.Entries.Length).IsEqualTo(2);
     }
 
@@ -50,9 +50,9 @@ public class XrefMapRoundTripTests
         var bytes = await File.ReadAllBytesAsync(map);
         var payload = XrefMapReader.Read(bytes);
 
-        await Assert.That(payload.Entries[0].Uid).IsEqualTo("Apple");
-        await Assert.That(payload.Entries[1].Uid).IsEqualTo("Mango");
-        await Assert.That(payload.Entries[2].Uid).IsEqualTo("Zebra");
+        await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("Apple"u8)).IsTrue();
+        await Assert.That(payload.Entries[1].Uid.AsSpan().SequenceEqual("Mango"u8)).IsTrue();
+        await Assert.That(payload.Entries[2].Uid.AsSpan().SequenceEqual("Zebra"u8)).IsTrue();
     }
 
     /// <summary>Reader tolerates an empty document.</summary>
@@ -62,7 +62,7 @@ public class XrefMapRoundTripTests
     {
         var payload = XrefMapReader.Read("{}"u8);
         await Assert.That(payload.Entries.Length).IsEqualTo(0);
-        await Assert.That(payload.BaseUrl).IsEqualTo(string.Empty);
+        await Assert.That(payload.BaseUrl.Length).IsEqualTo(0);
     }
 
     /// <summary>Reader skips entries missing either <c>uid</c> or <c>href</c>.</summary>
@@ -72,7 +72,7 @@ public class XrefMapRoundTripTests
     {
         var payload = XrefMapReader.Read("{\"references\":[{\"uid\":\"x\"},{\"href\":\"y.html\"},{\"uid\":\"z\",\"href\":\"z.html\"}]}"u8);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
-        await Assert.That(payload.Entries[0].Uid).IsEqualTo("z");
+        await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("z"u8)).IsTrue();
     }
 
     /// <summary>Reader tolerates and skips unknown DocFX fields (<c>name</c>, <c>fullName</c>, <c>commentId</c>).</summary>
@@ -82,7 +82,7 @@ public class XrefMapRoundTripTests
     {
         var payload = XrefMapReader.Read("{\"references\":[{\"uid\":\"x\",\"name\":\"X\",\"fullName\":\"Foo.X\",\"href\":\"x.html\"}]}"u8);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
-        await Assert.That(payload.Entries[0].Uid).IsEqualTo("x");
-        await Assert.That(payload.Entries[0].Href).IsEqualTo("x.html");
+        await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("x"u8)).IsTrue();
+        await Assert.That(payload.Entries[0].Href.AsSpan().SequenceEqual("x.html"u8)).IsTrue();
     }
 }

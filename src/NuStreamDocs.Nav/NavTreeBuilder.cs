@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -302,9 +303,9 @@ internal static class NavTreeBuilder
             }
 
             var sectionTitle = directory == root ? string.Empty : Path.GetFileName(directory);
-            if (!string.IsNullOrEmpty(pagesOverride.Title))
+            if (pagesOverride.Title.Length > 0)
             {
-                sectionTitle = pagesOverride.Title;
+                sectionTitle = Encoding.UTF8.GetString(pagesOverride.Title);
             }
 
             var sectionRelative = directory == root
@@ -322,16 +323,16 @@ internal static class NavTreeBuilder
 
     /// <summary>Reorders <paramref name="children"/> to match the order in <paramref name="ordered"/>; entries not in <paramref name="ordered"/> follow in their original order.</summary>
     /// <param name="children">Built children.</param>
-    /// <param name="ordered">Filenames or directory names from a <c>.pages</c> override.</param>
+    /// <param name="ordered">Filenames or directory names from a <c>.pages</c> override (UTF-8 bytes).</param>
     /// <returns>A reordered child array.</returns>
-    private static NavNode[] ApplyOrdering(NavNode[] children, string[] ordered)
+    private static NavNode[] ApplyOrdering(NavNode[] children, byte[][] ordered)
     {
         var result = new NavNode[children.Length];
         var taken = new bool[children.Length];
         var write = 0;
         for (var i = 0; i < ordered.Length; i++)
         {
-            var entry = ordered[i];
+            var entry = Encoding.UTF8.GetString(ordered[i]);
             for (var j = 0; j < children.Length; j++)
             {
                 if (taken[j])

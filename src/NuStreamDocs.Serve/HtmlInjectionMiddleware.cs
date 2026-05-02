@@ -57,14 +57,14 @@ internal static class HtmlInjectionMiddleware
             // Fall back to appending at end-of-stream when no </body> is found.
             await TryAdjustContentLengthAsync(ctx, originalBody, buffer.Length + DevServer.ReloadScriptMarker.Length).ConfigureAwait(false);
             await buffer.CopyToAsync(originalBody).ConfigureAwait(false);
-            await originalBody.WriteAsync(DevServer.ReloadScriptMarker.ToArray().AsMemory()).ConfigureAwait(false);
+            await originalBody.WriteAsync(DevServer.ReloadScriptMemory).ConfigureAwait(false);
             return;
         }
 
         var newLength = buffer.Length + DevServer.ReloadScriptMarker.Length;
         await TryAdjustContentLengthAsync(ctx, originalBody, newLength).ConfigureAwait(false);
         await originalBody.WriteAsync(buffer.GetBuffer().AsMemory(0, idx)).ConfigureAwait(false);
-        await originalBody.WriteAsync(DevServer.ReloadScriptMarker.ToArray().AsMemory()).ConfigureAwait(false);
+        await originalBody.WriteAsync(DevServer.ReloadScriptMemory).ConfigureAwait(false);
         await originalBody.WriteAsync(buffer.GetBuffer().AsMemory(idx, (int)buffer.Length - idx)).ConfigureAwait(false);
     }
 

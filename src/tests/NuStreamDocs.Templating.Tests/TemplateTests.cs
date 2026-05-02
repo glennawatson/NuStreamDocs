@@ -149,7 +149,13 @@ public class TemplateTests
     {
         var template = Template.Compile(source);
         var writer = new ArrayBufferWriter<byte>();
-        template.Render(data, partials, writer);
+        var bytePartials = new Dictionary<byte[], Template>(partials.Count, Common.ByteArrayComparer.Instance);
+        foreach (var pair in partials)
+        {
+            bytePartials[Encoding.UTF8.GetBytes(pair.Key)] = pair.Value;
+        }
+
+        template.Render(data, bytePartials, writer);
         return Encoding.UTF8.GetString(writer.WrittenSpan);
     }
 
@@ -173,16 +179,16 @@ public class TemplateTests
         (string Key, string Value)[] scalars,
         (string Key, TemplateData[] Items)[] sections)
     {
-        var s = new Dictionary<string, ReadOnlyMemory<byte>>(scalars.Length, StringComparer.Ordinal);
+        var s = new Dictionary<byte[], ReadOnlyMemory<byte>>(scalars.Length, Common.ByteArrayComparer.Instance);
         for (var i = 0; i < scalars.Length; i++)
         {
-            s[scalars[i].Key] = Encoding.UTF8.GetBytes(scalars[i].Value);
+            s[Encoding.UTF8.GetBytes(scalars[i].Key)] = Encoding.UTF8.GetBytes(scalars[i].Value);
         }
 
-        var t = new Dictionary<string, TemplateData[]>(sections.Length, StringComparer.Ordinal);
+        var t = new Dictionary<byte[], TemplateData[]>(sections.Length, Common.ByteArrayComparer.Instance);
         for (var i = 0; i < sections.Length; i++)
         {
-            t[sections[i].Key] = sections[i].Items;
+            t[Encoding.UTF8.GetBytes(sections[i].Key)] = sections[i].Items;
         }
 
         return new(s, t);

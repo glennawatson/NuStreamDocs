@@ -23,8 +23,9 @@ namespace NuStreamDocs.Plugins;
 /// </remarks>
 public interface ICustomFenceHandler
 {
-    /// <summary>Gets the language identifier this handler claims (e.g. <c>mermaid</c>, <c>math</c>).</summary>
-    string Language { get; }
+    /// <summary>Gets the UTF-8 language identifier this handler claims (e.g. <c>"mermaid"u8</c>, <c>"math"u8</c>).</summary>
+    /// <remarks>Implementations should return a UTF-8 literal so the dispatcher's per-page byte-keyed lookup never has to transcode at registration or dispatch time.</remarks>
+    ReadOnlySpan<byte> Language { get; }
 
     /// <summary>Renders <paramref name="content"/> into <paramref name="writer"/>.</summary>
     /// <param name="content">UTF-8 fence body, with HTML entities decoded back to their literal bytes.</param>

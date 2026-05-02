@@ -14,7 +14,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task RewritesAbsoluteUrl()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite("@font-face { src: url(https://fonts.example/x.woff2) }", "https://example.com/fonts.css", registry);
         await Assert.That(output).Contains("url(/assets/external/");
         await Assert.That(output).DoesNotContain("https://fonts.example/x.woff2");
@@ -25,13 +25,13 @@ public class CssUrlRewriterTests
     [Test]
     public async Task ResolvesRelativeUrlAgainstBase()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite("body { background: url(./bg.png) }", "https://example.com/styles/main.css", registry);
         await Assert.That(output).Contains("url(/assets/external/");
 
         var entries = registry.EntriesSnapshot();
         await Assert.That(entries).HasSingleItem();
-        await Assert.That(entries[0].Url).IsEqualTo("https://example.com/styles/bg.png");
+        await Assert.That(entries[0].Url.AsSpan().SequenceEqual("https://example.com/styles/bg.png"u8)).IsTrue();
     }
 
     /// <summary>A <c>data:</c> URL is left alone.</summary>
@@ -39,7 +39,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task LeavesDataUrlsAlone()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite("a { background: url(data:image/png;base64,AAA) }", "https://example.com/x.css", registry);
         await Assert.That(output).Contains("url(data:image/png");
     }
@@ -49,7 +49,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task PreservesQuoteStyle()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         var output = Rewrite("a { src: url(\"https://x.test/a.woff2\") }", "https://x.test/", registry);
         await Assert.That(output).Contains("url(\"/assets/external/");
     }

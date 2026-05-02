@@ -34,8 +34,8 @@ internal static class Aglc4Thesis
     /// <param name="writer">UTF-8 sink.</param>
     private static void WriteContextBlock(CitationEntry entry, IBufferWriter<byte> writer)
     {
-        var hasNote = !string.IsNullOrEmpty(entry.Note);
-        var hasPublisher = !string.IsNullOrEmpty(entry.Publisher);
+        var hasNote = entry.Note.Length > 0;
+        var hasPublisher = entry.Publisher.Length > 0;
         var hasYear = entry.Year is not 0;
         if (!hasNote && !hasPublisher && !hasYear)
         {

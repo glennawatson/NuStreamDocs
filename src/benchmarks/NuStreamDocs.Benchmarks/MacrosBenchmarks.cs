@@ -33,12 +33,12 @@ public class MacrosBenchmarks
         _markerHeavySource = BuildRepeated("Project: {{ project }} Version: {{ version }} Author: {{ author }}\n");
         _noMarkerSource = BuildRepeated("Plain prose line with no curly markers anywhere here at all.\n");
 
-        var vars = new Dictionary<string, string>(StringComparer.Ordinal)
+        var vars = new Dictionary<byte[], byte[]>(Common.ByteArrayComparer.Instance)
         {
-            ["project"] = "ReactiveUI",
-            ["version"] = "20.0.0",
-            ["author"] = "Glenn Watson",
-            ["year"] = "2026",
+            ["project"u8.ToArray()] = "ReactiveUI"u8.ToArray(),
+            ["version"u8.ToArray()] = "20.0.0"u8.ToArray(),
+            ["author"u8.ToArray()] = "Glenn Watson"u8.ToArray(),
+            ["year"u8.ToArray()] = "2026"u8.ToArray(),
         };
         _plugin = new(new(vars, EscapeHtml: false, WarnOnMissing: false));
     }

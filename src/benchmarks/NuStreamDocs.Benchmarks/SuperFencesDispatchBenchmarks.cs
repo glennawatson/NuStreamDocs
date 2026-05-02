@@ -90,10 +90,10 @@ public class SuperFencesDispatchBenchmarks
             ["mermaid"u8.ToArray()] = new StubMermaidHandler(),
             ["math"u8.ToArray()] = new StubMathHandler(),
         };
-        _allRegistered = fullDict.GetAlternateLookup<ReadOnlySpan<byte>>();
+        _allRegistered = fullDict.AsUtf8Lookup();
 
         var emptyDict = new Dictionary<byte[], ICustomFenceHandler>(0, ByteArrayComparer.Instance);
-        _noneRegistered = emptyDict.GetAlternateLookup<ReadOnlySpan<byte>>();
+        _noneRegistered = emptyDict.AsUtf8Lookup();
     }
 
     /// <summary>Dispatch with both languages registered — exercises the full byte-keyed lookup + handler-render path on every fence.</summary>
@@ -132,7 +132,7 @@ public class SuperFencesDispatchBenchmarks
     private sealed class StubMermaidHandler : ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public string Language => "mermaid";
+        public ReadOnlySpan<byte> Language => "mermaid"u8;
 
         /// <inheritdoc/>
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)
@@ -147,7 +147,7 @@ public class SuperFencesDispatchBenchmarks
     private sealed class StubMathHandler : ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public string Language => "math";
+        public ReadOnlySpan<byte> Language => "math"u8;
 
         /// <inheritdoc/>
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)

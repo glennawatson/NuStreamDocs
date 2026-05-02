@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Globalization;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Toc;
@@ -28,9 +27,6 @@ internal static class HeadingSlugifier
 {
     /// <summary>The hyphen byte used as the only allowed punctuation in slugs.</summary>
     private const byte HyphenByte = (byte)'-';
-
-    /// <summary>Slug used when a heading reduces to nothing after stripping (string overload).</summary>
-    private const string FallbackSlug = "section";
 
     /// <summary>ASCII offset to convert an upper-case letter to its lower-case counterpart.</summary>
     private const int AsciiUpperToLowerOffset = 32;
@@ -93,26 +89,6 @@ internal static class HeadingSlugifier
         }
 
         return (result, collisions);
-    }
-
-    /// <summary>Reduces <paramref name="text"/> to a slug.</summary>
-    /// <param name="text">Raw heading text.</param>
-    /// <returns>ASCII slug; never empty.</returns>
-    /// <remarks>
-    /// Public string-shaped convenience for tests and callers outside
-    /// the production hot path. Internally the slugifier works on
-    /// UTF-8 bytes; this overload re-encodes once.
-    /// </remarks>
-    public static string Slugify(string text)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            return FallbackSlug;
-        }
-
-        var bytes = Encoding.UTF8.GetBytes(text);
-        var slugBytes = SlugifyToBytes(bytes);
-        return Encoding.UTF8.GetString(slugBytes);
     }
 
     /// <summary>Reduces <paramref name="text"/> bytes to a slug byte array.</summary>

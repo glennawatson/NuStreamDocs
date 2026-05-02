@@ -19,7 +19,7 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task RewritesUrlInsideInlineStyle()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
         const string Source = "<style>body { background: url(https://example.com/bg.png) }</style>";
         var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Source), registry, AllHosts));
         await Assert.That(output).Contains("url(/assets/external/");
@@ -44,7 +44,7 @@ public class InlineStyleAndAuditTests
     public async Task EmptyAllowListLocalizesEverything()
     {
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        await Assert.That(filter.ShouldLocalize("https://anything.example/x.png")).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://anything.example/x.png"u8)).IsTrue();
     }
 
     /// <summary>A non-empty allow-list excludes hosts not on it.</summary>
@@ -52,9 +52,9 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task AllowListExcludesUnlistedHosts()
     {
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: ["allowed.example"]);
-        await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png")).IsTrue();
-        await Assert.That(filter.ShouldLocalize("https://other.example/x.png")).IsFalse();
+        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("allowed.example"));
+        await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png"u8)).IsTrue();
+        await Assert.That(filter.ShouldLocalize("https://other.example/x.png"u8)).IsFalse();
     }
 
     /// <summary>The skip-list wins over the allow-list when both contain the same host.</summary>
@@ -62,7 +62,7 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task SkipListWinsOverAllowList()
     {
-        var filter = new HostFilter(hostsToSkip: ["x.example"], hostsAllowed: ["x.example"]);
-        await Assert.That(filter.ShouldLocalize("https://x.example/anything")).IsFalse();
+        var filter = new HostFilter(hostsToSkip: PrivacyTestHelpers.Utf8("x.example"), hostsAllowed: PrivacyTestHelpers.Utf8("x.example"));
+        await Assert.That(filter.ShouldLocalize("https://x.example/anything"u8)).IsFalse();
     }
 }

@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Nav;
@@ -32,6 +34,9 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Length of the <c>.md</c> extension stripped when computing served URLs.</summary>
     private const int MarkdownExtensionLength = 3;
 
+    /// <summary>Bytes added when <c>.md</c> becomes <c>.html</c> (<c>.html</c> = 5, <c>.md</c> = 3).</summary>
+    private const int HtmlExtensionGrowth = 2;
+
     /// <summary>Sentinel End value for a span that hasn't yet been patched by its enclosing section.</summary>
     private const int UnsetSpanEnd = -1;
 
@@ -44,14 +49,18 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>The nav tree built during <see cref="OnConfigureAsync"/>; null until then.</summary>
     private NavNode? _root;
 
-    /// <summary>URL → node lookup over the rendered tree; built once when the tree is built so per-page renders resolve the active node in O(1).</summary>
-    private Dictionary<string, NavNode>? _urlIndex;
+    /// <summary>UTF-8 URL bytes → node lookup over the rendered tree; built once when the tree is built so per-page renders resolve the active node in O(1) without re-encoding the page URL.</summary>
+    private Dictionary<byte[], NavNode>? _urlIndex;
 
     /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(string)"/> call.</summary>
     private NavNode[]? _orderedLeaves;
 
-    /// <summary>Path → index lookup over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
-    private Dictionary<string, int>? _leafIndex;
+    /// <summary>UTF-8 path bytes → index lookup over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
+    /// <remarks>
+    /// Byte-keyed so the per-call probe doesn't pay a string-hash on the relative-path lookup;
+    /// <see cref="GetNeighbours(string)"/> encodes once into a stack/heap buffer.
+    /// </remarks>
+    private Dictionary<byte[], int>? _leafIndex;
 
     /// <summary>Per-leaf <c>[sectionStart, sectionEndExclusive)</c> spans over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
     private (int Start, int End)[]? _sectionSpans;
@@ -131,7 +140,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
             var suffix = rental.AsSpan(markerIndex + markerBytes.Length, length - markerIndex - markerBytes.Length);
 
             Write(html, prefix);
-            RenderNav(html, ToPageUrl(context.RelativePath));
+            RenderNav(html, context.RelativePath);
             Write(html, suffix);
         }
         finally
@@ -186,7 +195,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Builds the linearized leaves, path index, and section spans for <paramref name="root"/> in one pass.</summary>
     /// <param name="root">Nav tree root.</param>
     /// <returns>The three index pieces.</returns>
-    private static (NavNode[] Leaves, Dictionary<string, int> Index, (int Start, int End)[] Spans) BuildIndex(NavNode root)
+    private static (NavNode[] Leaves, Dictionary<byte[], int> Index, (int Start, int End)[] Spans) BuildIndex(NavNode root)
     {
         var leaves = new List<NavNode>();
         var spans = new List<(int Start, int End)>();
@@ -203,10 +212,10 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         }
 
         NavNode[] ordered = [.. leaves];
-        var index = new Dictionary<string, int>(leaves.Count, StringComparer.Ordinal);
+        var index = new Dictionary<byte[], int>(leaves.Count, ByteArrayComparer.Instance);
         for (var i = 0; i < ordered.Length; i++)
         {
-            index[ordered[i].RelativePath] = i;
+            index[Encoding.UTF8.GetBytes(ordered[i].RelativePath)] = i;
         }
 
         return (ordered, index, [.. spans]);
@@ -289,13 +298,23 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     private static string TitleOrEmpty(NavNode[] leaves, int idx) =>
         idx >= 0 && idx < leaves.Length ? leaves[idx].Title : string.Empty;
 
-    /// <summary>Translates the source-relative markdown path to the served-page URL.</summary>
+    /// <summary>Encodes <paramref name="relativePath"/> as the served-page URL bytes into <paramref name="destination"/>, swapping the trailing <c>.md</c> for <c>.html</c>.</summary>
     /// <param name="relativePath">Source-relative path.</param>
-    /// <returns>Site-relative URL.</returns>
-    private static string ToPageUrl(string relativePath) =>
-        relativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-            ? $"{relativePath.AsSpan(0, relativePath.Length - MarkdownExtensionLength)}.html"
-            : relativePath;
+    /// <param name="destination">UTF-8 destination span (must be sized to <c>Encoding.UTF8.GetMaxByteCount(relativePath.Length) + 2</c> to leave room for the <c>.html</c> growth).</param>
+    /// <returns>Number of bytes written to <paramref name="destination"/>.</returns>
+    private static int EncodePageUrlBytes(string relativePath, Span<byte> destination)
+    {
+        var endsWithMd = relativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+        var keepLength = endsWithMd ? relativePath.Length - MarkdownExtensionLength : relativePath.Length;
+        var keptBytes = Encoding.UTF8.GetBytes(relativePath.AsSpan(0, keepLength), destination);
+        if (!endsWithMd)
+        {
+            return keptBytes;
+        }
+
+        ".html"u8.CopyTo(destination[keptBytes..]);
+        return keptBytes + ".html"u8.Length;
+    }
 
     /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink — concrete <see cref="ArrayBufferWriter{T}"/> so the JIT keeps the call site direct.</param>
@@ -312,7 +331,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Lazily builds the leaf/index/span tables on first call and resolves <paramref name="relativePath"/> to its leaf index.</summary>
+    /// <summary>Lazily builds the leaf/index/span tables on first call and resolves <paramref name="relativePath"/> to its leaf index via a single UTF-8 encode + byte-keyed probe.</summary>
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="idx">Resolved index; -1 when not in the nav.</param>
     /// <returns>True when found.</returns>
@@ -329,16 +348,29 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
             (_orderedLeaves, _leafIndex, _sectionSpans) = BuildIndex(_root);
         }
 
-        return _leafIndex!.TryGetValue(relativePath, out idx);
+        const int StackBufferLimit = 256;
+        var maxBytes = Encoding.UTF8.GetMaxByteCount(relativePath.Length);
+        Span<byte> stackBuf = stackalloc byte[StackBufferLimit];
+        var keyBuffer = maxBytes <= StackBufferLimit ? stackBuf : new byte[maxBytes];
+        var written = Encoding.UTF8.GetBytes(relativePath, keyBuffer);
+        return _leafIndex!.TryGetValueByUtf8(keyBuffer[..written], out idx);
     }
 
     /// <summary>Renders the nav into <paramref name="writer"/> using the configured prune mode.</summary>
     /// <param name="writer">UTF-8 sink — concrete <see cref="ArrayBufferWriter{T}"/> so the JIT keeps the call site direct.</param>
-    /// <param name="pageUrl">Page-relative URL of the page being rendered.</param>
-    private void RenderNav(ArrayBufferWriter<byte> writer, string pageUrl)
+    /// <param name="relativePath">Source-relative path of the page being rendered.</param>
+    /// <remarks>
+    /// Encodes the path → URL conversion directly into a stack-or-pool buffer (no intermediate
+    /// <see cref="string"/>) and probes the byte-keyed URL index for the active node.
+    /// </remarks>
+    private void RenderNav(ArrayBufferWriter<byte> writer, string relativePath)
     {
-        // O(1) URL → node lookup against the index built once at configure time.
-        _ = _urlIndex!.TryGetValue(pageUrl, out var activeNode);
+        const int StackUrlLimit = 256;
+        var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Length) + HtmlExtensionGrowth;
+        Span<byte> stackBuf = stackalloc byte[StackUrlLimit];
+        var urlBuffer = capacity <= StackUrlLimit ? stackBuf : new byte[capacity];
+        var written = EncodePageUrlBytes(relativePath, urlBuffer);
+        _ = _urlIndex!.TryGetValueByUtf8(urlBuffer[..written], out var activeNode);
 
         if (_options.Prune)
         {

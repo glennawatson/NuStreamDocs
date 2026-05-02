@@ -185,7 +185,7 @@ public class PrivacyPluginLifecycleTests
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(fixture.Output)
-                .UsePrivacy(opts => opts with { CacheDirectory = cacheDir })
+                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir))
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
@@ -195,7 +195,7 @@ public class PrivacyPluginLifecycleTests
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(freshOutput)
-                .UsePrivacy(opts => opts with { CacheDirectory = cacheDir })
+                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir))
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 
 namespace NuStreamDocs.Autorefs;
 
@@ -46,16 +45,6 @@ internal static class AutorefScanner
         var idEnd = FindIdEnd(source, idStart);
         match = new(markerStart, idStart, idEnd);
         return true;
-    }
-
-    /// <summary>Decodes the ID covered by <paramref name="match"/> as a UTF-16 string.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="match">Match covering the marker + ID.</param>
-    /// <returns>The decoded ID; empty when the match is empty.</returns>
-    public static string DecodeId(ReadOnlySpan<byte> source, in AutorefMatch match)
-    {
-        var length = match.IdEnd - match.IdStart;
-        return length <= 0 ? string.Empty : Encoding.UTF8.GetString(source.Slice(match.IdStart, length));
     }
 
     /// <summary>Returns the index just past the last ID byte starting at <paramref name="start"/>.</summary>

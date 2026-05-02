@@ -45,12 +45,15 @@ internal static class HeadingRewriter
     /// <summary>Writes the rewritten body of <paramref name="snapshot"/> into <paramref name="writer"/>.</summary>
     /// <param name="snapshot">Original HTML bytes.</param>
     /// <param name="headings">Headings the scanner returned, with slugs assigned.</param>
-    /// <param name="permalinkSymbol">Glyph rendered inside the permalink anchor.</param>
+    /// <param name="permalinkSymbolBytes">
+    /// UTF-8 bytes of the glyph rendered inside the permalink anchor; encoded once by the caller
+    /// (typically at plugin configure-time) so the rewrite never re-encodes per page.
+    /// </param>
     /// <param name="writer">Target buffer writer.</param>
     public static void Rewrite(
         ReadOnlySpan<byte> snapshot,
         Heading[] headings,
-        string permalinkSymbol,
+        ReadOnlySpan<byte> permalinkSymbolBytes,
         IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(headings);
@@ -80,7 +83,7 @@ internal static class HeadingRewriter
             Utf8StringWriter.Write(writer, PermalinkPrefix);
             Utf8StringWriter.Write(writer, h.Slug);
             Utf8StringWriter.Write(writer, PermalinkMid);
-            AsciiByteHelpers.EncodeStringInto(permalinkSymbol, writer);
+            Utf8StringWriter.Write(writer, permalinkSymbolBytes);
             Utf8StringWriter.Write(writer, PermalinkSuffix);
 
             // Close tag itself ("</hN>") is 5 bytes; copy it verbatim.

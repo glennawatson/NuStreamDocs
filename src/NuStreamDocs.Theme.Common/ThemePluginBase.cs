@@ -3,8 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using System.Text.Encodings.Web;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Templating;
 
@@ -36,6 +36,54 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
 
     /// <summary>Template truthy flag emitted for enabled boolean options.</summary>
     private static readonly byte[] TruthyBytes = [.. "1"u8];
+
+    /// <summary>UTF-8 template-data key for <c>language</c>.</summary>
+    private static readonly byte[] LanguageKey = "language"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>site_name</c>.</summary>
+    private static readonly byte[] SiteNameKey = "site_name"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>site_root</c>.</summary>
+    private static readonly byte[] SiteRootKey = "site_root"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>page_title</c>.</summary>
+    private static readonly byte[] PageTitleKey = "page_title"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>body</c>.</summary>
+    private static readonly byte[] BodyKey = "body"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>asset_root</c>.</summary>
+    private static readonly byte[] AssetRootKey = "asset_root"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>copyright</c>.</summary>
+    private static readonly byte[] CopyrightKey = "copyright"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>repo_url</c>.</summary>
+    private static readonly byte[] RepoUrlKey = "repo_url"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>edit_url</c>.</summary>
+    private static readonly byte[] EditUrlKey = "edit_url"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>scroll_to_top</c>.</summary>
+    private static readonly byte[] ScrollToTopKey = "scroll_to_top"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>toc_follow</c>.</summary>
+    private static readonly byte[] TocFollowKey = "toc_follow"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>prev_url</c>.</summary>
+    private static readonly byte[] PrevUrlKey = "prev_url"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>prev_title</c>.</summary>
+    private static readonly byte[] PrevTitleKey = "prev_title"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>next_url</c>.</summary>
+    private static readonly byte[] NextUrlKey = "next_url"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>next_title</c>.</summary>
+    private static readonly byte[] NextTitleKey = "next_title"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>head_extras</c>.</summary>
+    private static readonly byte[] HeadExtrasKey = "head_extras"u8.ToArray();
 
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly TOptions _options;
@@ -93,11 +141,11 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         _headExtras = HeadExtraComposer.Compose(context.Plugins);
         _plugins = context.Plugins;
         _neighbours = FindNavNeighboursProvider(context.Plugins);
-        _languageBytes = ToUtf8(_options.Language);
-        _siteNameBytes = ToUtf8(_options.SiteName);
-        _assetRootBytes = ToUtf8(_options.ResolveAssetRoot());
-        _copyrightBytes = ToUtf8(_options.Copyright);
-        _repoUrlBytes = ToUtf8(_options.RepoUrl);
+        _languageBytes = Utf8Encoder.Encode(_options.Language);
+        _siteNameBytes = Utf8Encoder.Encode(_options.SiteName);
+        _assetRootBytes = Utf8Encoder.Encode(_options.ResolveAssetRoot());
+        _copyrightBytes = Utf8Encoder.Encode(_options.Copyright);
+        _repoUrlBytes = Utf8Encoder.Encode(_options.RepoUrl);
         _editUrlPrefix = BuildEditUrlPrefix(_options.RepoUrl, _options.EditUri);
 
         return ValueTask.CompletedTask;
@@ -120,24 +168,24 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             var editUrl = ResolveEditUrl(context.RelativePath);
             var neighbours = ResolveNeighbours(context.RelativePath);
             var data = new TemplateData(
-                new(14, StringComparer.Ordinal)
+                new(14, ByteArrayComparer.Instance)
                 {
-                    ["language"] = _languageBytes,
-                    ["site_name"] = _siteNameBytes,
-                    ["site_root"] = SiteRootBytes,
-                    ["page_title"] = ToUtf8(pageTitle),
-                    ["body"] = new(bodyBuffer, 0, bodyLength),
-                    ["asset_root"] = _assetRootBytes,
-                    ["copyright"] = _copyrightBytes,
-                    ["repo_url"] = _repoUrlBytes,
-                    ["edit_url"] = ToUtf8(editUrl),
-                    ["scroll_to_top"] = _options.EnableScrollToTop ? TruthyBytes : null,
-                    ["toc_follow"] = _options.EnableTocFollow ? TruthyBytes : null,
-                    ["prev_url"] = ToUtf8(NeighbourUrl(neighbours.PreviousPath)),
-                    ["prev_title"] = ToUtf8(neighbours.PreviousTitle),
-                    ["next_url"] = ToUtf8(NeighbourUrl(neighbours.NextPath)),
-                    ["next_title"] = ToUtf8(neighbours.NextTitle),
-                    ["head_extras"] = _headExtras,
+                    [LanguageKey] = _languageBytes,
+                    [SiteNameKey] = _siteNameBytes,
+                    [SiteRootKey] = SiteRootBytes,
+                    [PageTitleKey] = Utf8Encoder.Encode(pageTitle),
+                    [BodyKey] = new(bodyBuffer, 0, bodyLength),
+                    [AssetRootKey] = _assetRootBytes,
+                    [CopyrightKey] = _copyrightBytes,
+                    [RepoUrlKey] = _repoUrlBytes,
+                    [EditUrlKey] = Utf8Encoder.Encode(editUrl),
+                    [ScrollToTopKey] = _options.EnableScrollToTop ? TruthyBytes : null,
+                    [TocFollowKey] = _options.EnableTocFollow ? TruthyBytes : null,
+                    [PrevUrlKey] = Utf8Encoder.Encode(NeighbourUrl(neighbours.PreviousPath)),
+                    [PrevTitleKey] = Utf8Encoder.Encode(neighbours.PreviousTitle),
+                    [NextUrlKey] = Utf8Encoder.Encode(NeighbourUrl(neighbours.NextPath)),
+                    [NextTitleKey] = Utf8Encoder.Encode(neighbours.NextTitle),
+                    [HeadExtrasKey] = _headExtras,
                 },
                 sections: null);
 
@@ -174,12 +222,6 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
 
         StaticAssetComposer.WriteAll(_plugins, root);
     }
-
-    /// <summary>Converts a string to a UTF-8 byte array, returning a shared empty array for null/empty input.</summary>
-    /// <param name="value">Input string.</param>
-    /// <returns>UTF-8 bytes.</returns>
-    private static byte[] ToUtf8(string? value) =>
-        value is null or [] ? [] : Encoding.UTF8.GetBytes(value);
 
     /// <summary>Returns the first <see cref="INavNeighboursProvider"/> in <paramref name="plugins"/>, or null when none is registered.</summary>
     /// <param name="plugins">Registered plugins.</param>

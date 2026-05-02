@@ -28,20 +28,20 @@ internal static class Aglc4Articles
 
         Aglc4Writer.WriteParenthesizedYear(entry.Year, writer);
 
-        if (!string.IsNullOrEmpty(entry.Volume))
+        if (entry.Volume.Length > 0)
         {
             Aglc4Writer.WriteBytes(" "u8, writer);
             Aglc4Writer.WriteString(entry.Volume, writer);
         }
 
-        if (!string.IsNullOrEmpty(entry.ContainerTitle))
+        if (entry.ContainerTitle.Length > 0)
         {
             Aglc4Writer.WriteBytes(" *"u8, writer);
             Aglc4Writer.WriteString(entry.ContainerTitle, writer);
             Aglc4Writer.WriteBytes("*"u8, writer);
         }
 
-        if (string.IsNullOrEmpty(entry.Page))
+        if (entry.Page.Length is 0)
         {
             return;
         }

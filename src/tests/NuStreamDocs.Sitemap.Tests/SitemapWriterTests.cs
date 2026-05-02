@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Sitemap.Tests;
 
 /// <summary>Behavior tests for <c>SitemapWriter</c> and <c>NotFoundPlugin</c>.</summary>
@@ -11,20 +13,20 @@ public class SitemapWriterTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>
-        await Assert.That(SitemapWriter.RelativePathToUrlPath("guide/intro.md"))
+        await Assert.That(Encoding.UTF8.GetString(SitemapWriter.RelativePathToUrlPath("guide/intro.md")))
             .IsEqualTo("guide/intro.html");
 
     /// <summary>Backslashes are normalized to forward slashes.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathNormalizesSeparators() =>
-        await Assert.That(SitemapWriter.RelativePathToUrlPath("guide\\intro.md"))
+        await Assert.That(Encoding.UTF8.GetString(SitemapWriter.RelativePathToUrlPath("guide\\intro.md")))
             .IsEqualTo("guide/intro.html");
 
     /// <summary>Empty input yields empty output.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task EmptyInputEmptyOutput() => await Assert.That(SitemapWriter.RelativePathToUrlPath(string.Empty)).IsEqualTo(string.Empty);
+    public async Task EmptyInputEmptyOutput() => await Assert.That(SitemapWriter.RelativePathToUrlPath(string.Empty).Length).IsEqualTo(0);
 
     /// <summary>Writing the sitemap produces the expected XML envelope and per-URL elements.</summary>
     /// <returns>Async test.</returns>
@@ -32,7 +34,10 @@ public class SitemapWriterTests
     public async Task WriteSitemapEmitsXml()
     {
         using var fixture = new TempDirectory();
-        SitemapWriter.WriteSitemap(fixture.Root, "https://docs.test/", ["index.html", "guide/intro.html"]);
+        SitemapWriter.WriteSitemap(
+            fixture.Root,
+            "https://docs.test/"u8.ToArray(),
+            ["index.html"u8.ToArray(), "guide/intro.html"u8.ToArray()]);
 
         var xml = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "sitemap.xml"));
         await Assert.That(xml).Contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -47,7 +52,7 @@ public class SitemapWriterTests
     public async Task WriteRobotsPointsAtSitemap()
     {
         using var fixture = new TempDirectory();
-        SitemapWriter.WriteRobots(fixture.Root, "https://docs.test/");
+        SitemapWriter.WriteRobots(fixture.Root, "https://docs.test/"u8.ToArray());
 
         var txt = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "robots.txt"));
         await Assert.That(txt).Contains("User-agent: *");

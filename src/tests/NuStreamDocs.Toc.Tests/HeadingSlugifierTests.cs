@@ -10,20 +10,22 @@ public class HeadingSlugifierTests
     /// <summary>Basic ASCII slugification.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task BasicAsciiSlug() => await Assert.That(HeadingSlugifier.Slugify("Hello World")).IsEqualTo("hello-world");
+    public async Task BasicAsciiSlug() =>
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("Hello World"u8).AsSpan().SequenceEqual("hello-world"u8)).IsTrue();
 
     /// <summary>Punctuation collapses and trims.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task TrimsLeadingAndTrailingPunctuation() => await Assert.That(HeadingSlugifier.Slugify("  ~!Foo --- Bar?? ")).IsEqualTo("foo-bar");
+    public async Task TrimsLeadingAndTrailingPunctuation() =>
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("  ~!Foo --- Bar?? "u8).AsSpan().SequenceEqual("foo-bar"u8)).IsTrue();
 
     /// <summary>Empty / pure-punctuation input gets fallback.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task EmptyInputFallsBackToSection()
     {
-        await Assert.That(HeadingSlugifier.Slugify("???")).IsEqualTo("section");
-        await Assert.That(HeadingSlugifier.Slugify(string.Empty)).IsEqualTo("section");
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("???"u8).AsSpan().SequenceEqual("section"u8)).IsTrue();
+        await Assert.That(HeadingSlugifier.SlugifyToBytes(default).AsSpan().SequenceEqual("section"u8)).IsTrue();
     }
 
     /// <summary>Duplicates within a page get numeric suffixes.</summary>

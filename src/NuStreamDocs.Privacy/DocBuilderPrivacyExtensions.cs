@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
 
@@ -42,5 +43,15 @@ public static class DocBuilderPrivacyExtensions
         ArgumentNullException.ThrowIfNull(logger);
         var options = configure(PrivacyOptions.Default);
         return builder.UsePlugin(new PrivacyPlugin(options, logger));
+    }
+
+    /// <summary>String adapter over <see cref="PrivacyPlugin.AuditedUrls"/>.</summary>
+    /// <param name="plugin">Plugin instance.</param>
+    /// <returns>Right-sized URL string array.</returns>
+    /// <remarks>For consumers that genuinely want UTF-16 strings (logging, assertions, JSON serialization that doesn't cross the <see cref="System.Text.Json.Utf8JsonWriter"/> byte path).</remarks>
+    public static string[] AuditedUrlsAsStrings(this PrivacyPlugin plugin)
+    {
+        ArgumentNullException.ThrowIfNull(plugin);
+        return Utf8Snapshot.Decode(plugin.AuditedUrls);
     }
 }

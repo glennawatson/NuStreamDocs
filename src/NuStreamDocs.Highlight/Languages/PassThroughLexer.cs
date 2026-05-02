@@ -18,16 +18,13 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class PassThroughLexer
 {
-    /// <summary>Builds a pass-through lexer for <paramref name="languageName"/>.</summary>
-    /// <param name="languageName">Language identifier the registry will key on.</param>
-    /// <returns>A configured lexer whose only rule emits a single byte per step.</returns>
-    public static Lexer Create(string languageName)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(languageName);
-        return new(languageName, LanguageRuleBuilder.BuildSingleState([
+    /// <summary>
+    /// Gets the singleton lexer instance.
+    /// </summary>
+    public static Lexer Instance { get; } = new(LanguageRuleBuilder.BuildSingleState(
+    [
 
-            // Consume one byte per step — every byte is classified as plain text.
-            new(static slice => slice is [_, ..] ? 1 : 0, TokenClass.Text, LexerRule.NoStateChange),
-        ]));
-    }
+        // Consume one byte per step — every byte is classified as plain text.
+        new(static slice => slice is [_, ..] ? 1 : 0, TokenClass.Text, LexerRule.NoStateChange),
+    ]));
 }

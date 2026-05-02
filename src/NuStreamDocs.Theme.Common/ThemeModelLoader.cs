@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Templating;
 
 namespace NuStreamDocs.Theme.Common;
@@ -30,18 +32,18 @@ public static class ThemeModelLoader
         return Template.Compile(readBytes("page.mustache"));
     }
 
-    /// <summary>Compiles the standard <c>partials/*.mustache</c> set.</summary>
+    /// <summary>Compiles the standard <c>partials/*.mustache</c> set into a byte-keyed registry.</summary>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
-    /// <returns>An ordinal-keyed lookup keyed by the partial stem name.</returns>
-    public static Dictionary<string, Template> LoadStandardPartials(Func<string, byte[]> readBytes)
+    /// <returns>A UTF-8 byte-keyed registry of compiled partials.</returns>
+    public static Dictionary<byte[], Template> LoadStandardPartials(Func<string, byte[]> readBytes)
     {
         ArgumentNullException.ThrowIfNull(readBytes);
 
-        var working = new Dictionary<string, Template>(StandardPartialNames.Length, StringComparer.Ordinal);
+        var working = new Dictionary<byte[], Template>(StandardPartialNames.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < StandardPartialNames.Length; i++)
         {
             var name = StandardPartialNames[i];
-            working[name] = Template.Compile(readBytes("partials/" + name + ".mustache"));
+            working[Encoding.UTF8.GetBytes(name)] = Template.Compile(readBytes("partials/" + name + ".mustache"));
         }
 
         return working;

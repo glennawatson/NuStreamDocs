@@ -116,19 +116,19 @@ public class TagsPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath("guide\\intro.md")).IsEqualTo("guide/intro.html");
+        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("guide\\intro.md"))).IsEqualTo("guide/intro.html");
 
     /// <summary>RelativePathToUrlPath returns empty for empty input.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathEmpty() =>
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath(string.Empty)).IsEqualTo(string.Empty);
+        await Assert.That(TagsIndexWriter.RelativePathToUrlPath(string.Empty).Length).IsEqualTo(0);
 
     /// <summary>RelativePathToUrlPath leaves non-md inputs alone.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathNonMd() =>
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath("assets/logo.png")).IsEqualTo("assets/logo.png");
+        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("assets/logo.png"))).IsEqualTo("assets/logo.png");
 
     /// <summary>UseTags() registers the plugin.</summary>
     /// <returns>Async test.</returns>

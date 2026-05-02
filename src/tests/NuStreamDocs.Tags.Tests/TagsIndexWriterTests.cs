@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Tags.Tests;
 
 /// <summary>Branch-coverage tests for TagsIndexWriter.</summary>
@@ -22,11 +24,11 @@ public class TagsIndexWriterTests
     [Test]
     public async Task RelativePathToUrlPathBranches()
     {
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath("guide/intro.md")).IsEqualTo("guide/intro.html");
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath("guide/intro.MD")).IsEqualTo("guide/intro.html");
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath("guide/intro.txt")).IsEqualTo("guide/intro.txt");
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath("a\\b.md")).IsEqualTo("a/b.html");
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath(string.Empty)).IsEqualTo(string.Empty);
+        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("guide/intro.md"))).IsEqualTo("guide/intro.html");
+        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("guide/intro.MD"))).IsEqualTo("guide/intro.html");
+        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("guide/intro.txt"))).IsEqualTo("guide/intro.txt");
+        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("a\\b.md"))).IsEqualTo("a/b.html");
+        await Assert.That(TagsIndexWriter.RelativePathToUrlPath(string.Empty).Length).IsEqualTo(0);
     }
 
     /// <summary>Write produces an index page and per-tag pages with HTML-escaped content.</summary>
@@ -37,9 +39,9 @@ public class TagsIndexWriterTests
         using var temp = new ScratchDir();
         TagEntry[] entries =
         [
-            new("Alpha & Beta", "guide/intro.html", "<Title>"),
-            new("Alpha & Beta", "ref/api.html", "API"),
-            new("gamma", "guide/intro.html", "<Title>"),
+            new(Bytes("Alpha & Beta"), Bytes("guide/intro.html"), Bytes("<Title>")),
+            new(Bytes("Alpha & Beta"), Bytes("ref/api.html"), Bytes("API")),
+            new(Bytes("gamma"), Bytes("guide/intro.html"), Bytes("<Title>")),
         ];
         TagsIndexWriter.Write(temp.Root, TagsOptions.Default, entries);
         var tagsDir = Path.Combine(temp.Root, "tags");
@@ -62,9 +64,14 @@ public class TagsIndexWriterTests
     public async Task SymbolOnlyTagSlug()
     {
         using var temp = new ScratchDir();
-        TagsIndexWriter.Write(temp.Root, TagsOptions.Default, [new("***", "p.html", "P")]);
+        TagsIndexWriter.Write(temp.Root, TagsOptions.Default, [new(Bytes("***"), Bytes("p.html"), Bytes("P"))]);
         await Assert.That(File.Exists(Path.Combine(temp.Root, "tags", "tag.html"))).IsTrue();
     }
+
+    /// <summary>UTF-8 encodes <paramref name="value"/> for the byte-shaped <see cref="TagEntry"/> ctor.</summary>
+    /// <param name="value">Source text.</param>
+    /// <returns>UTF-8 byte array.</returns>
+    private static byte[] Bytes(string value) => Encoding.UTF8.GetBytes(value);
 
     /// <summary>Disposable scratch directory.</summary>
     private sealed class ScratchDir : IDisposable

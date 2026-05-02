@@ -66,8 +66,11 @@ public static class HighlightEmitter
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Per-<see cref="Emit"/> state struct threaded through <see cref="Lexer.Tokenize{T}"/> so the callback can stay static.</summary>
-    /// <param name="Source">Source bytes (held as <see cref="ReadOnlyMemory{T}"/> so the static callback can re-slice without capturing a span).</param>
+    /// <summary>
+    /// Encapsulates the state required for token emission during the highlighting process,
+    /// including the source data and the output writer.
+    /// </summary>
+    /// <param name="Source">UTF-8 source bytes.</param>
     /// <param name="Writer">UTF-8 sink.</param>
     private readonly record struct EmitState(ReadOnlyMemory<byte> Source, IBufferWriter<byte> Writer);
 }

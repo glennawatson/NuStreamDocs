@@ -29,7 +29,7 @@ public class DocBuilderBibliographyExtensionsTests
     {
         var builder = new DocBuilder();
         var style = Substitute.For<ICitationStyle>();
-        var result = builder.UseBibliography(style, static db => db.Add(new() { Id = "key", Type = EntryType.Book, Title = "title" }));
+        var result = builder.UseBibliography(style, static db => db.Add(new() { Id = "key"u8.ToArray(), Type = EntryType.Book, Title = "title"u8.ToArray() }));
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 }

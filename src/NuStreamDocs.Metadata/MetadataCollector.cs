@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
@@ -146,18 +145,19 @@ internal static class MetadataCollector
 
         using var rental = PageBuilderPool.Rent(256);
         var sink = rental.Writer;
-        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var seen = new HashSet<byte[]>(ByteArrayComparer.Instance);
+        var seenLookup = seen.AsUtf8Lookup();
 
         // Iterate from highest-priority (sidecar, then closest ancestor) to
         // lowest. First-write-wins keeps the highest-priority value.
         if (sidecar.Length > 0)
         {
-            AppendFreshKeys(sidecar, seen, sink);
+            AppendFreshKeys(sidecar, seen, seenLookup, sink);
         }
 
         for (var i = chain.Length - 1; i >= 0; i--)
         {
-            AppendFreshKeys(chain[i], seen, sink);
+            AppendFreshKeys(chain[i], seen, seenLookup, sink);
         }
 
         return sink.WrittenCount is 0 ? [] : [.. sink.WrittenSpan];
@@ -165,9 +165,14 @@ internal static class MetadataCollector
 
     /// <summary>Appends every top-level key from <paramref name="source"/> to <paramref name="sink"/> that hasn't already been seen.</summary>
     /// <param name="source">Source YAML bytes.</param>
-    /// <param name="seen">Keys already written; updated in place.</param>
+    /// <param name="seen">Byte-keyed set of keys already written; updated in place.</param>
+    /// <param name="seenLookup">Span-keyed alternate lookup over <paramref name="seen"/>; cached so the per-line probe never allocates.</param>
     /// <param name="sink">Output sink.</param>
-    private static void AppendFreshKeys(ReadOnlySpan<byte> source, HashSet<string> seen, ArrayBufferWriter<byte> sink)
+    private static void AppendFreshKeys(
+        ReadOnlySpan<byte> source,
+        HashSet<byte[]> seen,
+        HashSet<byte[]>.AlternateLookup<ReadOnlySpan<byte>> seenLookup,
+        ArrayBufferWriter<byte> sink)
     {
         var cursor = 0;
         while (cursor < source.Length)
@@ -183,13 +188,13 @@ internal static class MetadataCollector
             }
 
             var key = YamlByteScanner.KeyOf(line);
-            var keyString = Encoding.UTF8.GetString(key);
-            if (!seen.Add(keyString))
+            if (seenLookup.Contains(key))
             {
                 cursor = YamlByteScanner.AdvancePastValue(source, lineEnd);
                 continue;
             }
 
+            seen.Add(key.ToArray());
             var valueEnd = YamlByteScanner.AdvancePastValue(source, lineEnd);
             var block = source[lineStart..valueEnd];
             sink.Write(block);

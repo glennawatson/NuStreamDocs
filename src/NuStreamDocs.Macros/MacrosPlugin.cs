@@ -32,6 +32,9 @@ public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
     /// <summary>Cached missing-name callback (or null when warnings are off).</summary>
     private readonly MacrosScanner.MissingCallback? _onMissing;
 
+    /// <summary>Span-keyed alternate lookup over <see cref="MacrosOptions.Variables"/>; cached so the per-marker probe never allocates.</summary>
+    private readonly Dictionary<byte[], byte[]>.AlternateLookup<ReadOnlySpan<byte>> _variableLookup;
+
     /// <summary>Initializes a new instance of the <see cref="MacrosPlugin"/> class with default options.</summary>
     public MacrosPlugin()
         : this(MacrosOptions.Default, NullLogger.Instance)
@@ -54,6 +57,7 @@ public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
         ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _logger = logger;
+        _variableLookup = options.Variables.AsUtf8Lookup();
         _lookup = ResolveVariable;
         _onMissing = options.WarnOnMissing ? WarnMissing : null;
     }
@@ -98,19 +102,14 @@ public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
 
     /// <summary>Lookup callback bound to the configured <see cref="MacrosOptions.Variables"/> dictionary.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
-    /// <param name="value">Resolved value on hit.</param>
+    /// <param name="value">Resolved UTF-8 value bytes on hit.</param>
     /// <returns>True when the name is in the dictionary.</returns>
-    private bool ResolveVariable(ReadOnlySpan<byte> name, out string value)
-    {
-        var key = Encoding.UTF8.GetString(name);
-        return _options.Variables.TryGetValue(key, out value!);
-    }
+    private bool ResolveVariable(ReadOnlySpan<byte> name, out byte[] value) =>
+        _variableLookup.TryGetValue(name, out value!);
 
     /// <summary>Missing-name callback that logs at <c>Warning</c> via the source-generated helper.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
-    private void WarnMissing(ReadOnlySpan<byte> name)
-    {
-        var key = Encoding.UTF8.GetString(name);
-        MacrosLoggingHelper.LogMissingVariable(_logger, key);
-    }
+    /// <remarks>Decodes once at the diagnostic boundary because the source-gen logger needs <see cref="string"/>; the hot path stays byte-only.</remarks>
+    private void WarnMissing(ReadOnlySpan<byte> name) =>
+        MacrosLoggingHelper.LogMissingVariable(_logger, Encoding.UTF8.GetString(name));
 }

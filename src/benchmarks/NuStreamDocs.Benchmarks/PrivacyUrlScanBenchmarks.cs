@@ -95,8 +95,10 @@ public class PrivacyUrlScanBenchmarks
 
         _html = Encoding.UTF8.GetBytes(sb.ToString());
         _acceptAll = new(hostsToSkip: null, hostsAllowed: null);
-        _rejectAll = new(hostsToSkip: ["cdn.example", "fonts.googleapis.com"], hostsAllowed: null);
-        _registry = new("assets/external");
+        _rejectAll = new(
+            hostsToSkip: ["cdn.example"u8.ToArray(), "fonts.googleapis.com"u8.ToArray()],
+            hostsAllowed: null);
+        _registry = new("assets/external"u8.ToArray());
     }
 
     /// <summary>Audit pass with a filter that accepts every host — every URL is decoded + registered.</summary>

@@ -68,7 +68,7 @@ public class PostRenderBenchmarks
     private int _emitMergedAttrListEnd;
 
     /// <summary>Shared registry used by URL-rewrite benchmarks.</summary>
-    private ExternalAssetRegistry _registry = new("local");
+    private ExternalAssetRegistry _registry = new("local"u8.ToArray());
 
     /// <summary>Shared host filter — accepts every host so every URL exercises the rewrite path.</summary>
     private HostFilter _filter = new(hostsToSkip: null, hostsAllowed: null);
@@ -89,7 +89,7 @@ public class PostRenderBenchmarks
         _assetAttrHtml = Repeat("<img src=\"https://cdn.example/a.png\"><link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">");
         _srcsetHtml = Repeat("<img srcset=\"https://cdn.example/a.png 1x, https://cdn.example/b.png 2x, https://cdn.example/c.png 3x\">");
         _inlineStyleHtml = Repeat("<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>");
-        _registry = new("local");
+        _registry = new("local"u8.ToArray());
         _filter = new(hostsToSkip: null, hostsAllowed: null);
 
         const string ExistingAttrs = " class=\"existing\" data-x=\"1\"";

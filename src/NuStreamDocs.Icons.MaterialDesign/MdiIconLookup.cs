@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Icons.MaterialDesign;
 
@@ -27,7 +28,7 @@ public sealed class MdiIconLookup
         ArgumentNullException.ThrowIfNull(index);
         _blob = blob;
         _index = index;
-        _altLookup = _index.GetAlternateLookup<ReadOnlySpan<byte>>();
+        _altLookup = _index.AsUtf8Lookup();
     }
 
     /// <summary>Gets the number of icons in the lookup.</summary>

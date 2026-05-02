@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
@@ -45,10 +44,18 @@ public sealed class SuperFencesPlugin : DocPluginBase
         var seed = new Dictionary<byte[], ICustomFenceHandler>(plugins.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < plugins.Length; i++)
         {
-            if (plugins[i] is ICustomFenceHandler handler && handler.Language is { Length: > 0 })
+            if (plugins[i] is not ICustomFenceHandler handler)
             {
-                seed[Encoding.UTF8.GetBytes(handler.Language)] = handler;
+                continue;
             }
+
+            var language = handler.Language;
+            if (language.IsEmpty)
+            {
+                continue;
+            }
+
+            seed[language.ToArray()] = handler;
         }
 
         _handlers = seed;
@@ -71,7 +78,7 @@ public sealed class SuperFencesPlugin : DocPluginBase
             return ValueTask.CompletedTask;
         }
 
-        var altLookup = handlers.GetAlternateLookup<ReadOnlySpan<byte>>();
+        var altLookup = handlers.AsUtf8Lookup();
         HtmlSnapshotRewriter.Rewrite(html, altLookup, RewriteCallback);
 
         return ValueTask.CompletedTask;

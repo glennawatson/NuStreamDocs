@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Collections.Concurrent;
-using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Privacy.Bytes;
 
@@ -100,26 +99,6 @@ internal static class ExternalUrlScanner
         using var rental = PageBuilderPool.Rent(html.Length);
         var sink = rental.Writer;
         return RewriteInto(html, ctx, sink) ? sink.WrittenSpan.ToArray() : html.ToArray();
-    }
-
-    /// <summary>Public string-shaped variant kept for API compatibility.</summary>
-    /// <param name="input">Page HTML as a string.</param>
-    /// <param name="registry">URL registry.</param>
-    /// <param name="filter">Host filter.</param>
-    /// <returns>Rewritten HTML; the same instance when nothing matched.</returns>
-    public static string RewriteString(string input, ExternalAssetRegistry registry, HostFilter filter)
-    {
-        ArgumentNullException.ThrowIfNull(input);
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(filter);
-
-        var bytes = Encoding.UTF8.GetBytes(input);
-        var ctx = new UrlRewriteContext(filter, registry);
-        using var rental = PageBuilderPool.Rent(bytes.Length);
-        var sink = rental.Writer;
-        return RewriteInto(bytes, ctx, sink)
-            ? Encoding.UTF8.GetString(sink.WrittenSpan)
-            : input;
     }
 
     /// <summary>Dispatches the candidate at <paramref name="p"/> to the matcher for its first-byte class.</summary>

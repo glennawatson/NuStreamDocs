@@ -26,7 +26,7 @@ internal static class Aglc4Webpages
         Aglc4Writer.WriteString(entry.Title, writer);
         Aglc4Writer.WriteBytes("'"u8, writer);
 
-        if (!string.IsNullOrEmpty(entry.ContainerTitle))
+        if (entry.ContainerTitle.Length > 0)
         {
             Aglc4Writer.WriteBytes(", *"u8, writer);
             Aglc4Writer.WriteString(entry.ContainerTitle, writer);
@@ -44,7 +44,7 @@ internal static class Aglc4Webpages
             Aglc4Writer.WriteBytes(")"u8, writer);
         }
 
-        if (string.IsNullOrEmpty(entry.Url))
+        if (entry.Url.Length is 0)
         {
             return;
         }

@@ -20,7 +20,7 @@ internal static class Aglc4Legislation
         Aglc4Writer.WriteString(entry.Title, writer);
         Aglc4Writer.WriteBytes("*"u8, writer);
 
-        if (string.IsNullOrEmpty(entry.Jurisdiction))
+        if (entry.Jurisdiction.Length is 0)
         {
             return;
         }

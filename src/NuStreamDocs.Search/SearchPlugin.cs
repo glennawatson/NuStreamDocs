@@ -38,6 +38,9 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     /// <summary>Logger for diagnostics.</summary>
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    /// <summary>UTF-8 byte forms of <see cref="SearchOptions.SearchableFrontmatterKeys"/>; encoded once at construction so the per-page extractor never re-encodes.</summary>
+    private readonly byte[][] _searchableFrontmatterKeyBytes = Utf8Encoder.EncodeArray(options.SearchableFrontmatterKeys);
+
     /// <summary>Output root captured during configure.</summary>
     private string _outputRoot = string.Empty;
 
@@ -85,9 +88,9 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
             titleBytes = Encoding.UTF8.GetBytes(fallback);
         }
 
-        if (_options.SearchableFrontmatterKeys.Length > 0)
+        if (_searchableFrontmatterKeyBytes.Length > 0)
         {
-            FrontmatterValueExtractor.AppendKeysTo(context.Source.Span, _options.SearchableFrontmatterKeys, textBuffer);
+            FrontmatterValueExtractor.AppendKeysTo(context.Source.Span, _searchableFrontmatterKeyBytes, textBuffer);
         }
 
         _documents.Add(new(url, titleBytes, [.. textBuffer.WrittenSpan]));

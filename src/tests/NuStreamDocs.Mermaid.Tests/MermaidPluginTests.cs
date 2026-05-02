@@ -86,7 +86,7 @@ public class MermaidPluginTests
     public async Task CustomFenceLanguageIsMermaid()
     {
         ICustomFenceHandler handler = new MermaidPlugin();
-        await Assert.That(handler.Language).IsEqualTo("mermaid");
+        await Assert.That(handler.Language.SequenceEqual("mermaid"u8)).IsTrue();
     }
 
     /// <summary>Custom fence Render rejects null sink.</summary>
