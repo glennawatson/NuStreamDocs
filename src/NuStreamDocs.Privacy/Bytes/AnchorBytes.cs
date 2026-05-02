@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
@@ -120,7 +121,7 @@ internal static class AnchorBytes
             }
 
             var nextByte = (byte)(html[lt + 1] | 0x20);
-            if (nextByte is (byte)'a' && !ByteHelpers.IsAsciiIdentifierByte(html[lt + AnchorOpenLength]))
+            if (nextByte is (byte)'a' && !AsciiByteHelpers.IsAsciiIdentifierByte(html[lt + AnchorOpenLength]))
             {
                 return lt;
             }
@@ -142,8 +143,8 @@ internal static class AnchorBytes
             return false;
         }
 
-        return ByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpsPrefix)
-            || ByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpPrefix);
+        return AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpsPrefix)
+            || AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpPrefix);
     }
 
     /// <summary>Emits <paramref name="attrs"/> into <paramref name="sink"/> with the configured hardening applied.</summary>

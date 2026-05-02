@@ -5,16 +5,16 @@
 using System.Buffers;
 using System.Text;
 
-namespace NuStreamDocs.Privacy.Bytes;
+namespace NuStreamDocs.Common;
 
 /// <summary>
-/// Byte-level UTF-8 helpers shared across the privacy byte scanners
-/// — case-insensitive ASCII compares, attribute / word-boundary
-/// detection, whitespace skip, encoded-string emit.
+/// Byte-level UTF-8 helpers shared across span scanners — case-
+/// insensitive ASCII compares, identifier / word-boundary detection,
+/// whitespace skip, and zero-allocation string emit.
 /// </summary>
-internal static class ByteHelpers
+public static class AsciiByteHelpers
 {
-    /// <summary>ASCII bit that distinguishes uppercase letters from lowercase letters; OR-ing with this folds case.</summary>
+    /// <summary>ASCII bit that distinguishes uppercase letters from lowercase letters; OR-ing with this folds case for ASCII letters.</summary>
     private const byte AsciiCaseBit = 0x20;
 
     /// <summary>Returns true when <paramref name="b"/> contributes to an ASCII identifier (letter / digit / underscore).</summary>
@@ -53,7 +53,12 @@ internal static class ByteHelpers
         return p;
     }
 
-    /// <summary>Case-insensitive ASCII byte-prefix match at <paramref name="offset"/>.</summary>
+    /// <summary>
+    /// Case-insensitive ASCII byte-prefix match at <paramref name="offset"/>.
+    /// The lowercase reference must contain only ASCII letters and bytes
+    /// whose bit-5 is already set in their lowercase form (digits, ASCII
+    /// punctuation other than <c>_</c>).
+    /// </summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Candidate offset.</param>
     /// <param name="lowerCase">Lowercase ASCII bytes to compare against.</param>
@@ -76,7 +81,7 @@ internal static class ByteHelpers
         return true;
     }
 
-    /// <summary>Case-insensitive ASCII equality test over the full spans (lengths must match).</summary>
+    /// <summary>Case-insensitive ASCII equality test over the full spans (lengths must match). Same lowercase-reference contract as <see cref="StartsWithIgnoreAsciiCase"/>.</summary>
     /// <param name="a">Span to test.</param>
     /// <param name="b">Lowercase ASCII span to compare against.</param>
     /// <returns>True when equal ignoring ASCII case.</returns>
@@ -98,11 +103,13 @@ internal static class ByteHelpers
         return true;
     }
 
-    /// <summary>Encodes <paramref name="value"/> into <paramref name="sink"/> as UTF-8 with no intermediate string.</summary>
+    /// <summary>Encodes <paramref name="value"/> into <paramref name="sink"/> as UTF-8 with no intermediate buffer.</summary>
     /// <param name="value">Source string.</param>
     /// <param name="sink">UTF-8 sink.</param>
     public static void EncodeStringInto(string value, IBufferWriter<byte> sink)
     {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(sink);
         if (value.Length is 0)
         {
             return;

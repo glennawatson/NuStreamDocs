@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
@@ -125,7 +126,7 @@ internal static class MixedContentBytes
     private static bool TryMatchAttributeHeader(ReadOnlySpan<byte> html, int p, out int afterQuote)
     {
         afterQuote = p + 1;
-        if (!ByteHelpers.IsWordBoundary(html, p) || !TryMatchSrcOrHref(html, p, out var attrLen))
+        if (!AsciiByteHelpers.IsWordBoundary(html, p) || !TryMatchSrcOrHref(html, p, out var attrLen))
         {
             return false;
         }
@@ -155,13 +156,13 @@ internal static class MixedContentBytes
     /// <returns>True when one of the two names matched.</returns>
     private static bool TryMatchSrcOrHref(ReadOnlySpan<byte> source, int offset, out int length)
     {
-        if (ByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Src))
+        if (AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Src))
         {
             length = Src.Length;
             return true;
         }
 
-        if (ByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Href))
+        if (AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Href))
         {
             length = Href.Length;
             return true;
@@ -202,7 +203,7 @@ internal static class MixedContentBytes
             return false;
         }
 
-        if (ByteHelpers.EqualsIgnoreAsciiCase(host, Localhost))
+        if (AsciiByteHelpers.EqualsIgnoreAsciiCase(host, Localhost))
         {
             return true;
         }

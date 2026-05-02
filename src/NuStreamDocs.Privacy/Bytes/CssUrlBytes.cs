@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
@@ -114,12 +115,12 @@ internal static class CssUrlBytes
         urlStart = -1;
         urlEnd = -1;
         quote = 0;
-        if (!ByteHelpers.StartsWithIgnoreAsciiCase(source, p, UrlOpen))
+        if (!AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, p, UrlOpen))
         {
             return false;
         }
 
-        var afterOpen = ByteHelpers.SkipWhitespace(source, p + UrlOpen.Length);
+        var afterOpen = AsciiByteHelpers.SkipWhitespace(source, p + UrlOpen.Length);
         if (afterOpen >= source.Length)
         {
             return false;
@@ -150,8 +151,8 @@ internal static class CssUrlBytes
     {
         urlEnd = -1;
         tokenEnd = -1;
-        if (!ByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpScheme)
-            && !ByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpsScheme))
+        if (!AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpScheme)
+            && !AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpsScheme))
         {
             return false;
         }
@@ -170,7 +171,7 @@ internal static class CssUrlBytes
             p++;
         }
 
-        p = ByteHelpers.SkipWhitespace(source, p);
+        p = AsciiByteHelpers.SkipWhitespace(source, p);
         if (p >= source.Length || source[p] is not (byte)')')
         {
             return false;
@@ -218,7 +219,7 @@ internal static class CssUrlBytes
         var slash = sink.GetSpan(1);
         slash[0] = (byte)'/';
         sink.Advance(1);
-        ByteHelpers.EncodeStringInto(local, sink);
+        AsciiByteHelpers.EncodeStringInto(local, sink);
         if (quote is not 0)
         {
             var q = sink.GetSpan(1);

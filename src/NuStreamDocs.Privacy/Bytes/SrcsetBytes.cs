@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
@@ -157,7 +158,7 @@ internal static class SrcsetBytes
         var slash = sink.GetSpan(1);
         slash[0] = (byte)'/';
         sink.Advance(1);
-        ByteHelpers.EncodeStringInto(local, sink);
+        AsciiByteHelpers.EncodeStringInto(local, sink);
         sink.Write(entry[urlEnd..]);
         return true;
     }
@@ -195,18 +196,18 @@ internal static class SrcsetBytes
         valueStart = -1;
         valueEnd = -1;
         quote = 0;
-        if (!ByteHelpers.IsWordBoundary(html, p) || !ByteHelpers.StartsWithIgnoreAsciiCase(html, p, Srcset))
+        if (!AsciiByteHelpers.IsWordBoundary(html, p) || !AsciiByteHelpers.StartsWithIgnoreAsciiCase(html, p, Srcset))
         {
             return false;
         }
 
-        var afterEq = ByteHelpers.SkipWhitespace(html, p + Srcset.Length);
+        var afterEq = AsciiByteHelpers.SkipWhitespace(html, p + Srcset.Length);
         if (afterEq >= html.Length || html[afterEq] is not (byte)'=')
         {
             return false;
         }
 
-        var afterEq2 = ByteHelpers.SkipWhitespace(html, afterEq + 1);
+        var afterEq2 = AsciiByteHelpers.SkipWhitespace(html, afterEq + 1);
         if (afterEq2 >= html.Length || html[afterEq2] is not ((byte)'"' or (byte)'\''))
         {
             return false;
@@ -230,7 +231,7 @@ internal static class SrcsetBytes
     private static int SkipLeadingWhitespace(ReadOnlySpan<byte> entry)
     {
         var leading = 0;
-        while (leading < entry.Length && ByteHelpers.IsAsciiWhitespace(entry[leading]))
+        while (leading < entry.Length && AsciiByteHelpers.IsAsciiWhitespace(entry[leading]))
         {
             leading++;
         }
@@ -245,7 +246,7 @@ internal static class SrcsetBytes
     private static int FindUrlEnd(ReadOnlySpan<byte> entry, int from)
     {
         var p = from;
-        while (p < entry.Length && !ByteHelpers.IsAsciiWhitespace(entry[p]))
+        while (p < entry.Length && !AsciiByteHelpers.IsAsciiWhitespace(entry[p]))
         {
             p++;
         }

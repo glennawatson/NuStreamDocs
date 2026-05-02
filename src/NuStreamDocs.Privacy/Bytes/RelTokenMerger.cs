@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
@@ -62,7 +63,7 @@ internal static class RelTokenMerger
         var p = 0;
         while (p < source.Length && (count * RangeStride) + 1 < ranges.Length)
         {
-            while (p < source.Length && ByteHelpers.IsAsciiWhitespace(source[p]))
+            while (p < source.Length && AsciiByteHelpers.IsAsciiWhitespace(source[p]))
             {
                 p++;
             }
@@ -73,7 +74,7 @@ internal static class RelTokenMerger
             }
 
             var start = p;
-            while (p < source.Length && !ByteHelpers.IsAsciiWhitespace(source[p]))
+            while (p < source.Length && !AsciiByteHelpers.IsAsciiWhitespace(source[p]))
             {
                 p++;
             }
@@ -121,7 +122,7 @@ internal static class RelTokenMerger
     {
         for (var i = 0; i < count; i++)
         {
-            if (ByteHelpers.EqualsIgnoreAsciiCase(TokenAt(source, ranges, i), candidate))
+            if (AsciiByteHelpers.EqualsIgnoreAsciiCase(TokenAt(source, ranges, i), candidate))
             {
                 return true;
             }

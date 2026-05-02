@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Privacy.Bytes;
 
 /// <summary>
@@ -36,19 +38,19 @@ internal static class AnchorAttributeFinder
     /// <returns>The match, or <see cref="NamedAttribute.None"/>.</returns>
     private static NamedAttribute TryMatchAt(ReadOnlySpan<byte> attrs, int p, ReadOnlySpan<byte> name)
     {
-        if (!ByteHelpers.IsWordBoundary(attrs, p) || !ByteHelpers.StartsWithIgnoreAsciiCase(attrs, p, name))
+        if (!AsciiByteHelpers.IsWordBoundary(attrs, p) || !AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, p, name))
         {
             return NamedAttribute.None;
         }
 
         var afterName = p + name.Length;
-        var afterWs = ByteHelpers.SkipWhitespace(attrs, afterName);
+        var afterWs = AsciiByteHelpers.SkipWhitespace(attrs, afterName);
         if (afterWs >= attrs.Length || attrs[afterWs] is not (byte)'=')
         {
             return NamedAttribute.None;
         }
 
-        var afterEq = ByteHelpers.SkipWhitespace(attrs, afterWs + 1);
+        var afterEq = AsciiByteHelpers.SkipWhitespace(attrs, afterWs + 1);
         if (afterEq >= attrs.Length || attrs[afterEq] is not ((byte)'"' or (byte)'\''))
         {
             return NamedAttribute.None;

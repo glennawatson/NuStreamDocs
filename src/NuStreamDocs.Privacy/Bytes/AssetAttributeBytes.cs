@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
@@ -77,7 +78,7 @@ internal static class AssetAttributeBytes
         var dst = sink.GetSpan(1);
         dst[0] = (byte)'/';
         sink.Advance(1);
-        ByteHelpers.EncodeStringInto(local, sink);
+        AsciiByteHelpers.EncodeStringInto(local, sink);
         lastEmit = urlEnd;
         advanceTo = urlEnd;
         _ = quote;
@@ -121,7 +122,7 @@ internal static class AssetAttributeBytes
         urlEnd = -1;
         quote = 0;
 
-        if (!ByteHelpers.IsWordBoundary(html, p))
+        if (!AsciiByteHelpers.IsWordBoundary(html, p))
         {
             return false;
         }
@@ -131,13 +132,13 @@ internal static class AssetAttributeBytes
             return false;
         }
 
-        var afterEq = ByteHelpers.SkipWhitespace(html, afterName);
+        var afterEq = AsciiByteHelpers.SkipWhitespace(html, afterName);
         if (afterEq >= html.Length || html[afterEq] is not (byte)'=')
         {
             return false;
         }
 
-        var afterEq2 = ByteHelpers.SkipWhitespace(html, afterEq + 1);
+        var afterEq2 = AsciiByteHelpers.SkipWhitespace(html, afterEq + 1);
         if (afterEq2 >= html.Length || html[afterEq2] is not ((byte)'"' or (byte)'\''))
         {
             return false;
@@ -155,13 +156,13 @@ internal static class AssetAttributeBytes
     /// <returns>True when one of the two names matched.</returns>
     private static bool TryAttrName(ReadOnlySpan<byte> source, int offset, out int afterName)
     {
-        if (ByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Src))
+        if (AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Src))
         {
             afterName = offset + Src.Length;
             return true;
         }
 
-        if (ByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Href))
+        if (AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, offset, Href))
         {
             afterName = offset + Href.Length;
             return true;
@@ -180,8 +181,8 @@ internal static class AssetAttributeBytes
     private static bool TryScanUrl(ReadOnlySpan<byte> source, int urlStart, byte quote, out int urlEnd)
     {
         urlEnd = -1;
-        if (!ByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpScheme)
-            && !ByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpsScheme))
+        if (!AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpScheme)
+            && !AsciiByteHelpers.StartsWithIgnoreAsciiCase(source, urlStart, HttpsScheme))
         {
             return false;
         }

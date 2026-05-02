@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
@@ -102,13 +103,13 @@ internal static class InlineStyleBlockBytes
         bodyStart = -1;
         bodyEnd = -1;
         blockEnd = -1;
-        if (!ByteHelpers.StartsWithIgnoreAsciiCase(html, p, StyleOpen))
+        if (!AsciiByteHelpers.StartsWithIgnoreAsciiCase(html, p, StyleOpen))
         {
             return false;
         }
 
         var afterName = p + StyleOpen.Length;
-        if (afterName >= html.Length || ByteHelpers.IsAsciiIdentifierByte(html[afterName]))
+        if (afterName >= html.Length || AsciiByteHelpers.IsAsciiIdentifierByte(html[afterName]))
         {
             return false;
         }
@@ -139,7 +140,7 @@ internal static class InlineStyleBlockBytes
     {
         for (var i = from; i + StyleClose.Length <= html.Length; i++)
         {
-            if (ByteHelpers.StartsWithIgnoreAsciiCase(html, i, StyleClose))
+            if (AsciiByteHelpers.StartsWithIgnoreAsciiCase(html, i, StyleClose))
             {
                 return i;
             }
