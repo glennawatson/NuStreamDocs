@@ -2,28 +2,38 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
+using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight;
 
 /// <summary>
-/// Frozen language → <see cref="Lexer"/> map built once at configure
-/// time so per-block lookup is O(1) on the render hot path.
+/// Language → <see cref="Lexer"/> registry built once at configure time.
 /// </summary>
 /// <remarks>
-/// Built-in lexers register here automatically. Consumers add custom
-/// lexers via <see cref="HighlightOptions"/> and the resulting registry
-/// is what the plugin keeps for the lifetime of the build.
+/// Lookup is byte-keyed and case-insensitive — the alias arrives as a
+/// UTF-8 byte slice from the rendered HTML, so no string allocation is
+/// needed on the per-block hot path. Internally the registry stores
+/// each alias as a pre-lowercased <c>byte[]</c>; lookup folds the
+/// candidate's ASCII case via <see cref="AsciiByteHelpers"/>.
 /// </remarks>
 public sealed class LexerRegistry
 {
-    /// <summary>The frozen storage.</summary>
-    private readonly FrozenDictionary<string, Lexer> _lexers;
+    /// <summary>Length-bucketed alias table — <c>_aliasesByLength[len][i]</c> is the lowercased alias bytes; <c>_lexersByLength[len][i]</c> is the matching lexer.</summary>
+    private readonly byte[][][] _aliasesByLength;
+
+    /// <summary>Length-bucketed lexer table parallel to <see cref="_aliasesByLength"/>.</summary>
+    private readonly Lexer[][] _lexersByLength;
 
     /// <summary>Initializes a new instance of the <see cref="LexerRegistry"/> class.</summary>
-    /// <param name="lexers">Frozen language-name → lexer map.</param>
-    private LexerRegistry(FrozenDictionary<string, Lexer> lexers) => _lexers = lexers;
+    /// <param name="aliasesByLength">Length-bucketed alias table.</param>
+    /// <param name="lexersByLength">Length-bucketed lexer table.</param>
+    private LexerRegistry(byte[][][] aliasesByLength, Lexer[][] lexersByLength)
+    {
+        _aliasesByLength = aliasesByLength;
+        _lexersByLength = lexersByLength;
+    }
 
     /// <summary>Gets the default registry — every built-in language.</summary>
     public static LexerRegistry Default { get; } = Build([]);
@@ -31,6 +41,14 @@ public sealed class LexerRegistry
     /// <summary>Builds a registry containing the built-ins plus <paramref name="extra"/>.</summary>
     /// <param name="extra">Additional lexers to register; later entries with the same key win.</param>
     /// <returns>A frozen registry.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S138:Methods should not have too many lines",
+        Justification = "Single declarative alias→lexer map followed by a small bucketing pass; splitting it just relocates the literals without reducing complexity.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S125:Sections of code should not be commented out",
+        Justification = "Not commented out code — the alias-map blocks are headed by section comments.")]
     public static LexerRegistry Build(Lexer[] extra)
     {
         ArgumentNullException.ThrowIfNull(extra);
@@ -116,16 +134,86 @@ public sealed class LexerRegistry
             map[lexer.LanguageName] = lexer;
         }
 
-        return new(map.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase));
+        // Bucket aliases by length for the byte-keyed lookup. Each alias is
+        // pre-lowercased so the per-block compare is one ASCII case-fold pass
+        // (StartsWithIgnoreAsciiCase contract).
+        var maxLen = 0;
+        foreach (var key in map.Keys)
+        {
+            if (key.Length > maxLen)
+            {
+                maxLen = key.Length;
+            }
+        }
+
+        var counts = new int[maxLen + 1];
+        foreach (var key in map.Keys)
+        {
+            counts[key.Length]++;
+        }
+
+        var aliases = new byte[maxLen + 1][][];
+        var lexers = new Lexer[maxLen + 1][];
+        for (var len = 0; len <= maxLen; len++)
+        {
+            aliases[len] = counts[len] is 0 ? [] : new byte[counts[len]][];
+            lexers[len] = counts[len] is 0 ? [] : new Lexer[counts[len]];
+        }
+
+        var cursors = new int[maxLen + 1];
+        foreach (var (key, lexer) in map)
+        {
+            var len = key.Length;
+            var slot = cursors[len]++;
+            aliases[len][slot] = Encoding.UTF8.GetBytes(key.ToLowerInvariant());
+            lexers[len][slot] = lexer;
+        }
+
+        return new(aliases, lexers);
     }
 
-    /// <summary>Tries to resolve <paramref name="language"/> (case-insensitive) to a registered lexer.</summary>
-    /// <param name="language">Language name from a fenced-code info string.</param>
+    /// <summary>Tries to resolve <paramref name="language"/> (case-insensitive ASCII) to a registered lexer.</summary>
+    /// <param name="language">Language alias (UTF-8 bytes).</param>
     /// <param name="lexer">Resolved lexer on success.</param>
     /// <returns>True when registered.</returns>
-    public bool TryGet(string language, out Lexer lexer)
+    public bool TryGet(ReadOnlySpan<byte> language, out Lexer? lexer)
+    {
+        lexer = null;
+        if ((uint)language.Length >= (uint)_aliasesByLength.Length)
+        {
+            return false;
+        }
+
+        var aliasBucket = _aliasesByLength[language.Length];
+        var lexerBucket = _lexersByLength[language.Length];
+        for (var i = 0; i < aliasBucket.Length; i++)
+        {
+            if (AsciiByteHelpers.EqualsIgnoreAsciiCase(language, aliasBucket[i]))
+            {
+                lexer = lexerBucket[i];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>String-keyed convenience overload.</summary>
+    /// <param name="language">Language alias.</param>
+    /// <param name="lexer">Resolved lexer on success.</param>
+    /// <returns>True when registered.</returns>
+    public bool TryGet(string language, out Lexer? lexer)
     {
         ArgumentException.ThrowIfNullOrEmpty(language);
-        return _lexers.TryGetValue(language, out lexer!);
+        Span<byte> stack = stackalloc byte[256];
+        var maxBytes = Encoding.UTF8.GetMaxByteCount(language.Length);
+        if (maxBytes <= stack.Length)
+        {
+            var written = Encoding.UTF8.GetBytes(language, stack);
+            return TryGet(stack[..written], out lexer);
+        }
+
+        var heap = Encoding.UTF8.GetBytes(language);
+        return TryGet(heap, out lexer);
     }
 }

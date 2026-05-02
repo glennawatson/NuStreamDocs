@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Highlight.Languages;
+using static System.Text.Encoding;
 
 namespace NuStreamDocs.Highlight.Tests;
 
@@ -20,7 +21,7 @@ public class LanguageCommonTests
     [Arguments("/ not a comment", 0)]
     [Arguments("/* block */", 0)]
     public async Task LineComment_consumes_to_eol(string input, int expected) =>
-        await Assert.That(LanguageCommon.LineComment(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.LineComment(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>C-style block comment <c>/* ... */</c> matches non-greedy through the first <c>*/</c>.</summary>
     /// <param name="input">Input string.</param>
@@ -34,7 +35,7 @@ public class LanguageCommonTests
     [Arguments("// not a block", 0)]
     [Arguments("/", 0)]
     public async Task BlockComment_consumes_to_close_marker(string input, int expected) =>
-        await Assert.That(LanguageCommon.BlockComment(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.BlockComment(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Double-quoted no-escape strings consume through the closing quote without backslash handling.</summary>
     /// <param name="input">Input string.</param>
@@ -46,7 +47,7 @@ public class LanguageCommonTests
     [Arguments("\"unterminated", 0)]
     [Arguments("'wrong quote'", 0)]
     public async Task DoubleQuotedStringNoEscape_handles_closing_quote(string input, int expected) =>
-        await Assert.That(LanguageCommon.DoubleQuotedStringNoEscape(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.DoubleQuotedStringNoEscape(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Open-angle-slash (<c>&lt;/</c>) — the XML closing-tag introducer.</summary>
     /// <param name="input">Input string.</param>
@@ -58,7 +59,7 @@ public class LanguageCommonTests
     [Arguments("<tag>", 0)]
     [Arguments("<", 0)]
     public async Task AngleOpenSlash_matches_tag_close_introducer(string input, int expected) =>
-        await Assert.That(LanguageCommon.AngleOpenSlash(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.AngleOpenSlash(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Self-closing-tag terminator (<c>/&gt;</c>).</summary>
     /// <param name="input">Input string.</param>
@@ -69,7 +70,7 @@ public class LanguageCommonTests
     [Arguments("/ >", 0)]
     [Arguments("/", 0)]
     public async Task SelfClose_matches_self_closing_terminator(string input, int expected) =>
-        await Assert.That(LanguageCommon.SelfClose(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.SelfClose(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Entity reference matches <c>&amp;name;</c> with letters / digits / <c>#</c>.</summary>
     /// <param name="input">Input string.</param>
@@ -83,7 +84,7 @@ public class LanguageCommonTests
     [Arguments("& a", 0)]
     [Arguments("&unterminated", 0)]
     public async Task EntityReference_matches_named_and_numeric(string input, int expected) =>
-        await Assert.That(LanguageCommon.EntityReference(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.EntityReference(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Attribute name matches an identifier-shape followed by optional whitespace and a lookahead <c>=</c> (without consuming it).</summary>
     /// <param name="input">Input string.</param>
@@ -96,7 +97,7 @@ public class LanguageCommonTests
     [Arguments("name", 0)]
     [Arguments("=value", 0)]
     public async Task AttributeName_requires_equals_lookahead(string input, int expected) =>
-        await Assert.That(LanguageCommon.AttributeName(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.AttributeName(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Tag name accepts letters / digits / underscore / colon / dot / dash, starting with a letter or underscore.</summary>
     /// <param name="input">Input string.</param>
@@ -110,5 +111,5 @@ public class LanguageCommonTests
     [Arguments("123", 0)]
     [Arguments("-bad", 0)]
     public async Task TagName_matches_xml_name_grammar(string input, int expected) =>
-        await Assert.That(LanguageCommon.TagName(input)).IsEqualTo(expected);
+        await Assert.That(LanguageCommon.TagName(UTF8.GetBytes(input))).IsEqualTo(expected);
 }

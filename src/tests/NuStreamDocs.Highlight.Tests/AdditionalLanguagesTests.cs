@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using System.Text;
 using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight.Tests;
@@ -16,7 +14,7 @@ public class AdditionalLanguagesTests
     [Test]
     public async Task BashClassifiesKeywordsAndVariables()
     {
-        var html = Render(BashLexer.Instance, "if [ \"$x\" = 1 ]; then echo $HOME; fi");
+        var html = BashLexer.Instance.Render("if [ \"$x\" = 1 ]; then echo $HOME; fi"u8);
         await Assert.That(html.Contains("<span class=\"k\">if</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">then</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">fi</span>", StringComparison.Ordinal)).IsTrue();
@@ -29,7 +27,7 @@ public class AdditionalLanguagesTests
     [Test]
     public async Task JsonClassifiesKeysAndValues()
     {
-        var html = Render(JsonLexer.Instance, "{ \"name\": \"Alice\", \"count\": 42, \"on\": true }");
+        var html = JsonLexer.Instance.Render("{ \"name\": \"Alice\", \"count\": 42, \"on\": true }"u8);
         await Assert.That(html.Contains("<span class=\"na\">&quot;name&quot;</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"s2\">&quot;Alice&quot;</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">42</span>", StringComparison.Ordinal)).IsTrue();
@@ -41,7 +39,7 @@ public class AdditionalLanguagesTests
     [Test]
     public async Task YamlClassifiesKeysAndConstants()
     {
-        var html = Render(YamlLexer.Instance, "site_name: ReactiveUI\nstrict: true\n");
+        var html = YamlLexer.Instance.Render("site_name: ReactiveUI\nstrict: true\n"u8);
         await Assert.That(html.Contains("<span class=\"na\">site_name</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -51,7 +49,7 @@ public class AdditionalLanguagesTests
     [Test]
     public async Task DiffClassifiesAddedRemovedAndHunkHeader()
     {
-        var html = Render(DiffLexer.Instance, "@@ -1 +1 @@\n-old\n+new\n");
+        var html = DiffLexer.Instance.Render("@@ -1 +1 @@\n-old\n+new\n"u8);
         await Assert.That(html.Contains("<span class=\"cs\">@@ -1 +1 @@</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"se\">+new</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"cp\">-old</span>", StringComparison.Ordinal)).IsTrue();
@@ -62,20 +60,9 @@ public class AdditionalLanguagesTests
     [Test]
     public async Task RazorClassifiesInlineExpressionAndCsharpBlock()
     {
-        var html = Render(RazorLexer.Instance, "<p>@Model.Name</p>\n@{ var x = 42; }\n");
+        var html = RazorLexer.Instance.Render("<p>@Model.Name</p>\n@{ var x = 42; }\n"u8);
         await Assert.That(html.Contains("<span class=\"n\">@Model.Name</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">var</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">42</span>", StringComparison.Ordinal)).IsTrue();
-    }
-
-    /// <summary>Renders <paramref name="source"/> through <paramref name="lexer"/> and decodes the result.</summary>
-    /// <param name="lexer">Lexer.</param>
-    /// <param name="source">Source code.</param>
-    /// <returns>UTF-8-decoded HTML.</returns>
-    private static string Render(Lexer lexer, string source)
-    {
-        var sink = new ArrayBufferWriter<byte>();
-        HighlightEmitter.Emit(lexer, source, sink);
-        return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

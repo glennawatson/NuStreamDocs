@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Highlight</PackageId>
-    <Description>Server-side syntax highlighter for NuStreamDocs. Pygments-shape lexers compiled at build time via [GeneratedRegex]; output emits Pygments' short-form CSS classes so existing mkdocs-material themes light up unchanged. No JavaScript runtime, no Python, AOT-clean.</Description>
+    <Description>Server-side syntax highlighter for NuStreamDocs. Tokenises fenced code blocks at build time and emits classed HTML spans the theme stylesheet styles. AOT-clean.</Description>
     <RootNamespace>NuStreamDocs.Highlight</RootNamespace>
   </PropertyGroup>
 

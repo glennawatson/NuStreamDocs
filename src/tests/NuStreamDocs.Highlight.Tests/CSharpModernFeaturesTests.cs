@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using System.Text;
 using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight.Tests;
@@ -16,7 +14,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task RawStringLiteral_is_classified_as_string()
     {
-        var html = Render(CSharpLexer.Instance, "var x = \"\"\"hello\"\"\";");
+        var html = CSharpLexer.Instance.Render("var x = \"\"\"hello\"\"\";"u8);
         await Assert.That(html.Contains("<span class=\"s2\">&quot;&quot;&quot;hello&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -25,8 +23,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task RawStringLiteral_spans_newlines()
     {
-        const string Source = "var x = \"\"\"\n  multi-line\n  raw\n  \"\"\";";
-        var html = Render(CSharpLexer.Instance, Source);
+        var html = CSharpLexer.Instance.Render("var x = \"\"\"\n  multi-line\n  raw\n  \"\"\";"u8);
         await Assert.That(html.Contains("multi-line", StringComparison.Ordinal)).IsTrue();
 
         // The whole multi-line content should sit inside one s2 span.
@@ -38,7 +35,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task Utf8StringLiteral_includes_suffix()
     {
-        var html = Render(CSharpLexer.Instance, "var bytes = \"hello\"u8;");
+        var html = CSharpLexer.Instance.Render("var bytes = \"hello\"u8;"u8);
         await Assert.That(html.Contains("<span class=\"s2\">&quot;hello&quot;u8</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -47,7 +44,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task InterpolatedString_is_classified_as_string()
     {
-        var html = Render(CSharpLexer.Instance, "var s = $\"hello {name}\";");
+        var html = CSharpLexer.Instance.Render("var s = $\"hello {name}\";"u8);
         await Assert.That(html.Contains("<span class=\"s2\">$&quot;hello {name}&quot;</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -56,7 +53,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task RawInterpolatedString_is_classified_as_string()
     {
-        var html = Render(CSharpLexer.Instance, "var s = $\"\"\"line: {value}\"\"\";");
+        var html = CSharpLexer.Instance.Render("var s = $\"\"\"line: {value}\"\"\";"u8);
         await Assert.That(html.Contains("$&quot;&quot;&quot;line: {value}&quot;&quot;&quot;", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -65,7 +62,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task DoubleDollarRawInterpolatedString_is_classified_as_string()
     {
-        var html = Render(CSharpLexer.Instance, "var s = $$\"\"\"open: {{x}}\"\"\";");
+        var html = CSharpLexer.Instance.Render("var s = $$\"\"\"open: {{x}}\"\"\";"u8);
         await Assert.That(html.Contains("$$&quot;&quot;&quot;open: {{x}}&quot;&quot;&quot;", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -74,7 +71,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task ScopedKeyword_is_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "void M(scoped ref int x) { }");
+        var html = CSharpLexer.Instance.Render("void M(scoped ref int x) { }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">scoped</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -83,7 +80,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task InitKeyword_is_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "public int X { get; init; }");
+        var html = CSharpLexer.Instance.Render("public int X { get; init; }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">init</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -92,7 +89,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task FieldKeyword_is_recognised_in_accessor_bodies()
     {
-        var html = Render(CSharpLexer.Instance, "public int X { get => field; set => field = value; }");
+        var html = CSharpLexer.Instance.Render("public int X { get => field; set => field = value; }"u8);
         await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">value</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -102,7 +99,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task FieldIdentifier_outside_accessor_is_not_keyword()
     {
-        var html = Render(CSharpLexer.Instance, "void M() { var field = 1; }");
+        var html = CSharpLexer.Instance.Render("void M() { var field = 1; }"u8);
         await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsFalse();
         await Assert.That(html.Contains("<span class=\"n\">field</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -112,7 +109,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task ValueIdentifier_outside_accessor_is_not_keyword()
     {
-        var html = Render(CSharpLexer.Instance, "void M() { var value = 42; }");
+        var html = CSharpLexer.Instance.Render("void M() { var value = 42; }"u8);
         await Assert.That(html.Contains("<span class=\"k\">value</span>", StringComparison.Ordinal)).IsFalse();
         await Assert.That(html.Contains("<span class=\"n\">value</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -122,7 +119,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task ExtensionKeyword_is_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "extension(string str) { public bool IsEmpty => str.Length is 0; }");
+        var html = CSharpLexer.Instance.Render("extension(string str) { public bool IsEmpty => str.Length is 0; }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">extension</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -131,7 +128,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task UnionKeyword_is_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "union Result { Ok, Error }");
+        var html = CSharpLexer.Instance.Render("union Result { Ok, Error }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">union</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -140,7 +137,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task AllowsKeyword_is_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "void M<T>() where T : allows ref struct { }");
+        var html = CSharpLexer.Instance.Render("void M<T>() where T : allows ref struct { }"u8);
         await Assert.That(html.Contains("<span class=\"k\">allows</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -149,7 +146,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task NotnullKeyword_is_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "void M<T>() where T : notnull { }");
+        var html = CSharpLexer.Instance.Render("void M<T>() where T : notnull { }"u8);
         await Assert.That(html.Contains("<span class=\"k\">notnull</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -158,7 +155,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task UnmanagedKeyword_is_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "void M<T>() where T : unmanaged { }");
+        var html = CSharpLexer.Instance.Render("void M<T>() where T : unmanaged { }"u8);
         await Assert.That(html.Contains("<span class=\"k\">unmanaged</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -167,7 +164,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task DynamicKeyword_is_recognised_as_type()
     {
-        var html = Render(CSharpLexer.Instance, "dynamic x = 1;");
+        var html = CSharpLexer.Instance.Render("dynamic x = 1;"u8);
         await Assert.That(html.Contains("<span class=\"kt\">dynamic</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -176,7 +173,7 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task CollectionExpression_punctuation_lexes_correctly()
     {
-        var html = Render(CSharpLexer.Instance, "int[] arr = [1, 2, 3];");
+        var html = CSharpLexer.Instance.Render("int[] arr = [1, 2, 3];"u8);
         await Assert.That(html.Contains("<span class=\"mi\">1</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">2</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">3</span>", StringComparison.Ordinal)).IsTrue();
@@ -187,20 +184,9 @@ public class CSharpModernFeaturesTests
     [Test]
     public async Task PrimaryConstructor_keywords_recognised()
     {
-        var html = Render(CSharpLexer.Instance, "public class Point(int X, int Y);");
+        var html = CSharpLexer.Instance.Render("public class Point(int X, int Y);"u8);
         await Assert.That(html.Contains("<span class=\"kd\">public</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">class</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">int</span>", StringComparison.Ordinal)).IsTrue();
-    }
-
-    /// <summary>Renders <paramref name="source"/> through <paramref name="lexer"/> and returns the resulting HTML.</summary>
-    /// <param name="lexer">Configured lexer.</param>
-    /// <param name="source">Source text.</param>
-    /// <returns>Rendered HTML.</returns>
-    private static string Render(Lexer lexer, string source)
-    {
-        var sink = new ArrayBufferWriter<byte>();
-        HighlightEmitter.Emit(lexer, source, sink);
-        return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

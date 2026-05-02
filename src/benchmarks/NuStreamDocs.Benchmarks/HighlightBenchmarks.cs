@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Highlight;
 using NuStreamDocs.Highlight.Languages;
@@ -18,41 +17,41 @@ public class HighlightBenchmarks
     private const int Repetitions = 30;
 
     /// <summary>Pre-built C# fixture.</summary>
-    private string _csharp = string.Empty;
+    private byte[] _csharp = [];
 
     /// <summary>Pre-built TypeScript fixture.</summary>
-    private string _typescript = string.Empty;
+    private byte[] _typescript = [];
 
     /// <summary>Pre-built HTML fixture.</summary>
-    private string _html = string.Empty;
+    private byte[] _html = [];
 
     /// <summary>Pre-built XML fixture.</summary>
-    private string _xml = string.Empty;
+    private byte[] _xml = [];
 
     /// <summary>Pre-built Razor fixture.</summary>
-    private string _razor = string.Empty;
+    private byte[] _razor = [];
 
     /// <summary>Pre-built JSON fixture.</summary>
-    private string _json = string.Empty;
+    private byte[] _json = [];
 
     /// <summary>Pre-built YAML fixture.</summary>
-    private string _yaml = string.Empty;
+    private byte[] _yaml = [];
 
     /// <summary>Pre-built Bash fixture.</summary>
-    private string _bash = string.Empty;
+    private byte[] _bash = [];
 
     /// <summary>Generates the per-lexer code fixtures.</summary>
     [GlobalSetup]
     public void Setup()
     {
-        _csharp = Repeat("public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n", Repetitions);
-        _typescript = Repeat("export interface Bar { readonly id: number; readonly name: string; } const x: Bar = { id: 1, name: \"a\" };\n", Repetitions);
-        _html = Repeat("<div class=\"x\"><a href=\"https://x.test\">link</a><img src=\"/y.png\" alt=\"y\"></div>\n", Repetitions);
-        _xml = Repeat("<note id=\"a\"><title>Hello</title><body><![CDATA[x < y]]></body></note>\n", Repetitions);
-        _razor = Repeat("<p>@Model.Name</p>\n@{ var x = 42; if (x > 0) { <span>@x</span> } }\n", Repetitions);
-        _json = Repeat("{\"id\":1,\"name\":\"a\",\"items\":[1,2,3,true,null,{\"nested\":\"yes\"}]}\n", Repetitions);
-        _yaml = Repeat("name: example\nitems:\n  - id: 1\n    label: \"first\"\n  - id: 2\n    label: \"second\"\n", Repetitions);
-        _bash = Repeat("#!/usr/bin/env bash\nset -euo pipefail\nfor f in *.txt; do echo \"$f\"; done\n", Repetitions);
+        _csharp = Repeat("public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n"u8, Repetitions);
+        _typescript = Repeat("export interface Bar { readonly id: number; readonly name: string; } const x: Bar = { id: 1, name: \"a\" };\n"u8, Repetitions);
+        _html = Repeat("<div class=\"x\"><a href=\"https://x.test\">link</a><img src=\"/y.png\" alt=\"y\"></div>\n"u8, Repetitions);
+        _xml = Repeat("<note id=\"a\"><title>Hello</title><body><![CDATA[x < y]]></body></note>\n"u8, Repetitions);
+        _razor = Repeat("<p>@Model.Name</p>\n@{ var x = 42; if (x > 0) { <span>@x</span> } }\n"u8, Repetitions);
+        _json = Repeat("{\"id\":1,\"name\":\"a\",\"items\":[1,2,3,true,null,{\"nested\":\"yes\"}]}\n"u8, Repetitions);
+        _yaml = Repeat("name: example\nitems:\n  - id: 1\n    label: \"first\"\n  - id: 2\n    label: \"second\"\n"u8, Repetitions);
+        _bash = Repeat("#!/usr/bin/env bash\nset -euo pipefail\nfor f in *.txt; do echo \"$f\"; done\n"u8, Repetitions);
     }
 
     /// <summary>Benchmark: C# lexer.</summary>
@@ -95,26 +94,27 @@ public class HighlightBenchmarks
     [Benchmark]
     public int Bash() => Run(BashLexer.Instance, _bash);
 
-    /// <summary>Repeats <paramref name="line"/> <paramref name="count"/> times.</summary>
+    /// <summary>Repeats <paramref name="line"/> <paramref name="count"/> times into a fresh byte array.</summary>
     /// <param name="line">Single source line.</param>
     /// <param name="count">Repetition count.</param>
-    /// <returns>The concatenated string.</returns>
-    private static string Repeat(string line, int count)
+    /// <returns>The concatenated UTF-8 bytes.</returns>
+    private static byte[] Repeat(ReadOnlySpan<byte> line, int count)
     {
-        var builder = new StringBuilder(line.Length * count);
+        var output = new byte[line.Length * count];
+        var span = output.AsSpan();
         for (var i = 0; i < count; i++)
         {
-            builder.Append(line);
+            line.CopyTo(span[(i * line.Length)..]);
         }
 
-        return builder.ToString();
+        return output;
     }
 
     /// <summary>Drives <c>HighlightEmitter.Emit</c> with <paramref name="lexer"/> against <paramref name="source"/>.</summary>
     /// <param name="lexer">Lexer under test.</param>
-    /// <param name="source">Source text.</param>
+    /// <param name="source">Source bytes.</param>
     /// <returns>Bytes written.</returns>
-    private static int Run(Lexer lexer, string source)
+    private static int Run(Lexer lexer, byte[] source)
     {
         var sink = new ArrayBufferWriter<byte>(source.Length * 2);
         HighlightEmitter.Emit(lexer, source, sink);

@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
+using static System.Text.Encoding;
 
 namespace NuStreamDocs.Highlight.Tests;
 
@@ -11,33 +11,47 @@ namespace NuStreamDocs.Highlight.Tests;
 public class TokenMatchersTests
 {
     /// <summary>Hex body matches the C# / TS hex-digit body including underscore separators.</summary>
-    private static readonly SearchValues<char> HexBody = SearchValues.Create("0123456789abcdefABCDEF_");
+    private static readonly SearchValues<byte> HexBody = SearchValues.Create("0123456789abcdefABCDEF_"u8);
 
     /// <summary>Integer body — digits with optional <c>_</c> separators.</summary>
-    private static readonly SearchValues<char> IntegerBody = SearchValues.Create("0123456789_");
+    private static readonly SearchValues<byte> IntegerBody = SearchValues.Create("0123456789_"u8);
 
     /// <summary>C#-shape integer suffix.</summary>
-    private static readonly SearchValues<char> IntegerSuffix = SearchValues.Create("uUlL");
+    private static readonly SearchValues<byte> IntegerSuffix = SearchValues.Create("uUlL"u8);
 
     /// <summary>YAML anchor / alias body.</summary>
-    private static readonly SearchValues<char> AnchorBody = SearchValues.Create(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-");
+    private static readonly SearchValues<byte> AnchorBody = SearchValues.Create(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"u8);
 
     /// <summary>Markup text terminators — <c>&lt;</c> and <c>&amp;</c>.</summary>
-    private static readonly SearchValues<char> MarkupTextStop = SearchValues.Create("<&");
+    private static readonly SearchValues<byte> MarkupTextStop = SearchValues.Create("<&"u8);
 
     /// <summary>JSON's three keyword constants.</summary>
-    private static readonly FrozenSet<string> JsonKeywords = FrozenSet.ToFrozenSet(
-        ["true", "false", "null"],
-        StringComparer.Ordinal);
+    private static readonly ByteKeywordSet JsonKeywords = ByteKeywordSet.Create("true", "false", "null");
 
     /// <summary>Case-insensitive YAML literal constants.</summary>
-    private static readonly FrozenSet<string> YamlKeywords = FrozenSet.ToFrozenSet(
-        ["true", "false", "null", "yes", "no", "on", "off"],
-        StringComparer.OrdinalIgnoreCase);
+    private static readonly ByteKeywordSet YamlKeywords = ByteKeywordSet.CreateIgnoreCase(
+        "true",
+        "false",
+        "null",
+        "yes",
+        "no",
+        "on",
+        "off");
 
     /// <summary>Operators ordered longest-first so the alternation prefers the longer match.</summary>
-    private static readonly string[] ShortOperators = ["==", "=>", "="];
+    private static readonly byte[][] ShortOperators =
+    [
+        "=="u8.ToArray(),
+        "=>"u8.ToArray(),
+        "="u8.ToArray(),
+    ];
+
+    /// <summary>HTML comment opener literal as bytes.</summary>
+    private static readonly byte[] HtmlCommentOpen = "<!--"u8.ToArray();
+
+    /// <summary>HTML comment closer literal as bytes.</summary>
+    private static readonly byte[] HtmlCommentClose = "-->"u8.ToArray();
 
     /// <summary>ASCII whitespace runs match every contiguous space / tab / newline at the cursor.</summary>
     /// <param name="input">Input string.</param>
@@ -50,7 +64,7 @@ public class TokenMatchersTests
     [Arguments("xyz", 0)]
     [Arguments("", 0)]
     public async Task MatchAsciiWhitespace_returns_run_length(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchAsciiWhitespace(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchAsciiWhitespace(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Inline whitespace excludes line terminators.</summary>
     /// <param name="input">Input string.</param>
@@ -62,7 +76,7 @@ public class TokenMatchersTests
     [Arguments("\r\n", 0)]
     [Arguments("nope", 0)]
     public async Task MatchAsciiInlineWhitespace_excludes_newlines(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchAsciiInlineWhitespace(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchAsciiInlineWhitespace(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Hash-prefixed line comments stop at the first <c>\r</c> or <c>\n</c>.</summary>
     /// <param name="input">Input string.</param>
@@ -75,7 +89,7 @@ public class TokenMatchersTests
     [Arguments("# only comment", 14)]
     [Arguments("not a comment", 0)]
     public async Task MatchHashComment_consumes_to_eol(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchHashComment(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchHashComment(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>ASCII identifier matches a letter-or-underscore start followed by letters / digits / underscores.</summary>
     /// <param name="input">Input string.</param>
@@ -88,7 +102,7 @@ public class TokenMatchersTests
     [Arguments("123leadingDigit", 0)]
     [Arguments(".dot", 0)]
     public async Task MatchAsciiIdentifier_returns_identifier_length(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchAsciiIdentifier(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchAsciiIdentifier(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Signed integer matches optional <c>-</c> and one or more digits.</summary>
     /// <param name="input">Input string.</param>
@@ -101,7 +115,7 @@ public class TokenMatchersTests
     [Arguments("- 7", 0)]
     [Arguments("abc", 0)]
     public async Task MatchSignedAsciiInteger_handles_sign(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchSignedAsciiInteger(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchSignedAsciiInteger(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Signed float requires at least one digit on each side of the dot; exponent and sign are optional.</summary>
     /// <param name="input">Input string.</param>
@@ -117,7 +131,7 @@ public class TokenMatchersTests
     [Arguments(".5", 0)]
     [Arguments("123", 0)]
     public async Task MatchSignedAsciiFloat_handles_exponent(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchSignedAsciiFloat(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchSignedAsciiFloat(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Unsigned float rejects leading minus.</summary>
     /// <param name="input">Input string.</param>
@@ -128,7 +142,7 @@ public class TokenMatchersTests
     [Arguments("-1.0", 0)]
     [Arguments("0.5e2", 5)]
     public async Task MatchUnsignedAsciiFloat_rejects_minus(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchUnsignedAsciiFloat(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchUnsignedAsciiFloat(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Single-quoted no-escape strings consume through the closing quote.</summary>
     /// <param name="input">Input string.</param>
@@ -141,7 +155,7 @@ public class TokenMatchersTests
     [Arguments("not quoted", 0)]
     [Arguments("\"different\"", 0)]
     public async Task MatchSingleQuotedNoEscape_handles_closing_quote(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchSingleQuotedNoEscape(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchSingleQuotedNoEscape(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Double-quoted with backslash escape recognises <c>\"</c> as an embedded quote.</summary>
     /// <param name="input">Input string.</param>
@@ -153,7 +167,7 @@ public class TokenMatchersTests
     [Arguments("\"unterminated", 0)]
     [Arguments("'wrong quote'", 0)]
     public async Task MatchDoubleQuotedWithBackslashEscape_treats_backslash_quote_as_literal(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchDoubleQuotedWithBackslashEscape(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchDoubleQuotedWithBackslashEscape(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Doubled-quote escape (SQL/Pascal/YAML style) treats <c>''</c> as a literal apostrophe.</summary>
     /// <param name="input">Input string.</param>
@@ -165,7 +179,7 @@ public class TokenMatchersTests
     [Arguments("''", 2)]
     [Arguments("'unterminated", 0)]
     public async Task MatchSingleQuotedDoubledEscape_handles_doubled_quote(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchSingleQuotedDoubledEscape(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchSingleQuotedDoubledEscape(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Bracketed block consumes <c>open</c> + body + <c>close</c>.</summary>
     /// <param name="input">Input string.</param>
@@ -181,7 +195,7 @@ public class TokenMatchersTests
     [Arguments("{unterminated", '{', '}', 0)]
     [Arguments("no opener", '{', '}', 0)]
     public async Task MatchBracketedBlock_consumes_paired_delimiters(string input, char open, char close, int expected) =>
-        await Assert.That(TokenMatchers.MatchBracketedBlock(input, open, close)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchBracketedBlock(UTF8.GetBytes(input), (byte)open, (byte)close)).IsEqualTo(expected);
 
     /// <summary>Newline matcher recognises CRLF, lone CR, and lone LF.</summary>
     /// <param name="input">Input string.</param>
@@ -194,7 +208,7 @@ public class TokenMatchersTests
     [Arguments("notnewline", 0)]
     [Arguments("", 0)]
     public async Task MatchNewline_handles_all_line_terminators(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchNewline(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchNewline(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Delimited block matches non-greedy <c>open ... close</c>.</summary>
     /// <param name="input">Input string.</param>
@@ -206,7 +220,7 @@ public class TokenMatchersTests
     [Arguments("<!-- unterminated", 0)]
     [Arguments("not a comment", 0)]
     public async Task MatchDelimited_html_comment(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchDelimited(input, "<!--", "-->")).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchDelimited(UTF8.GetBytes(input), HtmlCommentOpen, HtmlCommentClose)).IsEqualTo(expected);
 
     /// <summary>Run-until-any consumes everything up to (but not including) the first character in the stop set.</summary>
     /// <param name="input">Input string.</param>
@@ -218,7 +232,7 @@ public class TokenMatchersTests
     [Arguments("<immediate", 0)]
     [Arguments("no stops here", 13)]
     public async Task MatchRunUntilAny_html_text(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchRunUntilAny(input, MarkupTextStop)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchRunUntilAny(UTF8.GetBytes(input), MarkupTextStop)).IsEqualTo(expected);
 
     /// <summary>Hex literal matcher recognises <c>0x</c>/<c>0X</c> + body + optional suffix.</summary>
     /// <param name="input">Input string.</param>
@@ -231,7 +245,7 @@ public class TokenMatchersTests
     [Arguments("0x", 0)]
     [Arguments("123", 0)]
     public async Task MatchAsciiHexLiteral_with_csharp_suffixes(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchAsciiHexLiteral(input, HexBody, IntegerSuffix)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchAsciiHexLiteral(UTF8.GetBytes(input), HexBody, IntegerSuffix)).IsEqualTo(expected);
 
     /// <summary>Run-with-suffix matches body + optional trailing chars.</summary>
     /// <param name="input">Input string.</param>
@@ -243,7 +257,7 @@ public class TokenMatchersTests
     [Arguments("100", 3)]
     [Arguments("abc", 0)]
     public async Task MatchRunWithSuffix_csharp_integer_shape(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchRunWithSuffix(input, IntegerBody, IntegerSuffix)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchRunWithSuffix(UTF8.GetBytes(input), IntegerBody, IntegerSuffix)).IsEqualTo(expected);
 
     /// <summary>Prefixed-run matches a single prefix character + a non-empty body.</summary>
     /// <param name="input">Input string.</param>
@@ -256,7 +270,7 @@ public class TokenMatchersTests
     [Arguments("&!", 0)]
     [Arguments("noprefix", 0)]
     public async Task MatchPrefixedRun_anchor_shape(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchPrefixedRun(input, '&', AnchorBody)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchPrefixedRun(UTF8.GetBytes(input), (byte)'&', AnchorBody)).IsEqualTo(expected);
 
     /// <summary>Keyword matcher accepts an exact match against a member of the keyword set with a non-identifier-continue boundary.</summary>
     /// <param name="input">Input string.</param>
@@ -270,7 +284,7 @@ public class TokenMatchersTests
     [Arguments("nu", 0)]
     [Arguments("trueish", 0)]
     public async Task MatchKeyword_word_boundary(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchKeyword(input, JsonKeywords)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchKeyword(UTF8.GetBytes(input), JsonKeywords)).IsEqualTo(expected);
 
     /// <summary>Keyword (case-insensitive) recognises any case combination.</summary>
     /// <param name="input">Input string.</param>
@@ -281,8 +295,8 @@ public class TokenMatchersTests
     [Arguments("FALSE)", 5)]
     [Arguments("Yes,", 3)]
     [Arguments("notakeyword", 0)]
-    public async Task MatchKeywordIgnoreCase_case_insensitive(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchKeywordIgnoreCase(input, YamlKeywords)).IsEqualTo(expected);
+    public async Task MatchKeyword_case_insensitive(string input, int expected) =>
+        await Assert.That(TokenMatchers.MatchKeyword(UTF8.GetBytes(input), YamlKeywords)).IsEqualTo(expected);
 
     /// <summary>Longest-literal alternation picks the longest matching prefix.</summary>
     /// <param name="input">Input string.</param>
@@ -294,7 +308,7 @@ public class TokenMatchersTests
     [Arguments("=expr", 1)]
     [Arguments("nope", 0)]
     public async Task MatchLongestLiteral_prefers_longer_match(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchLongestLiteral(input, ShortOperators)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchLongestLiteral(UTF8.GetBytes(input), ShortOperators)).IsEqualTo(expected);
 
     /// <summary>Double-quoted-key recognises a quoted string followed by optional whitespace and <c>:</c>.</summary>
     /// <param name="input">Input string.</param>
@@ -306,7 +320,7 @@ public class TokenMatchersTests
     [Arguments("\"value\",", 0)]
     [Arguments("\"unterminated", 0)]
     public async Task MatchDoubleQuotedKey_requires_colon_lookahead(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchDoubleQuotedKey(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchDoubleQuotedKey(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Raw quoted strings honour the matched-opener-count rule — N opening quotes match exactly N closing quotes.</summary>
     /// <param name="input">Input string.</param>
@@ -321,7 +335,7 @@ public class TokenMatchersTests
     [Arguments("\"\"only-two-quotes\"\"", 3, 0)]
     [Arguments("not raw", 3, 0)]
     public async Task MatchRawQuotedString_handles_variable_quote_count(string input, int minQuotes, int expected) =>
-        await Assert.That(TokenMatchers.MatchRawQuotedString(input, '"', minQuotes)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchRawQuotedString(UTF8.GetBytes(input), (byte)'"', minQuotes)).IsEqualTo(expected);
 
     /// <summary>Multi-line raw strings consume newlines without breaking the match.</summary>
     /// <returns>Async task.</returns>
@@ -329,7 +343,7 @@ public class TokenMatchersTests
     public async Task MatchRawQuotedString_spans_newlines()
     {
         const string Source = "\"\"\"\n  multi\n  line\n  \"\"\"";
-        await Assert.That(TokenMatchers.MatchRawQuotedString(Source, '"', 3)).IsEqualTo(Source.Length);
+        await Assert.That(TokenMatchers.MatchRawQuotedString(UTF8.GetBytes(Source), (byte)'"', 3)).IsEqualTo(Source.Length);
     }
 
     /// <summary>Doubled-quote-escape variant for double quotes (<c>"a""b"</c> Pascal/SQL style).</summary>
@@ -343,7 +357,7 @@ public class TokenMatchersTests
     [Arguments("\"unterminated", 0)]
     [Arguments("not quoted", 0)]
     public async Task MatchDoubleQuotedDoubledEscape_handles_doubled_quote(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchDoubleQuotedDoubledEscape(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchDoubleQuotedDoubledEscape(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Unsigned float matches positive floats only (no leading sign accepted).</summary>
     /// <param name="input">Input string.</param>
@@ -356,7 +370,7 @@ public class TokenMatchersTests
     [Arguments("+3.14", 0)]
     [Arguments("3.", 0)]
     public async Task MatchUnsignedAsciiFloat_rejects_signed_input(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchUnsignedAsciiFloat(input)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchUnsignedAsciiFloat(UTF8.GetBytes(input))).IsEqualTo(expected);
 
     /// <summary>Match-literal returns the literal length on a starts-with match, 0 otherwise.</summary>
     /// <param name="input">Input string.</param>
@@ -370,5 +384,5 @@ public class TokenMatchersTests
     [Arguments("", "if", 0)]
     [Arguments("if", "if", 2)]
     public async Task MatchLiteral_starts_with_check(string input, string literal, int expected) =>
-        await Assert.That(TokenMatchers.MatchLiteral(input, literal)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchLiteral(UTF8.GetBytes(input), UTF8.GetBytes(literal))).IsEqualTo(expected);
 }

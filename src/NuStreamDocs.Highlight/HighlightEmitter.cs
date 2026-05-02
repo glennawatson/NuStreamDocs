@@ -7,21 +7,20 @@ using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>Drives a <see cref="Lexer"/> over a source string and writes the classed HTML directly into a UTF-8 sink.</summary>
+/// <summary>Drives a <see cref="Lexer"/> over a UTF-8 byte source and writes the classed HTML directly into a UTF-8 sink.</summary>
 public static class HighlightEmitter
 {
     /// <summary>Tokenises <paramref name="source"/> through <paramref name="lexer"/> and writes the classed token stream into <paramref name="writer"/>.</summary>
     /// <param name="lexer">Compiled lexer.</param>
-    /// <param name="source">Source code (UTF-16).</param>
+    /// <param name="source">UTF-8 source bytes — accepts a <c>byte[]</c>, an array slice, or any other backing.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Emit(Lexer lexer, string source, IBufferWriter<byte> writer)
+    public static void Emit(Lexer lexer, ReadOnlyMemory<byte> source, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(lexer);
-        ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(writer);
 
         var state = new EmitState(source, writer);
-        lexer.Tokenise(source, state, EmitFromState);
+        lexer.Tokenise(source.Span, state, EmitFromState);
     }
 
     /// <summary>Static <see cref="Lexer.TokenSink{TState}"/> emitting one token from <paramref name="state"/>; method-group avoids the per-call closure alloc.</summary>
@@ -30,13 +29,13 @@ public static class HighlightEmitter
     /// <param name="length">Token length.</param>
     /// <param name="cls">Token classification.</param>
     private static void EmitFromState(EmitState state, int offset, int length, TokenClass cls) =>
-        EmitToken(state.Source.AsSpan(offset, length), cls, state.Writer);
+        EmitToken(state.Source.Span.Slice(offset, length), cls, state.Writer);
 
     /// <summary>Writes a single token, with its CSS class span when classified, escaping HTML metacharacters.</summary>
-    /// <param name="text">Token text.</param>
+    /// <param name="text">Token text bytes.</param>
     /// <param name="cls">Token classification.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitToken(ReadOnlySpan<char> text, TokenClass cls, IBufferWriter<byte> writer)
+    private static void EmitToken(ReadOnlySpan<byte> text, TokenClass cls, IBufferWriter<byte> writer)
     {
         var className = TokenClassNames.Css(cls);
         if (className.Length == 0)
@@ -68,7 +67,7 @@ public static class HighlightEmitter
     }
 
     /// <summary>Per-<see cref="Emit"/> state struct threaded through <see cref="Lexer.Tokenise{T}"/> so the callback can stay static.</summary>
-    /// <param name="Source">Source string.</param>
+    /// <param name="Source">Source bytes (held as <see cref="ReadOnlyMemory{T}"/> so the static callback can re-slice without capturing a span).</param>
     /// <param name="Writer">UTF-8 sink.</param>
-    private readonly record struct EmitState(string Source, IBufferWriter<byte> Writer);
+    private readonly record struct EmitState(ReadOnlyMemory<byte> Source, IBufferWriter<byte> Writer);
 }

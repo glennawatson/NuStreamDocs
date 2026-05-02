@@ -55,7 +55,7 @@ public class ProfiledPhaseBenchmarks
     private byte[] _markdown = [];
 
     /// <summary>Pre-built C# fixture for the lexer phase.</summary>
-    private string _csharp = string.Empty;
+    private byte[] _csharp = [];
 
     /// <summary>Absolute path to the corpus input root used by <c>EndToEndBuild</c>.</summary>
     private string _inputRoot = string.Empty;
@@ -77,9 +77,7 @@ public class ProfiledPhaseBenchmarks
         }
 
         _markdown = Encoding.UTF8.GetBytes(sb.ToString());
-        _csharp = string.Concat(Enumerable.Repeat(
-            "public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n",
-            LexerRepetitions));
+        _csharp = RepeatBytes("public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n"u8, LexerRepetitions);
 
         _inputRoot = Path.Combine(Path.GetTempPath(), "smkd-prof-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         _outputRoot = Path.Combine(Path.GetTempPath(), "smkd-prof-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
@@ -159,6 +157,23 @@ public class ProfiledPhaseBenchmarks
             .ToString();
 
     /// <summary>Best-effort recursive directory delete.</summary>
+    /// <summary>Repeats <paramref name="line"/> <paramref name="count"/> times into a fresh byte array.</summary>
+    /// <param name="line">UTF-8 line.</param>
+    /// <param name="count">Repetition count.</param>
+    /// <returns>Concatenated bytes.</returns>
+    private static byte[] RepeatBytes(ReadOnlySpan<byte> line, int count)
+    {
+        var output = new byte[line.Length * count];
+        var span = output.AsSpan();
+        for (var i = 0; i < count; i++)
+        {
+            line.CopyTo(span[(i * line.Length)..]);
+        }
+
+        return output;
+    }
+
+    /// <summary>Best-effort recursive delete used for the temp corpus.</summary>
     /// <param name="path">Directory path.</param>
     private static void TryDelete(string path)
     {

@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using System.Text;
 using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight.Tests;
@@ -16,7 +14,7 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task BlockAccessorBody_classifies_field_as_keyword()
     {
-        var html = Render(CSharpLexer.Instance, "public int X { get { return field; } }");
+        var html = CSharpLexer.Instance.Render("public int X { get { return field; } }"u8);
         await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -25,7 +23,7 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task BlockSetter_classifies_value_as_keyword()
     {
-        var html = Render(CSharpLexer.Instance, "public int X { set { field = value; } }");
+        var html = CSharpLexer.Instance.Render("public int X { set { field = value; } }"u8);
         await Assert.That(html.Contains("<span class=\"k\">value</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -34,7 +32,7 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task ArrowAccessorBody_classifies_field_as_keyword_and_pops_on_semicolon()
     {
-        var html = Render(CSharpLexer.Instance, "public int X { get => field; } void M() { var field = 1; }");
+        var html = CSharpLexer.Instance.Render("public int X { get => field; } void M() { var field = 1; }"u8);
 
         // First `field` (in accessor) should be a keyword; second (in method body) should NOT be.
         var firstKeyword = html.IndexOf("<span class=\"k\">field</span>", StringComparison.Ordinal);
@@ -48,8 +46,7 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task NestedBlockInsideAccessor_does_not_pop_state_too_early()
     {
-        const string Source = "public int X { set { Action a = () => { Console.WriteLine(1); }; field = value; } }";
-        var html = Render(CSharpLexer.Instance, Source);
+        var html = CSharpLexer.Instance.Render("public int X { set { Action a = () => { Console.WriteLine(1); }; field = value; } }"u8);
 
         // Both `field` and `value` after the lambda's closing `}` must still be classified as keywords.
         await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsTrue();
@@ -61,8 +58,7 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task MultipleAccessors_each_push_and_pop()
     {
-        const string Source = "public int X { get { return field; } set { field = value; } }";
-        var html = Render(CSharpLexer.Instance, Source);
+        var html = CSharpLexer.Instance.Render("public int X { get { return field; } set { field = value; } }"u8);
 
         // `field` should appear as a keyword at least twice (in both getter and setter).
         var firstField = html.IndexOf("<span class=\"k\">field</span>", StringComparison.Ordinal);
@@ -76,7 +72,7 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task AutoProperty_does_not_enter_accessor_state()
     {
-        var html = Render(CSharpLexer.Instance, "public int X { get; set; } void M() { var field = 1; }");
+        var html = CSharpLexer.Instance.Render("public int X { get; set; } void M() { var field = 1; }"u8);
 
         // `field` in the method body should be a plain identifier, not a keyword.
         await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsFalse();
@@ -88,19 +84,8 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task AccessorOpeners_classify_as_declaration_keyword()
     {
-        var html = Render(CSharpLexer.Instance, "public int X { get => 1; init => field = value; }");
+        var html = CSharpLexer.Instance.Render("public int X { get => 1; init => field = value; }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">get</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">init</span>", StringComparison.Ordinal)).IsTrue();
-    }
-
-    /// <summary>Renders <paramref name="source"/> through <paramref name="lexer"/> and returns the resulting HTML.</summary>
-    /// <param name="lexer">Configured lexer.</param>
-    /// <param name="source">Source text.</param>
-    /// <returns>Rendered HTML.</returns>
-    private static string Render(Lexer lexer, string source)
-    {
-        var sink = new ArrayBufferWriter<byte>();
-        HighlightEmitter.Emit(lexer, source, sink);
-        return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -17,50 +16,45 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class JsonLexer
 {
-    /// <summary>First-char set for string-shaped tokens (keys + values).</summary>
-    private static readonly SearchValues<char> QuoteFirst = SearchValues.Create("\"");
+    /// <summary>First-byte set for string-shaped tokens (keys + values).</summary>
+    private static readonly SearchValues<byte> QuoteFirst = SearchValues.Create("\""u8);
 
-    /// <summary>First-char set for numeric tokens (digits + leading minus).</summary>
-    private static readonly SearchValues<char> NumberFirst = SearchValues.Create("-0123456789");
+    /// <summary>First-byte set for numeric tokens (digits + leading minus).</summary>
+    private static readonly SearchValues<byte> NumberFirst = SearchValues.Create("-0123456789"u8);
 
-    /// <summary>First-char set for the <c>true</c> / <c>false</c> / <c>null</c> keyword constants.</summary>
-    private static readonly SearchValues<char> KeywordFirst = SearchValues.Create("tfn");
+    /// <summary>First-byte set for the <c>true</c> / <c>false</c> / <c>null</c> keyword constants.</summary>
+    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("tfn"u8);
 
-    /// <summary>First-char set for structural punctuation.</summary>
-    private static readonly SearchValues<char> PunctuationFirst = SearchValues.Create("{}[],:");
+    /// <summary>First-byte set for structural punctuation.</summary>
+    private static readonly SearchValues<byte> PunctuationFirst = SearchValues.Create("{}[],:"u8);
 
     /// <summary>Set of recognised JSON keyword constants.</summary>
-    private static readonly FrozenSet<string> KeywordConstants = FrozenSet.ToFrozenSet(
-        ["true", "false", "null"],
-        StringComparer.Ordinal);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create("true", "false", "null");
 
     /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = new(
         "json",
-        new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
-        {
-            [Lexer.RootState] = [
+        LanguageRuleBuilder.BuildSingleState([
 
-                // [ \t\r\n]+ whitespace runs.
-                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, NextState: null) { FirstChars = TokenMatchers.AsciiWhitespaceWithNewlines },
+            // [ \t\r\n]+ whitespace runs.
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines },
 
-                // "..." string followed by ":" — property key. Must precede the plain string rule.
-                new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, NextState: null) { FirstChars = QuoteFirst },
+            // "..." string followed by ":" — property key. Must precede the plain string rule.
+            new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = QuoteFirst },
 
-                // "..." string value with backslash escapes.
-                new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, NextState: null) { FirstChars = QuoteFirst },
+            // "..." string value with backslash escapes.
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = QuoteFirst },
 
-                // -?\d+\.\d+([eE][+-]?\d+)? float literal — must precede the integer rule.
-                new(TokenMatchers.MatchSignedAsciiFloat, TokenClass.NumberFloat, NextState: null) { FirstChars = NumberFirst },
+            // -?\d+\.\d+([eE][+-]?\d+)? float literal — must precede the integer rule.
+            new(TokenMatchers.MatchSignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = NumberFirst },
 
-                // -?\d+ integer literal.
-                new(TokenMatchers.MatchSignedAsciiInteger, TokenClass.NumberInteger, NextState: null) { FirstChars = NumberFirst },
+            // -?\d+ integer literal.
+            new(TokenMatchers.MatchSignedAsciiInteger, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = NumberFirst },
 
-                // true / false / null keyword constant.
-                new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, NextState: null) { FirstChars = KeywordFirst },
+            // true / false / null keyword constant.
+            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
 
-                // Single-character structural punctuation: { } [ ] , :
-                new(static slice => TokenMatchers.MatchSingleCharOf(slice, PunctuationFirst), TokenClass.Punctuation, NextState: null) { FirstChars = PunctuationFirst },
-            ],
-        }.ToFrozenDictionary(StringComparer.Ordinal));
+            // Single-byte structural punctuation: { } [ ] , :
+            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationFirst), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationFirst },
+        ]));
 }

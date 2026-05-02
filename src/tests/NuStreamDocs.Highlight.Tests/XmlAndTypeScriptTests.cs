@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using System.Text;
 using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Highlight.Tests;
@@ -16,7 +14,7 @@ public class XmlAndTypeScriptTests
     [Test]
     public async Task XmlTagPartsAreClassified()
     {
-        var html = Render(XmlLexer.Instance, "<note id=\"a\">hi</note>");
+        var html = XmlLexer.Instance.Render("<note id=\"a\">hi</note>"u8);
         await Assert.That(html.Contains("<span class=\"p\">&lt;</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"nc\">note</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"na\">id</span>", StringComparison.Ordinal)).IsTrue();
@@ -28,7 +26,7 @@ public class XmlAndTypeScriptTests
     [Test]
     public async Task HtmlCommentClassifies()
     {
-        var html = Render(HtmlLexer.Instance, "<!-- comment -->\n");
+        var html = HtmlLexer.Instance.Render("<!-- comment -->\n"u8);
         await Assert.That(html.Contains("<span class=\"cm\">&lt;!-- comment --&gt;</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -37,7 +35,7 @@ public class XmlAndTypeScriptTests
     [Test]
     public async Task TypeScriptClassifiesCoreTokens()
     {
-        var html = Render(TypeScriptLexer.Instance, "const greet = (name: string) => `hi ${name}`;");
+        var html = TypeScriptLexer.Instance.Render("const greet = (name: string) => `hi ${name}`;"u8);
         await Assert.That(html.Contains("<span class=\"kd\">const</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">string</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"o\">=&gt;</span>", StringComparison.Ordinal)).IsTrue();
@@ -50,20 +48,9 @@ public class XmlAndTypeScriptTests
     public async Task PlaceholderLanguagesResolve()
     {
         await Assert.That(LexerRegistry.Default.TryGet("rust", out var rust)).IsTrue();
-        await Assert.That(rust.LanguageName).IsEqualTo("rust");
+        await Assert.That(rust!.LanguageName).IsEqualTo("rust");
 
         await Assert.That(LexerRegistry.Default.TryGet("py", out var python)).IsTrue();
-        await Assert.That(python.LanguageName).IsEqualTo("python");
-    }
-
-    /// <summary>Renders <paramref name="source"/> through <paramref name="lexer"/> and decodes the result.</summary>
-    /// <param name="lexer">Lexer.</param>
-    /// <param name="source">Source code.</param>
-    /// <returns>UTF-8-decoded HTML.</returns>
-    private static string Render(Lexer lexer, string source)
-    {
-        var sink = new ArrayBufferWriter<byte>();
-        HighlightEmitter.Emit(lexer, source, sink);
-        return Encoding.UTF8.GetString(sink.WrittenSpan);
+        await Assert.That(python!.LanguageName).IsEqualTo("python");
     }
 }

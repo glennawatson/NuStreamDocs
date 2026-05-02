@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
@@ -21,13 +20,9 @@ namespace NuStreamDocs.Highlight;
 /// emit prefix bytes verbatim, swap the body for highlighted bytes, repeat.
 /// One copy per page; per-block work is the lexer pass plus an HTML escape.
 /// <para>
-/// When <see cref="HighlightOptions.WrapInHighlightDiv"/> is on (default),
-/// each highlighted block becomes
-/// <c>&lt;div class="highlight"&gt;[title][copy]&lt;pre&gt;&lt;code&gt;…&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</c>
-/// — the Pygments / mkdocs-material convention so theme CSS can hook the
-/// wrapper. The optional title bar pulls a <c>title="..."</c> from the
-/// fence-info string the markdown emitter passes through as
-/// <c>data-info</c>.
+/// The whole pipeline stays UTF-8: the language alias and the unescaped
+/// body are passed to the lexer / emitter as <see cref="ReadOnlyMemory{Byte}"/>
+/// without any UTF-16 round-trip.
 /// </para>
 /// </remarks>
 public sealed class HighlightPlugin : IDocPlugin
@@ -95,22 +90,7 @@ public sealed class HighlightPlugin : IDocPlugin
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>Reverses the small escape set <see cref="NuStreamDocs.Html.HtmlEscape.EscapeText(ReadOnlySpan{byte}, IBufferWriter{byte})"/> produces.</summary>
-    /// <param name="body">UTF-8 escaped body.</param>
-    /// <returns>Decoded source string.</returns>
-    private static string HtmlUnescape(ReadOnlySpan<byte> body)
-    {
-        if (body.IndexOf((byte)'&') < 0)
-        {
-            return Encoding.UTF8.GetString(body);
-        }
-
-        var sink = new ArrayBufferWriter<byte>(body.Length);
-        HtmlEntityDecoder.DecodeInto(sink, body);
-        return Encoding.UTF8.GetString(sink.WrittenSpan);
-    }
-
-    /// <summary>Decodes UTF-8 HTML-escaped bytes into a fresh byte array (no UTF-16 round-trip).</summary>
+    /// <summary>Decodes UTF-8 HTML-escaped bytes into a fresh byte array (no UTF-16 round-trip). When the input contains no entities the source bytes are copied verbatim.</summary>
     /// <param name="bytes">Source bytes.</param>
     /// <returns>Decoded bytes.</returns>
     private static byte[] HtmlUnescapeBytes(ReadOnlySpan<byte> bytes)
@@ -203,7 +183,7 @@ public sealed class HighlightPlugin : IDocPlugin
             return source.Length;
         }
 
-        var language = Encoding.UTF8.GetString(source.Slice(langStart, langEndRel));
+        var languageBytes = source.Slice(langStart, langEndRel);
         var afterLang = langStart + langEndRel + 1;
         var openTagEndRel = source[afterLang..].IndexOf((byte)'>');
         if (openTagEndRel < 0)
@@ -231,7 +211,7 @@ public sealed class HighlightPlugin : IDocPlugin
             return source.Length;
         }
 
-        EmitWrappedBlock(source, preStart, bodyStart, bodyEnd, dataInfo, language, writer);
+        EmitWrappedBlock(source, preStart, bodyStart, bodyEnd, dataInfo, languageBytes, writer);
         return afterCodeClose + preCloseRel + PreClose.Length;
     }
 
@@ -241,16 +221,16 @@ public sealed class HighlightPlugin : IDocPlugin
     /// <param name="bodyStart">Offset of the first body byte.</param>
     /// <param name="bodyEnd">Offset of <c>&lt;/code&gt;</c>.</param>
     /// <param name="dataInfo">Decoded fence-info bytes (may be empty).</param>
-    /// <param name="language">Language word.</param>
+    /// <param name="languageBytes">Language alias bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private void EmitWrappedBlock(ReadOnlySpan<byte> source, int preStart, int bodyStart, int bodyEnd, ReadOnlySpan<byte> dataInfo, string language, IBufferWriter<byte> writer)
+    private void EmitWrappedBlock(ReadOnlySpan<byte> source, int preStart, int bodyStart, int bodyEnd, ReadOnlySpan<byte> dataInfo, ReadOnlySpan<byte> languageBytes, IBufferWriter<byte> writer)
     {
         EmitOpeningWrapper(dataInfo, writer);
 
         // The original <pre><code class="language-X"…> opening — we rewrite the body, the rest passes through.
         Write(writer, source[preStart..bodyStart]);
         var body = source[bodyStart..bodyEnd];
-        EmitBody(writer, language, body);
+        EmitBody(writer, languageBytes, body);
         Write(writer, CodeClose);
         Write(writer, PreClose);
 
@@ -316,19 +296,19 @@ public sealed class HighlightPlugin : IDocPlugin
         Write(writer, "<button class=\"md-clipboard md-icon\" type=\"button\" aria-label=\"Copy to clipboard\"></button>"u8);
     }
 
-    /// <summary>Highlights <paramref name="body"/> when a lexer is registered for <paramref name="language"/>; otherwise emits it verbatim.</summary>
+    /// <summary>Highlights <paramref name="body"/> when a lexer is registered for <paramref name="languageBytes"/>; otherwise emits it verbatim.</summary>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <param name="language">Language name from the class attribute.</param>
+    /// <param name="languageBytes">Language alias bytes from the class attribute.</param>
     /// <param name="body">Body bytes between <c>&gt;</c> and <c>&lt;/code&gt;</c>.</param>
-    private void EmitBody(IBufferWriter<byte> writer, string language, ReadOnlySpan<byte> body)
+    private void EmitBody(IBufferWriter<byte> writer, ReadOnlySpan<byte> languageBytes, ReadOnlySpan<byte> body)
     {
-        if (!_registry.TryGet(language, out var lexer))
+        if (!_registry.TryGet(languageBytes, out var lexer) || lexer is null)
         {
             Write(writer, body);
             return;
         }
 
-        var unescaped = HtmlUnescape(body);
+        var unescaped = HtmlUnescapeBytes(body);
         HighlightEmitter.Emit(lexer, unescaped, writer);
     }
 }

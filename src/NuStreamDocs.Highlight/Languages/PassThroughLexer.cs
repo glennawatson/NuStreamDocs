@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
-
 namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>
@@ -22,18 +20,14 @@ public static class PassThroughLexer
 {
     /// <summary>Builds a pass-through lexer for <paramref name="languageName"/>.</summary>
     /// <param name="languageName">Language identifier the registry will key on.</param>
-    /// <returns>A configured lexer whose only rule emits a single character per step.</returns>
+    /// <returns>A configured lexer whose only rule emits a single byte per step.</returns>
     public static Lexer Create(string languageName)
     {
         ArgumentException.ThrowIfNullOrEmpty(languageName);
-        var states = new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
-        {
-            [Lexer.RootState] = [
+        return new(languageName, LanguageRuleBuilder.BuildSingleState([
 
-                // Consume one character per step — every character is classified as plain text.
-                new(static slice => slice is [_, ..] ? 1 : 0, TokenClass.Text, NextState: null),
-            ],
-        }.ToFrozenDictionary(StringComparer.Ordinal);
-        return new(languageName, states);
+            // Consume one byte per step — every byte is classified as plain text.
+            new(static slice => slice is [_, ..] ? 1 : 0, TokenClass.Text, LexerRule.NoStateChange),
+        ]));
     }
 }

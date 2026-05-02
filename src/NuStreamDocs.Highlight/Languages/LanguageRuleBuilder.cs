@@ -2,11 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Frozen;
-
 namespace NuStreamDocs.Highlight.Languages;
 
-/// <summary>Helpers for composing lexer rule arrays and frozen state maps.</summary>
+/// <summary>Helpers for composing lexer rule arrays and per-state rule tables.</summary>
 internal static class LanguageRuleBuilder
 {
     /// <summary>Builds the ordered rule list shared by the C# / TypeScript family.</summary>
@@ -75,12 +73,9 @@ internal static class LanguageRuleBuilder
         return output;
     }
 
-    /// <summary>Builds a frozen state map for a single-state lexer.</summary>
+    /// <summary>Builds a state table for a single-state lexer.</summary>
     /// <param name="rules">Root-state rules.</param>
-    /// <returns>Frozen root-state map.</returns>
-    public static FrozenDictionary<string, LexerRule[]> BuildSingleState(LexerRule[] rules) =>
-        new Dictionary<string, LexerRule[]>(StringComparer.Ordinal)
-        {
-            [Lexer.RootState] = rules,
-        }.ToFrozenDictionary(StringComparer.Ordinal);
+    /// <returns>State table indexed by state id; <c>states[<see cref="Lexer.RootStateId"/>]</c> holds <paramref name="rules"/>.</returns>
+    public static LexerRule[][] BuildSingleState(LexerRule[] rules) =>
+        [rules];
 }

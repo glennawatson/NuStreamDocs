@@ -8,10 +8,11 @@ namespace NuStreamDocs.Highlight.Languages;
 internal static class MarkupRootRules
 {
     /// <summary>Builds a markup root-state rule list by appending the shared tail after <paramref name="leadingRules"/>.</summary>
+    /// <param name="tagStateId">State id of the tag state pushed by <c>&lt;</c> / <c>&lt;/</c>.</param>
     /// <param name="textRule">Language-specific text fallback rule.</param>
     /// <param name="leadingRules">Language-specific rules that should run before the common markup tail.</param>
     /// <returns>Combined rule list.</returns>
-    public static LexerRule[] Build(LexerRule textRule, params LexerRule[] leadingRules)
+    public static LexerRule[] Build(int tagStateId, LexerRule textRule, params LexerRule[] leadingRules)
     {
         var output = new LexerRule[leadingRules.Length + 5];
         for (var i = 0; i < leadingRules.Length; i++)
@@ -22,19 +23,19 @@ internal static class MarkupRootRules
         var index = leadingRules.Length;
 
         // &name; / &#nnn; entity reference.
-        output[index++] = new(LanguageCommon.EntityReference, TokenClass.StringEscape, NextState: null) { FirstChars = LanguageCommon.EntityFirst };
+        output[index++] = new(LanguageCommon.EntityReference, TokenClass.StringEscape, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.EntityFirst };
 
         // < tag-open — pushes the tag state.
-        output[index++] = new(static slice => TokenMatchers.MatchSingleCharOf(slice, LanguageCommon.AngleOpenFirst), TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst };
+        output[index++] = new(static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.AngleOpenFirst), TokenClass.Punctuation, tagStateId) { FirstBytes = LanguageCommon.AngleOpenFirst };
 
         // </ closing-tag-open — pushes the tag state.
-        output[index++] = new(LanguageCommon.AngleOpenSlash, TokenClass.Punctuation, "tag") { FirstChars = LanguageCommon.AngleOpenFirst };
+        output[index++] = new(LanguageCommon.AngleOpenSlash, TokenClass.Punctuation, tagStateId) { FirstBytes = LanguageCommon.AngleOpenFirst };
 
         // Language-specific text-fallback rule (matches everything outside tags + entities).
         output[index++] = textRule;
 
         // [ \t\r\n]+ whitespace runs — moved to the front by MoveWhitespaceFirst so it wins before the text rule.
-        output[index] = new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, NextState: null) { FirstChars = LanguageCommon.WhitespaceWithNewlinesFirst };
+        output[index] = new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst };
 
         MoveWhitespaceFirst(output);
         return output;

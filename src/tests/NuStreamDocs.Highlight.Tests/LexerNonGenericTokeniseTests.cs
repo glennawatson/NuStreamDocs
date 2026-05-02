@@ -3,10 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Highlight.Languages;
+using static System.Text.Encoding;
 
 namespace NuStreamDocs.Highlight.Tests;
 
-/// <summary>Coverage for the non-generic Lexer.Tokenise(string, TokenSink) overload.</summary>
+/// <summary>Coverage for the non-generic Lexer.Tokenise(ReadOnlySpan&lt;byte&gt;, TokenSink) overload.</summary>
 public class LexerNonGenericTokeniseTests
 {
     /// <summary>Non-generic Tokenise emits at least one token for non-empty source.</summary>
@@ -16,7 +17,7 @@ public class LexerNonGenericTokeniseTests
     {
         var tokens = 0;
         CSharpLexer.Instance.Tokenise(
-            "var x = 1;",
+            UTF8.GetBytes("var x = 1;"),
             (_, _, _) => tokens++);
         await Assert.That(tokens).IsGreaterThan(0);
     }
