@@ -91,7 +91,7 @@ internal static class CSharpRules
         ["true", "false", "null"],
         StringComparer.Ordinal);
 
-    /// <summary>Operator alternation, sorted longest-first to match the regex semantics.</summary>
+    /// <summary>Operator alternation, sorted longest-first so a multi-char operator (<c>==</c>, <c>=&gt;</c>) wins before its single-char prefix.</summary>
     private static readonly string[] Operators =
     [
         "??=", "<<=", ">>=", "=>", "<=", ">=", "==", "!=", "&&", "||", "++", "--", "->",

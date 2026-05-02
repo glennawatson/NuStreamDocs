@@ -418,7 +418,11 @@ public static class TokenMatchers
     public static int MatchLiteral(ReadOnlySpan<char> slice, ReadOnlySpan<char> literal) =>
         slice.StartsWith(literal) ? literal.Length : 0;
 
-    /// <summary>Matches the longest prefix from <paramref name="literals"/> at the cursor. <paramref name="literals"/> must be sorted longest-first to match the regex alternation contract.</summary>
+    /// <summary>
+    /// Matches the longest prefix from <paramref name="literals"/> at the cursor.
+    /// <paramref name="literals"/> must be sorted longest-first so callers picking from a
+    /// candidate set never hit a shorter literal that is a prefix of a longer one.
+    /// </summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="literals">Candidate literals, sorted by descending length.</param>
     /// <returns>Length of the longest matching literal, or <c>0</c>.</returns>

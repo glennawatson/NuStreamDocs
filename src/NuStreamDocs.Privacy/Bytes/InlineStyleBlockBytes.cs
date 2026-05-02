@@ -9,7 +9,7 @@ namespace NuStreamDocs.Privacy.Bytes;
 /// <summary>
 /// Byte-level scanner that finds <c>&lt;style&gt;...&lt;/style&gt;</c>
 /// blocks and rewrites every <c>url(...)</c> token inside the block
-/// body via <see cref="CssUrlBytes"/>. Replaces <c>InlineStyleRegex</c>.
+/// body via <see cref="CssUrlBytes"/>.
 /// </summary>
 internal static class InlineStyleBlockBytes
 {

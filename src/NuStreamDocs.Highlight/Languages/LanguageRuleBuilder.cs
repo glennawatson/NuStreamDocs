@@ -10,7 +10,7 @@ namespace NuStreamDocs.Highlight.Languages;
 internal static class LanguageRuleBuilder
 {
     /// <summary>Builds the ordered rule list shared by the C# / TypeScript family.</summary>
-    /// <param name="rules">Language-specific regex/classification set.</param>
+    /// <param name="rules">Language-specific matcher / classification set.</param>
     /// <returns>Ordered rule list.</returns>
     public static LexerRule[] BuildCStyleRules(in CStyleRuleSet rules)
     {

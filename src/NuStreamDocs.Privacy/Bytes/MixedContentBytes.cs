@@ -9,8 +9,7 @@ namespace NuStreamDocs.Privacy.Bytes;
 /// <summary>
 /// UTF-8 byte scanner that upgrades <c>http://</c> URLs in
 /// <c>src</c> / <c>href</c> attributes to <c>https://</c>, except for
-/// loopback hosts. Replaces the regex-based
-/// <c>HttpAttributeRegex</c> pass.
+/// loopback hosts.
 /// </summary>
 internal static class MixedContentBytes
 {

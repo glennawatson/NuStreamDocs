@@ -77,7 +77,7 @@ public sealed class Lexer
     public FrozenDictionary<string, LexerRule[]> States { get; }
 
     /// <summary>Walks <paramref name="source"/> once, calling <paramref name="onToken"/> for each emitted token.</summary>
-    /// <param name="source">UTF-16 source string (regex APIs require strings).</param>
+    /// <param name="source">UTF-16 source string.</param>
     /// <param name="onToken">Callback invoked with offset, length, and classification.</param>
     public void Tokenise(string source, TokenSink onToken)
     {

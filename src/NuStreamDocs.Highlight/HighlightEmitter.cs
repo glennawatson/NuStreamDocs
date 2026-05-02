@@ -13,7 +13,7 @@ public static class HighlightEmitter
 {
     /// <summary>Tokenises <paramref name="source"/> through <paramref name="lexer"/> and writes the classed token stream into <paramref name="writer"/>.</summary>
     /// <param name="lexer">Compiled lexer.</param>
-    /// <param name="source">Source code (UTF-16, since regex APIs require strings).</param>
+    /// <param name="source">Source code (UTF-16).</param>
     /// <param name="writer">UTF-8 sink.</param>
     public static void Emit(Lexer lexer, string source, IBufferWriter<byte> writer)
     {

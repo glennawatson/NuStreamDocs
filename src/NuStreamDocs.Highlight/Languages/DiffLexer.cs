@@ -38,7 +38,7 @@ public static class DiffLexer
     /// <summary>First-char set for newline tokens.</summary>
     private static readonly SearchValues<char> NewlineFirst = SearchValues.Create("\r\n");
 
-    /// <summary>File-header line prefixes — checked in declaration order; longest first to match the regex alternation contract.</summary>
+    /// <summary>File-header line prefixes — checked in declaration order; longest first so a multi-char prefix wins before its shorter substring.</summary>
     private static readonly string[] FileHeaderPrefixes = ["---", "+++", "diff ", "index ", "Only in "];
 
     /// <summary>Gets the singleton lexer instance.</summary>

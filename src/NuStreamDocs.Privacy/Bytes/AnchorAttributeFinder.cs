@@ -6,8 +6,8 @@ namespace NuStreamDocs.Privacy.Bytes;
 
 /// <summary>
 /// Locates a single quoted attribute by name within a tag-body span,
-/// matching the regex shape <c>\bname\s*=\s*("|')(?&lt;v&gt;[^"']*)\1</c>
-/// case-insensitively without going through <see cref="System.Text.RegularExpressions.Regex"/>.
+/// matching <c>name="value"</c> or <c>name='value'</c>
+/// case-insensitively with whitespace allowed around the <c>=</c>.
 /// </summary>
 internal static class AnchorAttributeFinder
 {

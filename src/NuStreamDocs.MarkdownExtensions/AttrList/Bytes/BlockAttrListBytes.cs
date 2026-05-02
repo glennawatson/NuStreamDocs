@@ -8,8 +8,7 @@ namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
 /// <summary>
 /// Byte-level scanner for the block-level attr-list pattern —
-/// <c>&lt;tag&gt;prefix {: attrs } suffix&lt;/tag&gt;</c>. Replaces
-/// <c>BlockAttrListRegex</c>.
+/// <c>&lt;tag&gt;prefix {: attrs } suffix&lt;/tag&gt;</c>.
 /// </summary>
 internal static class BlockAttrListBytes
 {

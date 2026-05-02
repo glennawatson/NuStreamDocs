@@ -11,7 +11,6 @@ namespace NuStreamDocs.Privacy.Bytes;
 /// Byte-level scanner that locates <c>src=</c> / <c>href=</c>
 /// attributes with absolute http(s) URLs and either rewrites them to
 /// <c>/{local}</c> via the registry or records them for audit.
-/// Replaces <c>AssetAttributeRegex</c>.
 /// </summary>
 internal static class AssetAttributeBytes
 {

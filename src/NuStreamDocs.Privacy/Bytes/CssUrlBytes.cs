@@ -8,9 +8,8 @@ using System.Text;
 namespace NuStreamDocs.Privacy.Bytes;
 
 /// <summary>
-/// Byte-level scanner for CSS <c>url(...)</c> tokens. Replaces
-/// <c>InlineStyleUrlRegex</c>. Supports double-quoted, single-quoted,
-/// and unquoted forms.
+/// Byte-level scanner for CSS <c>url(...)</c> tokens. Supports
+/// double-quoted, single-quoted, and unquoted forms.
 /// </summary>
 internal static class CssUrlBytes
 {

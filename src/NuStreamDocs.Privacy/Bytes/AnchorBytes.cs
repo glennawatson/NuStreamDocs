@@ -9,8 +9,7 @@ namespace NuStreamDocs.Privacy.Bytes;
 /// <summary>
 /// Byte-level UTF-8 scanner that hardens external <c>&lt;a&gt;</c>
 /// anchors with <c>rel="noopener noreferrer"</c> and/or
-/// <c>target="_blank"</c>. Replaces the regex-based
-/// <c>ExternalAnchorRegex</c> + <c>MergeAttribute</c> pipeline.
+/// <c>target="_blank"</c>.
 /// </summary>
 internal static class AnchorBytes
 {

@@ -8,8 +8,7 @@ namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
 /// <summary>
 /// Byte-level scanner for the paired-inline attr-list pattern —
-/// <c>&lt;tag attrs&gt;inner&lt;/tag&gt;{: attrs }</c>. Replaces
-/// <c>InlinePairedAttrListRegex</c>.
+/// <c>&lt;tag attrs&gt;inner&lt;/tag&gt;{: attrs }</c>.
 /// </summary>
 internal static class InlinePairedAttrListBytes
 {

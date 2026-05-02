@@ -8,8 +8,7 @@ namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
 /// <summary>
 /// Byte-level scanner for the void-inline attr-list pattern —
-/// <c>&lt;img attrs[/]&gt;{: attrs }</c>. Replaces
-/// <c>InlineVoidAttrListRegex</c>.
+/// <c>&lt;img attrs[/]&gt;{: attrs }</c>.
 /// </summary>
 internal static class InlineVoidAttrListBytes
 {
