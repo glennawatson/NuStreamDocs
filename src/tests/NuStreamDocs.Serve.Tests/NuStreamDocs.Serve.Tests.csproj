@@ -8,6 +8,7 @@
          FileSystemWatcher-based loop; the AspNetCore types stay in
          DevServer / LiveReloadBroker which the tests don't touch. -->
     <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
