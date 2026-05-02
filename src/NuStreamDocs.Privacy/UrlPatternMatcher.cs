@@ -2,27 +2,36 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
-using System.Text.RegularExpressions;
-
 namespace NuStreamDocs.Privacy;
 
 /// <summary>
-/// Compiled glob-pattern matcher for URL-level allow/exclude rules.
-/// Supports <c>*</c> (any chars) and <c>?</c> (one char) wildcards;
-/// every other character is matched literally.
+/// Glob-pattern matcher for URL-level allow/exclude rules. Supports
+/// <c>*</c> (any chars, including empty) and <c>?</c> (exactly one
+/// char); every other character is matched literally and case-
+/// insensitively. Patterns are anchored at both ends.
 /// </summary>
 internal sealed class UrlPatternMatcher
 {
-    /// <summary>Per-match upper bound — every URL pattern is bounded so a pathological input can't lock the build.</summary>
-    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
-
-    /// <summary>Pre-compiled patterns; empty matcher matches nothing.</summary>
-    private readonly Regex[] _patterns;
+    /// <summary>Stored patterns; empty matcher matches nothing.</summary>
+    private readonly string[] _patterns;
 
     /// <summary>Initializes a new instance of the <see cref="UrlPatternMatcher"/> class.</summary>
     /// <param name="patterns">Glob patterns (case-insensitive). Null or empty disables matching.</param>
-    public UrlPatternMatcher(string[]? patterns) => _patterns = CompileAll(patterns);
+    public UrlPatternMatcher(string[]? patterns)
+    {
+        if (patterns is null or [])
+        {
+            _patterns = [];
+            return;
+        }
+
+        for (var i = 0; i < patterns.Length; i++)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(patterns[i]);
+        }
+
+        _patterns = patterns;
+    }
 
     /// <summary>Gets a value indicating whether any patterns are configured.</summary>
     public bool HasPatterns => _patterns is [_, ..];
@@ -33,9 +42,10 @@ internal sealed class UrlPatternMatcher
     public bool IsMatch(string url)
     {
         ArgumentNullException.ThrowIfNull(url);
+        var input = url.AsSpan();
         for (var i = 0; i < _patterns.Length; i++)
         {
-            if (_patterns[i].IsMatch(url))
+            if (MatchGlob(_patterns[i].AsSpan(), input))
             {
                 return true;
             }
@@ -44,60 +54,57 @@ internal sealed class UrlPatternMatcher
         return false;
     }
 
-    /// <summary>Compiles one glob pattern into a regex anchored at both ends.</summary>
-    /// <param name="glob">Glob pattern.</param>
-    /// <returns>Compiled, case-insensitive <see cref="Regex"/>.</returns>
-    private static Regex Compile(string glob)
+    /// <summary>
+    /// Iterative glob match with single-star backtracking. Linear in the
+    /// length of the input plus the pattern in the common case; the
+    /// backtrack is bounded by the position of the most recent <c>*</c>.
+    /// </summary>
+    /// <param name="pattern">Glob pattern.</param>
+    /// <param name="input">Candidate input.</param>
+    /// <returns>True when the whole input matches the whole pattern.</returns>
+    private static bool MatchGlob(ReadOnlySpan<char> pattern, ReadOnlySpan<char> input)
     {
-        ArgumentException.ThrowIfNullOrEmpty(glob);
-        Span<char> single = stackalloc char[1];
-        var sb = new StringBuilder(glob.Length + 4).Append('^');
-        for (var i = 0; i < glob.Length; i++)
+        var p = 0;
+        var i = 0;
+        var starP = -1;
+        var starI = 0;
+        while (i < input.Length)
         {
-            var c = glob[i];
-            switch (c)
+            if (p < pattern.Length && (pattern[p] is '?' || EqualsIgnoreCase(pattern[p], input[i])))
             {
-                case '*':
-                {
-                    sb.Append(".*");
-                    break;
-                }
-
-                case '?':
-                {
-                    sb.Append('.');
-                    break;
-                }
-
-                default:
-                {
-                    single[0] = c;
-                    sb.Append(Regex.Escape(new(single)));
-                    break;
-                }
+                p++;
+                i++;
+                continue;
             }
+
+            if (p < pattern.Length && pattern[p] is '*')
+            {
+                starP = p++;
+                starI = i;
+                continue;
+            }
+
+            if (starP < 0)
+            {
+                return false;
+            }
+
+            p = starP + 1;
+            i = ++starI;
         }
 
-        sb.Append('$');
-        return new(sb.ToString(), RegexOptions.Compiled | RegexOptions.IgnoreCase, RegexTimeout);
+        while (p < pattern.Length && pattern[p] is '*')
+        {
+            p++;
+        }
+
+        return p == pattern.Length;
     }
 
-    /// <summary>Compiles every supplied pattern into a right-sized array.</summary>
-    /// <param name="patterns">Optional pattern sequence.</param>
-    /// <returns>Compiled pattern array.</returns>
-    private static Regex[] CompileAll(string[]? patterns)
-    {
-        if (patterns is null or [])
-        {
-            return [];
-        }
-
-        var compiled = new Regex[patterns.Length];
-        for (var i = 0; i < patterns.Length; i++)
-        {
-            compiled[i] = Compile(patterns[i]);
-        }
-
-        return compiled;
-    }
+    /// <summary>Case-insensitive char equality using invariant lowering.</summary>
+    /// <param name="a">First char.</param>
+    /// <param name="b">Second char.</param>
+    /// <returns>True when equal under invariant lowering.</returns>
+    private static bool EqualsIgnoreCase(char a, char b) =>
+        a == b || char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
 }
