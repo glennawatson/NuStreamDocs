@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
-using System.Text;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
@@ -15,6 +13,13 @@ namespace NuStreamDocs.SuperFences;
 /// <c>&lt;pre&gt;&lt;code class="language-{lang}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
 /// blocks to registered <see cref="ICustomFenceHandler"/>s.
 /// </summary>
+/// <remarks>
+/// Handler lookup is byte-keyed via <see cref="System.Collections.Generic.Dictionary{TKey, TValue}.GetAlternateLookup{TAlternate}()"/>
+/// — the language slice off the rendered HTML drives the lookup with
+/// no UTF-16 transcoding and no per-fence byte-array allocation. The
+/// rewrite path streams straight into the caller's destination sink
+/// instead of materializing an intermediate replacement byte array.
+/// </remarks>
 internal static class SuperFencesDispatcher
 {
     /// <summary>Gets the UTF-8 bytes of the prefix every candidate block starts with.</summary>
@@ -31,56 +36,96 @@ internal static class SuperFencesDispatcher
     /// <returns>True when the prefix is present.</returns>
     public static bool NeedsDispatch(ReadOnlySpan<byte> html) => html.IndexOf(Prefix) >= 0;
 
-    /// <summary>Rewrites <paramref name="html"/>, dispatching any matched fences in <paramref name="handlers"/>.</summary>
+    /// <summary>Walks <paramref name="html"/>, dispatching matched fences in <paramref name="handlers"/> directly into <paramref name="sink"/>.</summary>
     /// <param name="html">Rendered HTML bytes.</param>
-    /// <param name="handlers">Resolved language-→-handler index.</param>
-    /// <returns>The rewritten bytes (or the original verbatim when nothing matches).</returns>
-    public static byte[] Dispatch(ReadOnlySpan<byte> html, FrozenDictionary<string, ICustomFenceHandler> handlers)
+    /// <param name="handlers">Span-keyed handler lookup (an alternate lookup over a byte-array keyed dictionary).</param>
+    /// <param name="sink">UTF-8 sink to receive the rewritten output.</param>
+    /// <returns>True when at least one block was dispatched (i.e. the sink content differs from <paramref name="html"/>); false when no candidate matched a handler.</returns>
+    public static bool DispatchInto(
+        ReadOnlySpan<byte> html,
+        Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
+        IBufferWriter<byte> sink)
     {
+        ArgumentNullException.ThrowIfNull(sink);
         if (html.IsEmpty)
         {
-            return [];
+            return false;
         }
 
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        var changed = false;
         var cursor = 0;
         while (cursor < html.Length)
         {
             var rel = html[cursor..].IndexOf(Prefix);
             if (rel < 0)
             {
-                sink.Write(html[cursor..]);
+                if (changed)
+                {
+                    sink.Write(html[cursor..]);
+                }
+
                 break;
             }
 
             var blockStart = cursor + rel;
-            sink.Write(html[cursor..blockStart]);
-
-            if (!TryDispatchBlock(html, blockStart, handlers, sink, out var blockEnd))
+            if (!TryResolveHandler(html, blockStart, handlers, out var handler, out var bodyStart, out var bodyEnd))
             {
-                // Not a block we can dispatch — copy the prefix verbatim and keep walking.
+                // Not a block we can dispatch. If we've already started rewriting, copy the prefix verbatim so the rest of the page reaches the sink intact.
                 var prefixEnd = blockStart + Prefix.Length;
-                sink.Write(html[blockStart..prefixEnd]);
+                if (changed)
+                {
+                    sink.Write(html[cursor..prefixEnd]);
+                }
+
                 cursor = prefixEnd;
                 continue;
             }
 
-            cursor = blockEnd;
+            if (!changed)
+            {
+                // First match — backfill the verbatim prefix we held off writing so the sink starts with the bytes leading up to the block.
+                sink.Write(html[..blockStart]);
+                changed = true;
+            }
+            else
+            {
+                sink.Write(html[cursor..blockStart]);
+            }
+
+            var decoded = HtmlEntityDecoder.Decode(html[bodyStart..bodyEnd]);
+            handler.Render(decoded, sink);
+
+            cursor = bodyEnd + BlockSuffix.Length;
         }
 
-        return [.. sink.WrittenSpan];
+        return changed;
     }
 
-    /// <summary>Tries to dispatch the block starting at <paramref name="blockStart"/>.</summary>
+    /// <summary>
+    /// Probes the block at <paramref name="blockStart"/>: validates
+    /// shape, resolves the language to a handler, and returns the body
+    /// span. Single hash + single equality call via the .NET 9
+    /// <c>Dictionary.AlternateLookup.TryGetValue</c> overload.
+    /// </summary>
     /// <param name="html">Rendered HTML.</param>
-    /// <param name="blockStart">Offset of the <c>&lt;pre&gt;</c>.</param>
-    /// <param name="handlers">Handler index.</param>
-    /// <param name="sink">Output sink.</param>
-    /// <param name="blockEnd">Exclusive end of the dispatched block on success.</param>
-    /// <returns>True when a handler was matched and invoked.</returns>
-    private static bool TryDispatchBlock(ReadOnlySpan<byte> html, int blockStart, FrozenDictionary<string, ICustomFenceHandler> handlers, ArrayBufferWriter<byte> sink, out int blockEnd)
+    /// <param name="blockStart">Offset of the leading <c>&lt;</c>.</param>
+    /// <param name="handlers">Span-keyed handler lookup.</param>
+    /// <param name="handler">Resolved handler on success.</param>
+    /// <param name="bodyStart">Inclusive offset of the body's first byte on success.</param>
+    /// <param name="bodyEnd">Exclusive offset of the body's last byte on success.</param>
+    /// <returns>True when both the block shape and the language resolve.</returns>
+    private static bool TryResolveHandler(
+        ReadOnlySpan<byte> html,
+        int blockStart,
+        Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
+        out ICustomFenceHandler handler,
+        out int bodyStart,
+        out int bodyEnd)
     {
-        blockEnd = 0;
+        handler = null!;
+        bodyStart = 0;
+        bodyEnd = 0;
+
         var langStart = blockStart + Prefix.Length;
         var classCloseRel = html[langStart..].IndexOf(ClassClose);
         if (classCloseRel < 0)
@@ -89,23 +134,14 @@ internal static class SuperFencesDispatcher
         }
 
         var langEnd = langStart + classCloseRel;
-        var bodyStart = langEnd + ClassClose.Length;
+        bodyStart = langEnd + ClassClose.Length;
         var suffixRel = html[bodyStart..].IndexOf(BlockSuffix);
         if (suffixRel < 0)
         {
             return false;
         }
 
-        var bodyEnd = bodyStart + suffixRel;
-        var language = Encoding.UTF8.GetString(html[langStart..langEnd]);
-        if (!handlers.TryGetValue(language, out var handler))
-        {
-            return false;
-        }
-
-        var decoded = HtmlEntityDecoder.Decode(html[bodyStart..bodyEnd]);
-        handler.Render(decoded, sink);
-        blockEnd = bodyEnd + BlockSuffix.Length;
-        return true;
+        bodyEnd = bodyStart + suffixRel;
+        return handlers.TryGetValue(html[langStart..langEnd], out _, out handler!);
     }
 }

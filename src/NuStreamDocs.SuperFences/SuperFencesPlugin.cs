@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
+using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
@@ -23,12 +23,16 @@ namespace NuStreamDocs.SuperFences;
 /// <see cref="ICustomFenceHandler"/> — same composition pattern
 /// the head-extras / static-asset providers use. Handlers receive
 /// the fence body with HTML entities decoded back to their
-/// literal bytes.
+/// literal bytes. The handler index is byte-keyed so the per-page
+/// dispatch loop never UTF-16 transcodes a language identifier;
+/// the rewrite streams straight into the page sink via
+/// <see cref="HtmlSnapshotRewriter"/> instead of materializing an
+/// intermediate replacement byte array.
 /// </remarks>
 public sealed class SuperFencesPlugin : DocPluginBase
 {
-    /// <summary>Resolved handler index, keyed on language name. Built once during <see cref="OnConfigureAsync"/>.</summary>
-    private FrozenDictionary<string, ICustomFenceHandler>? _handlers;
+    /// <summary>Resolved handler index, keyed on the language bytes. Built once during <see cref="OnConfigureAsync"/>.</summary>
+    private Dictionary<byte[], ICustomFenceHandler>? _handlers;
 
     /// <inheritdoc/>
     public override string Name => "superfences";
@@ -38,17 +42,16 @@ public sealed class SuperFencesPlugin : DocPluginBase
     {
         _ = cancellationToken;
         var plugins = context.Plugins;
-        var seed = new Dictionary<string, ICustomFenceHandler>(StringComparer.Ordinal);
+        var seed = new Dictionary<byte[], ICustomFenceHandler>(plugins.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < plugins.Length; i++)
         {
             if (plugins[i] is ICustomFenceHandler handler && handler.Language is { Length: > 0 })
             {
-                seed[handler.Language] = handler;
+                seed[Encoding.UTF8.GetBytes(handler.Language)] = handler;
             }
         }
 
-        _handlers = seed.ToFrozenDictionary(StringComparer.Ordinal);
-
+        _handlers = seed;
         return ValueTask.CompletedTask;
     }
 
@@ -63,21 +66,35 @@ public sealed class SuperFencesPlugin : DocPluginBase
         }
 
         var html = context.Html;
-        var rendered = html.WrittenSpan;
-        if (!SuperFencesDispatcher.NeedsDispatch(rendered))
+        if (!SuperFencesDispatcher.NeedsDispatch(html.WrittenSpan))
         {
             return ValueTask.CompletedTask;
         }
 
-        var rewritten = SuperFencesDispatcher.Dispatch(rendered, handlers);
-        if (rewritten.Length == rendered.Length && rewritten.AsSpan().SequenceEqual(rendered))
-        {
-            return ValueTask.CompletedTask;
-        }
-
-        html.ResetWrittenCount();
-        html.Write(rewritten);
+        var altLookup = handlers.GetAlternateLookup<ReadOnlySpan<byte>>();
+        HtmlSnapshotRewriter.Rewrite(html, altLookup, RewriteCallback);
 
         return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Static callback that runs inside <see cref="HtmlSnapshotRewriter"/>.
+    /// The dispatcher writes into <paramref name="sink"/> when it found
+    /// at least one fence; on no-op we copy the snapshot back verbatim.
+    /// </summary>
+    /// <param name="snapshot">Read-only snapshot of the page bytes.</param>
+    /// <param name="sink">Reset destination buffer.</param>
+    /// <param name="lookup">Span-keyed handler lookup.</param>
+    private static void RewriteCallback(
+        ReadOnlySpan<byte> snapshot,
+        ArrayBufferWriter<byte> sink,
+        Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> lookup)
+    {
+        if (SuperFencesDispatcher.DispatchInto(snapshot, lookup, sink))
+        {
+            return;
+        }
+
+        sink.Write(snapshot);
     }
 }

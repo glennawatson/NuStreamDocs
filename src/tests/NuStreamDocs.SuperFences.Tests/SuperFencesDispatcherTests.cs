@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Frozen;
 using System.Text;
 using NuStreamDocs.Plugins;
 
@@ -78,15 +77,20 @@ public class SuperFencesDispatcherTests
     /// <returns>Rewritten HTML.</returns>
     private static string Dispatch(string input, ICustomFenceHandler[] handlers)
     {
-        var seed = new Dictionary<string, ICustomFenceHandler>(StringComparer.Ordinal);
+        var index = new Dictionary<byte[], ICustomFenceHandler>(handlers.Length, Common.ByteArrayComparer.Instance);
         for (var i = 0; i < handlers.Length; i++)
         {
-            seed[handlers[i].Language] = handlers[i];
+            index[Encoding.UTF8.GetBytes(handlers[i].Language)] = handlers[i];
         }
 
-        var index = seed.ToFrozenDictionary(StringComparer.Ordinal);
         var bytes = Encoding.UTF8.GetBytes(input);
-        return Encoding.UTF8.GetString(SuperFencesDispatcher.Dispatch(bytes, index));
+        var sink = new ArrayBufferWriter<byte>(Math.Max(bytes.Length, 1));
+        if (!SuperFencesDispatcher.DispatchInto(bytes, index.GetAlternateLookup<ReadOnlySpan<byte>>(), sink))
+        {
+            sink.Write(bytes);
+        }
+
+        return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 
     /// <summary>Stub handler for the <c>mermaid</c> fence; emits a simple <c>div</c> wrapper.</summary>

@@ -9,13 +9,22 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Branch-coverage tests for ExternalAssetRegistry.</summary>
 public class ExternalAssetRegistryTests
 {
+    /// <summary>Standard test asset directory; reused across registry instances.</summary>
+    private const string AssetDir = "assets/external";
+
+    /// <summary>Asset directory + trailing slash, the prefix every produced local path starts with.</summary>
+    private const string AssetDirPrefix = AssetDir + "/";
+
+    /// <summary>Test PNG URL — used across the byte/string overload parity, idempotency, and snapshot tests.</summary>
+    private const string PngUrl = "https://x.test/a.png";
+
     /// <summary>Byte overload matches the string overload for a typical URL — adapter parity.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ByteOverloadMatchesStringOverload()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
-        var fromString = registry.GetOrAdd("https://x.test/a.png");
+        var registry = new ExternalAssetRegistry(AssetDir);
+        var fromString = registry.GetOrAdd(PngUrl);
         var fromBytes = registry.GetOrAdd("https://x.test/a.png"u8);
         await Assert.That(Encoding.UTF8.GetString(fromBytes)).IsEqualTo(fromString);
     }
@@ -25,10 +34,10 @@ public class ExternalAssetRegistryTests
     [Test]
     public async Task ByteOverloadPreservesExtension()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry(AssetDir);
         var local = registry.GetOrAdd("https://x.test/a/b.css"u8);
         await Assert.That(local.AsSpan().EndsWith(".css"u8)).IsTrue();
-        await Assert.That(local.AsSpan().StartsWith("assets/external/"u8)).IsTrue();
+        await Assert.That(local.AsSpan().StartsWith(Encoding.UTF8.GetBytes(AssetDirPrefix))).IsTrue();
     }
 
     /// <summary>Empty byte input throws at the boundary (matches the string overload).</summary>
@@ -36,7 +45,7 @@ public class ExternalAssetRegistryTests
     [Test]
     public async Task ByteOverloadRejectsEmpty()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry(AssetDir);
         await Assert.That(() => registry.GetOrAdd(default(ReadOnlySpan<byte>).ToArray()))
             .Throws<ArgumentException>();
     }
@@ -46,7 +55,7 @@ public class ExternalAssetRegistryTests
     [Test]
     public async Task ByteOverloadIsIdempotent()
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry(AssetDir);
         var a = registry.GetOrAdd("https://x.test/a.png"u8);
         var b = registry.GetOrAdd("https://x.test/a.png"u8);
         await Assert.That(a.AsSpan().SequenceEqual(b)).IsTrue();
@@ -57,16 +66,16 @@ public class ExternalAssetRegistryTests
     /// <param name="expectedExt">Expected suffix on the registered path.</param>
     /// <returns>Async test.</returns>
     [Test]
-    [Arguments("https://x.test/a.png", ".png")]
+    [Arguments(PngUrl, ".png")]
     [Arguments("https://x.test/a/b.css", ".css")]
     [Arguments("https://x.test/a.WOFF2", ".WOFF2")]
     [Arguments("https://x.test/a.svg?v=1", ".svg")]
     public async Task RecognizedExtensionPreserved(string url, string expectedExt)
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry(AssetDir);
         var local = registry.GetOrAdd(url);
         await Assert.That(local).EndsWith(expectedExt);
-        await Assert.That(local).StartsWith("assets/external/");
+        await Assert.That(local).StartsWith(AssetDirPrefix);
     }
 
     /// <summary>Paths without a recognized extension drop to a hash-only filename.</summary>
@@ -80,10 +89,10 @@ public class ExternalAssetRegistryTests
     [Arguments("not-a-uri")]
     public async Task UnusableExtensionStripped(string url)
     {
-        var registry = new ExternalAssetRegistry("assets/external");
+        var registry = new ExternalAssetRegistry(AssetDir);
         var local = registry.GetOrAdd(url);
-        await Assert.That(local).StartsWith("assets/external/");
-        await Assert.That(local.Contains('.', StringComparison.Ordinal) && local.LastIndexOf('.') > "assets/external/".Length - 1).IsFalse();
+        await Assert.That(local).StartsWith(AssetDirPrefix);
+        await Assert.That(local.Contains('.', StringComparison.Ordinal) && local.LastIndexOf('.') > AssetDirPrefix.Length - 1).IsFalse();
     }
 
     /// <summary>The same URL maps to the same local path on subsequent calls.</summary>
@@ -92,8 +101,8 @@ public class ExternalAssetRegistryTests
     public async Task GetOrAddIsIdempotent()
     {
         var registry = new ExternalAssetRegistry("d");
-        var a = registry.GetOrAdd("https://x.test/a.png");
-        var b = registry.GetOrAdd("https://x.test/a.png");
+        var a = registry.GetOrAdd(PngUrl);
+        var b = registry.GetOrAdd(PngUrl);
         await Assert.That(a).IsEqualTo(b);
     }
 
@@ -103,7 +112,7 @@ public class ExternalAssetRegistryTests
     public async Task DifferentUrlsDistinctPaths()
     {
         var registry = new ExternalAssetRegistry("d");
-        var a = registry.GetOrAdd("https://x.test/a.png");
+        var a = registry.GetOrAdd(PngUrl);
         var b = registry.GetOrAdd("https://x.test/b.png");
         await Assert.That(a).IsNotEqualTo(b);
     }
@@ -113,9 +122,9 @@ public class ExternalAssetRegistryTests
     [Test]
     public async Task TrailingSlashTrimmed()
     {
-        var registry = new ExternalAssetRegistry("assets/external/");
-        var local = registry.GetOrAdd("https://x.test/a.png");
-        await Assert.That(local).StartsWith("assets/external/");
+        var registry = new ExternalAssetRegistry(AssetDirPrefix);
+        var local = registry.GetOrAdd(PngUrl);
+        await Assert.That(local).StartsWith(AssetDirPrefix);
         await Assert.That(local.StartsWith("assets/external//", StringComparison.Ordinal)).IsFalse();
     }
 
@@ -125,7 +134,7 @@ public class ExternalAssetRegistryTests
     public async Task EntriesSnapshotReflectsRegistrations()
     {
         var registry = new ExternalAssetRegistry("d");
-        registry.GetOrAdd("https://x.test/a.png");
+        registry.GetOrAdd(PngUrl);
         registry.GetOrAdd("https://x.test/b.css");
         var entries = registry.EntriesSnapshot();
         await Assert.That(entries.Length).IsEqualTo(2);
@@ -137,8 +146,8 @@ public class ExternalAssetRegistryTests
     public async Task UrlsSnapshotReturnsUrlsOnly()
     {
         var registry = new ExternalAssetRegistry("d");
-        registry.GetOrAdd("https://x.test/a.png");
+        registry.GetOrAdd(PngUrl);
         var urls = registry.UrlsSnapshot();
-        await Assert.That(urls).Contains("https://x.test/a.png");
+        await Assert.That(urls).Contains(PngUrl);
     }
 }
