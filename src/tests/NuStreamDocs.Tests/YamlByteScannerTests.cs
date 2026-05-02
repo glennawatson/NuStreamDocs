@@ -21,7 +21,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task LineEndCases()
     {
-        var bytes = Encoding.UTF8.GetBytes("ab\ncd");
+        var bytes = "ab\ncd"u8.ToArray();
         await Assert.That(YamlByteScanner.LineEnd(bytes, 0)).IsEqualTo(3);
         await Assert.That(YamlByteScanner.LineEnd(bytes, 3)).IsEqualTo(5);
     }
@@ -31,7 +31,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task TrimLeadingDropsAsciiWhitespace()
     {
-        var bytes = Encoding.UTF8.GetBytes(" \t\rfoo");
+        var bytes = " \t\rfoo"u8.ToArray();
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.TrimLeading(bytes))).IsEqualTo("foo");
     }
 
@@ -40,7 +40,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task TrimWhitespaceDropsBothEnds()
     {
-        var bytes = Encoding.UTF8.GetBytes("  foo\n");
+        var bytes = "  foo\n"u8.ToArray();
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.TrimWhitespace(bytes))).IsEqualTo("foo");
     }
 
@@ -49,10 +49,10 @@ public class YamlByteScannerTests
     [Test]
     public async Task UnquoteVariants()
     {
-        var dq = Encoding.UTF8.GetBytes("\"hi\"");
-        var sq = Encoding.UTF8.GetBytes("'hi'");
-        var none = Encoding.UTF8.GetBytes("hi");
-        var mixed = Encoding.UTF8.GetBytes("\"hi'");
+        var dq = "\"hi\""u8.ToArray();
+        var sq = "'hi'"u8.ToArray();
+        var none = "hi"u8.ToArray();
+        var mixed = "\"hi'"u8.ToArray();
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.Unquote(dq))).IsEqualTo("hi");
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.Unquote(sq))).IsEqualTo("hi");
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.Unquote(none))).IsEqualTo("hi");
@@ -65,15 +65,15 @@ public class YamlByteScannerTests
     public async Task IsTopLevelKeyRejections()
     {
         await Assert.That(YamlByteScanner.IsTopLevelKey([])).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes(" key: x"))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("\tkey: x"))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("# comment"))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("- item"))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("\n"))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("\r"))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("---"))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("..."))).IsFalse();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("noColon"))).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey(" key: x"u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("\tkey: x"u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("# comment"u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("- item"u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("\n"u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("\r"u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("---"u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("..."u8)).IsFalse();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("noColon"u8)).IsFalse();
     }
 
     /// <summary>IsTopLevelKey accepts well-formed keys.</summary>
@@ -81,8 +81,8 @@ public class YamlByteScannerTests
     [Test]
     public async Task IsTopLevelKeyAccepts()
     {
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("title: Hello"))).IsTrue();
-        await Assert.That(YamlByteScanner.IsTopLevelKey(Encoding.UTF8.GetBytes("a:"))).IsTrue();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("title: Hello"u8)).IsTrue();
+        await Assert.That(YamlByteScanner.IsTopLevelKey("a:"u8)).IsTrue();
     }
 
     /// <summary>KeyOf returns the trimmed key span; empty when no colon.</summary>
@@ -90,8 +90,8 @@ public class YamlByteScannerTests
     [Test]
     public async Task KeyOfCases()
     {
-        await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.KeyOf(Encoding.UTF8.GetBytes("title : Hi")))).IsEqualTo("title");
-        await Assert.That(YamlByteScanner.KeyOf(Encoding.UTF8.GetBytes("noColon")).Length).IsEqualTo(0);
+        await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.KeyOf("title : Hi"u8))).IsEqualTo("title");
+        await Assert.That(YamlByteScanner.KeyOf("noColon"u8).Length).IsEqualTo(0);
     }
 
     /// <summary>AdvancePastValue skips indented continuations, list rows, comments, blank lines; stops at next top-level key.</summary>
@@ -99,7 +99,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task AdvancePastValueIndents()
     {
-        var src = Encoding.UTF8.GetBytes("  child: 1\n  - item\n# comment\n\nnext: x\n");
+        var src = "  child: 1\n  - item\n# comment\n\nnext: x\n"u8.ToArray();
         var cursor = YamlByteScanner.AdvancePastValue(src, 0);
         await Assert.That(cursor).IsGreaterThan(0);
 
@@ -113,7 +113,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task AdvancePastValueAtEnd()
     {
-        var src = Encoding.UTF8.GetBytes("  child: 1\n");
+        var src = "  child: 1\n"u8.ToArray();
         await Assert.That(YamlByteScanner.AdvancePastValue(src, 0)).IsEqualTo(src.Length);
     }
 }

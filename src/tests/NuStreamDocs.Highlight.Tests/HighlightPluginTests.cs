@@ -40,7 +40,7 @@ public class HighlightPluginTests
     public async Task RewritesKnownLanguageBlock()
     {
         var sink = new ArrayBufferWriter<byte>(128);
-        sink.Write(Encoding.UTF8.GetBytes("<pre><code class=\"language-csharp\">int x = 1;</code></pre>"));
+        sink.Write("<pre><code class=\"language-csharp\">int x = 1;</code></pre>"u8);
         await new HighlightPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("class=\"kt\"");
     }

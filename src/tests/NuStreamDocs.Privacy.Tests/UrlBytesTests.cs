@@ -192,14 +192,14 @@ public class UrlBytesTests
     public async Task AuditCollectsFromAllThreeSurfaces()
     {
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: ["cdn.test"]);
-        var auditSet = new ConcurrentDictionary<string, byte>();
+        var auditSet = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
         const string Html = "<img src=\"https://cdn.test/a.png\">"
             + "<img srcset=\"https://cdn.test/b.png 2x\">"
             + "<style>.x { background: url(https://cdn.test/c.png); }</style>";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Html), filter, auditSet);
-        await Assert.That(auditSet.ContainsKey("https://cdn.test/a.png")).IsTrue();
-        await Assert.That(auditSet.ContainsKey("https://cdn.test/b.png")).IsTrue();
-        await Assert.That(auditSet.ContainsKey("https://cdn.test/c.png")).IsTrue();
+        await Assert.That(auditSet.ContainsKey("https://cdn.test/a.png"u8.ToArray())).IsTrue();
+        await Assert.That(auditSet.ContainsKey("https://cdn.test/b.png"u8.ToArray())).IsTrue();
+        await Assert.That(auditSet.ContainsKey("https://cdn.test/c.png"u8.ToArray())).IsTrue();
     }
 
     /// <summary>Filter rejection keeps the URL out of the audit set.</summary>
@@ -208,7 +208,7 @@ public class UrlBytesTests
     public async Task AuditRespectsFilter()
     {
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: ["only.test"]);
-        var auditSet = new ConcurrentDictionary<string, byte>();
+        var auditSet = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
         const string Html = "<img src=\"https://cdn.test/a.png\">";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Html), filter, auditSet);
         await Assert.That(auditSet).IsEmpty();

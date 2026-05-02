@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
@@ -66,19 +65,19 @@ internal static class AssetAttributeBytes
             return false;
         }
 
-        var url = Encoding.UTF8.GetString(html[urlStart..urlEnd]);
-        if (!ctx.Filter.ShouldLocalize(url))
+        var urlBytes = html[urlStart..urlEnd];
+        if (!ctx.Filter.ShouldLocalize(urlBytes))
         {
             advanceTo = urlEnd;
             return false;
         }
 
-        var local = ctx.Registry.GetOrAdd(url);
+        var localBytes = ctx.Registry.GetOrAdd(urlBytes);
         sink.Write(html[lastEmit..urlStart]);
         var dst = sink.GetSpan(1);
         dst[0] = (byte)'/';
         sink.Advance(1);
-        AsciiByteHelpers.EncodeStringInto(local, sink);
+        sink.Write(localBytes);
         lastEmit = urlEnd;
         advanceTo = urlEnd;
         _ = quote;
@@ -99,10 +98,10 @@ internal static class AssetAttributeBytes
             return false;
         }
 
-        var url = Encoding.UTF8.GetString(html[urlStart..urlEnd]);
-        if (audit.Filter.ShouldLocalize(url))
+        var urlBytes = html[urlStart..urlEnd];
+        if (audit.Filter.ShouldLocalize(urlBytes))
         {
-            audit.Set.TryAdd(url, 0);
+            audit.Set.TryAdd(urlBytes.ToArray(), 0);
         }
 
         advanceTo = urlEnd;

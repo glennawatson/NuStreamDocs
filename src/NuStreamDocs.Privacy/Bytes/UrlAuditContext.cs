@@ -8,5 +8,5 @@ namespace NuStreamDocs.Privacy.Bytes;
 
 /// <summary>Read-only context bundle passed down to URL byte audit walkers.</summary>
 /// <param name="Filter">Host filter.</param>
-/// <param name="Set">Concurrent set the matched URLs are added to.</param>
-internal sealed record UrlAuditContext(HostFilter Filter, ConcurrentDictionary<string, byte> Set);
+/// <param name="Set">Concurrent set the matched URLs are added to (byte-array keyed).</param>
+internal sealed record UrlAuditContext(HostFilter Filter, ConcurrentDictionary<byte[], byte> Set);

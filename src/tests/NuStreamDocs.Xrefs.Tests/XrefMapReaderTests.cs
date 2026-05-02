@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace NuStreamDocs.Xrefs.Tests;
 
 /// <summary>Direct tests for XrefMapReader covering its tolerance branches.</summary>
@@ -82,11 +80,11 @@ public class XrefMapReaderTests
     [Test]
     public async Task UnknownReferenceFieldsTolerated()
     {
-        var json = Encoding.UTF8.GetBytes("""
-            {"references":[
-                {"uid":"X","name":"X.Display","fullName":"Some.Namespace.X","commentId":"T:Some.Namespace.X","href":"/x.html"}
-            ]}
-            """);
+        var json = """
+                   {"references":[
+                       {"uid":"X","name":"X.Display","fullName":"Some.Namespace.X","commentId":"T:Some.Namespace.X","href":"/x.html"}
+                   ]}
+                   """u8.ToArray();
         var payload = XrefMapReader.Read(json);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
         await Assert.That(payload.Entries[0].Uid).IsEqualTo("X");

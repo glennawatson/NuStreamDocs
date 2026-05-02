@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using System.Text.Json;
 using NuStreamDocs.Config;
 
@@ -33,7 +32,7 @@ public class ConfigReaderJsonPipelineTests
     [Test]
     public async Task AsyncReadInvokesConverterAndParsesJson()
     {
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes("ignored"));
+        await using var stream = new MemoryStream("ignored"u8.ToArray());
         var config = await ConfigReaderJsonPipeline.ReadAsync(stream, WriteSiteNameJsonAsync, CancellationToken.None);
         await Assert.That(config.SiteName).IsEqualTo("AsyncHelper");
     }

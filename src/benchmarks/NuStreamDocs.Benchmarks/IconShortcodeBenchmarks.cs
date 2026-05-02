@@ -53,8 +53,8 @@ public class IconShortcodeBenchmarks
     {
         _mixedSource = BuildRepeated(
             ":material-rocket-launch: ship :material-source-branch: branch :material-not-an-icon: miss :fontawesome-brands-github: site\n");
-        _resolverHit = Encoding.UTF8.GetBytes("rocket-launch");
-        _resolverMiss = Encoding.UTF8.GetBytes("definitely-not-a-real-icon-name");
+        _resolverHit = "rocket-launch"u8.ToArray();
+        _resolverMiss = "definitely-not-a-real-icon-name"u8.ToArray();
 
         _mdiResolver = new();
         _withMdi = new(_mdiResolver);

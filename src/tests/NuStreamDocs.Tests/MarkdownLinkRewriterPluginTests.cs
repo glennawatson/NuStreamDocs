@@ -25,7 +25,7 @@ public class MarkdownLinkRewriterPluginTests
     public async Task RewritesMdHrefToHtml()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write(Encoding.UTF8.GetBytes("<a href=\"guide/intro.md\">x</a>"));
+        sink.Write("<a href=\"guide/intro.md\">x</a>"u8);
 
         var plugin = new MarkdownLinkRewriterPlugin();
         var config = new MkDocsConfig("Site", null, "material", []);
@@ -56,7 +56,7 @@ public class MarkdownLinkRewriterPluginTests
     public async Task ExplicitDirectoryUrlsOverridesConfig()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write(Encoding.UTF8.GetBytes("<a href=\"intro.md\">x</a>"));
+        sink.Write("<a href=\"intro.md\">x</a>"u8);
 
         var plugin = new MarkdownLinkRewriterPlugin(useDirectoryUrls: true);
         var config = new MkDocsConfig("Site", null, "material", [], UseDirectoryUrls: false);

@@ -32,8 +32,8 @@ internal static class ExternalUrlScanner
     /// <summary>Records every external URL <see cref="Rewrite"/> would have localized, without modifying <paramref name="html"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="filter">Host filter.</param>
-    /// <param name="auditSet">Concurrent set the URLs are added to (the value is unused).</param>
-    public static void Audit(ReadOnlySpan<byte> html, HostFilter filter, ConcurrentDictionary<string, byte> auditSet)
+    /// <param name="auditSet">Concurrent byte-array-keyed set the URLs are added to (the value is unused).</param>
+    public static void Audit(ReadOnlySpan<byte> html, HostFilter filter, ConcurrentDictionary<byte[], byte> auditSet)
     {
         ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(auditSet);

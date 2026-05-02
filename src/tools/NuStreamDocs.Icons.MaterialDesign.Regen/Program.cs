@@ -48,6 +48,9 @@ public static class Program
     /// <summary>StyleCop analyzer category — repeated across every suppression we emit.</summary>
     private const string StyleCopCategory = "StyleCop";
 
+    /// <summary>Generated-file extension required of any caller-supplied <c>--output</c> path.</summary>
+    private const string RequiredOutputExtension = ".g.cs";
+
     /// <summary>Entry point.</summary>
     /// <param name="args">CLI args — optional <c>--output &lt;path&gt;</c> to override the generated-file location.</param>
     /// <returns>Process exit code.</returns>
@@ -93,20 +96,55 @@ public static class Program
 
     /// <summary>Resolves the output path from CLI args, defaulting to <c>MdiIconData.g.cs</c> under the assembly.</summary>
     /// <param name="args">CLI args.</param>
-    /// <returns>Absolute path.</returns>
+    /// <returns>Absolute path constrained to live under the repository root.</returns>
+    /// <remarks>
+    /// Validates that any caller-supplied <c>--output</c> resolves to a
+    /// descendant of the repository root and ends in <c>.g.cs</c>. The
+    /// resolved path then feeds <see cref="Directory.CreateDirectory(string)"/>
+    /// so an unconstrained CLI value would be a path-traversal vector
+    /// (CWE-23).
+    /// </remarks>
     private static string ResolveOutputPath(string[] args)
     {
+        var repoRoot = ResolveRepoRoot();
         for (var i = 0; i < args.Length - 1; i++)
         {
             if (args[i] is "--output" or "-o")
             {
-                return Path.GetFullPath(args[i + 1]);
+                return ValidateOutputPath(Path.GetFullPath(args[i + 1]), repoRoot);
             }
         }
 
-        var here = AppContext.BaseDirectory;
-        var repoRoot = Path.GetFullPath(Path.Combine(here, "..", "..", "..", "..", "..", ".."));
         return Path.Combine(repoRoot, "src", "NuStreamDocs.Icons.MaterialDesign", "MdiIconData.g.cs");
+    }
+
+    /// <summary>Resolves the repository root the regen tool is running inside.</summary>
+    /// <returns>Absolute, trailing-slash-free repo root.</returns>
+    private static string ResolveRepoRoot()
+    {
+        var here = AppContext.BaseDirectory;
+        return Path.GetFullPath(Path.Combine(here, "..", "..", "..", "..", "..", ".."));
+    }
+
+    /// <summary>Validates that <paramref name="resolved"/> lives under <paramref name="repoRoot"/> and ends in <see cref="RequiredOutputExtension"/>.</summary>
+    /// <param name="resolved">Absolute path produced by <see cref="Path.GetFullPath(string)"/>.</param>
+    /// <param name="repoRoot">Absolute repo root.</param>
+    /// <returns>The validated path.</returns>
+    /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
+    private static string ValidateOutputPath(string resolved, string repoRoot)
+    {
+        var normalizedRoot = repoRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!resolved.StartsWith(normalizedRoot, StringComparison.Ordinal))
+        {
+            throw new ArgumentException($"--output '{resolved}' resolves outside the repository root '{repoRoot}'.", nameof(resolved));
+        }
+
+        if (!resolved.EndsWith(RequiredOutputExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException($"--output '{resolved}' must end with '{RequiredOutputExtension}'.", nameof(resolved));
+        }
+
+        return resolved;
     }
 
     /// <summary>Runs <c>git clone --depth 1 --single-branch -- &lt;repo&gt; &lt;dir&gt;</c> against the system <c>git</c>.</summary>

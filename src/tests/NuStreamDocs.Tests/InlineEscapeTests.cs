@@ -66,7 +66,7 @@ public class InlineEscapeTests
     [Test]
     public async Task TrailingBackslashReturnsFalse()
     {
-        var bytes = Encoding.UTF8.GetBytes("\\");
+        var bytes = "\\"u8.ToArray();
         var writer = new ArrayBufferWriter<byte>();
         var pos = 0;
         var pendingTextStart = 0;
@@ -78,7 +78,7 @@ public class InlineEscapeTests
     [Test]
     public async Task PendingTextFlushedOnSuccess()
     {
-        var bytes = Encoding.UTF8.GetBytes("hi\\!");
+        var bytes = "hi\\!"u8.ToArray();
         var writer = new ArrayBufferWriter<byte>();
         var pos = 2;
         var pendingTextStart = 0;

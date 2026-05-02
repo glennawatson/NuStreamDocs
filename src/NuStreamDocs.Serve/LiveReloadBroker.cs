@@ -4,7 +4,6 @@
 
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
-using System.Text;
 
 namespace NuStreamDocs.Serve;
 
@@ -16,7 +15,7 @@ namespace NuStreamDocs.Serve;
 internal sealed class LiveReloadBroker
 {
     /// <summary>The wire payload sent to connected browsers on rebuild.</summary>
-    private static readonly byte[] ReloadPayload = Encoding.UTF8.GetBytes("reload");
+    private static readonly byte[] ReloadPayload = "reload"u8.ToArray();
 
     /// <summary>Tracks every currently-connected browser. Concurrent because clients connect/disconnect from request-handler threads.</summary>
     private readonly ConcurrentDictionary<Guid, WebSocket> _clients = new();

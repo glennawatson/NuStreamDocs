@@ -32,7 +32,7 @@ public class LightboxRegistrationTests
     public async Task WrapsBareImages()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write(System.Text.Encoding.UTF8.GetBytes("<p><img src=\"a.png\" alt=\"a\"></p>"));
+        sink.Write("<p><img src=\"a.png\" alt=\"a\"></p>"u8);
         await new LightboxPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
         await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("glightbox");
     }

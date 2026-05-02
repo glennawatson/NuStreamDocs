@@ -16,7 +16,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task BacktickWithLanguage()
     {
-        var bytes = Encoding.UTF8.GetBytes("```csharp");
+        var bytes = "```csharp"u8.ToArray();
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
     }
 
@@ -25,7 +25,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task TildeWithLanguage()
     {
-        var bytes = Encoding.UTF8.GetBytes("~~~js");
+        var bytes = "~~~js"u8.ToArray();
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("js");
     }
 
@@ -34,7 +34,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task NoLanguageYieldsEmpty()
     {
-        var bytes = Encoding.UTF8.GetBytes("```");
+        var bytes = "```"u8.ToArray();
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo(string.Empty);
     }
 
@@ -43,7 +43,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task LeadingWhitespaceTrimmed()
     {
-        var bytes = Encoding.UTF8.GetBytes("```   csharp");
+        var bytes = "```   csharp"u8.ToArray();
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
     }
 
@@ -52,7 +52,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task ExtraMetadataDropped()
     {
-        var bytes = Encoding.UTF8.GetBytes("```csharp title=\"hello.cs\"");
+        var bytes = "```csharp title=\"hello.cs\""u8.ToArray();
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
     }
 

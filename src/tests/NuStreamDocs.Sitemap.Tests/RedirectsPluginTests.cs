@@ -152,7 +152,7 @@ public class RedirectsPluginTests
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(8);
-        await plugin.OnRenderPageAsync(new("page.md", System.Text.Encoding.UTF8.GetBytes("just body"), sink), CancellationToken.None);
+        await plugin.OnRenderPageAsync(new("page.md", "just body"u8.ToArray(), sink), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         // No stubs written.

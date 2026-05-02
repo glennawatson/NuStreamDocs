@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
@@ -62,16 +61,16 @@ internal static class CssUrlBytes
             return false;
         }
 
-        var url = Encoding.UTF8.GetString(source[urlStart..urlEnd]);
-        if (!ctx.Filter.ShouldLocalize(url))
+        var urlBytes = source[urlStart..urlEnd];
+        if (!ctx.Filter.ShouldLocalize(urlBytes))
         {
             advanceTo = tokenEnd;
             return false;
         }
 
-        var local = ctx.Registry.GetOrAdd(url);
+        var localBytes = ctx.Registry.GetOrAdd(urlBytes);
         sink.Write(source[lastEmit..p]);
-        WriteRewrittenToken(quote, local, sink);
+        WriteRewrittenToken(quote, localBytes, sink);
         lastEmit = tokenEnd;
         advanceTo = tokenEnd;
         return true;
@@ -91,10 +90,10 @@ internal static class CssUrlBytes
             return false;
         }
 
-        var url = Encoding.UTF8.GetString(source[urlStart..urlEnd]);
-        if (audit.Filter.ShouldLocalize(url))
+        var urlBytes = source[urlStart..urlEnd];
+        if (audit.Filter.ShouldLocalize(urlBytes))
         {
-            audit.Set.TryAdd(url, 0);
+            audit.Set.TryAdd(urlBytes.ToArray(), 0);
         }
 
         advanceTo = tokenEnd;
@@ -206,7 +205,7 @@ internal static class CssUrlBytes
     /// <param name="quote">Quote byte (0 for unquoted).</param>
     /// <param name="local">Local rewrite path.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    private static void WriteRewrittenToken(byte quote, string local, IBufferWriter<byte> sink)
+    private static void WriteRewrittenToken(byte quote, ReadOnlySpan<byte> local, IBufferWriter<byte> sink)
     {
         sink.Write(UrlOpen);
         if (quote is not 0)
@@ -219,7 +218,7 @@ internal static class CssUrlBytes
         var slash = sink.GetSpan(1);
         slash[0] = (byte)'/';
         sink.Advance(1);
-        AsciiByteHelpers.EncodeStringInto(local, sink);
+        sink.Write(local);
         if (quote is not 0)
         {
             var q = sink.GetSpan(1);

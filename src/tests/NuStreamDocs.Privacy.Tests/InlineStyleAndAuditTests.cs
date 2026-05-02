@@ -30,11 +30,11 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task AuditModeCollectsWithoutRewriting()
     {
-        var audit = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
+        var audit = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
         const string Source = "<img src=\"https://example.com/x.png\"><style>a { background: url(https://example.com/y.png) }</style>";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Source), AllHosts, audit);
-        await Assert.That(audit.Keys).Contains("https://example.com/x.png");
-        await Assert.That(audit.Keys).Contains("https://example.com/y.png");
+        await Assert.That(audit.ContainsKey("https://example.com/x.png"u8.ToArray())).IsTrue();
+        await Assert.That(audit.ContainsKey("https://example.com/y.png"u8.ToArray())).IsTrue();
     }
 
     /// <summary>An empty allow-list defaults to "localize everything not on the skip list".</summary>

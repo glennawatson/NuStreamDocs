@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
@@ -146,19 +145,19 @@ internal static class SrcsetBytes
             return false;
         }
 
-        var url = Encoding.UTF8.GetString(entry[leading..urlEnd]);
-        if (!ctx.Filter.ShouldLocalize(url))
+        var urlBytes = entry[leading..urlEnd];
+        if (!ctx.Filter.ShouldLocalize(urlBytes))
         {
             sink.Write(entry);
             return false;
         }
 
-        var local = ctx.Registry.GetOrAdd(url);
+        var localBytes = ctx.Registry.GetOrAdd(urlBytes);
         sink.Write(entry[..leading]);
         var slash = sink.GetSpan(1);
         slash[0] = (byte)'/';
         sink.Advance(1);
-        AsciiByteHelpers.EncodeStringInto(local, sink);
+        sink.Write(localBytes);
         sink.Write(entry[urlEnd..]);
         return true;
     }
@@ -175,13 +174,13 @@ internal static class SrcsetBytes
             return;
         }
 
-        var url = Encoding.UTF8.GetString(entry[leading..urlEnd]);
-        if (!audit.Filter.ShouldLocalize(url))
+        var urlBytes = entry[leading..urlEnd];
+        if (!audit.Filter.ShouldLocalize(urlBytes))
         {
             return;
         }
 
-        audit.Set.TryAdd(url, 0);
+        audit.Set.TryAdd(urlBytes.ToArray(), 0);
     }
 
     /// <summary>Validates <c>\bsrcset\s*=\s*("|')</c> at <paramref name="p"/> and returns the value byte range.</summary>

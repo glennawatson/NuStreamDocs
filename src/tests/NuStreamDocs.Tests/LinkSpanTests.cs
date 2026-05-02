@@ -72,7 +72,7 @@ public class LinkSpanTests
     [Test]
     public async Task TryHandleEmitsAnchor()
     {
-        var bytes = Encoding.UTF8.GetBytes("[hi](u)");
+        var bytes = "[hi](u)"u8.ToArray();
         var writer = new ArrayBufferWriter<byte>();
         var pos = 0;
         var pendingTextStart = 0;
@@ -86,7 +86,7 @@ public class LinkSpanTests
     [Test]
     public async Task TryHandleMalformedReturnsFalse()
     {
-        var bytes = Encoding.UTF8.GetBytes("[unclosed");
+        var bytes = "[unclosed"u8.ToArray();
         var writer = new ArrayBufferWriter<byte>();
         var pos = 0;
         var pendingTextStart = 0;

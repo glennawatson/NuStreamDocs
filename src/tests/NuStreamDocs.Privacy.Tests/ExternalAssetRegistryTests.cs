@@ -2,11 +2,56 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Privacy.Tests;
 
 /// <summary>Branch-coverage tests for ExternalAssetRegistry.</summary>
 public class ExternalAssetRegistryTests
 {
+    /// <summary>Byte overload matches the string overload for a typical URL — adapter parity.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ByteOverloadMatchesStringOverload()
+    {
+        var registry = new ExternalAssetRegistry("assets/external");
+        var fromString = registry.GetOrAdd("https://x.test/a.png");
+        var fromBytes = registry.GetOrAdd("https://x.test/a.png"u8);
+        await Assert.That(Encoding.UTF8.GetString(fromBytes)).IsEqualTo(fromString);
+    }
+
+    /// <summary>Byte overload preserves the file extension byte-for-byte.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ByteOverloadPreservesExtension()
+    {
+        var registry = new ExternalAssetRegistry("assets/external");
+        var local = registry.GetOrAdd("https://x.test/a/b.css"u8);
+        await Assert.That(local.AsSpan().EndsWith(".css"u8)).IsTrue();
+        await Assert.That(local.AsSpan().StartsWith("assets/external/"u8)).IsTrue();
+    }
+
+    /// <summary>Empty byte input throws at the boundary (matches the string overload).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ByteOverloadRejectsEmpty()
+    {
+        var registry = new ExternalAssetRegistry("assets/external");
+        await Assert.That(() => registry.GetOrAdd(default(ReadOnlySpan<byte>).ToArray()))
+            .Throws<ArgumentException>();
+    }
+
+    /// <summary>Byte overload is idempotent — same URL returns the same byte[] on the second call.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ByteOverloadIsIdempotent()
+    {
+        var registry = new ExternalAssetRegistry("assets/external");
+        var a = registry.GetOrAdd("https://x.test/a.png"u8);
+        var b = registry.GetOrAdd("https://x.test/a.png"u8);
+        await Assert.That(a.AsSpan().SequenceEqual(b)).IsTrue();
+    }
+
     /// <summary>Recognized file extensions are preserved on the local path.</summary>
     /// <param name="url">Source URL.</param>
     /// <param name="expectedExt">Expected suffix on the registered path.</param>

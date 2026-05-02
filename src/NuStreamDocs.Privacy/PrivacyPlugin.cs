@@ -42,8 +42,8 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <summary>URL → local-path registry shared across worker threads.</summary>
     private readonly ExternalAssetRegistry _registry;
 
-    /// <summary>Audit-mode bag of detected external URLs; populated only when <see cref="PrivacyOptions.AuditOnly"/> is on.</summary>
-    private readonly ConcurrentDictionary<string, byte> _auditedUrls = new(StringComparer.Ordinal);
+    /// <summary>Audit-mode bag of detected external URL bytes; populated only when <see cref="PrivacyOptions.AuditOnly"/> is on.</summary>
+    private readonly ConcurrentDictionary<byte[], byte> _auditedUrls = new(ByteArrayComparer.Instance);
 
     /// <summary>Inline style hashes accumulated when <see cref="PrivacyOptions.GenerateCspManifest"/> is on.</summary>
     private readonly ConcurrentDictionary<string, byte> _styleHashes = new(StringComparer.Ordinal);
@@ -263,15 +263,22 @@ public sealed class PrivacyPlugin : IDocPlugin
             ? Path.Combine(outputRoot, ".cache", "privacy")
             : _options.CacheDirectory;
 
-    /// <summary>Builds a snapshot of the audited URLs.</summary>
+    /// <summary>Builds a snapshot of the audited URLs, decoding from byte storage at the diagnostic boundary.</summary>
     /// <returns>Right-sized URL array.</returns>
     private string[] GetAuditedUrlsSnapshot()
     {
-        if (_options.AuditOnly)
+        if (!_options.AuditOnly)
         {
-            return [.. _auditedUrls.Keys];
+            return _registry.UrlsSnapshot();
         }
 
-        return _registry.UrlsSnapshot();
+        byte[][] keys = [.. _auditedUrls.Keys];
+        var result = new string[keys.Length];
+        for (var i = 0; i < keys.Length; i++)
+        {
+            result[i] = System.Text.Encoding.UTF8.GetString(keys[i]);
+        }
+
+        return result;
     }
 }

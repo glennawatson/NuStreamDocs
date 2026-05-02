@@ -137,7 +137,7 @@ public class AnchorBytesTests
     public async Task NoOptionsNoRewrite()
     {
         var sink = new ArrayBufferWriter<byte>();
-        var bytes = Encoding.UTF8.GetBytes("<a href=\"https://example.com\">x</a>");
+        var bytes = "<a href=\"https://example.com\">x</a>"u8.ToArray();
         var changed = AnchorBytes.RewriteInto(bytes, addRelNoOpener: false, addTargetBlank: false, sink);
         await Assert.That(changed).IsFalse();
         await Assert.That(sink.WrittenCount).IsEqualTo(0);

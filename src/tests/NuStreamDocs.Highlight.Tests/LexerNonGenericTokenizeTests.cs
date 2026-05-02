@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Highlight.Languages;
-using static System.Text.Encoding;
 
 namespace NuStreamDocs.Highlight.Tests;
 
@@ -17,7 +16,7 @@ public class LexerNonGenericTokenizeTests
     {
         var tokens = 0;
         CSharpLexer.Instance.Tokenize(
-            UTF8.GetBytes("var x = 1;"),
+            "var x = 1;"u8,
             (_, _, _) => tokens++);
         await Assert.That(tokens).IsGreaterThan(0);
     }
