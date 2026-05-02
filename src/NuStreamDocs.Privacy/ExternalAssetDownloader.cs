@@ -31,6 +31,12 @@ internal static class ExternalAssetDownloader
     /// <summary>Initial backoff delay between retries.</summary>
     private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(200);
 
+    /// <summary>Lifetime ceiling on a pooled connection — cap on how long DNS / TLS state stays warm before the handler force-recycles the socket.</summary>
+    private static readonly TimeSpan PooledConnectionLifetime = TimeSpan.FromMinutes(2);
+
+    /// <summary>Idle ceiling on a pooled connection — drops sockets silent past this window so the pool releases promptly when the build's external-asset phase ends.</summary>
+    private static readonly TimeSpan PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15);
+
     /// <summary>Downloads every URL the <paramref name="registry"/> holds, iterating until the registry stops growing or the cap is reached.</summary>
     /// <param name="registry">URL registry; mutated as nested URLs are discovered.</param>
     /// <param name="outputRoot">Absolute output root.</param>
@@ -57,8 +63,15 @@ internal static class ExternalAssetDownloader
         ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(logger);
 
-        using var client = new HttpClient();
-        client.Timeout = settings.Timeout;
+        using var handler = new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = PooledConnectionLifetime,
+            PooledConnectionIdleTimeout = PooledConnectionIdleTimeout,
+        };
+        using var client = new HttpClient(handler, disposeHandler: false)
+        {
+            Timeout = settings.Timeout,
+        };
         var environment = new DownloadEnvironment(client, BuildRetryPipeline(settings.MaxRetries), registry, filter);
 
         var failures = new ConcurrentBag<string>();

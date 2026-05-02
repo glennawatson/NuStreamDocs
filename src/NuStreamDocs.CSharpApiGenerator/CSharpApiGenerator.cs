@@ -2,10 +2,10 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.CSharpApiGenerator.Logging;
+using NuStreamDocs.Logging;
 using SourceDocParser;
 using SourceDocParser.Model;
 using SourceDocParser.Zensical;
@@ -40,10 +40,6 @@ public static class CSharpApiGenerator
     /// <param name="logger">Optional logger; <see cref="NullLogger.Instance"/> by default.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The absolute path to the directory that received the generated Markdown.</returns>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "DescribeInputs is gated on logger.IsEnabled(LogLevel.Information); analyzer doesn't see through the manual guard around source-generated [LoggerMessage] calls.")]
     public static async Task<string> GenerateAsync(
         CSharpApiGeneratorOptions options,
         string docsInputRoot,
@@ -58,22 +54,20 @@ public static class CSharpApiGenerator
         Directory.CreateDirectory(outputRoot);
 
         var resolvedLogger = logger ?? NullLogger.Instance;
-        if (resolvedLogger.IsEnabled(LogLevel.Information))
-        {
-            CSharpApiGeneratorLoggingHelper.LogGeneratorStart(resolvedLogger, DescribeInputs(options.Inputs), outputRoot);
-        }
-
-        var stopwatch = Stopwatch.StartNew();
         var source = AssemblySourceFactory.Create(options.Inputs, resolvedLogger);
-
         using var sourceLifetime = source as IDisposable;
 
-        var emitter = new ZensicalDocumentationEmitter();
-        var extractor = new MetadataExtractor();
-        await extractor.RunAsync(source, outputRoot, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
-        stopwatch.Stop();
+        await PhaseTimer.RunAsync(
+            resolvedLogger,
+            l => LogGeneratorStartIfEnabled(l, options, outputRoot),
+            static (l, result, secs) => CSharpApiGeneratorLoggingHelper.LogGeneratorComplete(l, result.CanonicalTypes, result.PagesEmitted, secs),
+            async () =>
+            {
+                var emitter = new ZensicalDocumentationEmitter();
+                var extractor = new MetadataExtractor();
+                return await extractor.RunAsync(source, outputRoot, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
+            }).ConfigureAwait(false);
 
-        CSharpApiGeneratorLoggingHelper.LogGeneratorComplete(resolvedLogger, totalTypes: 0, totalPages: 0, stopwatch.ElapsedMilliseconds);
         return outputRoot;
     }
 
@@ -82,10 +76,6 @@ public static class CSharpApiGenerator
     /// <param name="logger">Optional logger; <see cref="NullLogger.Instance"/> by default.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The merged <see cref="DirectExtractionResult"/>.</returns>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "DescribeInputs is gated on logger.IsEnabled(LogLevel.Information); analyzer doesn't see through the manual guard around source-generated [LoggerMessage] calls.")]
     public static async Task<DirectExtractionResult> ExtractAsync(
         CSharpApiGeneratorOptions options,
         ILogger? logger,
@@ -95,21 +85,18 @@ public static class CSharpApiGenerator
         options.Validate();
 
         var resolvedLogger = logger ?? NullLogger.Instance;
-        if (resolvedLogger.IsEnabled(LogLevel.Information))
-        {
-            CSharpApiGeneratorLoggingHelper.LogDirectExtractStart(resolvedLogger, DescribeInputs(options.Inputs));
-        }
-
-        var stopwatch = Stopwatch.StartNew();
         var source = AssemblySourceFactory.Create(options.Inputs, resolvedLogger);
         using var sourceLifetime = source as IDisposable;
 
-        var extractor = new MetadataExtractor();
-        var result = await extractor.ExtractAsync(source, resolvedLogger, cancellationToken).ConfigureAwait(false);
-        stopwatch.Stop();
-
-        CSharpApiGeneratorLoggingHelper.LogDirectExtractComplete(resolvedLogger, result.CanonicalTypes.Length, result.SourceLinks.Length, stopwatch.ElapsedMilliseconds);
-        return result;
+        return await PhaseTimer.RunAsync(
+            resolvedLogger,
+            l => LogDirectExtractStartIfEnabled(l, options),
+            static (l, result, secs) => CSharpApiGeneratorLoggingHelper.LogDirectExtractComplete(l, result.CanonicalTypes.Length, result.SourceLinks.Length, secs),
+            async () =>
+            {
+                var extractor = new MetadataExtractor();
+                return await extractor.ExtractAsync(source, resolvedLogger, cancellationToken).ConfigureAwait(false);
+            }).ConfigureAwait(false);
     }
 
     /// <summary>Renders <paramref name="inputs"/> as a short human-readable label for log lines.</summary>
@@ -142,4 +129,39 @@ public static class CSharpApiGenerator
         CustomInput => "custom-source",
         _ => input.GetType().Name,
     };
+
+    /// <summary>Emits the generator-start log only when the configured level is enabled, so <see cref="DescribeInputs"/>'s <c>string.Join</c> stays out of the cold path.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="options">Generator options used to describe the input shape.</param>
+    /// <param name="outputRoot">Resolved output directory.</param>
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "DescribeInputs is gated on logger.IsEnabled; analyzer doesn't see through the source-generated [LoggerMessage] partial.")]
+    private static void LogGeneratorStartIfEnabled(ILogger logger, CSharpApiGeneratorOptions options, string outputRoot)
+    {
+        if (!logger.IsEnabled(LogLevel.Information))
+        {
+            return;
+        }
+
+        CSharpApiGeneratorLoggingHelper.LogGeneratorStart(logger, DescribeInputs(options.Inputs), outputRoot);
+    }
+
+    /// <summary>Emits the direct-extract-start log only when the configured level is enabled.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="options">Generator options used to describe the input shape.</param>
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "DescribeInputs is gated on logger.IsEnabled; analyzer doesn't see through the source-generated [LoggerMessage] partial.")]
+    private static void LogDirectExtractStartIfEnabled(ILogger logger, CSharpApiGeneratorOptions options)
+    {
+        if (!logger.IsEnabled(LogLevel.Information))
+        {
+            return;
+        }
+
+        CSharpApiGeneratorLoggingHelper.LogDirectExtractStart(logger, DescribeInputs(options.Inputs));
+    }
 }

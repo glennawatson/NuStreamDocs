@@ -41,12 +41,12 @@ internal static partial class CSharpApiGeneratorLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="totalTypes">Total canonical types processed.</param>
     /// <param name="totalPages">Total Markdown pages emitted.</param>
-    /// <param name="durationMs">Wall-clock duration in milliseconds.</param>
+    /// <param name="elapsedSeconds">Wall-clock duration in seconds (two decimal places).</param>
     [LoggerMessage(
         EventId = 6003,
         Level = LogLevel.Information,
-        Message = "ApiGenerator complete: {TotalTypes} type(s), {TotalPages} page(s) in {DurationMs} ms")]
-    public static partial void LogGeneratorComplete(ILogger logger, int totalTypes, int totalPages, long durationMs);
+        Message = "ApiGenerator complete: {TotalTypes} type(s), {TotalPages} page(s) in {ElapsedSeconds:F2}s")]
+    public static partial void LogGeneratorComplete(ILogger logger, int totalTypes, int totalPages, double elapsedSeconds);
 
     /// <summary>Logs a source-link miss at debug level.</summary>
     /// <param name="logger">Target logger.</param>
@@ -71,10 +71,10 @@ internal static partial class CSharpApiGeneratorLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="typeCount">Canonical types in the merged catalog.</param>
     /// <param name="sourceLinkCount">Source-link entries collected.</param>
-    /// <param name="durationMs">Wall-clock duration in milliseconds.</param>
+    /// <param name="elapsedSeconds">Wall-clock duration in seconds (two decimal places).</param>
     [LoggerMessage(
         EventId = 6006,
         Level = LogLevel.Information,
-        Message = "CSharpApiGenerator direct-extract complete: {TypeCount} type(s), {SourceLinkCount} source link(s) in {DurationMs} ms")]
-    public static partial void LogDirectExtractComplete(ILogger logger, int typeCount, int sourceLinkCount, long durationMs);
+        Message = "CSharpApiGenerator direct-extract complete: {TypeCount} type(s), {SourceLinkCount} source link(s) in {ElapsedSeconds:F2}s")]
+    public static partial void LogDirectExtractComplete(ILogger logger, int typeCount, int sourceLinkCount, double elapsedSeconds);
 }

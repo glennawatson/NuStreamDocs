@@ -38,6 +38,13 @@ internal static partial class BuildPipelineLoggingHelper
     [LoggerMessage(Level = LogLevel.Information, Message = "Configuring plugin: {PluginName}")]
     public static partial void LogPluginConfigure(ILogger logger, string pluginName);
 
+    /// <summary>Logs the end of one plugin's <c>OnConfigureAsync</c> hook with the elapsed time.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginName">Plugin name.</param>
+    /// <param name="elapsedSeconds">Phase duration in seconds (two decimal places).</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Configured plugin: {PluginName} in {ElapsedSeconds:F2}s")]
+    public static partial void LogPluginConfigureComplete(ILogger logger, string pluginName, double elapsedSeconds);
+
     /// <summary>Logs entry into the parallel render phase.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="parallelism">Effective <see cref="System.Threading.Tasks.ParallelOptions.MaxDegreeOfParallelism"/>.</param>
@@ -62,6 +69,13 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="pluginName">Plugin name.</param>
     [LoggerMessage(Level = LogLevel.Information, Message = "Finalizing plugin: {PluginName}")]
     public static partial void LogPluginFinalize(ILogger logger, string pluginName);
+
+    /// <summary>Logs the end of one plugin's <c>OnFinalizeAsync</c> hook with the elapsed time.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginName">Plugin name.</param>
+    /// <param name="elapsedSeconds">Phase duration in seconds (two decimal places).</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Finalized plugin: {PluginName} in {ElapsedSeconds:F2}s")]
+    public static partial void LogPluginFinalizeComplete(ILogger logger, string pluginName, double elapsedSeconds);
 
     /// <summary>Logs a per-page completion at debug level.</summary>
     /// <param name="logger">Target logger.</param>

@@ -2,9 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.LinkValidator.Logging;
+using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.LinkValidator;
@@ -99,19 +99,15 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot);
 
-        var stopwatch = Stopwatch.StartNew();
-        var corpus = await ValidationCorpus.BuildAsync(outputRoot, _options.Parallelism, cancellationToken).ConfigureAwait(false);
-
-        var (internalLinkCount, externalLinkCount) = LinkValidatorReporter.CountLinks(corpus);
-        LinkValidatorLoggingHelper.LogValidationStart(_logger, outputRoot, corpus.Pages.Length, internalLinkCount, externalLinkCount);
-
-        var internalDiags = await InternalLinkValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken).ConfigureAwait(false);
-        var externalDiags = _options.StrictExternal
-            ? await RunExternalAsync(corpus, cancellationToken).ConfigureAwait(false)
-            : [];
-
-        var merged = LinkValidatorReporter.Merge(internalDiags, externalDiags, _options.StrictInternal, _options.StrictExternal);
-        var (brokenCount, warningCount) = LinkValidatorReporter.Tally(merged);
+        var merged = await PhaseTimer.RunAsync(
+            _logger,
+            l => LinkValidatorLoggingHelper.LogValidationStart(l, outputRoot),
+            static (l, m, secs) =>
+            {
+                var (broken, warning) = LinkValidatorReporter.Tally(m);
+                LinkValidatorLoggingHelper.LogValidationComplete(l, broken, warning, secs);
+            },
+            () => RunValidationAsync(outputRoot, cancellationToken)).ConfigureAwait(false);
 
         for (var i = 0; i < merged.Length; i++)
         {
@@ -119,8 +115,6 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
             LinkValidatorLoggingHelper.LogBrokenLink(_logger, d.Severity, d.SourcePage, d.Message);
         }
 
-        stopwatch.Stop();
-        LinkValidatorLoggingHelper.LogValidationComplete(_logger, brokenCount, warningCount, stopwatch.ElapsedMilliseconds);
         return merged;
     }
 
@@ -145,6 +139,24 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
         }
     }
 
+    /// <summary>Builds the corpus, emits the corpus-summary log, runs both validators, and merges the diagnostics.</summary>
+    /// <param name="outputRoot">Site output root being validated.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The merged diagnostic array.</returns>
+    private async ValueTask<LinkDiagnostic[]> RunValidationAsync(string outputRoot, CancellationToken cancellationToken)
+    {
+        var corpus = await ValidationCorpus.BuildAsync(outputRoot, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        var (internalLinkCount, externalLinkCount) = LinkValidatorReporter.CountLinks(corpus);
+        LinkValidatorLoggingHelper.LogValidationCorpus(_logger, corpus.Pages.Length, internalLinkCount, externalLinkCount);
+
+        var internalDiags = await InternalLinkValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        var externalDiags = _options.StrictExternal
+            ? await RunExternalAsync(corpus, cancellationToken).ConfigureAwait(false)
+            : [];
+
+        return LinkValidatorReporter.Merge(internalDiags, externalDiags, _options.StrictInternal, _options.StrictExternal);
+    }
+
     /// <summary>Runs the external HTTP checker.</summary>
     /// <param name="corpus">Corpus.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -157,7 +169,12 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
             return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, client, cancellationToken).ConfigureAwait(false);
         }
 
-        using var owned = new HttpClient();
+        using var handler = new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+            PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15),
+        };
+        using var owned = new HttpClient(handler, disposeHandler: false);
         return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, owned, cancellationToken).ConfigureAwait(false);
     }
 }

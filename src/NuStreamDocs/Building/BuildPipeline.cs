@@ -383,8 +383,12 @@ public static class BuildPipeline
         BuildPipelineLoggingHelper.LogConfigureStart(log, plugins.Length);
         for (var i = 0; i < plugins.Length; i++)
         {
-            BuildPipelineLoggingHelper.LogPluginConfigure(log, plugins[i].Name);
-            await plugins[i].OnConfigureAsync(context, cancellationToken).ConfigureAwait(false);
+            var plugin = plugins[i];
+            await PhaseTimer.RunAsync(
+                log,
+                l => BuildPipelineLoggingHelper.LogPluginConfigure(l, plugin.Name),
+                (l, secs) => BuildPipelineLoggingHelper.LogPluginConfigureComplete(l, plugin.Name, secs),
+                () => plugin.OnConfigureAsync(context, cancellationToken)).ConfigureAwait(false);
         }
     }
 
@@ -400,8 +404,12 @@ public static class BuildPipeline
         BuildPipelineLoggingHelper.LogFinalizeStart(log, plugins.Length);
         for (var i = 0; i < plugins.Length; i++)
         {
-            BuildPipelineLoggingHelper.LogPluginFinalize(log, plugins[i].Name);
-            await plugins[i].OnFinalizeAsync(context, cancellationToken).ConfigureAwait(false);
+            var plugin = plugins[i];
+            await PhaseTimer.RunAsync(
+                log,
+                l => BuildPipelineLoggingHelper.LogPluginFinalize(l, plugin.Name),
+                (l, secs) => BuildPipelineLoggingHelper.LogPluginFinalizeComplete(l, plugin.Name, secs),
+                () => plugin.OnFinalizeAsync(context, cancellationToken)).ConfigureAwait(false);
         }
     }
 }

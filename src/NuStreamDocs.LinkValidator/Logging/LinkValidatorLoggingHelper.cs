@@ -12,19 +12,24 @@ internal static partial class LinkValidatorLoggingHelper
     /// <summary>Logs the start of a link validation run.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="outputRoot">Site output root being validated.</param>
-    /// <param name="pageCount">Pages discovered in the corpus.</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Link validation starting at {OutputRoot}")]
+    public static partial void LogValidationStart(ILogger logger, string outputRoot);
+
+    /// <summary>Logs the corpus-discovery summary emitted between the start log and the validators.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pageCount">Pages discovered.</param>
     /// <param name="internalLinkCount">Internal links found.</param>
     /// <param name="externalLinkCount">External links found.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Link validation starting at {OutputRoot}: {PageCount} page(s), {InternalLinkCount} internal link(s), {ExternalLinkCount} external link(s)")]
-    public static partial void LogValidationStart(ILogger logger, string outputRoot, int pageCount, int internalLinkCount, int externalLinkCount);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Validation corpus: {PageCount} page(s), {InternalLinkCount} internal link(s), {ExternalLinkCount} external link(s)")]
+    public static partial void LogValidationCorpus(ILogger logger, int pageCount, int internalLinkCount, int externalLinkCount);
 
     /// <summary>Logs the end-of-run summary.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="brokenCount">Diagnostics raised at error severity.</param>
     /// <param name="warningCount">Diagnostics raised at warning severity.</param>
-    /// <param name="durationMs">Total elapsed milliseconds.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Link validation complete: {BrokenCount} broken, {WarningCount} warning(s) in {DurationMs} ms")]
-    public static partial void LogValidationComplete(ILogger logger, int brokenCount, int warningCount, long durationMs);
+    /// <param name="elapsedSeconds">Total elapsed time in seconds (two decimal places).</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Link validation complete: {BrokenCount} broken, {WarningCount} warning(s) in {ElapsedSeconds:F2}s")]
+    public static partial void LogValidationComplete(ILogger logger, int brokenCount, int warningCount, double elapsedSeconds);
 
     /// <summary>Logs a single broken-link diagnostic.</summary>
     /// <param name="logger">Target logger.</param>
