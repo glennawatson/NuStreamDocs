@@ -95,7 +95,7 @@ public sealed class HighlightPlugin : IDocPlugin
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>Reverses the small escape set <see cref="NuStreamDocs.Html.HtmlEscape.EscapeText"/> produces.</summary>
+    /// <summary>Reverses the small escape set <see cref="NuStreamDocs.Html.HtmlEscape.EscapeText(ReadOnlySpan{byte}, IBufferWriter{byte})"/> produces.</summary>
     /// <param name="body">UTF-8 escaped body.</param>
     /// <returns>Decoded source string.</returns>
     private static string HtmlUnescape(ReadOnlySpan<byte> body)

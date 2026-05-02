@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Highlight;
@@ -42,38 +41,15 @@ public static class HighlightEmitter
         var className = TokenClassNames.Css(cls);
         if (className.Length == 0)
         {
-            EscapeUtf8(text, writer);
+            HtmlEscape.EscapeText(text, writer);
             return;
         }
 
         Write(writer, "<span class=\""u8);
         Write(writer, className);
         Write(writer, "\">"u8);
-        EscapeUtf8(text, writer);
+        HtmlEscape.EscapeText(text, writer);
         Write(writer, "</span>"u8);
-    }
-
-    /// <summary>UTF-8-encodes a UTF-16 span, then runs it through the project's HTML escaper.</summary>
-    /// <param name="text">Source text.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    private static void EscapeUtf8(ReadOnlySpan<char> text, IBufferWriter<byte> writer)
-    {
-        if (text.IsEmpty)
-        {
-            return;
-        }
-
-        var maxBytes = Encoding.UTF8.GetMaxByteCount(text.Length);
-        var rented = ArrayPool<byte>.Shared.Rent(maxBytes);
-        try
-        {
-            var written = Encoding.UTF8.GetBytes(text, rented);
-            HtmlEscape.EscapeText(rented.AsSpan(0, written), writer);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(rented);
-        }
     }
 
     /// <summary>Bulk-writes UTF-8 bytes into <paramref name="writer"/>.</summary>

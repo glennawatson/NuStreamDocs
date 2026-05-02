@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace NuStreamDocs.Html;
 
@@ -22,6 +23,10 @@ public static class HtmlEscape
     /// <summary>Bytes that require an HTML entity replacement in text content.</summary>
     private static readonly SearchValues<byte> EscapeBytes =
         SearchValues.Create("&<>\""u8);
+
+    /// <summary>Chars that require an HTML entity replacement in text content (UTF-16 form of <see cref="EscapeBytes"/>).</summary>
+    private static readonly SearchValues<char> EscapeChars =
+        SearchValues.Create("&<>\"");
 
     /// <summary>
     /// Writes <paramref name="source"/> to <paramref name="writer"/>,
@@ -68,6 +73,59 @@ public static class HtmlEscape
             WriteEntity(cursor[idx], writer);
             cursor = cursor[(idx + 1)..];
         }
+    }
+
+    /// <summary>
+    /// UTF-16 overload that writes the escaped, UTF-8-encoded form of
+    /// <paramref name="source"/> straight into <paramref name="writer"/>.
+    /// Same entity replacements as the byte overload — but no
+    /// intermediate buffer is rented, so per-call allocations stay at
+    /// zero on the highlight hot path.
+    /// </summary>
+    /// <param name="source">UTF-16 input span.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    public static void EscapeText(ReadOnlySpan<char> source, IBufferWriter<byte> writer)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        if (source.IsEmpty)
+        {
+            return;
+        }
+
+        var cursor = source;
+        while (!cursor.IsEmpty)
+        {
+            var idx = cursor.IndexOfAny(EscapeChars);
+            switch (idx)
+            {
+                case < 0:
+                    {
+                        EncodeUtf8(cursor, writer);
+                        return;
+                    }
+
+                case > 0:
+                    {
+                        EncodeUtf8(cursor[..idx], writer);
+                        break;
+                    }
+            }
+
+            WriteEntity((byte)cursor[idx], writer);
+            cursor = cursor[(idx + 1)..];
+        }
+    }
+
+    /// <summary>Encodes a non-empty run of UTF-16 chars into <paramref name="writer"/> as UTF-8 with no intermediate buffer.</summary>
+    /// <param name="chars">UTF-16 span (must be non-empty).</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void EncodeUtf8(ReadOnlySpan<char> chars, IBufferWriter<byte> writer)
+    {
+        var maxBytes = Encoding.UTF8.GetMaxByteCount(chars.Length);
+        var dst = writer.GetSpan(maxBytes);
+        var written = Encoding.UTF8.GetBytes(chars, dst);
+        writer.Advance(written);
     }
 
     /// <summary>Bulk-copies <paramref name="src"/> into <paramref name="writer"/>.</summary>
