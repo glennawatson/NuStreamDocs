@@ -33,4 +33,11 @@ public sealed class SmartSymbolsPlugin : DocPluginBase, IMarkdownPreprocessor
         ArgumentNullException.ThrowIfNull(writer);
         SmartSymbolsRewriter.Rewrite(source, writer);
     }
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 }

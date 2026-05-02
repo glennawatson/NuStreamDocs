@@ -38,7 +38,7 @@ public ref struct Utf8StackBuffer
     /// </summary>
     /// <param name="value">Source string.</param>
     /// <param name="stackBuffer">Caller-supplied stack span (typically <c>stackalloc byte[Utf8StackBuffer.StackSize]</c>).</param>
-    public Utf8StackBuffer(string value, Span<byte> stackBuffer)
+    public Utf8StackBuffer(string value, in Span<byte> stackBuffer)
     {
         ArgumentException.ThrowIfNullOrEmpty(value);
         var byteCount = Encoding.UTF8.GetByteCount(value);

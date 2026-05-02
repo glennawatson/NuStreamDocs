@@ -36,6 +36,16 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
     /// <summary>Resolved base directory captured at <see cref="OnConfigureAsync"/> time.</summary>
     private string? _baseDirectory;
 
+    /// <summary>Build-scoped cache of resolved snippet bytes, keyed by the UTF-8 include-path bytes lifted directly from the source span (no <see cref="string"/> round-trip).</summary>
+    /// <remarks>
+    /// Reset on every <see cref="OnConfigureAsync"/> call so a watch-mode rebuild that reconfigures the plugin
+    /// drops every cached file before re-running. Lifetime is bounded by the plugin instance — the host already
+    /// disposes plugins between builds, so the cache cannot outlive a build context. We deliberately do NOT cache
+    /// by file mtime: the plugin trusts its host to reconfigure when content changes, and a stat-per-lookup would
+    /// negate the cache win on cold pages.
+    /// </remarks>
+    private Dictionary<byte[], byte[]> _fileCache = new(ByteArrayComparer.Instance);
+
     /// <summary>Initializes a new instance of the <see cref="SnippetsPlugin"/> class with no base-directory override (defaults to the build's docs root).</summary>
     public SnippetsPlugin()
         : this(null)
@@ -53,6 +63,7 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
     public override ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
         _baseDirectory = _baseDirectoryOverride ?? context.InputRoot;
+        _fileCache = new(ByteArrayComparer.Instance);
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }
@@ -68,6 +79,13 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
             return;
         }
 
-        SnippetsRewriter.Rewrite(source, baseDir, writer);
+        SnippetsRewriter.Rewrite(source, baseDir, _fileCache, writer);
     }
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 }

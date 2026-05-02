@@ -5,7 +5,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 
-namespace NuStreamDocs.Building;
+namespace NuStreamDocs.Common;
 
 /// <summary>
 /// Thread-static cache of <see cref="ArrayBufferWriter{T}"/> instances

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Markdown;
@@ -54,11 +55,11 @@ internal static class AutoLink
 
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
 
-        Write("<a href=\""u8, writer);
+        Utf8StringWriter.Write(writer, "<a href=\""u8);
         HtmlEscape.EscapeText(content, writer);
-        Write("\">"u8, writer);
+        Utf8StringWriter.Write(writer, "\">"u8);
         HtmlEscape.EscapeText(content, writer);
-        Write("</a>"u8, writer);
+        Utf8StringWriter.Write(writer, "</a>"u8);
 
         pos = closeIndex + 1;
         pendingTextStart = pos;
@@ -123,14 +124,4 @@ internal static class AutoLink
     /// <returns>True for letters, digits, <c>+</c>, <c>-</c>, <c>.</c>.</returns>
     private static bool IsSchemeChar(byte b) =>
         IsSchemeStart(b) || b is >= (byte)'0' and <= (byte)'9' or (byte)'+' or (byte)'-' or (byte)'.';
-
-    /// <summary>Bulk-writes <paramref name="bytes"/>.</summary>
-    /// <param name="bytes">UTF-8 bytes.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    private static void Write(ReadOnlySpan<byte> bytes, IBufferWriter<byte> writer)
-    {
-        var dst = writer.GetSpan(bytes.Length);
-        bytes.CopyTo(dst);
-        writer.Advance(bytes.Length);
-    }
 }

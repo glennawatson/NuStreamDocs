@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.MarkdownExtensions.AttrList;
+using NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 using NuStreamDocs.Mermaid;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Privacy;
@@ -14,11 +15,18 @@ using NuStreamDocs.Privacy.Bytes;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for the HTML post-render plugins (attr-list, mermaid, privacy scanner) and the individual byte-level scanners they rely on.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class PostRenderBenchmarks
 {
     /// <summary>Number of repeated blocks per fixture.</summary>
     private const int Repetitions = 100;
+
+    /// <summary>Headroom factor for buffers that may grow under entity-style replacements (~10% expansion typical; 2× is generous).</summary>
+    private const int OutputExpansionFactor = 2;
+
+    /// <summary>Length of the literal <c>{:</c> attr-list opening marker.</summary>
+    private const int OpenMarkerLength = 2;
 
     /// <summary>Pre-built attr-list fixture.</summary>
     private byte[] _attrListHtml = [];
@@ -44,6 +52,21 @@ public class PostRenderBenchmarks
     /// <summary>Inline-style-only fixture for the byte scanner.</summary>
     private byte[] _inlineStyleHtml = [];
 
+    /// <summary>Synthetic source for the EmitMerged direct micro-benchmark — existing attrs followed by a <c>{:</c>...<c>}</c> body.</summary>
+    private byte[] _emitMergedSource = [];
+
+    /// <summary>Inclusive start of the existing-attrs window inside <see cref="_emitMergedSource"/>.</summary>
+    private int _emitMergedExistingStart;
+
+    /// <summary>Exclusive end of the existing-attrs window inside <see cref="_emitMergedSource"/>.</summary>
+    private int _emitMergedExistingEnd;
+
+    /// <summary>Inclusive start of the attr-list body inside <see cref="_emitMergedSource"/> (just past <c>{:</c>).</summary>
+    private int _emitMergedAttrListStart;
+
+    /// <summary>Exclusive end of the attr-list body inside <see cref="_emitMergedSource"/> (at the closing <c>}</c>).</summary>
+    private int _emitMergedAttrListEnd;
+
     /// <summary>Shared registry used by URL-rewrite benchmarks.</summary>
     private ExternalAssetRegistry _registry = new("local");
 
@@ -68,6 +91,14 @@ public class PostRenderBenchmarks
         _inlineStyleHtml = Repeat("<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>");
         _registry = new("local");
         _filter = new(hostsToSkip: null, hostsAllowed: null);
+
+        const string ExistingAttrs = " class=\"existing\" data-x=\"1\"";
+        const string AttrListBody = " #intro .lead .extra target=\"_blank\" ";
+        _emitMergedSource = Encoding.UTF8.GetBytes(ExistingAttrs + "{:" + AttrListBody + "}");
+        _emitMergedExistingStart = 0;
+        _emitMergedExistingEnd = ExistingAttrs.Length;
+        _emitMergedAttrListStart = _emitMergedExistingEnd + OpenMarkerLength;
+        _emitMergedAttrListEnd = _emitMergedSource.Length - 1;
     }
 
     /// <summary>Benchmark for <c>AttrListPlugin</c>'s post-render rewrite.</summary>
@@ -82,6 +113,26 @@ public class PostRenderBenchmarks
     {
         var sink = new ArrayBufferWriter<byte>(_attrListHtml.Length * 2);
         AttrListRewriter.RewriteInto(_attrListHtml, sink);
+        return sink.WrittenCount;
+    }
+
+    /// <summary>Direct benchmark for <c>AttrListMarker.EmitMerged</c> over a single synthetic opening-tag fixture; isolates the merge hot path from the surrounding stage rotation.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int AttrListMarkerEmitMerged()
+    {
+        var sink = new ArrayBufferWriter<byte>(_emitMergedSource.Length * OutputExpansionFactor);
+        for (var i = 0; i < Repetitions; i++)
+        {
+            AttrListMarker.EmitMerged(
+                _emitMergedSource,
+                _emitMergedExistingStart,
+                _emitMergedExistingEnd,
+                _emitMergedAttrListStart,
+                _emitMergedAttrListEnd,
+                sink);
+        }
+
         return sink.WrittenCount;
     }
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 
 namespace NuStreamDocs.Sitemap.Tests;
 
@@ -25,7 +26,7 @@ public class RedirectsPluginParameterizedTests
     public async Task FrontmatterAliasShapes(string frontmatter)
     {
         var plugin = new RedirectsPlugin();
-        var bytes = System.Text.Encoding.UTF8.GetBytes($"---\n{frontmatter}---\n# body");
+        var bytes = Encoding.UTF8.GetBytes($"---\n{frontmatter}---\n# body");
         var sink = new ArrayBufferWriter<byte>(bytes.Length);
         sink.Write(bytes);
         await plugin.OnRenderPageAsync(new("guide/intro.md", bytes, sink), CancellationToken.None);
@@ -43,7 +44,7 @@ public class RedirectsPluginParameterizedTests
     public async Task NoAliasesNoCrash(string source)
     {
         var plugin = new RedirectsPlugin();
-        var bytes = System.Text.Encoding.UTF8.GetBytes(source);
+        var bytes = Encoding.UTF8.GetBytes(source);
         var sink = new ArrayBufferWriter<byte>(bytes.Length + 1);
         sink.Write(bytes);
         await plugin.OnRenderPageAsync(new("p.md", bytes, sink), CancellationToken.None);

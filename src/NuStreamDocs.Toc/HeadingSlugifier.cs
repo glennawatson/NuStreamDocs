@@ -58,7 +58,8 @@ internal static class HeadingSlugifier
         var collisions = 0;
 
         // One reusable text-decode buffer for the whole page; reset between headings.
-        var textBuffer = new ArrayBufferWriter<byte>(64);
+        using var textRental = PageBuilderPool.Rent(64);
+        var textBuffer = textRental.Writer;
 
         for (var i = 0; i < headings.Length; i++)
         {
@@ -151,7 +152,7 @@ internal static class HeadingSlugifier
     /// <param name="text">Source UTF-8 text.</param>
     /// <param name="dst">Destination buffer; must be at least <c>text.Length</c> long.</param>
     /// <returns>Bytes written (0 when the slug is empty).</returns>
-    private static int WriteSlugCore(ReadOnlySpan<byte> text, Span<byte> dst)
+    private static int WriteSlugCore(ReadOnlySpan<byte> text, in Span<byte> dst)
     {
         var len = 0;
         var pendingHyphen = false;

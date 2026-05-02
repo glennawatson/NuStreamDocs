@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Blog.Tests;
@@ -14,7 +15,7 @@ public class WyamBlogPluginTests
     [Test]
     public async Task EmitsIndexAndTagArchives()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blog-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var postsDir = Path.Combine(docsRoot, "Announcements");
         Directory.CreateDirectory(postsDir);
 
@@ -50,7 +51,7 @@ public class WyamBlogPluginTests
     [Test]
     public async Task IndexOrdersNewestFirst()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blog-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var postsDir = Path.Combine(docsRoot, "blog");
         Directory.CreateDirectory(postsDir);
 

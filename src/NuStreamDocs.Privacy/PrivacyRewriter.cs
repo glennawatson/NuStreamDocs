@@ -3,32 +3,23 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
+using NuStreamDocs.Common;
 using NuStreamDocs.Privacy.Bytes;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// One-shot HTML rewriter that runs every privacy byte scanner against
-/// the same UTF-8 buffer, threading the buffer through without copying
-/// when a stage doesn't change anything.
-/// </summary>
+/// <summary>One-shot HTML rewriter that runs every privacy byte scanner against the same UTF-8 buffer.</summary>
 /// <remarks>
-/// Each stage takes a UTF-8 span, writes into an
-/// <see cref="ArrayBufferWriter{T}"/>, and either returns true (a fresh
-/// buffer becomes the working source) or false (the prior buffer is
-/// passed straight to the next stage). The page-level
-/// <c>Encoding.UTF8.GetString</c> round-trip the previous version paid
-/// is gone — every pass operates on bytes from start to finish.
+/// Two non-URL stages (mixed-content upgrade, anchor hardening) and one combined URL stage rotate through two pooled
+/// <see cref="ArrayBufferWriter{T}"/>s rented from <see cref="PageBuilderPool"/> — the same two-buffer shape
+/// <c>AttrListRewriter</c> uses, so the rewrite is allocation-free across stages and the writers are returned to
+/// the per-thread pool on dispose. The URL stage still walks the HTML in a single pass via
+/// <see cref="ExternalUrlScanner.RewriteInto"/>, replacing the three sequential per-attribute-type stages the
+/// previous shape paid for.
 /// </remarks>
 internal static class PrivacyRewriter
 {
-    /// <summary>Delegate matching every byte-level URL stage.</summary>
-    /// <param name="source">UTF-8 source span.</param>
-    /// <param name="ctx">URL-rewrite context.</param>
-    /// <param name="sink">UTF-8 sink.</param>
-    /// <returns>True when the stage rewrote at least one URL.</returns>
-    private delegate bool UrlStage(ReadOnlySpan<byte> source, in UrlRewriteContext ctx, IBufferWriter<byte> sink);
-
     /// <summary>Runs every privacy rewrite pass against <paramref name="html"/>, writing the result directly into <paramref name="sink"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="options">Plugin options.</param>
@@ -42,83 +33,105 @@ internal static class PrivacyRewriter
         ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(sink);
 
-        // Materialize once so we can swap byte[] references between stages —
-        // ReadOnlySpan<byte> can't escape stages (it's a ref struct).
-        var current = html.ToArray();
+        using var rentalA = PageBuilderPool.Rent(html.Length);
+        using var rentalB = PageBuilderPool.Rent(html.Length);
+        var slots = new StageBuffers(rentalA.Writer, rentalB.Writer);
+
+        ReadOnlyMemory<byte> current = default;
         var changed = false;
 
         if (options.UpgradeMixedContent)
         {
-            current = RunMixedContent(current, ref changed);
+            TryRunMixedContent(html, ref current, ref slots, ref changed);
         }
 
         if (options.AddRelNoOpener || options.AddTargetBlank)
         {
-            current = RunAnchor(current, options, ref changed);
+            TryRunAnchor(html, options, ref current, ref slots, ref changed);
         }
 
         var ctx = new UrlRewriteContext(filter, registry);
-        current = RunUrlStage(current, ctx, AssetAttributeBytes.RewriteInto, ref changed);
-        current = RunUrlStage(current, ctx, SrcsetBytes.RewriteInto, ref changed);
-        current = RunUrlStage(current, ctx, InlineStyleBlockBytes.RewriteInto, ref changed);
+        TryRunUrlPass(html, ctx, ref current, ref slots, ref changed);
 
         if (!changed)
         {
             return false;
         }
 
-        sink.Write(current);
+        sink.Write(current.Span);
         return true;
     }
 
-    /// <summary>Runs the mixed-content upgrade stage.</summary>
-    /// <param name="source">UTF-8 source.</param>
+    /// <summary>Runs the mixed-content upgrade stage and rotates the buffers when it rewrites.</summary>
+    /// <param name="originalHtml">Original UTF-8 source (used as the input on the first stage that runs).</param>
+    /// <param name="current">Current pipeline output; updated when this stage rewrites.</param>
+    /// <param name="slots">Two-buffer rotation slots.</param>
     /// <param name="changed">Tracks whether any stage has rewritten so far.</param>
-    /// <returns>The current buffer (fresh array when rewritten, the input array otherwise).</returns>
-    private static byte[] RunMixedContent(byte[] source, ref bool changed)
+    private static void TryRunMixedContent(ReadOnlySpan<byte> originalHtml, ref ReadOnlyMemory<byte> current, ref StageBuffers slots, ref bool changed)
     {
-        var sink = new ArrayBufferWriter<byte>(source.Length);
-        if (!MixedContentBytes.RewriteInto(source, sink))
+        slots.Spare.ResetWrittenCount();
+        var source = changed ? current.Span : originalHtml;
+        if (!MixedContentBytes.RewriteInto(source, slots.Spare))
         {
-            return source;
+            return;
         }
 
+        current = slots.Spare.WrittenMemory;
+        slots = slots.Swap();
         changed = true;
-        return sink.WrittenSpan.ToArray();
     }
 
-    /// <summary>Runs the anchor-hardening stage.</summary>
-    /// <param name="source">UTF-8 source.</param>
+    /// <summary>Runs the anchor-hardening stage and rotates the buffers when it rewrites.</summary>
+    /// <param name="originalHtml">Original UTF-8 source.</param>
     /// <param name="options">Plugin options.</param>
+    /// <param name="current">Current pipeline output; updated when this stage rewrites.</param>
+    /// <param name="slots">Two-buffer rotation slots.</param>
     /// <param name="changed">Tracks whether any stage has rewritten so far.</param>
-    /// <returns>The current buffer.</returns>
-    private static byte[] RunAnchor(byte[] source, in PrivacyOptions options, ref bool changed)
+    private static void TryRunAnchor(ReadOnlySpan<byte> originalHtml, in PrivacyOptions options, ref ReadOnlyMemory<byte> current, ref StageBuffers slots, ref bool changed)
     {
-        var sink = new ArrayBufferWriter<byte>(source.Length);
-        if (!AnchorBytes.RewriteInto(source, options.AddRelNoOpener, options.AddTargetBlank, sink))
+        slots.Spare.ResetWrittenCount();
+        var source = changed ? current.Span : originalHtml;
+        if (!AnchorBytes.RewriteInto(source, options.AddRelNoOpener, options.AddTargetBlank, slots.Spare))
         {
-            return source;
+            return;
         }
 
+        current = slots.Spare.WrittenMemory;
+        slots = slots.Swap();
         changed = true;
-        return sink.WrittenSpan.ToArray();
     }
 
-    /// <summary>Runs one URL-rewrite stage.</summary>
-    /// <param name="source">UTF-8 source.</param>
+    /// <summary>Runs the combined URL pass (asset attributes + srcset + inline-style url() in one walk) and rotates the buffers when it rewrites.</summary>
+    /// <param name="originalHtml">Original UTF-8 source.</param>
     /// <param name="ctx">URL-rewrite context.</param>
-    /// <param name="stage">Stage to run.</param>
+    /// <param name="current">Current pipeline output; updated when this stage rewrites.</param>
+    /// <param name="slots">Two-buffer rotation slots.</param>
     /// <param name="changed">Tracks whether any stage has rewritten so far.</param>
-    /// <returns>The current buffer.</returns>
-    private static byte[] RunUrlStage(byte[] source, in UrlRewriteContext ctx, UrlStage stage, ref bool changed)
+    private static void TryRunUrlPass(ReadOnlySpan<byte> originalHtml, in UrlRewriteContext ctx, ref ReadOnlyMemory<byte> current, ref StageBuffers slots, ref bool changed)
     {
-        var sink = new ArrayBufferWriter<byte>(source.Length);
-        if (!stage(source, ctx, sink))
+        slots.Spare.ResetWrittenCount();
+        var source = changed ? current.Span : originalHtml;
+        if (!ExternalUrlScanner.RewriteInto(source, ctx, slots.Spare))
         {
-            return source;
+            return;
         }
 
+        current = slots.Spare.WrittenMemory;
+        slots = slots.Swap();
         changed = true;
-        return sink.WrittenSpan.ToArray();
+    }
+
+    /// <summary>Two-buffer rotation pair — <see cref="Spare"/> is the next stage's target; <see cref="Other"/> holds the prior output (or is empty before any stage has rewritten).</summary>
+    /// <param name="Spare">Buffer the next stage writes into.</param>
+    /// <param name="Other">Buffer holding the prior stage's output.</param>
+    private readonly record struct StageBuffers(ArrayBufferWriter<byte> Spare, ArrayBufferWriter<byte> Other)
+    {
+        /// <summary>Swaps the two buffers; called after a stage commits to a rewrite so the next stage writes into the freed buffer.</summary>
+        /// <returns>The swapped pair.</returns>
+        [SuppressMessage(
+            "SonarAnalyzer",
+            "S2234:Parameters should be passed in the correct order",
+            Justification = "Swap intentionally reverses the pair — the prior Other becomes the new Spare and vice versa.")]
+        public StageBuffers Swap() => new(Other, Spare);
     }
 }

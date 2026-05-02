@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SuperFences.Tests;
@@ -77,7 +78,7 @@ public class SuperFencesDispatcherTests
     /// <returns>Rewritten HTML.</returns>
     private static string Dispatch(string input, ICustomFenceHandler[] handlers)
     {
-        var index = new Dictionary<byte[], ICustomFenceHandler>(handlers.Length, Common.ByteArrayComparer.Instance);
+        var index = new Dictionary<byte[], ICustomFenceHandler>(handlers.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < handlers.Length; i++)
         {
             index[Encoding.UTF8.GetBytes(handlers[i].Language)] = handlers[i];

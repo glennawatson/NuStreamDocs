@@ -10,6 +10,7 @@ using NuStreamDocs.Macros;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for <see cref="MacrosPlugin"/>.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class MacrosBenchmarks
 {

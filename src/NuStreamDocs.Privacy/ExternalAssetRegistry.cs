@@ -135,7 +135,7 @@ internal sealed class ExternalAssetRegistry
     /// <summary>Writes <paramref name="digest"/> as lowercase ASCII hex into <paramref name="dst"/>.</summary>
     /// <param name="digest">Digest bytes.</param>
     /// <param name="dst">Destination span (length must be 2× digest length).</param>
-    private static void WriteLowerHex(ReadOnlySpan<byte> digest, Span<byte> dst)
+    private static void WriteLowerHex(ReadOnlySpan<byte> digest, in Span<byte> dst)
     {
         const string LowerHex = "0123456789abcdef";
         for (var i = 0; i < digest.Length; i++)
@@ -205,7 +205,7 @@ internal sealed class ExternalAssetRegistry
     /// <param name="b">Byte to classify.</param>
     /// <returns>True for <c>[A-Za-z0-9]</c>.</returns>
     private static bool IsAsciiLetterOrDigit(byte b) =>
-        b is (>= (byte)'A' and <= (byte)'Z')
-            or (>= (byte)'a' and <= (byte)'z')
-            or (>= (byte)'0' and <= (byte)'9');
+        b is >= (byte)'A' and <= (byte)'Z'
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9';
 }

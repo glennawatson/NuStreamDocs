@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Markdown;
 
@@ -96,7 +97,7 @@ internal static class RawHtml
         }
 
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
-        Write(source[pos..end], writer);
+        Utf8StringWriter.Write(writer, source[pos..end]);
         pos = end;
         pendingTextStart = pos;
         return true;
@@ -215,14 +216,4 @@ internal static class RawHtml
         IsTagNameStart(b)
         || b is >= (byte)'0' and <= (byte)'9'
         || b == Hyphen;
-
-    /// <summary>Bulk-writes <paramref name="bytes"/>.</summary>
-    /// <param name="bytes">UTF-8 bytes.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    private static void Write(ReadOnlySpan<byte> bytes, IBufferWriter<byte> writer)
-    {
-        var dst = writer.GetSpan(bytes.Length);
-        bytes.CopyTo(dst);
-        writer.Advance(bytes.Length);
-    }
 }

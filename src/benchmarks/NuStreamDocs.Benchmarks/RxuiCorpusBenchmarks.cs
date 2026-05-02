@@ -18,6 +18,7 @@ using NuStreamDocs.Nav;
 using NuStreamDocs.Search;
 using NuStreamDocs.Snippets;
 using NuStreamDocs.SphinxInventory;
+using NuStreamDocs.Theme.Material.IconShortcode;
 
 namespace NuStreamDocs.Benchmarks;
 
@@ -63,10 +64,6 @@ public class RxuiCorpusBenchmarks
 
     /// <summary>Per-iteration output directory created under the system temp.</summary>
     private string _outputRoot = string.Empty;
-
-    /// <summary>Skips the benchmark on machines that don't have the corpus checked out.</summary>
-    /// <returns>True when the corpus directory is missing.</returns>
-    public static bool ShouldSkip() => !Directory.Exists(RxuiDocsRoot);
 
     /// <summary>Allocates a fresh per-iteration output directory.</summary>
     [IterationSetup]
@@ -198,7 +195,7 @@ public class RxuiCorpusBenchmarks
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
-            .UsePlugin(new Theme.Material.IconShortcode.IconShortcodePlugin(resolver))
+            .UsePlugin(new IconShortcodePlugin(resolver))
             .BuildAsync()
             .GetAwaiter()
             .GetResult();
@@ -243,7 +240,7 @@ public class RxuiCorpusBenchmarks
             .UseSearch()
             .UseMermaid()
             .UseSphinxInventory(registry)
-            .UsePlugin(new Theme.Material.IconShortcode.IconShortcodePlugin(iconResolver))
+            .UsePlugin(new IconShortcodePlugin(iconResolver))
             .BuildAsync()
             .GetAwaiter()
             .GetResult();

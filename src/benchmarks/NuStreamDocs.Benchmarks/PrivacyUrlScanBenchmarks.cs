@@ -18,6 +18,7 @@ namespace NuStreamDocs.Benchmarks;
 /// is most visible at high reject rates — this benchmark makes that
 /// visible.
 /// </summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class PrivacyUrlScanBenchmarks
 {

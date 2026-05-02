@@ -70,4 +70,23 @@ public class CslJsonLoaderTests
         var entries = CslJsonLoader.Parse(json.ToArray());
         await Assert.That(entries[0].Type).IsEqualTo(EntryType.Other);
     }
+
+    /// <summary>LoadFile reads from disk.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task LoadFile_reads_from_disk()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllTextAsync(path, """[{"id":"f","type":"book","title":"File"}]""");
+            var entries = CslJsonLoader.LoadFile(path);
+            await Assert.That(entries).HasSingleItem();
+            await Assert.That(entries[0].Id).IsEqualTo("f");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 }

@@ -69,7 +69,7 @@ public static class VersionsManifest
 
         var sink = new ArrayBufferWriter<byte>(256);
         WriteToUtf8(entries, sink);
-        File.WriteAllBytes(Path.Combine(parentDir, FileName), [.. sink.WrittenSpan]);
+        File.WriteAllBytes(Path.Combine(parentDir, FileName), sink.WrittenSpan);
     }
 
     /// <summary>Serializes the entries into <paramref name="sink"/> as a JSON array.</summary>

@@ -8,27 +8,8 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Privacy;
 
 /// <summary>
-/// Per-URL gate combining the host-level and URL-pattern allow / skip
-/// rules from <see cref="PrivacyOptions"/> into a single
-/// <see cref="ShouldLocalize(System.ReadOnlySpan{byte})"/> check.
+/// A filter that accepts or rejects URLs based on their host name.
 /// </summary>
-/// <remarks>
-/// Decision order:
-/// <list type="number">
-/// <item>Reject anything that isn't an absolute http(s) URL.</item>
-/// <item>Reject when the host is on the skip list.</item>
-/// <item>Reject when the URL matches an exclude pattern.</item>
-/// <item>Accept when an include pattern matches (when any are configured).</item>
-/// <item>Accept when the host is on the allow list (when any hosts are configured).</item>
-/// <item>Accept when neither allow-side rule is configured.</item>
-/// </list>
-/// All host comparisons are case-insensitive ASCII; patterns honor the
-/// simple <c>*</c>/<c>?</c> glob semantics in <see cref="UrlPatternMatcher"/>.
-/// The byte overload is the production hot path — it reaches a verdict
-/// without UTF-16 transcoding for the common scheme + skip-list +
-/// allow-list rules, only decoding when URL-level globs are
-/// configured.
-/// </remarks>
 internal sealed class HostFilter
 {
     /// <summary>Pre-encoded lowercase UTF-8 bytes of the skip list, for the byte fast-reject path.</summary>
@@ -88,18 +69,20 @@ internal sealed class HostFilter
         }
 
         // URL-level pattern matching is char-based; decode once when patterns are configured.
-        if (_excludePatterns.HasPatterns || _includePatterns.HasPatterns)
+        if (!_excludePatterns.HasPatterns && !_includePatterns.HasPatterns)
         {
-            var url = Encoding.UTF8.GetString(urlBytes);
-            if (_excludePatterns.IsMatch(url))
-            {
-                return false;
-            }
+            return !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);
+        }
 
-            if (_includePatterns.HasPatterns && _includePatterns.IsMatch(url))
-            {
-                return true;
-            }
+        var url = Encoding.UTF8.GetString(urlBytes);
+        if (_excludePatterns.IsMatch(url))
+        {
+            return false;
+        }
+
+        if (_includePatterns.HasPatterns && _includePatterns.IsMatch(url))
+        {
+            return true;
         }
 
         return !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);

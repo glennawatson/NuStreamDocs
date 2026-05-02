@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Polly;
 
@@ -107,7 +108,7 @@ public static class ExternalLinkValidator
     /// <param name="sink">Diagnostic accumulator.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the per-host run.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+    [SuppressMessage(
         "Reliability",
         "CA2025:Ensure tasks using 'IDisposable' instances complete before the instances are disposed",
         Justification = "Task.WhenAll(tasks) is awaited inside the using scope, so the SemaphoreSlim lives until every per-URL task has completed.")]

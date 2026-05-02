@@ -2,12 +2,12 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Bibliography;
 using NuStreamDocs.Bibliography.Model;
 using NuStreamDocs.Bibliography.Styles.Aglc4;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Benchmarks;
 
@@ -18,11 +18,15 @@ namespace NuStreamDocs.Benchmarks;
 /// pipeline on a page that uses <c>[@key]</c> markers, and the overhead the plugin
 /// imposes on a page that doesn't.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class BibliographyBenchmarks
 {
     /// <summary>Number of <c>[@key]</c> markers stamped into the marker-heavy fixture.</summary>
     private const int Repetitions = 100;
+
+    /// <summary>Headroom factor for the output writer (footnotes + bibliography section roughly double the body length on the marker-heavy fixture; 4× covers the spread).</summary>
+    private const int OutputExpansionFactor = 4;
 
     /// <summary>Pre-built marker-heavy input (every line resolves through a 3-entry database).</summary>
     private byte[] _markerHeavySource = [];
@@ -48,14 +52,15 @@ public class BibliographyBenchmarks
         _plugin = new(new(db, Aglc4Style.Instance, WarnOnMissing: false));
     }
 
-    /// <summary>Marker-heavy fixture — every <c>[@key]</c> resolves and gets rewritten plus a bibliography section appended.</summary>
+    /// <summary>Marker-heavy fixture, renting from <see cref="PageBuilderPool"/> to mirror production.</summary>
+    /// <remarks>Every <c>[@key]</c> resolves and gets rewritten plus a bibliography section appended.</remarks>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int MarkerHeavyResolve()
     {
-        var sink = new ArrayBufferWriter<byte>(_markerHeavySource.Length * 2);
-        _plugin.Preprocess(_markerHeavySource, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(_markerHeavySource.Length * OutputExpansionFactor);
+        _plugin.Preprocess(_markerHeavySource, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 
     /// <summary>No-marker fixture — exercises the <c>IndexOf("[@")</c> early-out path; should pass through ~unchanged.</summary>
@@ -63,9 +68,9 @@ public class BibliographyBenchmarks
     [Benchmark]
     public int NoMarkerPassThrough()
     {
-        var sink = new ArrayBufferWriter<byte>(_noMarkerSource.Length * 2);
-        _plugin.Preprocess(_noMarkerSource, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(_noMarkerSource.Length * OutputExpansionFactor);
+        _plugin.Preprocess(_noMarkerSource, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 
     /// <summary>Stamps <paramref name="block"/> <see cref="Repetitions"/> times into a UTF-8 buffer.</summary>

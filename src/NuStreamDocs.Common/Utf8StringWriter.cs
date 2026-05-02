@@ -48,6 +48,17 @@ public static class Utf8StringWriter
         writer.Advance(bytes.Length);
     }
 
+    /// <summary>Writes a single byte into <paramref name="writer"/>.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="value">Byte to write.</param>
+    public static void WriteByte(IBufferWriter<byte> writer, byte value)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        var dst = writer.GetSpan(1);
+        dst[0] = value;
+        writer.Advance(1);
+    }
+
     /// <summary>Writes <paramref name="value"/> as ASCII digits into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="value">Integer to format.</param>

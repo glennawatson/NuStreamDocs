@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.LinkValidator.Tests;
 
 /// <summary>Behavior tests for the byte-only LinkExtractor.</summary>
@@ -58,6 +60,6 @@ public class LinkExtractorTests
     /// <param name="range">Captured range.</param>
     /// <param name="expected">Expected bytes.</param>
     /// <returns>True when the slice equals the expected span.</returns>
-    private static bool SliceEquals(byte[] source, Common.ByteRange range, ReadOnlySpan<byte> expected) =>
+    private static bool SliceEquals(byte[] source, in ByteRange range, ReadOnlySpan<byte> expected) =>
         range.AsSpan(source).SequenceEqual(expected);
 }

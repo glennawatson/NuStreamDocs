@@ -172,7 +172,7 @@ public static class BlogIndexEmitter
         "Major Code Smell",
         "S6585:Do not hardcode the format specifier",
         Justification = "PublishedDateFormat is a named constant documented at its declaration.")]
-    private static void WriteDate(IBufferWriter<byte> writer, DateOnly published)
+    private static void WriteDate(IBufferWriter<byte> writer, in DateOnly published)
     {
         Span<char> chars = stackalloc char[PublishedDateFormat.Length];
         if (!published.TryFormat(chars, out var written, PublishedDateFormat, CultureInfo.InvariantCulture))

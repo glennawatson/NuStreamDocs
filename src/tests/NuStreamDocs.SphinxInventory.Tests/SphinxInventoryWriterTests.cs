@@ -88,6 +88,27 @@ public class SphinxInventoryWriterTests
         await Assert.That(builder.UseSphinxInventory()).IsSameReferenceAs(builder);
     }
 
+    /// <summary>UseSphinxInventory(builder, registry) registers the plugin.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UseSphinxInventoryRegistersWithRegistry()
+    {
+        var builder = new DocBuilder();
+        var registry = new AutorefsRegistry();
+        await Assert.That(builder.UseSphinxInventory(registry)).IsSameReferenceAs(builder);
+    }
+
+    /// <summary>UseSphinxInventory(builder, registry, options) registers the plugin.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UseSphinxInventoryRegistersWithOptions()
+    {
+        var builder = new DocBuilder();
+        var registry = new AutorefsRegistry();
+        var options = SphinxInventoryOptions.Default;
+        await Assert.That(builder.UseSphinxInventory(registry, options)).IsSameReferenceAs(builder);
+    }
+
     /// <summary>UseSphinxInventory rejects a null builder.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -112,11 +133,13 @@ public class SphinxInventoryWriterTests
                 newlines++;
             }
 
-            if (newlines is 4)
+            if (newlines is not 4)
             {
-                bodyOffset = i + 1;
-                return Encoding.UTF8.GetString(bytes, 0, bodyOffset);
+                continue;
             }
+
+            bodyOffset = i + 1;
+            return Encoding.UTF8.GetString(bytes, 0, bodyOffset);
         }
 
         bodyOffset = bytes.Length;

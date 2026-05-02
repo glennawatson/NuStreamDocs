@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Blog.MkDocs.Tests;
@@ -14,7 +15,7 @@ public class MkDocsBlogPluginTests
     [Test]
     public async Task UsesPostsAndCategoryDirectories()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-mkblog-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-mkblog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var blogRoot = Path.Combine(docsRoot, "blog");
         var postsRoot = Path.Combine(blogRoot, "posts");
         Directory.CreateDirectory(postsRoot);

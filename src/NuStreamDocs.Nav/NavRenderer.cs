@@ -30,36 +30,69 @@ namespace NuStreamDocs.Nav;
 /// </remarks>
 internal static class NavRenderer
 {
-    /// <summary>Emits the full nav tree for <paramref name="currentPageUrl"/>, marking the active branch.</summary>
+    /// <summary>Emits the full nav tree, marking <paramref name="activeNode"/>'s branch.</summary>
     /// <param name="root">Nav tree root.</param>
-    /// <param name="currentPageUrl">URL of the page being rendered, forward-slashed (<c>guide/intro.html</c>).</param>
+    /// <param name="activeNode">
+    /// Pre-resolved active node, or null when no page is active. The
+    /// caller resolves the URL via an O(1) index built once per build,
+    /// so per-page rendering doesn't walk the whole tree.
+    /// </param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RenderFull(NavNode root, string currentPageUrl, IBufferWriter<byte> writer)
+    public static void RenderFull(NavNode root, NavNode? activeNode, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(root);
-        ArgumentException.ThrowIfNullOrEmpty(currentPageUrl);
         ArgumentNullException.ThrowIfNull(writer);
 
         EnsureParentsAttached(root);
-        var activeNode = FindActiveNode(root, currentPageUrl);
         var activeBranch = BuildActiveBranchSet(activeNode);
         WriteList(writer, root.Children, activeBranch, prune: false);
     }
 
-    /// <summary>Emits the pruned nav for <paramref name="currentPageUrl"/>: only the active branch and its immediate context.</summary>
+    /// <summary>Emits the pruned nav: only the active branch and its immediate context.</summary>
     /// <param name="root">Nav tree root.</param>
-    /// <param name="currentPageUrl">URL of the page being rendered.</param>
+    /// <param name="activeNode">Pre-resolved active node, or null when no page is active.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RenderPruned(NavNode root, string currentPageUrl, IBufferWriter<byte> writer)
+    public static void RenderPruned(NavNode root, NavNode? activeNode, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(root);
-        ArgumentException.ThrowIfNullOrEmpty(currentPageUrl);
         ArgumentNullException.ThrowIfNull(writer);
 
         EnsureParentsAttached(root);
-        var activeNode = FindActiveNode(root, currentPageUrl);
         var activeBranch = BuildActiveBranchSet(activeNode);
         WriteList(writer, root.Children, activeBranch, prune: true);
+    }
+
+    /// <summary>Indexes every node in the tree by URL so per-page rendering can resolve the active node in O(1) instead of walking the whole tree.</summary>
+    /// <remarks>Indexes section <see cref="NavNode.IndexUrl"/> and leaf <see cref="NavNode.RelativeUrl"/> entries.</remarks>
+    /// <param name="root">Nav tree root.</param>
+    /// <returns>URL → node map sized to the visited node count.</returns>
+    public static Dictionary<string, NavNode> BuildUrlIndex(NavNode root)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        var index = new Dictionary<string, NavNode>(StringComparer.Ordinal);
+        IndexNode(root, index);
+        return index;
+    }
+
+    /// <summary>Recursive helper for <see cref="BuildUrlIndex"/>.</summary>
+    /// <param name="node">Current node.</param>
+    /// <param name="index">Accumulator.</param>
+    private static void IndexNode(NavNode node, Dictionary<string, NavNode> index)
+    {
+        if (!node.IsSection && !string.IsNullOrEmpty(node.RelativeUrl))
+        {
+            index[node.RelativeUrl] = node;
+        }
+
+        if (node.IsSection && !string.IsNullOrEmpty(node.IndexUrl))
+        {
+            index[node.IndexUrl] = node;
+        }
+
+        for (var i = 0; i < node.Children.Length; i++)
+        {
+            IndexNode(node.Children[i], index);
+        }
     }
 
     /// <summary>Materializes the active-ancestor chain into a small reference-equality set.</summary>
@@ -100,30 +133,6 @@ internal static class NavRenderer
         }
 
         root.AttachParents();
-    }
-
-    /// <summary>Returns the node representing <paramref name="currentPageUrl"/>, or null when the page is not in the tree.</summary>
-    /// <param name="root">Nav root.</param>
-    /// <param name="currentPageUrl">Active page URL.</param>
-    /// <returns>The active node, or null when not found.</returns>
-    private static NavNode? FindActiveNode(NavNode root, string currentPageUrl)
-    {
-        if ((!root.IsSection && string.Equals(root.RelativeUrl, currentPageUrl, StringComparison.Ordinal)) ||
-            (root.IsSection && root.IndexUrl.Length > 0 && string.Equals(root.IndexUrl, currentPageUrl, StringComparison.Ordinal)))
-        {
-            return root;
-        }
-
-        for (var i = 0; i < root.Children.Length; i++)
-        {
-            var active = FindActiveNode(root.Children[i], currentPageUrl);
-            if (active is not null)
-            {
-                return active;
-            }
-        }
-
-        return null;
     }
 
     /// <summary>Writes one <c>&lt;ul class="md-nav__list"&gt;</c> with <paramref name="items"/> as <c>&lt;li&gt;</c>s.</summary>

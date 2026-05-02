@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Snippets;
@@ -27,20 +28,22 @@ internal static class SnippetsRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>, splicing every <c>--8&lt;-- "file"</c> include inline.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="baseDirectory">Absolute path to resolve include targets against.</param>
+    /// <param name="fileCache">Byte-keyed snippet cache scoped to the current build.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, string baseDirectory, IBufferWriter<byte> writer)
+    public static void Rewrite(ReadOnlySpan<byte> source, string baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer)
     {
-        var visited = new HashSet<string>(StringComparer.Ordinal);
-        RewriteCore(source, baseDirectory, writer, visited, 0);
+        var visited = new HashSet<byte[]>(ByteArrayComparer.Instance);
+        RewriteCore(source, baseDirectory, fileCache, writer, visited, 0);
     }
 
     /// <summary>Recursive include implementation guarded by <paramref name="depth"/> and <paramref name="visited"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="baseDirectory">Snippet root.</param>
+    /// <param name="fileCache">Byte-keyed snippet cache.</param>
     /// <param name="writer">Sink.</param>
-    /// <param name="visited">Already-included files (cycle guard).</param>
+    /// <param name="visited">Already-included files (cycle guard, keyed on the include path bytes).</param>
     /// <param name="depth">Current recursion depth.</param>
-    private static void RewriteCore(ReadOnlySpan<byte> source, string baseDirectory, IBufferWriter<byte> writer, HashSet<string> visited, int depth)
+    private static void RewriteCore(ReadOnlySpan<byte> source, string baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer, HashSet<byte[]> visited, int depth)
     {
         var i = 0;
         while (i < source.Length)
@@ -58,7 +61,7 @@ internal static class SnippetsRewriter
             {
                 var pathBytes = source.Slice(lineStart + pathStart, pathLength);
                 var sectionBytes = sectionLength is 0 ? default : source.Slice(lineStart + sectionStart, sectionLength);
-                EmitInclude(pathBytes, sectionBytes, baseDirectory, writer, visited, depth);
+                EmitInclude(pathBytes, sectionBytes, baseDirectory, fileCache, writer, visited, depth);
                 i = lineEnd;
                 continue;
             }
@@ -107,30 +110,37 @@ internal static class SnippetsRewriter
         var specStart = quoteOffset + 1;
         var pathSpec = line.Slice(specStart, closeQuote);
         var hashIdx = pathSpec.IndexOf((byte)'#');
+        pathStart = specStart;
         if (hashIdx >= 0)
         {
-            pathStart = specStart;
             pathLength = hashIdx;
             sectionStart = specStart + hashIdx + 1;
             sectionLength = closeQuote - hashIdx - 1;
         }
         else
         {
-            pathStart = specStart;
             pathLength = closeQuote;
         }
 
         return pathLength > 0;
     }
 
-    /// <summary>Reads the snippet at <paramref name="pathBytes"/> and recursively expands its includes into <paramref name="writer"/>.</summary>
-    /// <param name="pathBytes">UTF-8 path bytes (encoded to <see cref="string"/> only at the <see cref="Path.Combine(string, string)"/> boundary).</param>
+    /// <summary>Reads the snippet at <paramref name="pathBytes"/> via byte-keyed cache lookup (resolving + reading on miss) and recursively expands its includes.</summary>
+    /// <param name="pathBytes">UTF-8 path bytes lifted from the source span.</param>
     /// <param name="sectionBytes">UTF-8 section-name bytes; empty span means whole-file include.</param>
     /// <param name="baseDirectory">Snippet root.</param>
+    /// <param name="fileCache">Build-scoped byte-keyed cache.</param>
     /// <param name="writer">Sink.</param>
-    /// <param name="visited">Already-included files (cycle guard).</param>
+    /// <param name="visited">Already-included path bytes (cycle guard).</param>
     /// <param name="depth">Current recursion depth.</param>
-    private static void EmitInclude(ReadOnlySpan<byte> pathBytes, ReadOnlySpan<byte> sectionBytes, string baseDirectory, IBufferWriter<byte> writer, HashSet<string> visited, int depth)
+    private static void EmitInclude(
+        ReadOnlySpan<byte> pathBytes,
+        ReadOnlySpan<byte> sectionBytes,
+        string baseDirectory,
+        Dictionary<byte[], byte[]> fileCache,
+        IBufferWriter<byte> writer,
+        HashSet<byte[]> visited,
+        int depth)
     {
         if (depth >= MaxIncludeDepth)
         {
@@ -138,32 +148,25 @@ internal static class SnippetsRewriter
             return;
         }
 
-        var path = Encoding.UTF8.GetString(pathBytes);
-        var absolute = Path.GetFullPath(Path.Combine(baseDirectory, path));
-        if (!IsInside(baseDirectory, absolute))
-        {
-            EmitError(writer, "snippet path escapes base directory"u8, pathBytes);
-            return;
-        }
-
-        if (!visited.Add(absolute))
+        var visitedLookup = visited.GetAlternateLookup<ReadOnlySpan<byte>>();
+        if (visitedLookup.Contains(pathBytes))
         {
             EmitError(writer, "snippet cycle detected"u8, pathBytes);
             return;
         }
 
+        if (!TryGetSnippetBytes(pathBytes, baseDirectory, fileCache, writer, out var bytes))
+        {
+            return;
+        }
+
+        var pathKey = pathBytes.ToArray();
+        visited.Add(pathKey);
         try
         {
-            if (!File.Exists(absolute))
-            {
-                EmitError(writer, "snippet not found"u8, pathBytes);
-                return;
-            }
-
-            var bytes = File.ReadAllBytes(absolute);
             if (sectionBytes.IsEmpty)
             {
-                RewriteCore(bytes, baseDirectory, writer, visited, depth + 1);
+                RewriteCore(bytes, baseDirectory, fileCache, writer, visited, depth + 1);
                 return;
             }
 
@@ -173,12 +176,49 @@ internal static class SnippetsRewriter
                 return;
             }
 
-            RewriteCore(((ReadOnlySpan<byte>)bytes).Slice(sectionStart, sectionLength), baseDirectory, writer, visited, depth + 1);
+            RewriteCore(((ReadOnlySpan<byte>)bytes).Slice(sectionStart, sectionLength), baseDirectory, fileCache, writer, visited, depth + 1);
         }
         finally
         {
-            visited.Remove(absolute);
+            visited.Remove(pathKey);
         }
+    }
+
+    /// <summary>Resolves <paramref name="pathBytes"/> to file bytes via <paramref name="fileCache"/>, reading from disk on cache miss after a path-escape check.</summary>
+    /// <param name="pathBytes">UTF-8 path bytes.</param>
+    /// <param name="baseDirectory">Snippet root.</param>
+    /// <param name="fileCache">Build-scoped byte-keyed cache.</param>
+    /// <param name="writer">Sink (used to emit error stubs on miss).</param>
+    /// <param name="bytes">Resolved file bytes on success.</param>
+    /// <returns>True when the file was resolved (cache hit or successful read); false when an error stub was emitted.</returns>
+    private static bool TryGetSnippetBytes(ReadOnlySpan<byte> pathBytes, string baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer, out byte[] bytes)
+    {
+        var cacheLookup = fileCache.GetAlternateLookup<ReadOnlySpan<byte>>();
+        if (cacheLookup.TryGetValue(pathBytes, out bytes!))
+        {
+            return true;
+        }
+
+        // Cache miss: validate + read once, then memoize so subsequent references skip the filesystem entirely.
+        var path = Encoding.UTF8.GetString(pathBytes);
+        var absolute = Path.GetFullPath(Path.Combine(baseDirectory, path));
+        if (!IsInside(baseDirectory, absolute))
+        {
+            EmitError(writer, "snippet path escapes base directory"u8, pathBytes);
+            bytes = [];
+            return false;
+        }
+
+        if (!File.Exists(absolute))
+        {
+            EmitError(writer, "snippet not found"u8, pathBytes);
+            bytes = [];
+            return false;
+        }
+
+        bytes = File.ReadAllBytes(absolute);
+        fileCache[pathBytes.ToArray()] = bytes;
+        return true;
     }
 
     /// <summary>Writes a fenced-code error stub so missing snippets surface in the rendered page rather than failing silently.</summary>

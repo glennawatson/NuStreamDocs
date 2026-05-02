@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Markdown;
 
 namespace NuStreamDocs.Html;
@@ -59,13 +60,13 @@ public static class HtmlEmitter
     /// <param name="source">Original UTF-8 source the block descriptors index into.</param>
     /// <param name="blocks">Block descriptors emitted by <see cref="BlockScanner"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+    [SuppressMessage(
         "Roslynator",
         "RCS1239:Use 'for' statement instead of 'while' statement",
         Justification = "Fenced-code emit consumes a variable number of sibling blocks per iteration; advancing 'i' inside the loop would trip S127 on a for-loop. While-loop keeps both rules happy.")]
     public static void Emit(
         ReadOnlySpan<byte> source,
-        ReadOnlySpan<BlockSpan> blocks,
+        in ReadOnlySpan<BlockSpan> blocks,
         IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
@@ -188,7 +189,7 @@ public static class HtmlEmitter
     /// <returns>Index of the closing fence (or last consumed block when the source had no closer).</returns>
     private static int EmitFencedCode(
         ReadOnlySpan<byte> source,
-        ReadOnlySpan<BlockSpan> blocks,
+        in ReadOnlySpan<BlockSpan> blocks,
         int openerIndex,
         IBufferWriter<byte> writer)
     {

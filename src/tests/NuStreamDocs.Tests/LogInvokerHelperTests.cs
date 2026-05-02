@@ -46,13 +46,14 @@ public class LogInvokerHelperTests
             ProjectEnabled,
             (_, _, _, p) => calls += p);
 
+        await Assert.That(calls).IsEqualTo(21);
+        return;
+
         int ProjectEnabled(int x)
         {
             calls++;
             return x * 10;
         }
-
-        await Assert.That(calls).IsEqualTo(21);
     }
 
     /// <summary>Projection overload skips the projection when logging is disabled.</summary>
@@ -70,13 +71,14 @@ public class LogInvokerHelperTests
             ProjectDisabled,
             (_, _, _, _) => calls = 1);
 
+        await Assert.That(calls).IsEqualTo(0);
+        return;
+
         int ProjectDisabled(int x)
         {
             calls = 99;
             return x;
         }
-
-        await Assert.That(calls).IsEqualTo(0);
     }
 
     /// <summary>Logger that always reports enabled.</summary>

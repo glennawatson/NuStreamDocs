@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Config;
 using NuStreamDocs.Plugins;
 
@@ -199,7 +200,7 @@ public sealed class DocBuilder
     /// this in a <c>Use{Plugin}</c> extension method that also accepts
     /// an options record.
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
+    [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
     public DocBuilder UsePlugin<TPlugin>()
         where TPlugin : IDocPlugin, new()
     {
@@ -234,7 +235,7 @@ public sealed class DocBuilder
     /// Used by accumulator-shaped extension methods (e.g. <c>AddExtraCss</c>)
     /// that fold every chained call onto one underlying plugin.
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
+    [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
     public TPlugin GetOrAddPlugin<TPlugin>()
         where TPlugin : class, IDocPlugin, new()
     {
@@ -270,7 +271,7 @@ public sealed class DocBuilder
     /// <summary>Returns the first registered reader whose extension matches, or null.</summary>
     /// <param name="extension">File extension including the leading dot, lowercase.</param>
     /// <returns>The matching reader, or null when none recognizes the extension.</returns>
-    public IConfigReader? FindConfigReader(ReadOnlySpan<char> extension)
+    public IConfigReader? FindConfigReader(in ReadOnlySpan<char> extension)
     {
         for (var i = 0; i < _configReaders.Count; i++)
         {

@@ -20,6 +20,7 @@ namespace NuStreamDocs.Benchmarks;
 /// a concatenated string per call, so isolating that cost from the
 /// dictionary-insert and contention costs is what we want here.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class AutorefsRegistryBenchmarks
 {

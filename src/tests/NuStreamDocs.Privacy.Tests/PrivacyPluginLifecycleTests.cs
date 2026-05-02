@@ -2,7 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using NuStreamDocs.Building;
 
@@ -155,6 +157,8 @@ public class PrivacyPluginLifecycleTests
             await Assert.That((Func<Task>)Build).Throws<PrivacyDownloadException>();
         }
 
+        return;
+
         Task Build() =>
             new DocBuilder().WithInput(fixture.Root)
                 .WithOutput(fixture.Output)
@@ -271,7 +275,7 @@ public class PrivacyPluginLifecycleTests
         /// <returns>A new fixture; caller must dispose.</returns>
         public static TempSite Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-priv-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+            var root = Path.Combine(Path.GetTempPath(), "smkd-priv-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(root);
             return new(root);
         }
@@ -391,7 +395,7 @@ public class PrivacyPluginLifecycleTests
         /// <returns>An unused port number.</returns>
         private static int GetFreePort()
         {
-            var l = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+            var l = new TcpListener(IPAddress.Loopback, 0);
             l.Start();
             try
             {

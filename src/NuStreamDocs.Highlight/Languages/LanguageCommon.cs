@@ -133,12 +133,9 @@ internal static class LanguageCommon
         }
 
         var bodyStop = slice[1..].IndexOfAnyExcept(EntityBody);
-        if (bodyStop is <= 0 || 1 + bodyStop >= slice.Length || slice[1 + bodyStop] is not (byte)';')
-        {
-            return 0;
-        }
-
-        return 1 + bodyStop + 1;
+        return bodyStop <= 0 || 1 + bodyStop >= slice.Length || slice[1 + bodyStop] is not (byte)';'
+            ? 0
+            : 1 + bodyStop + 1;
     }
 
     /// <summary>XML / Razor attribute name followed by <c>=</c> (lookahead, not consumed).</summary>

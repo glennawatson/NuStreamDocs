@@ -18,14 +18,24 @@ namespace NuStreamDocs.Benchmarks;
 /// so the benchmarks confirm the dedup didn't introduce delegate
 /// boxing, extra copies, or per-call allocations.
 /// </summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class CommonHelperBenchmarks
 {
     /// <summary>Per-iteration string-write count for the Utf8StringWriter pass.</summary>
     private const int Utf8WriterRepetitions = 1_000;
 
+    /// <summary>Headroom factor for the string-writer's pre-sized backing array (UTF-8 encode is at most 2× UTF-16 char count for non-ASCII).</summary>
+    private const int StringWriterCapacityFactor = 2;
+
+    /// <summary>Bytes per int when sizing the int-writer's backing array (max digits in <see cref="int.MaxValue"/> + sign).</summary>
+    private const int IntWriterBytesPerEntry = 8;
+
     /// <summary>Repeat factor for the snapshot / shortcode payloads.</summary>
     private const int PayloadRepetitions = 64;
+
+    /// <summary>Probe count for the run-length micro-benchmark — drives the loop hot enough to time without saturating BDN error bars.</summary>
+    private const int RunLengthProbes = 10_000;
 
     /// <summary>Repeat factor for the XML-escape payload (denser per-line).</summary>
     private const int XmlPayloadRepetitions = 128;
@@ -42,11 +52,27 @@ public class CommonHelperBenchmarks
     /// <summary>Sample title text reused by Utf8StringWriter benchmarks.</summary>
     private string _title = string.Empty;
 
+    /// <summary>Synthetic UTF-8 buffer of leading backticks for the <c>RunLength</c> micro-benchmark.</summary>
+    private byte[] _runLengthInput = [];
+
+    /// <summary>
+    /// Reused writer for the Utf8StringWriter benchmarks — constructed
+    /// once in <see cref="Setup"/> so the per-invocation measurement
+    /// reflects the actual write path, not the cost of allocating a
+    /// fresh backing array for every benchmark invocation.
+    /// </summary>
+    private ArrayBufferWriter<byte> _stringWriter = null!;
+
+    /// <summary>Reused writer for the Utf8StringWriter int benchmark.</summary>
+    private ArrayBufferWriter<byte> _intWriter = null!;
+
     /// <summary>Initial-state setup for the per-iteration buffers.</summary>
     [GlobalSetup]
     public void Setup()
     {
         _title = "The quick brown fox jumps over the lazy dog & friends \"on the run\"";
+        _stringWriter = new(_title.Length * Utf8WriterRepetitions * StringWriterCapacityFactor);
+        _intWriter = new(Utf8WriterRepetitions * IntWriterBytesPerEntry);
         _snapshotInput = Encoding.UTF8.GetBytes(string.Concat(Enumerable.Repeat(
             "<h1>Heading</h1><p>One paragraph with <em>emphasis</em> and <code>code</code>.</p>",
             PayloadRepetitions)));
@@ -56,34 +82,51 @@ public class CommonHelperBenchmarks
         _shortcodeInput = Encoding.UTF8.GetBytes(string.Concat(Enumerable.Repeat(
             "the :rocket: ship sailed past :material-anchor: at :+1: speed and we said :wave_hand: ",
             PayloadRepetitions)));
+
+        // Fixture sized to the typical fence/marker run encountered by the inline pass.
+        _runLengthInput = "```bash code"u8.ToArray();
     }
 
-    /// <summary>Bulk UTF-8 string write into a pre-sized writer.</summary>
+    /// <summary>Bulk UTF-8 string write into a pre-sized writer reused across invocations.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int Utf8StringWriter_String()
     {
-        var writer = new ArrayBufferWriter<byte>(_title.Length * Utf8WriterRepetitions * 2);
+        _stringWriter.ResetWrittenCount();
         for (var i = 0; i < Utf8WriterRepetitions; i++)
         {
-            Utf8StringWriter.Write(writer, _title);
+            Utf8StringWriter.Write(_stringWriter, _title);
         }
 
-        return writer.WrittenCount;
+        return _stringWriter.WrittenCount;
     }
 
-    /// <summary>Repeated int writes — exercises the stackalloc + TryFormat path.</summary>
+    /// <summary>Counts the leading marker run repeatedly — exercises the inline pass's fence/emphasis run-length probe.</summary>
+    /// <returns>Accumulated run lengths, kept live so the JIT doesn't elide the call.</returns>
+    [Benchmark]
+    public int AsciiByteHelpers_RunLength()
+    {
+        var total = 0;
+        for (var i = 0; i < RunLengthProbes; i++)
+        {
+            total += AsciiByteHelpers.RunLength(_runLengthInput, 0, (byte)'`');
+        }
+
+        return total;
+    }
+
+    /// <summary>Repeated int writes — exercises the stackalloc + TryFormat path. Writer is reused across invocations.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int Utf8StringWriter_Int32()
     {
-        var writer = new ArrayBufferWriter<byte>(Utf8WriterRepetitions * 8);
+        _intWriter.ResetWrittenCount();
         for (var i = 0; i < Utf8WriterRepetitions; i++)
         {
-            Utf8StringWriter.WriteInt32(writer, i);
+            Utf8StringWriter.WriteInt32(_intWriter, i);
         }
 
-        return writer.WrittenCount;
+        return _intWriter.WrittenCount;
     }
 
     /// <summary>XML mode entity escape (skips quotes).</summary>

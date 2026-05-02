@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NuStreamDocs.Plugins;
 
@@ -66,7 +67,7 @@ public class MaterialIconsPluginTests
     /// <summary>Helper: invoke <c>IHeadExtraProvider.WriteHeadExtra</c> and decode.</summary>
     /// <param name="provider">Provider under test.</param>
     /// <returns>The rendered head-extras HTML.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1859", Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
+    [SuppressMessage("Performance", "CA1859", Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
     private static string WriteHeadExtras(IHeadExtraProvider provider)
     {
         var writer = new ArrayBufferWriter<byte>();

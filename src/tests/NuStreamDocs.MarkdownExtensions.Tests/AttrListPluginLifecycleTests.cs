@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using NuStreamDocs.MarkdownExtensions.AttrList;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
@@ -18,7 +19,7 @@ public class AttrListPluginLifecycleTests
         var sink = new ArrayBufferWriter<byte>(64);
         sink.Write("<h1>Title</h1>\n{ #lead }\n"u8);
         await new AttrListPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("Title");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("Title");
     }
 
     /// <summary>OnRenderPageAsync is a no-op when there's no AttrList markup.</summary>

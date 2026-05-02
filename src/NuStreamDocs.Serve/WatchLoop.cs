@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using NuStreamDocs.Serve.Logging;
 
@@ -67,7 +68,7 @@ internal sealed class WatchLoop : IDisposable
     /// <summary>Streams debounced rebuild signals; each yielded element carries the unique paths that changed in the window.</summary>
     /// <param name="cancellationToken">Cancellation token; cancellation gracefully ends the stream.</param>
     /// <returns>Async stream of debounced change-set tickets.</returns>
-    public async IAsyncEnumerable<HashSet<string>> WaitAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<HashSet<string>> WaitAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var reader = _events.Reader;
         while (!cancellationToken.IsCancellationRequested)

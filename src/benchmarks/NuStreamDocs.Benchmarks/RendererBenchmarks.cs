@@ -9,6 +9,7 @@ using BenchmarkDotNet.Attributes;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for <c>MarkdownRenderer</c>.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class RendererBenchmarks
 {
@@ -18,8 +19,15 @@ public class RendererBenchmarks
     /// <summary>Medium synthetic-document size; matches a typical doc page count.</summary>
     private const int MediumParagraphs = 1000;
 
+    /// <summary>Headroom factor for the output writer (HTML expansion ≈ 1.6× for typical prose; 2× is generous).</summary>
+    private const int OutputExpansionFactor = 2;
+
     /// <summary>Pre-built UTF-8 input buffer; populated in <c>Setup</c>.</summary>
     private byte[] _source = [];
+
+    /// <summary>Reused output writer, sized once in <c>Setup</c> and reset per iteration.</summary>
+    /// <remarks>Mirrors the per-thread cache that <c>MarkdownRenderer</c> uses in production callers.</remarks>
+    private ArrayBufferWriter<byte> _writer = null!;
 
     /// <summary>Gets or sets the number of paragraphs in the synthetic input document.</summary>
     [Params(SmallParagraphs, MediumParagraphs)]
@@ -37,15 +45,16 @@ public class RendererBenchmarks
         }
 
         _source = Encoding.UTF8.GetBytes(sb.ToString());
+        _writer = new(_source.Length * OutputExpansionFactor);
     }
 
-    /// <summary>Full render to a pooled <c>ArrayBufferWriter{T}</c>.</summary>
+    /// <summary>Full render into a reused writer; isolates the renderer cost from one-shot writer growth.</summary>
     /// <returns>Bytes written, returned to keep the JIT honest.</returns>
     [Benchmark]
     public int Render()
     {
-        var writer = new ArrayBufferWriter<byte>(_source.Length * 2);
-        MarkdownRenderer.Render(_source, writer);
-        return writer.WrittenCount;
+        _writer.ResetWrittenCount();
+        MarkdownRenderer.Render(_source, _writer);
+        return _writer.WrittenCount;
     }
 }

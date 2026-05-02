@@ -176,7 +176,7 @@ internal static class AnchorBytes
     /// <param name="addRel">Whether rel-merge is requested.</param>
     /// <param name="rel">The located rel attribute (or <see cref="NamedAttribute.None"/>).</param>
     /// <param name="sink">UTF-8 sink.</param>
-    private static void EmitWithRelMerge(ReadOnlySpan<byte> attrs, bool addRel, NamedAttribute rel, IBufferWriter<byte> sink)
+    private static void EmitWithRelMerge(ReadOnlySpan<byte> attrs, bool addRel, in NamedAttribute rel, IBufferWriter<byte> sink)
     {
         if (!addRel)
         {

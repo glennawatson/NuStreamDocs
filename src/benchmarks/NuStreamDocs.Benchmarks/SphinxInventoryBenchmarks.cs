@@ -16,6 +16,7 @@ namespace NuStreamDocs.Benchmarks;
 /// interesting than the per-entry encode + zlib cost — the benchmark fans out
 /// across registry sizes that bracket realistic doc sites.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class SphinxInventoryBenchmarks
 {

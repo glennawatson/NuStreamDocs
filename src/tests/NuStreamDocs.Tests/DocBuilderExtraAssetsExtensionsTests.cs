@@ -16,9 +16,10 @@ public class DocBuilderExtraAssetsExtensionsTests
     public async Task AddExtraCssFileRegisters()
     {
         var builder = new DocBuilder();
-        builder.AddExtraCss("style.css");
+        var result = builder.AddExtraCss("style.css");
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         await Assert.That(plugin.StaticAssets).IsNotNull();
+        await Assert.That(result).IsSameReferenceAs(builder);
     }
 
     /// <summary>AddExtraCss(params) registers multiple sources.</summary>
@@ -27,9 +28,10 @@ public class DocBuilderExtraAssetsExtensionsTests
     public async Task AddExtraCssParamsRegisters()
     {
         var builder = new DocBuilder();
-        builder.AddExtraCss("a.css", "b.css", "c.css");
+        var result = builder.AddExtraCss("a.css", "b.css", "c.css");
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         await Assert.That(plugin.StaticAssets).IsNotNull();
+        await Assert.That(result).IsSameReferenceAs(builder);
     }
 
     /// <summary>AddExtraCssInline accepts an inline payload.</summary>
@@ -38,8 +40,8 @@ public class DocBuilderExtraAssetsExtensionsTests
     public async Task AddExtraCssInline()
     {
         var builder = new DocBuilder();
-        builder.AddExtraCssInline("inline.css", "body{}"u8.ToArray());
-        await Assert.That(builder).IsNotNull();
+        var result = builder.AddExtraCssInline("inline.css", "body{}"u8.ToArray());
+        await Assert.That(result).IsSameReferenceAs(builder);
     }
 
     /// <summary>AddExtraCssEmbedded registers an embedded resource.</summary>
@@ -48,8 +50,8 @@ public class DocBuilderExtraAssetsExtensionsTests
     public async Task AddExtraCssEmbedded()
     {
         var builder = new DocBuilder();
-        builder.AddExtraCssEmbedded(typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "missing.resource", "x.css");
-        await Assert.That(builder).IsNotNull();
+        var result = builder.AddExtraCssEmbedded(typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "missing.resource", "x.css");
+        await Assert.That(result).IsSameReferenceAs(builder);
     }
 
     /// <summary>AddExtraCssLink(url) registers an external link.</summary>
@@ -58,8 +60,8 @@ public class DocBuilderExtraAssetsExtensionsTests
     public async Task AddExtraCssLink()
     {
         var builder = new DocBuilder();
-        builder.AddExtraCssLink("https://x.test/a.css");
-        await Assert.That(builder).IsNotNull();
+        var result = builder.AddExtraCssLink("https://x.test/a.css");
+        await Assert.That(result).IsSameReferenceAs(builder);
     }
 
     /// <summary>AddExtraCssLink(params) registers multiple external hrefs.</summary>
@@ -68,8 +70,8 @@ public class DocBuilderExtraAssetsExtensionsTests
     public async Task AddExtraCssLinkParams()
     {
         var builder = new DocBuilder();
-        builder.AddExtraCssLink("https://x.test/a.css", "https://x.test/b.css");
-        await Assert.That(builder).IsNotNull();
+        var result = builder.AddExtraCssLink("https://x.test/a.css", "https://x.test/b.css");
+        await Assert.That(result).IsSameReferenceAs(builder);
     }
 
     /// <summary>AddExtraJs covers the full surface.</summary>
@@ -78,13 +80,12 @@ public class DocBuilderExtraAssetsExtensionsTests
     public async Task AddExtraJsAllShapes()
     {
         var builder = new DocBuilder();
-        builder.AddExtraJs("x.js");
-        builder.AddExtraJs("a.js", "b.js");
-        builder.AddExtraJsInline("inline.js", "var x;"u8.ToArray());
-        builder.AddExtraJsEmbedded(typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "missing.js", "embed.js");
-        builder.AddExtraJsLink("https://x.test/a.js");
-        builder.AddExtraJsLink("https://x.test/a.js", "https://x.test/b.js");
-        await Assert.That(builder).IsNotNull();
+        await Assert.That(builder.AddExtraJs("x.js")).IsSameReferenceAs(builder);
+        await Assert.That(builder.AddExtraJs("a.js", "b.js")).IsSameReferenceAs(builder);
+        await Assert.That(builder.AddExtraJsInline("inline.js", "var x;"u8.ToArray())).IsSameReferenceAs(builder);
+        await Assert.That(builder.AddExtraJsEmbedded(typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "missing.js", "embed.js")).IsSameReferenceAs(builder);
+        await Assert.That(builder.AddExtraJsLink("https://x.test/a.js")).IsSameReferenceAs(builder);
+        await Assert.That(builder.AddExtraJsLink("https://x.test/a.js", "https://x.test/b.js")).IsSameReferenceAs(builder);
     }
 
     /// <summary>Each AddExtra entry rejects null builder.</summary>

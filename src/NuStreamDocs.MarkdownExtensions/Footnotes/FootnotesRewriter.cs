@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Buffers.Text;
+using System.Text;
 using NuStreamDocs.Markdown;
 using NuStreamDocs.Markdown.Common;
 
@@ -49,7 +51,7 @@ internal static class FootnotesRewriter
                 && TryParseDefinition(source, i, out var idStart, out var idLen, out var bodyStart, out var bodyEnd, out var blockEnd))
             {
                 defs.Add(new(
-                    System.Text.Encoding.UTF8.GetString(source.Slice(idStart, idLen)),
+                    Encoding.UTF8.GetString(source.Slice(idStart, idLen)),
                     [.. source[bodyStart..bodyEnd]]));
                 i = blockEnd;
                 continue;
@@ -204,7 +206,7 @@ internal static class FootnotesRewriter
     /// <param name="writer">UTF-8 sink.</param>
     private static void EmitReference(ReadOnlySpan<byte> id, List<Definition> defs, IBufferWriter<byte> writer)
     {
-        var idString = System.Text.Encoding.UTF8.GetString(id);
+        var idString = Encoding.UTF8.GetString(id);
         var index = IndexOf(defs, idString);
         if (index < 0)
         {
@@ -233,11 +235,11 @@ internal static class FootnotesRewriter
         {
             var def = defs[i];
             writer.Write("<li id=\"fn-"u8);
-            writer.Write(System.Text.Encoding.UTF8.GetBytes(def.Id));
+            writer.Write(Encoding.UTF8.GetBytes(def.Id));
             writer.Write("\">"u8);
             InlineRenderer.Render(def.Body, writer);
             writer.Write(" <a href=\"#fnref-"u8);
-            writer.Write(System.Text.Encoding.UTF8.GetBytes(def.Id));
+            writer.Write(Encoding.UTF8.GetBytes(def.Id));
             writer.Write("\">↩</a></li>\n"u8);
         }
 
@@ -267,7 +269,7 @@ internal static class FootnotesRewriter
     private static void WriteInt(int value, IBufferWriter<byte> writer)
     {
         Span<byte> buf = stackalloc byte[16];
-        if (!System.Buffers.Text.Utf8Formatter.TryFormat(value, buf, out var written))
+        if (!Utf8Formatter.TryFormat(value, buf, out var written))
         {
             return;
         }

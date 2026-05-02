@@ -57,7 +57,7 @@ internal static class RelTokenMerger
     /// <param name="source">Source span.</param>
     /// <param name="ranges">Destination buffer of (start, end) pairs.</param>
     /// <returns>The count of tokens written into <paramref name="ranges"/>.</returns>
-    private static int IndexTokens(ReadOnlySpan<byte> source, Span<int> ranges)
+    private static int IndexTokens(ReadOnlySpan<byte> source, in Span<int> ranges)
     {
         var count = 0;
         var p = 0;
@@ -94,7 +94,7 @@ internal static class RelTokenMerger
     /// <param name="sink">UTF-8 sink.</param>
     /// <param name="isFirst">Whether the first token here is also the first overall (no leading space).</param>
     /// <returns>True when at least one token was emitted.</returns>
-    private static bool EmitNormalizedTokens(ReadOnlySpan<byte> source, ReadOnlySpan<int> ranges, int count, IBufferWriter<byte> sink, bool isFirst)
+    private static bool EmitNormalizedTokens(ReadOnlySpan<byte> source, in ReadOnlySpan<int> ranges, int count, IBufferWriter<byte> sink, bool isFirst)
     {
         for (var i = 0; i < count; i++)
         {
@@ -109,7 +109,7 @@ internal static class RelTokenMerger
     /// <param name="ranges">Token-range buffer.</param>
     /// <param name="i">Token index.</param>
     /// <returns>Token byte span.</returns>
-    private static ReadOnlySpan<byte> TokenAt(ReadOnlySpan<byte> source, ReadOnlySpan<int> ranges, int i) =>
+    private static ReadOnlySpan<byte> TokenAt(ReadOnlySpan<byte> source, in ReadOnlySpan<int> ranges, int i) =>
         source[ranges[i * RangeStride]..ranges[(i * RangeStride) + 1]];
 
     /// <summary>Returns true when <paramref name="candidate"/> matches any of the first <paramref name="count"/> tokens in <paramref name="ranges"/> (case-insensitive).</summary>
@@ -118,7 +118,7 @@ internal static class RelTokenMerger
     /// <param name="count">Number of valid token entries to scan.</param>
     /// <param name="candidate">Candidate token bytes.</param>
     /// <returns>True when a duplicate already exists in the list.</returns>
-    private static bool TokenInList(ReadOnlySpan<byte> source, ReadOnlySpan<int> ranges, int count, ReadOnlySpan<byte> candidate)
+    private static bool TokenInList(ReadOnlySpan<byte> source, in ReadOnlySpan<int> ranges, int count, ReadOnlySpan<byte> candidate)
     {
         for (var i = 0; i < count; i++)
         {

@@ -6,7 +6,7 @@ using System.Buffers;
 using System.Text;
 using NuStreamDocs.Common;
 
-namespace NuStreamDocs.Tags.Tests;
+namespace NuStreamDocs.Tests;
 
 /// <summary>Direct tests for the shared Utf8StringWriter helpers.</summary>
 public class Utf8StringWriterTests
@@ -77,6 +77,37 @@ public class Utf8StringWriterTests
     [Test]
     public async Task WriteByteSpanNullSinkThrows() =>
         await Assert.That(() => Utf8StringWriter.Write(null!, "x"u8))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>WriteByte advances by exactly one byte and writes the literal value.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteByteSingleByte()
+    {
+        var sink = new ArrayBufferWriter<byte>();
+        Utf8StringWriter.WriteByte(sink, (byte)'X');
+        await Assert.That(sink.WrittenCount).IsEqualTo(1);
+        await Assert.That(sink.WrittenSpan[0]).IsEqualTo((byte)'X');
+    }
+
+    /// <summary>Repeated WriteByte calls concatenate in order.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteByteSequentialConcatenates()
+    {
+        var sink = new ArrayBufferWriter<byte>();
+        Utf8StringWriter.WriteByte(sink, (byte)' ');
+        Utf8StringWriter.WriteByte(sink, (byte)'i');
+        Utf8StringWriter.WriteByte(sink, (byte)'d');
+        Utf8StringWriter.WriteByte(sink, (byte)'=');
+        await Assert.That(sink.WrittenSpan.SequenceEqual(" id="u8)).IsTrue();
+    }
+
+    /// <summary>WriteByte null-checks its sink.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteByteNullSinkThrows() =>
+        await Assert.That(() => Utf8StringWriter.WriteByte(null!, (byte)'a'))
             .Throws<ArgumentNullException>();
 
     /// <summary>WriteInt32 emits ASCII digits.</summary>

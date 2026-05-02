@@ -69,7 +69,7 @@ internal static class InlineStyleBlockBytes
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when at least one url(...) inside the body was rewritten.</returns>
-    private static bool TryRewriteBlock(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    internal static bool TryRewriteBlock(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
     {
         if (!TryMatchStyleBlock(html, p, out var bodyStart, out var bodyEnd, out var blockEnd))
         {
@@ -77,7 +77,8 @@ internal static class InlineStyleBlockBytes
             return false;
         }
 
-        var temp = new ArrayBufferWriter<byte>(bodyEnd - bodyStart);
+        using var rental = PageBuilderPool.Rent(bodyEnd - bodyStart);
+        var temp = rental.Writer;
         if (!CssUrlBytes.RewriteInto(html[bodyStart..bodyEnd], ctx, temp))
         {
             advanceTo = blockEnd;

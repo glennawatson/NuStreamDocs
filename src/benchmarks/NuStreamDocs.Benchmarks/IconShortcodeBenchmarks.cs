@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using NuStreamDocs.Common;
 using NuStreamDocs.Icons.MaterialDesign;
 using NuStreamDocs.Theme.Material.IconShortcode;
 
@@ -17,6 +18,7 @@ namespace NuStreamDocs.Benchmarks;
 /// <see cref="IconShortcodesWithMdi"/> measures the rewriter end-to-end with
 /// the resolver wired in.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class IconShortcodeBenchmarks
 {
@@ -25,6 +27,12 @@ public class IconShortcodeBenchmarks
 
     /// <summary>Capacity for the resolver-direct sink — sized to fit one wrapped MDI SVG (wrapper ~80 B + path ~250 B).</summary>
     private const int ResolverSinkCapacity = 512;
+
+    /// <summary>Headroom factor for the MDI rewrite output writer (each <c>:material-…:</c> shortcode expands to ~300-byte inline SVG; 4× covers it with margin).</summary>
+    private const int MdiOutputExpansionFactor = 4;
+
+    /// <summary>Headroom factor for the ligature-only output writer (each shortcode expands to a small <c>&lt;span&gt;</c> wrapper; 2× is generous).</summary>
+    private const int LigatureOutputExpansionFactor = 2;
 
     /// <summary>Pre-built fixture mixing MDI hits + ligature fallbacks + Font Awesome shortcodes.</summary>
     private byte[] _mixedSource = [];
@@ -47,6 +55,12 @@ public class IconShortcodeBenchmarks
     /// <summary>Pre-allocated sink used by the resolver-direct benchmarks; reset between iterations.</summary>
     private ArrayBufferWriter<byte> _resolverSink = null!;
 
+    /// <summary>MDI rewrite output sink size hint — sized once in <c>Setup</c>.</summary>
+    private int _mdiHint;
+
+    /// <summary>Ligature rewrite output sink size hint — sized once in <c>Setup</c>.</summary>
+    private int _ligatureHint;
+
     /// <summary>Allocates fixtures + plugins.</summary>
     [GlobalSetup]
     public void Setup()
@@ -60,6 +74,8 @@ public class IconShortcodeBenchmarks
         _withMdi = new(_mdiResolver);
         _ligatureOnly = new();
         _resolverSink = new(ResolverSinkCapacity);
+        _mdiHint = _mixedSource.Length * MdiOutputExpansionFactor;
+        _ligatureHint = _mixedSource.Length * LigatureOutputExpansionFactor;
     }
 
     /// <summary>MDI resolver hot-path — direct <c>TryResolve</c> for a known hit, writes wrapped SVG to a pre-sized sink.</summary>
@@ -80,24 +96,26 @@ public class IconShortcodeBenchmarks
         return _mdiResolver.TryResolve(_resolverMiss, _resolverSink) ? 1 : 0;
     }
 
-    /// <summary>Icon shortcode rewriter end-to-end with the MDI resolver — inlines SVGs for known names, falls back for the rest.</summary>
+    /// <summary>Icon shortcode rewriter end-to-end with the MDI resolver, renting from <see cref="PageBuilderPool"/> to mirror production.</summary>
+    /// <remarks>Inlines SVGs for known names; falls back to the font-ligature span for the rest.</remarks>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int IconShortcodesWithMdi()
     {
-        var sink = new ArrayBufferWriter<byte>(_mixedSource.Length * 4);
-        _withMdi.Preprocess(_mixedSource, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(_mdiHint);
+        _withMdi.Preprocess(_mixedSource, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 
-    /// <summary>Icon shortcode rewriter without a resolver — every Material shortcode emits a font-ligature span (the legacy path).</summary>
+    /// <summary>Icon shortcode rewriter without a resolver, renting from <see cref="PageBuilderPool"/> to mirror production.</summary>
+    /// <remarks>Every Material shortcode emits a font-ligature span (the legacy path).</remarks>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int IconShortcodesLigatureOnly()
     {
-        var sink = new ArrayBufferWriter<byte>(_mixedSource.Length * 2);
-        _ligatureOnly.Preprocess(_mixedSource, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(_ligatureHint);
+        _ligatureOnly.Preprocess(_mixedSource, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 
     /// <summary>Stamps <paramref name="block"/> <see cref="Repetitions"/> times into a UTF-8 buffer.</summary>

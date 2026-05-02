@@ -3,12 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Common</PackageId>
-    <Description>Shared building blocks for NuStreamDocs plugin assemblies — abstract DocPluginBase that wipes the no-op IDocPlugin hook boilerplate plus byte-level YAML scanning helpers used by every plugin that reads frontmatter or sidecar metadata.</Description>
+    <Description>Byte and UTF-8 helpers shared across the NuStreamDocs assemblies — ASCII classifiers, byte-array equality, an HTML byte scanner, the per-thread page-builder pool, and small utility types.</Description>
     <RootNamespace>NuStreamDocs.Common</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-  </ItemGroup>
 
 </Project>

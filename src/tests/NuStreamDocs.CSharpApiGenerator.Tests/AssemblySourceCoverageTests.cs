@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging.Abstractions;
 using SourceDocParser;
 using SourceDocParser.Model;
 
@@ -71,7 +72,7 @@ public class AssemblySourceCoverageTests
     public async Task FactoryCreateSingle()
     {
         var src = new EmptySource();
-        var resolved = AssemblySourceFactory.Create([new CustomInput(src)], Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+        var resolved = AssemblySourceFactory.Create([new CustomInput(src)], NullLogger.Instance);
         await Assert.That(resolved).IsEqualTo(src);
     }
 
@@ -82,7 +83,7 @@ public class AssemblySourceCoverageTests
     {
         var resolved = AssemblySourceFactory.Create(
             [new CustomInput(new EmptySource()), new CustomInput(new EmptySource())],
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+            NullLogger.Instance);
         await Assert.That(resolved).IsTypeOf<CompositeAssemblySource>();
     }
 

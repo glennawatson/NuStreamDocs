@@ -85,7 +85,7 @@ public static class WyamFrontmatterReader
     /// <param name="tags">Tag accumulator.</param>
     /// <param name="isBlog"><c>IsBlog</c> accumulator.</param>
     private static void ParseLine(
-        ReadOnlySpan<char> line,
+        in ReadOnlySpan<char> line,
         ref string title,
         ref string author,
         ref DateOnly published,
@@ -129,7 +129,7 @@ public static class WyamFrontmatterReader
     /// <summary>Splits the <c>Tags:</c> right-hand-side on commas.</summary>
     /// <param name="value">RHS of the <c>Tags</c> entry.</param>
     /// <param name="tags">Accumulator.</param>
-    private static void ParseTags(ReadOnlySpan<char> value, List<string> tags)
+    private static void ParseTags(in ReadOnlySpan<char> value, List<string> tags)
     {
         if (value.IsEmpty)
         {
@@ -168,7 +168,7 @@ public static class WyamFrontmatterReader
     /// <summary>Returns true when <paramref name="line"/> is exactly a frontmatter fence.</summary>
     /// <param name="line">Candidate line.</param>
     /// <returns>True when the line is exactly <c>---</c>.</returns>
-    private static bool IsFrontmatterFence(ReadOnlySpan<char> line) =>
+    private static bool IsFrontmatterFence(in ReadOnlySpan<char> line) =>
         line.Length == FrontmatterFenceLength
         && line[0] is '-'
         && line[1] is '-'

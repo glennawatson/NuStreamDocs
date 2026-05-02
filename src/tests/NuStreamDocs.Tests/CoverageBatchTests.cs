@@ -4,6 +4,7 @@
 
 using NuStreamDocs.Building;
 using NuStreamDocs.Caching;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Tests;
 

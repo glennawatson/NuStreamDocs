@@ -107,17 +107,9 @@ public static class FrontmatterFlagReader
             return PageFlags.Draft;
         }
 
-        if (line.StartsWith(NotInNavKey) && IsTrue(line[NotInNavKey.Length..]))
-        {
-            return PageFlags.NotInNav;
-        }
-
-        if (line.StartsWith(NavExcludeKey) && IsTrue(line[NavExcludeKey.Length..]))
-        {
-            return PageFlags.NotInNav;
-        }
-
-        return PageFlags.None;
+        return (line.StartsWith(NotInNavKey) && IsTrue(line[NotInNavKey.Length..])) || (line.StartsWith(NavExcludeKey) && IsTrue(line[NavExcludeKey.Length..]))
+            ? PageFlags.NotInNav
+            : PageFlags.None;
     }
 
     /// <summary>Returns true when <paramref name="span"/> trims to a YAML truthy literal (<c>true</c>/<c>yes</c>).</summary>

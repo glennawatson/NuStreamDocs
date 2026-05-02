@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
     <ProjectReference Include="..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
     <ProjectReference Include="..\NuStreamDocs.Templating\NuStreamDocs.Templating.csproj" />
   </ItemGroup>

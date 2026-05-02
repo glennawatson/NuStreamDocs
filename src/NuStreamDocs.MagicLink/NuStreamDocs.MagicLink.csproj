@@ -10,7 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
     <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

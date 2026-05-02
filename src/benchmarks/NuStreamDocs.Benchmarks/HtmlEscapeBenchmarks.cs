@@ -15,17 +15,27 @@ namespace NuStreamDocs.Benchmarks;
 /// case — vector copy) and a punctuation-heavy payload that exercises
 /// every escape branch.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class HtmlEscapeBenchmarks
 {
     /// <summary>Repetitions to grow the input enough to time.</summary>
     private const int Repetitions = 2000;
 
+    /// <summary>Headroom factor for the heavy-payload writer (~10% expansion from entity replacements; 2× is generous).</summary>
+    private const int HeavyExpansionFactor = 2;
+
     /// <summary>Pre-built clean buffer (no escapable bytes).</summary>
     private byte[] _clean = [];
 
     /// <summary>Pre-built buffer where every line contains escapable bytes.</summary>
     private byte[] _heavy = [];
+
+    /// <summary>Reused writer for the clean-payload benchmark — constructed once so the per-invocation measurement reflects the actual escape path, not an LOH-bound writer alloc.</summary>
+    private ArrayBufferWriter<byte> _cleanWriter = null!;
+
+    /// <summary>Reused writer for the heavy-payload benchmark.</summary>
+    private ArrayBufferWriter<byte> _heavyWriter = null!;
 
     /// <summary>Generates the input buffers once.</summary>
     [GlobalSetup]
@@ -41,25 +51,47 @@ public class HtmlEscapeBenchmarks
 
         _clean = Encoding.UTF8.GetBytes(clean.ToString());
         _heavy = Encoding.UTF8.GetBytes(heavy.ToString());
+        _cleanWriter = new(_clean.Length);
+        _heavyWriter = new(_heavy.Length * HeavyExpansionFactor);
     }
 
-    /// <summary>Escape pass over the no-escapes payload.</summary>
+    /// <summary>Escape pass over the no-escapes payload, reusing the writer across invocations.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int CleanPayload()
     {
-        var writer = new ArrayBufferWriter<byte>(_clean.Length);
-        HtmlEscape.EscapeText(_clean, writer);
-        return writer.WrittenCount;
+        _cleanWriter.ResetWrittenCount();
+        HtmlEscape.EscapeText(_clean, _cleanWriter);
+        return _cleanWriter.WrittenCount;
     }
 
-    /// <summary>Escape pass over the punctuation-heavy payload.</summary>
+    /// <summary>Escape pass over the punctuation-heavy payload, reusing the writer across invocations.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int HeavyPayload()
     {
-        var writer = new ArrayBufferWriter<byte>(_heavy.Length * 2);
-        HtmlEscape.EscapeText(_heavy, writer);
-        return writer.WrittenCount;
+        _heavyWriter.ResetWrittenCount();
+        HtmlEscape.EscapeText(_heavy, _heavyWriter);
+        return _heavyWriter.WrittenCount;
+    }
+
+    /// <summary>Attribute-escape pass over the clean payload — only <c>&amp;</c>/<c>"</c> trigger replacement, so this measures the IndexOfAny fast path against a smaller search-set.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int AttributeCleanPayload()
+    {
+        _cleanWriter.ResetWrittenCount();
+        HtmlEscape.EscapeAttribute(_clean, _cleanWriter);
+        return _cleanWriter.WrittenCount;
+    }
+
+    /// <summary>Attribute-escape pass over the punctuation-heavy payload — exercises only the <c>&amp;</c>/<c>"</c> branches; <c>&lt;</c>/<c>&gt;</c> are copied verbatim.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int AttributeHeavyPayload()
+    {
+        _heavyWriter.ResetWrittenCount();
+        HtmlEscape.EscapeAttribute(_heavy, _heavyWriter);
+        return _heavyWriter.WrittenCount;
     }
 }

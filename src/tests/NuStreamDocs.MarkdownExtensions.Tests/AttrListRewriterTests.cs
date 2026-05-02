@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Text;
 using NuStreamDocs.MarkdownExtensions.AttrList;
 
@@ -61,7 +62,7 @@ public class AttrListRewriterTests
     /// <returns>Rewritten HTML.</returns>
     private static string Rewrite(string source)
     {
-        var sink = new System.Buffers.ArrayBufferWriter<byte>();
+        var sink = new ArrayBufferWriter<byte>();
         AttrListRewriter.RewriteInto(Encoding.UTF8.GetBytes(source), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

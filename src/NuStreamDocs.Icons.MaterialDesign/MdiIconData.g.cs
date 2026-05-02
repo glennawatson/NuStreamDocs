@@ -7,34 +7,36 @@
 // Do not edit by hand — manual edits will be lost on the next regen.
 // </auto-generated>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Generated MDI icon catalogue — bucket-by-length switch over the upstream <c>Templarian/MaterialDesign-SVG</c> set.</summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "Sonar Code Smell",
     "S1541:Methods should not be too complex",
     Justification = "Generated bucket dispatch.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "Sonar Code Smell",
     "S138:Methods should not have too many lines",
     Justification = "Generated catalogue.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "Sonar Code Smell",
     "S1067:Expressions should not be too complex",
     Justification = "Generated catalogue.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "Sonar Code Smell",
     "S103:Lines should not be too long",
     Justification = "Generated catalogue — SVG path data is sometimes long.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "Style",
     "IDE0010:Add missing cases",
     Justification = "Default arm covers unmatched lengths.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "StyleCop",
     "SA1503:Braces should not be omitted",
     Justification = "Generated single-line if statements.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "StyleCop",
     "SA1107:Code should not contain multiple statements on one line",
     Justification = "Generated single-line if statements.")]
@@ -48,7 +50,7 @@ internal static class MdiIconData
     /// <param name="name">UTF-8 icon name (no <c>material-</c> prefix).</param>
     /// <param name="svg">UTF-8 SVG bytes on hit.</param>
     /// <returns>True when the icon is in the catalogue.</returns>
-    public static bool TryGet(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    public static bool TryGet(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name.Length)
         {            case 2: return TryGetLen2(name, out svg);
@@ -97,7 +99,7 @@ internal static class MdiIconData
     }
 
     /// <summary>2-byte names (8 entries).</summary>
-    private static bool TryGetLen2(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen2(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -128,7 +130,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>3-byte names (69 entries).</summary>
-    private static bool TryGetLen3(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen3(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -248,7 +250,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>4-byte names (142 entries).</summary>
-    private static bool TryGetLen4(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen4(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -447,7 +449,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>5-byte names (148 entries).</summary>
-    private static bool TryGetLen5(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen5(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -650,7 +652,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>6-byte names (189 entries).</summary>
-    private static bool TryGetLen6(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen6(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -896,7 +898,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>7-byte names (229 entries).</summary>
-    private static bool TryGetLen7(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen7(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -1184,7 +1186,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>8-byte names (251 entries).</summary>
-    private static bool TryGetLen8(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen8(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -1492,7 +1494,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>9-byte names (380 entries).</summary>
-    private static bool TryGetLen9(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen9(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -1923,7 +1925,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>10-byte names (420 entries).</summary>
-    private static bool TryGetLen10(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen10(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -2400,7 +2402,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>11-byte names (438 entries).</summary>
-    private static bool TryGetLen11(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen11(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -2891,7 +2893,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>12-byte names (510 entries).</summary>
-    private static bool TryGetLen12(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen12(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -3456,7 +3458,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>13-byte names (457 entries).</summary>
-    private static bool TryGetLen13(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen13(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -3968,7 +3970,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>14-byte names (465 entries).</summary>
-    private static bool TryGetLen14(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen14(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -4490,7 +4492,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>15-byte names (386 entries).</summary>
-    private static bool TryGetLen15(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen15(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -4929,7 +4931,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>16-byte names (366 entries).</summary>
-    private static bool TryGetLen16(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen16(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -5348,7 +5350,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>17-byte names (382 entries).</summary>
-    private static bool TryGetLen17(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen17(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -5781,7 +5783,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>18-byte names (402 entries).</summary>
-    private static bool TryGetLen18(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen18(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -6234,7 +6236,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>19-byte names (369 entries).</summary>
-    private static bool TryGetLen19(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen19(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -6652,7 +6654,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>20-byte names (340 entries).</summary>
-    private static bool TryGetLen20(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen20(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -7045,7 +7047,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>21-byte names (272 entries).</summary>
-    private static bool TryGetLen21(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen21(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -7366,7 +7368,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>22-byte names (288 entries).</summary>
-    private static bool TryGetLen22(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen22(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -7703,7 +7705,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>23-byte names (176 entries).</summary>
-    private static bool TryGetLen23(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen23(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -7930,7 +7932,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>24-byte names (167 entries).</summary>
-    private static bool TryGetLen24(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen24(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8142,7 +8144,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>25-byte names (140 entries).</summary>
-    private static bool TryGetLen25(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen25(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8327,7 +8329,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>26-byte names (105 entries).</summary>
-    private static bool TryGetLen26(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen26(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8475,7 +8477,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>27-byte names (72 entries).</summary>
-    private static bool TryGetLen27(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen27(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8592,7 +8594,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>28-byte names (79 entries).</summary>
-    private static bool TryGetLen28(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen28(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8706,7 +8708,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>29-byte names (42 entries).</summary>
-    private static bool TryGetLen29(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen29(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8781,7 +8783,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>30-byte names (50 entries).</summary>
-    private static bool TryGetLen30(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen30(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8870,7 +8872,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>31-byte names (31 entries).</summary>
-    private static bool TryGetLen31(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen31(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8930,7 +8932,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>32-byte names (18 entries).</summary>
-    private static bool TryGetLen32(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen32(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -8973,7 +8975,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>33-byte names (8 entries).</summary>
-    private static bool TryGetLen33(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen33(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -9004,7 +9006,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>34-byte names (10 entries).</summary>
-    private static bool TryGetLen34(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen34(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -9039,7 +9041,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>35-byte names (11 entries).</summary>
-    private static bool TryGetLen35(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen35(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -9069,7 +9071,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>36-byte names (12 entries).</summary>
-    private static bool TryGetLen36(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen36(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'c':
@@ -9100,7 +9102,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>37-byte names (3 entries).</summary>
-    private static bool TryGetLen37(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen37(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -9118,7 +9120,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>38-byte names (4 entries).</summary>
-    private static bool TryGetLen38(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen38(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'a':
@@ -9137,7 +9139,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>39-byte names (4 entries).</summary>
-    private static bool TryGetLen39(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen39(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'c':
@@ -9156,7 +9158,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>40-byte names (2 entries).</summary>
-    private static bool TryGetLen40(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen40(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'i':
@@ -9171,7 +9173,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>41-byte names (1 entries).</summary>
-    private static bool TryGetLen41(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen41(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'m':
@@ -9183,7 +9185,7 @@ internal static class MdiIconData
         svg = default; return false;
     }
     /// <summary>42-byte names (1 entries).</summary>
-    private static bool TryGetLen42(System.ReadOnlySpan<byte> name, out System.ReadOnlySpan<byte> svg)
+    private static bool TryGetLen42(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name[0])
         {            case (byte)'m':

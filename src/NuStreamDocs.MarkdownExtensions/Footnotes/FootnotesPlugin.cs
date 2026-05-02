@@ -29,4 +29,8 @@ public sealed class FootnotesPlugin : DocPluginBase, IMarkdownPreprocessor
         ArgumentNullException.ThrowIfNull(writer);
         FootnotesRewriter.Rewrite(source, writer);
     }
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
 }

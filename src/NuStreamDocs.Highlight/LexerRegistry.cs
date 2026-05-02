@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Highlight.Languages;
@@ -41,11 +42,11 @@ public sealed class LexerRegistry
     /// <summary>Builds a registry containing the built-ins plus <paramref name="extra"/>.</summary>
     /// <param name="extra">Additional lexers to register; later entries with the same key win.</param>
     /// <returns>A frozen registry.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+    [SuppressMessage(
         "Major Code Smell",
         "S138:Methods should not have too many lines",
         Justification = "Single declarative alias→lexer map followed by a small bucketing pass; splitting it just relocates the literals without reducing complexity.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+    [SuppressMessage(
         "Major Code Smell",
         "S125:Sections of code should not be commented out",
         Justification = "Not commented out code — the alias-map blocks are headed by section comments.")]

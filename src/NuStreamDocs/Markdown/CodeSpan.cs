@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Markdown;
@@ -34,7 +35,7 @@ internal static class CodeSpan
         IBufferWriter<byte> writer)
     {
         var fenceStart = pos;
-        var fenceLength = RunLength(source, pos);
+        var fenceLength = AsciiByteHelpers.RunLength(source, pos, Backtick);
         var contentStart = fenceStart + fenceLength;
 
         var closeStart = FindMatchingClose(source, contentStart, fenceLength);
@@ -44,28 +45,13 @@ internal static class CodeSpan
         }
 
         InlineRenderer.FlushText(source, pendingTextStart, fenceStart, writer);
-        Write("<code>"u8, writer);
+        Utf8StringWriter.Write(writer, "<code>"u8);
         HtmlEscape.EscapeText(source[contentStart..closeStart], writer);
-        Write("</code>"u8, writer);
+        Utf8StringWriter.Write(writer, "</code>"u8);
 
         pos = closeStart + fenceLength;
         pendingTextStart = pos;
         return true;
-    }
-
-    /// <summary>Counts the run of backticks starting at <paramref name="pos"/>.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="pos">Run start.</param>
-    /// <returns>Run length in bytes.</returns>
-    public static int RunLength(ReadOnlySpan<byte> source, int pos)
-    {
-        var i = pos;
-        while (i < source.Length && source[i] == Backtick)
-        {
-            i++;
-        }
-
-        return i - pos;
     }
 
     /// <summary>Locates the start of a backtick run of exactly <paramref name="targetLength"/>.</summary>
@@ -85,7 +71,7 @@ internal static class CodeSpan
             }
 
             var runStart = i;
-            var run = RunLength(source, i);
+            var run = AsciiByteHelpers.RunLength(source, i, Backtick);
             if (run == targetLength)
             {
                 return runStart;
@@ -95,15 +81,5 @@ internal static class CodeSpan
         }
 
         return -1;
-    }
-
-    /// <summary>Bulk-writes UTF-8 bytes to <paramref name="writer"/>.</summary>
-    /// <param name="bytes">Bytes to write.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    private static void Write(ReadOnlySpan<byte> bytes, IBufferWriter<byte> writer)
-    {
-        var dst = writer.GetSpan(bytes.Length);
-        bytes.CopyTo(dst);
-        writer.Advance(bytes.Length);
     }
 }

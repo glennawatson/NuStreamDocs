@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 using SourceDocParser;
 using SourceDocParser.Model;
@@ -56,7 +57,7 @@ public class CSharpApiGeneratorPluginCoverageTests
     {
         var opts = CSharpApiGeneratorOptions.FromSource(new EmptySource());
         var b1 = new DocBuilder().UseCSharpApiGenerator(opts);
-        var b2 = new DocBuilder().UseCSharpApiGenerator(opts, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+        var b2 = new DocBuilder().UseCSharpApiGenerator(opts, NullLogger.Instance);
         var b3 = new DocBuilder().UseCSharpApiGeneratorDirect(opts);
         await Assert.That(b1).IsNotNull();
         await Assert.That(b2).IsNotNull();

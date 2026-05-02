@@ -14,7 +14,9 @@ public class ExternalLinkPolisherTests
     [Test]
     public async Task AddsRelAttributeWhenAbsent()
     {
-        var output = Polish("<a href=\"https://example.com\">x</a>", PrivacyOptions.Default with { UpgradeMixedContent = false });
+        var output = Polish(
+            "<a href=\"https://example.com\">x</a>",
+            PrivacyOptions.Default with { UpgradeMixedContent = false });
         await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
     }
 
@@ -23,7 +25,9 @@ public class ExternalLinkPolisherTests
     [Test]
     public async Task MergesIntoExistingRelAttribute()
     {
-        var output = Polish("<a href=\"https://example.com\" rel=\"author\">x</a>", PrivacyOptions.Default with { UpgradeMixedContent = false });
+        var output = Polish(
+            "<a href=\"https://example.com\" rel=\"author\">x</a>",
+            PrivacyOptions.Default with { UpgradeMixedContent = false });
         await Assert.That(output).Contains("rel=\"author noopener noreferrer\"");
     }
 
@@ -32,7 +36,9 @@ public class ExternalLinkPolisherTests
     [Test]
     public async Task DoesNotDuplicateExistingTokens()
     {
-        var output = Polish("<a href=\"https://example.com\" rel=\"noopener noreferrer\">x</a>", PrivacyOptions.Default with { UpgradeMixedContent = false });
+        var output = Polish(
+            "<a href=\"https://example.com\" rel=\"noopener noreferrer\">x</a>",
+            PrivacyOptions.Default with { UpgradeMixedContent = false });
         var occurrences = output.Split("noopener").Length - 1;
         await Assert.That(occurrences).IsEqualTo(1);
     }
@@ -52,7 +58,9 @@ public class ExternalLinkPolisherTests
     [Test]
     public async Task UpgradesMixedContentInAttributes()
     {
-        var output = Polish("<img src=\"http://example.com/a.png\"><a href=\"http://example.com/p\">y</a>", PrivacyOptions.Default);
+        var output = Polish(
+            "<img src=\"http://example.com/a.png\"><a href=\"http://example.com/p\">y</a>",
+            PrivacyOptions.Default);
         await Assert.That(output).DoesNotContain("\"http://");
         await Assert.That(output).Contains("\"https://example.com/a.png\"");
         await Assert.That(output).Contains("\"https://example.com/p\"");
@@ -67,7 +75,9 @@ public class ExternalLinkPolisherTests
         var withoutTarget = Polish(Source, PrivacyOptions.Default with { UpgradeMixedContent = false });
         await Assert.That(withoutTarget).DoesNotContain("target");
 
-        var withTarget = Polish(Source, PrivacyOptions.Default with { UpgradeMixedContent = false, AddTargetBlank = true });
+        var withTarget = Polish(
+            Source,
+            PrivacyOptions.Default with { UpgradeMixedContent = false, AddTargetBlank = true });
         await Assert.That(withTarget).Contains("target=\"_blank\"");
     }
 
@@ -77,13 +87,25 @@ public class ExternalLinkPolisherTests
     public async Task NoOpWhenAllFlagsDisabled()
     {
         const string Source = "<a href=\"https://example.com\">x</a>";
-        var output = Polish(Source, PrivacyOptions.Default with
-        {
-            AddRelNoOpener = false,
-            AddTargetBlank = false,
-            UpgradeMixedContent = false,
-        });
+        var output = Polish(
+            Source,
+            PrivacyOptions.Default with
+            {
+                AddRelNoOpener = false, AddTargetBlank = false, UpgradeMixedContent = false,
+            });
         await Assert.That(output).IsEqualTo(Source);
+    }
+
+    /// <summary>HardenAnchors handles string input.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task HardenAnchors_handles_string_input()
+    {
+        const string Source = """<a href="https://example.com">link</a>""";
+        var options = PrivacyOptions.Default with { AddRelNoOpener = true, AddTargetBlank = true };
+        var output = ExternalLinkPolisher.HardenAnchors(Source, options);
+        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains("target=\"_blank\"");
     }
 
     /// <summary>Helper that runs the polisher and returns the string result.</summary>

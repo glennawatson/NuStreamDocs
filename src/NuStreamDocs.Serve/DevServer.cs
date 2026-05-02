@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
@@ -76,7 +77,7 @@ internal static class DevServer
         "Justification",
         "S5332: Using http protocol is insecure. Use https instead.",
         Justification = "Local dev only.")]
-    public static string BuildUrl(WatchAndServeOptions options) =>
+    public static string BuildUrl(in WatchAndServeOptions options) =>
         string.Create(CultureInfo.InvariantCulture, $"http://{options.Host}:{options.Port}");
 
     /// <summary>Builds the slim WebApplication without starting it.</summary>
@@ -89,7 +90,7 @@ internal static class DevServer
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.ConfigureKestrel((_, kestrel) =>
         {
-            if (System.Net.IPAddress.TryParse(options.Host, out var ip))
+            if (IPAddress.TryParse(options.Host, out var ip))
             {
                 kestrel.Listen(ip, options.Port);
                 return;
@@ -107,7 +108,7 @@ internal static class DevServer
     /// <param name="app">Application to configure.</param>
     /// <param name="outputRoot">Static root.</param>
     /// <param name="options">Watch + serve options.</param>
-    private static void ConfigurePipeline(WebApplication app, string outputRoot, WatchAndServeOptions options)
+    private static void ConfigurePipeline(WebApplication app, string outputRoot, in WatchAndServeOptions options)
     {
         app.UseWebSockets();
 

@@ -31,4 +31,11 @@ public sealed class EmojiPlugin : DocPluginBase, IMarkdownPreprocessor
         ArgumentNullException.ThrowIfNull(writer);
         EmojiRewriter.Rewrite(source, writer);
     }
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 }

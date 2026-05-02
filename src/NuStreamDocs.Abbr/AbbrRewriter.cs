@@ -52,7 +52,8 @@ internal static class AbbrRewriter
             return [];
         }
 
-        var keep = new ArrayBufferWriter<byte>(source.Length);
+        using var rental = PageBuilderPool.Rent(source.Length);
+        var keep = rental.Writer;
         var i = 0;
         while (i < source.Length)
         {

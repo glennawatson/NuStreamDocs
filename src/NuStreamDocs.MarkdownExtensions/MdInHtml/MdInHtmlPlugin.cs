@@ -37,4 +37,8 @@ public sealed class MdInHtmlPlugin : DocPluginBase, IMarkdownPreprocessor
         ArgumentNullException.ThrowIfNull(writer);
         MdInHtmlRewriter.Rewrite(source, writer);
     }
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
 }

@@ -70,6 +70,29 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task PreFilterRejectsHtmlWithNoUrls() => await Assert.That(ExternalUrlScanner.MayHaveExternalUrls("<p>no urls here</p>"u8)).IsFalse();
 
+    /// <summary>RewriteString handles null input.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task RewriteString_handles_null_input()
+    {
+        var registry = new ExternalAssetRegistry("assets");
+        var filter = new HostFilter(null, null);
+        var ex = Assert.Throws<ArgumentNullException>(() => ExternalUrlScanner.RewriteString(null!, registry, filter));
+        await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>RewriteString delegates to the byte walker.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task RewriteString_rewrites_html()
+    {
+        var registry = new ExternalAssetRegistry("/assets");
+        var filter = new HostFilter(null, null);
+        const string Input = """<img src="https://example.com/a.png">""";
+        var output = ExternalUrlScanner.RewriteString(Input, registry, filter);
+        await Assert.That(output).Contains("/assets/");
+    }
+
     /// <summary>Helper that runs the scanner and returns the string result.</summary>
     /// <param name="source">HTML input.</param>
     /// <param name="registry">URL registry.</param>

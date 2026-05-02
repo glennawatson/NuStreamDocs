@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using NuStreamDocs.Building;
 using NuStreamDocs.Plugins;
 
@@ -146,15 +147,7 @@ public class BuildPipelineTests
         public string Name => "a-to-b";
 
         /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, System.Buffers.IBufferWriter<byte> writer)
-        {
-            for (var i = 0; i < source.Length; i++)
-            {
-                var dst = writer.GetSpan(1);
-                dst[0] = source[i] is (byte)'A' ? (byte)'B' : source[i];
-                writer.Advance(1);
-            }
-        }
+        public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
         /// <inheritdoc/>
         public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
@@ -164,6 +157,21 @@ public class BuildPipelineTests
 
         /// <inheritdoc/>
         public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+
+        /// <inheritdoc/>
+        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+            Preprocess(source, writer);
+
+        /// <inheritdoc/>
+        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+        {
+            for (var i = 0; i < source.Length; i++)
+            {
+                var dst = writer.GetSpan(1);
+                dst[0] = source[i] is (byte)'A' ? (byte)'B' : source[i];
+                writer.Advance(1);
+            }
+        }
     }
 
     /// <summary>Test preprocessor that replaces every <c>B</c> with <c>C</c>.</summary>
@@ -173,7 +181,7 @@ public class BuildPipelineTests
         public string Name => "b-to-c";
 
         /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, System.Buffers.IBufferWriter<byte> writer)
+        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
         {
             for (var i = 0; i < source.Length; i++)
             {
@@ -182,6 +190,13 @@ public class BuildPipelineTests
                 writer.Advance(1);
             }
         }
+
+        /// <inheritdoc/>
+        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+            Preprocess(source, writer);
+
+        /// <inheritdoc/>
+        public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
         /// <inheritdoc/>
         public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;

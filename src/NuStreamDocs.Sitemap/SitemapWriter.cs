@@ -65,7 +65,7 @@ internal static class SitemapWriter
         }
 
         sink.Write("</urlset>\n"u8);
-        File.WriteAllBytes(Path.Combine(outputRoot, "sitemap.xml"), [.. sink.WrittenSpan]);
+        File.WriteAllBytes(Path.Combine(outputRoot, "sitemap.xml"), sink.WrittenSpan);
     }
 
     /// <summary>Emits <c>robots.txt</c> with an <c>Allow: *</c> rule and a sitemap pointer.</summary>
@@ -77,7 +77,7 @@ internal static class SitemapWriter
         sink.Write("User-agent: *\nAllow: /\n\nSitemap: "u8);
         Utf8StringWriter.Write(sink, baseUrl);
         sink.Write("sitemap.xml\n"u8);
-        File.WriteAllBytes(Path.Combine(outputRoot, "robots.txt"), [.. sink.WrittenSpan]);
+        File.WriteAllBytes(Path.Combine(outputRoot, "robots.txt"), sink.WrittenSpan);
     }
 
     /// <summary>Writes <paramref name="text"/> as UTF-8, expanding the XML-special characters.</summary>

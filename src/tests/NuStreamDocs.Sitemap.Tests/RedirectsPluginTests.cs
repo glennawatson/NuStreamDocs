@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using NuStreamDocs.Config;
 
 namespace NuStreamDocs.Sitemap.Tests;
@@ -43,7 +44,7 @@ public class RedirectsPluginTests
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - old/page\n  - really/old\n---\nbody";
-        var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
+        var bytes = Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("guide/intro.md", bytes, sink), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
@@ -65,7 +66,7 @@ public class RedirectsPluginTests
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases: [\"old.html\", \"prev.html\"]\n---\nbody";
-        var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
+        var bytes = Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("page.md", bytes, sink), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
@@ -87,7 +88,7 @@ public class RedirectsPluginTests
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - section/\n---\nbody";
-        var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
+        var bytes = Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("page.md", bytes, sink), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
@@ -109,7 +110,7 @@ public class RedirectsPluginTests
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - skipped.html\n---\nbody";
-        var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
+        var bytes = Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("page.md", bytes, sink), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
@@ -130,7 +131,7 @@ public class RedirectsPluginTests
         await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - old.html\n---\nbody";
-        var bytes = System.Text.Encoding.UTF8.GetBytes(Source);
+        var bytes = Encoding.UTF8.GetBytes(Source);
         var sink = new ArrayBufferWriter<byte>(64);
         await plugin.OnRenderPageAsync(new("loses.md", bytes, sink), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);

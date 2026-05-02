@@ -40,7 +40,7 @@ internal static class FeedEmitter
         FeedOptions options,
         string outputDir,
         BlogPost[] posts,
-        DateTimeOffset generatedAt,
+        in DateTimeOffset generatedAt,
         ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -74,7 +74,7 @@ internal static class FeedEmitter
         FeedOptions options,
         string outputDir,
         BlogPost[] posts,
-        DateTimeOffset generatedAt,
+        in DateTimeOffset generatedAt,
         ILogger logger,
         in FeedFormatRequest request)
     {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Buffers.Text;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.MarkdownExtensions.Internal;
 
@@ -165,7 +166,7 @@ internal static class TabsRewriter
     private static void WriteInt(int value, IBufferWriter<byte> writer)
     {
         Span<byte> buf = stackalloc byte[16];
-        if (!System.Buffers.Text.Utf8Formatter.TryFormat(value, buf, out var written))
+        if (!Utf8Formatter.TryFormat(value, buf, out var written))
         {
             return;
         }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 
 namespace NuStreamDocs.Yaml;
 
@@ -52,7 +53,7 @@ public static class FrontmatterValueExtractor
     /// <param name="sink">Output sink.</param>
     private static void AppendValueIfPresent(ReadOnlySpan<byte> frontmatter, string key, IBufferWriter<byte> sink)
     {
-        var keyBytes = System.Text.Encoding.UTF8.GetBytes(key);
+        var keyBytes = Encoding.UTF8.GetBytes(key);
         var cursor = 0;
         while (cursor < frontmatter.Length)
         {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Links;
@@ -56,9 +57,13 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
             return ValueTask.CompletedTask;
         }
 
-        var rewritten = MarkdownLinkRewriter.Rewrite(rendered, _useDirectoryUrls);
+        // Rewrite into a pooled scratch writer, then swap the bytes back into the page writer.
+        // Two-buffer dance is necessary because we read from html.WrittenSpan while writing the
+        // rewritten output — same writer can't be both source and sink.
+        using var scratch = PageBuilderPool.Rent(rendered.Length);
+        MarkdownLinkRewriter.RewriteInto(rendered, _useDirectoryUrls, scratch.Writer);
         html.ResetWrittenCount();
-        html.Write(rewritten);
+        html.Write(scratch.Writer.WrittenSpan);
 
         return ValueTask.CompletedTask;
     }

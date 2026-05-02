@@ -22,6 +22,7 @@ namespace NuStreamDocs.Benchmarks;
 /// of the build pipeline into the measurement.
 /// </para>
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class NavRenderBenchmarks
 {

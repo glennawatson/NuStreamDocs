@@ -20,7 +20,7 @@ public static class HtmlSnapshotRewriter
     /// <param name="snapshot">Snapshot of the bytes that were in <paramref name="writer"/>.</param>
     /// <param name="writer">Reset target buffer for the callback output.</param>
     /// <param name="state">User state.</param>
-    public delegate void SnapshotRewrite<TState>(ReadOnlySpan<byte> snapshot, ArrayBufferWriter<byte> writer, TState state);
+    public delegate void SnapshotRewrite<in TState>(ReadOnlySpan<byte> snapshot, ArrayBufferWriter<byte> writer, TState state);
 
     /// <summary>
     /// Snapshots the current contents of <paramref name="html"/>, resets the writer,

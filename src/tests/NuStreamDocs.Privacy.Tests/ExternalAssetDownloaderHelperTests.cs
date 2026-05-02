@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using System.Text;
 using Polly;
 
 namespace NuStreamDocs.Privacy.Tests;
@@ -62,10 +63,8 @@ public class ExternalAssetDownloaderHelperTests
     [Test]
     public async Task LooksLikeCssByContentType()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("body{}", System.Text.Encoding.UTF8, "text/css"),
-        };
+        using var response = new HttpResponseMessage(HttpStatusCode.OK);
+        response.Content = new StringContent("body{}", Encoding.UTF8, "text/css");
         var uri = new Uri("https://x.test/no-extension");
         await Assert.That(DownloadHttpClassifier.LooksLikeCss(uri, response)).IsTrue();
     }
@@ -75,10 +74,8 @@ public class ExternalAssetDownloaderHelperTests
     [Test]
     public async Task LooksLikeCssByExtension()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("body{}", System.Text.Encoding.UTF8, "application/octet-stream"),
-        };
+        using var response = new HttpResponseMessage(HttpStatusCode.OK);
+        response.Content = new StringContent("body{}", Encoding.UTF8, "application/octet-stream");
         var uri = new Uri("https://x.test/path/style.CSS");
         await Assert.That(DownloadHttpClassifier.LooksLikeCss(uri, response)).IsTrue();
     }
@@ -88,10 +85,8 @@ public class ExternalAssetDownloaderHelperTests
     [Test]
     public async Task LooksLikeCssNeitherFalse()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("hi", System.Text.Encoding.UTF8, "text/plain"),
-        };
+        using var response = new HttpResponseMessage(HttpStatusCode.OK);
+        response.Content = new StringContent("hi", Encoding.UTF8, "text/plain");
         var uri = new Uri("https://x.test/page.html");
         await Assert.That(DownloadHttpClassifier.LooksLikeCss(uri, response)).IsFalse();
     }

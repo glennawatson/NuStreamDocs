@@ -21,6 +21,7 @@ namespace NuStreamDocs.Benchmarks;
 /// the longer/denser shapes catch the outliers (long blog posts, API
 /// reference dumps).
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class HeadingIdScannerBenchmarks
 {

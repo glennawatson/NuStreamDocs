@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Globalization;
 using System.Text;
 
 namespace NuStreamDocs.SmartSymbols.Tests;
@@ -48,8 +49,8 @@ public class SmartSymbolsParameterizedTests
     [Arguments("{0} a")]
     [Arguments("a {0} b")]
     public async Task TokenAtPositions(string wrapper) =>
-        await Assert.That(Rewrite(string.Format(System.Globalization.CultureInfo.InvariantCulture, wrapper, "(c)")))
-            .IsEqualTo(string.Format(System.Globalization.CultureInfo.InvariantCulture, wrapper, "©"));
+        await Assert.That(Rewrite(string.Format(CultureInfo.InvariantCulture, wrapper, "(c)")))
+            .IsEqualTo(string.Format(CultureInfo.InvariantCulture, wrapper, "©"));
 
     /// <summary>Tokens that look right but lack the matching tail are not substituted.</summary>
     /// <param name="malformed">Malformed token.</param>

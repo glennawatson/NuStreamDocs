@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Snippets.Tests;
 
@@ -106,7 +107,8 @@ public class SnippetSectionTests
         public string Rewrite(string source)
         {
             var sink = new ArrayBufferWriter<byte>(256);
-            SnippetsRewriter.Rewrite(Encoding.UTF8.GetBytes(source), _root, sink);
+            var cache = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance);
+            SnippetsRewriter.Rewrite(Encoding.UTF8.GetBytes(source), _root, cache, sink);
             return Encoding.UTF8.GetString(sink.WrittenSpan);
         }
 

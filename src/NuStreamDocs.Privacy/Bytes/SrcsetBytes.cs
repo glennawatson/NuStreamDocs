@@ -45,7 +45,7 @@ internal static class SrcsetBytes
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when the srcset was rewritten with at least one localized URL.</returns>
-    private static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    internal static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
     {
         if (!TryMatchHeader(html, p, out var valueStart, out var valueEnd, out _))
         {
@@ -54,7 +54,8 @@ internal static class SrcsetBytes
         }
 
         var value = html[valueStart..valueEnd];
-        var temp = new ArrayBufferWriter<byte>(value.Length);
+        using var rental = PageBuilderPool.Rent(value.Length);
+        var temp = rental.Writer;
         var anyChanged = WriteRewrittenValue(value, ctx, temp);
         if (!anyChanged)
         {

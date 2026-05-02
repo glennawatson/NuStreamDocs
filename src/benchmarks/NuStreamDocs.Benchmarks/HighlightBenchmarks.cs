@@ -2,19 +2,23 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using BenchmarkDotNet.Attributes;
+using NuStreamDocs.Common;
 using NuStreamDocs.Highlight;
 using NuStreamDocs.Highlight.Languages;
 
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for the syntax-highlight emitter, parameterized over the production lexers.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class HighlightBenchmarks
 {
     /// <summary>Number of times each fixture line is repeated to give the lexer enough work to time.</summary>
     private const int Repetitions = 30;
+
+    /// <summary>Headroom factor for the highlighted-output writer (each token wraps in <c>&lt;span class="..."&gt;...&lt;/span&gt;</c>; 4× covers token-dense input with margin).</summary>
+    private const int OutputExpansionFactor = 4;
 
     /// <summary>Pre-built C# fixture.</summary>
     private byte[] _csharp = [];
@@ -110,14 +114,14 @@ public class HighlightBenchmarks
         return output;
     }
 
-    /// <summary>Drives <c>HighlightEmitter.Emit</c> with <paramref name="lexer"/> against <paramref name="source"/>.</summary>
+    /// <summary>Drives <c>HighlightEmitter.Emit</c> with <paramref name="lexer"/> against <paramref name="source"/>; rents the sink from <see cref="PageBuilderPool"/> to mirror production.</summary>
     /// <param name="lexer">Lexer under test.</param>
     /// <param name="source">Source bytes.</param>
     /// <returns>Bytes written.</returns>
     private static int Run(Lexer lexer, byte[] source)
     {
-        var sink = new ArrayBufferWriter<byte>(source.Length * 2);
-        HighlightEmitter.Emit(lexer, source, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(source.Length * OutputExpansionFactor);
+        HighlightEmitter.Emit(lexer, source, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 }

@@ -29,4 +29,8 @@ public sealed class MarkPlugin : DocPluginBase, IMarkdownPreprocessor
         ArgumentNullException.ThrowIfNull(writer);
         MarkRewriter.Rewrite(source, writer);
     }
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
 }

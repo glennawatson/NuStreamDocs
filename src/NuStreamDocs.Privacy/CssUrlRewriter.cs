@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
 
@@ -43,7 +44,8 @@ internal static class CssUrlRewriter
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(filter);
 
-        var sink = new ArrayBufferWriter<byte>(css.Length);
+        using var rental = PageBuilderPool.Rent(css.Length);
+        var sink = rental.Writer;
         var span = (ReadOnlySpan<byte>)css;
         var lastEmit = 0;
         var cursor = 0;

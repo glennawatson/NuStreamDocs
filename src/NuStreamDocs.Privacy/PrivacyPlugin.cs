@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -276,7 +277,7 @@ public sealed class PrivacyPlugin : IDocPlugin
         var result = new string[keys.Length];
         for (var i = 0; i < keys.Length; i++)
         {
-            result[i] = System.Text.Encoding.UTF8.GetString(keys[i]);
+            result[i] = Encoding.UTF8.GetString(keys[i]);
         }
 
         return result;

@@ -386,7 +386,7 @@ internal static class CSharpRules
         rules[i++] = new(static slice => TokenMatchers.MatchLongestLiteral(slice, Operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst };
 
         // Single-byte C-curly punctuation: ( ) { } [ ] ; , . :
-        rules[i++] = new(
+        rules[i] = new(
             static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.CCurlyPunctuationFirst),
             TokenClass.Punctuation,
             LexerRule.NoStateChange) { FirstBytes = LanguageCommon.CCurlyPunctuationFirst };

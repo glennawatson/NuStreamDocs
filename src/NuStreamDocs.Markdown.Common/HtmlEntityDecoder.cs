@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Markdown.Common;
 
@@ -76,7 +77,8 @@ public static class HtmlEntityDecoder
             return [.. bytes];
         }
 
-        var sink = new ArrayBufferWriter<byte>(bytes.Length);
+        using var rental = PageBuilderPool.Rent(bytes.Length);
+        var sink = rental.Writer;
         DecodeInto(sink, bytes);
         return [.. sink.WrittenSpan];
     }

@@ -36,7 +36,7 @@ internal static class CslJsonLoader
     /// <summary>Parses a CSL-JSON UTF-8 buffer into entries.</summary>
     /// <param name="json">UTF-8 source.</param>
     /// <returns>Parsed entries.</returns>
-    public static IReadOnlyList<CitationEntry> Parse(ReadOnlyMemory<byte> json)
+    public static IReadOnlyList<CitationEntry> Parse(in ReadOnlyMemory<byte> json)
     {
         using var doc = JsonDocument.Parse(json);
         if (doc.RootElement.ValueKind is not JsonValueKind.Array)
@@ -60,7 +60,7 @@ internal static class CslJsonLoader
     /// <param name="element">JSON object element.</param>
     /// <param name="entry">Parsed entry on success.</param>
     /// <returns>True when the element parsed cleanly (id and type present).</returns>
-    private static bool TryParseEntry(JsonElement element, out CitationEntry entry)
+    private static bool TryParseEntry(in JsonElement element, out CitationEntry entry)
     {
         entry = null!;
         if (element.ValueKind is not JsonValueKind.Object)
@@ -87,7 +87,7 @@ internal static class CslJsonLoader
     /// <param name="element">JSON object element.</param>
     /// <param name="id">Already-validated <c>id</c>.</param>
     /// <returns>Entry populated with the non-legal fields.</returns>
-    private static CitationEntry BuildPrintFields(JsonElement element, string id) => new()
+    private static CitationEntry BuildPrintFields(in JsonElement element, string id) => new()
     {
         Id = id,
         Type = ParseType(GetString(element, "type"u8)),
@@ -136,7 +136,7 @@ internal static class CslJsonLoader
     /// <summary>Reads <c>issued.date-parts[0][0]</c> per CSL-JSON.</summary>
     /// <param name="element">Entry object.</param>
     /// <returns>The parsed year, or 0 when absent.</returns>
-    private static int ParseYear(JsonElement element)
+    private static int ParseYear(in JsonElement element)
     {
         if (!element.TryGetProperty("issued"u8, out var issued)
             || !issued.TryGetProperty("date-parts"u8, out var parts)
@@ -159,7 +159,7 @@ internal static class CslJsonLoader
     /// <param name="element">Entry object.</param>
     /// <param name="utf8Property">Property name as UTF-8 (<c>"author"u8</c> / <c>"editor"u8</c>).</param>
     /// <returns>Parsed names; empty array when absent.</returns>
-    private static PersonName[] ParseNames(JsonElement element, ReadOnlySpan<byte> utf8Property)
+    private static PersonName[] ParseNames(in JsonElement element, ReadOnlySpan<byte> utf8Property)
     {
         if (!element.TryGetProperty(utf8Property, out var array) || array.ValueKind is not JsonValueKind.Array)
         {
@@ -184,7 +184,7 @@ internal static class CslJsonLoader
     /// <param name="element">JSON object.</param>
     /// <param name="utf8Property">Property name as UTF-8 — supplied via the <c>u8</c> literal.</param>
     /// <returns>String value or empty.</returns>
-    private static string GetString(JsonElement element, ReadOnlySpan<byte> utf8Property) =>
+    private static string GetString(in JsonElement element, ReadOnlySpan<byte> utf8Property) =>
         element.TryGetProperty(utf8Property, out var value) && value.ValueKind is JsonValueKind.String
             ? value.GetString() ?? string.Empty
             : string.Empty;

@@ -59,13 +59,19 @@ public class BlockScannerParameterizedTests
         var content = 0;
         for (var i = 0; i < blocks.Length; i++)
         {
-            if (blocks[i].Kind is BlockKind.FencedCode)
+            switch (blocks[i].Kind)
             {
-                fences++;
-            }
-            else if (blocks[i].Kind is BlockKind.FencedCodeContent)
-            {
-                content++;
+                case BlockKind.FencedCode:
+                {
+                    fences++;
+                    break;
+                }
+
+                case BlockKind.FencedCodeContent:
+                {
+                    content++;
+                    break;
+                }
             }
         }
 

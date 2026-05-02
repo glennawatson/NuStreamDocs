@@ -11,6 +11,7 @@ using NuStreamDocs.SmartSymbols;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Micro-benchmarks for inline markdown rewriters that operate on the byte-level fast path.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class InlineRewriterBenchmarks
 {

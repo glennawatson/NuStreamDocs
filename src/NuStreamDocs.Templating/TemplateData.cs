@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Templating;
 
 /// <summary>
@@ -67,7 +69,7 @@ public sealed class TemplateData
     /// <returns>True when a scalar exists under <paramref name="key"/>.</returns>
     public bool TryGetScalar(ReadOnlySpan<byte> key, out ReadOnlySpan<byte> value)
     {
-        var name = System.Text.Encoding.UTF8.GetString(key);
+        var name = Encoding.UTF8.GetString(key);
         if (_scalars.TryGetValue(name, out var bytes))
         {
             value = bytes.Span;
@@ -86,7 +88,7 @@ public sealed class TemplateData
     /// <returns>Section items.</returns>
     public TemplateData[] GetSection(ReadOnlySpan<byte> key)
     {
-        var name = System.Text.Encoding.UTF8.GetString(key);
+        var name = Encoding.UTF8.GetString(key);
         return _sections.GetValueOrDefault(name, EmptySections);
     }
 
@@ -95,7 +97,7 @@ public sealed class TemplateData
     /// <returns>Truthiness for Mustache section semantics.</returns>
     public bool IsTruthy(ReadOnlySpan<byte> key)
     {
-        var name = System.Text.Encoding.UTF8.GetString(key);
+        var name = Encoding.UTF8.GetString(key);
         if (_sections.TryGetValue(name, out var items) && items.Length > 0)
         {
             return true;

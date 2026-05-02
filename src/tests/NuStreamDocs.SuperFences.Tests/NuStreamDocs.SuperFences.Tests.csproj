@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\NuStreamDocs.SuperFences\NuStreamDocs.SuperFences.csproj" />
-    <ProjectReference Include="..\..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
   </ItemGroup>
 
 </Project>

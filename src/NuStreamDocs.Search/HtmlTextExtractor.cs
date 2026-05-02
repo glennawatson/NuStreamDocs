@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search;
 
@@ -47,7 +48,8 @@ public static class HtmlTextExtractor
     {
         ArgumentNullException.ThrowIfNull(text);
 
-        var titleBuffer = new ArrayBufferWriter<byte>();
+        using var titleRental = PageBuilderPool.Rent();
+        var titleBuffer = titleRental.Writer;
         var state = new ExtractState(InsideTag: false, InsideScript: false, CapturingTitle: false, EmittedSpace: true, TitleAlreadyCaptured: false);
 
         for (var i = 0; i < html.Length; i++)

@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
+
 namespace NuStreamDocs.MarkdownExtensions.Internal;
 
 /// <summary>
@@ -133,7 +135,7 @@ internal static class OpenerLineParser
     /// <summary>Title-cases <paramref name="type"/> by uppercasing the first ASCII letter and writes it.</summary>
     /// <param name="type">UTF-8 type token; an empty span writes nothing.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void WriteTitleCase(ReadOnlySpan<byte> type, System.Buffers.IBufferWriter<byte> writer)
+    public static void WriteTitleCase(ReadOnlySpan<byte> type, IBufferWriter<byte> writer)
     {
         if (type.Length is 0)
         {

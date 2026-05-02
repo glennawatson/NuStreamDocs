@@ -69,7 +69,8 @@ internal static class TagsIndexWriter
         var tagsDir = Path.Combine(outputRoot, options.OutputSubdirectory);
         Directory.CreateDirectory(tagsDir);
 
-        var sink = new ArrayBufferWriter<byte>(PageInitialCapacity);
+        using var rental = PageBuilderPool.Rent(PageInitialCapacity);
+        var sink = rental.Writer;
         WriteIndexPage(sink, grouped);
         File.WriteAllBytes(Path.Combine(tagsDir, options.IndexFileName), sink.WrittenSpan);
 

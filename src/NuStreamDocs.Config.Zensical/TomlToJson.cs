@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers.Text;
 using System.Text.Json;
 
 namespace NuStreamDocs.Config.Zensical;
@@ -282,7 +283,7 @@ public static class TomlToJson
     /// <returns>True when handled.</returns>
     private static bool TryWriteInteger(Utf8JsonWriter json, ReadOnlySpan<byte> raw)
     {
-        if (!System.Buffers.Text.Utf8Parser.TryParse(raw, out long value, out var consumed) || consumed != raw.Length)
+        if (!Utf8Parser.TryParse(raw, out long value, out var consumed) || consumed != raw.Length)
         {
             return false;
         }

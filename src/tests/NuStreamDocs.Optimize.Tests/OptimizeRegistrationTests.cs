@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 
@@ -55,7 +56,7 @@ public class OptimizeRegistrationTests
         var sink = new ArrayBufferWriter<byte>(64);
         sink.Write("<p>   spaces   </p>"u8);
         await new HtmlMinifyPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).DoesNotContain("   spaces   ");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).DoesNotContain("   spaces   ");
     }
 
     /// <summary>UseOptimize rejects null builder.</summary>

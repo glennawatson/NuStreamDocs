@@ -35,17 +35,10 @@ namespace NuStreamDocs.Plugins;
 /// </remarks>
 public interface IMarkdownPreprocessor
 {
-    /// <summary>Returns true when <paramref name="source"/> may contain markers this preprocessor recognizes.</summary>
-    /// <param name="source">UTF-8 markdown bytes about to be passed to <see cref="Preprocess(ReadOnlySpan{byte}, IBufferWriter{byte})"/>.</param>
-    /// <returns>
-    /// True when the preprocessor must run (the default — preserves back-compat). Implementations
-    /// override this with a vectorized <see cref="MemoryExtensions.IndexOf{T}(ReadOnlySpan{T}, T)"/>
-    /// (or <c>SearchValues</c>) probe for their distinctive marker bytes; the pipeline then skips
-    /// the rewriter entirely when no marker is anywhere in the source. On the rxui corpus, where
-    /// most pages use only a subset of the registered preprocessors, this cuts both the per-page
-    /// CPU work and the writer-buffer growth that the line-walk would otherwise drive.
-    /// </returns>
-    bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    /// <summary>Determines whether the <paramref name="source"/> requires rewriting based on the plugin's criteria.</summary>
+    /// <param name="source">UTF-8 markdown bytes to be evaluated for preprocessing needs.</param>
+    /// <returns><c>true</c> if the <paramref name="source"/> requires preprocessing; otherwise, <c>false</c>.</returns>
+    bool NeedsRewrite(ReadOnlySpan<byte> source);
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> with the plugin's substitutions applied.</summary>
     /// <param name="source">UTF-8 markdown bytes (as read from disk for the first preprocessor; the previous preprocessor's output for subsequent ones).</param>
@@ -60,6 +53,5 @@ public interface IMarkdownPreprocessor
     /// preprocessors that key behavior on the page identity
     /// (e.g. metadata injection) override this overload.
     /// </param>
-    void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
-        Preprocess(source, writer);
+    void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath);
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Markdown;
 
@@ -26,31 +27,31 @@ internal static class Emphasis
     /// <summary>Strong-emphasis run length.</summary>
     private const int StrongRun = 2;
 
-    /// <summary>UTF-8 bytes for the <c>em</c> open tag.</summary>
-    private static readonly byte[] EmOpen = [.. "<em>"u8];
+    /// <summary>Gets the UTF-8 bytes for the <c>em</c> open tag.</summary>
+    private static ReadOnlySpan<byte> EmOpen => "<em>"u8;
 
-    /// <summary>UTF-8 bytes for the <c>em</c> close tag.</summary>
-    private static readonly byte[] EmClose = [.. "</em>"u8];
+    /// <summary>Gets the UTF-8 bytes for the <c>em</c> close tag.</summary>
+    private static ReadOnlySpan<byte> EmClose => "</em>"u8;
 
-    /// <summary>UTF-8 bytes for the <c>strong</c> open tag.</summary>
-    private static readonly byte[] StrongOpen = [.. "<strong>"u8];
+    /// <summary>Gets the UTF-8 bytes for the <c>strong</c> open tag.</summary>
+    private static ReadOnlySpan<byte> StrongOpen => "<strong>"u8;
 
-    /// <summary>UTF-8 bytes for the <c>strong</c> close tag.</summary>
-    private static readonly byte[] StrongClose = [.. "</strong>"u8];
+    /// <summary>Gets the UTF-8 bytes for the <c>strong</c> close tag.</summary>
+    private static ReadOnlySpan<byte> StrongClose => "</strong>"u8;
 
-    /// <summary>UTF-8 bytes for the combined <c>strong</c>+<c>em</c> open.</summary>
-    private static readonly byte[] StrongEmOpen = [.. "<strong><em>"u8];
+    /// <summary>Gets the UTF-8 bytes for the combined <c>strong</c>+<c>em</c> open.</summary>
+    private static ReadOnlySpan<byte> StrongEmOpen => "<strong><em>"u8;
 
-    /// <summary>UTF-8 bytes for the combined <c>em</c>+<c>strong</c> close.</summary>
-    private static readonly byte[] StrongEmClose = [.. "</em></strong>"u8];
+    /// <summary>Gets the UTF-8 bytes for the combined <c>em</c>+<c>strong</c> close.</summary>
+    private static ReadOnlySpan<byte> StrongEmClose => "</em></strong>"u8;
 
     /// <summary>
     /// Handles an emphasis marker run at <paramref name="pos"/>.
     /// </summary>
-    /// <param name="source">UTF-8 source.</param>
+    /// <param name="source">The UTF-8 source.</param>
     /// <param name="pos">Cursor; advanced past the close run on success.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>
-    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="writer">The UTF-8 sink.</param>
     /// <returns>True when an emphasis run was emitted.</returns>
     public static bool TryHandle(
         ReadOnlySpan<byte> source,
@@ -59,7 +60,7 @@ internal static class Emphasis
         IBufferWriter<byte> writer)
     {
         var marker = source[pos];
-        var openRun = MarkerRun(source, pos, marker);
+        var openRun = AsciiByteHelpers.RunLength(source, pos, marker);
         var maxProbe = openRun >= MaxRunLength ? MaxRunLength : openRun;
 
         var openLength = 0;
@@ -95,24 +96,8 @@ internal static class Emphasis
         return true;
     }
 
-    /// <summary>Counts the run of <paramref name="marker"/> bytes starting at <paramref name="pos"/>.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="pos">Run start.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <returns>Run length.</returns>
-    public static int MarkerRun(ReadOnlySpan<byte> source, int pos, byte marker)
-    {
-        var i = pos;
-        while (i < source.Length && source[i] == marker)
-        {
-            i++;
-        }
-
-        return i - pos;
-    }
-
     /// <summary>Finds the start of a matching close run.</summary>
-    /// <param name="source">UTF-8 source.</param>
+    /// <param name="source">The UTF-8 source.</param>
     /// <param name="searchFrom">First byte to consider.</param>
     /// <param name="marker">Marker byte.</param>
     /// <param name="length">Required close run length.</param>
@@ -129,7 +114,7 @@ internal static class Emphasis
             }
 
             var runStart = i;
-            var run = MarkerRun(source, i, marker);
+            var run = AsciiByteHelpers.RunLength(source, i, marker);
             if (run >= length)
             {
                 return runStart;
@@ -142,31 +127,40 @@ internal static class Emphasis
     }
 
     /// <summary>Writes the open + content + close tags for the chosen <paramref name="openLength"/>.</summary>
-    /// <param name="source">UTF-8 source.</param>
+    /// <param name="source">the UTF-8 source.</param>
     /// <param name="contentStart">Start of inner content.</param>
     /// <param name="closeStart">Start of close run.</param>
     /// <param name="openLength">1 = em, 2 = strong, 3 = strong+em.</param>
-    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="writer">the UTF-8 sink.</param>
     private static void EmitWrapped(ReadOnlySpan<byte> source, int contentStart, int closeStart, int openLength, IBufferWriter<byte> writer)
     {
-        var (open, close) = TagsFor(openLength);
-        Write(open, writer);
+        Utf8StringWriter.Write(writer, OpenTag(openLength));
         InlineRenderer.Render(source[contentStart..closeStart], writer);
-        Write(close, writer);
+        Utf8StringWriter.Write(writer, CloseTag(openLength));
     }
 
-    /// <summary>Returns the open + close UTF-8 tag bytes for <paramref name="openLength"/>.</summary>
+    /// <summary>Returns the open the UTF-8 tag bytes for <paramref name="openLength"/>.</summary>
     /// <param name="openLength">1, 2, or 3.</param>
-    /// <returns>The open + close tag pair.</returns>
-    private static (byte[] Open, byte[] Close) TagsFor(int openLength) => openLength switch
+    /// <returns>Open tag bytes.</returns>
+    private static ReadOnlySpan<byte> OpenTag(int openLength) => openLength switch
     {
-        MaxRunLength => (StrongEmOpen, StrongEmClose),
-        StrongRun => (StrongOpen, StrongClose),
-        _ => (EmOpen, EmClose),
+        MaxRunLength => StrongEmOpen,
+        StrongRun => StrongOpen,
+        _ => EmOpen,
+    };
+
+    /// <summary>Returns the close the UTF-8 tag bytes for <paramref name="openLength"/>.</summary>
+    /// <param name="openLength">1, 2, or 3.</param>
+    /// <returns>Close tag bytes.</returns>
+    private static ReadOnlySpan<byte> CloseTag(int openLength) => openLength switch
+    {
+        MaxRunLength => StrongEmClose,
+        StrongRun => StrongClose,
+        _ => EmClose,
     };
 
     /// <summary>Returns true when an underscore run at <paramref name="pos"/> is intra-word and should not delimit emphasis.</summary>
-    /// <param name="source">UTF-8 source.</param>
+    /// <param name="source">the UTF-8 source.</param>
     /// <param name="pos">Position of the open marker.</param>
     /// <param name="contentStart">First byte of the inner content (just past the open run).</param>
     /// <param name="closeStart">Position of the close marker.</param>
@@ -175,35 +169,16 @@ internal static class Emphasis
     private static bool IsIntraWord(ReadOnlySpan<byte> source, int pos, int contentStart, int closeStart, int length)
     {
         var openIntraWord = pos > 0
-            && IsWordByte(source[pos - 1])
+            && AsciiByteHelpers.IsAsciiIdentifierByte(source[pos - 1])
             && contentStart < source.Length
-            && IsWordByte(source[contentStart]);
+            && AsciiByteHelpers.IsAsciiIdentifierByte(source[contentStart]);
 
         var closeIntraWord = closeStart > 0
-            && IsWordByte(source[closeStart - 1])
+            && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart - 1])
             && closeStart + length < source.Length
-            && IsWordByte(source[closeStart + length]);
+            && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart + length]);
 
         // Reject when *either* end is intra-word — the run can't legally delimit on that side.
         return openIntraWord || closeIntraWord;
-    }
-
-    /// <summary>Returns true when <paramref name="b"/> is an ASCII identifier byte.</summary>
-    /// <param name="b">UTF-8 byte.</param>
-    /// <returns>True for letters, digits, or <c>_</c>.</returns>
-    private static bool IsWordByte(byte b) =>
-        b is >= (byte)'0' and <= (byte)'9'
-          or >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or (byte)'_';
-
-    /// <summary>Bulk-writes <paramref name="bytes"/>.</summary>
-    /// <param name="bytes">UTF-8 bytes.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    private static void Write(ReadOnlySpan<byte> bytes, IBufferWriter<byte> writer)
-    {
-        var dst = writer.GetSpan(bytes.Length);
-        bytes.CopyTo(dst);
-        writer.Advance(bytes.Length);
     }
 }

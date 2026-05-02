@@ -93,6 +93,9 @@ public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkd
         FrontmatterSplicer.Splice(source, extra, writer);
     }
 
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
     /// <summary>Validates and returns <paramref name="opts"/>.</summary>
     /// <param name="opts">Options to validate.</param>
     /// <returns>The validated options.</returns>

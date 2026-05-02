@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -29,24 +30,24 @@ public static class DocBuilderServeExtensions
     /// <param name="builder">Configured builder.</param>
     /// <returns>Async task that completes when the loop exits.</returns>
     public static Task WatchAndServeAsync(this DocBuilder builder) =>
-        WatchAndServeAsync(builder, WatchAndServeOptions.Default, NullLogger.Instance, CancellationToken.None);
+        builder.WatchAndServeAsync(WatchAndServeOptions.Default, NullLogger.Instance, CancellationToken.None);
 
     /// <summary>Runs the watch + serve loop with explicit cancellation.</summary>
     /// <param name="builder">Configured builder.</param>
     /// <param name="cancellationToken">Cancellation token; cancellation triggers graceful shutdown.</param>
     /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(this DocBuilder builder, CancellationToken cancellationToken) =>
-        WatchAndServeAsync(builder, WatchAndServeOptions.Default, NullLogger.Instance, cancellationToken);
+    public static Task WatchAndServeAsync(this DocBuilder builder, in CancellationToken cancellationToken) =>
+        builder.WatchAndServeAsync(WatchAndServeOptions.Default, NullLogger.Instance, cancellationToken);
 
     /// <summary>Runs the watch + serve loop with options-customization.</summary>
     /// <param name="builder">Configured builder.</param>
     /// <param name="configure">Function that receives <see cref="WatchAndServeOptions.Default"/> and returns the customized set.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, CancellationToken cancellationToken)
+    public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, in CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        return WatchAndServeAsync(builder, configure(WatchAndServeOptions.Default), NullLogger.Instance, cancellationToken);
+        return builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), NullLogger.Instance, cancellationToken);
     }
 
     /// <summary>Runs the watch + serve loop with options + logger.</summary>
@@ -55,10 +56,10 @@ public static class DocBuilderServeExtensions
     /// <param name="logger">Logger that receives lifecycle events.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, ILogger logger, CancellationToken cancellationToken)
+    public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, ILogger logger, in CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        return WatchAndServeAsync(builder, configure(WatchAndServeOptions.Default), logger, cancellationToken);
+        return builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), logger, cancellationToken);
     }
 
     /// <summary>Most-specific overload — every other entry point delegates here.</summary>
@@ -145,7 +146,7 @@ public static class DocBuilderServeExtensions
             };
             Process.Start(psi);
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (Win32Exception)
         {
             // No registered handler for the URL on this platform — give up.
         }

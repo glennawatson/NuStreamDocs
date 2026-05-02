@@ -43,7 +43,7 @@ internal static class SuperFencesDispatcher
     /// <returns>True when at least one block was dispatched (i.e. the sink content differs from <paramref name="html"/>); false when no candidate matched a handler.</returns>
     public static bool DispatchInto(
         ReadOnlySpan<byte> html,
-        Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
+        in Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
         IBufferWriter<byte> sink)
     {
         ArgumentNullException.ThrowIfNull(sink);
@@ -117,7 +117,7 @@ internal static class SuperFencesDispatcher
     private static bool TryResolveHandler(
         ReadOnlySpan<byte> html,
         int blockStart,
-        Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
+        in Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
         out ICustomFenceHandler handler,
         out int bodyStart,
         out int bodyEnd)

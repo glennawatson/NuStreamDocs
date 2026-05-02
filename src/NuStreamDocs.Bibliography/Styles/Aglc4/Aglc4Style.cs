@@ -32,7 +32,7 @@ public sealed class Aglc4Style : ICitationStyle
     }
 
     /// <inheritdoc/>
-    public void WriteFootnote(CitationEntry entry, CitationLocator locator, IBufferWriter<byte> writer)
+    public void WriteFootnote(CitationEntry entry, CitationLocator locator, ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(writer);
@@ -43,7 +43,7 @@ public sealed class Aglc4Style : ICitationStyle
         }
 
         Aglc4Writer.WriteBytes(" "u8, writer);
-        Aglc4Pinpoint.Write(locator, writer);
+        Aglc4Pinpoint.Write(locator, source, writer);
     }
 
     /// <inheritdoc/>

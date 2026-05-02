@@ -38,7 +38,7 @@ public class BibliographyDatabaseTests
     public async Task LookupMissesReturnFalse()
     {
         var db = new BibliographyDatabaseBuilder().Build();
-        await Assert.That(db.TryGet("nope", out var _)).IsFalse();
+        await Assert.That(db.TryGet("nope", out _)).IsFalse();
     }
 
     /// <summary>Duplicate ids are rejected at construction.</summary>
@@ -61,4 +61,21 @@ public class BibliographyDatabaseTests
     [Test]
     public async Task EmptyDatabaseHasZeroCount() =>
         await Assert.That(BibliographyDatabase.Empty.Count).IsEqualTo(0);
+
+    /// <summary>All returns the ordered snapshot.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task All_returns_ordered_snapshot()
+    {
+        var db = new BibliographyDatabaseBuilder()
+            .AddBook("b", "B", PersonName.Of("X", "Y"), 2000, "P")
+            .AddBook("a", "A", PersonName.Of("X", "Y"), 2001, "P")
+            .Build();
+
+        await Assert.That(db.All.Length).IsEqualTo(2);
+
+        // BibliographyDatabase preserves insertion order in the _ordered array.
+        await Assert.That(db.All[0].Id).IsEqualTo("b");
+        await Assert.That(db.All[1].Id).IsEqualTo("a");
+    }
 }

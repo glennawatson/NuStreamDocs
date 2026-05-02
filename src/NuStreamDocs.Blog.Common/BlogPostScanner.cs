@@ -176,7 +176,7 @@ public static class BlogPostScanner
     /// <summary>Writes the humanized title into <paramref name="destination"/>.</summary>
     /// <param name="destination">Destination span.</param>
     /// <param name="source">Hyphen-separated slug.</param>
-    private static void WriteHumanized(Span<char> destination, string source)
+    private static void WriteHumanized(in Span<char> destination, string source)
     {
         var write = 0;
         var titleCaseNext = true;
@@ -224,12 +224,12 @@ public static class BlogPostScanner
     /// <summary>Returns true when <paramref name="line"/> starts an ATX heading.</summary>
     /// <param name="line">Candidate line.</param>
     /// <returns>True when the line starts with <c>#</c>.</returns>
-    private static bool IsAtxHeading(ReadOnlySpan<char> line) => line is ['#', ..];
+    private static bool IsAtxHeading(in ReadOnlySpan<char> line) => line is ['#', ..];
 
     /// <summary>Returns true when <paramref name="line"/> is exactly a frontmatter fence.</summary>
     /// <param name="line">Candidate line.</param>
     /// <returns>True when the line is exactly <c>---</c>.</returns>
-    private static bool IsFrontmatterFence(ReadOnlySpan<char> line) =>
+    private static bool IsFrontmatterFence(in ReadOnlySpan<char> line) =>
         line.Length == FrontmatterFenceLength
         && line[0] is '-'
         && line[1] is '-'

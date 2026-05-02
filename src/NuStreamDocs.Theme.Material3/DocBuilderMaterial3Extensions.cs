@@ -14,8 +14,7 @@ public static class DocBuilderMaterial3Extensions
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with default options + the Material3 icon-shortcode preprocessor.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterial3Theme(this DocBuilder builder) =>
-        UseMaterial3Theme(builder, iconResolver: null);
+    public static DocBuilder UseMaterial3Theme(this DocBuilder builder) => builder.UseMaterial3Theme(iconResolver: null);
 
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with default options + the Material3 icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
     /// <param name="builder">The builder.</param>
@@ -38,8 +37,7 @@ public static class DocBuilderMaterial3Extensions
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="Material3ThemeOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterial3Theme(this DocBuilder builder, Func<Material3ThemeOptions, Material3ThemeOptions> configure) =>
-        UseMaterial3Theme(builder, configure, iconResolver: null);
+    public static DocBuilder UseMaterial3Theme(this DocBuilder builder, Func<Material3ThemeOptions, Material3ThemeOptions> configure) => builder.UseMaterial3Theme(configure, iconResolver: null);
 
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with caller-tweaked options + the Material3 icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
     /// <param name="builder">The builder.</param>

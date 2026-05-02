@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Globalization;
 using System.Text;
 using NuStreamDocs.Building;
 using NuStreamDocs.Plugins;
@@ -201,7 +202,7 @@ public class ExtraAssetsTests
         /// <returns>A new fixture; caller must dispose.</returns>
         public static TempDir Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-extras-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+            var root = Path.Combine(Path.GetTempPath(), "smkd-extras-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(root);
             return new(root);
         }

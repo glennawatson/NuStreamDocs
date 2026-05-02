@@ -198,7 +198,7 @@ public sealed class BoundedCache<TKey, TValue>
     /// <summary>Evicts every entry older than <see cref="MaxAge"/> as of <paramref name="now"/>.</summary>
     /// <param name="now">Wall-clock instant to compare against.</param>
     /// <returns>Number of entries removed.</returns>
-    public int Compact(DateTimeOffset now)
+    public int Compact(in DateTimeOffset now)
     {
         var removed = 0;
         int remaining;

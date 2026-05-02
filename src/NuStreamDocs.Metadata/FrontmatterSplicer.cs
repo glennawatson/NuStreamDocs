@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Metadata;
@@ -129,7 +130,7 @@ internal static class FrontmatterSplicer
                 }
 
                 var key = YamlByteScanner.KeyOf(line);
-                var keyString = System.Text.Encoding.UTF8.GetString(key);
+                var keyString = Encoding.UTF8.GetString(key);
                 if (existingKeys.Contains(keyString))
                 {
                     cursor = YamlByteScanner.AdvancePastValue(extra, lineEnd);
@@ -166,7 +167,7 @@ internal static class FrontmatterSplicer
             if (YamlByteScanner.IsTopLevelKey(line))
             {
                 var key = YamlByteScanner.KeyOf(line);
-                keys.Add(System.Text.Encoding.UTF8.GetString(key));
+                keys.Add(Encoding.UTF8.GetString(key));
             }
 
             cursor = lineEnd;

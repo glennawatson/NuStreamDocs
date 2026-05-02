@@ -57,7 +57,7 @@ internal static class AssetAttributeBytes
     /// <param name="lastEmit">Offset up to which the source has been emitted.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when a URL was rewritten.</returns>
-    private static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    internal static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
     {
         if (!TryMatchHeader(html, p, out var urlStart, out var urlEnd, out var quote))
         {

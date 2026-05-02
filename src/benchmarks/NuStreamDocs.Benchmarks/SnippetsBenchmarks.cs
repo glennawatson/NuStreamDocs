@@ -2,10 +2,10 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using System.Globalization;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Snippets;
 
@@ -17,6 +17,7 @@ namespace NuStreamDocs.Benchmarks;
 /// syntax, and a no-marker pass-through — pin the cost of the three paths real
 /// pages take through the rewriter.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class SnippetsBenchmarks
 {
@@ -88,9 +89,9 @@ public class SnippetsBenchmarks
     [Benchmark]
     public int WholeFileInclude()
     {
-        var sink = new ArrayBufferWriter<byte>(_wholeFileSource.Length * 2);
-        _plugin.Preprocess(_wholeFileSource, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(_wholeFileSource.Length * 2);
+        _plugin.Preprocess(_wholeFileSource, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 
     /// <summary>Section include — every directive splices a single <c>&lt;!-- @section --&gt;</c> block.</summary>
@@ -98,9 +99,9 @@ public class SnippetsBenchmarks
     [Benchmark]
     public int SectionInclude()
     {
-        var sink = new ArrayBufferWriter<byte>(_sectionSource.Length * 2);
-        _plugin.Preprocess(_sectionSource, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(_sectionSource.Length * 2);
+        _plugin.Preprocess(_sectionSource, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 
     /// <summary>No-marker fixture — exercises the line-walk early-out path.</summary>
@@ -108,9 +109,9 @@ public class SnippetsBenchmarks
     [Benchmark]
     public int NoMarkerPassThrough()
     {
-        var sink = new ArrayBufferWriter<byte>(_noMarkerSource.Length * 2);
-        _plugin.Preprocess(_noMarkerSource, sink);
-        return sink.WrittenCount;
+        using var rental = PageBuilderPool.Rent(_noMarkerSource.Length * 2);
+        _plugin.Preprocess(_noMarkerSource, rental.Writer);
+        return rental.Writer.WrittenCount;
     }
 
     /// <summary>Stamps <paramref name="block"/> <see cref="Repetitions"/> times into a UTF-8 buffer.</summary>

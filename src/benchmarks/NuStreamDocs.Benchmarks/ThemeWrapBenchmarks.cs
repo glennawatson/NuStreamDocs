@@ -18,6 +18,7 @@ namespace NuStreamDocs.Benchmarks;
 /// gone — this benchmark surfaces any regression and gives the
 /// allocation profiler something focused to chew on.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class ThemeWrapBenchmarks
 {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Globalization;
 using System.Text;
 
 namespace NuStreamDocs.Versions.Tests;
@@ -64,7 +65,7 @@ public class VersionsManifestTests
     [Test]
     public async Task ReadFromMissingFileYieldsEmpty()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smd-versions-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var dir = Path.Combine(Path.GetTempPath(), "smd-versions-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         try
         {
             Directory.CreateDirectory(dir);

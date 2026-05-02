@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Tests;
@@ -14,7 +15,7 @@ public class PageDiscoveryFilterTests
     [Test]
     public async Task DiscoveryHonorsExclude()
     {
-        var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         try
         {
             Directory.CreateDirectory(Path.Combine(root, "drafts"));
@@ -43,7 +44,7 @@ public class PageDiscoveryFilterTests
     [Test]
     public async Task DiscoveryHonorsInclude()
     {
-        var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         try
         {
             Directory.CreateDirectory(Path.Combine(root, "guide"));

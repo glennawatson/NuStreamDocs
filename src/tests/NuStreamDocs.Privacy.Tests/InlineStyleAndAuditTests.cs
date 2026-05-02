@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Tests;
 
@@ -30,7 +31,7 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task AuditModeCollectsWithoutRewriting()
     {
-        var audit = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
+        var audit = new ConcurrentDictionary<byte[], byte>(ByteArrayComparer.Instance);
         const string Source = "<img src=\"https://example.com/x.png\"><style>a { background: url(https://example.com/y.png) }</style>";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Source), AllHosts, audit);
         await Assert.That(audit.ContainsKey("https://example.com/x.png"u8.ToArray())).IsTrue();

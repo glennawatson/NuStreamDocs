@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace NuStreamDocs.Bibliography.Model;
 
 /// <summary>
@@ -9,11 +11,11 @@ namespace NuStreamDocs.Bibliography.Model;
 /// kinds. <see cref="None"/> means "bare value, no label was present";
 /// the remaining members map to a concrete formatter prefix or shape.
 /// </summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "Design",
     "CA1028:Enum storage should be Int32",
     Justification = "Closed vocabulary of <16 members; byte storage halves CitationLocator footprint.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
+[SuppressMessage(
     "Sonar Code Smell",
     "S4022:Enums storage should be Int32",
     Justification = "Closed vocabulary of <16 members; byte storage halves CitationLocator footprint.")]

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Templating;
@@ -39,7 +40,7 @@ internal static class TemplateRenderer
     /// <param name="writer">UTF-8 sink.</param>
     public static void Render(
         ReadOnlySpan<byte> source,
-        ReadOnlySpan<TemplateInstruction> instructions,
+        in ReadOnlySpan<TemplateInstruction> instructions,
         TemplateData root,
         Dictionary<string, Template>? partials,
         IBufferWriter<byte> writer)
@@ -79,7 +80,7 @@ internal static class TemplateRenderer
     /// <returns>Next instruction pointer.</returns>
     private static int Step(
         ReadOnlySpan<byte> source,
-        ReadOnlySpan<TemplateInstruction> instructions,
+        in ReadOnlySpan<TemplateInstruction> instructions,
         ref RenderState state,
         Dictionary<string, Template>? partials,
         int ip,
@@ -222,7 +223,7 @@ internal static class TemplateRenderer
     /// <param name="ip">Close-instruction pointer.</param>
     /// <returns>Next instruction pointer.</returns>
     private static int ExitSection(
-        ReadOnlySpan<TemplateInstruction> instructions,
+        in ReadOnlySpan<TemplateInstruction> instructions,
         in TemplateInstruction instr,
         ref RenderState state,
         int ip)
@@ -270,7 +271,7 @@ internal static class TemplateRenderer
         }
 
         var key = source.Slice(instr.Start, instr.Length);
-        var name = System.Text.Encoding.UTF8.GetString(key);
+        var name = Encoding.UTF8.GetString(key);
         if (!partials.TryGetValue(name, out var template))
         {
             return ip + 1;

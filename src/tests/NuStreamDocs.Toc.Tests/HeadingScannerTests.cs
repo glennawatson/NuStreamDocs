@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
+
 namespace NuStreamDocs.Toc.Tests;
 
 /// <summary>Tests for <c>HeadingScanner</c>.</summary>
@@ -71,7 +73,7 @@ public class HeadingScannerTests
     {
         var html = "<h2>Hello <code>World</code></h2>"u8.ToArray();
         var headings = HeadingScanner.Scan(html);
-        var sink = new System.Buffers.ArrayBufferWriter<byte>(32);
+        var sink = new ArrayBufferWriter<byte>(32);
         HeadingScanner.DecodeTextInto(html, in headings[0], sink);
         await Assert.That(sink.WrittenSpan.SequenceEqual("Hello World"u8)).IsTrue();
     }

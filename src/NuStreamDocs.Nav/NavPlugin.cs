@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Nav;
@@ -43,6 +44,9 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>The nav tree built during <see cref="OnConfigureAsync"/>; null until then.</summary>
     private NavNode? _root;
 
+    /// <summary>URL → node lookup over the rendered tree; built once when the tree is built so per-page renders resolve the active node in O(1).</summary>
+    private Dictionary<string, NavNode>? _urlIndex;
+
     /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(string)"/> call.</summary>
     private NavNode[]? _orderedLeaves;
 
@@ -54,14 +58,14 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
 
     /// <summary>Initializes a new instance of the <see cref="NavPlugin"/> class with default options.</summary>
     public NavPlugin()
-        : this(NavOptions.Default, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)
+        : this(NavOptions.Default, NullLogger.Instance)
     {
     }
 
     /// <summary>Initializes a new instance of the <see cref="NavPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
     public NavPlugin(in NavOptions options)
-        : this(options, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)
+        : this(options, NullLogger.Instance)
     {
     }
 
@@ -89,6 +93,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     {
         _ = cancellationToken;
         _root = NavTreeBuilder.Build(context.InputRoot, in _options, _logger);
+        _urlIndex = NavRenderer.BuildUrlIndex(_root);
 
         return ValueTask.CompletedTask;
     }
@@ -332,12 +337,15 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <param name="pageUrl">Page-relative URL of the page being rendered.</param>
     private void RenderNav(ArrayBufferWriter<byte> writer, string pageUrl)
     {
+        // O(1) URL → node lookup against the index built once at configure time.
+        _ = _urlIndex!.TryGetValue(pageUrl, out var activeNode);
+
         if (_options.Prune)
         {
-            NavRenderer.RenderPruned(_root!, pageUrl, writer);
+            NavRenderer.RenderPruned(_root!, activeNode, writer);
             return;
         }
 
-        NavRenderer.RenderFull(_root!, pageUrl, writer);
+        NavRenderer.RenderFull(_root!, activeNode, writer);
     }
 }

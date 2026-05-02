@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 namespace NuStreamDocs.Metadata.Tests;
 
 /// <summary>Disposable temp-directory fixture for collector tests.</summary>
@@ -18,7 +20,7 @@ internal sealed class TempTree : IDisposable
     /// <returns>A new fixture; caller must dispose.</returns>
     public static TempTree Create()
     {
-        var root = Path.Combine(Path.GetTempPath(), "smkd-meta-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var root = Path.Combine(Path.GetTempPath(), "smkd-meta-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(root);
         return new(root);
     }

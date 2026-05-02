@@ -18,6 +18,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for every <c>IMarkdownPreprocessor</c> shipped in <c>NuStreamDocs.MarkdownExtensions</c>.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class MarkdownExtensionsBenchmarks
 {

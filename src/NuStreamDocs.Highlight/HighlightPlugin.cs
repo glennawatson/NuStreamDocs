@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Html;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
@@ -100,7 +101,8 @@ public sealed class HighlightPlugin : IDocPlugin
             return bytes.ToArray();
         }
 
-        var sink = new ArrayBufferWriter<byte>(bytes.Length);
+        using var rental = PageBuilderPool.Rent(bytes.Length);
+        var sink = rental.Writer;
         HtmlEntityDecoder.DecodeInto(sink, bytes);
         return sink.WrittenSpan.ToArray();
     }
@@ -280,7 +282,7 @@ public sealed class HighlightPlugin : IDocPlugin
         }
 
         Write(writer, "<span class=\"filename\">"u8);
-        Html.HtmlEscape.EscapeText(title, writer);
+        HtmlEscape.EscapeText(title, writer);
         Write(writer, "</span>"u8);
     }
 

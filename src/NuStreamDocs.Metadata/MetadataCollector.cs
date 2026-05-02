@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Metadata;
@@ -142,7 +144,8 @@ internal static class MetadataCollector
             return [];
         }
 
-        var sink = new ArrayBufferWriter<byte>(initialCapacity: 256);
+        using var rental = PageBuilderPool.Rent(256);
+        var sink = rental.Writer;
         var seen = new HashSet<string>(StringComparer.Ordinal);
 
         // Iterate from highest-priority (sidecar, then closest ancestor) to
@@ -180,7 +183,7 @@ internal static class MetadataCollector
             }
 
             var key = YamlByteScanner.KeyOf(line);
-            var keyString = System.Text.Encoding.UTF8.GetString(key);
+            var keyString = Encoding.UTF8.GetString(key);
             if (!seen.Add(keyString))
             {
                 cursor = YamlByteScanner.AdvancePastValue(source, lineEnd);

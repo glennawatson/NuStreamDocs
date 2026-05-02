@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 
 namespace NuStreamDocs.Metadata.Tests;
 
@@ -35,7 +36,7 @@ public class MetadataPluginLifecycleTests
     {
         var sink = new ArrayBufferWriter<byte>(16);
         new MetadataPlugin().Preprocess("hello"u8, sink);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
     }
 
     /// <summary>Preprocess (path overload) also passes through when no metadata is registered.</summary>
@@ -45,6 +46,6 @@ public class MetadataPluginLifecycleTests
     {
         var sink = new ArrayBufferWriter<byte>(16);
         new MetadataPlugin().Preprocess("hello"u8, sink, "page.md");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
     }
 }

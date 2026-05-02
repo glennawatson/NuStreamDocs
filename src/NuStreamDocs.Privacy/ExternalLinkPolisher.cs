@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Privacy.Bytes;
 
 namespace NuStreamDocs.Privacy;
@@ -34,7 +35,8 @@ internal static class ExternalLinkPolisher
             return [.. html];
         }
 
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        using var rental1 = PageBuilderPool.Rent(html.Length);
+        var sink = rental1.Writer;
         var changedMixed = options.UpgradeMixedContent && MixedContentBytes.RewriteInto(html, sink);
         var stage1 = changedMixed ? sink.WrittenSpan : html;
 
@@ -43,7 +45,8 @@ internal static class ExternalLinkPolisher
             return stage1.ToArray();
         }
 
-        var sink2 = new ArrayBufferWriter<byte>(stage1.Length);
+        using var rental2 = PageBuilderPool.Rent(stage1.Length);
+        var sink2 = rental2.Writer;
         var changedAnchors = AnchorBytes.RewriteInto(stage1, options.AddRelNoOpener, options.AddTargetBlank, sink2);
         return changedAnchors ? sink2.WrittenSpan.ToArray() : stage1.ToArray();
     }
@@ -55,7 +58,8 @@ internal static class ExternalLinkPolisher
     {
         ArgumentNullException.ThrowIfNull(html);
         var bytes = Encoding.UTF8.GetBytes(html);
-        var sink = new ArrayBufferWriter<byte>(bytes.Length);
+        using var rental = PageBuilderPool.Rent(bytes.Length);
+        var sink = rental.Writer;
         return MixedContentBytes.RewriteInto(bytes, sink) ? Encoding.UTF8.GetString(sink.WrittenSpan) : html;
     }
 
@@ -63,11 +67,12 @@ internal static class ExternalLinkPolisher
     /// <param name="html">Page HTML as a string.</param>
     /// <param name="options">Plugin options; only <see cref="PrivacyOptions.AddRelNoOpener"/> / <see cref="PrivacyOptions.AddTargetBlank"/> are read.</param>
     /// <returns>Rewritten HTML; the same instance when no anchor matched.</returns>
-    public static string HardenAnchors(string html, PrivacyOptions options)
+    public static string HardenAnchors(string html, in PrivacyOptions options)
     {
         ArgumentNullException.ThrowIfNull(html);
         var bytes = Encoding.UTF8.GetBytes(html);
-        var sink = new ArrayBufferWriter<byte>(bytes.Length);
+        using var rental = PageBuilderPool.Rent(bytes.Length);
+        var sink = rental.Writer;
         var changed = AnchorBytes.RewriteInto(bytes, options.AddRelNoOpener, options.AddTargetBlank, sink);
         return changed ? Encoding.UTF8.GetString(sink.WrittenSpan) : html;
     }

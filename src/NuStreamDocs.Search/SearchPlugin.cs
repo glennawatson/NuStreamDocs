@@ -5,7 +5,9 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.IO.Compression;
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Search.Logging;
@@ -73,13 +75,14 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
             return ValueTask.CompletedTask;
         }
 
-        var textBuffer = new ArrayBufferWriter<byte>(html.Length / 2);
+        using var textRental = PageBuilderPool.Rent(html.Length / 2);
+        var textBuffer = textRental.Writer;
         var titleBytes = HtmlTextExtractor.Extract(html, textBuffer);
         var url = ToHtmlUrl(context.RelativePath);
         if (titleBytes.Length == 0)
         {
             var fallback = Path.GetFileNameWithoutExtension(context.RelativePath);
-            titleBytes = System.Text.Encoding.UTF8.GetBytes(fallback);
+            titleBytes = Encoding.UTF8.GetBytes(fallback);
         }
 
         if (_options.SearchableFrontmatterKeys.Length > 0)

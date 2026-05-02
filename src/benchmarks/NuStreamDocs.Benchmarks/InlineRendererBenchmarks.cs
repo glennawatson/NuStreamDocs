@@ -15,14 +15,21 @@ namespace NuStreamDocs.Benchmarks;
 /// of inline content (links, code, emphasis, autolinks, hard breaks).
 /// Isolates the inline-emit cost from the block scan and the HTML wrap.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class InlineRendererBenchmarks
 {
     /// <summary>Number of times the fixture line is repeated.</summary>
     private const int Repetitions = 500;
 
+    /// <summary>Headroom factor for the output writer (HTML expansion ≈ 1.6× for typical inline content; 2× is generous).</summary>
+    private const int OutputExpansionFactor = 2;
+
     /// <summary>Pre-built UTF-8 inline source.</summary>
     private byte[] _source = [];
+
+    /// <summary>Reused output writer; pre-sized once in <c>Setup</c> and reset per iteration to mirror the per-thread cache pattern in production callers.</summary>
+    private ArrayBufferWriter<byte> _writer = null!;
 
     /// <summary>Generates the input UTF-8 buffer once.</summary>
     [GlobalSetup]
@@ -39,15 +46,16 @@ public class InlineRendererBenchmarks
         }
 
         _source = Encoding.UTF8.GetBytes(sb.ToString());
+        _writer = new(_source.Length * OutputExpansionFactor);
     }
 
-    /// <summary>Pure inline render to a pooled <c>ArrayBufferWriter{T}</c>.</summary>
+    /// <summary>Pure inline render into a reused writer; isolates the renderer cost from one-shot writer growth.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int Render()
     {
-        var writer = new ArrayBufferWriter<byte>(_source.Length * 2);
-        InlineRenderer.Render(_source, writer);
-        return writer.WrittenCount;
+        _writer.ResetWrittenCount();
+        InlineRenderer.Render(_source, _writer);
+        return _writer.WrittenCount;
     }
 }

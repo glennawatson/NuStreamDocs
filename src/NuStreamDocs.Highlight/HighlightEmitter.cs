@@ -14,7 +14,7 @@ public static class HighlightEmitter
     /// <param name="lexer">Compiled lexer.</param>
     /// <param name="source">UTF-8 source bytes — accepts a <c>byte[]</c>, an array slice, or any other backing.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Emit(Lexer lexer, ReadOnlyMemory<byte> source, IBufferWriter<byte> writer)
+    public static void Emit(Lexer lexer, in ReadOnlyMemory<byte> source, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(lexer);
         ArgumentNullException.ThrowIfNull(writer);

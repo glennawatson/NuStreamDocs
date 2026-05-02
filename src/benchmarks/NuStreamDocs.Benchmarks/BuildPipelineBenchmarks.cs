@@ -24,6 +24,7 @@ namespace NuStreamDocs.Benchmarks;
 /// so individual times measure the per-build cost (parse + render +
 /// plugin hooks + write) without the corpus-creation overhead.
 /// </remarks>
+[ShortRunJob]
 [MemoryDiagnoser]
 [SuppressMessage(
     "Major Code Smell",

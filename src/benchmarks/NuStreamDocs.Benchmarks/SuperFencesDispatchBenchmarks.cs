@@ -13,6 +13,7 @@ using NuStreamDocs.SuperFences;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Per-page cost of the SuperFences dispatcher across registered / unregistered fence mixes.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class SuperFencesDispatchBenchmarks
 {
@@ -86,8 +87,8 @@ public class SuperFencesDispatchBenchmarks
 
         var fullDict = new Dictionary<byte[], ICustomFenceHandler>(2, ByteArrayComparer.Instance)
         {
-            [Encoding.UTF8.GetBytes("mermaid")] = new StubMermaidHandler(),
-            [Encoding.UTF8.GetBytes("math")] = new StubMathHandler(),
+            ["mermaid"u8.ToArray()] = new StubMermaidHandler(),
+            ["math"u8.ToArray()] = new StubMathHandler(),
         };
         _allRegistered = fullDict.GetAlternateLookup<ReadOnlySpan<byte>>();
 

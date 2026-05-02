@@ -2,56 +2,55 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
+using System.Text;
 using NuStreamDocs.Bibliography.Model;
+using NuStreamDocs.Bibliography.Styles.Aglc4;
 
 namespace NuStreamDocs.Bibliography.Tests;
 
-/// <summary>Pandoc-style citation marker grammar — single, multi, locator-bearing, escape-into-code.</summary>
+/// <summary>Pandoc-style citation marker grammar — single, multi, locator-bearing, escape-into-code — verified end-to-end through the rewriter so the single-pass walker stays honest.</summary>
 public class CitationMarkerScannerTests
 {
-    /// <summary>A bare <c>[@key]</c> marker is captured with the right span.</summary>
+    /// <summary>A bare <c>[@key]</c> marker resolves into a footnote reference and emits a Bibliography section with a single entry.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SingleKeyIsRecognized()
     {
-        var markers = CitationMarkerScanner.Find("see [@mabo] for context"u8);
-        await Assert.That(markers).HasSingleItem();
-        await Assert.That(markers[0].Cites).HasSingleItem();
-        await Assert.That(markers[0].Cites[0].Key).IsEqualTo("mabo");
-        await Assert.That(markers[0].Cites[0].Locator.Kind).IsEqualTo(LocatorKind.None);
+        var output = Render("see [@mabo] for context");
+        await Assert.That(output).Contains("[^bib-mabo]");
+        await Assert.That(output).Contains("## Bibliography");
     }
 
-    /// <summary>A locator label and value are split correctly.</summary>
+    /// <summary>A locator label and value are split correctly and the AGLC4 prefix appears in the footnote definition.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task LocatorWithLabelIsClassified()
     {
-        var markers = CitationMarkerScanner.Find("[@mabo, p 23]"u8);
-        var loc = markers[0].Cites[0].Locator;
-        await Assert.That(loc.Kind).IsEqualTo(LocatorKind.Page);
-        await Assert.That(loc.Value).IsEqualTo("23");
+        var output = Render("[@mabo, p 23]");
+        await Assert.That(output).Contains("[^bib-mabo]:");
+        await Assert.That(output).Contains(" 23");
     }
 
-    /// <summary>Multi-cite <c>[@a; @b]</c> emits two refs in order.</summary>
+    /// <summary>Multi-cite <c>[@a; @b]</c> emits two footnote references separated by <c>"; "</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task MultiCiteSplitsOnSemicolon()
     {
-        var markers = CitationMarkerScanner.Find("[@one; @two]"u8);
-        await Assert.That(markers).HasSingleItem();
-        await Assert.That(markers[0].Cites.Length).IsEqualTo(2);
-        await Assert.That(markers[0].Cites[0].Key).IsEqualTo("one");
-        await Assert.That(markers[0].Cites[1].Key).IsEqualTo("two");
+        var output = Render("[@one; @two]");
+        await Assert.That(output).Contains("[^bib-one]");
+        await Assert.That(output).Contains("[^bib-two]");
+        await Assert.That(output).Contains("; ");
     }
 
-    /// <summary>Markers inside fenced code are skipped.</summary>
+    /// <summary>Markers inside fenced code blocks are skipped — only the outside marker resolves.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task FencedCodeIsSkipped()
     {
-        var markers = CitationMarkerScanner.Find("```\n[@nope]\n```\n[@yes]\n"u8);
-        await Assert.That(markers).HasSingleItem();
-        await Assert.That(markers[0].Cites[0].Key).IsEqualTo("yes");
+        var output = Render("```\n[@nope]\n```\n[@yes]\n");
+        await Assert.That(output).Contains("[@nope]");
+        await Assert.That(output).Contains("[^bib-yes]");
     }
 
     /// <summary>Markers inside inline code spans are skipped.</summary>
@@ -59,37 +58,55 @@ public class CitationMarkerScannerTests
     [Test]
     public async Task InlineCodeIsSkipped()
     {
-        var markers = CitationMarkerScanner.Find("`[@inline]` and [@real]"u8);
-        await Assert.That(markers).HasSingleItem();
-        await Assert.That(markers[0].Cites[0].Key).IsEqualTo("real");
+        var output = Render("`[@inline]` and [@real]");
+        await Assert.That(output).Contains("`[@inline]`");
+        await Assert.That(output).Contains("[^bib-real]");
     }
 
-    /// <summary>Locator value with a hyphen range is preserved.</summary>
+    /// <summary>Locator value with a hyphen range is preserved in the footnote definition.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task LocatorRangeIsPreserved()
     {
-        var markers = CitationMarkerScanner.Find("[@case, pp 23-25]"u8);
-        await Assert.That(markers[0].Cites[0].Locator.Value).IsEqualTo("23-25");
+        var output = Render("[@mabo, pp 23-25]");
+        await Assert.That(output).Contains("23-25");
     }
 
-    /// <summary>An unrecognized label round-trips through <see cref="LocatorKind.Other"/>.</summary>
+    /// <summary>An unrecognized label round-trips through <see cref="LocatorKind.Other"/> — both label and value land verbatim.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnknownLabelIsOther()
     {
-        var markers = CitationMarkerScanner.Find("[@x, foo 9]"u8);
-        var loc = markers[0].Cites[0].Locator;
-        await Assert.That(loc.Kind).IsEqualTo(LocatorKind.Other);
-        await Assert.That(loc.Value).IsEqualTo("foo 9");
+        var output = Render("[@mabo, foo 9]");
+        await Assert.That(output).Contains("foo 9");
     }
 
-    /// <summary>An empty source produces no markers.</summary>
+    /// <summary>An empty source produces no markers and no Bibliography section.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptySourceProducesNothing()
     {
-        var markers = CitationMarkerScanner.Find(default);
-        await Assert.That(markers).IsEmpty();
+        var output = Render(string.Empty);
+        await Assert.That(output).IsEqualTo(string.Empty);
+        await Assert.That(output).DoesNotContain("Bibliography");
+    }
+
+    /// <summary>Renders <paramref name="markdown"/> through the bibliography plugin against a fixed three-entry database and returns the UTF-8 result as a string.</summary>
+    /// <param name="markdown">Source markdown.</param>
+    /// <returns>Rendered output.</returns>
+    private static string Render(string markdown)
+    {
+        var db = new BibliographyDatabaseBuilder()
+            .AddCase("mabo", "Mabo v Queensland (No 2)", "(1992) 175 CLR 1", 1992)
+            .AddCase("one", "Case One", "[2020] 1", 2020)
+            .AddCase("two", "Case Two", "[2020] 2", 2020)
+            .AddCase("yes", "Case Yes", "[2020] 3", 2020)
+            .AddCase("real", "Case Real", "[2020] 4", 2020)
+            .Build();
+        var options = new BibliographyOptions(db, Aglc4Style.Instance, WarnOnMissing: false);
+        var plugin = new BibliographyPlugin(options);
+        var sink = new ArrayBufferWriter<byte>(Math.Max(markdown.Length * 4, 16));
+        plugin.Preprocess(Encoding.UTF8.GetBytes(markdown), sink);
+        return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

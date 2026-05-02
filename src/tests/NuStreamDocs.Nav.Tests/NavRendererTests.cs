@@ -45,6 +45,53 @@ public class NavRendererTests
         await Assert.That(html.Contains("md-nav__link--active", StringComparison.Ordinal)).IsTrue();
     }
 
+    /// <summary>BuildUrlIndex maps every leaf URL to its node.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BuildUrlIndexMapsEveryLeaf()
+    {
+        var root = BuildSampleTree();
+        var index = NavRenderer.BuildUrlIndex(root);
+
+        await Assert.That(index.ContainsKey("guide/intro.html")).IsTrue();
+        await Assert.That(index.ContainsKey("blog/post.html")).IsTrue();
+        await Assert.That(index["guide/intro.html"].Title).IsEqualTo("Intro");
+    }
+
+    /// <summary>BuildUrlIndex includes section index URLs (when present).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BuildUrlIndexIncludesSectionIndex()
+    {
+        var leaf = new NavNode("Intro", "guide/intro.md", isSection: false, []);
+
+        // Sections expose IndexUrl via the 5-arg ctor's indexPath argument.
+        var section = new NavNode("Guide", relativePath: string.Empty, isSection: true, [leaf], indexPath: "guide/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [section]);
+
+        var index = NavRenderer.BuildUrlIndex(root);
+
+        await Assert.That(index.ContainsKey("guide/intro.html")).IsTrue();
+        await Assert.That(index.ContainsKey("guide/index.html")).IsTrue();
+        await Assert.That(index["guide/index.html"].Title).IsEqualTo("Guide");
+    }
+
+    /// <summary>BuildUrlIndex returns an empty dictionary for an empty tree.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BuildUrlIndexEmptyTree()
+    {
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, []);
+        var index = NavRenderer.BuildUrlIndex(root);
+        await Assert.That(index.Count).IsEqualTo(0);
+    }
+
+    /// <summary>BuildUrlIndex throws when root is null.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BuildUrlIndexNullRootThrows() =>
+        await Assert.That(() => NavRenderer.BuildUrlIndex(null!)).Throws<ArgumentNullException>();
+
     /// <summary>Builds the standard 2-section fixture and runs the plugin's per-page render path.</summary>
     /// <param name="prune">Prune mode flag.</param>
     /// <param name="currentPage">URL of the page being rendered.</param>
@@ -75,5 +122,16 @@ public class NavRendererTests
         await plugin.OnRenderPageAsync(renderContext, CancellationToken.None);
 
         return Encoding.UTF8.GetString(page.WrittenSpan);
+    }
+
+    /// <summary>Builds a small two-section tree used by the index-positive tests.</summary>
+    /// <returns>Tree root.</returns>
+    private static NavNode BuildSampleTree()
+    {
+        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
+        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
+        var guide = new NavNode("Guide", string.Empty, isSection: true, [intro]);
+        var blog = new NavNode("Blog", string.Empty, isSection: true, [post]);
+        return new(string.Empty, string.Empty, isSection: true, [guide, blog]);
     }
 }

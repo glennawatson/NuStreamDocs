@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Autorefs.Logging;
+using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 
 namespace NuStreamDocs.Autorefs;
@@ -89,13 +90,14 @@ public static class AutorefsRewriter
             return false;
         }
 
-        var sink = new ArrayBufferWriter<byte>(source.Length);
+        using var rental = PageBuilderPool.Rent(source.Length);
+        var sink = rental.Writer;
         if (!RewriteSpan(source, registry, sink))
         {
             return false;
         }
 
-        File.WriteAllBytes(path, [.. sink.WrittenSpan]);
+        File.WriteAllBytes(path, sink.WrittenSpan);
         return true;
     }
 
@@ -127,13 +129,14 @@ public static class AutorefsRewriter
         }
 
         var sourcePage = Path.GetFileName(path);
-        var sink = new ArrayBufferWriter<byte>(source.Length);
+        using var rental = PageBuilderPool.Rent(source.Length);
+        var sink = rental.Writer;
         if (!RewriteSpanCore(source, registry, sink, logger, sourcePage, ref totals))
         {
             return;
         }
 
-        File.WriteAllBytes(path, [.. sink.WrittenSpan]);
+        File.WriteAllBytes(path, sink.WrittenSpan);
     }
 
     /// <summary>One canonical scan-and-substitute loop; logging fires only when <paramref name="logger"/> is non-null.</summary>

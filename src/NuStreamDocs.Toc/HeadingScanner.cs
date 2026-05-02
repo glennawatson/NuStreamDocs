@@ -138,7 +138,8 @@ internal static class HeadingScanner
             return string.Empty;
         }
 
-        var buffer = new ArrayBufferWriter<byte>(inner.Length);
+        using var rental = PageBuilderPool.Rent(inner.Length);
+        var buffer = rental.Writer;
         DecodeTextInto(html, in heading, buffer);
         return buffer.WrittenCount is 0
             ? string.Empty

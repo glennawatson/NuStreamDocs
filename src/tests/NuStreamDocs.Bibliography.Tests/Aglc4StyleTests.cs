@@ -92,9 +92,10 @@ public class Aglc4StyleTests
     public async Task FootnoteAppendsLocator()
     {
         var entry = new CitationEntry { Id = "x", Type = EntryType.Book, Title = "T" };
-        var locator = new CitationLocator(LocatorKind.Page, "23");
+        var source = "23"u8.ToArray();
+        var locator = new CitationLocator(LocatorKind.Page, 0, source.Length);
         var sink = new ArrayBufferWriter<byte>(64);
-        Aglc4Style.Instance.WriteFootnote(entry, locator, sink);
+        Aglc4Style.Instance.WriteFootnote(entry, locator, source, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).EndsWith(" 23");
     }
 
@@ -104,9 +105,10 @@ public class Aglc4StyleTests
     public async Task FootnoteParagraphLocatorIsBracketed()
     {
         var entry = new CitationEntry { Id = "x", Type = EntryType.Book, Title = "T" };
-        var locator = new CitationLocator(LocatorKind.Paragraph, "12");
+        var source = "12"u8.ToArray();
+        var locator = new CitationLocator(LocatorKind.Paragraph, 0, source.Length);
         var sink = new ArrayBufferWriter<byte>(64);
-        Aglc4Style.Instance.WriteFootnote(entry, locator, sink);
+        Aglc4Style.Instance.WriteFootnote(entry, locator, source, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).EndsWith(" [12]");
     }
 

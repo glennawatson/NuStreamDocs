@@ -45,4 +45,11 @@ public sealed class IconShortcodePlugin : DocPluginBase, IMarkdownPreprocessor
         ArgumentNullException.ThrowIfNull(writer);
         IconShortcodeRewriter.Rewrite(source, writer, "material-symbols-outlined"u8, _resolver);
     }
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 }

@@ -12,6 +12,7 @@
     <File Path="testconfig.json" />
   </Folder>
   <Project Path="NuStreamDocs.Templating/NuStreamDocs.Templating.csproj" />
+  <Project Path="NuStreamDocs.Common/NuStreamDocs.Common.csproj" />
   <Project Path="NuStreamDocs/NuStreamDocs.csproj" />
   <Project Path="NuStreamDocs.Serve/NuStreamDocs.Serve.csproj" />
   <Project Path="NuStreamDocs.Macros/NuStreamDocs.Macros.csproj" />
@@ -45,7 +46,6 @@
   <Project Path="NuStreamDocs.Icons.MaterialDesign/NuStreamDocs.Icons.MaterialDesign.csproj" />
   <Project Path="NuStreamDocs.Abbr/NuStreamDocs.Abbr.csproj" />
   <Project Path="NuStreamDocs.Arithmatex/NuStreamDocs.Arithmatex.csproj" />
-  <Project Path="NuStreamDocs.Common/NuStreamDocs.Common.csproj" />
   <Project Path="NuStreamDocs.Emoji/NuStreamDocs.Emoji.csproj" />
   <Project Path="NuStreamDocs.Keys/NuStreamDocs.Keys.csproj" />
   <Project Path="NuStreamDocs.MagicLink/NuStreamDocs.MagicLink.csproj" />

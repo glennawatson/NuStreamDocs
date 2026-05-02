@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 namespace NuStreamDocs.Xrefs.Tests;
 
 /// <summary>Disposable temp-directory fixture.</summary>
@@ -18,7 +20,7 @@ internal sealed class TempDir : IDisposable
     /// <returns>New fixture; caller must dispose.</returns>
     public static TempDir Create()
     {
-        var root = Path.Combine(Path.GetTempPath(), "smkd-xrefs-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var root = Path.Combine(Path.GetTempPath(), "smkd-xrefs-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(root);
         return new(root);
     }

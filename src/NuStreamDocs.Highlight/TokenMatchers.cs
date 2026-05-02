@@ -386,7 +386,7 @@ public static class TokenMatchers
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="prefixes">Candidate prefixes, sorted by descending length.</param>
     /// <returns>Length of the line on match, <c>0</c> on miss.</returns>
-    public static int MatchPrefixedLineLongest(ReadOnlySpan<byte> slice, ReadOnlySpan<byte[]> prefixes)
+    public static int MatchPrefixedLineLongest(ReadOnlySpan<byte> slice, in ReadOnlySpan<byte[]> prefixes)
     {
         var prefix = MatchLongestLiteral(slice, prefixes);
         return prefix is 0 ? 0 : prefix + LineLength(slice[prefix..]);
@@ -444,7 +444,7 @@ public static class TokenMatchers
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="literals">Candidate literals, sorted by descending length.</param>
     /// <returns>Length of the longest matching literal, or <c>0</c>.</returns>
-    public static int MatchLongestLiteral(ReadOnlySpan<byte> slice, ReadOnlySpan<byte[]> literals)
+    public static int MatchLongestLiteral(ReadOnlySpan<byte> slice, in ReadOnlySpan<byte[]> literals)
     {
         for (var i = 0; i < literals.Length; i++)
         {

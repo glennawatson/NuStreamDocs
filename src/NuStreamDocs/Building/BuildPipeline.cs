@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Caching;
+using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
 
@@ -69,7 +70,7 @@ public static class BuildPipeline
         string inputRoot,
         string outputRoot,
         IDocPlugin[] plugins,
-        CancellationToken cancellationToken) =>
+        in CancellationToken cancellationToken) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, cancellationToken);
 
     /// <summary>Canonical build entry point: runs the pipeline with explicit <paramref name="options"/>.</summary>

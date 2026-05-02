@@ -47,8 +47,18 @@ public static class InlineRenderer
     /// <summary>Less-than byte (autolink open).</summary>
     private const byte Lt = (byte)'<';
 
-    /// <summary>Space byte (potential hard-break leader).</summary>
-    private const byte Sp = (byte)' ';
+    /// <summary>Line-feed byte (hard-break trigger).</summary>
+    private const byte Lf = (byte)'\n';
+
+    /// <summary>Bytes that may begin a recognized inline construct.</summary>
+    /// <remarks>
+    /// Vectorized via <see cref="SearchValues"/> so plain-text runs between specials are leapt over with one
+    /// hardware-accelerated <c>IndexOfAny</c> call rather than a per-byte switch dispatch. Hard breaks are
+    /// triggered by <c>\n</c> (which then walks back over trailing spaces); the space byte itself is NOT in
+    /// this set so prose with normal spacing benefits from the leap.
+    /// </remarks>
+    private static readonly SearchValues<byte> SpecialBytes =
+        SearchValues.Create("\\`*_[<\n"u8);
 
     /// <summary>
     /// Renders the inline content of <paramref name="source"/> to
@@ -64,8 +74,14 @@ public static class InlineRenderer
         var pendingTextStart = 0;
         while (pos < source.Length)
         {
-            var b = source[pos];
-            var handled = TryHandleSpecial(source, ref pos, ref pendingTextStart, b, writer);
+            var rel = source[pos..].IndexOfAny(SpecialBytes);
+            if (rel < 0)
+            {
+                break;
+            }
+
+            pos += rel;
+            var handled = TryHandleSpecial(source, ref pos, ref pendingTextStart, source[pos], writer);
             if (!handled)
             {
                 pos++;
@@ -111,7 +127,7 @@ public static class InlineRenderer
             OpenBracket => LinkSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Lt => AutoLink.TryHandle(source, ref pos, ref pendingTextStart, writer)
                 || RawHtml.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            Sp => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
+            Lf => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
             _ => false,
         };
 }

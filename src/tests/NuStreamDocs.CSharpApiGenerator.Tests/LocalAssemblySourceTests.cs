@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using SourceDocParser.Model;
+
 namespace NuStreamDocs.CSharpApiGenerator.Tests;
 
 /// <summary>Branch-coverage tests for LocalAssemblySource.BuildFallbackIndex.</summary>
@@ -86,9 +88,9 @@ public class LocalAssemblySourceTests
     /// <summary>Returns the first AssemblyGroup yielded by <paramref name="src"/>.</summary>
     /// <param name="src">Source to enumerate.</param>
     /// <returns>The first yielded group.</returns>
-    private static async Task<SourceDocParser.Model.AssemblyGroup> FirstGroup(LocalAssemblySource src)
+    private static async Task<AssemblyGroup> FirstGroup(LocalAssemblySource src)
     {
-        var groups = new List<SourceDocParser.Model.AssemblyGroup>();
+        var groups = new List<AssemblyGroup>();
         await foreach (var g in src.DiscoverAsync())
         {
             groups.Add(g);

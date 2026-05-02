@@ -23,18 +23,18 @@ public sealed class DetailsPlugin : MarkdownAssetPluginBase
     /// <summary>UTF-8 stylesheet shipped to every site.</summary>
     private static readonly byte[] CssBytes =
         [.. """
-details{border-left:4px solid #448aff;background:rgba(68,138,255,.06);padding:.6em 1em;margin:1em 0;border-radius:.2em}
-details>summary{font-weight:700;cursor:pointer;list-style:none}
-details>summary::-webkit-details-marker{display:none}
-details>summary::before{content:"\25B8";display:inline-block;margin-right:.4em;transition:transform .15s ease}
-details[open]>summary::before{transform:rotate(90deg)}
-details.tip,details.hint{border-left-color:#00bfa5;background:rgba(0,191,165,.06)}
-details.warning,details.caution,details.attention{border-left-color:#ff9100;background:rgba(255,145,0,.06)}
-details.danger,details.error{border-left-color:#ff1744;background:rgba(255,23,68,.06)}
-details.info,details.todo{border-left-color:#00b8d4;background:rgba(0,184,212,.06)}
-details.success,details.check{border-left-color:#00c853;background:rgba(0,200,83,.06)}
-details.quote,details.cite{border-left-color:#9e9e9e;background:rgba(158,158,158,.06)}
-"""u8];
+            details{border-left:4px solid #448aff;background:rgba(68,138,255,.06);padding:.6em 1em;margin:1em 0;border-radius:.2em}
+            details>summary{font-weight:700;cursor:pointer;list-style:none}
+            details>summary::-webkit-details-marker{display:none}
+            details>summary::before{content:"\25B8";display:inline-block;margin-right:.4em;transition:transform .15s ease}
+            details[open]>summary::before{transform:rotate(90deg)}
+            details.tip,details.hint{border-left-color:#00bfa5;background:rgba(0,191,165,.06)}
+            details.warning,details.caution,details.attention{border-left-color:#ff9100;background:rgba(255,145,0,.06)}
+            details.danger,details.error{border-left-color:#ff1744;background:rgba(255,23,68,.06)}
+            details.info,details.todo{border-left-color:#00b8d4;background:rgba(0,184,212,.06)}
+            details.success,details.check{border-left-color:#00c853;background:rgba(0,200,83,.06)}
+            details.quote,details.cite{border-left-color:#9e9e9e;background:rgba(158,158,158,.06)}
+            """u8];
 
     /// <inheritdoc/>
     public override string Name => "details";

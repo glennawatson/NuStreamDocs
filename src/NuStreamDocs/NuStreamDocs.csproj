@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Core stays free of SourceDocParser. The CSharpApiGenerator plugin
          (NuStreamDocs.CSharpApiGenerator, separate assembly) takes the
          dependency and registers itself via builder.UseCSharpApiGenerator(). -->

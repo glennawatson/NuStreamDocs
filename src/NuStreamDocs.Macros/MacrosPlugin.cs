@@ -74,6 +74,13 @@ public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
         MacrosScanner.Rewrite(source, _lookup, _options.EscapeHtml, _onMissing, writer);
     }
 
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        Preprocess(source, writer);
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
     /// <summary>Copies <paramref name="source"/> through to <paramref name="writer"/> without scanning.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="writer">UTF-8 sink.</param>

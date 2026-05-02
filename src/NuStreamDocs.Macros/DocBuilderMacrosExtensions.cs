@@ -72,6 +72,5 @@ public static class DocBuilderMacrosExtensions
     /// <param name="builder">Builder.</param>
     /// <param name="options">Resolved options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMacros(this DocBuilder builder, MacrosOptions options) =>
-        UseMacros(builder, options, NullLogger.Instance);
+    public static DocBuilder UseMacros(this DocBuilder builder, MacrosOptions options) => builder.UseMacros(options, NullLogger.Instance);
 }

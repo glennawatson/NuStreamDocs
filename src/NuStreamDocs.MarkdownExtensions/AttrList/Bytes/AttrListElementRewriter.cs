@@ -47,9 +47,8 @@ internal static class AttrListElementRewriter
             return false;
         }
 
-        var merged = AttrListMarker.ParseAndMerge(html, nameEnd, openGt, contentStart, contentEnd);
         sink.Write(html[lastEmit..nameEnd]);
-        AttrListMarker.WriteString(merged, sink);
+        AttrListMarker.EmitMerged(html, nameEnd, openGt, contentStart, contentEnd, sink);
         sink.Write(html[openGt..afterClose]);
         lastEmit = markerEnd;
         advanceTo = markerEnd;
@@ -129,9 +128,8 @@ internal static class AttrListElementRewriter
             return false;
         }
 
-        var merged = AttrListMarker.ParseAndMerge(html, nameEnd, slashStart, contentStart, contentEnd);
         sink.Write(html[lastEmit..nameEnd]);
-        AttrListMarker.WriteString(merged, sink);
+        AttrListMarker.EmitMerged(html, nameEnd, slashStart, contentStart, contentEnd, sink);
         sink.Write(html[slashStart..(gt + 1)]);
         lastEmit = markerEnd;
         advanceTo = markerEnd;
@@ -145,9 +143,8 @@ internal static class AttrListElementRewriter
     /// <param name="match">Match positions for the block rewrite.</param>
     private static void EmitRewrittenBlock(ReadOnlySpan<byte> html, IBufferWriter<byte> sink, ref int lastEmit, in BlockMatch match)
     {
-        var merged = AttrListMarker.ParseAndMerge(html, match.NameEnd, match.OpenGt, match.ContentStart, match.ContentEnd);
         sink.Write(html[lastEmit..match.NameEnd]);
-        AttrListMarker.WriteString(merged, sink);
+        AttrListMarker.EmitMerged(html, match.NameEnd, match.OpenGt, match.ContentStart, match.ContentEnd, sink);
         var openGtEnd = match.OpenGt + 1;
         sink.Write(html[match.OpenGt..openGtEnd]);
         sink.Write(html[openGtEnd..match.PrefixEnd]);

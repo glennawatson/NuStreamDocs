@@ -44,12 +44,6 @@ public enum BlockKind
     /// <summary>List item, ordered or bullet.</summary>
     ListItem,
 
-    /// <summary>Raw HTML block (one of the seven CommonMark types).</summary>
-    HtmlBlock,
-
-    /// <summary>Link reference definition.</summary>
-    LinkReferenceDefinition,
-
     /// <summary>Default text container.</summary>
     Paragraph,
 }

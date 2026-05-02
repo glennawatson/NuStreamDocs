@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 using NuStreamDocs.Nav.Logging;
@@ -110,7 +111,7 @@ internal static class NavTreeBuilder
         }
         else
         {
-            var matchResult = matcher.Execute(new Microsoft.Extensions.FileSystemGlobbing.Abstractions.DirectoryInfoWrapper(new(inputRoot)));
+            var matchResult = matcher.Execute(new DirectoryInfoWrapper(new(inputRoot)));
             foreach (var file in matchResult.Files)
             {
                 var rel = file.Path.Replace('\\', '/');

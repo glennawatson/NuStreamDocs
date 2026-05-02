@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
@@ -114,7 +115,7 @@ internal static class PagesFileReader
     {
         var trimmed = YamlByteScanner.TrimWhitespace(span);
         var unquoted = YamlByteScanner.Unquote(trimmed);
-        return unquoted.IsEmpty ? string.Empty : System.Text.Encoding.UTF8.GetString(unquoted);
+        return unquoted.IsEmpty ? string.Empty : Encoding.UTF8.GetString(unquoted);
     }
 
     /// <summary>Reads a YAML boolean (true / false / yes / no).</summary>

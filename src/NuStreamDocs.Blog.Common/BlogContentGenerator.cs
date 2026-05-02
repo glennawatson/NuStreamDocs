@@ -19,7 +19,7 @@ public static class BlogContentGenerator
     /// <param name="options">Generation options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes once the generated files are on disk.</returns>
-    public static ValueTask GenerateAsync(ILogger logger, in BlogGenerationOptions options, CancellationToken cancellationToken)
+    public static ValueTask GenerateAsync(ILogger logger, in BlogGenerationOptions options, in CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(options);

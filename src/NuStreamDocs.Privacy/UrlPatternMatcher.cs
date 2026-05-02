@@ -62,7 +62,7 @@ internal sealed class UrlPatternMatcher
     /// <param name="pattern">Glob pattern.</param>
     /// <param name="input">Candidate input.</param>
     /// <returns>True when the whole input matches the whole pattern.</returns>
-    private static bool MatchGlob(ReadOnlySpan<char> pattern, ReadOnlySpan<char> input)
+    private static bool MatchGlob(in ReadOnlySpan<char> pattern, in ReadOnlySpan<char> input)
     {
         var p = 0;
         var i = 0;

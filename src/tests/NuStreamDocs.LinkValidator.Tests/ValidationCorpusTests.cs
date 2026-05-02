@@ -88,7 +88,9 @@ public class ValidationCorpusTests
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), "<h1 id=\"a\">Hi</h1>");
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 1, CancellationToken.None);
             await Assert.That(corpus.ContainsPage("index.html")).IsTrue();
+            await Assert.That(corpus.ContainsPage("index.html"u8.ToArray())).IsTrue();
             await Assert.That(corpus.ContainsPage("missing.html")).IsFalse();
+            await Assert.That(corpus.ContainsPage("missing.html"u8.ToArray())).IsFalse();
         }
         finally
         {

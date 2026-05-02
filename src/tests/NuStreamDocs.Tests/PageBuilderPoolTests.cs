@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Tests;
 
@@ -15,10 +15,9 @@ public class PageBuilderPoolTests
     [Test]
     public async Task RentReturnRoundTripReusesWriter()
     {
-        ArrayBufferWriter<byte> first;
         using (var rental = PageBuilderPool.Rent(1024))
         {
-            first = rental.Writer;
+            var first = rental.Writer;
             first.Write("hello"u8);
         }
 

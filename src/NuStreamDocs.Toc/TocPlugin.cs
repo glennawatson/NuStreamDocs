@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics;
+using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Toc.Logging;
@@ -37,14 +38,14 @@ public sealed class TocPlugin : IDocPlugin
 
     /// <summary>Initializes a new instance of the <see cref="TocPlugin"/> class with default options.</summary>
     public TocPlugin()
-        : this(TocOptions.Default, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)
+        : this(TocOptions.Default, NullLogger.Instance)
     {
     }
 
     /// <summary>Initializes a new instance of the <see cref="TocPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
     public TocPlugin(in TocOptions options)
-        : this(options, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)
+        : this(options, NullLogger.Instance)
     {
     }
 

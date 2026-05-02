@@ -5,7 +5,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace NuStreamDocs.Building;
+namespace NuStreamDocs.Common;
 
 /// <summary>
 /// Disposable rental wrapping a pooled <see cref="ArrayBufferWriter{T}"/>

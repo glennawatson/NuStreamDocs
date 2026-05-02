@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 namespace NuStreamDocs.Optimize.Tests;
 
 /// <summary>End-to-end tests for <c>OptimizePlugin</c>.</summary>
@@ -83,7 +85,7 @@ public class OptimizePluginTests
     /// <returns>Absolute path.</returns>
     private static string TempDir()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smd-opt-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var dir = Path.Combine(Path.GetTempPath(), "smd-opt-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(dir);
         return dir;
     }

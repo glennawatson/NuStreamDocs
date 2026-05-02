@@ -16,6 +16,7 @@ namespace NuStreamDocs.Benchmarks;
 /// per-page cost multiplies through large corpora; this benchmark
 /// matches the shapes seen on the rxui corpus.
 /// </summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class LinkExtractorBenchmarks
 {

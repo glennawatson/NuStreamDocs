@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Lightbox.Tests;
@@ -34,7 +35,7 @@ public class LightboxRegistrationTests
         var sink = new ArrayBufferWriter<byte>(64);
         sink.Write("<p><img src=\"a.png\" alt=\"a\"></p>"u8);
         await new LightboxPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("glightbox");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("glightbox");
     }
 
     /// <summary>OnRenderPageAsync leaves images alone when WrapImages is false.</summary>
@@ -44,10 +45,10 @@ public class LightboxRegistrationTests
     {
         var sink = new ArrayBufferWriter<byte>(64);
         const string Html = "<p><img src=\"a.png\" alt=\"a\"></p>";
-        sink.Write(System.Text.Encoding.UTF8.GetBytes(Html));
+        sink.Write(Encoding.UTF8.GetBytes(Html));
         var plugin = new LightboxPlugin(LightboxOptions.Default with { WrapImages = false });
         await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
     }
 
     /// <summary>UseLightbox registers the plugin.</summary>

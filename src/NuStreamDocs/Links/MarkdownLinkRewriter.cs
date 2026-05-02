@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Links;
 
@@ -60,33 +61,47 @@ internal static class MarkdownLinkRewriter
             return [];
         }
 
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        using var rental = PageBuilderPool.Rent(html.Length);
+        RewriteInto(html, useDirectoryUrls, rental.Writer);
+        return [.. rental.Writer.WrittenSpan];
+    }
+
+    /// <summary>Streams the rewrite of <paramref name="html"/> into <paramref name="writer"/>; lets callers feed a pooled writer instead of materializing a fresh <see cref="byte"/> array.</summary>
+    /// <param name="html">Rendered HTML.</param>
+    /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c> (and <c>index.md</c> → empty); when false, <c>foo.md</c> → <c>foo.html</c>.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, ArrayBufferWriter<byte> writer)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        if (html.IsEmpty)
+        {
+            return;
+        }
+
         var cursor = 0;
         while (cursor < html.Length)
         {
             var rel = html[cursor..].IndexOf(HrefStub);
             if (rel < 0)
             {
-                sink.Write(html[cursor..]);
+                writer.Write(html[cursor..]);
                 break;
             }
 
             var attrStart = cursor + rel + HrefStub.Length;
-            sink.Write(html[cursor..attrStart]);
+            writer.Write(html[cursor..attrStart]);
 
             var quoteRel = html[attrStart..].IndexOf((byte)'"');
             if (quoteRel < 0)
             {
-                sink.Write(html[attrStart..]);
+                writer.Write(html[attrStart..]);
                 break;
             }
 
             var attrEnd = attrStart + quoteRel;
-            EmitHref(html[attrStart..attrEnd], sink, useDirectoryUrls);
+            EmitHref(html[attrStart..attrEnd], writer, useDirectoryUrls);
             cursor = attrEnd;
         }
-
-        return [.. sink.WrittenSpan];
     }
 
     /// <summary>Emits a (possibly rewritten) href attribute value into <paramref name="sink"/>.</summary>

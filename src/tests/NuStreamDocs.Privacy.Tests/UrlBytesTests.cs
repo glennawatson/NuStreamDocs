@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Tests;
 
@@ -192,7 +193,7 @@ public class UrlBytesTests
     public async Task AuditCollectsFromAllThreeSurfaces()
     {
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: ["cdn.test"]);
-        var auditSet = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
+        var auditSet = new ConcurrentDictionary<byte[], byte>(ByteArrayComparer.Instance);
         const string Html = "<img src=\"https://cdn.test/a.png\">"
             + "<img srcset=\"https://cdn.test/b.png 2x\">"
             + "<style>.x { background: url(https://cdn.test/c.png); }</style>";
@@ -208,7 +209,7 @@ public class UrlBytesTests
     public async Task AuditRespectsFilter()
     {
         var filter = new HostFilter(hostsToSkip: null, hostsAllowed: ["only.test"]);
-        var auditSet = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
+        var auditSet = new ConcurrentDictionary<byte[], byte>(ByteArrayComparer.Instance);
         const string Html = "<img src=\"https://cdn.test/a.png\">";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Html), filter, auditSet);
         await Assert.That(auditSet).IsEmpty();

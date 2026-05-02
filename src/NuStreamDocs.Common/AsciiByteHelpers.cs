@@ -38,6 +38,22 @@ public static class AsciiByteHelpers
     public static bool IsWordBoundary(ReadOnlySpan<byte> source, int offset) =>
         offset is 0 || !IsAsciiIdentifierByte(source[offset - 1]);
 
+    /// <summary>Counts the maximal run of <paramref name="marker"/> bytes starting at <paramref name="pos"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="pos">Run start.</param>
+    /// <param name="marker">Byte to count.</param>
+    /// <returns>Run length in bytes; zero when <paramref name="pos"/> is at or past the end, or when <paramref name="source"/>[<paramref name="pos"/>] is not <paramref name="marker"/>.</returns>
+    public static int RunLength(ReadOnlySpan<byte> source, int pos, byte marker)
+    {
+        var i = pos;
+        while (i < source.Length && source[i] == marker)
+        {
+            i++;
+        }
+
+        return i - pos;
+    }
+
     /// <summary>Skips ASCII whitespace from <paramref name="offset"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Starting offset.</param>

@@ -11,6 +11,7 @@ using NuStreamDocs.Toc;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for the TOC plugin's heading scan, rewrite, and fragment-render passes.</summary>
+[ShortRunJob]
 [MemoryDiagnoser]
 public class TocBenchmarks
 {

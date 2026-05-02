@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Tags.Tests;
@@ -21,7 +22,7 @@ public class Utf8HtmlScannerTests
     [Arguments(6)]
     public async Task FindHeadingForEachLevel(int level)
     {
-        var html = System.Text.Encoding.UTF8.GetBytes($"prefix<h{level}>x</h{level}>");
+        var html = Encoding.UTF8.GetBytes($"prefix<h{level}>x</h{level}>");
         var found = Utf8HtmlScanner.TryFindNextHeadingOpen(html, 0, out var tagStart, out var tagEnd, out var detectedLevel);
         await Assert.That(found).IsTrue();
         await Assert.That(detectedLevel).IsEqualTo(level);
@@ -53,7 +54,7 @@ public class Utf8HtmlScannerTests
     [Arguments("<p>plain</p>")]
     public async Task NonHeadingsRejected(string html)
     {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(html);
+        var bytes = Encoding.UTF8.GetBytes(html);
         await Assert.That(Utf8HtmlScanner.TryFindNextHeadingOpen(bytes, 0, out _, out _, out _)).IsFalse();
     }
 

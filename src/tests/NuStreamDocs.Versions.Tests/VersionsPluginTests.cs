@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Versions.Tests;
@@ -14,7 +15,7 @@ public class VersionsPluginTests
     [Test]
     public async Task OnFinalizeWritesManifest()
     {
-        var siteRoot = Path.Combine(Path.GetTempPath(), "smd-vplugin-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var siteRoot = Path.Combine(Path.GetTempPath(), "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var versionRoot = Path.Combine(siteRoot, "0.4.2");
         Directory.CreateDirectory(versionRoot);
 
@@ -40,7 +41,7 @@ public class VersionsPluginTests
     [Test]
     public async Task SecondBuildUpdatesEntry()
     {
-        var siteRoot = Path.Combine(Path.GetTempPath(), "smd-vplugin-" + Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        var siteRoot = Path.Combine(Path.GetTempPath(), "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var versionRoot = Path.Combine(siteRoot, "0.4.2");
         Directory.CreateDirectory(versionRoot);
 
