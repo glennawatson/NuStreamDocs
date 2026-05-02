@@ -2,9 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
-using NuStreamDocs.Plugins;
 using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material3.IconShortcode;
@@ -21,10 +18,10 @@ namespace NuStreamDocs.Theme.Material3.IconShortcode;
 /// family. The two themes ship parallel rewriters so each can
 /// evolve its emission shape independently.
 /// </remarks>
-public sealed class IconShortcodePlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class IconShortcodePlugin : ThemeIconShortcodePluginBase
 {
-    /// <summary>Optional inline-SVG resolver consulted before the font-ligature fallback.</summary>
-    private readonly IIconResolver? _resolver;
+    /// <summary>Theme-specific Material Symbols class.</summary>
+    private static readonly byte[] MaterialIconFontClass = [.. "material-symbols-outlined"u8];
 
     /// <summary>Initializes a new instance of the <see cref="IconShortcodePlugin"/> class with the default font-ligature fallback only.</summary>
     public IconShortcodePlugin()
@@ -34,22 +31,14 @@ public sealed class IconShortcodePlugin : DocPluginBase, IMarkdownPreprocessor
 
     /// <summary>Initializes a new instance of the <see cref="IconShortcodePlugin"/> class with an inline-SVG resolver (e.g. <c>NuStreamDocs.Icons.MaterialDesign</c>).</summary>
     /// <param name="resolver">Resolver consulted before the font-ligature fallback; <c>null</c> falls back unconditionally.</param>
-    public IconShortcodePlugin(IIconResolver? resolver) => _resolver = resolver;
+    public IconShortcodePlugin(IIconResolver? resolver)
+        : base(resolver)
+    {
+    }
 
     /// <inheritdoc/>
     public override string Name => "material3-icon-shortcodes";
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        IconShortcodeRewriter.Rewrite(source, writer, "material-symbols-outlined"u8, _resolver);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
-        Preprocess(source, writer);
-
-    /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    protected override byte[] IconFontClass => MaterialIconFontClass;
 }

@@ -248,13 +248,13 @@ internal static class FSharpRules
         rules[i++] = new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = ParenFirst };
 
         // # preprocessor directive — line-anchored (#if / #endif / #else / #line / #nowarn / #light).
-        rules[i++] = new(MatchPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = PreprocessorFirst, RequiresLineStart = true };
+        rules[i++] = new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = PreprocessorFirst, RequiresLineStart = true };
 
         // """..."""B? triple-quoted string — must precede regular and verbatim strings.
         rules[i++] = new(MatchTripleQuotedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
 
         // @"..." verbatim string with "" as embedded-quote escape.
-        rules[i++] = new(MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst };
+        rules[i++] = new(LanguageCommon.MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst };
 
         // "..."B? regular double-quoted string with backslash escapes.
         rules[i++] = new(MatchRegularString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = StringFirst };
@@ -277,7 +277,7 @@ internal static class FSharpRules
             LexerRule.NoStateChange) { FirstBytes = LanguageCommon.HexFirst };
 
         // [0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fFmM]? float literal — must precede the integer rule.
-        rules[i++] = new(MatchFloatNumber, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DigitFirst };
+        rules[i++] = new(static slice => LanguageCommon.MatchFloatWithOptionalSuffix(slice, FloatSuffix), TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DigitFirst };
 
         // [0-9_]+[suffix]* integer literal.
         rules[i++] = new(
@@ -374,20 +374,6 @@ internal static class FSharpRules
         return matched < slice.Length && slice[matched] is (byte)'B' ? matched + 1 : matched;
     }
 
-    /// <summary>Verbatim string <c>@"..."</c> with <c>""</c> as the embedded-quote escape.</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched.</returns>
-    private static int MatchVerbatimString(ReadOnlySpan<byte> slice)
-    {
-        if (slice is [] || slice[0] is not (byte)'@')
-        {
-            return 0;
-        }
-
-        var body = TokenMatchers.MatchDoubleQuotedDoubledEscape(slice[1..]);
-        return body is 0 ? 0 : 1 + body;
-    }
-
     /// <summary>Regular double-quoted string with backslash escapes; accepts an optional <c>B</c> bytestring suffix.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
@@ -400,30 +386,5 @@ internal static class FSharpRules
         }
 
         return matched < slice.Length && slice[matched] is (byte)'B' ? matched + 1 : matched;
-    }
-
-    /// <summary>Float literal — unsigned float with an optional one-byte F# suffix (<c>f</c> / <c>F</c> / <c>m</c> / <c>M</c>).</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched.</returns>
-    private static int MatchFloatNumber(ReadOnlySpan<byte> slice)
-    {
-        var matched = TokenMatchers.MatchUnsignedAsciiFloat(slice);
-        if (matched is 0)
-        {
-            return 0;
-        }
-
-        return matched < slice.Length && FloatSuffix.Contains(slice[matched]) ? matched + 1 : matched;
-    }
-
-    /// <summary>Preprocessor directive — optional leading <c>[ \t]</c>, then <c>#</c>, then the rest of the line.</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched.</returns>
-    private static int MatchPreprocessor(ReadOnlySpan<byte> slice)
-    {
-        var indent = TokenMatchers.MatchAsciiInlineWhitespace(slice);
-        return indent >= slice.Length || slice[indent] is not (byte)'#'
-            ? 0
-            : indent + 1 + TokenMatchers.LineLength(slice[(indent + 1)..]);
     }
 }

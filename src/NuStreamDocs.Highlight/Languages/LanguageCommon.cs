@@ -153,6 +153,46 @@ internal static class LanguageCommon
         return nameLen + ws < slice.Length && slice[nameLen + ws] is (byte)'=' ? nameLen : 0;
     }
 
+    /// <summary>Verbatim string <c>@"..."</c> with <c>""</c> as the embedded-quote escape.</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <returns>Length matched.</returns>
+    public static int MatchVerbatimString(ReadOnlySpan<byte> slice)
+    {
+        if (slice is [] || slice[0] is not (byte)'@')
+        {
+            return 0;
+        }
+
+        var body = TokenMatchers.MatchDoubleQuotedDoubledEscape(slice[1..]);
+        return body is 0 ? 0 : 1 + body;
+    }
+
+    /// <summary>Preprocessor directive — optional leading <c>[ \t]</c>, then <c>#</c>, then the rest of the line.</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <returns>Length matched.</returns>
+    public static int MatchHashPreprocessor(ReadOnlySpan<byte> slice)
+    {
+        var indent = TokenMatchers.MatchAsciiInlineWhitespace(slice);
+        return indent >= slice.Length || slice[indent] is not (byte)'#'
+            ? 0
+            : indent + 1 + TokenMatchers.LineLength(slice[(indent + 1)..]);
+    }
+
+    /// <summary>Unsigned float literal with an optional one-byte suffix from <paramref name="suffix"/>.</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <param name="suffix">Recognized trailing suffix bytes.</param>
+    /// <returns>Length matched.</returns>
+    public static int MatchFloatWithOptionalSuffix(ReadOnlySpan<byte> slice, SearchValues<byte> suffix)
+    {
+        var matched = TokenMatchers.MatchUnsignedAsciiFloat(slice);
+        if (matched is 0)
+        {
+            return 0;
+        }
+
+        return matched < slice.Length && suffix.Contains(slice[matched]) ? matched + 1 : matched;
+    }
+
     /// <summary>XML / Razor tag name.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>

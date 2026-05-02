@@ -196,6 +196,25 @@ public sealed class PrivacyPlugin : IDocPlugin
         json.WriteEndArray();
     }
 
+    /// <summary>Decodes a UTF-8 relative output path and combines it under <paramref name="outputRoot"/>.</summary>
+    /// <param name="outputRoot">Absolute output root.</param>
+    /// <param name="pathBytes">Forward-slash relative path bytes.</param>
+    /// <returns>Absolute output path.</returns>
+    private static string ResolveOutputPath(string outputRoot, ReadOnlySpan<byte> pathBytes)
+    {
+        Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
+        Encoding.UTF8.GetChars(pathBytes, pathChars);
+        for (var i = 0; i < pathChars.Length; i++)
+        {
+            if (pathChars[i] is '/')
+            {
+                pathChars[i] = Path.DirectorySeparatorChar;
+            }
+        }
+
+        return Path.Combine(outputRoot, new string(pathChars));
+    }
+
     /// <summary>Throws <see cref="PrivacyDownloadException"/> when <see cref="PrivacyOptions.FailOnError"/> is set and any download failed.</summary>
     /// <param name="failures">Failed-URL list returned by the downloader.</param>
     private void ThrowIfRequested(string[] failures)
@@ -218,17 +237,7 @@ public sealed class PrivacyPlugin : IDocPlugin
             return;
         }
 
-        Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
-        Encoding.UTF8.GetChars(pathBytes, pathChars);
-        for (var i = 0; i < pathChars.Length; i++)
-        {
-            if (pathChars[i] is '/')
-            {
-                pathChars[i] = Path.DirectorySeparatorChar;
-            }
-        }
-
-        var target = Path.Combine(outputRoot, new string(pathChars));
+        var target = ResolveOutputPath(outputRoot, pathBytes);
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
 
         using var stream = File.Create(target);
@@ -259,17 +268,7 @@ public sealed class PrivacyPlugin : IDocPlugin
             return;
         }
 
-        Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
-        Encoding.UTF8.GetChars(pathBytes, pathChars);
-        for (var i = 0; i < pathChars.Length; i++)
-        {
-            if (pathChars[i] is '/')
-            {
-                pathChars[i] = Path.DirectorySeparatorChar;
-            }
-        }
-
-        var target = Path.Combine(outputRoot, new string(pathChars));
+        var target = ResolveOutputPath(outputRoot, pathBytes);
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
 
         using var stream = File.Create(target);

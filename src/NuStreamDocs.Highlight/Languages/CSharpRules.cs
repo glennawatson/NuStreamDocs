@@ -294,10 +294,10 @@ internal static class CSharpRules
         rules[i++] = new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
 
         // # preprocessor directive — line-anchored, optional leading [ \t].
-        rules[i++] = new(MatchPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = PreprocessorFirst, RequiresLineStart = true };
+        rules[i++] = new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = PreprocessorFirst, RequiresLineStart = true };
 
         // @"..." verbatim string with "" as the embedded-quote escape.
-        rules[i++] = new(MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst };
+        rules[i++] = new(LanguageCommon.MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst };
 
         // $"..." / $$"..." / $"""...""" / $$"""...""" interpolated string (C# 6+ / 11+).
         rules[i++] = new(MatchInterpolatedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DollarFirst };
@@ -329,7 +329,7 @@ internal static class CSharpRules
             LexerRule.NoStateChange) { FirstBytes = LanguageCommon.HexFirst };
 
         // [0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fFdDmM]? float literal — must precede the integer rule.
-        rules[i++] = new(MatchFloatNumber, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DigitFirst };
+        rules[i++] = new(static slice => LanguageCommon.MatchFloatWithOptionalSuffix(slice, FloatSuffix), TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DigitFirst };
 
         // [0-9_]+[uUlL]* integer literal.
         rules[i++] = new(
@@ -426,31 +426,6 @@ internal static class CSharpRules
             : 0;
     }
 
-    /// <summary>Preprocessor directive — optional leading <c>[ \t]</c>, then <c>#</c>, then the rest of the line.</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched.</returns>
-    private static int MatchPreprocessor(ReadOnlySpan<byte> slice)
-    {
-        var indent = TokenMatchers.MatchAsciiInlineWhitespace(slice);
-        return indent >= slice.Length || slice[indent] is not (byte)'#'
-            ? 0
-            : indent + 1 + TokenMatchers.LineLength(slice[(indent + 1)..]);
-    }
-
-    /// <summary>Verbatim string <c>@"…"</c> with <c>""</c> as the embedded-quote escape.</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched.</returns>
-    private static int MatchVerbatimString(ReadOnlySpan<byte> slice)
-    {
-        if (slice is [] || slice[0] is not (byte)'@')
-        {
-            return 0;
-        }
-
-        var body = TokenMatchers.MatchDoubleQuotedDoubledEscape(slice[1..]);
-        return body is 0 ? 0 : 1 + body;
-    }
-
     /// <summary>Regular double-quoted string with backslash escapes, with an optional <c>u8</c> suffix (C# 11+ UTF-8 string literal).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
@@ -499,19 +474,5 @@ internal static class CSharpRules
         // don't break the string token at the lexer level.
         var quoted = TokenMatchers.MatchDoubleQuotedWithBackslashEscape(afterDollars);
         return quoted is 0 ? 0 : dollars + quoted;
-    }
-
-    /// <summary>Float literal — unsigned float with an optional one-byte C# suffix (<c>f</c> / <c>F</c> / <c>d</c> / <c>D</c> / <c>m</c> / <c>M</c>).</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched.</returns>
-    private static int MatchFloatNumber(ReadOnlySpan<byte> slice)
-    {
-        var matched = TokenMatchers.MatchUnsignedAsciiFloat(slice);
-        if (matched is 0)
-        {
-            return 0;
-        }
-
-        return matched < slice.Length && FloatSuffix.Contains(slice[matched]) ? matched + 1 : matched;
     }
 }
