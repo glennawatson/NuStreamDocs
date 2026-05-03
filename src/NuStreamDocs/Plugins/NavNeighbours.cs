@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
@@ -12,11 +14,11 @@ namespace NuStreamDocs.Plugins;
 /// <param name="NextPath">Source-relative path of the next leaf page in nav order; empty when there is none.</param>
 /// <param name="NextTitle">Display title of the next page; empty when there is none.</param>
 public readonly record struct NavNeighbours(
-    string PreviousPath,
+    FilePath PreviousPath,
     string PreviousTitle,
-    string NextPath,
+    FilePath NextPath,
     string NextTitle)
 {
     /// <summary>Gets the empty value (no previous, no next).</summary>
-    public static NavNeighbours None { get; } = new(string.Empty, string.Empty, string.Empty, string.Empty);
+    public static NavNeighbours None { get; } = new(default, string.Empty, default, string.Empty);
 }

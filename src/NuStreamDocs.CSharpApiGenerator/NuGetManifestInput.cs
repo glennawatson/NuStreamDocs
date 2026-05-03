@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.CSharpApiGenerator;
 
 /// <summary>
@@ -11,4 +13,4 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// </summary>
 /// <param name="RootDirectory">Repository root containing <c>nuget-packages.json</c>.</param>
 /// <param name="ApiCachePath">Destination root for fetched packages.</param>
-public sealed record NuGetManifestInput(string RootDirectory, string ApiCachePath) : CSharpApiGeneratorInput;
+public sealed record NuGetManifestInput(DirectoryPath RootDirectory, DirectoryPath ApiCachePath) : CSharpApiGeneratorInput;

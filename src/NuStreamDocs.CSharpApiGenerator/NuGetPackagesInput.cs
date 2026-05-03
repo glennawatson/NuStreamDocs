@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.CSharpApiGenerator;
 
 /// <summary>
@@ -15,13 +17,13 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <param name="TfmPreference">Ordered list of preferred TFMs. Empty falls back to <see cref="DefaultTfmPreference"/>.</param>
 public sealed record NuGetPackagesInput(
     NuGetPackageReference[] Packages,
-    string ApiCachePath,
+    DirectoryPath ApiCachePath,
     string[] TfmPreference) : CSharpApiGeneratorInput
 {
     /// <summary>Initializes a new instance of the <see cref="NuGetPackagesInput"/> class with <see cref="DefaultTfmPreference"/>.</summary>
     /// <param name="packages">Packages to fetch.</param>
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
-    public NuGetPackagesInput(NuGetPackageReference[] packages, string apiCachePath)
+    public NuGetPackagesInput(NuGetPackageReference[] packages, DirectoryPath apiCachePath)
         : this(packages, apiCachePath, DefaultTfmPreference)
     {
     }

@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Caching;
 
 /// <summary>
@@ -17,6 +19,6 @@ namespace NuStreamDocs.Caching;
 /// <param name="ContentHash">16-byte ASCII lowercase hex digest of the source UTF-8 bytes.</param>
 /// <param name="OutputLengthBytes">Length of the previously emitted output file.</param>
 public readonly record struct ManifestEntry(
-    string RelativePath,
+    FilePath RelativePath,
     byte[] ContentHash,
     long OutputLengthBytes);

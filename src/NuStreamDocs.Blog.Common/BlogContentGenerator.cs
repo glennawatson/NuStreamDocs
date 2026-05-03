@@ -34,7 +34,7 @@ public static class BlogContentGenerator
     /// <returns>A task that completes once the generated files are on disk.</returns>
     private static async ValueTask GenerateCoreAsync(ILogger logger, BlogGenerationOptions options, CancellationToken cancellationToken)
     {
-        BlogLoggingHelper.LogDiscoveryStart(logger, options.PostsRoot);
+        BlogLoggingHelper.LogDiscoveryStart(logger, options.PostsRoot.Value);
         var posts = BlogPostScanner.Scan(options.PostsRoot, options.DocsRoot);
         BlogLoggingHelper.LogDiscoveryComplete(logger, posts.Length, 0);
         if (logger.IsEnabled(LogLevel.Debug))
@@ -58,7 +58,7 @@ public static class BlogContentGenerator
 
         if (!options.EmitArchives)
         {
-            BlogLoggingHelper.LogIndexGenerated(logger, options.IndexPath, 0);
+            BlogLoggingHelper.LogIndexGenerated(logger, options.IndexPath.Value, 0);
             return;
         }
 
@@ -74,7 +74,7 @@ public static class BlogContentGenerator
             archiveCount++;
         }
 
-        BlogLoggingHelper.LogIndexGenerated(logger, options.IndexPath, archiveCount);
+        BlogLoggingHelper.LogIndexGenerated(logger, options.IndexPath.Value, archiveCount);
     }
 
     /// <summary>Buckets posts by tag with deterministic ordering.</summary>

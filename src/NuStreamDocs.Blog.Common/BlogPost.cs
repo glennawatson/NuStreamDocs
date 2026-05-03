@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Blog.Common;
 
 /// <summary>
@@ -15,7 +17,7 @@ namespace NuStreamDocs.Blog.Common;
 /// <param name="Tags">Tags pulled from <c>Tags:</c> frontmatter (single string or comma/space separated).</param>
 /// <param name="Excerpt">Plain-text excerpt — first paragraph of the body, used for index listings.</param>
 public sealed record BlogPost(
-    string RelativePath,
+    FilePath RelativePath,
     string Slug,
     string Title,
     string Author,

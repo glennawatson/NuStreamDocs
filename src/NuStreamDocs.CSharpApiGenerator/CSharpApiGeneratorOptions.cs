@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using SourceDocParser;
 
 namespace NuStreamDocs.CSharpApiGenerator;
@@ -49,7 +50,7 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="rootDirectory">Repository root containing <c>nuget-packages.json</c>.</param>
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromManifest(string rootDirectory, string apiCachePath) =>
+    public static CSharpApiGeneratorOptions FromManifest(DirectoryPath rootDirectory, DirectoryPath apiCachePath) =>
         From(new NuGetManifestInput(rootDirectory, apiCachePath));
 
     /// <summary>Builds an options record for the manifest input shape with a custom output subdirectory.</summary>
@@ -57,14 +58,14 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <param name="outputMarkdownSubdirectory">Output subdirectory under the docs root.</param>
     /// <returns>An options record using <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromManifest(string rootDirectory, string apiCachePath, string outputMarkdownSubdirectory) =>
+    public static CSharpApiGeneratorOptions FromManifest(DirectoryPath rootDirectory, DirectoryPath apiCachePath, string outputMarkdownSubdirectory) =>
         new([new NuGetManifestInput(rootDirectory, apiCachePath)], outputMarkdownSubdirectory, CSharpApiGeneratorMode.EmitMarkdown);
 
     /// <summary>Builds an options record for the inline-NuGet-packages shape.</summary>
     /// <param name="packages">Packages to fetch.</param>
     /// <param name="apiCachePath">Destination root for fetched packages and the synthesized manifest.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromPackages(NuGetPackageReference[] packages, string apiCachePath) =>
+    public static CSharpApiGeneratorOptions FromPackages(NuGetPackageReference[] packages, DirectoryPath apiCachePath) =>
         From(new NuGetPackagesInput(packages, apiCachePath));
 
     /// <summary>Builds an options record for local pre-built assemblies.</summary>
