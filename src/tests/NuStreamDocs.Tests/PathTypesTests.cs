@@ -46,8 +46,9 @@ public class PathTypesTests
     [Test]
     public async Task FileDirectoryReturnsParent()
     {
-        var page = new FilePath(Path.Combine("/docs", "guide", "intro.md"));
-        await Assert.That(page.Directory.Value).IsEqualTo(Path.Combine("/docs", "guide"));
+        var pageValue = Path.Combine("/docs", "guide", "intro.md");
+        var page = new FilePath(pageValue);
+        await Assert.That(page.Directory.Value).IsEqualTo(Path.GetDirectoryName(pageValue));
     }
 
     /// <summary><see cref="FilePath.WithExtension(string)"/> swaps the file extension in place.</summary>
