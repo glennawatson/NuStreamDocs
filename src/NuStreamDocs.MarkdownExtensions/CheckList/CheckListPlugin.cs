@@ -30,7 +30,7 @@ public sealed class CheckListPlugin : MarkdownAssetPluginBase
     public override string Name => "checklist";
 
     /// <inheritdoc/>
-    protected override string AssetPath => "assets/extensions/checklist.css";
+    protected override FilePath AssetPath => new("assets/extensions/checklist.css");
 
     /// <inheritdoc/>
     protected override byte[] StylesheetBytes => CssBytes;

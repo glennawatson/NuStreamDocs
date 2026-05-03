@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
@@ -28,5 +30,5 @@ public interface IStaticAssetProvider
 {
     /// <summary>Gets the static assets this plugin contributes.</summary>
     /// <remarks>Pairs of forward-slash relative paths and their UTF-8 bytes.</remarks>
-    (string Path, byte[] Bytes)[] StaticAssets { get; }
+    (FilePath Path, byte[] Bytes)[] StaticAssets { get; }
 }

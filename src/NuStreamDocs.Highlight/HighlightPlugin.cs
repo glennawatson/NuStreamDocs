@@ -66,7 +66,7 @@ public sealed class HighlightPlugin : IDocPlugin, IStaticAssetProvider, IHeadExt
     public string Name => "highlight";
 
     /// <inheritdoc/>
-    public (string Path, byte[] Bytes)[] StaticAssets =>
+    public (FilePath Path, byte[] Bytes)[] StaticAssets =>
         [(HighlightStylesheet.AssetPath, HighlightStylesheet.GetBytes())];
 
     /// <inheritdoc/>

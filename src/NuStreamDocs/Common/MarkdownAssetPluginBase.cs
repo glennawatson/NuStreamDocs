@@ -16,10 +16,10 @@ namespace NuStreamDocs.Common;
 public abstract class MarkdownAssetPluginBase : DocPluginBase, IMarkdownPreprocessor, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <inheritdoc/>
-    public (string Path, byte[] Bytes)[] StaticAssets => [(AssetPath, StylesheetBytes)];
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetPath, StylesheetBytes)];
 
     /// <summary>Gets the forward-slash relative path the css asset is written to.</summary>
-    protected abstract string AssetPath { get; }
+    protected abstract FilePath AssetPath { get; }
 
     /// <summary>Gets the UTF-8 stylesheet shipped to every site under <see cref="AssetPath"/>.</summary>
     protected abstract byte[] StylesheetBytes { get; }

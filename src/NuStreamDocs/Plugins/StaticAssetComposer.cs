@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
@@ -19,10 +21,13 @@ public static class StaticAssetComposer
     /// <summary>Writes every provider's assets under <paramref name="outputRoot"/>.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="outputRoot">Absolute output root.</param>
-    public static void WriteAll(IDocPlugin[] plugins, string outputRoot)
+    public static void WriteAll(IDocPlugin[] plugins, DirectoryPath outputRoot)
     {
         ArgumentNullException.ThrowIfNull(plugins);
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        if (outputRoot.IsEmpty)
+        {
+            throw new ArgumentException("Output root must be non-empty.", nameof(outputRoot));
+        }
 
         for (var i = 0; i < plugins.Length; i++)
         {
@@ -35,7 +40,7 @@ public static class StaticAssetComposer
             for (var j = 0; j < assets.Length; j++)
             {
                 var (relativePath, bytes) = assets[j];
-                var target = Path.Combine(outputRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+                var target = Path.Combine(outputRoot.Value, relativePath.Value.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.WriteAllBytes(target, bytes);
             }

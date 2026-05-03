@@ -34,7 +34,7 @@ public sealed class TabsPlugin : MarkdownAssetPluginBase
     public override string Name => "tabs";
 
     /// <inheritdoc/>
-    protected override string AssetPath => "assets/extensions/tabs.css";
+    protected override FilePath AssetPath => new("assets/extensions/tabs.css");
 
     /// <inheritdoc/>
     protected override byte[] StylesheetBytes => CssBytes;

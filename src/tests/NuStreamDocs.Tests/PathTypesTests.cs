@@ -102,4 +102,39 @@ public class PathTypesTests
         await Assert.That(dir.IsEmpty).IsTrue();
         await Assert.That(file.IsEmpty).IsTrue();
     }
+
+    /// <summary>UrlPath wraps and unwraps URL strings.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UrlPathWraps()
+    {
+        UrlPath relative = "/assets/extra/foo.css";
+        UrlPath absolute = "https://example.com/foo.css";
+        UrlPath protoRelative = "//cdn.example.com/foo.css";
+        await Assert.That(relative.Value).IsEqualTo("/assets/extra/foo.css");
+        await Assert.That((string)absolute).IsEqualTo("https://example.com/foo.css");
+        await Assert.That(relative.IsAbsolute).IsFalse();
+        await Assert.That(absolute.IsAbsolute).IsTrue();
+        await Assert.That(protoRelative.IsAbsolute).IsTrue();
+    }
+
+    /// <summary>PathSegment wraps relative subdirectory references.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task PathSegmentWraps()
+    {
+        PathSegment segment = "blog/posts";
+        await Assert.That(segment.Value).IsEqualTo("blog/posts");
+        await Assert.That(segment.IsEmpty).IsFalse();
+    }
+
+    /// <summary>GlobPattern wraps include/exclude glob strings.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task GlobPatternWraps()
+    {
+        GlobPattern pattern = "**/*.md";
+        await Assert.That(pattern.Value).IsEqualTo("**/*.md");
+        await Assert.That(pattern.IsEmpty).IsFalse();
+    }
 }

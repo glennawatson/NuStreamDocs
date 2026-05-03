@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Highlight;
 
 /// <summary>The Pygments-default stylesheet bytes that style the token-class spans <see cref="HighlightEmitter"/> emits.</summary>
@@ -14,10 +16,10 @@ namespace NuStreamDocs.Highlight;
 public static class HighlightStylesheet
 {
     /// <summary>Gets the site-relative path the stylesheet is written to.</summary>
-    public static string AssetPath => "assets/stylesheets/highlight.css";
+    public static FilePath AssetPath => new("assets/stylesheets/highlight.css");
 
     /// <summary>Gets the absolute URL prefix (<c>/</c>) for the stylesheet, suitable for an HTML <c>href</c>.</summary>
-    public static string AssetHref => "/" + AssetPath;
+    public static UrlPath AssetHref => new("/" + AssetPath.Value);
 
     /// <summary>Gets the UTF-8 stylesheet source as a span; <see cref="GetBytes"/> copies it per asset request.</summary>
     private static ReadOnlySpan<byte> CssBytes =>

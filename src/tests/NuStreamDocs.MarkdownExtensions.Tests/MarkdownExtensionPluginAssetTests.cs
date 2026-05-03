@@ -21,7 +21,7 @@ public class MarkdownExtensionPluginAssetTests
     {
         var assets = new AdmonitionPlugin().StaticAssets;
         await Assert.That(assets.Length).IsEqualTo(1);
-        await Assert.That(assets[0].Path).Contains("admonition");
+        await Assert.That(assets[0].Path.Value).Contains("admonition");
         await Assert.That(assets[0].Bytes.Length).IsGreaterThan(0);
     }
 

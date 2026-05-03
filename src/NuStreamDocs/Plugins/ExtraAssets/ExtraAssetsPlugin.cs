@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
@@ -31,10 +32,10 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     private readonly List<ExtraAssetSource> _jsSources = [];
 
     /// <summary>Resolved CSS assets ready to be shipped (file/inline/embedded only).</summary>
-    private readonly List<(string Path, byte[] Bytes)> _cssAssets = [];
+    private readonly List<(FilePath Path, byte[] Bytes)> _cssAssets = [];
 
     /// <summary>Resolved JS assets ready to be shipped (file/inline/embedded only).</summary>
-    private readonly List<(string Path, byte[] Bytes)> _jsAssets = [];
+    private readonly List<(FilePath Path, byte[] Bytes)> _jsAssets = [];
 
     /// <summary>UTF-8 head fragment composed once during <see cref="OnConfigureAsync"/>.</summary>
     private byte[] _headFragment = [];
@@ -43,7 +44,7 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     public string Name => "extra-assets";
 
     /// <inheritdoc/>
-    public (string Path, byte[] Bytes)[] StaticAssets => [.. _cssAssets, .. _jsAssets];
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => [.. _cssAssets, .. _jsAssets];
 
     /// <summary>Appends a CSS source. Called by the builder API; folds onto the existing instance when one is already registered.</summary>
     /// <param name="source">Source to add.</param>
@@ -104,7 +105,7 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     /// <summary>Resolves the bytes for every shippable source into <paramref name="assets"/>.</summary>
     /// <param name="sources">Source list.</param>
     /// <param name="assets">Output list of <c>(relativePath, bytes)</c> pairs.</param>
-    private static void Resolve(List<ExtraAssetSource> sources, List<(string Path, byte[] Bytes)> assets)
+    private static void Resolve(List<ExtraAssetSource> sources, List<(FilePath Path, byte[] Bytes)> assets)
     {
         for (var i = 0; i < sources.Count; i++)
         {
@@ -115,7 +116,7 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
             }
 
             var bytes = ReadBytes(src);
-            assets.Add(($"{AssetDirectory}/{src.OutputName}", bytes));
+            assets.Add((new FilePath($"{AssetDirectory}/{src.OutputName}"), bytes));
         }
     }
 
@@ -124,7 +125,7 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     /// <returns>UTF-8 asset bytes.</returns>
     private static byte[] ReadBytes(ExtraAssetSource source) => source.Kind switch
     {
-        ExtraAssetSourceKind.File => File.ReadAllBytes(source.FilePath!),
+        ExtraAssetSourceKind.File => File.ReadAllBytes(source.FilePath.Value),
         ExtraAssetSourceKind.Inline => source.InlineBytes!,
         ExtraAssetSourceKind.Embedded => ReadEmbedded(source),
         _ => throw new InvalidOperationException($"Source kind {source.Kind} cannot be resolved to bytes."),

@@ -40,7 +40,7 @@ public sealed class DetailsPlugin : MarkdownAssetPluginBase
     public override string Name => "details";
 
     /// <inheritdoc/>
-    protected override string AssetPath => "assets/extensions/details.css";
+    protected override FilePath AssetPath => new("assets/extensions/details.css");
 
     /// <inheritdoc/>
     protected override byte[] StylesheetBytes => CssBytes;

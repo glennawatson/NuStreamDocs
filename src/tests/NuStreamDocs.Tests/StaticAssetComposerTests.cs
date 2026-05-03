@@ -58,13 +58,13 @@ public class StaticAssetComposerTests
 
     /// <summary>Test plugin that exposes static assets.</summary>
     /// <param name="assets">Asset entries.</param>
-    private sealed class TestProvider(params (string Path, byte[] Bytes)[] assets) : IDocPlugin, IStaticAssetProvider
+    private sealed class TestProvider(params (Common.FilePath Path, byte[] Bytes)[] assets) : IDocPlugin, IStaticAssetProvider
     {
         /// <inheritdoc/>
         public string Name => "test-provider";
 
         /// <inheritdoc/>
-        public (string Path, byte[] Bytes)[] StaticAssets { get; } = assets;
+        public (Common.FilePath Path, byte[] Bytes)[] StaticAssets { get; } = assets;
 
         /// <inheritdoc/>
         public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;

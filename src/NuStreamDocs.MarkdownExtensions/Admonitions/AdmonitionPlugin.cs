@@ -39,7 +39,7 @@ public sealed class AdmonitionPlugin : MarkdownAssetPluginBase
     public override string Name => "admonitions";
 
     /// <inheritdoc/>
-    protected override string AssetPath => "assets/extensions/admonition.css";
+    protected override FilePath AssetPath => new("assets/extensions/admonition.css");
 
     /// <inheritdoc/>
     protected override byte[] StylesheetBytes => CssBytes;
