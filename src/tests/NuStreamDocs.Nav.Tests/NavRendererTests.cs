@@ -56,7 +56,7 @@ public class NavRendererTests
 
         await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
         await Assert.That(index.ContainsKeyByUtf8("blog/post.html"u8)).IsTrue();
-        await Assert.That(index.TryGetValueByUtf8("guide/intro.html"u8, out var introNode) && introNode.Title == "Intro").IsTrue();
+        await Assert.That(index.TryGetValueByUtf8("guide/intro.html"u8, out var introNode) && Encoding.UTF8.GetString(introNode.Title) == "Intro").IsTrue();
     }
 
     /// <summary>BuildUrlIndex includes section index URLs (when present).</summary>
@@ -74,7 +74,7 @@ public class NavRendererTests
 
         await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
         await Assert.That(index.ContainsKeyByUtf8("guide/index.html"u8)).IsTrue();
-        await Assert.That(index.TryGetValueByUtf8("guide/index.html"u8, out var guideNode) && guideNode.Title == "Guide").IsTrue();
+        await Assert.That(index.TryGetValueByUtf8("guide/index.html"u8, out var guideNode) && Encoding.UTF8.GetString(guideNode.Title) == "Guide").IsTrue();
     }
 
     /// <summary>BuildUrlIndex returns an empty dictionary for an empty tree.</summary>

@@ -278,12 +278,12 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     private static string PathOrEmpty(NavNode[] leaves, int idx) =>
         idx >= 0 && idx < leaves.Length ? leaves[idx].RelativePath : string.Empty;
 
-    /// <summary>Returns the title at <paramref name="idx"/> or empty when out of range.</summary>
+    /// <summary>Returns the UTF-8 title bytes at <paramref name="idx"/> or empty when out of range.</summary>
     /// <param name="leaves">Leaf array.</param>
     /// <param name="idx">Candidate index.</param>
-    /// <returns>Title or empty string.</returns>
-    private static string TitleOrEmpty(NavNode[] leaves, int idx) =>
-        idx >= 0 && idx < leaves.Length ? leaves[idx].Title : string.Empty;
+    /// <returns>Pre-encoded title bytes or empty.</returns>
+    private static byte[] TitleOrEmpty(NavNode[] leaves, int idx) =>
+        idx >= 0 && idx < leaves.Length ? leaves[idx].Title : [];
 
     /// <summary>Encodes <paramref name="relativePath"/> as the served-page URL bytes into <paramref name="destination"/>, swapping the trailing <c>.md</c> for <c>.html</c>.</summary>
     /// <param name="relativePath">Source-relative path.</param>

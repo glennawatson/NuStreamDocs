@@ -370,7 +370,7 @@ internal static class NavTreeBuilder
     {
         if (node.IsSection)
         {
-            var sectionName = node.RelativePath.AsSpan();
+            var sectionName = node.RelativePath.Value.AsSpan();
             var slash = sectionName.LastIndexOf('/');
             if (slash >= 0)
             {
@@ -380,13 +380,13 @@ internal static class NavTreeBuilder
             return sectionName.Equals(entry, StringComparison.OrdinalIgnoreCase);
         }
 
-        var fileName = Path.GetFileName(node.RelativePath.AsSpan());
+        var fileName = Path.GetFileName(node.RelativePath.Value.AsSpan());
         if (fileName.Equals(entry, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        var bare = Path.GetFileNameWithoutExtension(node.RelativePath.AsSpan());
+        var bare = Path.GetFileNameWithoutExtension(node.RelativePath.Value.AsSpan());
         return bare.Equals(entry, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -451,7 +451,7 @@ internal static class NavTreeBuilder
 
             if (options.HideEmptySections && node.Children.Length == 0)
             {
-                NavLoggingHelper.LogNavPruned(logger, node.RelativePath, "empty section");
+                NavLoggingHelper.LogNavPruned(logger, node.RelativePath.Value, "empty section");
                 continue;
             }
 

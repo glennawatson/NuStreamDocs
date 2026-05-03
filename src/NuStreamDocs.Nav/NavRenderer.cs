@@ -219,18 +219,18 @@ internal static class NavRenderer
     /// <param name="active">True when the section sits on the active branch.</param>
     private static void WriteSection(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, bool active)
     {
-        if (node.IndexPath.Length > 0)
+        if (!node.IndexPath.IsEmpty)
         {
             WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
             WriteUtf8(writer, node.IndexUrlBytes);
             WriteUtf8(writer, "\">"u8);
-            WriteUtf8(writer, node.TitleBytes);
+            WriteUtf8(writer, node.Title);
             WriteUtf8(writer, "</a>"u8);
         }
         else
         {
             WriteUtf8(writer, "<span class=\"md-nav__link\">"u8);
-            WriteUtf8(writer, node.TitleBytes);
+            WriteUtf8(writer, node.Title);
             WriteUtf8(writer, "</span>"u8);
         }
 
@@ -243,9 +243,9 @@ internal static class NavRenderer
         // Wrap the child list in <nav class="md-nav"> + <label class="md-nav__title"> so mkdocs-material's CSS
         // recognises a nested section (folding chevron, indent, label).
         WriteUtf8(writer, "<nav class=\"md-nav\" aria-label=\""u8);
-        WriteUtf8(writer, node.TitleBytes);
+        WriteUtf8(writer, node.Title);
         WriteUtf8(writer, "\"><label class=\"md-nav__title\">"u8);
-        WriteUtf8(writer, node.TitleBytes);
+        WriteUtf8(writer, node.Title);
         WriteUtf8(writer, "</label>"u8);
         WriteList(writer, node.Children, activeBranch, prune);
         WriteUtf8(writer, "</nav>"u8);
@@ -260,7 +260,7 @@ internal static class NavRenderer
         WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
         WriteUtf8(writer, node.RelativeUrlBytes);
         WriteUtf8(writer, "\">"u8);
-        WriteUtf8(writer, node.TitleBytes);
+        WriteUtf8(writer, node.Title);
         WriteUtf8(writer, "</a>"u8);
     }
 
@@ -287,7 +287,7 @@ internal static class NavRenderer
         if (href.Length is 0)
         {
             WriteUtf8(writer, "<span class=\"md-tabs__link\">"u8);
-            WriteUtf8(writer, node.TitleBytes);
+            WriteUtf8(writer, node.Title);
             WriteUtf8(writer, "</span>"u8);
         }
         else
@@ -295,7 +295,7 @@ internal static class NavRenderer
             WriteUtf8(writer, "<a class=\"md-tabs__link\" href=\""u8);
             WriteUtf8(writer, href);
             WriteUtf8(writer, "\">"u8);
-            WriteUtf8(writer, node.TitleBytes);
+            WriteUtf8(writer, node.Title);
             WriteUtf8(writer, "</a>"u8);
         }
 

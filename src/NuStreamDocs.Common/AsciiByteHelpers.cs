@@ -158,6 +158,41 @@ public static class AsciiByteHelpers
         return true;
     }
 
+    /// <summary>Case-insensitive ASCII tri-state compare over <paramref name="a"/> and <paramref name="b"/>.</summary>
+    /// <param name="a">Left span.</param>
+    /// <param name="b">Right span.</param>
+    /// <returns>Negative, zero, or positive per <see cref="IComparer{T}"/>.</returns>
+    /// <remarks>
+    /// Folds <c>A</c>-<c>Z</c> to <c>a</c>-<c>z</c> on both sides; non-letter bytes (including UTF-8
+    /// continuation bytes) compare ordinally. Suitable for sorting English-language UTF-8 titles; do
+    /// not rely on it for locale-aware compares.
+    /// </remarks>
+    public static int CompareIgnoreAsciiCase(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
+    {
+        var min = a.Length < b.Length ? a.Length : b.Length;
+        for (var i = 0; i < min; i++)
+        {
+            var ai = a[i];
+            var bi = b[i];
+            if (ai is >= (byte)'A' and <= (byte)'Z')
+            {
+                ai |= AsciiCaseBit;
+            }
+
+            if (bi is >= (byte)'A' and <= (byte)'Z')
+            {
+                bi |= AsciiCaseBit;
+            }
+
+            if (ai != bi)
+            {
+                return ai - bi;
+            }
+        }
+
+        return a.Length - b.Length;
+    }
+
     /// <summary>Encodes <paramref name="value"/> into <paramref name="sink"/> as UTF-8 with no intermediate buffer.</summary>
     /// <param name="value">Source string.</param>
     /// <param name="sink">UTF-8 sink.</param>

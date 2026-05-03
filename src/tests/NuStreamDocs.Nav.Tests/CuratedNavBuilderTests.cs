@@ -33,8 +33,8 @@ public class CuratedNavBuilderTests
 
         var root = (NavNode)plugin.Root!;
         await Assert.That(root.Children.Length).IsEqualTo(2);
-        await Assert.That(root.Children[0].Title).IsEqualTo("Home");
-        await Assert.That(root.Children[1].Title).IsEqualTo("Guide");
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Home");
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[1].Title)).IsEqualTo("Guide");
     }
 
     /// <summary>An empty curated list falls back to the auto-discovery walker.</summary>

@@ -44,7 +44,7 @@ public class LiterateNavTests
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         var section = Array.Find(root.Children, static c => c.IsSection)!;
-        await Assert.That(section.Title).IsEqualTo("User Guide");
+        await Assert.That(System.Text.Encoding.UTF8.GetString(section.Title)).IsEqualTo("User Guide");
     }
 
     /// <summary><c>hide: true</c> drops the section from its parent's children.</summary>
@@ -60,6 +60,6 @@ public class LiterateNavTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# home");
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
-        await Assert.That(Array.Exists(root.Children, static c => c.IsSection && c.Title == "secret")).IsFalse();
+        await Assert.That(Array.Exists(root.Children, static c => c.IsSection && System.Text.Encoding.UTF8.GetString(c.Title) == "secret")).IsFalse();
     }
 }

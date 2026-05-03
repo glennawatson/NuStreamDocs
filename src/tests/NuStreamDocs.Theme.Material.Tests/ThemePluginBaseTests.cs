@@ -233,11 +233,11 @@ public class ThemePluginBaseTests
 
         /// <inheritdoc/>
         public NavNeighbours GetNeighbours(string relativePath) =>
-            new(globalUrl.TrimStart('/') + ".md", "Prev", string.Empty, string.Empty);
+            new(globalUrl.TrimStart('/') + ".md", "Prev"u8.ToArray(), string.Empty, []);
 
         /// <inheritdoc/>
         public NavNeighbours GetSectionNeighbours(string relativePath) =>
-            new(sectionUrl.TrimStart('/') + ".md", "Section Prev", string.Empty, string.Empty);
+            new(sectionUrl.TrimStart('/') + ".md", "Section Prev"u8.ToArray(), string.Empty, []);
 
         /// <inheritdoc/>
         public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;

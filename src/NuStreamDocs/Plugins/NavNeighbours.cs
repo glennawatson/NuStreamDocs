@@ -15,10 +15,10 @@ namespace NuStreamDocs.Plugins;
 /// <param name="NextTitle">Display title of the next page; empty when there is none.</param>
 public readonly record struct NavNeighbours(
     FilePath PreviousPath,
-    string PreviousTitle,
+    byte[] PreviousTitle,
     FilePath NextPath,
-    string NextTitle)
+    byte[] NextTitle)
 {
     /// <summary>Gets the empty value (no previous, no next).</summary>
-    public static NavNeighbours None { get; } = new(default, string.Empty, default, string.Empty);
+    public static NavNeighbours None { get; } = new(default, [], default, []);
 }
