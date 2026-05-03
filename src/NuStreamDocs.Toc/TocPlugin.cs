@@ -91,7 +91,7 @@ public sealed class TocPlugin : IDocPlugin
             return ValueTask.CompletedTask;
         }
 
-        TocLoggingHelper.LogTocStart(_logger, context.RelativePath);
+        TocLoggingHelper.LogTocStart(_logger, context.RelativePath.Value);
         var sw = Stopwatch.StartNew();
 
         var length = written.Length;
@@ -105,7 +105,7 @@ public sealed class TocPlugin : IDocPlugin
             if (headings.Length is 0)
             {
                 sw.Stop();
-                TocLoggingHelper.LogTocComplete(_logger, context.RelativePath, 0, 0, sw.ElapsedMilliseconds);
+                TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, 0, 0, sw.ElapsedMilliseconds);
                 return ValueTask.CompletedTask;
             }
 
@@ -120,7 +120,7 @@ public sealed class TocPlugin : IDocPlugin
             }
 
             sw.Stop();
-            TocLoggingHelper.LogTocComplete(_logger, context.RelativePath, slugged.Length, collisions, sw.ElapsedMilliseconds);
+            TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, slugged.Length, collisions, sw.ElapsedMilliseconds);
         }
         finally
         {

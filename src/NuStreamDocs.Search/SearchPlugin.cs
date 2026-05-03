@@ -42,7 +42,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     private readonly byte[][] _searchableFrontmatterKeyBytes = options.SearchableFrontmatterKeys;
 
     /// <summary>Output root captured during configure.</summary>
-    private string _outputRoot = string.Empty;
+    private DirectoryPath _outputRoot;
 
     /// <summary>Initializes a new instance of the <see cref="SearchPlugin"/> class with default options.</summary>
     public SearchPlugin()
@@ -102,8 +102,8 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     /// <inheritdoc/>
     public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
-        var root = _outputRoot is [] ? context.OutputRoot : _outputRoot;
-        if (root is [])
+        var root = _outputRoot.IsEmpty ? context.OutputRoot : _outputRoot;
+        if (root.IsEmpty)
         {
             return;
         }

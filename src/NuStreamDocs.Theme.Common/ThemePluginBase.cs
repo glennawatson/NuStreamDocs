@@ -104,7 +104,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     private readonly TOptions _options;
 
     /// <summary>Output root captured during <see cref="OnConfigureAsync"/>.</summary>
-    private string _outputRoot = string.Empty;
+    private DirectoryPath _outputRoot;
 
     /// <summary>UTF-8 head-extras HTML assembled during <see cref="OnConfigureAsync"/>; empty until it runs.</summary>
     private byte[] _headExtras = [];
@@ -209,8 +209,8 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <inheritdoc/>
     public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
-        var root = _outputRoot is [] ? context.OutputRoot : _outputRoot;
-        if (root is [])
+        var root = _outputRoot.IsEmpty ? context.OutputRoot : _outputRoot;
+        if (root.IsEmpty)
         {
             return;
         }

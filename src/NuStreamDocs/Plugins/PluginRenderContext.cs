@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
@@ -15,6 +16,6 @@ namespace NuStreamDocs.Plugins;
 /// inspecting <see cref="ArrayBufferWriter{T}.WrittenSpan"/> and
 /// reassembling into a fresh writer they swap in via the build pipeline.</param>
 public readonly record struct PluginRenderContext(
-    string RelativePath,
+    FilePath RelativePath,
     ReadOnlyMemory<byte> Source,
     ArrayBufferWriter<byte> Html);

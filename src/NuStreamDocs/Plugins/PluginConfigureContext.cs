@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
@@ -11,8 +13,8 @@ namespace NuStreamDocs.Plugins;
 /// <param name="OutputRoot">Absolute path to the site output directory.</param>
 /// <param name="Plugins">Every plugin registered with the builder, in registration order. Theme plugins use this to discover companion contracts such as <see cref="IHeadExtraProvider"/>.</param>
 public readonly record struct PluginConfigureContext(
-    string InputRoot,
-    string OutputRoot,
+    DirectoryPath InputRoot,
+    DirectoryPath OutputRoot,
     IDocPlugin[] Plugins)
 {
     /// <summary>Gets a value indicating whether the build emits pretty URLs (<c>foo/index.html</c>) instead of flat <c>foo.html</c>.</summary>

@@ -57,7 +57,7 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDo
     public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
-        var parentDir = Path.GetDirectoryName(context.OutputRoot.TrimEnd('/', '\\'));
+        var parentDir = Path.GetDirectoryName(context.OutputRoot.Value.TrimEnd('/', '\\'));
         if (string.IsNullOrEmpty(parentDir))
         {
             // Output already at filesystem root — nowhere to write a parent manifest.

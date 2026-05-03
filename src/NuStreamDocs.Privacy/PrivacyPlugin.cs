@@ -56,7 +56,7 @@ public sealed class PrivacyPlugin : IDocPlugin
     private readonly ILogger _logger;
 
     /// <summary>Output root captured during <see cref="OnConfigureAsync"/>.</summary>
-    private string _outputRoot = string.Empty;
+    private DirectoryPath _outputRoot;
 
     /// <summary>Initializes a new instance of the <see cref="PrivacyPlugin"/> class with default options.</summary>
     public PrivacyPlugin()
@@ -154,14 +154,14 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <inheritdoc/>
     public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
-        var root = _outputRoot is [] ? context.OutputRoot : _outputRoot;
-        if (!_options.Enabled || root is [])
+        var root = _outputRoot.IsEmpty ? context.OutputRoot : _outputRoot;
+        if (!_options.Enabled || root.IsEmpty)
         {
             return;
         }
 
         var registeredCount = _registry.Count;
-        PrivacyLoggingHelper.LogLocalizationStart(_logger, registeredCount, root);
+        PrivacyLoggingHelper.LogLocalizationStart(_logger, registeredCount, root.Value);
 
         var cacheRoot = ResolveCacheRoot(root);
         var settings = new ExternalAssetDownloader.DownloadSettings(
