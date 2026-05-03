@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Building;
@@ -42,10 +43,10 @@ public sealed class DocBuilder
     private readonly List<string> _excludes = new(4);
 
     /// <summary>Configured input docs directory; defaults to <c>./docs</c>.</summary>
-    private string _inputRoot = "./docs";
+    private DirectoryPath _inputRoot = new("./docs");
 
     /// <summary>Configured output site directory; defaults to <c>./site</c>.</summary>
-    private string _outputRoot = "./site";
+    private DirectoryPath _outputRoot = new("./site");
 
     /// <summary>Optional logger threaded through the build pipeline.</summary>
     private ILogger? _logger;
@@ -69,10 +70,10 @@ public sealed class DocBuilder
     public bool IncludeDraftsEnabled => _includeDrafts;
 
     /// <summary>Gets the configured input docs root (defaults to <c>./docs</c>).</summary>
-    public string InputRoot => _inputRoot;
+    public DirectoryPath InputRoot => _inputRoot;
 
     /// <summary>Gets the configured output site root (defaults to <c>./site</c>).</summary>
-    public string OutputRoot => _outputRoot;
+    public DirectoryPath OutputRoot => _outputRoot;
 
     /// <summary>Enables the directory-URL output shape (<c>foo/index.html</c> + <c>foo/</c> links).</summary>
     /// <returns>This builder for chaining.</returns>
@@ -119,21 +120,29 @@ public sealed class DocBuilder
     }
 
     /// <summary>Sets the input docs directory.</summary>
-    /// <param name="path">Path to the docs root.</param>
+    /// <param name="path">Path to the docs root; string literals are accepted via the implicit <see cref="DirectoryPath"/> conversion.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder WithInput(string path)
+    public DocBuilder WithInput(DirectoryPath path)
     {
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        if (path.IsEmpty)
+        {
+            throw new ArgumentException("Input path must be non-empty.", nameof(path));
+        }
+
         _inputRoot = path;
         return this;
     }
 
     /// <summary>Sets the output site directory.</summary>
-    /// <param name="path">Path to the output root.</param>
+    /// <param name="path">Path to the output root; string literals are accepted via the implicit <see cref="DirectoryPath"/> conversion.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder WithOutput(string path)
+    public DocBuilder WithOutput(DirectoryPath path)
     {
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        if (path.IsEmpty)
+        {
+            throw new ArgumentException("Output path must be non-empty.", nameof(path));
+        }
+
         _outputRoot = path;
         return this;
     }

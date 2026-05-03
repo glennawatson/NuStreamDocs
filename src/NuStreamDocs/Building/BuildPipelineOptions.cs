@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.Building;
 
-/// <summary>
-/// Options bundle for <see cref="BuildPipeline.RunAsync(string, string, Plugins.IDocPlugin[], BuildPipelineOptions, System.Threading.CancellationToken)"/>.
-/// </summary>
+/// <summary>Options bundle for the canonical <c>BuildPipeline.RunAsync</c> entry point.</summary>
 /// <param name="Filter">Include/exclude glob filter applied during page discovery.</param>
 /// <param name="Logger">Optional logger; <see langword="null"/> silences diagnostics.</param>
 /// <param name="UseDirectoryUrls">When true, pages emit as <c>foo/index.html</c> instead of <c>foo.html</c>.</param>

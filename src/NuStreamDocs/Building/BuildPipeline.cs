@@ -57,7 +57,7 @@ public static class BuildPipeline
     /// <param name="outputRoot">Absolute path to the site output root.</param>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>The total number of pages processed (rendered + skipped).</returns>
-    public static Task<int> RunAsync(string inputRoot, string outputRoot, IDocPlugin[] plugins) =>
+    public static Task<int> RunAsync(DirectoryPath inputRoot, DirectoryPath outputRoot, IDocPlugin[] plugins) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, CancellationToken.None);
 
     /// <summary>Runs the build with cancellation support and default options.</summary>
@@ -67,8 +67,8 @@ public static class BuildPipeline
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The total number of pages processed.</returns>
     public static Task<int> RunAsync(
-        string inputRoot,
-        string outputRoot,
+        DirectoryPath inputRoot,
+        DirectoryPath outputRoot,
         IDocPlugin[] plugins,
         in CancellationToken cancellationToken) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, cancellationToken);
@@ -81,21 +81,29 @@ public static class BuildPipeline
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The total number of pages processed.</returns>
     public static async Task<int> RunAsync(
-        string inputRoot,
-        string outputRoot,
+        DirectoryPath inputRoot,
+        DirectoryPath outputRoot,
         IDocPlugin[] plugins,
         BuildPipelineOptions options,
         CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrEmpty(inputRoot);
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        if (inputRoot.IsEmpty)
+        {
+            throw new ArgumentException("Input root must be non-empty.", nameof(inputRoot));
+        }
+
+        if (outputRoot.IsEmpty)
+        {
+            throw new ArgumentException("Output root must be non-empty.", nameof(outputRoot));
+        }
+
         ArgumentNullException.ThrowIfNull(plugins);
         var filter = options.Filter ?? PathFilter.Empty;
         var useDirectoryUrls = options.UseDirectoryUrls;
         var includeDrafts = options.IncludeDrafts;
 
         var log = options.Logger ?? NullLogger.Instance;
-        BuildPipelineLoggingHelper.LogBuildStart(log, inputRoot, outputRoot, plugins.Length);
+        BuildPipelineLoggingHelper.LogBuildStart(log, inputRoot.Value, outputRoot.Value, plugins.Length);
         var stopwatch = Stopwatch.StartNew();
         var pluginTiming = new PluginTimingTable();
 
@@ -171,7 +179,7 @@ public static class BuildPipeline
     /// </remarks>
     private static async ValueTask<(ManifestEntry Entry, bool CacheHit)> ProcessOnePageAsync(
         PageWorkItem item,
-        string outputRoot,
+        DirectoryPath outputRoot,
         IDocPlugin[] plugins,
         BuildManifest previous,
         bool useDirectoryUrls,
@@ -359,7 +367,7 @@ public static class BuildPipeline
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="useDirectoryUrls">When true, emits non-index pages as <c>foo/index.html</c>; when false, emits as <c>foo.html</c>.</param>
     /// <returns>The absolute output path with the <c>.html</c> extension.</returns>
-    private static string OutputPathFor(string outputRoot, string relativePath, bool useDirectoryUrls) =>
+    private static FilePath OutputPathFor(DirectoryPath outputRoot, FilePath relativePath, bool useDirectoryUrls) =>
         useDirectoryUrls
             ? OutputPathForDirectoryUrls(outputRoot, relativePath)
             : OutputPathForFlatUrls(outputRoot, relativePath);
@@ -368,14 +376,14 @@ public static class BuildPipeline
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    private static string OutputPathForFlatUrls(string outputRoot, string relativePath) =>
+    private static FilePath OutputPathForFlatUrls(DirectoryPath outputRoot, FilePath relativePath) =>
         OutputPathBuilder.ForFlatUrls(outputRoot, relativePath);
 
     /// <summary>Directory-URL form: <c>guide/foo.md</c> → <c>guide/foo/index.html</c>; <c>guide/index.md</c> stays as <c>guide/index.html</c>.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    private static string OutputPathForDirectoryUrls(string outputRoot, string relativePath) =>
+    private static FilePath OutputPathForDirectoryUrls(DirectoryPath outputRoot, FilePath relativePath) =>
         OutputPathBuilder.ForDirectoryUrls(outputRoot, relativePath);
 
     /// <summary>Fires <see cref="IDocPlugin.OnConfigureAsync"/> on every plugin.</summary>
@@ -389,8 +397,8 @@ public static class BuildPipeline
     /// <returns>A task that completes when every plugin's configure hook has settled.</returns>
     private static async Task FireOnConfigureAsync(
         IDocPlugin[] plugins,
-        string inputRoot,
-        string outputRoot,
+        DirectoryPath inputRoot,
+        DirectoryPath outputRoot,
         BuildPipelineOptions options,
         PluginTimingTable pluginTiming,
         CancellationToken cancellationToken,
@@ -421,7 +429,7 @@ public static class BuildPipeline
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="log">Logger for phase + per-plugin progress.</param>
     /// <returns>A task that completes when every plugin's finalize hook has settled.</returns>
-    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, string outputRoot, PluginTimingTable pluginTiming, CancellationToken cancellationToken, ILogger log)
+    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, DirectoryPath outputRoot, PluginTimingTable pluginTiming, CancellationToken cancellationToken, ILogger log)
     {
         var context = new PluginFinalizeContext(outputRoot);
         BuildPipelineLoggingHelper.LogFinalizeStart(log, plugins.Length);
