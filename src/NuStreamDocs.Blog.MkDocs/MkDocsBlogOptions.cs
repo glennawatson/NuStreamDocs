@@ -2,18 +2,20 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Blog.MkDocs;
 
 /// <summary>Configuration for <see cref="MkDocsBlogPlugin"/>.</summary>
 /// <param name="BlogSubdirectory">Subdirectory under the docs root that hosts the blog (e.g. <c>blog</c>). Posts live in <c>{BlogSubdirectory}/posts</c>.</param>
 /// <param name="IndexTitle">Title rendered at the top of the generated index page.</param>
 /// <param name="EmitCategoryArchives">When true, a <c>{BlogSubdirectory}/category/{slug}.md</c> archive page is generated for each tag/category in use.</param>
-public sealed record MkDocsBlogOptions(string BlogSubdirectory, string IndexTitle, bool EmitCategoryArchives)
+public sealed record MkDocsBlogOptions(PathSegment BlogSubdirectory, string IndexTitle, bool EmitCategoryArchives)
 {
     /// <summary>Initializes a new instance of the <see cref="MkDocsBlogOptions"/> class with archives enabled.</summary>
     /// <param name="blogSubdirectory">Blog subdirectory.</param>
     /// <param name="indexTitle">Index title.</param>
-    public MkDocsBlogOptions(string blogSubdirectory, string indexTitle)
+    public MkDocsBlogOptions(PathSegment blogSubdirectory, string indexTitle)
         : this(blogSubdirectory, indexTitle, EmitCategoryArchives: true)
     {
     }
@@ -22,7 +24,11 @@ public sealed record MkDocsBlogOptions(string BlogSubdirectory, string IndexTitl
     /// <exception cref="ArgumentException">When a required field is null, empty, or whitespace.</exception>
     public void Validate()
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(BlogSubdirectory);
+        if (BlogSubdirectory.IsEmpty)
+        {
+            throw new ArgumentException("BlogSubdirectory must be non-empty.", nameof(BlogSubdirectory));
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(IndexTitle);
     }
 }

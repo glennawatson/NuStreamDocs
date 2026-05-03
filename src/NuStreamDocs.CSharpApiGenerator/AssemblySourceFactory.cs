@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text.Json;
+using NuStreamDocs.Common;
 using SourceDocParser;
 using SourceDocParser.NuGet.Infrastructure;
 
@@ -56,7 +57,7 @@ internal static class AssemblySourceFactory
     {
         NuGetManifestInput m => new NuGetAssemblySource(m.RootDirectory, m.ApiCachePath, logger),
         NuGetPackagesInput p => CreateFromPackages(p, logger),
-        LocalAssembliesInput l => new LocalAssemblySource(l.Tfm, l.AssemblyPaths, l.FallbackSearchPaths),
+        LocalAssembliesInput l => new LocalAssemblySource(l.Tfm, ToStringArray(l.AssemblyPaths), ToStringArray(l.FallbackSearchPaths)),
         CustomInput c => c.Source,
         _ => throw new ArgumentException($"Unknown input shape: {input.GetType().FullName}", nameof(input)),
     };
@@ -133,5 +134,43 @@ internal static class AssemblySourceFactory
         }
 
         return [.. sink.WrittenSpan];
+    }
+
+    /// <summary>Materializes a <see cref="FilePath"/> array as a plain <c>string[]</c> for SourceDocParser interop.</summary>
+    /// <param name="paths">Source paths.</param>
+    /// <returns>String view; empty when input is empty.</returns>
+    private static string[] ToStringArray(FilePath[] paths)
+    {
+        if (paths.Length is 0)
+        {
+            return [];
+        }
+
+        var result = new string[paths.Length];
+        for (var i = 0; i < paths.Length; i++)
+        {
+            result[i] = paths[i].Value;
+        }
+
+        return result;
+    }
+
+    /// <summary>Materializes a <see cref="DirectoryPath"/> array as a plain <c>string[]</c> for SourceDocParser interop.</summary>
+    /// <param name="paths">Source paths.</param>
+    /// <returns>String view; empty when input is empty.</returns>
+    private static string[] ToStringArray(DirectoryPath[] paths)
+    {
+        if (paths.Length is 0)
+        {
+            return [];
+        }
+
+        var result = new string[paths.Length];
+        for (var i = 0; i < paths.Length; i++)
+        {
+            result[i] = paths[i].Value;
+        }
+
+        return result;
     }
 }

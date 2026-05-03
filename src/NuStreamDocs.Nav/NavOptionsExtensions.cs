@@ -8,10 +8,10 @@ namespace NuStreamDocs.Nav;
 
 /// <summary>Construction helpers for <see cref="NavOptions"/>'s glob-pattern lists.</summary>
 /// <remarks>
-/// Intentionally string-only — <see cref="NavOptions.Includes"/> / <see cref="NavOptions.Excludes"/>
-/// are glob patterns matched against file paths via
-/// <c>Microsoft.Extensions.FileSystemGlobbing.Matcher</c>, which is string-shaped end-to-end.
-/// Per the project's path-stays-string exemption, no UTF-8-byte overloads are provided.
+/// <see cref="NavOptions.Includes"/> / <see cref="NavOptions.Excludes"/> use
+/// <see cref="GlobPattern"/> so the "this is a glob, not a path" intent reads from the type.
+/// String literals at call sites convert via the implicit operator, so existing fluent calls
+/// (e.g. <c>opts.WithExcludes("articles/**")</c>) keep compiling unchanged.
 /// </remarks>
 public static class NavOptionsExtensions
 {
@@ -19,7 +19,7 @@ public static class NavOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Glob include patterns.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions WithIncludes(this NavOptions options, params string[] patterns)
+    public static NavOptions WithIncludes(this NavOptions options, params GlobPattern[] patterns)
     {
         ArgumentNullException.ThrowIfNull(patterns);
         return options with { Includes = patterns };
@@ -29,7 +29,7 @@ public static class NavOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Additional glob patterns.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions AddIncludes(this NavOptions options, params string[] patterns)
+    public static NavOptions AddIncludes(this NavOptions options, params GlobPattern[] patterns)
     {
         ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0
@@ -47,7 +47,7 @@ public static class NavOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Glob exclude patterns.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions WithExcludes(this NavOptions options, params string[] patterns)
+    public static NavOptions WithExcludes(this NavOptions options, params GlobPattern[] patterns)
     {
         ArgumentNullException.ThrowIfNull(patterns);
         return options with { Excludes = patterns };
@@ -57,7 +57,7 @@ public static class NavOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Additional glob patterns.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions AddExcludes(this NavOptions options, params string[] patterns)
+    public static NavOptions AddExcludes(this NavOptions options, params GlobPattern[] patterns)
     {
         ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0

@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Search;
 
 /// <summary>Configuration for <see cref="SearchPlugin"/>.</summary>
@@ -21,7 +23,7 @@ namespace NuStreamDocs.Search;
 /// <param name="Compression">Sibling-compression knob honored by the index writer.</param>
 public readonly record struct SearchOptions(
     SearchFormat Format,
-    string OutputSubdirectory,
+    PathSegment OutputSubdirectory,
     string Language,
     int MinTokenLength,
     byte[][] SearchableFrontmatterKeys,

@@ -66,10 +66,17 @@ public class NavTreeBuilderParameterizedTests
     [Arguments(new string[0], 2)]
     public async Task IncludePatterns(string[] patterns, int expectedChildren)
     {
+        ArgumentNullException.ThrowIfNull(patterns);
         using var temp = new ScratchTree();
         await temp.WriteAsync("a.md", "# A\n");
         await temp.WriteAsync("b.md", "# B\n");
-        var options = NavOptions.Default with { Includes = patterns };
+        var includeGlobs = new Common.GlobPattern[patterns.Length];
+        for (var i = 0; i < patterns.Length; i++)
+        {
+            includeGlobs[i] = patterns[i];
+        }
+
+        var options = NavOptions.Default with { Includes = includeGlobs };
         var root = NavTreeBuilder.Build(temp.Root, options);
         await Assert.That(root.Children.Length).IsEqualTo(expectedChildren);
     }

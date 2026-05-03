@@ -34,11 +34,11 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <param name="Mode">How metadata is handed to the build pipeline; defaults to <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</param>
 public sealed record CSharpApiGeneratorOptions(
     CSharpApiGeneratorInput[] Inputs,
-    string OutputMarkdownSubdirectory,
+    PathSegment OutputMarkdownSubdirectory,
     CSharpApiGeneratorMode Mode)
 {
     /// <summary>Gets the default subdirectory name for emit-mode reference pages.</summary>
-    public static string DefaultOutputSubdirectory => "api";
+    public static PathSegment DefaultOutputSubdirectory => new("api");
 
     /// <summary>Builds an options record for one or more input shapes using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</summary>
     /// <param name="inputs">One or more input shapes.</param>
@@ -58,7 +58,7 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <param name="outputMarkdownSubdirectory">Output subdirectory under the docs root.</param>
     /// <returns>An options record using <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromManifest(DirectoryPath rootDirectory, DirectoryPath apiCachePath, string outputMarkdownSubdirectory) =>
+    public static CSharpApiGeneratorOptions FromManifest(DirectoryPath rootDirectory, DirectoryPath apiCachePath, PathSegment outputMarkdownSubdirectory) =>
         new([new NuGetManifestInput(rootDirectory, apiCachePath)], outputMarkdownSubdirectory, CSharpApiGeneratorMode.EmitMarkdown);
 
     /// <summary>Builds an options record for the inline-NuGet-packages shape.</summary>
@@ -72,7 +72,7 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="tfm">TFM the assemblies were built for.</param>
     /// <param name="assemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromAssemblies(string tfm, string[] assemblyPaths) =>
+    public static CSharpApiGeneratorOptions FromAssemblies(string tfm, FilePath[] assemblyPaths) =>
         From(new LocalAssembliesInput(tfm, assemblyPaths));
 
     /// <summary>Builds an options record around a caller-supplied <see cref="IAssemblySource"/>.</summary>
@@ -87,7 +87,11 @@ public sealed record CSharpApiGeneratorOptions(
     public void Validate()
     {
         ArgumentNullException.ThrowIfNull(Inputs);
-        ArgumentException.ThrowIfNullOrWhiteSpace(OutputMarkdownSubdirectory);
+        if (OutputMarkdownSubdirectory.IsEmpty)
+        {
+            throw new ArgumentException("OutputMarkdownSubdirectory must be non-empty.", nameof(OutputMarkdownSubdirectory));
+        }
+
         if (Inputs.Length is 0)
         {
             throw new ArgumentException("At least one input must be supplied.", nameof(Inputs));

@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Nav;
 
 /// <summary>
@@ -11,10 +13,10 @@ namespace NuStreamDocs.Nav;
 /// Mirrors the most-used knobs of mkdocs nav. Defaults match
 /// what large projects need out of the box; consumers tweak via
 /// <c>builder.UseNav(opts =&gt; opts with { ... })</c>.
-/// <see cref="Includes"/> / <see cref="Excludes"/> stay <see cref="string"/>-shaped — they are
-/// glob patterns matched against file paths (an exemption to the byte-first pipeline rule, since
-/// the underlying <c>Microsoft.Extensions.FileSystemGlobbing.Matcher</c> is string-only and paths
-/// stay <see cref="string"/> end-to-end).
+/// <see cref="Includes"/> / <see cref="Excludes"/> are <see cref="GlobPattern"/>-typed so the
+/// "this is a glob, not a path" intent reads from the type. The wrapper is a single-string struct
+/// with implicit conversion to <see cref="string"/>, so the underlying
+/// <c>Microsoft.Extensions.FileSystemGlobbing.Matcher</c> stays an unmodified consumer.
 /// </remarks>
 /// <param name="Includes">Glob include patterns relative to the input root.</param>
 /// <param name="Excludes">Glob exclude patterns; evaluated after <see cref="Includes"/>.</param>
@@ -38,8 +40,8 @@ namespace NuStreamDocs.Nav;
 /// via extension methods on the options record so the core <see cref="NavPlugin"/> stays unaware
 /// of any specific config dialect.</param>
 public readonly record struct NavOptions(
-    string[] Includes,
-    string[] Excludes,
+    GlobPattern[] Includes,
+    GlobPattern[] Excludes,
     bool HideEmptySections,
     NavSortBy SortBy,
     bool Prune,

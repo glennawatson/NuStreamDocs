@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Feed;
 
 /// <summary>Configuration for <see cref="FeedPlugin"/>.</summary>
@@ -17,8 +19,8 @@ public sealed record FeedOptions(
     string SiteUrl,
     string Title,
     string Description,
-    string PostsSubdirectory,
-    string OutputSubdirectory,
+    PathSegment PostsSubdirectory,
+    PathSegment OutputSubdirectory,
     FeedFormats Formats,
     int MaxItems)
 {
@@ -30,7 +32,7 @@ public sealed record FeedOptions(
     /// <param name="title">Feed title.</param>
     /// <param name="description">Feed description.</param>
     /// <param name="postsSubdirectory">Posts subdirectory.</param>
-    public FeedOptions(string siteUrl, string title, string description, string postsSubdirectory)
+    public FeedOptions(string siteUrl, string title, string description, PathSegment postsSubdirectory)
         : this(siteUrl, title, description, postsSubdirectory, postsSubdirectory, FeedFormats.Both, DefaultMaxItemsValue)
     {
     }
@@ -45,7 +47,7 @@ public sealed record FeedOptions(
         ArgumentException.ThrowIfNullOrWhiteSpace(SiteUrl);
         ArgumentException.ThrowIfNullOrWhiteSpace(Title);
         ArgumentException.ThrowIfNullOrWhiteSpace(Description);
-        ArgumentException.ThrowIfNullOrWhiteSpace(PostsSubdirectory);
-        ArgumentException.ThrowIfNullOrWhiteSpace(OutputSubdirectory);
+        ArgumentException.ThrowIfNullOrEmpty(PostsSubdirectory.Value);
+        ArgumentException.ThrowIfNullOrEmpty(OutputSubdirectory.Value);
     }
 }

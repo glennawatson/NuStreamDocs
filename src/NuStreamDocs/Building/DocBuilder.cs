@@ -155,22 +155,30 @@ public sealed class DocBuilder
     /// of the includes are processed. Paths still need to survive the
     /// configured excludes.
     /// </remarks>
-    public DocBuilder Include(string pattern)
+    public DocBuilder Include(GlobPattern pattern)
     {
-        ArgumentException.ThrowIfNullOrEmpty(pattern);
-        _includes.Add(pattern);
+        if (pattern.IsEmpty)
+        {
+            throw new ArgumentException("Glob pattern must be non-empty.", nameof(pattern));
+        }
+
+        _includes.Add(pattern.Value);
         return this;
     }
 
     /// <summary>Adds one or more include globs (forward-slashed, relative to the docs root).</summary>
     /// <param name="patterns">Glob patterns.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder Include(params ReadOnlySpan<string> patterns)
+    public DocBuilder Include(params ReadOnlySpan<GlobPattern> patterns)
     {
         for (var i = 0; i < patterns.Length; i++)
         {
-            ArgumentException.ThrowIfNullOrEmpty(patterns[i]);
-            _includes.Add(patterns[i]);
+            if (patterns[i].IsEmpty)
+            {
+                throw new ArgumentException("Glob patterns must be non-empty.", nameof(patterns));
+            }
+
+            _includes.Add(patterns[i].Value);
         }
 
         return this;
@@ -179,22 +187,30 @@ public sealed class DocBuilder
     /// <summary>Adds an exclude glob (forward-slashed, relative to the docs root).</summary>
     /// <param name="pattern">Glob pattern, e.g. <c>drafts/**</c>.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder Exclude(string pattern)
+    public DocBuilder Exclude(GlobPattern pattern)
     {
-        ArgumentException.ThrowIfNullOrEmpty(pattern);
-        _excludes.Add(pattern);
+        if (pattern.IsEmpty)
+        {
+            throw new ArgumentException("Glob pattern must be non-empty.", nameof(pattern));
+        }
+
+        _excludes.Add(pattern.Value);
         return this;
     }
 
     /// <summary>Adds one or more exclude globs (forward-slashed, relative to the docs root).</summary>
     /// <param name="patterns">Glob patterns.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder Exclude(params ReadOnlySpan<string> patterns)
+    public DocBuilder Exclude(params ReadOnlySpan<GlobPattern> patterns)
     {
         for (var i = 0; i < patterns.Length; i++)
         {
-            ArgumentException.ThrowIfNullOrEmpty(patterns[i]);
-            _excludes.Add(patterns[i]);
+            if (patterns[i].IsEmpty)
+            {
+                throw new ArgumentException("Glob patterns must be non-empty.", nameof(patterns));
+            }
+
+            _excludes.Add(patterns[i].Value);
         }
 
         return this;
