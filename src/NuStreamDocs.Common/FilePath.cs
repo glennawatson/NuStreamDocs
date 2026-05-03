@@ -52,6 +52,20 @@ public readonly record struct FilePath(string Value)
     /// <param name="path">Source file path.</param>
     public static implicit operator string(FilePath path) => path.Value ?? string.Empty;
 
+    /// <summary>Implicitly wraps a <see cref="string"/> path so callers can pass string literals to APIs that take a <see cref="FilePath"/>.</summary>
+    /// <param name="value">Source path string; null becomes an empty <see cref="FilePath"/>.</param>
+    public static implicit operator FilePath(string? value) => new(value ?? string.Empty);
+
+    /// <summary>Friendly named alias for the string→<see cref="FilePath"/> implicit operator (CA2225).</summary>
+    /// <param name="value">Source path string.</param>
+    /// <returns>The wrapped path.</returns>
+    public static FilePath FromString(string? value) => value;
+
+    /// <summary>Friendly named alias for the <see cref="FilePath"/>→<see cref="string"/> implicit operator (CA2225).</summary>
+    /// <param name="path">Source file.</param>
+    /// <returns>The underlying path string.</returns>
+    public static string ToStringValue(FilePath path) => path;
+
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;
 

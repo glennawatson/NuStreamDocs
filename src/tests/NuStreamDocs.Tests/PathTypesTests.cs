@@ -80,4 +80,26 @@ public class PathTypesTests
         await Assert.That(new DirectoryPath("/a")).IsEqualTo(new DirectoryPath("/a"));
         await Assert.That(new FilePath("/a/b.md")).IsEqualTo(new FilePath("/a/b.md"));
     }
+
+    /// <summary>Implicit conversion from <see cref="string"/> wraps the value so callers can pass string literals.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ImplicitFromStringWraps()
+    {
+        DirectoryPath dir = "/docs";
+        FilePath file = "/docs/intro.md";
+        await Assert.That(dir.Value).IsEqualTo("/docs");
+        await Assert.That(file.Value).IsEqualTo("/docs/intro.md");
+    }
+
+    /// <summary>A null string converts to an empty path.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ImplicitFromNullStringIsEmpty()
+    {
+        DirectoryPath dir = (string?)null;
+        FilePath file = (string?)null;
+        await Assert.That(dir.IsEmpty).IsTrue();
+        await Assert.That(file.IsEmpty).IsTrue();
+    }
 }
