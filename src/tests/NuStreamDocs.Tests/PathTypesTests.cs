@@ -1,0 +1,83 @@
+// Copyright (c) 2026 Glenn Watson and Contributors. All rights reserved.
+// Glenn Watson and Contributors licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using NuStreamDocs.Common;
+
+namespace NuStreamDocs.Tests;
+
+/// <summary>Behavior tests for <c>DirectoryPath</c> and <c>FilePath</c> primitives.</summary>
+public class PathTypesTests
+{
+    /// <summary>Default-constructed paths report empty.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DefaultIsEmpty()
+    {
+        await Assert.That(default(DirectoryPath).IsEmpty).IsTrue();
+        await Assert.That(default(FilePath).IsEmpty).IsTrue();
+    }
+
+    /// <summary>Combine and / operator both produce a child directory.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task CombineProducesChildDirectory()
+    {
+        var root = new DirectoryPath("/docs");
+        var child = root / "guide";
+        await Assert.That(child.Value).IsEqualTo(Path.Combine("/docs", "guide"));
+    }
+
+    /// <summary>The <see cref="DirectoryPath.File(string)"/> helper composes a file path.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task FileHelperComposesFilePath()
+    {
+        var root = new DirectoryPath("/docs");
+        var page = root.File("intro.md");
+        await Assert.That(page.Value).IsEqualTo(Path.Combine("/docs", "intro.md"));
+        await Assert.That(page.FileName).IsEqualTo("intro.md");
+        await Assert.That(page.FileNameWithoutExtension).IsEqualTo("intro");
+        await Assert.That(page.Extension).IsEqualTo(".md");
+    }
+
+    /// <summary><see cref="FilePath.Directory"/> returns the parent.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task FileDirectoryReturnsParent()
+    {
+        var page = new FilePath(Path.Combine("/docs", "guide", "intro.md"));
+        await Assert.That(page.Directory.Value).IsEqualTo(Path.Combine("/docs", "guide"));
+    }
+
+    /// <summary><see cref="FilePath.WithExtension(string)"/> swaps the file extension in place.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WithExtensionRenamesFile()
+    {
+        var page = new FilePath("/docs/intro.md");
+        var html = page.WithExtension(".html");
+        await Assert.That(html.Value).IsEqualTo(Path.ChangeExtension("/docs/intro.md", ".html"));
+    }
+
+    /// <summary>Implicit conversion to string lets path types feed BCL APIs unmodified.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ImplicitStringConversion()
+    {
+        var dir = new DirectoryPath("/docs");
+        await Assert.That((string)dir).IsEqualTo("/docs");
+
+        var file = new FilePath("/docs/intro.md");
+        await Assert.That((string)file).IsEqualTo("/docs/intro.md");
+    }
+
+    /// <summary>Equality is value-based for both types.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ValueEqualityHolds()
+    {
+        await Assert.That(new DirectoryPath("/a")).IsEqualTo(new DirectoryPath("/a"));
+        await Assert.That(new FilePath("/a/b.md")).IsEqualTo(new FilePath("/a/b.md"));
+    }
+}
