@@ -28,4 +28,8 @@ public readonly record struct PluginConfigureContext(
     /// <summary>Gets the UTF-8-encoded canonical site URL; an empty array when none configured.</summary>
     /// <remarks>Used by sitemap, theme, and link-rewriter plugins to compute absolute URLs.</remarks>
     public byte[] SiteUrl { get; init; } = [];
+
+    /// <summary>Gets the UTF-8-encoded site-wide author name; an empty array when none configured.</summary>
+    /// <remarks>Used by theme plugins as the fallback for the per-page <c>&lt;meta name="author"&gt;</c> when no front-matter <c>author:</c> is set.</remarks>
+    public byte[] SiteAuthor { get; init; } = [];
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Reflection;
 using System.Text.Encodings.Web;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -67,6 +68,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>UTF-8 template-data key for <c>repo_url</c>.</summary>
     private static readonly byte[] RepoUrlKey = "repo_url"u8.ToArray();
 
+    /// <summary>UTF-8 template-data key for <c>repo_label</c> — the short host-less repo name shown next to the source icon.</summary>
+    private static readonly byte[] RepoLabelKey = "repo_label"u8.ToArray();
+
     /// <summary>UTF-8 template-data key for <c>edit_url</c>.</summary>
     private static readonly byte[] EditUrlKey = "edit_url"u8.ToArray();
 
@@ -94,11 +98,23 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>UTF-8 template-data key for <c>description</c>.</summary>
     private static readonly byte[] DescriptionKey = "description"u8.ToArray();
 
+    /// <summary>UTF-8 template-data key for <c>author</c>.</summary>
+    private static readonly byte[] AuthorKey = "author"u8.ToArray();
+
     /// <summary>UTF-8 template-data key for <c>hide_navigation</c>.</summary>
     private static readonly byte[] HideNavigationKey = "hide_navigation"u8.ToArray();
 
     /// <summary>UTF-8 template-data key for <c>hide_toc</c>.</summary>
     private static readonly byte[] HideTocKey = "hide_toc"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>favicon</c>.</summary>
+    private static readonly byte[] FaviconKey = "favicon"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>generator</c>.</summary>
+    private static readonly byte[] GeneratorKey = "generator"u8.ToArray();
+
+    /// <summary>UTF-8 generator value emitted as <c>nustreamdocs-{version}</c>; encoded once at type init.</summary>
+    private static readonly byte[] GeneratorBytes = BuildGeneratorBytes();
 
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly TOptions _options;
@@ -118,8 +134,14 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Per-build edit-link prefix; bytes ending in <c>/</c> ready to concatenate with a relative page path. Empty when edit links are disabled.</summary>
     private byte[] _editUrlPrefix = [];
 
+    /// <summary>Short owner/repo label derived from the configured repo URL; empty when no repo URL is configured.</summary>
+    private byte[] _repoLabel = [];
+
     /// <summary>Per-build canonical-URL prefix; empty when no site URL is configured.</summary>
     private byte[] _canonicalUrlPrefix = [];
+
+    /// <summary>Site-wide author captured from the configure context; used as the per-page <c>&lt;meta author&gt;</c> fallback when the page has no front-matter <c>author:</c>.</summary>
+    private byte[] _siteAuthor = [];
 
     /// <summary>Whether the build emits pretty <c>foo/index.html</c> URLs.</summary>
     private bool _useDirectoryUrls;
@@ -149,6 +171,8 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         _neighbours = FindNavNeighboursProvider(context.Plugins);
         _editUrlPrefix = BuildEditUrlPrefix(_options.RepoUrl, _options.EditUri);
         _canonicalUrlPrefix = BuildCanonicalUrlPrefix(_options.SiteUrl);
+        _repoLabel = BuildRepoLabel(_options.RepoUrl);
+        _siteAuthor = context.SiteAuthor;
         _useDirectoryUrls = context.UseDirectoryUrls;
 
         return ValueTask.CompletedTask;
@@ -170,7 +194,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             var pageTitle = ResolvePageTitle(context);
             var neighbours = ResolveNeighbours(context.RelativePath);
             var data = new TemplateData(
-                new(16, ByteArrayComparer.Instance)
+                new(22, ByteArrayComparer.Instance)
                 {
                     [LanguageKey] = _options.Language,
                     [SiteNameKey] = _options.SiteName,
@@ -179,9 +203,10 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [SiteRootKey] = SiteRootBytes,
                     [PageTitleKey] = Utf8Encoder.Encode(pageTitle),
                     [BodyKey] = new(bodyBuffer, 0, bodyLength),
-                    [AssetRootKey] = _options.ResolveAssetRoot(),
+                    [AssetRootKey] = ResolvePageRelativeAssetRoot(_options.ResolveAssetRoot(), context.RelativePath),
                     [CopyrightKey] = _options.Copyright,
                     [RepoUrlKey] = _options.RepoUrl,
+                    [RepoLabelKey] = _repoLabel,
                     [EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
                     [ScrollToTopKey] = _options.EnableScrollToTop ? TruthyBytes : null,
                     [TocFollowKey] = _options.EnableTocFollow ? TruthyBytes : null,
@@ -189,10 +214,13 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [PrevTitleKey] = neighbours.PreviousTitle,
                     [NextUrlKey] = Utf8Encoder.Encode(NeighbourUrl(neighbours.NextPath)),
                     [NextTitleKey] = neighbours.NextTitle,
-                    [HeadExtrasKey] = _headExtras,
+                    [HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath),
                     [DescriptionKey] = ResolveDescription(context),
                     [HideNavigationKey] = NuStreamDocs.Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8) ? TruthyBytes : null,
                     [HideTocKey] = NuStreamDocs.Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
+                    [GeneratorKey] = GeneratorBytes,
+                    [FaviconKey] = _options.Favicon,
+                    [AuthorKey] = ResolveAuthor(context, _siteAuthor),
                 },
                 sections: null);
 
@@ -292,16 +320,38 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         return StripYamlQuotes(raw).ToArray();
     }
 
-    /// <summary>Resolves the page title — front-matter <c>title:</c> when present, otherwise the file stem.</summary>
+    /// <summary>Resolves the page author — front-matter <c>author:</c>, falling back to the site-wide value from the configure context.</summary>
+    /// <param name="context">Per-page render context.</param>
+    /// <param name="siteAuthor">Site-wide author bytes captured at configure time; empty when not configured.</param>
+    /// <returns>UTF-8 author bytes; empty when neither front-matter nor site_author is set.</returns>
+    private static byte[] ResolveAuthor(in PluginRenderContext context, byte[] siteAuthor)
+    {
+        var raw = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "author"u8);
+        if (!raw.IsEmpty)
+        {
+            return StripYamlQuotes(raw).ToArray();
+        }
+
+        return siteAuthor;
+    }
+
+    /// <summary>Resolves the page title — front-matter <c>title:</c>, then the first markdown H1, then the file stem.</summary>
     /// <param name="context">Per-page render context.</param>
     /// <returns>HTML-encoded title text.</returns>
     private static string ResolvePageTitle(in PluginRenderContext context)
     {
-        var fromFrontMatter = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "title"u8);
+        var source = context.Source.Span;
+        var fromFrontMatter = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(source, "title"u8);
         if (!fromFrontMatter.IsEmpty)
         {
             var unquoted = StripYamlQuotes(fromFrontMatter);
             return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(unquoted));
+        }
+
+        var firstHeading = NuStreamDocs.Markdown.MarkdownH1Scanner.FindFirst(source);
+        if (!firstHeading.IsEmpty)
+        {
+            return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading));
         }
 
         return HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(context.RelativePath));
@@ -359,11 +409,42 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         return dst;
     }
 
-    /// <summary>Returns true when <paramref name="value"/> begins with <c>http://</c> or <c>https://</c>.</summary>
+    /// <summary>Builds the <c>nustreamdocs-{version}</c> generator value; the version is read from the assembly informational version with any <c>+sha</c> build-metadata suffix stripped.</summary>
+    /// <returns>UTF-8 bytes of the generator string.</returns>
+    private static byte[] BuildGeneratorBytes()
+    {
+        const string Prefix = "nustreamdocs-";
+        var informational = typeof(ThemePluginBase<TTheme, TOptions>).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? string.Empty;
+        var span = informational.AsSpan();
+        var plus = span.IndexOf('+');
+        if (plus >= 0)
+        {
+            span = span[..plus];
+        }
+
+        var totalChars = Prefix.Length + span.Length;
+        var dst = new byte[totalChars];
+        for (var i = 0; i < Prefix.Length; i++)
+        {
+            dst[i] = (byte)Prefix[i];
+        }
+
+        for (var i = 0; i < span.Length; i++)
+        {
+            // Semantic-version characters are ASCII; safe to narrow.
+            dst[Prefix.Length + i] = (byte)span[i];
+        }
+
+        return dst;
+    }
+
+    /// <summary>Returns true when <paramref name="value"/> begins with <c>http://</c> or <c>https://</c> (case-insensitive).</summary>
     /// <param name="value">UTF-8 candidate URL.</param>
     /// <returns>True for absolute http(s) URLs.</returns>
     private static bool IsAbsoluteUrl(ReadOnlySpan<byte> value) =>
-        value.StartsWith("http://"u8) || value.StartsWith("https://"u8);
+        AsciiByteHelpers.StartsWithIgnoreAsciiCase(value, 0, "http://"u8)
+        || AsciiByteHelpers.StartsWithIgnoreAsciiCase(value, 0, "https://"u8);
 
     /// <summary>Translates forward slashes in <paramref name="relativePath"/> to the active directory separator when needed.</summary>
     /// <param name="relativePath">Relative output path using forward slashes.</param>
@@ -384,6 +465,131 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         });
     }
 
+    /// <summary>Counts directory-segment depth of <paramref name="relativePath"/> for page-relative URL composition.</summary>
+    /// <param name="relativePath">Source-relative page path (e.g. <c>guide/intro.md</c>).</param>
+    /// <returns>Number of <c>/</c> separators between the input root and the page's directory.</returns>
+    private static int PageDepth(string relativePath)
+    {
+        var path = relativePath.AsSpan();
+        if (path is ['/', ..])
+        {
+            path = path[1..];
+        }
+
+        var depth = 0;
+        for (var i = 0; i < path.Length; i++)
+        {
+            if (path[i] is '/' or '\\')
+            {
+                depth++;
+            }
+        }
+
+        return depth;
+    }
+
+    /// <summary>Builds the page-relative <c>../</c> prefix bytes for a page at the given depth.</summary>
+    /// <param name="depth">Number of directory segments between the input root and the page.</param>
+    /// <returns>Empty span at depth 0; otherwise <c>../</c> repeated <paramref name="depth"/> times.</returns>
+    private static byte[] PageRelativePrefixBytes(int depth)
+    {
+        if (depth is 0)
+        {
+            return [];
+        }
+
+        const int SegmentLength = 3;
+        var dst = new byte[depth * SegmentLength];
+        for (var i = 0; i < depth; i++)
+        {
+            var off = i * SegmentLength;
+            const int SecondCharOffset = 1;
+            const int SeparatorOffset = 2;
+            dst[off] = (byte)'.';
+            dst[off + SecondCharOffset] = (byte)'.';
+            dst[off + SeparatorOffset] = (byte)'/';
+        }
+
+        return dst;
+    }
+
+    /// <summary>Rewrites a site-root-absolute asset root (<c>/assets</c>) to be page-relative for the current page; leaves absolute http(s) URLs untouched.</summary>
+    /// <param name="assetRoot">UTF-8 asset root from the theme options.</param>
+    /// <param name="relativePath">Source-relative page path.</param>
+    /// <returns>Page-relative asset-root bytes, or the original bytes when the input is an absolute URL.</returns>
+    private static byte[] ResolvePageRelativeAssetRoot(byte[] assetRoot, string relativePath)
+    {
+        if (assetRoot is [] || IsAbsoluteUrl(assetRoot))
+        {
+            return assetRoot;
+        }
+
+        // Strip a leading '/' so concatenation with the page-relative prefix doesn't produce a site-root absolute URL.
+        var span = assetRoot.AsSpan();
+        var trimmed = span is [(byte)'/', ..] ? span[1..] : span;
+        var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
+        if (prefix.Length is 0)
+        {
+            return trimmed.ToArray();
+        }
+
+        var dst = new byte[prefix.Length + trimmed.Length];
+        prefix.AsSpan().CopyTo(dst);
+        trimmed.CopyTo(dst.AsSpan(prefix.Length));
+        return dst;
+    }
+
+    /// <summary>Rewrites every <c>"/assets/</c> / <c>'/assets/</c> href in the cached head-extras blob to be page-relative for the current page.</summary>
+    /// <param name="headExtras">UTF-8 head-extras HTML composed once per build.</param>
+    /// <param name="relativePath">Source-relative page path.</param>
+    /// <returns>Rewritten bytes; the original blob when no occurrences match or the page is at depth 0 and only the leading slash needs trimming.</returns>
+    private static byte[] RewriteHeadExtraAssetHrefs(byte[] headExtras, string relativePath)
+    {
+        if (headExtras is [])
+        {
+            return headExtras;
+        }
+
+        var source = headExtras.AsSpan();
+        if (source.IndexOf("/assets/"u8) < 0)
+        {
+            return headExtras;
+        }
+
+        var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
+        var writer = new ArrayBufferWriter<byte>(headExtras.Length);
+        var cursor = 0;
+        while (cursor < source.Length)
+        {
+            var rest = source[cursor..];
+            var idx = rest.IndexOf("/assets/"u8);
+            if (idx < 0)
+            {
+                writer.Write(rest);
+                break;
+            }
+
+            // Only rewrite hrefs preceded by a quote — leaves CSS url(/assets/...) inside <style> blocks untouched only if they exist (none today).
+            var absolute = cursor + idx;
+            if (absolute > 0 && source[absolute - 1] is (byte)'"' or (byte)'\'')
+            {
+                writer.Write(rest[..idx]);
+                writer.Write(prefix);
+
+                // Drop the leading '/'; emit "assets/" then continue past the matched separator.
+                writer.Write("assets/"u8);
+                cursor = absolute + "/assets/"u8.Length;
+                continue;
+            }
+
+            // No quote in front; copy through up to and including the match and keep scanning.
+            writer.Write(rest[..(idx + "/assets/"u8.Length)]);
+            cursor = absolute + "/assets/"u8.Length;
+        }
+
+        return [.. writer.WrittenSpan];
+    }
+
     /// <summary>Returns the site URL trimmed and slash-suffixed for canonical-URL composition.</summary>
     /// <param name="siteUrl">Configured UTF-8 absolute site URL.</param>
     /// <returns>Bytes ending in <c>/</c>, or an empty array when no site URL is configured.</returns>
@@ -398,6 +604,47 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         var dst = new byte[trimmed.Length + 1];
         trimmed.CopyTo(dst);
         dst[^1] = (byte)'/';
+        return dst;
+    }
+
+    /// <summary>Returns the short repo label for display next to the source icon.</summary>
+    /// <param name="repoUrl">Configured UTF-8 repository URL.</param>
+    /// <returns>
+    /// The last two non-empty path segments of <paramref name="repoUrl"/> joined with <c>/</c>; the full URL
+    /// when fewer than two segments are present; an empty array when <paramref name="repoUrl"/> is empty.
+    /// </returns>
+    private static byte[] BuildRepoLabel(byte[] repoUrl)
+    {
+        if (repoUrl is [])
+        {
+            return [];
+        }
+
+        var span = repoUrl.AsSpan().TrimEnd((byte)'/');
+        if (span.IsEmpty)
+        {
+            return [.. repoUrl];
+        }
+
+        var lastSlash = span.LastIndexOf((byte)'/');
+        if (lastSlash < 0)
+        {
+            return [.. repoUrl];
+        }
+
+        var head = span[..lastSlash];
+        var tail = span[(lastSlash + 1)..];
+        var prevSlash = head.LastIndexOf((byte)'/');
+        var owner = prevSlash < 0 ? head : head[(prevSlash + 1)..];
+        if (owner.IsEmpty || tail.IsEmpty)
+        {
+            return [.. repoUrl];
+        }
+
+        var dst = new byte[owner.Length + 1 + tail.Length];
+        owner.CopyTo(dst);
+        dst[owner.Length] = (byte)'/';
+        tail.CopyTo(dst.AsSpan(owner.Length + 1));
         return dst;
     }
 

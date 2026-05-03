@@ -39,6 +39,10 @@ namespace NuStreamDocs.Nav;
 /// Reader assemblies (mkdocs.yml, docfx <c>toc.yml</c>, awesome-nav, etc.) populate this field
 /// via extension methods on the options record so the core <see cref="NavPlugin"/> stays unaware
 /// of any specific config dialect.</param>
+/// <param name="UseDirectoryUrls">Caller-supplied directory-URL override; null defers to the
+/// pipeline's <c>UseDirectoryUrls</c> flag captured during plugin configuration. When the
+/// effective flag is true, tab hrefs collapse <c>foo/index.html</c> and <c>foo.html</c> to
+/// <c>foo/</c> so they match the rest of the rendered link surface.</param>
 public readonly record struct NavOptions(
     GlobPattern[] Includes,
     GlobPattern[] Excludes,
@@ -48,7 +52,8 @@ public readonly record struct NavOptions(
     bool Indexes,
     bool WarnOnOrphanPages,
     bool Tabs,
-    NavEntry[] CuratedEntries)
+    NavEntry[] CuratedEntries,
+    bool? UseDirectoryUrls)
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static NavOptions Default { get; } = new(
@@ -60,5 +65,6 @@ public readonly record struct NavOptions(
         Indexes: true,
         WarnOnOrphanPages: true,
         Tabs: false,
-        CuratedEntries: []);
+        CuratedEntries: [],
+        UseDirectoryUrls: null);
 }

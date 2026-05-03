@@ -76,7 +76,7 @@ public class MaterialThemeTests
         await Assert.That(html).Contains("<!doctype html>");
         await Assert.That(html).Contains("Hi");
         await Assert.That(html).Contains("<h1>");
-        await Assert.That(html).Contains("href=\"/assets/stylesheets/material.min.css\"");
+        await Assert.That(html).Contains("href=\"assets/stylesheets/material.min.css\"");
     }
 
     /// <summary>CDN mode should skip the asset write and point the page template at the CDN URL.</summary>

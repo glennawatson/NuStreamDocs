@@ -34,6 +34,9 @@ public interface IThemeShellOptions
     /// <summary>Gets the UTF-8 repo-relative edit prefix; empty when no edit link should be rendered.</summary>
     byte[] EditUri { get; }
 
+    /// <summary>Gets the UTF-8 href used for the page favicon; empty when no favicon link should be rendered.</summary>
+    byte[] Favicon { get; }
+
     /// <summary>Gets a value indicating whether to render a scroll-to-top button.</summary>
     bool EnableScrollToTop { get; }
 

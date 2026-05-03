@@ -34,8 +34,9 @@ public static class MkDocsConfigJsonParser
         var siteUrl = root.TryGetProperty("site_url"u8, out var u) ? u.GetString() : null;
         var themeName = ReadThemeName(root);
         var useDirectoryUrls = !root.TryGetProperty("use_directory_urls"u8, out var d) || ReadBool(d, defaultValue: true);
+        var siteAuthor = root.TryGetProperty("site_author"u8, out var a) ? a.GetString() : null;
 
-        return new(siteName, siteUrl, themeName, useDirectoryUrls);
+        return new(siteName, siteUrl, themeName, useDirectoryUrls, siteAuthor);
     }
 
     /// <summary>Reads a JSON boolean, falling back to <paramref name="defaultValue"/> for unexpected shapes.</summary>

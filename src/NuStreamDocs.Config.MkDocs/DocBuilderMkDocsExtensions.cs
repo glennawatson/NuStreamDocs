@@ -45,6 +45,7 @@ public static class DocBuilderMkDocsExtensions
         return builder
             .WithSiteName(config.SiteName)
             .WithSiteUrl(config.SiteUrl)
+            .WithSiteAuthor(config.SiteAuthor)
             .UseDirectoryUrls(config.UseDirectoryUrls);
     }
 }

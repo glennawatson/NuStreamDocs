@@ -21,6 +21,7 @@ namespace NuStreamDocs.Theme.Material3;
 /// <param name="Copyright">UTF-8 footer copyright line.</param>
 /// <param name="RepoUrl">UTF-8 canonical repository URL; empty when no source link should be rendered.</param>
 /// <param name="EditUri">UTF-8 path inside the repo that prefixes a page's relative path to form an edit URL; empty when no edit link should be rendered.</param>
+/// <param name="Favicon">UTF-8 href used for the page favicon (e.g. <c>./images/favicons/favicon.ico</c>); empty when no favicon link should be rendered.</param>
 /// <param name="EnableScrollToTop">Render a scroll-to-top button (mkdocs-material's <c>navigation.top</c>).</param>
 /// <param name="EnableTocFollow">Enable scroll-spy on the page TOC (mkdocs-material's <c>toc.follow</c>).</param>
 /// <param name="EnableNavigationFooter">Render prev/next page links in the page footer (mkdocs-material's <c>navigation.footer</c>).</param>
@@ -36,6 +37,7 @@ public readonly record struct Material3ThemeOptions(
     byte[] Copyright,
     byte[] RepoUrl,
     byte[] EditUri,
+    byte[] Favicon,
     bool EnableScrollToTop,
     bool EnableTocFollow,
     bool EnableNavigationFooter,
@@ -55,6 +57,7 @@ public readonly record struct Material3ThemeOptions(
         Copyright: [],
         RepoUrl: [],
         EditUri: [],
+        Favicon: [],
         EnableScrollToTop: true,
         EnableTocFollow: true,
         EnableNavigationFooter: true,

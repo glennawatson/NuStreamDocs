@@ -45,7 +45,7 @@ public class Material3ThemeTests
         await Assert.That(html).Contains("<!doctype html>");
         await Assert.That(html).Contains("MD3 Site");
         await Assert.That(html).Contains("data-md-color-scheme=\"default\"");
-        await Assert.That(html).Contains("href=\"/assets/stylesheets/material3.css\"");
+        await Assert.That(html).Contains("href=\"assets/stylesheets/material3.css\"");
         await Assert.That(html).Contains("<h1>");
     }
 

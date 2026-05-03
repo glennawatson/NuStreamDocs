@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="generator" content="{{generator}}">
     <title>{{page_title}}{{#site_name}} - {{site_name}}{{/site_name}}</title>
     {{#description}}<meta name="description" content="{{description}}">
     <meta property="og:description" content="{{description}}">
@@ -12,7 +13,9 @@
     {{/site_name}}<meta property="og:title" content="{{page_title}}">
     {{#prev_url}}<link rel="prev" href="{{prev_url}}">
     {{/prev_url}}{{#next_url}}<link rel="next" href="{{next_url}}">
-    {{/next_url}}{{> head_styles}}
+    {{/next_url}}{{#favicon}}<link rel="icon" href="{{favicon}}">
+    {{/favicon}}{{#author}}<meta name="author" content="{{author}}">
+    {{/author}}{{> head_styles}}
   </head>
   <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
     <a href="#md-content" class="md-skip">Skip to content</a>

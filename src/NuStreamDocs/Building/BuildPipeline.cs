@@ -409,6 +409,7 @@ public static class BuildPipeline
             UseDirectoryUrls = options.UseDirectoryUrls,
             SiteName = options.SiteName ?? [],
             SiteUrl = options.SiteUrl ?? [],
+            SiteAuthor = options.SiteAuthor ?? [],
         };
         BuildPipelineLoggingHelper.LogConfigureStart(log, plugins.Length);
         for (var i = 0; i < plugins.Length; i++)

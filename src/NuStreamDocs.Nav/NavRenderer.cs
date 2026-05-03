@@ -77,7 +77,14 @@ internal static class NavRenderer
         WriteUtf8(writer, "<nav class=\"md-tabs\" aria-label=\"Tabs\" data-md-component=\"tabs\"><div class=\"md-tabs__inner md-grid\"><ul class=\"md-tabs__list\">"u8);
         for (var i = 0; i < root.Children.Length; i++)
         {
-            WriteTabItem(writer, root.Children[i], activeBranch);
+            var child = root.Children[i];
+            if (IsTopLevelHomePage(child))
+            {
+                // The home page is reachable via the brand link, mkdocs-material does the same.
+                continue;
+            }
+
+            WriteTabItem(writer, child, activeBranch);
         }
 
         WriteUtf8(writer, "</ul></div></nav>"u8);
@@ -93,6 +100,32 @@ internal static class NavRenderer
         var index = new Dictionary<byte[], NavNode>(ByteArrayComparer.Instance);
         IndexNode(root, index);
         return index;
+    }
+
+    /// <summary>Returns true when <paramref name="node"/> is a top-level <c>index.md</c> / <c>README.md</c> leaf that should not be emitted as its own tab.</summary>
+    /// <param name="node">Top-level child of the nav root.</param>
+    /// <returns>True when the node is the implicit home page; false otherwise.</returns>
+    private static bool IsTopLevelHomePage(NavNode node)
+    {
+        if (node.IsSection)
+        {
+            return false;
+        }
+
+        var relative = node.RelativePath.Value;
+        if (string.IsNullOrEmpty(relative))
+        {
+            return false;
+        }
+
+        // Top-level only — nested home pages live inside their section and never reach the tab strip.
+        if (relative.AsSpan().IndexOfAny(['/', '\\']) >= 0)
+        {
+            return false;
+        }
+
+        return string.Equals(relative, "index.md", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(relative, "README.md", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Recursive helper for <see cref="BuildUrlIndex"/>.</summary>

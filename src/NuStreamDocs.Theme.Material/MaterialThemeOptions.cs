@@ -23,6 +23,7 @@ namespace NuStreamDocs.Theme.Material;
 /// <param name="Copyright">UTF-8 footer copyright line.</param>
 /// <param name="RepoUrl">UTF-8 canonical repository URL (e.g. <c>https://github.com/owner/repo</c>); empty when no source link should be rendered.</param>
 /// <param name="EditUri">UTF-8 path inside the repo that prefixes a page's relative path to form an edit URL (e.g. <c>edit/main/docs</c>); empty when no edit link should be rendered.</param>
+/// <param name="Favicon">UTF-8 href used for the page favicon (e.g. <c>./images/favicons/favicon.ico</c>); empty when no favicon link should be rendered.</param>
 /// <param name="EnableScrollToTop">Gets a value indicating whether to render a scroll-to-top button (the equivalent of mkdocs-material's <c>navigation.top</c>).</param>
 /// <param name="EnableTocFollow">Gets a value indicating whether to enable scroll-spy on the page TOC (the equivalent of mkdocs-material's <c>toc.follow</c>).</param>
 /// <param name="EnableNavigationFooter">Gets a value indicating whether to render prev/next page links in the page footer (the equivalent of mkdocs-material's <c>navigation.footer</c>).</param>
@@ -39,6 +40,7 @@ public readonly record struct MaterialThemeOptions(
     byte[] Copyright,
     byte[] RepoUrl,
     byte[] EditUri,
+    byte[] Favicon,
     bool EnableScrollToTop,
     bool EnableTocFollow,
     bool EnableNavigationFooter,
@@ -70,6 +72,7 @@ public readonly record struct MaterialThemeOptions(
         Copyright: [],
         RepoUrl: [],
         EditUri: [],
+        Favicon: [],
         EnableScrollToTop: true,
         EnableTocFollow: true,
         EnableNavigationFooter: true,

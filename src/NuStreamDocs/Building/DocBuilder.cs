@@ -63,6 +63,9 @@ public sealed class DocBuilder
     /// <summary>UTF-8 canonical site URL surfaced through <see cref="PluginConfigureContext.SiteUrl"/>; empty when none configured.</summary>
     private byte[] _siteUrl = [];
 
+    /// <summary>UTF-8 site-wide author name surfaced through <see cref="PluginConfigureContext.SiteAuthor"/>; empty when none configured.</summary>
+    private byte[] _siteAuthor = [];
+
     /// <summary>Gets a value indicating whether the build is configured for the directory-URL output shape.</summary>
     public bool UseDirectoryUrlsEnabled => _useDirectoryUrls;
 
@@ -291,7 +294,7 @@ public sealed class DocBuilder
             _inputRoot,
             _outputRoot,
             [.. _plugins],
-            new(BuildPathFilter(), _logger, _useDirectoryUrls, _includeDrafts, _siteName, _siteUrl),
+            new(BuildPathFilter(), _logger, _useDirectoryUrls, _includeDrafts, _siteName, _siteUrl, _siteAuthor),
             cancellationToken);
 
     /// <summary>Gets the configured UTF-8 site name (empty when none).</summary>
@@ -355,6 +358,38 @@ public sealed class DocBuilder
     public DocBuilder WithSiteUrl(ReadOnlySpan<byte> value)
     {
         _siteUrl = value.IsEmpty ? [] : value.ToArray();
+        return this;
+    }
+
+    /// <summary>Gets the configured UTF-8 site-wide author name (empty when none).</summary>
+    /// <returns>Configured bytes — never null.</returns>
+    public ReadOnlySpan<byte> SiteAuthor() => _siteAuthor;
+
+    /// <summary>Sets the UTF-8 site-wide author name from a string.</summary>
+    /// <param name="value">Author name; pass empty / null to clear.</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteAuthor(string? value)
+    {
+        _siteAuthor = string.IsNullOrEmpty(value) ? [] : System.Text.Encoding.UTF8.GetBytes(value);
+        return this;
+    }
+
+    /// <summary>Sets the UTF-8 site-wide author name directly from byte content.</summary>
+    /// <param name="value">UTF-8 bytes (caller-owned; the builder takes a reference).</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteAuthor(byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        _siteAuthor = value;
+        return this;
+    }
+
+    /// <summary>Sets the UTF-8 site-wide author name from a span (copies into a fresh array).</summary>
+    /// <param name="value">UTF-8 bytes.</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteAuthor(ReadOnlySpan<byte> value)
+    {
+        _siteAuthor = value.IsEmpty ? [] : value.ToArray();
         return this;
     }
 
