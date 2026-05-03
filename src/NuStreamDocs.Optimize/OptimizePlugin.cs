@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.Optimize.Logging;
 using NuStreamDocs.Plugins;
 
@@ -28,7 +29,8 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : ID
     /// so a plain <see cref="HashSet{T}"/> outperforms <c>HashSet</c> here — the freeze
     /// cost wouldn't repay itself at this volume.
     /// </summary>
-    private readonly HashSet<string> _extensionLookup = new((options ?? throw new ArgumentNullException(nameof(options))).Extensions, StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _extensionLookup =
+        (options ?? throw new ArgumentNullException(nameof(options))).Extensions.ToStringSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Logger captured at construction; defaults to <see cref="NullLogger.Instance"/> when no logger is supplied.</summary>
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));

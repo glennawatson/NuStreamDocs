@@ -100,7 +100,7 @@ public class SearchPluginTests
     [Test]
     public async Task SearchableFrontmatterKeysAppendBytes()
     {
-        var plugin = new SearchPlugin(SearchOptions.Default with { SearchableFrontmatterKeys = ["tags"] });
+        var plugin = new SearchPlugin(SearchOptions.Default with { SearchableFrontmatterKeys = [[.. "tags"u8]] });
         var html = new ArrayBufferWriter<byte>();
         html.Write("<h1>Hi</h1><p>body</p>"u8);
         var source = "---\ntags: [foo, bar]\n---\nbody"u8.ToArray();
@@ -131,7 +131,7 @@ public class SearchPluginTests
         var html = new ArrayBufferWriter<byte>();
         html.Write("<h1>Hi</h1><p>body content</p>"u8);
 
-        await plugin.OnConfigureAsync(new(default, fixture.Root, fixture.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(fixture.Root, fixture.Root, []), CancellationToken.None);
         await plugin.OnRenderPageAsync(new("a.md", default, html), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
 
@@ -150,7 +150,7 @@ public class SearchPluginTests
         var html = new ArrayBufferWriter<byte>();
         html.Write("<h1>Hi</h1><p>body</p>"u8);
 
-        await plugin.OnConfigureAsync(new(default, fixture.Root, fixture.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(fixture.Root, fixture.Root, []), CancellationToken.None);
         await plugin.OnRenderPageAsync(new("a.md", default, html), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
 

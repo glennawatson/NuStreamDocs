@@ -11,34 +11,34 @@ namespace NuStreamDocs.Caching;
 /// xxHash3-based content hashing helper.
 /// </summary>
 /// <remarks>
-/// xxHash3 is a 64-bit, vector-friendly, non-cryptographic hash; the
-/// allocation profile and throughput beat SHA / MD5 by an order of
-/// magnitude and "is this file the same as last build?" doesn't need
-/// cryptographic strength.
+/// Wraps <see cref="XxHash3"/> from <c>System.IO.Hashing</c> — Microsoft's vector-friendly,
+/// 64-bit non-cryptographic hash. Digests are returned as raw 8-byte arrays (no hex / base64
+/// encoding) so consumers stay byte-shaped end-to-end; persistence layers re-encode at the
+/// boundary (e.g. <c>Utf8JsonWriter.WriteBase64StringValue</c>).
 /// </remarks>
 public static class ContentHasher
 {
-    /// <summary>Length in bytes of an xxHash3 digest.</summary>
-    private const int HashByteLength = 8;
+    /// <summary>xxHash3 digest size in bytes; matches <c>System.IO.Hashing.XxHash3.HashLengthInBytes</c>.</summary>
+    private const int Xxhash3DigestBytes = 8;
 
-    /// <summary>Length of the hex-encoded digest (two chars per byte).</summary>
-    private const int HashHexLength = HashByteLength * 2;
+    /// <summary>Gets the length in bytes of an xxHash3 digest.</summary>
+    public static int HashByteLength => Xxhash3DigestBytes;
 
-    /// <summary>Hashes <paramref name="utf8"/> and returns the lowercase hex digest.</summary>
+    /// <summary>Hashes <paramref name="utf8"/> and returns the raw 8-byte digest.</summary>
     /// <param name="utf8">UTF-8 source bytes.</param>
-    /// <returns>16-character lowercase hex string.</returns>
-    public static string HashHex(ReadOnlySpan<byte> utf8)
+    /// <returns>The 8-byte xxHash3 digest.</returns>
+    public static byte[] Hash(ReadOnlySpan<byte> utf8)
     {
-        Span<byte> digest = stackalloc byte[HashByteLength];
+        var digest = new byte[HashByteLength];
         XxHash3.Hash(utf8, digest);
-        return Convert.ToHexStringLower(digest);
+        return digest;
     }
 
-    /// <summary>Hashes the contents of a file and returns the lowercase hex digest.</summary>
+    /// <summary>Hashes the contents of a file and returns the raw 8-byte digest.</summary>
     /// <param name="path">Absolute path to the file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The hex digest.</returns>
-    public static async ValueTask<string> HashFileAsync(string path, CancellationToken cancellationToken)
+    /// <returns>The 8-byte xxHash3 digest.</returns>
+    public static async ValueTask<byte[]> HashFileAsync(string path, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(path);
 
@@ -56,9 +56,9 @@ public static class ContentHasher
                 hasher.Append(buffer.AsSpan(0, read));
             }
 
-            Span<byte> digest = stackalloc byte[HashByteLength];
+            var digest = new byte[HashByteLength];
             hasher.GetCurrentHash(digest);
-            return Convert.ToHexStringLower(digest);
+            return digest;
         }
         finally
         {
@@ -67,6 +67,6 @@ public static class ContentHasher
     }
 
     /// <summary>Returns the canonical empty-content digest.</summary>
-    /// <returns>Hex digest of zero-length input.</returns>
-    public static string EmptyHex() => new('0', HashHexLength);
+    /// <returns>The xxHash3 digest of zero-length input — an 8-byte zero-filled array.</returns>
+    public static byte[] Empty() => new byte[HashByteLength];
 }

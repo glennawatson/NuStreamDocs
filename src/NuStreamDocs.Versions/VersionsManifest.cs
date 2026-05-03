@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text.Json;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Versions;
 
@@ -128,7 +129,7 @@ public static class VersionsManifest
     {
         var version = string.Empty;
         var title = string.Empty;
-        var aliases = Array.Empty<string>();
+        byte[][] aliases = [];
 
         while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
         {
@@ -149,7 +150,7 @@ public static class VersionsManifest
             }
             else if (reader.ValueTextEquals("aliases"u8))
             {
-                aliases = ReadStringArray(ref reader);
+                aliases = reader.ReadStringArrayAsBytes();
             }
             else
             {
@@ -159,28 +160,6 @@ public static class VersionsManifest
         }
 
         return new(version, title, aliases);
-    }
-
-    /// <summary>Reads a JSON array of strings positioned just before the open bracket.</summary>
-    /// <param name="reader">Reader.</param>
-    /// <returns>The parsed strings.</returns>
-    private static string[] ReadStringArray(ref Utf8JsonReader reader)
-    {
-        if (!reader.Read() || reader.TokenType != JsonTokenType.StartArray)
-        {
-            return [];
-        }
-
-        var values = new List<string>(4);
-        while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
-        {
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                values.Add(reader.GetString() ?? string.Empty);
-            }
-        }
-
-        return [.. values];
     }
 
     /// <summary>Writes one entry as a <c>{ version, title, aliases }</c> object.</summary>

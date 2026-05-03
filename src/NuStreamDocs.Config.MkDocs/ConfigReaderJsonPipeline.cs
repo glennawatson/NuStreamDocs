@@ -5,7 +5,7 @@
 using System.Buffers;
 using System.Text.Json;
 
-namespace NuStreamDocs.Config;
+namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
 /// Shared YAML/TOML → UTF-8 JSON → <see cref="MkDocsConfig"/> pipeline used by

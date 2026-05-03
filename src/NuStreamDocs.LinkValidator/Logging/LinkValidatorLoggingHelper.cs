@@ -28,7 +28,7 @@ internal static partial class LinkValidatorLoggingHelper
     /// <param name="brokenCount">Diagnostics raised at error severity.</param>
     /// <param name="warningCount">Diagnostics raised at warning severity.</param>
     /// <param name="elapsedSeconds">Total elapsed time in seconds (two decimal places).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Link validation complete: {BrokenCount} broken, {WarningCount} warning(s) in {ElapsedSeconds:F2}s")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Link validation complete: {BrokenCount} broken, {WarningCount} warning(s) in {ElapsedSeconds:F3}s")]
     public static partial void LogValidationComplete(ILogger logger, int brokenCount, int warningCount, double elapsedSeconds);
 
     /// <summary>Logs a single broken-link diagnostic.</summary>

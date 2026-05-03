@@ -19,7 +19,9 @@ public static class ThemeModelLoader
         "head_styles",
         "body_scripts",
         "header",
+        "search",
         "sidebar",
+        "sidebar_secondary",
         "footer",
     ];
 

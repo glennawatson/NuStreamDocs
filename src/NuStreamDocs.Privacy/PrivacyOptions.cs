@@ -49,13 +49,36 @@ public readonly record struct PrivacyOptions(
     bool GenerateCspManifest,
     byte[] CspManifestPath)
 {
+    /// <summary>Default <see cref="HostsToSkip"/> entries — hosts whose URLs are almost never the right thing to localize (source-control providers, social networks, video embeds).</summary>
+    /// <remarks>Encoded once at type init.</remarks>
+    private static readonly byte[][] WellKnownHostsToSkip =
+    [
+        [.. "github.com"u8],
+        [.. "raw.githubusercontent.com"u8],
+        [.. "gist.github.com"u8],
+        [.. "gitlab.com"u8],
+        [.. "bitbucket.org"u8],
+        [.. "twitter.com"u8],
+        [.. "x.com"u8],
+        [.. "youtube.com"u8],
+        [.. "www.youtube.com"u8],
+        [.. "youtu.be"u8],
+        [.. "stackoverflow.com"u8],
+    ];
+
     /// <summary>Gets the option set with all defaults populated.</summary>
+    /// <remarks>
+    /// <see cref="HostsToSkip"/> ships with a list of well-known "never localize" hosts.
+    /// Override with <see cref="PrivacyOptionsExtensions.WithHostsToSkip(PrivacyOptions, string[])"/>
+    /// to start fresh, extend with <see cref="PrivacyOptionsExtensions.AddHostsToSkip(PrivacyOptions, string[])"/>,
+    /// or empty with <see cref="PrivacyOptionsExtensions.ClearHostsToSkip(PrivacyOptions)"/>.
+    /// </remarks>
     public static PrivacyOptions Default { get; } = new(
         Enabled: true,
         AssetDirectory: [.. "assets/external"u8],
         DownloadParallelism: 4,
         DownloadTimeout: TimeSpan.FromSeconds(10),
-        HostsToSkip: [],
+        HostsToSkip: WellKnownHostsToSkip,
         HostsAllowed: [],
         AuditOnly: false,
         AuditManifestPath: [.. "privacy-audit.json"u8],

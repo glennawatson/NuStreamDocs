@@ -43,7 +43,7 @@ public class ThemeWrapBenchmarks
     public async Task Setup()
     {
         _plugin = new();
-        var configureContext = new PluginConfigureContext(default, "/in", "/out", []);
+        var configureContext = new PluginConfigureContext("/in", "/out", []);
         await _plugin.OnConfigureAsync(configureContext, CancellationToken.None);
 
         var sb = new StringBuilder(BodyBytes);

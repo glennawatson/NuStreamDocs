@@ -4,21 +4,33 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>{{page_title}}{{#site_name}} - {{site_name}}{{/site_name}}</title>
-    {{> head_styles}}
+    {{#description}}<meta name="description" content="{{description}}">
+    <meta property="og:description" content="{{description}}">
+    {{/description}}{{#canonical_url}}<link rel="canonical" href="{{canonical_url}}">
+    <meta property="og:url" content="{{canonical_url}}">
+    {{/canonical_url}}{{#site_name}}<meta property="og:site_name" content="{{site_name}}">
+    {{/site_name}}<meta property="og:title" content="{{page_title}}">
+    {{#prev_url}}<link rel="prev" href="{{prev_url}}">
+    {{/prev_url}}{{#next_url}}<link rel="next" href="{{next_url}}">
+    {{/next_url}}{{> head_styles}}
   </head>
   <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <a href="#md-content" class="md-skip">Skip to content</a>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
     <div class="md-container">
       {{> header}}
-      <main class="md-main">
+      <main class="md-main" data-md-component="main">
         <div class="md-main__inner md-grid">
           {{> sidebar}}
-          <div class="md-content">
+          {{> sidebar_secondary}}
+          <div class="md-content" data-md-component="content">
             {{#breadcrumbs}}{{> breadcrumbs}}{{/breadcrumbs}}
-            <article class="md-content__inner md-typeset">
+            <article class="md-content__inner md-typeset" id="md-content">
               {{{body}}}
             </article>
           </div>
-          {{#toc}}{{> toc}}{{/toc}}
         </div>
       </main>
       {{> footer}}

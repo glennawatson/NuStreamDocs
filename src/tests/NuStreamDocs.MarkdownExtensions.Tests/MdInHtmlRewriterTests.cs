@@ -88,6 +88,24 @@ public class MdInHtmlRewriterTests
         await Assert.That(Rewrite(Source)).IsEqualTo(Source);
     }
 
+    /// <summary>The bare <c>markdown</c> attribute trips the marker probe.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BareMarkdownAttributeIsDetectedByProbe()
+    {
+        var source = Encoding.UTF8.GetBytes("<div class=\"grid cards\" markdown>");
+        await Assert.That(NuStreamDocs.Markdown.Common.MarkdownMarkerProbes.HasMdInHtmlAttribute(source)).IsTrue();
+    }
+
+    /// <summary>The probe rejects look-alike attribute names like <c>markdown-foo</c> (no boundary character after the token).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task LookalikeAttributeNamesAreRejected()
+    {
+        var source = Encoding.UTF8.GetBytes("<div data-markdown-id=\"x\">y</div>");
+        await Assert.That(NuStreamDocs.Markdown.Common.MarkdownMarkerProbes.HasMdInHtmlAttribute(source)).IsFalse();
+    }
+
     /// <summary>Empty input yields empty output.</summary>
     /// <returns>Async test.</returns>
     [Test]

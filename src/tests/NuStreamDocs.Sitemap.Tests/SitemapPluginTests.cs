@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using NuStreamDocs.Building;
-using NuStreamDocs.Config;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Sitemap.Tests;
 
@@ -18,8 +19,8 @@ public class SitemapPluginTests
     {
         using var temp = new SitemapTempDir();
         var plugin = new SitemapPlugin();
-        var config = new MkDocsConfig("Site", "https://docs.test", "material", []);
-        await plugin.OnConfigureAsync(new(config, "/in", temp.Root, []), CancellationToken.None);
+        var ctx = new PluginConfigureContext("/in", temp.Root, []) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test") };
+        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new("guide/intro.md", default, sink), CancellationToken.None);
@@ -37,8 +38,8 @@ public class SitemapPluginTests
     {
         using var temp = new SitemapTempDir();
         var plugin = new SitemapPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, "/in", temp.Root, []), CancellationToken.None);
+        var ctx = new PluginConfigureContext("/in", temp.Root, []);
+        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new("any.md", default, sink), CancellationToken.None);
@@ -54,8 +55,8 @@ public class SitemapPluginTests
     {
         using var temp = new SitemapTempDir();
         var plugin = new SitemapPlugin();
-        var config = new MkDocsConfig("Site", "https://docs.test/", "material", []);
-        await plugin.OnConfigureAsync(new(config, "/in", temp.Root, []), CancellationToken.None);
+        var ctx = new PluginConfigureContext("/in", temp.Root, []) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test/") };
+        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new(string.Empty, default, sink), CancellationToken.None);

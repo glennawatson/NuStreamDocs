@@ -2,9 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Config;
-
-namespace NuStreamDocs.Tests;
+namespace NuStreamDocs.Nav.Tests;
 
 /// <summary>Tests for <c>NavBuilder</c>.</summary>
 public class NavBuilderTests
@@ -25,8 +23,8 @@ public class NavBuilderTests
     public async Task ResultIsRightSized()
     {
         var buffer = new NavEntry[8];
-        buffer[0] = new("First", "first.md");
-        buffer[1] = new("Second", "second.md");
+        buffer[0] = NavEntryFactory.Leaf("First", "first.md");
+        buffer[1] = NavEntryFactory.Leaf("Second", "second.md");
         var result = NavBuilder.ToArray(buffer, 2);
         await Assert.That(result.Length).IsEqualTo(2);
         await Assert.That(result[0]).IsEqualTo(buffer[0]);

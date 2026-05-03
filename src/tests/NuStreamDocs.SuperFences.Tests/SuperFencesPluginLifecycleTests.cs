@@ -31,7 +31,7 @@ public class SuperFencesPluginLifecycleTests
     {
         var plugin = new SuperFencesPlugin();
         var stub = new StubHandler();
-        var ctx = new PluginConfigureContext(default, "/in", "/out", [plugin, stub]);
+        var ctx = new PluginConfigureContext("/in", "/out", [plugin, stub]);
         await plugin.OnConfigureAsync(ctx, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(128);
@@ -48,7 +48,7 @@ public class SuperFencesPluginLifecycleTests
     public async Task NoOpWhenNoFenceMarkup()
     {
         var plugin = new SuperFencesPlugin();
-        var ctx = new PluginConfigureContext(default, "/in", "/out", [plugin, new StubHandler()]);
+        var ctx = new PluginConfigureContext("/in", "/out", [plugin, new StubHandler()]);
         await plugin.OnConfigureAsync(ctx, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(64);
@@ -64,7 +64,7 @@ public class SuperFencesPluginLifecycleTests
     public async Task NoOpWhenNoHandlers()
     {
         var plugin = new SuperFencesPlugin();
-        var ctx = new PluginConfigureContext(default, "/in", "/out", [plugin]);
+        var ctx = new PluginConfigureContext("/in", "/out", [plugin]);
         await plugin.OnConfigureAsync(ctx, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(64);
@@ -81,7 +81,7 @@ public class SuperFencesPluginLifecycleTests
     {
         var plugin = new SuperFencesPlugin();
         var bad = new EmptyLanguageHandler();
-        var ctx = new PluginConfigureContext(default, "/in", "/out", [plugin, bad]);
+        var ctx = new PluginConfigureContext("/in", "/out", [plugin, bad]);
         await plugin.OnConfigureAsync(ctx, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(64);

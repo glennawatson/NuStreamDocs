@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 
@@ -35,7 +36,7 @@ public class VersionsRegistrationTests
     {
         var opts = VersionOptions.Latest("1.2", "Recent");
         await Assert.That(opts.Aliases.Length).IsEqualTo(1);
-        await Assert.That(opts.Aliases[0]).IsEqualTo("latest");
+        await Assert.That(Encoding.UTF8.GetString(opts.Aliases[0])).IsEqualTo("latest");
     }
 
     /// <summary>Validate() throws on empty version.</summary>
@@ -63,12 +64,12 @@ public class VersionsRegistrationTests
     [Test]
     public async Task ToEntryCopies()
     {
-        var entry = new VersionOptions("1.0", "Stable", ["latest", "v1"]).ToEntry();
+        var entry = new VersionOptions("1.0", "Stable", [[.. "latest"u8], [.. "v1"u8]]).ToEntry();
         await Assert.That(entry.Version).IsEqualTo("1.0");
         await Assert.That(entry.Title).IsEqualTo("Stable");
         await Assert.That(entry.Aliases.Length).IsEqualTo(2);
-        await Assert.That(entry.Aliases[0]).IsEqualTo("latest");
-        await Assert.That(entry.Aliases[1]).IsEqualTo("v1");
+        await Assert.That(Encoding.UTF8.GetString(entry.Aliases[0])).IsEqualTo("latest");
+        await Assert.That(Encoding.UTF8.GetString(entry.Aliases[1])).IsEqualTo("v1");
     }
 
     /// <summary>UseVersions rejects null builder.</summary>

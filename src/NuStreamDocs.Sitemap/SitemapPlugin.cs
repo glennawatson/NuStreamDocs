@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Sitemap;
@@ -33,7 +32,7 @@ public sealed class SitemapPlugin : IDocPlugin
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
-        _baseUrlBytes = NormalizeBaseUrl(context.Config.SiteUrl);
+        _baseUrlBytes = NormalizeBaseUrl(context.SiteUrl);
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }
@@ -70,9 +69,25 @@ public sealed class SitemapPlugin : IDocPlugin
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>Normalizes <paramref name="raw"/> to UTF-8 base-URL bytes with a trailing slash, or returns <c>null</c> when unusable.</summary>
-    /// <param name="raw">The configured <c>site_url</c>.</param>
+    /// <summary>Normalizes <paramref name="raw"/> to UTF-8 base-URL bytes with a trailing slash, or returns <c>null</c> when empty.</summary>
+    /// <param name="raw">UTF-8 site-url bytes.</param>
     /// <returns>Normalized base-URL bytes or <c>null</c>.</returns>
-    private static byte[]? NormalizeBaseUrl(string? raw) =>
-        string.IsNullOrWhiteSpace(raw) ? null : Utf8Encoder.EncodeWithTrailingAscii(raw, (byte)'/');
+    private static byte[]? NormalizeBaseUrl(ReadOnlySpan<byte> raw)
+    {
+        var trimmed = raw.Trim((byte)' ').Trim((byte)'\t');
+        if (trimmed.IsEmpty)
+        {
+            return null;
+        }
+
+        if (trimmed[^1] is (byte)'/')
+        {
+            return trimmed.ToArray();
+        }
+
+        var dst = new byte[trimmed.Length + 1];
+        trimmed.CopyTo(dst);
+        dst[^1] = (byte)'/';
+        return dst;
+    }
 }

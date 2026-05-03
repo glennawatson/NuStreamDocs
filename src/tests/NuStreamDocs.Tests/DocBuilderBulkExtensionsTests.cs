@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
-using NuStreamDocs.Config;
 
 namespace NuStreamDocs.Tests;
 
@@ -39,40 +38,5 @@ public class DocBuilderBulkExtensionsTests
         var ex = Assert.Throws<ArgumentNullException>(static () =>
             DocBuilderBulkExtensions.UsePlugins(null!));
         await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseConfigReaders registers each reader.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseConfigReadersRegistersAll()
-    {
-        var builder = new DocBuilder();
-        var r = new TestConfigReader(".test");
-        var returned = builder.UseConfigReaders(r);
-        await Assert.That(returned).IsSameReferenceAs(builder);
-        await Assert.That(builder.FindConfigReader(".test".AsSpan())).IsSameReferenceAs(r);
-    }
-
-    /// <summary>UseConfigReaders rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseConfigReadersRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderBulkExtensions.UseConfigReaders(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>Stub config reader that recognizes a single extension.</summary>
-    private sealed class TestConfigReader(string extension) : IConfigReader
-    {
-        /// <inheritdoc/>
-        public string FormatName => "test";
-
-        /// <inheritdoc/>
-        public bool RecognizesExtension(ReadOnlySpan<char> ext) => ext.SequenceEqual(extension);
-
-        /// <inheritdoc/>
-        public MkDocsConfig Read(ReadOnlySpan<byte> utf8Source) => new("Site", null, "material", []);
     }
 }

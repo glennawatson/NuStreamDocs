@@ -4,7 +4,6 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 using NuStreamDocs.Serve.Logging;
@@ -73,32 +72,77 @@ public static class DocBuilderServeExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(logger);
 
-        // Initial build: synchronous in the lifecycle so the host has something to serve immediately.
-        await builder.BuildAsync(cancellationToken).ConfigureAwait(false);
-
-        var broker = new LiveReloadBroker();
-        var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, cancellationToken).ConfigureAwait(false);
-        var url = DevServer.BuildUrl(options);
-        ServeLoggingHelper.LogServerStart(logger, url, builder.InputRoot, builder.OutputRoot);
-
-        if (options.OpenBrowser)
+        // Link the supplied token with an internal Ctrl+C handler. Callers that pass CancellationToken.None
+        // (e.g. Nuke's Serve target) still need an exit path on console interrupt — without this the
+        // `await foreach` over the watcher never observes cancellation and the process hangs.
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var combinedToken = linkedCts.Token;
+        ConsoleCancelEventHandler? consoleHandler = (_, args) =>
         {
-            TryOpenBrowser(url);
-        }
+            args.Cancel = true;
+            try
+            {
+                linkedCts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Cancellation source already torn down; nothing to do.
+            }
+        };
+        Console.CancelKeyPress += consoleHandler;
 
         try
         {
-            using var watcher = new WatchLoop(builder.InputRoot, options.WatchOutput ? builder.OutputRoot : null, options.DebounceMs, logger);
-            await foreach (var changes in watcher.WaitAsync(cancellationToken).ConfigureAwait(false))
+            // Initial build: synchronous in the lifecycle so the host has something to serve immediately.
+            await builder.BuildAsync(combinedToken).ConfigureAwait(false);
+
+            var broker = new LiveReloadBroker();
+            var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, combinedToken).ConfigureAwait(false);
+            var url = DevServer.BuildUrl(options);
+            ServeLoggingHelper.LogServerStart(logger, url, builder.InputRoot, builder.OutputRoot);
+
+            if (options.OpenBrowser)
             {
-                await RebuildAndSignalAsync(builder, broker, logger, changes, cancellationToken).ConfigureAwait(false);
+                TryOpenBrowser(url);
+            }
+
+            try
+            {
+                using var watcher = new WatchLoop(builder.InputRoot, options.WatchOutput ? builder.OutputRoot : null, options.DebounceMs, logger);
+                await foreach (var changes in watcher.WaitAsync(combinedToken).ConfigureAwait(false))
+                {
+                    await RebuildAndSignalAsync(builder, broker, logger, changes, combinedToken).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected on Ctrl+C / token cancellation; fall through to shutdown.
+            }
+            finally
+            {
+                ServeLoggingHelper.LogServerStopping(logger);
+
+                // Abort tracked WebSockets up-front so the in-flight LiveReload handlers exit
+                // promptly. Browsers don't always reply to the close handshake; relying on a
+                // graceful close lets Ctrl+C hang forever.
+                broker.AbortAll();
+
+                using var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                try
+                {
+                    await app.StopAsync(stopCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    // 2-second shutdown budget elapsed; fall through to DisposeAsync.
+                }
+
+                await app.DisposeAsync().ConfigureAwait(false);
             }
         }
         finally
         {
-            ServeLoggingHelper.LogServerStopping(logger);
-            await app.StopAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
-            await app.DisposeAsync().ConfigureAwait(false);
+            Console.CancelKeyPress -= consoleHandler;
         }
     }
 

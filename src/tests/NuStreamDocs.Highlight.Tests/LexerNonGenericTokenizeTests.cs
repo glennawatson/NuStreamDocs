@@ -25,5 +25,5 @@ public class LexerNonGenericTokenizeTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task PluginOnConfigure() =>
-        await new HighlightPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+        await new HighlightPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 }

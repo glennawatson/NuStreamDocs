@@ -4,7 +4,7 @@
 
 using System.Buffers;
 
-namespace NuStreamDocs.Config;
+namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
 /// Contract for a config-file reader that produces a

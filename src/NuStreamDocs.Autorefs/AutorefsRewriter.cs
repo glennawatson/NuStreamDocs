@@ -32,20 +32,18 @@ public static class AutorefsRewriter
         ArgumentException.ThrowIfNullOrEmpty(outputRoot);
         ArgumentNullException.ThrowIfNull(registry);
 
-        if (!Directory.Exists(outputRoot))
+        if (!Directory.Exists(outputRoot) || registry.Count is 0)
         {
             return 0;
         }
 
+        // Materialize the file list once so the parallel pass partitions a stable input.
+        var files = Directory.GetFiles(outputRoot, "*.html", SearchOption.AllDirectories);
         var rewritten = 0;
-        foreach (var file in Directory.EnumerateFiles(outputRoot, "*.html", SearchOption.AllDirectories))
-        {
-            if (RewriteOne(file, registry))
-            {
-                rewritten++;
-            }
-        }
 
+        // Capture-by-ref via local action; Parallel.ForEach passes the file path through as the body input.
+        var registryLocal = registry;
+        Parallel.ForEach(files, file => Interlocked.Add(ref rewritten, RewriteOne(file, registryLocal) ? 1 : 0));
         return rewritten;
     }
 
@@ -60,18 +58,26 @@ public static class AutorefsRewriter
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(logger);
 
-        if (!Directory.Exists(outputRoot))
+        if (!Directory.Exists(outputRoot) || registry.Count is 0)
         {
             return (0, 0);
         }
 
-        var totals = default(RewriteTotals);
-        foreach (var file in Directory.EnumerateFiles(outputRoot, "*.html", SearchOption.AllDirectories))
-        {
-            RewriteOneLogged(file, registry, logger, ref totals);
-        }
+        var files = Directory.GetFiles(outputRoot, "*.html", SearchOption.AllDirectories);
+        var resolved = 0;
+        var missing = 0;
+        var registryLocal = registry;
+        var loggerLocal = logger;
 
-        return (totals.Resolved, totals.Missing);
+        Parallel.ForEach(files, file =>
+        {
+            var local = default(RewriteTotals);
+            RewriteOneLogged(file, registryLocal, loggerLocal, ref local);
+            Interlocked.Add(ref resolved, local.Resolved);
+            Interlocked.Add(ref missing, local.Missing);
+        });
+
+        return (resolved, missing);
     }
 
     /// <summary>Rewrites a single output file in place.</summary>

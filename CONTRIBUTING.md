@@ -177,20 +177,42 @@ Test projects relax the allocation rules but keep the style rules.
   (not `Behaviour`). The `.editorconfig`,
   analyzer rule names, and the BCL itself are US English; mixing
   dialects splits casing across tooling search.
-- **`<summary>` says what; `<remarks>` says how.** Every public *and*
-  internal type, method, and property is documented with a
-  `<summary>` that describes *what it does* — never how it does it.
-  Implementation detail (which collection backs it, what algorithm
-  is used, table sizes, hashing strategy, GC behaviour, whether
-  it's pooled / cached / lazy) goes in `<remarks>`. Compare:
+- **XML doc comments describe the contract, not the implementation.**
+  Every public *and* internal type, method, property, parameter, and
+  return gets a `<summary>` / `<param>` / `<returns>` that answers
+  "what is this for?" — the consumer-facing contract. Implementation
+  detail (which collection backs it, what algorithm is used, table
+  sizes, hashing strategy, GC behaviour, whether it's pooled /
+  cached / lazy, "encoded once at construction" / "stores X as Y" /
+  "wraps Z" phrasings) does **not** belong in `<summary>` and rarely
+  belongs anywhere. Compare:
   - **Wrong:** `Byte-keyed icon lookup backed by a Dictionary&lt;byte[], (int, int)&gt; over a concatenated SVG blob with an IAlternateEqualityComparer for span lookups…`
   - **Right:** `Resolves a Material Design icon name to its SVG path-data bytes.`
   - **Wrong:** `Returns the local path for the URL — xxHash3-keyed concurrent dictionary lookup, falling back to BuildLocalPath on miss.`
   - **Right:** `Returns the local path for the URL.`
-  When an internal method's algorithm is genuinely non-obvious and
-  worth documenting (a workaround, a perf-driven choice, a load-
-  bearing invariant), put that explanation in a `<remarks>` block —
-  never let it leak into the `<summary>`.
+  - **Wrong `<param>`:** `Source strings; encoded once into byte[][] via Utf8Encoder.EncodeArray with the empty-array fast path.`
+  - **Right `<param>`:** `Source strings.`
+- **`<remarks>` is reserved for genuinely confusing implementation
+  detail** — a non-obvious algorithm, a workaround for a specific
+  bug, a perf-driven choice that would surprise a reader. **Not** a
+  place to dump every "stores X as Y" / "wraps Z" / "encoded once at
+  construction" sentence — that's routine and the reader can see it
+  in the code. Most types should have **no** `<remarks>` at all. If
+  `<remarks>` would just paraphrase the field types or restate the
+  obvious, delete it instead of writing it.
+- **Multi-line XML doc content puts text between newline-delimited
+  tags.** When a `<summary>` / `<remarks>` / `<param>` body needs
+  more than one line, the opening and closing tags sit on their own
+  lines and the content lines wrap between them — never let a single
+  tag-and-content line stretch past 200 chars (S103 will trip), and
+  never lean the opening tag on the first content line. Wrong:
+  `/// <remarks>First sentence... second sentence.</remarks>`
+  (single line, blows past 200 chars) or
+  `/// <remarks>First line` … `/// second line</remarks>` (open tag
+  fused to content). Right: `/// <remarks>` on one line, content
+  on its own line(s), `/// </remarks>` on its own line. Single-line
+  summaries / params / returns stay single-line — only break onto
+  multi-line form when the content actually wraps.
 - **`var` for locals; targeted `new()` for typed slots.** Always
   `var x = ...` for locals; never repeat the type on both sides
   (`Foo x = new Foo()` is banned — use `var x = new Foo()` or

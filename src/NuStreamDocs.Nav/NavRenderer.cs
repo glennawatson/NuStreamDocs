@@ -62,6 +62,27 @@ internal static class NavRenderer
         WriteList(writer, root.Children, activeBranch, prune: true);
     }
 
+    /// <summary>Emits a horizontal tab bar from the root's top-level children (mkdocs-material's <c>navigation.tabs</c>).</summary>
+    /// <param name="root">Nav tree root.</param>
+    /// <param name="activeNode">Pre-resolved active node; the tab whose subtree contains it receives the <c>md-tabs__item--active</c> class.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    public static void RenderTabs(NavNode root, NavNode? activeNode, IBufferWriter<byte> writer)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        ArgumentNullException.ThrowIfNull(writer);
+
+        EnsureParentsAttached(root);
+        var activeBranch = BuildActiveBranchSet(activeNode);
+
+        WriteUtf8(writer, "<nav class=\"md-tabs\" aria-label=\"Tabs\" data-md-component=\"tabs\"><div class=\"md-tabs__inner md-grid\"><ul class=\"md-tabs__list\">"u8);
+        for (var i = 0; i < root.Children.Length; i++)
+        {
+            WriteTabItem(writer, root.Children[i], activeBranch);
+        }
+
+        WriteUtf8(writer, "</ul></div></nav>"u8);
+    }
+
     /// <summary>Indexes every node in the tree by UTF-8 URL bytes so per-page rendering can resolve the active node in O(1) without re-encoding the lookup key.</summary>
     /// <remarks>Indexes section <see cref="NavNode.IndexUrlBytes"/> and leaf <see cref="NavNode.RelativeUrlBytes"/> entries.</remarks>
     /// <param name="root">Nav tree root.</param>
@@ -164,7 +185,7 @@ internal static class NavRenderer
     private static void WriteItem(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune)
     {
         var active = activeBranch.Contains(node);
-        WriteUtf8(writer, active ? "<li class=\"md-nav__item md-nav__item--active\">"u8 : "<li class=\"md-nav__item\">"u8);
+        WriteUtf8(writer, ResolveItemOpenTag(node, active));
 
         if (node.IsSection)
         {
@@ -177,6 +198,18 @@ internal static class NavRenderer
 
         WriteUtf8(writer, "</li>"u8);
     }
+
+    /// <summary>Returns the right opening <c>&lt;li&gt;</c> tag for <paramref name="node"/>, with <c>--nested</c> / <c>--active</c> modifiers as appropriate.</summary>
+    /// <param name="node">Node being rendered.</param>
+    /// <param name="active">True when the node sits on the active branch.</param>
+    /// <returns>UTF-8 bytes for the opening tag.</returns>
+    private static ReadOnlySpan<byte> ResolveItemOpenTag(NavNode node, bool active) => (node.IsSection, active) switch
+    {
+        (true, true) => "<li class=\"md-nav__item md-nav__item--nested md-nav__item--active\">"u8,
+        (true, false) => "<li class=\"md-nav__item md-nav__item--nested\">"u8,
+        (false, true) => "<li class=\"md-nav__item md-nav__item--active\">"u8,
+        (false, false) => "<li class=\"md-nav__item\">"u8,
+    };
 
     /// <summary>Writes a section node's label + nested list.</summary>
     /// <param name="writer">UTF-8 sink.</param>
@@ -207,7 +240,15 @@ internal static class NavRenderer
             return;
         }
 
+        // Wrap the child list in <nav class="md-nav"> + <label class="md-nav__title"> so mkdocs-material's CSS
+        // recognises a nested section (folding chevron, indent, label).
+        WriteUtf8(writer, "<nav class=\"md-nav\" aria-label=\""u8);
+        WriteUtf8(writer, node.TitleBytes);
+        WriteUtf8(writer, "\"><label class=\"md-nav__title\">"u8);
+        WriteUtf8(writer, node.TitleBytes);
+        WriteUtf8(writer, "</label>"u8);
         WriteList(writer, node.Children, activeBranch, prune);
+        WriteUtf8(writer, "</nav>"u8);
     }
 
     /// <summary>Writes a leaf node's anchor.</summary>
@@ -232,4 +273,37 @@ internal static class NavRenderer
         bytes.CopyTo(dst);
         writer.Advance(bytes.Length);
     }
+
+    /// <summary>Emits a single <c>&lt;li class="md-tabs__item"&gt;</c> for <paramref name="node"/>.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="node">Top-level nav node.</param>
+    /// <param name="activeBranch">Active-branch set; the tab is flagged active when its subtree contains the active node.</param>
+    private static void WriteTabItem(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch)
+    {
+        var active = activeBranch.Contains(node);
+        WriteUtf8(writer, active ? "<li class=\"md-tabs__item md-tabs__item--active\">"u8 : "<li class=\"md-tabs__item\">"u8);
+
+        var href = TabHref(node);
+        if (href.Length is 0)
+        {
+            WriteUtf8(writer, "<span class=\"md-tabs__link\">"u8);
+            WriteUtf8(writer, node.TitleBytes);
+            WriteUtf8(writer, "</span>"u8);
+        }
+        else
+        {
+            WriteUtf8(writer, "<a class=\"md-tabs__link\" href=\""u8);
+            WriteUtf8(writer, href);
+            WriteUtf8(writer, "\">"u8);
+            WriteUtf8(writer, node.TitleBytes);
+            WriteUtf8(writer, "</a>"u8);
+        }
+
+        WriteUtf8(writer, "</li>"u8);
+    }
+
+    /// <summary>Picks the URL the tab links to: the section's index page when present, the leaf URL otherwise.</summary>
+    /// <param name="node">Top-level nav node.</param>
+    /// <returns>UTF-8 URL bytes; empty when no link is available.</returns>
+    private static ReadOnlySpan<byte> TabHref(NavNode node) => node.IsSection ? node.IndexUrlBytes : node.RelativeUrlBytes;
 }

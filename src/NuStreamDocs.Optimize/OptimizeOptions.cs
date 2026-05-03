@@ -7,22 +7,36 @@ using System.IO.Compression;
 namespace NuStreamDocs.Optimize;
 
 /// <summary>Configuration for <see cref="OptimizePlugin"/>.</summary>
+/// <remarks>
+/// <see cref="Extensions"/> is stored as UTF-8 bytes per the project's byte-first pipeline rule.
+/// String-shaped construction goes through <c>OptimizeOptionsExtensions</c>'s
+/// <c>WithExtensions</c> / <c>AddExtensions</c> helpers, which encode once at the boundary.
+/// </remarks>
 /// <param name="Formats">Compression formats to emit.</param>
 /// <param name="GzipLevel">Compression level for gzip; <see cref="CompressionLevel.SmallestSize"/> by default.</param>
 /// <param name="BrotliLevel">Compression level for brotli; <see cref="CompressionLevel.SmallestSize"/> by default.</param>
-/// <param name="Extensions">File extensions to compress (lowercase, leading dot, e.g. <c>.html</c>).</param>
+/// <param name="Extensions">UTF-8 file-extension entries to compress (lowercase, leading dot, e.g. <c>.html</c>).</param>
 /// <param name="MinimumBytes">Skip compression when the source is smaller than this many bytes.</param>
 /// <param name="Parallelism">Maximum parallel compression workers.</param>
 public sealed record OptimizeOptions(
     OptimizeFormats Formats,
     CompressionLevel GzipLevel,
     CompressionLevel BrotliLevel,
-    string[] Extensions,
+    byte[][] Extensions,
     int MinimumBytes,
     int Parallelism)
 {
     /// <summary>Gets the default extension set worth precompressing — text-like assets that gain a lot from gzip/brotli.</summary>
-    public static string[] DefaultExtensions { get; } = [".html", ".css", ".js", ".json", ".svg", ".xml", ".txt"];
+    public static byte[][] DefaultExtensions { get; } =
+    [
+        [.. ".html"u8],
+        [.. ".css"u8],
+        [.. ".js"u8],
+        [.. ".json"u8],
+        [.. ".svg"u8],
+        [.. ".xml"u8],
+        [.. ".txt"u8],
+    ];
 
     /// <summary>Gets the default option set — both formats, smallest-size, default extensions, 1KiB minimum, default parallelism.</summary>
     public static OptimizeOptions Default { get; } = new(

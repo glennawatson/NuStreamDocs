@@ -32,7 +32,7 @@ public class TagsPluginTests
     {
         using var temp = new TagsTempDir();
         var plugin = new TagsPlugin();
-        await plugin.OnConfigureAsync(new(default, "/in", temp.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(8);
         sink.Write("<p>no tags</p>"u8);
@@ -49,7 +49,7 @@ public class TagsPluginTests
     {
         using var temp = new TagsTempDir();
         var plugin = new TagsPlugin();
-        await plugin.OnConfigureAsync(new(default, "/in", temp.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
         const string Source1 = "---\ntags:\n  - alpha\n  - beta\n---\nbody";
         var sink1 = new ArrayBufferWriter<byte>(64);
@@ -79,7 +79,7 @@ public class TagsPluginTests
     {
         using var temp = new TagsTempDir();
         var plugin = new TagsPlugin();
-        await plugin.OnConfigureAsync(new(default, "/in", temp.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
         const string Source = "---\ntags:\n  - solo\n---\nbody";
         var sink = new ArrayBufferWriter<byte>(64);
@@ -100,7 +100,7 @@ public class TagsPluginTests
         using var temp = new TagsTempDir();
         var options = new TagsOptions("topics", "all.html");
         var plugin = new TagsPlugin(options);
-        await plugin.OnConfigureAsync(new(default, "/in", temp.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
         const string Source = "---\ntags:\n  - foo\n---\nbody";
         var sink = new ArrayBufferWriter<byte>(64);

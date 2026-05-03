@@ -5,10 +5,15 @@
 namespace NuStreamDocs.Versions;
 
 /// <summary>Configuration for the versions plugin.</summary>
+/// <remarks>
+/// <see cref="Aliases"/> is stored as UTF-8 bytes per the project's byte-first pipeline rule.
+/// String-shaped construction is via <see cref="VersionOptionsExtensions.WithAliases(VersionOptions, string[])"/>
+/// and friends, which encode once at the boundary.
+/// </remarks>
 /// <param name="Version">Identifier for the version this build represents.</param>
 /// <param name="Title">Human-readable selector label.</param>
-/// <param name="Aliases">Aliases that point at this version (e.g. <c>latest</c>).</param>
-public sealed record VersionOptions(string Version, string Title, string[] Aliases)
+/// <param name="Aliases">UTF-8 aliases that point at this version (e.g. <c>latest</c>).</param>
+public sealed record VersionOptions(string Version, string Title, byte[][] Aliases)
 {
     /// <summary>Initializes a new instance of the <see cref="VersionOptions"/> class with no aliases.</summary>
     /// <param name="version">Version identifier.</param>
@@ -23,7 +28,7 @@ public sealed record VersionOptions(string Version, string Title, string[] Alias
     /// <param name="title">Selector label.</param>
     /// <returns>Options with the <c>latest</c> alias attached.</returns>
     public static VersionOptions Latest(string version, string title) =>
-        new(version, title, ["latest"]);
+        new(version, title, [[.. "latest"u8]]);
 
     /// <summary>Throws when any required field is empty or whitespace.</summary>
     /// <exception cref="ArgumentException">When a required field is null, empty, or whitespace.</exception>

@@ -4,7 +4,7 @@
 
 using System.Buffers;
 using System.Text;
-using NuStreamDocs.Config;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Sitemap.Tests;
 
@@ -23,8 +23,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(configPath, ConfigBody);
 
         var plugin = new RedirectsPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsTrue();
@@ -40,8 +39,7 @@ public class RedirectsPluginTests
         using var output = new RedirectsTempDir();
 
         var plugin = new RedirectsPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - old/page\n  - really/old\n---\nbody";
         var bytes = Encoding.UTF8.GetBytes(Source);
@@ -62,8 +60,7 @@ public class RedirectsPluginTests
         using var output = new RedirectsTempDir();
 
         var plugin = new RedirectsPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases: [\"old.html\", \"prev.html\"]\n---\nbody";
         var bytes = Encoding.UTF8.GetBytes(Source);
@@ -84,8 +81,7 @@ public class RedirectsPluginTests
         using var output = new RedirectsTempDir();
 
         var plugin = new RedirectsPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - section/\n---\nbody";
         var bytes = Encoding.UTF8.GetBytes(Source);
@@ -106,8 +102,7 @@ public class RedirectsPluginTests
 
         var options = RedirectsOptions.Default with { ScanFrontmatterAliases = false, LoadConfigFile = false };
         var plugin = new RedirectsPlugin(options, []);
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - skipped.html\n---\nbody";
         var bytes = Encoding.UTF8.GetBytes(Source);
@@ -127,8 +122,7 @@ public class RedirectsPluginTests
         using var output = new RedirectsTempDir();
 
         var plugin = new RedirectsPlugin(("old.html", "/wins.html"));
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
 
         const string Source = "---\naliases:\n  - old.html\n---\nbody";
         var bytes = Encoding.UTF8.GetBytes(Source);
@@ -149,8 +143,7 @@ public class RedirectsPluginTests
         using var output = new RedirectsTempDir();
 
         var plugin = new RedirectsPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(8);
         await plugin.OnRenderPageAsync(new("page.md", "just body"u8.ToArray(), sink), CancellationToken.None);
@@ -174,8 +167,7 @@ public class RedirectsPluginTests
         using var input = new RedirectsTempDir();
         using var output = new RedirectsTempDir();
         var plugin = new RedirectsPlugin(("good.html", "/dest.html"), (string.Empty, "/x"), ("from", "  "), ("   ", "   "));
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "good.html"))).IsTrue();
@@ -190,8 +182,7 @@ public class RedirectsPluginTests
         using var input = new RedirectsTempDir();
         using var output = new RedirectsTempDir();
         var plugin = new RedirectsPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(Directory.GetFiles(output.Root)).IsEmpty();
@@ -207,8 +198,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "redirects.yml"), "old.html: /new.html\n");
 
         var plugin = new RedirectsPlugin(RedirectsOptions.Default with { LoadConfigFile = false }, []);
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsFalse();
@@ -222,8 +212,7 @@ public class RedirectsPluginTests
         using var input = new RedirectsTempDir();
         using var output = new RedirectsTempDir();
         var plugin = new RedirectsPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
 
         var source = "---\naliases: [bare, already.html, with-ext.HTML]\n---\nbody"u8.ToArray();
         var sink = new ArrayBufferWriter<byte>(8);
@@ -243,8 +232,7 @@ public class RedirectsPluginTests
         using var input = new RedirectsTempDir();
         using var output = new RedirectsTempDir();
         var plugin = new RedirectsPlugin(("from.html", "/dst?a=1&b=\"2\"<3>"));
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, input.Root, output.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext(input.Root, output.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(output.Root), CancellationToken.None);
 
         var stub = await File.ReadAllTextAsync(Path.Combine(output.Root, "from.html"));

@@ -43,7 +43,7 @@ public class XrefsPluginTests
         };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnConfigureAsync(new(default, "/in", temp.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
         var resolved = registry.TryResolve("System.String", out var url);
         await Assert.That(resolved).IsTrue();
@@ -66,7 +66,7 @@ public class XrefsPluginTests
         };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnConfigureAsync(new(default, "/in", temp.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
         registry.TryResolve("Foo", out var url);
         await Assert.That(url).IsEqualTo("https://example.com/docs/api/Foo.html");
@@ -101,7 +101,7 @@ public class XrefsPluginTests
         };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnConfigureAsync(new(default, "/in", temp.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
         await Assert.That(registry.Count).IsEqualTo(0);
     }

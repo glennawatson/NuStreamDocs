@@ -96,6 +96,35 @@ public class TabsRewriterTests
         await Assert.That(Rewrite(Input)).IsEqualTo(Input);
     }
 
+    /// <summary>Two openers separated by an indented fenced-code body (the mkdocs-material code-tabs pattern) merge into one tabbed-set.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task GroupsOpenersWithIndentedFencedCodeBetween()
+    {
+        const string Input = """
+            === "C#"
+
+                ```csharp
+                var x = 1;
+                ```
+
+            === "F#"
+
+                ```fsharp
+                let x = 1
+                ```
+            """;
+        var output = Rewrite(Input);
+
+        // Single tabbed-set wraps both labels.
+        var setOpenIdx = output.IndexOf("<div class=\"tabbed-set\">", StringComparison.Ordinal);
+        var nextSetIdx = setOpenIdx >= 0 ? output.IndexOf("<div class=\"tabbed-set\">", setOpenIdx + 1, StringComparison.Ordinal) : -1;
+        await Assert.That(setOpenIdx).IsGreaterThanOrEqualTo(0);
+        await Assert.That(nextSetIdx).IsEqualTo(-1);
+        await Assert.That(output).Contains(">C#</label>");
+        await Assert.That(output).Contains(">F#</label>");
+    }
+
     /// <summary>Helper that runs the rewriter and returns the string result.</summary>
     /// <param name="source">UTF-8 source markdown.</param>
     /// <returns>Rewritten output.</returns>

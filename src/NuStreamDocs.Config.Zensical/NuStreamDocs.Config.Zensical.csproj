@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Config.MkDocs\NuStreamDocs.Config.MkDocs.csproj" />
   </ItemGroup>
 
   <ItemGroup>

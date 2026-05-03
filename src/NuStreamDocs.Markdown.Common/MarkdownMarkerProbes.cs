@@ -65,11 +65,45 @@ public static class MarkdownMarkerProbes
     public static bool HasInlineHiliteFence(ReadOnlySpan<byte> source) =>
         source.IndexOf("`#!"u8) >= 0;
 
-    /// <summary>True when <paramref name="source"/> contains the <c>markdown=</c> attribute used by md-in-html.</summary>
+    /// <summary>True when <paramref name="source"/> may contain the <c>markdown</c> attribute used by md-in-html.</summary>
     /// <param name="source">UTF-8 markdown source.</param>
-    /// <returns>True when the source contains the marker.</returns>
-    public static bool HasMdInHtmlAttribute(ReadOnlySpan<byte> source) =>
-        source.IndexOf("markdown="u8) >= 0;
+    /// <returns>True when the source contains the bare or quoted form.</returns>
+    /// <remarks>
+    /// Recognizes both shapes mkdocs-material / Markdown Extra emit:
+    /// <c>&lt;div markdown="1"&gt;</c> and the bare <c>&lt;div markdown&gt;</c>. The token must be
+    /// followed by <c>=</c>, ASCII whitespace, or the tag-closing <c>&gt;</c> so plain prose
+    /// containing the word "markdown" doesn't trigger the rewriter pass.
+    /// </remarks>
+    public static bool HasMdInHtmlAttribute(ReadOnlySpan<byte> source)
+    {
+        const byte SkipPastTokenOffset = 8; // length of "markdown"
+        var token = "markdown"u8;
+        var cursor = 0;
+        while (cursor + token.Length <= source.Length)
+        {
+            var hit = source[cursor..].IndexOf(token);
+            if (hit < 0)
+            {
+                return false;
+            }
+
+            var afterIndex = cursor + hit + SkipPastTokenOffset;
+            if (afterIndex >= source.Length)
+            {
+                return false;
+            }
+
+            var next = source[afterIndex];
+            if (next is (byte)'=' or (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n' or (byte)'>')
+            {
+                return true;
+            }
+
+            cursor = afterIndex;
+        }
+
+        return false;
+    }
 
     /// <summary>True when <paramref name="source"/> contains either a caret (<c>^</c>) or tilde (<c>~</c>) byte — used by sub/sup/ins/del rewriters.</summary>
     /// <param name="source">UTF-8 markdown source.</param>

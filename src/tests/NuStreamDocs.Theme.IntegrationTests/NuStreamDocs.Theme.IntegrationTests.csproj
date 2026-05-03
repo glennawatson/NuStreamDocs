@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NuStreamDocs.Theme.Material\NuStreamDocs.Theme.Material.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Theme.Material3\NuStreamDocs.Theme.Material3.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Highlight\NuStreamDocs.Highlight.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.MarkdownExtensions\NuStreamDocs.MarkdownExtensions.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Emoji\NuStreamDocs.Emoji.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Toc\NuStreamDocs.Toc.csproj" />
+  </ItemGroup>
+
+</Project>

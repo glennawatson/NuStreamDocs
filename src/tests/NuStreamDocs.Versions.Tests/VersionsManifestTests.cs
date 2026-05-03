@@ -18,7 +18,7 @@ public class VersionsManifestTests
     {
         VersionEntry[] input = [
             new("0.1.0", "0.1 (legacy)", []),
-            new("0.4.2", "0.4 (latest)", ["latest", "stable"]),
+            new("0.4.2", "0.4 (latest)", [[.. "latest"u8], [.. "stable"u8]]),
         ];
 
         var sink = new ArrayBufferWriter<byte>();
@@ -28,7 +28,7 @@ public class VersionsManifestTests
         await Assert.That(roundTripped.Length).IsEqualTo(2);
         await Assert.That(roundTripped[0].Version).IsEqualTo("0.1.0");
         await Assert.That(roundTripped[1].Aliases.Length).IsEqualTo(2);
-        await Assert.That(roundTripped[1].Aliases[0]).IsEqualTo("latest");
+        await Assert.That(Encoding.UTF8.GetString(roundTripped[1].Aliases[0])).IsEqualTo("latest");
     }
 
     /// <summary><c>VersionsManifest.Upsert</c> replaces an entry when the version matches.</summary>
@@ -41,7 +41,7 @@ public class VersionsManifestTests
             new("0.4.2", "0.4 (old)", []),
         ];
 
-        var merged = VersionsManifest.Upsert(existing, new("0.4.2", "0.4 (latest)", ["latest"]));
+        var merged = VersionsManifest.Upsert(existing, new("0.4.2", "0.4 (latest)", [[.. "latest"u8]]));
 
         await Assert.That(merged.Length).IsEqualTo(2);
         await Assert.That(merged[1].Title).IsEqualTo("0.4 (latest)");
@@ -54,7 +54,7 @@ public class VersionsManifestTests
     public async Task UpsertAppendsNewVersion()
     {
         VersionEntry[] existing = [new("0.1.0", "0.1", [])];
-        var merged = VersionsManifest.Upsert(existing, new("0.4.2", "0.4", ["latest"]));
+        var merged = VersionsManifest.Upsert(existing, new("0.4.2", "0.4", [[.. "latest"u8]]));
 
         await Assert.That(merged.Length).IsEqualTo(2);
         await Assert.That(merged[1].Version).IsEqualTo("0.4.2");

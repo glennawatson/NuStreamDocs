@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj" />
   </ItemGroup>
 
   <ItemGroup>

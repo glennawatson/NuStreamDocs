@@ -153,14 +153,35 @@ internal static class DevServer
             var broker = ctx.RequestServices.GetRequiredService<LiveReloadBroker>();
             var socket = await ctx.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
             await broker.TrackAsync(socket, ctx.RequestAborted).ConfigureAwait(false);
-            if (socket.State is WebSocketState.Open)
-            {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "shutdown", CancellationToken.None).ConfigureAwait(false);
-            }
-
+            await TryGracefulCloseAsync(socket).ConfigureAwait(false);
             return;
         }
 
         ctx.Response.StatusCode = StatusCodes.Status400BadRequest;
+    }
+
+    /// <summary>Closes <paramref name="socket"/> with a 1-second timeout so a misbehaving browser can't hang shutdown.</summary>
+    /// <param name="socket">Socket to close.</param>
+    /// <returns>Async task.</returns>
+    private static async Task TryGracefulCloseAsync(WebSocket socket)
+    {
+        if (socket.State is not WebSocketState.Open)
+        {
+            return;
+        }
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        try
+        {
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "shutdown", cts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            socket.Abort();
+        }
+        catch (WebSocketException)
+        {
+            socket.Abort();
+        }
     }
 }

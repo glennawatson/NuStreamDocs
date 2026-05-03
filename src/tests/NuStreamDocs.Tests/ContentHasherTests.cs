@@ -19,10 +19,10 @@ public class ContentHasherTests
         {
             await File.WriteAllTextAsync(path, "content");
             var hash = await ContentHasher.HashFileAsync(path, CancellationToken.None);
-            await Assert.That(hash).IsNotNullOrEmpty();
+            await Assert.That(hash.Length).IsEqualTo(ContentHasher.HashByteLength);
 
             var hash2 = await ContentHasher.HashFileAsync(path, CancellationToken.None);
-            await Assert.That(hash).IsEqualTo(hash2);
+            await Assert.That(hash.AsSpan().SequenceEqual(hash2)).IsTrue();
         }
         finally
         {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Text;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Versions.Tests;
@@ -28,7 +29,7 @@ public class VersionsPluginTests
             var entries = VersionsManifest.Read(siteRoot);
             await Assert.That(entries.Count).IsEqualTo(1);
             await Assert.That(entries[0].Version).IsEqualTo("0.4.2");
-            await Assert.That(entries[0].Aliases[0]).IsEqualTo("latest");
+            await Assert.That(Encoding.UTF8.GetString(entries[0].Aliases[0])).IsEqualTo("latest");
         }
         finally
         {
@@ -48,7 +49,7 @@ public class VersionsPluginTests
         try
         {
             var first = new VersionsPlugin(new("0.4.2", "0.4 (initial)"));
-            var second = new VersionsPlugin(new("0.4.2", "0.4 (refreshed)", ["latest"]));
+            var second = new VersionsPlugin(new("0.4.2", "0.4 (refreshed)", [[.. "latest"u8]]));
             var context = new PluginFinalizeContext(versionRoot);
 
             await first.OnFinalizeAsync(context, CancellationToken.None);

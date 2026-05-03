@@ -39,11 +39,13 @@ public class BuildManifestParseTests
     {
         using var temp = new ScratchDir();
         var path = Path.Combine(temp.Root, BuildManifest.FileName);
+
+        // Hashes are base64-encoded byte arrays; "AQIDBAUGBwg=" decodes to {1,2,3,4,5,6,7,8}.
         const string Json = "{\"schema\":1,\"entries\":[" +
-            "{\"path\":\"good.md\",\"hash\":\"h\",\"len\":1}," +
+            "{\"path\":\"good.md\",\"hash\":\"AQIDBAUGBwg=\",\"len\":1}," +
             "{\"path\":\"missing-hash.md\",\"len\":2}," +
             "\"not an object\"," +
-            "{\"path\":\"second-good.md\",\"hash\":\"h2\",\"len\":3}]}";
+            "{\"path\":\"second-good.md\",\"hash\":\"CQoLDA0ODxA=\",\"len\":3}]}";
         await File.WriteAllTextAsync(path, Json);
         var manifest = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
         await Assert.That(manifest.Count).IsEqualTo(2);

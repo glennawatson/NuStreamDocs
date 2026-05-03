@@ -158,7 +158,7 @@ public class NavRenderBenchmarks
     /// <returns>A task representing the asynchronous setup.</returns>
     private static Task ConfigureAsync(NavPlugin plugin, string inputRoot, string outputRoot)
     {
-        var context = new PluginConfigureContext(default, inputRoot, outputRoot, [plugin]);
+        var context = new PluginConfigureContext(inputRoot, outputRoot, [plugin]);
         return plugin.OnConfigureAsync(context, CancellationToken.None).AsTask();
     }
 

@@ -44,6 +44,9 @@ public enum BlockKind
     /// <summary>List item, ordered or bullet.</summary>
     ListItem,
 
+    /// <summary>Continuation line inside an open list item — body indented at or beyond the list's content column.</summary>
+    ListItemContent,
+
     /// <summary>Default text container.</summary>
     Paragraph,
 

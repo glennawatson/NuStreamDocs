@@ -11,14 +11,17 @@ namespace NuStreamDocs.Tests;
 /// <summary>Direct coverage for small core helpers that lack dedicated tests.</summary>
 public class CoverageBatchTests
 {
-    /// <summary>ContentHasher.EmptyHex returns the canonical empty-content hex string.</summary>
+    /// <summary><see cref="ContentHasher.Empty"/> returns an 8-byte zero-filled digest.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task ContentHasherEmptyHex()
+    public async Task ContentHasherEmpty()
     {
-        var empty = ContentHasher.EmptyHex();
-        await Assert.That(empty).IsEqualTo(new('0', empty.Length));
-        await Assert.That(empty.Length).IsGreaterThan(0);
+        var empty = ContentHasher.Empty();
+        await Assert.That(empty.Length).IsEqualTo(ContentHasher.HashByteLength);
+        for (var i = 0; i < empty.Length; i++)
+        {
+            await Assert.That(empty[i]).IsEqualTo((byte)0);
+        }
     }
 
     /// <summary>Default PageBuilderPool.Rent() yields a non-null writer.</summary>
@@ -40,7 +43,7 @@ public class CoverageBatchTests
         try
         {
             var manifest = BuildManifest.Empty();
-            manifest.Replace([new("a.md", "deadbeef", 42L)]);
+            manifest.Replace([new("a.md", new byte[ContentHasher.HashByteLength], 42L)]);
             await manifest.SaveAsync(dir, CancellationToken.None);
             await Assert.That(manifest.Count).IsEqualTo(1);
 

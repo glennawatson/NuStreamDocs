@@ -70,6 +70,29 @@ public class BlockScannerTests
         await Assert.That(kinds[0]).IsEqualTo(BlockKind.IndentedCode);
     }
 
+    /// <summary>Indented lines following a list item should classify as list-item continuation, not indented code.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task IndentedLinesAfterListItemBecomeListItemContent()
+    {
+        var kinds = ScanKinds("-   item\n\n    ---\n\n    body\n"u8);
+        await Assert.That(kinds[0]).IsEqualTo(BlockKind.ListItem);
+        await Assert.That(kinds[1]).IsEqualTo(BlockKind.Blank);
+        await Assert.That(kinds[2]).IsEqualTo(BlockKind.ListItemContent);
+        await Assert.That(kinds[3]).IsEqualTo(BlockKind.Blank);
+        await Assert.That(kinds[4]).IsEqualTo(BlockKind.ListItemContent);
+    }
+
+    /// <summary>An outdented non-list line should close the list and reclassify normally.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task OutdentedLineClosesList()
+    {
+        var kinds = ScanKinds("- item\noutside\n"u8);
+        await Assert.That(kinds[0]).IsEqualTo(BlockKind.ListItem);
+        await Assert.That(kinds[1]).IsEqualTo(BlockKind.Paragraph);
+    }
+
     /// <summary>Helper that scans <paramref name="utf8"/> and returns the emitted kinds.</summary>
     /// <param name="utf8">UTF-8 source bytes.</param>
     /// <returns>Per-line block kinds.</returns>

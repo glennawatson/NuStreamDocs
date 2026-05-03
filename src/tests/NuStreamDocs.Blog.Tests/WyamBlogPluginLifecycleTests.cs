@@ -15,7 +15,7 @@ public class WyamBlogPluginLifecycleTests
         using var temp = new ScratchDir();
         Directory.CreateDirectory(Path.Combine(temp.Root, "posts"));
         var plugin = new WyamBlogPlugin(new("posts", "Blog"));
-        await plugin.OnConfigureAsync(new(default, temp.Root, "/out", []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(temp.Root, "/out", []), CancellationToken.None);
     }
 
     /// <summary>OnRenderPageAsync no-ops.</summary>

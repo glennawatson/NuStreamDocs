@@ -5,8 +5,8 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
-using NuStreamDocs.Config;
 using NuStreamDocs.Links;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
 
@@ -28,8 +28,7 @@ public class MarkdownLinkRewriterPluginTests
         sink.Write("<a href=\"guide/intro.md\">x</a>"u8);
 
         var plugin = new MarkdownLinkRewriterPlugin();
-        var config = new MkDocsConfig("Site", null, "material", []);
-        await plugin.OnConfigureAsync(new(config, "/in", "/out", []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new PluginConfigureContext("/in", "/out", []), CancellationToken.None);
         await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
 
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("guide/intro");
@@ -59,8 +58,8 @@ public class MarkdownLinkRewriterPluginTests
         sink.Write("<a href=\"intro.md\">x</a>"u8);
 
         var plugin = new MarkdownLinkRewriterPlugin(useDirectoryUrls: true);
-        var config = new MkDocsConfig("Site", null, "material", [], UseDirectoryUrls: false);
-        await plugin.OnConfigureAsync(new(config, "/in", "/out", []), CancellationToken.None);
+        var ctx = new PluginConfigureContext("/in", "/out", []) { UseDirectoryUrls = false };
+        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
         await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
 
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);

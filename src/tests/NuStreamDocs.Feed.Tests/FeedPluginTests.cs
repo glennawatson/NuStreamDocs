@@ -24,7 +24,7 @@ public class FeedPluginTests
     [Test]
     public async Task OnConfigureAsyncSucceeds() =>
         await new FeedPlugin(new("https://x.test/", "T", "D", "blog"))
-            .OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+            .OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnRenderPageAsync is a no-op.</summary>
     /// <returns>Async test.</returns>
@@ -43,7 +43,7 @@ public class FeedPluginTests
     {
         using var dir = new TempDir();
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
     }
 
@@ -55,7 +55,7 @@ public class FeedPluginTests
         using var dir = new TempDir();
         var opts = new FeedOptions("https://x.test/", "T", "D", "blog") { Formats = FeedFormats.None };
         var plugin = new FeedPlugin(opts);
-        await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsFalse();
@@ -80,7 +80,7 @@ public class FeedPluginTests
         using var dir = new TempDir();
         Directory.CreateDirectory(Path.Combine(dir.Root, "blog"));
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
     }
@@ -99,7 +99,7 @@ public class FeedPluginTests
 
         var clock = new FakeTimeProvider(new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), clock);
-        await plugin.OnConfigureAsync(new(default, dir.Root, dir.Root, []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
         await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsTrue();

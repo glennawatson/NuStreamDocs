@@ -4,7 +4,7 @@
 
 using System.Buffers;
 
-namespace NuStreamDocs.Config;
+namespace NuStreamDocs.Common;
 
 /// <summary>
 /// Async UTF-8 line-by-line reader over a <see cref="System.IO.Stream"/>.

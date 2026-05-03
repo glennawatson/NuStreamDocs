@@ -13,7 +13,7 @@ public class MetadataPluginLifecycleTests
     /// <summary>OnConfigureAsync captures the input root.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync() => await new MetadataPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+    public async Task OnConfigureAsync() => await new MetadataPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnRenderPageAsync is a no-op.</summary>
     /// <returns>Async test.</returns>

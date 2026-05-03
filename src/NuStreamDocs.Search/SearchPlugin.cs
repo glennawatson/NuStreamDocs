@@ -38,8 +38,8 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     /// <summary>Logger for diagnostics.</summary>
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    /// <summary>UTF-8 byte forms of <see cref="SearchOptions.SearchableFrontmatterKeys"/>; encoded once at construction so the per-page extractor never re-encodes.</summary>
-    private readonly byte[][] _searchableFrontmatterKeyBytes = Utf8Encoder.EncodeArray(options.SearchableFrontmatterKeys);
+    /// <summary>Alias for <see cref="SearchOptions.SearchableFrontmatterKeys"/> — the option list is already byte-shaped, so the per-page extractor reads directly without copying.</summary>
+    private readonly byte[][] _searchableFrontmatterKeyBytes = options.SearchableFrontmatterKeys;
 
     /// <summary>Output root captured during configure.</summary>
     private string _outputRoot = string.Empty;

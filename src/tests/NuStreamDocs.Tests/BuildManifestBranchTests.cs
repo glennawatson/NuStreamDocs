@@ -39,12 +39,14 @@ public class BuildManifestBranchTests
     {
         var manifest = BuildManifest.Empty();
         var queue = new ConcurrentQueue<ManifestEntry>();
-        queue.Enqueue(new("a.md", "hash1", 10));
-        queue.Enqueue(new("b.md", "hash2", 20));
+        var aHash = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+        var bHash = new byte[] { 9, 10, 11, 12, 13, 14, 15, 16 };
+        queue.Enqueue(new("a.md", aHash, 10));
+        queue.Enqueue(new("b.md", bHash, 20));
         manifest.Replace(queue);
         await Assert.That(manifest.Count).IsEqualTo(2);
         await Assert.That(manifest.TryGet("a.md", out var entry)).IsTrue();
-        await Assert.That(entry.ContentHash).IsEqualTo("hash1");
+        await Assert.That(entry.ContentHash.AsSpan().SequenceEqual(aHash)).IsTrue();
     }
 
     /// <summary>TryGet returns false for unknown paths.</summary>
@@ -63,12 +65,13 @@ public class BuildManifestBranchTests
     {
         using var temp = new ScratchDir();
         var manifest = BuildManifest.Empty();
-        manifest.Replace([new("p.md", "deadbeef", 99)]);
+        var hash = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04 };
+        manifest.Replace([new("p.md", hash, 99)]);
         await manifest.SaveAsync(temp.Root, CancellationToken.None);
         var loaded = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
         await Assert.That(loaded.Count).IsEqualTo(1);
         await Assert.That(loaded.TryGet("p.md", out var entry)).IsTrue();
-        await Assert.That(entry.ContentHash).IsEqualTo("deadbeef");
+        await Assert.That(entry.ContentHash.AsSpan().SequenceEqual(hash)).IsTrue();
         await Assert.That(entry.OutputLengthBytes).IsEqualTo(99);
     }
 

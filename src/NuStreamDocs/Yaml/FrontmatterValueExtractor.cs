@@ -15,6 +15,69 @@ namespace NuStreamDocs.Yaml;
 /// </summary>
 public static class FrontmatterValueExtractor
 {
+    /// <summary>Returns true when the top-level block-list under <paramref name="listKey"/> contains an item whose trimmed value equals <paramref name="entry"/>.</summary>
+    /// <param name="source">UTF-8 markdown source bytes (frontmatter + body).</param>
+    /// <param name="listKey">UTF-8 list-key bytes (e.g. <c>"hide"u8</c>).</param>
+    /// <param name="entry">UTF-8 entry bytes to look for (e.g. <c>"navigation"u8</c>).</param>
+    /// <returns>True when the entry is present in the block-list.</returns>
+    public static bool ListContains(ReadOnlySpan<byte> source, ReadOnlySpan<byte> listKey, ReadOnlySpan<byte> entry)
+    {
+        if (listKey.IsEmpty || entry.IsEmpty || !YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
+        {
+            return false;
+        }
+
+        var frontmatter = source[..closerStart];
+        var cursor = 0;
+        while (cursor < frontmatter.Length)
+        {
+            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var line = frontmatter[cursor..lineEnd];
+            var trimmed = YamlByteScanner.TrimLeading(line);
+            if (trimmed.Length > listKey.Length
+                && trimmed.StartsWith(listKey)
+                && trimmed[listKey.Length] is (byte)':')
+            {
+                return BlockListContains(frontmatter, lineEnd, entry);
+            }
+
+            cursor = lineEnd;
+        }
+
+        return false;
+    }
+
+    /// <summary>Returns the trimmed inline scalar value bytes for the top-level key <paramref name="keyBytes"/>, or empty when absent / non-scalar.</summary>
+    /// <param name="source">UTF-8 markdown source bytes (frontmatter + body).</param>
+    /// <param name="keyBytes">UTF-8 key bytes (e.g. <c>"title"u8</c>).</param>
+    /// <returns>Trimmed inline scalar slice into <paramref name="source"/>, or empty when no scalar value follows the key.</returns>
+    public static ReadOnlySpan<byte> GetScalar(ReadOnlySpan<byte> source, ReadOnlySpan<byte> keyBytes)
+    {
+        if (keyBytes.IsEmpty || !YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
+        {
+            return [];
+        }
+
+        var frontmatter = source[..closerStart];
+        var cursor = 0;
+        while (cursor < frontmatter.Length)
+        {
+            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var line = frontmatter[cursor..lineEnd];
+            var trimmed = YamlByteScanner.TrimLeading(line);
+            if (trimmed.Length > keyBytes.Length
+                && trimmed.StartsWith(keyBytes)
+                && trimmed[keyBytes.Length] is (byte)':')
+            {
+                return YamlByteScanner.TrimWhitespace(trimmed[(keyBytes.Length + 1)..]);
+            }
+
+            cursor = lineEnd;
+        }
+
+        return [];
+    }
+
     /// <summary>
     /// Reads the frontmatter values for every key in <paramref name="keys"/>
     /// from <paramref name="source"/> and appends each (separated by a single
@@ -129,5 +192,44 @@ public static class FrontmatterValueExtractor
 
             cursor = lineEnd;
         }
+    }
+
+    /// <summary>Walks the indented block-list starting at <paramref name="cursor"/>, returning true on a matching item.</summary>
+    /// <param name="frontmatter">Frontmatter bytes.</param>
+    /// <param name="cursor">Cursor positioned at the first child line.</param>
+    /// <param name="entry">Entry bytes to look for.</param>
+    /// <returns>True on match.</returns>
+    private static bool BlockListContains(ReadOnlySpan<byte> frontmatter, int cursor, ReadOnlySpan<byte> entry)
+    {
+        while (cursor < frontmatter.Length)
+        {
+            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var line = frontmatter[cursor..lineEnd];
+            if (line.IsEmpty)
+            {
+                break;
+            }
+
+            var first = line[0];
+            if (first is not ((byte)' ' or (byte)'\t' or (byte)'-'))
+            {
+                break;
+            }
+
+            var trimmed = YamlByteScanner.TrimLeading(line);
+            if (trimmed is [(byte)'-', ..])
+            {
+                trimmed = YamlByteScanner.TrimLeading(trimmed[1..]);
+            }
+
+            if (YamlByteScanner.TrimWhitespace(trimmed).SequenceEqual(entry))
+            {
+                return true;
+            }
+
+            cursor = lineEnd;
+        }
+
+        return false;
     }
 }

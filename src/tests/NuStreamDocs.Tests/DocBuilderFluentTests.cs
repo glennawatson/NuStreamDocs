@@ -4,7 +4,6 @@
 
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
-using NuStreamDocs.Config;
 
 namespace NuStreamDocs.Tests;
 
@@ -153,31 +152,6 @@ public class DocBuilderFluentTests
         await Assert.That(first).IsSameReferenceAs(second);
     }
 
-    /// <summary>UseConfigReader rejects null.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseConfigReaderRejectsNull()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseConfigReader(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>FindConfigReader returns null when no reader recognizes the extension.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task FindConfigReaderMiss() =>
-        await Assert.That(new DocBuilder().FindConfigReader(".xml".AsSpan())).IsNull();
-
-    /// <summary>FindConfigReader returns the first registered match.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task FindConfigReaderHit()
-    {
-        var reader = new StubReader(".test");
-        var builder = new DocBuilder().UseConfigReader(reader);
-        await Assert.That(builder.FindConfigReader(".test".AsSpan())).IsSameReferenceAs(reader);
-    }
-
     /// <summary>RenderPageAsync rejects a null html sink.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -186,19 +160,5 @@ public class DocBuilderFluentTests
         var ex = await Assert.ThrowsAsync<ArgumentNullException>(static () =>
             new DocBuilder().RenderPageAsync("p.md", default, null!, CancellationToken.None));
         await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>Stub config reader for the FindConfigReader hit/miss tests.</summary>
-    /// <param name="extension">Extension this stub matches.</param>
-    private sealed class StubReader(string extension) : IConfigReader
-    {
-        /// <inheritdoc/>
-        public string FormatName => "stub";
-
-        /// <inheritdoc/>
-        public bool RecognizesExtension(ReadOnlySpan<char> ext) => ext.SequenceEqual(extension);
-
-        /// <inheritdoc/>
-        public MkDocsConfig Read(ReadOnlySpan<byte> utf8Source) => new("Site", null, "material", []);
     }
 }

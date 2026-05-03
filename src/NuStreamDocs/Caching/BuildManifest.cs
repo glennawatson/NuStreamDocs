@@ -150,7 +150,7 @@ public sealed class BuildManifest
             var entry = pair.Value;
             writer.WriteStartObject();
             writer.WriteString("path"u8, entry.RelativePath);
-            writer.WriteString("hash"u8, entry.ContentHash);
+            writer.WriteBase64String("hash"u8, entry.ContentHash);
             writer.WriteNumber("len"u8, entry.OutputLengthBytes);
             writer.WriteEndObject();
         }
@@ -248,8 +248,17 @@ public sealed class BuildManifest
         }
 
         var path = pathProp.GetString();
-        var hash = hashProp.GetString();
-        if (path is null || hash is null)
+        if (path is null || hashProp.ValueKind != JsonValueKind.String)
+        {
+            return false;
+        }
+
+        byte[] hash;
+        try
+        {
+            hash = hashProp.GetBytesFromBase64();
+        }
+        catch (FormatException)
         {
             return false;
         }

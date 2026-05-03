@@ -41,7 +41,7 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
-        _useDirectoryUrls = _useDirectoryUrlsOverride ?? context.Config.UseDirectoryUrls;
+        _useDirectoryUrls = _useDirectoryUrlsOverride ?? context.UseDirectoryUrls;
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }

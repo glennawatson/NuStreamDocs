@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Common;
@@ -76,4 +77,10 @@ public static class Utf8Encoder
 
         return result;
     }
+
+    /// <summary>Extension form of <see cref="EncodeArray"/>; lets call sites read <c>values.EncodeUtf8Array()</c> at the natural string-boundary.</summary>
+    /// <param name="values">Source strings.</param>
+    /// <returns>Per-entry UTF-8 bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte[][] EncodeUtf8Array(this string[]? values) => EncodeArray(values);
 }

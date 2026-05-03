@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Building;
+using NuStreamDocs.Config.MkDocs;
 
 namespace NuStreamDocs.Config.Zensical.Tests;
 
@@ -55,14 +56,15 @@ public class ZensicalConfigReaderTests
         await Assert.That(fromStream.ThemeName).IsEqualTo(fromSpan.ThemeName);
     }
 
-    /// <summary>The Use extension should register the reader for the toml extension.</summary>
+    /// <summary>UseZensicalConfig with a TOML byte span applies the parsed site metadata to the builder.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task BuilderRegistersReader()
+    public async Task UseZensicalConfigAppliesSiteMetadata()
     {
-        var builder = new DocBuilder().UseZensicalConfig();
-        var reader = builder.FindConfigReader(".toml");
-        await Assert.That(reader).IsNotNull();
-        await Assert.That(reader!.FormatName).IsEqualTo("zensical");
+        var toml = "site_name = \"From-Toml\"\nsite_url = \"https://x.test/\"\n[theme]\nname = \"material\"\n"u8;
+        var builder = new DocBuilder().UseZensicalConfig(toml);
+
+        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteName())).IsEqualTo("From-Toml");
+        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteUrl())).IsEqualTo("https://x.test/");
     }
 }

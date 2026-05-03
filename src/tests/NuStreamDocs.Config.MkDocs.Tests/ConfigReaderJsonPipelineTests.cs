@@ -3,9 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
-using NuStreamDocs.Config;
 
-namespace NuStreamDocs.Tests;
+namespace NuStreamDocs.Config.MkDocs.Tests;
 
 /// <summary>Direct tests for the shared YAML/TOML → JSON → MkDocsConfig pipeline.</summary>
 public class ConfigReaderJsonPipelineTests

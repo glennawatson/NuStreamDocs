@@ -2,20 +2,19 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using System.Text.Json;
 
-namespace NuStreamDocs.Config;
+namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
-/// Format-neutral helper that reads a <see cref="MkDocsConfig"/> from
-/// a UTF-8 JSON byte span.
+/// Format-neutral helper that reads a <see cref="MkDocsConfig"/> from a UTF-8 JSON byte span.
 /// </summary>
 /// <remarks>
-/// Both <c>NuStreamDocs.Config.MkDocs</c> (YAML) and
-/// <c>NuStreamDocs.Config.Zensical</c> (TOML) emit JSON with the same
-/// shape and route through this parser, so the post-conversion path
-/// stays shared and AOT-clean.
+/// Both <c>NuStreamDocs.Config.MkDocs</c> (YAML) and <c>NuStreamDocs.Config.Zensical</c> (TOML)
+/// emit JSON with the same shape and route through this parser, so the post-conversion path stays
+/// shared and AOT-clean. Nav parsing lives in the dialect-specific reader assemblies and produces
+/// <c>NavEntry[]</c> directly into <c>NavOptions.CuratedEntries</c> — this parser handles only
+/// site-level metadata.
 /// </remarks>
 public static class MkDocsConfigJsonParser
 {
@@ -34,10 +33,9 @@ public static class MkDocsConfigJsonParser
         var siteName = root.TryGetProperty("site_name"u8, out var n) ? n.GetString() ?? string.Empty : string.Empty;
         var siteUrl = root.TryGetProperty("site_url"u8, out var u) ? u.GetString() : null;
         var themeName = ReadThemeName(root);
-        var nav = ReadNav(root);
         var useDirectoryUrls = !root.TryGetProperty("use_directory_urls"u8, out var d) || ReadBool(d, defaultValue: true);
 
-        return new(siteName, siteUrl, themeName, nav, useDirectoryUrls);
+        return new(siteName, siteUrl, themeName, useDirectoryUrls);
     }
 
     /// <summary>Reads a JSON boolean, falling back to <paramref name="defaultValue"/> for unexpected shapes.</summary>
@@ -67,53 +65,5 @@ public static class MkDocsConfigJsonParser
             JsonValueKind.Object when theme.TryGetProperty("name"u8, out var name) => name.GetString() ?? DefaultThemeName,
             _ => DefaultThemeName,
         };
-    }
-
-    /// <summary>Reads the flat-list form of the <c>nav</c> array.</summary>
-    /// <param name="root">Root JSON element.</param>
-    /// <returns>Parsed nav entries; empty when the array is missing or nested.</returns>
-    private static NavEntry[] ReadNav(in JsonElement root)
-    {
-        if (!root.TryGetProperty("nav"u8, out var nav) || nav.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        var capacity = nav.GetArrayLength();
-        if (capacity == 0)
-        {
-            return [];
-        }
-
-        var buffer = ArrayPool<NavEntry>.Shared.Rent(capacity);
-        try
-        {
-            var count = 0;
-            var items = nav.EnumerateArray();
-            while (items.MoveNext())
-            {
-                var item = items.Current;
-                if (item.ValueKind != JsonValueKind.Object)
-                {
-                    continue;
-                }
-
-                var props = item.EnumerateObject();
-                while (props.MoveNext())
-                {
-                    var prop = props.Current;
-                    if (prop.Value.ValueKind == JsonValueKind.String)
-                    {
-                        buffer[count++] = new(prop.Name, prop.Value.GetString() ?? string.Empty);
-                    }
-                }
-            }
-
-            return NavBuilder.ToArray(buffer, count);
-        }
-        finally
-        {
-            ArrayPool<NavEntry>.Shared.Return(buffer, clearArray: true);
-        }
     }
 }

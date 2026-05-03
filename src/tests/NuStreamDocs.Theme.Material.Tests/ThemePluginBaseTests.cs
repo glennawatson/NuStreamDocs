@@ -21,11 +21,11 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with
+            .UseMaterialTheme(static opts => opts
+                .WithSiteName("Hi")
+                .WithRepoUrl("https://github.com/owner/repo")
+                .WithEditUri("edit/main/docs") with
             {
-                SiteName = "Hi",
-                RepoUrl = "https://github.com/owner/repo",
-                EditUri = "edit/main/docs",
                 EnableScrollToTop = true,
                 EnableTocFollow = true,
                 EnableNavigationFooter = true,
@@ -48,12 +48,10 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with
-            {
-                SiteName = "Hi",
-                RepoUrl = "https://github.com/owner/repo",
-                EditUri = string.Empty,
-            })
+            .UseMaterialTheme(static opts => opts
+                .WithSiteName("Hi")
+                .WithRepoUrl("https://github.com/owner/repo")
+                .WithEditUri(string.Empty))
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -71,12 +69,10 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with
-            {
-                SiteName = "Hi",
-                RepoUrl = string.Empty,
-                EditUri = "edit/main/docs",
-            })
+            .UseMaterialTheme(static opts => opts
+                .WithSiteName("Hi")
+                .WithRepoUrl(string.Empty)
+                .WithEditUri("edit/main/docs"))
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -94,12 +90,10 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with
-            {
-                SiteName = "Hi",
-                RepoUrl = "https://github.com/owner/repo/",
-                EditUri = "/edit/main/docs/",
-            })
+            .UseMaterialTheme(static opts => opts
+                .WithSiteName("Hi")
+                .WithRepoUrl("https://github.com/owner/repo/")
+                .WithEditUri("/edit/main/docs/"))
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -120,12 +114,10 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with
-            {
-                SiteName = "Hi",
-                RepoUrl = "https://github.com/owner/repo",
-                EditUri = "edit/main/docs",
-            })
+            .UseMaterialTheme(static opts => opts
+                .WithSiteName("Hi")
+                .WithRepoUrl("https://github.com/owner/repo")
+                .WithEditUri("edit/main/docs"))
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "guide", "intro.html"));
@@ -143,9 +135,8 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
             {
-                SiteName = "Hi",
                 AssetSource = MaterialAssetSource.Cdn,
             })
             .BuildAsync();
@@ -166,7 +157,7 @@ public class ThemePluginBaseTests
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UsePlugin(new StubNeighbours(globalUrl: "/prev-page", sectionUrl: "/section-page"))
-            .UseMaterialTheme(static opts => opts with { SiteName = "Hi", EnableNavigationFooter = true, SectionScopedFooter = false })
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true, SectionScopedFooter = false })
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -185,7 +176,7 @@ public class ThemePluginBaseTests
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UsePlugin(new StubNeighbours(globalUrl: "/global", sectionUrl: "/section-only"))
-            .UseMaterialTheme(static opts => opts with { SiteName = "Hi", EnableNavigationFooter = true, SectionScopedFooter = true })
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true, SectionScopedFooter = true })
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -205,7 +196,7 @@ public class ThemePluginBaseTests
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UsePlugin(new StubNeighbours(globalUrl: "/should-not-appear", sectionUrl: "/should-not-appear"))
-            .UseMaterialTheme(static opts => opts with { SiteName = "Hi", EnableNavigationFooter = false })
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = false })
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -223,7 +214,7 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with { SiteName = "Hi", EnableNavigationFooter = true })
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true })
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));

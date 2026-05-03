@@ -22,7 +22,12 @@ public class VersionsManifestParameterizedTests
     public async Task RoundTripShapes(string version, string title, int aliasCount)
     {
         using var temp = new ScratchDir();
-        var aliases = Enumerable.Range(0, aliasCount).Select(i => $"alias{i}").ToArray();
+        var aliases = new byte[aliasCount][];
+        for (var i = 0; i < aliasCount; i++)
+        {
+            aliases[i] = Encoding.UTF8.GetBytes($"alias{i}");
+        }
+
         VersionEntry[] entries = [new(version, title, aliases)];
         VersionsManifest.Write(temp.Root, entries);
         var loaded = VersionsManifest.Read(temp.Root);

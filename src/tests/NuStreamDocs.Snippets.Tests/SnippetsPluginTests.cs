@@ -37,7 +37,7 @@ public class SnippetsPluginTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "include.md"), "spliced");
 
         var plugin = new SnippetsPlugin();
-        await plugin.OnConfigureAsync(new(default, temp.Root, "/out", []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(temp.Root, "/out", []), CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(64);
         plugin.Preprocess("--8<-- \"include.md\""u8, sink);
@@ -53,7 +53,7 @@ public class SnippetsPluginTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "include.md"), "explicit");
 
         var plugin = new SnippetsPlugin(temp.Root);
-        await plugin.OnConfigureAsync(new(default, "/wrong", "/out", []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new("/wrong", "/out", []), CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(64);
         plugin.Preprocess("--8<-- \"include.md\""u8, sink);

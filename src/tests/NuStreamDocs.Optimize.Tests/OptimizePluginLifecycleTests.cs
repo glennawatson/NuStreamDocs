@@ -18,7 +18,7 @@ public class OptimizePluginLifecycleTests
     /// <summary>OptimizePlugin.OnConfigureAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OptimizeOnConfigureAsync() => await new OptimizePlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+    public async Task OptimizeOnConfigureAsync() => await new OptimizePlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 
     /// <summary>OptimizePlugin.OnRenderPageAsync no-ops on plain HTML.</summary>
     /// <returns>Async test.</returns>
@@ -42,7 +42,7 @@ public class OptimizePluginLifecycleTests
     /// <summary>HtmlMinifyPlugin.OnConfigureAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HtmlMinifyOnConfigureAsync() => await new HtmlMinifyPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+    public async Task HtmlMinifyOnConfigureAsync() => await new HtmlMinifyPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 
     /// <summary>HtmlMinifyPlugin.OnFinalizeAsync no-ops.</summary>
     /// <returns>Async test.</returns>

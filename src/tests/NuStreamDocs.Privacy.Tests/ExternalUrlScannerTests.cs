@@ -70,6 +70,27 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task PreFilterRejectsHtmlWithNoUrls() => await Assert.That(ExternalUrlScanner.MayHaveExternalUrls("<p>no urls here</p>"u8)).IsFalse();
 
+    /// <summary>A <c>&lt;link rel="canonical"&gt;</c> URL is left untouched — canonical URLs point AT the canonical site by design.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task LeavesCanonicalLinkAlone()
+    {
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
+        const string Source = "<link rel=\"canonical\" href=\"https://reactiveui.net/docs/\">";
+        var output = Rewrite(Source, registry, EmptyHosts);
+        await Assert.That(output).IsEqualTo(Source);
+    }
+
+    /// <summary>A <c>&lt;link rel="alternate"&gt;</c> with hreflang still localizes — only canonical / og:url / twitter:url are protected.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task RewritesAlternateLinkHreflangVariant()
+    {
+        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
+        var output = Rewrite("<link rel=\"alternate\" hreflang=\"de\" href=\"https://example.com/de/\">", registry, EmptyHosts);
+        await Assert.That(output).Contains("href=\"/assets/external/");
+    }
+
     /// <summary>Helper that runs the scanner and returns the string result.</summary>
     /// <param name="source">HTML input.</param>
     /// <param name="registry">URL registry.</param>

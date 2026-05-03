@@ -77,8 +77,16 @@ internal static class TabsRewriter
             cursor = bodyEnd;
             tabIndex++;
 
-            more = MarkdownCodeScanner.AtLineStart(source, cursor)
-                && TryParseOpener(source, cursor, out titleStart, out titleLen, out headerEnd);
+            // ConsumeBody trims trailing blank lines from its return value, so a `===` opener
+            // separated from the previous body by a blank line lands at the start of a `\n`-only
+            // line rather than the opener bytes. Skip blanks before re-probing.
+            var probe = SkipBlankLines(source, cursor);
+            more = MarkdownCodeScanner.AtLineStart(source, probe)
+                && TryParseOpener(source, probe, out titleStart, out titleLen, out headerEnd);
+            if (more)
+            {
+                cursor = probe;
+            }
         }
 
         writer.Write("</div>\n\n"u8);
@@ -158,6 +166,28 @@ internal static class TabsRewriter
         writer.Write("</label>\n<div class=\"tabbed-content\">\n\n"u8);
         IndentedBlockScanner.WriteDeindented(body, writer);
         writer.Write("\n</div>\n"u8);
+    }
+
+    /// <summary>Advances <paramref name="offset"/> past any run of blank (whitespace-only) lines starting at a line boundary.</summary>
+    /// <param name="source">UTF-8 source bytes.</param>
+    /// <param name="offset">Cursor; expected to be at the start of a line.</param>
+    /// <returns>Offset of the first non-blank line at or after <paramref name="offset"/>.</returns>
+    private static int SkipBlankLines(ReadOnlySpan<byte> source, int offset)
+    {
+        var p = offset;
+        while (p < source.Length)
+        {
+            var rel = source[p..].IndexOf((byte)'\n');
+            var lineEnd = rel < 0 ? source.Length : p + rel + 1;
+            if (!IndentedBlockScanner.IsBlankLine(source[p..lineEnd]))
+            {
+                return p;
+            }
+
+            p = lineEnd;
+        }
+
+        return p;
     }
 
     /// <summary>Writes <paramref name="value"/> as decimal ASCII bytes.</summary>

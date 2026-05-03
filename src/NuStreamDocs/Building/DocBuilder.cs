@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using NuStreamDocs.Config;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Building;
@@ -36,9 +35,6 @@ public sealed class DocBuilder
     /// <summary>Registered plugin instances, in registration order.</summary>
     private readonly List<IDocPlugin> _plugins = new(InitialPluginCapacity);
 
-    /// <summary>Registered config readers, in registration order.</summary>
-    private readonly List<IConfigReader> _configReaders = new(2);
-
     /// <summary>Configured include globs (forward-slashed, relative to the docs root).</summary>
     private readonly List<string> _includes = new(2);
 
@@ -59,6 +55,12 @@ public sealed class DocBuilder
 
     /// <summary>When true, pages whose frontmatter declares <c>draft: true</c> are still rendered; otherwise drafts are skipped.</summary>
     private bool _includeDrafts;
+
+    /// <summary>UTF-8 site name surfaced through <see cref="PluginConfigureContext.SiteName"/>; empty when none configured.</summary>
+    private byte[] _siteName = [];
+
+    /// <summary>UTF-8 canonical site URL surfaced through <see cref="PluginConfigureContext.SiteUrl"/>; empty when none configured.</summary>
+    private byte[] _siteUrl = [];
 
     /// <summary>Gets a value indicating whether the build is configured for the directory-URL output shape.</summary>
     public bool UseDirectoryUrlsEnabled => _useDirectoryUrls;
@@ -252,38 +254,6 @@ public sealed class DocBuilder
         return fresh;
     }
 
-    /// <summary>Registers an <see cref="IConfigReader"/> with the builder.</summary>
-    /// <param name="reader">The reader to register.</param>
-    /// <returns>This builder for chaining.</returns>
-    /// <remarks>
-    /// Each format ships in its own assembly and is registered through
-    /// the assembly's <c>Use{Format}Config()</c> extension. The first
-    /// reader whose <see cref="IConfigReader.RecognizesExtension"/>
-    /// returns true is used at config-load time.
-    /// </remarks>
-    public DocBuilder UseConfigReader(IConfigReader reader)
-    {
-        ArgumentNullException.ThrowIfNull(reader);
-        _configReaders.Add(reader);
-        return this;
-    }
-
-    /// <summary>Returns the first registered reader whose extension matches, or null.</summary>
-    /// <param name="extension">File extension including the leading dot, lowercase.</param>
-    /// <returns>The matching reader, or null when none recognizes the extension.</returns>
-    public IConfigReader? FindConfigReader(in ReadOnlySpan<char> extension)
-    {
-        for (var i = 0; i < _configReaders.Count; i++)
-        {
-            if (_configReaders[i].RecognizesExtension(extension))
-            {
-                return _configReaders[i];
-            }
-        }
-
-        return null;
-    }
-
     /// <summary>Runs the configured build pipeline without cancellation support.</summary>
     /// <returns>The number of pages emitted.</returns>
     public Task<int> BuildAsync() => BuildAsync(CancellationToken.None);
@@ -296,8 +266,72 @@ public sealed class DocBuilder
             _inputRoot,
             _outputRoot,
             [.. _plugins],
-            new(BuildPathFilter(), _logger, _useDirectoryUrls, _includeDrafts),
+            new(BuildPathFilter(), _logger, _useDirectoryUrls, _includeDrafts, _siteName, _siteUrl),
             cancellationToken);
+
+    /// <summary>Gets the configured UTF-8 site name (empty when none).</summary>
+    /// <returns>Configured bytes — never null.</returns>
+    public ReadOnlySpan<byte> SiteName() => _siteName;
+
+    /// <summary>Gets the configured UTF-8 canonical site URL (empty when none).</summary>
+    /// <returns>Configured bytes — never null.</returns>
+    public ReadOnlySpan<byte> SiteUrl() => _siteUrl;
+
+    /// <summary>Sets the UTF-8 site name from a string.</summary>
+    /// <param name="value">Display name; pass empty / null to clear.</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteName(string? value)
+    {
+        _siteName = string.IsNullOrEmpty(value) ? [] : System.Text.Encoding.UTF8.GetBytes(value);
+        return this;
+    }
+
+    /// <summary>Sets the UTF-8 site name directly from byte content.</summary>
+    /// <param name="value">UTF-8 bytes (caller-owned; the builder takes a reference).</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteName(byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        _siteName = value;
+        return this;
+    }
+
+    /// <summary>Sets the UTF-8 site name from a span (copies into a fresh array).</summary>
+    /// <param name="value">UTF-8 bytes.</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteName(ReadOnlySpan<byte> value)
+    {
+        _siteName = value.IsEmpty ? [] : value.ToArray();
+        return this;
+    }
+
+    /// <summary>Sets the UTF-8 canonical site URL from a string.</summary>
+    /// <param name="value">Absolute URL (e.g. <c>https://example.com/</c>); pass null/empty to clear.</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteUrl(string? value)
+    {
+        _siteUrl = string.IsNullOrEmpty(value) ? [] : System.Text.Encoding.UTF8.GetBytes(value);
+        return this;
+    }
+
+    /// <summary>Sets the UTF-8 canonical site URL directly from byte content.</summary>
+    /// <param name="value">UTF-8 bytes (caller-owned; the builder takes a reference).</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteUrl(byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        _siteUrl = value;
+        return this;
+    }
+
+    /// <summary>Sets the UTF-8 canonical site URL from a span (copies into a fresh array).</summary>
+    /// <param name="value">UTF-8 bytes.</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder WithSiteUrl(ReadOnlySpan<byte> value)
+    {
+        _siteUrl = value.IsEmpty ? [] : value.ToArray();
+        return this;
+    }
 
     /// <summary>
     /// Renders a single in-memory document via every registered plugin's

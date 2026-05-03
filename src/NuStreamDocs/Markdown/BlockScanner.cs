@@ -192,6 +192,7 @@ public static class BlockScanner
 
         var fence = default(FenceState);
         var html = default(HtmlBlockState);
+        var list = default(ListState);
         var count = 0;
         var pos = 0;
         while (pos < utf8.Length)
@@ -200,7 +201,7 @@ public static class BlockScanner
             ReadLineExtents(utf8, pos, out var contentEnd, out var nextLine);
 
             var line = utf8[lineStart..contentEnd];
-            var kind = ClassifyLine(line, ref fence, ref html, out var level);
+            var kind = ClassifyLine(line, ref fence, ref html, ref list, out var level);
 
             var span = writer.GetSpan(1);
             span[0] = new(kind, lineStart, contentEnd - lineStart, level);
@@ -233,13 +234,14 @@ public static class BlockScanner
         contentEnd = lfOffset > 0 && utf8[lfAbs - 1] == Cr ? lfAbs - 1 : lfAbs;
     }
 
-    /// <summary>Classifies one already-trimmed-of-line-break line, with fence + html-block state.</summary>
+    /// <summary>Classifies one already-trimmed-of-line-break line, with fence + html-block + list state.</summary>
     /// <param name="line">UTF-8 bytes of the line.</param>
     /// <param name="fence">Open fence state, mutated when this line opens or closes a fence.</param>
     /// <param name="html">Open html-block state, mutated when this line opens or closes a CommonMark HTML block.</param>
+    /// <param name="list">Open list state, mutated when this line opens, continues, or closes a list.</param>
     /// <param name="level">Heading level / fence length / list indent populated on return.</param>
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
-    private static BlockKind ClassifyLine(ReadOnlySpan<byte> line, ref FenceState fence, ref HtmlBlockState html, out int level)
+    private static BlockKind ClassifyLine(ReadOnlySpan<byte> line, ref FenceState fence, ref HtmlBlockState html, ref ListState list, out int level)
     {
         level = 0;
 
@@ -255,17 +257,55 @@ public static class BlockScanner
 
         if (line.IsEmpty)
         {
+            // Blank doesn't close the list; the next line decides.
             return BlockKind.Blank;
         }
 
         var indent = LeadingIndent(line);
+
+        if (list.IsOpen && indent >= list.ContentIndent)
+        {
+            level = list.ContentIndent;
+            return BlockKind.ListItemContent;
+        }
+
         if (indent >= IndentedCodeColumn)
         {
+            list = default;
             level = indent;
             return BlockKind.IndentedCode;
         }
 
-        return ClassifyContentLine(line[indent..], ref fence, ref html, out level);
+        var kind = ClassifyContentLine(line[indent..], ref fence, ref html, out level);
+        list = kind is BlockKind.ListItem
+            ? new(ComputeListContentIndent(line, indent, level))
+            : default;
+        return kind;
+    }
+
+    /// <summary>Returns the content column for a list item — the column where the post-marker content actually begins.</summary>
+    /// <param name="line">UTF-8 line.</param>
+    /// <param name="indent">Leading indent (bytes; tabs counted as 1, matching <see cref="LeadingIndent"/>).</param>
+    /// <param name="markerLength">Marker length (bullet = 1, ordered = digit count + delimiter byte).</param>
+    /// <returns>Content column where continuation lines must reach to stay inside the item.</returns>
+    /// <remarks>
+    /// CommonMark says one mandatory space after the marker, plus up to three additional spaces are
+    /// part of the marker indent. A single mandatory space gives the lower bound (<c>-foo</c>-style
+    /// items don't reach this branch — the classifier rejects them). Past one mandatory space, we
+    /// follow the actual whitespace run so author conventions like <c>-   text</c> (3 spaces, content
+    /// at column 4) keep continuation lines aligned with their author intent.
+    /// </remarks>
+    private static int ComputeListContentIndent(ReadOnlySpan<byte> line, int indent, int markerLength)
+    {
+        var afterMarker = indent + markerLength;
+        var p = afterMarker;
+        while (p < line.Length && line[p] is Sp or Tab)
+        {
+            p++;
+        }
+
+        var spaceRun = p - afterMarker;
+        return spaceRun is 0 ? afterMarker + 1 : afterMarker + spaceRun;
     }
 
     /// <summary>Classifies the indent-trimmed body of a content line.</summary>
@@ -879,5 +919,13 @@ public static class BlockScanner
     {
         /// <summary>Gets a value indicating whether an HTML block is currently open.</summary>
         public bool IsOpen => Kind is not HtmlBlockKind.None;
+    }
+
+    /// <summary>Open-list state held across lines during a single scan.</summary>
+    /// <param name="ContentIndent">Column at which continuation lines must start to stay inside the list item.</param>
+    private readonly record struct ListState(int ContentIndent)
+    {
+        /// <summary>Gets a value indicating whether a list is currently open.</summary>
+        public bool IsOpen => ContentIndent > 0;
     }
 }

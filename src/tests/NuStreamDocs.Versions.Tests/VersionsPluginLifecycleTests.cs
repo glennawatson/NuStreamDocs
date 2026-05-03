@@ -20,7 +20,7 @@ public class VersionsPluginLifecycleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task OnConfigure() =>
-        await new VersionsPlugin(new("1.0", "Stable")).OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+        await new VersionsPlugin(new("1.0", "Stable")).OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnRenderPageAsync no-ops.</summary>
     /// <returns>Async test.</returns>

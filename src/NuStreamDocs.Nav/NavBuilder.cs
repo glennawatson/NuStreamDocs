@@ -2,18 +2,18 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace NuStreamDocs.Config;
+namespace NuStreamDocs.Nav;
 
 /// <summary>
 /// Allocation-conscious helpers for assembling <see cref="NavEntry"/> arrays.
 /// </summary>
 /// <remarks>
 /// Keeps the per-entry path off the heap by writing directly into a
-/// caller-rented buffer, then trimming in one move. Used by the config
-/// reader and the awesome-nav plugin to avoid <c>List&lt;T&gt;</c>
-/// resize churn on large sites.
+/// caller-rented buffer, then trimming in one move. Used by config
+/// readers (mkdocs.yml, docfx <c>toc.yml</c>, awesome-nav) and the auto-discovery
+/// builder to avoid <c>List&lt;T&gt;</c> resize churn on large sites.
 /// </remarks>
-internal static class NavBuilder
+public static class NavBuilder
 {
     /// <summary>
     /// Returns a properly sized <see cref="NavEntry"/> array from a
@@ -24,7 +24,7 @@ internal static class NavBuilder
     /// <see cref="System.Buffers.ArrayPool{T}"/> by the caller.</param>
     /// <param name="count">Number of valid entries at the start of <paramref name="buffer"/>.</param>
     /// <returns>A right-sized array; empty when <paramref name="count"/> is 0.</returns>
-    internal static NavEntry[] ToArray(NavEntry[] buffer, int count)
+    public static NavEntry[] ToArray(NavEntry[] buffer, int count)
     {
         ArgumentNullException.ThrowIfNull(buffer);
         if (count == 0)

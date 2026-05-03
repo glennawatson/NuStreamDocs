@@ -3,9 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
-using NuStreamDocs.Config;
 
-namespace NuStreamDocs.Tests;
+namespace NuStreamDocs.Config.MkDocs.Tests;
 
 /// <summary>Behavior tests for <c>MkDocsConfigJsonParser</c>.</summary>
 public class MkDocsConfigJsonParserTests
@@ -68,48 +67,6 @@ public class MkDocsConfigJsonParserTests
     {
         var config = MkDocsConfigJsonParser.FromJson("{\"theme\":42}"u8);
         await Assert.That(config.ThemeName).IsEqualTo("material");
-    }
-
-    /// <summary>Flat nav of <c>{ Title: path }</c> objects parses.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task FlatNavParses()
-    {
-        const string Json = "{\"nav\":[{\"Home\":\"index.md\"},{\"Guide\":\"guide.md\"}]}";
-        var config = MkDocsConfigJsonParser.FromJson(Encoding.UTF8.GetBytes(Json));
-        await Assert.That(config.Nav.Length).IsEqualTo(2);
-        await Assert.That(config.Nav[0].Title).IsEqualTo("Home");
-        await Assert.That(config.Nav[0].Path).IsEqualTo("index.md");
-        await Assert.That(config.Nav[1].Title).IsEqualTo("Guide");
-    }
-
-    /// <summary>Empty nav array yields an empty <c>NavEntry[]</c>.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task EmptyNavArray()
-    {
-        var config = MkDocsConfigJsonParser.FromJson("{\"nav\":[]}"u8);
-        await Assert.That(config.Nav.Length).IsEqualTo(0);
-    }
-
-    /// <summary>Non-array nav is silently ignored.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NonArrayNav()
-    {
-        var config = MkDocsConfigJsonParser.FromJson("{\"nav\":\"not-an-array\"}"u8);
-        await Assert.That(config.Nav.Length).IsEqualTo(0);
-    }
-
-    /// <summary>Nav entries that aren't string-valued are skipped.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NavSkipsNonStringValues()
-    {
-        const string Json = "{\"nav\":[{\"Home\":\"index.md\"},{\"Nested\":{\"sub\":\"path\"}}]}";
-        var config = MkDocsConfigJsonParser.FromJson(Encoding.UTF8.GetBytes(Json));
-        await Assert.That(config.Nav.Length).IsEqualTo(1);
-        await Assert.That(config.Nav[0].Title).IsEqualTo("Home");
     }
 
     /// <summary>use_directory_urls of an unexpected kind falls back to true.</summary>

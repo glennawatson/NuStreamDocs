@@ -10,7 +10,7 @@ public class LinkValidatorPluginLifecycleTests
     /// <summary>OnConfigureAsync no-ops.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync() => await new LinkValidatorPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+    public async Task OnConfigureAsync() => await new LinkValidatorPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnRenderPageAsync no-ops.</summary>
     /// <returns>Async test.</returns>

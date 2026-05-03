@@ -43,6 +43,12 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>UTF-8 template-data key for <c>site_name</c>.</summary>
     private static readonly byte[] SiteNameKey = "site_name"u8.ToArray();
 
+    /// <summary>UTF-8 template variable for the absolute site URL.</summary>
+    private static readonly byte[] SiteUrlKey = "site_url"u8.ToArray();
+
+    /// <summary>UTF-8 template variable for the per-page canonical URL.</summary>
+    private static readonly byte[] CanonicalUrlKey = "canonical_url"u8.ToArray();
+
     /// <summary>UTF-8 template-data key for <c>site_root</c>.</summary>
     private static readonly byte[] SiteRootKey = "site_root"u8.ToArray();
 
@@ -85,6 +91,15 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>UTF-8 template-data key for <c>head_extras</c>.</summary>
     private static readonly byte[] HeadExtrasKey = "head_extras"u8.ToArray();
 
+    /// <summary>UTF-8 template-data key for <c>description</c>.</summary>
+    private static readonly byte[] DescriptionKey = "description"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>hide_navigation</c>.</summary>
+    private static readonly byte[] HideNavigationKey = "hide_navigation"u8.ToArray();
+
+    /// <summary>UTF-8 template-data key for <c>hide_toc</c>.</summary>
+    private static readonly byte[] HideTocKey = "hide_toc"u8.ToArray();
+
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly TOptions _options;
 
@@ -100,23 +115,14 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>First registered nav-neighbour provider, captured during <see cref="OnConfigureAsync"/>; null when none was registered.</summary>
     private INavNeighboursProvider? _neighbours;
 
-    /// <summary>Per-build constant scalars cached during <see cref="OnConfigureAsync"/> so per-page renders avoid re-encoding them.</summary>
-    private byte[] _languageBytes = [];
+    /// <summary>Per-build edit-link prefix; bytes ending in <c>/</c> ready to concatenate with a relative page path. Empty when edit links are disabled.</summary>
+    private byte[] _editUrlPrefix = [];
 
-    /// <summary>UTF-8 site name; cached during <see cref="OnConfigureAsync"/>.</summary>
-    private byte[] _siteNameBytes = [];
+    /// <summary>Per-build canonical-URL prefix; empty when no site URL is configured.</summary>
+    private byte[] _canonicalUrlPrefix = [];
 
-    /// <summary>UTF-8 asset root; cached during <see cref="OnConfigureAsync"/>.</summary>
-    private byte[] _assetRootBytes = [];
-
-    /// <summary>UTF-8 copyright string; cached during <see cref="OnConfigureAsync"/>.</summary>
-    private byte[] _copyrightBytes = [];
-
-    /// <summary>UTF-8 repo URL; cached during <see cref="OnConfigureAsync"/>.</summary>
-    private byte[] _repoUrlBytes = [];
-
-    /// <summary>Repo/edit prefix normalized once per build for per-page edit URL composition.</summary>
-    private string _editUrlPrefix = string.Empty;
+    /// <summary>Whether the build emits pretty <c>foo/index.html</c> URLs.</summary>
+    private bool _useDirectoryUrls;
 
     /// <summary>Initializes a new instance of the <see cref="ThemePluginBase{TTheme, TOptions}"/> class.</summary>
     /// <param name="options">Theme options.</param>
@@ -141,12 +147,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         _headExtras = HeadExtraComposer.Compose(context.Plugins);
         _plugins = context.Plugins;
         _neighbours = FindNavNeighboursProvider(context.Plugins);
-        _languageBytes = Utf8Encoder.Encode(_options.Language);
-        _siteNameBytes = Utf8Encoder.Encode(_options.SiteName);
-        _assetRootBytes = Utf8Encoder.Encode(_options.ResolveAssetRoot());
-        _copyrightBytes = Utf8Encoder.Encode(_options.Copyright);
-        _repoUrlBytes = Utf8Encoder.Encode(_options.RepoUrl);
         _editUrlPrefix = BuildEditUrlPrefix(_options.RepoUrl, _options.EditUri);
+        _canonicalUrlPrefix = BuildCanonicalUrlPrefix(_options.SiteUrl);
+        _useDirectoryUrls = context.UseDirectoryUrls;
 
         return ValueTask.CompletedTask;
     }
@@ -164,21 +167,22 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             html.WrittenSpan.CopyTo(bodyBuffer);
             html.ResetWrittenCount();
 
-            var pageTitle = HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(context.RelativePath));
-            var editUrl = ResolveEditUrl(context.RelativePath);
+            var pageTitle = ResolvePageTitle(context);
             var neighbours = ResolveNeighbours(context.RelativePath);
             var data = new TemplateData(
-                new(14, ByteArrayComparer.Instance)
+                new(16, ByteArrayComparer.Instance)
                 {
-                    [LanguageKey] = _languageBytes,
-                    [SiteNameKey] = _siteNameBytes,
+                    [LanguageKey] = _options.Language,
+                    [SiteNameKey] = _options.SiteName,
+                    [SiteUrlKey] = _options.SiteUrl,
+                    [CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath),
                     [SiteRootKey] = SiteRootBytes,
                     [PageTitleKey] = Utf8Encoder.Encode(pageTitle),
                     [BodyKey] = new(bodyBuffer, 0, bodyLength),
-                    [AssetRootKey] = _assetRootBytes,
-                    [CopyrightKey] = _copyrightBytes,
-                    [RepoUrlKey] = _repoUrlBytes,
-                    [EditUrlKey] = Utf8Encoder.Encode(editUrl),
+                    [AssetRootKey] = _options.ResolveAssetRoot(),
+                    [CopyrightKey] = _options.Copyright,
+                    [RepoUrlKey] = _options.RepoUrl,
+                    [EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
                     [ScrollToTopKey] = _options.EnableScrollToTop ? TruthyBytes : null,
                     [TocFollowKey] = _options.EnableTocFollow ? TruthyBytes : null,
                     [PrevUrlKey] = Utf8Encoder.Encode(NeighbourUrl(neighbours.PreviousPath)),
@@ -186,6 +190,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [NextUrlKey] = Utf8Encoder.Encode(NeighbourUrl(neighbours.NextPath)),
                     [NextTitleKey] = Utf8Encoder.Encode(neighbours.NextTitle),
                     [HeadExtrasKey] = _headExtras,
+                    [DescriptionKey] = ResolveDescription(context),
+                    [HideNavigationKey] = NuStreamDocs.Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8) ? TruthyBytes : null,
+                    [HideTocKey] = NuStreamDocs.Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
                 },
                 sections: null);
 
@@ -271,27 +278,92 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         });
     }
 
-    /// <summary>Normalizes the repo/edit roots once per build for per-page edit URL composition.</summary>
-    /// <param name="repoUrl">Configured repository URL.</param>
-    /// <param name="editUri">Configured edit path inside the repository.</param>
-    /// <returns>The normalized prefix ending in <c>/</c>, or empty when edit links are disabled.</returns>
-    private static string BuildEditUrlPrefix(string repoUrl, string editUri)
+    /// <summary>Resolves the page description — front-matter <c>description:</c>, or empty when absent.</summary>
+    /// <param name="context">Per-page render context.</param>
+    /// <returns>UTF-8 description bytes, ready for direct emit; empty when no description.</returns>
+    private static byte[] ResolveDescription(in PluginRenderContext context)
     {
-        if (repoUrl is [] || editUri is [])
+        var raw = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "description"u8);
+        if (raw.IsEmpty)
         {
-            return string.Empty;
+            return [];
         }
 
-        var repo = repoUrl.AsSpan().TrimEnd('/');
-        var edit = editUri.AsSpan().Trim('/');
-        return string.Create(repo.Length + edit.Length + EditUrlSeparatorCount, (repoUrl, editUri, repoLength: repo.Length, editLength: edit.Length), static (dst, state) =>
-        {
-            state.repoUrl.AsSpan(0, state.repoLength).CopyTo(dst);
-            dst[state.repoLength] = '/';
-            state.editUri.AsSpan().Trim('/').CopyTo(dst[(state.repoLength + 1)..]);
-            dst[^1] = '/';
-        });
+        return StripYamlQuotes(raw).ToArray();
     }
+
+    /// <summary>Resolves the page title — front-matter <c>title:</c> when present, otherwise the file stem.</summary>
+    /// <param name="context">Per-page render context.</param>
+    /// <returns>HTML-encoded title text.</returns>
+    private static string ResolvePageTitle(in PluginRenderContext context)
+    {
+        var fromFrontMatter = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "title"u8);
+        if (!fromFrontMatter.IsEmpty)
+        {
+            var unquoted = StripYamlQuotes(fromFrontMatter);
+            return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(unquoted));
+        }
+
+        return HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(context.RelativePath));
+    }
+
+    /// <summary>Drops a single matching pair of leading/trailing single- or double-quote bytes from <paramref name="value"/>.</summary>
+    /// <param name="value">UTF-8 candidate.</param>
+    /// <returns>Unquoted slice or <paramref name="value"/> unchanged.</returns>
+    private static ReadOnlySpan<byte> StripYamlQuotes(ReadOnlySpan<byte> value)
+    {
+        if (value.Length >= 2
+            && (value[0] is (byte)'"' or (byte)'\'')
+            && value[^1] == value[0])
+        {
+            return value[1..^1];
+        }
+
+        return value;
+    }
+
+    /// <summary>Normalizes the repo/edit roots once per build for per-page edit URL composition.</summary>
+    /// <param name="repoUrl">Configured UTF-8 repository URL.</param>
+    /// <param name="editUri">Configured UTF-8 edit path inside the repository.</param>
+    /// <returns>The normalized prefix bytes ending in <c>/</c>, or an empty array when edit links are disabled.</returns>
+    private static byte[] BuildEditUrlPrefix(byte[] repoUrl, byte[] editUri)
+    {
+        if (editUri is [])
+        {
+            return [];
+        }
+
+        var edit = editUri.AsSpan();
+        if (IsAbsoluteUrl(edit))
+        {
+            // Already a full URL — don't prepend RepoUrl, just normalize the trailing slash.
+            var trimmed = edit.TrimEnd((byte)'/');
+            var absoluteDst = new byte[trimmed.Length + 1];
+            trimmed.CopyTo(absoluteDst);
+            absoluteDst[^1] = (byte)'/';
+            return absoluteDst;
+        }
+
+        if (repoUrl is [])
+        {
+            return [];
+        }
+
+        var repo = repoUrl.AsSpan().TrimEnd((byte)'/');
+        var relEdit = edit.Trim((byte)'/');
+        var dst = new byte[repo.Length + relEdit.Length + EditUrlSeparatorCount];
+        repo.CopyTo(dst);
+        dst[repo.Length] = (byte)'/';
+        relEdit.CopyTo(dst.AsSpan(repo.Length + 1));
+        dst[^1] = (byte)'/';
+        return dst;
+    }
+
+    /// <summary>Returns true when <paramref name="value"/> begins with <c>http://</c> or <c>https://</c>.</summary>
+    /// <param name="value">UTF-8 candidate URL.</param>
+    /// <returns>True for absolute http(s) URLs.</returns>
+    private static bool IsAbsoluteUrl(ReadOnlySpan<byte> value) =>
+        value.StartsWith("http://"u8) || value.StartsWith("https://"u8);
 
     /// <summary>Translates forward slashes in <paramref name="relativePath"/> to the active directory separator when needed.</summary>
     /// <param name="relativePath">Relative output path using forward slashes.</param>
@@ -312,6 +384,63 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         });
     }
 
+    /// <summary>Returns the site URL trimmed and slash-suffixed for canonical-URL composition.</summary>
+    /// <param name="siteUrl">Configured UTF-8 absolute site URL.</param>
+    /// <returns>Bytes ending in <c>/</c>, or an empty array when no site URL is configured.</returns>
+    private static byte[] BuildCanonicalUrlPrefix(byte[] siteUrl)
+    {
+        if (siteUrl is [])
+        {
+            return [];
+        }
+
+        var trimmed = siteUrl.AsSpan().TrimEnd((byte)'/');
+        var dst = new byte[trimmed.Length + 1];
+        trimmed.CopyTo(dst);
+        dst[^1] = (byte)'/';
+        return dst;
+    }
+
+    /// <summary>Returns the URL slug for the page, matching the build pipeline's emit shape.</summary>
+    /// <param name="relativePath">Source-relative path.</param>
+    /// <param name="useDirectoryUrls">Whether non-index pages collapse to directory slugs.</param>
+    /// <returns>The slug span (no leading <c>/</c>); empty when the page is the root <c>index</c>.</returns>
+    private static ReadOnlySpan<char> ToCanonicalSlug(string relativePath, bool useDirectoryUrls)
+    {
+        var path = relativePath.AsSpan();
+        if (path is ['/', ..])
+        {
+            path = path[1..];
+        }
+
+        const string MdExt = ".md";
+        const string IndexStem = "index.md";
+
+        if (path.EndsWith(IndexStem, StringComparison.OrdinalIgnoreCase))
+        {
+            return path[..^IndexStem.Length];
+        }
+
+        if (path.EndsWith(MdExt, StringComparison.OrdinalIgnoreCase))
+        {
+            var stem = path[..^MdExt.Length];
+            if (useDirectoryUrls)
+            {
+                var dst = new char[stem.Length + 1];
+                stem.CopyTo(dst);
+                dst[^1] = '/';
+                return dst;
+            }
+
+            var html = new char[stem.Length + ".html".Length];
+            stem.CopyTo(html);
+            ".html".CopyTo(html.AsSpan(stem.Length));
+            return html;
+        }
+
+        return path;
+    }
+
     /// <summary>Resolves prev/next neighbours according to the configured footer settings.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The neighbours; <see cref="NavNeighbours.None"/> when the footer is disabled or no provider is registered.</returns>
@@ -327,27 +456,55 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             : _neighbours.GetNeighbours(relativePath);
     }
 
+    /// <summary>Returns the canonical URL for the page; empty when no site URL is configured.</summary>
+    /// <param name="relativePath">Page path relative to the input root.</param>
+    /// <returns>The canonical URL bytes, or an empty array.</returns>
+    private byte[] ResolveCanonicalUrlBytes(string relativePath)
+    {
+        if (_canonicalUrlPrefix is [])
+        {
+            return [];
+        }
+
+        var slug = ToCanonicalSlug(relativePath, _useDirectoryUrls);
+        if (slug.Length is 0)
+        {
+            return _canonicalUrlPrefix;
+        }
+
+        var dst = new byte[_canonicalUrlPrefix.Length + slug.Length];
+        _canonicalUrlPrefix.AsSpan().CopyTo(dst);
+        var write = _canonicalUrlPrefix.Length;
+        for (var i = 0; i < slug.Length; i++)
+        {
+            // Source-relative paths from the build pipeline are ASCII-safe; Windows back-slashes fold to '/'.
+            dst[write++] = slug[i] is '\\' ? (byte)'/' : (byte)slug[i];
+        }
+
+        return dst;
+    }
+
     /// <summary>Builds the per-page edit URL from the configured repo URL + edit prefix + the page's relative path.</summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
-    /// <returns>The edit URL, or an empty string when not configured.</returns>
-    private string ResolveEditUrl(string relativePath)
+    /// <returns>The edit URL bytes, or an empty array when not configured.</returns>
+    private byte[] ResolveEditUrlBytes(string relativePath)
     {
         if (_editUrlPrefix is [])
         {
-            return string.Empty;
+            return [];
         }
 
         var path = relativePath.AsSpan();
         var start = path is ['/', ..] ? 1 : 0;
-        return string.Create(_editUrlPrefix.Length + path.Length - start, (_editUrlPrefix, relativePath, start), static (dst, state) =>
+        var dst = new byte[_editUrlPrefix.Length + path.Length - start];
+        _editUrlPrefix.AsSpan().CopyTo(dst);
+        var write = _editUrlPrefix.Length;
+        for (var i = start; i < path.Length; i++)
         {
-            state._editUrlPrefix.AsSpan().CopyTo(dst);
-            var write = state._editUrlPrefix.Length;
-            var src = state.relativePath.AsSpan();
-            for (var i = state.start; i < src.Length; i++)
-            {
-                dst[write++] = src[i] is '\\' ? '/' : src[i];
-            }
-        });
+            // Relative paths from the build pipeline are already ASCII-safe (a-z, 0-9, -, _, /, .) — back-slash on Windows folds to '/'.
+            dst[write++] = path[i] is '\\' ? (byte)'/' : (byte)path[i];
+        }
+
+        return dst;
     }
 }

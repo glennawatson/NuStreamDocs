@@ -93,7 +93,7 @@ public class UrlPatternAndCspTests
         try
         {
             var plugin = new PrivacyPlugin(PrivacyOptions.Default with { GenerateCspManifest = true });
-            var configure = new PluginConfigureContext(default, "/in", outputRoot, []);
+            var configure = new PluginConfigureContext("/in", outputRoot, []);
             await plugin.OnConfigureAsync(configure, CancellationToken.None);
 
             byte[] html = [.. "<style>body{color:red}</style><script>alert(1)</script>"u8];

@@ -65,6 +65,13 @@ internal static class AssetAttributeBytes
             return false;
         }
 
+        // Canonical / OpenGraph / Twitter URLs point AT the canonical site by design — never localize.
+        if (IsCanonicalOrSocialMetadataContext(html, p))
+        {
+            advanceTo = urlEnd;
+            return false;
+        }
+
         var urlBytes = html[urlStart..urlEnd];
         if (!ctx.Filter.ShouldLocalize(urlBytes))
         {
@@ -98,6 +105,12 @@ internal static class AssetAttributeBytes
             return false;
         }
 
+        if (IsCanonicalOrSocialMetadataContext(html, p))
+        {
+            advanceTo = urlEnd;
+            return true;
+        }
+
         var urlBytes = html[urlStart..urlEnd];
         if (audit.Filter.ShouldLocalize(urlBytes))
         {
@@ -106,6 +119,60 @@ internal static class AssetAttributeBytes
 
         advanceTo = urlEnd;
         return true;
+    }
+
+    /// <summary>True when the candidate <c>href=</c> / <c>src=</c> at <paramref name="attrOffset"/> sits inside a tag
+    /// whose attributes mark the URL as pointing at the canonical site (<c>&lt;link rel="canonical"&gt;</c>,
+    /// <c>&lt;meta property="og:url"&gt;</c>, <c>&lt;meta name="twitter:url"&gt;</c>).</summary>
+    /// <param name="html">UTF-8 source.</param>
+    /// <param name="attrOffset">Offset of the candidate attribute name byte.</param>
+    /// <returns>True when this URL should be left untouched by the rewriter.</returns>
+    /// <remarks>
+    /// Walks back from <paramref name="attrOffset"/> to the most recent <c>&lt;</c> (capped at 256 bytes —
+    /// any well-formed open tag fits) and runs an ordinal-ignore-case search for the tell-tale rel /
+    /// property / name attribute on the same tag. False positives are harmless: the URL just keeps its
+    /// external form.
+    /// </remarks>
+    private static bool IsCanonicalOrSocialMetadataContext(ReadOnlySpan<byte> html, int attrOffset)
+    {
+        const int MaxBackscan = 256;
+        var lower = Math.Max(0, attrOffset - MaxBackscan);
+        var slice = html[lower..attrOffset];
+        var openIdx = slice.LastIndexOf((byte)'<');
+        if (openIdx < 0)
+        {
+            return false;
+        }
+
+        var tagBytes = slice[(openIdx + 1)..];
+        return ContainsAttributeIgnoreCase(tagBytes, "rel=\"canonical\""u8)
+            || ContainsAttributeIgnoreCase(tagBytes, "rel='canonical'"u8)
+            || ContainsAttributeIgnoreCase(tagBytes, "property=\"og:url\""u8)
+            || ContainsAttributeIgnoreCase(tagBytes, "property='og:url'"u8)
+            || ContainsAttributeIgnoreCase(tagBytes, "name=\"twitter:url\""u8)
+            || ContainsAttributeIgnoreCase(tagBytes, "name='twitter:url'"u8);
+    }
+
+    /// <summary>Case-insensitive contains-check for <paramref name="needle"/> over <paramref name="haystack"/> — small N, simple loop.</summary>
+    /// <param name="haystack">Search target.</param>
+    /// <param name="needle">Lowercase ASCII needle.</param>
+    /// <returns>True when the needle appears in the haystack.</returns>
+    private static bool ContainsAttributeIgnoreCase(ReadOnlySpan<byte> haystack, ReadOnlySpan<byte> needle)
+    {
+        if (needle.Length > haystack.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i + needle.Length <= haystack.Length; i++)
+        {
+            if (AsciiByteHelpers.StartsWithIgnoreAsciiCase(haystack, i, needle))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Validates <c>(src|href)\s*=\s*("|')https?://[^"'\s>]+("|')</c> at <paramref name="p"/>, returning the URL byte range and quote byte on success.</summary>

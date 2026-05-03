@@ -26,8 +26,12 @@ namespace NuStreamDocs.Highlight;
 /// without any UTF-16 round-trip.
 /// </para>
 /// </remarks>
-public sealed class HighlightPlugin : IDocPlugin
+public sealed class HighlightPlugin : IDocPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
+    /// <summary>The <c>&lt;link rel="stylesheet"&gt;</c> snippet the page-shell template injects into <c>&lt;head&gt;</c>.</summary>
+    private static readonly byte[] HeadExtraSnippet =
+        [.. "<link rel=\"stylesheet\" href=\""u8, .. "/assets/stylesheets/highlight.css"u8, .. "\">\n"u8];
+
     /// <summary>The opening tag the rewriter searches for.</summary>
     private static readonly byte[] PreOpen = [.. "<pre><code class=\"language-"u8];
 
@@ -62,6 +66,10 @@ public sealed class HighlightPlugin : IDocPlugin
     public string Name => "highlight";
 
     /// <inheritdoc/>
+    public (string Path, byte[] Bytes)[] StaticAssets =>
+        [(HighlightStylesheet.AssetPath, HighlightStylesheet.GetBytes())];
+
+    /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
         _ = context;
@@ -89,6 +97,13 @@ public sealed class HighlightPlugin : IDocPlugin
         _ = context;
         _ = cancellationToken;
         return ValueTask.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public void WriteHeadExtra(IBufferWriter<byte> writer)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        writer.Write(HeadExtraSnippet);
     }
 
     /// <summary>Decodes UTF-8 HTML-escaped bytes into a fresh byte array (no UTF-16 round-trip). When the input contains no entities the source bytes are copied verbatim.</summary>

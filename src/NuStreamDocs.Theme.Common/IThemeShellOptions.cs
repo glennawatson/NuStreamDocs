@@ -7,22 +7,32 @@ namespace NuStreamDocs.Theme.Common;
 /// <summary>
 /// Common page-shell knobs shared by the built-in themes.
 /// </summary>
+/// <remarks>
+/// Scalar text fields (site name, language, copyright, repo / edit URLs) are stored as UTF-8
+/// bytes per the project's byte-first pipeline rule — the page-shell template flows pure UTF-8
+/// from <c>OnConfigureAsync</c> through every render. String-shaped construction goes through
+/// each theme's option-extension class (<c>WithSiteName</c>, <c>WithCopyright</c>, …), which
+/// encodes once at the boundary.
+/// </remarks>
 public interface IThemeShellOptions
 {
-    /// <summary>Gets the top-bar site title injected into every page.</summary>
-    string SiteName { get; }
+    /// <summary>Gets the UTF-8 top-bar site title injected into every page.</summary>
+    byte[] SiteName { get; }
 
-    /// <summary>Gets the HTML <c>lang</c> attribute value.</summary>
-    string Language { get; }
+    /// <summary>Gets the UTF-8 absolute site URL (e.g. <c>https://reactiveui.net</c>); empty when no canonical / OpenGraph URL should be rendered. Mirrors mkdocs's <c>site_url</c> config.</summary>
+    byte[] SiteUrl { get; }
 
-    /// <summary>Gets the footer copyright line.</summary>
-    string Copyright { get; }
+    /// <summary>Gets the UTF-8 HTML <c>lang</c> attribute value.</summary>
+    byte[] Language { get; }
 
-    /// <summary>Gets the canonical repository URL; empty when no source link should be rendered.</summary>
-    string RepoUrl { get; }
+    /// <summary>Gets the UTF-8 footer copyright line.</summary>
+    byte[] Copyright { get; }
 
-    /// <summary>Gets the repo-relative edit prefix; empty when no edit link should be rendered.</summary>
-    string EditUri { get; }
+    /// <summary>Gets the UTF-8 canonical repository URL; empty when no source link should be rendered.</summary>
+    byte[] RepoUrl { get; }
+
+    /// <summary>Gets the UTF-8 repo-relative edit prefix; empty when no edit link should be rendered.</summary>
+    byte[] EditUri { get; }
 
     /// <summary>Gets a value indicating whether to render a scroll-to-top button.</summary>
     bool EnableScrollToTop { get; }
@@ -39,7 +49,7 @@ public interface IThemeShellOptions
     /// <summary>Gets a value indicating whether the plugin should emit the bundled static assets.</summary>
     bool WriteEmbeddedAssets { get; }
 
-    /// <summary>Gets the URL prefix the page template should use for asset references.</summary>
+    /// <summary>Gets the UTF-8 URL prefix the page template should use for asset references.</summary>
     /// <returns>The active asset-root prefix.</returns>
-    string ResolveAssetRoot();
+    byte[] ResolveAssetRoot();
 }

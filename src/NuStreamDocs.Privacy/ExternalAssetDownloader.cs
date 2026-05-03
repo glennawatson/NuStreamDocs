@@ -28,6 +28,9 @@ internal static class ExternalAssetDownloader
     /// <summary>Maximum number of fixed-point download passes. CSS-inside-CSS chains are rare; three is plenty.</summary>
     private const int MaxIterations = 3;
 
+    /// <summary>Minimum gap between in-flight progress beacons during a single iteration.</summary>
+    private const long ProgressBeaconMillis = 5000;
+
     /// <summary>Initial backoff delay between retries.</summary>
     private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(200);
 
@@ -96,6 +99,13 @@ internal static class ExternalAssetDownloader
                 break;
             }
 
+            var iterationNumber = iteration + 1;
+            PrivacyLoggingHelper.LogIterationStart(logger, iterationNumber, pending.Length, settings.Parallelism);
+            var iterationStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var iterationFailureBaseline = failures.Count;
+            var completed = 0;
+            var lastProgressTick = Environment.TickCount64;
+
             await Parallel.ForEachAsync(
                 pending,
                 new ParallelOptions
@@ -114,8 +124,27 @@ internal static class ExternalAssetDownloader
                         failures.Add(entry.Url);
                         PrivacyLoggingHelper.LogDownloadFailure(logger, entry.Url, target.OutputPath);
                     }
+
+                    var done = Interlocked.Increment(ref completed);
+
+                    // Beacon every ~5 seconds: a single CAS guards the log so concurrent completions emit at most once per window.
+                    var now = Environment.TickCount64;
+                    var prev = Volatile.Read(ref lastProgressTick);
+                    if (now - prev >= ProgressBeaconMillis &&
+                        Interlocked.CompareExchange(ref lastProgressTick, now, prev) == prev)
+                    {
+                        PrivacyLoggingHelper.LogIterationProgress(logger, iterationNumber, done, pending.Length);
+                    }
                 })
                 .ConfigureAwait(false);
+
+            iterationStopwatch.Stop();
+            PrivacyLoggingHelper.LogIterationComplete(
+                logger,
+                iterationNumber,
+                pending.Length,
+                failures.Count - iterationFailureBaseline,
+                iterationStopwatch.Elapsed.TotalSeconds);
         }
 
         return [.. failures];

@@ -97,6 +97,7 @@ public static class BuildPipeline
         var log = options.Logger ?? NullLogger.Instance;
         BuildPipelineLoggingHelper.LogBuildStart(log, inputRoot, outputRoot, plugins.Length);
         var stopwatch = Stopwatch.StartNew();
+        var pluginTiming = new PluginTimingTable();
 
         Directory.CreateDirectory(outputRoot);
         var previous = await BuildManifest.LoadAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
@@ -106,7 +107,7 @@ public static class BuildPipeline
         // single right-sized allocation rather than the [.. bag] enumerator copy.
         var fresh = new ConcurrentQueue<ManifestEntry>();
 
-        await FireOnConfigureAsync(plugins, inputRoot, outputRoot, cancellationToken, log).ConfigureAwait(false);
+        await FireOnConfigureAsync(plugins, inputRoot, outputRoot, options, pluginTiming, cancellationToken, log).ConfigureAwait(false);
 
         var processed = 0;
         var cacheHits = 0;
@@ -128,7 +129,7 @@ public static class BuildPipeline
                     return;
                 }
 
-                var (entry, hit) = await ProcessOnePageAsync(item, outputRoot, plugins, previous, useDirectoryUrls, ct).ConfigureAwait(false);
+                var (entry, hit) = await ProcessOnePageAsync(item, outputRoot, plugins, previous, useDirectoryUrls, pluginTiming, ct).ConfigureAwait(false);
                 fresh.Enqueue(entry);
                 Interlocked.Increment(ref processed);
                 if (hit)
@@ -144,8 +145,9 @@ public static class BuildPipeline
         previous.Replace(fresh);
         await previous.SaveAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
 
-        await FireOnFinalizeAsync(plugins, outputRoot, cancellationToken, log).ConfigureAwait(false);
+        await FireOnFinalizeAsync(plugins, outputRoot, pluginTiming, cancellationToken, log).ConfigureAwait(false);
         stopwatch.Stop();
+        pluginTiming.Emit(log);
         BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, stopwatch.ElapsedMilliseconds);
         return processed;
     }
@@ -156,6 +158,7 @@ public static class BuildPipeline
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="previous">Previous-build manifest.</param>
     /// <param name="useDirectoryUrls">Selects the output-path shape (flat <c>foo.html</c> vs <c>foo/index.html</c>).</param>
+    /// <param name="pluginTiming">End-of-build per-plugin time accumulator.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The fresh manifest entry for this page and a flag indicating whether the entry was a cache hit.</returns>
     /// <remarks>
@@ -172,6 +175,7 @@ public static class BuildPipeline
         IDocPlugin[] plugins,
         BuildManifest previous,
         bool useDirectoryUrls,
+        PluginTimingTable pluginTiming,
         CancellationToken cancellationToken)
     {
         // Read into a pooled buffer instead of File.ReadAllBytesAsync — the
@@ -190,11 +194,11 @@ public static class BuildPipeline
         {
             await RandomAccess.ReadAsync(sourceHandle, sourceBuffer.AsMemory(0, sourceLength), 0, cancellationToken).ConfigureAwait(false);
             var source = sourceBuffer.AsMemory(0, sourceLength);
-            var hash = ContentHasher.HashHex(source.Span);
+            var hash = ContentHasher.Hash(source.Span);
             var outputPath = OutputPathFor(outputRoot, item.RelativePath, useDirectoryUrls);
 
             if (previous.TryGet(item.RelativePath, out var stale) &&
-                string.Equals(stale.ContentHash, hash, StringComparison.Ordinal) &&
+                stale.ContentHash.AsSpan().SequenceEqual(hash) &&
                 File.Exists(outputPath))
             {
                 // Hot incremental path: the source bytes match the previous
@@ -215,7 +219,11 @@ public static class BuildPipeline
                 var context = new PluginRenderContext(item.RelativePath, source, writer);
                 for (var i = 0; i < plugins.Length; i++)
                 {
-                    await plugins[i].OnRenderPageAsync(context, cancellationToken).ConfigureAwait(false);
+                    var plugin = plugins[i];
+                    using (pluginTiming.Measure(plugin.Name))
+                    {
+                        await plugin.OnRenderPageAsync(context, cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
                 EnsureDirectory(outputPath);
@@ -374,42 +382,57 @@ public static class BuildPipeline
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="inputRoot">Absolute input root.</param>
     /// <param name="outputRoot">Absolute output root.</param>
+    /// <param name="options">Pipeline options carrying URL shape + site-level metadata.</param>
+    /// <param name="pluginTiming">End-of-build per-plugin time accumulator.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="log">Logger for phase + per-plugin progress.</param>
     /// <returns>A task that completes when every plugin's configure hook has settled.</returns>
-    private static async Task FireOnConfigureAsync(IDocPlugin[] plugins, string inputRoot, string outputRoot, CancellationToken cancellationToken, ILogger log)
+    private static async Task FireOnConfigureAsync(
+        IDocPlugin[] plugins,
+        string inputRoot,
+        string outputRoot,
+        BuildPipelineOptions options,
+        PluginTimingTable pluginTiming,
+        CancellationToken cancellationToken,
+        ILogger log)
     {
-        var context = new PluginConfigureContext(default, inputRoot, outputRoot, plugins);
+        var context = new PluginConfigureContext(inputRoot, outputRoot, plugins)
+        {
+            UseDirectoryUrls = options.UseDirectoryUrls,
+            SiteName = options.SiteName ?? [],
+            SiteUrl = options.SiteUrl ?? [],
+        };
         BuildPipelineLoggingHelper.LogConfigureStart(log, plugins.Length);
         for (var i = 0; i < plugins.Length; i++)
         {
             var plugin = plugins[i];
-            await PhaseTimer.RunAsync(
-                log,
-                l => BuildPipelineLoggingHelper.LogPluginConfigure(l, plugin.Name),
-                (l, secs) => BuildPipelineLoggingHelper.LogPluginConfigureComplete(l, plugin.Name, secs),
-                () => plugin.OnConfigureAsync(context, cancellationToken)).ConfigureAwait(false);
+            BuildPipelineLoggingHelper.LogPluginConfigure(log, plugin.Name);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                await plugin.OnConfigureAsync(context, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
     /// <summary>Fires <see cref="IDocPlugin.OnFinalizeAsync"/> on every plugin.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="outputRoot">Absolute output root.</param>
+    /// <param name="pluginTiming">End-of-build per-plugin time accumulator.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="log">Logger for phase + per-plugin progress.</param>
     /// <returns>A task that completes when every plugin's finalize hook has settled.</returns>
-    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, string outputRoot, CancellationToken cancellationToken, ILogger log)
+    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, string outputRoot, PluginTimingTable pluginTiming, CancellationToken cancellationToken, ILogger log)
     {
         var context = new PluginFinalizeContext(outputRoot);
         BuildPipelineLoggingHelper.LogFinalizeStart(log, plugins.Length);
         for (var i = 0; i < plugins.Length; i++)
         {
             var plugin = plugins[i];
-            await PhaseTimer.RunAsync(
-                log,
-                l => BuildPipelineLoggingHelper.LogPluginFinalize(l, plugin.Name),
-                (l, secs) => BuildPipelineLoggingHelper.LogPluginFinalizeComplete(l, plugin.Name, secs),
-                () => plugin.OnFinalizeAsync(context, cancellationToken)).ConfigureAwait(false);
+            BuildPipelineLoggingHelper.LogPluginFinalize(log, plugin.Name);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                await plugin.OnFinalizeAsync(context, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 }

@@ -55,14 +55,15 @@ public class MkDocsConfigReaderTests
         await Assert.That(fromStream.ThemeName).IsEqualTo(fromSpan.ThemeName);
     }
 
-    /// <summary>Builder.UseMkDocsConfig should register the reader so FindConfigReader resolves it.</summary>
+    /// <summary>Builder.UseMkDocsConfig with a YAML byte span applies the parsed site metadata to the builder.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task BuilderRegistersReader()
+    public async Task UseMkDocsConfigAppliesSiteMetadata()
     {
-        var builder = new DocBuilder().UseMkDocsConfig();
-        var reader = builder.FindConfigReader(".yml");
-        await Assert.That(reader).IsNotNull();
-        await Assert.That(reader!.FormatName).IsEqualTo("mkdocs");
+        var yaml = "site_name: From-Yaml\nsite_url: https://x.test/\ntheme: material\n"u8;
+        var builder = new DocBuilder().UseMkDocsConfig(yaml);
+
+        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteName())).IsEqualTo("From-Yaml");
+        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteUrl())).IsEqualTo("https://x.test/");
     }
 }

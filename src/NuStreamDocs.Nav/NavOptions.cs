@@ -11,6 +11,10 @@ namespace NuStreamDocs.Nav;
 /// Mirrors the most-used knobs of mkdocs nav. Defaults match
 /// what large projects need out of the box; consumers tweak via
 /// <c>builder.UseNav(opts =&gt; opts with { ... })</c>.
+/// <see cref="Includes"/> / <see cref="Excludes"/> stay <see cref="string"/>-shaped — they are
+/// glob patterns matched against file paths (an exemption to the byte-first pipeline rule, since
+/// the underlying <c>Microsoft.Extensions.FileSystemGlobbing.Matcher</c> is string-only and paths
+/// stay <see cref="string"/> end-to-end).
 /// </remarks>
 /// <param name="Includes">Glob include patterns relative to the input root.</param>
 /// <param name="Excludes">Glob exclude patterns; evaluated after <see cref="Includes"/>.</param>
@@ -24,6 +28,15 @@ namespace NuStreamDocs.Nav;
 /// would include but that doesn't appear in the rendered nav tree is reported via the logger
 /// (mirrors the mkdocs <c>"pages exist in the docs directory, but are not included in the nav configuration"</c>
 /// message). Default <see langword="true"/> — disable when generating partial trees on purpose.</param>
+/// <param name="Tabs">When true, the top-level nav entries also render into the page header as a
+/// horizontal tab bar (mkdocs-material's <c>navigation.tabs</c>). The active theme picks the tab
+/// markup up via the <c>&lt;!--@@nav-tabs@@--&gt;</c> placeholder and styles it through the
+/// theme's bundled <c>.md-tabs</c> rules.</param>
+/// <param name="CuratedEntries">When non-empty, the nav tree is built from this curated list
+/// instead of the directory walk — pages not listed here are still built but excluded from nav.
+/// Reader assemblies (mkdocs.yml, docfx <c>toc.yml</c>, awesome-nav, etc.) populate this field
+/// via extension methods on the options record so the core <see cref="NavPlugin"/> stays unaware
+/// of any specific config dialect.</param>
 public readonly record struct NavOptions(
     string[] Includes,
     string[] Excludes,
@@ -31,7 +44,9 @@ public readonly record struct NavOptions(
     NavSortBy SortBy,
     bool Prune,
     bool Indexes,
-    bool WarnOnOrphanPages)
+    bool WarnOnOrphanPages,
+    bool Tabs,
+    NavEntry[] CuratedEntries)
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static NavOptions Default { get; } = new(
@@ -41,5 +56,7 @@ public readonly record struct NavOptions(
         SortBy: NavSortBy.FileName,
         Prune: false,
         Indexes: true,
-        WarnOnOrphanPages: true);
+        WarnOnOrphanPages: true,
+        Tabs: false,
+        CuratedEntries: []);
 }

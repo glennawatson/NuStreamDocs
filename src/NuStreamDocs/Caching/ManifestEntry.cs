@@ -8,10 +8,15 @@ namespace NuStreamDocs.Caching;
 /// One entry in the build manifest: a record of what we rendered last
 /// time so the next build can skip unchanged pages.
 /// </summary>
+/// <remarks>
+/// <see cref="ContentHash"/> is the 16-byte ASCII lowercase hex digest produced by
+/// <see cref="ContentHasher"/>; kept as raw bytes so the manifest read/write path stays UTF-8
+/// end-to-end and the hot incremental-rebuild compare avoids decoding to <see cref="string"/>.
+/// </remarks>
 /// <param name="RelativePath">Page path relative to the input root, forward-slashed.</param>
-/// <param name="ContentHash">xxHash3 of the source UTF-8 bytes, hex-encoded.</param>
+/// <param name="ContentHash">16-byte ASCII lowercase hex digest of the source UTF-8 bytes.</param>
 /// <param name="OutputLengthBytes">Length of the previously emitted output file.</param>
 public readonly record struct ManifestEntry(
     string RelativePath,
-    string ContentHash,
+    byte[] ContentHash,
     long OutputLengthBytes);

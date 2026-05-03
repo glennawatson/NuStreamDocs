@@ -32,18 +32,11 @@ internal static partial class BuildPipelineLoggingHelper
     [LoggerMessage(Level = LogLevel.Information, Message = "Configuring {PluginCount} plugin(s)...")]
     public static partial void LogConfigureStart(ILogger logger, int pluginCount);
 
-    /// <summary>Logs the start of one plugin's <c>OnConfigureAsync</c> hook.</summary>
+    /// <summary>Logs the start of one plugin's <c>OnConfigureAsync</c> hook (Debug — most plugins are no-ops on this hook so the per-plugin trail is too noisy at Info level).</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginName">Plugin name (<see cref="NuStreamDocs.Plugins.IDocPlugin.Name"/>).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Configuring plugin: {PluginName}")]
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Configuring plugin: {PluginName}")]
     public static partial void LogPluginConfigure(ILogger logger, string pluginName);
-
-    /// <summary>Logs the end of one plugin's <c>OnConfigureAsync</c> hook with the elapsed time.</summary>
-    /// <param name="logger">Target logger.</param>
-    /// <param name="pluginName">Plugin name.</param>
-    /// <param name="elapsedSeconds">Phase duration in seconds (two decimal places).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Configured plugin: {PluginName} in {ElapsedSeconds:F2}s")]
-    public static partial void LogPluginConfigureComplete(ILogger logger, string pluginName, double elapsedSeconds);
 
     /// <summary>Logs entry into the parallel render phase.</summary>
     /// <param name="logger">Target logger.</param>
@@ -64,18 +57,11 @@ internal static partial class BuildPipelineLoggingHelper
     [LoggerMessage(Level = LogLevel.Information, Message = "Finalizing {PluginCount} plugin(s)...")]
     public static partial void LogFinalizeStart(ILogger logger, int pluginCount);
 
-    /// <summary>Logs the start of one plugin's <c>OnFinalizeAsync</c> hook.</summary>
+    /// <summary>Logs the start of one plugin's <c>OnFinalizeAsync</c> hook (Debug — most plugins are no-ops on this hook).</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginName">Plugin name.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Finalizing plugin: {PluginName}")]
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Finalizing plugin: {PluginName}")]
     public static partial void LogPluginFinalize(ILogger logger, string pluginName);
-
-    /// <summary>Logs the end of one plugin's <c>OnFinalizeAsync</c> hook with the elapsed time.</summary>
-    /// <param name="logger">Target logger.</param>
-    /// <param name="pluginName">Plugin name.</param>
-    /// <param name="elapsedSeconds">Phase duration in seconds (two decimal places).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Finalized plugin: {PluginName} in {ElapsedSeconds:F2}s")]
-    public static partial void LogPluginFinalizeComplete(ILogger logger, string pluginName, double elapsedSeconds);
 
     /// <summary>Logs a per-page completion at debug level.</summary>
     /// <param name="logger">Target logger.</param>

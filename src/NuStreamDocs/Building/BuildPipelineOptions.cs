@@ -11,12 +11,16 @@ namespace NuStreamDocs.Building;
 /// <param name="Logger">Optional logger; <see langword="null"/> silences diagnostics.</param>
 /// <param name="UseDirectoryUrls">When true, pages emit as <c>foo/index.html</c> instead of <c>foo.html</c>.</param>
 /// <param name="IncludeDrafts">When true, pages whose frontmatter sets <c>draft: true</c> are emitted; when false they are skipped.</param>
+/// <param name="SiteName">UTF-8 site name surfaced to plugins through <see cref="Plugins.PluginConfigureContext.SiteName"/>; empty when none configured.</param>
+/// <param name="SiteUrl">UTF-8 canonical site URL surfaced to plugins through <see cref="Plugins.PluginConfigureContext.SiteUrl"/>; empty when none configured.</param>
 public readonly record struct BuildPipelineOptions(
     PathFilter Filter,
     ILogger? Logger,
     bool UseDirectoryUrls,
-    bool IncludeDrafts)
+    bool IncludeDrafts,
+    byte[] SiteName,
+    byte[] SiteUrl)
 {
-    /// <summary>Gets the empty option set: no filter, no logger, flat URLs, drafts skipped.</summary>
-    public static BuildPipelineOptions Default => new(PathFilter.Empty, null, false, false);
+    /// <summary>Gets the empty option set: no filter, no logger, flat URLs, drafts skipped, no site metadata.</summary>
+    public static BuildPipelineOptions Default => new(PathFilter.Empty, null, false, false, [], []);
 }

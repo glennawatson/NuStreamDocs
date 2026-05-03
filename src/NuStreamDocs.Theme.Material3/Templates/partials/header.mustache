@@ -1,15 +1,33 @@
 <header class="md-header" data-md-component="header">
-  <nav class="md-header__inner" aria-label="Header">
-    <a href="{{site_root}}" class="md-logo" aria-label="{{site_name}}">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation menu">&#9776;</label>
+    <a href="{{site_root}}" class="md-header__button md-logo" aria-label="{{site_name}}" data-md-component="logo">
       <span class="md-ellipsis">{{site_name}}</span>
     </a>
-    <div class="md-header__title"><span class="md-ellipsis">{{page_title}}</span></div>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">{{site_name}}</span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">{{page_title}}</span>
+        </div>
+      </div>
+    </div>
+    <label class="md-header__button md-icon" for="__search" aria-label="Open search">&#128270;</label>
+    {{> search}}
     {{#edit_url}}
     <a href="{{edit_url}}" class="md-header__option" title="Edit this page" rel="noopener" target="_blank" aria-label="Edit this page">&#9998;</a>
     {{/edit_url}}
     {{#repo_url}}
-    <a href="{{repo_url}}" class="md-header__option" title="Source repository" rel="noopener" target="_blank" aria-label="Source repository">&#9881;</a>
+    <div class="md-header__source">
+      <a href="{{repo_url}}" title="Go to repository" class="md-source" data-md-component="source" rel="noopener" target="_blank">
+        <span class="md-source__icon md-icon">&#9881;</span>
+        <div class="md-source__repository">{{repo_url}}</div>
+      </a>
+    </div>
     {{/repo_url}}
     <button class="md-header__option" type="button" data-md-component="palette-toggle" aria-label="Toggle colour scheme">&#9728;</button>
   </nav>
 </header>
+<!--@@nav-tabs@@-->

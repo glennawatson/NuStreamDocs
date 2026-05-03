@@ -31,7 +31,7 @@ public class VersionsManifestBranchTests
     public async Task RoundTrip()
     {
         using var temp = new ScratchDir();
-        VersionEntry[] entries = [new("1.0", "Stable", ["latest"]), new("2.0", "Next", [])];
+        VersionEntry[] entries = [new("1.0", "Stable", [[.. "latest"u8]]), new("2.0", "Next", [])];
         VersionsManifest.Write(temp.Root, entries);
         var roundTripped = VersionsManifest.Read(temp.Root);
         await Assert.That(roundTripped.Length).IsEqualTo(2);
@@ -57,7 +57,7 @@ public class VersionsManifestBranchTests
     public async Task UpsertReplaces()
     {
         VersionEntry[] existing = [new("1.0", "Old", []), new("2.0", "Untouched", [])];
-        var merged = VersionsManifest.Upsert(existing, new("1.0", "New", ["latest"]));
+        var merged = VersionsManifest.Upsert(existing, new("1.0", "New", [[.. "latest"u8]]));
         await Assert.That(merged.Length).IsEqualTo(2);
         await Assert.That(merged[0].Title).IsEqualTo("New");
         await Assert.That(merged[1].Title).IsEqualTo("Untouched");

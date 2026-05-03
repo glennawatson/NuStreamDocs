@@ -61,7 +61,7 @@ public class SnippetsBenchmarks
 
         // The plugin captures _baseDir lazily on OnConfigureAsync; force it now so the
         // benchmark only measures the per-page rewrite cost.
-        var ctx = new PluginConfigureContext(default, _baseDir, _baseDir, []);
+        var ctx = new PluginConfigureContext(_baseDir, _baseDir, []);
         await _plugin.OnConfigureAsync(ctx, CancellationToken.None).ConfigureAwait(false);
     }
 

@@ -108,7 +108,7 @@ public class NavRendererTests
 
         var options = NavOptions.Default with { Prune = prune };
         var plugin = new NavPlugin(options);
-        var configureContext = new PluginConfigureContext(default, fixture.Root, fixture.Output, [plugin]);
+        var configureContext = new PluginConfigureContext(fixture.Root, fixture.Output, [plugin]);
         await plugin.OnConfigureAsync(configureContext, CancellationToken.None);
 
         var page = new ArrayBufferWriter<byte>();

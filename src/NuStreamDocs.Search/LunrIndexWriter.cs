@@ -32,8 +32,8 @@ public static class LunrIndexWriter
     /// <param name="path">Absolute output path.</param>
     /// <param name="language">Language code emitted in the <c>config</c> block.</param>
     /// <param name="documents">Document corpus.</param>
-    /// <param name="extraStopwords">Additional stopwords to advertise in the <c>config</c> block; theme JS can layer them onto the language's default set.</param>
-    public static void Write(string path, string language, SearchDocument[] documents, string[] extraStopwords)
+    /// <param name="extraStopwords">UTF-8 stopwords to advertise in the <c>config</c> block; theme JS can layer them onto the language's default set.</param>
+    public static void Write(string path, string language, SearchDocument[] documents, byte[][] extraStopwords)
     {
         ArgumentException.ThrowIfNullOrEmpty(path);
         ArgumentNullException.ThrowIfNull(documents);

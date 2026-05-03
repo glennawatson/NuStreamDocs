@@ -1,7 +1,15 @@
-<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar">
-  <div class="md-sidebar__inner">
-    <nav class="md-nav md-nav--primary" aria-label="Navigation">
-      <!--@@nav@@-->
-    </nav>
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation"{{#hide_navigation}} hidden{{/hide_navigation}}>
+  <div class="md-sidebar__scrollwrap">
+    <div class="md-sidebar__inner">
+      <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+        <label class="md-nav__title" for="__drawer">
+          <a href="{{site_root}}" class="md-nav__button md-logo" aria-label="{{site_name}}">
+            <span class="md-ellipsis">{{site_name}}</span>
+          </a>
+          {{site_name}}
+        </label>
+        <!--@@nav@@-->
+      </nav>
+    </div>
   </div>
 </div>

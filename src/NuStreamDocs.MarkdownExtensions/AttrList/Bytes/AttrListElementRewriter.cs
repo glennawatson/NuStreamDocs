@@ -210,6 +210,14 @@ internal static class AttrListElementRewriter
             return false;
         }
 
+        // The marker's closing brace must land before the element's close tag. When pages embed an
+        // attr-list-like literal inside a tag's text that straddles the close, `markerEnd` runs past
+        // `closeStart`; fall through cleanly instead of slicing past the end.
+        if (markerEnd > closeStart)
+        {
+            return false;
+        }
+
         prefixEnd = trimmedPrefixEnd;
         var suffix = html[markerEnd..closeStart];
         if (suffix.IndexOf((byte)'<') >= 0)

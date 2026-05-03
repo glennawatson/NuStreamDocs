@@ -83,6 +83,29 @@ internal sealed class LiveReloadBroker
         return sent;
     }
 
+    /// <summary>Aborts every tracked WebSocket so the request handlers exit promptly during shutdown.</summary>
+    /// <remarks>
+    /// Browsers don't always reply to the close handshake — relying on a graceful close would let
+    /// the dev server hang on Ctrl+C waiting forever. <see cref="WebSocket.Abort"/> tears the
+    /// connection down without waiting for the peer, then the registry clears.
+    /// </remarks>
+    public void AbortAll()
+    {
+        foreach (var kvp in _clients)
+        {
+            try
+            {
+                kvp.Value.Abort();
+            }
+            catch (ObjectDisposedException)
+            {
+                // already torn down
+            }
+        }
+
+        _clients.Clear();
+    }
+
     /// <summary>Sends the reload payload to a single client; swallows transport errors.</summary>
     /// <param name="socket">Target websocket.</param>
     /// <returns>True when the send succeeded.</returns>

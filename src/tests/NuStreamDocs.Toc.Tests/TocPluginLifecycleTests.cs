@@ -21,7 +21,7 @@ public class TocPluginLifecycleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task OnConfigure() =>
-        await new TocPlugin().OnConfigureAsync(new(default, "/in", "/out", []), CancellationToken.None);
+        await new TocPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 
     /// <summary>OnFinalizeAsync is a no-op.</summary>
     /// <returns>Async test.</returns>

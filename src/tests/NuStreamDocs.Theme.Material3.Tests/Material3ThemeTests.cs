@@ -34,7 +34,7 @@ public class Material3ThemeTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterial3Theme(static opts => opts with { SiteName = "MD3 Site" })
+            .UseMaterial3Theme(static opts => opts.WithSiteName("MD3 Site"))
             .BuildAsync();
 
         var cssPath = Path.Combine(fixture.Site, "assets", "stylesheets", "material3.css");
@@ -45,7 +45,7 @@ public class Material3ThemeTests
         await Assert.That(html).Contains("<!doctype html>");
         await Assert.That(html).Contains("MD3 Site");
         await Assert.That(html).Contains("data-md-color-scheme=\"default\"");
-        await Assert.That(html).Contains("href=\"assets/stylesheets/material3.css\"");
+        await Assert.That(html).Contains("href=\"/assets/stylesheets/material3.css\"");
         await Assert.That(html).Contains("<h1>");
     }
 
@@ -60,10 +60,9 @@ public class Material3ThemeTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterial3Theme(static opts => opts with
+            .UseMaterial3Theme(static opts => opts.WithCdnRoot("https://example.test/md3") with
             {
                 AssetSource = Material3AssetSource.Cdn,
-                CdnRoot = "https://example.test/md3",
             })
             .BuildAsync();
 

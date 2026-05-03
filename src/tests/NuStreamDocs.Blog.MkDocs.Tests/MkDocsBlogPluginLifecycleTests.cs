@@ -15,7 +15,7 @@ public class MkDocsBlogPluginLifecycleTests
         using var temp = new ScratchDir();
         Directory.CreateDirectory(Path.Combine(temp.Root, "blog", "posts"));
         var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
-        await plugin.OnConfigureAsync(new(default, temp.Root, "/out", []), CancellationToken.None);
+        await plugin.OnConfigureAsync(new(temp.Root, "/out", []), CancellationToken.None);
     }
 
     /// <summary>OnRenderPageAsync no-ops.</summary>

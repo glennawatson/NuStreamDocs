@@ -39,7 +39,7 @@ public class MaterialThemeTests
                 ["site_root"u8.ToArray()] = (byte[])[.. "/"u8],
                 ["page_title"u8.ToArray()] = (byte[])[.. "Hi"u8],
                 ["body"u8.ToArray()] = (byte[])[.. "<h1>Hello</h1>"u8],
-                ["asset_root"u8.ToArray()] = (byte[])[.. "assets"u8],
+                ["asset_root"u8.ToArray()] = (byte[])[.. "/assets"u8],
                 ["copyright"u8.ToArray()] = (byte[])[.. ""u8],
             },
             sections: null);
@@ -51,7 +51,7 @@ public class MaterialThemeTests
         await Assert.That(html).Contains("<!doctype html>");
         await Assert.That(html).Contains("Test Site");
         await Assert.That(html).Contains("<h1>Hello</h1>");
-        await Assert.That(html).Contains("assets/stylesheets/material.min.css");
+        await Assert.That(html).Contains("/assets/stylesheets/material.min.css");
     }
 
     /// <summary>Embedded mode should write the bundle and wrap pages in the Material shell.</summary>
@@ -65,7 +65,7 @@ public class MaterialThemeTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with { SiteName = "Hi" })
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi"))
             .BuildAsync();
 
         var cssPath = Path.Combine(fixture.Site, "assets", "stylesheets", "material.min.css");
@@ -76,7 +76,7 @@ public class MaterialThemeTests
         await Assert.That(html).Contains("<!doctype html>");
         await Assert.That(html).Contains("Hi");
         await Assert.That(html).Contains("<h1>");
-        await Assert.That(html).Contains("href=\"assets/stylesheets/material.min.css\"");
+        await Assert.That(html).Contains("href=\"/assets/stylesheets/material.min.css\"");
     }
 
     /// <summary>CDN mode should skip the asset write and point the page template at the CDN URL.</summary>
@@ -90,10 +90,9 @@ public class MaterialThemeTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts with
+            .UseMaterialTheme(static opts => opts.WithCdnRoot("https://example.test/material") with
             {
                 AssetSource = MaterialAssetSource.Cdn,
-                CdnRoot = "https://example.test/material",
             })
             .BuildAsync();
 
