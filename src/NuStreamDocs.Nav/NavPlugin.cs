@@ -96,11 +96,11 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         _logger = logger;
     }
 
-    /// <summary>Gets the marker the theme places where the rendered nav should land.</summary>
-    public static string NavMarker => "<!--@@nav@@-->";
+    /// <summary>Gets the UTF-8 marker bytes the theme places where the rendered nav should land.</summary>
+    public static byte[] NavMarker { get; } = [.. "<!--@@nav@@-->"u8];
 
-    /// <summary>Gets the marker the theme places where the top-bar tabs should land (mkdocs-material's <c>navigation.tabs</c>).</summary>
-    public static string NavTabsMarker => "<!--@@nav-tabs@@-->";
+    /// <summary>Gets the UTF-8 marker bytes the theme places where the top-bar tabs should land (mkdocs-material's <c>navigation.tabs</c>).</summary>
+    public static byte[] NavTabsMarker { get; } = [.. "<!--@@nav-tabs@@-->"u8];
 
     /// <inheritdoc/>
     public string Name => "nav";

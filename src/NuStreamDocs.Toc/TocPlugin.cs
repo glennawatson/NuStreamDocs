@@ -28,9 +28,6 @@ namespace NuStreamDocs.Toc;
 /// </remarks>
 public sealed class TocPlugin : IDocPlugin
 {
-    /// <summary>UTF-8 marker themes embed where the rendered TOC should land.</summary>
-    private static readonly byte[] MarkerBytes = [.. "<!--@@toc@@-->"u8];
-
     /// <summary>Configured option set.</summary>
     private readonly TocOptions _options;
 
@@ -66,8 +63,8 @@ public sealed class TocPlugin : IDocPlugin
             : Encoding.UTF8.GetBytes(options.PermalinkSymbol);
     }
 
-    /// <summary>Gets the marker the theme places where the rendered TOC should land.</summary>
-    public static string TocMarker => "<!--@@toc@@-->";
+    /// <summary>Gets the UTF-8 marker bytes the theme places where the rendered TOC should land.</summary>
+    public static byte[] TocMarker { get; } = [.. "<!--@@toc@@-->"u8];
 
     /// <inheritdoc/>
     public string Name => "toc";
@@ -144,7 +141,7 @@ public sealed class TocPlugin : IDocPlugin
     private void SubstituteMarker(ArrayBufferWriter<byte> html, Heading[] headings)
     {
         var written = html.WrittenSpan;
-        var markerIndex = written.IndexOf(MarkerBytes.AsSpan());
+        var markerIndex = written.IndexOf(TocMarker.AsSpan());
         if (markerIndex < 0)
         {
             return;
@@ -159,7 +156,7 @@ public sealed class TocPlugin : IDocPlugin
 
             var snapshot = rental.AsSpan(0, length);
             var prefix = snapshot[..markerIndex];
-            var suffix = snapshot[(markerIndex + MarkerBytes.Length)..];
+            var suffix = snapshot[(markerIndex + TocMarker.Length)..];
 
             Utf8StringWriter.Write(html, prefix);
             TocFragmentRenderer.Render(snapshot, headings, in _options, html);

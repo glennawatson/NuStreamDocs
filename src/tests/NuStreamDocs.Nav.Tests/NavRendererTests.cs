@@ -115,7 +115,7 @@ public class NavRendererTests
 
         // Surrogate "themed" payload — just the marker and trailing tag.
         page.Write("<nav>"u8);
-        page.Write(Encoding.UTF8.GetBytes(NavPlugin.NavMarker));
+        page.Write(NavPlugin.NavMarker);
         page.Write("</nav>"u8);
 
         var sourcePath = currentPage.Replace(".html", ".md", StringComparison.Ordinal);

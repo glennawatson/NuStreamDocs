@@ -14,7 +14,7 @@ public class TocPluginLifecycleTests
     {
         var plugin = new TocPlugin();
         await Assert.That(plugin.Name).IsEqualTo("toc");
-        await Assert.That(TocPlugin.TocMarker).IsEqualTo("<!--@@toc@@-->");
+        await Assert.That(System.Text.Encoding.UTF8.GetString(TocPlugin.TocMarker)).IsEqualTo("<!--@@toc@@-->");
     }
 
     /// <summary>OnConfigureAsync is a no-op.</summary>
