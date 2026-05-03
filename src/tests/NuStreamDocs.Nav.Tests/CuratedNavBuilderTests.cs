@@ -59,4 +59,20 @@ public class CuratedNavBuilderTests
         // Auto-discovery picks up every top-level .md file (3 here).
         await Assert.That(root.Children.Length).IsEqualTo(3);
     }
+
+    /// <summary>Curated entries honor directory-style served URLs.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task CuratedEntriesHonorDirectoryUrls()
+    {
+        using var fixture = TempDocsTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide.md"), "# Guide");
+
+        var root = CuratedNavBuilder.Build(
+            fixture.Root,
+            [NavEntryFactory.Leaf("Guide", "guide.md")],
+            useDirectoryUrls: true);
+
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].RelativeUrlBytes)).IsEqualTo("guide/");
+    }
 }

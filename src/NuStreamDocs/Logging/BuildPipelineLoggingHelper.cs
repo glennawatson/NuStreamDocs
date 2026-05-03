@@ -22,9 +22,9 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="pageCount">Total pages processed.</param>
     /// <param name="cacheHits">Pages reused from the previous-build manifest.</param>
-    /// <param name="elapsedMs">Wall-clock duration in milliseconds.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Build complete: {PageCount} page(s) processed, {CacheHits} cache hit(s), elapsed={ElapsedMs}ms")]
-    public static partial void LogBuildComplete(ILogger logger, int pageCount, int cacheHits, long elapsedMs);
+    /// <param name="elapsedSeconds">Wall-clock duration in seconds (three decimal places).</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Build complete: {PageCount} page(s) processed, {CacheHits} cache hit(s), elapsed={ElapsedSeconds:F3}s")]
+    public static partial void LogBuildComplete(ILogger logger, int pageCount, int cacheHits, double elapsedSeconds);
 
     /// <summary>Logs entry into the configure phase before any plugin's <c>OnConfigureAsync</c> fires.</summary>
     /// <param name="logger">Target logger.</param>
@@ -47,9 +47,9 @@ internal static partial class BuildPipelineLoggingHelper
     /// <summary>Logs the end of the parallel render phase.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pageCount">Pages processed in this phase.</param>
-    /// <param name="elapsedMs">Phase duration in milliseconds.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Render complete: {PageCount} page(s) in {ElapsedMs}ms")]
-    public static partial void LogRenderComplete(ILogger logger, int pageCount, long elapsedMs);
+    /// <param name="elapsedSeconds">Phase duration in seconds (three decimal places).</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Render complete: {PageCount} page(s) in {ElapsedSeconds:F3}s")]
+    public static partial void LogRenderComplete(ILogger logger, int pageCount, double elapsedSeconds);
 
     /// <summary>Logs entry into the finalize phase before any plugin's <c>OnFinalizeAsync</c> fires.</summary>
     /// <param name="logger">Target logger.</param>

@@ -4,6 +4,7 @@
 
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
@@ -21,9 +22,6 @@ namespace NuStreamDocs.Nav;
 /// </remarks>
 internal static class CuratedNavBuilder
 {
-    /// <summary>Maximum bytes peeked from the front of each leaf file when extracting the front-matter title.</summary>
-    private const int FrontmatterPeekBytes = 1024;
-
     /// <summary>UTF-8 markdown extension bytes.</summary>
     private static readonly byte[] MarkdownExtensionBytes = ".md"u8.ToArray();
 
@@ -31,15 +29,32 @@ internal static class CuratedNavBuilder
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="entries">Top-level curated entries.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(string inputRoot, NavEntry[] entries) =>
-        Build(inputRoot, entries, NullLogger.Instance);
+    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries) =>
+        Build(inputRoot, entries, useDirectoryUrls: false, NullLogger.Instance);
+
+    /// <summary>Builds the nav tree from <paramref name="entries"/> with an explicit served URL shape.</summary>
+    /// <param name="inputRoot">Absolute path to the docs root.</param>
+    /// <param name="entries">Top-level curated entries.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    /// <returns>Root <see cref="NavNode"/>.</returns>
+    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls) =>
+        Build(inputRoot, entries, useDirectoryUrls, NullLogger.Instance);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with a logger for orphan / missing-file diagnostics.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="entries">Top-level curated entries.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(string inputRoot, NavEntry[] entries, ILogger logger)
+    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries, ILogger logger)
+        => Build(inputRoot, entries, useDirectoryUrls: false, logger);
+
+    /// <summary>Builds the nav tree from <paramref name="entries"/> with a logger for orphan / missing-file diagnostics.</summary>
+    /// <param name="inputRoot">Absolute path to the docs root.</param>
+    /// <param name="entries">Top-level curated entries.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    /// <param name="logger">Logger.</param>
+    /// <returns>Root <see cref="NavNode"/>.</returns>
+    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
         ArgumentNullException.ThrowIfNull(entries);
@@ -49,7 +64,7 @@ internal static class CuratedNavBuilder
         var written = 0;
         for (var i = 0; i < entries.Length; i++)
         {
-            var built = BuildEntry(inputRoot, entries[i], logger);
+            var built = BuildEntry(inputRoot, entries[i], useDirectoryUrls, logger);
             if (built is not null)
             {
                 children[written++] = built;
@@ -63,7 +78,7 @@ internal static class CuratedNavBuilder
             children = trimmed;
         }
 
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, children);
+        var root = new NavNode([], default, isSection: true, children, useDirectoryUrls);
         root.AttachParents();
         return root;
     }
@@ -71,13 +86,14 @@ internal static class CuratedNavBuilder
     /// <summary>Builds one entry into a <see cref="NavNode"/>; returns null when the entry is malformed.</summary>
     /// <param name="inputRoot">Docs root.</param>
     /// <param name="entry">Curated entry.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The built node or null.</returns>
-    private static NavNode? BuildEntry(string inputRoot, in NavEntry entry, ILogger logger)
+    private static NavNode? BuildEntry(DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
     {
         if (entry.IsSection)
         {
-            return BuildSectionEntry(inputRoot, entry, logger);
+            return BuildSectionEntry(inputRoot, entry, useDirectoryUrls, logger);
         }
 
         if (entry.Path.Length is 0)
@@ -86,32 +102,34 @@ internal static class CuratedNavBuilder
             return null;
         }
 
-        return BuildLeafEntry(inputRoot, entry);
+        return BuildLeafEntry(inputRoot, entry, useDirectoryUrls);
     }
 
     /// <summary>Builds a leaf page or external-link node.</summary>
     /// <param name="inputRoot">Docs root.</param>
     /// <param name="entry">Leaf entry.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>Node.</returns>
-    private static NavNode BuildLeafEntry(string inputRoot, in NavEntry entry)
+    private static NavNode BuildLeafEntry(DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls)
     {
-        var pathString = Encoding.UTF8.GetString(entry.Path);
-        var title = ResolveTitle(inputRoot, entry, pathString);
-        return new(title, pathString, isSection: false, []);
+        FilePath path = Encoding.UTF8.GetString(entry.Path);
+        var title = ResolveTitle(inputRoot, entry, path);
+        return new(title, path, isSection: false, [], useDirectoryUrls);
     }
 
     /// <summary>Builds a section node and its children.</summary>
     /// <param name="inputRoot">Docs root.</param>
     /// <param name="entry">Section entry.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Section node.</returns>
-    private static NavNode BuildSectionEntry(string inputRoot, in NavEntry entry, ILogger logger)
+    private static NavNode BuildSectionEntry(DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
     {
         var children = new NavNode[entry.Children.Length];
         var written = 0;
         for (var i = 0; i < entry.Children.Length; i++)
         {
-            var built = BuildEntry(inputRoot, entry.Children[i], logger);
+            var built = BuildEntry(inputRoot, entry.Children[i], useDirectoryUrls, logger);
             if (built is not null)
             {
                 children[written++] = built;
@@ -125,30 +143,30 @@ internal static class CuratedNavBuilder
             children = trimmed;
         }
 
-        var title = entry.Title.Length is 0 ? string.Empty : Encoding.UTF8.GetString(entry.Title);
-        var indexPath = entry.Path.Length is 0 ? string.Empty : Encoding.UTF8.GetString(entry.Path);
-        return new(title, indexPath, isSection: true, children, indexPath);
+        byte[] title = entry.Title.Length is 0 ? [] : [.. entry.Title];
+        FilePath indexPath = entry.Path.Length is 0 ? default : Encoding.UTF8.GetString(entry.Path);
+        return new(title, indexPath, isSection: true, children, indexPath, useDirectoryUrls);
     }
 
     /// <summary>Resolves a leaf entry's display title — explicit, then front-matter <c>title:</c>, then file stem.</summary>
     /// <param name="inputRoot">Docs root.</param>
     /// <param name="entry">Leaf entry.</param>
-    /// <param name="pathString">Decoded path.</param>
-    /// <returns>Title string.</returns>
-    private static string ResolveTitle(string inputRoot, in NavEntry entry, string pathString)
+    /// <param name="path">Decoded path.</param>
+    /// <returns>Title bytes.</returns>
+    private static byte[] ResolveTitle(DirectoryPath inputRoot, in NavEntry entry, FilePath path)
     {
         if (entry.Title.Length > 0)
         {
-            return Encoding.UTF8.GetString(entry.Title);
+            return [.. entry.Title];
         }
 
         if (IsAbsoluteUrl(entry.Path) || !PathLooksLikeMarkdown(entry.Path))
         {
             // External link or non-markdown — fall back to the path stem.
-            return Path.GetFileNameWithoutExtension(pathString);
+            return Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
         }
 
-        return TryReadFrontmatterTitle(inputRoot, pathString) ?? Path.GetFileNameWithoutExtension(pathString);
+        return FrontmatterTitleReader.ReadBytes(inputRoot.File(path.Value)) ?? Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
     }
 
     /// <summary>Returns true when the UTF-8 path begins with <c>http://</c> or <c>https://</c>.</summary>
@@ -178,60 +196,5 @@ internal static class CuratedNavBuilder
         }
 
         return true;
-    }
-
-    /// <summary>Peeks the head of <paramref name="pathString"/>'s file and returns its front-matter <c>title:</c> when present.</summary>
-    /// <param name="inputRoot">Docs root.</param>
-    /// <param name="pathString">Source-relative path.</param>
-    /// <returns>Title string or null when absent / unreadable.</returns>
-    private static string? TryReadFrontmatterTitle(string inputRoot, string pathString)
-    {
-        var absolute = Path.Combine(inputRoot, pathString);
-        try
-        {
-            using var handle = File.OpenHandle(absolute);
-            var size = (int)Math.Min(FrontmatterPeekBytes, RandomAccess.GetLength(handle));
-            if (size <= 0)
-            {
-                return null;
-            }
-
-            Span<byte> buffer = stackalloc byte[FrontmatterPeekBytes];
-            var read = RandomAccess.Read(handle, buffer[..size], 0);
-            var scalar = FrontmatterValueExtractor.GetScalar(buffer[..read], "title"u8);
-            if (scalar.IsEmpty)
-            {
-                return null;
-            }
-
-            return Encoding.UTF8.GetString(StripYamlQuotes(scalar));
-        }
-        catch (FileNotFoundException)
-        {
-            return null;
-        }
-        catch (DirectoryNotFoundException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return null;
-        }
-    }
-
-    /// <summary>Drops a single matching pair of leading/trailing single- or double-quote bytes from <paramref name="value"/>.</summary>
-    /// <param name="value">UTF-8 candidate.</param>
-    /// <returns>Unquoted slice or <paramref name="value"/> unchanged.</returns>
-    private static ReadOnlySpan<byte> StripYamlQuotes(ReadOnlySpan<byte> value)
-    {
-        if (value.Length >= 2
-            && (value[0] is (byte)'"' or (byte)'\'')
-            && value[^1] == value[0])
-        {
-            return value[1..^1];
-        }
-
-        return value;
     }
 }

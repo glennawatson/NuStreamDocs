@@ -57,6 +57,9 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>The nav tree built during <see cref="OnConfigureAsync"/>; null until then.</summary>
     private NavNode? _root;
 
+    /// <summary>True when the configured build emits directory-style served URLs.</summary>
+    private bool _useDirectoryUrls;
+
     /// <summary>UTF-8 URL bytes → node lookup over the rendered tree; built once when the tree is built so per-page renders resolve the active node in O(1) without re-encoding the page URL.</summary>
     private Dictionary<byte[], NavNode>? _urlIndex;
 
@@ -112,9 +115,11 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
+        var useDirectoryUrls = _options.UseDirectoryUrls ?? context.UseDirectoryUrls;
+        _useDirectoryUrls = useDirectoryUrls;
         _root = _options.CuratedEntries.Length > 0
-            ? CuratedNavBuilder.Build(context.InputRoot, _options.CuratedEntries, _logger)
-            : NavTreeBuilder.Build(context.InputRoot, in _options, _logger);
+            ? CuratedNavBuilder.Build(context.InputRoot, _options.CuratedEntries, useDirectoryUrls, _logger)
+            : NavTreeBuilder.Build(context.InputRoot, in _options, useDirectoryUrls, _logger);
         _urlIndex = NavRenderer.BuildUrlIndex(_root);
 
         return ValueTask.CompletedTask;
@@ -285,11 +290,12 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     private static byte[] TitleOrEmpty(NavNode[] leaves, int idx) =>
         idx >= 0 && idx < leaves.Length ? leaves[idx].Title : [];
 
-    /// <summary>Encodes <paramref name="relativePath"/> as the served-page URL bytes into <paramref name="destination"/>, swapping the trailing <c>.md</c> for <c>.html</c>.</summary>
+    /// <summary>Encodes <paramref name="relativePath"/> as the served-page URL bytes into <paramref name="destination"/>.</summary>
     /// <param name="relativePath">Source-relative path.</param>
-    /// <param name="destination">UTF-8 destination span (must be sized to <c>Encoding.UTF8.GetMaxByteCount(relativePath.Length) + 2</c> to leave room for the <c>.html</c> growth).</param>
+    /// <param name="useDirectoryUrls">True when the served site uses directory-style URLs.</param>
+    /// <param name="destination">UTF-8 destination span sized for the worst-case served-path output.</param>
     /// <returns>Number of bytes written to <paramref name="destination"/>.</returns>
-    private static int EncodePageUrlBytes(string relativePath, Span<byte> destination)
+    private static int EncodePageUrlBytes(string relativePath, bool useDirectoryUrls, Span<byte> destination)
     {
         var endsWithMd = relativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
         var keepLength = endsWithMd ? relativePath.Length - MarkdownExtensionLength : relativePath.Length;
@@ -299,8 +305,22 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
             return keptBytes;
         }
 
-        ".html"u8.CopyTo(destination[keptBytes..]);
-        return keptBytes + ".html"u8.Length;
+        if (!useDirectoryUrls)
+        {
+            ".html"u8.CopyTo(destination[keptBytes..]);
+            return keptBytes + ".html"u8.Length;
+        }
+
+        var stem = relativePath.AsSpan(0, keepLength);
+        var lastSlash = stem.LastIndexOfAny('/', '\\');
+        var fileName = lastSlash >= 0 ? stem[(lastSlash + 1)..] : stem;
+        if (!fileName.Equals("index", StringComparison.OrdinalIgnoreCase))
+        {
+            destination[keptBytes] = (byte)'/';
+            return keptBytes + 1;
+        }
+
+        return lastSlash >= 0 ? Encoding.UTF8.GetBytes(stem[..(lastSlash + 1)], destination) : 0;
     }
 
     /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>
@@ -396,16 +416,16 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Length) + HtmlExtensionGrowth;
         Span<byte> stackBuf = stackalloc byte[StackUrlLimit];
         var urlBuffer = capacity <= StackUrlLimit ? stackBuf : new byte[capacity];
-        var written = EncodePageUrlBytes(relativePath, urlBuffer);
+        var written = EncodePageUrlBytes(relativePath, _useDirectoryUrls, urlBuffer);
         _ = _urlIndex!.TryGetValueByUtf8(urlBuffer[..written], out var activeNode);
 
         if (_options.Prune)
         {
-            NavRenderer.RenderPruned(_root!, activeNode, writer);
+            NavRenderer.RenderSidebarPruned(_root!, activeNode, writer);
             return;
         }
 
-        NavRenderer.RenderFull(_root!, activeNode, writer);
+        NavRenderer.RenderSidebarFull(_root!, activeNode, writer);
     }
 
     /// <summary>Renders the top-level nav as a horizontal tab bar at the position of the page's <c>&lt;!--@@nav-tabs@@--&gt;</c> marker.</summary>
@@ -417,7 +437,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Length) + HtmlExtensionGrowth;
         Span<byte> stackBuf = stackalloc byte[StackUrlLimit];
         var urlBuffer = capacity <= StackUrlLimit ? stackBuf : new byte[capacity];
-        var written = EncodePageUrlBytes(relativePath, urlBuffer);
+        var written = EncodePageUrlBytes(relativePath, _useDirectoryUrls, urlBuffer);
         _ = _urlIndex!.TryGetValueByUtf8(urlBuffer[..written], out var activeNode);
 
         NavRenderer.RenderTabs(_root!, activeNode, writer);

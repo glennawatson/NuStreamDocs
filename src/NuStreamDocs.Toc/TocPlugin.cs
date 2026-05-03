@@ -113,7 +113,7 @@ public sealed class TocPlugin : IDocPlugin
 
             if (_options.MarkerSubstitute)
             {
-                SubstituteMarker(html, slugged);
+                SubstituteMarker(html, snapshot, slugged);
             }
 
             sw.Stop();
@@ -137,8 +137,9 @@ public sealed class TocPlugin : IDocPlugin
 
     /// <summary>Locates the TOC marker in the freshly-rewritten body and substitutes the fragment.</summary>
     /// <param name="html">Output buffer (already carries the heading-rewritten body).</param>
+    /// <param name="sourceSnapshot">Original pre-rewrite HTML snapshot used for heading-text slices.</param>
     /// <param name="headings">Slugged headings.</param>
-    private void SubstituteMarker(ArrayBufferWriter<byte> html, Heading[] headings)
+    private void SubstituteMarker(ArrayBufferWriter<byte> html, ReadOnlySpan<byte> sourceSnapshot, Heading[] headings)
     {
         var written = html.WrittenSpan;
         var markerIndex = written.IndexOf(TocMarker.AsSpan());
@@ -159,7 +160,7 @@ public sealed class TocPlugin : IDocPlugin
             var suffix = snapshot[(markerIndex + TocMarker.Length)..];
 
             Utf8StringWriter.Write(html, prefix);
-            TocFragmentRenderer.Render(snapshot, headings, in _options, html);
+            TocFragmentRenderer.Render(sourceSnapshot, headings, in _options, html);
             Utf8StringWriter.Write(html, suffix);
         }
         finally

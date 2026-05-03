@@ -60,8 +60,8 @@ public class OptimizeOptionsExtensionsTests
     public async Task AddExtensionsEmptyIsNoOp()
     {
         var seeded = OptimizeOptions.Default;
-        var stringNoOp = seeded.AddExtensions(System.Array.Empty<string>());
-        var bytesNoOp = seeded.AddExtensions(System.Array.Empty<byte[]>());
+        var stringNoOp = seeded.AddExtensions(Array.Empty<string>());
+        var bytesNoOp = seeded.AddExtensions(Array.Empty<byte[]>());
         await Assert.That(stringNoOp.Extensions).IsSameReferenceAs(seeded.Extensions);
         await Assert.That(bytesNoOp.Extensions).IsSameReferenceAs(seeded.Extensions);
     }

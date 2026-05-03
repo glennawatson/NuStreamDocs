@@ -8,6 +8,7 @@ using System.IO.Compression;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
+using NuStreamDocs.Links;
 using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Search.Logging;
@@ -44,6 +45,9 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     /// <summary>Output root captured during configure.</summary>
     private DirectoryPath _outputRoot;
 
+    /// <summary>Whether the site emits directory-style URLs.</summary>
+    private bool _useDirectoryUrls;
+
     /// <summary>Initializes a new instance of the <see cref="SearchPlugin"/> class with default options.</summary>
     public SearchPlugin()
         : this(SearchOptions.Default, NullLogger.Instance)
@@ -64,6 +68,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
         _outputRoot = context.OutputRoot;
+        _useDirectoryUrls = context.UseDirectoryUrls;
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }
@@ -81,7 +86,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
         using var textRental = PageBuilderPool.Rent(html.Length / 2);
         var textBuffer = textRental.Writer;
         var titleBytes = HtmlTextExtractor.Extract(html, textBuffer);
-        var url = ToHtmlUrl(context.RelativePath);
+        var url = ToHtmlUrl(context.RelativePath, _useDirectoryUrls);
         if (titleBytes.Length == 0)
         {
             var fallback = Path.GetFileNameWithoutExtension(context.RelativePath);
@@ -224,18 +229,19 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
         return [.. docs];
     }
 
-    /// <summary>Translates a source-relative markdown path to its rendered HTML URL.</summary>
+    /// <summary>Translates a source-relative markdown path to its rendered page URL.</summary>
     /// <param name="markdownPath">Source-relative path (e.g. <c>guide/intro.md</c>).</param>
-    /// <returns>Site-relative URL with <c>.html</c> extension.</returns>
-    private static string ToHtmlUrl(string markdownPath)
+    /// <param name="useDirectoryUrls">True when the site emits directory-style URLs.</param>
+    /// <returns>Root-relative rendered URL.</returns>
+    private static string ToHtmlUrl(FilePath markdownPath, bool useDirectoryUrls)
     {
-        if (markdownPath is [])
+        if (markdownPath.IsEmpty)
         {
-            return string.Empty;
+            return "/";
         }
 
-        var withoutExt = Path.ChangeExtension(markdownPath, ".html");
-        return withoutExt.Replace('\\', '/');
+        var path = useDirectoryUrls ? markdownPath : markdownPath.WithExtension(".html");
+        return Encoding.UTF8.GetString(ServedUrlBytes.FromPath(path, useDirectoryUrls, leadingSlash: true));
     }
 
     /// <summary>Returns the lowercase format name for the discovery <c>&lt;meta&gt;</c> tag.</summary>

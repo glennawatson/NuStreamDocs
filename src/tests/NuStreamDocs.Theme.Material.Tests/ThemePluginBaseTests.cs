@@ -184,6 +184,27 @@ public class ThemePluginBaseTests
         await Assert.That(html).DoesNotContain("/global");
     }
 
+    /// <summary>Directory-URL builds emit footer neighbour links in directory form.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task NavFooterUsesDirectoryUrlsWhenEnabled()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseDirectoryUrls()
+            .UsePlugin(new StubNeighbours(globalUrl: "/prev-page", sectionUrl: "/section-page"))
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true, SectionScopedFooter = false })
+            .BuildAsync();
+
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro", "index.html"));
+        await Assert.That(html).Contains("/prev-page/");
+        await Assert.That(html).DoesNotContain("/prev-page.html");
+    }
+
     /// <summary>Footer disabled bypasses the provider and emits no neighbour links.</summary>
     /// <returns>Async test.</returns>
     [Test]

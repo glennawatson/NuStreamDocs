@@ -86,6 +86,16 @@ public class AttrListRewriterTests
         await Assert.That(output).Contains("id=\"intro\"");
     }
 
+    /// <summary>The space form applies classes to inline SVG so icon shortcodes can size correctly.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SpaceFormLiftsSvgClasses()
+    {
+        var output = Rewrite("<p><svg viewBox=\"0 0 24 24\"></svg>{ .lg .middle }</p>");
+        await Assert.That(output).Contains("<svg viewBox=\"0 0 24 24\" class=\"lg middle\"></svg>");
+        await Assert.That(output).DoesNotContain("{ .lg .middle }");
+    }
+
     /// <summary>An incidental <c>{ </c> in a code block (no attr-list lead bytes after the brace) is left alone.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

@@ -22,7 +22,7 @@ public class LightboxRegistrationTests
     public async Task DefaultOptions()
     {
         var defaults = LightboxOptions.Default;
-        await Assert.That(System.Text.Encoding.UTF8.GetString(defaults.StylesheetUrl)).Contains("glightbox");
+        await Assert.That(Encoding.UTF8.GetString(defaults.StylesheetUrl)).Contains("glightbox");
         await Assert.That(defaults.WrapImages).IsTrue();
         await Assert.That(defaults.Selector).IsEqualTo("glightbox");
     }

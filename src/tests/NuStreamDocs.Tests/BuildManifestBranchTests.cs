@@ -64,7 +64,7 @@ public class BuildManifestBranchTests
     public async Task SaveLoadRoundTrip()
     {
         using var temp = new ScratchDir();
-        var manifest = BuildManifest.Empty();
+        var manifest = BuildManifest.Empty("test-build");
         var hash = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04 };
         manifest.Replace([new("p.md", hash, 99)]);
         await manifest.SaveAsync(temp.Root, CancellationToken.None);
@@ -73,6 +73,20 @@ public class BuildManifestBranchTests
         await Assert.That(loaded.TryGet("p.md", out var entry)).IsTrue();
         await Assert.That(entry.ContentHash.AsSpan().SequenceEqual(hash)).IsTrue();
         await Assert.That(entry.OutputLengthBytes).IsEqualTo(99);
+    }
+
+    /// <summary>A build fingerprint mismatch forces a cold-cache manifest.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task LoadAsyncRejectsDifferentBuildFingerprint()
+    {
+        using var temp = new ScratchDir();
+        var manifest = BuildManifest.Empty("build-a");
+        manifest.Replace([new("p.md", [1, 2, 3, 4], 10)]);
+        await manifest.SaveAsync(temp.Root, CancellationToken.None);
+
+        var loaded = await BuildManifest.LoadAsync(temp.Root, "build-b", CancellationToken.None);
+        await Assert.That(loaded.Count).IsEqualTo(0);
     }
 
     /// <summary>Disposable scratch directory.</summary>

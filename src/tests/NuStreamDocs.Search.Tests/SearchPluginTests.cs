@@ -65,7 +65,7 @@ public class SearchPluginTests
         var docs = doc.RootElement.GetProperty("docs"u8);
         await Assert.That(docs.GetArrayLength()).IsEqualTo(1);
         await Assert.That(docs[0].GetProperty("title"u8).GetString()).IsEqualTo("Page");
-        await Assert.That(docs[0].GetProperty("location"u8).GetString()).IsEqualTo("page.html");
+        await Assert.That(docs[0].GetProperty("location"u8).GetString()).IsEqualTo("/page.html");
     }
 
     /// <summary>An empty render-page buffer is skipped without adding a document.</summary>

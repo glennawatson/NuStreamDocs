@@ -27,14 +27,22 @@ namespace NuStreamDocs.Caching;
 public sealed class BuildManifest
 {
     /// <summary>Schema version emitted in the JSON document; bumped on breaking changes.</summary>
-    private const int SchemaVersion = 1;
+    private const int SchemaVersion = 2;
+
+    /// <summary>Fingerprint of the pipeline that produced these entries.</summary>
+    private readonly string _buildFingerprint;
 
     /// <summary>Relative-path → entry lookup, frozen for read-mostly access.</summary>
     private Dictionary<string, ManifestEntry> _entries;
 
     /// <summary>Initializes a new instance of the <see cref="BuildManifest"/> class.</summary>
     /// <param name="entries">Entries to seed the manifest with.</param>
-    private BuildManifest(Dictionary<string, ManifestEntry> entries) => _entries = entries;
+    /// <param name="buildFingerprint">Fingerprint of the pipeline that produced <paramref name="entries"/>.</param>
+    private BuildManifest(Dictionary<string, ManifestEntry> entries, string buildFingerprint)
+    {
+        _entries = entries;
+        _buildFingerprint = buildFingerprint;
+    }
 
     /// <summary>Gets the file name written under the output root.</summary>
     public static string FileName => ".nustreamdocs.manifest.json";
@@ -45,7 +53,13 @@ public sealed class BuildManifest
     /// <summary>Returns an empty manifest.</summary>
     /// <returns>A manifest with no entries.</returns>
     public static BuildManifest Empty() =>
-        new(EmptyCollections.DictionaryFor<string, ManifestEntry>());
+        new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), string.Empty);
+
+    /// <summary>Returns an empty manifest bound to <paramref name="buildFingerprint"/>.</summary>
+    /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
+    /// <returns>A manifest with no tracked entries.</returns>
+    public static BuildManifest Empty(string buildFingerprint) =>
+        new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), buildFingerprint);
 
     /// <summary>
     /// Loads the manifest from <paramref name="outputRoot"/>; returns an
@@ -56,6 +70,14 @@ public sealed class BuildManifest
     /// <returns>The loaded manifest.</returns>
     public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
         LoadAsync(outputRoot, cancellationToken, logger: null);
+
+    /// <summary>Loads the manifest and rejects it when its build fingerprint differs from <paramref name="buildFingerprint"/>.</summary>
+    /// <param name="outputRoot">Absolute output root.</param>
+    /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The loaded manifest, or an empty manifest on a fingerprint mismatch.</returns>
+    public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, string buildFingerprint, in CancellationToken cancellationToken) =>
+        LoadAsync(outputRoot, buildFingerprint, cancellationToken, logger: null);
 
     /// <summary>
     /// Loads the manifest from <paramref name="outputRoot"/> with an optional logger;
@@ -91,6 +113,24 @@ public sealed class BuildManifest
             // Corrupt manifest — fall back to a full rebuild rather than fail.
             return Empty();
         }
+    }
+
+    /// <summary>Loads the manifest with an expected pipeline fingerprint.</summary>
+    /// <param name="outputRoot">Absolute output root.</param>
+    /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="logger">Optional logger; pass <see langword="null"/> to silence diagnostics.</param>
+    /// <returns>The loaded manifest when the fingerprint matches; otherwise an empty manifest.</returns>
+    public static async ValueTask<BuildManifest> LoadAsync(
+        DirectoryPath outputRoot,
+        string buildFingerprint,
+        CancellationToken cancellationToken,
+        ILogger? logger)
+    {
+        var manifest = await LoadAsync(outputRoot, cancellationToken, logger).ConfigureAwait(false);
+        return string.Equals(manifest._buildFingerprint, buildFingerprint, StringComparison.Ordinal)
+            ? manifest
+            : Empty(buildFingerprint);
     }
 
     /// <summary>Looks up an entry by relative path.</summary>
@@ -149,6 +189,7 @@ public sealed class BuildManifest
         await using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
         writer.WriteNumber("schema"u8, SchemaVersion);
+        writer.WriteString("build"u8, _buildFingerprint);
 
         writer.WritePropertyName("entries"u8);
         writer.WriteStartArray();
@@ -177,16 +218,21 @@ public sealed class BuildManifest
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
 
-        if (!TryReadEntriesArray(root, out var entries))
+        if (!TryReadDocument(root, out var buildFingerprint, out var entries))
         {
             return Empty();
+        }
+
+        if (entries.GetArrayLength() is 0)
+        {
+            return new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), buildFingerprint);
         }
 
         var buffer = new ManifestEntry[entries.GetArrayLength()];
         var count = ReadEntries(entries, buffer);
         if (count == 0)
         {
-            return Empty();
+            return new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), buildFingerprint);
         }
 
         if (count != buffer.Length)
@@ -194,19 +240,32 @@ public sealed class BuildManifest
             Array.Resize(ref buffer, count);
         }
 
-        return new(ManifestIndex.Build(buffer));
+        return new(ManifestIndex.Build(buffer), buildFingerprint);
     }
 
-    /// <summary>Validates the document shape and exposes the entries array.</summary>
+    /// <summary>Validates the document shape and exposes the build fingerprint and entries array.</summary>
     /// <param name="root">Root JSON element.</param>
+    /// <param name="buildFingerprint">Build fingerprint on success.</param>
     /// <param name="entries">Entries array on success.</param>
     /// <returns>True when the document matches the expected schema.</returns>
-    private static bool TryReadEntriesArray(in JsonElement root, out JsonElement entries)
+    private static bool TryReadDocument(in JsonElement root, out string buildFingerprint, out JsonElement entries)
     {
+        buildFingerprint = string.Empty;
         entries = default;
         if (!root.TryGetProperty("schema"u8, out var schema) ||
             schema.ValueKind != JsonValueKind.Number ||
             schema.GetInt32() != SchemaVersion)
+        {
+            return false;
+        }
+
+        if (!root.TryGetProperty("build"u8, out var buildProp) || buildProp.ValueKind != JsonValueKind.String)
+        {
+            return false;
+        }
+
+        var fingerprint = buildProp.GetString();
+        if (string.IsNullOrEmpty(fingerprint))
         {
             return false;
         }
@@ -216,8 +275,9 @@ public sealed class BuildManifest
             return false;
         }
 
+        buildFingerprint = fingerprint;
         entries = array;
-        return array.GetArrayLength() > 0;
+        return true;
     }
 
     /// <summary>Materializes every well-formed entry from the JSON array.</summary>

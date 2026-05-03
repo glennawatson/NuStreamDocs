@@ -1,6 +1,8 @@
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation menu">&#9776;</label>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M4 12h16M4 17.5h16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+    </label>
     <a href="{{site_root}}" class="md-header__button md-logo" aria-label="{{site_name}}" data-md-component="logo">
       <span class="md-ellipsis">{{site_name}}</span>
     </a>
@@ -14,20 +16,32 @@
         </div>
       </div>
     </div>
-    <label class="md-header__button md-icon" for="__search" aria-label="Open search">&#128270;</label>
+    <div class="md-header__spacer"></div>
     {{> search}}
     {{#edit_url}}
-    <a href="{{edit_url}}" class="md-header__option" title="Edit this page" rel="noopener" target="_blank" aria-label="Edit this page">&#9998;</a>
+    <a href="{{edit_url}}" class="md-header__option md-icon" title="Edit this page" rel="noopener" target="_blank" aria-label="Edit this page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.25-1 9.5-9.5a1.5 1.5 0 0 0 0-2.12l-1.13-1.13a1.5 1.5 0 0 0-2.12 0L5 15.75 4 20Zm0 0h4.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+    </a>
     {{/edit_url}}
     {{#repo_url}}
     <div class="md-header__source">
       <a href="{{repo_url}}" title="Go to repository" class="md-source" data-md-component="source" rel="noopener" target="_blank">
-        <span class="md-source__icon md-icon">&#9881;</span>
-        <div class="md-source__repository">{{repo_label}}</div>
+        <span class="md-source__icon md-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.24c-3.34.73-4.04-1.61-4.04-1.61a3.18 3.18 0 0 0-1.34-1.76c-1.1-.75.08-.74.08-.74a2.53 2.53 0 0 1 1.85 1.24 2.57 2.57 0 0 0 3.5 1 2.58 2.58 0 0 1 .76-1.62c-2.67-.3-5.47-1.34-5.47-5.95A4.66 4.66 0 0 1 6.61 9a4.33 4.33 0 0 1 .12-3.2s1-.32 3.3 1.23a11.36 11.36 0 0 1 6 0C18.3 5.48 19.3 5.8 19.3 5.8A4.33 4.33 0 0 1 19.42 9a4.65 4.65 0 0 1 1.23 3.22c0 4.62-2.8 5.64-5.48 5.94a2.89 2.89 0 0 1 .82 2.24v3.32c0 .32.22.7.82.58A12 12 0 0 0 12 .5Z" fill="currentColor" /></svg>
+        </span>
+        <div class="md-source__content">
+          <div class="md-source__repository">{{repo_label}}</div>
+          <div class="md-source__facts" data-md-component="source-facts" hidden>
+            <span class="md-source__fact" data-md-component="source-stars" hidden></span>
+            <span class="md-source__fact" data-md-component="source-forks" hidden></span>
+          </div>
+        </div>
       </a>
     </div>
     {{/repo_url}}
-    <button class="md-header__option" type="button" data-md-component="palette-toggle" aria-label="Toggle colour scheme">&#9728;</button>
+    <md-icon-button class="md-header__option" type="button" data-md-component="palette-toggle" aria-label="Toggle colour scheme">
+      <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.75v2.5m0 11.5v2.5m8.25-8.25h-2.5M6.25 12H3.75m14.08 5.83-1.77-1.77M7.94 7.94 6.17 6.17m11.66 0-1.77 1.77M7.94 16.06l-1.77 1.77M12 16.25a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+    </md-icon-button>
   </nav>
 </header>
 <!--@@nav-tabs@@-->

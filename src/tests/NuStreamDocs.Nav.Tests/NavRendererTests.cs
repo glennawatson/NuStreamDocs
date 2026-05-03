@@ -17,9 +17,19 @@ public class NavRendererTests
     [Test]
     public async Task FullRendererEmitsEveryNode()
     {
-        var html = await RenderAsync(prune: false, currentPage: "guide/intro.html");
-        await Assert.That(html.Contains("guide/intro.html", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("blog/post.html", StringComparison.Ordinal)).IsTrue();
+        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
+        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
+        var guide = new NavNode("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
+        var blog = new NavNode("Blog", "blog", isSection: true, [post], indexPath: "blog/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [guide, blog]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderFull(root, intro, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html.Contains("/guide/intro.html", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("/blog/post.html", StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>The pruned renderer drops sections outside the active branch.</summary>
@@ -44,6 +54,119 @@ public class NavRendererTests
     {
         var html = await RenderAsync(prune: false, currentPage: "guide/intro.html");
         await Assert.That(html.Contains("md-nav__link--active", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>The scoped sidebar shows only the active top-level section instead of repeating every top-level tab.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SidebarScopesToActiveTopLevelSection()
+    {
+        var home = new NavNode("Home", "index.md", isSection: false, []);
+        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
+        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
+        var guide = new NavNode("Guide", "guide", isSection: true, [intro]);
+        var blog = new NavNode("Blog", "blog", isSection: true, [post]);
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [home, guide, blog]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderSidebarFull(root, intro, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("/index.html");
+        await Assert.That(html).Contains("/guide/");
+        await Assert.That(html).Contains("/guide/intro.html");
+        await Assert.That(html).DoesNotContain("/blog/post.html");
+    }
+
+    /// <summary>Section tabs without a promoted index page still link to the section root.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TabsLinkToSectionRootWhenSectionHasNoIndexPage()
+    {
+        var home = new NavNode("Home", "index.md", isSection: false, []);
+        var apiIndex = new NavNode("API home", "api/index.md", isSection: false, []);
+        var api = new NavNode("API", "api", isSection: true, [apiIndex]);
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [home, api]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderTabs(root, apiIndex, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("href=\"/api/\"");
+        await Assert.That(html).Contains("md-tabs__item--active");
+    }
+
+    /// <summary>Leaf links render as root-relative hrefs so docs pages do not resolve them against the current directory.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SidebarLeafLinksAreRootRelative()
+    {
+        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
+        var guide = new NavNode("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [guide]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderSidebarFull(root, intro, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("href=\"/guide/index.html\"");
+        await Assert.That(html).Contains("href=\"/guide/intro.html\"");
+    }
+
+    /// <summary>Directory-URL section index pages scope the sidebar to their active top-level section.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DirectoryUrlSectionIndexScopesSidebar()
+    {
+        using var fixture = TempDocsTree.Create();
+        Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
+        Directory.CreateDirectory(Path.Combine(fixture.Root, "blog"));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Index");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "index.md"), "# Guide");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", "index.md"), "# Blog");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", "post.md"), "# Post");
+
+        var options = NavOptions.Default with { Tabs = true, UseDirectoryUrls = true };
+        var plugin = new NavPlugin(options);
+        var configureContext = new PluginConfigureContext(fixture.Root, fixture.Output, [plugin]) { UseDirectoryUrls = true };
+        await plugin.OnConfigureAsync(configureContext, CancellationToken.None);
+
+        var page = new ArrayBufferWriter<byte>();
+        page.Write("<nav>"u8);
+        page.Write(NavPlugin.NavMarker);
+        page.Write("</nav>"u8);
+
+        var renderContext = new PluginRenderContext("guide/index.md", ReadOnlyMemory<byte>.Empty, page);
+        await plugin.OnRenderPageAsync(renderContext, CancellationToken.None);
+
+        var html = Encoding.UTF8.GetString(page.WrittenSpan);
+        await Assert.That(html).Contains("Home");
+        await Assert.That(html).Contains("href=\"/guide/\"");
+        await Assert.That(html).Contains("href=\"/guide/intro/\"");
+        await Assert.That(html).DoesNotContain("href=\"/blog/post/\"");
+    }
+
+    /// <summary>Sidebar sections without an index page link to the first real descendant page.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SidebarSectionWithoutIndexUsesFirstDescendantHref()
+    {
+        var blogs = new NavNode("Blogs", "docs/resources/blogs.md", isSection: false, [], useDirectoryUrls: true);
+        var videos = new NavNode("Videos", "docs/resources/videos.md", isSection: false, [], useDirectoryUrls: true);
+        var resources = new NavNode("Resources", "docs/resources", isSection: true, [blogs, videos], useDirectoryUrls: true);
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [resources], useDirectoryUrls: true);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderSidebarPruned(root, resources, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("href=\"/docs/resources/blogs/\"");
+        await Assert.That(html).DoesNotContain("href=\"/docs/resources/\"");
     }
 
     /// <summary>BuildUrlIndex maps every leaf URL to its node.</summary>

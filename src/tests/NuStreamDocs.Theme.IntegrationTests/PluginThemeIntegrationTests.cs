@@ -9,6 +9,7 @@ using NuStreamDocs.MarkdownExtensions;
 using NuStreamDocs.Nav;
 using NuStreamDocs.Theme.Material;
 using NuStreamDocs.Theme.Material3;
+using NuStreamDocs.Toc;
 
 namespace NuStreamDocs.Theme.IntegrationTests;
 
@@ -161,6 +162,18 @@ public class PluginThemeIntegrationTests
         await Assert.That(html).Contains("md-tabs__list");
     }
 
+    /// <summary>Material 3 renders inline SVG header controls and a palette toggle in the page shell.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task Material3HeaderUsesSvgControls()
+    {
+        const string Source = "# Index";
+        var html = await BuildPageAsync(ThemeKind.Material3, Source, static _ => { });
+
+        await Assert.That(html).Contains("data-md-component=\"palette-toggle\"");
+        await Assert.That(html).Contains("<svg viewBox=\"0 0 24 24\"");
+    }
+
     /// <summary>An emoji shortcode expands to an inline span on both themes.</summary>
     /// <param name="theme">Theme variant under test.</param>
     /// <returns>Async test.</returns>
@@ -197,6 +210,29 @@ public class PluginThemeIntegrationTests
         await Assert.That(html).Contains("md-header");
         await Assert.That(html).Contains("md-footer");
         await Assert.That(html).Contains("md-sidebar--primary");
+    }
+
+    /// <summary>The TOC shell renders a single secondary nav container and uses the on-page label on both themes.</summary>
+    /// <param name="theme">Theme variant under test.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments(ThemeKind.Material)]
+    [Arguments(ThemeKind.Material3)]
+    public async Task TocRendersSingleSecondaryNav(ThemeKind theme)
+    {
+        const string Source = """
+            # Hi
+
+            ## Alpha
+
+            body
+
+            ### Beta
+            """;
+
+        var html = await BuildPageAsync(theme, Source, b => b.UseToc());
+        await Assert.That(CountOccurrences(html, "class=\"md-nav md-nav--secondary\"")).IsEqualTo(1);
+        await Assert.That(html).Contains("aria-label=\"On this page\"");
     }
 
     /// <summary>Builds a single-page site through the chosen theme and returns the rendered HTML for <c>index.md</c>.</summary>
@@ -254,5 +290,26 @@ public class PluginThemeIntegrationTests
         await builder.BuildAsync();
 
         return await File.ReadAllTextAsync(Path.Combine(fixture.Site, "index.html"));
+    }
+
+    /// <summary>Counts the ordinal occurrences of <paramref name="value"/> inside <paramref name="text"/>.</summary>
+    /// <param name="text">Source text.</param>
+    /// <param name="value">Substring to count.</param>
+    /// <returns>The number of matches.</returns>
+    private static int CountOccurrences(string text, string value)
+    {
+        var count = 0;
+        var index = 0;
+        while (true)
+        {
+            index = text.IndexOf(value, index, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                return count;
+            }
+
+            count++;
+            index += value.Length;
+        }
     }
 }

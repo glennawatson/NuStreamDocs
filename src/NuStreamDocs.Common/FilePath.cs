@@ -77,4 +77,8 @@ public readonly record struct FilePath(string Value)
         ArgumentNullException.ThrowIfNull(extension);
         return IsEmpty ? this : new(Path.ChangeExtension(Value, extension));
     }
+
+    /// <summary>Determines whether this file currently exists on disk.</summary>
+    /// <returns>True when the file exists; otherwise false.</returns>
+    public bool Exists() => File.Exists(Value);
 }

@@ -62,8 +62,8 @@ public class VersionOptionsExtensionsTests
     public async Task AddAliasesEmptyIsNoOp()
     {
         var seeded = VersionOptions.Latest("1.0", "1.0");
-        var stringNoOp = seeded.AddAliases(System.Array.Empty<string>());
-        var bytesNoOp = seeded.AddAliases(System.Array.Empty<byte[]>());
+        var stringNoOp = seeded.AddAliases(Array.Empty<string>());
+        var bytesNoOp = seeded.AddAliases(Array.Empty<byte[]>());
         await Assert.That(stringNoOp.Aliases).IsSameReferenceAs(seeded.Aliases);
         await Assert.That(bytesNoOp.Aliases).IsSameReferenceAs(seeded.Aliases);
     }

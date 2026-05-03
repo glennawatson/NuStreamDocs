@@ -53,7 +53,7 @@ public class PrivacyOptionsExtensionsTests
     [Test]
     public async Task AddHostsToSkipWithEmptyInputIsNoOp()
     {
-        var updated = PrivacyOptions.Default.AddHostsToSkip(System.Array.Empty<string>());
+        var updated = PrivacyOptions.Default.AddHostsToSkip(Array.Empty<string>());
         await Assert.That(updated.HostsToSkip).IsEqualTo(PrivacyOptions.Default.HostsToSkip);
     }
 

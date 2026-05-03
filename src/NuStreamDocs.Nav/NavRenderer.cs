@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Buffers.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Nav;
@@ -45,7 +46,21 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeBranch = BuildActiveBranchSet(activeNode);
-        WriteList(writer, root.Children, activeBranch, prune: false);
+        WriteList(writer, root.Children, activeBranch, prune: false, level: 0);
+    }
+
+    /// <summary>Emits the primary sidebar tree, scoping to the active top-level section when one is selected.</summary>
+    /// <param name="root">Nav tree root.</param>
+    /// <param name="activeNode">Pre-resolved active node, or null when no page is active.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    public static void RenderSidebarFull(NavNode root, NavNode? activeNode, IBufferWriter<byte> writer)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        ArgumentNullException.ThrowIfNull(writer);
+
+        EnsureParentsAttached(root);
+        var activeBranch = BuildActiveBranchSet(activeNode);
+        WriteList(writer, ResolveSidebarItems(root, activeBranch), activeBranch, prune: false, level: 0);
     }
 
     /// <summary>Emits the pruned nav: only the active branch and its immediate context.</summary>
@@ -59,7 +74,21 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeBranch = BuildActiveBranchSet(activeNode);
-        WriteList(writer, root.Children, activeBranch, prune: true);
+        WriteList(writer, root.Children, activeBranch, prune: true, level: 0);
+    }
+
+    /// <summary>Emits the pruned primary sidebar tree, scoping to the active top-level section when one is selected.</summary>
+    /// <param name="root">Nav tree root.</param>
+    /// <param name="activeNode">Pre-resolved active node, or null when no page is active.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    public static void RenderSidebarPruned(NavNode root, NavNode? activeNode, IBufferWriter<byte> writer)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        ArgumentNullException.ThrowIfNull(writer);
+
+        EnsureParentsAttached(root);
+        var activeBranch = BuildActiveBranchSet(activeNode);
+        WriteList(writer, ResolveSidebarItems(root, activeBranch), activeBranch, prune: true, level: 0);
     }
 
     /// <summary>Emits a horizontal tab bar from the root's top-level children (mkdocs-material's <c>navigation.tabs</c>).</summary>
@@ -128,6 +157,42 @@ internal static class NavRenderer
             || string.Equals(relative, "README.md", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>Returns the scoped primary-sidebar items for the active page.</summary>
+    /// <param name="root">Nav root.</param>
+    /// <param name="activeBranch">Nodes on the active branch.</param>
+    /// <returns>The items the primary sidebar should render.</returns>
+    private static NavNode[] ResolveSidebarItems(NavNode root, HashSet<NavNode> activeBranch)
+    {
+        NavNode? home = null;
+        NavNode? activeSection = null;
+        for (var i = 0; i < root.Children.Length; i++)
+        {
+            var child = root.Children[i];
+            if (home is null && IsTopLevelHomePage(child))
+            {
+                home = child;
+                continue;
+            }
+
+            if (activeSection is null && child.IsSection && activeBranch.Contains(child))
+            {
+                activeSection = child;
+            }
+        }
+
+        if (activeSection is null)
+        {
+            return root.Children;
+        }
+
+        if (home is null)
+        {
+            return [activeSection];
+        }
+
+        return [home, activeSection];
+    }
+
     /// <summary>Recursive helper for <see cref="BuildUrlIndex"/>.</summary>
     /// <param name="node">Current node.</param>
     /// <param name="index">Accumulator.</param>
@@ -194,17 +259,18 @@ internal static class NavRenderer
     /// <param name="items">Child items to render.</param>
     /// <param name="activeBranch">Reference-equality set of nodes on the active branch (empty when there is no active page).</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
-    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, HashSet<NavNode> activeBranch, bool prune)
+    /// <param name="level">Current nav depth.</param>
+    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, HashSet<NavNode> activeBranch, bool prune, int level)
     {
         if (items.Length == 0)
         {
             return;
         }
 
-        WriteUtf8(writer, "<ul class=\"md-nav__list\">"u8);
+        WriteUtf8(writer, "<ul class=\"md-nav__list\" data-md-scrollfix>"u8);
         for (var i = 0; i < items.Length; i++)
         {
-            WriteItem(writer, items[i], activeBranch, prune);
+            WriteItem(writer, items[i], activeBranch, prune, level);
         }
 
         WriteUtf8(writer, "</ul>"u8);
@@ -215,14 +281,15 @@ internal static class NavRenderer
     /// <param name="node">Node to render.</param>
     /// <param name="activeBranch">Reference-equality set of nodes on the active branch.</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
-    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune)
+    /// <param name="level">Current nav depth.</param>
+    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, int level)
     {
         var active = activeBranch.Contains(node);
-        WriteUtf8(writer, ResolveItemOpenTag(node, active));
+        WriteUtf8(writer, ResolveItemOpenTag(node, active, prune));
 
         if (node.IsSection)
         {
-            WriteSection(writer, node, activeBranch, prune, active);
+            WriteSection(writer, node, activeBranch, prune, active, level);
         }
         else
         {
@@ -232,17 +299,34 @@ internal static class NavRenderer
         WriteUtf8(writer, "</li>"u8);
     }
 
-    /// <summary>Returns the right opening <c>&lt;li&gt;</c> tag for <paramref name="node"/>, with <c>--nested</c> / <c>--active</c> modifiers as appropriate.</summary>
+    /// <summary>Returns the right opening <c>&lt;li&gt;</c> tag for <paramref name="node"/>.</summary>
     /// <param name="node">Node being rendered.</param>
     /// <param name="active">True when the node sits on the active branch.</param>
+    /// <param name="prune">True when the tree is being rendered in prune mode.</param>
     /// <returns>UTF-8 bytes for the opening tag.</returns>
-    private static ReadOnlySpan<byte> ResolveItemOpenTag(NavNode node, bool active) => (node.IsSection, active) switch
+    private static ReadOnlySpan<byte> ResolveItemOpenTag(NavNode node, bool active, bool prune)
     {
-        (true, true) => "<li class=\"md-nav__item md-nav__item--nested md-nav__item--active\">"u8,
-        (true, false) => "<li class=\"md-nav__item md-nav__item--nested\">"u8,
-        (false, true) => "<li class=\"md-nav__item md-nav__item--active\">"u8,
-        (false, false) => "<li class=\"md-nav__item\">"u8,
-    };
+        if (node.IsSection)
+        {
+            if (active)
+            {
+                return "<li class=\"md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested\">"u8;
+            }
+
+            return prune
+                ? "<li class=\"md-nav__item md-nav__item--pruned md-nav__item--nested\">"u8
+                : "<li class=\"md-nav__item md-nav__item--nested\">"u8;
+        }
+
+        if (active)
+        {
+            return "<li class=\"md-nav__item md-nav__item--active\">"u8;
+        }
+
+        return prune
+            ? "<li class=\"md-nav__item md-nav__item--pruned\">"u8
+            : "<li class=\"md-nav__item\">"u8;
+    }
 
     /// <summary>Writes a section node's label + nested list.</summary>
     /// <param name="writer">UTF-8 sink.</param>
@@ -250,37 +334,42 @@ internal static class NavRenderer
     /// <param name="activeBranch">Reference-equality set of nodes on the active branch.</param>
     /// <param name="prune">When true, render children only when the section is on the active branch.</param>
     /// <param name="active">True when the section sits on the active branch.</param>
-    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, bool active)
+    /// <param name="level">Current nav depth.</param>
+    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, bool active, int level)
     {
-        if (!node.IndexPath.IsEmpty)
+        var hasHref = TryGetSidebarHref(node, out var href, out var appendTrailingSlash);
+        if (hasHref)
         {
             WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
-            WriteUtf8(writer, node.IndexUrlBytes);
+            WriteRootRelativeHref(writer, href, appendTrailingSlash);
             WriteUtf8(writer, "\">"u8);
-            WriteUtf8(writer, node.Title);
-            WriteUtf8(writer, "</a>"u8);
         }
         else
         {
-            WriteUtf8(writer, "<span class=\"md-nav__link\">"u8);
-            WriteUtf8(writer, node.Title);
-            WriteUtf8(writer, "</span>"u8);
+            WriteUtf8(writer, active ? "<span class=\"md-nav__link md-nav__link--active\">"u8 : "<span class=\"md-nav__link\">"u8);
         }
+
+        WriteTitleSpan(writer, node.Title);
+        if (prune && !active && node.Children is [_, ..])
+        {
+            WriteUtf8(writer, "<span class=\"md-nav__icon md-icon\"></span>"u8);
+        }
+
+        WriteUtf8(writer, hasHref ? "</a>"u8 : "</span>"u8);
 
         if (prune && !active)
         {
-            // Pruned: skip children outside the active branch.
             return;
         }
 
-        // Wrap the child list in <nav class="md-nav"> + <label class="md-nav__title"> so mkdocs-material's CSS
-        // recognises a nested section (folding chevron, indent, label).
-        WriteUtf8(writer, "<nav class=\"md-nav\" aria-label=\""u8);
+        WriteUtf8(writer, "<nav class=\"md-nav\" data-md-level=\""u8);
+        WriteLevel(writer, level + 1);
+        WriteUtf8(writer, "\" aria-label=\""u8);
         WriteUtf8(writer, node.Title);
-        WriteUtf8(writer, "\"><label class=\"md-nav__title\">"u8);
+        WriteUtf8(writer, "\"><label class=\"md-nav__title\"><span class=\"md-nav__icon md-icon\"></span>"u8);
         WriteUtf8(writer, node.Title);
         WriteUtf8(writer, "</label>"u8);
-        WriteList(writer, node.Children, activeBranch, prune);
+        WriteList(writer, node.Children, activeBranch, prune, level + 1);
         WriteUtf8(writer, "</nav>"u8);
     }
 
@@ -291,10 +380,97 @@ internal static class NavRenderer
     private static void WriteLeaf(IBufferWriter<byte> writer, NavNode node, bool active)
     {
         WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
-        WriteUtf8(writer, node.RelativeUrlBytes);
+        WriteRootRelativeHref(writer, node.RelativeUrlBytes, appendTrailingSlash: false);
         WriteUtf8(writer, "\">"u8);
-        WriteUtf8(writer, node.Title);
+        WriteTitleSpan(writer, IsTopLevelHomePage(node) ? "Home"u8 : node.Title);
         WriteUtf8(writer, "</a>"u8);
+    }
+
+    /// <summary>Writes the title body used inside nav links.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="title">Title bytes.</param>
+    private static void WriteTitleSpan(IBufferWriter<byte> writer, ReadOnlySpan<byte> title)
+    {
+        WriteUtf8(writer, "<span class=\"md-ellipsis\">"u8);
+        WriteUtf8(writer, title);
+        WriteUtf8(writer, "</span>"u8);
+    }
+
+    /// <summary>Writes a small decimal integer into <paramref name="writer"/>.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="value">Value to write.</param>
+    private static void WriteLevel(IBufferWriter<byte> writer, int value)
+    {
+        Span<byte> digits = stackalloc byte[11];
+        if (!Utf8Formatter.TryFormat(value, digits, out var written))
+        {
+            return;
+        }
+
+        WriteUtf8(writer, digits[..written]);
+    }
+
+    /// <summary>Returns the sidebar href for a section: index page, first leaf descendant, or section root.</summary>
+    /// <param name="node">Section node.</param>
+    /// <param name="href">Resolved href bytes without a leading slash.</param>
+    /// <param name="appendTrailingSlash">True when the href should end in a slash.</param>
+    /// <returns>True when a link is available.</returns>
+    private static bool TryGetSidebarHref(NavNode node, out ReadOnlySpan<byte> href, out bool appendTrailingSlash)
+    {
+        if (node.IndexUrlBytes.Length > 0)
+        {
+            href = node.IndexUrlBytes;
+            appendTrailingSlash = false;
+            return true;
+        }
+
+        if (TryGetFirstLeafHref(node, out href))
+        {
+            appendTrailingSlash = false;
+            return true;
+        }
+
+        if (node.RelativeUrlBytes.Length > 0)
+        {
+            href = node.RelativeUrlBytes;
+            appendTrailingSlash = true;
+            return true;
+        }
+
+        href = default;
+        appendTrailingSlash = false;
+        return false;
+    }
+
+    /// <summary>Returns the first descendant leaf href for <paramref name="node"/>.</summary>
+    /// <param name="node">Section node.</param>
+    /// <param name="href">Resolved href bytes without a leading slash.</param>
+    /// <returns>True when a descendant leaf exists.</returns>
+    private static bool TryGetFirstLeafHref(NavNode node, out ReadOnlySpan<byte> href)
+    {
+        for (var i = 0; i < node.Children.Length; i++)
+        {
+            var child = node.Children[i];
+            if (!child.IsSection)
+            {
+                href = child.RelativeUrlBytes;
+                return true;
+            }
+
+            if (child.IndexUrlBytes.Length > 0)
+            {
+                href = child.IndexUrlBytes;
+                return true;
+            }
+
+            if (TryGetFirstLeafHref(child, out href))
+            {
+                return true;
+            }
+        }
+
+        href = default;
+        return false;
     }
 
     /// <summary>Bulk-writes UTF-8 bytes into <paramref name="writer"/>.</summary>
@@ -316,8 +492,7 @@ internal static class NavRenderer
         var active = activeBranch.Contains(node);
         WriteUtf8(writer, active ? "<li class=\"md-tabs__item md-tabs__item--active\">"u8 : "<li class=\"md-tabs__item\">"u8);
 
-        var href = TabHref(node);
-        if (href.Length is 0)
+        if (!TryGetTabHref(node, out var href, out var appendTrailingSlash))
         {
             WriteUtf8(writer, "<span class=\"md-tabs__link\">"u8);
             WriteUtf8(writer, node.Title);
@@ -326,7 +501,7 @@ internal static class NavRenderer
         else
         {
             WriteUtf8(writer, "<a class=\"md-tabs__link\" href=\""u8);
-            WriteUtf8(writer, href);
+            WriteRootRelativeHref(writer, href, appendTrailingSlash);
             WriteUtf8(writer, "\">"u8);
             WriteUtf8(writer, node.Title);
             WriteUtf8(writer, "</a>"u8);
@@ -335,8 +510,56 @@ internal static class NavRenderer
         WriteUtf8(writer, "</li>"u8);
     }
 
-    /// <summary>Picks the URL the tab links to: the section's index page when present, the leaf URL otherwise.</summary>
+    /// <summary>Writes a root-relative href, appending a trailing slash for section-directory fallbacks when required.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="href">Href bytes without the leading slash.</param>
+    /// <param name="appendTrailingSlash">True when a slash should be appended if the URL does not already end with one.</param>
+    private static void WriteRootRelativeHref(IBufferWriter<byte> writer, ReadOnlySpan<byte> href, bool appendTrailingSlash)
+    {
+        WriteUtf8(writer, "/"u8);
+        if (!href.IsEmpty)
+        {
+            WriteUtf8(writer, href);
+        }
+
+        if (!appendTrailingSlash || (!href.IsEmpty && href[^1] is (byte)'/'))
+        {
+            return;
+        }
+
+        WriteUtf8(writer, "/"u8);
+    }
+
+    /// <summary>Picks the URL the tab links to: the section's index page when present, otherwise the section path, or the leaf URL.</summary>
     /// <param name="node">Top-level nav node.</param>
-    /// <returns>UTF-8 URL bytes; empty when no link is available.</returns>
-    private static ReadOnlySpan<byte> TabHref(NavNode node) => node.IsSection ? node.IndexUrlBytes : node.RelativeUrlBytes;
+    /// <param name="href">Resolved href bytes without a leading slash.</param>
+    /// <param name="appendTrailingSlash">True when the href should end in a slash.</param>
+    /// <returns>True when a link is available.</returns>
+    private static bool TryGetTabHref(NavNode node, out ReadOnlySpan<byte> href, out bool appendTrailingSlash)
+    {
+        if (node.IsSection)
+        {
+            if (node.IndexUrlBytes.Length > 0)
+            {
+                href = node.IndexUrlBytes;
+                appendTrailingSlash = false;
+                return true;
+            }
+
+            if (node.RelativeUrlBytes.Length > 0)
+            {
+                href = node.RelativeUrlBytes;
+                appendTrailingSlash = true;
+                return true;
+            }
+
+            href = default;
+            appendTrailingSlash = false;
+            return false;
+        }
+
+        href = node.RelativeUrlBytes;
+        appendTrailingSlash = false;
+        return true;
+    }
 }

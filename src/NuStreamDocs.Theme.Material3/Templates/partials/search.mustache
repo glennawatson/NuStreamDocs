@@ -1,18 +1,30 @@
 <div class="md-search" data-md-component="search" role="search">
+  <label class="md-search__trigger" for="__search" aria-label="Open search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35M10.75 18a7.25 7.25 0 1 1 0-14.5 7.25 7.25 0 0 1 0 14.5Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+    <span>Search</span>
+  </label>
   <label class="md-search__overlay" for="__search" aria-hidden="true"></label>
   <div class="md-search__inner">
     <form class="md-search__form" name="search">
-      <input
+      <md-outlined-text-field
         type="search"
-        class="md-search__input"
+        class="md-search__field"
         name="query"
+        label="Search"
         placeholder="Search"
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
         aria-label="Search"
         data-md-component="search-query">
-      <label class="md-search__icon md-icon" for="__search" aria-label="Open search">&#128270;</label>
+      </md-outlined-text-field>
+      <md-icon-button class="md-search__icon" type="button" data-md-component="search-close" aria-label="Close search">
+        <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+      </md-icon-button>
     </form>
+    <div class="md-search__results" data-md-component="search-results">
+      <p class="md-search__status" data-md-component="search-status">Type at least 2 characters to search.</p>
+      <ol class="md-search__list" data-md-component="search-list"></ol>
+    </div>
   </div>
 </div>

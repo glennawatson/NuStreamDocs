@@ -79,7 +79,7 @@ public class MdInHtmlGridCardsTests
     private static string Render(string source)
     {
         var sink = new ArrayBufferWriter<byte>();
-        NuStreamDocs.MarkdownRenderer.Render(Encoding.UTF8.GetBytes(source), sink);
+        MarkdownRenderer.Render(Encoding.UTF8.GetBytes(source), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

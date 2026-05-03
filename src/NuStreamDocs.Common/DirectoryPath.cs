@@ -110,6 +110,12 @@ public readonly record struct DirectoryPath(string Value)
         return IsEmpty ? new(fileName) : new(Path.Combine(Value, fileName));
     }
 
+    /// <summary>
+    /// Determines if the file exists or not.
+    /// </summary>
+    /// <returns>True if the file exists; false otherwise.</returns>
+    public bool Exists() => Directory.Exists(Value);
+
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;
 

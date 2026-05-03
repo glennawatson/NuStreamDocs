@@ -4,6 +4,7 @@
 
 using System.Text;
 using NuStreamDocs.Common;
+using NuStreamDocs.Links;
 
 namespace NuStreamDocs.Nav;
 
@@ -26,11 +27,35 @@ namespace NuStreamDocs.Nav;
 /// </remarks>
 internal sealed class NavNode
 {
-    /// <summary>Length of the <c>.md</c> suffix converted to <c>.html</c>.</summary>
-    private const int MarkdownExtensionLength = 3;
+    /// <summary>Initializes a new instance of the <see cref="NavNode"/> class from already-encoded title bytes.</summary>
+    /// <param name="title">Pre-encoded UTF-8 title bytes; ownership transfers to the node.</param>
+    /// <param name="relativePath">Source-relative path (file) or directory path (section).</param>
+    /// <param name="isSection">True when this node is a section rather than a page.</param>
+    /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
+    /// <param name="indexPath">Source-relative path of the section's promoted index page (e.g. <c>guide/index.md</c>); empty when the section has no index landing page.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    public NavNode(byte[] title, FilePath relativePath, bool isSection, NavNode[] children, FilePath indexPath, bool useDirectoryUrls)
+    {
+        Title = title;
+        RelativePath = relativePath;
+        IsSection = isSection;
+        Children = children;
+        IndexPath = indexPath;
+        RelativeUrlBytes = ServedUrlBytes.FromPath(relativePath, useDirectoryUrls);
+        IndexUrlBytes = ServedUrlBytes.FromPath(indexPath, useDirectoryUrls);
+    }
 
-    /// <summary>HTML extension bytes appended when swapping a markdown extension on the rendered URL.</summary>
-    private static readonly byte[] HtmlExtension = ".html"u8.ToArray();
+    /// <summary>Initializes a new instance of the <see cref="NavNode"/> class.</summary>
+    /// <param name="title">Display title.</param>
+    /// <param name="relativePath">Source-relative path (file) or directory path (section).</param>
+    /// <param name="isSection">True when this node is a section rather than a page.</param>
+    /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
+    /// <param name="indexPath">Source-relative path of the section's promoted index page (e.g. <c>guide/index.md</c>); empty when the section has no index landing page.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    public NavNode(string title, FilePath relativePath, bool isSection, NavNode[] children, FilePath indexPath, bool useDirectoryUrls)
+        : this(string.IsNullOrEmpty(title) ? [] : Encoding.UTF8.GetBytes(title), relativePath, isSection, children, indexPath, useDirectoryUrls)
+    {
+    }
 
     /// <summary>Initializes a new instance of the <see cref="NavNode"/> class.</summary>
     /// <param name="title">Display title.</param>
@@ -39,14 +64,19 @@ internal sealed class NavNode
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     /// <param name="indexPath">Source-relative path of the section's promoted index page (e.g. <c>guide/index.md</c>); empty when the section has no index landing page.</param>
     public NavNode(string title, FilePath relativePath, bool isSection, NavNode[] children, FilePath indexPath)
+        : this(title, relativePath, isSection, children, indexPath, useDirectoryUrls: false)
     {
-        Title = string.IsNullOrEmpty(title) ? [] : Encoding.UTF8.GetBytes(title);
-        RelativePath = relativePath;
-        IsSection = isSection;
-        Children = children;
-        IndexPath = indexPath;
-        RelativeUrlBytes = ToPageUrlBytes(relativePath);
-        IndexUrlBytes = ToPageUrlBytes(indexPath);
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="NavNode"/> class without a promoted section index page.</summary>
+    /// <param name="title">Display title.</param>
+    /// <param name="relativePath">Source-relative path (file) or directory path (section).</param>
+    /// <param name="isSection">True when this node is a section rather than a page.</param>
+    /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    public NavNode(string title, FilePath relativePath, bool isSection, NavNode[] children, bool useDirectoryUrls)
+        : this(title, relativePath, isSection, children, default, useDirectoryUrls)
+    {
     }
 
     /// <summary>Initializes a new instance of the <see cref="NavNode"/> class without a promoted section index page.</summary>
@@ -55,7 +85,18 @@ internal sealed class NavNode
     /// <param name="isSection">True when this node is a section rather than a page.</param>
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     public NavNode(string title, FilePath relativePath, bool isSection, NavNode[] children)
-        : this(title, relativePath, isSection, children, default)
+        : this(title, relativePath, isSection, children, default, useDirectoryUrls: false)
+    {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="NavNode"/> class from already-encoded title bytes.</summary>
+    /// <param name="title">Pre-encoded UTF-8 title bytes; ownership transfers to the node.</param>
+    /// <param name="relativePath">Source-relative path (file) or directory path (section).</param>
+    /// <param name="isSection">True when this node is a section rather than a page.</param>
+    /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    public NavNode(byte[] title, FilePath relativePath, bool isSection, NavNode[] children, bool useDirectoryUrls)
+        : this(title, relativePath, isSection, children, default, useDirectoryUrls)
     {
     }
 
@@ -65,14 +106,8 @@ internal sealed class NavNode
     /// <param name="isSection">True when this node is a section rather than a page.</param>
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     public NavNode(byte[] title, FilePath relativePath, bool isSection, NavNode[] children)
+        : this(title, relativePath, isSection, children, useDirectoryUrls: false)
     {
-        Title = title;
-        RelativePath = relativePath;
-        IsSection = isSection;
-        Children = children;
-        IndexPath = default;
-        RelativeUrlBytes = ToPageUrlBytes(relativePath);
-        IndexUrlBytes = [];
     }
 
     /// <summary>Gets the UTF-8 display title bytes; encoded once at construction so renderers never transcode per emit.</summary>
@@ -108,30 +143,5 @@ internal sealed class NavNode
             child.Parent = this;
             child.AttachParents();
         }
-    }
-
-    /// <summary>Maps a source-relative markdown path to the rendered-page URL bytes.</summary>
-    /// <param name="path">Source-relative path.</param>
-    /// <returns>UTF-8 bytes of the rendered-page URL; empty when <paramref name="path"/> is empty.</returns>
-    private static byte[] ToPageUrlBytes(FilePath path)
-    {
-        if (path.IsEmpty)
-        {
-            return [];
-        }
-
-        var value = path.Value;
-        var stripMd = value.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
-        if (!stripMd)
-        {
-            return Encoding.UTF8.GetBytes(value);
-        }
-
-        var trimmed = value.AsSpan(0, value.Length - MarkdownExtensionLength);
-        var byteCount = Encoding.UTF8.GetByteCount(trimmed);
-        var output = new byte[byteCount + HtmlExtension.Length];
-        var written = Encoding.UTF8.GetBytes(trimmed, output);
-        HtmlExtension.CopyTo(output.AsSpan(written));
-        return output;
     }
 }

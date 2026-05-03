@@ -773,7 +773,18 @@ they put their work under licenses that let us learn from them.
   mkdocs-material emits. Thanks to the Pictogrammers team for keeping
   this catalogue free, open source, and friendly to redistribute.
 
-All six upstream projects ship under permissive licenses compatible
+- **[Material Web](https://github.com/material-components/material-web)** — Apache 2.0.
+  `NuStreamDocs.Theme.Material3` vendors a small official Material Web
+  browser-runtime subset for the search field and icon-button controls,
+  then layers docs-specific layout and parity CSS on top. Thanks to the
+  Material Web team.
+
+- **[Lit](https://github.com/lit/lit)** and **[tslib](https://github.com/Microsoft/tslib)** — BSD-3-Clause / 0BSD.
+  These are redistributed only as transitive browser-runtime
+  dependencies of the vendored Material Web subset used by
+  `NuStreamDocs.Theme.Material3`. Thanks to the Lit team and Microsoft.
+
+All nine upstream projects ship under permissive licenses compatible
 with this project's MIT license. Their license texts are reproduced
 verbatim in [LICENSE](LICENSE) under the **Third-Party Notices**
 section.
@@ -783,3 +794,8 @@ section.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+The repository also redistributes a small number of third-party files
+inside `NuStreamDocs.Theme.Material3` under their original licenses.
+See [LICENSE](LICENSE) and
+`src/NuStreamDocs.Theme.Material3/Templates/THIRD_PARTY_NOTICES.md`.

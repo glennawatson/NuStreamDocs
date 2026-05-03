@@ -44,6 +44,7 @@ public class TocFragmentRendererTests
         TocFragmentRenderer.Render(html, slugged, TocOptions.Default, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).Contains("<nav class=\"md-nav md-nav--secondary\"");
+        await Assert.That(output).Contains("aria-label=\"On this page\"");
         await Assert.That(output).Contains("md-nav__list");
         await Assert.That(output).Contains("href=\"#a\"");
         await Assert.That(output).Contains("href=\"#b\"");

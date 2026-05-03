@@ -4,6 +4,7 @@
 
 using NuStreamDocs.Building;
 using NuStreamDocs.Caching;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
 
@@ -72,5 +73,60 @@ public class IncrementalBuildTests
 
         var manifestPath = Path.Combine(fixture.Output, BuildManifest.FileName);
         await Assert.That(File.Exists(manifestPath)).IsTrue();
+    }
+
+    /// <summary>An unchanged page is re-rendered when the plugin pipeline changes.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task RebuildsWhenPluginFingerprintChanges()
+    {
+        using var fixture = TempBuildFixture.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "stable.md"), "# Hi");
+
+        var builder = new DocBuilder()
+            .WithInput(fixture.Input)
+            .WithOutput(fixture.Output);
+        await builder.BuildAsync();
+
+        var withPlugin = new DocBuilder()
+            .WithInput(fixture.Input)
+            .WithOutput(fixture.Output)
+            .UsePlugin(new AppendCommentPlugin());
+        await withPlugin.BuildAsync();
+
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Output, "stable.html"));
+        await Assert.That(html).Contains("pipeline-changed");
+    }
+
+    /// <summary>Simple render plugin used to prove the fingerprint invalidates stale output.</summary>
+    private sealed class AppendCommentPlugin : IDocPlugin
+    {
+        /// <inheritdoc/>
+        public string Name => "append-comment";
+
+        /// <inheritdoc/>
+        public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+        {
+            _ = context;
+            _ = cancellationToken;
+            return ValueTask.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+        {
+            _ = cancellationToken;
+            "<!--pipeline-changed-->"u8.CopyTo(context.Html.GetSpan("<!--pipeline-changed-->".Length));
+            context.Html.Advance("<!--pipeline-changed-->".Length);
+            return ValueTask.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+        {
+            _ = context;
+            _ = cancellationToken;
+            return ValueTask.CompletedTask;
+        }
     }
 }

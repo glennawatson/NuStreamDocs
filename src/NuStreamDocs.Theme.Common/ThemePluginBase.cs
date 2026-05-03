@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using NuStreamDocs.Common;
+using NuStreamDocs.Links;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Templating;
 
@@ -20,12 +21,6 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     where TTheme : class, IThemePackage
     where TOptions : struct, IThemeShellOptions
 {
-    /// <summary>Markdown extension stripped when computing served URLs.</summary>
-    private const string MarkdownExtension = ".md";
-
-    /// <summary>Characters added when replacing <c>.md</c> with <c>.html</c>.</summary>
-    private const int HtmlExtensionGrowth = 2;
-
     /// <summary>Separators added when composing the normalized repo/edit prefix (<c>/</c> between segments and trailing <c>/</c>).</summary>
     private const int EditUrlSeparatorCount = 2;
 
@@ -210,14 +205,14 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
                     [ScrollToTopKey] = _options.EnableScrollToTop ? TruthyBytes : null,
                     [TocFollowKey] = _options.EnableTocFollow ? TruthyBytes : null,
-                    [PrevUrlKey] = Utf8Encoder.Encode(NeighbourUrl(neighbours.PreviousPath)),
+                    [PrevUrlKey] = ServedUrlBytes.FromPath(neighbours.PreviousPath, _useDirectoryUrls, leadingSlash: true),
                     [PrevTitleKey] = neighbours.PreviousTitle,
-                    [NextUrlKey] = Utf8Encoder.Encode(NeighbourUrl(neighbours.NextPath)),
+                    [NextUrlKey] = ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, leadingSlash: true),
                     [NextTitleKey] = neighbours.NextTitle,
                     [HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath),
                     [DescriptionKey] = ResolveDescription(context),
-                    [HideNavigationKey] = NuStreamDocs.Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8) ? TruthyBytes : null,
-                    [HideTocKey] = NuStreamDocs.Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
+                    [HideNavigationKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8) ? TruthyBytes : null,
+                    [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
                     [GeneratorKey] = GeneratorBytes,
                     [FaviconKey] = _options.Favicon,
                     [AuthorKey] = ResolveAuthor(context, _siteAuthor),
@@ -274,44 +269,12 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         return null;
     }
 
-    /// <summary>Translates a source-relative neighbour path into the served-page URL.</summary>
-    /// <param name="relativePath">Source-relative path; empty when no neighbour exists.</param>
-    /// <returns>The served URL, or empty when <paramref name="relativePath"/> is empty.</returns>
-    private static string NeighbourUrl(string relativePath)
-    {
-        if (relativePath is [])
-        {
-            return string.Empty;
-        }
-
-        var path = relativePath.AsSpan();
-        var endsWithMarkdown = path.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase);
-        var outputLength = 1 + path.Length + (endsWithMarkdown ? HtmlExtensionGrowth : 0);
-        return string.Create(outputLength, (relativePath, endsWithMarkdown), static (dst, state) =>
-        {
-            dst[0] = '/';
-            var src = state.relativePath.AsSpan();
-            var stemLength = state.endsWithMarkdown ? src.Length - MarkdownExtension.Length : src.Length;
-            for (var i = 0; i < stemLength; i++)
-            {
-                dst[i + 1] = src[i] is '\\' ? '/' : src[i];
-            }
-
-            if (!state.endsWithMarkdown)
-            {
-                return;
-            }
-
-            ".html".AsSpan().CopyTo(dst[(stemLength + 1)..]);
-        });
-    }
-
     /// <summary>Resolves the page description — front-matter <c>description:</c>, or empty when absent.</summary>
     /// <param name="context">Per-page render context.</param>
     /// <returns>UTF-8 description bytes, ready for direct emit; empty when no description.</returns>
     private static byte[] ResolveDescription(in PluginRenderContext context)
     {
-        var raw = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "description"u8);
+        var raw = Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "description"u8);
         if (raw.IsEmpty)
         {
             return [];
@@ -326,7 +289,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <returns>UTF-8 author bytes; empty when neither front-matter nor site_author is set.</returns>
     private static byte[] ResolveAuthor(in PluginRenderContext context, byte[] siteAuthor)
     {
-        var raw = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "author"u8);
+        var raw = Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "author"u8);
         if (!raw.IsEmpty)
         {
             return StripYamlQuotes(raw).ToArray();
@@ -341,14 +304,14 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     private static string ResolvePageTitle(in PluginRenderContext context)
     {
         var source = context.Source.Span;
-        var fromFrontMatter = NuStreamDocs.Yaml.FrontmatterValueExtractor.GetScalar(source, "title"u8);
+        var fromFrontMatter = Yaml.FrontmatterValueExtractor.GetScalar(source, "title"u8);
         if (!fromFrontMatter.IsEmpty)
         {
             var unquoted = StripYamlQuotes(fromFrontMatter);
             return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(unquoted));
         }
 
-        var firstHeading = NuStreamDocs.Markdown.MarkdownH1Scanner.FindFirst(source);
+        var firstHeading = Markdown.MarkdownH1Scanner.FindFirst(source);
         if (!firstHeading.IsEmpty)
         {
             return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading));

@@ -45,6 +45,9 @@ public static class BuildPipeline
     /// <summary>Default parallel-worker cap; tuned for laptops and CI runners.</summary>
     private const int DefaultParallelism = 8;
 
+    /// <summary>Milliseconds per second for user-facing elapsed-time conversion.</summary>
+    private const double MillisecondsPerSecond = 1000d;
+
     /// <summary>Initial-capacity multiplier for preprocessor scratch buffers — pages typically grow only modestly through rewrites.</summary>
     private const int PreprocessorScratchMultiplier = 2;
 
@@ -106,9 +109,10 @@ public static class BuildPipeline
         BuildPipelineLoggingHelper.LogBuildStart(log, inputRoot.Value, outputRoot.Value, plugins.Length);
         var stopwatch = Stopwatch.StartNew();
         var pluginTiming = new PluginTimingTable();
+        var buildFingerprint = BuildFingerprint.Create(plugins, options);
 
         Directory.CreateDirectory(outputRoot);
-        var previous = await BuildManifest.LoadAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
+        var previous = await BuildManifest.LoadAsync(outputRoot, buildFingerprint, cancellationToken, log).ConfigureAwait(false);
 
         // ConcurrentQueue's segmented linked-list outperforms ConcurrentBag for the
         // append-only-from-many-threads / drain-once pattern, and ToArray() is a
@@ -148,7 +152,7 @@ public static class BuildPipeline
                 BuildPipelineLoggingHelper.LogPageProcessed(log, item.RelativePath, hit);
             }).ConfigureAwait(false);
 
-        BuildPipelineLoggingHelper.LogRenderComplete(log, processed, stopwatch.ElapsedMilliseconds - renderStarted);
+        BuildPipelineLoggingHelper.LogRenderComplete(log, processed, (stopwatch.ElapsedMilliseconds - renderStarted) / MillisecondsPerSecond);
 
         previous.Replace(fresh);
         await previous.SaveAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
@@ -156,7 +160,7 @@ public static class BuildPipeline
         await FireOnFinalizeAsync(plugins, outputRoot, pluginTiming, cancellationToken, log).ConfigureAwait(false);
         stopwatch.Stop();
         pluginTiming.Emit(log);
-        BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, stopwatch.ElapsedMilliseconds);
+        BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, stopwatch.ElapsedMilliseconds / MillisecondsPerSecond);
         return processed;
     }
 

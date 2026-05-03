@@ -33,7 +33,7 @@ internal static class TocFragmentRenderer
     private static ReadOnlySpan<byte> EntityQuot => "&quot;"u8;
 
     /// <summary>Gets the opening of the wrapper nav element.</summary>
-    private static ReadOnlySpan<byte> NavOpen => "<nav class=\"md-nav md-nav--secondary\" aria-label=\"Table of contents\"><ul class=\"md-nav__list\">"u8;
+    private static ReadOnlySpan<byte> NavOpen => "<nav class=\"md-nav md-nav--secondary\" aria-label=\"On this page\"><ul class=\"md-nav__list\">"u8;
 
     /// <summary>Gets the close of the wrapper nav element.</summary>
     private static ReadOnlySpan<byte> NavClose => "</ul></nav>"u8;

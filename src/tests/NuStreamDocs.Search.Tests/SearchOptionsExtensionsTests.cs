@@ -102,7 +102,7 @@ public class SearchOptionsExtensionsTests
     public async Task AddWithEmptyInputIsNoOp()
     {
         var seeded = SearchOptions.Default.WithExtraStopwords("foo");
-        var noOp = seeded.AddExtraStopwords(System.Array.Empty<string>());
+        var noOp = seeded.AddExtraStopwords(Array.Empty<string>());
         await Assert.That(noOp.ExtraStopwords).IsSameReferenceAs(seeded.ExtraStopwords);
     }
 

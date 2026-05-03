@@ -81,6 +81,57 @@ public class NavTreeBuilderParameterizedTests
         await Assert.That(root.Children.Length).IsEqualTo(expectedChildren);
     }
 
+    /// <summary>Auto-discovered pages use the front-matter title instead of the file stem.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task FrontmatterTitleWinsForAutoDiscovery()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("license.md", "---\ntitle: Licenses & Credits\n---\n# License\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Licenses & Credits");
+    }
+
+    /// <summary>Auto-discovered pages fall back to the first H1 before the file stem.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task H1TitleWinsWhenFrontmatterTitleMissing()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("getting-started.md", "# Getting Started with ReactiveUI\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Getting Started with ReactiveUI");
+    }
+
+    /// <summary>Section titles humanize the directory token when no override is present.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SectionTitlesHumanizeDirectoryNames()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("getting-started/index.md", "# Getting Started with ReactiveUI\n");
+        await temp.WriteAsync("getting-started/install.md", "# Install\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Getting Started");
+    }
+
+    /// <summary>Directory-URL mode stores section and page hrefs in served form.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DirectoryUrlsFlowIntoBuiltNodes()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("guide/index.md", "# Guide\n");
+        await temp.WriteAsync("guide/intro.md", "# Intro\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default, useDirectoryUrls: true);
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].IndexUrlBytes)).IsEqualTo("guide/");
+        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Children[0].RelativeUrlBytes)).IsEqualTo("guide/intro/");
+    }
+
     /// <summary>Disposable scratch tree.</summary>
     private sealed class ScratchTree : IDisposable
     {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Search;
 
 namespace NuStreamDocs.Theme.Material3.Tests;
 
@@ -21,6 +22,8 @@ public class Material3ThemeTests
         await Assert.That(theme.Partials.GetAlternateLookup<ReadOnlySpan<byte>>().ContainsKey("sidebar"u8)).IsTrue();
         await Assert.That(theme.StaticAssets.ContainsKey("assets/stylesheets/material3.css")).IsTrue();
         await Assert.That(theme.StaticAssets.ContainsKey("assets/javascripts/material3.js")).IsTrue();
+        await Assert.That(theme.StaticAssets.ContainsKey("assets/javascripts/material-web-init.js")).IsTrue();
+        await Assert.That(theme.StaticAssets.ContainsKey("assets/vendor/@material/web/textfield/outlined-text-field.js")).IsTrue();
     }
 
     /// <summary>Embedded mode should write the bundle and wrap pages in the MD3 shell.</summary>
@@ -47,6 +50,34 @@ public class Material3ThemeTests
         await Assert.That(html).Contains("data-md-color-scheme=\"default\"");
         await Assert.That(html).Contains("href=\"assets/stylesheets/material3.css\"");
         await Assert.That(html).Contains("<h1>");
+    }
+
+    /// <summary>Search-enabled builds render the Material 3 search surface and richer repository badge scaffolding.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SearchAndRepoBadgeRenderInHeader()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseSearch()
+            .UseMaterial3Theme(static opts => opts
+                .WithSiteName("MD3 Site")
+                .WithRepoUrl("https://github.com/owner/repo"))
+            .BuildAsync();
+
+        var pagePath = Path.Combine(fixture.Site, "page.html");
+        var html = await File.ReadAllTextAsync(pagePath);
+        await Assert.That(html).Contains("data-md-component=\"search\"");
+        await Assert.That(html).Contains("data-md-component=\"search-results\"");
+        await Assert.That(html).Contains("name=\"nustreamdocs:search-index\"");
+        await Assert.That(html).Contains("https://github.com/owner/repo");
+        await Assert.That(html).Contains("data-md-component=\"source-facts\"");
+        await Assert.That(html).Contains("<md-outlined-text-field");
+        await Assert.That(html).Contains("<md-icon-button");
     }
 
     /// <summary>CDN mode should skip the asset write and point at the configured CDN URL.</summary>

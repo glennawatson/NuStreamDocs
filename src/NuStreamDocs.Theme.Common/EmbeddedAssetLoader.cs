@@ -53,7 +53,9 @@ public static class EmbeddedAssetLoader
     {
         ArgumentException.ThrowIfNullOrEmpty(resourcePrefix);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
-        return string.Create(resourcePrefix.Length + TemplatesSegment.Length + relativePath.Length, (resourcePrefix, relativePath), static (dst, state) =>
+
+        var lastSlash = relativePath.LastIndexOf('/');
+        return string.Create(resourcePrefix.Length + TemplatesSegment.Length + relativePath.Length, (resourcePrefix, relativePath, lastSlash), static (dst, state) =>
         {
             state.resourcePrefix.AsSpan().CopyTo(dst);
             TemplatesSegment.AsSpan().CopyTo(dst[state.resourcePrefix.Length..]);
@@ -61,7 +63,12 @@ public static class EmbeddedAssetLoader
             for (var i = 0; i < state.relativePath.Length; i++)
             {
                 var c = state.relativePath[i];
-                dst[write + i] = c is '/' ? '.' : c;
+                dst[write + i] = c switch
+                {
+                    '/' => '.',
+                    '@' or '-' when i < state.lastSlash => '_',
+                    _ => c,
+                };
             }
         });
     }

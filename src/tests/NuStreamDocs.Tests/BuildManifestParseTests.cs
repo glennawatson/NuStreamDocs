@@ -14,15 +14,14 @@ public class BuildManifestParseTests
     /// <returns>Async test.</returns>
     [Test]
     [Arguments("{}")]
-    [Arguments("{\"schema\":\"bad\",\"entries\":[]}")]
-    [Arguments("{\"schema\":99,\"entries\":[]}")]
-    [Arguments("{\"schema\":1,\"entries\":\"not an array\"}")]
-    [Arguments("{\"schema\":1,\"entries\":[]}")]
-    [Arguments("{\"schema\":1,\"entries\":[{}]}")]
-    [Arguments("{\"schema\":1,\"entries\":[{\"path\":\"a\"}]}")]
-    [Arguments("{\"schema\":1,\"entries\":[{\"hash\":\"a\"}]}")]
-    [Arguments("{\"schema\":1,\"entries\":[{\"path\":null,\"hash\":\"x\",\"len\":0}]}")]
-    [Arguments("{\"schema\":1,\"entries\":[\"not an object\"]}")]
+    [Arguments("{\"schema\":\"bad\",\"build\":\"x\",\"entries\":[]}")]
+    [Arguments("{\"schema\":99,\"build\":\"x\",\"entries\":[]}")]
+    [Arguments("{\"schema\":2,\"entries\":\"not an array\"}")]
+    [Arguments("{\"schema\":2,\"build\":\"x\",\"entries\":[{}]}")]
+    [Arguments("{\"schema\":2,\"build\":\"x\",\"entries\":[{\"path\":\"a\"}]}")]
+    [Arguments("{\"schema\":2,\"build\":\"x\",\"entries\":[{\"hash\":\"a\"}]}")]
+    [Arguments("{\"schema\":2,\"build\":\"x\",\"entries\":[{\"path\":null,\"hash\":\"x\",\"len\":0}]}")]
+    [Arguments("{\"schema\":2,\"build\":\"x\",\"entries\":[\"not an object\"]}")]
     public async Task RejectedShapesReturnEmpty(string json)
     {
         using var temp = new ScratchDir();
@@ -41,7 +40,7 @@ public class BuildManifestParseTests
         var path = Path.Combine(temp.Root, BuildManifest.FileName);
 
         // Hashes are base64-encoded byte arrays; "AQIDBAUGBwg=" decodes to {1,2,3,4,5,6,7,8}.
-        const string Json = "{\"schema\":1,\"entries\":[" +
+        const string Json = "{\"schema\":2,\"build\":\"abc\",\"entries\":[" +
             "{\"path\":\"good.md\",\"hash\":\"AQIDBAUGBwg=\",\"len\":1}," +
             "{\"path\":\"missing-hash.md\",\"len\":2}," +
             "\"not an object\"," +

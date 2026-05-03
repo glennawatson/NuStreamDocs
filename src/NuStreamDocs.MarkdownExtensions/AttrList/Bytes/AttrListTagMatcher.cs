@@ -154,7 +154,8 @@ internal static class AttrListTagMatcher
         || TryName(source, p, "small"u8, out nameLen)
         || TryName(source, p, "span"u8, out nameLen)
         || TryName(source, p, "sub"u8, out nameLen)
-        || TryName(source, p, "sup"u8, out nameLen);
+        || TryName(source, p, "sup"u8, out nameLen)
+        || TryName(source, p, "svg"u8, out nameLen);
 
     /// <summary>Attempts an <c>h1</c>..<c>h6</c> match.</summary>
     /// <param name="source">UTF-8 source.</param>
