@@ -41,7 +41,7 @@ public sealed class MaterialIconsPlugin : DocPluginBase, IHeadExtraProvider
     {
         ArgumentNullException.ThrowIfNull(writer);
         var url = _options.ResolveStylesheetUrl();
-        if (string.IsNullOrEmpty(url))
+        if (url.Length is 0)
         {
             return;
         }
@@ -49,14 +49,14 @@ public sealed class MaterialIconsPlugin : DocPluginBase, IHeadExtraProvider
         // Preconnect makes sense only when the URL actually points at
         // fonts.googleapis.com; a custom override URL probably points
         // somewhere else and the preconnect hint would be wasted.
-        if (_options.Preconnect && url.Contains("fonts.googleapis.com", StringComparison.Ordinal))
+        if (_options.Preconnect && url.AsSpan().IndexOf("fonts.googleapis.com"u8) >= 0)
         {
             HeadExtraWriter.WriteUtf8(writer, "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n"u8);
             HeadExtraWriter.WriteUtf8(writer, "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n"u8);
         }
 
         HeadExtraWriter.WriteUtf8(writer, "<link rel=\"stylesheet\" href=\""u8);
-        HeadExtraWriter.WriteString(writer, url);
+        HeadExtraWriter.WriteUtf8(writer, url);
         HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
     }
 }

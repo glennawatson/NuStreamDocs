@@ -41,13 +41,13 @@ public readonly record struct Material3ThemeOptions(
     bool EnableNavigationFooter,
     bool SectionScopedFooter) : IThemeShellOptions
 {
-    /// <summary>Gets the default embedded-asset root as UTF-8 bytes.</summary>
-    public static byte[] DefaultEmbeddedAssetRootBytes { get; } = [.. "/assets"u8];
+    /// <summary>Gets the default embedded-asset root URL prefix.</summary>
+    public static byte[] DefaultEmbeddedAssetRoot { get; } = [.. "/assets"u8];
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static Material3ThemeOptions Default { get; } = new(
         AssetSource: Material3AssetSource.Embedded,
-        EmbeddedAssetRoot: DefaultEmbeddedAssetRootBytes,
+        EmbeddedAssetRoot: DefaultEmbeddedAssetRoot,
         CdnRoot: [],
         SiteName: [],
         SiteUrl: [],

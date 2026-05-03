@@ -5,11 +5,11 @@
 namespace NuStreamDocs.Icons.FontAwesome;
 
 /// <summary>Configuration for <see cref="FontAwesomePlugin"/>.</summary>
-/// <param name="StylesheetUrl">URL of the Font Awesome stylesheet to inject into <c>&lt;head&gt;</c>.</param>
+/// <param name="StylesheetUrl">UTF-8 URL of the Font Awesome stylesheet to inject into <c>&lt;head&gt;</c>.</param>
 /// <param name="Crossorigin">Optional <c>crossorigin</c> attribute value; empty to omit.</param>
 /// <param name="ReferrerPolicy">Optional <c>referrerpolicy</c> attribute value; empty to omit.</param>
 public readonly record struct FontAwesomeOptions(
-    string StylesheetUrl,
+    byte[] StylesheetUrl,
     string Crossorigin,
     string ReferrerPolicy)
 {
@@ -19,8 +19,8 @@ public readonly record struct FontAwesomeOptions(
     /// doesn't drift when upstream rev-bumps. Bump in lockstep when
     /// content authors need newer icon glyphs.
     /// </remarks>
-    public static string DefaultStylesheetUrl =>
-        "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css";
+    public static byte[] DefaultStylesheetUrl { get; } =
+        [.. "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css"u8];
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static FontAwesomeOptions Default { get; } = new(

@@ -31,7 +31,7 @@ public class FontAwesomePluginTests
     {
         var plugin = new FontAwesomePlugin(FontAwesomeOptions.Default with
         {
-            StylesheetUrl = "https://example.test/fa.css",
+            StylesheetUrl = [.. "https://example.test/fa.css"u8],
         });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).Contains("https://example.test/fa.css");
@@ -42,7 +42,7 @@ public class FontAwesomePluginTests
     [Test]
     public async Task EmptyUrlProducesNothing()
     {
-        var plugin = new FontAwesomePlugin(FontAwesomeOptions.Default with { StylesheetUrl = string.Empty });
+        var plugin = new FontAwesomePlugin(FontAwesomeOptions.Default with { StylesheetUrl = [] });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).IsEqualTo(string.Empty);
     }

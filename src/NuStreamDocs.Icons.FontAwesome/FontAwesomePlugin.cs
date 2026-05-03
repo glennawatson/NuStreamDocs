@@ -46,13 +46,13 @@ public sealed class FontAwesomePlugin : DocPluginBase, IHeadExtraProvider
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        if (string.IsNullOrEmpty(_options.StylesheetUrl))
+        if (_options.StylesheetUrl.Length is 0)
         {
             return;
         }
 
         HeadExtraWriter.WriteUtf8(writer, "<link rel=\"stylesheet\" href=\""u8);
-        HeadExtraWriter.WriteString(writer, _options.StylesheetUrl);
+        HeadExtraWriter.WriteUtf8(writer, _options.StylesheetUrl);
         HeadExtraWriter.WriteUtf8(writer, "\""u8);
         HeadExtraWriter.AppendAttribute(writer, " crossorigin=\""u8, _options.Crossorigin);
         HeadExtraWriter.AppendAttribute(writer, " referrerpolicy=\""u8, _options.ReferrerPolicy);

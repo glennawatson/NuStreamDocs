@@ -59,7 +59,7 @@ public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider
         if (_options.StylesheetUrl is [_, ..])
         {
             HeadExtraWriter.WriteUtf8(writer, "<link rel=\"stylesheet\" href=\""u8);
-            HeadExtraWriter.WriteString(writer, _options.StylesheetUrl);
+            HeadExtraWriter.WriteUtf8(writer, _options.StylesheetUrl);
             HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
         }
 
@@ -69,7 +69,7 @@ public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider
         }
 
         HeadExtraWriter.WriteUtf8(writer, "<script defer src=\""u8);
-        HeadExtraWriter.WriteString(writer, _options.ScriptUrl);
+        HeadExtraWriter.WriteUtf8(writer, _options.ScriptUrl);
         HeadExtraWriter.WriteUtf8(writer, "\"></script>\n"u8);
         HeadExtraWriter.WriteUtf8(writer, "<script>document.addEventListener('DOMContentLoaded',function(){if(window.GLightbox){GLightbox({selector:'."u8);
         HeadExtraWriter.WriteString(writer, _options.Selector);

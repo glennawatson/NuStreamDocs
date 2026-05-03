@@ -18,8 +18,8 @@ public static class HighlightStylesheet
     /// <summary>Gets the site-relative path the stylesheet is written to.</summary>
     public static FilePath AssetPath => new("assets/stylesheets/highlight.css");
 
-    /// <summary>Gets the absolute URL prefix (<c>/</c>) for the stylesheet, suitable for an HTML <c>href</c>.</summary>
-    public static UrlPath AssetHref => new("/" + AssetPath.Value);
+    /// <summary>Gets the UTF-8 absolute URL bytes (<c>/</c>-prefixed) for the stylesheet, suitable for an HTML <c>href</c> emitted directly into the page <c>&lt;head&gt;</c>.</summary>
+    public static byte[] AssetHref { get; } = [.. "/assets/stylesheets/highlight.css"u8];
 
     /// <summary>Gets the UTF-8 stylesheet source as a span; <see cref="GetBytes"/> copies it per asset request.</summary>
     private static ReadOnlySpan<byte> CssBytes =>

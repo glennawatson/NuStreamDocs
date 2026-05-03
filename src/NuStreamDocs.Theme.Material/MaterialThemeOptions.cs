@@ -12,10 +12,7 @@ namespace NuStreamDocs.Theme.Material;
 /// <remarks>
 /// Scalar text fields are stored as UTF-8 bytes per the project's byte-first pipeline rule.
 /// String-shaped construction goes through <c>MaterialThemeOptionsExtensions</c>'s <c>WithXxx</c>
-/// helpers, which encode once at the boundary. The default <see cref="DefaultCdnRoot"/> /
-/// <see cref="DefaultEmbeddedAssetRoot"/> properties remain string-shaped for human readability
-/// in code; the byte forms are exposed via <see cref="DefaultCdnRootBytes"/> /
-/// <see cref="DefaultEmbeddedAssetRootBytes"/>.
+/// helpers, which encode once at the boundary.
 /// </remarks>
 /// <param name="AssetSource">Gets or sets the source of the assets.</param>
 /// <param name="EmbeddedAssetRoot">UTF-8 root path for embedded assets.</param>
@@ -56,24 +53,17 @@ public readonly record struct MaterialThemeOptions(
     /// (<c>9.7.6</c>); bump in lockstep with any refresh of the files
     /// under <c>Templates/assets/</c>.
     /// </remarks>
-    public static string DefaultCdnRoot =>
-        "https://cdn.jsdelivr.net/gh/squidfunk/mkdocs-material@9.7.6/material/templates/assets";
-
-    /// <summary>Gets the default embedded-asset root URL prefix.</summary>
-    public static string DefaultEmbeddedAssetRoot => "/assets";
-
-    /// <summary>Gets the default CDN root as UTF-8 bytes.</summary>
-    public static byte[] DefaultCdnRootBytes { get; } =
+    public static byte[] DefaultCdnRoot { get; } =
         [.. "https://cdn.jsdelivr.net/gh/squidfunk/mkdocs-material@9.7.6/material/templates/assets"u8];
 
-    /// <summary>Gets the default embedded-asset root as UTF-8 bytes.</summary>
-    public static byte[] DefaultEmbeddedAssetRootBytes { get; } = [.. "/assets"u8];
+    /// <summary>Gets the default embedded-asset root URL prefix.</summary>
+    public static byte[] DefaultEmbeddedAssetRoot { get; } = [.. "/assets"u8];
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static MaterialThemeOptions Default { get; } = new(
         AssetSource: MaterialAssetSource.Embedded,
-        EmbeddedAssetRoot: DefaultEmbeddedAssetRootBytes,
-        CdnRoot: DefaultCdnRootBytes,
+        EmbeddedAssetRoot: DefaultEmbeddedAssetRoot,
+        CdnRoot: DefaultCdnRoot,
         SiteName: [],
         SiteUrl: [],
         Language: [.. "en"u8],

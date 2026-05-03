@@ -58,7 +58,7 @@ public class MaterialIconsPluginTests
     [Test]
     public async Task OverrideUrlWins()
     {
-        var plugin = new MaterialIconsPlugin(MaterialIconsOptions.Default with { StylesheetUrlOverride = "https://example.test/icons.css" });
+        var plugin = new MaterialIconsPlugin(MaterialIconsOptions.Default with { StylesheetUrlOverride = [.. "https://example.test/icons.css"u8] });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).Contains("https://example.test/icons.css");
         await Assert.That(html).DoesNotContain("googleapis");

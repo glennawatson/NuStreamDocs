@@ -42,7 +42,7 @@ public class LightboxPluginTests
     public async Task EmptyStylesheetSkipsLink()
     {
         var sink = new ArrayBufferWriter<byte>();
-        new LightboxPlugin(LightboxOptions.Default with { StylesheetUrl = string.Empty }).WriteHeadExtra(sink);
+        new LightboxPlugin(LightboxOptions.Default with { StylesheetUrl = [] }).WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).DoesNotContain("<link rel=\"stylesheet\"");
         await Assert.That(head).Contains("<script defer");
@@ -54,7 +54,7 @@ public class LightboxPluginTests
     public async Task EmptyScriptSkipsScript()
     {
         var sink = new ArrayBufferWriter<byte>();
-        new LightboxPlugin(LightboxOptions.Default with { ScriptUrl = string.Empty }).WriteHeadExtra(sink);
+        new LightboxPlugin(LightboxOptions.Default with { ScriptUrl = [] }).WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).Contains("<link rel=\"stylesheet\"");
         await Assert.That(head).DoesNotContain("<script");
