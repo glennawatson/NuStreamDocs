@@ -54,7 +54,7 @@ public sealed class BuildManifest
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest.</returns>
-    public static ValueTask<BuildManifest> LoadAsync(string outputRoot, in CancellationToken cancellationToken) =>
+    public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
         LoadAsync(outputRoot, cancellationToken, logger: null);
 
     /// <summary>
@@ -65,9 +65,12 @@ public sealed class BuildManifest
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="logger">Optional logger; pass <see langword="null"/> to silence diagnostics.</param>
     /// <returns>The loaded manifest.</returns>
-    public static async ValueTask<BuildManifest> LoadAsync(string outputRoot, CancellationToken cancellationToken, ILogger? logger)
+    public static async ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, CancellationToken cancellationToken, ILogger? logger)
     {
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        if (outputRoot.IsEmpty)
+        {
+            throw new ArgumentException("Output root must be non-empty.", nameof(outputRoot));
+        }
 
         var log = logger ?? NullLogger.Instance;
         var path = Path.Combine(outputRoot, FileName);
@@ -123,7 +126,7 @@ public sealed class BuildManifest
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the file is written.</returns>
-    public Task SaveAsync(string outputRoot, in CancellationToken cancellationToken) =>
+    public Task SaveAsync(DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
         SaveAsync(outputRoot, cancellationToken, logger: null);
 
     /// <summary>Persists the manifest under <paramref name="outputRoot"/> with an optional logger.</summary>
@@ -131,9 +134,13 @@ public sealed class BuildManifest
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="logger">Optional logger; pass <see langword="null"/> to silence diagnostics.</param>
     /// <returns>A task that completes when the file is written.</returns>
-    public async Task SaveAsync(string outputRoot, CancellationToken cancellationToken, ILogger? logger)
+    public async Task SaveAsync(DirectoryPath outputRoot, CancellationToken cancellationToken, ILogger? logger)
     {
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        if (outputRoot.IsEmpty)
+        {
+            throw new ArgumentException("Output root must be non-empty.", nameof(outputRoot));
+        }
+
         Directory.CreateDirectory(outputRoot);
 
         var log = logger ?? NullLogger.Instance;

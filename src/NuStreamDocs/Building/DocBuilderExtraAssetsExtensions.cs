@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins.ExtraAssets;
 
 namespace NuStreamDocs.Building;
@@ -24,7 +25,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="filePath">Absolute or relative path to a CSS file.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraCss(this DocBuilder builder, string filePath)
+    public static DocBuilder AddExtraCss(this DocBuilder builder, FilePath filePath)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.File(filePath));
@@ -103,7 +104,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="filePath">Absolute or relative path to a JS file.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraJs(this DocBuilder builder, string filePath)
+    public static DocBuilder AddExtraJs(this DocBuilder builder, FilePath filePath)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.File(filePath));

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
@@ -16,7 +17,7 @@ public sealed class ExtraAssetSource
 {
     /// <summary>Initializes a new instance of the <see cref="ExtraAssetSource"/> class.</summary>
     /// <param name="kind">Source kind.</param>
-    /// <param name="filePath">Disk path for <see cref="ExtraAssetSourceKind.File"/>; otherwise null.</param>
+    /// <param name="filePath">Disk path for <see cref="ExtraAssetSourceKind.File"/>; default for other kinds.</param>
     /// <param name="inlineBytes">UTF-8 bytes for <see cref="ExtraAssetSourceKind.Inline"/>; otherwise null.</param>
     /// <param name="assembly">Assembly for <see cref="ExtraAssetSourceKind.Embedded"/>; otherwise null.</param>
     /// <param name="resourceName">Embedded-resource name; otherwise null.</param>
@@ -24,7 +25,7 @@ public sealed class ExtraAssetSource
     /// <param name="url">External href for <see cref="ExtraAssetSourceKind.Url"/>; otherwise null.</param>
     private ExtraAssetSource(
         ExtraAssetSourceKind kind,
-        string? filePath,
+        FilePath filePath,
         byte[]? inlineBytes,
         Assembly? assembly,
         string? resourceName,
@@ -43,8 +44,8 @@ public sealed class ExtraAssetSource
     /// <summary>Gets the source kind.</summary>
     public ExtraAssetSourceKind Kind { get; }
 
-    /// <summary>Gets the disk path; non-null only for <see cref="ExtraAssetSourceKind.File"/>.</summary>
-    public string? FilePath { get; }
+    /// <summary>Gets the disk path; <see cref="NuStreamDocs.Common.FilePath.IsEmpty"/> for non-<see cref="ExtraAssetSourceKind.File"/> kinds.</summary>
+    public FilePath FilePath { get; }
 
     /// <summary>Gets the inline UTF-8 bytes; non-null only for <see cref="ExtraAssetSourceKind.Inline"/>.</summary>
     public byte[]? InlineBytes { get; }
@@ -62,12 +63,16 @@ public sealed class ExtraAssetSource
     public string? Url { get; }
 
     /// <summary>Creates a file-on-disk source.</summary>
-    /// <param name="filePath">Absolute or relative path to a UTF-8 asset file.</param>
+    /// <param name="filePath">Absolute or relative path to a UTF-8 asset file. String literals convert via the implicit <see cref="NuStreamDocs.Common.FilePath"/> operator.</param>
     /// <returns>The source.</returns>
-    public static ExtraAssetSource File(string filePath)
+    public static ExtraAssetSource File(FilePath filePath)
     {
-        ArgumentException.ThrowIfNullOrEmpty(filePath);
-        return new(ExtraAssetSourceKind.File, filePath, null, null, null, Path.GetFileName(filePath), null);
+        if (filePath.IsEmpty)
+        {
+            throw new ArgumentException("File path must be non-empty.", nameof(filePath));
+        }
+
+        return new(ExtraAssetSourceKind.File, filePath, null, null, null, Path.GetFileName(filePath.Value), null);
     }
 
     /// <summary>Creates an inline UTF-8 source.</summary>
@@ -78,7 +83,7 @@ public sealed class ExtraAssetSource
     {
         ArgumentException.ThrowIfNullOrEmpty(outputName);
         ArgumentNullException.ThrowIfNull(utf8Bytes);
-        return new(ExtraAssetSourceKind.Inline, null, utf8Bytes, null, null, outputName, null);
+        return new(ExtraAssetSourceKind.Inline, default, utf8Bytes, null, null, outputName, null);
     }
 
     /// <summary>Creates an embedded-resource source.</summary>
@@ -91,7 +96,7 @@ public sealed class ExtraAssetSource
         ArgumentNullException.ThrowIfNull(assembly);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
         ArgumentException.ThrowIfNullOrEmpty(outputName);
-        return new(ExtraAssetSourceKind.Embedded, null, null, assembly, resourceName, outputName, null);
+        return new(ExtraAssetSourceKind.Embedded, default, null, assembly, resourceName, outputName, null);
     }
 
     /// <summary>Creates an external-URL source. No asset is shipped — only a <c>&lt;link&gt;</c> or <c>&lt;script&gt;</c> tag.</summary>
@@ -100,6 +105,6 @@ public sealed class ExtraAssetSource
     public static ExtraAssetSource External(string url)
     {
         ArgumentException.ThrowIfNullOrEmpty(url);
-        return new(ExtraAssetSourceKind.Url, null, null, null, null, null, url);
+        return new(ExtraAssetSourceKind.Url, default, null, null, null, null, url);
     }
 }

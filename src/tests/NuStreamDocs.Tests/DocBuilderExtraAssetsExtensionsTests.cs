@@ -93,11 +93,11 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task NullBuilderGuards()
     {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCss(null!, "x.css"));
+        var ex1 = Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCss(null!, (Common.FilePath)"x.css"));
         Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCssInline(null!, "x.css", []));
         Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCssEmbedded(null!, typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "r", "x.css"));
         Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCssLink(null!, "x"));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJs(null!, "x.js"));
+        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJs(null!, (Common.FilePath)"x.js"));
         Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJsInline(null!, "x.js", []));
         Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJsEmbedded(null!, typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "r", "x.js"));
         Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJsLink(null!, "x"));
