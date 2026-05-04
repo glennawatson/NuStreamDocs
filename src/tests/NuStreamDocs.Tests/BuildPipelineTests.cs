@@ -144,7 +144,7 @@ public class BuildPipelineTests
     private sealed class ReplaceAToB : IDocPlugin, IMarkdownPreprocessor
     {
         /// <inheritdoc/>
-        public string Name => "a-to-b";
+        public byte[] Name => "a-to-b"u8.ToArray();
 
         /// <inheritdoc/>
         public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
@@ -178,7 +178,7 @@ public class BuildPipelineTests
     private sealed class ReplaceBToC : IDocPlugin, IMarkdownPreprocessor
     {
         /// <inheritdoc/>
-        public string Name => "b-to-c";
+        public byte[] Name => "b-to-c"u8.ToArray();
 
         /// <inheritdoc/>
         public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

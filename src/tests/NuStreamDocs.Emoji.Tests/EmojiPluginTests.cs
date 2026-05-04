@@ -26,7 +26,7 @@ public class EmojiPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new EmojiPlugin().Name).IsEqualTo("emoji");
+        await Assert.That(new EmojiPlugin().Name.AsSpan().SequenceEqual("emoji"u8)).IsTrue();
 
     /// <summary>Preprocess with a null sink throws.</summary>
     /// <returns>Async test.</returns>

@@ -37,7 +37,7 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : ID
     }
 
     /// <inheritdoc/>
-    public string Name => "wyam-blog";
+    public byte[] Name => "wyam-blog"u8.ToArray();
 
     /// <inheritdoc/>
     public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

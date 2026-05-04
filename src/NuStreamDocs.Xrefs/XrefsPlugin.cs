@@ -64,7 +64,7 @@ public sealed class XrefsPlugin : IDocPlugin
     public AutorefsRegistry Registry { get; }
 
     /// <inheritdoc/>
-    public string Name => "xrefs";
+    public byte[] Name => "xrefs"u8.ToArray();
 
     /// <inheritdoc/>
     public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

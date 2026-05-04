@@ -40,7 +40,7 @@ public sealed class FontAwesomePlugin : DocPluginBase, IHeadExtraProvider
     public FontAwesomePlugin(in FontAwesomeOptions options) => _options = options;
 
     /// <inheritdoc/>
-    public override string Name => "fontawesome";
+    public override byte[] Name => "fontawesome"u8.ToArray();
 
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)

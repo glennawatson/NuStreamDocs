@@ -51,7 +51,7 @@ public sealed class AutorefsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public string Name => "autorefs";
+    public byte[] Name => "autorefs"u8.ToArray();
 
     /// <summary>Gets the shared registry. Other plugins may publish IDs into it during configure or render.</summary>
     public AutorefsRegistry Registry { get; }

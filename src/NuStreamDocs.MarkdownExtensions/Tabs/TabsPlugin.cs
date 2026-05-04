@@ -31,7 +31,7 @@ public sealed class TabsPlugin : MarkdownAssetPluginBase
 """u8];
 
     /// <inheritdoc/>
-    public override string Name => "tabs";
+    public override byte[] Name => "tabs"u8.ToArray();
 
     /// <inheritdoc/>
     protected override FilePath AssetPath => new("assets/extensions/tabs.css");

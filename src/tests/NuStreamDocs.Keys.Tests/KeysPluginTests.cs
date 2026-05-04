@@ -25,7 +25,7 @@ public class KeysPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new KeysPlugin().Name).IsEqualTo("keys");
+        await Assert.That(new KeysPlugin().Name.AsSpan().SequenceEqual("keys"u8)).IsTrue();
 
     /// <summary>Preprocess rejects a null sink.</summary>
     /// <returns>Async test.</returns>

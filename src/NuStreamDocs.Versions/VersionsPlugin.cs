@@ -35,7 +35,7 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDo
     }
 
     /// <inheritdoc/>
-    public string Name => "versions";
+    public byte[] Name => "versions"u8.ToArray();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

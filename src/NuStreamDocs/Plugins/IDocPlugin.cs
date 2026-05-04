@@ -28,8 +28,8 @@ namespace NuStreamDocs.Plugins;
 /// </remarks>
 public interface IDocPlugin
 {
-    /// <summary>Gets the human-readable plugin name (used in build logs).</summary>
-    string Name { get; }
+    /// <summary>Gets the human-readable plugin name as UTF-8 bytes (used in build logs and the cache fingerprint).</summary>
+    byte[] Name { get; }
 
     /// <summary>Hook fired during the configuration phase, before discovery.</summary>
     /// <param name="context">Per-build configuration state.</param>

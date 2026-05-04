@@ -13,7 +13,7 @@ internal sealed class RecordingPlugin : IDocPlugin
     public static string? LastPath { get; set; }
 
     /// <inheritdoc/>
-    public string Name => "recording";
+    public byte[] Name => "recording"u8.ToArray();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

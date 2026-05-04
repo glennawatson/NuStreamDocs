@@ -21,7 +21,7 @@ namespace NuStreamDocs.Common;
 public abstract class DocPluginBase : IDocPlugin
 {
     /// <inheritdoc/>
-    public abstract string Name { get; }
+    public abstract byte[] Name { get; }
 
     /// <inheritdoc/>
     public virtual ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

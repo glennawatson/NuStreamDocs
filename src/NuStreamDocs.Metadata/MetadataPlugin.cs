@@ -44,7 +44,7 @@ public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkd
     }
 
     /// <inheritdoc/>
-    public string Name => "metadata";
+    public byte[] Name => "metadata"u8.ToArray();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

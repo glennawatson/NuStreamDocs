@@ -19,7 +19,7 @@ public class CSharpApiGeneratorPluginCoverageTests
     public async Task NameAccessor()
     {
         var plugin = new CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
-        await Assert.That(plugin.Name).IsEqualTo("csharp-apigenerator");
+        await Assert.That(plugin.Name.AsSpan().SequenceEqual("csharp-apigenerator"u8)).IsTrue();
     }
 
     /// <summary>OnRenderPageAsync is a no-op.</summary>

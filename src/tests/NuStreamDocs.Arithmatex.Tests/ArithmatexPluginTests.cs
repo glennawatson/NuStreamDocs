@@ -25,7 +25,7 @@ public class ArithmatexPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new ArithmatexPlugin().Name).IsEqualTo("arithmatex");
+        await Assert.That(new ArithmatexPlugin().Name.AsSpan().SequenceEqual("arithmatex"u8)).IsTrue();
 
     /// <summary>Preprocess rejects null sink.</summary>
     /// <returns>Async test.</returns>

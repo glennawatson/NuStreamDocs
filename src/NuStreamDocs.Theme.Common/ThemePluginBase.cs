@@ -154,7 +154,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public abstract string Name { get; }
+    public abstract byte[] Name { get; }
 
     /// <summary>Gets the loaded theme.</summary>
     protected TTheme LoadedTheme { get; }

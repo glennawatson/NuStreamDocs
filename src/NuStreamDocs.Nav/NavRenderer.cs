@@ -185,12 +185,29 @@ internal static class NavRenderer
             return root.Children;
         }
 
+        return ComposeSidebarItems(home, activeSection);
+    }
+
+    /// <summary>Builds the final contextual sidebar item array from the optional home leaf and active section.</summary>
+    /// <param name="home">Top-level home leaf, when present.</param>
+    /// <param name="activeSection">Active top-level section.</param>
+    /// <returns>The contextual sidebar item array.</returns>
+    private static NavNode[] ComposeSidebarItems(NavNode? home, NavNode activeSection)
+    {
         if (home is null)
         {
-            return [activeSection];
+            return activeSection.Children is [_, ..] ? activeSection.Children : [activeSection];
         }
 
-        return [home, activeSection];
+        if (activeSection.Children is not [_, ..])
+        {
+            return [home, activeSection];
+        }
+
+        var items = new NavNode[activeSection.Children.Length + 1];
+        items[0] = home;
+        Array.Copy(activeSection.Children, 0, items, 1, activeSection.Children.Length);
+        return items;
     }
 
     /// <summary>Recursive helper for <see cref="BuildUrlIndex"/>.</summary>
@@ -366,9 +383,7 @@ internal static class NavRenderer
         WriteLevel(writer, level + 1);
         WriteUtf8(writer, "\" aria-label=\""u8);
         WriteUtf8(writer, node.Title);
-        WriteUtf8(writer, "\"><label class=\"md-nav__title\"><span class=\"md-nav__icon md-icon\"></span>"u8);
-        WriteUtf8(writer, node.Title);
-        WriteUtf8(writer, "</label>"u8);
+        WriteUtf8(writer, "\">"u8);
         WriteList(writer, node.Children, activeBranch, prune, level + 1);
         WriteUtf8(writer, "</nav>"u8);
     }

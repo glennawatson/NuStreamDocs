@@ -116,7 +116,7 @@ public class Aglc4StyleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task StyleNameIsAglc4() =>
-        await Assert.That(Aglc4Style.Instance.Name).IsEqualTo("AGLC4");
+        await Assert.That(Aglc4Style.Instance.Name.AsSpan().SequenceEqual("AGLC4"u8)).IsTrue();
 
     /// <summary>Renders <paramref name="entry"/> via <see cref="Aglc4Style"/>'s bibliography path and decodes the UTF-8 result.</summary>
     /// <param name="entry">Resolved entry.</param>

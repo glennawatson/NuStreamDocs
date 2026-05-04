@@ -36,7 +36,7 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
     }
 
     /// <inheritdoc/>
-    public string Name => "mkdocs-blog";
+    public byte[] Name => "mkdocs-blog"u8.ToArray();
 
     /// <inheritdoc/>
     public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

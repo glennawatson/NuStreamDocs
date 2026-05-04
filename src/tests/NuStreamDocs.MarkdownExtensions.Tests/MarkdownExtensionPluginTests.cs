@@ -28,19 +28,19 @@ public class MarkdownExtensionPluginTests
     [Test]
     public async Task PluginNamesAreStable()
     {
-        await Assert.That(new AdmonitionPlugin().Name).IsEqualTo("admonitions");
-        await Assert.That(new AttrListPlugin().Name).IsEqualTo("attr-list");
-        await Assert.That(new CaretTildePlugin().Name).IsEqualTo("caret-tilde");
-        await Assert.That(new CheckListPlugin().Name).IsEqualTo("checklist");
-        await Assert.That(new CriticMarkupPlugin().Name).IsEqualTo("critic");
-        await Assert.That(new DefListPlugin().Name).IsEqualTo("deflist");
-        await Assert.That(new DetailsPlugin().Name).IsEqualTo("details");
-        await Assert.That(new FootnotesPlugin().Name).IsEqualTo("footnotes");
-        await Assert.That(new InlineHilitePlugin().Name).IsEqualTo("inlinehilite");
-        await Assert.That(new MarkPlugin().Name).IsEqualTo("mark");
-        await Assert.That(new MdInHtmlPlugin().Name).IsEqualTo("md_in_html");
-        await Assert.That(new TablesPlugin().Name).IsEqualTo("tables");
-        await Assert.That(new TabsPlugin().Name).IsEqualTo("tabs");
+        await Assert.That(new AdmonitionPlugin().Name.AsSpan().SequenceEqual("admonitions"u8)).IsTrue();
+        await Assert.That(new AttrListPlugin().Name.AsSpan().SequenceEqual("attr-list"u8)).IsTrue();
+        await Assert.That(new CaretTildePlugin().Name.AsSpan().SequenceEqual("caret-tilde"u8)).IsTrue();
+        await Assert.That(new CheckListPlugin().Name.AsSpan().SequenceEqual("checklist"u8)).IsTrue();
+        await Assert.That(new CriticMarkupPlugin().Name.AsSpan().SequenceEqual("critic"u8)).IsTrue();
+        await Assert.That(new DefListPlugin().Name.AsSpan().SequenceEqual("deflist"u8)).IsTrue();
+        await Assert.That(new DetailsPlugin().Name.AsSpan().SequenceEqual("details"u8)).IsTrue();
+        await Assert.That(new FootnotesPlugin().Name.AsSpan().SequenceEqual("footnotes"u8)).IsTrue();
+        await Assert.That(new InlineHilitePlugin().Name.AsSpan().SequenceEqual("inlinehilite"u8)).IsTrue();
+        await Assert.That(new MarkPlugin().Name.AsSpan().SequenceEqual("mark"u8)).IsTrue();
+        await Assert.That(new MdInHtmlPlugin().Name.AsSpan().SequenceEqual("md_in_html"u8)).IsTrue();
+        await Assert.That(new TablesPlugin().Name.AsSpan().SequenceEqual("tables"u8)).IsTrue();
+        await Assert.That(new TabsPlugin().Name.AsSpan().SequenceEqual("tabs"u8)).IsTrue();
     }
 
     /// <summary>Every preprocessor passes its source through to the rewriter.</summary>

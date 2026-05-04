@@ -39,7 +39,7 @@ internal static class BuildFingerprint
         for (var i = 0; i < plugins.Length; i++)
         {
             Write(buffer, "|plugin="u8);
-            AsciiByteHelpers.EncodeStringInto(plugins[i].Name, buffer);
+            Write(buffer, plugins[i].Name);
             Write(buffer, "|"u8);
             AppendTypeFingerprint(buffer, plugins[i].GetType());
         }

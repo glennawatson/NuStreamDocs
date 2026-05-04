@@ -13,7 +13,7 @@ public class VersionsPluginLifecycleTests
     public async Task NameAccessor()
     {
         var plugin = new VersionsPlugin(new("1.0", "Stable"));
-        await Assert.That(plugin.Name).IsEqualTo("versions");
+        await Assert.That(plugin.Name.AsSpan().SequenceEqual("versions"u8)).IsTrue();
     }
 
     /// <summary>OnConfigureAsync no-ops.</summary>

@@ -34,7 +34,7 @@ public sealed class MaterialIconsPlugin : DocPluginBase, IHeadExtraProvider
     public MaterialIconsPlugin(in MaterialIconsOptions options) => _options = options;
 
     /// <inheritdoc/>
-    public override string Name => "material-icons";
+    public override byte[] Name => "material-icons"u8.ToArray();
 
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)

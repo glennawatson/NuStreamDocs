@@ -14,7 +14,7 @@ public class MkDocsBlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new MkDocsBlogPlugin(new("blog", "Blog")).Name).IsEqualTo("mkdocs-blog");
+        await Assert.That(new MkDocsBlogPlugin(new("blog", "Blog")).Name.AsSpan().SequenceEqual("mkdocs-blog"u8)).IsTrue();
 
     /// <summary>2-arg ctor enables EmitCategoryArchives.</summary>
     /// <returns>Async test.</returns>

@@ -26,7 +26,7 @@ namespace NuStreamDocs.Arithmatex;
 public sealed class ArithmatexPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "arithmatex";
+    public override byte[] Name => "arithmatex"u8.ToArray();
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

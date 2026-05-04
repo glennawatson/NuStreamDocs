@@ -74,8 +74,8 @@ public class NavRendererTests
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("/index.html");
-        await Assert.That(html).Contains("/guide/");
         await Assert.That(html).Contains("/guide/intro.html");
+        await Assert.That(html).DoesNotContain(">Guide<");
         await Assert.That(html).DoesNotContain("/blog/post.html");
     }
 
@@ -98,7 +98,7 @@ public class NavRendererTests
         await Assert.That(html).Contains("md-tabs__item--active");
     }
 
-    /// <summary>Leaf links render as root-relative hrefs so docs pages do not resolve them against the current directory.</summary>
+    /// <summary>Contextual sidebar leaf links remain root-relative after the active section wrapper is flattened away.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SidebarLeafLinksAreRootRelative()
@@ -112,8 +112,8 @@ public class NavRendererTests
         NavRenderer.RenderSidebarFull(root, intro, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
-        await Assert.That(html).Contains("href=\"/guide/index.html\"");
         await Assert.That(html).Contains("href=\"/guide/intro.html\"");
+        await Assert.That(html).DoesNotContain("href=\"/guide/index.html\"");
     }
 
     /// <summary>Directory-URL section index pages scope the sidebar to their active top-level section.</summary>
@@ -145,8 +145,8 @@ public class NavRendererTests
 
         var html = Encoding.UTF8.GetString(page.WrittenSpan);
         await Assert.That(html).Contains("Home");
-        await Assert.That(html).Contains("href=\"/guide/\"");
         await Assert.That(html).Contains("href=\"/guide/intro/\"");
+        await Assert.That(html).DoesNotContain(">Guide<");
         await Assert.That(html).DoesNotContain("href=\"/blog/post/\"");
     }
 
@@ -167,6 +167,24 @@ public class NavRendererTests
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("href=\"/docs/resources/blogs/\"");
         await Assert.That(html).DoesNotContain("href=\"/docs/resources/\"");
+    }
+
+    /// <summary>The flattened contextual sidebar omits the active section wrapper entirely.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SidebarOmitsRedundantNestedSectionTitle()
+    {
+        var intro = new NavNode("Getting Started", "docs/getting-started/index.md", isSection: false, [], useDirectoryUrls: true);
+        var docs = new NavNode("Docs", "docs", isSection: true, [intro], indexPath: "docs/index.md", useDirectoryUrls: true);
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [docs], useDirectoryUrls: true);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderSidebarPruned(root, docs, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("<span class=\"md-ellipsis\">Getting Started</span>");
+        await Assert.That(html).DoesNotContain("<span class=\"md-ellipsis\">Docs</span>");
     }
 
     /// <summary>BuildUrlIndex maps every leaf URL to its node.</summary>

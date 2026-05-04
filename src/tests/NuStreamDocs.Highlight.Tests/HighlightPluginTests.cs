@@ -14,7 +14,7 @@ public class HighlightPluginTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new HighlightPlugin().Name).IsEqualTo("highlight");
+    public async Task NameIsStable() => await Assert.That(new HighlightPlugin().Name.AsSpan().SequenceEqual("highlight"u8)).IsTrue();
 
     /// <summary>Default options has no extra lexers.</summary>
     /// <returns>Async test.</returns>

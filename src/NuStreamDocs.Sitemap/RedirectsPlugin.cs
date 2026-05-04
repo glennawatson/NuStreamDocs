@@ -86,7 +86,7 @@ public sealed class RedirectsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public string Name => "redirects";
+    public byte[] Name => "redirects"u8.ToArray();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

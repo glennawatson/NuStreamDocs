@@ -46,7 +46,7 @@ public class OptimizeRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task HtmlMinifyPluginName() =>
-        await Assert.That(new HtmlMinifyPlugin().Name).IsEqualTo("html-minify");
+        await Assert.That(new HtmlMinifyPlugin().Name.AsSpan().SequenceEqual("html-minify"u8)).IsTrue();
 
     /// <summary>HtmlMinifyPlugin minifies HTML at finalize.</summary>
     /// <returns>Async test.</returns>

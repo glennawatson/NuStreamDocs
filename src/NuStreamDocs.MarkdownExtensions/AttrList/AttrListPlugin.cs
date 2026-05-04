@@ -27,7 +27,7 @@ namespace NuStreamDocs.MarkdownExtensions.AttrList;
 public sealed class AttrListPlugin : DocPluginBase
 {
     /// <inheritdoc/>
-    public override string Name => "attr-list";
+    public override byte[] Name => "attr-list"u8.ToArray();
 
     /// <inheritdoc/>
     public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)

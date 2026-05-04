@@ -59,7 +59,7 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     public LinkDiagnostic[] LastDiagnostics { get; private set; } = [];
 
     /// <inheritdoc/>
-    public string Name => "link-validator";
+    public byte[] Name => "link-validator"u8.ToArray();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

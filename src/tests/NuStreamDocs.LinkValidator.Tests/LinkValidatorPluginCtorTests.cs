@@ -13,7 +13,7 @@ public class LinkValidatorPluginCtorTests
     public async Task TwoArgCtor()
     {
         var plugin = new LinkValidatorPlugin(LinkValidatorOptions.Default, httpClientFactory: () => new());
-        await Assert.That(plugin.Name).IsEqualTo("link-validator");
+        await Assert.That(plugin.Name.AsSpan().SequenceEqual("link-validator"u8)).IsTrue();
     }
 
     /// <summary>ValidationCorpus.ContainsPage returns false for unknown pages.</summary>

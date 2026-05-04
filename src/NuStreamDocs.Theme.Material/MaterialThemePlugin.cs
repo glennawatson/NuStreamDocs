@@ -35,7 +35,7 @@ public sealed class MaterialThemePlugin : ThemePluginBase<MaterialTheme, Materia
     }
 
     /// <inheritdoc/>
-    public override string Name => "material-theme";
+    public override byte[] Name => "material-theme"u8.ToArray();
 
     /// <summary>Gets the loaded theme; exposed for tests.</summary>
     internal MaterialTheme Theme => LoadedTheme;

@@ -13,7 +13,7 @@ public class PrivacyPluginCoverageTests
     public async Task NameAccessor()
     {
         var plugin = new PrivacyPlugin();
-        await Assert.That(plugin.Name).IsEqualTo("privacy");
+        await Assert.That(plugin.Name.AsSpan().SequenceEqual("privacy"u8)).IsTrue();
     }
 
     /// <summary>AuditedUrls is empty before any pages are scanned.</summary>

@@ -52,7 +52,7 @@ public sealed class BibliographyPlugin : DocPluginBase, IMarkdownPreprocessor
     }
 
     /// <inheritdoc/>
-    public override string Name => "bibliography";
+    public override byte[] Name => "bibliography"u8.ToArray();
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

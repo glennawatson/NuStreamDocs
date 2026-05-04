@@ -250,7 +250,7 @@ public class ThemePluginBaseTests
     private sealed class StubNeighbours(string globalUrl, string sectionUrl) : IDocPlugin, INavNeighboursProvider
     {
         /// <inheritdoc/>
-        public string Name => "stub-neighbours";
+        public byte[] Name => "stub-neighbours"u8.ToArray();
 
         /// <inheritdoc/>
         public NavNeighbours GetNeighbours(string relativePath) =>

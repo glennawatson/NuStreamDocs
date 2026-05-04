@@ -35,7 +35,7 @@ mermaid.initialize({ startOnLoad: true });
 """u8];
 
     /// <inheritdoc/>
-    public override string Name => "mermaid";
+    public override byte[] Name => "mermaid"u8.ToArray();
 
     /// <inheritdoc/>
     ReadOnlySpan<byte> ICustomFenceHandler.Language => "mermaid"u8;

@@ -17,7 +17,7 @@ public class MarkdownLinkRewriterPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new MarkdownLinkRewriterPlugin().Name).IsEqualTo("markdown-link-rewriter");
+        await Assert.That(new MarkdownLinkRewriterPlugin().Name.AsSpan().SequenceEqual("markdown-link-rewriter"u8)).IsTrue();
 
     /// <summary>OnRenderPageAsync rewrites a <c>.md</c> href to <c>.html</c>.</summary>
     /// <returns>Async test.</returns>

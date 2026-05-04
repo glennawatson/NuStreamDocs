@@ -106,7 +106,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     public static byte[] NavTabsMarker { get; } = [.. "<!--@@nav-tabs@@-->"u8];
 
     /// <inheritdoc/>
-    public string Name => "nav";
+    public byte[] Name => "nav"u8.ToArray();
 
     /// <summary>Gets the computed nav tree root; null before <see cref="OnConfigureAsync"/> has run.</summary>
     public object? Root => _root;

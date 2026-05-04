@@ -28,14 +28,14 @@ public class PluginTimingTableTests
     public async Task MeasureScopeAccumulatesElapsed()
     {
         var table = new PluginTimingTable();
-        using (table.Measure("plugin-a"))
+        using (table.Measure("plugin-a"u8.ToArray()))
         {
             await Task.Delay(20);
         }
 
         var rows = SnapshotViaReflection(table);
         await Assert.That(rows.Length).IsEqualTo(1);
-        await Assert.That(rows[0].Name).IsEqualTo("plugin-a");
+        await Assert.That(rows[0].Name.AsSpan().SequenceEqual("plugin-a"u8)).IsTrue();
         await Assert.That(rows[0].Seconds).IsGreaterThan(0.010);
     }
 
@@ -47,7 +47,7 @@ public class PluginTimingTableTests
         var table = new PluginTimingTable();
         for (var i = 0; i < 3; i++)
         {
-            using (table.Measure("plugin-a"))
+            using (table.Measure("plugin-a"u8.ToArray()))
             {
                 await Task.Delay(10);
             }
@@ -64,14 +64,14 @@ public class PluginTimingTableTests
     public async Task SnapshotIsSortedDescending()
     {
         var table = new PluginTimingTable();
-        table.Add("fast", 1_000);
-        table.Add("slow", 100_000_000);
-        table.Add("medium", 1_000_000);
+        table.Add("fast"u8.ToArray(), 1_000);
+        table.Add("slow"u8.ToArray(), 100_000_000);
+        table.Add("medium"u8.ToArray(), 1_000_000);
 
         var rows = SnapshotViaReflection(table);
-        await Assert.That(rows[0].Name).IsEqualTo("slow");
-        await Assert.That(rows[1].Name).IsEqualTo("medium");
-        await Assert.That(rows[2].Name).IsEqualTo("fast");
+        await Assert.That(rows[0].Name.AsSpan().SequenceEqual("slow"u8)).IsTrue();
+        await Assert.That(rows[1].Name.AsSpan().SequenceEqual("medium"u8)).IsTrue();
+        await Assert.That(rows[2].Name.AsSpan().SequenceEqual("fast"u8)).IsTrue();
     }
 
     /// <summary><c>Add</c> rejects null / empty plugin names.</summary>
@@ -80,8 +80,8 @@ public class PluginTimingTableTests
     public async Task AddRejectsEmptyName()
     {
         var table = new PluginTimingTable();
-        var ex1 = Assert.Throws<ArgumentException>(() => table.Add(string.Empty, 1));
-        var ex2 = Assert.Throws<ArgumentException>(() => table.Measure(string.Empty));
+        var ex1 = Assert.Throws<ArgumentException>(() => table.Add([], 1));
+        var ex2 = Assert.Throws<ArgumentException>(() => table.Measure([]));
         await Assert.That(ex1).IsNotNull();
         await Assert.That(ex2).IsNotNull();
     }
@@ -103,8 +103,8 @@ public class PluginTimingTableTests
     public async Task EmitWritesHeaderAndOneRowPerPlugin()
     {
         var table = new PluginTimingTable();
-        table.Add("plugin-a", System.Diagnostics.Stopwatch.Frequency); // ~1s
-        table.Add("plugin-b", System.Diagnostics.Stopwatch.Frequency / 2); // ~0.5s
+        table.Add("plugin-a"u8.ToArray(), System.Diagnostics.Stopwatch.Frequency); // ~1s
+        table.Add("plugin-b"u8.ToArray(), System.Diagnostics.Stopwatch.Frequency / 2); // ~0.5s
 
         var logger = new RecordingLogger();
         table.Emit(logger);
@@ -121,8 +121,8 @@ public class PluginTimingTableTests
     public async Task SubSignificantEntriesUseDebugLevel()
     {
         var table = new PluginTimingTable();
-        table.Add("plugin-a", System.Diagnostics.Stopwatch.Frequency); // ~1s
-        table.Add("plugin-fast", 1); // ~0s
+        table.Add("plugin-a"u8.ToArray(), System.Diagnostics.Stopwatch.Frequency); // ~1s
+        table.Add("plugin-fast"u8.ToArray(), 1); // ~0s
 
         var logger = new RecordingLogger();
         table.Emit(logger);
@@ -136,10 +136,10 @@ public class PluginTimingTableTests
     /// <summary>Calls the internal <c>Snapshot()</c> via reflection so tests can assert ordering / accumulation without exposing it on the public API.</summary>
     /// <param name="table">Table under test.</param>
     /// <returns>The snapshot rows.</returns>
-    private static (string Name, double Seconds)[] SnapshotViaReflection(PluginTimingTable table) =>
+    private static (byte[] Name, double Seconds)[] SnapshotViaReflection(PluginTimingTable table) =>
         (table.GetType()
             .GetMethod("Snapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .Invoke(table, null) as (string Name, double Seconds)[])!;
+            .Invoke(table, null) as (byte[] Name, double Seconds)[])!;
 
     /// <summary>Records every log entry for assertion.</summary>
     private sealed class RecordingLogger : ILogger

@@ -17,7 +17,7 @@ namespace NuStreamDocs.MarkdownExtensions.Footnotes;
 public sealed class FootnotesPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "footnotes";
+    public override byte[] Name => "footnotes"u8.ToArray();
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>

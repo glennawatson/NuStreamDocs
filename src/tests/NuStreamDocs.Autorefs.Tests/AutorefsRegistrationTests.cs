@@ -13,7 +13,7 @@ public class AutorefsRegistrationTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new AutorefsPlugin().Name).IsEqualTo("autorefs");
+    public async Task NameIsStable() => await Assert.That(new AutorefsPlugin().Name.AsSpan().SequenceEqual("autorefs"u8)).IsTrue();
 
     /// <summary>UseAutorefs() registers.</summary>
     /// <returns>Async test.</returns>

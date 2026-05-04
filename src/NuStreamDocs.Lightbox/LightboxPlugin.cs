@@ -32,7 +32,7 @@ public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider
     }
 
     /// <inheritdoc/>
-    public override string Name => "lightbox";
+    public override byte[] Name => "lightbox"u8.ToArray();
 
     /// <inheritdoc/>
     public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)

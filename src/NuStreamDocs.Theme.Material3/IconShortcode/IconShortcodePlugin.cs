@@ -37,7 +37,7 @@ public sealed class IconShortcodePlugin : ThemeIconShortcodePluginBase
     }
 
     /// <inheritdoc/>
-    public override string Name => "material3-icon-shortcodes";
+    public override byte[] Name => "material3-icon-shortcodes"u8.ToArray();
 
     /// <inheritdoc/>
     protected override byte[] IconFontClass => MaterialIconFontClass;

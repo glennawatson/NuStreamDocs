@@ -25,7 +25,7 @@ namespace NuStreamDocs.MagicLink;
 public sealed class MagicLinkPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "magiclink";
+    public override byte[] Name => "magiclink"u8.ToArray();
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

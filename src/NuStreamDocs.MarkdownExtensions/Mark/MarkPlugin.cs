@@ -17,7 +17,7 @@ namespace NuStreamDocs.MarkdownExtensions.Mark;
 public sealed class MarkPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "mark";
+    public override byte[] Name => "mark"u8.ToArray();
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>

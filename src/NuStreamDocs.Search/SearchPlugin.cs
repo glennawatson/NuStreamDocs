@@ -62,7 +62,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     }
 
     /// <inheritdoc/>
-    public string Name => "search";
+    public byte[] Name => "search"u8.ToArray();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

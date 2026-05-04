@@ -37,7 +37,7 @@ public sealed class DetailsPlugin : MarkdownAssetPluginBase
             """u8];
 
     /// <inheritdoc/>
-    public override string Name => "details";
+    public override byte[] Name => "details"u8.ToArray();
 
     /// <inheritdoc/>
     protected override FilePath AssetPath => new("assets/extensions/details.css");

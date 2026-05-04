@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Logging;
 
 /// <summary>
@@ -38,6 +40,19 @@ internal static partial class BuildPipelineLoggingHelper
     [LoggerMessage(Level = LogLevel.Debug, Message = "Configuring plugin: {PluginName}")]
     public static partial void LogPluginConfigure(ILogger logger, string pluginName);
 
+    /// <summary>UTF-8 byte overload for <see cref="LogPluginConfigure(ILogger, string)"/>; the encode step only runs when Debug is enabled.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginName">Plugin name as UTF-8 bytes.</param>
+    public static void LogPluginConfigure(ILogger logger, ReadOnlySpan<byte> pluginName)
+    {
+        if (!logger.IsEnabled(LogLevel.Debug))
+        {
+            return;
+        }
+
+        LogPluginConfigure(logger, Encoding.UTF8.GetString(pluginName));
+    }
+
     /// <summary>Logs entry into the parallel render phase.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="parallelism">Effective <see cref="System.Threading.Tasks.ParallelOptions.MaxDegreeOfParallelism"/>.</param>
@@ -62,6 +77,19 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="pluginName">Plugin name.</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Finalizing plugin: {PluginName}")]
     public static partial void LogPluginFinalize(ILogger logger, string pluginName);
+
+    /// <summary>UTF-8 byte overload for <see cref="LogPluginFinalize(ILogger, string)"/>; the encode step only runs when Debug is enabled.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="pluginName">Plugin name as UTF-8 bytes.</param>
+    public static void LogPluginFinalize(ILogger logger, ReadOnlySpan<byte> pluginName)
+    {
+        if (!logger.IsEnabled(LogLevel.Debug))
+        {
+            return;
+        }
+
+        LogPluginFinalize(logger, Encoding.UTF8.GetString(pluginName));
+    }
 
     /// <summary>Logs a per-page completion at debug level.</summary>
     /// <param name="logger">Target logger.</param>

@@ -16,7 +16,7 @@ namespace NuStreamDocs.MarkdownExtensions.Tables;
 public sealed class TablesPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "tables";
+    public override byte[] Name => "tables"u8.ToArray();
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

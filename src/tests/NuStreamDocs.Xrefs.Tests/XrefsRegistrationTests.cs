@@ -12,7 +12,7 @@ public class XrefsRegistrationTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new XrefsPlugin().Name).IsEqualTo("xrefs");
+    public async Task NameIsStable() => await Assert.That(new XrefsPlugin().Name.AsSpan().SequenceEqual("xrefs"u8)).IsTrue();
 
     /// <summary>Default options has the expected fields.</summary>
     /// <returns>Async test.</returns>

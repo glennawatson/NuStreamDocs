@@ -85,7 +85,7 @@ public sealed class PrivacyPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public string Name => "privacy";
+    public byte[] Name => "privacy"u8.ToArray();
 
     /// <summary>Gets the snapshot of external URLs the plugin has seen so far as UTF-8 byte arrays.</summary>
     /// <remarks>

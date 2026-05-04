@@ -31,7 +31,7 @@ namespace NuStreamDocs.Keys;
 public sealed class KeysPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "keys";
+    public override byte[] Name => "keys"u8.ToArray();
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

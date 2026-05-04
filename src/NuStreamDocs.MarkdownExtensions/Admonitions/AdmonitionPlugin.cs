@@ -36,7 +36,7 @@ public sealed class AdmonitionPlugin : MarkdownAssetPluginBase
             """u8];
 
     /// <inheritdoc/>
-    public override string Name => "admonitions";
+    public override byte[] Name => "admonitions"u8.ToArray();
 
     /// <inheritdoc/>
     protected override FilePath AssetPath => new("assets/extensions/admonition.css");

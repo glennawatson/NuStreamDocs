@@ -36,7 +36,7 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
     }
 
     /// <inheritdoc/>
-    public string Name => "markdown-link-rewriter";
+    public byte[] Name => "markdown-link-rewriter"u8.ToArray();
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

@@ -14,7 +14,7 @@ public class LightboxRegistrationTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new LightboxPlugin().Name).IsEqualTo("lightbox");
+    public async Task NameIsStable() => await Assert.That(new LightboxPlugin().Name.AsSpan().SequenceEqual("lightbox"u8)).IsTrue();
 
     /// <summary>Defaults expose the expected CDN URLs and selector.</summary>
     /// <returns>Async test.</returns>

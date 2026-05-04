@@ -19,7 +19,7 @@ namespace NuStreamDocs.Abbr;
 public sealed class AbbrPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "abbr";
+    public override byte[] Name => "abbr"u8.ToArray();
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

@@ -13,7 +13,7 @@ public class OptimizePluginLifecycleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task OptimizeName() =>
-        await Assert.That(new OptimizePlugin().Name).IsEqualTo("optimize");
+        await Assert.That(new OptimizePlugin().Name.AsSpan().SequenceEqual("optimize"u8)).IsTrue();
 
     /// <summary>OptimizePlugin.OnConfigureAsync no-ops.</summary>
     /// <returns>Async test.</returns>

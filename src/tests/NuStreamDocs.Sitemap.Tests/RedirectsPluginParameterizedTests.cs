@@ -55,8 +55,8 @@ public class RedirectsPluginParameterizedTests
     [Test]
     public async Task CtorOverloads()
     {
-        await Assert.That(new RedirectsPlugin().Name).IsEqualTo("redirects");
-        await Assert.That(new RedirectsPlugin(("a.html", "/b.html")).Name).IsEqualTo("redirects");
-        await Assert.That(new RedirectsPlugin(RedirectsOptions.Default, [("a.html", "/b.html")]).Name).IsEqualTo("redirects");
+        await Assert.That(new RedirectsPlugin().Name.AsSpan().SequenceEqual("redirects"u8)).IsTrue();
+        await Assert.That(new RedirectsPlugin(("a.html", "/b.html")).Name.AsSpan().SequenceEqual("redirects"u8)).IsTrue();
+        await Assert.That(new RedirectsPlugin(RedirectsOptions.Default, [("a.html", "/b.html")]).Name.AsSpan().SequenceEqual("redirects"u8)).IsTrue();
     }
 }

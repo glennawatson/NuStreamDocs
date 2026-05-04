@@ -25,7 +25,7 @@ namespace NuStreamDocs.MarkdownExtensions.MdInHtml;
 public sealed class MdInHtmlPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override string Name => "md_in_html";
+    public override byte[] Name => "md_in_html"u8.ToArray();
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>

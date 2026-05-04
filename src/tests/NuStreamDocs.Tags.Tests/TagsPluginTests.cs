@@ -14,7 +14,7 @@ public class TagsPluginTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new TagsPlugin().Name).IsEqualTo("tags");
+    public async Task NameIsStable() => await Assert.That(new TagsPlugin().Name.AsSpan().SequenceEqual("tags"u8)).IsTrue();
 
     /// <summary>Default options write to <c>tags/index.html</c>.</summary>
     /// <returns>Async test.</returns>
