@@ -53,7 +53,7 @@ internal static class SitemapWriter
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="baseUrl">Site URL (with trailing slash), UTF-8 bytes.</param>
     /// <param name="urlPaths">UTF-8 URL byte paths relative to <paramref name="baseUrl"/>, sorted.</param>
-    public static void WriteSitemap(string outputRoot, byte[] baseUrl, byte[][] urlPaths)
+    public static void WriteSitemap(DirectoryPath outputRoot, byte[] baseUrl, byte[][] urlPaths)
     {
         var sink = new ArrayBufferWriter<byte>(8 * 1024);
         sink.Write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"u8);
@@ -74,7 +74,7 @@ internal static class SitemapWriter
     /// <summary>Emits <c>robots.txt</c> with an <c>Allow: *</c> rule and a sitemap pointer.</summary>
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="baseUrl">Site URL (with trailing slash), UTF-8 bytes.</param>
-    public static void WriteRobots(string outputRoot, byte[] baseUrl)
+    public static void WriteRobots(DirectoryPath outputRoot, byte[] baseUrl)
     {
         var sink = new ArrayBufferWriter<byte>(256);
         sink.Write("User-agent: *\nAllow: /\n\nSitemap: "u8);

@@ -62,9 +62,9 @@ public static class VersionsManifest
     /// <summary>Writes the manifest at <paramref name="parentDir"/>/<see cref="FileName"/>.</summary>
     /// <param name="parentDir">Parent site directory.</param>
     /// <param name="entries">Entries to persist.</param>
-    public static void Write(string parentDir, VersionEntry[] entries)
+    public static void Write(DirectoryPath parentDir, VersionEntry[] entries)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(parentDir);
+        ArgumentException.ThrowIfNullOrWhiteSpace(parentDir.Value);
         ArgumentNullException.ThrowIfNull(entries);
         Directory.CreateDirectory(parentDir);
 

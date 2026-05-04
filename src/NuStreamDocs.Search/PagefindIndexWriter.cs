@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search;
 
@@ -24,9 +25,9 @@ public static class PagefindIndexWriter
     /// <summary>Writes <paramref name="documents"/> as a Pagefind manifest + per-record files.</summary>
     /// <param name="searchRoot">Absolute path to the search subdirectory.</param>
     /// <param name="documents">Document corpus.</param>
-    public static void Write(string searchRoot, SearchDocument[] documents)
+    public static void Write(DirectoryPath searchRoot, SearchDocument[] documents)
     {
-        ArgumentException.ThrowIfNullOrEmpty(searchRoot);
+        ArgumentException.ThrowIfNullOrEmpty(searchRoot.Value);
         ArgumentNullException.ThrowIfNull(documents);
 
         var recordsDir = Path.Combine(searchRoot, "pagefind-records");

@@ -56,7 +56,7 @@ internal static class TagsIndexWriter
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="options">Plugin options controlling the output layout.</param>
     /// <param name="entries">Per-page tag occurrences collected during the build.</param>
-    public static void Write(string outputRoot, in TagsOptions options, TagEntry[] entries)
+    public static void Write(DirectoryPath outputRoot, in TagsOptions options, TagEntry[] entries)
     {
         if (entries.Length is 0)
         {
