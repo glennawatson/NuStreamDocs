@@ -43,6 +43,36 @@ public readonly record struct UrlPath(string Value)
     /// <returns>The underlying URL string.</returns>
     public static string ToStringValue(UrlPath url) => url;
 
+    /// <summary>Returns the underlying URL as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
+    /// <returns>The URL span; empty when the wrapper is default.</returns>
+    public ReadOnlySpan<char> AsSpan() => Value.AsSpan();
+
+    /// <summary>Returns true when this URL ends with <paramref name="value"/> ordinally.</summary>
+    /// <param name="value">Suffix to test for.</param>
+    /// <returns>True when the URL ends with <paramref name="value"/>.</returns>
+    public bool EndsWith(ReadOnlySpan<char> value) =>
+        AsSpan().EndsWith(value, StringComparison.Ordinal);
+
+    /// <summary>Returns true when this URL ends with <paramref name="value"/> using the supplied comparison.</summary>
+    /// <param name="value">Suffix to test for.</param>
+    /// <param name="comparison">Comparison kind.</param>
+    /// <returns>True when the URL ends with <paramref name="value"/>.</returns>
+    public bool EndsWith(ReadOnlySpan<char> value, StringComparison comparison) =>
+        AsSpan().EndsWith(value, comparison);
+
+    /// <summary>Returns true when this URL starts with <paramref name="value"/> ordinally.</summary>
+    /// <param name="value">Prefix to test for.</param>
+    /// <returns>True when the URL starts with <paramref name="value"/>.</returns>
+    public bool StartsWith(ReadOnlySpan<char> value) =>
+        AsSpan().StartsWith(value, StringComparison.Ordinal);
+
+    /// <summary>Returns true when this URL starts with <paramref name="value"/> using the supplied comparison.</summary>
+    /// <param name="value">Prefix to test for.</param>
+    /// <param name="comparison">Comparison kind.</param>
+    /// <returns>True when the URL starts with <paramref name="value"/>.</returns>
+    public bool StartsWith(ReadOnlySpan<char> value, StringComparison comparison) =>
+        AsSpan().StartsWith(value, comparison);
+
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;
 }

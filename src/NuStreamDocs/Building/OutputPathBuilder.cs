@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Building;
 
 /// <summary>Maps a source-relative <c>.md</c> path to an absolute output path under the build's output root.</summary>
@@ -33,17 +35,19 @@ internal static class OutputPathBuilder
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    public static string ForFlatUrls(string outputRoot, string relativePath)
+    public static FilePath ForFlatUrls(DirectoryPath outputRoot, FilePath relativePath)
     {
-        var relSpan = relativePath.AsSpan();
+        var rootStr = outputRoot.Value ?? string.Empty;
+        var relStr = relativePath.Value ?? string.Empty;
+        var relSpan = relStr.AsSpan();
         var endsWithMd = relSpan.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase);
         var keepLength = endsWithMd ? relSpan.Length - MarkdownExtensionLength : relSpan.Length;
-        var totalLength = outputRoot.Length + 1 + keepLength + (endsWithMd ? HtmlExtensionLength : 0);
+        var totalLength = rootStr.Length + 1 + keepLength + (endsWithMd ? HtmlExtensionLength : 0);
         var separator = Path.DirectorySeparatorChar;
 
         return string.Create(
             totalLength,
-            (outputRoot, relativePath, keepLength, endsWithMd, separator),
+            (rootStr, relStr, keepLength, endsWithMd, separator),
             static (span, state) => WriteOutputPath(span, state));
     }
 
@@ -51,9 +55,11 @@ internal static class OutputPathBuilder
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    public static string ForDirectoryUrls(string outputRoot, string relativePath)
+    public static FilePath ForDirectoryUrls(DirectoryPath outputRoot, FilePath relativePath)
     {
-        var relSpan = relativePath.AsSpan();
+        var rootStr = outputRoot.Value ?? string.Empty;
+        var relStr = relativePath.Value ?? string.Empty;
+        var relSpan = relStr.AsSpan();
         if (!relSpan.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase))
         {
             return ForFlatUrls(outputRoot, relativePath);
@@ -68,11 +74,11 @@ internal static class OutputPathBuilder
         }
 
         var stemLength = stem.Length;
-        var totalLength = outputRoot.Length + 1 + stemLength + IndexHtmlSuffixLength;
+        var totalLength = rootStr.Length + 1 + stemLength + IndexHtmlSuffixLength;
         var separator = Path.DirectorySeparatorChar;
         return string.Create(
             totalLength,
-            (outputRoot, relativePath, stemLength, separator),
+            (rootStr, relStr, stemLength, separator),
             static (span, state) => WriteDirectoryUrlPath(span, state));
     }
 

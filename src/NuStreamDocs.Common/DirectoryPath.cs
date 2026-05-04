@@ -111,10 +111,95 @@ public readonly record struct DirectoryPath(string Value)
     }
 
     /// <summary>
-    /// Determines if the file exists or not.
+    /// Determines if the directory exists or not.
     /// </summary>
-    /// <returns>True if the file exists; false otherwise.</returns>
+    /// <returns>True if the directory exists; false otherwise.</returns>
     public bool Exists() => Directory.Exists(Value);
+
+    /// <summary>Returns the underlying path as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
+    /// <returns>The path span; empty when the wrapper is default.</returns>
+    public ReadOnlySpan<char> AsSpan() => Value.AsSpan();
+
+    /// <summary>Creates this directory and any missing intermediate directories.</summary>
+    /// <returns>This path, for fluent chaining.</returns>
+    public DirectoryPath Create()
+    {
+        if (!IsEmpty)
+        {
+            Directory.CreateDirectory(Value);
+        }
+
+        return this;
+    }
+
+    /// <summary>Deletes the directory (must be empty).</summary>
+    public void Delete() => Directory.Delete(Value);
+
+    /// <summary>Deletes the directory and, when <paramref name="recursive"/> is true, everything inside.</summary>
+    /// <param name="recursive">When true, deletes the entire subtree.</param>
+    public void DeleteRecursive(bool recursive) => Directory.Delete(Value, recursive);
+
+    /// <summary>Enumerates files at the top level of this directory.</summary>
+    /// <returns>Matching file paths.</returns>
+    public IEnumerable<FilePath> EnumerateFiles() => EnumerateFiles("*", SearchOption.TopDirectoryOnly);
+
+    /// <summary>Enumerates files at the top level matching <paramref name="searchPattern"/>.</summary>
+    /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
+    /// <returns>Matching file paths.</returns>
+    public IEnumerable<FilePath> EnumerateFiles(string searchPattern) => EnumerateFiles(searchPattern, SearchOption.TopDirectoryOnly);
+
+    /// <summary>Enumerates files inside this directory matching <paramref name="searchPattern"/>.</summary>
+    /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
+    /// <param name="searchOption">Top-level vs. recursive scan.</param>
+    /// <returns>Matching file paths.</returns>
+    public IEnumerable<FilePath> EnumerateFiles(string searchPattern, SearchOption searchOption)
+    {
+        if (IsEmpty)
+        {
+            return [];
+        }
+
+        return Project(Directory.EnumerateFiles(Value, searchPattern, searchOption));
+
+        static IEnumerable<FilePath> Project(IEnumerable<string> source)
+        {
+            foreach (var entry in source)
+            {
+                yield return new FilePath(entry);
+            }
+        }
+    }
+
+    /// <summary>Enumerates direct subdirectories.</summary>
+    /// <returns>Matching directory paths.</returns>
+    public IEnumerable<DirectoryPath> EnumerateDirectories() => EnumerateDirectories("*", SearchOption.TopDirectoryOnly);
+
+    /// <summary>Enumerates direct subdirectories matching <paramref name="searchPattern"/>.</summary>
+    /// <param name="searchPattern">Glob pattern.</param>
+    /// <returns>Matching directory paths.</returns>
+    public IEnumerable<DirectoryPath> EnumerateDirectories(string searchPattern) => EnumerateDirectories(searchPattern, SearchOption.TopDirectoryOnly);
+
+    /// <summary>Enumerates subdirectories matching <paramref name="searchPattern"/>.</summary>
+    /// <param name="searchPattern">Glob pattern.</param>
+    /// <param name="searchOption">Top-level vs. recursive scan.</param>
+    /// <returns>Matching directory paths.</returns>
+    public IEnumerable<DirectoryPath> EnumerateDirectories(string searchPattern, SearchOption searchOption)
+    {
+        if (IsEmpty)
+        {
+            return [];
+        }
+
+        return Project(Directory.EnumerateDirectories(Value, searchPattern, searchOption));
+
+        static IEnumerable<DirectoryPath> Project(IEnumerable<string> source)
+        {
+            foreach (var entry in source)
+            {
+                yield return new DirectoryPath(entry);
+            }
+        }
+    }
 
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;

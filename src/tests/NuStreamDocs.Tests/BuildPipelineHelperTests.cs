@@ -16,7 +16,7 @@ public class BuildPipelineHelperTests
     public async Task NonMarkdownPathPassThrough()
     {
         var path = OutputPathBuilder.ForDirectoryUrls("/out", "asset.css");
-        await Assert.That(path).EndsWith("asset.css");
+        await Assert.That(path.Value).EndsWith("asset.css");
     }
 
     /// <summary>index.md keeps a flat output path.</summary>
@@ -25,7 +25,7 @@ public class BuildPipelineHelperTests
     public async Task IndexMdStaysFlat()
     {
         var path = OutputPathBuilder.ForDirectoryUrls("/out", "guide/index.md");
-        await Assert.That(path).EndsWith("index.html");
+        await Assert.That(path.Value).EndsWith("index.html");
     }
 
     /// <summary>Non-index .md becomes "&lt;stem&gt;/index.html".</summary>
@@ -34,7 +34,7 @@ public class BuildPipelineHelperTests
     public async Task NonIndexBecomesDirectoryUrl()
     {
         var path = OutputPathBuilder.ForDirectoryUrls("/out", "guide/intro.md").Replace('\\', '/');
-        await Assert.That(path).EndsWith("guide/intro/index.html");
+        await Assert.That(path.Value).EndsWith("guide/intro/index.html");
     }
 
     /// <summary>Flat-URL form swaps .md to .html.</summary>
@@ -43,7 +43,7 @@ public class BuildPipelineHelperTests
     public async Task FlatUrlSwapsExtension()
     {
         var path = OutputPathBuilder.ForFlatUrls("/out", "guide/intro.md").Replace('\\', '/');
-        await Assert.That(path).EndsWith("guide/intro.html");
+        await Assert.That(path.Value).EndsWith("guide/intro.html");
     }
 
     /// <summary>EmbeddedResourceReader.Read throws when the resource name does not exist on the assembly.</summary>

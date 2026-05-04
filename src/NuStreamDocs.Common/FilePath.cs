@@ -69,6 +69,30 @@ public readonly record struct FilePath(string Value)
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;
 
+    /// <summary>Returns the underlying path as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
+    /// <returns>The path span; empty when the wrapper is default.</returns>
+    public ReadOnlySpan<char> AsSpan() => Value.AsSpan();
+
+    /// <summary>Returns true when this path ends with <paramref name="value"/> ordinally.</summary>
+    /// <param name="value">Suffix to test for.</param>
+    /// <returns>True when the path ends with <paramref name="value"/>.</returns>
+    public bool EndsWith(ReadOnlySpan<char> value) =>
+        AsSpan().EndsWith(value, StringComparison.Ordinal);
+
+    /// <summary>Returns true when this path ends with <paramref name="value"/> using the supplied comparison.</summary>
+    /// <param name="value">Suffix to test for.</param>
+    /// <param name="comparison">Comparison kind.</param>
+    /// <returns>True when the path ends with <paramref name="value"/>.</returns>
+    public bool EndsWith(ReadOnlySpan<char> value, StringComparison comparison) =>
+        AsSpan().EndsWith(value, comparison);
+
+    /// <summary>Returns a copy with every <paramref name="oldChar"/> replaced by <paramref name="newChar"/> — typically used to normalize <c>\</c> to <c>/</c>.</summary>
+    /// <param name="oldChar">Character to find.</param>
+    /// <param name="newChar">Character to substitute.</param>
+    /// <returns>The rewritten path.</returns>
+    public FilePath Replace(char oldChar, char newChar) =>
+        IsEmpty ? this : new(Value.Replace(oldChar, newChar));
+
     /// <summary>Returns a copy with the extension swapped to <paramref name="extension"/>.</summary>
     /// <param name="extension">New extension; should include the leading dot.</param>
     /// <returns>The renamed file path.</returns>
@@ -81,4 +105,46 @@ public readonly record struct FilePath(string Value)
     /// <summary>Determines whether this file currently exists on disk.</summary>
     /// <returns>True when the file exists; otherwise false.</returns>
     public bool Exists() => File.Exists(Value);
+
+    /// <summary>Reads the file's contents as raw UTF-8 bytes.</summary>
+    /// <returns>The file bytes.</returns>
+    public byte[] ReadAllBytes() => File.ReadAllBytes(Value);
+
+    /// <summary>Asynchronously reads the file's contents as raw UTF-8 bytes.</summary>
+    /// <returns>The file bytes.</returns>
+    public Task<byte[]> ReadAllBytesAsync() => File.ReadAllBytesAsync(Value);
+
+    /// <summary>Asynchronously reads the file's contents as raw UTF-8 bytes.</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The file bytes.</returns>
+    public Task<byte[]> ReadAllBytesAsync(CancellationToken cancellationToken) =>
+        File.ReadAllBytesAsync(Value, cancellationToken);
+
+    /// <summary>Writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
+    /// <param name="bytes">Source bytes.</param>
+    public void WriteAllBytes(ReadOnlySpan<byte> bytes) => File.WriteAllBytes(Value, bytes);
+
+    /// <summary>Asynchronously writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
+    /// <param name="bytes">Source bytes.</param>
+    /// <returns>A task that completes when the write finishes.</returns>
+    public Task WriteAllBytesAsync(ReadOnlyMemory<byte> bytes) =>
+        File.WriteAllBytesAsync(Value, bytes);
+
+    /// <summary>Asynchronously writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
+    /// <param name="bytes">Source bytes.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when the write finishes.</returns>
+    public Task WriteAllBytesAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+        File.WriteAllBytesAsync(Value, bytes, cancellationToken);
+
+    /// <summary>Opens the file for reading.</summary>
+    /// <returns>A read-only stream over the file contents.</returns>
+    public FileStream OpenRead() => File.OpenRead(Value);
+
+    /// <summary>Creates or truncates the file and opens it for writing.</summary>
+    /// <returns>A writable stream.</returns>
+    public FileStream Create() => File.Create(Value);
+
+    /// <summary>Deletes the file if it exists.</summary>
+    public void Delete() => File.Delete(Value);
 }
