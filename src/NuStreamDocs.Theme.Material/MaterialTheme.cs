@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
+using NuStreamDocs.Common;
 using NuStreamDocs.Templating;
 using NuStreamDocs.Theme.Common;
 
@@ -31,7 +32,7 @@ public sealed class MaterialTheme : IThemePackage
     ];
 
     /// <summary>Static assets as an indexable snapshot for write-out loops.</summary>
-    private readonly (string RelativePath, byte[] Bytes)[] _staticAssetEntries;
+    private readonly (FilePath RelativePath, byte[] Bytes)[] _staticAssetEntries;
 
     /// <summary>Initializes a new instance of the <see cref="MaterialTheme"/> class.</summary>
     /// <param name="page">Compiled top-level page template.</param>
@@ -60,7 +61,7 @@ public sealed class MaterialTheme : IThemePackage
     public ReadOnlyDictionary<string, byte[]> StaticAssets { get; }
 
     /// <inheritdoc/>
-    (string RelativePath, byte[] Bytes)[] IThemePackage.StaticAssetEntries => _staticAssetEntries;
+    (FilePath RelativePath, byte[] Bytes)[] IThemePackage.StaticAssetEntries => _staticAssetEntries;
 
     /// <summary>Loads and compiles the Material theme from its embedded resources.</summary>
     /// <returns>A ready-to-use <see cref="MaterialTheme"/>.</returns>

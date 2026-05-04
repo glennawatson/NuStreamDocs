@@ -73,11 +73,11 @@ public static class ThemeModelLoader
     /// <summary>Builds an indexable static-asset snapshot from <paramref name="staticAssets"/>.</summary>
     /// <param name="staticAssets">Plain lookup keyed by relative path.</param>
     /// <returns>Named tuple array for write-out loops.</returns>
-    public static (string RelativePath, byte[] Bytes)[] BuildStaticAssetEntries(Dictionary<string, byte[]> staticAssets)
+    public static (FilePath RelativePath, byte[] Bytes)[] BuildStaticAssetEntries(Dictionary<string, byte[]> staticAssets)
     {
         ArgumentNullException.ThrowIfNull(staticAssets);
 
-        var entries = new (string RelativePath, byte[] Bytes)[staticAssets.Count];
+        var entries = new (FilePath RelativePath, byte[] Bytes)[staticAssets.Count];
         var index = 0;
         foreach (var entry in staticAssets)
         {

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Templating;
 
 namespace NuStreamDocs.Theme.Common;
@@ -19,5 +20,5 @@ public interface IThemePackage
     Dictionary<byte[], Template> Partials { get; }
 
     /// <summary>Gets the static assets as an indexable snapshot for write-out loops.</summary>
-    (string RelativePath, byte[] Bytes)[] StaticAssetEntries { get; }
+    (FilePath RelativePath, byte[] Bytes)[] StaticAssetEntries { get; }
 }
