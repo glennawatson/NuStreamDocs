@@ -23,7 +23,7 @@ public class EmbeddedAssetCoverageTests
     public async Task VendoredPathUsesMsbuildResourceShape()
     {
         var name = EmbeddedAsset.ToResourceName("assets/vendor/@lit/reactive-element/css-tag.js");
-        await Assert.That(name).IsEqualTo("NuStreamDocs.Theme.Material3.Templates.assets.vendor._lit.reactive_element.css-tag.js");
+        await Assert.That(name.AsSpan().SequenceEqual("NuStreamDocs.Theme.Material3.Templates.assets.vendor._lit.reactive_element.css-tag.js"u8)).IsTrue();
     }
 
     /// <summary>Vendored official runtime assets can be read from the embedded-resource table.</summary>
