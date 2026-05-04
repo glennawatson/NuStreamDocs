@@ -108,13 +108,14 @@ a:hover { text-decoration: underline; }
 .md-container { min-height: 100vh; display: flex; flex-direction: column; }
 .md-main { flex: 1; padding: 24px 0; }
 .md-grid {
-  /* No max-width — the grid fills the viewport. With sidebars fixed at 16rem / 14rem and the
-     content column on `1fr`, this puts the bulk of any extra screen real-estate into the article
-     instead of leaving large empty rails on wide monitors. The content article has its own
-     reading-width cap below (`.md-content__inner max-width`) so paragraphs don't run unreadably
-     long on very wide displays. */
+  /* Cap the grid so the header bar, tab strip, and footer center on wide monitors with a
+     comfortable amount of deadspace at the rails. Wide enough that the article column inside the
+     grid still gets meaningful space — at 92rem with sidebars at 16rem + 14rem = 30rem, the
+     content column ends up around 60rem (~960px), which is the upper end of comfortable line
+     length without running paragraphs ridiculously wide on a 4K monitor. */
+  max-width: 92rem;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 16px;
   width: 100%;
 }
 .md-main__inner {
@@ -210,6 +211,10 @@ a:hover { text-decoration: underline; }
   padding: 0;
   display: flex;
   align-items: center;
+  /* Center the tabs row within the page so "Home / API / Docs / …" sits in the middle of the
+     bar rather than hugging the left rail. Falls back to `flex-start` when the tabs would
+     overflow horizontally so the first tab stays reachable on narrow viewports. */
+  justify-content: center;
   gap: 0.25rem;
   overflow-x: auto;
 }
@@ -370,14 +375,7 @@ a:hover { text-decoration: underline; }
 }
 
 /* ----- Content typography. ----- */
-.md-content__inner {
-  min-width: 0;
-  /* Reading-width cap so paragraph prose stays comfortable even when the content column itself
-     is many hundreds of pixels wide on big monitors. Tables and code blocks aren't constrained
-     by their parent — they're allowed to overflow this width via `.md-typeset` rules below. */
-  max-width: 80rem;
-  margin: 0 auto;
-}
+.md-content__inner { min-width: 0; }
 .md-typeset h1 { font: var(--md-sys-typescale-display-large); margin: 0 0 24px; letter-spacing: -0.02em; }
 .md-typeset h2 { font: var(--md-sys-typescale-headline-medium); margin: 32px 0 12px; }
 .md-typeset h3 { font: var(--md-sys-typescale-title-large); margin: 24px 0 8px; }

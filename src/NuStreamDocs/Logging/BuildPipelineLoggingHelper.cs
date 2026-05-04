@@ -66,6 +66,12 @@ internal static partial class BuildPipelineLoggingHelper
     [LoggerMessage(Level = LogLevel.Information, Message = "Render complete: {PageCount} page(s) in {ElapsedSeconds:F3}s")]
     public static partial void LogRenderComplete(ILogger logger, int pageCount, double elapsedSeconds);
 
+    /// <summary>Logs the docs static-asset copy step result.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="assetCount">Number of files copied from the input docs tree to the output site tree.</param>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Copied {AssetCount} static asset(s) from docs/ to site/")]
+    public static partial void LogAssetsCopied(ILogger logger, int assetCount);
+
     /// <summary>Logs entry into the finalize phase before any plugin's <c>OnFinalizeAsync</c> fires.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginCount">Number of plugins to finalize.</param>

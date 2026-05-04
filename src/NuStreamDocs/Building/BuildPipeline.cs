@@ -154,6 +154,12 @@ public static class BuildPipeline
 
         BuildPipelineLoggingHelper.LogRenderComplete(log, processed, (stopwatch.ElapsedMilliseconds - renderStarted) / MillisecondsPerSecond);
 
+        // Copy author-supplied static content from docs/ to site/ — images, fonts, vendor JS,
+        // anything the page templates or theme options reference by docs-relative path. Runs
+        // before finalize so plugins like sitemap/search/privacy see the assets in place.
+        var assetsCopied = DocsAssetCopier.Copy(inputRoot, outputRoot, filter);
+        BuildPipelineLoggingHelper.LogAssetsCopied(log, assetsCopied);
+
         previous.Replace(fresh);
         await previous.SaveAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
 
