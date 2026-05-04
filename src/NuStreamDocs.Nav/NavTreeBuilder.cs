@@ -651,6 +651,33 @@ internal static class NavTreeBuilder
         var children = new NavNode[total];
         Array.Copy(pages, 0, children, 0, pageCount);
         Array.Copy(sections, 0, children, pageCount, sectionCount);
+
+        // Re-sort the merged set when any child carries an explicit Order so
+        // pages and sections interleave by their authored position. The
+        // historical pages-first-sections-last layout is preserved when no
+        // child has an Order — sites without the new frontmatter render exactly
+        // as before.
+        if (HasExplicitOrder(children))
+        {
+            Array.Sort(children, NavNodeFileNameComparer.Instance);
+        }
+
         return children;
+    }
+
+    /// <summary>Returns true when any node in <paramref name="children"/> carries an explicit Order (i.e. not the unordered <see cref="int.MaxValue"/> sentinel).</summary>
+    /// <param name="children">Child node array.</param>
+    /// <returns>True when at least one child has Order &lt; <see cref="int.MaxValue"/>.</returns>
+    private static bool HasExplicitOrder(NavNode[] children)
+    {
+        for (var i = 0; i < children.Length; i++)
+        {
+            if (children[i].Order != int.MaxValue)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

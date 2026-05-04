@@ -226,6 +226,53 @@ public class NavTreeBuilderParameterizedTests
         await Assert.That(sectionOrder).IsEqualTo("bravo,alpha,charlie");
     }
 
+    /// <summary>Explicit <c>Order:</c> sorts pages and sections together when any child has one — an Order: 1 section comes before an Order: 6 leaf page.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ExplicitOrderInterleavesPagesAndSections()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("Slack.md", "---\nOrder: 4\n---\n# Slack\n");
+        await temp.WriteAsync("Book.md", "---\nOrder: 6\n---\n# Book\n");
+        await temp.WriteAsync("license.md", "# License\n");
+        await temp.WriteAsync("docs/index.md", "---\nOrder: 1\n---\n# Docs\n");
+        await temp.WriteAsync("docs/page.md", "# P\n");
+        await temp.WriteAsync("api/index.md", "---\nOrder: 2\n---\n# API\n");
+        await temp.WriteAsync("api/page.md", "# P\n");
+        await temp.WriteAsync("contribute/index.md", "---\nOrder: 3\n---\n# C\n");
+        await temp.WriteAsync("contribute/page.md", "# P\n");
+        await temp.WriteAsync("vs/index.md", "---\nOrder: 5\n---\n# V\n");
+        await temp.WriteAsync("vs/page.md", "# P\n");
+        await temp.WriteAsync("Announcements/post.md", "# Post\n");
+        await temp.WriteAsync("articles/post.md", "# Post\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
+
+        var ordered = string.Join(",", root.Children.Select(c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        await Assert.That(ordered).IsEqualTo("docs,api,contribute,Slack,vs,Book,Announcements,articles,license");
+    }
+
+    /// <summary>Without any explicit <c>Order:</c>, the historical pages-first-sections-last layout is preserved (no behaviour change for unannotated trees).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnannotatedTreesKeepPagesFirstThenSections()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("alpha.md", "# A\n");
+        await temp.WriteAsync("zulu.md", "# Z\n");
+        await temp.WriteAsync("guide/index.md", "# G\n");
+        await temp.WriteAsync("guide/p.md", "# P\n");
+        await temp.WriteAsync("api/index.md", "# A\n");
+        await temp.WriteAsync("api/p.md", "# P\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
+
+        var ordered = string.Join(",", root.Children.Select(c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+
+        // Pages alpha-sorted first, then sections alpha-sorted — the existing default.
+        await Assert.That(ordered).IsEqualTo("alpha,zulu,api,guide");
+    }
+
     /// <summary>Same explicit <c>Order:</c> on multiple pages falls back to alpha.</summary>
     /// <returns>Async test.</returns>
     [Test]
