@@ -61,7 +61,7 @@ public sealed class RedirectsPlugin : IDocPlugin
 
     /// <summary>Initializes a new instance of the <see cref="RedirectsPlugin"/> class with the given <paramref name="entries"/> and default options.</summary>
     /// <param name="entries">Tuples of <c>(fromPath, toUrl)</c>.</param>
-    public RedirectsPlugin(params (string From, string To)[] entries)
+    public RedirectsPlugin(params (UrlPath From, UrlPath To)[] entries)
         : this(RedirectsOptions.Default, entries)
     {
     }
@@ -69,7 +69,7 @@ public sealed class RedirectsPlugin : IDocPlugin
     /// <summary>Initializes a new instance of the <see cref="RedirectsPlugin"/> class with explicit options and static entries.</summary>
     /// <param name="options">Plugin options.</param>
     /// <param name="entries">Static tuples of <c>(fromPath, toUrl)</c> merged with config-file and alias entries at finalize.</param>
-    public RedirectsPlugin(in RedirectsOptions options, (string From, string To)[] entries)
+    public RedirectsPlugin(in RedirectsOptions options, (UrlPath From, UrlPath To)[] entries)
     {
         ArgumentNullException.ThrowIfNull(entries);
         _options = options;
@@ -78,7 +78,7 @@ public sealed class RedirectsPlugin : IDocPlugin
         for (var i = 0; i < entries.Length; i++)
         {
             var (from, to) = entries[i];
-            if (!string.IsNullOrWhiteSpace(from) && !string.IsNullOrWhiteSpace(to))
+            if (!string.IsNullOrWhiteSpace(from.Value) && !string.IsNullOrWhiteSpace(to.Value))
             {
                 _seed[Utf8Encoder.Encode(from)] = Utf8Encoder.Encode(to);
             }

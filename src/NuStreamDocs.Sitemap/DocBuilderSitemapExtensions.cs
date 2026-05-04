@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Sitemap;
 
@@ -31,7 +32,7 @@ public static class DocBuilderSitemapExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="entries">Tuples of <c>(fromPath, toUrl)</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseRedirects(this DocBuilder builder, params (string From, string To)[] entries)
+    public static DocBuilder UseRedirects(this DocBuilder builder, params (UrlPath From, UrlPath To)[] entries)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(entries);
@@ -43,7 +44,7 @@ public static class DocBuilderSitemapExtensions
     /// <param name="options">Plugin options controlling config-file lookup and frontmatter alias scanning.</param>
     /// <param name="entries">Static tuples of <c>(fromPath, toUrl)</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseRedirects(this DocBuilder builder, in RedirectsOptions options, params (string From, string To)[] entries)
+    public static DocBuilder UseRedirects(this DocBuilder builder, in RedirectsOptions options, params (UrlPath From, UrlPath To)[] entries)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(entries);
