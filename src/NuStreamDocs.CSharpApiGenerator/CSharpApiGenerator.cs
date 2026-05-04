@@ -70,7 +70,7 @@ public static class CSharpApiGenerator
 
         if (options.EmitIndexPage)
         {
-            ApiIndexWriter.Write(outputRoot, options.IndexTitle.AsSpan(), options.IndexIntroduction.AsSpan());
+            ApiIndexWriter.Write(outputRoot, options.IndexTitle.AsSpan(), options.IndexIntroduction.AsSpan(), options.IndexOrder);
         }
 
         return outputRoot;

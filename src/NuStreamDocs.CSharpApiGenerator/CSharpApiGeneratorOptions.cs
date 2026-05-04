@@ -35,13 +35,19 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <param name="EmitIndexPage">When true, writes a top-level <c>index.md</c> landing page at the API output root listing every generated namespace. Defaults to <see langword="true"/>.</param>
 /// <param name="IndexTitle">UTF-8 heading bytes for the generated landing page; falls back to <c>API Reference</c> when null or empty. Use a <c>"..."u8</c> literal at the call site.</param>
 /// <param name="IndexIntroduction">Optional UTF-8 intro paragraph bytes rendered between the heading and the namespace list. Use a <c>"..."u8</c> literal at the call site.</param>
+/// <param name="IndexOrder">
+/// Optional <c>Order:</c> frontmatter integer for the generated landing page so the API entry
+/// sits in a fixed slot in the parent nav (Statiq convention). <see langword="null"/> emits no
+/// <c>Order:</c> block.
+/// </param>
 public sealed record CSharpApiGeneratorOptions(
     CSharpApiGeneratorInput[] Inputs,
     PathSegment OutputMarkdownSubdirectory,
     CSharpApiGeneratorMode Mode,
     bool EmitIndexPage = true,
     byte[]? IndexTitle = null,
-    byte[]? IndexIntroduction = null)
+    byte[]? IndexIntroduction = null,
+    int? IndexOrder = null)
 {
     /// <summary>Gets the default subdirectory name for emit-mode reference pages.</summary>
     public static PathSegment DefaultOutputSubdirectory => new("api");

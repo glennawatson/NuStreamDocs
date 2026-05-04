@@ -92,6 +92,35 @@ public class ApiIndexWriterTests
         await Assert.That(contents).Contains("- [`Foo.Bar`](Foo.Bar/)");
     }
 
+    /// <summary>An <c>IndexOrder</c> value emits a YAML frontmatter block ahead of the heading.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task IndexOrderEmitsFrontmatterBlock()
+    {
+        using var fixture = new TempApiTree();
+        Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo"));
+
+        var written = ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], [], order: 2);
+        await Assert.That(written).IsEqualTo(1);
+
+        var contents = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "index.md"), Encoding.UTF8);
+        await Assert.That(contents).StartsWith("---\nOrder: 2\n---\n\n# API Reference");
+    }
+
+    /// <summary>The legacy three-arg overload writes no frontmatter (back-compat).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task LegacyOverloadEmitsNoFrontmatter()
+    {
+        using var fixture = new TempApiTree();
+        Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo"));
+
+        ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], []);
+        var contents = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "index.md"), Encoding.UTF8);
+        await Assert.That(contents).DoesNotContain("Order:");
+        await Assert.That(contents).StartsWith("# API Reference");
+    }
+
     /// <summary>Disposable temp directory used as the API root for these tests.</summary>
     private sealed class TempApiTree : IDisposable
     {

@@ -41,7 +41,16 @@ internal static class ApiIndexWriter
     /// <param name="title">UTF-8 page title bytes; falls back to <c>API Reference</c> when empty.</param>
     /// <param name="introduction">Optional UTF-8 intro paragraph rendered between the title and the namespace list. Empty for no intro.</param>
     /// <returns>Number of namespace directories written into the index, or zero when <paramref name="apiPath"/> doesn't exist or contains no candidate dirs.</returns>
-    public static int Write(DirectoryPath apiPath, ReadOnlySpan<byte> title, ReadOnlySpan<byte> introduction)
+    public static int Write(DirectoryPath apiPath, ReadOnlySpan<byte> title, ReadOnlySpan<byte> introduction) =>
+        Write(apiPath, title, introduction, order: null);
+
+    /// <summary>Writes <c>{apiPath}/index.md</c> listing every non-infra subdirectory and (optionally) prepending an <c>Order:</c> frontmatter block.</summary>
+    /// <param name="apiPath">Absolute path to the API output root the emitter wrote.</param>
+    /// <param name="title">UTF-8 page title bytes; falls back to <c>API Reference</c> when empty.</param>
+    /// <param name="introduction">Optional UTF-8 intro paragraph rendered between the title and the namespace list.</param>
+    /// <param name="order">Optional <c>Order:</c> integer; emitted as a YAML frontmatter block at the top of the page when set.</param>
+    /// <returns>Number of namespace directories written into the index, or zero when <paramref name="apiPath"/> doesn't exist or contains no candidate dirs.</returns>
+    public static int Write(DirectoryPath apiPath, ReadOnlySpan<byte> title, ReadOnlySpan<byte> introduction, int? order)
     {
         if (!apiPath.Exists())
         {
@@ -55,6 +64,11 @@ internal static class ApiIndexWriter
         }
 
         var sink = new ArrayBufferWriter<byte>(InitialBufferCapacity);
+        if (order is { } o)
+        {
+            WriteOrderFrontmatter(sink, o);
+        }
+
         WriteTitle(sink, title);
         WriteIntroduction(sink, introduction);
         WriteNamespaceList(sink, namespaces);
@@ -62,6 +76,16 @@ internal static class ApiIndexWriter
         var indexPath = apiPath.File("index.md");
         File.WriteAllBytes(indexPath.Value, sink.WrittenSpan.ToArray());
         return namespaces.Length;
+    }
+
+    /// <summary>Writes a minimal YAML frontmatter block carrying just <c>Order: N</c>.</summary>
+    /// <param name="sink">UTF-8 sink.</param>
+    /// <param name="order">Order integer.</param>
+    private static void WriteOrderFrontmatter(IBufferWriter<byte> sink, int order)
+    {
+        WriteSpan(sink, "---\nOrder: "u8);
+        WriteUtf8(sink, order.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        WriteSpan(sink, "\n---\n\n"u8);
     }
 
     /// <summary>Returns the ordinal-sorted set of subdirectory names under <paramref name="apiPath"/>, skipping the well-known infrastructure dirs.</summary>
