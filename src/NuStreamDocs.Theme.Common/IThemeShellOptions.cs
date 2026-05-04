@@ -44,6 +44,20 @@ public interface IThemeShellOptions
     /// <summary>Gets the UTF-8 href used for the page favicon; empty when no favicon link should be rendered.</summary>
     byte[] Favicon { get; }
 
+    /// <summary>
+    /// Gets the asset-relative path of the default favicon (e.g. <c>/images/favicon.svg</c>);
+    /// empty when the theme ships no default. Concatenated with <see cref="ResolveAssetRoot"/>
+    /// at request time to form the served URL.
+    /// </summary>
+    byte[] DefaultEmbeddedFaviconRelativeUrl => [];
+
+    /// <summary>
+    /// Gets the asset-relative URL of the theme's primary stylesheet — re-used by the
+    /// synthesised 404 page so it picks up the theme's color scheme. Empty when the theme
+    /// has no stylesheet to point at.
+    /// </summary>
+    byte[] PrimaryStylesheetRelativeUrl => [];
+
     /// <summary>Gets a value indicating whether to render a scroll-to-top button.</summary>
     bool EnableScrollToTop { get; }
 

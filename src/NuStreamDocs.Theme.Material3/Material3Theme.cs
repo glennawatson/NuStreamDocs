@@ -21,6 +21,7 @@ public sealed class Material3Theme : IThemePackage
         "assets/stylesheets/material3.css",
         "assets/javascripts/material3.js",
         "assets/javascripts/material-web-init.js",
+        "assets/images/favicon.svg",
         "assets/vendor/@lit/reactive-element/css-tag.js",
         "assets/vendor/@lit/reactive-element/decorators/base.js",
         "assets/vendor/@lit/reactive-element/decorators/custom-element.js",

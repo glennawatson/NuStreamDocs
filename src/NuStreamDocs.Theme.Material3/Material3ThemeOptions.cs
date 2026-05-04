@@ -69,6 +69,13 @@ public readonly record struct Material3ThemeOptions(
     /// <inheritdoc/>
     public bool WriteEmbeddedAssets => AssetSource == Material3AssetSource.Embedded;
 
+    /// <inheritdoc/>
+    /// <remarks>The Material 3 theme bundles a generic <c>favicon.svg</c> under its asset root; consumers can override via <c>WithFavicon(...)</c>.</remarks>
+    public byte[] DefaultEmbeddedFaviconRelativeUrl { get; } = [.. "/images/favicon.svg"u8];
+
+    /// <inheritdoc/>
+    public byte[] PrimaryStylesheetRelativeUrl { get; } = [.. "/stylesheets/material3.css"u8];
+
     /// <summary>Resolves the asset-root URL according to <see cref="AssetSource"/>.</summary>
     /// <returns>The active UTF-8 asset-root prefix.</returns>
     public ReadOnlySpan<byte> ResolveAssetRoot() =>

@@ -138,6 +138,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Per-build canonical-URL prefix; empty when no site URL is configured.</summary>
     private byte[] _canonicalUrlPrefix = [];
 
+    /// <summary>Effective favicon URL bytes — explicit option, then auto-discovered docs convention, then the theme's embedded default.</summary>
+    private byte[] _resolvedFavicon = [];
+
     /// <summary>Site-wide author captured from the configure context; used as the per-page <c>&lt;meta author&gt;</c> fallback when the page has no front-matter <c>author:</c>.</summary>
     private byte[] _siteAuthor = [];
 
@@ -172,6 +175,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         _repoLabel = BuildRepoLabel(_options.RepoUrl);
         _siteAuthor = context.SiteAuthor;
         _useDirectoryUrls = context.UseDirectoryUrls;
+        _resolvedFavicon = ResolveFavicon(context.InputRoot);
 
         return ValueTask.CompletedTask;
     }
@@ -218,7 +222,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [HideNavigationKey] = ShouldHideNavigation(context) ? TruthyBytes : null,
                     [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
                     [GeneratorKey] = GeneratorBytes,
-                    [FaviconKey] = _options.Favicon,
+                    [FaviconKey] = _resolvedFavicon,
                     [AuthorKey] = ResolveAuthor(context, _siteAuthor),
                 },
                 sections: null);
@@ -255,6 +259,41 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         }
 
         StaticAssetComposer.WriteAll(_plugins, root);
+        await EmitDefault404Async(root, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Probes <paramref name="inputRoot"/> for a conventional favicon file when the user hasn't configured one explicitly.</summary>
+    /// <param name="inputRoot">Docs root.</param>
+    /// <returns>Site-rooted UTF-8 URL bytes pointing at the discovered favicon, or an empty array.</returns>
+    /// <remarks>Probes match mkdocs / mkdocs-material conventions in priority order.</remarks>
+    private static byte[] DiscoverFavicon(DirectoryPath inputRoot)
+    {
+        if (inputRoot.IsEmpty)
+        {
+            return [];
+        }
+
+        ReadOnlySpan<string> candidates =
+        [
+            "images/favicons/favicon.ico",
+            "images/favicons/favicon.svg",
+            "images/favicon.ico",
+            "images/favicon.svg",
+            "assets/favicon.ico",
+            "favicon.ico",
+            "favicon.svg",
+        ];
+
+        for (var i = 0; i < candidates.Length; i++)
+        {
+            var probe = Path.Combine(inputRoot.Value, candidates[i]);
+            if (File.Exists(probe))
+            {
+                return Utf8Concat.Concat("/"u8, System.Text.Encoding.UTF8.GetBytes(candidates[i].Replace('\\', '/')));
+            }
+        }
+
+        return [];
     }
 
     /// <summary>Returns the first <see cref="INavNeighboursProvider"/> in <paramref name="plugins"/>, or null when none is registered.</summary>
@@ -702,6 +741,41 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         }
 
         return path;
+    }
+
+    /// <summary>Writes a default <c>404.html</c> at the site root when the user hasn't supplied one.</summary>
+    /// <param name="root">Absolute output root.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Async task.</returns>
+    private ValueTask EmitDefault404Async(DirectoryPath root, CancellationToken cancellationToken)
+    {
+        var stylesheetRel = _options.PrimaryStylesheetRelativeUrl;
+        byte[] stylesheetUrl = stylesheetRel is [_, ..]
+            ? Utf8Concat.Concat(_options.ResolveAssetRoot(), stylesheetRel)
+            : [];
+        return NotFoundPageWriter.WriteIfMissingAsync(root, _options.SiteName ?? [], stylesheetUrl, _resolvedFavicon, cancellationToken);
+    }
+
+    /// <summary>Picks the effective favicon URL: explicit option → docs-tree probe → theme-bundled default → empty.</summary>
+    /// <param name="inputRoot">Docs root passed through to the discovery probe.</param>
+    /// <returns>UTF-8 URL bytes the page template renders into the <c>&lt;link rel="icon"&gt;</c> attribute.</returns>
+    private byte[] ResolveFavicon(DirectoryPath inputRoot)
+    {
+        if (_options.Favicon is [_, ..])
+        {
+            return _options.Favicon;
+        }
+
+        var discovered = DiscoverFavicon(inputRoot);
+        if (discovered is [_, ..])
+        {
+            return discovered;
+        }
+
+        var defaultRelative = _options.DefaultEmbeddedFaviconRelativeUrl;
+        return defaultRelative is [_, ..] && _options.WriteEmbeddedAssets
+            ? Utf8Concat.Concat(_options.ResolveAssetRoot(), defaultRelative)
+            : [];
     }
 
     /// <summary>Returns true when the rendered page should hide the primary sidebar.</summary>

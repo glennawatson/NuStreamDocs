@@ -56,6 +56,23 @@ public static class Material3ThemeOptionsExtensions
     public static Material3ThemeOptions WithLogo(this Material3ThemeOptions options, ReadOnlySpan<byte> value) =>
         options with { Logo = value.ToArray() };
 
+    /// <summary>Replaces the favicon href with the supplied UTF-8 bytes.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">UTF-8 favicon href bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions WithFavicon(this Material3ThemeOptions options, byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return options with { Favicon = value };
+    }
+
+    /// <summary>Replaces the favicon href with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">UTF-8 favicon href bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions WithFavicon(this Material3ThemeOptions options, ReadOnlySpan<byte> value) =>
+        options with { Favicon = value.ToArray() };
+
     /// <summary>Replaces the absolute site URL (<c>site_url</c>) with <paramref name="value"/>.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="value">Absolute site URL (e.g. <c>https://reactiveui.net</c>).</param>

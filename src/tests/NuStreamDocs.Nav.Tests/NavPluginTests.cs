@@ -55,4 +55,52 @@ public class NavPluginTests
 
         await Assert.That(builder).IsNotNull();
     }
+
+    /// <summary>A top-level leaf with no descendants triggers <see cref="NavPlugin.ShouldHidePrimarySidebar(NuStreamDocs.Common.FilePath)"/> so the theme drawer can stay collapsed.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ShouldHidePrimarySidebarTrueForTopLevelLeaf()
+    {
+        using var fixture = TempDocsTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "license.md"), "# License");
+        Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
+
+        var plugin = new NavPlugin();
+        await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
+
+        await Assert.That(plugin.ShouldHidePrimarySidebar("license.md")).IsTrue();
+    }
+
+    /// <summary>The root <c>index.md</c> page must not be flagged for sidebar suppression — the home page wants the full nav.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ShouldHidePrimarySidebarFalseForRootIndex()
+    {
+        using var fixture = TempDocsTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
+
+        var plugin = new NavPlugin();
+        await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
+
+        await Assert.That(plugin.ShouldHidePrimarySidebar("index.md")).IsFalse();
+    }
+
+    /// <summary>Pages nested inside a section must keep the sidebar visible — they have peers/parents to render.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ShouldHidePrimarySidebarFalseForNestedLeaf()
+    {
+        using var fixture = TempDocsTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
+        Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "advanced.md"), "# Advanced");
+
+        var plugin = new NavPlugin();
+        await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
+
+        await Assert.That(plugin.ShouldHidePrimarySidebar("guide/intro.md")).IsFalse();
+    }
 }

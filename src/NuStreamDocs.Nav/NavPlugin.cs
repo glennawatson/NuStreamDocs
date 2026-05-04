@@ -245,8 +245,10 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
             return false;
         }
 
-        // Resolve the active node by URL. Bytes match how _urlIndex is keyed.
-        var encoded = ServedUrlBytes.FromPath(relativePath, _useDirectoryUrls, leadingSlash: true);
+        // Resolve the active node by URL. Bytes match how _urlIndex is keyed —
+        // NavRenderer.BuildUrlIndex stores NavNode.RelativeUrlBytes which is built
+        // via ServedUrlBytes.FromPath without a leading slash.
+        var encoded = ServedUrlBytes.FromPath(relativePath, _useDirectoryUrls);
         if (!_urlIndex.TryGetValue(encoded, out var active))
         {
             return false;
