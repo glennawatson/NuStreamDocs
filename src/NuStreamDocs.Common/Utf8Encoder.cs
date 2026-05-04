@@ -78,9 +78,34 @@ public static class Utf8Encoder
         return result;
     }
 
-    /// <summary>Extension form of <see cref="EncodeArray"/>; lets call sites read <c>values.EncodeUtf8Array()</c> at the natural string-boundary.</summary>
+    /// <summary>Encodes every entry of <paramref name="values"/> into UTF-8 byte arrays.</summary>
+    /// <param name="values">Source compatibility-string entries; null / empty input yields an empty result.</param>
+    /// <returns>Per-entry UTF-8 bytes; default / null-backed entries map to empty arrays.</returns>
+    public static byte[][] EncodeArray(ApiCompatString[]? values)
+    {
+        if (values is null or [])
+        {
+            return [];
+        }
+
+        var result = new byte[values.Length][];
+        for (var i = 0; i < values.Length; i++)
+        {
+            result[i] = Encode(values[i].Value);
+        }
+
+        return result;
+    }
+
+    /// <summary>Extension form of <see cref="EncodeArray(string[])"/>; lets call sites read <c>values.EncodeUtf8Array()</c> at the natural string-boundary.</summary>
     /// <param name="values">Source strings.</param>
     /// <returns>Per-entry UTF-8 bytes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[][] EncodeUtf8Array(this string[]? values) => EncodeArray(values);
+
+    /// <summary>Extension form of <see cref="EncodeArray(ApiCompatString[])"/>; lets call sites read <c>values.EncodeUtf8Array()</c> at the natural compat-string boundary.</summary>
+    /// <param name="values">Source compatibility-string entries.</param>
+    /// <returns>Per-entry UTF-8 bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte[][] EncodeUtf8Array(this ApiCompatString[]? values) => EncodeArray(values);
 }

@@ -18,7 +18,7 @@ public static class SearchOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="keys">Frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static SearchOptions WithSearchableFrontmatterKeys(this SearchOptions options, params string[] keys) =>
+    public static SearchOptions WithSearchableFrontmatterKeys(this SearchOptions options, params ApiCompatString[] keys) =>
         options with { SearchableFrontmatterKeys = keys.EncodeUtf8Array() };
 
     /// <summary>Replaces the searchable-frontmatter-key list with the supplied UTF-8 key bytes.</summary>
@@ -35,7 +35,7 @@ public static class SearchOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="keys">Additional frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static SearchOptions AddSearchableFrontmatterKeys(this SearchOptions options, params string[] keys)
+    public static SearchOptions AddSearchableFrontmatterKeys(this SearchOptions options, params ApiCompatString[] keys)
     {
         ArgumentNullException.ThrowIfNull(keys);
         return keys.Length is 0
@@ -72,7 +72,7 @@ public static class SearchOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="stopwords">Stopword strings.</param>
     /// <returns>The updated options.</returns>
-    public static SearchOptions WithExtraStopwords(this SearchOptions options, params string[] stopwords) =>
+    public static SearchOptions WithExtraStopwords(this SearchOptions options, params ApiCompatString[] stopwords) =>
         options with { ExtraStopwords = stopwords.EncodeUtf8Array() };
 
     /// <summary>Replaces the extra-stopword list with the supplied UTF-8 stopword bytes.</summary>
@@ -89,7 +89,7 @@ public static class SearchOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="stopwords">Additional stopword strings.</param>
     /// <returns>The updated options.</returns>
-    public static SearchOptions AddExtraStopwords(this SearchOptions options, params string[] stopwords)
+    public static SearchOptions AddExtraStopwords(this SearchOptions options, params ApiCompatString[] stopwords)
     {
         ArgumentNullException.ThrowIfNull(stopwords);
         return stopwords.Length is 0

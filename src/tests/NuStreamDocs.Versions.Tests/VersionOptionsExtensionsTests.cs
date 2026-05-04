@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Versions.Tests;
 
@@ -62,7 +63,7 @@ public class VersionOptionsExtensionsTests
     public async Task AddAliasesEmptyIsNoOp()
     {
         var seeded = VersionOptions.Latest("1.0", "1.0");
-        var stringNoOp = seeded.AddAliases(Array.Empty<string>());
+        var stringNoOp = seeded.AddAliases(Array.Empty<ApiCompatString>());
         var bytesNoOp = seeded.AddAliases(Array.Empty<byte[]>());
         await Assert.That(stringNoOp.Aliases).IsSameReferenceAs(seeded.Aliases);
         await Assert.That(bytesNoOp.Aliases).IsSameReferenceAs(seeded.Aliases);
@@ -107,7 +108,7 @@ public class VersionOptionsExtensionsTests
     public async Task NullArgumentsThrow()
     {
         var ex1 = Assert.Throws<ArgumentNullException>(static () => VersionOptions.Latest("1", "1").WithAliases((byte[][])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => VersionOptions.Latest("1", "1").AddAliases((string[])null!));
+        var ex2 = Assert.Throws<ArgumentNullException>(static () => VersionOptions.Latest("1", "1").AddAliases((ApiCompatString[])null!));
         var ex3 = Assert.Throws<ArgumentNullException>(static () => VersionOptions.Latest("1", "1").AddAliases((byte[][])null!));
         await Assert.That(ex1).IsNotNull();
         await Assert.That(ex2).IsNotNull();

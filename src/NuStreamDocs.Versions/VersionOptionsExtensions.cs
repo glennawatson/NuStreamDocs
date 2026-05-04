@@ -18,7 +18,7 @@ public static class VersionOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="aliases">Alias strings.</param>
     /// <returns>The updated options.</returns>
-    public static VersionOptions WithAliases(this VersionOptions options, params string[] aliases)
+    public static VersionOptions WithAliases(this VersionOptions options, params ApiCompatString[] aliases)
     {
         ArgumentNullException.ThrowIfNull(options);
         return options with { Aliases = aliases.EncodeUtf8Array() };
@@ -39,7 +39,7 @@ public static class VersionOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="aliases">Additional alias strings.</param>
     /// <returns>The updated options.</returns>
-    public static VersionOptions AddAliases(this VersionOptions options, params string[] aliases)
+    public static VersionOptions AddAliases(this VersionOptions options, params ApiCompatString[] aliases)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(aliases);

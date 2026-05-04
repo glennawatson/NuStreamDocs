@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Tests;
 
@@ -102,7 +103,7 @@ public class SearchOptionsExtensionsTests
     public async Task AddWithEmptyInputIsNoOp()
     {
         var seeded = SearchOptions.Default.WithExtraStopwords("foo");
-        var noOp = seeded.AddExtraStopwords(Array.Empty<string>());
+        var noOp = seeded.AddExtraStopwords(Array.Empty<ApiCompatString>());
         await Assert.That(noOp.ExtraStopwords).IsSameReferenceAs(seeded.ExtraStopwords);
     }
 
@@ -136,7 +137,7 @@ public class SearchOptionsExtensionsTests
     public async Task NullArgumentsThrow()
     {
         var ex1 = Assert.Throws<ArgumentNullException>(static () => SearchOptions.Default.WithSearchableFrontmatterKeys((byte[][])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => SearchOptions.Default.AddSearchableFrontmatterKeys((string[])null!));
+        var ex2 = Assert.Throws<ArgumentNullException>(static () => SearchOptions.Default.AddSearchableFrontmatterKeys((ApiCompatString[])null!));
         var ex3 = Assert.Throws<ArgumentNullException>(static () => SearchOptions.Default.WithExtraStopwords((byte[][])null!));
         var ex4 = Assert.Throws<ArgumentNullException>(static () => SearchOptions.Default.AddExtraStopwords((byte[][])null!));
         await Assert.That(ex1).IsNotNull();

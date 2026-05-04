@@ -2,12 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Versions;
 
 /// <summary>Configuration for the versions plugin.</summary>
 /// <remarks>
 /// <see cref="Aliases"/> is stored as UTF-8 bytes per the project's byte-first pipeline rule.
-/// String-shaped construction is via <see cref="VersionOptionsExtensions.WithAliases(VersionOptions, string[])"/>
+/// String-shaped construction is via <see cref="VersionOptionsExtensions.WithAliases(VersionOptions, ApiCompatString[])"/>
 /// and friends, which encode once at the boundary.
 /// </remarks>
 /// <param name="Version">Identifier for the version this build represents.</param>
