@@ -134,6 +134,12 @@ internal sealed class NavNode
     /// <summary>Gets the UTF-8 page URL bytes derived from <see cref="IndexPath"/>; empty when this node has no promoted index page.</summary>
     public byte[] IndexUrlBytes { get; }
 
+    /// <summary>
+    /// Gets the explicit display order from front-matter <c>Order:</c>. Default <see cref="int.MaxValue"/>
+    /// signals "no explicit order" so the sort comparers can fall back to natural alpha.
+    /// </summary>
+    public int Order { get; init; } = int.MaxValue;
+
     /// <summary>Attaches <see cref="Parent"/> links for this node's subtree after construction.</summary>
     internal void AttachParents()
     {

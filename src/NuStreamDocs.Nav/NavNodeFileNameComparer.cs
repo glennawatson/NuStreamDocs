@@ -4,13 +4,22 @@
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>Singleton comparer that orders <see cref="NavNode"/>s by file name.</summary>
+/// <summary>Singleton comparer that orders <see cref="NavNode"/>s by explicit <c>Order:</c> first then file name.</summary>
 internal sealed class NavNodeFileNameComparer : IComparer<NavNode>
 {
     /// <summary>Gets the shared instance to avoid per-sort allocations.</summary>
     public static NavNodeFileNameComparer Instance { get; } = new();
 
     /// <inheritdoc/>
-    public int Compare(NavNode? x, NavNode? y) =>
-        string.Compare(x?.RelativePath, y?.RelativePath, StringComparison.OrdinalIgnoreCase);
+    public int Compare(NavNode? x, NavNode? y)
+    {
+        var xOrder = x?.Order ?? int.MaxValue;
+        var yOrder = y?.Order ?? int.MaxValue;
+        if (xOrder != yOrder)
+        {
+            return xOrder.CompareTo(yOrder);
+        }
+
+        return string.Compare(x?.RelativePath, y?.RelativePath, StringComparison.OrdinalIgnoreCase);
+    }
 }

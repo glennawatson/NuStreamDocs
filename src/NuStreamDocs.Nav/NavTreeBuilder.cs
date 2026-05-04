@@ -331,28 +331,20 @@ internal static class NavTreeBuilder
                 children = ApplyOrdering(children, pagesOverride.OrderedEntries);
             }
 
-            byte[] sectionTitle;
-            if (pagesOverride.Title.Length > 0)
-            {
-                sectionTitle = [.. pagesOverride.Title];
-            }
-            else if (directory == root)
-            {
-                sectionTitle = [];
-            }
-            else
-            {
-                // Prefer the section's own index.md frontmatter `title:` when present so authored
-                // names like `title: ReactiveUI APIs` win over the humanized directory name.
-                sectionTitle = ResolveIndexFrontmatterTitle(root, indexPath)
-                    ?? Path.GetFileName(directory.Value.AsSpan()).HumanizePathName();
-            }
-
+            var sectionTitle = ResolveSectionTitle(root, directory, indexPath, pagesOverride);
             var sectionRelative = directory == root
                 ? default
                 : new FilePath(NavPathHelper.ToForwardSlashRelative(root, directory).Value);
 
-            return new(sectionTitle, sectionRelative, isSection: true, children, indexPath, useDirectoryUrls);
+            // Sections inherit Order from their own index.md frontmatter when present, so
+            // `Order: 0` on `guide/index.md` lifts the Guide section above its alpha siblings.
+            var sectionOrder = indexPath.IsEmpty
+                ? int.MaxValue
+                : ResolveOrder(new FilePath(Path.Combine(root.Value, indexPath.Value)));
+            return new(sectionTitle, sectionRelative, isSection: true, children, indexPath, useDirectoryUrls)
+            {
+                Order = sectionOrder,
+            };
         }
         finally
         {
@@ -473,10 +465,42 @@ internal static class NavTreeBuilder
             }
 
             var title = ResolveLeafTitle(file);
-            buffer[count++] = new(title, relative, isSection: false, [], useDirectoryUrls);
+            var order = ResolveOrder(file);
+            buffer[count++] = new(title, relative, isSection: false, [], useDirectoryUrls)
+            {
+                Order = order,
+            };
         }
 
         return count;
+    }
+
+    /// <summary>Reads the front-matter <c>Order:</c> integer for <paramref name="file"/>; defaults to <see cref="int.MaxValue"/> when absent.</summary>
+    /// <param name="file">Absolute markdown file path.</param>
+    /// <returns>The explicit order, or <see cref="int.MaxValue"/> meaning "unordered".</returns>
+    private static int ResolveOrder(FilePath file) =>
+        FrontmatterOrderReader.TryRead(file, out var order) ? order : int.MaxValue;
+
+    /// <summary>Picks the section's display title, preferring an explicit <c>.pages</c> override, then index-page front-matter, then the humanised directory name.</summary>
+    /// <param name="root">Absolute docs root.</param>
+    /// <param name="directory">Section directory.</param>
+    /// <param name="indexPath">Source-relative path of the section's index page; empty when the section has none.</param>
+    /// <param name="pagesOverride">Parsed <c>.pages</c> file contents.</param>
+    /// <returns>UTF-8 title bytes; empty for the docs root.</returns>
+    private static byte[] ResolveSectionTitle(DirectoryPath root, DirectoryPath directory, FilePath indexPath, PagesFile pagesOverride)
+    {
+        if (pagesOverride.Title.Length > 0)
+        {
+            return [.. pagesOverride.Title];
+        }
+
+        if (directory == root)
+        {
+            return [];
+        }
+
+        return ResolveIndexFrontmatterTitle(root, indexPath)
+            ?? Path.GetFileName(directory.Value.AsSpan()).HumanizePathName();
     }
 
     /// <summary>Resolves a leaf title from front-matter, then the first markdown H1, then a humanized file stem.</summary>

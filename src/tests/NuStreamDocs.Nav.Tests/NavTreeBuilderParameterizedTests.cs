@@ -190,6 +190,58 @@ public class NavTreeBuilderParameterizedTests
         await Assert.That(sectionTitle).IsEqualTo("Override Title");
     }
 
+    /// <summary>Pages with explicit <c>Order:</c> sort by that integer first; alpha breaks ties + handles unordered pages.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ExplicitOrderSortsBeforeAlpha()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("alpha-late.md", "---\nOrder: 5\n---\n# Late\n");
+        await temp.WriteAsync("bravo-early.md", "---\nOrder: 1\n---\n# Early\n");
+        await temp.WriteAsync("charlie-no-order.md", "# Charlie\n");
+        await temp.WriteAsync("delta-no-order.md", "# Delta\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
+
+        var pathOrder = string.Join(",", root.Children.Select(c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        await Assert.That(pathOrder).IsEqualTo("bravo-early,alpha-late,charlie-no-order,delta-no-order");
+    }
+
+    /// <summary>Sections inherit <c>Order:</c> from their <c>index.md</c> frontmatter.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SectionOrderHonoursIndexFrontmatter()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("alpha/index.md", "---\nOrder: 5\n---\n# Alpha\n");
+        await temp.WriteAsync("alpha/p.md", "# P\n");
+        await temp.WriteAsync("bravo/index.md", "---\nOrder: 1\n---\n# Bravo\n");
+        await temp.WriteAsync("bravo/p.md", "# P\n");
+        await temp.WriteAsync("charlie/index.md", "# Charlie\n");
+        await temp.WriteAsync("charlie/p.md", "# P\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
+
+        var sectionOrder = string.Join(",", root.Children.Where(c => c.IsSection).Select(c => Path.GetFileName(c.RelativePath.Value)));
+        await Assert.That(sectionOrder).IsEqualTo("bravo,alpha,charlie");
+    }
+
+    /// <summary>Same explicit <c>Order:</c> on multiple pages falls back to alpha.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DuplicateOrderTieBreaksAlphabetically()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("zulu.md", "---\nOrder: 1\n---\n# Z\n");
+        await temp.WriteAsync("alpha.md", "---\nOrder: 1\n---\n# A\n");
+        await temp.WriteAsync("mike.md", "---\nOrder: 1\n---\n# M\n");
+
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
+
+        var pathOrder = string.Join(",", root.Children.Select(c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        await Assert.That(pathOrder).IsEqualTo("alpha,mike,zulu");
+    }
+
     /// <summary>Disposable scratch tree.</summary>
     private sealed class ScratchTree : IDisposable
     {
