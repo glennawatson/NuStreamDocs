@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Autorefs.Logging;
@@ -20,7 +21,7 @@ namespace NuStreamDocs.Autorefs;
 /// <see cref="Registry"/> property, so cross-document references
 /// resolve no matter which plugin produced the destination.
 /// </remarks>
-public sealed class AutorefsPlugin : IDocPlugin
+public sealed class AutorefsPlugin : IDocPlugin, IMarkdownPreprocessor
 {
     /// <summary>Length of the <c>.md</c> extension, dropped when computing the served URL.</summary>
     private const int MarkdownExtensionLength = 3;
@@ -79,6 +80,21 @@ public sealed class AutorefsPlugin : IDocPlugin
         HeadingIdScanner.ScanAndRegister(context.Html.WrittenSpan, pageUrlBytes, Registry);
 
         return ValueTask.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+        AutorefsReferenceLinkPreprocessor.NeedsRewrite(source);
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+        AutorefsReferenceLinkPreprocessor.Rewrite(source, writer);
+
+    /// <inheritdoc/>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath)
+    {
+        _ = relativePath;
+        AutorefsReferenceLinkPreprocessor.Rewrite(source, writer);
     }
 
     /// <inheritdoc/>
