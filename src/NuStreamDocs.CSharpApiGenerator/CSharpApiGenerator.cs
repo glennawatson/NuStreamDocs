@@ -68,6 +68,11 @@ public static class CSharpApiGenerator
                 return await extractor.RunAsync(source, outputRoot, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
             }).ConfigureAwait(false);
 
+        if (options.EmitIndexPage)
+        {
+            ApiIndexWriter.Write(outputRoot, options.IndexTitle.AsSpan(), options.IndexIntroduction.AsSpan());
+        }
+
         return outputRoot;
     }
 
