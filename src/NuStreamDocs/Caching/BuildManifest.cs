@@ -137,8 +137,8 @@ public sealed class BuildManifest
     /// <param name="relativePath">Relative path key.</param>
     /// <param name="entry">Found entry on success.</param>
     /// <returns>True when an entry was found.</returns>
-    public bool TryGet(string relativePath, out ManifestEntry entry) =>
-        _entries.TryGetValue(relativePath, out entry);
+    public bool TryGet(FilePath relativePath, out ManifestEntry entry) =>
+        _entries.TryGetValue(relativePath.Value ?? string.Empty, out entry);
 
     /// <summary>Replaces the entries with <paramref name="updated"/>.</summary>
     /// <param name="updated">Right-sized array of entries to store.</param>
