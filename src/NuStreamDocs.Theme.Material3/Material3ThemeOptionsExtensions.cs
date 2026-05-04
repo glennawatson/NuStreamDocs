@@ -223,4 +223,11 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithCdnRoot(this Material3ThemeOptions options, ReadOnlySpan<byte> value) =>
         options with { CdnRoot = value.ToArray() };
+
+    /// <summary>Sets whether prev/next footer links stop at the closest enclosing section.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">True to scope prev/next to the current section; false to traverse the full nav.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions WithSectionScopedFooter(this Material3ThemeOptions options, bool value) =>
+        options with { SectionScopedFooter = value };
 }
