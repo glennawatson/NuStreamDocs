@@ -145,12 +145,10 @@ public static class TypeScriptLexer
     /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = Build();
 
-    /// <summary>Builds the rule list. Exposed internal so <see cref="JavaScriptLexer"/> can reuse the patterns under a different language name.</summary>
-    /// <param name="languageHint">Diagnostic-only language tag.</param>
+    /// <summary>Builds the rule list. Exposed internal so <see cref="JavaScriptLexer"/> can reuse the patterns.</summary>
     /// <returns>Ordered rule list.</returns>
-    internal static LexerRule[] BuildRules(string languageHint)
+    internal static LexerRule[] BuildRules()
     {
-        _ = languageHint;
         return LanguageRuleBuilder.BuildCStyleRules(
             new(
 
@@ -229,5 +227,5 @@ public static class TypeScriptLexer
 
     /// <summary>Builds the lexer.</summary>
     /// <returns>Configured lexer.</returns>
-    private static Lexer Build() => new(LanguageRuleBuilder.BuildSingleState(BuildRules("typescript")));
+    private static Lexer Build() => new(LanguageRuleBuilder.BuildSingleState(BuildRules()));
 }

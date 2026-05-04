@@ -5,6 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using NuStreamDocs.Bibliography.Model;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Bibliography.Csl;
 
@@ -27,10 +28,10 @@ internal static class CslJsonLoader
     /// <summary>Loads a CSL-JSON file from disk and returns the parsed entries.</summary>
     /// <param name="path">Path to a <c>.json</c> file containing a CSL-JSON array.</param>
     /// <returns>Parsed entries.</returns>
-    public static IReadOnlyList<CitationEntry> LoadFile(string path)
+    public static IReadOnlyList<CitationEntry> LoadFile(FilePath path)
     {
-        ArgumentException.ThrowIfNullOrEmpty(path);
-        var bytes = File.ReadAllBytes(path);
+        ArgumentException.ThrowIfNullOrEmpty(path.Value);
+        var bytes = File.ReadAllBytes(path.Value);
         return Parse(bytes);
     }
 

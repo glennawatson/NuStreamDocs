@@ -435,9 +435,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Counts directory-segment depth of <paramref name="relativePath"/> for page-relative URL composition.</summary>
     /// <param name="relativePath">Source-relative page path (e.g. <c>guide/intro.md</c>).</param>
     /// <returns>Number of <c>/</c> separators between the input root and the page's directory.</returns>
-    private static int PageDepth(string relativePath)
+    private static int PageDepth(FilePath relativePath)
     {
-        var path = relativePath.AsSpan();
+        ReadOnlySpan<char> path = relativePath;
         if (path is ['/', ..])
         {
             path = path[1..];
@@ -484,7 +484,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <param name="assetRoot">UTF-8 asset root from the theme options.</param>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>Page-relative asset-root bytes, or the original bytes when the input is an absolute URL.</returns>
-    private static byte[] ResolvePageRelativeAssetRoot(byte[] assetRoot, string relativePath)
+    private static byte[] ResolvePageRelativeAssetRoot(byte[] assetRoot, FilePath relativePath)
     {
         if (assetRoot is [] || IsAbsoluteUrl(assetRoot))
         {
@@ -535,7 +535,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <param name="headExtras">UTF-8 head-extras HTML composed once per build.</param>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>Rewritten bytes; the original blob when no occurrences match or the page is at depth 0 and only the leading slash needs trimming.</returns>
-    private static byte[] RewriteHeadExtraAssetHrefs(byte[] headExtras, string relativePath)
+    private static byte[] RewriteHeadExtraAssetHrefs(byte[] headExtras, FilePath relativePath)
     {
         if (headExtras is [])
         {
@@ -644,9 +644,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="useDirectoryUrls">Whether non-index pages collapse to directory slugs.</param>
     /// <returns>The slug span (no leading <c>/</c>); empty when the page is the root <c>index</c>.</returns>
-    private static ReadOnlySpan<char> ToCanonicalSlug(string relativePath, bool useDirectoryUrls)
+    private static ReadOnlySpan<char> ToCanonicalSlug(FilePath relativePath, bool useDirectoryUrls)
     {
-        var path = relativePath.AsSpan();
+        ReadOnlySpan<char> path = relativePath;
         if (path is ['/', ..])
         {
             path = path[1..];
@@ -683,7 +683,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Resolves prev/next neighbours according to the configured footer settings.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The neighbours; <see cref="NavNeighbours.None"/> when the footer is disabled or no provider is registered.</returns>
-    private NavNeighbours ResolveNeighbours(string relativePath)
+    private NavNeighbours ResolveNeighbours(FilePath relativePath)
     {
         if (!_options.EnableNavigationFooter || _neighbours is null)
         {
@@ -698,7 +698,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Returns the canonical URL for the page; empty when no site URL is configured.</summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <returns>The canonical URL bytes, or an empty array.</returns>
-    private byte[] ResolveCanonicalUrlBytes(string relativePath)
+    private byte[] ResolveCanonicalUrlBytes(FilePath relativePath)
     {
         if (_canonicalUrlPrefix is [])
         {
@@ -726,14 +726,14 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Builds the per-page edit URL from the configured repo URL + edit prefix + the page's relative path.</summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <returns>The edit URL bytes, or an empty array when not configured.</returns>
-    private byte[] ResolveEditUrlBytes(string relativePath)
+    private byte[] ResolveEditUrlBytes(FilePath relativePath)
     {
         if (_editUrlPrefix is [])
         {
             return [];
         }
 
-        var path = relativePath.AsSpan();
+        ReadOnlySpan<char> path = relativePath;
         var start = path is ['/', ..] ? 1 : 0;
         var dst = new byte[_editUrlPrefix.Length + path.Length - start];
         _editUrlPrefix.AsSpan().CopyTo(dst);

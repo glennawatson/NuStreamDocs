@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Privacy.Logging;
 using Polly;
 
@@ -51,16 +52,16 @@ internal static class ExternalAssetDownloader
     /// <returns>The list of URLs that exhausted retries and never succeeded.</returns>
     public static async Task<string[]> DownloadAllAsync(
         ExternalAssetRegistry registry,
-        string outputRoot,
-        string cacheRoot,
+        DirectoryPath outputRoot,
+        DirectoryPath cacheRoot,
         DownloadSettings settings,
         HostFilter filter,
         ILogger logger,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(registry);
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
-        ArgumentException.ThrowIfNullOrEmpty(cacheRoot);
+        ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
+        ArgumentException.ThrowIfNullOrEmpty(cacheRoot.Value);
         ArgumentOutOfRangeException.ThrowIfLessThan(settings.Parallelism, 1);
         ArgumentOutOfRangeException.ThrowIfNegative(settings.MaxRetries);
         ArgumentNullException.ThrowIfNull(filter);
@@ -117,12 +118,12 @@ internal static class ExternalAssetDownloader
                 {
                     var target = new DownloadTarget(
                         entry.Url,
-                        Path.Combine(outputRoot, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)),
-                        Path.Combine(cacheRoot, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)));
+                        Path.Combine(outputRoot.Value, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)),
+                        Path.Combine(cacheRoot.Value, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)));
                     if (!await DownloadOneAsync(environment, target, logger, ct).ConfigureAwait(false))
                     {
                         failures.Add(entry.Url);
-                        PrivacyLoggingHelper.LogDownloadFailure(logger, entry.Url, target.OutputPath);
+                        PrivacyLoggingHelper.LogDownloadFailure(logger, entry.Url, target.OutputPath.Value);
                     }
 
                     var done = Interlocked.Increment(ref completed);
@@ -174,7 +175,7 @@ internal static class ExternalAssetDownloader
     {
         if (await TryCopyFromCacheAsync(target.CachePath, target.OutputPath, cancellationToken).ConfigureAwait(false))
         {
-            PrivacyLoggingHelper.LogCacheHit(logger, target.Url, target.CachePath);
+            PrivacyLoggingHelper.LogCacheHit(logger, target.Url, target.CachePath.Value);
             return true;
         }
 
@@ -202,7 +203,7 @@ internal static class ExternalAssetDownloader
             }
 
             await WriteCacheAndOutputAsync(target.CachePath, target.OutputPath, bytes, cancellationToken).ConfigureAwait(false);
-            PrivacyLoggingHelper.LogDownloadSuccess(logger, target.Url, target.OutputPath);
+            PrivacyLoggingHelper.LogDownloadSuccess(logger, target.Url, target.OutputPath.Value);
             return true;
         }
         catch (HttpRequestException)
@@ -220,16 +221,16 @@ internal static class ExternalAssetDownloader
     /// <param name="outputPath">Absolute output file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True when the cache hit and the file was copied.</returns>
-    private static async Task<bool> TryCopyFromCacheAsync(string cachePath, string outputPath, CancellationToken cancellationToken)
+    private static async Task<bool> TryCopyFromCacheAsync(FilePath cachePath, FilePath outputPath, CancellationToken cancellationToken)
     {
-        if (!File.Exists(cachePath))
+        if (!File.Exists(cachePath.Value))
         {
             return false;
         }
 
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        await using var src = File.OpenRead(cachePath);
-        await using var dst = File.Create(outputPath);
+        Directory.CreateDirectory(outputPath.Directory.Value);
+        await using var src = File.OpenRead(cachePath.Value);
+        await using var dst = File.Create(outputPath.Value);
         await src.CopyToAsync(dst, cancellationToken).ConfigureAwait(false);
         return true;
     }
@@ -240,12 +241,12 @@ internal static class ExternalAssetDownloader
     /// <param name="bytes">Bytes to write.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when both writes finish.</returns>
-    private static async Task WriteCacheAndOutputAsync(string cachePath, string outputPath, byte[] bytes, CancellationToken cancellationToken)
+    private static async Task WriteCacheAndOutputAsync(FilePath cachePath, FilePath outputPath, byte[] bytes, CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        await File.WriteAllBytesAsync(cachePath, bytes, cancellationToken).ConfigureAwait(false);
-        await File.WriteAllBytesAsync(outputPath, bytes, cancellationToken).ConfigureAwait(false);
+        Directory.CreateDirectory(cachePath.Directory.Value);
+        Directory.CreateDirectory(outputPath.Directory.Value);
+        await File.WriteAllBytesAsync(cachePath.Value, bytes, cancellationToken).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(outputPath.Value, bytes, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Per-batch download tuning settings collapsed into one parameter.</summary>
@@ -258,7 +259,7 @@ internal static class ExternalAssetDownloader
     /// <param name="Url">External URL.</param>
     /// <param name="OutputPath">Absolute output path.</param>
     /// <param name="CachePath">Absolute cache path.</param>
-    public readonly record struct DownloadTarget(string Url, string OutputPath, string CachePath);
+    public readonly record struct DownloadTarget(string Url, FilePath OutputPath, FilePath CachePath);
 
     /// <summary>Shared per-batch state passed through the download helpers.</summary>
     /// <param name="Client">Shared HTTP client.</param>

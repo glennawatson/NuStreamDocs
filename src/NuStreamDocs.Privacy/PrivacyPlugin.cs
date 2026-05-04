@@ -199,8 +199,8 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <summary>Decodes a UTF-8 relative output path and combines it under <paramref name="outputRoot"/>.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="pathBytes">Forward-slash relative path bytes.</param>
-    /// <returns>Absolute output path.</returns>
-    private static string ResolveOutputPath(string outputRoot, ReadOnlySpan<byte> pathBytes)
+    /// <returns>Absolute output file path.</returns>
+    private static FilePath ResolveOutputPath(DirectoryPath outputRoot, ReadOnlySpan<byte> pathBytes)
     {
         Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
         Encoding.UTF8.GetChars(pathBytes, pathChars);
@@ -212,7 +212,7 @@ public sealed class PrivacyPlugin : IDocPlugin
             }
         }
 
-        return Path.Combine(outputRoot, new string(pathChars));
+        return Path.Combine(outputRoot.Value, new string(pathChars));
     }
 
     /// <summary>Throws <see cref="PrivacyDownloadException"/> when <see cref="PrivacyOptions.FailOnError"/> is set and any download failed.</summary>
@@ -229,7 +229,7 @@ public sealed class PrivacyPlugin : IDocPlugin
 
     /// <summary>Writes the audit manifest to <see cref="PrivacyOptions.AuditManifestPath"/> under <paramref name="outputRoot"/> when the option is non-empty.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
-    private void WriteManifestIfRequested(string outputRoot)
+    private void WriteManifestIfRequested(DirectoryPath outputRoot)
     {
         var pathBytes = _options.AuditManifestPath;
         if (pathBytes is [])
@@ -238,9 +238,9 @@ public sealed class PrivacyPlugin : IDocPlugin
         }
 
         var target = ResolveOutputPath(outputRoot, pathBytes);
-        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+        Directory.CreateDirectory(target.Directory.Value);
 
-        using var stream = File.Create(target);
+        using var stream = File.Create(target.Value);
         using var json = new Utf8JsonWriter(stream, new() { Indented = true });
         json.WriteStartObject();
         json.WriteBoolean("auditOnly"u8, _options.AuditOnly);
@@ -255,12 +255,12 @@ public sealed class PrivacyPlugin : IDocPlugin
         json.WriteEndArray();
         json.WriteEndObject();
         json.Flush();
-        PrivacyLoggingHelper.LogAuditWrite(_logger, target, auditedUrls.Length);
+        PrivacyLoggingHelper.LogAuditWrite(_logger, target.Value, auditedUrls.Length);
     }
 
     /// <summary>Writes the CSP-hash manifest when <see cref="PrivacyOptions.GenerateCspManifest"/> is set and a path is configured.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
-    private void WriteCspManifestIfRequested(string outputRoot)
+    private void WriteCspManifestIfRequested(DirectoryPath outputRoot)
     {
         var pathBytes = _options.CspManifestPath;
         if (!_options.GenerateCspManifest || pathBytes is [])
@@ -269,9 +269,9 @@ public sealed class PrivacyPlugin : IDocPlugin
         }
 
         var target = ResolveOutputPath(outputRoot, pathBytes);
-        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+        Directory.CreateDirectory(target.Directory.Value);
 
-        using var stream = File.Create(target);
+        using var stream = File.Create(target.Value);
         using var json = new Utf8JsonWriter(stream, new() { Indented = true });
         json.WriteStartObject();
         json.WritePropertyName("styleSrc"u8);
