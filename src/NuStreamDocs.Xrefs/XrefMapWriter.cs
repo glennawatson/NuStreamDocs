@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text.Json;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Xrefs;
 
@@ -31,9 +32,9 @@ internal static class XrefMapWriter
     /// <param name="outputPath">Absolute path to write to.</param>
     /// <param name="baseUrl">Optional base URL embedded as the <c>baseUrl</c> field; empty omits the field.</param>
     /// <param name="entries">Snapshot from <c>AutorefsRegistry.Snapshot()</c>.</param>
-    public static void Write(string outputPath, string baseUrl, (string Id, string Url)[] entries)
+    public static void Write(FilePath outputPath, UrlPath baseUrl, (ApiCompatString Id, UrlPath Url)[] entries)
     {
-        var sorted = new (string Id, string Url)[entries.Length];
+        var sorted = new (ApiCompatString Id, UrlPath Url)[entries.Length];
         Array.Copy(entries, sorted, entries.Length);
         Array.Sort(sorted, static (a, b) => string.CompareOrdinal(a.Id, b.Id));
 
@@ -42,7 +43,7 @@ internal static class XrefMapWriter
         {
             writer.WriteStartObject();
 
-            if (!string.IsNullOrEmpty(baseUrl))
+            if (!baseUrl.IsEmpty)
             {
                 writer.WriteString("baseUrl"u8, baseUrl);
             }

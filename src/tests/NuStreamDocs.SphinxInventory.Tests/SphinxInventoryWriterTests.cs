@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Text;
 using NuStreamDocs.Autorefs;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SphinxInventory.Tests;
@@ -32,7 +33,7 @@ public class SphinxInventoryWriterTests
     public async Task BodyDecompressesToEntryLines()
     {
         using var fixture = new InventoryFixture();
-        var entries = new (string Id, string Url)[]
+        var entries = new (ApiCompatString Id, UrlPath Url)[]
         {
             ("MyType", "api/MyType.html"),
             ("MyType.Method", "api/MyType.html#method"),

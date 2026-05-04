@@ -168,10 +168,10 @@ public sealed class AutorefsRegistry
     /// <summary>Snapshots the registry into a right-sized <c>(id, url)</c> array. Order is unspecified.</summary>
     /// <returns>A fresh snapshot array.</returns>
     /// <remarks>Build-end consumer; pays one UTF-8 decode per entry. Hot-path resolution goes through <see cref="TryResolveInto(ReadOnlySpan{byte}, IBufferWriter{byte})"/>.</remarks>
-    public (string Id, string Url)[] Snapshot()
+    public (ApiCompatString Id, UrlPath Url)[] Snapshot()
     {
         KeyValuePair<byte[], Anchor>[] kvs = [.. _anchors];
-        var result = new (string Id, string Url)[kvs.Length];
+        var result = new (ApiCompatString Id, UrlPath Url)[kvs.Length];
         for (var i = 0; i < kvs.Length; i++)
         {
             result[i] = (Encoding.UTF8.GetString(kvs[i].Key), kvs[i].Value.ComposeString());
