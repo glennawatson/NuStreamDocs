@@ -20,15 +20,15 @@ internal static class ManifestIndex
     /// <summary>Builds the path-keyed index over <paramref name="entries"/>.</summary>
     /// <param name="entries">Source entries.</param>
     /// <returns>The ordinal-keyed lookup.</returns>
-    internal static Dictionary<string, ManifestEntry> Build(ManifestEntry[] entries)
+    internal static Dictionary<FilePath, ManifestEntry> Build(ManifestEntry[] entries)
     {
         ArgumentNullException.ThrowIfNull(entries);
         if (entries.Length == 0)
         {
-            return EmptyCollections.DictionaryFor<string, ManifestEntry>();
+            return EmptyCollections.DictionaryFor<FilePath, ManifestEntry>();
         }
 
-        var working = new Dictionary<string, ManifestEntry>(entries.Length, StringComparer.Ordinal);
+        var working = new Dictionary<FilePath, ManifestEntry>(entries.Length);
         for (var i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];

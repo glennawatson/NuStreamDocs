@@ -29,16 +29,16 @@ public sealed class BuildManifest
     /// <summary>Schema version emitted in the JSON document; bumped on breaking changes.</summary>
     private const int SchemaVersion = 2;
 
-    /// <summary>Fingerprint of the pipeline that produced these entries.</summary>
-    private readonly string _buildFingerprint;
+    /// <summary>Raw SHA-256 fingerprint bytes of the pipeline that produced these entries.</summary>
+    private readonly byte[] _buildFingerprint;
 
     /// <summary>Relative-path → entry lookup, frozen for read-mostly access.</summary>
-    private Dictionary<string, ManifestEntry> _entries;
+    private Dictionary<FilePath, ManifestEntry> _entries;
 
     /// <summary>Initializes a new instance of the <see cref="BuildManifest"/> class.</summary>
     /// <param name="entries">Entries to seed the manifest with.</param>
     /// <param name="buildFingerprint">Fingerprint of the pipeline that produced <paramref name="entries"/>.</param>
-    private BuildManifest(Dictionary<string, ManifestEntry> entries, string buildFingerprint)
+    private BuildManifest(Dictionary<FilePath, ManifestEntry> entries, byte[] buildFingerprint)
     {
         _entries = entries;
         _buildFingerprint = buildFingerprint;
@@ -53,13 +53,16 @@ public sealed class BuildManifest
     /// <summary>Returns an empty manifest.</summary>
     /// <returns>A manifest with no entries.</returns>
     public static BuildManifest Empty() =>
-        new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), string.Empty);
+        new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), []);
 
     /// <summary>Returns an empty manifest bound to <paramref name="buildFingerprint"/>.</summary>
-    /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
+    /// <param name="buildFingerprint">Current pipeline fingerprint bytes.</param>
     /// <returns>A manifest with no tracked entries.</returns>
-    public static BuildManifest Empty(string buildFingerprint) =>
-        new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), buildFingerprint);
+    public static BuildManifest Empty(byte[] buildFingerprint)
+    {
+        ArgumentNullException.ThrowIfNull(buildFingerprint);
+        return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
+    }
 
     /// <summary>
     /// Loads the manifest from <paramref name="outputRoot"/>; returns an
@@ -76,7 +79,7 @@ public sealed class BuildManifest
     /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest, or an empty manifest on a fingerprint mismatch.</returns>
-    public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, string buildFingerprint, in CancellationToken cancellationToken) =>
+    public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, byte[] buildFingerprint, in CancellationToken cancellationToken) =>
         LoadAsync(outputRoot, buildFingerprint, cancellationToken, logger: null);
 
     /// <summary>
@@ -123,12 +126,13 @@ public sealed class BuildManifest
     /// <returns>The loaded manifest when the fingerprint matches; otherwise an empty manifest.</returns>
     public static async ValueTask<BuildManifest> LoadAsync(
         DirectoryPath outputRoot,
-        string buildFingerprint,
+        byte[] buildFingerprint,
         CancellationToken cancellationToken,
         ILogger? logger)
     {
+        ArgumentNullException.ThrowIfNull(buildFingerprint);
         var manifest = await LoadAsync(outputRoot, cancellationToken, logger).ConfigureAwait(false);
-        return string.Equals(manifest._buildFingerprint, buildFingerprint, StringComparison.Ordinal)
+        return manifest._buildFingerprint.AsSpan().SequenceEqual(buildFingerprint)
             ? manifest
             : Empty(buildFingerprint);
     }
@@ -138,7 +142,7 @@ public sealed class BuildManifest
     /// <param name="entry">Found entry on success.</param>
     /// <returns>True when an entry was found.</returns>
     public bool TryGet(FilePath relativePath, out ManifestEntry entry) =>
-        _entries.TryGetValue(relativePath.Value ?? string.Empty, out entry);
+        _entries.TryGetValue(relativePath, out entry);
 
     /// <summary>Replaces the entries with <paramref name="updated"/>.</summary>
     /// <param name="updated">Right-sized array of entries to store.</param>
@@ -189,7 +193,7 @@ public sealed class BuildManifest
         await using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
         writer.WriteNumber("schema"u8, SchemaVersion);
-        writer.WriteString("build"u8, _buildFingerprint);
+        writer.WriteBase64String("build"u8, _buildFingerprint);
 
         writer.WritePropertyName("entries"u8);
         writer.WriteStartArray();
@@ -225,14 +229,14 @@ public sealed class BuildManifest
 
         if (entries.GetArrayLength() is 0)
         {
-            return new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), buildFingerprint);
+            return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
         }
 
         var buffer = new ManifestEntry[entries.GetArrayLength()];
         var count = ReadEntries(entries, buffer);
         if (count == 0)
         {
-            return new(EmptyCollections.DictionaryFor<string, ManifestEntry>(), buildFingerprint);
+            return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
         }
 
         if (count != buffer.Length)
@@ -248,9 +252,9 @@ public sealed class BuildManifest
     /// <param name="buildFingerprint">Build fingerprint on success.</param>
     /// <param name="entries">Entries array on success.</param>
     /// <returns>True when the document matches the expected schema.</returns>
-    private static bool TryReadDocument(in JsonElement root, out string buildFingerprint, out JsonElement entries)
+    private static bool TryReadDocument(in JsonElement root, out byte[] buildFingerprint, out JsonElement entries)
     {
-        buildFingerprint = string.Empty;
+        buildFingerprint = [];
         entries = default;
         if (!root.TryGetProperty("schema"u8, out var schema) ||
             schema.ValueKind != JsonValueKind.Number ||
@@ -264,8 +268,17 @@ public sealed class BuildManifest
             return false;
         }
 
-        var fingerprint = buildProp.GetString();
-        if (string.IsNullOrEmpty(fingerprint))
+        byte[] fingerprint;
+        try
+        {
+            fingerprint = buildProp.GetBytesFromBase64();
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+
+        if (fingerprint is [])
         {
             return false;
         }

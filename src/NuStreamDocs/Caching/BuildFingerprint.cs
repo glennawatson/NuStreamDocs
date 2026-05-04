@@ -23,8 +23,8 @@ internal static class BuildFingerprint
     /// <summary>Returns the cache fingerprint for the current build configuration.</summary>
     /// <param name="plugins">Registered plugins, in execution order.</param>
     /// <param name="options">Pipeline options that affect emitted output.</param>
-    /// <returns>Hex digest for this build shape.</returns>
-    public static string Create(IDocPlugin[] plugins, in BuildPipelineOptions options)
+    /// <returns>Raw SHA-256 digest bytes for this build shape.</returns>
+    public static byte[] Create(IDocPlugin[] plugins, in BuildPipelineOptions options)
     {
         ArgumentNullException.ThrowIfNull(plugins);
 
@@ -44,7 +44,7 @@ internal static class BuildFingerprint
             AppendTypeFingerprint(buffer, plugins[i].GetType());
         }
 
-        return Convert.ToHexString(SHA256.HashData(buffer.WrittenSpan));
+        return SHA256.HashData(buffer.WrittenSpan);
     }
 
     /// <summary>Appends the fingerprint components for <paramref name="type"/>.</summary>

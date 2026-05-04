@@ -42,7 +42,7 @@ public class CoverageBatchTests
         Directory.CreateDirectory(dir);
         try
         {
-            var manifest = BuildManifest.Empty("test-build");
+            var manifest = BuildManifest.Empty("test-build"u8.ToArray());
             manifest.Replace([new("a.md", new byte[ContentHasher.HashByteLength], 42L)]);
             await manifest.SaveAsync(dir, CancellationToken.None);
             await Assert.That(manifest.Count).IsEqualTo(1);
