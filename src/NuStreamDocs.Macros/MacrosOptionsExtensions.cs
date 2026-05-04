@@ -70,15 +70,15 @@ public static class MacrosOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="variables">String → string variable map; both name and value are encoded once to UTF-8.</param>
     /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariables(this MacrosOptions options, Dictionary<string, string> variables)
+    public static MacrosOptions WithVariables(this MacrosOptions options, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(variables);
         var map = new Dictionary<byte[], byte[]>(variables.Count, ByteArrayComparer.Instance);
         foreach (var pair in variables)
         {
-            ArgumentException.ThrowIfNullOrEmpty(pair.Key);
-            ArgumentNullException.ThrowIfNull(pair.Value);
+            ArgumentException.ThrowIfNullOrEmpty(pair.Key.Value);
+            ArgumentNullException.ThrowIfNull(pair.Value.Value);
             map[Encoding.UTF8.GetBytes(pair.Key)] = Encoding.UTF8.GetBytes(pair.Value);
         }
 

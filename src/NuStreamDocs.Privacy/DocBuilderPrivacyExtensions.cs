@@ -45,13 +45,20 @@ public static class DocBuilderPrivacyExtensions
         return builder.UsePlugin(new PrivacyPlugin(options, logger));
     }
 
-    /// <summary>String adapter over <see cref="PrivacyPlugin.AuditedUrls"/>.</summary>
+    /// <summary>Compatibility-string adapter over <see cref="PrivacyPlugin.AuditedUrls"/>.</summary>
     /// <param name="plugin">Plugin instance.</param>
-    /// <returns>Right-sized URL string array.</returns>
+    /// <returns>Right-sized URL array wrapped as <see cref="ApiCompatString"/> (implicitly convertible to <c>string</c>).</returns>
     /// <remarks>For consumers that genuinely want UTF-16 strings (logging, assertions, JSON serialization that doesn't cross the <see cref="System.Text.Json.Utf8JsonWriter"/> byte path).</remarks>
-    public static string[] AuditedUrlsAsStrings(this PrivacyPlugin plugin)
+    public static ApiCompatString[] AuditedUrlsAsStrings(this PrivacyPlugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin);
-        return Utf8Snapshot.Decode(plugin.AuditedUrls);
+        var decoded = Utf8Snapshot.Decode(plugin.AuditedUrls);
+        var wrapped = new ApiCompatString[decoded.Length];
+        for (var i = 0; i < decoded.Length; i++)
+        {
+            wrapped[i] = decoded[i];
+        }
+
+        return wrapped;
     }
 }

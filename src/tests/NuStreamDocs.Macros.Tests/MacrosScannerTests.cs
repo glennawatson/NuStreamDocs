@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Macros.Tests;
 
@@ -94,7 +95,7 @@ public class MacrosScannerTests
     [Test]
     public async Task DottedAndHyphenatedNamesResolve()
     {
-        var vars = new Dictionary<string, string>(StringComparer.Ordinal)
+        var vars = new Dictionary<ApiCompatString, ApiCompatString>
         {
             ["site.name"] = "S",
             ["my-var"] = "H",
@@ -166,7 +167,7 @@ public class MacrosScannerTests
     /// <param name="input">Markdown source.</param>
     /// <param name="variables">Variables dictionary.</param>
     /// <returns>Rewritten markdown.</returns>
-    private static string Rewrite(string input, Dictionary<string, string> variables)
+    private static string Rewrite(string input, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
         var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables));
         var sink = new ArrayBufferWriter<byte>(input.Length * 2);
@@ -178,7 +179,7 @@ public class MacrosScannerTests
     /// <param name="input">Markdown source.</param>
     /// <param name="variables">Variables dictionary.</param>
     /// <returns>Rewritten markdown.</returns>
-    private static string RewriteEscaped(string input, Dictionary<string, string> variables)
+    private static string RewriteEscaped(string input, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
         var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables) with { EscapeHtml = true });
         var sink = new ArrayBufferWriter<byte>(input.Length * 2);

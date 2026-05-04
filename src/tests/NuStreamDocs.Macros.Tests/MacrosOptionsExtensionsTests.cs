@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Macros.Tests;
 
@@ -85,7 +86,7 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariablesStringEncodesAllEntries()
     {
-        var seed = new Dictionary<string, string>(StringComparer.Ordinal)
+        var seed = new Dictionary<ApiCompatString, ApiCompatString>
         {
             ["a"] = "1",
             ["b"] = "2",
@@ -127,7 +128,7 @@ public class MacrosOptionsExtensionsTests
     {
         await Assert.That(() => MacrosOptions.Default.WithVariables((Dictionary<byte[], byte[]>)null!))
             .Throws<ArgumentNullException>();
-        await Assert.That(() => MacrosOptions.Default.WithVariables((Dictionary<string, string>)null!))
+        await Assert.That(() => MacrosOptions.Default.WithVariables((Dictionary<ApiCompatString, ApiCompatString>)null!))
             .Throws<ArgumentNullException>();
     }
 }
