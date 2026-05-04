@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
@@ -53,5 +54,5 @@ public interface IMarkdownPreprocessor
     /// preprocessors that key behavior on the page identity
     /// (e.g. metadata injection) override this overload.
     /// </param>
-    void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath);
+    void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath);
 }

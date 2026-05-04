@@ -38,7 +38,7 @@ public abstract class MarkdownAssetPluginBase : DocPluginBase, IMarkdownPreproce
     public abstract void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer);
 
     /// <inheritdoc/>
-    public virtual void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+    public virtual void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
         Preprocess(source, writer);
 
     /// <inheritdoc/>

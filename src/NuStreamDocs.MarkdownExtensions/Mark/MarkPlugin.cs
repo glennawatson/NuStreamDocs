@@ -31,6 +31,6 @@ public sealed class MarkPlugin : DocPluginBase, IMarkdownPreprocessor
     }
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
         Preprocess(source, writer);
 }

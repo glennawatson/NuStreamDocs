@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
@@ -159,7 +160,7 @@ public class BuildPipelineTests
         public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
         /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
             Preprocess(source, writer);
 
         /// <inheritdoc/>
@@ -192,7 +193,7 @@ public class BuildPipelineTests
         }
 
         /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath) =>
+        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
             Preprocess(source, writer);
 
         /// <inheritdoc/>

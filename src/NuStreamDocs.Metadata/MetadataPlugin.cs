@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Metadata;
@@ -84,7 +85,7 @@ public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkd
     }
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, string relativePath)
+    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath)
     {
         ArgumentNullException.ThrowIfNull(writer);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
