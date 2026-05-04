@@ -114,6 +114,23 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>UTF-8 generator value emitted as <c>nustreamdocs-{version}</c>; encoded once at type init.</summary>
     private static readonly byte[] GeneratorBytes = BuildGeneratorBytes();
 
+    /// <summary>UTF-8 template-data key for <c>build_date</c> — ISO 8601 timestamp stamped onto every page.</summary>
+    private static readonly byte[] BuildDateKey = "build_date"u8.ToArray();
+
+    /// <summary>UTF-8 ISO 8601 build timestamp; captured once when this assembly first loads so every page in a single run reports the same value.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6354", Justification = "Build timestamp is intentionally wall-clock; not unit-tested for content.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6585", Justification = "ISO 8601 round-trip format is the wire format consumers expect.")]
+    private static readonly byte[] BuildDateBytes = System.Text.Encoding.UTF8.GetBytes(
+        DateTimeOffset.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+
+    /// <summary>UTF-8 four-digit current year — used as the <c>{year}</c> token replacement in the configured copyright string.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6354", Justification = "Wall-clock by design — copyright stamping uses UTC year.")]
+    private static readonly byte[] CurrentYearBytes = System.Text.Encoding.UTF8.GetBytes(
+        DateTimeOffset.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+    /// <summary>UTF-8 token consumers can embed in their copyright string; replaced with <see cref="CurrentYearBytes"/> at render time.</summary>
+    private static readonly byte[] YearTokenBytes = "{year}"u8.ToArray();
+
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly TOptions _options;
 
@@ -140,6 +157,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
 
     /// <summary>Effective favicon URL bytes — explicit option, then auto-discovered docs convention, then the theme's embedded default.</summary>
     private byte[] _resolvedFavicon = [];
+
+    /// <summary>Effective copyright bytes with any <c>{year}</c> token expanded to the current year — computed once during configure.</summary>
+    private byte[] _resolvedCopyright = [];
 
     /// <summary>Site-wide author captured from the configure context; used as the per-page <c>&lt;meta author&gt;</c> fallback when the page has no front-matter <c>author:</c>.</summary>
     private byte[] _siteAuthor = [];
@@ -176,6 +196,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         _siteAuthor = context.SiteAuthor;
         _useDirectoryUrls = context.UseDirectoryUrls;
         _resolvedFavicon = ResolveFavicon(context.InputRoot);
+        _resolvedCopyright = ExpandYearToken(_options.Copyright);
 
         return ValueTask.CompletedTask;
     }
@@ -207,7 +228,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [PageTitleKey] = Utf8Encoder.Encode(pageTitle),
                     [BodyKey] = new(bodyBuffer, 0, bodyLength),
                     [AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_options.ResolveAssetRoot(), context.RelativePath, _useDirectoryUrls)]),
-                    [CopyrightKey] = _options.Copyright,
+                    [CopyrightKey] = _resolvedCopyright,
                     [RepoUrlKey] = _options.RepoUrl,
                     [RepoLabelKey] = _repoLabel,
                     [EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
@@ -222,6 +243,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [HideNavigationKey] = ShouldHideNavigation(context) ? TruthyBytes : null,
                     [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
                     [GeneratorKey] = GeneratorBytes,
+                    [BuildDateKey] = BuildDateBytes,
                     [FaviconKey] = _resolvedFavicon,
                     [AuthorKey] = ResolveAuthor(context, _siteAuthor),
                 },
@@ -443,6 +465,54 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         }
 
         return dst;
+    }
+
+    /// <summary>Replaces every literal <c>{year}</c> occurrence in <paramref name="copyright"/> with the current four-digit year.</summary>
+    /// <param name="copyright">Configured copyright bytes (may be empty).</param>
+    /// <returns>A fresh byte array with the token expanded; returns <paramref name="copyright"/> unchanged when no token is present.</returns>
+    /// <remarks>Lets consumers write <c>"Copyright © {year} Acme Corp"u8</c> in <c>WithCopyright</c> and have the year stay correct without touching the build script each January.</remarks>
+    private static byte[] ExpandYearToken(byte[] copyright)
+    {
+        if (copyright is null or [])
+        {
+            return [];
+        }
+
+        var token = YearTokenBytes.AsSpan();
+        var src = copyright.AsSpan();
+        if (src.IndexOf(token) < 0)
+        {
+            return copyright;
+        }
+
+        var writer = new System.Buffers.ArrayBufferWriter<byte>(copyright.Length);
+        var year = CurrentYearBytes.AsSpan();
+        while (true)
+        {
+            var idx = src.IndexOf(token);
+            if (idx < 0)
+            {
+                if (!src.IsEmpty)
+                {
+                    src.CopyTo(writer.GetSpan(src.Length));
+                    writer.Advance(src.Length);
+                }
+
+                break;
+            }
+
+            if (idx > 0)
+            {
+                src[..idx].CopyTo(writer.GetSpan(idx));
+                writer.Advance(idx);
+            }
+
+            year.CopyTo(writer.GetSpan(year.Length));
+            writer.Advance(year.Length);
+            src = src[(idx + token.Length)..];
+        }
+
+        return writer.WrittenSpan.ToArray();
     }
 
     /// <summary>Returns true when <paramref name="value"/> begins with <c>http://</c> or <c>https://</c> (case-insensitive).</summary>

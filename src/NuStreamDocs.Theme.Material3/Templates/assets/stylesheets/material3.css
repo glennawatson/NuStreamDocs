@@ -674,7 +674,9 @@ a:hover { text-decoration: underline; }
 /* Repo badge — outlined card with the repo path on top and the stars/forks
    counts on a tinted second row, mirroring zensical's "card with shoulder"
    shape so the GitHub stats read as their own panel rather than a hover-only
-   pill. */
+   pill. The card establishes its own colour scope (don't inherit the header
+   foreground — sites that paint the header dark would render the GitHub
+   icon white-on-white inside the light card surface). */
 .md-source {
   display: inline-flex;
   align-items: center;
@@ -683,8 +685,11 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--md-sys-shape-corner-md);
   background: var(--md-sys-color-surface-container-low);
-  color: inherit;
+  color: var(--md-sys-color-on-surface);
   transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.md-source__icon {
+  color: var(--md-sys-color-on-surface-variant);
 }
 .md-source:hover {
   background: var(--md-sys-color-surface-container-high);
