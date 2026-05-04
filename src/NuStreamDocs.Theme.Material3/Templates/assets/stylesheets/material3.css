@@ -617,6 +617,32 @@ a:hover { text-decoration: underline; }
   display: block;
 }
 
+/* ----- Primary nav live filter. ----- */
+.md-nav__filter {
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+.md-nav__filter-input {
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 999px;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface);
+  font: var(--md-sys-typescale-body-medium);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.md-nav__filter-input:focus {
+  border-color: var(--md-sys-color-primary);
+}
+.md-nav__item--filter-hidden {
+  display: none !important;
+}
+.md-nav__link--filter-match {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
 /* ----- Heading permalinks: reveal on heading hover/focus only. ----- */
 .md-typeset .headerlink {
   margin-left: 0.5rem;

@@ -329,3 +329,81 @@
     sidebar.scrollTop = sidebar.scrollTop + offset;
   });
 })();
+
+/* Primary-sidebar live filter. Hides nav items whose label and
+   descendants don't match the query; auto-expands matching ancestors
+   so hits are visible without manual click-through. */
+(function () {
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var holder = document.querySelector(".md-sidebar--primary [data-md-component=\"nav-filter\"]");
+    if (!holder) { return; }
+
+    var input = holder.querySelector("input");
+    var nav = document.querySelector(".md-sidebar--primary .md-nav--primary");
+    if (!input || !nav) { return; }
+
+    var items = nav.querySelectorAll(".md-nav__item");
+    var toggleSnapshot = [];
+    var toggles = nav.querySelectorAll("input.md-nav__toggle");
+    for (var t = 0; t < toggles.length; t++) {
+      toggleSnapshot.push(toggles[t].checked);
+    }
+
+    function labelText(item) {
+      var direct = item.querySelector(":scope > .md-nav__link, :scope > .md-nav__container > .md-nav__link");
+      return direct ? (direct.textContent || "").toLowerCase() : "";
+    }
+
+    function clearItem(item) {
+      item.classList.remove("md-nav__item--filter-hidden");
+      var link = item.querySelector(":scope > .md-nav__link, :scope > .md-nav__container > .md-nav__link");
+      if (link) { link.classList.remove("md-nav__link--filter-match"); }
+    }
+
+    function reset() {
+      for (var i = 0; i < items.length; i++) { clearItem(items[i]); }
+      var t = nav.querySelectorAll("input.md-nav__toggle");
+      for (var j = 0; j < t.length && j < toggleSnapshot.length; j++) {
+        t[j].checked = toggleSnapshot[j];
+      }
+    }
+
+    /* Returns true if this item or any descendant matched. */
+    function walk(item, query) {
+      var children = item.querySelectorAll(":scope > nav > ul > li.md-nav__item, :scope > .md-nav__container > nav > ul > li.md-nav__item");
+      var anyChildMatch = false;
+      for (var i = 0; i < children.length; i++) {
+        if (walk(children[i], query)) { anyChildMatch = true; }
+      }
+
+      var selfText = labelText(item);
+      var selfMatch = selfText.indexOf(query) >= 0;
+      var link = item.querySelector(":scope > .md-nav__link, :scope > .md-nav__container > .md-nav__link");
+      if (link) { link.classList.toggle("md-nav__link--filter-match", selfMatch && query.length > 0); }
+
+      var visible = selfMatch || anyChildMatch;
+      item.classList.toggle("md-nav__item--filter-hidden", !visible);
+
+      if (anyChildMatch) {
+        var toggle = item.querySelector(":scope > input.md-nav__toggle");
+        if (toggle) { toggle.checked = true; }
+      }
+
+      return visible;
+    }
+
+    var debounceTimer = 0;
+    input.addEventListener("input", function () {
+      window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(function () {
+        var query = input.value.trim().toLowerCase();
+        if (!query) { reset(); return; }
+
+        var roots = nav.querySelectorAll(":scope > ul > li.md-nav__item");
+        for (var i = 0; i < roots.length; i++) { walk(roots[i], query); }
+      }, 80);
+    });
+  });
+})();

@@ -18,8 +18,6 @@ ship; the file is meant to stay short.
   missing.
 - **PDF output.** DocFX has a PDF builder; would need an HTML→PDF
   bridge (PuppeteerSharp or QuestPDF) and per-page chrome trimming.
-- **API tree live filter.** TOC search box that narrows the rendered
-  reference tree without a page reload — purely a theme-side feature.
 
 ## Statiq gaps
 
