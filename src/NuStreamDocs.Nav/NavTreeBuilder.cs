@@ -129,7 +129,7 @@ internal static class NavTreeBuilder
         if (matcher is null)
         {
             // No glob filters configured; orphan candidates are every .md file under the root.
-            foreach (var file in Directory.EnumerateFiles(inputRoot, "*" + MarkdownExtension, SearchOption.AllDirectories))
+            foreach (var file in inputRoot.EnumerateFiles("*" + MarkdownExtension, SearchOption.AllDirectories))
             {
                 var rel = NavPathHelper.ToForwardSlashRelative(inputRoot, file);
                 if (!navPaths.Contains(rel))
@@ -302,7 +302,7 @@ internal static class NavTreeBuilder
         if (pagesOverride.Hide && directory != root)
         {
             var hiddenRelative = NavPathHelper.ToForwardSlashRelative(root, directory);
-            NavLoggingHelper.LogNavPruned(logger, hiddenRelative, ".pages hide:true");
+            NavLoggingHelper.LogNavPruned(logger, hiddenRelative.Value, ".pages hide:true");
             return null;
         }
 
@@ -347,7 +347,7 @@ internal static class NavTreeBuilder
 
             var sectionRelative = directory == root
                 ? default
-                : new FilePath(NavPathHelper.ToForwardSlashRelative(root, directory));
+                : new FilePath(NavPathHelper.ToForwardSlashRelative(root, directory).Value);
 
             return new(sectionTitle, sectionRelative, isSection: true, children, indexPath, useDirectoryUrls);
         }
@@ -441,7 +441,7 @@ internal static class NavTreeBuilder
         for (var i = 0; i < files.Length; i++)
         {
             FilePath file = files[i];
-            var relative = new FilePath(NavPathHelper.ToForwardSlashRelative(root, file));
+            var relative = NavPathHelper.ToForwardSlashRelative(root, file);
             if (matcher is not null)
             {
                 var match = matcher.Match(relative);

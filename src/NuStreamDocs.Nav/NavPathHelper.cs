@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Nav;
 
 /// <summary>
@@ -27,18 +29,29 @@ internal static class NavPathHelper
     /// <param name="root">Absolute docs root.</param>
     /// <param name="path">Absolute path under <paramref name="root"/> (file or directory).</param>
     /// <returns>The relative path, slash-normalized. Empty when <paramref name="path"/> equals <paramref name="root"/>.</returns>
-    public static string ToForwardSlashRelative(string root, string path)
-    {
-        ArgumentNullException.ThrowIfNull(root);
-        ArgumentNullException.ThrowIfNull(path);
+    public static FilePath ToForwardSlashRelative(DirectoryPath root, FilePath path) =>
+        ToForwardSlashRelativeCore(root.Value ?? string.Empty, path.Value ?? string.Empty);
 
-        if (TryFastPathSlice(root, path, out var sliceStart))
+    /// <summary>Computes <paramref name="directory"/>'s source-relative location under <paramref name="root"/> with forward-slash separators.</summary>
+    /// <param name="root">Absolute docs root.</param>
+    /// <param name="directory">Absolute directory under <paramref name="root"/>.</param>
+    /// <returns>The relative directory path. Empty when <paramref name="directory"/> equals <paramref name="root"/>.</returns>
+    public static DirectoryPath ToForwardSlashRelative(DirectoryPath root, DirectoryPath directory) =>
+        ToForwardSlashRelativeCore(root.Value ?? string.Empty, directory.Value ?? string.Empty);
+
+    /// <summary>Shared core that does the slash-normalized relative-path computation.</summary>
+    /// <param name="rootStr">Absolute docs root.</param>
+    /// <param name="pathStr">Absolute path under the root.</param>
+    /// <returns>The relative path with forward slashes; empty when the inputs are equal.</returns>
+    private static string ToForwardSlashRelativeCore(string rootStr, string pathStr)
+    {
+        if (TryFastPathSlice(rootStr, pathStr, out var sliceStart))
         {
-            return CreateNormalized(path, sliceStart);
+            return CreateNormalized(pathStr, sliceStart);
         }
 
         // Fallback for cross-mount / weird casing — pay the two-string tax only here.
-        return Path.GetRelativePath(root, path).Replace('\\', '/');
+        return Path.GetRelativePath(rootStr, pathStr).Replace('\\', '/');
     }
 
     /// <summary>Tries the fast path — <paramref name="path"/> starts with <paramref name="root"/> + separator.</summary>

@@ -53,6 +53,10 @@ public readonly record struct DirectoryPath(string Value)
     /// <param name="path">Source path.</param>
     public static implicit operator string(DirectoryPath path) => path.Value ?? string.Empty;
 
+    /// <summary>Implicitly unwraps to a <see cref="ReadOnlySpan{Char}"/> for span-shaped APIs.</summary>
+    /// <param name="path">Source path.</param>
+    public static implicit operator ReadOnlySpan<char>(DirectoryPath path) => (path.Value ?? string.Empty).AsSpan();
+
     /// <summary>Implicitly wraps a <see cref="string"/> path so callers can pass string literals to APIs that take a <see cref="DirectoryPath"/>.</summary>
     /// <param name="value">Source path string; null becomes an empty <see cref="DirectoryPath"/>.</param>
     public static implicit operator DirectoryPath(string? value) => new(value ?? string.Empty);
@@ -79,6 +83,11 @@ public readonly record struct DirectoryPath(string Value)
     /// <param name="path">Source directory.</param>
     /// <returns>The underlying path string.</returns>
     public static string ToStringValue(DirectoryPath path) => path;
+
+    /// <summary>Friendly named alias for the <see cref="DirectoryPath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
+    /// <param name="path">Source directory.</param>
+    /// <returns>The underlying path as a span.</returns>
+    public static ReadOnlySpan<char> ToReadOnlySpan(DirectoryPath path) => path;
 
     /// <summary>Friendly named alias for the <c>/</c> string-segment operator (CA2225).</summary>
     /// <param name="left">Source directory.</param>

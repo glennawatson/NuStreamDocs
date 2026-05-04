@@ -29,6 +29,10 @@ public readonly record struct UrlPath(string Value)
     /// <param name="url">Source URL.</param>
     public static implicit operator string(UrlPath url) => url.Value ?? string.Empty;
 
+    /// <summary>Implicitly unwraps to a <see cref="ReadOnlySpan{Char}"/> for span-shaped APIs.</summary>
+    /// <param name="url">Source URL.</param>
+    public static implicit operator ReadOnlySpan<char>(UrlPath url) => (url.Value ?? string.Empty).AsSpan();
+
     /// <summary>Implicitly wraps a <see cref="string"/> so callers can pass URL literals to APIs that take a <see cref="UrlPath"/>.</summary>
     /// <param name="value">Source URL string; null becomes an empty <see cref="UrlPath"/>.</param>
     public static implicit operator UrlPath(string? value) => new(value ?? string.Empty);
@@ -42,6 +46,11 @@ public readonly record struct UrlPath(string Value)
     /// <param name="url">Source URL.</param>
     /// <returns>The underlying URL string.</returns>
     public static string ToStringValue(UrlPath url) => url;
+
+    /// <summary>Friendly named alias for the <see cref="UrlPath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
+    /// <param name="url">Source URL.</param>
+    /// <returns>The underlying URL as a span.</returns>
+    public static ReadOnlySpan<char> ToReadOnlySpan(UrlPath url) => url;
 
     /// <summary>Returns the underlying URL as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
     /// <returns>The URL span; empty when the wrapper is default.</returns>
