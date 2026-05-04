@@ -7,11 +7,12 @@ using System.Globalization;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Autorefs;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>
-/// Per-call cost of <see cref="AutorefsRegistry.Register(string, string, string)"/> across the
+/// Per-call cost of <see cref="AutorefsRegistry.Register(ApiCompatString, UrlPath, ApiCompatString)"/> across the
 /// two real-world fragment shapes: heading scans (id == fragment so the
 /// stored URL is <c>page#id</c>) and whole-page references (no fragment
 /// so the stored URL is the bare page URL).

@@ -16,7 +16,7 @@ namespace NuStreamDocs.Autorefs;
 /// <remarks>
 /// Built up during the parallel render pass: heading scanners and
 /// other plugins (e.g. <c>NuStreamDocs.CSharpApiGenerator</c>) call
-/// <see cref="Register(string, string, string)"/> from any worker. Resolution happens after
+/// <see cref="Register(ApiCompatString, UrlPath, ApiCompatString)"/> from any worker. Resolution happens after
 /// the pass when <see cref="AutorefsPlugin"/> rewrites
 /// <c>@autoref:ID</c> markers in the emitted HTML, so the registry
 /// only needs to be settled by <see cref="Plugins.IDocPlugin.OnFinalizeAsync"/>
@@ -32,7 +32,7 @@ namespace NuStreamDocs.Autorefs;
 /// pattern, so the per-page rewriter can resolve IDs straight from the
 /// source span and stream the resolved URL bytes back to the writer
 /// without ever round-tripping through <see cref="string"/>. The
-/// <see cref="Register(string, string, string)"/> / <see cref="TryResolve(string, out string)"/> string overloads stay public for
+/// <see cref="Register(ApiCompatString, UrlPath, ApiCompatString)"/> / <see cref="TryResolve(string, out string)"/> string overloads stay public for
 /// programmatic / build-end callers that already hold strings.
 /// </para>
 /// </remarks>
@@ -102,13 +102,13 @@ public sealed class AutorefsRegistry
     /// <param name="pageRelativeUrl">Page-relative URL, forward-slashed.</param>
     /// <param name="fragment">Anchor fragment without the leading <c>#</c>; may be null/empty for whole-page references.</param>
     /// <remarks>Wraps the byte overload — pays one UTF-8 encode per call. Suitable for the build-end / programmatic callers that already hold strings.</remarks>
-    public void Register(string id, string pageRelativeUrl, string? fragment)
+    public void Register(ApiCompatString id, UrlPath pageRelativeUrl, ApiCompatString fragment)
     {
-        ArgumentException.ThrowIfNullOrEmpty(id);
-        ArgumentException.ThrowIfNullOrEmpty(pageRelativeUrl);
+        ArgumentException.ThrowIfNullOrEmpty(id.Value);
+        ArgumentException.ThrowIfNullOrEmpty(pageRelativeUrl.Value);
 
         var pageBytes = Encoding.UTF8.GetBytes(pageRelativeUrl);
-        if (string.IsNullOrEmpty(fragment))
+        if (fragment.IsEmpty)
         {
             Register(Encoding.UTF8.GetBytes(id), pageBytes, default);
             return;
