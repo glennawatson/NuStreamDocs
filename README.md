@@ -171,6 +171,27 @@ Both themes honor the same `IStaticAssetProvider` /
 `IHeadExtraProvider` contracts, so any plugin written once works under either
 theme without recompilation.
 
+### Configuring with UTF-8 string literals (`"..."u8`)
+
+The fluent option setters that take user-facing text or URLs accept **UTF-8
+string literals** (`"..."u8`) directly — same shape the engine uses
+internally, so the value lands as bytes with no per-call UTF-8 encode:
+
+```csharp
+.UseMaterial3Theme(opts => opts
+    .WithSiteName("My Project"u8)
+    .WithLogo("images/logo.png"u8)
+    .WithSiteUrl("https://example.com"u8)
+    .WithCopyright("Copyright © 2026 My Project Authors"u8)
+    .WithRepoUrl("https://github.com/me/my-project"u8)
+    .WithEditUri("https://github.com/me/my-project/edit/main/docs/"u8))
+```
+
+The same pattern applies wherever a plugin's option setters take inline
+strings — for example `.UsePrivacy(opts => opts.AddHostsToSkip("example.com"u8))`.
+Use `"..."u8` for literal values and the regular `string` overloads for
+values you've already loaded from configuration.
+
 ---
 
 ## Plugins (overview)
