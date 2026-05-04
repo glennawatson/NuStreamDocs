@@ -61,7 +61,8 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
         // Two-buffer dance is necessary because we read from html.WrittenSpan while writing the
         // rewritten output — same writer can't be both source and sink.
         using var scratch = PageBuilderPool.Rent(rendered.Length);
-        MarkdownLinkRewriter.RewriteInto(rendered, _useDirectoryUrls, scratch.Writer);
+        var prependParent = _useDirectoryUrls && IsNonIndexMarkdownPath(context.RelativePath);
+        MarkdownLinkRewriter.RewriteInto(rendered, _useDirectoryUrls, prependParent, scratch.Writer);
         html.ResetWrittenCount();
         html.Write(scratch.Writer.WrittenSpan);
 
@@ -74,5 +75,19 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
         _ = context;
         _ = cancellationToken;
         return ValueTask.CompletedTask;
+    }
+
+    /// <summary>Returns true when <paramref name="relativePath"/> names a non-index markdown file (gains an extra directory level under directory-URL mode).</summary>
+    /// <param name="relativePath">Source-relative page path.</param>
+    /// <returns>True for non-index markdown pages.</returns>
+    private static bool IsNonIndexMarkdownPath(FilePath relativePath)
+    {
+        if (relativePath.IsEmpty)
+        {
+            return false;
+        }
+
+        var name = Path.GetFileNameWithoutExtension(relativePath.Value.AsSpan());
+        return !name.Equals("index", StringComparison.OrdinalIgnoreCase);
     }
 }

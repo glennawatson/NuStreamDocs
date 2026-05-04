@@ -70,7 +70,18 @@ internal static class MarkdownLinkRewriter
     /// <param name="html">Rendered HTML.</param>
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c> (and <c>index.md</c> → empty); when false, <c>foo.md</c> → <c>foo.html</c>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, ArrayBufferWriter<byte> writer)
+    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, ArrayBufferWriter<byte> writer) =>
+        RewriteInto(html, useDirectoryUrls, prependParent: false, writer);
+
+    /// <summary>
+    /// Streams the rewrite of <paramref name="html"/> into <paramref name="writer"/>, optionally prepending
+    /// <c>../</c> to every relative href so file-relative links resolve correctly under directory URLs.
+    /// </summary>
+    /// <param name="html">Rendered HTML.</param>
+    /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c>.</param>
+    /// <param name="prependParent">Prepend <c>../</c> for non-index pages emitted under directory URLs.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, bool prependParent, ArrayBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
         if (html.IsEmpty)
@@ -99,7 +110,7 @@ internal static class MarkdownLinkRewriter
             }
 
             var attrEnd = attrStart + quoteRel;
-            EmitHref(html[attrStart..attrEnd], writer, useDirectoryUrls);
+            EmitHref(html[attrStart..attrEnd], writer, useDirectoryUrls, prependParent);
             cursor = attrEnd;
         }
     }
@@ -108,7 +119,8 @@ internal static class MarkdownLinkRewriter
     /// <param name="href">Attribute value bytes (without the surrounding quotes).</param>
     /// <param name="sink">Output sink.</param>
     /// <param name="useDirectoryUrls">Selects the directory-URL output shape.</param>
-    private static void EmitHref(ReadOnlySpan<byte> href, ArrayBufferWriter<byte> sink, bool useDirectoryUrls)
+    /// <param name="prependParent">When true, prepend <c>../</c> before the rewritten directory-style URL.</param>
+    private static void EmitHref(ReadOnlySpan<byte> href, ArrayBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
     {
         if (!IsRelative(href))
         {
@@ -128,6 +140,11 @@ internal static class MarkdownLinkRewriter
         var tail = pathEnd < 0 ? default : href[pathEnd..];
         if (useDirectoryUrls)
         {
+            if (prependParent)
+            {
+                sink.Write("../"u8);
+            }
+
             EmitDirectoryStyle(stem, tail, sink);
             return;
         }
