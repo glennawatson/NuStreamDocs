@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Abbr</PackageId>
-    <Description>Abbreviation plugin for NuStreamDocs. Implements the Markdown Extra abbreviation syntax — strips `*[token]: definition` lines from the source and wraps every subsequent occurrence of the token in &lt;abbr title="definition"&gt;.</Description>
+    <Description>Show definitions on hover for abbreviations and acronyms in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Abbr</RootNamespace>
   </PropertyGroup>
 

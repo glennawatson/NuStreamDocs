@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Search</PackageId>
-    <Description>Build-time search-index plugin for NuStreamDocs. Walks rendered pages, extracts plain text and heading anchors, and emits an index in the configured format. Defaults to a Pagefind-compatible sharded index for large corpora; Lunr-compatible JSON is available for sites using the upstream mkdocs-material bundled JS.</Description>
+    <Description>Add full-text search to your NuStreamDocs site. The search index is built at the same time as the site — readers get instant results in the browser without a separate server.</Description>
     <RootNamespace>NuStreamDocs.Search</RootNamespace>
   </PropertyGroup>
 

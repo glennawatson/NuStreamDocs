@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Theme.Material</PackageId>
-    <Description>Material-styled theme for NuStreamDocs. Mustache page template plus the Material CSS/JS bundle, all shipped inside the assembly as embedded resources for single-file / AOT-friendly distribution.</Description>
+    <Description>Material-styled theme for NuStreamDocs. Page template, styles, and scripts all ship inside the package — no external assets to manage.</Description>
     <RootNamespace>NuStreamDocs.Theme.Material</RootNamespace>
   </PropertyGroup>
 

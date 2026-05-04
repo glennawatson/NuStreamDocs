@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Sitemap</PackageId>
-    <Description>Site-level emitters for NuStreamDocs — sitemap.xml + robots.txt, a default 404 page, and redirect stubs. Each plugin is opt-in via its own builder extension.</Description>
+    <Description>Generate the standard site-level files for your NuStreamDocs build — sitemap.xml, robots.txt, a 404 page, and URL redirect stubs.</Description>
     <RootNamespace>NuStreamDocs.Sitemap</RootNamespace>
   </PropertyGroup>
 

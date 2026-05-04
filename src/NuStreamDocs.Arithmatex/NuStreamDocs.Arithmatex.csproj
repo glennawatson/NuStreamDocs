@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Arithmatex</PackageId>
-    <Description>Arithmatex plugin for NuStreamDocs. Implements pymdownx.arithmatex (generic mode) — wraps `$x$` and `$$x$$` math spans in MathJax/KaTeX-friendly markup so a client-side renderer picks them up.</Description>
+    <Description>Render math equations in your NuStreamDocs documentation. Write LaTeX-style math inline with `$x$` or as a display block with `$$x$$`.</Description>
     <RootNamespace>NuStreamDocs.Arithmatex</RootNamespace>
   </PropertyGroup>
 

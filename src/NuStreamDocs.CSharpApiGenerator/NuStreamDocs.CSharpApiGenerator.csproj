@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.CSharpApiGenerator</PackageId>
-    <Description>C# reference plugin for NuStreamDocs. Wraps SourceDocParser + the Zensical emitter so a builder can pull NuGet-packaged assemblies, generate Markdown reference pages into the docs tree, and have them picked up by normal page discovery.</Description>
+    <Description>Generate API reference pages from your .NET assemblies as part of your NuStreamDocs build. Point at NuGet packages or local DLLs and the plugin writes Markdown reference docs into your docs tree, ready to be linked from your handwritten content.</Description>
     <RootNamespace>NuStreamDocs.CSharpApiGenerator</RootNamespace>
   </PropertyGroup>
 

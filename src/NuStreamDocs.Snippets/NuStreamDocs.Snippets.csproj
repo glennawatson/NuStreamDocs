@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Snippets</PackageId>
-    <Description>Snippets plugin for NuStreamDocs. Implements pymdownx.snippets — splices `--8&lt;-- "file"` includes inline at preprocess time, resolved against the docs root.</Description>
+    <Description>Reuse content across pages in your NuStreamDocs documentation. Write `--8&lt;-- "shared/note.md"` and the contents of that file are spliced inline at build time.</Description>
     <RootNamespace>NuStreamDocs.Snippets</RootNamespace>
   </PropertyGroup>
 

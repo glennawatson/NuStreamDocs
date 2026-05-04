@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Serve</PackageId>
-    <Description>Watch + dev-server plugin for NuStreamDocs. Wraps DocBuilder.BuildAsync in a long-running watch loop: rebuilds on file change (FileSystemWatcher with debouncing) and serves the output directory over Kestrel with a LiveReload websocket so connected browsers refresh automatically. AOT-compatible — uses WebApplication.CreateSlimBuilder + middleware routing, no reflection-based DI.</Description>
+    <Description>Local development server for NuStreamDocs. Watches your source files, rebuilds on change, serves the site, and live-reloads connected browsers automatically.</Description>
     <RootNamespace>NuStreamDocs.Serve</RootNamespace>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>

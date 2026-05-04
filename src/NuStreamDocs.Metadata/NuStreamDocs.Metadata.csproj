@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Metadata</PackageId>
-    <Description>Metadata plugin for NuStreamDocs. Walks the docs tree at configure time, merges directory-level (`_meta.yml`) and per-page sidecar (`page.meta.yml`) frontmatter, and splices the merged keys into each page before render — concept-level inspired by Statiq's directory/sidecar/computed metadata model, byte-level UTF-8 throughout.</Description>
+    <Description>Apply shared frontmatter to your NuStreamDocs pages without copying it into every file. Drop a `_meta.yml` next to a folder and every page in it inherits those keys; override per page with a `page.meta.yml` sidecar.</Description>
     <RootNamespace>NuStreamDocs.Metadata</RootNamespace>
   </PropertyGroup>
 

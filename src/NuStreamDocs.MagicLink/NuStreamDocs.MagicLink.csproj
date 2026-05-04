@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.MagicLink</PackageId>
-    <Description>Magic-link plugin for NuStreamDocs. Implements pymdownx.magiclink default behavior — wraps bare http(s)/ftp(s)/mailto/www URLs in CommonMark autolink brackets so the inline renderer emits anchor tags.</Description>
+    <Description>Auto-link bare URLs and email addresses in your NuStreamDocs markdown. Write `https://example.com` or `me@example.com` and it renders as a clickable link without needing explicit angle brackets or markdown link syntax.</Description>
     <RootNamespace>NuStreamDocs.MagicLink</RootNamespace>
   </PropertyGroup>
 

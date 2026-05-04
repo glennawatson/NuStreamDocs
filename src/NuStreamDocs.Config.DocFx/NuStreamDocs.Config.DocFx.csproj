@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Config.DocFx</PackageId>
-    <Description>DocFx-style toc.yml reader for NuStreamDocs. Recursively walks a docs root, follows toc.yml -&gt; toc.yml references, and feeds the resulting nav tree into NavOptions.CuratedEntries.</Description>
+    <Description>Build your NuStreamDocs navigation from nested `toc.yml` outline files. Drop `toc.yml` files alongside your content and the structure becomes your sidebar.</Description>
     <RootNamespace>NuStreamDocs.Config.DocFx</RootNamespace>
   </PropertyGroup>
 

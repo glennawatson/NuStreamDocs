@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.LinkValidator</PackageId>
-    <Description>Strict-mode link validator for NuStreamDocs. Internal mode follows mkdocs --strict (relative links + anchors + nav/disk consistency); the optional external mode HTTP-checks absolute URLs through Polly with host-batched throttling and retry.</Description>
+    <Description>Catch broken links in your NuStreamDocs site at build time. Internal mode flags references to missing pages or anchors; optional external mode HTTP-checks absolute URLs.</Description>
     <RootNamespace>NuStreamDocs.LinkValidator</RootNamespace>
   </PropertyGroup>
 

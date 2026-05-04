@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Nav</PackageId>
-    <Description>Rich navigation plugin for NuStreamDocs: glob includes, ordering hints, hidden sections, per-directory override files, multi-level rewrites.</Description>
+    <Description>Build the sidebar navigation for your NuStreamDocs site with glob includes, custom ordering, hidden sections, and per-directory overrides.</Description>
     <RootNamespace>NuStreamDocs.Nav</RootNamespace>
   </PropertyGroup>
 

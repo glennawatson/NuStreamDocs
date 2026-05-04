@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Keys</PackageId>
-    <Description>Keys plugin for NuStreamDocs. Implements pymdownx.keys: turns ++ctrl+alt+del++ markup into a structured keys span with normalized key classes for theme styling.</Description>
+    <Description>Render keyboard shortcuts in your NuStreamDocs documentation. Write `++ctrl+alt+del++` and the plugin styles each key as a keycap.</Description>
     <RootNamespace>NuStreamDocs.Keys</RootNamespace>
   </PropertyGroup>
 

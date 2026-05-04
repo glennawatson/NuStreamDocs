@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Mermaid</PackageId>
-    <Description>Mermaid diagram plugin for NuStreamDocs. Retags fenced mermaid code blocks into a container the mermaid runtime auto-discovers and pulls the runtime in via a head &lt;script&gt; tag.</Description>
+    <Description>Render Mermaid diagrams (flowcharts, sequence diagrams, class diagrams, …) from fenced ```mermaid blocks in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Mermaid</RootNamespace>
   </PropertyGroup>
 

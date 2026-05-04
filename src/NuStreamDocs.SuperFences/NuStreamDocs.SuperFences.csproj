@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.SuperFences</PackageId>
-    <Description>Custom-fence dispatcher for NuStreamDocs. Auto-discovers ICustomFenceHandler plugins during configure and rewrites &lt;pre&gt;&lt;code class="language-X"&gt; blocks whose language is claimed by a registered handler.</Description>
+    <Description>Lets other plugins claim a fenced-code-block language (like `mermaid` or `math`) and render the block however they like. Pull this in when you're using a plugin that asks for it.</Description>
     <RootNamespace>NuStreamDocs.SuperFences</RootNamespace>
   </PropertyGroup>
 

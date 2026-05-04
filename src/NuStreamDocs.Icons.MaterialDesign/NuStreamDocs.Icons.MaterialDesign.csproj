@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Icons.MaterialDesign</PackageId>
-    <Description>Material Design Icons (MDI) inline-SVG resolver for NuStreamDocs. Plugs into the icon-shortcode rewriter to inline MDI SVGs directly into rendered HTML — matches mkdocs-material's :material-foo: shape so docs that target the MDI name space (~7000 icons) render the right glyph instead of a font-ligature span. Uses a precompiled byte-keyed FrozenDictionary alternate-lookup so per-page resolution stays allocation-free.</Description>
+    <Description>Use any of the ~7000 Material Design Icons (MDI) in your NuStreamDocs documentation. Reference an icon as `:material-foo:` and the SVG is inlined directly into the page.</Description>
     <RootNamespace>NuStreamDocs.Icons.MaterialDesign</RootNamespace>
   </PropertyGroup>
 

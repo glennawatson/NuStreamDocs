@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Config.MkDocs</PackageId>
-    <Description>mkdocs.yml reader plugin for NuStreamDocs. Hand-rolled span and UTF-8 YAML to JSON pipeline; never round-trips through strings.</Description>
+    <Description>Configure your NuStreamDocs site from a YAML file. Reads the common `mkdocs.yml` shape so projects migrating from a YAML-driven static site can keep their existing config.</Description>
     <RootNamespace>NuStreamDocs.Config.MkDocs</RootNamespace>
   </PropertyGroup>
 

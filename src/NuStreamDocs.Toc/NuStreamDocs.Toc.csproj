@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Toc</PackageId>
-    <Description>Per-page table-of-contents and permalink heading-anchor plugin for NuStreamDocs.</Description>
+    <Description>Add a per-page table of contents and clickable permalink anchors next to each heading in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Toc</RootNamespace>
   </PropertyGroup>
 

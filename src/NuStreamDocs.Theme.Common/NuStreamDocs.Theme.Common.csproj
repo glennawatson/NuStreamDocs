@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Theme.Common</PackageId>
-    <Description>Shared theme-side helpers for NuStreamDocs. Owns the byte-level icon-shortcode rewriter plus the common embedded-asset loader, theme-model loader, and page-shell base used by the built-in Material and Material 3 themes.</Description>
+    <Description>Shared building blocks for NuStreamDocs theme plugins. You don't normally reference this directly — the theme you're using brings it in for you.</Description>
     <RootNamespace>NuStreamDocs.Theme.Common</RootNamespace>
   </PropertyGroup>
 

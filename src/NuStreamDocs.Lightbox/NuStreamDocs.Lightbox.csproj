@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Lightbox</PackageId>
-    <Description>glightbox-compatible image lightbox plugin for NuStreamDocs. Adds the glightbox CSS + JS to every page head and wraps content images in &lt;a&gt; lightbox triggers.</Description>
+    <Description>Click to open images in a full-screen lightbox viewer in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Lightbox</RootNamespace>
   </PropertyGroup>
 

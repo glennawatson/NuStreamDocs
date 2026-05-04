@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Emoji</PackageId>
-    <Description>Emoji plugin for NuStreamDocs. Implements the pymdownx.emoji default shortcode rewriter — turns :name: shortcodes into &lt;span class="twemoji"&gt; spans backed by a built-in popular-emoji index.</Description>
+    <Description>Drop emoji into your NuStreamDocs documentation using `:name:` shortcodes (`:smile:`, `:rocket:`, …).</Description>
     <RootNamespace>NuStreamDocs.Emoji</RootNamespace>
   </PropertyGroup>
 

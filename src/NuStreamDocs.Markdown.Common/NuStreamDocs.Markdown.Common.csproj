@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Markdown.Common</PackageId>
-    <Description>Shared byte-level scanning helpers for NuStreamDocs markdown rewriters — fenced-code passthrough, inline-code passthrough, line-start / line-end probes, and indented-body detection. Pulled out of duplicated copies across Emoji / Keys / Abbr / Arithmatex / SmartSymbols / MagicLink / CaretTilde and the MarkdownExtensions internal helpers.</Description>
+    <Description>Shared building blocks for NuStreamDocs markdown plugins. You don't normally reference this directly — the markdown plugin you're using brings it in for you.</Description>
     <RootNamespace>NuStreamDocs.Markdown.Common</RootNamespace>
   </PropertyGroup>
 

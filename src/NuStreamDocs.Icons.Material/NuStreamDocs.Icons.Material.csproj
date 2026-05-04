@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Icons.Material</PackageId>
-    <Description>Google Material icon-font plugin for NuStreamDocs. Supports both classic Material Icons and the newer Material Symbols (Outlined / Rounded / Sharp). Theme-agnostic; pairs with any theme via the IHeadExtraProvider contract.</Description>
+    <Description>Use Google Material Icons and Material Symbols (Outlined / Rounded / Sharp) in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Icons.Material</RootNamespace>
   </PropertyGroup>
 

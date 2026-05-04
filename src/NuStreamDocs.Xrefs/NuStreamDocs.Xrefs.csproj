@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Xrefs</PackageId>
-    <Description>DocFX-style xrefmap plugin for NuStreamDocs. Emits an xrefmap.json catalog at finalize time, optionally consumes external xrefmaps at configure time, and resolves cross-site UIDs through the Autorefs registry. Byte-level UTF-8 throughout.</Description>
+    <Description>Cross-link references between separate NuStreamDocs sites by symbol name. Publishes an `xrefmap.json` catalog of every named anchor in your build, and consumes catalogs from other sites so cross-site references resolve to the right page.</Description>
     <RootNamespace>NuStreamDocs.Xrefs</RootNamespace>
   </PropertyGroup>
 

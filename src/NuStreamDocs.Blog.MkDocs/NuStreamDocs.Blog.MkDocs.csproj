@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Blog.MkDocs</PackageId>
-    <Description>mkdocs-material-style blog plugin for NuStreamDocs. Reads posts under blog/posts/ with the categories/date/authors frontmatter shape and emits index + category archives. Layered on NuStreamDocs.Blog.Common so post parsing and markdown generation are shared with the Wyam variant.</Description>
+    <Description>Add a blog with categories, dates, and authors to your NuStreamDocs site. Drop posts under `blog/posts/` and the plugin generates an index page and per-category archive pages.</Description>
     <RootNamespace>NuStreamDocs.Blog.MkDocs</RootNamespace>
   </PropertyGroup>
 

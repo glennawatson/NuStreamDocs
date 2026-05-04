@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.SmartSymbols</PackageId>
-    <Description>Smart-symbols plugin for NuStreamDocs. Implements pymdownx.smartsymbols defaults — copyright/registered/trademark, c/o, +/-, =/=, arrow forms, and the common fractions — as a UTF-8 markdown preprocessor.</Description>
+    <Description>Auto-substitute typographic symbols in your NuStreamDocs markdown — copyright, registered, trademark, plus-minus, arrows, and common fractions — without needing to type the Unicode characters yourself.</Description>
     <RootNamespace>NuStreamDocs.SmartSymbols</RootNamespace>
   </PropertyGroup>
 

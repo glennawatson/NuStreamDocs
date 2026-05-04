@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Theme.Material3</PackageId>
-    <Description>Material Design 3 theme for NuStreamDocs. Hand-written MD3 stylesheet using design tokens (color roles, shape, typography, elevation), structurally inspired by mkdocs-material 9.x but rebuilt for the modern MD3 surface treatment. Ships its own templates and assets as embedded resources.</Description>
+    <Description>Material Design 3 theme for NuStreamDocs. MD3 design tokens (color roles, shape, typography, elevation) for a modern look. Page template, styles, and scripts all ship inside the package — no external assets to manage.</Description>
     <RootNamespace>NuStreamDocs.Theme.Material3</RootNamespace>
   </PropertyGroup>
 

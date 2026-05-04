@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Autorefs</PackageId>
-    <Description>Cross-document reference resolver for NuStreamDocs. Collects heading anchor IDs during render and rewrites @autoref:ID markers in the emitted HTML to the resolved page URL + fragment.</Description>
+    <Description>Cross-link to any heading in your NuStreamDocs site by ID. Write `@autoref:my-section-id` in your markdown and it resolves to the right page + anchor at build time, no matter where the heading lives.</Description>
     <RootNamespace>NuStreamDocs.Autorefs</RootNamespace>
   </PropertyGroup>
 

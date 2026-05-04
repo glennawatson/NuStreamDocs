@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Icons.FontAwesome</PackageId>
-    <Description>Font Awesome icon-font plugin for NuStreamDocs. Theme-agnostic; pairs with any theme via the IHeadExtraProvider contract. Loads Font Awesome Free from a configurable CDN.</Description>
+    <Description>Use Font Awesome icons in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Icons.FontAwesome</RootNamespace>
   </PropertyGroup>
 

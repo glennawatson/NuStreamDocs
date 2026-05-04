@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Blog.Common</PackageId>
-    <Description>Shared blog pipeline for NuStreamDocs. Owns the Wyam-style frontmatter reader, post scanner, markdown emitters, and generation orchestration used by both the legacy Wyam blog plugin and the mkdocs-style variant.</Description>
+    <Description>Shared building blocks for the NuStreamDocs blog plugins. You normally pull in NuStreamDocs.Blog or NuStreamDocs.Blog.MkDocs instead — they bring this in for you.</Description>
     <RootNamespace>NuStreamDocs.Blog.Common</RootNamespace>
   </PropertyGroup>
 

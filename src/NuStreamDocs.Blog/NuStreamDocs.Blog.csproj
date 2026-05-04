@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Blog</PackageId>
-    <Description>Wyam-compatible blog/journal plugin for NuStreamDocs. Walks a flat directory of YYYY-MM-DD-slug.md posts, parses Wyam-style frontmatter (NoTitle / IsBlog / Title / Tags / Author / Published), and generates an index + tag archives. Drop-in for the legacy reactiveui.net blog/announcements layout.</Description>
+    <Description>Add a blog or news section to your NuStreamDocs site. Drop date-named markdown posts (`YYYY-MM-DD-slug.md`) into a folder and the plugin generates an index page and per-tag archive pages.</Description>
     <RootNamespace>NuStreamDocs.Blog</RootNamespace>
   </PropertyGroup>
 

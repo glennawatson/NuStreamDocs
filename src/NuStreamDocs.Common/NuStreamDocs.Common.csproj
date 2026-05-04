@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Common</PackageId>
-    <Description>Byte and UTF-8 helpers shared across the NuStreamDocs assemblies — ASCII classifiers, byte-array equality, an HTML byte scanner, the per-thread page-builder pool, and small utility types.</Description>
+    <Description>Shared utility types and helpers used across the NuStreamDocs assemblies. You don't normally reference this directly — the plugin you're using brings it in for you.</Description>
     <RootNamespace>NuStreamDocs.Common</RootNamespace>
   </PropertyGroup>
 

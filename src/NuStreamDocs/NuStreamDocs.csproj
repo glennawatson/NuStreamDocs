@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs</PackageId>
-    <Description>AOT-friendly, allocation-conscious Markdown and static-site generator core. Custom span/UTF-8 parser, HTML emitter, page pipeline, plugin contract, content-hash incremental builds. Theme assets ship in dedicated theme plugin assemblies (e.g. NuStreamDocs.Theme.Material).</Description>
+    <Description>Static-site generator core for building documentation sites from markdown. Includes the markdown parser, HTML renderer, page pipeline, plugin host, and incremental rebuild support. AOT-friendly and allocation-conscious. Pair with a theme plugin and the markdown / navigation / search extensions you need.</Description>
     <RootNamespace>NuStreamDocs</RootNamespace>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
   </PropertyGroup>

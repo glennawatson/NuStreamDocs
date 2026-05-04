@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Config.Zensical</PackageId>
-    <Description>Zensical-flavored TOML config reader plugin for NuStreamDocs. Span-based and AOT clean.</Description>
+    <Description>Configure your NuStreamDocs site from a TOML file.</Description>
     <RootNamespace>NuStreamDocs.Config.Zensical</RootNamespace>
   </PropertyGroup>
 

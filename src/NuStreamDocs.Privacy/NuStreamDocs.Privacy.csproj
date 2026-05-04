@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Privacy</PackageId>
-    <Description>Privacy plugin for NuStreamDocs. Detects external assets (img, link, script) referenced from rendered pages, localizes them under assets/external/, and rewrites the page HTML to point at the local copies — the equivalent of mkdocs-material's privacy plugin scoped to asset externalization.</Description>
+    <Description>Stop your NuStreamDocs pages from leaking visitor data to third-party CDNs. Downloads external images, scripts, and stylesheets at build time, ships them with your site, and rewrites the page HTML to load the local copies.</Description>
     <RootNamespace>NuStreamDocs.Privacy</RootNamespace>
   </PropertyGroup>
 

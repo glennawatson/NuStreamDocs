@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>NuStreamDocs.Tags</PackageId>
-    <Description>Tags plugin for NuStreamDocs. Collects per-page `tags:` frontmatter during the build and emits a tags index plus per-tag listing pages.</Description>
+    <Description>Tag your NuStreamDocs pages and get an automatic tags index plus a listing page per tag.</Description>
     <RootNamespace>NuStreamDocs.Tags</RootNamespace>
   </PropertyGroup>
 
