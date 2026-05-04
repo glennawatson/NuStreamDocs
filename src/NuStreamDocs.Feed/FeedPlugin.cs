@@ -4,6 +4,7 @@
 
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Blog.Common;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Feed;
@@ -31,7 +32,7 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>Captured input root from the configure phase; required by finalize.</summary>
-    private string _inputRoot = string.Empty;
+    private DirectoryPath _inputRoot;
 
     /// <summary>Initializes a new instance of the <see cref="FeedPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
@@ -71,7 +72,7 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
-        if (_options.Formats == FeedFormats.None || string.IsNullOrEmpty(_inputRoot))
+        if (_options.Formats == FeedFormats.None || _inputRoot.IsEmpty)
         {
             return ValueTask.CompletedTask;
         }

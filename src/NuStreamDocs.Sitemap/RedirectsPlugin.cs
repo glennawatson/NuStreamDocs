@@ -51,7 +51,7 @@ public sealed class RedirectsPlugin : IDocPlugin
     private readonly byte[] _aliasKeyBytes;
 
     /// <summary>Captured input root for config-file lookup.</summary>
-    private string _inputRoot = string.Empty;
+    private DirectoryPath _inputRoot;
 
     /// <summary>Initializes a new instance of the <see cref="RedirectsPlugin"/> class with default options and no static entries.</summary>
     public RedirectsPlugin()
@@ -133,7 +133,7 @@ public sealed class RedirectsPlugin : IDocPlugin
             merged[entry.Key] = entry.Value;
         }
 
-        if (_options.LoadConfigFile && !string.IsNullOrEmpty(_options.ConfigFileName) && !string.IsNullOrEmpty(_inputRoot))
+        if (_options.LoadConfigFile && !string.IsNullOrEmpty(_options.ConfigFileName) && !_inputRoot.IsEmpty)
         {
             var configPath = Path.Combine(_inputRoot, _options.ConfigFileName);
             if (File.Exists(configPath))
