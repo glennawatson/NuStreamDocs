@@ -66,8 +66,8 @@ public static class BlogContentGenerator
         var archiveCount = 0;
         foreach (var (tag, postsForTag) in GroupByTag(posts))
         {
-            var safeSlug = BlogSlugifier.Slugify(tag, options.ArchiveFallbackSlug);
-            var archivePath = Path.Combine(options.ArchiveRoot, safeSlug + ".md");
+            var safeSlugBytes = BlogSlugifier.Slugify(System.Text.Encoding.UTF8.GetBytes(tag), System.Text.Encoding.UTF8.GetBytes(options.ArchiveFallbackSlug));
+            var archivePath = Path.Combine(options.ArchiveRoot, System.Text.Encoding.UTF8.GetString(safeSlugBytes) + ".md");
             writer.ResetWrittenCount();
             BlogIndexEmitter.WriteTagArchive(writer, tag, [.. postsForTag]);
             await File.WriteAllBytesAsync(archivePath, writer.WrittenMemory, cancellationToken).ConfigureAwait(false);

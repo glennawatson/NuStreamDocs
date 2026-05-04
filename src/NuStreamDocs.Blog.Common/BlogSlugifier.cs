@@ -8,49 +8,59 @@ namespace NuStreamDocs.Blog.Common;
 internal static class BlogSlugifier
 {
     /// <summary>Difference between an ASCII uppercase and lowercase letter.</summary>
-    private const int AsciiCaseShift = 32;
+    private const byte AsciiCaseShift = 32;
 
     /// <summary>Slugifies <paramref name="value"/>: lowercased ASCII alphanumerics plus <c>-</c>/<c>_</c>; everything else collapses or drops.</summary>
-    /// <param name="value">Source text.</param>
+    /// <param name="value">Source UTF-8 bytes.</param>
     /// <param name="fallback">Returned when nothing slug-safe survives.</param>
-    /// <returns>Slug.</returns>
-    public static string Slugify(string value, string fallback)
+    /// <returns>Slug bytes.</returns>
+    public static byte[] Slugify(ReadOnlySpan<byte> value, ReadOnlySpan<byte> fallback)
     {
-        var chars = new char[value.Length];
+        var dst = new byte[value.Length];
         var written = 0;
         for (var i = 0; i < value.Length; i++)
         {
-            var mapped = MapChar(value[i]);
-            if (mapped != '\0')
+            var mapped = MapByte(value[i]);
+            if (mapped != 0)
             {
-                chars[written++] = mapped;
+                dst[written++] = mapped;
             }
         }
 
-        return written == 0 ? fallback : new(chars, 0, written);
+        if (written == 0)
+        {
+            return fallback.ToArray();
+        }
+
+        if (written != dst.Length)
+        {
+            Array.Resize(ref dst, written);
+        }
+
+        return dst;
     }
 
-    /// <summary>Maps one character to its slug equivalent or <c>\0</c> when it should be dropped.</summary>
-    /// <param name="c">Source character.</param>
-    /// <returns>Slug char or NUL.</returns>
-    private static char MapChar(char c)
+    /// <summary>Maps one byte to its slug equivalent or <c>0</c> when it should be dropped.</summary>
+    /// <param name="b">Source byte.</param>
+    /// <returns>Slug byte or NUL.</returns>
+    private static byte MapByte(byte b)
     {
-        if (IsLowerAlphanumeric(c) || c is '-' or '_')
+        if (IsLowerAlphanumeric(b) || b is (byte)'-' or (byte)'_')
         {
-            return c;
+            return b;
         }
 
-        if (c is >= 'A' and <= 'Z')
+        if (b is >= (byte)'A' and <= (byte)'Z')
         {
-            return (char)(c + AsciiCaseShift);
+            return (byte)(b + AsciiCaseShift);
         }
 
-        return c is ' ' or '/' ? '-' : '\0';
+        return b is (byte)' ' or (byte)'/' ? (byte)'-' : (byte)0;
     }
 
     /// <summary>True for ASCII <c>a–z</c> or <c>0–9</c>.</summary>
-    /// <param name="c">Char.</param>
+    /// <param name="b">Byte.</param>
     /// <returns>True when slug-safe without case translation.</returns>
-    private static bool IsLowerAlphanumeric(char c) =>
-        c is >= 'a' and <= 'z' or >= '0' and <= '9';
+    private static bool IsLowerAlphanumeric(byte b) =>
+        b is >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9';
 }
