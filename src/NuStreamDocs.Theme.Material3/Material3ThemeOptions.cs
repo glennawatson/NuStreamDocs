@@ -16,6 +16,7 @@ namespace NuStreamDocs.Theme.Material3;
 /// <param name="EmbeddedAssetRoot">UTF-8 local URL prefix when assets are bundled.</param>
 /// <param name="CdnRoot">UTF-8 remote URL prefix when assets are served from a CDN.</param>
 /// <param name="SiteName">UTF-8 top-bar site title injected into every page.</param>
+/// <param name="Logo">UTF-8 href used for the site logo image (e.g. <c>images/logo.png</c>); empty when no logo image should be rendered and the site name should display instead.</param>
 /// <param name="SiteUrl">UTF-8 absolute site URL (e.g. <c>https://reactiveui.net</c>); empty when no canonical / og:url should be rendered. Mirrors mkdocs's <c>site_url</c>.</param>
 /// <param name="Language">UTF-8 HTML <c>lang</c> attribute value.</param>
 /// <param name="Copyright">UTF-8 footer copyright line.</param>
@@ -32,6 +33,7 @@ public readonly record struct Material3ThemeOptions(
     byte[] EmbeddedAssetRoot,
     byte[] CdnRoot,
     byte[] SiteName,
+    byte[] Logo,
     byte[] SiteUrl,
     byte[] Language,
     byte[] Copyright,
@@ -52,6 +54,7 @@ public readonly record struct Material3ThemeOptions(
         EmbeddedAssetRoot: DefaultEmbeddedAssetRoot,
         CdnRoot: [],
         SiteName: [],
+        Logo: [],
         SiteUrl: [],
         Language: [.. "en"u8],
         Copyright: [],

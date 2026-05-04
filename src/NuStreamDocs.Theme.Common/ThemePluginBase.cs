@@ -39,6 +39,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>UTF-8 template-data key for <c>site_name</c>.</summary>
     private static readonly byte[] SiteNameKey = "site_name"u8.ToArray();
 
+    /// <summary>UTF-8 template-data key for <c>logo</c> — page-relative href to the site logo image.</summary>
+    private static readonly byte[] LogoKey = "logo"u8.ToArray();
+
     /// <summary>UTF-8 template variable for the absolute site URL.</summary>
     private static readonly byte[] SiteUrlKey = "site_url"u8.ToArray();
 
@@ -189,10 +192,11 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             var pageTitle = ResolvePageTitle(context);
             var neighbours = ResolveNeighbours(context.RelativePath);
             var data = new TemplateData(
-                new(22, ByteArrayComparer.Instance)
+                new(23, ByteArrayComparer.Instance)
                 {
                     [LanguageKey] = _options.Language,
                     [SiteNameKey] = _options.SiteName,
+                    [LogoKey] = ResolvePageRelativeUrl(_options.Logo, context.RelativePath),
                     [SiteUrlKey] = _options.SiteUrl,
                     [CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath),
                     [SiteRootKey] = SiteRootBytes,
@@ -489,6 +493,31 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
 
         // Strip a leading '/' so concatenation with the page-relative prefix doesn't produce a site-root absolute URL.
         var span = assetRoot.AsSpan();
+        var trimmed = span is [(byte)'/', ..] ? span[1..] : span;
+        var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
+        if (prefix.Length is 0)
+        {
+            return trimmed.ToArray();
+        }
+
+        var dst = new byte[prefix.Length + trimmed.Length];
+        prefix.AsSpan().CopyTo(dst);
+        trimmed.CopyTo(dst.AsSpan(prefix.Length));
+        return dst;
+    }
+
+    /// <summary>Rewrites a configured href (site-root absolute <c>/foo</c> or relative <c>foo</c>) to be page-relative for the current page; leaves absolute http(s) URLs untouched.</summary>
+    /// <param name="href">UTF-8 href from the theme options.</param>
+    /// <param name="relativePath">Source-relative page path.</param>
+    /// <returns>Page-relative href bytes; the original bytes when the input is empty or an absolute URL.</returns>
+    private static byte[] ResolvePageRelativeUrl(byte[] href, FilePath relativePath)
+    {
+        if (href is [] || IsAbsoluteUrl(href))
+        {
+            return href;
+        }
+
+        var span = href.AsSpan();
         var trimmed = span is [(byte)'/', ..] ? span[1..] : span;
         var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
         if (prefix.Length is 0)

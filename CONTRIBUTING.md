@@ -37,6 +37,35 @@ Test projects relax the allocation rules but keep the style rules.
   `IBufferWriter<byte>` for output. No `string` materialization in
   parse, escape, or emit. UTF-8 string literals (`"..."u8`) for tag
   fragments and JSON property names.
+- **`string` has no place in this codebase — public, internal, or
+  private.** Every text parameter, field, return value, and local in
+  production code (`src/` outside test projects) must be one of:
+  - `byte[]` / `ReadOnlySpan<byte>` / `ReadOnlyMemory<byte>` for UTF-8
+    text (the default — parse, render, emit all flow as bytes).
+  - One of the project's purpose-built path/URL structs:
+    `FilePath`, `DirectoryPath`, `PathSegment`, `GlobPattern`,
+    `UrlPath` (single-`string`-field record structs with implicit
+    conversion to `string` for BCL interop). Pick the one that
+    matches what the value *is*, not the storage shape.
+  - `NuStreamDocs.Common.ApiCompatString` — the explicit
+    "compatibility-only" wrapper, reserved for the narrow seam
+    where an outside consumer (a config-file value, a BCL signature
+    we cannot override, a plugin host that hands us text) forces
+    a `string` across the public boundary. The wrapper signals
+    "eliminate this the moment the contract changes." Encode it to
+    bytes once at construction and keep going.
+  - `nameof(...)` for member references (still produces a `string`
+    constant, but emitted by the compiler — exempt).
+  This rule applies to **private helpers too**. A `string`
+  parameter on a `private static` method is an architectural smell:
+  the caller already has bytes / a path struct, and the helper is
+  silently down-converting. Take the bytes / the struct directly.
+  When you find an existing `string` signature, treat it as tech
+  debt — convert at least the call sites you touch in your change.
+- **No `string` overloads on `WithXxx` option-extension methods.**
+  Provide `byte[]` and `ReadOnlySpan<byte>` overloads only, so call
+  sites use UTF-8 literals (`"..."u8`). A `string` overload re-opens
+  the door we just closed.
 - **Bounded caches only.** Anything cache-shaped is size and age capped
   and keyed by content hash so long-running watchers / large-project
   builds don't accrete memory.

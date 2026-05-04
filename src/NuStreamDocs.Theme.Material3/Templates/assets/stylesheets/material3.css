@@ -118,6 +118,15 @@ a:hover { text-decoration: underline; }
   grid-template-columns: 16rem minmax(0, 1fr) 14rem;
   gap: 24px;
 }
+.md-main__inner:has(> .md-sidebar--primary[hidden]):has(> .md-sidebar--secondary[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.md-main__inner:has(> .md-sidebar--primary[hidden]):not(:has(> .md-sidebar--secondary[hidden])) {
+  grid-template-columns: minmax(0, 1fr) 14rem;
+}
+.md-main__inner:not(:has(> .md-sidebar--primary[hidden])):has(> .md-sidebar--secondary[hidden]) {
+  grid-template-columns: 16rem minmax(0, 1fr);
+}
 
 /* ----- Header. ----- */
 .md-header {
@@ -573,7 +582,7 @@ a:hover { text-decoration: underline; }
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   gap: 1rem;
 }
 .md-typeset .grid.cards > :is(ul, ol) > li {
@@ -587,6 +596,21 @@ a:hover { text-decoration: underline; }
 .md-typeset .grid.cards p {
   margin: 0.35rem 0;
 }
+
+/* Inline icons emitted by the :material-...: shortcode arrive as bare
+   <svg class="lg middle"> elements (no .twemoji wrapper). Without explicit
+   sizing the browser falls back to 300x150 — make them inherit the text
+   colour and match em-relative icon sizes used by mkdocs-material. */
+.md-typeset svg[viewBox] {
+  fill: currentcolor;
+  vertical-align: text-top;
+  width: 1.125em;
+  height: 1.125em;
+}
+.md-typeset svg.lg { width: 1.5em; height: 1.5em; }
+.md-typeset svg.xl { width: 2.25em; height: 2.25em; }
+.md-typeset svg.middle,
+.md-typeset svg.lg.middle { vertical-align: middle; }
 
 .rxui-landing {
   margin: 0 -1.5rem 1.5rem;

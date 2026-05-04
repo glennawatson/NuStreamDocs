@@ -19,6 +19,13 @@ public interface IThemeShellOptions
     /// <summary>Gets the UTF-8 top-bar site title injected into every page.</summary>
     byte[] SiteName { get; }
 
+    /// <summary>
+    /// Gets the UTF-8 href used for the site logo image (e.g. <c>images/logo.png</c>);
+    /// empty when no logo image should be rendered and the site name should display
+    /// instead. Page-relative paths are rewritten per page.
+    /// </summary>
+    byte[] Logo => [];
+
     /// <summary>Gets the UTF-8 absolute site URL (e.g. <c>https://reactiveui.net</c>); empty when no canonical / OpenGraph URL should be rendered. Mirrors mkdocs's <c>site_url</c> config.</summary>
     byte[] SiteUrl { get; }
 
