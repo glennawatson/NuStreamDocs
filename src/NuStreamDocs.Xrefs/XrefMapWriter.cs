@@ -34,9 +34,10 @@ internal static class XrefMapWriter
     /// <param name="entries">Snapshot from <c>AutorefsRegistry.Snapshot()</c>.</param>
     public static void Write(FilePath outputPath, byte[] baseUrl, (byte[] Id, byte[] Url)[] entries)
     {
-        var sorted = new (ApiCompatString Id, byte[] Url)[entries.Length];
-        Array.Copy(entries, sorted, entries.Length);
-        Array.Sort(sorted, static (a, b) => string.CompareOrdinal(a.Id, b.Id));
+        // Copy then sort by UID byte sequence — ordinal UTF-8 byte compare matches
+        // ordinal string compare for valid UTF-8 and gives deterministic build-to-build ordering.
+        (byte[] Id, byte[] Url)[] sorted = [.. entries];
+        Array.Sort(sorted, static (a, b) => a.Id.AsSpan().SequenceCompareTo(b.Id.AsSpan()));
 
         var sink = new ArrayBufferWriter<byte>(initialCapacity: 1024);
         using (var writer = new Utf8JsonWriter(sink, new() { Indented = false }))
@@ -54,8 +55,8 @@ internal static class XrefMapWriter
             {
                 var (id, url) = sorted[i];
                 writer.WriteStartObject();
-                writer.WriteString("uid"u8, id);
-                writer.WriteString("href"u8, url);
+                writer.WriteString("uid"u8, (ReadOnlySpan<byte>)id);
+                writer.WriteString("href"u8, (ReadOnlySpan<byte>)url);
                 writer.WriteEndObject();
             }
 
