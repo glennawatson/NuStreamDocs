@@ -214,11 +214,31 @@
       }
     });
 
-    searchToggle.addEventListener("change", function () {
-      if (searchToggle.checked) {
-        window.setTimeout(function () { query.focus(); }, 0);
+    function focusQuery() {
+      try { query.focus(); } catch (e) { /* component may not be ready */ }
+      var inner = query.shadowRoot && query.shadowRoot.querySelector("input, textarea");
+      if (inner) {
+        try { inner.focus(); } catch (e) { /* ignore */ }
       }
+    }
+
+    searchToggle.addEventListener("change", function () {
+      if (!searchToggle.checked) {
+        return;
+      }
+
+      focusQuery();
+      window.setTimeout(focusQuery, 60);
+      window.setTimeout(focusQuery, 200);
     });
+
+    if (form) {
+      form.addEventListener("click", function (event) {
+        if (event.target === query || (query.contains && query.contains(event.target))) {
+          focusQuery();
+        }
+      });
+    }
   }
 
   function initializeRepoStats() {

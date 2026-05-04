@@ -481,10 +481,13 @@ a:hover { text-decoration: underline; }
 }
 .md-search__inner {
   display: none;
-  position: absolute;
-  top: calc(100% + 0.75rem);
-  right: 0;
+  position: fixed;
+  top: 4.25rem;
+  right: 1rem;
+  left: auto;
   width: min(36rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 5.25rem);
+  overflow-y: auto;
   padding: 0.875rem;
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--md-sys-shape-corner-lg);
@@ -612,6 +615,23 @@ a:hover { text-decoration: underline; }
 #__search:checked ~ .md-container .md-search__inner,
 #__search:checked ~ .md-container .md-search__overlay {
   display: block;
+}
+
+/* ----- Heading permalinks: reveal on heading hover/focus only. ----- */
+.md-typeset .headerlink {
+  margin-left: 0.5rem;
+  color: var(--md-sys-color-primary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.md-typeset h1:hover .headerlink,
+.md-typeset h2:hover .headerlink,
+.md-typeset h3:hover .headerlink,
+.md-typeset h4:hover .headerlink,
+.md-typeset h5:hover .headerlink,
+.md-typeset h6:hover .headerlink,
+.md-typeset .headerlink:focus {
+  opacity: 1;
 }
 
 /* ----- Footer. ----- */
