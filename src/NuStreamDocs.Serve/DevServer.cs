@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Serve;
 
@@ -85,7 +86,7 @@ internal static class DevServer
         "Justification",
         "S5332: Using http protocol is insecure. Use https instead.",
         Justification = "Local dev only.")]
-    public static string BuildUrl(in WatchAndServeOptions options) =>
+    public static UrlPath BuildUrl(in WatchAndServeOptions options) =>
         string.Create(CultureInfo.InvariantCulture, $"http://{options.Host}:{options.Port}");
 
     /// <summary>Builds the slim WebApplication without starting it.</summary>

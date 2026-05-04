@@ -100,7 +100,7 @@ public static class DocBuilderServeExtensions
             var broker = new LiveReloadBroker();
             var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, combinedToken).ConfigureAwait(false);
             var url = DevServer.BuildUrl(options);
-            ServeLoggingHelper.LogServerStart(logger, url, builder.InputRoot.Value, builder.OutputRoot.Value);
+            ServeLoggingHelper.LogServerStart(logger, url.Value, builder.InputRoot.Value, builder.OutputRoot.Value);
 
             if (options.OpenBrowser)
             {
