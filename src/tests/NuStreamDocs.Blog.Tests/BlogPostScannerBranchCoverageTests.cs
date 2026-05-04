@@ -47,10 +47,10 @@ public class BlogPostScannerBranchCoverageTests
         await Assert.That(posts.Length).IsEqualTo(2);
 
         // Newest first: 2026-02-10 > 2026-01-20
-        await Assert.That(posts[0].Slug).IsEqualTo("no-frontmatter");
-        await Assert.That(posts[0].Title).IsEqualTo("No Frontmatter");
-        await Assert.That(posts[1].Title).IsEqualTo("Custom Title");
-        await Assert.That(posts[1].Author).IsEqualTo("Alice");
+        await Assert.That(posts[0].Slug.AsSpan().SequenceEqual("no-frontmatter"u8)).IsTrue();
+        await Assert.That(posts[0].Title.AsSpan().SequenceEqual("No Frontmatter"u8)).IsTrue();
+        await Assert.That(posts[1].Title.AsSpan().SequenceEqual("Custom Title"u8)).IsTrue();
+        await Assert.That(posts[1].Author.AsSpan().SequenceEqual("Alice"u8)).IsTrue();
         await Assert.That(posts[1].Tags.Length).IsEqualTo(2);
     }
 

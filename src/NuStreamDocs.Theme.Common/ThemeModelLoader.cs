@@ -55,12 +55,12 @@ public static class ThemeModelLoader
     /// <param name="staticAssetPaths">Relative asset paths.</param>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
     /// <returns>A plain dictionary keyed by relative output path.</returns>
-    public static Dictionary<string, byte[]> LoadStaticAssets(string[] staticAssetPaths, Func<FilePath, byte[]> readBytes)
+    public static Dictionary<FilePath, byte[]> LoadStaticAssets(FilePath[] staticAssetPaths, Func<FilePath, byte[]> readBytes)
     {
         ArgumentNullException.ThrowIfNull(staticAssetPaths);
         ArgumentNullException.ThrowIfNull(readBytes);
 
-        var working = new Dictionary<string, byte[]>(staticAssetPaths.Length, StringComparer.Ordinal);
+        var working = new Dictionary<FilePath, byte[]>(staticAssetPaths.Length);
         for (var i = 0; i < staticAssetPaths.Length; i++)
         {
             var path = staticAssetPaths[i];
@@ -73,7 +73,7 @@ public static class ThemeModelLoader
     /// <summary>Builds an indexable static-asset snapshot from <paramref name="staticAssets"/>.</summary>
     /// <param name="staticAssets">Plain lookup keyed by relative path.</param>
     /// <returns>Named tuple array for write-out loops.</returns>
-    public static (FilePath RelativePath, byte[] Bytes)[] BuildStaticAssetEntries(Dictionary<string, byte[]> staticAssets)
+    public static (FilePath RelativePath, byte[] Bytes)[] BuildStaticAssetEntries(Dictionary<FilePath, byte[]> staticAssets)
     {
         ArgumentNullException.ThrowIfNull(staticAssets);
 

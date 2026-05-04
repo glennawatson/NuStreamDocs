@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using NuStreamDocs.Blog.Common;
 
 namespace NuStreamDocs.Blog.Tests;
@@ -45,7 +46,7 @@ public class BlogPostScannerParameterizedTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, $"2026-01-15-{slug}.md"), "body");
         var posts = BlogPostScanner.Scan(temp.Root, temp.Root);
         await Assert.That(posts.Length).IsEqualTo(1);
-        await Assert.That(posts[0].Title).IsEqualTo(expected);
+        await Assert.That(Encoding.UTF8.GetString(posts[0].Title)).IsEqualTo(expected);
     }
 
     /// <summary>Disposable scratch directory.</summary>

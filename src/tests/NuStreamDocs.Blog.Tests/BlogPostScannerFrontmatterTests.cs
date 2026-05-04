@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using NuStreamDocs.Blog.Common;
 
 namespace NuStreamDocs.Blog.Tests;
@@ -24,7 +25,7 @@ public class BlogPostScannerFrontmatterTests
             Path.Combine(temp.Root, "2026-04-01-slug.md"),
             $"---\n{titleField}\n---\nbody\n");
         var posts = BlogPostScanner.Scan(temp.Root, temp.Root);
-        await Assert.That(posts[0].Title).IsEqualTo(expected);
+        await Assert.That(Encoding.UTF8.GetString(posts[0].Title)).IsEqualTo(expected);
     }
 
     /// <summary>Author field shapes round-trip through BlogPost.Author.</summary>
@@ -42,7 +43,7 @@ public class BlogPostScannerFrontmatterTests
             Path.Combine(temp.Root, "2026-04-02-slug.md"),
             $"---\n{authorField}\n---\nbody\n");
         var posts = BlogPostScanner.Scan(temp.Root, temp.Root);
-        await Assert.That(posts[0].Author).IsEqualTo(expected);
+        await Assert.That(Encoding.UTF8.GetString(posts[0].Author)).IsEqualTo(expected);
     }
 
     /// <summary>Tags list shapes parse into Tags array.</summary>

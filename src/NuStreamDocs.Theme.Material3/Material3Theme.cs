@@ -16,7 +16,7 @@ namespace NuStreamDocs.Theme.Material3;
 public sealed class Material3Theme : IThemePackage
 {
     /// <summary>Embedded asset paths the theme ships.</summary>
-    private static readonly string[] StaticAssetPaths =
+    private static readonly FilePath[] StaticAssetPaths =
     [
         "assets/stylesheets/material3.css",
         "assets/javascripts/material3.js",
@@ -93,7 +93,7 @@ public sealed class Material3Theme : IThemePackage
     /// <param name="page">Compiled top-level page template.</param>
     /// <param name="partials">Compiled partial templates.</param>
     /// <param name="staticAssets">Static-asset bundle keyed by relative path.</param>
-    private Material3Theme(Template page, Dictionary<byte[], Template> partials, Dictionary<string, byte[]> staticAssets)
+    private Material3Theme(Template page, Dictionary<byte[], Template> partials, Dictionary<FilePath, byte[]> staticAssets)
     {
         Page = page;
         Partials = partials;
@@ -112,7 +112,7 @@ public sealed class Material3Theme : IThemePackage
      /// Gets the static-asset map, keyed by relative output path. Plain
      /// <see cref="Dictionary{TKey, TValue}"/> exposed read-only.
      /// </summary>
-    public ReadOnlyDictionary<string, byte[]> StaticAssets { get; }
+    public ReadOnlyDictionary<FilePath, byte[]> StaticAssets { get; }
 
     /// <inheritdoc/>
     (FilePath RelativePath, byte[] Bytes)[] IThemePackage.StaticAssetEntries => _staticAssetEntries;

@@ -68,10 +68,15 @@ public static class BlogIndexEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="tag">The tag.</param>
     /// <param name="posts">Posts that carry the tag.</param>
-    public static void WriteTagArchive(IBufferWriter<byte> writer, string tag, BlogPost[] posts)
+    public static void WriteTagArchive(IBufferWriter<byte> writer, byte[] tag, BlogPost[] posts)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        ArgumentException.ThrowIfNullOrEmpty(tag);
+        ArgumentNullException.ThrowIfNull(tag);
+        if (tag.Length is 0)
+        {
+            throw new ArgumentException("Tag must be non-empty.", nameof(tag));
+        }
+
         ArgumentNullException.ThrowIfNull(posts);
 
         writer.Write("# Posts tagged \""u8);
@@ -108,7 +113,7 @@ public static class BlogIndexEmitter
         writer.Write(")\n_"u8);
         WriteDate(writer, post.Published);
 
-        if (!string.IsNullOrEmpty(post.Author))
+        if (post.Author is [_, ..])
         {
             writer.Write(" — "u8);
             Utf8StringWriter.Write(writer, post.Author);
@@ -118,7 +123,7 @@ public static class BlogIndexEmitter
 
         writer.Write("_\n\n"u8);
 
-        if (string.IsNullOrEmpty(post.Excerpt))
+        if (post.Excerpt is [])
         {
             return;
         }
@@ -130,7 +135,7 @@ public static class BlogIndexEmitter
     /// <summary>Appends the tag suffix to a post-summary line when at least one tag is present.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="tags">Tag list.</param>
-    private static void AppendTags(IBufferWriter<byte> writer, string[] tags)
+    private static void AppendTags(IBufferWriter<byte> writer, byte[][] tags)
     {
         if (tags is not [_, ..])
         {

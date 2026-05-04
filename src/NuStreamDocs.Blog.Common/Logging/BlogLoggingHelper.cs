@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Blog.Common.Logging;
 
 /// <summary>
@@ -29,6 +31,25 @@ internal static partial class BlogLoggingHelper
     /// <param name="title">Post title.</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Discovered post {Slug} ({Published}) — {Title}")]
     public static partial void LogPostDiscovered(ILogger logger, string slug, DateOnly published, string title);
+
+    /// <summary>UTF-8 byte overload for <see cref="LogPostDiscovered(ILogger, string, DateOnly, string)"/>; the encode step only runs when Debug is enabled.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="slug">URL-safe slug as UTF-8 bytes.</param>
+    /// <param name="published">Publish date.</param>
+    /// <param name="title">Post title as UTF-8 bytes.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging arguments",
+        Justification = "Caller gates on IsEnabled before the encode runs; the analyzer cannot see across the wrapper.")]
+    public static void LogPostDiscovered(ILogger logger, ReadOnlySpan<byte> slug, DateOnly published, ReadOnlySpan<byte> title)
+    {
+        if (!logger.IsEnabled(LogLevel.Debug))
+        {
+            return;
+        }
+
+        LogPostDiscovered(logger, Encoding.UTF8.GetString(slug), published, Encoding.UTF8.GetString(title));
+    }
 
     /// <summary>Logs the index/archive page generation summary.</summary>
     /// <param name="logger">Target logger.</param>

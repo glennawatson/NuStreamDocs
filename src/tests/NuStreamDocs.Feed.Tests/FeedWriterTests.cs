@@ -71,19 +71,19 @@ public class FeedWriterTests
     private static BlogPost[] BuildPosts() => [
         new(
             "blog/2024-06-01-launch.md",
-            "launch",
-            "Launch",
-            "Author A",
+            "launch"u8.ToArray(),
+            "Launch"u8.ToArray(),
+            "Author A"u8.ToArray(),
             new(2024, 6, 1),
-            ["Release"],
-            "Launch announcement."),
+            [[.. "Release"u8]],
+            "Launch announcement."u8.ToArray()),
         new(
             "blog/2024-05-01-update.md",
-            "update",
-            "Update",
-            "Author B",
+            "update"u8.ToArray(),
+            "Update"u8.ToArray(),
+            "Author B"u8.ToArray(),
             new(2024, 5, 1),
-            ["Update"],
-            "Update announcement."),
+            [[.. "Update"u8]],
+            "Update announcement."u8.ToArray()),
     ];
 }

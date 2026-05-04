@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Blog.Common.Logging;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
@@ -64,9 +65,10 @@ public static class BlogContentGenerator
 
         Directory.CreateDirectory(options.ArchiveRoot);
         var archiveCount = 0;
+        var fallback = System.Text.Encoding.UTF8.GetBytes(options.ArchiveFallbackSlug);
         foreach (var (tag, postsForTag) in GroupByTag(posts))
         {
-            var safeSlugBytes = BlogSlugifier.Slugify(System.Text.Encoding.UTF8.GetBytes(tag), System.Text.Encoding.UTF8.GetBytes(options.ArchiveFallbackSlug));
+            var safeSlugBytes = BlogSlugifier.Slugify(tag, fallback);
             var archivePath = Path.Combine(options.ArchiveRoot, System.Text.Encoding.UTF8.GetString(safeSlugBytes) + ".md");
             writer.ResetWrittenCount();
             BlogIndexEmitter.WriteTagArchive(writer, tag, [.. postsForTag]);
@@ -80,9 +82,9 @@ public static class BlogContentGenerator
     /// <summary>Buckets posts by tag with deterministic ordering.</summary>
     /// <param name="posts">Posts to group.</param>
     /// <returns>Tag → posts map.</returns>
-    private static SortedDictionary<string, List<BlogPost>> GroupByTag(BlogPost[] posts)
+    private static SortedDictionary<byte[], List<BlogPost>> GroupByTag(BlogPost[] posts)
     {
-        var map = new SortedDictionary<string, List<BlogPost>>(StringComparer.Ordinal);
+        var map = new SortedDictionary<byte[], List<BlogPost>>(ByteArrayComparer.Instance);
         for (var i = 0; i < posts.Length; i++)
         {
             var post = posts[i];

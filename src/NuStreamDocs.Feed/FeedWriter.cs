@@ -2,14 +2,15 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Globalization;
 using System.Text;
-using System.Xml;
 using NuStreamDocs.Blog.Common;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Feed;
 
-/// <summary>Renders RSS 2.0 and Atom 1.0 documents from a list of <see cref="BlogPost"/>s.</summary>
+/// <summary>Renders RSS 2.0 and Atom 1.0 documents from a list of <see cref="BlogPost"/>s as UTF-8 bytes.</summary>
 public static class FeedWriter
 {
     /// <summary>RFC 822 date format string used in RSS pubDate / lastBuildDate.</summary>
@@ -18,17 +19,8 @@ public static class FeedWriter
     /// <summary>Length of the <c>.md</c> extension stripped when computing the served URL.</summary>
     private const int MarkdownExtensionLength = 3;
 
-    /// <summary>Element / attribute name constants reused across the writer.</summary>
-    private const string TitleElement = "title";
-
-    /// <summary>Element name for absolute URL.</summary>
-    private const string LinkElement = "link";
-
-    /// <summary>Element name for the description / subtitle field.</summary>
-    private const string DescriptionElement = "description";
-
-    /// <summary>Atom namespace URI.</summary>
-    private const string AtomNamespace = "http://www.w3.org/2005/Atom";
+    /// <summary>Initial sink capacity (~30 entries x 256 bytes) — covers most feeds without a regrow.</summary>
+    private const int InitialCapacity = 8 * 1024;
 
     /// <summary>Renders an RSS 2.0 document.</summary>
     /// <param name="options">Feed options.</param>
@@ -40,30 +32,24 @@ public static class FeedWriter
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(posts);
 
-        using var stream = new MemoryStream();
-        using (var writer = XmlWriter.Create(stream, new() { Indent = true, Encoding = new UTF8Encoding(false) }))
+        var sink = new ArrayBufferWriter<byte>(InitialCapacity);
+        sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
+        sink.Write("<rss version=\"2.0\">\n  <channel>\n"u8);
+
+        WriteElement(sink, "    "u8, "title"u8, Encoding.UTF8.GetBytes(options.Title));
+        WriteElement(sink, "    "u8, "link"u8, Encoding.UTF8.GetBytes(options.SiteUrl));
+        WriteElement(sink, "    "u8, "description"u8, Encoding.UTF8.GetBytes(options.Description));
+        WriteElement(sink, "    "u8, "lastBuildDate"u8, FormatDate(generatedUtc, Rfc822Format));
+
+        var siteUrlBytes = Encoding.UTF8.GetBytes(options.SiteUrl.TrimEnd('/'));
+        var limit = ResolveLimit(options, posts.Length);
+        for (var i = 0; i < limit; i++)
         {
-            writer.WriteStartDocument();
-            writer.WriteStartElement("rss");
-            writer.WriteAttributeString("version", "2.0");
-            writer.WriteStartElement("channel");
-            writer.WriteElementString(TitleElement, options.Title);
-            writer.WriteElementString(LinkElement, options.SiteUrl);
-            writer.WriteElementString(DescriptionElement, options.Description);
-            writer.WriteElementString("lastBuildDate", generatedUtc.ToString(Rfc822Format, CultureInfo.InvariantCulture));
-
-            var limit = ResolveLimit(options, posts.Length);
-            for (var i = 0; i < limit; i++)
-            {
-                WriteRssItem(writer, options, posts[i]);
-            }
-
-            writer.WriteEndElement();
-            writer.WriteEndElement();
-            writer.WriteEndDocument();
+            WriteRssItem(sink, siteUrlBytes, posts[i]);
         }
 
-        return CopyStream(stream);
+        sink.Write("  </channel>\n</rss>"u8);
+        return sink.WrittenSpan.ToArray();
     }
 
     /// <summary>Renders an Atom 1.0 document.</summary>
@@ -76,31 +62,29 @@ public static class FeedWriter
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(posts);
 
-        using var stream = new MemoryStream();
-        using (var writer = XmlWriter.Create(stream, new() { Indent = true, Encoding = new UTF8Encoding(false) }))
+        var sink = new ArrayBufferWriter<byte>(InitialCapacity);
+        sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
+        sink.Write("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n"u8);
+
+        var siteUrlBytes = Encoding.UTF8.GetBytes(options.SiteUrl);
+        WriteElement(sink, "  "u8, "id"u8, siteUrlBytes);
+        WriteElement(sink, "  "u8, "title"u8, Encoding.UTF8.GetBytes(options.Title));
+        WriteElement(sink, "  "u8, "subtitle"u8, Encoding.UTF8.GetBytes(options.Description));
+        WriteElement(sink, "  "u8, "updated"u8, FormatDate(generatedUtc, "o"));
+
+        sink.Write("  <link href=\""u8);
+        XmlEntityEscaper.WriteEscaped(sink, siteUrlBytes, XmlEntityEscaper.Mode.HtmlAttribute);
+        sink.Write("\" />\n"u8);
+
+        var trimmedSiteUrl = Encoding.UTF8.GetBytes(options.SiteUrl.TrimEnd('/'));
+        var limit = ResolveLimit(options, posts.Length);
+        for (var i = 0; i < limit; i++)
         {
-            writer.WriteStartDocument();
-            writer.WriteStartElement("feed", AtomNamespace);
-            writer.WriteElementString("id", options.SiteUrl);
-            writer.WriteElementString(TitleElement, options.Title);
-            writer.WriteElementString("subtitle", options.Description);
-            writer.WriteElementString("updated", generatedUtc.ToString("o", CultureInfo.InvariantCulture));
-
-            writer.WriteStartElement("link");
-            writer.WriteAttributeString("href", options.SiteUrl);
-            writer.WriteEndElement();
-
-            var limit = ResolveLimit(options, posts.Length);
-            for (var i = 0; i < limit; i++)
-            {
-                WriteAtomEntry(writer, options, posts[i]);
-            }
-
-            writer.WriteEndElement();
-            writer.WriteEndDocument();
+            WriteAtomEntry(sink, trimmedSiteUrl, posts[i]);
         }
 
-        return CopyStream(stream);
+        sink.Write("</feed>"u8);
+        return sink.WrittenSpan.ToArray();
     }
 
     /// <summary>Returns the effective number of items to render given the option cap.</summary>
@@ -110,100 +94,124 @@ public static class FeedWriter
     private static int ResolveLimit(FeedOptions options, int postCount) =>
         options.MaxItems <= 0 ? postCount : Math.Min(options.MaxItems, postCount);
 
-    /// <summary>Copies the written bytes of <paramref name="stream"/> into a right-sized array.</summary>
-    /// <param name="stream">Completed memory stream.</param>
-    /// <returns>Owned UTF-8 byte array.</returns>
-    private static byte[] CopyStream(MemoryStream stream)
+    /// <summary>Writes one <c>&lt;name&gt;value&lt;/name&gt;</c> element with the value XML-escaped.</summary>
+    /// <param name="sink">UTF-8 sink.</param>
+    /// <param name="indent">Leading whitespace bytes.</param>
+    /// <param name="elementName">Element local name (UTF-8).</param>
+    /// <param name="value">UTF-8 element value.</param>
+    private static void WriteElement(IBufferWriter<byte> sink, ReadOnlySpan<byte> indent, ReadOnlySpan<byte> elementName, ReadOnlySpan<byte> value)
     {
-        var length = checked((int)stream.Length);
-        if (stream.TryGetBuffer(out var buffer))
-        {
-            return [.. buffer.AsSpan(0, length)];
-        }
-
-        var owned = new byte[length];
-        stream.Position = 0;
-        _ = stream.Read(owned, 0, length);
-        return owned;
+        sink.Write(indent);
+        sink.Write("<"u8);
+        sink.Write(elementName);
+        sink.Write(">"u8);
+        XmlEntityEscaper.WriteEscaped(sink, value, XmlEntityEscaper.Mode.Xml);
+        sink.Write("</"u8);
+        sink.Write(elementName);
+        sink.Write(">\n"u8);
     }
 
+    /// <summary>Encodes <paramref name="value"/> using <paramref name="format"/> against invariant culture into a fresh UTF-8 byte array.</summary>
+    /// <param name="value">Source date.</param>
+    /// <param name="format">Standard or custom format string accepted by <see cref="DateTimeOffset.ToString(string, IFormatProvider)"/>.</param>
+    /// <returns>UTF-8 bytes; the encode happens once per element.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Major Code Smell",
+        "S6585:Do not hardcode the format specifier",
+        Justification = "Callers pass a named constant (Rfc822Format) or the standard ISO 8601 spec 'o'.")]
+    private static byte[] FormatDate(DateTimeOffset value, string format) =>
+        Encoding.UTF8.GetBytes(value.ToString(format, CultureInfo.InvariantCulture));
+
     /// <summary>Writes one RSS 2.0 <c>&lt;item&gt;</c> element.</summary>
-    /// <param name="writer">XML writer.</param>
-    /// <param name="options">Options.</param>
+    /// <param name="sink">UTF-8 sink.</param>
+    /// <param name="siteUrlBytes">Trimmed site root.</param>
     /// <param name="post">Post.</param>
-    private static void WriteRssItem(XmlWriter writer, FeedOptions options, BlogPost post)
+    private static void WriteRssItem(IBufferWriter<byte> sink, byte[] siteUrlBytes, BlogPost post)
     {
-        writer.WriteStartElement("item");
-        writer.WriteElementString(TitleElement, post.Title);
-        var link = BuildLink(options.SiteUrl, post.RelativePath);
-        writer.WriteElementString(LinkElement, link);
-        writer.WriteElementString("guid", link);
-        if (!string.IsNullOrEmpty(post.Author))
+        var titleBytes = post.Title;
+        var authorBytes = post.Author;
+        var excerptBytes = post.Excerpt;
+        var tagBytes = post.Tags;
+        var linkBytes = BuildLinkBytes(siteUrlBytes, post.RelativePath);
+
+        sink.Write("    <item>\n"u8);
+        WriteElement(sink, "      "u8, "title"u8, titleBytes);
+        WriteElement(sink, "      "u8, "link"u8, linkBytes);
+        WriteElement(sink, "      "u8, "guid"u8, linkBytes);
+        if (authorBytes is [_, ..])
         {
-            writer.WriteElementString("author", post.Author);
+            WriteElement(sink, "      "u8, "author"u8, authorBytes);
         }
 
-        writer.WriteElementString(
-            "pubDate",
-            post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString(Rfc822Format, CultureInfo.InvariantCulture));
+        WriteElement(sink, "      "u8, "pubDate"u8, FormatDate(new DateTimeOffset(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), Rfc822Format));
 
-        for (var i = 0; i < post.Tags.Length; i++)
+        for (var i = 0; i < tagBytes.Length; i++)
         {
-            writer.WriteElementString("category", post.Tags[i]);
+            WriteElement(sink, "      "u8, "category"u8, tagBytes[i]);
         }
 
-        if (!string.IsNullOrEmpty(post.Excerpt))
+        if (excerptBytes is [_, ..])
         {
-            writer.WriteElementString(DescriptionElement, post.Excerpt);
+            WriteElement(sink, "      "u8, "description"u8, excerptBytes);
         }
 
-        writer.WriteEndElement();
+        sink.Write("    </item>\n"u8);
     }
 
     /// <summary>Writes one Atom 1.0 <c>&lt;entry&gt;</c> element.</summary>
-    /// <param name="writer">XML writer.</param>
-    /// <param name="options">Options.</param>
+    /// <param name="sink">UTF-8 sink.</param>
+    /// <param name="siteUrlBytes">Trimmed site root.</param>
     /// <param name="post">Post.</param>
-    private static void WriteAtomEntry(XmlWriter writer, FeedOptions options, BlogPost post)
+    private static void WriteAtomEntry(IBufferWriter<byte> sink, byte[] siteUrlBytes, BlogPost post)
     {
-        writer.WriteStartElement("entry");
-        var link = BuildLink(options.SiteUrl, post.RelativePath);
-        writer.WriteElementString("id", link);
-        writer.WriteElementString(TitleElement, post.Title);
+        var titleBytes = post.Title;
+        var authorBytes = post.Author;
+        var excerptBytes = post.Excerpt;
+        var linkBytes = BuildLinkBytes(siteUrlBytes, post.RelativePath);
 
-        writer.WriteStartElement("link");
-        writer.WriteAttributeString("href", link);
-        writer.WriteEndElement();
+        sink.Write("  <entry>\n"u8);
+        WriteElement(sink, "    "u8, "id"u8, linkBytes);
+        WriteElement(sink, "    "u8, "title"u8, titleBytes);
 
-        writer.WriteElementString(
-            "updated",
-            post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("o", CultureInfo.InvariantCulture));
+        sink.Write("    <link href=\""u8);
+        XmlEntityEscaper.WriteEscaped(sink, linkBytes, XmlEntityEscaper.Mode.HtmlAttribute);
+        sink.Write("\" />\n"u8);
 
-        if (!string.IsNullOrEmpty(post.Author))
+        WriteElement(sink, "    "u8, "updated"u8, FormatDate(new DateTimeOffset(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), "o"));
+
+        if (authorBytes is [_, ..])
         {
-            writer.WriteStartElement("author");
-            writer.WriteElementString("name", post.Author);
-            writer.WriteEndElement();
+            sink.Write("    <author>\n"u8);
+            WriteElement(sink, "      "u8, "name"u8, authorBytes);
+            sink.Write("    </author>\n"u8);
         }
 
-        if (!string.IsNullOrEmpty(post.Excerpt))
+        if (excerptBytes is [_, ..])
         {
-            writer.WriteElementString("summary", post.Excerpt);
+            WriteElement(sink, "    "u8, "summary"u8, excerptBytes);
         }
 
-        writer.WriteEndElement();
+        sink.Write("  </entry>\n"u8);
     }
 
-    /// <summary>Builds an absolute URL from the site URL and the post's relative <c>.md</c> path.</summary>
-    /// <param name="siteUrl">Site root.</param>
+    /// <summary>Builds an absolute URL from the trimmed site root and the post's relative <c>.md</c> path, as UTF-8 bytes.</summary>
+    /// <param name="siteUrlBytes">Trimmed site root (no trailing <c>/</c>).</param>
     /// <param name="relativePath">Post relative path.</param>
-    /// <returns>Absolute URL.</returns>
-    private static string BuildLink(string siteUrl, string relativePath)
+    /// <returns>Absolute URL bytes.</returns>
+    private static byte[] BuildLinkBytes(byte[] siteUrlBytes, FilePath relativePath)
     {
-        var trimmed = siteUrl.TrimEnd('/');
-        var page = relativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-            ? $"{relativePath.AsSpan(0, relativePath.Length - MarkdownExtensionLength)}.html"
-            : relativePath;
-        return $"{trimmed}/{page}";
+        var rel = relativePath.Value ?? string.Empty;
+        var endsMd = rel.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+        var pageLength = endsMd ? rel.Length - MarkdownExtensionLength + ".html".Length : rel.Length;
+        var pageBytes = new byte[pageLength];
+        var written = endsMd
+            ? Encoding.UTF8.GetBytes(rel.AsSpan(0, rel.Length - MarkdownExtensionLength), pageBytes)
+            : Encoding.UTF8.GetBytes(rel.AsSpan(), pageBytes);
+        if (endsMd)
+        {
+            ".html"u8.CopyTo(pageBytes.AsSpan(written));
+        }
+
+        return Utf8Concat.Concat(siteUrlBytes, "/"u8, pageBytes);
     }
 }

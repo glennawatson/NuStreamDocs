@@ -24,7 +24,7 @@ namespace NuStreamDocs.Theme.Material;
 public sealed class MaterialTheme : IThemePackage
 {
     /// <summary>Embedded asset paths of the theme's static files.</summary>
-    private static readonly string[] StaticAssetPaths =
+    private static readonly FilePath[] StaticAssetPaths =
     [
         "assets/stylesheets/material.min.css",
         "assets/stylesheets/palette.min.css",
@@ -38,7 +38,7 @@ public sealed class MaterialTheme : IThemePackage
     /// <param name="page">Compiled top-level page template.</param>
     /// <param name="partials">Compiled partial templates.</param>
     /// <param name="staticAssets">Static-asset bundle keyed by relative path.</param>
-    private MaterialTheme(Template page, Dictionary<byte[], Template> partials, Dictionary<string, byte[]> staticAssets)
+    private MaterialTheme(Template page, Dictionary<byte[], Template> partials, Dictionary<FilePath, byte[]> staticAssets)
     {
         Page = page;
         Partials = partials;
@@ -58,7 +58,7 @@ public sealed class MaterialTheme : IThemePackage
     /// <see cref="Dictionary{TKey, TValue}"/> exposed read-only — the bundle is tiny
     /// (3-5 entries) and the freeze cost wouldn't repay itself.
     /// </summary>
-    public ReadOnlyDictionary<string, byte[]> StaticAssets { get; }
+    public ReadOnlyDictionary<FilePath, byte[]> StaticAssets { get; }
 
     /// <inheritdoc/>
     (FilePath RelativePath, byte[] Bytes)[] IThemePackage.StaticAssetEntries => _staticAssetEntries;

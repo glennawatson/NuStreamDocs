@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
@@ -37,17 +39,17 @@ public static class BlogPostScanner
     /// <param name="postsRoot">Absolute path to the directory holding the post files.</param>
     /// <param name="docsRoot">Absolute path to the docs root (used for the post's relative path).</param>
     /// <returns>Parsed posts, ordered by publish date descending.</returns>
-    public static BlogPost[] Scan(string postsRoot, string docsRoot)
+    public static BlogPost[] Scan(DirectoryPath postsRoot, DirectoryPath docsRoot)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(postsRoot);
-        ArgumentException.ThrowIfNullOrWhiteSpace(docsRoot);
-        if (!Directory.Exists(postsRoot))
+        ArgumentException.ThrowIfNullOrWhiteSpace(postsRoot.Value);
+        ArgumentException.ThrowIfNullOrWhiteSpace(docsRoot.Value);
+        if (!postsRoot.Exists())
         {
             return [];
         }
 
         var posts = new List<BlogPost>(64);
-        foreach (var path in Directory.EnumerateFiles(postsRoot, "*.md", SearchOption.TopDirectoryOnly))
+        foreach (var path in postsRoot.EnumerateFiles("*.md", SearchOption.TopDirectoryOnly))
         {
             var post = TryReadPost(path, docsRoot);
             if (post is not null)
@@ -65,9 +67,9 @@ public static class BlogPostScanner
     /// <param name="absolutePath">Absolute path to the post file.</param>
     /// <param name="docsRoot">Absolute docs root.</param>
     /// <returns>The parsed post, or null when the file isn't a Wyam-style post.</returns>
-    private static BlogPost? TryReadPost(string absolutePath, string docsRoot)
+    private static BlogPost? TryReadPost(FilePath absolutePath, DirectoryPath docsRoot)
     {
-        var fileName = Path.GetFileNameWithoutExtension(absolutePath);
+        var fileName = absolutePath.FileNameWithoutExtension;
         if (fileName.Length <= DatePrefixLength
             || fileName[YearMonthSeparatorIndex] != '-'
             || fileName[MonthDaySeparatorIndex] != '-'
@@ -76,49 +78,55 @@ public static class BlogPostScanner
             return null;
         }
 
-        var datePart = fileName[..DateLength];
+        var datePart = fileName.AsSpan(0, DateLength);
         if (!DateOnly.TryParseExact(datePart, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fileDate))
         {
             return null;
         }
 
         var slug = fileName[DatePrefixLength..];
-        var markdown = File.ReadAllText(absolutePath);
-        var fm = WyamFrontmatterReader.Parse(markdown);
+        var bytes = absolutePath.ReadAllBytes();
+        var fm = WyamFrontmatterReader.Parse(bytes);
 
         var published = fm.Published == default ? fileDate : fm.Published;
-        var title = string.IsNullOrEmpty(fm.Title) ? Humanize(slug) : fm.Title;
-        var excerpt = ExtractExcerpt(markdown, fm.BodyStartOffset);
-        var relativePath = NormalizeRelativePath(Path.GetRelativePath(docsRoot, absolutePath));
-        var tags = fm.Tags ?? [];
+        var titleBytes = fm.Title is [_, ..] ? fm.Title : HumanizeBytes(slug);
+        var excerptBytes = ExtractExcerpt(bytes, fm.BodyStartOffset);
+        var relativePath = NormalizeRelativePath(Path.GetRelativePath(docsRoot.Value, absolutePath.Value));
 
-        return new(relativePath, slug, title, fm.Author, published, tags, excerpt);
+        return new(
+            relativePath,
+            Encoding.UTF8.GetBytes(slug),
+            titleBytes,
+            fm.Author,
+            published,
+            fm.Tags,
+            excerptBytes);
     }
 
     /// <summary>Pulls the first non-empty paragraph from the body as a plain-text excerpt.</summary>
-    /// <param name="markdown">Full source.</param>
+    /// <param name="bytes">UTF-8 bytes of the full markdown source.</param>
     /// <param name="bodyOffset">Byte offset where the body begins.</param>
     /// <returns>Excerpt with trailing newlines trimmed; empty when no paragraph is found.</returns>
-    private static string ExtractExcerpt(string markdown, int bodyOffset)
+    private static byte[] ExtractExcerpt(byte[] bytes, int bodyOffset)
     {
-        if (bodyOffset >= markdown.Length)
+        if (bodyOffset >= bytes.Length)
         {
-            return string.Empty;
+            return [];
         }
 
-        var body = markdown.AsSpan(bodyOffset);
+        var body = bytes.AsSpan(bodyOffset);
         while (!body.IsEmpty)
         {
-            var lineEnd = body.IndexOf('\n');
+            var lineEnd = body.IndexOf((byte)'\n');
             if (lineEnd < 0)
             {
                 lineEnd = body.Length;
             }
 
-            var line = body[..lineEnd].TrimEnd('\r').Trim();
+            var line = body[..lineEnd].TrimEnd((byte)'\r').Trim((byte)' ').Trim((byte)'\t');
             if (!line.IsEmpty && !IsAtxHeading(line) && !IsFrontmatterFence(line))
             {
-                return line.ToString();
+                return line.ToArray();
             }
 
             if (lineEnd >= body.Length)
@@ -129,21 +137,46 @@ public static class BlogPostScanner
             body = body[(lineEnd + 1)..];
         }
 
-        return string.Empty;
+        return [];
     }
 
-    /// <summary>Title-cases <c>my-cool-post</c> into <c>My Cool Post</c> as a fallback when no Title frontmatter is present.</summary>
-    /// <param name="slug">Hyphen-separated slug.</param>
-    /// <returns>Spaced title-case rendering.</returns>
-    private static string Humanize(string slug)
+    /// <summary>Title-cases <c>my-cool-post</c> into <c>My Cool Post</c> as a fallback when no Title frontmatter is present, emitting UTF-8 bytes.</summary>
+    /// <param name="slug">Hyphen-separated ASCII slug (filename stem).</param>
+    /// <returns>Spaced title-case rendering as UTF-8 bytes.</returns>
+    private static byte[] HumanizeBytes(string slug)
     {
         var outputLength = GetHumanizedLength(slug);
         if (outputLength is 0)
         {
-            return string.Empty;
+            return [];
         }
 
-        return string.Create(outputLength, slug, static (dst, source) => WriteHumanized(dst, source));
+        var dst = new byte[outputLength];
+        var write = 0;
+        var titleCaseNext = true;
+        var pendingSpace = false;
+        for (var i = 0; i < slug.Length; i++)
+        {
+            var c = slug[i];
+            if (c is '-')
+            {
+                pendingSpace = write is not 0;
+                titleCaseNext = true;
+                continue;
+            }
+
+            if (pendingSpace)
+            {
+                dst[write++] = (byte)' ';
+                pendingSpace = false;
+            }
+
+            // Slug chars are ASCII (filename stem after the YYYY-MM-DD- prefix); narrow to byte directly.
+            dst[write++] = titleCaseNext ? (byte)char.ToUpperInvariant(c) : (byte)c;
+            titleCaseNext = false;
+        }
+
+        return dst;
     }
 
     /// <summary>Counts the characters needed for the humanized title.</summary>
@@ -173,35 +206,6 @@ public static class BlogPostScanner
         return outputLength;
     }
 
-    /// <summary>Writes the humanized title into <paramref name="destination"/>.</summary>
-    /// <param name="destination">Destination span.</param>
-    /// <param name="source">Hyphen-separated slug.</param>
-    private static void WriteHumanized(in Span<char> destination, string source)
-    {
-        var write = 0;
-        var titleCaseNext = true;
-        var pendingSpace = false;
-        for (var i = 0; i < source.Length; i++)
-        {
-            var c = source[i];
-            if (c is '-')
-            {
-                pendingSpace = write is not 0;
-                titleCaseNext = true;
-                continue;
-            }
-
-            if (pendingSpace)
-            {
-                destination[write++] = ' ';
-                pendingSpace = false;
-            }
-
-            destination[write++] = titleCaseNext ? char.ToUpperInvariant(c) : c;
-            titleCaseNext = false;
-        }
-    }
-
     /// <summary>Normalizes a source-relative path to forward slashes.</summary>
     /// <param name="relativePath">Path to normalize.</param>
     /// <returns>Forward-slashed path.</returns>
@@ -224,16 +228,16 @@ public static class BlogPostScanner
     /// <summary>Returns true when <paramref name="line"/> starts an ATX heading.</summary>
     /// <param name="line">Candidate line.</param>
     /// <returns>True when the line starts with <c>#</c>.</returns>
-    private static bool IsAtxHeading(in ReadOnlySpan<char> line) => line is ['#', ..];
+    private static bool IsAtxHeading(in ReadOnlySpan<byte> line) => line is [(byte)'#', ..];
 
     /// <summary>Returns true when <paramref name="line"/> is exactly a frontmatter fence.</summary>
     /// <param name="line">Candidate line.</param>
     /// <returns>True when the line is exactly <c>---</c>.</returns>
-    private static bool IsFrontmatterFence(in ReadOnlySpan<char> line) =>
+    private static bool IsFrontmatterFence(in ReadOnlySpan<byte> line) =>
         line.Length == FrontmatterFenceLength
-        && line[0] is '-'
-        && line[1] is '-'
-        && line[FrontmatterFenceLastIndex] is '-';
+        && line[0] is (byte)'-'
+        && line[1] is (byte)'-'
+        && line[FrontmatterFenceLastIndex] is (byte)'-';
 
     /// <summary>Comparer that orders posts by <see cref="BlogPost.Published"/> descending; cached as a singleton to avoid per-call lambda allocations.</summary>
     private sealed class BlogPostByPublishedDescending : IComparer<BlogPost>

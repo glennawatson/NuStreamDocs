@@ -3,11 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
 /// <summary>
-/// Reads Wyam-style YAML frontmatter from a markdown source string.
+/// Reads Wyam-style YAML frontmatter from a UTF-8 markdown source.
 /// </summary>
 /// <remarks>
 /// Wyam used a simple <c>key: value</c> dialect — no nested objects,
@@ -26,52 +28,53 @@ public static class WyamFrontmatterReader
     private const int FrontmatterFenceLastIndex = 2;
 
     /// <summary>Parses frontmatter from the head of <paramref name="markdown"/>.</summary>
-    /// <param name="markdown">Full markdown source.</param>
+    /// <param name="markdown">Full UTF-8 markdown source.</param>
     /// <returns>The parsed frontmatter values plus the byte offset where the body begins.</returns>
-    public static FrontmatterResult Parse(string markdown)
+    public static FrontmatterResult Parse(ReadOnlySpan<byte> markdown)
     {
-        ArgumentNullException.ThrowIfNull(markdown);
         if (!IsFrontmatterFence(markdown))
         {
-            return new(string.Empty, string.Empty, default, [], false, 0);
+            return new([], [], default, [], false, 0);
         }
 
-        var firstLineEnd = markdown.IndexOf('\n', FrontmatterFenceLength);
+        var firstLineEnd = markdown[FrontmatterFenceLength..].IndexOf((byte)'\n');
         if (firstLineEnd < 0)
         {
-            return new(string.Empty, string.Empty, default, [], false, 0);
+            return new([], [], default, [], false, 0);
         }
 
+        firstLineEnd += FrontmatterFenceLength;
         var bodyStart = -1;
         var cursor = firstLineEnd + 1;
-        var title = string.Empty;
-        var author = string.Empty;
+        var title = Array.Empty<byte>();
+        var author = Array.Empty<byte>();
         var published = default(DateOnly);
-        var tags = new List<string>(4);
+        var tags = new List<byte[]>(4);
         var isBlog = false;
 
         while (cursor < markdown.Length)
         {
-            var lineEnd = markdown.IndexOf('\n', cursor);
+            var rest = markdown[cursor..];
+            var lineEnd = rest.IndexOf((byte)'\n');
             if (lineEnd < 0)
             {
-                lineEnd = markdown.Length;
+                lineEnd = rest.Length;
             }
 
-            var line = markdown.AsSpan(cursor, lineEnd - cursor).TrimEnd('\r');
+            var line = rest[..lineEnd].TrimEnd((byte)'\r');
             if (IsFrontmatterFence(line))
             {
-                bodyStart = lineEnd + 1;
+                bodyStart = cursor + lineEnd + 1;
                 break;
             }
 
             ParseLine(line, ref title, ref author, ref published, tags, ref isBlog);
-            cursor = lineEnd + 1;
+            cursor += lineEnd + 1;
         }
 
         if (bodyStart < 0)
         {
-            return new(string.Empty, string.Empty, default, [], false, 0);
+            return new([], [], default, [], false, 0);
         }
 
         return new(title, author, published, [.. tags], isBlog, bodyStart);
@@ -85,51 +88,51 @@ public static class WyamFrontmatterReader
     /// <param name="tags">Tag accumulator.</param>
     /// <param name="isBlog"><c>IsBlog</c> accumulator.</param>
     private static void ParseLine(
-        in ReadOnlySpan<char> line,
-        ref string title,
-        ref string author,
+        ReadOnlySpan<byte> line,
+        ref byte[] title,
+        ref byte[] author,
         ref DateOnly published,
-        List<string> tags,
+        List<byte[]> tags,
         ref bool isBlog)
     {
-        var sep = line.IndexOf(':');
+        var sep = line.IndexOf((byte)':');
         if (sep <= 0)
         {
             return;
         }
 
-        var key = line[..sep].Trim();
-        var value = line[(sep + 1)..].Trim();
+        var key = AsciiByteHelpers.TrimAsciiWhitespace(line[..sep]);
+        var value = AsciiByteHelpers.TrimAsciiWhitespace(line[(sep + 1)..]);
 
-        if (key.Equals("Title", StringComparison.OrdinalIgnoreCase))
+        if (AsciiByteHelpers.EqualsIgnoreAsciiCase(key, "title"u8))
         {
-            title = value.ToString();
+            title = value.ToArray();
         }
-        else if (key.Equals("Author", StringComparison.OrdinalIgnoreCase))
+        else if (AsciiByteHelpers.EqualsIgnoreAsciiCase(key, "author"u8))
         {
-            author = value.ToString();
+            author = value.ToArray();
         }
-        else if (key.Equals("Published", StringComparison.OrdinalIgnoreCase))
+        else if (AsciiByteHelpers.EqualsIgnoreAsciiCase(key, "published"u8))
         {
-            if (DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            if (TryParseDate(value, out var parsed))
             {
                 published = parsed;
             }
         }
-        else if (key.Equals("Tags", StringComparison.OrdinalIgnoreCase))
+        else if (AsciiByteHelpers.EqualsIgnoreAsciiCase(key, "tags"u8))
         {
             ParseTags(value, tags);
         }
-        else if (key.Equals("IsBlog", StringComparison.OrdinalIgnoreCase))
+        else if (AsciiByteHelpers.EqualsIgnoreAsciiCase(key, "isblog"u8))
         {
-            isBlog = value.Equals("true", StringComparison.OrdinalIgnoreCase);
+            isBlog = AsciiByteHelpers.EqualsIgnoreAsciiCase(value, "true"u8);
         }
     }
 
     /// <summary>Splits the <c>Tags:</c> right-hand-side on commas.</summary>
     /// <param name="value">RHS of the <c>Tags</c> entry.</param>
     /// <param name="tags">Accumulator.</param>
-    private static void ParseTags(in ReadOnlySpan<char> value, List<string> tags)
+    private static void ParseTags(ReadOnlySpan<byte> value, List<byte[]> tags)
     {
         if (value.IsEmpty)
         {
@@ -139,12 +142,13 @@ public static class WyamFrontmatterReader
         var cursor = 0;
         while (cursor < value.Length)
         {
-            var next = value[cursor..].IndexOf(',');
-            var slice = next < 0 ? value[cursor..] : value.Slice(cursor, next);
-            var trimmed = slice.Trim();
+            var rest = value[cursor..];
+            var next = rest.IndexOf((byte)',');
+            var slice = next < 0 ? rest : rest[..next];
+            var trimmed = AsciiByteHelpers.TrimAsciiWhitespace(slice);
             if (!trimmed.IsEmpty)
             {
-                tags.Add(trimmed.ToString());
+                tags.Add(trimmed.ToArray());
             }
 
             if (next < 0)
@@ -156,36 +160,38 @@ public static class WyamFrontmatterReader
         }
     }
 
+    /// <summary>Parses an ASCII <c>yyyy-MM-dd</c> span without going through a string allocation.</summary>
+    /// <param name="value">UTF-8 candidate span.</param>
+    /// <param name="parsed">The parsed date on success.</param>
+    /// <returns>True when <paramref name="value"/> matches the format.</returns>
+    private static bool TryParseDate(ReadOnlySpan<byte> value, out DateOnly parsed)
+    {
+        Span<char> chars = stackalloc char[value.Length];
+        var written = Encoding.UTF8.GetChars(value, chars);
+        return DateOnly.TryParseExact(chars[..written], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed);
+    }
+
     /// <summary>Returns true when <paramref name="markdown"/> starts with a frontmatter fence.</summary>
     /// <param name="markdown">Source markdown.</param>
     /// <returns>True when the source starts with <c>---</c>.</returns>
-    private static bool IsFrontmatterFence(string markdown) =>
+    private static bool IsFrontmatterFence(ReadOnlySpan<byte> markdown) =>
         markdown.Length >= FrontmatterFenceLength
-        && markdown[0] is '-'
-        && markdown[1] is '-'
-        && markdown[FrontmatterFenceLastIndex] is '-';
-
-    /// <summary>Returns true when <paramref name="line"/> is exactly a frontmatter fence.</summary>
-    /// <param name="line">Candidate line.</param>
-    /// <returns>True when the line is exactly <c>---</c>.</returns>
-    private static bool IsFrontmatterFence(in ReadOnlySpan<char> line) =>
-        line.Length == FrontmatterFenceLength
-        && line[0] is '-'
-        && line[1] is '-'
-        && line[FrontmatterFenceLastIndex] is '-';
+        && markdown[0] is (byte)'-'
+        && markdown[1] is (byte)'-'
+        && markdown[FrontmatterFenceLastIndex] is (byte)'-';
 
     /// <summary>Result of parsing.</summary>
-    /// <param name="Title">Parsed title (or empty).</param>
-    /// <param name="Author">Parsed author (or empty).</param>
+    /// <param name="Title">Parsed title bytes (or empty).</param>
+    /// <param name="Author">Parsed author bytes (or empty).</param>
     /// <param name="Published">Parsed publish date (or default).</param>
     /// <param name="Tags">Parsed tag list (possibly empty).</param>
     /// <param name="IsBlog">True when <c>IsBlog: true</c> was present.</param>
     /// <param name="BodyStartOffset">Byte offset within the original source where the markdown body starts.</param>
     public readonly record struct FrontmatterResult(
-        string Title,
-        string Author,
+        byte[] Title,
+        byte[] Author,
         DateOnly Published,
-        string[] Tags,
+        byte[][] Tags,
         bool IsBlog,
         int BodyStartOffset);
 }
