@@ -38,6 +38,11 @@ public static class FrontmatterTitleReader
             Span<byte> buffer = stackalloc byte[FrontmatterPeekBytes];
             var read = RandomAccess.Read(handle, buffer[..size], 0);
             var scalar = FrontmatterValueExtractor.GetScalar(buffer[..read], "title"u8);
+            if (scalar.IsEmpty)
+            {
+                scalar = FrontmatterValueExtractor.GetScalar(buffer[..read], "Title"u8);
+            }
+
             return scalar.IsEmpty ? null : Encoding.UTF8.GetString(StripYamlQuotes(scalar));
         }
         catch (FileNotFoundException)
@@ -73,6 +78,11 @@ public static class FrontmatterTitleReader
             Span<byte> buffer = stackalloc byte[FrontmatterPeekBytes];
             var read = RandomAccess.Read(handle, buffer[..size], 0);
             var scalar = FrontmatterValueExtractor.GetScalar(buffer[..read], "title"u8);
+            if (scalar.IsEmpty)
+            {
+                scalar = FrontmatterValueExtractor.GetScalar(buffer[..read], "Title"u8);
+            }
+
             return scalar.IsEmpty ? null : [.. StripYamlQuotes(scalar)];
         }
         catch (FileNotFoundException)

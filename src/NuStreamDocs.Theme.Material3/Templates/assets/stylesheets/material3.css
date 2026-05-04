@@ -173,10 +173,20 @@ a:hover { text-decoration: underline; }
   --md-icon-button-state-layer-size: 2.5rem;
 }
 .md-logo {
+  display: inline-flex;
+  align-items: center;
   width: auto;
   max-width: 14rem;
   font: var(--md-sys-typescale-title-large);
   color: inherit;
+}
+.md-logo img,
+.md-logo svg {
+  display: block;
+  width: auto;
+  height: 1.5rem;
+  max-width: 100%;
+  object-fit: contain;
 }
 .md-header__title {
   min-width: 0;

@@ -191,6 +191,11 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     public NavNeighbours GetNeighbours(FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
+        if (IsRootIndex(relativePath))
+        {
+            return NavNeighbours.None;
+        }
+
         if (!TryResolveIndex(relativePath, out var idx))
         {
             return NavNeighbours.None;
@@ -204,18 +209,39 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     public NavNeighbours GetSectionNeighbours(FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
+        if (IsRootIndex(relativePath))
+        {
+            return NavNeighbours.None;
+        }
+
         if (!TryResolveIndex(relativePath, out var idx))
         {
             return NavNeighbours.None;
         }
 
         var (start, end) = _sectionSpans![idx];
+
+        // Section of one: no real neighbours, suppress prev/next.
+        if (end - start <= 1)
+        {
+            return NavNeighbours.None;
+        }
+
         return BoundedNeighbours(_orderedLeaves!, idx, start, end);
     }
 
     /// <summary>Gets the typed nav root; for use from the plugin's own assembly + tests.</summary>
     /// <returns>The nav root, or null when <see cref="OnConfigureAsync"/> has not yet run.</returns>
     internal NavNode? GetRoot() => _root;
+
+    /// <summary>Returns true when <paramref name="relativePath"/> is the docs-root <c>index.md</c>.</summary>
+    /// <param name="relativePath">Source-relative page path.</param>
+    /// <returns>True for the root landing page.</returns>
+    private static bool IsRootIndex(FilePath relativePath)
+    {
+        var value = relativePath.Value;
+        return value is "index.md" or "index.MD" or "INDEX.md" or "INDEX.MD";
+    }
 
     /// <summary>Computes a cheap stat-only fingerprint over every <c>.md</c> and <c>.pages</c> file under <paramref name="inputRoot"/>.</summary>
     /// <param name="inputRoot">Absolute docs root.</param>
