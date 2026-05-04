@@ -154,12 +154,23 @@ a:hover { text-decoration: underline; }
   grid-template-columns: 16rem minmax(0, 1fr) 14rem;
   gap: 24px;
 }
-/* Keep the content track centred when both side columns drop out — only the
-   middle column needs to remain. The primary + secondary sidebars use the
-   `hidden` attribute when their content is empty / suppressed; we leave the
-   16rem / 14rem track in place otherwise so the article width stays stable. */
+/* Pin the article to the centre track. With grid auto-placement, hiding the
+   primary sidebar (display: none via [hidden]) would let .md-content fall
+   back into column 1 (16rem), squashing it into a sidebar-width strip.
+   Anchor it explicitly so the article width stays stable whichever sidebars
+   are hidden. */
+.md-main__inner > .md-content {
+  grid-column: 2;
+}
+/* When both side columns are suppressed the template collapses to a single
+   centred track so we don't leave the article floating in a 92rem grid with
+   nothing in the rails. The primary + secondary sidebars use the `hidden`
+   attribute when their content is empty / suppressed. */
 .md-main__inner:has(> .md-sidebar--primary[hidden]):has(> .md-sidebar--secondary[hidden]) {
   grid-template-columns: minmax(0, 1fr);
+}
+.md-main__inner:has(> .md-sidebar--primary[hidden]):has(> .md-sidebar--secondary[hidden]) > .md-content {
+  grid-column: 1;
 }
 
 /* ----- Header. ----- */

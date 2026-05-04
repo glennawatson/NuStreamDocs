@@ -127,6 +127,25 @@ public class Material3DefaultsTests
         await Assert.That(html).Contains("My custom message");
     }
 
+    /// <summary>The bundled stylesheet keeps the content article pinned to the centre grid track even when sidebars are hidden, so leaf pages aren't squeezed into the sidebar-width column.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ContentArticlePinnedToCentreTrack()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
+            .BuildAsync();
+
+        var css = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "assets", "stylesheets", "material3.css"));
+        await Assert.That(css).Contains(".md-main__inner > .md-content");
+        await Assert.That(css).Contains("grid-column: 2");
+    }
+
     /// <summary>The synthetic 404 emitter steps aside when a real <c>404.html</c> is already on disk.</summary>
     /// <returns>Async test.</returns>
     [Test]
