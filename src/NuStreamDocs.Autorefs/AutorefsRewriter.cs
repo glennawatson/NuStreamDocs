@@ -27,9 +27,9 @@ public static class AutorefsRewriter
     /// <param name="outputRoot">Absolute path to the site output root.</param>
     /// <param name="registry">Registry to resolve against.</param>
     /// <returns>Number of files rewritten.</returns>
-    public static int RewriteAll(string outputRoot, AutorefsRegistry registry)
+    public static int RewriteAll(DirectoryPath outputRoot, AutorefsRegistry registry)
     {
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentNullException.ThrowIfNull(registry);
 
         if (!Directory.Exists(outputRoot) || registry.Count is 0)

@@ -30,7 +30,7 @@ internal static class SnippetsRewriter
     /// <param name="baseDirectory">Absolute path to resolve include targets against.</param>
     /// <param name="fileCache">Byte-keyed snippet cache scoped to the current build.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, string baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer)
+    public static void Rewrite(ReadOnlySpan<byte> source, DirectoryPath baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer)
     {
         var visited = new HashSet<byte[]>(ByteArrayComparer.Instance);
         RewriteCore(source, baseDirectory, fileCache, writer, visited, 0);
@@ -43,7 +43,7 @@ internal static class SnippetsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="visited">Already-included files (cycle guard, keyed on the include path bytes).</param>
     /// <param name="depth">Current recursion depth.</param>
-    private static void RewriteCore(ReadOnlySpan<byte> source, string baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer, HashSet<byte[]> visited, int depth)
+    private static void RewriteCore(ReadOnlySpan<byte> source, DirectoryPath baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer, HashSet<byte[]> visited, int depth)
     {
         var i = 0;
         while (i < source.Length)
@@ -136,7 +136,7 @@ internal static class SnippetsRewriter
     private static void EmitInclude(
         ReadOnlySpan<byte> pathBytes,
         ReadOnlySpan<byte> sectionBytes,
-        string baseDirectory,
+        DirectoryPath baseDirectory,
         Dictionary<byte[], byte[]> fileCache,
         IBufferWriter<byte> writer,
         HashSet<byte[]> visited,
@@ -190,7 +190,7 @@ internal static class SnippetsRewriter
     /// <param name="writer">Sink (used to emit error stubs on miss).</param>
     /// <param name="bytes">Resolved file bytes on success.</param>
     /// <returns>True when the file was resolved (cache hit or successful read); false when an error stub was emitted.</returns>
-    private static bool TryGetSnippetBytes(ReadOnlySpan<byte> pathBytes, string baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer, out byte[] bytes)
+    private static bool TryGetSnippetBytes(ReadOnlySpan<byte> pathBytes, DirectoryPath baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer, out byte[] bytes)
     {
         if (fileCache.TryGetValueByUtf8(pathBytes, out bytes!))
         {
@@ -236,7 +236,7 @@ internal static class SnippetsRewriter
     /// <param name="baseDirectory">Base directory.</param>
     /// <param name="absolute">Resolved absolute path.</param>
     /// <returns>True when the resolved path is inside the base.</returns>
-    private static bool IsInside(string baseDirectory, string absolute)
+    private static bool IsInside(DirectoryPath baseDirectory, string absolute)
     {
         var basePath = Path.GetFullPath(baseDirectory);
         if (!basePath.EndsWith(Path.DirectorySeparatorChar))

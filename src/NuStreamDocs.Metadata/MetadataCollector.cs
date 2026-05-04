@@ -23,7 +23,7 @@ internal static class MetadataCollector
     /// <param name="inputRoot">Absolute docs root.</param>
     /// <param name="options">Metadata options.</param>
     /// <returns>A populated registry; <see cref="MetadataRegistry.Empty"/> when no metadata files were found.</returns>
-    public static MetadataRegistry Build(string inputRoot, in MetadataOptions options)
+    public static MetadataRegistry Build(DirectoryPath inputRoot, in MetadataOptions options)
     {
         if (!Directory.Exists(inputRoot))
         {

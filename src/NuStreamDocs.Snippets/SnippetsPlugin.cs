@@ -30,11 +30,11 @@ namespace NuStreamDocs.Snippets;
 /// </remarks>
 public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
 {
-    /// <summary>Optional override for the snippet base directory; <c>null</c> means use <c>InputRoot</c>.</summary>
-    private readonly string? _baseDirectoryOverride;
+    /// <summary>Optional override for the snippet base directory; empty means use <c>InputRoot</c>.</summary>
+    private readonly DirectoryPath _baseDirectoryOverride;
 
     /// <summary>Resolved base directory captured at <see cref="OnConfigureAsync"/> time.</summary>
-    private string? _baseDirectory;
+    private DirectoryPath _baseDirectory;
 
     /// <summary>Build-scoped cache of resolved snippet bytes, keyed by the UTF-8 include-path bytes lifted directly from the source span (no <see cref="string"/> round-trip).</summary>
     /// <remarks>
@@ -48,13 +48,13 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
 
     /// <summary>Initializes a new instance of the <see cref="SnippetsPlugin"/> class with no base-directory override (defaults to the build's docs root).</summary>
     public SnippetsPlugin()
-        : this(null)
+        : this(default)
     {
     }
 
     /// <summary>Initializes a new instance of the <see cref="SnippetsPlugin"/> class with a caller-supplied base directory.</summary>
-    /// <param name="baseDirectory">Absolute path to the snippet root, or <c>null</c> to use the docs root.</param>
-    public SnippetsPlugin(string? baseDirectory) => _baseDirectoryOverride = baseDirectory;
+    /// <param name="baseDirectory">Absolute path to the snippet root, or <see langword="default"/> to use the docs root.</param>
+    public SnippetsPlugin(DirectoryPath baseDirectory) => _baseDirectoryOverride = baseDirectory;
 
     /// <inheritdoc/>
     public override string Name => "snippets";
@@ -62,7 +62,7 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
     /// <inheritdoc/>
     public override ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
-        _baseDirectory = _baseDirectoryOverride ?? context.InputRoot;
+        _baseDirectory = _baseDirectoryOverride.IsEmpty ? context.InputRoot : _baseDirectoryOverride;
         _fileCache = new(ByteArrayComparer.Instance);
         _ = cancellationToken;
         return ValueTask.CompletedTask;
@@ -72,14 +72,13 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        var baseDir = _baseDirectory;
-        if (string.IsNullOrEmpty(baseDir))
+        if (_baseDirectory.IsEmpty)
         {
             writer.Write(source);
             return;
         }
 
-        SnippetsRewriter.Rewrite(source, baseDir, _fileCache, writer);
+        SnippetsRewriter.Rewrite(source, _baseDirectory, _fileCache, writer);
     }
 
     /// <inheritdoc/>
