@@ -284,7 +284,7 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <summary>Resolves the absolute cache root, falling back to <c>{outputRoot}/.cache/privacy</c> when the option is empty.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <returns>Absolute cache directory.</returns>
-    private string ResolveCacheRoot(string outputRoot)
+    private DirectoryPath ResolveCacheRoot(DirectoryPath outputRoot)
     {
         if (_options.CacheDirectory is [])
         {
