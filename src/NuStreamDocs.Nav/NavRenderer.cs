@@ -192,21 +192,38 @@ internal static class NavRenderer
     /// <param name="home">Top-level home leaf, when present.</param>
     /// <param name="activeSection">Active top-level section.</param>
     /// <returns>The contextual sidebar item array.</returns>
+    /// <remarks>
+    /// When the active section's only child is a single leaf page, the children are hoisted up so
+    /// the sidebar doesn't render the redundant section wrapper around a one-page subtree. For any
+    /// other shape (multiple children, or children that are themselves sections) the active
+    /// section is kept as the wrapper so readers see the expandable Material drawer header
+    /// (<c>--active --section --nested</c>) and have a sense of place when scrolling 100+ peers.
+    /// </remarks>
     private static NavNode[] ComposeSidebarItems(NavNode? home, NavNode activeSection)
     {
-        if (home is null)
+        if (ShouldHoistSingleLeaf(activeSection))
         {
-            return activeSection.Children is [_, ..] ? activeSection.Children : [activeSection];
+            return home is null ? activeSection.Children : ComposeWithHomePrepended(home, activeSection.Children);
         }
 
-        if (activeSection.Children is not [_, ..])
-        {
-            return [home, activeSection];
-        }
+        return home is null ? [activeSection] : [home, activeSection];
+    }
 
-        var items = new NavNode[activeSection.Children.Length + 1];
+    /// <summary>True when the active section is a single-leaf wrapper whose children should be hoisted in place of the section header.</summary>
+    /// <param name="activeSection">Active top-level section.</param>
+    /// <returns>True only when the section contains exactly one child and that child is a leaf page.</returns>
+    private static bool ShouldHoistSingleLeaf(NavNode activeSection) =>
+        activeSection.Children is [{ IsSection: false }];
+
+    /// <summary>Prepends <paramref name="home"/> onto <paramref name="children"/> as a fresh array.</summary>
+    /// <param name="home">Top-level home leaf.</param>
+    /// <param name="children">Hoisted children.</param>
+    /// <returns>A right-sized array starting with home.</returns>
+    private static NavNode[] ComposeWithHomePrepended(NavNode home, NavNode[] children)
+    {
+        var items = new NavNode[children.Length + 1];
         items[0] = home;
-        Array.Copy(activeSection.Children, 0, items, 1, activeSection.Children.Length);
+        Array.Copy(children, 0, items, 1, children.Length);
         return items;
     }
 

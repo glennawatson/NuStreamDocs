@@ -318,6 +318,56 @@ await new DocBuilder()
 
 ---
 
+## Hiding pages from the navigation
+
+Three layers of "don't show this in the sidebar" — pick whichever fits the
+use case. Pages hidden from the nav still build and are reachable by direct
+URL; only their entry in the navigation tree is suppressed.
+
+### Per-page (frontmatter)
+
+Drop a flag into the page's YAML frontmatter:
+
+```yaml
+---
+title: Internal notes
+not_in_nav: true       # alias: nav_exclude: true
+---
+```
+
+Both `not_in_nav: true` and `nav_exclude: true` are accepted. The page
+still renders to disk and is search-indexed; it just doesn't appear in
+the sidebar. Truthy values: `true`, `yes`. Anything else (including
+`false`, `no`, omitted) keeps the page visible.
+
+### Per-section (`.pages` file)
+
+Drop a `.pages` file into a directory and set `hide: true` to suppress
+the entire section (and every page underneath it) from the navigation:
+
+```yaml
+# guide/internal/.pages
+hide: true
+```
+
+### Glob-level (build configuration)
+
+Exclude a whole pattern at build configuration time — the pages are
+still built and reachable, but never make it into the nav matcher:
+
+```csharp
+.UseNav(opts => opts with
+{
+    Excludes = [..opts.Excludes, "drafts/**", "**/_internal/**"],
+})
+```
+
+Each layer logs a debug message naming the prune reason
+(`frontmatter not_in_nav`, `.pages hide:true`, `glob excluded`) so you
+can confirm what's getting hidden.
+
+---
+
 ## Recipes
 
 ### Minimal blog

@@ -196,13 +196,13 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                 {
                     [LanguageKey] = _options.Language,
                     [SiteNameKey] = _options.SiteName,
-                    [LogoKey] = ResolvePageRelativeUrl(_options.Logo, context.RelativePath),
+                    [LogoKey] = ResolvePageRelativeUrl(_options.Logo, context.RelativePath, _useDirectoryUrls),
                     [SiteUrlKey] = _options.SiteUrl,
                     [CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath),
                     [SiteRootKey] = SiteRootBytes,
                     [PageTitleKey] = Utf8Encoder.Encode(pageTitle),
                     [BodyKey] = new(bodyBuffer, 0, bodyLength),
-                    [AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_options.ResolveAssetRoot(), context.RelativePath)]),
+                    [AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_options.ResolveAssetRoot(), context.RelativePath, _useDirectoryUrls)]),
                     [CopyrightKey] = _options.Copyright,
                     [RepoUrlKey] = _options.RepoUrl,
                     [RepoLabelKey] = _repoLabel,
@@ -213,7 +213,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [PrevTitleKey] = neighbours.PreviousTitle,
                     [NextUrlKey] = ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, leadingSlash: true),
                     [NextTitleKey] = neighbours.NextTitle,
-                    [HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath),
+                    [HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
                     [DescriptionKey] = ResolveDescription(context),
                     [HideNavigationKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8) ? TruthyBytes : null,
                     [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
@@ -432,10 +432,14 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         });
     }
 
-    /// <summary>Counts directory-segment depth of <paramref name="relativePath"/> for page-relative URL composition.</summary>
+    /// <summary>Counts the depth of the served URL for page-relative asset composition.</summary>
     /// <param name="relativePath">Source-relative page path (e.g. <c>guide/intro.md</c>).</param>
-    /// <returns>Number of <c>/</c> separators between the input root and the page's directory.</returns>
-    private static int PageDepth(FilePath relativePath)
+    /// <param name="useDirectoryUrls">
+    /// True when non-index pages collapse to directory slugs (e.g. <c>guide/intro.md</c> serves at
+    /// <c>/guide/intro/</c>); the served path is then one level deeper than the source path.
+    /// </param>
+    /// <returns>Number of <c>../</c> hops a relative href on this page needs to reach the site root.</returns>
+    private static int PageDepth(FilePath relativePath, bool useDirectoryUrls)
     {
         ReadOnlySpan<char> path = relativePath;
         if (path is ['/', ..])
@@ -452,7 +456,25 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             }
         }
 
+        // With directory URLs, a non-index page like guide/intro.md serves at /guide/intro/, so
+        // the document is one directory deeper than the source path implies. Index pages already
+        // collapse to their parent directory's URL, so depth is unchanged for those.
+        if (useDirectoryUrls && !IsIndexPage(path))
+        {
+            depth++;
+        }
+
         return depth;
+    }
+
+    /// <summary>True when <paramref name="path"/>'s filename is <c>index.md</c> (case-insensitive).</summary>
+    /// <param name="path">Source-relative path span.</param>
+    /// <returns>True when the page is an index file whose served URL is its parent directory.</returns>
+    private static bool IsIndexPage(ReadOnlySpan<char> path)
+    {
+        var lastSep = path.LastIndexOfAny('/', '\\');
+        var fileName = lastSep < 0 ? path : path[(lastSep + 1)..];
+        return fileName.Equals("index.md", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Builds the page-relative <c>../</c> prefix bytes for a page at the given depth.</summary>
@@ -483,8 +505,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Rewrites a site-root-absolute asset root (<c>/assets</c>) to be page-relative for the current page; leaves absolute http(s) URLs untouched.</summary>
     /// <param name="assetRoot">UTF-8 asset root from the theme options.</param>
     /// <param name="relativePath">Source-relative page path.</param>
+    /// <param name="useDirectoryUrls">True when non-index pages serve at directory URLs (one extra <c>../</c> hop).</param>
     /// <returns>Page-relative asset-root bytes, or the original bytes when the input is an absolute URL.</returns>
-    private static ReadOnlySpan<byte> ResolvePageRelativeAssetRoot(ReadOnlySpan<byte> assetRoot, FilePath relativePath)
+    private static ReadOnlySpan<byte> ResolvePageRelativeAssetRoot(ReadOnlySpan<byte> assetRoot, FilePath relativePath, bool useDirectoryUrls)
     {
         if (IsAbsoluteUrl(assetRoot))
         {
@@ -493,7 +516,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
 
         // Strip a leading '/' so concatenation with the page-relative prefix doesn't produce a site-root absolute URL.
         var trimmed = assetRoot is [(byte)'/', ..] ? assetRoot[1..] : assetRoot;
-        var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
+        var prefix = PageRelativePrefixBytes(PageDepth(relativePath, useDirectoryUrls));
         if (prefix.Length is 0)
         {
             return trimmed.ToArray();
@@ -508,8 +531,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Rewrites a configured href (site-root absolute <c>/foo</c> or relative <c>foo</c>) to be page-relative for the current page; leaves absolute http(s) URLs untouched.</summary>
     /// <param name="href">UTF-8 href from the theme options.</param>
     /// <param name="relativePath">Source-relative page path.</param>
+    /// <param name="useDirectoryUrls">True when non-index pages serve at directory URLs (one extra <c>../</c> hop).</param>
     /// <returns>Page-relative href bytes; the original bytes when the input is empty or an absolute URL.</returns>
-    private static byte[] ResolvePageRelativeUrl(byte[] href, FilePath relativePath)
+    private static byte[] ResolvePageRelativeUrl(byte[] href, FilePath relativePath, bool useDirectoryUrls)
     {
         if (href is [] || IsAbsoluteUrl(href))
         {
@@ -518,7 +542,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
 
         var span = href.AsSpan();
         var trimmed = span is [(byte)'/', ..] ? span[1..] : span;
-        var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
+        var prefix = PageRelativePrefixBytes(PageDepth(relativePath, useDirectoryUrls));
         if (prefix.Length is 0)
         {
             return trimmed.ToArray();
@@ -533,8 +557,9 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Rewrites every <c>"/assets/</c> / <c>'/assets/</c> href in the cached head-extras blob to be page-relative for the current page.</summary>
     /// <param name="headExtras">UTF-8 head-extras HTML composed once per build.</param>
     /// <param name="relativePath">Source-relative page path.</param>
+    /// <param name="useDirectoryUrls">True when non-index pages serve at directory URLs (one extra <c>../</c> hop).</param>
     /// <returns>Rewritten bytes; the original blob when no occurrences match or the page is at depth 0 and only the leading slash needs trimming.</returns>
-    private static byte[] RewriteHeadExtraAssetHrefs(byte[] headExtras, FilePath relativePath)
+    private static byte[] RewriteHeadExtraAssetHrefs(byte[] headExtras, FilePath relativePath, bool useDirectoryUrls)
     {
         if (headExtras is [])
         {
@@ -547,7 +572,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             return headExtras;
         }
 
-        var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
+        var prefix = PageRelativePrefixBytes(PageDepth(relativePath, useDirectoryUrls));
         var writer = new ArrayBufferWriter<byte>(headExtras.Length);
         var cursor = 0;
         while (cursor < source.Length)

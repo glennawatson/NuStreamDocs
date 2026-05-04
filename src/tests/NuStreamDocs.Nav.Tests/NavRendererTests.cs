@@ -187,6 +187,76 @@ public class NavRendererTests
         await Assert.That(html).DoesNotContain("<span class=\"md-ellipsis\">Docs</span>");
     }
 
+    /// <summary>
+    /// When the active page is a section's own index (e.g. <c>api/index.md</c>) and the section
+    /// has many child sub-sections (typical API-reference shape), the sidebar should render the
+    /// active section as an expandable header (<c>--active --section --nested</c>) with its
+    /// children listed inside a nested <c>&lt;nav data-md-level="1"&gt;</c> wrapper, matching the
+    /// standard Material drawer tree-view shape. Without this, readers see a flat list of
+    /// sub-sections with no indication of which section they're inside.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SidebarKeepsActiveSectionHeaderWhenSectionHasManyChildren()
+    {
+        var akavache = new NavNode("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
+        var core = new NavNode("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
+        var drawing = new NavNode("Akavache.Drawing", "api/Akavache.Drawing", isSection: true, [], indexPath: "api/Akavache.Drawing/index.md");
+        var api = new NavNode("API", "api", isSection: true, [akavache, core, drawing], indexPath: "api/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [api]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderSidebarPruned(root, api, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+
+        // Active section gets the expandable Material drawer shape.
+        await Assert.That(html).Contains("md-nav__item--active md-nav__item--section md-nav__item--nested");
+
+        // Children render inside a nested <nav data-md-level="1"> below the section header rather
+        // than being hoisted up as flat siblings.
+        await Assert.That(html).Contains("data-md-level=\"1\"");
+
+        // Every child namespace is present in the rendered nav.
+        await Assert.That(html).Contains(">Akavache<");
+        await Assert.That(html).Contains(">Akavache.Core<");
+        await Assert.That(html).Contains(">Akavache.Drawing<");
+    }
+
+    /// <summary>
+    /// Same expandable-section shape applies under <see cref="NavOptions.Tabs"/> mode when the
+    /// active top-level section has many sub-section children — the sidebar wrapping the
+    /// children gives readers a sense of place even when 100 sub-sections are listed.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SidebarTabsModeKeepsActiveSectionHeaderForSubSections()
+    {
+        var home = new NavNode("Home", "index.md", isSection: false, []);
+        var akavache = new NavNode("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
+        var core = new NavNode("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
+        var api = new NavNode("API", "api", isSection: true, [akavache, core], indexPath: "api/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [home, api]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderSidebarPruned(root, api, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+
+        // Home leaf still sits above the active section.
+        await Assert.That(html).Contains(">Home<");
+
+        // Active section header with the expandable tree-view shape.
+        await Assert.That(html).Contains("md-nav__item--active md-nav__item--section md-nav__item--nested");
+        await Assert.That(html).Contains("data-md-level=\"1\"");
+
+        // Sub-section children appear inside the section's nested nav.
+        await Assert.That(html).Contains(">Akavache<");
+        await Assert.That(html).Contains(">Akavache.Core<");
+    }
+
     /// <summary>BuildUrlIndex maps every leaf URL to its node.</summary>
     /// <returns>Async test.</returns>
     [Test]
