@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Nav;
 
@@ -21,10 +22,9 @@ public static class NavEntryFactory
     /// <param name="title">Display title; pass <see cref="string.Empty"/> to derive from the file at render time.</param>
     /// <param name="path">Source-relative markdown path (forward slashes) or absolute URL.</param>
     /// <returns>A leaf <see cref="NavEntry"/>.</returns>
-    public static NavEntry Leaf(string title, string path)
+    public static NavEntry Leaf(ApiCompatString title, FilePath path)
     {
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentException.ThrowIfNullOrEmpty(path.Value);
         return new(EncodeUtf8(title), EncodeUtf8(path), []);
     }
 
@@ -62,9 +62,9 @@ public static class NavEntryFactory
     /// <param name="title">Section display title.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
-    public static NavEntry Section(string title, NavEntry[] children)
+    public static NavEntry Section(ApiCompatString title, NavEntry[] children)
     {
-        ArgumentException.ThrowIfNullOrEmpty(title);
+        ArgumentException.ThrowIfNullOrEmpty(title.Value);
         ArgumentNullException.ThrowIfNull(children);
         if (children.Length is 0)
         {
@@ -100,10 +100,10 @@ public static class NavEntryFactory
     /// <param name="indexPath">Source-relative landing-page path.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
-    public static NavEntry SectionWithIndex(string title, string indexPath, NavEntry[] children)
+    public static NavEntry SectionWithIndex(ApiCompatString title, FilePath indexPath, NavEntry[] children)
     {
-        ArgumentException.ThrowIfNullOrEmpty(title);
-        ArgumentException.ThrowIfNullOrEmpty(indexPath);
+        ArgumentException.ThrowIfNullOrEmpty(title.Value);
+        ArgumentException.ThrowIfNullOrEmpty(indexPath.Value);
         ArgumentNullException.ThrowIfNull(children);
         if (children.Length is 0)
         {
