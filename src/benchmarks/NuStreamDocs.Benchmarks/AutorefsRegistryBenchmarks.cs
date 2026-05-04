@@ -11,7 +11,7 @@ using NuStreamDocs.Autorefs;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>
-/// Per-call cost of <see cref="AutorefsRegistry.Register(ReadOnlySpan{byte}, ReadOnlySpan{byte}, ReadOnlySpan{byte})"/>
+/// Per-call cost of <see cref="AutorefsRegistry.Register(ReadOnlySpan{byte}, byte[], ReadOnlySpan{byte})"/>
 /// across the two real-world fragment shapes: heading scans (id == fragment so
 /// the stored URL is <c>page#id</c>) and whole-page references (no fragment
 /// so the stored URL is the bare page URL).

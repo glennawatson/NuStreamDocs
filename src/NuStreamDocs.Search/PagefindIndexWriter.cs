@@ -31,11 +31,11 @@ public static class PagefindIndexWriter
         ArgumentException.ThrowIfNullOrEmpty(searchRoot.Value);
         ArgumentNullException.ThrowIfNull(documents);
 
-        var recordsDir = Path.Combine(searchRoot, "pagefind-records");
-        Directory.CreateDirectory(recordsDir);
+        DirectoryPath recordsDir = Path.Combine(searchRoot.Value, "pagefind-records");
+        recordsDir.Create();
 
-        var manifestPath = Path.Combine(searchRoot, "pagefind-entry.json");
-        using var manifestStream = File.Create(manifestPath);
+        var manifestPath = searchRoot.File("pagefind-entry.json");
+        using var manifestStream = File.Create(manifestPath.Value);
         using var manifest = new Utf8JsonWriter(manifestStream);
 
         manifest.WriteStartObject();
@@ -47,7 +47,7 @@ public static class PagefindIndexWriter
         {
             var doc = documents[i];
             var slug = SlugifyForRecord(doc.RelativeUrl, i);
-            var recordPath = Path.Combine(recordsDir, Encoding.UTF8.GetString(slug) + ".json");
+            var recordPath = recordsDir.File(Encoding.UTF8.GetString(slug) + ".json");
             WriteRecord(recordPath, doc);
 
             manifest.WriteStartObject();
@@ -65,9 +65,9 @@ public static class PagefindIndexWriter
     /// <summary>Writes one per-page record JSON.</summary>
     /// <param name="path">Absolute output path.</param>
     /// <param name="doc">Document to serialize.</param>
-    private static void WriteRecord(string path, in SearchDocument doc)
+    private static void WriteRecord(FilePath path, in SearchDocument doc)
     {
-        using var stream = File.Create(path);
+        using var stream = File.Create(path.Value);
         using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
         writer.WriteString("url"u8, (ReadOnlySpan<byte>)doc.RelativeUrl);

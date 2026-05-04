@@ -66,7 +66,7 @@ public class SphinxInventoryWriterTests
     {
         using var fixture = new InventoryFixture();
         var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "api/Foo.html"u8, fragment: null);
+        registry.Register("Foo"u8, "api/Foo.html"u8.ToArray(), fragment: default);
         var plugin = new SphinxInventoryPlugin(registry, new("X", string.Empty, "objects.inv"));
         var context = new PluginFinalizeContext(fixture.Directory);
         await plugin.OnFinalizeAsync(context, CancellationToken.None);

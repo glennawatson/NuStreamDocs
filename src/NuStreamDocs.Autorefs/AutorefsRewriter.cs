@@ -31,13 +31,13 @@ public static class AutorefsRewriter
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentNullException.ThrowIfNull(registry);
 
-        if (!Directory.Exists(outputRoot) || registry.Count is 0)
+        if (!outputRoot.Exists() || registry.Count is 0)
         {
             return 0;
         }
 
         // Materialize the file list once so the parallel pass partitions a stable input.
-        var files = Directory.GetFiles(outputRoot, "*.html", SearchOption.AllDirectories);
+        var files = Directory.GetFiles(outputRoot.Value, "*.html", SearchOption.AllDirectories);
         var rewritten = 0;
 
         // Capture-by-ref via local action; Parallel.ForEach passes the file path through as the body input.
@@ -51,18 +51,18 @@ public static class AutorefsRewriter
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="logger">Logger that receives per-reference debug/warning events.</param>
     /// <returns>Counts of resolved and missing references across the site.</returns>
-    public static (int Resolved, int Missing) RewriteAll(string outputRoot, AutorefsRegistry registry, ILogger logger)
+    public static (int Resolved, int Missing) RewriteAll(DirectoryPath outputRoot, AutorefsRegistry registry, ILogger logger)
     {
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(logger);
 
-        if (!Directory.Exists(outputRoot) || registry.Count is 0)
+        if (!outputRoot.Exists() || registry.Count is 0)
         {
             return (0, 0);
         }
 
-        var files = Directory.GetFiles(outputRoot, "*.html", SearchOption.AllDirectories);
+        var files = Directory.GetFiles(outputRoot.Value, "*.html", SearchOption.AllDirectories);
         var resolved = 0;
         var missing = 0;
         var registryLocal = registry;
@@ -83,12 +83,13 @@ public static class AutorefsRewriter
     /// <param name="path">Absolute path to the HTML file.</param>
     /// <param name="registry">Registry to resolve against.</param>
     /// <returns>True when the file contained at least one resolvable marker.</returns>
-    public static bool RewriteOne(string path, AutorefsRegistry registry)
+    public static bool RewriteOne(FilePath path, AutorefsRegistry registry)
     {
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentException.ThrowIfNullOrEmpty(path.Value);
         ArgumentNullException.ThrowIfNull(registry);
 
-        var source = File.ReadAllBytes(path);
+        // BCL boundary — File.ReadAllBytes / WriteAllBytes take string only.
+        var source = File.ReadAllBytes(path.Value);
         if (source.AsSpan().IndexOf(AutorefScanner.Marker) < 0)
         {
             return false;
@@ -101,7 +102,7 @@ public static class AutorefsRewriter
             return false;
         }
 
-        File.WriteAllBytes(path, sink.WrittenSpan);
+        File.WriteAllBytes(path.Value, sink.WrittenSpan);
         return true;
     }
 
@@ -124,15 +125,15 @@ public static class AutorefsRewriter
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="logger">Logger for per-reference events.</param>
     /// <param name="totals">Resolved + missing counters threaded across files.</param>
-    private static void RewriteOneLogged(string path, AutorefsRegistry registry, ILogger logger, ref RewriteTotals totals)
+    private static void RewriteOneLogged(FilePath path, AutorefsRegistry registry, ILogger logger, ref RewriteTotals totals)
     {
-        var source = File.ReadAllBytes(path);
+        var source = File.ReadAllBytes(path.Value);
         if (source.AsSpan().IndexOf(AutorefScanner.Marker) < 0)
         {
             return;
         }
 
-        FilePath sourcePage = Path.GetFileName(path);
+        FilePath sourcePage = path.FileName;
         using var rental = PageBuilderPool.Rent(source.Length);
         var sink = rental.Writer;
         if (!RewriteSpanCore(source, registry, sink, logger, sourcePage, ref totals))
@@ -140,7 +141,7 @@ public static class AutorefsRewriter
             return;
         }
 
-        File.WriteAllBytes(path, sink.WrittenSpan);
+        File.WriteAllBytes(path.Value, sink.WrittenSpan);
     }
 
     /// <summary>One canonical scan-and-substitute loop; logging fires only when <paramref name="logger"/> is non-null.</summary>
@@ -192,7 +193,7 @@ public static class AutorefsRewriter
         AutorefsRegistry registry,
         IBufferWriter<byte> sink,
         ILogger? logger,
-        string? sourcePage,
+        FilePath? sourcePage,
         ref RewriteTotals totals)
     {
         var idLength = match.IdEnd - match.IdStart;
@@ -223,7 +224,7 @@ public static class AutorefsRewriter
             return false;
         }
 
-        AutorefsLoggingHelper.LogReferenceUnresolved(logger, idSpan, sourcePage);
+        AutorefsLoggingHelper.LogReferenceUnresolved(logger, idSpan, sourcePage.Value);
         return false;
     }
 

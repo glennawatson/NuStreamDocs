@@ -14,7 +14,7 @@ public class HeadingIdScannerTests
     {
         var registry = new AutorefsRegistry();
         var html = "<h1 id=\"intro\">Intro</h1>\n<p>body</p>\n<h2 id=\"detail\">Detail</h2>\n<h3>NoId</h3>"u8;
-        HeadingIdScanner.ScanAndRegister(html, "guide/intro.html", registry);
+        HeadingIdScanner.ScanAndRegister(html, "guide/intro.html"u8.ToArray(), registry);
 
         await Assert.That(registry.Count).IsEqualTo(2);
         await Assert.That(registry.TryResolve("intro"u8, out var introUrl)).IsTrue();
@@ -30,7 +30,7 @@ public class HeadingIdScannerTests
     {
         var registry = new AutorefsRegistry();
         var html = "<p>just a paragraph</p>"u8;
-        HeadingIdScanner.ScanAndRegister(html, "page.html", registry);
+        HeadingIdScanner.ScanAndRegister(html, "page.html"u8.ToArray(), registry);
         await Assert.That(registry.Count).IsEqualTo(0);
     }
 }

@@ -16,8 +16,8 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var registry = new AutorefsRegistry();
-        registry.Register("Foo.Bar"u8, "api/Foo.Bar.html"u8, fragment: default);
-        registry.Register("Foo.Baz"u8, "api/Foo.Baz.html"u8, fragment: default);
+        registry.Register("Foo.Bar"u8, "api/Foo.Bar.html"u8.ToArray(), fragment: default);
+        registry.Register("Foo.Baz"u8, "api/Foo.Baz.html"u8.ToArray(), fragment: default);
         var plugin = new XrefsPlugin(registry, XrefsOptions.Default);
 
         await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
@@ -79,7 +79,7 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "f.html"u8, fragment: default);
+        registry.Register("Foo"u8, "f.html"u8.ToArray(), fragment: default);
         var options = XrefsOptions.Default with { EmitMap = false };
         var plugin = new XrefsPlugin(registry, options);
 

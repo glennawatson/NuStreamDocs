@@ -25,9 +25,6 @@ namespace NuStreamDocs.Benchmarks;
 [MemoryDiagnoser]
 public class HeadingIdScannerBenchmarks
 {
-    /// <summary>Page-relative URL passed to every <c>Register</c> call.</summary>
-    private const string PageUrl = "guide/intro.html";
-
     /// <summary>Bytes per kilobyte; used to convert the <c>PageSizeKb</c> param into a byte count.</summary>
     private const int BytesPerKilobyte = 1024;
 
@@ -54,6 +51,9 @@ public class HeadingIdScannerBenchmarks
 
     /// <summary>Many headings — long reference page or API surface dump.</summary>
     private const int ManyHeadings = 32;
+
+    /// <summary>Page-relative URL bytes shared across every <c>Register</c> call — encoded once per build, exactly as the production plugin does.</summary>
+    private static readonly byte[] PageUrl = "guide/intro.html"u8.ToArray();
 
     /// <summary>Synthetic rendered-HTML payload sized by <see cref="PageSizeKb"/> and <see cref="HeadingCount"/>.</summary>
     private byte[] _html = [];

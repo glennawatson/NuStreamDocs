@@ -56,20 +56,22 @@ public sealed class AutorefsRegistry
     /// <summary>Registers an ID against a page URL and fragment using the byte-shaped hot path.</summary>
     /// <param name="id">UTF-8 reference ID bytes.</param>
     /// <param name="pageRelativeUrlBytes">
-    /// UTF-8 page-relative URL bytes; the array becomes the canonical storage and is shared across every ID
-    /// registered for the same page so encoding happens once per page rather than once per ID.
+    /// UTF-8 page-relative URL bytes; the array reference is stored as canonical storage and shared
+    /// across every ID registered for the same page, so encoding happens once per page rather than once per ID.
+    /// Callers must not mutate the array after handing it in.
     /// </param>
     /// <param name="fragment">UTF-8 fragment bytes (without the leading <c>#</c>); pass an empty span for whole-page references.</param>
-    public void Register(ReadOnlySpan<byte> id, ReadOnlySpan<byte> pageRelativeUrlBytes, ReadOnlySpan<byte> fragment)
+    public void Register(ReadOnlySpan<byte> id, byte[] pageRelativeUrlBytes, ReadOnlySpan<byte> fragment)
     {
         if (id.IsEmpty)
         {
             throw new ArgumentException("id must be non-empty.", nameof(id));
         }
 
+        ArgumentNullException.ThrowIfNull(pageRelativeUrlBytes);
         var idBytes = id.ToArray();
 
-        _anchors[idBytes] = new([.. pageRelativeUrlBytes], ResolveFragment(idBytes, fragment));
+        _anchors[idBytes] = new(pageRelativeUrlBytes, ResolveFragment(idBytes, fragment));
     }
 
     /// <summary>Resolves an ID to its full URL and writes the UTF-8 URL bytes directly into <paramref name="writer"/>.</summary>

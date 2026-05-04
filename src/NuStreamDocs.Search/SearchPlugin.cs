@@ -9,7 +9,6 @@ using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 using NuStreamDocs.Links;
-using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Search.Logging;
 using NuStreamDocs.Yaml;
@@ -41,6 +40,9 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
 
     /// <summary>Alias for <see cref="SearchOptions.SearchableFrontmatterKeys"/> — the option list is already byte-shaped, so the per-page extractor reads directly without copying.</summary>
     private readonly byte[][] _searchableFrontmatterKeyBytes = options.SearchableFrontmatterKeys;
+
+    /// <summary>Pre-encoded site-relative manifest URL bytes; computed once at construction and reused per page in <see cref="WriteHeadExtra"/>.</summary>
+    private readonly byte[] _manifestUrlBytes = BuildManifestUrlBytes(options.OutputSubdirectory, options.Format);
 
     /// <summary>Output root captured during configure.</summary>
     private DirectoryPath _outputRoot;
@@ -99,14 +101,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
         }
 
         _documents.Add(new(url, titleBytes, [.. textBuffer.WrittenSpan]));
-        LogInvokerHelper.Invoke(
-            _logger,
-            LogLevel.Debug,
-            textBuffer.WrittenCount,
-            0,
-            url,
-            static bytes => Encoding.UTF8.GetString(bytes),
-            static (l, len, _, slug) => SearchLoggingHelper.LogDocumentIndexed(l, slug, len));
+        SearchLoggingHelper.LogDocumentIndexed(_logger, url, textBuffer.WrittenCount);
 
         return ValueTask.CompletedTask;
     }
@@ -120,16 +115,16 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
             return;
         }
 
-        var searchRoot = Path.Combine(root, _options.OutputSubdirectory);
+        DirectoryPath searchRoot = Path.Combine(root.Value, _options.OutputSubdirectory);
         var docs = FilterAndSort(_documents, _options.MinTokenLength);
         SearchLoggingHelper.LogIndexBuildStart(_logger, docs.Length, _options.Format, searchRoot);
-        string primaryIndexPath;
+        FilePath primaryIndexPath;
         switch (_options.Format)
         {
             case SearchFormat.Lunr:
             {
-                Directory.CreateDirectory(searchRoot);
-                primaryIndexPath = Path.Combine(searchRoot, "search_index.json");
+                searchRoot.Create();
+                primaryIndexPath = searchRoot.File("search_index.json");
                 LunrIndexWriter.Write(primaryIndexPath, _options.Language, docs, _options.ExtraStopwords);
                 break;
             }
@@ -139,12 +134,12 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
                 // Pagefind is the default format; any new SearchFormat
                 // values not handled above fall back to Pagefind too.
                 PagefindIndexWriter.Write(searchRoot, docs);
-                primaryIndexPath = Path.Combine(searchRoot, "pagefind-entry.json");
+                primaryIndexPath = searchRoot.File("pagefind-entry.json");
                 break;
             }
         }
 
-        if (_options.Compression is not SearchCompression.None && File.Exists(primaryIndexPath))
+        if (_options.Compression is not SearchCompression.None && primaryIndexPath.Exists())
         {
             await EmitCompressedSiblingsAsync(primaryIndexPath, _options.Compression, cancellationToken).ConfigureAwait(false);
         }
@@ -157,17 +152,12 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        var manifestPath = _options.Format switch
-        {
-            SearchFormat.Lunr => "/" + _options.OutputSubdirectory + "/search_index.json",
-            _ => "/" + _options.OutputSubdirectory + "/pagefind-entry.json",
-        };
 
         HeadExtraWriter.WriteUtf8(writer, "<meta name=\"nustreamdocs:search-format\" content=\""u8);
-        HeadExtraWriter.WriteString(writer, FormatName(_options.Format));
+        HeadExtraWriter.WriteUtf8(writer, FormatNameBytes(_options.Format));
         HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
         HeadExtraWriter.WriteUtf8(writer, "<meta name=\"nustreamdocs:search-index\" content=\""u8);
-        HeadExtraWriter.WriteString(writer, manifestPath);
+        HeadExtraWriter.WriteUtf8(writer, _manifestUrlBytes);
         HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
     }
 
@@ -180,16 +170,16 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     /// <param name="compression">Compression knob; <see cref="SearchCompression.None"/> is a no-op handled by the caller.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when both siblings have been written.</returns>
-    private static async Task EmitCompressedSiblingsAsync(string path, SearchCompression compression, CancellationToken cancellationToken)
+    private static async Task EmitCompressedSiblingsAsync(FilePath path, SearchCompression compression, CancellationToken cancellationToken)
     {
-        var raw = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
-        await WriteGzipAsync(path + ".gz", raw, cancellationToken).ConfigureAwait(false);
+        var raw = await File.ReadAllBytesAsync(path.Value, cancellationToken).ConfigureAwait(false);
+        await WriteGzipAsync(path.Value + ".gz", raw, cancellationToken).ConfigureAwait(false);
         if (compression is not SearchCompression.Smallest)
         {
             return;
         }
 
-        await WriteBrotliAsync(path + ".br", raw, cancellationToken).ConfigureAwait(false);
+        await WriteBrotliAsync(path.Value + ".br", raw, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Writes <paramref name="raw"/> through <see cref="GZipStream"/> at the smallest compression level.</summary>
@@ -251,14 +241,35 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
         return ServedUrlBytes.FromPath(path, useDirectoryUrls, leadingSlash: true);
     }
 
-    /// <summary>Returns the lowercase format name for the discovery <c>&lt;meta&gt;</c> tag.</summary>
+    /// <summary>Returns the lowercase format name as UTF-8 bytes for the discovery <c>&lt;meta&gt;</c> tag.</summary>
     /// <param name="format">Format selection.</param>
-    /// <returns>Format name string suitable for a meta-tag value.</returns>
-    private static string FormatName(SearchFormat format) => format switch
+    /// <returns>Format name bytes suitable for a meta-tag value.</returns>
+    private static ReadOnlySpan<byte> FormatNameBytes(SearchFormat format) => format switch
     {
-        SearchFormat.Lunr => "lunr",
-        _ => "pagefind",
+        SearchFormat.Lunr => "lunr"u8,
+        _ => "pagefind"u8,
     };
+
+    /// <summary>Builds the site-relative manifest URL bytes (e.g. <c>/search/pagefind-entry.json</c>) for the chosen format.</summary>
+    /// <param name="outputSubdirectory">Site-relative search directory.</param>
+    /// <param name="format">Index format selection.</param>
+    /// <returns>UTF-8 manifest URL bytes.</returns>
+    private static byte[] BuildManifestUrlBytes(PathSegment outputSubdirectory, SearchFormat format)
+    {
+        ReadOnlySpan<byte> filename = format switch
+        {
+            SearchFormat.Lunr => "/search_index.json"u8,
+            _ => "/pagefind-entry.json"u8,
+        };
+
+        var subdir = outputSubdirectory.Value.AsSpan();
+        var size = 1 + Encoding.UTF8.GetByteCount(subdir) + filename.Length;
+        var result = new byte[size];
+        result[0] = (byte)'/';
+        var written = 1 + Encoding.UTF8.GetBytes(subdir, result.AsSpan(1));
+        filename.CopyTo(result.AsSpan(written));
+        return result;
+    }
 
     /// <summary>Sums the UTF-8 byte length across every indexed document.</summary>
     /// <param name="docs">Documents to measure.</param>

@@ -18,7 +18,7 @@ public class AutorefsRewriterFileWalkTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "page.html"), "see <a href=\"@autoref:Foo\">Foo</a>");
 
         var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "/api/foo.html"u8, fragment: default);
+        registry.Register("Foo"u8, "/api/foo.html"u8.ToArray(), fragment: default);
 
         var count = AutorefsRewriter.RewriteAll(temp.Root, registry);
         await Assert.That(count).IsEqualTo(1);
@@ -36,7 +36,7 @@ public class AutorefsRewriterFileWalkTests
         await File.WriteAllTextAsync(pagePath, "<a href=\"@autoref:Resolved\">x</a> and <a href=\"@autoref:Missing\">y</a>");
 
         var registry = new AutorefsRegistry();
-        registry.Register("Resolved"u8, "/r.html"u8, fragment: default);
+        registry.Register("Resolved"u8, "/r.html"u8.ToArray(), fragment: default);
 
         var (resolved, missing) = AutorefsRewriter.RewriteAll(temp.Root, registry, NullLogger.Instance);
         await Assert.That(resolved).IsEqualTo(1);
@@ -94,7 +94,7 @@ public class AutorefsRewriterFileWalkTests
         var path = Path.Combine(temp.Root, "good.html");
         await File.WriteAllTextAsync(path, "<a href=\"@autoref:Foo\">x</a>");
         var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "/foo.html"u8, fragment: default);
+        registry.Register("Foo"u8, "/foo.html"u8.ToArray(), fragment: default);
         await Assert.That(AutorefsRewriter.RewriteOne(path, registry)).IsTrue();
         var rewritten = await File.ReadAllTextAsync(path);
         await Assert.That(rewritten).Contains("/foo.html");

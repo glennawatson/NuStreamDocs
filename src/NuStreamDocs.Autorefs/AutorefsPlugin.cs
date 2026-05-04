@@ -2,8 +2,10 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Autorefs.Logging;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Autorefs;
@@ -73,8 +75,8 @@ public sealed class AutorefsPlugin : IDocPlugin
     public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
-        var pageUrl = ToPageUrl(context.RelativePath);
-        HeadingIdScanner.ScanAndRegister(context.Html.WrittenSpan, pageUrl, Registry);
+        var pageUrlBytes = ToPageUrlBytes(context.RelativePath);
+        HeadingIdScanner.ScanAndRegister(context.Html.WrittenSpan, pageUrlBytes, Registry);
 
         return ValueTask.CompletedTask;
     }
@@ -90,11 +92,20 @@ public sealed class AutorefsPlugin : IDocPlugin
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>Maps a source-relative <c>.md</c> path to the served-page URL.</summary>
+    /// <summary>Maps a source-relative <c>.md</c> path to the served-page URL as UTF-8 bytes (suffix swapped to <c>.html</c>).</summary>
     /// <param name="relativePath">Source-relative markdown path, forward-slashed.</param>
-    /// <returns>Page-relative URL suffixed with <c>.html</c>.</returns>
-    private static string ToPageUrl(string relativePath) =>
-        relativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-            ? $"{relativePath.AsSpan(0, relativePath.Length - MarkdownExtensionLength)}.html"
-            : relativePath;
+    /// <returns>Page-relative URL bytes.</returns>
+    private static byte[] ToPageUrlBytes(FilePath relativePath)
+    {
+        var path = relativePath.AsSpan();
+        var hasMd = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+        var sourceChars = hasMd ? path[..^MarkdownExtensionLength] : path;
+        ReadOnlySpan<byte> suffix = hasMd ? ".html"u8 : default;
+
+        var size = Encoding.UTF8.GetByteCount(sourceChars) + suffix.Length;
+        var result = new byte[size];
+        var written = Encoding.UTF8.GetBytes(sourceChars, result);
+        suffix.CopyTo(result.AsSpan(written));
+        return result;
+    }
 }

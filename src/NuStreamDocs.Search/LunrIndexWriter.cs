@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search;
 
@@ -25,7 +26,7 @@ public static class LunrIndexWriter
     /// <param name="path">Absolute output path.</param>
     /// <param name="language">Language code emitted in the <c>config</c> block.</param>
     /// <param name="documents">Document corpus.</param>
-    public static void Write(string path, string language, SearchDocument[] documents) =>
+    public static void Write(FilePath path, ApiCompatString language, SearchDocument[] documents) =>
         Write(path, language, documents, []);
 
     /// <summary>Writes <paramref name="documents"/> as Lunr-compatible JSON, including an <c>extra_stopwords</c> array.</summary>
@@ -33,21 +34,21 @@ public static class LunrIndexWriter
     /// <param name="language">Language code emitted in the <c>config</c> block.</param>
     /// <param name="documents">Document corpus.</param>
     /// <param name="extraStopwords">UTF-8 stopwords to advertise in the <c>config</c> block; theme JS can layer them onto the language's default set.</param>
-    public static void Write(string path, string language, SearchDocument[] documents, byte[][] extraStopwords)
+    public static void Write(FilePath path, ApiCompatString language, SearchDocument[] documents, byte[][] extraStopwords)
     {
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentException.ThrowIfNullOrEmpty(path.Value);
         ArgumentNullException.ThrowIfNull(documents);
         ArgumentNullException.ThrowIfNull(extraStopwords);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        using var stream = File.Create(path);
+        path.Directory.Create();
+        using var stream = File.Create(path.Value);
         using var writer = new Utf8JsonWriter(stream);
 
         writer.WriteStartObject();
 
         writer.WritePropertyName("config"u8);
         writer.WriteStartObject();
-        writer.WriteString("lang"u8, string.IsNullOrEmpty(language) ? "en" : language);
+        writer.WriteString("lang"u8, language.IsEmpty ? "en" : language.Value);
         writer.WriteString("separator"u8, @"[\s\-]+");
         if (extraStopwords.Length > 0)
         {

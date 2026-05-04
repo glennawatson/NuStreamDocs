@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Polly" />
+    <PackageReference Include="Polly.RateLimiting" />
   </ItemGroup>
 
   <ItemGroup>
