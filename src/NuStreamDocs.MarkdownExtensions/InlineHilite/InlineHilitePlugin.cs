@@ -24,7 +24,7 @@ namespace NuStreamDocs.MarkdownExtensions.InlineHilite;
 public sealed class InlineHilitePlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override byte[] Name => "inlinehilite"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "inlinehilite"u8;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>

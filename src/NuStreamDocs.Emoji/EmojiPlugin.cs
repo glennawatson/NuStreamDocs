@@ -23,7 +23,7 @@ namespace NuStreamDocs.Emoji;
 public sealed class EmojiPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override byte[] Name => "emoji"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "emoji"u8;
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

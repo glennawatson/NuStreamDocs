@@ -69,7 +69,7 @@ public class SitemapPluginTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new SitemapPlugin().Name.AsSpan().SequenceEqual("sitemap"u8)).IsTrue();
+    public async Task NameIsStable() => await Assert.That(new SitemapPlugin().Name.SequenceEqual("sitemap"u8)).IsTrue();
 
     /// <summary>UseSitemap registers the plugin.</summary>
     /// <returns>Async test.</returns>

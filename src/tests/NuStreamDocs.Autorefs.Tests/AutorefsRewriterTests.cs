@@ -16,7 +16,7 @@ public class AutorefsRewriterTests
     public async Task ResolvedMarkersGetRewritten()
     {
         var registry = new AutorefsRegistry();
-        registry.Register("Foo", "api/foo.html", "Foo");
+        registry.Register("Foo"u8, "api/foo.html"u8, "Foo"u8);
         var input = "<a href=\"@autoref:Foo\">Foo</a>"u8;
 
         var sink = new ArrayBufferWriter<byte>();
@@ -49,8 +49,8 @@ public class AutorefsRewriterTests
     public async Task MultipleMarkersInOneDocument()
     {
         var registry = new AutorefsRegistry();
-        registry.Register("a", "a.html", null);
-        registry.Register("b", "b.html", "b");
+        registry.Register("a"u8, "a.html"u8, default);
+        registry.Register("b"u8, "b.html"u8, "b"u8);
         var input = "see <a href=\"@autoref:a\">A</a> and <a href=\"@autoref:b\">B</a>"u8;
 
         var sink = new ArrayBufferWriter<byte>();

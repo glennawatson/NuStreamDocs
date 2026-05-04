@@ -22,7 +22,7 @@ namespace NuStreamDocs.Bibliography.Styles;
 public interface ICitationStyle
 {
     /// <summary>Gets the style's display name as UTF-8 bytes (e.g. <c>"AGLC4"u8</c>).</summary>
-    byte[] Name { get; }
+    ReadOnlySpan<byte> Name { get; }
 
     /// <summary>Writes the in-text reference (style-dependent — footnote ref for AGLC4, "(Smith 2024)" for APA, etc.) to <paramref name="writer"/>.</summary>
     /// <param name="entry">Resolved entry.</param>

@@ -24,7 +24,7 @@ public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "html-minify"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "html-minify"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

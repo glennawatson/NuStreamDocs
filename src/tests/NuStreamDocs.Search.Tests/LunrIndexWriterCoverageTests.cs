@@ -14,7 +14,7 @@ public class LunrIndexWriterCoverageTests
     {
         using var dir = new TempDir();
         var path = Path.Combine(dir.Root, "lunr.json");
-        LunrIndexWriter.Write(path, "en", [new("/a.html", [.. "A"u8], [.. "body"u8])]);
+        LunrIndexWriter.Write(path, "en", [new([.. "/a.html"u8], [.. "A"u8], [.. "body"u8])]);
         await Assert.That(File.Exists(path)).IsTrue();
         await Assert.That(await File.ReadAllTextAsync(path)).Contains("\"lang\":\"en\"");
     }
@@ -26,7 +26,7 @@ public class LunrIndexWriterCoverageTests
     {
         using var dir = new TempDir();
         var path = Path.Combine(dir.Root, "lunr.json");
-        LunrIndexWriter.Write(path, string.Empty, [new("/a.html", [.. "A"u8], [.. "B"u8])]);
+        LunrIndexWriter.Write(path, string.Empty, [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])]);
         await Assert.That(await File.ReadAllTextAsync(path)).Contains("\"lang\":\"en\"");
     }
 
@@ -37,7 +37,7 @@ public class LunrIndexWriterCoverageTests
     {
         using var dir = new TempDir();
         var path = Path.Combine(dir.Root, "lunr.json");
-        LunrIndexWriter.Write(path, "en", [new("/a.html", [.. "A"u8], [.. "B"u8])], [[.. "foo"u8], [.. "bar"u8]]);
+        LunrIndexWriter.Write(path, "en", [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])], [[.. "foo"u8], [.. "bar"u8]]);
         var json = await File.ReadAllTextAsync(path);
         await Assert.That(json).Contains("\"extra_stopwords\"");
         await Assert.That(json).Contains("\"foo\"");
@@ -55,8 +55,8 @@ public class LunrIndexWriterCoverageTests
             path,
             "en",
             [
-                new("/one.html", [.. "T1"u8], [.. "X"u8]),
-                new("/two.html", [.. "T2"u8], [.. "Y"u8]),
+                new([.. "/one.html"u8], [.. "T1"u8], [.. "X"u8]),
+                new([.. "/two.html"u8], [.. "T2"u8], [.. "Y"u8]),
             ]);
         var json = await File.ReadAllTextAsync(path);
         await Assert.That(json).Contains("/one.html");

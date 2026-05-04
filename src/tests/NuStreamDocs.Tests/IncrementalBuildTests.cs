@@ -102,7 +102,7 @@ public class IncrementalBuildTests
     private sealed class AppendCommentPlugin : IDocPlugin
     {
         /// <inheritdoc/>
-        public byte[] Name => "append-comment"u8.ToArray();
+        public ReadOnlySpan<byte> Name => "append-comment"u8;
 
         /// <inheritdoc/>
         public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

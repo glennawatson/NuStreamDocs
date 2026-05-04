@@ -46,7 +46,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     public DirectExtractionResult? LastExtraction { get; private set; }
 
     /// <inheritdoc/>
-    public byte[] Name => "csharp-apigenerator"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "csharp-apigenerator"u8;
 
     /// <inheritdoc/>
     public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

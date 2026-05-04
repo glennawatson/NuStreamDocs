@@ -41,7 +41,7 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     private byte[] _headFragment = [];
 
     /// <inheritdoc/>
-    public byte[] Name => "extra-assets"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "extra-assets"u8;
 
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => [.. _cssAssets, .. _jsAssets];

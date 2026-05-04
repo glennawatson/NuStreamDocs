@@ -17,7 +17,7 @@ namespace NuStreamDocs.MarkdownExtensions.DefList;
 public sealed class DefListPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override byte[] Name => "deflist"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "deflist"u8;
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

@@ -12,7 +12,7 @@ public class MetadataRegistrationTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new MetadataPlugin().Name.AsSpan().SequenceEqual("metadata"u8)).IsTrue();
+    public async Task NameIsStable() => await Assert.That(new MetadataPlugin().Name.SequenceEqual("metadata"u8)).IsTrue();
 
     /// <summary>Default options exposes the expected file names.</summary>
     /// <returns>Async test.</returns>

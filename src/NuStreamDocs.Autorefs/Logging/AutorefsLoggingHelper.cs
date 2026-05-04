@@ -2,18 +2,16 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Autorefs.Logging;
 
 /// <summary>
 /// Source-generated logging entry points for <see cref="AutorefsPlugin"/>
 /// and <see cref="AutorefsRewriter"/>.
 /// </summary>
-/// <remarks>
-/// All methods are <see cref="LoggerMessageAttribute"/> partials. Debug-
-/// level entries that bind expensive arguments should be invoked via
-/// <c>NuStreamDocs.Logging.LogInvokerHelper.Invoke</c> at the call site
-/// so the projection only runs when the level is enabled.
-/// </remarks>
 internal static partial class AutorefsLoggingHelper
 {
     /// <summary>Logs the start of a resolution pass.</summary>
@@ -25,25 +23,39 @@ internal static partial class AutorefsLoggingHelper
         Message = "Autorefs resolution pass starting ({CatalogSize} registered ID(s))")]
     public static partial void LogResolutionStart(ILogger logger, int catalogSize);
 
-    /// <summary>Logs a single resolved reference at debug level.</summary>
+    /// <summary>Logs a resolved reference.</summary>
     /// <param name="logger">Target logger.</param>
-    /// <param name="id">Resolved ID.</param>
-    /// <param name="targetPath">Resolved target URL or file path.</param>
-    [LoggerMessage(
-        EventId = 5002,
-        Level = LogLevel.Debug,
-        Message = "Autorefs resolved {Id} -> {TargetPath}")]
-    public static partial void LogReferenceResolved(ILogger logger, string id, string targetPath);
+    /// <param name="urlBytes">The url bytes.</param>
+    /// <param name="id">UTF-8 reference ID bytes.</param>
+    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: registry lookup is gated on logger.IsEnabled.")]
+    public static void LogReferenceResolved(ILogger? logger, ReadOnlySpan<byte> urlBytes, ReadOnlySpan<byte> id)
+    {
+        if (logger is null)
+        {
+            return;
+        }
 
-    /// <summary>Logs an unresolved reference at warning level.</summary>
+        if (!logger.IsEnabled(LogLevel.Debug))
+        {
+            return;
+        }
+
+        LogReferenceResolvedCore(logger, Encoding.UTF8.GetString(id), Encoding.UTF8.GetString(urlBytes));
+    }
+
+    /// <summary>Logs an unresolved reference.</summary>
     /// <param name="logger">Target logger.</param>
-    /// <param name="id">Unresolved ID.</param>
+    /// <param name="id">UTF-8 unresolved ID bytes.</param>
     /// <param name="sourcePage">Page that referenced the ID.</param>
-    [LoggerMessage(
-        EventId = 5003,
-        Level = LogLevel.Warning,
-        Message = "Autorefs could not resolve {Id} on page {SourcePage}")]
-    public static partial void LogReferenceUnresolved(ILogger logger, string id, string sourcePage);
+    public static void LogReferenceUnresolved(ILogger logger, ReadOnlySpan<byte> id, FilePath sourcePage)
+    {
+        if (!logger.IsEnabled(LogLevel.Warning))
+        {
+            return;
+        }
+
+        LogReferenceUnresolvedCore(logger, Encoding.UTF8.GetString(id), sourcePage);
+    }
 
     /// <summary>Logs the end-of-pass summary.</summary>
     /// <param name="logger">Target logger.</param>
@@ -54,4 +66,24 @@ internal static partial class AutorefsLoggingHelper
         Level = LogLevel.Information,
         Message = "Autorefs resolution complete: {ResolvedCount} resolved, {MissingCount} missing")]
     public static partial void LogResolutionComplete(ILogger logger, int resolvedCount, int missingCount);
+
+    /// <summary>Source-generated emitter for <see cref="LogReferenceResolved"/>; takes the already-decoded strings.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="id">Resolved ID.</param>
+    /// <param name="targetPath">Resolved target URL or file path.</param>
+    [LoggerMessage(
+        EventId = 5002,
+        Level = LogLevel.Debug,
+        Message = "Autorefs resolved {Id} -> {TargetPath}")]
+    private static partial void LogReferenceResolvedCore(ILogger logger, string id, string targetPath);
+
+    /// <summary>Source-generated emitter for <see cref="LogReferenceUnresolved"/>; takes the already-decoded strings.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="id">Unresolved ID.</param>
+    /// <param name="sourcePage">Page that referenced the ID.</param>
+    [LoggerMessage(
+        EventId = 5003,
+        Level = LogLevel.Warning,
+        Message = "Autorefs could not resolve {Id} on page {SourcePage}")]
+    private static partial void LogReferenceUnresolvedCore(ILogger logger, string id, string sourcePage);
 }

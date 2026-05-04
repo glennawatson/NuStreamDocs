@@ -61,7 +61,7 @@ public class StaticAssetComposerTests
     private sealed class TestProvider(params (Common.FilePath Path, byte[] Bytes)[] assets) : IDocPlugin, IStaticAssetProvider
     {
         /// <inheritdoc/>
-        public byte[] Name => "test-provider"u8.ToArray();
+        public ReadOnlySpan<byte> Name => "test-provider"u8;
 
         /// <inheritdoc/>
         public (Common.FilePath Path, byte[] Bytes)[] StaticAssets { get; } = assets;
@@ -80,7 +80,7 @@ public class StaticAssetComposerTests
     private sealed class NonProvider : IDocPlugin
     {
         /// <inheritdoc/>
-        public byte[] Name => "non-provider"u8.ToArray();
+        public ReadOnlySpan<byte> Name => "non-provider"u8;
 
         /// <inheritdoc/>
         public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;

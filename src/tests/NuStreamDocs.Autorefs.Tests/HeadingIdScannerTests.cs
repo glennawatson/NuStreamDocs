@@ -17,10 +17,10 @@ public class HeadingIdScannerTests
         HeadingIdScanner.ScanAndRegister(html, "guide/intro.html", registry);
 
         await Assert.That(registry.Count).IsEqualTo(2);
-        await Assert.That(registry.TryResolve("intro", out var introUrl)).IsTrue();
-        await Assert.That(introUrl).IsEqualTo("guide/intro.html#intro");
-        await Assert.That(registry.TryResolve("detail", out var detailUrl)).IsTrue();
-        await Assert.That(detailUrl).IsEqualTo("guide/intro.html#detail");
+        await Assert.That(registry.TryResolve("intro"u8, out var introUrl)).IsTrue();
+        await Assert.That(introUrl.AsSpan().SequenceEqual("guide/intro.html#intro"u8)).IsTrue();
+        await Assert.That(registry.TryResolve("detail"u8, out var detailUrl)).IsTrue();
+        await Assert.That(detailUrl.AsSpan().SequenceEqual("guide/intro.html#detail"u8)).IsTrue();
     }
 
     /// <summary>HTML without any heading IDs leaves the registry untouched.</summary>

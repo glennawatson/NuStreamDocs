@@ -63,7 +63,7 @@ public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
     }
 
     /// <inheritdoc/>
-    public override byte[] Name => "macros"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "macros"u8;
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

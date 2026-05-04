@@ -15,7 +15,7 @@ public class SnippetsPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new SnippetsPlugin().Name.AsSpan().SequenceEqual("snippets"u8)).IsTrue();
+        await Assert.That(new SnippetsPlugin().Name.SequenceEqual("snippets"u8)).IsTrue();
 
     /// <summary>Without configure being called the source passes through untouched.</summary>
     /// <returns>Async test.</returns>

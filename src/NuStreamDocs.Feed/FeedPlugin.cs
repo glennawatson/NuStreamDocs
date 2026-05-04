@@ -50,7 +50,7 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "feed"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "feed"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

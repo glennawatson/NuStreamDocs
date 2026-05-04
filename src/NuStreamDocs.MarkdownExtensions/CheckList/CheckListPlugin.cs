@@ -27,7 +27,7 @@ public sealed class CheckListPlugin : MarkdownAssetPluginBase
 """u8];
 
     /// <inheritdoc/>
-    public override byte[] Name => "checklist"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "checklist"u8;
 
     /// <inheritdoc/>
     protected override FilePath AssetPath => new("assets/extensions/checklist.css");

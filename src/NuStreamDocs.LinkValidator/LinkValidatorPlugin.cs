@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.LinkValidator.Logging;
 using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
@@ -59,7 +60,7 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     public LinkDiagnostic[] LastDiagnostics { get; private set; } = [];
 
     /// <inheritdoc/>
-    public byte[] Name => "link-validator"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "link-validator"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
@@ -95,13 +96,13 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     /// <param name="outputRoot">Site output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Combined diagnostics, with severity demoted when the matching strict flag is off.</returns>
-    public async Task<LinkDiagnostic[]> RunAsync(string outputRoot, CancellationToken cancellationToken)
+    public async Task<LinkDiagnostic[]> RunAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
 
         var merged = await PhaseTimer.RunAsync(
             _logger,
-            l => LinkValidatorLoggingHelper.LogValidationStart(l, outputRoot),
+            l => LinkValidatorLoggingHelper.LogValidationStart(l, outputRoot.Value),
             static (l, m, secs) =>
             {
                 var (broken, warning) = LinkValidatorReporter.Tally(m);
@@ -143,7 +144,7 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     /// <param name="outputRoot">Site output root being validated.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The merged diagnostic array.</returns>
-    private async ValueTask<LinkDiagnostic[]> RunValidationAsync(string outputRoot, CancellationToken cancellationToken)
+    private async ValueTask<LinkDiagnostic[]> RunValidationAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
     {
         var corpus = await ValidationCorpus.BuildAsync(outputRoot, _options.Parallelism, cancellationToken).ConfigureAwait(false);
         var (internalLinkCount, externalLinkCount) = LinkValidatorReporter.CountLinks(corpus);

@@ -86,7 +86,7 @@ public sealed class RedirectsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "redirects"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "redirects"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
@@ -303,19 +303,20 @@ public sealed class RedirectsPlugin : IDocPlugin
     /// <summary>Translates a source-relative markdown path to its rendered HTML URL bytes.</summary>
     /// <param name="markdownPath">Source-relative path (e.g. <c>guide/intro.md</c>).</param>
     /// <returns>UTF-8 bytes of the site-relative URL with the <c>.html</c> extension and forward slashes; empty for an empty input.</returns>
-    private static byte[] ToHtmlUrlBytes(string markdownPath)
+    private static byte[] ToHtmlUrlBytes(FilePath markdownPath)
     {
-        if (markdownPath is [])
+        if (markdownPath.IsEmpty)
         {
             return [];
         }
 
-        var byteCount = Encoding.UTF8.GetByteCount(markdownPath);
-        var stripMd = markdownPath.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+        var pathSpan = markdownPath.Value.AsSpan();
+        var byteCount = Encoding.UTF8.GetByteCount(pathSpan);
+        var stripMd = pathSpan.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
         var output = new byte[stripMd ? byteCount - MarkdownExtension.Length + HtmlExtension.Length : byteCount];
         var written = stripMd
-            ? Encoding.UTF8.GetBytes(markdownPath.AsSpan(0, markdownPath.Length - MarkdownExtension.Length), output)
-            : Encoding.UTF8.GetBytes(markdownPath, output);
+            ? Encoding.UTF8.GetBytes(pathSpan[..^MarkdownExtension.Length], output)
+            : Encoding.UTF8.GetBytes(pathSpan, output);
         if (stripMd)
         {
             HtmlExtension.CopyTo(output.AsSpan(written));
@@ -403,10 +404,10 @@ public sealed class RedirectsPlugin : IDocPlugin
     /// <param name="toUrlBytes">Destination URL as UTF-8 bytes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the stub has been written.</returns>
-    private static async Task WriteStubAsync(string outputRoot, byte[] fromPathBytes, byte[] toUrlBytes, CancellationToken cancellationToken)
+    private static async Task WriteStubAsync(DirectoryPath outputRoot, byte[] fromPathBytes, byte[] toUrlBytes, CancellationToken cancellationToken)
     {
         var fromPath = Encoding.UTF8.GetString(fromPathBytes);
-        var absolute = Path.GetFullPath(Path.Combine(outputRoot, fromPath));
+        var absolute = Path.GetFullPath(Path.Combine(outputRoot.Value, fromPath));
         Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
         var sink = new ArrayBufferWriter<byte>(512);
         BuildStub(toUrlBytes, sink);

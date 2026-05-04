@@ -51,7 +51,7 @@ public sealed class AutorefsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "autorefs"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "autorefs"u8;
 
     /// <summary>Gets the shared registry. Other plugins may publish IDs into it during configure or render.</summary>
     public AutorefsRegistry Registry { get; }

@@ -15,7 +15,7 @@ public class ExtraAssetsPluginCoverageTests
     public async Task NameAccessor()
     {
         var plugin = new ExtraAssetsPlugin();
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("extra-assets"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("extra-assets"u8)).IsTrue();
     }
 
     /// <summary>OnRenderPageAsync is a no-op.</summary>

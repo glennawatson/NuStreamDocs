@@ -13,7 +13,7 @@ public class NavPluginCoverageTests
     public async Task NameAccessor()
     {
         var plugin = new NavPlugin();
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("nav"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("nav"u8)).IsTrue();
     }
 
     /// <summary>GetRoot is null before OnConfigureAsync runs.</summary>

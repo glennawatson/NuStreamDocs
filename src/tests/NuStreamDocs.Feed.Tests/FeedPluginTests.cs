@@ -16,7 +16,7 @@ public class FeedPluginTests
     public async Task TwoArgCtor()
     {
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), TimeProvider.System);
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("feed"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
     }
 
     /// <summary>OnConfigureAsync is a no-op.</summary>
@@ -126,7 +126,7 @@ public class FeedPluginTests
     public async Task ThreeArgCtorAcceptsLogger()
     {
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), TimeProvider.System, NullLogger.Instance);
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("feed"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
     }
 
     /// <summary>Disposable scratch directory.</summary>

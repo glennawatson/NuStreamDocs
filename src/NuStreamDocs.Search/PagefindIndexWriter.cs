@@ -46,13 +46,13 @@ public static class PagefindIndexWriter
         for (var i = 0; i < documents.Length; i++)
         {
             var doc = documents[i];
-            var slug = SlugifyForRecord(Encoding.UTF8.GetBytes(doc.RelativeUrl), i);
+            var slug = SlugifyForRecord(doc.RelativeUrl, i);
             var recordPath = Path.Combine(recordsDir, Encoding.UTF8.GetString(slug) + ".json");
             WriteRecord(recordPath, doc);
 
             manifest.WriteStartObject();
             manifest.WriteString("slug"u8, slug);
-            manifest.WriteString("url"u8, doc.RelativeUrl);
+            manifest.WriteString("url"u8, (ReadOnlySpan<byte>)doc.RelativeUrl);
             manifest.WriteString("title"u8, (ReadOnlySpan<byte>)doc.Title);
             manifest.WriteEndObject();
         }
@@ -70,7 +70,7 @@ public static class PagefindIndexWriter
         using var stream = File.Create(path);
         using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
-        writer.WriteString("url"u8, doc.RelativeUrl);
+        writer.WriteString("url"u8, (ReadOnlySpan<byte>)doc.RelativeUrl);
         writer.WriteString("title"u8, (ReadOnlySpan<byte>)doc.Title);
         writer.WriteString("content"u8, (ReadOnlySpan<byte>)doc.Text);
         writer.WriteEndObject();

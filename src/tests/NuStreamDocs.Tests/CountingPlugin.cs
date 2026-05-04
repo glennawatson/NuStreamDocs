@@ -25,7 +25,7 @@ internal sealed class CountingPlugin : IDocPlugin
     private int _finalizeHits;
 
     /// <inheritdoc/>
-    public byte[] Name => "counting"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "counting"u8;
 
     /// <summary>Gets the number of times <c>OnConfigureAsync</c> was invoked.</summary>
     public int ConfigureHits => Volatile.Read(ref _configureHits);

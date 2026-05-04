@@ -50,7 +50,7 @@ public sealed class SphinxInventoryPlugin : IDocPlugin
     public AutorefsRegistry Registry { get; }
 
     /// <inheritdoc/>
-    public byte[] Name => "sphinx-inventory"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "sphinx-inventory"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

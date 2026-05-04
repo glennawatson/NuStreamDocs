@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Versions.Logging;
 
@@ -35,7 +36,7 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDo
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "versions"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "versions"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
@@ -57,20 +58,14 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDo
     public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
-        var parentDir = Path.GetDirectoryName(context.OutputRoot.Value.TrimEnd('/', '\\'));
-        if (string.IsNullOrEmpty(parentDir))
+        var parentDir = ResolveParentDirectory(context.OutputRoot);
+        if (parentDir.IsEmpty)
         {
             // Output already at filesystem root — nowhere to write a parent manifest.
             return ValueTask.CompletedTask;
         }
 
-        var manifestPath = Path.Combine(parentDir, VersionsManifest.FileName);
-        var existing = VersionsManifest.Read(parentDir);
-        VersionsLoggingHelper.LogManifestRead(_logger, manifestPath, existing.Length);
-        var merged = VersionsManifest.Upsert(existing, _options.ToEntry());
-        VersionsManifest.Write(parentDir, merged);
-        VersionsLoggingHelper.LogManifestWrite(_logger, manifestPath, merged.Length);
-
+        UpsertManifest(parentDir);
         return ValueTask.CompletedTask;
     }
 
@@ -82,5 +77,24 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDo
         ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
+    }
+
+    /// <summary>Returns the parent directory of <paramref name="outputRoot"/>, or empty when <paramref name="outputRoot"/> is at the filesystem root.</summary>
+    /// <param name="outputRoot">Build output root.</param>
+    /// <returns>Parent directory, or an empty <see cref="DirectoryPath"/>.</returns>
+    private static DirectoryPath ResolveParentDirectory(DirectoryPath outputRoot) =>
+        Path.GetDirectoryName(outputRoot.Value.TrimEnd('/', '\\'));
+
+    /// <summary>Reads the existing manifest in <paramref name="parentDir"/>, upserts this build's entry, and writes it back.</summary>
+    /// <param name="parentDir">Directory that owns <c>versions.json</c>.</param>
+    private void UpsertManifest(DirectoryPath parentDir)
+    {
+        DirectoryPath manifestPath = Path.Combine(parentDir.Value, VersionsManifest.FileName);
+        var existing = VersionsManifest.Read(parentDir);
+        VersionsLoggingHelper.LogManifestRead(_logger, manifestPath, existing.Length);
+
+        var merged = VersionsManifest.Upsert(existing, _options.ToEntry());
+        VersionsManifest.Write(parentDir, merged);
+        VersionsLoggingHelper.LogManifestWrite(_logger, manifestPath, merged.Length);
     }
 }

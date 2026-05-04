@@ -48,12 +48,12 @@ public sealed class ValidationCorpus
     /// <param name="parallelism">Maximum parallel readers.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The populated corpus.</returns>
-    public static async Task<ValidationCorpus> BuildAsync(string outputRoot, int parallelism, CancellationToken cancellationToken)
+    public static async Task<ValidationCorpus> BuildAsync(DirectoryPath outputRoot, int parallelism, CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot);
+        ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(parallelism);
 
-        var fullRoot = Path.GetFullPath(outputRoot);
+        var fullRoot = new DirectoryPath(Path.GetFullPath(outputRoot.Value));
         var pages = new ConcurrentDictionary<byte[], PageLinks>(ByteArrayComparer.Instance);
 
         var parallelOptions = new ParallelOptions
@@ -67,7 +67,7 @@ public sealed class ValidationCorpus
             parallelOptions,
             async (path, ct) =>
             {
-                var bytes = await File.ReadAllBytesAsync(path, ct).ConfigureAwait(false);
+                var bytes = await File.ReadAllBytesAsync(path.Value, ct).ConfigureAwait(false);
                 var pageUrlBytes = ToPageUrlBytes(fullRoot, path);
                 pages[pageUrlBytes] = ScanPage(pageUrlBytes, bytes);
             }).ConfigureAwait(false);
@@ -118,18 +118,27 @@ public sealed class ValidationCorpus
     /// <summary>Yields every <c>.html</c> file under <paramref name="root"/>.</summary>
     /// <param name="root">Absolute site root.</param>
     /// <returns>Absolute paths.</returns>
-    private static IEnumerable<string> EnumerateHtml(string root) =>
-        Directory.Exists(root)
-            ? Directory.EnumerateFiles(root, "*.html", SearchOption.AllDirectories)
-            : [];
+    private static IEnumerable<FilePath> EnumerateHtml(DirectoryPath root)
+    {
+        if (!Directory.Exists(root.Value))
+        {
+            yield break;
+        }
+
+        // foreach over IEnumerable<string> from Directory.EnumerateFiles — no indexed alternative.
+        foreach (var path in Directory.EnumerateFiles(root.Value, "*.html", SearchOption.AllDirectories))
+        {
+            yield return new(path);
+        }
+    }
 
     /// <summary>Converts an absolute <c>.html</c> path to its site-relative URL bytes.</summary>
     /// <param name="root">Absolute site root.</param>
     /// <param name="absolutePath">Absolute path to the file.</param>
     /// <returns>Forward-slashed site-relative URL as UTF-8 bytes.</returns>
-    private static byte[] ToPageUrlBytes(string root, string absolutePath)
+    private static byte[] ToPageUrlBytes(DirectoryPath root, FilePath absolutePath)
     {
-        var relative = Path.GetRelativePath(root, absolutePath).Replace('\\', '/');
+        var relative = Path.GetRelativePath(root.Value, absolutePath.Value).Replace('\\', '/');
         return Encoding.UTF8.GetBytes(relative);
     }
 

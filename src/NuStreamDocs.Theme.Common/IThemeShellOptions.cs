@@ -61,5 +61,5 @@ public interface IThemeShellOptions
 
     /// <summary>Gets the UTF-8 URL prefix the page template should use for asset references.</summary>
     /// <returns>The active asset-root prefix.</returns>
-    byte[] ResolveAssetRoot();
+    ReadOnlySpan<byte> ResolveAssetRoot();
 }

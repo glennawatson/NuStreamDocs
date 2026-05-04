@@ -154,7 +154,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public abstract byte[] Name { get; }
+    public abstract ReadOnlySpan<byte> Name { get; }
 
     /// <summary>Gets the loaded theme.</summary>
     protected TTheme LoadedTheme { get; }
@@ -202,7 +202,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [SiteRootKey] = SiteRootBytes,
                     [PageTitleKey] = Utf8Encoder.Encode(pageTitle),
                     [BodyKey] = new(bodyBuffer, 0, bodyLength),
-                    [AssetRootKey] = ResolvePageRelativeAssetRoot(_options.ResolveAssetRoot(), context.RelativePath),
+                    [AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_options.ResolveAssetRoot(), context.RelativePath)]),
                     [CopyrightKey] = _options.Copyright,
                     [RepoUrlKey] = _options.RepoUrl,
                     [RepoLabelKey] = _repoLabel,
@@ -484,16 +484,15 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <param name="assetRoot">UTF-8 asset root from the theme options.</param>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>Page-relative asset-root bytes, or the original bytes when the input is an absolute URL.</returns>
-    private static byte[] ResolvePageRelativeAssetRoot(byte[] assetRoot, FilePath relativePath)
+    private static ReadOnlySpan<byte> ResolvePageRelativeAssetRoot(ReadOnlySpan<byte> assetRoot, FilePath relativePath)
     {
-        if (assetRoot is [] || IsAbsoluteUrl(assetRoot))
+        if (IsAbsoluteUrl(assetRoot))
         {
             return assetRoot;
         }
 
         // Strip a leading '/' so concatenation with the page-relative prefix doesn't produce a site-root absolute URL.
-        var span = assetRoot.AsSpan();
-        var trimmed = span is [(byte)'/', ..] ? span[1..] : span;
+        var trimmed = assetRoot is [(byte)'/', ..] ? assetRoot[1..] : assetRoot;
         var prefix = PageRelativePrefixBytes(PageDepth(relativePath));
         if (prefix.Length is 0)
         {

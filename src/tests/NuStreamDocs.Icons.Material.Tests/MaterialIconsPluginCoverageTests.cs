@@ -13,6 +13,6 @@ public class MaterialIconsPluginCoverageTests
     public async Task NameAccessor()
     {
         var plugin = new MaterialIconsPlugin();
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("material-icons"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("material-icons"u8)).IsTrue();
     }
 }

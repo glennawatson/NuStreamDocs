@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Collections.Concurrent;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Autorefs;
@@ -13,29 +12,6 @@ namespace NuStreamDocs.Autorefs;
 /// Thread-safe map of cross-document reference IDs to the page URL +
 /// fragment that owns them.
 /// </summary>
-/// <remarks>
-/// Built up during the parallel render pass: heading scanners and
-/// other plugins (e.g. <c>NuStreamDocs.CSharpApiGenerator</c>) call
-/// <see cref="Register(ApiCompatString, UrlPath, ApiCompatString)"/> from any worker. Resolution happens after
-/// the pass when <see cref="AutorefsPlugin"/> rewrites
-/// <c>@autoref:ID</c> markers in the emitted HTML, so the registry
-/// only needs to be settled by <see cref="Plugins.IDocPlugin.OnFinalizeAsync"/>
-/// time.
-/// <para>
-/// Last write wins: if two pages register the same ID, the later one
-/// shadows the earlier. Plugins should namespace their IDs (e.g.
-/// <c>api:System.String</c>, <c>cite:rfc-9110</c>) to avoid collisions.
-/// </para>
-/// <para>
-/// Storage is byte-keyed (<see cref="byte"/> arrays of UTF-8) with a
-/// <see cref="ByteArrayComparer"/> + <see cref="System.Collections.Generic.Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/>
-/// pattern, so the per-page rewriter can resolve IDs straight from the
-/// source span and stream the resolved URL bytes back to the writer
-/// without ever round-tripping through <see cref="string"/>. The
-/// <see cref="Register(ApiCompatString, UrlPath, ApiCompatString)"/> / <see cref="TryResolve(string, out string)"/> string overloads stay public for
-/// programmatic / build-end callers that already hold strings.
-/// </para>
-/// </remarks>
 public sealed class AutorefsRegistry
 {
     /// <summary>Default pre-sized capacity for the parameterless constructor.</summary>
@@ -84,38 +60,16 @@ public sealed class AutorefsRegistry
     /// registered for the same page so encoding happens once per page rather than once per ID.
     /// </param>
     /// <param name="fragment">UTF-8 fragment bytes (without the leading <c>#</c>); pass an empty span for whole-page references.</param>
-    public void Register(ReadOnlySpan<byte> id, byte[] pageRelativeUrlBytes, ReadOnlySpan<byte> fragment)
+    public void Register(ReadOnlySpan<byte> id, ReadOnlySpan<byte> pageRelativeUrlBytes, ReadOnlySpan<byte> fragment)
     {
         if (id.IsEmpty)
         {
             throw new ArgumentException("id must be non-empty.", nameof(id));
         }
 
-        ArgumentNullException.ThrowIfNull(pageRelativeUrlBytes);
         var idBytes = id.ToArray();
 
-        _anchors[idBytes] = new(pageRelativeUrlBytes, ResolveFragment(idBytes, fragment));
-    }
-
-    /// <summary>Registers an ID against a page URL and fragment from string inputs.</summary>
-    /// <param name="id">Reference ID.</param>
-    /// <param name="pageRelativeUrl">Page-relative URL, forward-slashed.</param>
-    /// <param name="fragment">Anchor fragment without the leading <c>#</c>; may be null/empty for whole-page references.</param>
-    /// <remarks>Wraps the byte overload — pays one UTF-8 encode per call. Suitable for the build-end / programmatic callers that already hold strings.</remarks>
-    public void Register(ApiCompatString id, UrlPath pageRelativeUrl, ApiCompatString fragment)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(id.Value);
-        ArgumentException.ThrowIfNullOrEmpty(pageRelativeUrl.Value);
-
-        var pageBytes = Encoding.UTF8.GetBytes(pageRelativeUrl);
-        if (fragment.IsEmpty)
-        {
-            Register(Encoding.UTF8.GetBytes(id), pageBytes, default);
-            return;
-        }
-
-        var fragmentBytes = Encoding.UTF8.GetBytes(fragment);
-        Register(Encoding.UTF8.GetBytes(id), pageBytes, fragmentBytes);
+        _anchors[idBytes] = new([.. pageRelativeUrlBytes], ResolveFragment(idBytes, fragment));
     }
 
     /// <summary>Resolves an ID to its full URL and writes the UTF-8 URL bytes directly into <paramref name="writer"/>.</summary>
@@ -135,26 +89,16 @@ public sealed class AutorefsRegistry
         return true;
     }
 
-    /// <summary>Resolves an ID to its full URL.</summary>
-    /// <param name="id">Reference ID.</param>
-    /// <param name="url">Resolved URL on success.</param>
+    /// <summary>Resolves an ID to its full URL as a freshly allocated UTF-8 byte array.</summary>
+    /// <param name="id">UTF-8 reference ID bytes.</param>
+    /// <param name="url">Resolved UTF-8 URL bytes on success; empty array on miss.</param>
     /// <returns>True when the ID was registered.</returns>
-    /// <remarks>
-    /// Wraps the byte path — pays one UTF-8 encode for the lookup probe and one decode for the composed
-    /// result. Suitable for diagnostics / log formatting where the string is going somewhere that needs
-    /// a string anyway.
-    /// </remarks>
-    public bool TryResolve(string id, out string url)
+    /// <remarks>Allocating overload — diagnostics / snapshot path. The hot per-marker rewriter uses <see cref="TryResolveInto(ReadOnlySpan{byte}, IBufferWriter{byte})"/>.</remarks>
+    public bool TryResolve(ReadOnlySpan<byte> id, out byte[] url)
     {
-        ArgumentException.ThrowIfNullOrEmpty(id);
-        Span<byte> stackBuffer = stackalloc byte[256];
-        var maxBytes = Encoding.UTF8.GetMaxByteCount(id.Length);
-        var idBuffer = maxBytes <= stackBuffer.Length ? stackBuffer : new byte[maxBytes];
-        var idLen = Encoding.UTF8.GetBytes(id, idBuffer);
-        var idSpan = idBuffer[..idLen];
-        if (!_anchors.TryGetValueByUtf8(idSpan, out var anchor))
+        if (!_anchors.TryGetValueByUtf8(id, out var anchor))
         {
-            url = string.Empty;
+            url = [];
             return false;
         }
 
@@ -168,13 +112,13 @@ public sealed class AutorefsRegistry
     /// <summary>Snapshots the registry into a right-sized <c>(id, url)</c> array. Order is unspecified.</summary>
     /// <returns>A fresh snapshot array.</returns>
     /// <remarks>Build-end consumer; pays one UTF-8 decode per entry. Hot-path resolution goes through <see cref="TryResolveInto(ReadOnlySpan{byte}, IBufferWriter{byte})"/>.</remarks>
-    public (ApiCompatString Id, UrlPath Url)[] Snapshot()
+    public (byte[] Id, byte[] Url)[] Snapshot()
     {
         KeyValuePair<byte[], Anchor>[] kvs = [.. _anchors];
-        var result = new (ApiCompatString Id, UrlPath Url)[kvs.Length];
+        var result = new (byte[] Id, byte[] Url)[kvs.Length];
         for (var i = 0; i < kvs.Length; i++)
         {
-            result[i] = (Encoding.UTF8.GetString(kvs[i].Key), kvs[i].Value.ComposeString());
+            result[i] = (kvs[i].Key, kvs[i].Value.ComposeString());
         }
 
         return result;
@@ -220,8 +164,8 @@ public sealed class AutorefsRegistry
 
         /// <summary>Composes the stored URL into <c>page</c> or <c>page#fragment</c> form as a string.</summary>
         /// <returns>Composed URL.</returns>
-        public string ComposeString() => Fragment is null
-            ? Encoding.UTF8.GetString(PageUrl)
-            : $"{Encoding.UTF8.GetString(PageUrl)}#{Encoding.UTF8.GetString(Fragment)}";
+        public byte[] ComposeString() => Fragment is null
+            ? PageUrl
+            : Utf8Concat.Concat(PageUrl, "#"u8, Fragment);
     }
 }

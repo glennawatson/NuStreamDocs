@@ -15,7 +15,7 @@ public class SearchPluginCoverageTests
     public async Task NameAccessor()
     {
         var plugin = new SearchPlugin();
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("search"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("search"u8)).IsTrue();
     }
 
     /// <summary>WriteHeadExtra emits some bytes for the default options.</summary>

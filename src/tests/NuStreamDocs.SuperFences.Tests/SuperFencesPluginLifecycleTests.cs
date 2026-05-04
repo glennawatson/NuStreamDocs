@@ -95,7 +95,7 @@ public class SuperFencesPluginLifecycleTests
     private sealed class StubHandler : DocPluginBase, ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public override byte[] Name => "stub-handler"u8.ToArray();
+        public override ReadOnlySpan<byte> Name => "stub-handler"u8;
 
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Language => "stub"u8;
@@ -113,7 +113,7 @@ public class SuperFencesPluginLifecycleTests
     private sealed class EmptyLanguageHandler : DocPluginBase, ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public override byte[] Name => "empty-lang"u8.ToArray();
+        public override ReadOnlySpan<byte> Name => "empty-lang"u8;
 
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Language => default;

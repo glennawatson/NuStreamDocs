@@ -12,10 +12,10 @@ namespace NuStreamDocs.Search;
 /// <see cref="System.Text.Json.Utf8JsonWriter"/>'s byte-span
 /// overloads with no UTF-16 round-trip.
 /// </remarks>
-/// <param name="RelativeUrl">URL relative to the site root, forward-slashed (e.g. <c>guide/intro.html</c>).</param>
+/// <param name="RelativeUrl">URL relative to the site root, forward-slashed (e.g. <c>guide/intro.html</c>), UTF-8.</param>
 /// <param name="Title">Plain-text page title, UTF-8.</param>
 /// <param name="Text">Plain-text body, UTF-8, with HTML tags stripped.</param>
 public readonly record struct SearchDocument(
-    string RelativeUrl,
+    byte[] RelativeUrl,
     byte[] Title,
     byte[] Text);

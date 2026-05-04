@@ -23,7 +23,7 @@ namespace NuStreamDocs.MarkdownExtensions.CriticMarkup;
 public sealed class CriticMarkupPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override byte[] Name => "critic"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "critic"u8;
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

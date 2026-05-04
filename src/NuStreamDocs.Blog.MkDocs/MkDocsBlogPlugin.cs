@@ -36,21 +36,21 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "mkdocs-blog"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "mkdocs-blog"u8;
 
     /// <inheritdoc/>
     public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
-        var blogRoot = Path.Combine(context.InputRoot, _options.BlogSubdirectory);
+        var blogRoot = context.InputRoot / _options.BlogSubdirectory;
         await BlogContentGenerator.GenerateAsync(
             _logger,
             new(
-                PostsRoot: Path.Combine(blogRoot, "posts"),
+                PostsRoot: blogRoot / "posts",
                 DocsRoot: context.InputRoot,
-                IndexPath: Path.Combine(blogRoot, "index.md"),
+                IndexPath: blogRoot.File("index.md"),
                 IndexTitle: _options.IndexTitle,
                 EmitArchives: _options.EmitCategoryArchives,
-                ArchiveRoot: Path.Combine(blogRoot, "category"),
+                ArchiveRoot: blogRoot / "category",
                 ArchiveFallbackSlug: "category"),
             cancellationToken).ConfigureAwait(false);
     }

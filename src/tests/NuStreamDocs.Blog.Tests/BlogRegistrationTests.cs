@@ -14,7 +14,7 @@ public class BlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new WyamBlogPlugin(new("posts", "Blog")).Name.AsSpan().SequenceEqual("wyam-blog"u8)).IsTrue();
+        await Assert.That(new WyamBlogPlugin(new("posts", "Blog")).Name.SequenceEqual("wyam-blog"u8)).IsTrue();
 
     /// <summary>2-arg ctor enables EmitTagArchives.</summary>
     /// <returns>Async test.</returns>

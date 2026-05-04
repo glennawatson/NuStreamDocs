@@ -15,7 +15,7 @@ public class MermaidPluginTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new MermaidPlugin().Name.AsSpan().SequenceEqual("mermaid"u8)).IsTrue();
+    public async Task NameIsStable() => await Assert.That(new MermaidPlugin().Name.SequenceEqual("mermaid"u8)).IsTrue();
 
     /// <summary>OnRenderPageAsync rewrites <c>language-mermaid</c> code blocks.</summary>
     /// <returns>Async test.</returns>

@@ -16,7 +16,7 @@ public class XrefMapRoundTripTests
     {
         using var temp = TempDir.Create();
         var map = Path.Combine(temp.Root, "xrefmap.json");
-        XrefMapWriter.Write(map, "https://example.com/", [("Foo.Bar", "api/Foo.Bar.html"), ("Baz", "api/Baz.html")]);
+        XrefMapWriter.Write(map, [.. "https://example.com/"u8], [([.. "Foo.Bar"u8], [.. "api/Foo.Bar.html"u8]), ([.. "Baz"u8], [.. "api/Baz.html"u8])]);
 
         var bytes = await File.ReadAllBytesAsync(map);
         var payload = XrefMapReader.Read(bytes);
@@ -32,7 +32,7 @@ public class XrefMapRoundTripTests
     {
         using var temp = TempDir.Create();
         var map = Path.Combine(temp.Root, "xrefmap.json");
-        XrefMapWriter.Write(map, string.Empty, [("Foo", "f.html")]);
+        XrefMapWriter.Write(map, [], [([.. "Foo"u8], [.. "f.html"u8])]);
 
         var text = await File.ReadAllTextAsync(map, Encoding.UTF8);
         await Assert.That(text.Contains("baseUrl", StringComparison.Ordinal)).IsFalse();
@@ -45,7 +45,7 @@ public class XrefMapRoundTripTests
     {
         using var temp = TempDir.Create();
         var map = Path.Combine(temp.Root, "xrefmap.json");
-        XrefMapWriter.Write(map, string.Empty, [("Zebra", "z.html"), ("Apple", "a.html"), ("Mango", "m.html")]);
+        XrefMapWriter.Write(map, [], [([.. "Zebra"u8], [.. "z.html"u8]), ([.. "Apple"u8], [.. "a.html"u8]), ([.. "Mango"u8], [.. "m.html"u8])]);
 
         var bytes = await File.ReadAllBytesAsync(map);
         var payload = XrefMapReader.Read(bytes);

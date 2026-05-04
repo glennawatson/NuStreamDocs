@@ -20,9 +20,6 @@ namespace NuStreamDocs.Theme.Material.IconShortcode;
 /// </remarks>
 public sealed class IconShortcodePlugin : ThemeIconShortcodePluginBase
 {
-    /// <summary>Theme-specific Material ligature class.</summary>
-    private static readonly byte[] MaterialIconFontClass = [.. "material-icons"u8];
-
     /// <summary>Initializes a new instance of the <see cref="IconShortcodePlugin"/> class with the default font-ligature fallback only.</summary>
     public IconShortcodePlugin()
         : this(null)
@@ -37,8 +34,8 @@ public sealed class IconShortcodePlugin : ThemeIconShortcodePluginBase
     }
 
     /// <inheritdoc/>
-    public override byte[] Name => "material-icon-shortcodes"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "material-icon-shortcodes"u8;
 
     /// <inheritdoc/>
-    protected override byte[] IconFontClass => MaterialIconFontClass;
+    protected override ReadOnlySpan<byte> IconFontClass => "material-icons"u8;
 }

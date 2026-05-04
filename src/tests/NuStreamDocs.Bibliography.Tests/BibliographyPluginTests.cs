@@ -17,7 +17,7 @@ public class BibliographyPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsBibliography() =>
-        await Assert.That(new BibliographyPlugin().Name.AsSpan().SequenceEqual("bibliography"u8)).IsTrue();
+        await Assert.That(new BibliographyPlugin().Name.SequenceEqual("bibliography"u8)).IsTrue();
 
     /// <summary>Source without markers is copied through verbatim.</summary>
     /// <returns>Async test.</returns>

@@ -43,7 +43,7 @@ public sealed class NotFoundPlugin : IDocPlugin
 """u8];
 
     /// <inheritdoc/>
-    public byte[] Name => "404"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "404"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

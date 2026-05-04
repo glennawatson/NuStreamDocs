@@ -71,6 +71,6 @@ public readonly record struct Material3ThemeOptions(
 
     /// <summary>Resolves the asset-root URL according to <see cref="AssetSource"/>.</summary>
     /// <returns>The active UTF-8 asset-root prefix.</returns>
-    public byte[] ResolveAssetRoot() =>
+    public ReadOnlySpan<byte> ResolveAssetRoot() =>
         AssetSource == Material3AssetSource.Cdn ? CdnRoot : EmbeddedAssetRoot;
 }

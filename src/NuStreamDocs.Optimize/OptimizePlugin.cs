@@ -49,7 +49,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : ID
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "optimize"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "optimize"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

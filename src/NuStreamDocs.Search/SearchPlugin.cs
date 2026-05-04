@@ -62,7 +62,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "search"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "search"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
@@ -99,7 +99,14 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
         }
 
         _documents.Add(new(url, titleBytes, [.. textBuffer.WrittenSpan]));
-        LogInvokerHelper.Invoke(_logger, LogLevel.Debug, url, textBuffer.WrittenCount, static (l, u, len) => SearchLoggingHelper.LogDocumentIndexed(l, u, len));
+        LogInvokerHelper.Invoke(
+            _logger,
+            LogLevel.Debug,
+            textBuffer.WrittenCount,
+            0,
+            url,
+            static bytes => Encoding.UTF8.GetString(bytes),
+            static (l, len, _, slug) => SearchLoggingHelper.LogDocumentIndexed(l, slug, len));
 
         return ValueTask.CompletedTask;
     }
@@ -225,23 +232,23 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
             }
         }
 
-        docs.Sort(static (a, b) => string.CompareOrdinal(a.RelativeUrl, b.RelativeUrl));
+        docs.Sort(static (a, b) => a.RelativeUrl.AsSpan().SequenceCompareTo(b.RelativeUrl.AsSpan()));
         return [.. docs];
     }
 
     /// <summary>Translates a source-relative markdown path to its rendered page URL.</summary>
     /// <param name="markdownPath">Source-relative path (e.g. <c>guide/intro.md</c>).</param>
     /// <param name="useDirectoryUrls">True when the site emits directory-style URLs.</param>
-    /// <returns>Root-relative rendered URL.</returns>
-    private static string ToHtmlUrl(FilePath markdownPath, bool useDirectoryUrls)
+    /// <returns>Root-relative rendered URL bytes.</returns>
+    private static byte[] ToHtmlUrl(FilePath markdownPath, bool useDirectoryUrls)
     {
         if (markdownPath.IsEmpty)
         {
-            return "/";
+            return [(byte)'/'];
         }
 
         var path = useDirectoryUrls ? markdownPath : markdownPath.WithExtension(".html");
-        return Encoding.UTF8.GetString(ServedUrlBytes.FromPath(path, useDirectoryUrls, leadingSlash: true));
+        return ServedUrlBytes.FromPath(path, useDirectoryUrls, leadingSlash: true);
     }
 
     /// <summary>Returns the lowercase format name for the discovery <c>&lt;meta&gt;</c> tag.</summary>

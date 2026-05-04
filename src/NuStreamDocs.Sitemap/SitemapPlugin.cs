@@ -27,7 +27,7 @@ public sealed class SitemapPlugin : IDocPlugin
     private byte[]? _baseUrlBytes;
 
     /// <inheritdoc/>
-    public byte[] Name => "sitemap"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "sitemap"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

@@ -63,7 +63,7 @@ public sealed class HighlightPlugin : IDocPlugin, IStaticAssetProvider, IHeadExt
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "highlight"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "highlight"u8;
 
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets =>

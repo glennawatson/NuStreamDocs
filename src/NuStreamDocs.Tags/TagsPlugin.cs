@@ -39,7 +39,7 @@ public sealed class TagsPlugin : IDocPlugin
     public TagsPlugin(in TagsOptions options) => _options = options;
 
     /// <inheritdoc/>
-    public byte[] Name => "tags"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "tags"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

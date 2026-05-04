@@ -26,17 +26,10 @@ public static class VersionsManifest
     /// <summary>Reads the manifest at <paramref name="parentDir"/>/<see cref="FileName"/>.</summary>
     /// <param name="parentDir">Parent site directory containing every version's subdirectory.</param>
     /// <returns>The parsed entries; empty when the file is missing.</returns>
-    public static VersionEntry[] Read(string parentDir)
+    public static VersionEntry[] Read(DirectoryPath parentDir)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parentDir);
-        var path = Path.Combine(parentDir, FileName);
-        if (!File.Exists(path))
-        {
-            return [];
-        }
-
-        var bytes = File.ReadAllBytes(path);
-        return ReadFromUtf8(bytes);
+        return ReadCore(parentDir);
     }
 
     /// <summary>Parses a JSON array of version entries from UTF-8 bytes.</summary>
@@ -172,7 +165,7 @@ public static class VersionsManifest
         writer.WriteString("title"u8, entry.Title);
         writer.WritePropertyName("aliases"u8);
         writer.WriteStartArray();
-        var aliases = entry.Aliases ?? [];
+        var aliases = entry.Aliases;
         for (var i = 0; i < aliases.Length; i++)
         {
             writer.WriteStringValue(aliases[i]);
@@ -180,5 +173,20 @@ public static class VersionsManifest
 
         writer.WriteEndArray();
         writer.WriteEndObject();
+    }
+
+    /// <summary>Loads the manifest bytes from disk and delegates to the UTF-8 parser.</summary>
+    /// <param name="parentDir">Validated parent directory.</param>
+    /// <returns>The parsed entries; empty when the file is missing.</returns>
+    private static VersionEntry[] ReadCore(string parentDir)
+    {
+        var path = Path.Combine(parentDir, FileName);
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        var bytes = File.ReadAllBytes(path);
+        return ReadFromUtf8(bytes);
     }
 }

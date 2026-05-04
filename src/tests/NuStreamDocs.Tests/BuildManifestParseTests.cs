@@ -39,8 +39,9 @@ public class BuildManifestParseTests
         using var temp = new ScratchDir();
         var path = Path.Combine(temp.Root, BuildManifest.FileName);
 
-        // Hashes are base64-encoded byte arrays; "AQIDBAUGBwg=" decodes to {1,2,3,4,5,6,7,8}.
-        const string Json = "{\"schema\":2,\"build\":\"abc\",\"entries\":[" +
+        // The "build" fingerprint and per-entry "hash" fields are both base64-encoded byte arrays.
+        // "YWJj" decodes to "abc"; "AQIDBAUGBwg=" decodes to {1,2,3,4,5,6,7,8}.
+        const string Json = "{\"schema\":2,\"build\":\"YWJj\",\"entries\":[" +
             "{\"path\":\"good.md\",\"hash\":\"AQIDBAUGBwg=\",\"len\":1}," +
             "{\"path\":\"missing-hash.md\",\"len\":2}," +
             "\"not an object\"," +

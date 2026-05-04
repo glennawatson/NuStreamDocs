@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Tags;
@@ -25,15 +24,15 @@ internal static class TagsIndexWriter
 
     /// <summary>Maps a source-relative path (e.g. <c>guide/intro.md</c>) to a UTF-8 URL byte array (e.g. <c>guide/intro.html</c>).</summary>
     /// <param name="relativePath">Source path relative to the docs root.</param>
-    /// <returns>UTF-8 URL bytes; an empty array when <paramref name="relativePath"/> is null/empty.</returns>
-    public static byte[] RelativePathToUrlPath(string relativePath)
+    /// <returns>UTF-8 URL bytes; an empty array when <paramref name="relativePath"/> is empty.</returns>
+    public static byte[] RelativePathToUrlPath(FilePath relativePath)
     {
-        if (string.IsNullOrEmpty(relativePath))
+        if (relativePath.IsEmpty)
         {
             return [];
         }
 
-        var span = relativePath.AsSpan();
+        ReadOnlySpan<char> span = relativePath;
         var endsWithMd = span.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
         var keep = endsWithMd ? span.Length - MarkdownExtensionLength : span.Length;
         var totalLength = keep + (endsWithMd ? HtmlExtensionLength : 0);
@@ -77,8 +76,24 @@ internal static class TagsIndexWriter
             sink.ResetWrittenCount();
             WriteTagPage(sink, pair.Key, pair.Value);
             var slug = SlugifyTag(pair.Key);
-            File.WriteAllBytes(Path.Combine(tagsDir, Encoding.UTF8.GetString(slug) + ".html"), sink.WrittenSpan);
+            File.WriteAllBytes(Path.Combine(tagsDir, BuildSlugFileName(slug)), sink.WrittenSpan);
         }
+    }
+
+    /// <summary>Builds a <c>{slug}.html</c> file name from ASCII slug bytes in a single allocation.</summary>
+    /// <param name="slug">Slug bytes (ASCII alphanumeric / hyphen only, by construction of <see cref="SlugifyInto"/>).</param>
+    /// <returns>The slug followed by the <c>.html</c> extension as a single allocated string.</returns>
+    private static string BuildSlugFileName(byte[] slug)
+    {
+        return string.Create(slug.Length + HtmlExtensionLength, slug, static (dst, src) =>
+        {
+            for (var i = 0; i < src.Length; i++)
+            {
+                dst[i] = (char)src[i];
+            }
+
+            ".html".AsSpan().CopyTo(dst[src.Length..]);
+        });
     }
 
     /// <summary>Groups <paramref name="entries"/> by tag, yielding tags sorted alphabetically and pages within each tag sorted by URL.</summary>

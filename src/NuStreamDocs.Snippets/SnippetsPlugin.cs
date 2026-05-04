@@ -57,7 +57,7 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
     public SnippetsPlugin(DirectoryPath baseDirectory) => _baseDirectoryOverride = baseDirectory;
 
     /// <inheritdoc/>
-    public override byte[] Name => "snippets"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "snippets"u8;
 
     /// <inheritdoc/>
     public override ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

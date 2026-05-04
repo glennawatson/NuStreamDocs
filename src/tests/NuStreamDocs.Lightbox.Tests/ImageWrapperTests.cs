@@ -17,7 +17,7 @@ public class ImageWrapperTests
     {
         var input = "<p><img src=\"/img/foo.png\" alt=\"foo\"></p>"u8;
         var sink = new ArrayBufferWriter<byte>();
-        var wrapped = ImageWrapper.Rewrite(input, "glightbox", sink);
+        var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(wrapped).IsEqualTo(1);
@@ -31,7 +31,7 @@ public class ImageWrapperTests
     {
         var input = "<a href=\"https://example.com\"><img src=\"/img/foo.png\"></a>"u8;
         var sink = new ArrayBufferWriter<byte>();
-        var wrapped = ImageWrapper.Rewrite(input, "glightbox", sink);
+        var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(wrapped).IsEqualTo(0);
@@ -45,7 +45,7 @@ public class ImageWrapperTests
     {
         var input = "<img src=\"a.png\"><img src=\"b.png\">"u8;
         var sink = new ArrayBufferWriter<byte>();
-        var wrapped = ImageWrapper.Rewrite(input, "glightbox", sink);
+        var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(wrapped).IsEqualTo(2);

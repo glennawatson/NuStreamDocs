@@ -34,7 +34,7 @@ public sealed class SuperFencesPlugin : DocPluginBase
     private Dictionary<byte[], ICustomFenceHandler>? _handlers;
 
     /// <inheritdoc/>
-    public override byte[] Name => "superfences"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "superfences"u8;
 
     /// <inheritdoc/>
     public override ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

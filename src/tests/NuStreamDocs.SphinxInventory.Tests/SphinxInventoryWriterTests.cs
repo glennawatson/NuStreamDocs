@@ -6,7 +6,6 @@ using System.IO.Compression;
 using System.Text;
 using NuStreamDocs.Autorefs;
 using NuStreamDocs.Building;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SphinxInventory.Tests;
@@ -33,10 +32,10 @@ public class SphinxInventoryWriterTests
     public async Task BodyDecompressesToEntryLines()
     {
         using var fixture = new InventoryFixture();
-        var entries = new (ApiCompatString Id, UrlPath Url)[]
+        var entries = new (byte[] Id, byte[] Url)[]
         {
-            ("MyType", "api/MyType.html"),
-            ("MyType.Method", "api/MyType.html#method"),
+            ([.. "MyType"u8], [.. "api/MyType.html"u8]),
+            ([.. "MyType.Method"u8], [.. "api/MyType.html#method"u8]),
         };
         SphinxInventoryWriter.Write(fixture.Path, SphinxInventoryOptions.Default, entries);
 
@@ -67,7 +66,7 @@ public class SphinxInventoryWriterTests
     {
         using var fixture = new InventoryFixture();
         var registry = new AutorefsRegistry();
-        registry.Register("Foo", "api/Foo.html", fragment: null);
+        registry.Register("Foo"u8, "api/Foo.html"u8, fragment: null);
         var plugin = new SphinxInventoryPlugin(registry, new("X", string.Empty, "objects.inv"));
         var context = new PluginFinalizeContext(fixture.Directory);
         await plugin.OnFinalizeAsync(context, CancellationToken.None);

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Autorefs.Logging;
 using NuStreamDocs.Common;
 
@@ -133,7 +132,7 @@ public static class AutorefsRewriter
             return;
         }
 
-        var sourcePage = Path.GetFileName(path);
+        FilePath sourcePage = Path.GetFileName(path);
         using var rental = PageBuilderPool.Rent(source.Length);
         var sink = rental.Writer;
         if (!RewriteSpanCore(source, registry, sink, logger, sourcePage, ref totals))
@@ -157,7 +156,7 @@ public static class AutorefsRewriter
         AutorefsRegistry registry,
         IBufferWriter<byte> sink,
         ILogger? logger,
-        string? sourcePage,
+        FilePath? sourcePage,
         ref RewriteTotals totals)
     {
         var changed = false;
@@ -201,16 +200,17 @@ public static class AutorefsRewriter
         if (idLength > 0 && registry.TryResolveInto(idSpan, sink))
         {
             totals.Resolved++;
-            if (logger is not null)
+            if (logger is null)
             {
-                // Logger source-gen wants strings — pay the per-event decode + double-resolve cold path only when
-                // a logger is actually attached. The hot path (no logger) stays purely on bytes.
-                var idStr = Encoding.UTF8.GetString(idSpan);
-                if (registry.TryResolve(idStr, out var urlStr))
-                {
-                    AutorefsLoggingHelper.LogReferenceResolved(logger, idStr, urlStr);
-                }
+                return true;
             }
+
+            if (!registry.TryResolve(idSpan,  out var urlBytes))
+            {
+                return true;
+            }
+
+            AutorefsLoggingHelper.LogReferenceResolved(logger, urlBytes, idSpan);
 
             return true;
         }
@@ -223,7 +223,7 @@ public static class AutorefsRewriter
             return false;
         }
 
-        AutorefsLoggingHelper.LogReferenceUnresolved(logger, Encoding.UTF8.GetString(idSpan), sourcePage);
+        AutorefsLoggingHelper.LogReferenceUnresolved(logger, idSpan, sourcePage);
         return false;
     }
 

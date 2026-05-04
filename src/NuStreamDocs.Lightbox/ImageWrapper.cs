@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 
 namespace NuStreamDocs.Lightbox;
 
@@ -21,17 +20,17 @@ public static class ImageWrapper
 {
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="sink"/>, wrapping standalone images.</summary>
     /// <param name="source">UTF-8 HTML.</param>
-    /// <param name="selector">Class name applied to the wrapping anchor.</param>
+    /// <param name="selector">UTF-8 class name applied to the wrapping anchor.</param>
     /// <param name="sink">UTF-8 sink.</param>
     /// <returns>The number of images that were wrapped.</returns>
-    public static int Rewrite(ReadOnlySpan<byte> source, string selector, IBufferWriter<byte> sink)
+    public static int Rewrite(ReadOnlySpan<byte> source, ReadOnlySpan<byte> selector, IBufferWriter<byte> sink)
     {
         ArgumentNullException.ThrowIfNull(sink);
-        ArgumentException.ThrowIfNullOrEmpty(selector);
+        if (selector.IsEmpty)
+        {
+            throw new ArgumentException("Selector must be non-empty.", nameof(selector));
+        }
 
-        // Encode the (build-time) selector once into bytes so the per-image hot
-        // path stays UTF-8 throughout instead of UTF-16 round-tripping per tag.
-        var selectorBytes = Encoding.UTF8.GetBytes(selector);
         var wrapped = 0;
         var anchorDepth = 0;
         var cursor = 0;
@@ -49,33 +48,14 @@ public static class ImageWrapper
             var tagStart = cursor + lt;
             var rel = source[tagStart..];
 
-            if (StartsWith(rel, "<a "u8) || StartsWith(rel, "<a>"u8))
+            UpdateAnchorDepth(rel, ref anchorDepth);
+
+            if (anchorDepth == 0 && StartsWith(rel, "<img "u8)
+                && TryWrapImage(source, tagStart, selector, sink, out var afterTag))
             {
-                anchorDepth++;
-            }
-            else if (StartsWith(rel, "</a>"u8))
-            {
-                if (anchorDepth > 0)
-                {
-                    anchorDepth--;
-                }
-            }
-            else if (anchorDepth == 0 && StartsWith(rel, "<img "u8))
-            {
-                var tagEnd = FindTagEnd(source, tagStart);
-                if (TryGetSrcRange(source[tagStart..tagEnd], out var srcStart, out var srcLength))
-                {
-                    Write(sink, "<a href=\""u8);
-                    Write(sink, source.Slice(tagStart + srcStart, srcLength));
-                    Write(sink, "\" class=\""u8);
-                    Write(sink, selectorBytes);
-                    Write(sink, "\">"u8);
-                    Write(sink, source[tagStart..tagEnd]);
-                    Write(sink, "</a>"u8);
-                    cursor = tagEnd;
-                    wrapped++;
-                    continue;
-                }
+                cursor = afterTag;
+                wrapped++;
+                continue;
             }
 
             // Tag we're not transforming — emit verbatim up to and including the closing '>'.
@@ -85,6 +65,55 @@ public static class ImageWrapper
         }
 
         return wrapped;
+    }
+
+    /// <summary>Adjusts <paramref name="anchorDepth"/> when <paramref name="tag"/> opens or closes an <c>&lt;a&gt;</c>.</summary>
+    /// <param name="tag">Source slice starting at <c>&lt;</c>.</param>
+    /// <param name="anchorDepth">Open-anchor counter; never decremented below zero.</param>
+    private static void UpdateAnchorDepth(ReadOnlySpan<byte> tag, ref int anchorDepth)
+    {
+        if (StartsWith(tag, "<a "u8) || StartsWith(tag, "<a>"u8))
+        {
+            anchorDepth++;
+            return;
+        }
+
+        if (!StartsWith(tag, "</a>"u8) || anchorDepth <= 0)
+        {
+            return;
+        }
+
+        anchorDepth--;
+    }
+
+    /// <summary>Emits a glightbox-anchor wrap for the <c>&lt;img&gt;</c> tag at <paramref name="tagStart"/>.</summary>
+    /// <param name="source">Full UTF-8 source.</param>
+    /// <param name="tagStart">Index of the leading <c>&lt;</c>.</param>
+    /// <param name="selector">UTF-8 class name applied to the wrapping anchor.</param>
+    /// <param name="sink">UTF-8 sink.</param>
+    /// <param name="afterTag">Index just past the closing <c>&gt;</c> when wrapping succeeded.</param>
+    /// <returns>True when the image was wrapped; false leaves the caller to emit the tag verbatim.</returns>
+    private static bool TryWrapImage(
+        ReadOnlySpan<byte> source,
+        int tagStart,
+        ReadOnlySpan<byte> selector,
+        IBufferWriter<byte> sink,
+        out int afterTag)
+    {
+        afterTag = FindTagEnd(source, tagStart);
+        if (!TryGetSrcRange(source[tagStart..afterTag], out var srcStart, out var srcLength))
+        {
+            return false;
+        }
+
+        Write(sink, "<a href=\""u8);
+        Write(sink, source.Slice(tagStart + srcStart, srcLength));
+        Write(sink, "\" class=\""u8);
+        Write(sink, selector);
+        Write(sink, "\">"u8);
+        Write(sink, source[tagStart..afterTag]);
+        Write(sink, "</a>"u8);
+        return true;
     }
 
     /// <summary>Returns the index just past the next <c>&gt;</c> in <paramref name="source"/> from <paramref name="start"/>.</summary>

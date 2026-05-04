@@ -23,14 +23,14 @@ internal static class SitemapWriter
     /// <summary>Maps a source-relative path (e.g. <c>guide/intro.md</c>) to UTF-8 URL bytes (e.g. <c>guide/intro.html</c>).</summary>
     /// <param name="relativePath">Source path relative to the docs root.</param>
     /// <returns>UTF-8 URL bytes; an empty array when input is unusable.</returns>
-    public static byte[] RelativePathToUrlPath(string relativePath)
+    public static byte[] RelativePathToUrlPath(FilePath relativePath)
     {
-        if (string.IsNullOrEmpty(relativePath))
+        if (relativePath.IsEmpty)
         {
             return [];
         }
 
-        var span = relativePath.AsSpan();
+        var span = relativePath.Value.AsSpan();
         var endsWithMd = span.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
         var keepLength = endsWithMd ? span.Length - MarkdownExtensionLength : span.Length;
         var totalLength = keepLength + (endsWithMd ? HtmlExtensionLength : 0);

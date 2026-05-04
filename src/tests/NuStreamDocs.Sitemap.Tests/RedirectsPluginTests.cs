@@ -157,7 +157,7 @@ public class RedirectsPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new RedirectsPlugin().Name.AsSpan().SequenceEqual("redirects"u8)).IsTrue();
+        await Assert.That(new RedirectsPlugin().Name.SequenceEqual("redirects"u8)).IsTrue();
 
     /// <summary>Static seed entries with whitespace-only from/to are filtered out.</summary>
     /// <returns>Async test.</returns>

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Autorefs;
 using NuStreamDocs.Plugins;
@@ -47,7 +48,9 @@ public class SphinxInventoryBenchmarks
         for (var i = 0; i < EntryCount; i++)
         {
             var idx = i.ToString(CultureInfo.InvariantCulture);
-            registry.Register("Symbol_" + idx, "api/Symbol_" + idx + ".html", fragment: null);
+            var idBytes = Encoding.UTF8.GetBytes("Symbol_" + idx);
+            var urlBytes = Encoding.UTF8.GetBytes("api/Symbol_" + idx + ".html");
+            registry.Register(idBytes, urlBytes, fragment: default);
         }
 
         _plugin = new(registry);

@@ -47,7 +47,7 @@ public class NavNeighboursTests
 
         var neighbours = plugin.GetSectionNeighbours("alpha/b.md");
         await Assert.That(neighbours.PreviousPath).IsEqualTo("alpha/a.md");
-        await Assert.That(neighbours.NextPath).IsEqualTo(string.Empty);
+        await Assert.That(neighbours.NextPath.IsEmpty).IsTrue();
     }
 
     /// <summary>An unknown path returns <c>NavNeighbours.None</c>.</summary>

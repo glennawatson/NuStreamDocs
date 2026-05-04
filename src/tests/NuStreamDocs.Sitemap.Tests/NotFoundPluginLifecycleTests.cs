@@ -13,7 +13,7 @@ public class NotFoundPluginLifecycleTests
     public async Task NameAccessor()
     {
         var plugin = new NotFoundPlugin();
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("404"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("404"u8)).IsTrue();
     }
 
     /// <summary>OnConfigureAsync no-ops.</summary>

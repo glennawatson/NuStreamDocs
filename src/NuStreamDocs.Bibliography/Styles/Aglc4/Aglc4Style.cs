@@ -19,7 +19,7 @@ public sealed class Aglc4Style : ICitationStyle
     public static Aglc4Style Instance { get; } = new();
 
     /// <inheritdoc/>
-    public byte[] Name => "AGLC4"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "AGLC4"u8;
 
     /// <inheritdoc/>
     public void WriteInText(CitationEntry entry, int footnoteNumber, IBufferWriter<byte> writer)

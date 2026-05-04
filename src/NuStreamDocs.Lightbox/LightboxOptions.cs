@@ -8,8 +8,8 @@ namespace NuStreamDocs.Lightbox;
 /// <param name="StylesheetUrl">UTF-8 absolute URL to glightbox CSS, emitted directly into the page <c>&lt;head&gt;</c>.</param>
 /// <param name="ScriptUrl">UTF-8 absolute URL to glightbox JS, emitted directly into the page <c>&lt;head&gt;</c>.</param>
 /// <param name="WrapImages">When true, the plugin rewrites every <c>&lt;img src=&quot;...&quot;&gt;</c> outside an existing anchor into a glightbox anchor wrapper.</param>
-/// <param name="Selector">CSS selector glightbox uses to discover targets; default <c>.glightbox</c>.</param>
-public sealed record LightboxOptions(byte[] StylesheetUrl, byte[] ScriptUrl, bool WrapImages, string Selector)
+/// <param name="Selector">UTF-8 CSS selector glightbox uses to discover targets; default <c>glightbox</c>.</param>
+public sealed record LightboxOptions(byte[] StylesheetUrl, byte[] ScriptUrl, bool WrapImages, byte[] Selector)
 {
     /// <summary>Gets the default glightbox jsDelivr CSS pin.</summary>
     public static byte[] DefaultStylesheetUrl { get; } = [.. "https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/css/glightbox.min.css"u8];
@@ -18,7 +18,7 @@ public sealed record LightboxOptions(byte[] StylesheetUrl, byte[] ScriptUrl, boo
     public static byte[] DefaultScriptUrl { get; } = [.. "https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/js/glightbox.min.js"u8];
 
     /// <summary>Gets the default selector applied to lightbox-wrapped anchors.</summary>
-    public static string DefaultSelector => "glightbox";
+    public static byte[] DefaultSelector { get; } = [.. "glightbox"u8];
 
     /// <summary>Gets the default options: CDN URLs, image-wrapping enabled, default selector.</summary>
     public static LightboxOptions Default => new(DefaultStylesheetUrl, DefaultScriptUrl, WrapImages: true, DefaultSelector);

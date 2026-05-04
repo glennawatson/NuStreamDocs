@@ -83,6 +83,6 @@ public readonly record struct MaterialThemeOptions(
 
     /// <summary>Gets the UTF-8 URL prefix the page template should use for asset references.</summary>
     /// <returns>Either <see cref="EmbeddedAssetRoot"/> or <see cref="CdnRoot"/> depending on <see cref="AssetSource"/>.</returns>
-    public byte[] ResolveAssetRoot() =>
+    public ReadOnlySpan<byte> ResolveAssetRoot() =>
         AssetSource == MaterialAssetSource.Cdn ? CdnRoot : EmbeddedAssetRoot;
 }

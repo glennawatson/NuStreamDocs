@@ -67,7 +67,7 @@ public sealed class TocPlugin : IDocPlugin
     public static byte[] TocMarker { get; } = [.. "<!--@@toc@@-->"u8];
 
     /// <inheritdoc/>
-    public byte[] Name => "toc"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "toc"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

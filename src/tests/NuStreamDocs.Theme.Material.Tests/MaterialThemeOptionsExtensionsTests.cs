@@ -84,10 +84,10 @@ public class MaterialThemeOptionsExtensionsTests
     public async Task ResolveAssetRootSwitchesByAssetSource()
     {
         var embedded = MaterialThemeOptions.Default;
-        await Assert.That(embedded.ResolveAssetRoot().AsSpan().SequenceEqual("/assets"u8)).IsTrue();
+        await Assert.That(embedded.ResolveAssetRoot().SequenceEqual("/assets"u8)).IsTrue();
 
         var cdn = embedded.WithCdnRoot("https://cdn.example") with { AssetSource = MaterialAssetSource.Cdn };
-        await Assert.That(cdn.ResolveAssetRoot().AsSpan().SequenceEqual("https://cdn.example"u8)).IsTrue();
+        await Assert.That(cdn.ResolveAssetRoot().SequenceEqual("https://cdn.example"u8)).IsTrue();
     }
 
     /// <summary>Null byte overloads throw.</summary>

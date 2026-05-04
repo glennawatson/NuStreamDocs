@@ -50,7 +50,7 @@ internal static class SphinxInventoryWriter
     /// <param name="outputPath">Absolute output path.</param>
     /// <param name="options">Header options (project, version, file name).</param>
     /// <param name="entries">Snapshot from the autorefs registry — <c>(uid, href)</c> pairs.</param>
-    public static void Write(FilePath outputPath, SphinxInventoryOptions options, (ApiCompatString Id, UrlPath Url)[] entries)
+    public static void Write(FilePath outputPath, SphinxInventoryOptions options, (byte[] Id, byte[] Url)[] entries)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         using var stream = File.Create(outputPath);
@@ -97,7 +97,7 @@ internal static class SphinxInventoryWriter
     /// <summary>Writes every entry into <paramref name="stream"/>, zlib-compressed.</summary>
     /// <param name="stream">Output stream (the compressed bytes are written directly to it).</param>
     /// <param name="entries">Snapshot entries.</param>
-    private static void WriteCompressedBody(Stream stream, (ApiCompatString Id, UrlPath Url)[] entries)
+    private static void WriteCompressedBody(Stream stream, (byte[] Id, byte[] Url)[] entries)
     {
         using var zlib = new ZLibStream(stream, CompressionLevel.Optimal, leaveOpen: true);
         var sink = new ArrayBufferWriter<byte>(1024);
@@ -113,11 +113,11 @@ internal static class SphinxInventoryWriter
     /// <param name="sink">Body sink.</param>
     /// <param name="name">UID.</param>
     /// <param name="url">Resolved URL.</param>
-    private static void WriteEntry(IBufferWriter<byte> sink, ApiCompatString name, UrlPath url)
+    private static void WriteEntry(IBufferWriter<byte> sink, byte[] name, byte[] url)
     {
-        Utf8StringWriter.Write(sink, name);
+        sink.Write(name);
         sink.Write(EntryMiddle);
-        Utf8StringWriter.Write(sink, url);
+        sink.Write(url);
         sink.Write(EntryTrailer);
     }
 }

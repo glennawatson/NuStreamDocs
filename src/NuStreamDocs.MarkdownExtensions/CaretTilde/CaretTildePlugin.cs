@@ -19,7 +19,7 @@ namespace NuStreamDocs.MarkdownExtensions.CaretTilde;
 public sealed class CaretTildePlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override byte[] Name => "caret-tilde"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "caret-tilde"u8;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>

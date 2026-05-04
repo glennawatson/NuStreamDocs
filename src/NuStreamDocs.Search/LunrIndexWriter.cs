@@ -69,7 +69,7 @@ public static class LunrIndexWriter
         {
             var doc = documents[i];
             writer.WriteStartObject();
-            writer.WriteString("location"u8, doc.RelativeUrl);
+            writer.WriteString("location"u8, (ReadOnlySpan<byte>)doc.RelativeUrl);
             writer.WriteString("title"u8, (ReadOnlySpan<byte>)doc.Title);
             writer.WriteString("text"u8, (ReadOnlySpan<byte>)doc.Text);
             writer.WriteEndObject();

@@ -21,7 +21,7 @@ public abstract class ThemeIconShortcodePluginBase : DocPluginBase, IMarkdownPre
     protected ThemeIconShortcodePluginBase(IIconResolver? resolver) => _resolver = resolver;
 
     /// <summary>Gets the theme-specific font class emitted for Material shortcodes.</summary>
-    protected abstract byte[] IconFontClass { get; }
+    protected abstract ReadOnlySpan<byte> IconFontClass { get; }
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

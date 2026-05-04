@@ -25,7 +25,7 @@ public class SmartSymbolsPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new SmartSymbolsPlugin().Name.AsSpan().SequenceEqual("smartsymbols"u8)).IsTrue();
+        await Assert.That(new SmartSymbolsPlugin().Name.SequenceEqual("smartsymbols"u8)).IsTrue();
 
     /// <summary>Preprocess rejects null sink.</summary>
     /// <returns>Async test.</returns>

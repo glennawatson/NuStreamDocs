@@ -32,9 +32,9 @@ internal static class XrefMapWriter
     /// <param name="outputPath">Absolute path to write to.</param>
     /// <param name="baseUrl">Optional base URL embedded as the <c>baseUrl</c> field; empty omits the field.</param>
     /// <param name="entries">Snapshot from <c>AutorefsRegistry.Snapshot()</c>.</param>
-    public static void Write(FilePath outputPath, UrlPath baseUrl, (ApiCompatString Id, UrlPath Url)[] entries)
+    public static void Write(FilePath outputPath, byte[] baseUrl, (byte[] Id, byte[] Url)[] entries)
     {
-        var sorted = new (ApiCompatString Id, UrlPath Url)[entries.Length];
+        var sorted = new (ApiCompatString Id, byte[] Url)[entries.Length];
         Array.Copy(entries, sorted, entries.Length);
         Array.Sort(sorted, static (a, b) => string.CompareOrdinal(a.Id, b.Id));
 
@@ -43,7 +43,7 @@ internal static class XrefMapWriter
         {
             writer.WriteStartObject();
 
-            if (!baseUrl.IsEmpty)
+            if (baseUrl.Length > 0)
             {
                 writer.WriteString("baseUrl"u8, baseUrl);
             }

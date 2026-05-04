@@ -16,10 +16,8 @@ public class PluginTimingTableTests
     public async Task EmptyTableSnapshotReturnsEmpty()
     {
         var table = new PluginTimingTable();
-        var rows = table.GetType()
-            .GetMethod("Snapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .Invoke(table, null) as (string Name, double Seconds)[];
-        await Assert.That(rows!.Length).IsEqualTo(0);
+        var rows = SnapshotViaReflection(table);
+        await Assert.That(rows.Length).IsEqualTo(0);
     }
 
     /// <summary>The <c>Measure</c> scope accumulates elapsed time into the named bucket.</summary>
@@ -35,7 +33,7 @@ public class PluginTimingTableTests
 
         var rows = SnapshotViaReflection(table);
         await Assert.That(rows.Length).IsEqualTo(1);
-        await Assert.That(rows[0].Name.AsSpan().SequenceEqual("plugin-a"u8)).IsTrue();
+        await Assert.That(rows[0].Name.SequenceEqual("plugin-a"u8)).IsTrue();
         await Assert.That(rows[0].Seconds).IsGreaterThan(0.010);
     }
 
@@ -69,9 +67,9 @@ public class PluginTimingTableTests
         table.Add("medium"u8.ToArray(), 1_000_000);
 
         var rows = SnapshotViaReflection(table);
-        await Assert.That(rows[0].Name.AsSpan().SequenceEqual("slow"u8)).IsTrue();
-        await Assert.That(rows[1].Name.AsSpan().SequenceEqual("medium"u8)).IsTrue();
-        await Assert.That(rows[2].Name.AsSpan().SequenceEqual("fast"u8)).IsTrue();
+        await Assert.That(rows[0].Name.SequenceEqual("slow"u8)).IsTrue();
+        await Assert.That(rows[1].Name.SequenceEqual("medium"u8)).IsTrue();
+        await Assert.That(rows[2].Name.SequenceEqual("fast"u8)).IsTrue();
     }
 
     /// <summary><c>Add</c> rejects null / empty plugin names.</summary>

@@ -26,7 +26,7 @@ public sealed class Material3ThemePlugin : ThemePluginBase<Material3Theme, Mater
     }
 
     /// <inheritdoc/>
-    public override byte[] Name => "material3-theme"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "material3-theme"u8;
 
     /// <summary>Gets the loaded theme; exposed for tests.</summary>
     internal Material3Theme Theme => LoadedTheme;

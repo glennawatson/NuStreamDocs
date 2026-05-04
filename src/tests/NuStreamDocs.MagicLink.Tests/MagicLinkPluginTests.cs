@@ -25,7 +25,7 @@ public class MagicLinkPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new MagicLinkPlugin().Name.AsSpan().SequenceEqual("magiclink"u8)).IsTrue();
+        await Assert.That(new MagicLinkPlugin().Name.SequenceEqual("magiclink"u8)).IsTrue();
 
     /// <summary>Preprocess rejects null sinks.</summary>
     /// <returns>Async test.</returns>

@@ -37,21 +37,21 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : ID
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "wyam-blog"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "wyam-blog"u8;
 
     /// <inheritdoc/>
     public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
     {
-        var postsRoot = Path.Combine(context.InputRoot, _options.PostsSubdirectory);
+        var postsRoot = context.InputRoot / _options.PostsSubdirectory;
         await BlogContentGenerator.GenerateAsync(
             _logger,
             new(
                 PostsRoot: postsRoot,
                 DocsRoot: context.InputRoot,
-                IndexPath: Path.Combine(postsRoot, "index.md"),
+                IndexPath: postsRoot.File("index.md"),
                 IndexTitle: _options.IndexTitle,
                 EmitArchives: _options.EmitTagArchives,
-                ArchiveRoot: Path.Combine(postsRoot, "tags"),
+                ArchiveRoot: postsRoot / "tags",
                 ArchiveFallbackSlug: "tag"),
             cancellationToken).ConfigureAwait(false);
     }

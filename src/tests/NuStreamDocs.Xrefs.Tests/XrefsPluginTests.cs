@@ -16,8 +16,8 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var registry = new AutorefsRegistry();
-        registry.Register("Foo.Bar", "api/Foo.Bar.html", fragment: null);
-        registry.Register("Foo.Baz", "api/Foo.Baz.html", fragment: null);
+        registry.Register("Foo.Bar"u8, "api/Foo.Bar.html"u8, fragment: default);
+        registry.Register("Foo.Baz"u8, "api/Foo.Baz.html"u8, fragment: default);
         var plugin = new XrefsPlugin(registry, XrefsOptions.Default);
 
         await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
@@ -34,7 +34,7 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var importPath = Path.Combine(temp.Root, "external.json");
-        XrefMapWriter.Write(importPath, baseUrl: string.Empty, [("System.String", "api/System.String.html")]);
+        XrefMapWriter.Write(importPath, baseUrl: [], [([.. "System.String"u8], [.. "api/System.String.html"u8])]);
 
         var registry = new AutorefsRegistry();
         var options = XrefsOptions.Default with
@@ -45,9 +45,9 @@ public class XrefsPluginTests
 
         await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
-        var resolved = registry.TryResolve("System.String", out var url);
+        var resolved = registry.TryResolve("System.String"u8, out var url);
         await Assert.That(resolved).IsTrue();
-        await Assert.That(url).IsEqualTo("https://docs.microsoft.com/dotnet/api/System.String.html");
+        await Assert.That(url.AsSpan().SequenceEqual("https://docs.microsoft.com/dotnet/api/System.String.html"u8)).IsTrue();
     }
 
     /// <summary>An imported file's <c>baseUrl</c> is honored when no override is supplied.</summary>
@@ -57,7 +57,7 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var importPath = Path.Combine(temp.Root, "external.json");
-        XrefMapWriter.Write(importPath, baseUrl: "https://example.com/docs/", [("Foo", "api/Foo.html")]);
+        XrefMapWriter.Write(importPath, baseUrl: [.. "https://example.com/docs/"u8], [([.. "Foo"u8], [.. "api/Foo.html"u8])]);
 
         var registry = new AutorefsRegistry();
         var options = XrefsOptions.Default with
@@ -68,8 +68,8 @@ public class XrefsPluginTests
 
         await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
 
-        registry.TryResolve("Foo", out var url);
-        await Assert.That(url).IsEqualTo("https://example.com/docs/api/Foo.html");
+        registry.TryResolve("Foo"u8, out var url);
+        await Assert.That(url.AsSpan().SequenceEqual("https://example.com/docs/api/Foo.html"u8)).IsTrue();
     }
 
     /// <summary>EmitMap=false skips the xrefmap.json file write at finalize time.</summary>
@@ -79,7 +79,7 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var registry = new AutorefsRegistry();
-        registry.Register("Foo", "f.html", fragment: null);
+        registry.Register("Foo"u8, "f.html"u8, fragment: default);
         var options = XrefsOptions.Default with { EmitMap = false };
         var plugin = new XrefsPlugin(registry, options);
 

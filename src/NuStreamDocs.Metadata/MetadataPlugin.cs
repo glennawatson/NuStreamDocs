@@ -45,7 +45,7 @@ public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkd
     }
 
     /// <inheritdoc/>
-    public byte[] Name => "metadata"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "metadata"u8;
 
     /// <inheritdoc/>
     public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)

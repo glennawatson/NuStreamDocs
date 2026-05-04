@@ -72,7 +72,7 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariablesBytesSeedsMap()
     {
-        var seed = new Dictionary<byte[], byte[]>(Common.ByteArrayComparer.Instance)
+        var seed = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance)
         {
             ["a"u8.ToArray()] = "1"u8.ToArray(),
             ["b"u8.ToArray()] = "2"u8.ToArray(),

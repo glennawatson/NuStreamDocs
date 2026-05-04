@@ -30,15 +30,14 @@ public sealed class PluginTimingTable
     /// <summary>Begins a measurement scope for <paramref name="pluginName"/>; disposing the returned scope adds the elapsed ticks to the running total.</summary>
     /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IDocPlugin.Name"/> bytes.</param>
     /// <returns>A scope to wrap with <c>using</c>.</returns>
-    public MeasurementScope Measure(byte[] pluginName)
+    public MeasurementScope Measure(ReadOnlySpan<byte> pluginName)
     {
-        ArgumentNullException.ThrowIfNull(pluginName);
         if (pluginName.Length is 0)
         {
             throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName));
         }
 
-        return new(this, pluginName);
+        return new(this, [.. pluginName]);
     }
 
     /// <summary>Adds a pre-captured tick delta to <paramref name="pluginName"/>'s running total.</summary>
@@ -99,52 +98,21 @@ public sealed class PluginTimingTable
 
     /// <summary>Disposable scope returned from <see cref="Measure"/>; captures <see cref="Stopwatch.GetTimestamp"/> at entry and accumulates the delta on disposal.</summary>
     /// <remarks>The <c>using</c> compiler lowering disposes exactly once, so no re-entry guard is needed.</remarks>
-    public readonly struct MeasurementScope : IDisposable, IEquatable<MeasurementScope>
+    public readonly record struct MeasurementScope(PluginTimingTable Table, byte[] PluginName) : IDisposable
     {
-        /// <summary>Owning table the elapsed delta accumulates into.</summary>
-        private readonly PluginTimingTable _table;
-
-        /// <summary>Plugin name key bytes in <see cref="_table"/>.</summary>
-        private readonly byte[] _pluginName;
-
         /// <summary>Stopwatch timestamp captured at scope entry.</summary>
-        private readonly long _start;
-
-        /// <summary>Initializes a new instance of the <see cref="MeasurementScope"/> struct.</summary>
-        /// <param name="table">Table the elapsed delta accumulates into.</param>
-        /// <param name="pluginName">Plugin name key bytes.</param>
-        internal MeasurementScope(PluginTimingTable table, byte[] pluginName)
-        {
-            _table = table;
-            _pluginName = pluginName;
-            _start = Stopwatch.GetTimestamp();
-        }
-
-        /// <summary>Equality operator.</summary>
-        /// <param name="left">Left.</param>
-        /// <param name="right">Right.</param>
-        /// <returns>True when the scopes share the same table, plugin, and start tick.</returns>
-        public static bool operator ==(MeasurementScope left, MeasurementScope right) => left.Equals(right);
-
-        /// <summary>Inequality operator.</summary>
-        /// <param name="left">Left.</param>
-        /// <param name="right">Right.</param>
-        /// <returns>True when the scopes differ.</returns>
-        public static bool operator !=(MeasurementScope left, MeasurementScope right) => !left.Equals(right);
+        private readonly long _start = Stopwatch.GetTimestamp();
 
         /// <inheritdoc/>
-        public void Dispose() => _table.Add(_pluginName, Stopwatch.GetTimestamp() - _start);
+        public void Dispose() => Table.Add(PluginName, Stopwatch.GetTimestamp() - _start);
 
         /// <inheritdoc/>
         public bool Equals(MeasurementScope other) =>
             _start == other._start &&
-            ReferenceEquals(_table, other._table) &&
-            ByteArrayComparer.Instance.Equals(_pluginName, other._pluginName);
+            ReferenceEquals(Table, other.Table) &&
+            ByteArrayComparer.Instance.Equals(PluginName, other.PluginName);
 
         /// <inheritdoc/>
-        public override bool Equals(object? obj) => obj is MeasurementScope other && Equals(other);
-
-        /// <inheritdoc/>
-        public override int GetHashCode() => HashCode.Combine(_start, _table, ByteArrayComparer.Instance.GetHashCode(_pluginName));
+        public override int GetHashCode() => HashCode.Combine(_start, Table, ByteArrayComparer.Instance.GetHashCode(PluginName));
     }
 }

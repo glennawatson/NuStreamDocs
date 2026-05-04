@@ -26,7 +26,7 @@ public class AbbrPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new AbbrPlugin().Name.AsSpan().SequenceEqual("abbr"u8)).IsTrue();
+        await Assert.That(new AbbrPlugin().Name.SequenceEqual("abbr"u8)).IsTrue();
 
     /// <summary>Preprocess rejects a null sink.</summary>
     /// <returns>Async test.</returns>

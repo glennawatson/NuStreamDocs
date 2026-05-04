@@ -13,7 +13,7 @@ public class MaterialThemePluginCoverageTests
     public async Task DefaultCtorAndName()
     {
         var plugin = new MaterialThemePlugin();
-        await Assert.That(plugin.Name.AsSpan().SequenceEqual("material-theme"u8)).IsTrue();
+        await Assert.That(plugin.Name.SequenceEqual("material-theme"u8)).IsTrue();
         await Assert.That(plugin.Theme).IsNotNull();
     }
 }

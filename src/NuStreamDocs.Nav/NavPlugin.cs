@@ -41,11 +41,11 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     private const int UnsetSpanEnd = -1;
 
     /// <summary>Render thunk for the sidebar nav placeholder; static field to avoid re-allocating the delegate per page.</summary>
-    private static readonly Action<NavPlugin, ArrayBufferWriter<byte>, string> _renderNavThunk =
+    private static readonly Action<NavPlugin, ArrayBufferWriter<byte>, FilePath> _renderNavThunk =
         static (self, html, path) => self.RenderNav(html, path);
 
     /// <summary>Render thunk for the top-bar tabs placeholder; static field to avoid re-allocating the delegate per page.</summary>
-    private static readonly Action<NavPlugin, ArrayBufferWriter<byte>, string> _renderTabsThunk =
+    private static readonly Action<NavPlugin, ArrayBufferWriter<byte>, FilePath> _renderTabsThunk =
         static (self, html, path) => self.RenderTabs(html, path);
 
     /// <summary>Configured option set; captured at registration time.</summary>
@@ -106,7 +106,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     public static byte[] NavTabsMarker { get; } = [.. "<!--@@nav-tabs@@-->"u8];
 
     /// <inheritdoc/>
-    public byte[] Name => "nav"u8.ToArray();
+    public ReadOnlySpan<byte> Name => "nav"u8;
 
     /// <summary>Gets the computed nav tree root; null before <see cref="OnConfigureAsync"/> has run.</summary>
     public object? Root => _root;
@@ -279,9 +279,9 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Returns the relative path at <paramref name="idx"/> or empty when out of range.</summary>
     /// <param name="leaves">Leaf array.</param>
     /// <param name="idx">Candidate index.</param>
-    /// <returns>Relative path or empty string.</returns>
-    private static string PathOrEmpty(NavNode[] leaves, int idx) =>
-        idx >= 0 && idx < leaves.Length ? leaves[idx].RelativePath : string.Empty;
+    /// <returns>Relative path or empty.</returns>
+    private static FilePath PathOrEmpty(NavNode[] leaves, int idx) =>
+        idx >= 0 && idx < leaves.Length ? leaves[idx].RelativePath : default;
 
     /// <summary>Returns the UTF-8 title bytes at <paramref name="idx"/> or empty when out of range.</summary>
     /// <param name="leaves">Leaf array.</param>
@@ -295,11 +295,12 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <param name="useDirectoryUrls">True when the served site uses directory-style URLs.</param>
     /// <param name="destination">UTF-8 destination span sized for the worst-case served-path output.</param>
     /// <returns>Number of bytes written to <paramref name="destination"/>.</returns>
-    private static int EncodePageUrlBytes(string relativePath, bool useDirectoryUrls, Span<byte> destination)
+    private static int EncodePageUrlBytes(FilePath relativePath, bool useDirectoryUrls, Span<byte> destination)
     {
-        var endsWithMd = relativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
-        var keepLength = endsWithMd ? relativePath.Length - MarkdownExtensionLength : relativePath.Length;
-        var keptBytes = Encoding.UTF8.GetBytes(relativePath.AsSpan(0, keepLength), destination);
+        var path = relativePath.Value;
+        var endsWithMd = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+        var keepLength = endsWithMd ? path.Length - MarkdownExtensionLength : path.Length;
+        var keptBytes = Encoding.UTF8.GetBytes(path.AsSpan(0, keepLength), destination);
         if (!endsWithMd)
         {
             return keptBytes;
@@ -311,7 +312,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
             return keptBytes + ".html"u8.Length;
         }
 
-        var stem = relativePath.AsSpan(0, keepLength);
+        var stem = path.AsSpan(0, keepLength);
         var lastSlash = stem.LastIndexOfAny('/', '\\');
         var fileName = lastSlash >= 0 ? stem[(lastSlash + 1)..] : stem;
         if (!fileName.Equals("index", StringComparison.OrdinalIgnoreCase))
@@ -342,7 +343,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="idx">Resolved index; -1 when not in the nav.</param>
     /// <returns>True when found.</returns>
-    private bool TryResolveIndex(string relativePath, out int idx)
+    private bool TryResolveIndex(FilePath relativePath, out int idx)
     {
         idx = -1;
         if (_root is null)
@@ -355,11 +356,12 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
             (_orderedLeaves, _leafIndex, _sectionSpans) = BuildIndex(_root);
         }
 
+        var path = relativePath.Value;
         const int StackBufferLimit = 256;
-        var maxBytes = Encoding.UTF8.GetMaxByteCount(relativePath.Length);
+        var maxBytes = Encoding.UTF8.GetMaxByteCount(path.Length);
         Span<byte> stackBuf = stackalloc byte[StackBufferLimit];
         var keyBuffer = maxBytes <= StackBufferLimit ? stackBuf : new byte[maxBytes];
-        var written = Encoding.UTF8.GetBytes(relativePath, keyBuffer);
+        var written = Encoding.UTF8.GetBytes(path, keyBuffer);
         return _leafIndex!.TryGetValueByUtf8(keyBuffer[..written], out idx);
     }
 
@@ -373,8 +375,8 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     private void ReplaceMarker(
         ArrayBufferWriter<byte> html,
         ReadOnlySpan<byte> marker,
-        string relativePath,
-        Action<NavPlugin, ArrayBufferWriter<byte>, string> render)
+        FilePath relativePath,
+        Action<NavPlugin, ArrayBufferWriter<byte>, FilePath> render)
     {
         var written = html.WrittenSpan;
         var markerIndex = written.IndexOf(marker);
@@ -410,10 +412,10 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Renders the sidebar nav for the active page; switches between full and pruned trees per the configured options.</summary>
     /// <param name="writer">UTF-8 sink — concrete <see cref="ArrayBufferWriter{T}"/> so the JIT keeps the call site direct.</param>
     /// <param name="relativePath">Source-relative path of the page being rendered.</param>
-    private void RenderNav(ArrayBufferWriter<byte> writer, string relativePath)
+    private void RenderNav(ArrayBufferWriter<byte> writer, FilePath relativePath)
     {
         const int StackUrlLimit = 256;
-        var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Length) + HtmlExtensionGrowth;
+        var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Value.Length) + HtmlExtensionGrowth;
         Span<byte> stackBuf = stackalloc byte[StackUrlLimit];
         var urlBuffer = capacity <= StackUrlLimit ? stackBuf : new byte[capacity];
         var written = EncodePageUrlBytes(relativePath, _useDirectoryUrls, urlBuffer);
@@ -431,10 +433,10 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Renders the top-level nav as a horizontal tab bar at the position of the page's <c>&lt;!--@@nav-tabs@@--&gt;</c> marker.</summary>
     /// <param name="writer">Page HTML buffer.</param>
     /// <param name="relativePath">Source-relative path of the current page; resolves which tab is active.</param>
-    private void RenderTabs(ArrayBufferWriter<byte> writer, string relativePath)
+    private void RenderTabs(ArrayBufferWriter<byte> writer, FilePath relativePath)
     {
         const int StackUrlLimit = 256;
-        var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Length) + HtmlExtensionGrowth;
+        var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Value.Length) + HtmlExtensionGrowth;
         Span<byte> stackBuf = stackalloc byte[StackUrlLimit];
         var urlBuffer = capacity <= StackUrlLimit ? stackBuf : new byte[capacity];
         var written = EncodePageUrlBytes(relativePath, _useDirectoryUrls, urlBuffer);

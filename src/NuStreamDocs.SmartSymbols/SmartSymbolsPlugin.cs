@@ -25,7 +25,7 @@ namespace NuStreamDocs.SmartSymbols;
 public sealed class SmartSymbolsPlugin : DocPluginBase, IMarkdownPreprocessor
 {
     /// <inheritdoc/>
-    public override byte[] Name => "smartsymbols"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "smartsymbols"u8;
 
     /// <inheritdoc/>
     public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

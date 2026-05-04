@@ -342,7 +342,7 @@ internal static class NavTreeBuilder
             }
             else
             {
-                sectionTitle = HumanizePathName(Path.GetFileName(directory));
+                sectionTitle = Path.GetFileName(directory.Value.AsSpan()).HumanizePathName();
             }
 
             var sectionRelative = directory == root
@@ -494,41 +494,7 @@ internal static class NavTreeBuilder
             return [.. heading];
         }
 
-        return HumanizePathName(Path.GetFileNameWithoutExtension(file));
-    }
-
-    /// <summary>Humanizes a file or directory token like <c>getting-started</c> into title text.</summary>
-    /// <param name="name">Path token without separators.</param>
-    /// <returns>UTF-8 title bytes.</returns>
-    private static byte[] HumanizePathName(string name)
-    {
-        if (string.IsNullOrEmpty(name))
-        {
-            return [];
-        }
-
-        var humanized = string.Create(name.Length, name, static (destination, source) =>
-        {
-            var makeUpper = true;
-            for (var i = 0; i < source.Length; i++)
-            {
-                var current = source[i];
-                if (current is '-' or '_')
-                {
-                    destination[i] = ' ';
-                    makeUpper = true;
-                    continue;
-                }
-
-                destination[i] = makeUpper && current is >= 'a' and <= 'z'
-                    ? (char)(current - ('a' - 'A'))
-                    : current;
-
-                makeUpper = current is ' ';
-            }
-        });
-
-        return Encoding.UTF8.GetBytes(humanized);
+        return Path.GetFileNameWithoutExtension(file.Value.AsSpan()).HumanizePathName();
     }
 
     /// <summary>Appends non-empty subdirectories as section nodes.</summary>

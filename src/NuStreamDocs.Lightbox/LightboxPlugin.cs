@@ -32,7 +32,7 @@ public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider
     }
 
     /// <inheritdoc/>
-    public override byte[] Name => "lightbox"u8.ToArray();
+    public override ReadOnlySpan<byte> Name => "lightbox"u8;
 
     /// <inheritdoc/>
     public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
@@ -72,7 +72,7 @@ public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider
         HeadExtraWriter.WriteUtf8(writer, _options.ScriptUrl);
         HeadExtraWriter.WriteUtf8(writer, "\"></script>\n"u8);
         HeadExtraWriter.WriteUtf8(writer, "<script>document.addEventListener('DOMContentLoaded',function(){if(window.GLightbox){GLightbox({selector:'."u8);
-        HeadExtraWriter.WriteString(writer, _options.Selector);
+        HeadExtraWriter.WriteUtf8(writer, _options.Selector);
         HeadExtraWriter.WriteUtf8(writer, "'});}});</script>\n"u8);
     }
 }

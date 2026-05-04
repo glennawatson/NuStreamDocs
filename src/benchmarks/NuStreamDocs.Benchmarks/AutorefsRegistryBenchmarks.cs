@@ -7,14 +7,13 @@ using System.Globalization;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Autorefs;
-using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>
-/// Per-call cost of <see cref="AutorefsRegistry.Register(ApiCompatString, UrlPath, ApiCompatString)"/> across the
-/// two real-world fragment shapes: heading scans (id == fragment so the
-/// stored URL is <c>page#id</c>) and whole-page references (no fragment
+/// Per-call cost of <see cref="AutorefsRegistry.Register(ReadOnlySpan{byte}, ReadOnlySpan{byte}, ReadOnlySpan{byte})"/>
+/// across the two real-world fragment shapes: heading scans (id == fragment so
+/// the stored URL is <c>page#id</c>) and whole-page references (no fragment
 /// so the stored URL is the bare page URL).
 /// </summary>
 /// <remarks>
@@ -42,12 +41,6 @@ public class AutorefsRegistryBenchmarks
     /// <summary>Initial capacity for the resolve sink — generous enough that no per-iteration grow is observed for typical page-relative URLs.</summary>
     private const int ResolveSinkCapacity = 128;
 
-    /// <summary>Page URL pre-allocated once and reused for every call to remove encode-once-per-call noise.</summary>
-    private string[] _pageUrls = [];
-
-    /// <summary>IDs pre-allocated once and reused across iterations.</summary>
-    private string[] _ids = [];
-
     /// <summary>UTF-8 page URL bytes — pre-encoded once so the byte-path benches measure dictionary-insert cost only.</summary>
     private byte[][] _pageUrlBytes = [];
 
@@ -71,17 +64,13 @@ public class AutorefsRegistryBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _ids = new string[EntryCount];
-        _pageUrls = new string[EntryCount];
         _idBytes = new byte[EntryCount][];
         _pageUrlBytes = new byte[EntryCount][];
         for (var i = 0; i < EntryCount; i++)
         {
             var idx = i.ToString(CultureInfo.InvariantCulture);
-            _ids[i] = "section-" + idx;
-            _pageUrls[i] = "guide/page-" + (i / HeadingsPerPage).ToString(CultureInfo.InvariantCulture) + ".html";
-            _idBytes[i] = Encoding.UTF8.GetBytes(_ids[i]);
-            _pageUrlBytes[i] = Encoding.UTF8.GetBytes(_pageUrls[i]);
+            _idBytes[i] = Encoding.UTF8.GetBytes("section-" + idx);
+            _pageUrlBytes[i] = Encoding.UTF8.GetBytes("guide/page-" + (i / HeadingsPerPage).ToString(CultureInfo.InvariantCulture) + ".html");
         }
 
         _resolveSink = new(ResolveSinkCapacity);
@@ -103,9 +92,10 @@ public class AutorefsRegistryBenchmarks
     [Benchmark(Baseline = true)]
     public int RegisterWithFragment()
     {
-        for (var i = 0; i < _ids.Length; i++)
+        for (var i = 0; i < _idBytes.Length; i++)
         {
-            _registry.Register(_ids[i], _pageUrls[i], _ids[i]);
+            var idSpan = (ReadOnlySpan<byte>)_idBytes[i];
+            _registry.Register(idSpan, _pageUrlBytes[i], idSpan);
         }
 
         return _registry.Count;
@@ -116,9 +106,9 @@ public class AutorefsRegistryBenchmarks
     [Benchmark]
     public int RegisterWithoutFragment()
     {
-        for (var i = 0; i < _ids.Length; i++)
+        for (var i = 0; i < _idBytes.Length; i++)
         {
-            _registry.Register(_ids[i], _pageUrls[i], fragment: null);
+            _registry.Register(_idBytes[i], _pageUrlBytes[i], fragment: default);
         }
 
         return _registry.Count;
@@ -129,28 +119,14 @@ public class AutorefsRegistryBenchmarks
     [Benchmark]
     public int RegisterWithFragmentPreSized()
     {
-        var registry = new AutorefsRegistry(_ids.Length);
-        for (var i = 0; i < _ids.Length; i++)
-        {
-            registry.Register(_ids[i], _pageUrls[i], _ids[i]);
-        }
-
-        return registry.Count;
-    }
-
-    /// <summary>Heading-scan path through the byte-shaped Register overload.</summary>
-    /// <returns>Final entry count.</returns>
-    /// <remarks>Measures the actual rxui-corpus hot path with no per-call UTF-8 encoding.</remarks>
-    [Benchmark]
-    public int RegisterWithFragmentBytes()
-    {
+        var registry = new AutorefsRegistry(_idBytes.Length);
         for (var i = 0; i < _idBytes.Length; i++)
         {
             var idSpan = (ReadOnlySpan<byte>)_idBytes[i];
-            _registry.Register(idSpan, _pageUrlBytes[i], idSpan);
+            registry.Register(idSpan, _pageUrlBytes[i], idSpan);
         }
 
-        return _registry.Count;
+        return registry.Count;
     }
 
     /// <summary>Resolves every registered id back through the byte-path resolve into a reused sink.</summary>
