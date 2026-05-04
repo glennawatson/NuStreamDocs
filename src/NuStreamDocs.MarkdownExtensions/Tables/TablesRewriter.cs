@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Markdown;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.MarkdownExtensions.Internal;
 
@@ -308,7 +309,10 @@ internal static class TablesRewriter
             var align = i < aligns.Length ? aligns[i] : Align.None;
             WriteAlignAttr(align, writer);
             writer.Write(">"u8);
-            HtmlEscaper.Escape(Trim(row.Slice(cellBuffer[i].Start, cellBuffer[i].Length)), writer);
+
+            // Cells render as inline markdown — `[label](href)`, emphasis, code spans, autolinks —
+            // so links inside table cells resolve to anchor tags instead of staying literal.
+            InlineRenderer.Render(Trim(row.Slice(cellBuffer[i].Start, cellBuffer[i].Length)), writer);
             writer.Write("</"u8);
             writer.Write(tag);
             writer.Write(">"u8);

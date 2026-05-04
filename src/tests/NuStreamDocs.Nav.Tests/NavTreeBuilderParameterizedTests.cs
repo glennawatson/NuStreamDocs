@@ -132,6 +132,64 @@ public class NavTreeBuilderParameterizedTests
         await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Children[0].RelativeUrlBytes)).IsEqualTo("guide/intro/");
     }
 
+    /// <summary>
+    /// Section titles prefer the section's own <c>index.md</c> frontmatter <c>title:</c> when
+    /// present so authored names beat the humanized directory fallback. Without this, deep API
+    /// trees show "Akavache.Settings" (directory name) instead of the readable title set by the
+    /// page author.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SectionTitlePrefersIndexFrontmatter()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync(
+            "Akavache.Settings/index.md",
+            "---\ntitle: Akavache Settings\n---\n# overview\n");
+        await temp.WriteAsync("Akavache.Settings/page.md", "# Page\n");
+
+        var options = NavOptions.Default with { Indexes = true };
+        var root = NavTreeBuilder.Build(temp.Root, options);
+
+        var sectionTitle = System.Text.Encoding.UTF8.GetString(root.Children[0].Title);
+        await Assert.That(sectionTitle).IsEqualTo("Akavache Settings");
+    }
+
+    /// <summary>Section title falls back to the humanized directory name when the index page has no frontmatter <c>title</c>.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SectionTitleFallsBackToDirectoryName()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync("getting-started/index.md", "# Welcome\n");
+        await temp.WriteAsync("getting-started/page.md", "# Page\n");
+
+        var options = NavOptions.Default with { Indexes = true };
+        var root = NavTreeBuilder.Build(temp.Root, options);
+
+        var sectionTitle = System.Text.Encoding.UTF8.GetString(root.Children[0].Title);
+        await Assert.That(sectionTitle).IsEqualTo("Getting Started");
+    }
+
+    /// <summary>The <c>.pages</c> override <c>title:</c> wins over both the index frontmatter title and the directory name.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task PagesOverrideTitleWinsOverIndexFrontmatter()
+    {
+        using var temp = new ScratchTree();
+        await temp.WriteAsync(
+            "guide/index.md",
+            "---\ntitle: Authored Title\n---\n# Welcome\n");
+        await temp.WriteAsync("guide/page.md", "# Page\n");
+        await temp.WriteAsync("guide/.pages", "title: Override Title\n");
+
+        var options = NavOptions.Default with { Indexes = true };
+        var root = NavTreeBuilder.Build(temp.Root, options);
+
+        var sectionTitle = System.Text.Encoding.UTF8.GetString(root.Children[0].Title);
+        await Assert.That(sectionTitle).IsEqualTo("Override Title");
+    }
+
     /// <summary>Disposable scratch tree.</summary>
     private sealed class ScratchTree : IDisposable
     {

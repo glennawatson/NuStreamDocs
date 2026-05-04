@@ -44,6 +44,56 @@ public class TablesRewriterTests
         await Assert.That(output).DoesNotContain("<table>");
     }
 
+    /// <summary>
+    /// Inline markdown inside body cells renders to HTML — `[label](href)` becomes an anchor,
+    /// `*emphasis*` becomes &lt;em&gt;, and `` `code` `` becomes &lt;code&gt;. Without this, the API
+    /// reference tables that the C# generator emits show literal markdown link syntax instead of
+    /// clickable links — the `[Type](Type.md)` cells stay as raw text.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task BodyCellRendersInlineMarkdownLinksAndEmphasis()
+    {
+        var output = Rewrite(
+            "| Type | Notes |\n" +
+            "| --- | --- |\n" +
+            "| [AkavacheBuilderExtensions](AkavacheBuilderExtensions.md) | use *carefully* with `cache.Get` |\n");
+
+        await Assert.That(output).Contains("<a href=\"AkavacheBuilderExtensions.md\">AkavacheBuilderExtensions</a>");
+        await Assert.That(output).Contains("<em>carefully</em>");
+        await Assert.That(output).Contains("<code>cache.Get</code>");
+
+        // The literal markdown syntax must not survive into the rendered output.
+        await Assert.That(output).DoesNotContain("[AkavacheBuilderExtensions]");
+    }
+
+    /// <summary>Header cells render inline markdown the same way body cells do.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task HeaderCellRendersInlineMarkdown()
+    {
+        var output = Rewrite(
+            "| [Spec](spec.md) | Count |\n" +
+            "| --- | --- |\n" +
+            "| row | 1 |\n");
+
+        await Assert.That(output).Contains("<th><a href=\"spec.md\">Spec</a></th>");
+    }
+
+    /// <summary>Cells without inline markdown still emit escaped HTML — no regression on plain text.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PlainCellsStillEscapeHtmlSpecials()
+    {
+        var output = Rewrite(
+            "| h1 | h2 |\n" +
+            "| --- | --- |\n" +
+            "| a < b | x & y |\n");
+
+        await Assert.That(output).Contains("<td>a &lt; b</td>");
+        await Assert.That(output).Contains("<td>x &amp; y</td>");
+    }
+
     /// <summary>Helper that runs the rewriter and returns the string result.</summary>
     /// <param name="source">UTF-8 source markdown.</param>
     /// <returns>Rewritten output.</returns>

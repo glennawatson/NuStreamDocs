@@ -342,7 +342,10 @@ internal static class NavTreeBuilder
             }
             else
             {
-                sectionTitle = Path.GetFileName(directory.Value.AsSpan()).HumanizePathName();
+                // Prefer the section's own index.md frontmatter `title:` when present so authored
+                // names like `title: ReactiveUI APIs` win over the humanized directory name.
+                sectionTitle = ResolveIndexFrontmatterTitle(root, indexPath)
+                    ?? Path.GetFileName(directory.Value.AsSpan()).HumanizePathName();
             }
 
             var sectionRelative = directory == root
@@ -495,6 +498,22 @@ internal static class NavTreeBuilder
         }
 
         return Path.GetFileNameWithoutExtension(file.Value.AsSpan()).HumanizePathName();
+    }
+
+    /// <summary>Reads the section's index page frontmatter <c>title:</c> field, returning null when missing or unreadable.</summary>
+    /// <param name="root">Absolute input root used to resolve <paramref name="indexPath"/>.</param>
+    /// <param name="indexPath">Source-relative path to the section's index page; empty when the section has none.</param>
+    /// <returns>The frontmatter title bytes, or null when absent — letting the caller fall back to the directory name.</returns>
+    private static byte[]? ResolveIndexFrontmatterTitle(DirectoryPath root, FilePath indexPath)
+    {
+        if (indexPath.IsEmpty)
+        {
+            return null;
+        }
+
+        var absolute = Path.Combine(root.Value, indexPath.Value);
+        var title = FrontmatterTitleReader.ReadBytes(absolute);
+        return title is [_, ..] ? title : null;
     }
 
     /// <summary>Appends non-empty subdirectories as section nodes.</summary>
