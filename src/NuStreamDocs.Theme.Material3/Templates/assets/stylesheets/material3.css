@@ -493,8 +493,8 @@ a:hover { text-decoration: underline; }
   display: none;
   position: fixed;
   top: 4.25rem;
-  right: 1rem;
-  left: auto;
+  left: 50%;
+  transform: translateX(-50%);
   width: min(36rem, calc(100vw - 2rem));
   max-height: calc(100vh - 5.25rem);
   overflow-y: auto;

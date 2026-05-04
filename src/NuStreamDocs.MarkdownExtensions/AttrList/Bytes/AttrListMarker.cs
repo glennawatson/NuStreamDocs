@@ -31,7 +31,9 @@ internal static class AttrListMarker
     {
         var colonForm = span.IndexOf(OpenMarker);
         var spaceForm = span.IndexOf("{ "u8);
-        return MinNonNegative(colonForm, spaceForm);
+        var hashForm = span.IndexOf("{#"u8);
+        var dotForm = span.IndexOf("{."u8);
+        return MinNonNegative(MinNonNegative(colonForm, spaceForm), MinNonNegative(hashForm, dotForm));
     }
 
     /// <summary>Tries to match an optional-whitespace + <c>{:&#160;… }</c> / <c>{ … }</c> token starting at or just after <paramref name="p"/>.</summary>
@@ -507,6 +509,13 @@ internal static class AttrListMarker
         if (nextByte is (byte)':')
         {
             afterOpener = afterBrace + 1;
+            return true;
+        }
+
+        // {#id …} / {.class …} — python-markdown attr_list shorthand with no leading whitespace.
+        if (nextByte is (byte)'#' or (byte)'.')
+        {
+            afterOpener = afterBrace;
             return true;
         }
 
