@@ -22,29 +22,12 @@ public static class FrontmatterValueExtractor
     /// <returns>True when the entry is present in the block-list.</returns>
     public static bool ListContains(ReadOnlySpan<byte> source, ReadOnlySpan<byte> listKey, ReadOnlySpan<byte> entry)
     {
-        if (listKey.IsEmpty || entry.IsEmpty || !YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
+        if (listKey.IsEmpty || entry.IsEmpty || !TryGetFrontmatterAndKeyLine(source, listKey, out var frontmatter, out var lineEnd, out _))
         {
             return false;
         }
 
-        var frontmatter = source[..closerStart];
-        var cursor = 0;
-        while (cursor < frontmatter.Length)
-        {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
-            var line = frontmatter[cursor..lineEnd];
-            var trimmed = YamlByteScanner.TrimLeading(line);
-            if (trimmed.Length > listKey.Length
-                && trimmed.StartsWith(listKey)
-                && trimmed[listKey.Length] is (byte)':')
-            {
-                return BlockListContains(frontmatter, lineEnd, entry);
-            }
-
-            cursor = lineEnd;
-        }
-
-        return false;
+        return BlockListContains(frontmatter, lineEnd, entry);
     }
 
     /// <summary>Returns the trimmed inline scalar value bytes for the top-level key <paramref name="keyBytes"/>, or empty when absent / non-scalar.</summary>
@@ -53,29 +36,12 @@ public static class FrontmatterValueExtractor
     /// <returns>Trimmed inline scalar slice into <paramref name="source"/>, or empty when no scalar value follows the key.</returns>
     public static ReadOnlySpan<byte> GetScalar(ReadOnlySpan<byte> source, ReadOnlySpan<byte> keyBytes)
     {
-        if (keyBytes.IsEmpty || !YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
+        if (keyBytes.IsEmpty || !TryGetFrontmatterAndKeyLine(source, keyBytes, out _, out _, out var afterColon))
         {
             return [];
         }
 
-        var frontmatter = source[..closerStart];
-        var cursor = 0;
-        while (cursor < frontmatter.Length)
-        {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
-            var line = frontmatter[cursor..lineEnd];
-            var trimmed = YamlByteScanner.TrimLeading(line);
-            if (trimmed.Length > keyBytes.Length
-                && trimmed.StartsWith(keyBytes)
-                && trimmed[keyBytes.Length] is (byte)':')
-            {
-                return YamlByteScanner.TrimWhitespace(trimmed[(keyBytes.Length + 1)..]);
-            }
-
-            cursor = lineEnd;
-        }
-
-        return [];
+        return YamlByteScanner.TrimWhitespace(afterColon);
     }
 
     /// <summary>
@@ -110,6 +76,66 @@ public static class FrontmatterValueExtractor
         }
     }
 
+    /// <summary>Locates the first top-level line whose key equals <paramref name="keyBytes"/>; yields the frontmatter slice, the cursor past the key line, and the bytes after the colon.</summary>
+    /// <param name="source">UTF-8 markdown source bytes.</param>
+    /// <param name="keyBytes">UTF-8 key bytes.</param>
+    /// <param name="frontmatter">Frontmatter slice on success.</param>
+    /// <param name="lineEnd">Offset just past the matched key line on success.</param>
+    /// <param name="afterColon">Bytes after the colon on the matched line on success.</param>
+    /// <returns>True when the key line was found.</returns>
+    private static bool TryGetFrontmatterAndKeyLine(
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> keyBytes,
+        out ReadOnlySpan<byte> frontmatter,
+        out int lineEnd,
+        out ReadOnlySpan<byte> afterColon)
+    {
+        afterColon = default;
+        lineEnd = 0;
+        frontmatter = default;
+        if (!YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
+        {
+            return false;
+        }
+
+        frontmatter = source[..closerStart];
+        return TryFindTopLevelKey(frontmatter, keyBytes, out lineEnd, out afterColon);
+    }
+
+    /// <summary>Walks <paramref name="frontmatter"/> line-by-line looking for a top-level <c>{key}:</c> match.</summary>
+    /// <param name="frontmatter">Frontmatter bytes.</param>
+    /// <param name="keyBytes">UTF-8 key bytes.</param>
+    /// <param name="lineEnd">Offset just past the matched key line on success; otherwise <c>0</c>.</param>
+    /// <param name="afterColon">Bytes after the colon on the matched line on success; otherwise empty.</param>
+    /// <returns>True on match.</returns>
+    private static bool TryFindTopLevelKey(
+        ReadOnlySpan<byte> frontmatter,
+        ReadOnlySpan<byte> keyBytes,
+        out int lineEnd,
+        out ReadOnlySpan<byte> afterColon)
+    {
+        lineEnd = 0;
+        afterColon = default;
+        var cursor = 0;
+        while (cursor < frontmatter.Length)
+        {
+            var thisLineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var trimmed = YamlByteScanner.TrimLeading(frontmatter[cursor..thisLineEnd]);
+            if (trimmed.Length > keyBytes.Length
+                && trimmed.StartsWith(keyBytes)
+                && trimmed[keyBytes.Length] is (byte)':')
+            {
+                lineEnd = thisLineEnd;
+                afterColon = trimmed[(keyBytes.Length + 1)..];
+                return true;
+            }
+
+            cursor = thisLineEnd;
+        }
+
+        return false;
+    }
+
     /// <summary>Appends the value bytes of the top-level <paramref name="keyBytes"/> in <paramref name="frontmatter"/> to <paramref name="sink"/> when present.</summary>
     /// <remarks>The appended value is preceded by a single space-byte delimiter.</remarks>
     /// <param name="frontmatter">Frontmatter bytes.</param>
@@ -117,23 +143,13 @@ public static class FrontmatterValueExtractor
     /// <param name="sink">Output sink.</param>
     private static void AppendValueIfPresent(ReadOnlySpan<byte> frontmatter, ReadOnlySpan<byte> keyBytes, IBufferWriter<byte> sink)
     {
-        var cursor = 0;
-        while (cursor < frontmatter.Length)
+        if (!TryFindTopLevelKey(frontmatter, keyBytes, out var lineEnd, out var afterColon))
         {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
-            var line = frontmatter[cursor..lineEnd];
-            var trimmed = YamlByteScanner.TrimLeading(line);
-            if (trimmed.Length > keyBytes.Length
-                && trimmed.StartsWith(keyBytes)
-                && trimmed[keyBytes.Length] is (byte)':')
-            {
-                AppendInlineValue(trimmed[(keyBytes.Length + 1)..], sink);
-                AppendBlockChildren(frontmatter, lineEnd, sink);
-                return;
-            }
-
-            cursor = lineEnd;
+            return;
         }
+
+        AppendInlineValue(afterColon, sink);
+        AppendBlockChildren(frontmatter, lineEnd, sink);
     }
 
     /// <summary>Appends the inline portion of a value (everything after the colon, on the same line) to <paramref name="sink"/> with a leading space.</summary>
@@ -147,89 +163,82 @@ public static class FrontmatterValueExtractor
             return;
         }
 
-        var dst = sink.GetSpan(trimmed.Length + 1);
-        dst[0] = (byte)' ';
-        trimmed.CopyTo(dst[1..]);
-        sink.Advance(trimmed.Length + 1);
+        WriteWithSpace(sink, trimmed);
+    }
+
+    /// <summary>Reads one indented continuation / block-list child line; returns false when the next line is no longer a child.</summary>
+    /// <param name="frontmatter">Frontmatter bytes.</param>
+    /// <param name="cursor">Cursor positioned at the candidate child line; advanced past the consumed line on success.</param>
+    /// <param name="value">Trimmed child value on success; empty otherwise.</param>
+    /// <returns>True when a child line was consumed; false at end-of-block.</returns>
+    private static bool TryReadBlockChild(ReadOnlySpan<byte> frontmatter, ref int cursor, out ReadOnlySpan<byte> value)
+    {
+        value = default;
+        if (cursor >= frontmatter.Length)
+        {
+            return false;
+        }
+
+        var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+        var line = frontmatter[cursor..lineEnd];
+        if (line.IsEmpty || line[0] is not ((byte)' ' or (byte)'\t' or (byte)'-'))
+        {
+            return false;
+        }
+
+        // Strip leading whitespace and an optional `-` list marker.
+        var trimmed = YamlByteScanner.TrimLeading(line);
+        if (trimmed is [(byte)'-', ..])
+        {
+            trimmed = YamlByteScanner.TrimLeading(trimmed[1..]);
+        }
+
+        value = YamlByteScanner.TrimWhitespace(trimmed);
+        cursor = lineEnd;
+        return true;
     }
 
     /// <summary>Appends every indented continuation / block-list line that follows <paramref name="cursor"/> to <paramref name="sink"/> (each preceded by a single space).</summary>
     /// <param name="frontmatter">Frontmatter bytes.</param>
-    /// <param name="cursor">Cursor positioned at the line just after the key line.</param>
+    /// <param name="cursor">Cursor positioned at the first child line.</param>
     /// <param name="sink">Output sink.</param>
     private static void AppendBlockChildren(ReadOnlySpan<byte> frontmatter, int cursor, IBufferWriter<byte> sink)
     {
-        while (cursor < frontmatter.Length)
+        while (TryReadBlockChild(frontmatter, ref cursor, out var value))
         {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
-            var line = frontmatter[cursor..lineEnd];
-            if (line.IsEmpty)
+            if (!value.IsEmpty)
             {
-                break;
+                WriteWithSpace(sink, value);
             }
-
-            var first = line[0];
-            if (first is not ((byte)' ' or (byte)'\t' or (byte)'-'))
-            {
-                break;
-            }
-
-            // Strip the leading whitespace and optional `- ` list marker.
-            var trimmed = YamlByteScanner.TrimLeading(line);
-            if (trimmed is [(byte)'-', ..])
-            {
-                trimmed = YamlByteScanner.TrimLeading(trimmed[1..]);
-            }
-
-            var withoutNewline = YamlByteScanner.TrimWhitespace(trimmed);
-            if (!withoutNewline.IsEmpty)
-            {
-                var dst = sink.GetSpan(withoutNewline.Length + 1);
-                dst[0] = (byte)' ';
-                withoutNewline.CopyTo(dst[1..]);
-                sink.Advance(withoutNewline.Length + 1);
-            }
-
-            cursor = lineEnd;
         }
     }
 
-    /// <summary>Walks the indented block-list starting at <paramref name="cursor"/>, returning true on a matching item.</summary>
+    /// <summary>Probes the indented block-list children that follow <paramref name="cursor"/> for an item that equals <paramref name="entry"/>.</summary>
     /// <param name="frontmatter">Frontmatter bytes.</param>
     /// <param name="cursor">Cursor positioned at the first child line.</param>
-    /// <param name="entry">Entry bytes to look for.</param>
+    /// <param name="entry">Entry bytes to match.</param>
     /// <returns>True on match.</returns>
     private static bool BlockListContains(ReadOnlySpan<byte> frontmatter, int cursor, ReadOnlySpan<byte> entry)
     {
-        while (cursor < frontmatter.Length)
+        while (TryReadBlockChild(frontmatter, ref cursor, out var value))
         {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
-            var line = frontmatter[cursor..lineEnd];
-            if (line.IsEmpty)
-            {
-                break;
-            }
-
-            var first = line[0];
-            if (first is not ((byte)' ' or (byte)'\t' or (byte)'-'))
-            {
-                break;
-            }
-
-            var trimmed = YamlByteScanner.TrimLeading(line);
-            if (trimmed is [(byte)'-', ..])
-            {
-                trimmed = YamlByteScanner.TrimLeading(trimmed[1..]);
-            }
-
-            if (YamlByteScanner.TrimWhitespace(trimmed).SequenceEqual(entry))
+            if (value.SequenceEqual(entry))
             {
                 return true;
             }
-
-            cursor = lineEnd;
         }
 
         return false;
+    }
+
+    /// <summary>Writes a leading space byte then <paramref name="value"/> into <paramref name="sink"/> in one allocation.</summary>
+    /// <param name="sink">Output sink.</param>
+    /// <param name="value">Value bytes to append (must be non-empty).</param>
+    private static void WriteWithSpace(IBufferWriter<byte> sink, ReadOnlySpan<byte> value)
+    {
+        var dst = sink.GetSpan(value.Length + 1);
+        dst[0] = (byte)' ';
+        value.CopyTo(dst[1..]);
+        sink.Advance(value.Length + 1);
     }
 }

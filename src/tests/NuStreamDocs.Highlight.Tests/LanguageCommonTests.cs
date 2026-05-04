@@ -112,4 +112,44 @@ public class LanguageCommonTests
     [Arguments("-bad", 0)]
     public async Task TagName_matches_xml_name_grammar(string input, int expected) =>
         await Assert.That(LanguageCommon.TagName(UTF8.GetBytes(input))).IsEqualTo(expected);
+
+    /// <summary>Triple-slash <c>///</c> consumes to end of line; anything else returns zero.</summary>
+    /// <param name="input">Input string.</param>
+    /// <param name="expected">Expected matched length.</param>
+    /// <returns>Async task.</returns>
+    [Test]
+    [Arguments("/// xml-doc\nrest", 11)]
+    [Arguments("/// trailing only", 17)]
+    [Arguments("///\nrest", 3)]
+    [Arguments("// regular", 0)]
+    [Arguments("/ not a comment", 0)]
+    [Arguments("", 0)]
+    public async Task XmlDocCommentToEol_consumes_after_triple_slash(string input, int expected) =>
+        await Assert.That(LanguageCommon.XmlDocCommentToEol(UTF8.GetBytes(input))).IsEqualTo(expected);
+
+    /// <summary>Single-character literal returns 3 for <c>'x'</c> and 4 for <c>'\x'</c>; everything else is zero.</summary>
+    /// <param name="input">Input string.</param>
+    /// <param name="expected">Expected matched length.</param>
+    /// <returns>Async task.</returns>
+    [Test]
+    [Arguments("'a'", 3)]
+    [Arguments("'\\n'", 4)]
+    [Arguments("'\\t'rest", 4)]
+    [Arguments("'ab'", 0)]
+    [Arguments("not a char", 0)]
+    [Arguments("'", 0)]
+    [Arguments("''", 0)]
+    public async Task CharLiteral_matches_typed_or_escape_form(string input, int expected) =>
+        await Assert.That(LanguageCommon.CharLiteral(UTF8.GetBytes(input))).IsEqualTo(expected);
+
+    /// <summary>The exposed length constants line up with the matcher results so consumers can size buffers without re-deriving them.</summary>
+    /// <returns>Async task.</returns>
+    [Test]
+    public async Task LengthConstantsAlignWithMatcherResults()
+    {
+        // /// matches DocCommentPrefixLength bytes plus the rest-of-line length.
+        await Assert.That(LanguageCommon.XmlDocCommentToEol(UTF8.GetBytes("///"))).IsEqualTo(LanguageCommon.DocCommentPrefixLength);
+        await Assert.That(LanguageCommon.CharLiteral(UTF8.GetBytes("'a'"))).IsEqualTo(LanguageCommon.BasicCharLiteralLength);
+        await Assert.That(LanguageCommon.CharLiteral(UTF8.GetBytes("'\\n'"))).IsEqualTo(LanguageCommon.EscapedCharLiteralLength);
+    }
 }

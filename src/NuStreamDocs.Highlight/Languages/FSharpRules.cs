@@ -25,15 +25,6 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 internal static class FSharpRules
 {
-    /// <summary>Length of the <c>///</c> doc-comment introducer.</summary>
-    private const int DocCommentPrefixLength = 3;
-
-    /// <summary>Length of a basic <c>'x'</c> character literal.</summary>
-    private const int BasicCharLiteralLength = 3;
-
-    /// <summary>Length of an escaped <c>'\x'</c> character literal.</summary>
-    private const int EscapedCharLiteralLength = 4;
-
     /// <summary>Minimum opening / closing quote run for a triple-quoted string literal (<c>"""</c>).</summary>
     private const int TripleQuoteLength = 3;
 
@@ -236,10 +227,7 @@ internal static class FSharpRules
         rules[i++] = new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst };
 
         // /// xml-doc-comment to end-of-line — must precede the line-comment rule.
-        rules[i++] = new(
-            static slice => slice is [(byte)'/', (byte)'/', (byte)'/', ..] ? DocCommentPrefixLength + TokenMatchers.LineLength(slice[DocCommentPrefixLength..]) : 0,
-            TokenClass.CommentSpecial,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
+        rules[i++] = new(LanguageCommon.XmlDocCommentToEol, TokenClass.CommentSpecial, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
 
         // // line comment to end-of-line.
         rules[i++] = new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
@@ -260,15 +248,7 @@ internal static class FSharpRules
         rules[i++] = new(MatchRegularString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = StringFirst };
 
         // 'x' or '\x' single-character literal.
-        rules[i++] = new(
-            static slice => slice switch
-            {
-                [(byte)'\'', (byte)'\\', _, (byte)'\'', ..] => EscapedCharLiteralLength,
-                [(byte)'\'', _, (byte)'\'', ..] => BasicCharLiteralLength,
-                _ => 0,
-            },
-            TokenClass.StringSingle,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst };
+        rules[i++] = new(LanguageCommon.CharLiteral, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst };
 
         // 0x[hex_]+[suffix]* hex integer literal — must precede the integer rule.
         rules[i++] = new(

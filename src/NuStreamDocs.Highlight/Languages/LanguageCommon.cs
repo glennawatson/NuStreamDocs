@@ -12,6 +12,15 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </summary>
 internal static class LanguageCommon
 {
+    /// <summary>Length of the <c>///</c> doc-comment prefix.</summary>
+    public const int DocCommentPrefixLength = 3;
+
+    /// <summary>Length of a basic single-character literal: <c>'x'</c> = 3 bytes.</summary>
+    public const int BasicCharLiteralLength = 3;
+
+    /// <summary>Length of an escape-sequence single-character literal: <c>'\n'</c> = 4 bytes.</summary>
+    public const int EscapedCharLiteralLength = 4;
+
     /// <summary>First-byte set for a leading <c>/</c> (line / block / doc comments).</summary>
     public static readonly SearchValues<byte> SlashFirst = SearchValues.Create("/"u8);
 
@@ -80,6 +89,24 @@ internal static class LanguageCommon
     /// <returns>Length matched.</returns>
     public static int LineComment(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchLineCommentToEol(slice, (byte)'/', (byte)'/');
+
+    /// <summary><c>///</c> XML doc-comment to end of line — must precede the regular <c>//</c> line-comment matcher.</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <returns>Length matched (zero when the slice doesn't open with <c>///</c>).</returns>
+    public static int XmlDocCommentToEol(ReadOnlySpan<byte> slice) =>
+        slice is [(byte)'/', (byte)'/', (byte)'/', ..]
+            ? DocCommentPrefixLength + TokenMatchers.LineLength(slice[DocCommentPrefixLength..])
+            : 0;
+
+    /// <summary>Single-character literal: <c>'x'</c> or <c>'\x'</c> (matches the typical C / C# / F# shape).</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <returns>3 for a basic literal, 4 for the escape form, 0 otherwise.</returns>
+    public static int CharLiteral(ReadOnlySpan<byte> slice) => slice switch
+    {
+        [(byte)'\'', (byte)'\\', _, (byte)'\'', ..] => EscapedCharLiteralLength,
+        [(byte)'\'', _, (byte)'\'', ..] => BasicCharLiteralLength,
+        _ => 0,
+    };
 
     /// <summary>C-style block comment — <c>/* ... */</c> non-greedy.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
