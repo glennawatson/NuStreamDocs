@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Config.MkDocs;
 
@@ -15,10 +16,10 @@ public static class DocBuilderMkDocsExtensions
     /// <param name="builder">Target builder.</param>
     /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMkDocsConfig(this DocBuilder builder, string yamlPath)
+    public static DocBuilder UseMkDocsConfig(this DocBuilder builder, FilePath yamlPath)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
 
         var bytes = File.ReadAllBytes(yamlPath);
         return builder.UseMkDocsConfig((ReadOnlySpan<byte>)bytes);

@@ -53,7 +53,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
     /// <param name="utf8Css">UTF-8 CSS bytes.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraCssInline(this DocBuilder builder, string outputName, byte[] utf8Css)
+    public static DocBuilder AddExtraCssInline(this DocBuilder builder, FilePath outputName, byte[] utf8Css)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.Inline(outputName, utf8Css));
@@ -66,7 +66,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="resourceName">Manifest resource name.</param>
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraCssEmbedded(this DocBuilder builder, Assembly assembly, string resourceName, string outputName)
+    public static DocBuilder AddExtraCssEmbedded(this DocBuilder builder, Assembly assembly, ApiCompatString resourceName, FilePath outputName)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
@@ -77,7 +77,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="url">External href.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraCssLink(this DocBuilder builder, string url)
+    public static DocBuilder AddExtraCssLink(this DocBuilder builder, UrlPath url)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.External(url));
@@ -88,7 +88,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="urls">External hrefs.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraCssLink(this DocBuilder builder, params ReadOnlySpan<string> urls)
+    public static DocBuilder AddExtraCssLink(this DocBuilder builder, params ReadOnlySpan<UrlPath> urls)
     {
         ArgumentNullException.ThrowIfNull(builder);
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
@@ -132,7 +132,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
     /// <param name="utf8Js">UTF-8 JS bytes.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraJsInline(this DocBuilder builder, string outputName, byte[] utf8Js)
+    public static DocBuilder AddExtraJsInline(this DocBuilder builder, FilePath outputName, byte[] utf8Js)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Inline(outputName, utf8Js));
@@ -145,7 +145,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="resourceName">Manifest resource name.</param>
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraJsEmbedded(this DocBuilder builder, Assembly assembly, string resourceName, string outputName)
+    public static DocBuilder AddExtraJsEmbedded(this DocBuilder builder, Assembly assembly, ApiCompatString resourceName, FilePath outputName)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
@@ -156,7 +156,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="url">External src.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraJsLink(this DocBuilder builder, string url)
+    public static DocBuilder AddExtraJsLink(this DocBuilder builder, UrlPath url)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.External(url));
@@ -167,7 +167,7 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="urls">External srcs.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraJsLink(this DocBuilder builder, params ReadOnlySpan<string> urls)
+    public static DocBuilder AddExtraJsLink(this DocBuilder builder, params ReadOnlySpan<UrlPath> urls)
     {
         ArgumentNullException.ThrowIfNull(builder);
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();

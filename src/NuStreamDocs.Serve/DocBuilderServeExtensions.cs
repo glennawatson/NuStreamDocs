@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Serve.Logging;
 
 namespace NuStreamDocs.Serve;
@@ -179,7 +180,7 @@ public static class DocBuilderServeExtensions
 
     /// <summary>Best-effort cross-platform "open URL in default browser" — silently swallows any failure.</summary>
     /// <param name="url">URL to open.</param>
-    private static void TryOpenBrowser(string url)
+    private static void TryOpenBrowser(UrlPath url)
     {
         try
         {

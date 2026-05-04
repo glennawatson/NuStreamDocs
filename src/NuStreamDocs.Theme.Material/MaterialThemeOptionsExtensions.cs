@@ -19,7 +19,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">Site name.</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithSiteName(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithSiteName(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { SiteName = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the site name with the supplied UTF-8 bytes.</summary>
@@ -43,7 +43,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">Absolute site URL (e.g. <c>https://reactiveui.net</c>).</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithSiteUrl(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithSiteUrl(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { SiteUrl = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the absolute site URL with the supplied UTF-8 bytes.</summary>
@@ -67,7 +67,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">Language code (e.g. <c>en</c>).</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithLanguage(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithLanguage(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { Language = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the language code with the supplied UTF-8 bytes.</summary>
@@ -91,7 +91,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">Copyright text.</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithCopyright(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithCopyright(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { Copyright = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the copyright line with the supplied UTF-8 bytes.</summary>
@@ -115,7 +115,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">Repository URL.</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithRepoUrl(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithRepoUrl(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { RepoUrl = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the repository URL with the supplied UTF-8 bytes.</summary>
@@ -139,7 +139,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">Edit-URI prefix (e.g. <c>edit/main/docs</c>).</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithEditUri(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithEditUri(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { EditUri = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the edit-URI prefix with the supplied UTF-8 bytes.</summary>
@@ -163,7 +163,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">URL prefix for embedded assets (e.g. <c>/assets</c>).</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithEmbeddedAssetRoot(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithEmbeddedAssetRoot(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { EmbeddedAssetRoot = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the embedded-asset root with the supplied UTF-8 bytes.</summary>
@@ -187,7 +187,7 @@ public static class MaterialThemeOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">CDN URL prefix.</param>
     /// <returns>The updated options.</returns>
-    public static MaterialThemeOptions WithCdnRoot(this MaterialThemeOptions options, string value) =>
+    public static MaterialThemeOptions WithCdnRoot(this MaterialThemeOptions options, ApiCompatString value) =>
         options with { CdnRoot = Utf8Encoder.Encode(value) };
 
     /// <summary>Replaces the CDN root with the supplied UTF-8 bytes.</summary>

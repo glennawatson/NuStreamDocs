@@ -19,9 +19,9 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="assetDirectory">New directory.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithAssetDirectory(this PrivacyOptions options, string assetDirectory)
+    public static PrivacyOptions WithAssetDirectory(this PrivacyOptions options, DirectoryPath assetDirectory)
     {
-        ArgumentException.ThrowIfNullOrEmpty(assetDirectory);
+        ArgumentException.ThrowIfNullOrEmpty(assetDirectory.Value);
         return options with { AssetDirectory = Encoding.UTF8.GetBytes(assetDirectory) };
     }
 
@@ -252,7 +252,7 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="path">Forward-slash relative path.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithAuditManifestPath(this PrivacyOptions options, string path) =>
+    public static PrivacyOptions WithAuditManifestPath(this PrivacyOptions options, FilePath path) =>
         options with { AuditManifestPath = Utf8Encoder.Encode(path) };
 
     /// <summary>Returns a copy of <paramref name="options"/> with <paramref name="path"/> as the audit manifest path.</summary>
@@ -276,7 +276,7 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="path">Absolute path; empty falls back to <c>{outputRoot}/.cache/privacy</c>.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithCacheDirectory(this PrivacyOptions options, string path) =>
+    public static PrivacyOptions WithCacheDirectory(this PrivacyOptions options, DirectoryPath path) =>
         options with { CacheDirectory = Utf8Encoder.Encode(path) };
 
     /// <summary>Returns a copy of <paramref name="options"/> with <paramref name="path"/> as the cache directory.</summary>
@@ -300,7 +300,7 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="path">Forward-slash relative path.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithCspManifestPath(this PrivacyOptions options, string path) =>
+    public static PrivacyOptions WithCspManifestPath(this PrivacyOptions options, FilePath path) =>
         options with { CspManifestPath = Utf8Encoder.Encode(path) };
 
     /// <summary>Returns a copy of <paramref name="options"/> with <paramref name="path"/> as the CSP manifest path.</summary>

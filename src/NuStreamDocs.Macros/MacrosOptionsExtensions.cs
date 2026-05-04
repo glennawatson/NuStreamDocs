@@ -39,11 +39,11 @@ public static class MacrosOptionsExtensions
     /// <param name="value">Variable value.</param>
     /// <returns>The updated options.</returns>
     /// <remarks>Encodes both inputs to UTF-8 once and delegates to the byte overload.</remarks>
-    public static MacrosOptions WithVariable(this MacrosOptions options, string name, string value)
+    public static MacrosOptions WithVariable(this MacrosOptions options, ApiCompatString name, ApiCompatString value)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(value.Value);
         return WithVariableCore(options, Encoding.UTF8.GetBytes(name), Encoding.UTF8.GetBytes(value));
     }
 

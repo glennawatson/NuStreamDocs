@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Config.MkDocs;
 
 namespace NuStreamDocs.Config.Zensical;
@@ -14,10 +15,10 @@ public static class DocBuilderZensicalExtensions
     /// <param name="builder">Target builder.</param>
     /// <param name="tomlPath">Absolute or relative path to a zensical.toml file.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseZensicalConfig(this DocBuilder builder, string tomlPath)
+    public static DocBuilder UseZensicalConfig(this DocBuilder builder, FilePath tomlPath)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(tomlPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(tomlPath.Value);
 
         var bytes = File.ReadAllBytes(tomlPath);
         return builder.UseZensicalConfig((ReadOnlySpan<byte>)bytes);

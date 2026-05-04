@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Snippets;
 
@@ -22,10 +23,10 @@ public static class DocBuilderSnippetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="baseDirectory">Absolute path under which snippet includes resolve.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSnippets(this DocBuilder builder, string baseDirectory)
+    public static DocBuilder UseSnippets(this DocBuilder builder, DirectoryPath baseDirectory)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory.Value);
         return builder.UsePlugin(new SnippetsPlugin(baseDirectory));
     }
 }
