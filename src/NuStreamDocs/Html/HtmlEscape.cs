@@ -75,6 +75,15 @@ public static class HtmlEscape
                     }
             }
 
+            // Pass through pre-formed HTML entity references (`&#dddd;`, `&#xhhhh;`, `&name;`)
+            // verbatim — re-escaping them would emit literal `&amp;#x2714;` in output.
+            if (cursor[idx] is (byte)'&' && IsEntityReference(cursor[idx..], out var entityLen))
+            {
+                CopyTo(cursor.Slice(idx, entityLen), writer);
+                cursor = cursor[(idx + entityLen)..];
+                continue;
+            }
+
             WriteEntity(cursor[idx], writer);
             cursor = cursor[(idx + 1)..];
         }
@@ -209,4 +218,87 @@ public static class HtmlEscape
 
         CopyTo(entity, writer);
     }
+
+    /// <summary>Returns true when <paramref name="cursor"/> begins with a well-formed HTML entity reference.</summary>
+    /// <param name="cursor">UTF-8 span starting at the candidate <c>&amp;</c>.</param>
+    /// <param name="length">Length of the matched reference (including the trailing <c>;</c>) on success.</param>
+    /// <returns>True when a reference shape was matched.</returns>
+    private static bool IsEntityReference(ReadOnlySpan<byte> cursor, out int length)
+    {
+        length = 0;
+        if (cursor.Length < 3 || cursor[0] is not (byte)'&')
+        {
+            return false;
+        }
+
+        var bodyEnd = cursor[1] is (byte)'#'
+            ? ScanNumericEntityBody(cursor)
+            : ScanNamedEntityBody(cursor);
+        if (bodyEnd < 0 || bodyEnd >= cursor.Length || cursor[bodyEnd] is not (byte)';')
+        {
+            return false;
+        }
+
+        length = bodyEnd + 1;
+        return true;
+    }
+
+    /// <summary>Scans the body of <c>&amp;#dddd</c> / <c>&amp;#xhhhh</c> and returns the end offset (position of the expected <c>;</c>) or -1 on no match.</summary>
+    /// <param name="cursor">Span starting at <c>&amp;</c>; <c>cursor[1]</c> is already <c>#</c>.</param>
+    /// <returns>End offset, or -1.</returns>
+    private static int ScanNumericEntityBody(ReadOnlySpan<byte> cursor)
+    {
+        var i = 2;
+        var hex = i < cursor.Length && cursor[i] is (byte)'x' or (byte)'X';
+        if (hex)
+        {
+            i++;
+        }
+
+        var digitStart = i;
+        while (i < cursor.Length)
+        {
+            var b = cursor[i];
+            var isDigit = hex ? IsAsciiHexDigit(b) : b is >= (byte)'0' and <= (byte)'9';
+            if (!isDigit)
+            {
+                break;
+            }
+
+            i++;
+        }
+
+        return i == digitStart ? -1 : i;
+    }
+
+    /// <summary>Scans the body of <c>&amp;name</c> and returns the end offset (position of the expected <c>;</c>) or -1 on no match.</summary>
+    /// <param name="cursor">Span starting at <c>&amp;</c>; <c>cursor[1]</c> is the candidate name lead byte.</param>
+    /// <returns>End offset, or -1.</returns>
+    private static int ScanNamedEntityBody(ReadOnlySpan<byte> cursor)
+    {
+        if (!IsAsciiLetter(cursor[1]))
+        {
+            return -1;
+        }
+
+        var i = 2;
+        while (i < cursor.Length && (IsAsciiLetter(cursor[i]) || cursor[i] is >= (byte)'0' and <= (byte)'9'))
+        {
+            i++;
+        }
+
+        return i;
+    }
+
+    /// <summary>True when <paramref name="b"/> is an ASCII hex digit.</summary>
+    /// <param name="b">Candidate byte.</param>
+    /// <returns>True for <c>0-9 / a-f / A-F</c>.</returns>
+    private static bool IsAsciiHexDigit(byte b) =>
+        b is >= (byte)'0' and <= (byte)'9' or >= (byte)'a' and <= (byte)'f' or >= (byte)'A' and <= (byte)'F';
+
+    /// <summary>True when <paramref name="b"/> is an ASCII letter.</summary>
+    /// <param name="b">Candidate byte.</param>
+    /// <returns>True for <c>a-z / A-Z</c>.</returns>
+    private static bool IsAsciiLetter(byte b) =>
+        b is >= (byte)'a' and <= (byte)'z' or >= (byte)'A' and <= (byte)'Z';
 }

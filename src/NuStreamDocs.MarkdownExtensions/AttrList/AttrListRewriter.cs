@@ -46,7 +46,9 @@ internal static class AttrListRewriter
     /// </remarks>
     public static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
         html.IndexOf("{:"u8) >= 0
-        || html.IndexOf("{ "u8) >= 0;
+        || html.IndexOf("{ "u8) >= 0
+        || html.IndexOf("{#"u8) >= 0
+        || html.IndexOf("{."u8) >= 0;
 
     /// <summary>Rewrites every block- and inline-level attr-list token in <paramref name="html"/> directly into <paramref name="sink"/>.</summary>
     /// <param name="html">Page HTML span.</param>

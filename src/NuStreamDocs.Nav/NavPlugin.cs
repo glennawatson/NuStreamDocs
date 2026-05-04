@@ -8,6 +8,7 @@ using System.IO.Hashing;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
+using NuStreamDocs.Links;
 using NuStreamDocs.Nav.Logging;
 using NuStreamDocs.Plugins;
 
@@ -230,9 +231,52 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         return BoundedNeighbours(_orderedLeaves!, idx, start, end);
     }
 
+    /// <inheritdoc/>
+    public bool ShouldHidePrimarySidebar(FilePath relativePath)
+    {
+        if (relativePath.IsEmpty || _root is null || _urlIndex is null)
+        {
+            return false;
+        }
+
+        // The docs-root index page is its own thing — landing pages still want the nav.
+        if (IsRootIndex(relativePath))
+        {
+            return false;
+        }
+
+        // Resolve the active node by URL. Bytes match how _urlIndex is keyed.
+        var encoded = ServedUrlBytes.FromPath(relativePath, _useDirectoryUrls, leadingSlash: true);
+        if (!_urlIndex.TryGetValue(encoded, out var active))
+        {
+            return false;
+        }
+
+        // Top-level leaf with no descendants: nothing the primary sidebar can usefully render.
+        return active is { IsSection: false, Children.Length: 0 } && IsTopLevelChild(_root, active);
+    }
+
     /// <summary>Gets the typed nav root; for use from the plugin's own assembly + tests.</summary>
     /// <returns>The nav root, or null when <see cref="OnConfigureAsync"/> has not yet run.</returns>
     internal NavNode? GetRoot() => _root;
+
+    /// <summary>True when <paramref name="candidate"/> is a direct child of <paramref name="root"/>.</summary>
+    /// <param name="root">Nav root.</param>
+    /// <param name="candidate">Candidate node.</param>
+    /// <returns>True for top-level pages.</returns>
+    private static bool IsTopLevelChild(NavNode root, NavNode candidate)
+    {
+        var children = root.Children;
+        for (var i = 0; i < children.Length; i++)
+        {
+            if (ReferenceEquals(children[i], candidate))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>Returns true when <paramref name="relativePath"/> is the docs-root <c>index.md</c>.</summary>
     /// <param name="relativePath">Source-relative page path.</param>

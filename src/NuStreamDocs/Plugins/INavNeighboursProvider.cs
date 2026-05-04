@@ -32,4 +32,15 @@ public interface INavNeighboursProvider
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The section-scoped neighbours; <see cref="NavNeighbours.None"/> when the page is not in the nav or sits at a section boundary with no in-section neighbour on a side.</returns>
     NavNeighbours GetSectionNeighbours(FilePath relativePath);
+
+    /// <summary>
+    /// Returns true when the primary sidebar would have nothing useful to render for
+    /// <paramref name="relativePath"/> — e.g. a top-level leaf page with no descendants.
+    /// </summary>
+    /// <param name="relativePath">Source-relative path of the current page.</param>
+    /// <returns>True when the sidebar should be hidden for the page.</returns>
+    /// <remarks>
+    /// Default returns <see langword="false"/> so existing providers keep their current behaviour.
+    /// </remarks>
+    bool ShouldHidePrimarySidebar(FilePath relativePath) => false;
 }

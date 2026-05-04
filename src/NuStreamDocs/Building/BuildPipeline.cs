@@ -377,10 +377,20 @@ public static class BuildPipeline
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="useDirectoryUrls">When true, emits non-index pages as <c>foo/index.html</c>; when false, emits as <c>foo.html</c>.</param>
     /// <returns>The absolute output path with the <c>.html</c> extension.</returns>
-    private static FilePath OutputPathFor(DirectoryPath outputRoot, FilePath relativePath, bool useDirectoryUrls) =>
-        useDirectoryUrls
+    private static FilePath OutputPathFor(DirectoryPath outputRoot, FilePath relativePath, bool useDirectoryUrls)
+    {
+        // 404.md always emits as /404.html at the site root, regardless of the
+        // directory-URL toggle — most static hosts (GitHub Pages, Netlify, S3
+        // static-website mode) only honour /404.html for not-found responses.
+        if (string.Equals(relativePath.Value, "404.md", StringComparison.OrdinalIgnoreCase))
+        {
+            return OutputPathForFlatUrls(outputRoot, relativePath);
+        }
+
+        return useDirectoryUrls
             ? OutputPathForDirectoryUrls(outputRoot, relativePath)
             : OutputPathForFlatUrls(outputRoot, relativePath);
+    }
 
     /// <summary>Flat-URL form: <c>foo.md</c> → <c>foo.html</c>; everything else passes through.</summary>
     /// <param name="outputRoot">Absolute output root.</param>

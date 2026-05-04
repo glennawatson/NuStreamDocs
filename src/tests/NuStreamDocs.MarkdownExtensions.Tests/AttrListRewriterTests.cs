@@ -57,6 +57,42 @@ public class AttrListRewriterTests
         await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsFalse();
     }
 
+    /// <summary>The <c>{#id}</c> shorthand triggers the <see cref="AttrListRewriter.NeedsRewrite"/> gate so the rewriter actually runs on pages that only contain the colon-less form.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task NeedsRewriteAcceptsHashShorthand()
+    {
+        const string Html = "<p><a href=\"\"></a>{#T:Foo}</p>";
+        await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsTrue();
+    }
+
+    /// <summary>The <c>{.class}</c> shorthand triggers <see cref="AttrListRewriter.NeedsRewrite"/> alongside the hash form.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task NeedsRewriteAcceptsDotShorthand()
+    {
+        const string Html = "<p><span></span>{.callout}</p>";
+        await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsTrue();
+    }
+
+    /// <summary>
+    /// End-to-end: pages whose only marker is the <c>{#id}</c> shorthand pass the
+    /// <see cref="AttrListRewriter.NeedsRewrite"/> gate and are rewritten by
+    /// <see cref="AttrListRewriter.RewriteInto"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FullPipelineLiftsHashShorthandWithMethodSignature()
+    {
+        const string Html =
+            "<p><a href=\"\"></a>{#M:Foo.Bar.Baz(Foo.IThing)}</p>";
+        await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsTrue();
+
+        var output = Rewrite(Html);
+        await Assert.That(output).Contains("id=\"M:Foo.Bar.Baz(Foo.IThing)\"");
+        await Assert.That(output).DoesNotContain("{#M:");
+    }
+
     /// <summary>The mkdocs-material shorthand <c>{ .class }</c> (open-brace + space, no colon) is recognized.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -107,6 +143,26 @@ public class AttrListRewriterTests
         const string Html = "<pre><code>var x = { foo: 1 };</code></pre>";
         var output = Rewrite(Html);
         await Assert.That(output).IsEqualTo(Html);
+    }
+
+    /// <summary>The shorthand <c>{#id}</c> (no leading colon or whitespace) lifts the id onto the enclosing block.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task HashShorthandLiftsBlockId()
+    {
+        var output = Rewrite("<p><a href=\"\"></a>{#T:Akavache.NewtonsoftJson.AkavacheBuilderExtensions}</p>");
+        await Assert.That(output).Contains("id=\"T:Akavache.NewtonsoftJson.AkavacheBuilderExtensions\"");
+        await Assert.That(output).DoesNotContain("{#T:");
+    }
+
+    /// <summary>Method-shape ids that include parentheses round-trip through the shorthand path.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task HashShorthandLiftsBlockIdWithParens()
+    {
+        var output = Rewrite("<p><a href=\"\"></a>{#M:Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.WithEncryptedSqliteProvider(Akavache.IAkavacheBuilder)}</p>");
+        await Assert.That(output).Contains("id=\"M:Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.WithEncryptedSqliteProvider(Akavache.IAkavacheBuilder)\"");
+        await Assert.That(output).DoesNotContain("{#M:");
     }
 
     /// <summary>Helper that runs the rewriter and returns the string result.</summary>

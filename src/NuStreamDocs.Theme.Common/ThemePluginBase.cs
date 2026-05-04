@@ -215,7 +215,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [NextTitleKey] = neighbours.NextTitle,
                     [HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
                     [DescriptionKey] = ResolveDescription(context),
-                    [HideNavigationKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8) ? TruthyBytes : null,
+                    [HideNavigationKey] = ShouldHideNavigation(context) ? TruthyBytes : null,
                     [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
                     [GeneratorKey] = GeneratorBytes,
                     [FaviconKey] = _options.Favicon,
@@ -702,6 +702,20 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
         }
 
         return path;
+    }
+
+    /// <summary>Returns true when the rendered page should hide the primary sidebar.</summary>
+    /// <param name="context">Per-page render context.</param>
+    /// <returns>True when the sidebar should be hidden.</returns>
+    /// <remarks>Honours the page's <c>hide: [navigation]</c> frontmatter and the nav provider's hint for empty sidebars.</remarks>
+    private bool ShouldHideNavigation(PluginRenderContext context)
+    {
+        if (Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8))
+        {
+            return true;
+        }
+
+        return _neighbours?.ShouldHidePrimarySidebar(context.RelativePath) ?? false;
     }
 
     /// <summary>Resolves prev/next neighbours according to the configured footer settings.</summary>

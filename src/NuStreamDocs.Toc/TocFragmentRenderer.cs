@@ -123,10 +123,18 @@ internal static class TocFragmentRenderer
         IBufferWriter<byte> writer)
     {
         // Close any siblings/deeper that should not contain this heading.
+        // Track whether we popped a same-level sibling: when we did, the parent's
+        // child <ul> is still open and we must not emit another UlOpen below.
+        var poppedSibling = false;
         while (stack.TryPeek(out var top) && top >= heading.Level)
         {
             stack.Pop();
             Utf8StringWriter.Write(writer, LiClose);
+
+            if (top == heading.Level)
+            {
+                poppedSibling = true;
+            }
 
             // Only close a nested <ul> when we're leaving a level that
             // was actually nested under another <li>. The outer <ul>
@@ -138,7 +146,8 @@ internal static class TocFragmentRenderer
         }
 
         // If we're deeper than the current parent, open a child <ul> inside its <li>.
-        if (stack.TryPeek(out var parentLevel) && parentLevel < heading.Level)
+        // Skip when we just popped a sibling — the surrounding <ul> is still open.
+        if (!poppedSibling && stack.TryPeek(out var parentLevel) && parentLevel < heading.Level)
         {
             Utf8StringWriter.Write(writer, UlOpen);
         }
