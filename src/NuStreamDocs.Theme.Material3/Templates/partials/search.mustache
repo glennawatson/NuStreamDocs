@@ -6,21 +6,19 @@
   <label class="md-search__overlay" for="__search" aria-hidden="true"></label>
   <div class="md-search__inner">
     <form class="md-search__form" name="search">
-      <md-outlined-text-field
+      <input
         type="search"
         class="md-search__field"
         name="query"
-        label="Search"
         placeholder="Search"
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
         aria-label="Search"
         data-md-component="search-query">
-      </md-outlined-text-field>
-      <md-icon-button class="md-search__icon" type="button" data-md-component="search-close" aria-label="Close search">
-        <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
-      </md-icon-button>
+      <button class="md-search__icon" type="button" data-md-component="search-close" aria-label="Close search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+      </button>
     </form>
     <div class="md-search__results" data-md-component="search-results">
       <p class="md-search__status" data-md-component="search-status">Type at least 2 characters to search.</p>

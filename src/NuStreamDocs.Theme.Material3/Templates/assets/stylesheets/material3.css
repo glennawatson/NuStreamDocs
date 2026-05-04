@@ -572,38 +572,64 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
 }
 .md-search__field {
-  /* Material Web's <md-outlined-text-field> defaults to display: inline-flex
-     with min-inline-size: 200px on the :host. We keep its internal shape
-     (overriding `display` corrupts its shadow flex layout and stops the
-     inner <input> from receiving keystrokes). Width is governed by the
-     enclosing grid's 1fr column; we just relax the min-inline-size so the
-     cell can shrink to fit the popup. */
+  /* Plain <input> styled to match the MD3 surface. Replaced the previous
+     <md-outlined-text-field> web component because its shadow-DOM layout
+     measured wrong inside the popup (zero-width inner <input>, outline
+     geometry computing 4× the host width). The plain element fills the
+     grid cell, takes keystrokes immediately, and ships no JS. */
   inline-size: 100%;
   min-inline-size: 0;
   max-inline-size: 100%;
   box-sizing: border-box;
-  --md-outlined-text-field-container-shape: 999px;
-  --md-outlined-text-field-outline-color: var(--md-sys-color-outline-variant);
-  --md-outlined-text-field-hover-outline-color: var(--md-sys-color-on-surface);
-  --md-outlined-text-field-focus-outline-color: var(--md-sys-color-primary);
-  --md-outlined-text-field-label-text-color: var(--md-sys-color-on-surface-variant);
-  --md-outlined-text-field-focus-label-text-color: var(--md-sys-color-primary);
-  --md-outlined-text-field-input-text-color: var(--md-sys-color-on-surface);
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 999px;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface);
+  font: var(--md-sys-typescale-body-large);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.md-search__field:hover {
+  border-color: var(--md-sys-color-on-surface);
+}
+.md-search__field:focus {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 1px var(--md-sys-color-primary);
+}
+.md-search__field::placeholder {
+  color: var(--md-sys-color-on-surface-variant);
 }
 .md-search__form {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.5rem;
   inline-size: 100%;
   box-sizing: border-box;
 }
 .md-search__icon {
-  /* Sits in the second grid column; no positioning needed. */
+  /* Plain <button>: sits in the second grid column. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
   color: var(--md-sys-color-on-surface-variant);
-  --md-icon-button-icon-size: 1.125rem;
-  --md-icon-button-state-layer-size: 2rem;
+  cursor: pointer;
+}
+.md-search__icon:hover {
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+}
+.md-search__icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
 }
 .md-search__results {
   margin-top: 0.875rem;

@@ -214,31 +214,13 @@
       }
     });
 
-    function focusQuery() {
-      try { query.focus(); } catch (e) { /* component may not be ready */ }
-      var inner = query.shadowRoot && query.shadowRoot.querySelector("input, textarea");
-      if (inner) {
-        try { inner.focus(); } catch (e) { /* ignore */ }
-      }
-    }
-
     searchToggle.addEventListener("change", function () {
-      if (!searchToggle.checked) {
-        return;
+      if (searchToggle.checked) {
+        // Plain <input>: a single rAF tick is enough to outlast the
+        // :checked-driven display flip; no shadow-DOM hydration race.
+        window.requestAnimationFrame(function () { query.focus(); });
       }
-
-      focusQuery();
-      window.setTimeout(focusQuery, 60);
-      window.setTimeout(focusQuery, 200);
     });
-
-    if (form) {
-      form.addEventListener("click", function (event) {
-        if (event.target === query || (query.contains && query.contains(event.target))) {
-          focusQuery();
-        }
-      });
-    }
   }
 
   function initializeRepoStats() {
