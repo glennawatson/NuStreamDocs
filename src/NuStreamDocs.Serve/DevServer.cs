@@ -30,6 +30,9 @@ internal static class DevServer
     /// <summary>Path of the websocket endpoint browsers connect to.</summary>
     private const string LiveReloadPath = "/__livereload";
 
+    /// <summary>Site-rooted path of the not-found page the dev server re-executes the pipeline against on a 404.</summary>
+    private const string NotFoundPagePath = "/404.html";
+
     /// <summary>
     /// Injected JavaScript snippet used to enable live-reload functionality in served HTML pages.
     /// This script establishes a WebSocket connection to the server at the live-reload endpoint
@@ -120,6 +123,11 @@ internal static class DevServer
     private static void ConfigurePipeline(WebApplication app, string outputRoot, in WatchAndServeOptions options)
     {
         app.UseWebSockets();
+
+        // Re-execute the pipeline against /404.html when a request would otherwise 404, so the
+        // configured not-found page (synthesized by ThemePluginBase or authored as 404.md) is
+        // served on every missing path. The status code stays 404 — only the body is swapped.
+        app.UseStatusCodePagesWithReExecute(NotFoundPagePath);
 
         // Path-restricted MapGet avoids the manual path-check in Use().
         // When using a specialized RequestDelegate, RDG emits no reflection.
