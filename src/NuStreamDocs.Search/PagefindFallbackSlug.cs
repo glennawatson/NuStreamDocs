@@ -3,14 +3,28 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search;
 
 /// <summary>Produces the <c>page-N</c> fallback slug used by <see cref="PagefindIndexWriter"/> when a document has no usable URL.</summary>
 internal static class PagefindFallbackSlug
 {
-    /// <summary>Returns <c>page-{ordinal}</c> formatted with invariant culture.</summary>
+    /// <summary>Gets the UTF-8 prefix shared by every fallback slug.</summary>
+    private static ReadOnlySpan<byte> Prefix => "page-"u8;
+
+    /// <summary>Returns <c>page-{ordinal}</c> formatted with invariant culture as UTF-8 bytes.</summary>
     /// <param name="ordinal">Document ordinal.</param>
-    /// <returns>Slug string.</returns>
-    public static string For(int ordinal) => "page-" + ordinal.ToString(CultureInfo.InvariantCulture);
+    /// <returns>Slug bytes.</returns>
+    public static byte[] For(int ordinal)
+    {
+        Span<byte> digits = stackalloc byte[16];
+        if (ordinal.TryFormat(digits, out var written, provider: CultureInfo.InvariantCulture))
+        {
+            return Utf8Concat.Concat(Prefix, digits[..written]);
+        }
+
+        // 16 bytes fits int.MinValue with sign; this is unreachable for int but keeps the API safe.
+        return Utf8Concat.Concat(Prefix, System.Text.Encoding.UTF8.GetBytes(ordinal.ToString(CultureInfo.InvariantCulture)));
+    }
 }

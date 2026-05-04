@@ -12,7 +12,7 @@ public class PagefindIndexWriterFallbackTests
     [Test]
     public async Task FallbackShape()
     {
-        await Assert.That(PagefindFallbackSlug.For(0)).IsEqualTo("page-0");
-        await Assert.That(PagefindFallbackSlug.For(42)).IsEqualTo("page-42");
+        await Assert.That(PagefindFallbackSlug.For(0).AsSpan().SequenceEqual("page-0"u8)).IsTrue();
+        await Assert.That(PagefindFallbackSlug.For(42).AsSpan().SequenceEqual("page-42"u8)).IsTrue();
     }
 }

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using System.Text.Json;
 using NuStreamDocs.Common;
 
@@ -45,8 +46,8 @@ public static class PagefindIndexWriter
         for (var i = 0; i < documents.Length; i++)
         {
             var doc = documents[i];
-            var slug = SlugifyForRecord(doc.RelativeUrl, i);
-            var recordPath = Path.Combine(recordsDir, slug + ".json");
+            var slug = SlugifyForRecord(Encoding.UTF8.GetBytes(doc.RelativeUrl), i);
+            var recordPath = Path.Combine(recordsDir, Encoding.UTF8.GetString(slug) + ".json");
             WriteRecord(recordPath, doc);
 
             manifest.WriteStartObject();
@@ -76,36 +77,29 @@ public static class PagefindIndexWriter
         writer.Flush();
     }
 
-    /// <summary>Turns a URL into a filesystem-safe slug, falling back to an index when needed.</summary>
-    /// <param name="url">Relative URL.</param>
+    /// <summary>Turns a URL into a filesystem-safe slug as UTF-8 bytes, falling back to an index when the URL is empty.</summary>
+    /// <param name="url">Relative URL bytes.</param>
     /// <param name="ordinal">Per-document ordinal used as a uniqueness seed.</param>
-    /// <returns>Slug suitable for a record filename.</returns>
-    private static string SlugifyForRecord(string url, int ordinal)
+    /// <returns>Slug bytes suitable for a record filename.</returns>
+    private static byte[] SlugifyForRecord(ReadOnlySpan<byte> url, int ordinal)
     {
-        if (string.IsNullOrEmpty(url))
+        if (url.IsEmpty)
         {
-            return Fallback(ordinal);
+            return PagefindFallbackSlug.For(ordinal);
         }
 
-        // string.Create + Span<char> writes the slug straight into the
-        // string's storage — one allocation, no StringBuilder doubling.
-        return string.Create(url.Length, url, static (span, source) =>
+        var dst = new byte[url.Length];
+        for (var i = 0; i < url.Length; i++)
         {
-            for (var i = 0; i < source.Length; i++)
-            {
-                span[i] = IsSlugSafe(source[i]) ? source[i] : '-';
-            }
-        });
+            dst[i] = IsSlugSafe(url[i]) ? url[i] : (byte)'-';
+        }
+
+        return dst;
     }
 
-    /// <summary>True for characters that don't need escaping in a record filename.</summary>
-    /// <param name="c">Candidate char.</param>
+    /// <summary>True for bytes that don't need escaping in a record filename.</summary>
+    /// <param name="b">Candidate byte.</param>
     /// <returns>True for ASCII alphanumerics, hyphen, and underscore.</returns>
-    private static bool IsSlugSafe(char c) =>
-        c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-' or '_';
-
-    /// <summary>Returns the <c>page-N</c> fallback slug.</summary>
-    /// <param name="ordinal">Document ordinal.</param>
-    /// <returns>Slug string.</returns>
-    private static string Fallback(int ordinal) => PagefindFallbackSlug.For(ordinal);
+    private static bool IsSlugSafe(byte b) =>
+        b is >= (byte)'a' and <= (byte)'z' or >= (byte)'A' and <= (byte)'Z' or >= (byte)'0' and <= (byte)'9' or (byte)'-' or (byte)'_';
 }
