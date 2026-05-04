@@ -225,6 +225,97 @@ public class NavRendererTests
     }
 
     /// <summary>
+    /// Active sections emit the full Material drawer expandable shape: a hidden checkbox toggle
+    /// (pre-checked because it's on the active branch), a link + chevron-label container, and a
+    /// nested <c>&lt;nav&gt;</c> with its children. CSS drives expand/collapse from the
+    /// checkbox's <c>:checked</c> state — readers can collapse the active section by clicking
+    /// the chevron without any JS.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ActiveSectionEmitsToggleAndContainerStructure()
+    {
+        var akavache = new NavNode("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
+        var core = new NavNode("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
+        var api = new NavNode("API", "api", isSection: true, [akavache, core], indexPath: "api/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [api]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderSidebarPruned(root, api, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+
+        // Hidden checkbox toggle, pre-checked because the section is on the active branch.
+        await Assert.That(html).Contains("<input class=\"md-nav__toggle md-toggle\" type=\"checkbox\"");
+        await Assert.That(html).Contains("checked>");
+
+        // Link + chevron-label container wraps the section header.
+        await Assert.That(html).Contains("<div class=\"md-nav__link md-nav__container\">");
+        await Assert.That(html).Contains("<label class=\"md-nav__link md-nav__link--active\" for=\"__nav_");
+
+        // Nested nav wires its aria-labelledby + aria-expanded to the toggle.
+        await Assert.That(html).Contains("aria-labelledby=\"__nav_");
+        await Assert.That(html).Contains("aria-expanded=\"true\"");
+
+        // Drawer title inside the nested nav (visible when the sidebar opens as a mobile drawer).
+        await Assert.That(html).Contains("<label class=\"md-nav__title\" for=\"__nav_");
+    }
+
+    /// <summary>
+    /// Non-active sibling sections in prune mode keep the leaf-style chevron link (no toggle / no
+    /// nested nav) so the rendered bytes stay small. Once the reader navigates into one, that
+    /// section becomes active and gets its full expandable shape.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task NonActiveSectionsKeepLeafChevronShape()
+    {
+        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
+        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
+        var guide = new NavNode("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
+        var blog = new NavNode("Blog", "blog", isSection: true, [post], indexPath: "blog/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [guide, blog]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderPruned(root, intro, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+
+        // The active "Guide" section gets the toggle.
+        await Assert.That(html).Contains("md-nav__toggle md-toggle");
+
+        // The non-active "Blog" section's anchor exists with a leaf-style chevron icon, but its
+        // children aren't rendered inline (prune mode).
+        await Assert.That(html).DoesNotContain(">Post<");
+        await Assert.That(html).Contains(">Blog<");
+        await Assert.That(html).Contains("md-nav__icon md-icon");
+    }
+
+    /// <summary>Toggle IDs are unique within a single render so multiple sections don't collide.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ToggleIdsAreUniquePerRender()
+    {
+        var aIntro = new NavNode("A intro", "a/intro.md", isSection: false, []);
+        var bIntro = new NavNode("B intro", "b/intro.md", isSection: false, []);
+        var a = new NavNode("A", "a", isSection: true, [aIntro], indexPath: "a/index.md");
+        var b = new NavNode("B", "b", isSection: true, [bIntro], indexPath: "b/index.md");
+        var root = new NavNode(string.Empty, string.Empty, isSection: true, [a, b]);
+        root.AttachParents();
+
+        var writer = new ArrayBufferWriter<byte>();
+        NavRenderer.RenderFull(root, aIntro, writer);
+
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+
+        // Two sections with children → two unique toggle IDs.
+        await Assert.That(html).Contains("id=\"__nav_1\"");
+        await Assert.That(html).Contains("id=\"__nav_2\"");
+    }
+
+    /// <summary>
     /// Same expandable-section shape applies under <see cref="NavOptions.Tabs"/> mode when the
     /// active top-level section has many sub-section children — the sidebar wrapping the
     /// children gives readers a sense of place even when 100 sub-sections are listed.

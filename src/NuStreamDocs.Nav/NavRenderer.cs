@@ -46,7 +46,8 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeBranch = BuildActiveBranchSet(activeNode);
-        WriteList(writer, root.Children, activeBranch, prune: false, level: 0);
+        var toggleCounter = 0;
+        WriteList(writer, root.Children, activeBranch, prune: false, level: 0, ref toggleCounter);
     }
 
     /// <summary>Emits the primary sidebar tree, scoping to the active top-level section when one is selected.</summary>
@@ -60,7 +61,8 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeBranch = BuildActiveBranchSet(activeNode);
-        WriteList(writer, ResolveSidebarItems(root, activeBranch), activeBranch, prune: false, level: 0);
+        var toggleCounter = 0;
+        WriteList(writer, ResolveSidebarItems(root, activeBranch), activeBranch, prune: false, level: 0, ref toggleCounter);
     }
 
     /// <summary>Emits the pruned nav: only the active branch and its immediate context.</summary>
@@ -74,7 +76,8 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeBranch = BuildActiveBranchSet(activeNode);
-        WriteList(writer, root.Children, activeBranch, prune: true, level: 0);
+        var toggleCounter = 0;
+        WriteList(writer, root.Children, activeBranch, prune: true, level: 0, ref toggleCounter);
     }
 
     /// <summary>Emits the pruned primary sidebar tree, scoping to the active top-level section when one is selected.</summary>
@@ -88,7 +91,8 @@ internal static class NavRenderer
 
         EnsureParentsAttached(root);
         var activeBranch = BuildActiveBranchSet(activeNode);
-        WriteList(writer, ResolveSidebarItems(root, activeBranch), activeBranch, prune: true, level: 0);
+        var toggleCounter = 0;
+        WriteList(writer, ResolveSidebarItems(root, activeBranch), activeBranch, prune: true, level: 0, ref toggleCounter);
     }
 
     /// <summary>Emits a horizontal tab bar from the root's top-level children (mkdocs-material's <c>navigation.tabs</c>).</summary>
@@ -294,7 +298,8 @@ internal static class NavRenderer
     /// <param name="activeBranch">Reference-equality set of nodes on the active branch (empty when there is no active page).</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
     /// <param name="level">Current nav depth.</param>
-    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, HashSet<NavNode> activeBranch, bool prune, int level)
+    /// <param name="toggleCounter">Per-render counter for the section-toggle checkbox IDs (<c>__nav_N</c>).</param>
+    private static void WriteList(IBufferWriter<byte> writer, NavNode[] items, HashSet<NavNode> activeBranch, bool prune, int level, ref int toggleCounter)
     {
         if (items.Length == 0)
         {
@@ -304,7 +309,7 @@ internal static class NavRenderer
         WriteUtf8(writer, "<ul class=\"md-nav__list\" data-md-scrollfix>"u8);
         for (var i = 0; i < items.Length; i++)
         {
-            WriteItem(writer, items[i], activeBranch, prune, level);
+            WriteItem(writer, items[i], activeBranch, prune, level, ref toggleCounter);
         }
 
         WriteUtf8(writer, "</ul>"u8);
@@ -316,14 +321,15 @@ internal static class NavRenderer
     /// <param name="activeBranch">Reference-equality set of nodes on the active branch.</param>
     /// <param name="prune">When true, sub-lists collapse outside the active branch.</param>
     /// <param name="level">Current nav depth.</param>
-    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, int level)
+    /// <param name="toggleCounter">Per-render counter for the section-toggle checkbox IDs (<c>__nav_N</c>).</param>
+    private static void WriteItem(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, int level, ref int toggleCounter)
     {
         var active = activeBranch.Contains(node);
         WriteUtf8(writer, ResolveItemOpenTag(node, active, prune));
 
         if (node.IsSection)
         {
-            WriteSection(writer, node, activeBranch, prune, active, level);
+            WriteSection(writer, node, activeBranch, prune, active, level, ref toggleCounter);
         }
         else
         {
@@ -362,14 +368,78 @@ internal static class NavRenderer
             : "<li class=\"md-nav__item\">"u8;
     }
 
-    /// <summary>Writes a section node's label + nested list.</summary>
+    /// <summary>Writes a section node's expandable toggle + link + nested list.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="node">Section node.</param>
     /// <param name="activeBranch">Reference-equality set of nodes on the active branch.</param>
     /// <param name="prune">When true, render children only when the section is on the active branch.</param>
     /// <param name="active">True when the section sits on the active branch.</param>
     /// <param name="level">Current nav depth.</param>
-    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, bool active, int level)
+    /// <param name="toggleCounter">Per-render counter for the section-toggle checkbox IDs.</param>
+    /// <remarks>
+    /// Emits the standard Material drawer expandable-section shape: a hidden checkbox toggle, a
+    /// link + chevron-label container, and a nested <c>&lt;nav&gt;</c> with the children. CSS
+    /// drives expand/collapse from the checkbox's <c>:checked</c> state — no JavaScript required
+    /// for the per-section toggle. Sections on the active branch ship pre-checked so readers
+    /// land with their current page in view.
+    /// </remarks>
+    private static void WriteSection(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, bool active, int level, ref int toggleCounter)
+    {
+        var hasChildren = ShouldEmitChildren(node, prune, active);
+        if (hasChildren)
+        {
+            WriteSectionWithToggle(writer, node, activeBranch, prune, active, level, ref toggleCounter);
+            return;
+        }
+
+        WriteSectionLink(writer, node, active, includeChevron: prune && !active && node.Children is [_, ..]);
+    }
+
+    /// <summary>Writes the section in the full expandable shape: hidden toggle + link container + chevron label + nested nav.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="node">Section node with children to render inline.</param>
+    /// <param name="activeBranch">Reference-equality set of nodes on the active branch.</param>
+    /// <param name="prune">When true, deeper sub-sections collapse to leaf-style chevron links.</param>
+    /// <param name="active">True when the section sits on the active branch.</param>
+    /// <param name="level">Current nav depth.</param>
+    /// <param name="toggleCounter">Per-render counter for the unique checkbox IDs.</param>
+    private static void WriteSectionWithToggle(IBufferWriter<byte> writer, NavNode node, HashSet<NavNode> activeBranch, bool prune, bool active, int level, ref int toggleCounter)
+    {
+        toggleCounter++;
+        var toggleId = toggleCounter;
+
+        WriteUtf8(writer, "<input class=\"md-nav__toggle md-toggle\" type=\"checkbox\" id=\"__nav_"u8);
+        WriteLevel(writer, toggleId);
+        WriteUtf8(writer, active ? "\" checked>"u8 : "\">"u8);
+
+        WriteUtf8(writer, "<div class=\"md-nav__link md-nav__container\">"u8);
+        WriteSectionLink(writer, node, active, includeChevron: false);
+        WriteUtf8(writer, active ? "<label class=\"md-nav__link md-nav__link--active\" for=\"__nav_"u8 : "<label class=\"md-nav__link\" for=\"__nav_"u8);
+        WriteLevel(writer, toggleId);
+        WriteUtf8(writer, "\" id=\"__nav_"u8);
+        WriteLevel(writer, toggleId);
+        WriteUtf8(writer, "_label\" tabindex=\"\"><span class=\"md-nav__icon md-icon\"></span></label></div>"u8);
+
+        WriteUtf8(writer, "<nav class=\"md-nav\" data-md-level=\""u8);
+        WriteLevel(writer, level + 1);
+        WriteUtf8(writer, "\" aria-labelledby=\"__nav_"u8);
+        WriteLevel(writer, toggleId);
+        WriteUtf8(writer, active ? "_label\" aria-expanded=\"true\">"u8 : "_label\">"u8);
+        WriteUtf8(writer, "<label class=\"md-nav__title\" for=\"__nav_"u8);
+        WriteLevel(writer, toggleId);
+        WriteUtf8(writer, "\"><span class=\"md-nav__icon md-icon\"></span>"u8);
+        WriteUtf8(writer, node.Title);
+        WriteUtf8(writer, "</label>"u8);
+        WriteList(writer, node.Children, activeBranch, prune, level + 1, ref toggleCounter);
+        WriteUtf8(writer, "</nav>"u8);
+    }
+
+    /// <summary>Writes just the section's link (anchor or span) plus title, optionally followed by a leaf-style chevron icon.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="node">Section node.</param>
+    /// <param name="active">True when this section's link should render with <c>md-nav__link--active</c>.</param>
+    /// <param name="includeChevron">When true, append an <c>md-nav__icon</c> span after the title to signal "click to drill in" on collapsed sections.</param>
+    private static void WriteSectionLink(IBufferWriter<byte> writer, NavNode node, bool active, bool includeChevron)
     {
         var hasHref = TryGetSidebarHref(node, out var href, out var appendTrailingSlash);
         if (hasHref)
@@ -384,26 +454,26 @@ internal static class NavRenderer
         }
 
         WriteTitleSpan(writer, node.Title);
-        if (prune && !active && node.Children is [_, ..])
+        if (includeChevron)
         {
             WriteUtf8(writer, "<span class=\"md-nav__icon md-icon\"></span>"u8);
         }
 
         WriteUtf8(writer, hasHref ? "</a>"u8 : "</span>"u8);
-
-        if (prune && !active)
-        {
-            return;
-        }
-
-        WriteUtf8(writer, "<nav class=\"md-nav\" data-md-level=\""u8);
-        WriteLevel(writer, level + 1);
-        WriteUtf8(writer, "\" aria-label=\""u8);
-        WriteUtf8(writer, node.Title);
-        WriteUtf8(writer, "\">"u8);
-        WriteList(writer, node.Children, activeBranch, prune, level + 1);
-        WriteUtf8(writer, "</nav>"u8);
     }
+
+    /// <summary>True when this section should emit its full expandable shape (children rendered inline).</summary>
+    /// <param name="node">Section node.</param>
+    /// <param name="prune">Prune-mode flag.</param>
+    /// <param name="active">Active-branch flag.</param>
+    /// <returns>True when children should be emitted; false to render a leaf-style chevron link.</returns>
+    /// <remarks>
+    /// In prune mode only the active branch emits its children inline; sibling sections collapse
+    /// to a single anchor for byte-size economy. In non-prune mode every section emits its full
+    /// subtree.
+    /// </remarks>
+    private static bool ShouldEmitChildren(NavNode node, bool prune, bool active) =>
+        node.Children is [_, ..] && (!prune || active);
 
     /// <summary>Writes a leaf node's anchor.</summary>
     /// <param name="writer">UTF-8 sink.</param>

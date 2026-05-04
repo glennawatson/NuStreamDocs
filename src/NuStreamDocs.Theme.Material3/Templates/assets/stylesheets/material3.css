@@ -268,6 +268,78 @@ a:hover { text-decoration: underline; }
   color: var(--md-sys-color-on-surface-variant);
   font: var(--md-sys-typescale-label-large);
 }
+
+/* Hide the section-toggle checkboxes — they exist purely to drive expand/collapse via :checked. */
+.md-sidebar--primary .md-nav__toggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* The drawer's per-section title above the children — visible inside the nested <nav>. Hidden in
+   the desktop sidebar (the top-level link does the labelling); shown on mobile when the nav opens
+   as a full-screen drawer. */
+.md-sidebar--primary .md-nav__title { display: none; }
+
+/* Section row: link + chevron-label arranged side-by-side. */
+.md-sidebar--primary .md-nav__item--nested > .md-nav__container {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  background: none;
+}
+.md-sidebar--primary .md-nav__item--nested > .md-nav__container:hover {
+  background: none;
+}
+.md-sidebar--primary .md-nav__item--nested > .md-nav__container > .md-nav__link {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Chevron toggle label inside the section row. */
+.md-sidebar--primary .md-nav__item--nested > .md-nav__container > label.md-nav__link {
+  flex: 0 0 auto;
+  cursor: pointer;
+  padding: 8px 8px;
+  border-radius: var(--md-sys-shape-corner-md);
+  background: none;
+}
+.md-sidebar--primary .md-nav__item--nested > .md-nav__container > label.md-nav__link:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+/* Chevron glyph — uses a CSS-drawn arrow so we don't need an icon font. Rotates when the section
+   is expanded (checkbox :checked). */
+.md-sidebar--primary .md-nav__icon {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: currentColor;
+  /* Right-pointing chevron mask. */
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.5 7l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center / contain;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.5 7l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center / contain;
+  transition: transform 0.15s ease;
+}
+.md-sidebar--primary .md-nav__item--nested > input.md-nav__toggle:checked ~ .md-nav__container .md-nav__icon,
+.md-sidebar--primary .md-nav__item--nested > input.md-nav__toggle:checked + .md-nav__container .md-nav__icon {
+  transform: rotate(90deg);
+}
+
+/* Show / hide the nested nav based on the toggle checkbox. */
+.md-sidebar--primary .md-nav__item--nested > .md-nav { display: none; }
+.md-sidebar--primary .md-nav__item--nested > input.md-nav__toggle:checked ~ .md-nav { display: block; }
+
+/* Indent each nested level so the tree shape reads at a glance. */
+.md-sidebar--primary .md-nav .md-nav { padding-left: 0.5rem; }
+.md-sidebar--primary .md-nav .md-nav .md-nav__list {
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+  padding-left: 0.5rem;
+}
 .md-sidebar--secondary .md-nav--secondary {
   padding: 0.25rem 0 0;
 }

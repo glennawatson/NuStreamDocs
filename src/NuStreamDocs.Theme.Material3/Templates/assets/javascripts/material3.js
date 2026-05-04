@@ -287,3 +287,25 @@
     });
   });
 })();
+
+/* Scroll the primary sidebar's active nav link into view on first load.
+   The sidebar's __inner element scrolls independently (sticky position +
+   max-height + overflow-y: auto), so the page-level scroll behavior won't
+   reach it; we have to scroll the sidebar itself. Centered so readers can
+   see siblings above + below their current page in the tree. */
+(function () {
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var sidebar = document.querySelector(".md-sidebar--primary .md-sidebar__inner");
+    if (!sidebar) { return; }
+
+    var active = sidebar.querySelector(".md-nav__link--active");
+    if (!active) { return; }
+
+    var sidebarRect = sidebar.getBoundingClientRect();
+    var activeRect = active.getBoundingClientRect();
+    var offset = activeRect.top - sidebarRect.top - sidebar.clientHeight / 2 + active.clientHeight / 2;
+    sidebar.scrollTop = sidebar.scrollTop + offset;
+  });
+})();
