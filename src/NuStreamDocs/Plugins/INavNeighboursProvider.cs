@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
@@ -14,7 +16,7 @@ namespace NuStreamDocs.Plugins;
 /// Theme plugins look up the first registered
 /// <see cref="INavNeighboursProvider"/> during
 /// <see cref="IDocPlugin.OnConfigureAsync"/> and call
-/// <see cref="GetNeighbours(string)"/> per page during render. The
+/// <see cref="GetNeighbours(FilePath)"/> per page during render. The
 /// provider is expected to be cheap (sub-microsecond): build any
 /// linear index up front in your own <c>OnConfigure</c> and serve
 /// reads from a <see cref="System.Collections.Generic.Dictionary{TKey,TValue}"/>.
@@ -24,10 +26,10 @@ public interface INavNeighboursProvider
     /// <summary>Looks up the previous and next pages in the global linear nav order.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The neighbours; <see cref="NavNeighbours.None"/> when the page is not in the nav.</returns>
-    NavNeighbours GetNeighbours(string relativePath);
+    NavNeighbours GetNeighbours(FilePath relativePath);
 
     /// <summary>Looks up the previous and next pages within the closest section that contains <paramref name="relativePath"/>; never crosses out of that section.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The section-scoped neighbours; <see cref="NavNeighbours.None"/> when the page is not in the nav or sits at a section boundary with no in-section neighbour on a side.</returns>
-    NavNeighbours GetSectionNeighbours(string relativePath);
+    NavNeighbours GetSectionNeighbours(FilePath relativePath);
 }

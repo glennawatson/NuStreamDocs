@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Theme.Material.Tests;
@@ -253,11 +254,11 @@ public class ThemePluginBaseTests
         public byte[] Name => "stub-neighbours"u8.ToArray();
 
         /// <inheritdoc/>
-        public NavNeighbours GetNeighbours(string relativePath) =>
+        public NavNeighbours GetNeighbours(FilePath relativePath) =>
             new(globalUrl.TrimStart('/') + ".md", "Prev"u8.ToArray(), string.Empty, []);
 
         /// <inheritdoc/>
-        public NavNeighbours GetSectionNeighbours(string relativePath) =>
+        public NavNeighbours GetSectionNeighbours(FilePath relativePath) =>
             new(sectionUrl.TrimStart('/') + ".md", "Section Prev"u8.ToArray(), string.Empty, []);
 
         /// <inheritdoc/>

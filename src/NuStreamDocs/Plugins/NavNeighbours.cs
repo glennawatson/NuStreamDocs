@@ -7,7 +7,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Adjacent-page metadata returned by <see cref="INavNeighboursProvider.GetNeighbours(string)"/>.
+/// Adjacent-page metadata returned by <see cref="INavNeighboursProvider.GetNeighbours(FilePath)"/>.
 /// </summary>
 /// <param name="PreviousPath">Source-relative path of the previous leaf page in nav order; empty when there is none.</param>
 /// <param name="PreviousTitle">Display title of the previous page; empty when there is none.</param>

@@ -63,13 +63,13 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>UTF-8 URL bytes → node lookup over the rendered tree; built once when the tree is built so per-page renders resolve the active node in O(1) without re-encoding the page URL.</summary>
     private Dictionary<byte[], NavNode>? _urlIndex;
 
-    /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(string)"/> call.</summary>
+    /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(FilePath)"/> call.</summary>
     private NavNode[]? _orderedLeaves;
 
     /// <summary>UTF-8 path bytes → index lookup over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
     /// <remarks>
     /// Byte-keyed so the per-call probe doesn't pay a string-hash on the relative-path lookup;
-    /// <see cref="GetNeighbours(string)"/> encodes once into a stack/heap buffer.
+    /// <see cref="GetNeighbours(FilePath)"/> encodes once into a stack/heap buffer.
     /// </remarks>
     private Dictionary<byte[], int>? _leafIndex;
 
@@ -155,7 +155,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Looks up the previous and next leaf pages for <paramref name="relativePath"/> in the nav's natural traversal order.</summary>
     /// <param name="relativePath">Source-relative path of the current page (e.g. <c>guide/intro.md</c>).</param>
     /// <returns>The neighbours; empty fields when there is no previous or no next, or <see cref="NavNeighbours.None"/> when the page is not in the nav.</returns>
-    public NavNeighbours GetNeighbours(string relativePath)
+    public NavNeighbours GetNeighbours(FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
         if (!TryResolveIndex(relativePath, out var idx))
@@ -168,7 +168,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     }
 
     /// <inheritdoc/>
-    public NavNeighbours GetSectionNeighbours(string relativePath)
+    public NavNeighbours GetSectionNeighbours(FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
         if (!TryResolveIndex(relativePath, out var idx))
