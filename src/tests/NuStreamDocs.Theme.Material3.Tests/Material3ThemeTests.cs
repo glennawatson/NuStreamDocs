@@ -22,8 +22,7 @@ public class Material3ThemeTests
         await Assert.That(theme.Partials.GetAlternateLookup<ReadOnlySpan<byte>>().ContainsKey("sidebar"u8)).IsTrue();
         await Assert.That(theme.StaticAssets.ContainsKey("assets/stylesheets/material3.css")).IsTrue();
         await Assert.That(theme.StaticAssets.ContainsKey("assets/javascripts/material3.js")).IsTrue();
-        await Assert.That(theme.StaticAssets.ContainsKey("assets/javascripts/material-web-init.js")).IsTrue();
-        await Assert.That(theme.StaticAssets.ContainsKey("assets/vendor/@material/web/textfield/outlined-text-field.js")).IsTrue();
+        await Assert.That(theme.StaticAssets.ContainsKey("assets/images/favicon.svg")).IsTrue();
     }
 
     /// <summary>Embedded mode should write the bundle and wrap pages in the MD3 shell.</summary>
@@ -76,8 +75,9 @@ public class Material3ThemeTests
         await Assert.That(html).Contains("name=\"nustreamdocs:search-index\"");
         await Assert.That(html).Contains("https://github.com/owner/repo");
         await Assert.That(html).Contains("data-md-component=\"source-facts\"");
-        await Assert.That(html).Contains("<md-outlined-text-field");
-        await Assert.That(html).Contains("<md-icon-button");
+        await Assert.That(html).Contains("<input");
+        await Assert.That(html).Contains("data-md-component=\"search-query\"");
+        await Assert.That(html).Contains("data-md-component=\"search-close\"");
     }
 
     /// <summary>

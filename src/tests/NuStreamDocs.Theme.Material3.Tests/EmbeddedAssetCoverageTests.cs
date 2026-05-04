@@ -17,21 +17,12 @@ public class EmbeddedAssetCoverageTests
         await Assert.That(name.Length).IsGreaterThan(0);
     }
 
-    /// <summary>Vendored package paths map to the embedded resource names MSBuild emits.</summary>
+    /// <summary>Hand-authored stylesheet asset can be read from the embedded-resource table.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task VendoredPathUsesMsbuildResourceShape()
+    public async Task BundledStylesheetCanBeRead()
     {
-        var name = EmbeddedAsset.ToResourceName("assets/vendor/@lit/reactive-element/css-tag.js");
-        await Assert.That(name.AsSpan().SequenceEqual("NuStreamDocs.Theme.Material3.Templates.assets.vendor._lit.reactive_element.css-tag.js"u8)).IsTrue();
-    }
-
-    /// <summary>Vendored official runtime assets can be read from the embedded-resource table.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task VendoredRuntimeAssetCanBeRead()
-    {
-        var bytes = EmbeddedAsset.ReadBytes("assets/vendor/@lit/reactive-element/css-tag.js");
+        var bytes = EmbeddedAsset.ReadBytes("assets/stylesheets/material3.css");
         await Assert.That(bytes.Length).IsGreaterThan(0);
     }
 }

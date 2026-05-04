@@ -16,75 +16,19 @@ namespace NuStreamDocs.Theme.Material3;
 public sealed class Material3Theme : IThemePackage
 {
     /// <summary>Embedded asset paths the theme ships.</summary>
+    /// <remarks>
+    /// Pure CSS + a single hand-written JS file plus the bundled favicon. The previous
+    /// Material Web component bundle (Lit + lit-element + lit-html + tslib + the
+    /// <c>@material/web</c> tree) shipped ~408 KB across 62 vendored JS files to support
+    /// two custom elements (<c>md-outlined-text-field</c> and <c>md-icon-button</c>);
+    /// both have been replaced with plain <c>&lt;input&gt;</c> / <c>&lt;button&gt;</c>
+    /// styled with MD3 tokens, so the entire vendor tree was deleted.
+    /// </remarks>
     private static readonly FilePath[] StaticAssetPaths =
     [
         "assets/stylesheets/material3.css",
         "assets/javascripts/material3.js",
-        "assets/javascripts/material-web-init.js",
         "assets/images/favicon.svg",
-        "assets/vendor/@lit/reactive-element/css-tag.js",
-        "assets/vendor/@lit/reactive-element/decorators/base.js",
-        "assets/vendor/@lit/reactive-element/decorators/custom-element.js",
-        "assets/vendor/@lit/reactive-element/decorators/event-options.js",
-        "assets/vendor/@lit/reactive-element/decorators/property.js",
-        "assets/vendor/@lit/reactive-element/decorators/query-all.js",
-        "assets/vendor/@lit/reactive-element/decorators/query-assigned-elements.js",
-        "assets/vendor/@lit/reactive-element/decorators/query-assigned-nodes.js",
-        "assets/vendor/@lit/reactive-element/decorators/query-async.js",
-        "assets/vendor/@lit/reactive-element/decorators/query.js",
-        "assets/vendor/@lit/reactive-element/decorators/state.js",
-        "assets/vendor/@lit/reactive-element/reactive-element.js",
-        "assets/vendor/@lit-labs/ssr-dom-shim/index.js",
-        "assets/vendor/@material/web/field/internal/field.js",
-        "assets/vendor/@material/web/field/internal/outlined-field.js",
-        "assets/vendor/@material/web/field/internal/outlined-styles.js",
-        "assets/vendor/@material/web/field/internal/shared-styles.js",
-        "assets/vendor/@material/web/field/outlined-field.js",
-        "assets/vendor/@material/web/focus/internal/focus-ring-styles.js",
-        "assets/vendor/@material/web/focus/internal/focus-ring.js",
-        "assets/vendor/@material/web/focus/md-focus-ring.js",
-        "assets/vendor/@material/web/iconbutton/icon-button.js",
-        "assets/vendor/@material/web/iconbutton/internal/icon-button.js",
-        "assets/vendor/@material/web/iconbutton/internal/shared-styles.js",
-        "assets/vendor/@material/web/iconbutton/internal/standard-styles.js",
-        "assets/vendor/@material/web/internal/aria/aria.js",
-        "assets/vendor/@material/web/internal/aria/delegate.js",
-        "assets/vendor/@material/web/internal/controller/attachable-controller.js",
-        "assets/vendor/@material/web/internal/controller/form-submitter.js",
-        "assets/vendor/@material/web/internal/controller/is-rtl.js",
-        "assets/vendor/@material/web/internal/controller/string-converter.js",
-        "assets/vendor/@material/web/internal/events/redispatch-event.js",
-        "assets/vendor/@material/web/internal/motion/animation.js",
-        "assets/vendor/@material/web/labs/behaviors/constraint-validation.js",
-        "assets/vendor/@material/web/labs/behaviors/element-internals.js",
-        "assets/vendor/@material/web/labs/behaviors/form-associated.js",
-        "assets/vendor/@material/web/labs/behaviors/on-report-validity.js",
-        "assets/vendor/@material/web/labs/behaviors/validators/text-field-validator.js",
-        "assets/vendor/@material/web/labs/behaviors/validators/validator.js",
-        "assets/vendor/@material/web/ripple/internal/ripple-styles.js",
-        "assets/vendor/@material/web/ripple/internal/ripple.js",
-        "assets/vendor/@material/web/ripple/ripple.js",
-        "assets/vendor/@material/web/textfield/internal/outlined-styles.js",
-        "assets/vendor/@material/web/textfield/internal/outlined-text-field.js",
-        "assets/vendor/@material/web/textfield/internal/shared-styles.js",
-        "assets/vendor/@material/web/textfield/internal/text-field.js",
-        "assets/vendor/@material/web/textfield/outlined-text-field.js",
-        "assets/vendor/lit/decorators.js",
-        "assets/vendor/lit/directives/class-map.js",
-        "assets/vendor/lit/directives/live.js",
-        "assets/vendor/lit/directives/style-map.js",
-        "assets/vendor/lit/index.js",
-        "assets/vendor/lit/static-html.js",
-        "assets/vendor/lit-element/lit-element.js",
-        "assets/vendor/lit-html/directive-helpers.js",
-        "assets/vendor/lit-html/directive.js",
-        "assets/vendor/lit-html/directives/class-map.js",
-        "assets/vendor/lit-html/directives/live.js",
-        "assets/vendor/lit-html/directives/style-map.js",
-        "assets/vendor/lit-html/is-server.js",
-        "assets/vendor/lit-html/lit-html.js",
-        "assets/vendor/lit-html/static.js",
-        "assets/vendor/tslib/tslib.es6.mjs",
     ];
 
     /// <summary>Static assets as an indexable snapshot for write-out loops.</summary>
