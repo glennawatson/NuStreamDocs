@@ -127,6 +127,98 @@ public class Material3DefaultsTests
         await Assert.That(html).Contains("My custom message");
     }
 
+    /// <summary>Pages stamp a <c>build-date</c> meta with an ISO 8601 timestamp.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BuildDateMetaIsStamped()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
+            .BuildAsync();
+
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var iso = ExtractBuildDate(html);
+
+        // ISO 8601 round-trip ("o") starts with YYYY-MM-DDTHH:MM:SS.
+        await Assert.That(iso.Length).IsGreaterThanOrEqualTo(19);
+        await Assert.That(iso[4]).IsEqualTo('-');
+        await Assert.That(iso[7]).IsEqualTo('-');
+        await Assert.That(iso[10]).IsEqualTo('T');
+        await Assert.That(iso[13]).IsEqualTo(':');
+        await Assert.That(iso[16]).IsEqualTo(':');
+    }
+
+    /// <summary>Copyright values containing the literal token <c>{year}</c> have it expanded to the current four-digit year.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task CopyrightYearTokenExpands()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseMaterial3Theme(static opts => opts
+                .WithSiteName("Site")
+                .WithCopyright("(c) {year} Acme — and friends"u8))
+            .BuildAsync();
+
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var year = DateTimeOffset.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        await Assert.That(html).Contains($"(c) {year} Acme — and friends");
+        await Assert.That(html).DoesNotContain("{year}");
+    }
+
+    /// <summary>Copyrights without the <c>{year}</c> token render verbatim.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task CopyrightWithoutTokenRendersVerbatim()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseMaterial3Theme(static opts => opts
+                .WithSiteName("Site")
+                .WithCopyright("(c) Acme Corp"u8))
+            .BuildAsync();
+
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        await Assert.That(html).Contains("(c) Acme Corp");
+    }
+
+    /// <summary>The repo-source card pins its own foreground colour so dark headers don't render the GitHub icon white-on-white inside the light card.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SourceCardScopesItsOwnForegroundColour()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
+            .BuildAsync();
+
+        var css = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "assets", "stylesheets", "material3.css"));
+        await Assert.That(css).Contains(".md-source__icon");
+
+        // The .md-source rule pins its colour explicitly to on-surface so a header
+        // foreground override (e.g. white text on a coloured header) doesn't bleed
+        // into the card surface.
+        await Assert.That(css).Contains(".md-source {");
+        await Assert.That(css).Contains("color: var(--md-sys-color-on-surface)");
+    }
+
     /// <summary>The bundled stylesheet keeps the content article pinned to the centre grid track even when sidebars are hidden, so leaf pages aren't squeezed into the sidebar-width column.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -164,5 +256,22 @@ public class Material3DefaultsTests
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "404.html"));
         await Assert.That(html).Contains("Authored Not Found");
         await Assert.That(html).DoesNotContain("Page not found");
+    }
+
+    /// <summary>Pulls the <c>build-date</c> meta value out of <paramref name="html"/>.</summary>
+    /// <param name="html">Rendered page HTML.</param>
+    /// <returns>The captured timestamp, or empty when the meta isn't present.</returns>
+    private static string ExtractBuildDate(string html)
+    {
+        const string Marker = "<meta name=\"build-date\" content=\"";
+        var idx = html.IndexOf(Marker, StringComparison.Ordinal);
+        if (idx < 0)
+        {
+            return string.Empty;
+        }
+
+        var rest = html.AsSpan(idx + Marker.Length);
+        var end = rest.IndexOf('"');
+        return end > 0 ? new string(rest[..end]) : string.Empty;
     }
 }
