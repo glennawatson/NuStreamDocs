@@ -72,7 +72,7 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="tfm">TFM the assemblies were built for.</param>
     /// <param name="assemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromAssemblies(string tfm, FilePath[] assemblyPaths) =>
+    public static CSharpApiGeneratorOptions FromAssemblies(ApiCompatString tfm, FilePath[] assemblyPaths) =>
         From(new LocalAssembliesInput(tfm, assemblyPaths));
 
     /// <summary>Builds an options record around a caller-supplied <see cref="IAssemblySource"/>.</summary>

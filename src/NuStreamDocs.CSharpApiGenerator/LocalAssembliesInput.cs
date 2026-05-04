@@ -15,14 +15,14 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <param name="AssemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
 /// <param name="FallbackSearchPaths">Additional directories whose contents the resolver consults when a transitive reference can't be located. Empty by default.</param>
 public sealed record LocalAssembliesInput(
-    string Tfm,
+    ApiCompatString Tfm,
     FilePath[] AssemblyPaths,
     DirectoryPath[] FallbackSearchPaths) : CSharpApiGeneratorInput
 {
     /// <summary>Initializes a new instance of the <see cref="LocalAssembliesInput"/> class with no fallback search paths.</summary>
     /// <param name="tfm">TFM the assemblies were built for.</param>
     /// <param name="assemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
-    public LocalAssembliesInput(string tfm, FilePath[] assemblyPaths)
+    public LocalAssembliesInput(ApiCompatString tfm, FilePath[] assemblyPaths)
         : this(tfm, assemblyPaths, [])
     {
     }
