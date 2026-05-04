@@ -27,9 +27,6 @@ ship; the file is meant to stay short.
 
 ## Internal polish (not feature parity)
 
-- **Watch-mode incremental nav rebuild.** `WatchLoop` re-runs the full
-  nav build on any change. Diff-based patch would help on the rxui
-  corpus.
 - **End-to-end Material golden-fixture test.** Plugin-level integration
   tests are green; we don't yet have an HTML golden comparable to
   `ZensicalRenderSmokeTests` on the parser side. Only existing snapshot

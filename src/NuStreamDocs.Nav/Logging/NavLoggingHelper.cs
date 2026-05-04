@@ -66,4 +66,12 @@ internal static partial class NavLoggingHelper
         Level = LogLevel.Warning,
         Message = "Nav orphan: {RelativePath}")]
     public static partial void LogOrphanPage(ILogger logger, string relativePath);
+
+    /// <summary>Logs that a nav rebuild was skipped because the input fingerprint matched the previous build.</summary>
+    /// <param name="logger">Target logger.</param>
+    [LoggerMessage(
+        EventId = 4006,
+        Level = LogLevel.Information,
+        Message = "Nav rebuild skipped: input tree unchanged (incremental).")]
+    public static partial void LogNavRebuildSkipped(ILogger logger);
 }

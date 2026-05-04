@@ -3,9 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Buffers.Binary;
+using System.IO.Hashing;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
+using NuStreamDocs.Nav.Logging;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Nav;
@@ -40,6 +43,12 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Sentinel End value for a span that hasn't yet been patched by its enclosing section.</summary>
     private const int UnsetSpanEnd = -1;
 
+    /// <summary>Length of one packed (Int64 ticks + Int64 length) stat tuple in the fingerprint scratch buffer.</summary>
+    private const int StatTupleLength = 16;
+
+    /// <summary>Byte offset of the length field inside the stat tuple.</summary>
+    private const int StatLengthOffset = 8;
+
     /// <summary>Render thunk for the sidebar nav placeholder; static field to avoid re-allocating the delegate per page.</summary>
     private static readonly Action<NavPlugin, ArrayBufferWriter<byte>, FilePath> _renderNavThunk =
         static (self, html, path) => self.RenderNav(html, path);
@@ -56,6 +65,9 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
 
     /// <summary>The nav tree built during <see cref="OnConfigureAsync"/>; null until then.</summary>
     private NavNode? _root;
+
+    /// <summary>Stat-based fingerprint of the input tree from the previous build; <c>0</c> when not yet computed.</summary>
+    private ulong _lastTreeFingerprint;
 
     /// <summary>True when the configured build emits directory-style served URLs.</summary>
     private bool _useDirectoryUrls;
@@ -116,11 +128,32 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     {
         _ = cancellationToken;
         var useDirectoryUrls = _options.UseDirectoryUrls ?? context.UseDirectoryUrls;
+
+        if (_root is not null && _useDirectoryUrls == useDirectoryUrls && _options.CuratedEntries.Length is 0)
+        {
+            var fingerprint = ComputeTreeFingerprint(context.InputRoot);
+            if (fingerprint == _lastTreeFingerprint)
+            {
+                NavLoggingHelper.LogNavRebuildSkipped(_logger);
+                return ValueTask.CompletedTask;
+            }
+
+            _lastTreeFingerprint = fingerprint;
+        }
+
         _useDirectoryUrls = useDirectoryUrls;
         _root = _options.CuratedEntries.Length > 0
             ? CuratedNavBuilder.Build(context.InputRoot, _options.CuratedEntries, useDirectoryUrls, _logger)
             : NavTreeBuilder.Build(context.InputRoot, in _options, useDirectoryUrls, _logger);
         _urlIndex = NavRenderer.BuildUrlIndex(_root);
+        _orderedLeaves = null;
+        _leafIndex = null;
+        _sectionSpans = null;
+
+        if (_options.CuratedEntries.Length is 0)
+        {
+            _lastTreeFingerprint = ComputeTreeFingerprint(context.InputRoot);
+        }
 
         return ValueTask.CompletedTask;
     }
@@ -183,6 +216,48 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Gets the typed nav root; for use from the plugin's own assembly + tests.</summary>
     /// <returns>The nav root, or null when <see cref="OnConfigureAsync"/> has not yet run.</returns>
     internal NavNode? GetRoot() => _root;
+
+    /// <summary>Computes a cheap stat-only fingerprint over every <c>.md</c> and <c>.pages</c> file under <paramref name="inputRoot"/>.</summary>
+    /// <param name="inputRoot">Absolute docs root.</param>
+    /// <returns>xxHash3 over sorted (path|ticks|length) tuples; <c>0</c> when the root is missing.</returns>
+    private static ulong ComputeTreeFingerprint(DirectoryPath inputRoot)
+    {
+        if (!Directory.Exists(inputRoot))
+        {
+            return 0UL;
+        }
+
+        var entries = new List<(string Path, long Ticks, long Length)>(capacity: 256);
+        AppendStats(inputRoot, "*.md", entries);
+        AppendStats(inputRoot, ".pages", entries);
+        entries.Sort(static (a, b) => string.CompareOrdinal(a.Path, b.Path));
+
+        var hash = new XxHash3();
+        Span<byte> scratch = stackalloc byte[StatTupleLength];
+        for (var i = 0; i < entries.Count; i++)
+        {
+            hash.Append(Encoding.UTF8.GetBytes(entries[i].Path));
+            BinaryPrimitives.WriteInt64LittleEndian(scratch[..StatLengthOffset], entries[i].Ticks);
+            BinaryPrimitives.WriteInt64LittleEndian(scratch[StatLengthOffset..], entries[i].Length);
+            hash.Append(scratch);
+        }
+
+        return hash.GetCurrentHashAsUInt64();
+    }
+
+    /// <summary>Appends one stat tuple per matching file under <paramref name="root"/> to <paramref name="entries"/>.</summary>
+    /// <param name="root">Absolute docs root.</param>
+    /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
+    /// <param name="entries">Accumulator.</param>
+    private static void AppendStats(DirectoryPath root, string searchPattern, List<(string Path, long Ticks, long Length)> entries)
+    {
+        var files = Directory.GetFiles(root, searchPattern, SearchOption.AllDirectories);
+        for (var i = 0; i < files.Length; i++)
+        {
+            var info = new FileInfo(files[i]);
+            entries.Add((files[i], info.LastWriteTimeUtc.Ticks, info.Length));
+        }
+    }
 
     /// <summary>Builds the linearized leaves, path index, and section spans for <paramref name="root"/> in one pass.</summary>
     /// <param name="root">Nav tree root.</param>
