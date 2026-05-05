@@ -75,7 +75,7 @@ public sealed class SnippetsPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
     }
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf("--8<--"u8) >= 0;
 
     /// <inheritdoc/>
     public void PreRender(in PagePreRenderContext context)

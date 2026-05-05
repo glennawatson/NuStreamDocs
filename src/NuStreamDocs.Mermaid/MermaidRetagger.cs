@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
+
 namespace NuStreamDocs.Mermaid;
 
 /// <summary>
@@ -28,57 +30,36 @@ internal static class MermaidRetagger
     /// <returns>True when the open marker is present.</returns>
     public static bool NeedsRetag(ReadOnlySpan<byte> html) => html.IndexOf(OpenMarker) >= 0;
 
-    /// <summary>Retags every mermaid block in <paramref name="html"/>.</summary>
+    /// <summary>Retags every mermaid block in <paramref name="html"/> directly into <paramref name="output"/>.</summary>
     /// <param name="html">Page HTML span.</param>
-    /// <returns>The rewritten bytes.</returns>
-    public static byte[] Retag(ReadOnlySpan<byte> html)
+    /// <param name="output">Destination sink — receives the rewritten bytes verbatim, no intermediate <see cref="byte"/> array.</param>
+    public static void Retag(ReadOnlySpan<byte> html, IBufferWriter<byte> output)
     {
-        var output = new byte[html.Length];
-        var written = 0;
         var i = 0;
         while (i < html.Length)
         {
             var rel = html[i..].IndexOf(OpenMarker);
             if (rel < 0)
             {
-                CopyTo(html[i..], output, ref written);
-                break;
+                output.Write(html[i..]);
+                return;
             }
 
-            CopyTo(html.Slice(i, rel), output, ref written);
+            output.Write(html.Slice(i, rel));
             i += rel + OpenMarker.Length;
 
             var closeRel = html[i..].IndexOf(CloseMarker);
             if (closeRel < 0)
             {
-                CopyTo(OpenMarker, output, ref written);
-                CopyTo(html[i..], output, ref written);
-                break;
+                output.Write(OpenMarker);
+                output.Write(html[i..]);
+                return;
             }
 
-            CopyTo(NewOpen, output, ref written);
-            CopyTo(html.Slice(i, closeRel), output, ref written);
-            CopyTo(NewClose, output, ref written);
+            output.Write(NewOpen);
+            output.Write(html.Slice(i, closeRel));
+            output.Write(NewClose);
             i += closeRel + CloseMarker.Length;
         }
-
-        if (written == output.Length)
-        {
-            return output;
-        }
-
-        var trimmed = new byte[written];
-        output.AsSpan(0, written).CopyTo(trimmed);
-        return trimmed;
-    }
-
-    /// <summary>Appends <paramref name="src"/> to <paramref name="dest"/> at <paramref name="written"/>.</summary>
-    /// <param name="src">Source span.</param>
-    /// <param name="dest">Destination buffer.</param>
-    /// <param name="written">Cursor; advanced by <paramref name="src"/>.Length.</param>
-    private static void CopyTo(ReadOnlySpan<byte> src, byte[] dest, ref int written)
-    {
-        src.CopyTo(dest.AsSpan(written));
-        written += src.Length;
     }
 }

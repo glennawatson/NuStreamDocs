@@ -46,14 +46,8 @@ mermaid.initialize({ startOnLoad: true });
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => MermaidRetagger.NeedsRetag(html);
 
     /// <inheritdoc/>
-    public void PostRender(in PagePostRenderContext context)
-    {
-        var rewritten = MermaidRetagger.Retag(context.Html);
-        var output = context.Output;
-        var dst = output.GetSpan(rewritten.Length);
-        rewritten.AsSpan().CopyTo(dst);
-        output.Advance(rewritten.Length);
-    }
+    public void PostRender(in PagePostRenderContext context) =>
+        MermaidRetagger.Retag(context.Html, context.Output);
 
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)

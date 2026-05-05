@@ -27,7 +27,7 @@ public sealed class CriticMarkupPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)'{') >= 0;
 
     /// <inheritdoc/>
     public void PreRender(in PagePreRenderContext context) =>
