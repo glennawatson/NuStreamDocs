@@ -496,6 +496,30 @@ public static class TokenMatchers
     public static int MatchDoubleQuotedDoubledEscape(ReadOnlySpan<byte> slice) =>
         MatchQuotedDoubledEscape(slice, (byte)'"');
 
+    /// <summary>Matches a paired block comment with two-byte open and close delimiters (no nesting).</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <param name="open">Two-byte opener (e.g. <c>"#="u8</c> for Julia, <c>"%{"u8</c> for MATLAB, <c>"#["u8</c> for Nim).</param>
+    /// <param name="close">Two-byte closer (e.g. <c>"=#"u8</c>, <c>"%}"u8</c>, <c>"]#"u8</c>).</param>
+    /// <returns>Length matched (including both delimiters), or zero on miss / unterminated input.</returns>
+    public static int MatchPairedBlockComment(ReadOnlySpan<byte> slice, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close)
+    {
+        const int TwoByteDelimiterLength = 2;
+        if (open.Length != TwoByteDelimiterLength || close.Length != TwoByteDelimiterLength)
+        {
+            return 0;
+        }
+
+        const int MinClosedLength = TwoByteDelimiterLength + TwoByteDelimiterLength;
+        if (slice.Length < MinClosedLength || slice[0] != open[0] || slice[1] != open[1])
+        {
+            return 0;
+        }
+
+        var rest = slice[TwoByteDelimiterLength..];
+        var closeAt = rest.IndexOf(close);
+        return closeAt < 0 ? 0 : TwoByteDelimiterLength + closeAt + TwoByteDelimiterLength;
+    }
+
     /// <summary>
     /// Matches a bracketed block — required <paramref name="open"/> byte, a body of any bytes except
     /// <paramref name="close"/>, then a required <paramref name="close"/> byte.

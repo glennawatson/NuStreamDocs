@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -74,14 +75,8 @@ public static class ProtobufLexer
     /// <summary>First-byte set for constant keywords.</summary>
     private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tf"u8);
 
-    /// <summary>First-byte set for whitespace runs.</summary>
-    private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
-
-    /// <summary>Single-byte structural punctuation.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.<>"u8);
-
-    /// <summary>First-byte set for the equals-sign operator (<c>field = 1</c>).</summary>
-    private static readonly SearchValues<byte> EqualsFirst = SearchValues.Create("="u8);
+    /// <summary>Single-byte structural punctuation (includes <c>=</c> as the field-tag assignment).</summary>
+    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.<>="u8);
 
     /// <summary>Gets the singleton Protobuf lexer.</summary>
     public static Lexer Instance { get; } = Build();
@@ -90,24 +85,26 @@ public static class ProtobufLexer
     /// <returns>Lexer.</returns>
     private static Lexer Build()
     {
-        LexerRule[] rules =
-        [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst },
-            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst },
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordTypes), TokenClass.KeywordType, LexerRule.NoStateChange) { FirstBytes = KeywordTypeFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, EqualsFirst), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = EqualsFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
+        SchemaFamilyConfig config = new()
+        {
+            IncludeHashComment = false,
+            IncludeSlashComments = true,
+            IncludeTripleQuotedString = false,
+            IncludeSingleQuotedString = true,
+            SigilFirst = null,
+            Keywords = Keywords,
+            KeywordFirst = KeywordFirst,
+            KeywordTypes = KeywordTypes,
+            KeywordTypeFirst = KeywordTypeFirst,
+            KeywordDeclarations = KeywordDeclarations,
+            KeywordDeclarationFirst = KeywordDeclarationFirst,
+            KeywordConstants = KeywordConstants,
+            KeywordConstantFirst = KeywordConstantFirst,
+            Operators = null,
+            OperatorFirst = null,
+            Punctuation = PunctuationSet
+        };
 
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
+        return new(LanguageRuleBuilder.BuildSingleState(SchemaFamilyRules.Build(config)));
     }
 }

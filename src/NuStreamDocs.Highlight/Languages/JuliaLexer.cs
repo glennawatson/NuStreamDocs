@@ -16,9 +16,6 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class JuliaLexer
 {
-    /// <summary>Length of the <c>#=</c> block-comment opener.</summary>
-    private const int BlockCommentDelimiterLength = 2;
-
     /// <summary>General-keyword set.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
         [.. "if"u8],
@@ -197,16 +194,6 @@ public static class JuliaLexer
     /// <summary>Matches a Julia <c>#=</c> ... <c>=#</c> block comment.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
-    private static int MatchBlockComment(ReadOnlySpan<byte> slice)
-    {
-        const int MinClosed = BlockCommentDelimiterLength + BlockCommentDelimiterLength;
-        if (slice.Length < MinClosed || slice[0] is not (byte)'#' || slice[1] is not (byte)'=')
-        {
-            return 0;
-        }
-
-        var rest = slice[BlockCommentDelimiterLength..];
-        var close = rest.IndexOf("=#"u8);
-        return close < 0 ? 0 : BlockCommentDelimiterLength + close + BlockCommentDelimiterLength;
-    }
+    private static int MatchBlockComment(ReadOnlySpan<byte> slice) =>
+        TokenMatchers.MatchPairedBlockComment(slice, "#="u8, "=#"u8);
 }

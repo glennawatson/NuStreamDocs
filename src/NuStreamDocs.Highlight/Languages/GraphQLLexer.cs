@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -14,9 +15,6 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class GraphQLLexer
 {
-    /// <summary>Minimum opening / closing quote run for a triple-quoted block-string description.</summary>
-    private const int TripleQuoteLength = 3;
-
     /// <summary>General-keyword set.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
         [.. "query"u8],
@@ -53,18 +51,6 @@ public static class GraphQLLexer
         [.. "false"u8],
         [.. "null"u8]);
 
-    /// <summary>First-byte set for whitespace runs.</summary>
-    private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
-
-    /// <summary>First-byte set for hash-prefixed comments.</summary>
-    private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
-
-    /// <summary>First-byte set for double-quoted strings (and triple-quoted descriptions).</summary>
-    private static readonly SearchValues<byte> DoubleQuoteFirst = SearchValues.Create("\""u8);
-
-    /// <summary>First-byte set for the variable / directive sigil rule.</summary>
-    private static readonly SearchValues<byte> SigilFirst = SearchValues.Create("$@"u8);
-
     /// <summary>First-byte set for general keywords.</summary>
     private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("dfimoqrs"u8);
 
@@ -77,11 +63,11 @@ public static class GraphQLLexer
     /// <summary>First-byte set for constant keywords.</summary>
     private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfn"u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("=!|&"u8);
+    /// <summary>First-byte set for the <c>$variable</c> / <c>@directive</c> sigils.</summary>
+    private static readonly SearchValues<byte> SigilFirst = SearchValues.Create("$@"u8);
 
     /// <summary>Single-byte structural punctuation.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[],:"u8);
+    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[],:!|&="u8);
 
     /// <summary>Gets the singleton GraphQL lexer.</summary>
     public static Lexer Instance { get; } = Build();
@@ -90,47 +76,26 @@ public static class GraphQLLexer
     /// <returns>Lexer.</returns>
     private static Lexer Build()
     {
-        LexerRule[] rules =
-        [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            // """description""" must precede the regular string rule.
-            new(static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', TripleQuoteLength), TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst },
-
-            // "..." string with backslash escapes.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst },
-
-            // $var or @directive sigil.
-            new(MatchSigilName, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SigilFirst },
-
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordTypes), TokenClass.KeywordType, LexerRule.NoStateChange) { FirstBytes = KeywordTypeFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, OperatorFirst), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
-
-    /// <summary>Matches a <c>$variable</c> or <c>@directive</c> reference — sigil + identifier body.</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched, or zero.</returns>
-    private static int MatchSigilName(ReadOnlySpan<byte> slice)
-    {
-        if (slice is [] || (slice[0] is not (byte)'$' && slice[0] is not (byte)'@'))
+        SchemaFamilyConfig config = new()
         {
-            return 0;
-        }
+            IncludeHashComment = true,
+            IncludeSlashComments = false,
+            IncludeTripleQuotedString = true,
+            IncludeSingleQuotedString = false,
+            SigilFirst = SigilFirst,
+            Keywords = Keywords,
+            KeywordFirst = KeywordFirst,
+            KeywordTypes = KeywordTypes,
+            KeywordTypeFirst = KeywordTypeFirst,
+            KeywordDeclarations = KeywordDeclarations,
+            KeywordDeclarationFirst = KeywordDeclarationFirst,
+            KeywordConstants = KeywordConstants,
+            KeywordConstantFirst = KeywordConstantFirst,
+            Operators = null,
+            OperatorFirst = null,
+            Punctuation = PunctuationSet
+        };
 
-        var ident = TokenMatchers.MatchAsciiIdentifier(slice[1..]);
-        return ident is 0 ? 0 : 1 + ident;
+        return new(LanguageRuleBuilder.BuildSingleState(SchemaFamilyRules.Build(config)));
     }
 }
