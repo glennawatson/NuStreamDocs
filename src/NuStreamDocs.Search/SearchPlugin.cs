@@ -99,8 +99,15 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuild
         var url = ToHtmlUrl(context.RelativePath, _useDirectoryUrls);
         if (titleBytes.Length == 0)
         {
-            var fallback = context.RelativePath.FileNameWithoutExtension;
-            titleBytes = Encoding.UTF8.GetBytes(fallback);
+            // Slice the file-stem directly off the path span so the fallback
+            // skips Path.GetFileNameWithoutExtension's intermediate string copy.
+            var pathSpan = context.RelativePath.AsSpan();
+            var lastSep = pathSpan.LastIndexOfAny('/', '\\');
+            var fileSpan = lastSep < 0 ? pathSpan : pathSpan[(lastSep + 1)..];
+            var dotIdx = fileSpan.LastIndexOf('.');
+            var stemSpan = dotIdx < 0 ? fileSpan : fileSpan[..dotIdx];
+            titleBytes = new byte[Encoding.UTF8.GetByteCount(stemSpan)];
+            Encoding.UTF8.GetBytes(stemSpan, titleBytes);
         }
 
         if (_searchableFrontmatterKeyBytes.Length > 0)

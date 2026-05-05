@@ -119,13 +119,13 @@ public class UrlPatternAndCspTests
         }
     }
 
-    /// <summary>Drives one Rewrite call against a fresh sink.</summary>
+    /// <summary>Drives one PostRender call against a fresh sink.</summary>
     /// <param name="plugin">Plugin under test.</param>
     /// <param name="html">Input HTML bytes.</param>
     private static void RunRewrite(PrivacyPlugin plugin, ReadOnlySpan<byte> html)
     {
         var output = new ArrayBufferWriter<byte>();
-        var ctx = new PagePostResolveContext("page.md", html, output);
-        plugin.Rewrite(in ctx);
+        var ctx = new PagePostRenderContext("page.md", default, html, output);
+        plugin.PostRender(in ctx);
     }
 }

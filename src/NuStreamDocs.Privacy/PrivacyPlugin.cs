@@ -20,7 +20,7 @@ namespace NuStreamDocs.Privacy;
 /// downloads each unique URL once at finalize time.
 /// </summary>
 /// <remarks>
-/// Per-page <see cref="Rewrite"/> rewrites the page HTML to localized
+/// Per-page <see cref="PostRender"/> rewrites the page HTML to localized
 /// asset paths; URL-to-local-path mappings accumulate in a thread-safe
 /// registry. <see cref="FinalizeAsync"/> drives the actual HTTP fetches
 /// in parallel. Already-downloaded assets (cache hits on subsequent
@@ -32,8 +32,15 @@ namespace NuStreamDocs.Privacy;
 /// production sites.
 /// </para>
 /// </remarks>
-public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostResolvePlugin, IBuildFinalizePlugin
+public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
 {
+    /// <summary>
+    /// Tiebreak that orders Privacy's URL rewriting after the theme shell wrap
+    /// (<see cref="PluginBand.Latest"/>) and after Nav (tiebreak 2) so external-URL
+    /// substitution covers shell + nav payloads too.
+    /// </summary>
+    private const int PostRenderTiebreak = 3;
+
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly PrivacyOptions _options;
 
@@ -91,7 +98,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostResolvePlugi
     public PluginPriority ConfigurePriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public PluginPriority PostResolvePriority => new(PluginBand.Late);
+    public PluginPriority PostRenderPriority => new(PluginBand.Latest, PostRenderTiebreak);
 
     /// <inheritdoc/>
     public PluginPriority FinalizePriority => new(PluginBand.Late);
@@ -127,7 +134,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostResolvePlugi
     }
 
     /// <inheritdoc/>
-    public void Rewrite(in PagePostResolveContext context)
+    public void PostRender(in PagePostRenderContext context)
     {
         var rendered = context.Html;
         var hasUrls = ExternalUrlScanner.MayHaveExternalUrls(rendered);

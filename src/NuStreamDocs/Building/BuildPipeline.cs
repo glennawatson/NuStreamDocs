@@ -122,7 +122,7 @@ public static class BuildPipeline
             MaxDegreeOfParallelism = DefaultParallelism,
         };
 
-        var perPage = new PerPageDispatch(phases, previous, pluginTiming, bufferedPages);
+        var perPage = new PerPageDispatch(phases, previous, pluginTiming, bufferedPages, SnapshotMarkerNeedles(phases, crossPageMarkers));
 
         BuildPipelineLoggingHelper.LogRenderStart(log, parallelOptions.MaxDegreeOfParallelism);
         var renderStarted = stopwatch.ElapsedMilliseconds;
@@ -239,20 +239,11 @@ public static class BuildPipeline
                     owned = finalRental;
                 }
 
-                if (phases.Scans.Length > 0)
-                {
-                    var scanContext = new PageScanContext(item.RelativePath, source.Span, finalRental.Writer.WrittenSpan);
-                    for (var i = 0; i < phases.Scans.Length; i++)
-                    {
-                        var plugin = phases.Scans[i];
-                        using (pluginTiming.Measure(plugin.Name))
-                        {
-                            plugin.Scan(in scanContext);
-                        }
-                    }
-                }
+                FireScans(phases.Scans, item.RelativePath, source.Span, finalRental.Writer.WrittenSpan, pluginTiming);
 
-                if (phases.NeedsCrossPageBarrier)
+                var pageNeedsBarrier = phases.NeedsCrossPageBarrier
+                    && PageHasCrossPageMarker(finalRental.Writer.WrittenSpan, dispatch.CrossPageMarkerNeedles);
+                if (pageNeedsBarrier)
                 {
                     // Transfer rental ownership to the buffered queue. The drain phase
                     // disposes the rental after PostResolve + Write.
@@ -285,6 +276,65 @@ public static class BuildPipeline
         {
             ArrayPool<byte>.Shared.Return(sourceBuffer);
         }
+    }
+
+    /// <summary>Snapshots the registered cross-page marker needles for the per-page fast-path.</summary>
+    /// <param name="phases">Per-phase plugin arrays.</param>
+    /// <param name="registry">Live registry seeded during configure.</param>
+    /// <returns>An empty array when no cross-page work is registered; otherwise the registered needle bytes.</returns>
+    private static byte[][] SnapshotMarkerNeedles(PluginPhases phases, CrossPageMarkerRegistry registry) =>
+        phases.NeedsCrossPageBarrier ? [.. registry.Markers] : [];
+
+    /// <summary>Fires every <see cref="IPageScanPlugin.Scan"/> in priority order against the post-render HTML.</summary>
+    /// <param name="scans">Sorted scan participants.</param>
+    /// <param name="relativePath">Page path relative to the input root.</param>
+    /// <param name="source">Original UTF-8 markdown bytes.</param>
+    /// <param name="html">Post-render HTML bytes.</param>
+    /// <param name="pluginTiming">Per-plugin time accumulator.</param>
+    private static void FireScans(IPageScanPlugin[] scans, FilePath relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html, PluginTimingTable pluginTiming)
+    {
+        if (scans.Length is 0)
+        {
+            return;
+        }
+
+        var scanContext = new PageScanContext(relativePath, source, html);
+        for (var i = 0; i < scans.Length; i++)
+        {
+            var plugin = scans[i];
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                plugin.Scan(in scanContext);
+            }
+        }
+    }
+
+    /// <summary>
+    /// True when at least one <paramref name="needles"/> entry is present in <paramref name="html"/>;
+    /// false when no needles are registered (no cross-page work) or none match this page.
+    /// </summary>
+    /// <param name="html">UTF-8 HTML of the rendered page.</param>
+    /// <param name="needles">Marker byte sequences registered by cross-page plugins during configure.</param>
+    /// <returns>True when the page must be held for the cross-page barrier; false when it can write immediately.</returns>
+    private static bool PageHasCrossPageMarker(ReadOnlySpan<byte> html, byte[][] needles)
+    {
+        if (needles.Length is 0)
+        {
+            // No registered markers means the cross-page barrier still has to drain
+            // (e.g. an IBuildResolvePlugin that walks every page during the barrier
+            // expects every page to be available); fall back to buffering everything.
+            return true;
+        }
+
+        for (var i = 0; i < needles.Length; i++)
+        {
+            if (html.IndexOf(needles[i]) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Threads <paramref name="source"/> through every <see cref="IPagePreRenderPlugin"/> sorted by priority.</summary>
@@ -703,11 +753,13 @@ public static class BuildPipeline
     /// <param name="Previous">Previous-build manifest.</param>
     /// <param name="PluginTiming">Per-plugin time accumulator.</param>
     /// <param name="Buffered">Queue receiving rentals when cross-page resolution is needed.</param>
+    /// <param name="CrossPageMarkerNeedles">Snapshot of marker byte sequences registered during configure; pages whose HTML contains none of them skip the cross-page buffer hold.</param>
     private readonly record struct PerPageDispatch(
         PluginPhases Phases,
         BuildManifest Previous,
         PluginTimingTable PluginTiming,
-        ConcurrentQueue<BufferedPage> Buffered);
+        ConcurrentQueue<BufferedPage> Buffered,
+        byte[][] CrossPageMarkerNeedles);
 
     /// <summary>One page held back from immediate write because the build needs cross-page resolution.</summary>
     /// <param name="RelativePath">Source-relative path.</param>

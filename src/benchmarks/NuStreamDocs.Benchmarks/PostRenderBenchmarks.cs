@@ -144,7 +144,7 @@ public class PostRenderBenchmarks
     /// <summary>Benchmark for <c>PrivacyPlugin</c>'s page scan (full pipeline through PrivacyRewriter).</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public int Privacy() => RunPostResolve(new PrivacyPlugin(), _privacyHtml);
+    public int Privacy() => RunPostRender(new PrivacyPlugin(), _privacyHtml);
 
     /// <summary>Direct benchmark for <c>MixedContentBytes.RewriteInto</c>.</summary>
     /// <returns>Bytes written.</returns>
@@ -208,18 +208,6 @@ public class PostRenderBenchmarks
         var sink = new ArrayBufferWriter<byte>(html.Length * 2);
         var context = new PagePostRenderContext("page.md", default, html, sink);
         plugin.PostRender(in context);
-        return sink.WrittenCount;
-    }
-
-    /// <summary>Drives <paramref name="plugin"/>.Rewrite against <paramref name="html"/>.</summary>
-    /// <param name="plugin">Post-resolve plugin under test.</param>
-    /// <param name="html">Pre-rendered HTML bytes.</param>
-    /// <returns>Bytes written by the plugin.</returns>
-    private static int RunPostResolve(IPagePostResolvePlugin plugin, byte[] html)
-    {
-        var sink = new ArrayBufferWriter<byte>(html.Length * 2);
-        var context = new PagePostResolveContext("page.md", html, sink);
-        plugin.Rewrite(in context);
         return sink.WrittenCount;
     }
 
