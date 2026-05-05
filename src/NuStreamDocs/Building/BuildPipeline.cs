@@ -418,24 +418,11 @@ public static class BuildPipeline
             return input;
         }
 
-        var anyRewrites = false;
-        for (var i = 0; i < plugins.Length; i++)
-        {
-            if (plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
-            {
-                anyRewrites = true;
-                break;
-            }
-        }
-
-        if (!anyRewrites)
-        {
-            return input;
-        }
-
-        var capacity = Math.Max(input.Writer.WrittenCount, source.Length) * PreprocessorScratchMultiplier;
-        var back = PageBuilderPool.Rent(capacity);
-
+        // Single-pass loop: ask each plugin in order whether it wants to rewrite, and only
+        // rent the swap rental on the first rewrite that actually fires. The previous shape
+        // had a separate "any rewrites?" pre-check which doubled the NeedsRewrite count on
+        // the marker-free hot path (and the WithNav benchmark hit it on every page).
+        PageBuilderRental? back = null;
         var front = input;
         for (var i = 0; i < plugins.Length; i++)
         {
@@ -445,18 +432,33 @@ public static class BuildPipeline
                 continue;
             }
 
-            back.Writer.ResetWrittenCount();
-            var ctx = new PagePostRenderContext(relativePath, source, front.Writer.WrittenSpan, back.Writer);
+            if (back is null)
+            {
+                var capacity = Math.Max(input.Writer.WrittenCount, source.Length) * PreprocessorScratchMultiplier;
+                back = PageBuilderPool.Rent(capacity);
+            }
+
+            var swap = back.Value;
+            swap.Writer.ResetWrittenCount();
+            var ctx = new PagePostRenderContext(relativePath, source, front.Writer.WrittenSpan, swap.Writer);
             using (pluginTiming.Measure(plugin.Name))
             {
                 plugin.PostRender(in ctx);
             }
 
-            (front, back) = (back, front);
+            back = front;
+            front = swap;
         }
 
-        // `back` is now the stale rental — push to scratch for disposal.
-        scratch.Add(back);
+        // After the loop, `back` is the rental NOT holding the final bytes — always stale
+        // when at least one plugin rewrote. The caller's owned-rental tracking points at
+        // `front` for disposal; everything else (the original input or the rented swap,
+        // whichever isn't `front`) goes through scratch.
+        if (back is { } stale)
+        {
+            scratch.Add(stale);
+        }
+
         return front;
     }
 
