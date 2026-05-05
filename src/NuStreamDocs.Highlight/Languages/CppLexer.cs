@@ -18,19 +18,9 @@ public static class CppLexer
     /// <summary>Length of the <c>u8</c> string-encoding prefix.</summary>
     private const int Utf8PrefixLength = 2;
 
-    /// <summary>General-keyword set.</summary>
+    /// <summary>General-keyword set — shared C-family control-flow plus C++-specific extras.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "else"u8],
-        [.. "for"u8],
-        [.. "while"u8],
-        [.. "do"u8],
-        [.. "switch"u8],
-        [.. "case"u8],
-        [.. "default"u8],
-        [.. "break"u8],
-        [.. "continue"u8],
-        [.. "return"u8],
+        [.. CFamilyShared.ControlFlow,
         [.. "goto"u8],
         [.. "sizeof"u8],
         [.. "typedef"u8],
@@ -40,9 +30,6 @@ public static class CppLexer
         [.. "new"u8],
         [.. "delete"u8],
         [.. "this"u8],
-        [.. "throw"u8],
-        [.. "try"u8],
-        [.. "catch"u8],
         [.. "operator"u8],
         [.. "and"u8],
         [.. "or"u8],
@@ -58,7 +45,7 @@ public static class CppLexer
         [.. "static_cast"u8],
         [.. "dynamic_cast"u8],
         [.. "const_cast"u8],
-        [.. "reinterpret_cast"u8]);
+        [.. "reinterpret_cast"u8]]);
 
     /// <summary>Built-in primitive type keywords.</summary>
     private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
@@ -125,48 +112,14 @@ public static class CppLexer
         [.. "nullptr"u8],
         [.. "NULL"u8]);
 
-    /// <summary>Operator alternation, sorted longest-first.</summary>
+    /// <summary>Operator alternation — shared C-style core plus C++-specific multi-byte forms (<c>&lt;=&gt;</c>, <c>-&gt;*</c>, <c>.*</c>, <c>::</c>).</summary>
     private static readonly byte[][] OperatorTable =
     [
-        [.. "<<="u8],
-        [.. ">>="u8],
         [.. "<=>"u8],
         [.. "->*"u8],
         [.. ".*"u8],
         [.. "::"u8],
-        [.. "->"u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "<<"u8],
-        [.. ">>"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "&="u8],
-        [.. "|="u8],
-        [.. "^="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
+        .. CFamilyShared.StandardOperators
     ];
 
     /// <summary>First-byte set for general keywords.</summary>
@@ -181,17 +134,8 @@ public static class CppLexer
     /// <summary>First-byte set for constant keywords.</summary>
     private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfnN"u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/%=<>!&|^~?:."u8);
-
-    /// <summary>Single-byte structural punctuation.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:"u8);
-
-    /// <summary>Integer-literal suffix bytes.</summary>
+    /// <summary>Integer-literal suffix bytes (extends the C set with <c>z</c> / <c>Z</c> for <c>size_t</c>).</summary>
     private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("uUlLzZ"u8);
-
-    /// <summary>Float-literal suffix bytes.</summary>
-    private static readonly SearchValues<byte> FloatSuffixSet = SearchValues.Create("fFlL"u8);
 
     /// <summary>First-byte set for the special-string rule (raw-string with optional encoding prefix).</summary>
     private static readonly SearchValues<byte> RawStringFirst = SearchValues.Create("RuLU"u8);
@@ -219,10 +163,10 @@ public static class CppLexer
             KeywordConstants = KeywordConstants,
             KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
-            Punctuation = PunctuationSet,
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
+            Punctuation = CFamilyShared.StandardPunctuation,
             IntegerSuffix = IntegerSuffixSet,
-            FloatSuffix = FloatSuffixSet,
+            FloatSuffix = CFamilyShared.CFloatSuffix,
             IncludeDocComment = false,
             IncludePreprocessor = true,
             IncludeCharacterLiteral = true,

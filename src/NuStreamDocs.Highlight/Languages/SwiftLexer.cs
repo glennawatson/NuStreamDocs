@@ -18,27 +18,14 @@ public static class SwiftLexer
     /// <summary>Minimum opening / closing quote run for a multi-line string literal.</summary>
     private const int MultiLineStringMinQuotes = 3;
 
-    /// <summary>General-keyword set.</summary>
+    /// <summary>General-keyword set — shared C-family control-flow plus Swift-specific extras.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "else"u8],
+        [.. CFamilyShared.ControlFlow,
         [.. "guard"u8],
-        [.. "switch"u8],
-        [.. "case"u8],
-        [.. "default"u8],
-        [.. "for"u8],
-        [.. "while"u8],
         [.. "repeat"u8],
-        [.. "do"u8],
-        [.. "break"u8],
-        [.. "continue"u8],
         [.. "fallthrough"u8],
-        [.. "return"u8],
-        [.. "throw"u8],
         [.. "throws"u8],
         [.. "rethrows"u8],
-        [.. "try"u8],
-        [.. "catch"u8],
         [.. "defer"u8],
         [.. "where"u8],
         [.. "as"u8],
@@ -60,7 +47,7 @@ public static class SwiftLexer
         [.. "willSet"u8],
         [.. "didSet"u8],
         [.. "get"u8],
-        [.. "set"u8]);
+        [.. "set"u8]]);
 
     /// <summary>Built-in nominal type keywords.</summary>
     private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
@@ -120,45 +107,20 @@ public static class SwiftLexer
         [.. "operator"u8],
         [.. "precedencegroup"u8]);
 
-    /// <summary>Constant keywords.</summary>
+    /// <summary>Constant keywords — Swift uses <c>nil</c> in place of the shared <c>null</c>.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
         [.. "true"u8],
         [.. "false"u8],
         [.. "nil"u8]);
 
-    /// <summary>Operator alternation, sorted longest-first.</summary>
+    /// <summary>Operator alternation — shared C-style core plus Swift's range / nil-coalesce / optional-chain forms.</summary>
     private static readonly byte[][] OperatorTable =
     [
         [.. "..."u8],
         [.. "..<"u8],
-        [.. "->"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
         [.. "??"u8],
         [.. "?."u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
+        .. CFamilyShared.StandardOperators
     ];
 
     /// <summary>First-byte set for general keywords.</summary>
@@ -173,10 +135,7 @@ public static class SwiftLexer
     /// <summary>First-byte set for constant keywords.</summary>
     private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfn"u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/%=<>!&|^~?."u8);
-
-    /// <summary>Single-byte structural punctuation.</summary>
+    /// <summary>Single-byte structural punctuation — shared C-curly set plus the Swift <c>@</c> attribute marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);
 
     /// <summary>Gets the singleton Swift lexer.</summary>
@@ -206,7 +165,7 @@ public static class SwiftLexer
             KeywordConstants = KeywordConstants,
             KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = PunctuationSet,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,

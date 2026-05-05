@@ -15,20 +15,13 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class RustLexer
 {
-    /// <summary>General-keyword set.</summary>
+    /// <summary>General-keyword set — shared C-family control-flow plus Rust-specific extras.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
+        [.. CFamilyShared.ControlFlow,
         [.. "as"u8],
-        [.. "break"u8],
-        [.. "continue"u8],
-        [.. "do"u8],
-        [.. "else"u8],
-        [.. "for"u8],
-        [.. "if"u8],
         [.. "in"u8],
         [.. "loop"u8],
         [.. "match"u8],
-        [.. "return"u8],
-        [.. "while"u8],
         [.. "yield"u8],
         [.. "where"u8],
         [.. "async"u8],
@@ -41,7 +34,7 @@ public static class RustLexer
         [.. "self"u8],
         [.. "Self"u8],
         [.. "super"u8],
-        [.. "crate"u8]);
+        [.. "crate"u8]]);
 
     /// <summary>Built-in primitive type keywords.</summary>
     private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
@@ -89,46 +82,14 @@ public static class RustLexer
         [.. "Ok"u8],
         [.. "Err"u8]);
 
-    /// <summary>Operator alternation, sorted longest-first.</summary>
+    /// <summary>Operator alternation — shared C-style core plus Rust's range / arrow / path forms.</summary>
     private static readonly byte[][] OperatorTable =
     [
         [.. "..="u8],
-        [.. "<<="u8],
-        [.. ">>="u8],
         [.. ".."u8],
-        [.. "->"u8],
         [.. "=>"u8],
         [.. "::"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "<<"u8],
-        [.. ">>"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "&="u8],
-        [.. "|="u8],
-        [.. "^="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
+        .. CFamilyShared.StandardOperators
     ];
 
     /// <summary>First-byte set for general keywords.</summary>
@@ -143,10 +104,7 @@ public static class RustLexer
     /// <summary>First-byte set for constant keywords.</summary>
     private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfNSOE"u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/%=<>!&|^~?."u8);
-
-    /// <summary>Single-byte structural punctuation.</summary>
+    /// <summary>Single-byte structural punctuation — shared C-curly set plus the Rust <c>#</c> attribute marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:#"u8);
 
     /// <summary>Integer-literal suffix bytes.</summary>
@@ -178,7 +136,7 @@ public static class RustLexer
             KeywordConstants = KeywordConstants,
             KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = PunctuationSet,
             IntegerSuffix = IntegerSuffixSet,
             FloatSuffix = FloatSuffixSet,

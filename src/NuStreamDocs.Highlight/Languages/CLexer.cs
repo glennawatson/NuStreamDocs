@@ -14,19 +14,9 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class CLexer
 {
-    /// <summary>General-keyword set.</summary>
+    /// <summary>General-keyword set — shared C-family control-flow plus C-specific extras.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "else"u8],
-        [.. "for"u8],
-        [.. "while"u8],
-        [.. "do"u8],
-        [.. "switch"u8],
-        [.. "case"u8],
-        [.. "default"u8],
-        [.. "break"u8],
-        [.. "continue"u8],
-        [.. "return"u8],
+        [.. CFamilyShared.ControlFlow,
         [.. "goto"u8],
         [.. "sizeof"u8],
         [.. "typedef"u8],
@@ -36,7 +26,7 @@ public static class CLexer
         [.. "_Generic"u8],
         [.. "_Noreturn"u8],
         [.. "_Static_assert"u8],
-        [.. "_Thread_local"u8]);
+        [.. "_Thread_local"u8]]);
 
     /// <summary>Built-in primitive type keywords.</summary>
     private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
@@ -79,51 +69,11 @@ public static class CLexer
         [.. "union"u8],
         [.. "enum"u8]);
 
-    /// <summary>Constant keywords.</summary>
+    /// <summary>Constant keywords — <c>true</c> / <c>false</c> via the shared set, plus the C-specific <c>NULL</c>.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
         [.. "true"u8],
         [.. "false"u8],
         [.. "NULL"u8]);
-
-    /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "<<="u8],
-        [.. ">>="u8],
-        [.. "->"u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "<<"u8],
-        [.. ">>"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "&="u8],
-        [.. "|="u8],
-        [.. "^="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
-    ];
 
     /// <summary>First-byte set for general keywords.</summary>
     private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("_bcdefgirstvw"u8);
@@ -136,18 +86,6 @@ public static class CLexer
 
     /// <summary>First-byte set for constant keywords.</summary>
     private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfN"u8);
-
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/%=<>!&|^~?"u8);
-
-    /// <summary>Single-byte structural punctuation.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:"u8);
-
-    /// <summary>Integer / hex literal suffix bytes.</summary>
-    private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("uUlL"u8);
-
-    /// <summary>Float-literal suffix bytes.</summary>
-    private static readonly SearchValues<byte> FloatSuffixSet = SearchValues.Create("fFlL"u8);
 
     /// <summary>Gets the singleton C lexer.</summary>
     public static Lexer Instance { get; } = Build();
@@ -166,11 +104,11 @@ public static class CLexer
             KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
             KeywordConstantFirst = KeywordConstantFirst,
-            Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
-            Punctuation = PunctuationSet,
-            IntegerSuffix = IntegerSuffixSet,
-            FloatSuffix = FloatSuffixSet,
+            Operators = CFamilyShared.StandardOperators,
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
+            Punctuation = CFamilyShared.StandardPunctuation,
+            IntegerSuffix = CFamilyShared.CIntegerSuffix,
+            FloatSuffix = CFamilyShared.CFloatSuffix,
             IncludeDocComment = false,
             IncludePreprocessor = true,
             IncludeCharacterLiteral = true,

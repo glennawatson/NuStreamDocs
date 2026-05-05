@@ -14,23 +14,15 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class GoLexer
 {
-    /// <summary>General-keyword set.</summary>
+    /// <summary>General-keyword set — shared C-family control-flow (Go has no try/catch/throw/finally; those entries simply don't fire) plus Go-specific extras.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "break"u8],
-        [.. "case"u8],
-        [.. "continue"u8],
-        [.. "default"u8],
+        [.. CFamilyShared.ControlFlow,
         [.. "defer"u8],
-        [.. "else"u8],
         [.. "fallthrough"u8],
-        [.. "for"u8],
         [.. "go"u8],
         [.. "goto"u8],
-        [.. "if"u8],
         [.. "range"u8],
-        [.. "return"u8],
-        [.. "select"u8],
-        [.. "switch"u8]);
+        [.. "select"u8]]);
 
     /// <summary>Built-in primitive type keywords.</summary>
     private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
@@ -77,46 +69,15 @@ public static class GoLexer
         [.. "nil"u8],
         [.. "iota"u8]);
 
-    /// <summary>Operator alternation, sorted longest-first.</summary>
+    /// <summary>Operator alternation — shared C-style core plus Go's bit-clear / channel-receive / short-decl / spread forms.</summary>
     private static readonly byte[][] OperatorTable =
     [
-        [.. "<<="u8],
-        [.. ">>="u8],
         [.. "&^="u8],
         [.. ":="u8],
         [.. "<-"u8],
         [.. "..."u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "<<"u8],
-        [.. ">>"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "&="u8],
-        [.. "|="u8],
-        [.. "^="u8],
         [.. "&^"u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8]
+        .. CFamilyShared.StandardOperators
     ];
 
     /// <summary>First-byte set for general keywords.</summary>
@@ -131,10 +92,7 @@ public static class GoLexer
     /// <summary>First-byte set for constant keywords.</summary>
     private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfni"u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/%=<>!&|^:."u8);
-
-    /// <summary>Single-byte structural punctuation.</summary>
+    /// <summary>Single-byte structural punctuation — Go has no <c>:</c> punctuation since <c>:</c> is part of <c>:=</c>.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,."u8);
 
     /// <summary>Numeric-literal suffix bytes (Go uses <c>i</c> for the imaginary suffix).</summary>
@@ -166,7 +124,7 @@ public static class GoLexer
             KeywordConstants = KeywordConstants,
             KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = PunctuationSet,
             IntegerSuffix = NumericSuffixSet,
             FloatSuffix = NumericSuffixSet,
