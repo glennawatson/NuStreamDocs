@@ -12,13 +12,13 @@ namespace NuStreamDocs.Tests;
 /// <summary>End-to-end tests for the front-matter title peek used by the nav builders.</summary>
 public class FrontmatterTitleReaderTests
 {
-    /// <summary>Lower-case <c>title:</c> resolves through both the string and byte entry points.</summary>
+    /// <summary>Lower-case <c>title:</c> resolves through the byte-shaped entry point.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ReadsLowerCaseTitle()
     {
         using var fixture = await TempFile.WriteAsync("---\ntitle: Hello\n---\n# Body\n");
-        await Assert.That(FrontmatterTitleReader.Read(fixture.Path)).IsEqualTo("Hello");
+        await Assert.That(ReadString(fixture.Path)).IsEqualTo("Hello");
         var bytes = FrontmatterTitleReader.ReadBytes((FilePath)fixture.Path);
         await Assert.That(bytes is not null && Encoding.UTF8.GetString(bytes!) == "Hello").IsTrue();
     }
@@ -29,7 +29,7 @@ public class FrontmatterTitleReaderTests
     public async Task FallsBackToCapitalisedTitle()
     {
         using var fixture = await TempFile.WriteAsync("---\nTitle: Capitalised\n---\nbody");
-        await Assert.That(FrontmatterTitleReader.Read(fixture.Path)).IsEqualTo("Capitalised");
+        await Assert.That(ReadString(fixture.Path)).IsEqualTo("Capitalised");
     }
 
     /// <summary>Quoted titles are stripped of their surrounding YAML quotes.</summary>
@@ -39,8 +39,8 @@ public class FrontmatterTitleReaderTests
     {
         using var doubleQuoted = await TempFile.WriteAsync("---\ntitle: \"Quoted\"\n---\n");
         using var singleQuoted = await TempFile.WriteAsync("---\ntitle: 'Sing'\n---\n");
-        await Assert.That(FrontmatterTitleReader.Read(doubleQuoted.Path)).IsEqualTo("Quoted");
-        await Assert.That(FrontmatterTitleReader.Read(singleQuoted.Path)).IsEqualTo("Sing");
+        await Assert.That(ReadString(doubleQuoted.Path)).IsEqualTo("Quoted");
+        await Assert.That(ReadString(singleQuoted.Path)).IsEqualTo("Sing");
     }
 
     /// <summary>Files with no front-matter or no title key return null without throwing.</summary>
@@ -50,8 +50,8 @@ public class FrontmatterTitleReaderTests
     {
         using var noFrontmatter = await TempFile.WriteAsync("# Body only");
         using var emptyTitle = await TempFile.WriteAsync("---\nlayout: page\n---\nbody");
-        await Assert.That(FrontmatterTitleReader.Read(noFrontmatter.Path)).IsNull();
-        await Assert.That(FrontmatterTitleReader.Read(emptyTitle.Path)).IsNull();
+        await Assert.That(ReadString(noFrontmatter.Path)).IsNull();
+        await Assert.That(ReadString(emptyTitle.Path)).IsNull();
     }
 
     /// <summary>An empty file returns null and never throws.</summary>
@@ -60,7 +60,7 @@ public class FrontmatterTitleReaderTests
     public async Task ReturnsNullForEmptyFile()
     {
         using var empty = await TempFile.WriteAsync(string.Empty);
-        await Assert.That(FrontmatterTitleReader.Read(empty.Path)).IsNull();
+        await Assert.That(ReadString(empty.Path)).IsNull();
         await Assert.That(FrontmatterTitleReader.ReadBytes((FilePath)empty.Path)).IsNull();
     }
 
@@ -70,17 +70,23 @@ public class FrontmatterTitleReaderTests
     public async Task ReturnsNullForMissingPath()
     {
         var missing = Path.Combine(Path.GetTempPath(), "smkd-nofile-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        await Assert.That(FrontmatterTitleReader.Read(missing)).IsNull();
+        await Assert.That(ReadString(missing)).IsNull();
         await Assert.That(FrontmatterTitleReader.ReadBytes((FilePath)missing)).IsNull();
     }
 
-    /// <summary>Both string-shaped <see cref="FrontmatterTitleReader.Read"/> and byte-shaped <c>ReadBytes</c> reject empty paths.</summary>
+    /// <summary><see cref="FrontmatterTitleReader.ReadBytes"/> rejects empty paths.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task EmptyPathsThrow()
-    {
-        await Assert.That(() => FrontmatterTitleReader.Read(string.Empty)).Throws<ArgumentException>();
+    public async Task EmptyPathsThrow() =>
         await Assert.That(() => FrontmatterTitleReader.ReadBytes((FilePath)string.Empty)).Throws<ArgumentException>();
+
+    /// <summary>Helper that decodes the byte-shaped result for the test assertions.</summary>
+    /// <param name="absolutePath">Absolute path to a markdown page.</param>
+    /// <returns>The decoded title, or null when absent.</returns>
+    private static string? ReadString(string absolutePath)
+    {
+        var bytes = FrontmatterTitleReader.ReadBytes((FilePath)absolutePath);
+        return bytes is null ? null : Encoding.UTF8.GetString(bytes);
     }
 
     /// <summary>Disposable temp file with the supplied UTF-8 contents.</summary>

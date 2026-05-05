@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Yaml;
@@ -18,16 +17,6 @@ public static class FrontmatterTitleReader
 {
     /// <summary>Maximum bytes read from the head of each file.</summary>
     private const int FrontmatterPeekBytes = 1024;
-
-    /// <summary>Returns the front-matter <c>title:</c> for <paramref name="absolutePath"/> when present.</summary>
-    /// <param name="absolutePath">Absolute path to a markdown page.</param>
-    /// <returns>The decoded title, or <see langword="null"/> when absent or unreadable.</returns>
-    public static string? Read(string absolutePath)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(absolutePath);
-        var bytes = ReadTitleBytes(absolutePath);
-        return bytes is null ? null : Encoding.UTF8.GetString(bytes);
-    }
 
     /// <summary>Returns the front-matter <c>title:</c> bytes for <paramref name="absolutePath"/> when present.</summary>
     /// <param name="absolutePath">Absolute path to a markdown page.</param>

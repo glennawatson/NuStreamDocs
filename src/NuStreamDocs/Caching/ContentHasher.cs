@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.IO.Hashing;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Caching;
 
@@ -38,11 +39,11 @@ public static class ContentHasher
     /// <param name="path">Absolute path to the file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The 8-byte xxHash3 digest.</returns>
-    public static async ValueTask<byte[]> HashFileAsync(string path, CancellationToken cancellationToken)
+    public static async ValueTask<byte[]> HashFileAsync(FilePath path, CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentException.ThrowIfNullOrEmpty(path.Value);
 
-        await using var stream = File.OpenRead(path);
+        await using var stream = File.OpenRead(path.Value);
         var hasher = new XxHash3();
 
         // 64 KiB read window; bounded so a multi-MB page doesn't spike

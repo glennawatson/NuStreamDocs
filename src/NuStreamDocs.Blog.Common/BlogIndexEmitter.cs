@@ -40,16 +40,20 @@ public static class BlogIndexEmitter
 
     /// <summary>Writes the blog index file bytes into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <param name="title">Page heading, e.g. <c>Blog</c> or <c>Announcements</c>.</param>
+    /// <param name="title">UTF-8 page heading bytes, e.g. <c>"Blog"u8</c> or <c>"Announcements"u8</c>.</param>
     /// <param name="posts">Posts to list. Caller controls ordering.</param>
-    public static void WriteIndex(IBufferWriter<byte> writer, string title, BlogPost[] posts)
+    public static void WriteIndex(IBufferWriter<byte> writer, ReadOnlySpan<byte> title, BlogPost[] posts)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        ArgumentException.ThrowIfNullOrEmpty(title);
+        if (title.IsEmpty)
+        {
+            throw new ArgumentException("Title bytes must be non-empty.", nameof(title));
+        }
+
         ArgumentNullException.ThrowIfNull(posts);
 
         writer.Write("# "u8);
-        Utf8StringWriter.Write(writer, title);
+        writer.Write(title);
         writer.Write("\n\n"u8);
 
         if (posts.Length == 0)

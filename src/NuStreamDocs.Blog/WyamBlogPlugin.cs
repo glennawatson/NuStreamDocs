@@ -55,7 +55,7 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
                 IndexTitle: _options.IndexTitle,
                 EmitArchives: _options.EmitTagArchives,
                 ArchiveRoot: postsRoot / "tags",
-                ArchiveFallbackSlug: "tag"),
+                ArchiveFallbackSlug: [.. "tag"u8]),
             cancellationToken).ConfigureAwait(false);
     }
 

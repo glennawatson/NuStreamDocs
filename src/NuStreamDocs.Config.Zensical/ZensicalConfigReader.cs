@@ -19,7 +19,7 @@ namespace NuStreamDocs.Config.Zensical;
 public sealed class ZensicalConfigReader : IConfigReader
 {
     /// <inheritdoc/>
-    public string FormatName => "zensical";
+    public ReadOnlySpan<byte> FormatName => "zensical"u8;
 
     /// <inheritdoc/>
     public bool RecognizesExtension(ReadOnlySpan<char> extension) =>

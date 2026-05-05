@@ -61,8 +61,11 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Logger handed to the tree builder.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>The nav tree built during <see cref="DiscoverAsync"/>; null until then.</summary>
+    /// <summary>The build-time nav tree (class graph) constructed during <see cref="DiscoverAsync"/>; null until then. Held for diagnostics, neighbour linearization, and orphan reporting.</summary>
     private NavNode? _root;
+
+    /// <summary>The flat render-time nav tree consumed by <see cref="NavRenderer"/>; null until <see cref="DiscoverAsync"/> runs.</summary>
+    private NavTree? _tree;
 
     /// <summary>Stat-based fingerprint of the input tree from the previous build; <c>0</c> when not yet computed.</summary>
     private ulong _lastTreeFingerprint;
@@ -70,8 +73,8 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>True when the configured build emits directory-style served URLs.</summary>
     private bool _useDirectoryUrls;
 
-    /// <summary>UTF-8 URL bytes → node lookup over the rendered tree; built once when the tree is built so per-page renders resolve the active node in O(1) without re-encoding the page URL.</summary>
-    private Dictionary<byte[], NavNode>? _urlIndex;
+    /// <summary>UTF-8 URL bytes → flat-tree node-index lookup; built once per discover so per-page renders resolve the active node in O(1) without re-encoding the page URL.</summary>
+    private Dictionary<byte[], int>? _urlIndex;
 
     /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(FilePath)"/> call.</summary>
     private NavNode[]? _orderedLeaves;
@@ -145,7 +148,8 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         _root = _options.CuratedEntries.Length > 0
             ? CuratedNavBuilder.Build(context.InputRoot, _options.CuratedEntries, useDirectoryUrls, _logger)
             : NavTreeBuilder.Build(context.InputRoot, in _options, useDirectoryUrls, _logger);
-        _urlIndex = NavRenderer.BuildUrlIndex(_root);
+        _tree = NavTreeFlattener.Flatten(_root);
+        _urlIndex = NavRenderer.BuildUrlIndex(_tree);
         _orderedLeaves = null;
         _leafIndex = null;
         _sectionSpans = null;
@@ -161,7 +165,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> html)
     {
-        if (_root is null)
+        if (_tree is null)
         {
             return false;
         }
@@ -177,7 +181,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <inheritdoc/>
     public void PostRender(in PagePostRenderContext context)
     {
-        if (_root is null)
+        if (_tree is null)
         {
             context.Output.Write(context.Html);
             return;
@@ -281,7 +285,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <inheritdoc/>
     public bool ShouldHidePrimarySidebar(FilePath relativePath)
     {
-        if (relativePath.IsEmpty || _root is null || _urlIndex is null)
+        if (relativePath.IsEmpty || _tree is null || _urlIndex is null)
         {
             return false;
         }
@@ -293,35 +297,30 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         }
 
         var encoded = ServedUrlBytes.FromPath(relativePath, _useDirectoryUrls);
-        if (!_urlIndex.TryGetValue(encoded, out var active))
+        if (!_urlIndex.TryGetValue(encoded, out var activeIdx))
         {
             return false;
         }
 
+        var nodes = _tree.Nodes;
+        var active = nodes[activeIdx];
+
         // Top-level leaf with no descendants: nothing the primary sidebar can usefully render.
-        return active is { IsSection: false, Children.Length: 0 } && IsTopLevelChild(_root, active);
+        return active is { IsSection: false, ChildCount: 0 } && IsTopLevelChild(nodes, activeIdx);
     }
 
     /// <summary>Gets the typed nav root; for use from the plugin's own assembly + tests.</summary>
     /// <returns>The nav root, or null when <see cref="DiscoverAsync"/> has not yet run.</returns>
     internal NavNode? GetRoot() => _root;
 
-    /// <summary>True when <paramref name="candidate"/> is a direct child of <paramref name="root"/>.</summary>
-    /// <param name="root">Nav root.</param>
-    /// <param name="candidate">Candidate node.</param>
+    /// <summary>True when <paramref name="candidateIndex"/> sits in the root's direct-child range.</summary>
+    /// <param name="nodes">Flat tree node array.</param>
+    /// <param name="candidateIndex">Candidate node index.</param>
     /// <returns>True for top-level pages.</returns>
-    private static bool IsTopLevelChild(NavNode root, NavNode candidate)
+    private static bool IsTopLevelChild(NavTreeNode[] nodes, int candidateIndex)
     {
-        var children = root.Children;
-        for (var i = 0; i < children.Length; i++)
-        {
-            if (ReferenceEquals(children[i], candidate))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        var root = nodes[0];
+        return candidateIndex >= root.FirstChildIndex && candidateIndex < root.FirstChildIndex + root.ChildCount;
     }
 
     /// <summary>Returns true when <paramref name="relativePath"/> is the docs-root <c>index.md</c>.</summary>
@@ -556,20 +555,15 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <param name="relativePath">Source-relative path of the page being rendered.</param>
     private void RenderNav(IBufferWriter<byte> writer, FilePath relativePath)
     {
-        const int StackUrlLimit = 256;
-        var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Value.Length) + HtmlExtensionGrowth;
-        Span<byte> stackBuf = stackalloc byte[StackUrlLimit];
-        var urlBuffer = capacity <= StackUrlLimit ? stackBuf : new byte[capacity];
-        var written = EncodePageUrlBytes(relativePath, _useDirectoryUrls, urlBuffer);
-        _ = _urlIndex!.TryGetValueByUtf8(urlBuffer[..written], out var activeNode);
+        var activeIdx = ResolveActiveIndex(relativePath);
 
         if (_options.Prune)
         {
-            NavRenderer.RenderSidebarPruned(_root!, activeNode, writer);
+            NavRenderer.RenderSidebarPruned(_tree!, activeIdx, writer);
             return;
         }
 
-        NavRenderer.RenderSidebarFull(_root!, activeNode, writer);
+        NavRenderer.RenderSidebarFull(_tree!, activeIdx, writer);
     }
 
     /// <summary>Renders the top-level nav as a horizontal tab bar at the position of the page's <c>&lt;!--@@nav-tabs@@--&gt;</c> marker.</summary>
@@ -577,13 +571,20 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <param name="relativePath">Source-relative path of the current page; resolves which tab is active.</param>
     private void RenderTabs(IBufferWriter<byte> writer, FilePath relativePath)
     {
+        var activeIdx = ResolveActiveIndex(relativePath);
+        NavRenderer.RenderTabs(_tree!, activeIdx, writer);
+    }
+
+    /// <summary>Encodes <paramref name="relativePath"/> as the served URL bytes and probes <see cref="_urlIndex"/> for the active node's flat-tree index.</summary>
+    /// <param name="relativePath">Source-relative path of the page being rendered.</param>
+    /// <returns>Active node index, or <c>-1</c> when the page is not in the nav.</returns>
+    private int ResolveActiveIndex(FilePath relativePath)
+    {
         const int StackUrlLimit = 256;
         var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Value.Length) + HtmlExtensionGrowth;
         Span<byte> stackBuf = stackalloc byte[StackUrlLimit];
         var urlBuffer = capacity <= StackUrlLimit ? stackBuf : new byte[capacity];
         var written = EncodePageUrlBytes(relativePath, _useDirectoryUrls, urlBuffer);
-        _ = _urlIndex!.TryGetValueByUtf8(urlBuffer[..written], out var activeNode);
-
-        NavRenderer.RenderTabs(_root!, activeNode, writer);
+        return _urlIndex!.TryGetValueByUtf8(urlBuffer[..written], out var activeIdx) ? activeIdx : -1;
     }
 }

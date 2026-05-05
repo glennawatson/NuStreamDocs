@@ -6,12 +6,12 @@ namespace NuStreamDocs.Icons.FontAwesome;
 
 /// <summary>Configuration for <see cref="FontAwesomePlugin"/>.</summary>
 /// <param name="StylesheetUrl">UTF-8 URL of the Font Awesome stylesheet to inject into <c>&lt;head&gt;</c>.</param>
-/// <param name="Crossorigin">Optional <c>crossorigin</c> attribute value; empty to omit.</param>
-/// <param name="ReferrerPolicy">Optional <c>referrerpolicy</c> attribute value; empty to omit.</param>
+/// <param name="Crossorigin">Optional UTF-8 <c>crossorigin</c> attribute value; empty to omit.</param>
+/// <param name="ReferrerPolicy">Optional UTF-8 <c>referrerpolicy</c> attribute value; empty to omit.</param>
 public readonly record struct FontAwesomeOptions(
     byte[] StylesheetUrl,
-    string Crossorigin,
-    string ReferrerPolicy)
+    byte[] Crossorigin,
+    byte[] ReferrerPolicy)
 {
     /// <summary>Gets the default Font Awesome Free CDN URL (CSS, all variants).</summary>
     /// <remarks>
@@ -22,9 +22,15 @@ public readonly record struct FontAwesomeOptions(
     public static byte[] DefaultStylesheetUrl { get; } =
         [.. "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css"u8];
 
+    /// <summary>Gets the default <c>crossorigin</c> attribute value.</summary>
+    public static byte[] DefaultCrossorigin { get; } = [.. "anonymous"u8];
+
+    /// <summary>Gets the default <c>referrerpolicy</c> attribute value.</summary>
+    public static byte[] DefaultReferrerPolicy { get; } = [.. "no-referrer"u8];
+
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static FontAwesomeOptions Default { get; } = new(
         StylesheetUrl: DefaultStylesheetUrl,
-        Crossorigin: "anonymous",
-        ReferrerPolicy: "no-referrer");
+        Crossorigin: DefaultCrossorigin,
+        ReferrerPolicy: DefaultReferrerPolicy);
 }

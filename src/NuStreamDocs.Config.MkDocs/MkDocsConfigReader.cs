@@ -12,7 +12,7 @@ namespace NuStreamDocs.Config.MkDocs;
 public sealed class MkDocsConfigReader : IConfigReader
 {
     /// <inheritdoc/>
-    public string FormatName => "mkdocs";
+    public ReadOnlySpan<byte> FormatName => "mkdocs"u8;
 
     /// <inheritdoc/>
     public bool RecognizesExtension(ReadOnlySpan<char> extension) =>

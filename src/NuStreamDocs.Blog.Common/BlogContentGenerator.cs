@@ -65,7 +65,7 @@ public static class BlogContentGenerator
 
         Directory.CreateDirectory(options.ArchiveRoot);
         var archiveCount = 0;
-        var fallback = System.Text.Encoding.UTF8.GetBytes(options.ArchiveFallbackSlug);
+        var fallback = options.ArchiveFallbackSlug;
         foreach (var (tag, postsForTag) in GroupByTag(posts))
         {
             var safeSlugBytes = BlogSlugifier.Slugify(tag, fallback);

@@ -16,7 +16,7 @@ public class WyamBlogPluginLifecycleTests
     {
         using var temp = new ScratchDir();
         Directory.CreateDirectory(Path.Combine(temp.Root, "posts"));
-        var plugin = new WyamBlogPlugin(new("posts", "Blog"));
+        var plugin = new WyamBlogPlugin(new("posts", [.. "Blog"u8]));
         await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
     }
 

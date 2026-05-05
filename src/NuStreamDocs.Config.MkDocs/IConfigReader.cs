@@ -27,8 +27,8 @@ namespace NuStreamDocs.Config.MkDocs;
 /// </remarks>
 public interface IConfigReader
 {
-    /// <summary>Gets the human-readable format name (used in build logs).</summary>
-    string FormatName { get; }
+    /// <summary>Gets the UTF-8 human-readable format name.</summary>
+    ReadOnlySpan<byte> FormatName { get; }
 
     /// <summary>Returns true when this reader can handle a file with <paramref name="extension"/>.</summary>
     /// <param name="extension">File extension including the leading dot, lowercase (e.g. <c>.yml</c>).</param>

@@ -24,7 +24,7 @@ public class MkDocsBlogPluginTests
         {
             await File.WriteAllTextAsync(Path.Combine(postsRoot, "2024-01-15-launch.md"), "---\nTitle: Launch\nAuthor: Team\nTags: Release\nPublished: 2024-01-15\n---\nLaunch announcement.");
 
-            var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
+            var plugin = new MkDocsBlogPlugin(new("blog", [.. "Blog"u8]));
             var ctx = new BuildDiscoverContext(docsRoot, "/out", []);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 

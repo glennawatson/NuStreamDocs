@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 
 namespace NuStreamDocs.Plugins;
 
@@ -23,35 +22,19 @@ public static class HeadExtraWriter
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>UTF-8-encodes <paramref name="value"/> directly into the writer's span.</summary>
-    /// <param name="writer">UTF-8 sink.</param>
-    /// <param name="value">String to encode.</param>
-    public static void WriteString(IBufferWriter<byte> writer, string value)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        if (string.IsNullOrEmpty(value))
-        {
-            return;
-        }
-
-        var dst = writer.GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length));
-        var written = Encoding.UTF8.GetBytes(value, dst);
-        writer.Advance(written);
-    }
-
     /// <summary>Emits <c>{prefix}{value}"</c> when <paramref name="value"/> is non-empty.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="prefix">Open-attribute prefix including <c>="</c>.</param>
-    /// <param name="value">Attribute value; skipped when empty.</param>
-    public static void AppendAttribute(IBufferWriter<byte> writer, ReadOnlySpan<byte> prefix, string value)
+    /// <param name="value">UTF-8 attribute value bytes; skipped when empty.</param>
+    public static void AppendAttribute(IBufferWriter<byte> writer, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> value)
     {
-        if (string.IsNullOrEmpty(value))
+        if (value.IsEmpty)
         {
             return;
         }
 
         WriteUtf8(writer, prefix);
-        WriteString(writer, value);
+        WriteUtf8(writer, value);
         WriteUtf8(writer, "\""u8);
     }
 }

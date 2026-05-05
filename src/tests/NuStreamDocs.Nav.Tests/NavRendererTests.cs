@@ -25,7 +25,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderFull(root, intro, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
+        NavRenderer.RenderFull(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html.Contains("/guide/intro.html", StringComparison.Ordinal)).IsTrue();
@@ -70,7 +71,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderSidebarFull(root, intro, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
+        NavRenderer.RenderSidebarFull(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("/index.html");
@@ -91,7 +93,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderTabs(root, apiIndex, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, apiIndex);
+        NavRenderer.RenderTabs(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("href=\"/api/\"");
@@ -109,7 +112,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderSidebarFull(root, intro, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
+        NavRenderer.RenderSidebarFull(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("href=\"/guide/intro.html\"");
@@ -154,7 +158,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderSidebarPruned(root, resources, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, resources);
+        NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("href=\"/docs/resources/blogs/\"");
@@ -172,7 +177,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderSidebarPruned(root, docs, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, docs);
+        NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<span class=\"md-ellipsis\">Getting Started</span>");
@@ -199,7 +205,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderSidebarPruned(root, api, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, api);
+        NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
 
@@ -234,7 +241,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderSidebarPruned(root, api, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, api);
+        NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
 
@@ -271,7 +279,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderPruned(root, intro, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
+        NavRenderer.RenderPruned(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
 
@@ -298,7 +307,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderFull(root, aIntro, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, aIntro);
+        NavRenderer.RenderFull(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
 
@@ -324,7 +334,8 @@ public class NavRendererTests
         root.AttachParents();
 
         var writer = new ArrayBufferWriter<byte>();
-        NavRenderer.RenderSidebarPruned(root, api, writer);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, api);
+        NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
 
@@ -346,11 +357,12 @@ public class NavRendererTests
     public async Task BuildUrlIndexMapsEveryLeaf()
     {
         var root = BuildSampleTree();
-        var index = NavRenderer.BuildUrlIndex(root);
+        var tree = NavTreeFlattener.Flatten(root);
+        var index = NavRenderer.BuildUrlIndex(tree);
 
         await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
         await Assert.That(index.ContainsKeyByUtf8("blog/post.html"u8)).IsTrue();
-        await Assert.That(index.TryGetValueByUtf8("guide/intro.html"u8, out var introNode) && Encoding.UTF8.GetString(introNode.Title) == "Intro").IsTrue();
+        await Assert.That(index.TryGetValueByUtf8("guide/intro.html"u8, out var introIdx) && Encoding.UTF8.GetString(tree.Nodes[introIdx].Title) == "Intro").IsTrue();
     }
 
     /// <summary>BuildUrlIndex includes section index URLs (when present).</summary>
@@ -363,12 +375,13 @@ public class NavRendererTests
         // Sections expose IndexUrl via the 5-arg ctor's indexPath argument.
         var section = new NavNode("Guide", relativePath: string.Empty, isSection: true, [leaf], indexPath: "guide/index.md");
         var root = new NavNode(string.Empty, string.Empty, isSection: true, [section]);
+        var tree = NavTreeFlattener.Flatten(root);
 
-        var index = NavRenderer.BuildUrlIndex(root);
+        var index = NavRenderer.BuildUrlIndex(tree);
 
         await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
         await Assert.That(index.ContainsKeyByUtf8("guide/index.html"u8)).IsTrue();
-        await Assert.That(index.TryGetValueByUtf8("guide/index.html"u8, out var guideNode) && Encoding.UTF8.GetString(guideNode.Title) == "Guide").IsTrue();
+        await Assert.That(index.TryGetValueByUtf8("guide/index.html"u8, out var guideIdx) && Encoding.UTF8.GetString(tree.Nodes[guideIdx].Title) == "Guide").IsTrue();
     }
 
     /// <summary>BuildUrlIndex returns an empty dictionary for an empty tree.</summary>
@@ -377,14 +390,15 @@ public class NavRendererTests
     public async Task BuildUrlIndexEmptyTree()
     {
         var root = new NavNode(string.Empty, string.Empty, isSection: true, []);
-        var index = NavRenderer.BuildUrlIndex(root);
+        var tree = NavTreeFlattener.Flatten(root);
+        var index = NavRenderer.BuildUrlIndex(tree);
         await Assert.That(index.Count).IsEqualTo(0);
     }
 
-    /// <summary>BuildUrlIndex throws when root is null.</summary>
+    /// <summary>BuildUrlIndex throws when tree is null.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task BuildUrlIndexNullRootThrows() =>
+    public async Task BuildUrlIndexNullTreeThrows() =>
         await Assert.That(() => NavRenderer.BuildUrlIndex(null!)).Throws<ArgumentNullException>();
 
     /// <summary>Builds the standard 2-section fixture and runs the plugin's per-page render path.</summary>

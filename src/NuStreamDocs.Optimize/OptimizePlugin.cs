@@ -69,7 +69,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous walk.</returns>
-    internal async Task CompressTreeAsync(string outputRoot, CancellationToken cancellationToken)
+    internal async Task CompressTreeAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
     {
         var parallelOptions = new ParallelOptions
         {
@@ -78,7 +78,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
         };
 
         var eligible = EnumerateEligible(outputRoot);
-        OptimizeLoggingHelper.LogOptimizeStart(_logger, eligible.Length, outputRoot);
+        OptimizeLoggingHelper.LogOptimizeStart(_logger, eligible.Length, outputRoot.Value);
 
         var processed = 0;
         long bytesSaved = 0;
@@ -109,10 +109,10 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <summary>Returns every file under <paramref name="root"/> whose extension is compressible and whose size meets the minimum.</summary>
     /// <param name="root">Output root.</param>
     /// <returns>Eligible absolute paths.</returns>
-    private string[] EnumerateEligible(string root)
+    private FilePath[] EnumerateEligible(DirectoryPath root)
     {
-        var buffer = new List<string>();
-        foreach (var path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        var buffer = new List<FilePath>(capacity: 256);
+        foreach (var path in Directory.EnumerateFiles(root.Value, "*", SearchOption.AllDirectories))
         {
             if (path.EndsWith(".gz", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".br", StringComparison.OrdinalIgnoreCase))
             {
@@ -133,7 +133,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
                 continue;
             }
 
-            buffer.Add(path);
+            buffer.Add(new(path));
         }
 
         return [.. buffer];
@@ -143,16 +143,17 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <param name="path">Absolute path.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The total bytes saved across the configured formats (sum of original-minus-compressed for each emitted sibling).</returns>
-    private async Task<long> CompressOneAsync(string path, CancellationToken cancellationToken)
+    private async Task<long> CompressOneAsync(FilePath path, CancellationToken cancellationToken)
     {
-        var originalBytes = new FileInfo(path).Length;
+        var pathValue = path.Value;
+        var originalBytes = new FileInfo(pathValue).Length;
         long saved = 0;
         if ((_options.Formats & OptimizeFormats.Gzip) == OptimizeFormats.Gzip)
         {
-            await Compressor.WriteGzipAsync(path, _options.GzipLevel, cancellationToken).ConfigureAwait(false);
-            var gzBytes = new FileInfo(path + ".gz").Length;
+            await Compressor.WriteGzipAsync(pathValue, _options.GzipLevel, cancellationToken).ConfigureAwait(false);
+            var gzBytes = new FileInfo(pathValue + ".gz").Length;
             saved += originalBytes - gzBytes;
-            OptimizeLoggingHelper.LogFileProcessed(_logger, path, originalBytes, gzBytes);
+            OptimizeLoggingHelper.LogFileProcessed(_logger, pathValue, originalBytes, gzBytes);
         }
 
         if ((_options.Formats & OptimizeFormats.Brotli) != OptimizeFormats.Brotli)
@@ -160,10 +161,10 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
             return saved;
         }
 
-        await Compressor.WriteBrotliAsync(path, _options.BrotliLevel, cancellationToken).ConfigureAwait(false);
-        var brBytes = new FileInfo(path + ".br").Length;
+        await Compressor.WriteBrotliAsync(pathValue, _options.BrotliLevel, cancellationToken).ConfigureAwait(false);
+        var brBytes = new FileInfo(pathValue + ".br").Length;
         saved += originalBytes - brBytes;
-        OptimizeLoggingHelper.LogFileProcessed(_logger, path, originalBytes, brBytes);
+        OptimizeLoggingHelper.LogFileProcessed(_logger, pathValue, originalBytes, brBytes);
         return saved;
     }
 }

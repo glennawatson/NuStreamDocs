@@ -54,7 +54,7 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
                 IndexTitle: _options.IndexTitle,
                 EmitArchives: _options.EmitCategoryArchives,
                 ArchiveRoot: blogRoot / "category",
-                ArchiveFallbackSlug: "category"),
+                ArchiveFallbackSlug: [.. "category"u8]),
             cancellationToken).ConfigureAwait(false);
     }
 

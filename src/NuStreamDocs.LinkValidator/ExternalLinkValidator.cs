@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using NuStreamDocs.Common;
 using Polly;
 
 namespace NuStreamDocs.LinkValidator;
@@ -188,7 +189,7 @@ public static class ExternalLinkValidator
 
     /// <summary>One external-URL occurrence: source page plus the parsed URI.</summary>
     /// <param name="SourcePage">Page URL the link came from.</param>
-    /// <param name="Url">Raw URL string.</param>
+    /// <param name="Url">Raw URL.</param>
     /// <param name="Uri">Parsed URI.</param>
-    internal readonly record struct ExternalHit(string SourcePage, string Url, Uri Uri);
+    internal readonly record struct ExternalHit(UrlPath SourcePage, UrlPath Url, Uri Uri);
 }

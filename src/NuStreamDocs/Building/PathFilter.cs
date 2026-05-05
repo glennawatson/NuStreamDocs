@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.FileSystemGlobbing;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Building;
 
@@ -29,7 +30,7 @@ public sealed class PathFilter
     /// <summary>Initializes a new instance of the <see cref="PathFilter"/> class.</summary>
     /// <param name="includes">Globs whose matches are kept; empty means "everything".</param>
     /// <param name="excludes">Globs whose matches are dropped; empty means "nothing dropped".</param>
-    public PathFilter(string[] includes, string[] excludes)
+    public PathFilter(GlobPattern[] includes, GlobPattern[] excludes)
     {
         ArgumentNullException.ThrowIfNull(includes);
         ArgumentNullException.ThrowIfNull(excludes);
@@ -39,7 +40,7 @@ public sealed class PathFilter
         {
             for (var i = 0; i < includes.Length; i++)
             {
-                matcher.AddInclude(includes[i]);
+                matcher.AddInclude(includes[i].Value);
             }
         }
         else
@@ -51,7 +52,7 @@ public sealed class PathFilter
 
         for (var i = 0; i < excludes.Length; i++)
         {
-            matcher.AddExclude(excludes[i]);
+            matcher.AddExclude(excludes[i].Value);
         }
 
         _matcher = matcher;
@@ -71,9 +72,9 @@ public sealed class PathFilter
     /// <summary>Tests whether <paramref name="relativePath"/> survives the filter.</summary>
     /// <param name="relativePath">Forward-slashed path relative to the docs root.</param>
     /// <returns>True when the path is kept by the configured globs.</returns>
-    public bool Matches(string relativePath)
+    public bool Matches(FilePath relativePath)
     {
-        ArgumentNullException.ThrowIfNull(relativePath);
-        return _matcher.Match(relativePath).HasMatches;
+        ArgumentException.ThrowIfNullOrEmpty(relativePath.Value);
+        return _matcher.Match(relativePath.Value).HasMatches;
     }
 }

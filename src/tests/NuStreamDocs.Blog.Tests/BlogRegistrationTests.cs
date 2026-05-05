@@ -14,21 +14,21 @@ public class BlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new WyamBlogPlugin(new("posts", "Blog")).Name.SequenceEqual("wyam-blog"u8)).IsTrue();
+        await Assert.That(new WyamBlogPlugin(new("posts", [.. "Blog"u8])).Name.SequenceEqual("wyam-blog"u8)).IsTrue();
 
     /// <summary>2-arg ctor enables EmitTagArchives.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TwoArgCtorEnablesArchives() =>
-        await Assert.That(new WyamBlogOptions("posts", "Blog").EmitTagArchives).IsTrue();
+        await Assert.That(new WyamBlogOptions("posts", [.. "Blog"u8]).EmitTagArchives).IsTrue();
 
     /// <summary>Validate() throws on empty fields.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ValidateThrowsOnEmpty()
     {
-        Assert.Throws<ArgumentException>(static () => new WyamBlogOptions(string.Empty, "T").Validate());
-        var ex = Assert.Throws<ArgumentException>(static () => new WyamBlogOptions("posts", string.Empty).Validate());
+        Assert.Throws<ArgumentException>(static () => new WyamBlogOptions(string.Empty, [.. "T"u8]).Validate());
+        var ex = Assert.Throws<ArgumentException>(static () => new WyamBlogOptions("posts", []).Validate());
         await Assert.That(ex).IsNotNull();
     }
 
@@ -36,13 +36,13 @@ public class BlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseWyamBlogRegisters() =>
-        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", "Blog"))).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]))).IsTypeOf<DocBuilder>();
 
     /// <summary>UseWyamBlog(options, logger) registers.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseWyamBlogLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", "Blog"), NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]), NullLogger.Instance)).IsTypeOf<DocBuilder>();
 
     /// <summary>UseWyamBlog rejects null builder.</summary>
     /// <returns>Async test.</returns>
@@ -50,7 +50,7 @@ public class BlogRegistrationTests
     public async Task UseWyamBlogRejectsNullBuilder()
     {
         var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderBlogExtensions.UseWyamBlog(null!, new("posts", "Blog")));
+            DocBuilderBlogExtensions.UseWyamBlog(null!, new("posts", [.. "Blog"u8])));
         await Assert.That(ex).IsNotNull();
     }
 
@@ -69,7 +69,7 @@ public class BlogRegistrationTests
     public async Task UseWyamBlogRejectsNullLogger()
     {
         var ex = Assert.Throws<ArgumentNullException>(static () =>
-            new DocBuilder().UseWyamBlog(new("posts", "Blog"), null!));
+            new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]), null!));
         await Assert.That(ex).IsNotNull();
     }
 }

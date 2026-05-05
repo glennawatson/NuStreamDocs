@@ -16,7 +16,7 @@ public class MkDocsBlogPluginLifecycleTests
     {
         using var temp = new ScratchDir();
         Directory.CreateDirectory(Path.Combine(temp.Root, "blog", "posts"));
-        var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
+        var plugin = new MkDocsBlogPlugin(new("blog", [.. "Blog"u8]));
         await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
     }
 

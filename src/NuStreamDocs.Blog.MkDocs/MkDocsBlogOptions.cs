@@ -8,20 +8,20 @@ namespace NuStreamDocs.Blog.MkDocs;
 
 /// <summary>Configuration for <see cref="MkDocsBlogPlugin"/>.</summary>
 /// <param name="BlogSubdirectory">Subdirectory under the docs root that hosts the blog (e.g. <c>blog</c>). Posts live in <c>{BlogSubdirectory}/posts</c>.</param>
-/// <param name="IndexTitle">Title rendered at the top of the generated index page.</param>
+/// <param name="IndexTitle">UTF-8 title bytes rendered at the top of the generated index page.</param>
 /// <param name="EmitCategoryArchives">When true, a <c>{BlogSubdirectory}/category/{slug}.md</c> archive page is generated for each tag/category in use.</param>
-public sealed record MkDocsBlogOptions(PathSegment BlogSubdirectory, string IndexTitle, bool EmitCategoryArchives)
+public sealed record MkDocsBlogOptions(PathSegment BlogSubdirectory, byte[] IndexTitle, bool EmitCategoryArchives)
 {
     /// <summary>Initializes a new instance of the <see cref="MkDocsBlogOptions"/> class with archives enabled.</summary>
     /// <param name="blogSubdirectory">Blog subdirectory.</param>
-    /// <param name="indexTitle">Index title.</param>
-    public MkDocsBlogOptions(PathSegment blogSubdirectory, string indexTitle)
+    /// <param name="indexTitle">UTF-8 title bytes.</param>
+    public MkDocsBlogOptions(PathSegment blogSubdirectory, byte[] indexTitle)
         : this(blogSubdirectory, indexTitle, EmitCategoryArchives: true)
     {
     }
 
     /// <summary>Throws when any field is empty.</summary>
-    /// <exception cref="ArgumentException">When a required field is null, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentException">When a required field is null or empty.</exception>
     public void Validate()
     {
         if (BlogSubdirectory.IsEmpty)
@@ -29,6 +29,11 @@ public sealed record MkDocsBlogOptions(PathSegment BlogSubdirectory, string Inde
             throw new ArgumentException("BlogSubdirectory must be non-empty.", nameof(BlogSubdirectory));
         }
 
-        ArgumentException.ThrowIfNullOrWhiteSpace(IndexTitle);
+        if (IndexTitle is [_, ..])
+        {
+            return;
+        }
+
+        throw new ArgumentException("IndexTitle bytes must be non-empty.", nameof(IndexTitle));
     }
 }

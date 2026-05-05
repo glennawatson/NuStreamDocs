@@ -119,16 +119,16 @@ internal static class ExternalAssetDownloader
     /// <param name="registry">URL registry; mutated as nested CSS URLs are discovered.</param>
     /// <param name="processed">Cross-iteration dedupe set keyed on UTF-8 URL bytes; updated in place.</param>
     /// <returns>Pending entries to download in this pass.</returns>
-    private static (string Url, string LocalPath)[] SnapshotPending(ExternalAssetRegistry registry, HashSet<byte[]> processed)
+    private static (UrlPath Url, FilePath LocalPath)[] SnapshotPending(ExternalAssetRegistry registry, HashSet<byte[]> processed)
     {
         var snapshot = registry.EntriesSnapshot();
-        var pendingBuffer = new List<(string Url, string LocalPath)>(snapshot.Length);
+        var pendingBuffer = new List<(UrlPath Url, FilePath LocalPath)>(snapshot.Length);
         for (var i = 0; i < snapshot.Length; i++)
         {
             // Skip the UTF-8 decode for entries we've already processed in an earlier pass — only decode when we're actually queuing the URL.
             if (processed.Add(snapshot[i].Url))
             {
-                pendingBuffer.Add((Encoding.UTF8.GetString(snapshot[i].Url), Encoding.UTF8.GetString(snapshot[i].LocalPath)));
+                pendingBuffer.Add((new(Encoding.UTF8.GetString(snapshot[i].Url)), new(Encoding.UTF8.GetString(snapshot[i].LocalPath))));
             }
         }
 
@@ -143,7 +143,7 @@ internal static class ExternalAssetDownloader
     /// <returns>A task that completes when every parallel download in this pass finishes.</returns>
     private static async Task RunIterationAsync(
         int iterationNumber,
-        (string Url, string LocalPath)[] pending,
+        (UrlPath Url, FilePath LocalPath)[] pending,
         IterationContext ctx,
         CancellationToken cancellationToken)
     {
@@ -162,14 +162,15 @@ internal static class ExternalAssetDownloader
             },
             async (entry, ct) =>
             {
+                var localPath = entry.LocalPath.Value.Replace('/', Path.DirectorySeparatorChar);
                 var target = new DownloadTarget(
                     entry.Url,
-                    Path.Combine(ctx.OutputRoot.Value, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)),
-                    Path.Combine(ctx.CacheRoot.Value, entry.LocalPath.Replace('/', Path.DirectorySeparatorChar)));
+                    Path.Combine(ctx.OutputRoot.Value, localPath),
+                    Path.Combine(ctx.CacheRoot.Value, localPath));
                 if (!await DownloadOneAsync(ctx.Environment, target, ctx.Logger, ct).ConfigureAwait(false))
                 {
-                    ctx.Failures.Add(entry.Url);
-                    PrivacyLoggingHelper.LogDownloadFailure(ctx.Logger, entry.Url, target.OutputPath.Value);
+                    ctx.Failures.Add(entry.Url.Value);
+                    PrivacyLoggingHelper.LogDownloadFailure(ctx.Logger, entry.Url.Value, target.OutputPath.Value);
                 }
 
                 var done = Interlocked.Increment(ref completed);
@@ -237,7 +238,7 @@ internal static class ExternalAssetDownloader
     {
         if (TryPublishFromCache(target.CachePath, target.OutputPath))
         {
-            PrivacyLoggingHelper.LogCacheHit(logger, target.Url, target.CachePath.Value);
+            PrivacyLoggingHelper.LogCacheHit(logger, target.Url.Value, target.CachePath.Value);
             return true;
         }
 
@@ -270,7 +271,7 @@ internal static class ExternalAssetDownloader
             }
 
             await WriteCacheAndOutputAsync(target.CachePath, target.OutputPath, bytes, cancellationToken).ConfigureAwait(false);
-            PrivacyLoggingHelper.LogDownloadSuccess(logger, target.Url, target.OutputPath.Value);
+            PrivacyLoggingHelper.LogDownloadSuccess(logger, target.Url.Value, target.OutputPath.Value);
             return true;
         }
         catch (HttpRequestException)
@@ -337,7 +338,7 @@ internal static class ExternalAssetDownloader
     /// <param name="Url">External URL.</param>
     /// <param name="OutputPath">Absolute output path.</param>
     /// <param name="CachePath">Absolute cache path.</param>
-    public readonly record struct DownloadTarget(string Url, FilePath OutputPath, FilePath CachePath);
+    public readonly record struct DownloadTarget(UrlPath Url, FilePath OutputPath, FilePath CachePath);
 
     /// <summary>Shared per-batch state passed through the download helpers.</summary>
     /// <param name="Client">Shared HTTP client.</param>

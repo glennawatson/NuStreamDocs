@@ -28,7 +28,7 @@ public class WyamBlogPluginTests
                 Path.Combine(postsDir, "2021-01-04-association.md"),
                 "---\nTitle: Association\nAuthor: Rodney Littles, II\nTags: Announcement, Release\nPublished: 2021-01-04\n---\nThe announcement.");
 
-            var plugin = new WyamBlogPlugin(new("Announcements", "Announcements"));
+            var plugin = new WyamBlogPlugin(new("Announcements", [.. "Announcements"u8]));
             var ctx = new BuildDiscoverContext(docsRoot, "/out", []);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
@@ -60,7 +60,7 @@ public class WyamBlogPluginTests
             await File.WriteAllTextAsync(Path.Combine(postsDir, "2020-01-01-old.md"), "---\nTitle: Old\nPublished: 2020-01-01\n---\nOld body.");
             await File.WriteAllTextAsync(Path.Combine(postsDir, "2024-01-01-new.md"), "---\nTitle: New\nPublished: 2024-01-01\n---\nNew body.");
 
-            var plugin = new WyamBlogPlugin(new("blog", "Blog", EmitTagArchives: false));
+            var plugin = new WyamBlogPlugin(new("blog", [.. "Blog"u8], EmitTagArchives: false));
             var ctx = new BuildDiscoverContext(docsRoot, "/out", []);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 

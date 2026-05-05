@@ -26,6 +26,10 @@ internal sealed class MetadataRegistry(Dictionary<string, byte[]> byPath)
     /// <summary>Looks up the merged-body bytes for <paramref name="relativePath"/>, or returns an empty span when nothing to inject.</summary>
     /// <param name="relativePath">Forward-slash-normalized page path.</param>
     /// <returns>Merged YAML body bytes (no <c>---</c> delimiters); empty when absent.</returns>
-    public ReadOnlySpan<byte> ExtraFor(string relativePath) =>
-        byPath.TryGetValue(relativePath, out var bytes) ? bytes : [];
+    /// <remarks>
+    /// Case-insensitive on the path key — the underlying dictionary is built with
+    /// <see cref="StringComparer.OrdinalIgnoreCase"/> to absorb cross-OS path-casing differences.
+    /// </remarks>
+    public ReadOnlySpan<byte> ExtraFor(FilePath relativePath) =>
+        byPath.TryGetValue(relativePath.Value, out var bytes) ? bytes : [];
 }

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Nav;
 
 namespace NuStreamDocs.Config.MkDocs;
@@ -17,10 +18,10 @@ public static class NavOptionsMkDocsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions FromMkDocsYaml(this NavOptions options, string yamlPath)
+    public static NavOptions FromMkDocsYaml(this NavOptions options, FilePath yamlPath)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath);
-        var bytes = File.ReadAllBytes(yamlPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
+        var bytes = File.ReadAllBytes(yamlPath.Value);
         return options.FromMkDocsYaml((ReadOnlySpan<byte>)bytes);
     }
 
