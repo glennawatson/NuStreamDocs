@@ -138,7 +138,7 @@ public class MixedContentBytesTests
     [Test]
     public async Task EmptyInputReturnsFalse()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var changed = MixedContentBytes.RewriteInto([], sink);
         await Assert.That(changed).IsFalse();
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
@@ -149,7 +149,7 @@ public class MixedContentBytesTests
     [Test]
     public async Task NoMatchReturnsFalseAndWritesNothing()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var changed = MixedContentBytes.RewriteInto("hello world"u8, sink);
         await Assert.That(changed).IsFalse();
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
@@ -181,7 +181,7 @@ public class MixedContentBytesTests
     /// <returns>Rewritten string, or the input when no rewrite happened.</returns>
     private static string Rewrite(string html)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var changed = MixedContentBytes.RewriteInto(Encoding.UTF8.GetBytes(html), sink);
         return changed ? Encoding.UTF8.GetString(sink.WrittenSpan) : html;
     }

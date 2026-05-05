@@ -12,7 +12,7 @@ public class LinkValidatorPluginCtorTests
     [Test]
     public async Task TwoArgCtor()
     {
-        var plugin = new LinkValidatorPlugin(LinkValidatorOptions.Default, httpClientFactory: () => new());
+        LinkValidatorPlugin plugin = new(LinkValidatorOptions.Default, httpClientFactory: static () => new());
         await Assert.That(plugin.Name.SequenceEqual("link-validator"u8)).IsTrue();
     }
 

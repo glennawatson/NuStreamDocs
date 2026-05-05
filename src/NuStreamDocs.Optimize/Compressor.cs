@@ -36,7 +36,7 @@ internal static class Compressor
     {
         await using var src = File.OpenRead(sourcePath);
         await using var dst = File.Create(sourcePath + GzipSuffix);
-        await using var gz = new GZipStream(dst, level, leaveOpen: true);
+        await using GZipStream gz = new(dst, level, leaveOpen: true);
         await src.CopyToAsync(gz, cancellationToken).ConfigureAwait(false);
     }
 
@@ -49,7 +49,7 @@ internal static class Compressor
     {
         await using var src = File.OpenRead(sourcePath);
         await using var dst = File.Create(sourcePath + BrotliSuffix);
-        await using var br = new BrotliStream(dst, level, leaveOpen: true);
+        await using BrotliStream br = new(dst, level, leaveOpen: true);
         await src.CopyToAsync(br, cancellationToken).ConfigureAwait(false);
     }
 }

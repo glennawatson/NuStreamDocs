@@ -15,7 +15,7 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariableBytesStoresEntry()
     {
-        var options = MacrosOptions.Default.WithVariable("name"u8.ToArray(), "world"u8.ToArray());
+        var options = MacrosOptions.Default.WithVariable([.. "name"u8], [.. "world"u8]);
         var lookup = options.Variables.GetAlternateLookup<ReadOnlySpan<byte>>();
         await Assert.That(lookup.TryGetValue("name"u8, out var value)).IsTrue();
         await Assert.That(value.AsSpan().SequenceEqual("world"u8)).IsTrue();
@@ -38,7 +38,7 @@ public class MacrosOptionsExtensionsTests
     public async Task WithVariableStringMatchesByteOverload()
     {
         var fromString = MacrosOptions.Default.WithVariable("greeting", "hello");
-        var fromBytes = MacrosOptions.Default.WithVariable("greeting"u8.ToArray(), "hello"u8.ToArray());
+        var fromBytes = MacrosOptions.Default.WithVariable([.. "greeting"u8], [.. "hello"u8]);
 
         await Assert.That(fromString.Variables.Count).IsEqualTo(1);
         await Assert.That(fromBytes.Variables.Count).IsEqualTo(1);
@@ -72,10 +72,10 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariablesBytesSeedsMap()
     {
-        var seed = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance)
+        Dictionary<byte[], byte[]> seed = new(ByteArrayComparer.Instance)
         {
-            ["a"u8.ToArray()] = "1"u8.ToArray(),
-            ["b"u8.ToArray()] = "2"u8.ToArray(),
+            [[.. "a"u8]] = [.. "1"u8],
+            [[.. "b"u8]] = [.. "2"u8]
         };
         var options = MacrosOptions.Default.WithVariables(seed);
         await Assert.That(options.Variables.Count).IsEqualTo(2);
@@ -86,10 +86,10 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariablesStringEncodesAllEntries()
     {
-        var seed = new Dictionary<ApiCompatString, ApiCompatString>
+        Dictionary<ApiCompatString, ApiCompatString> seed = new()
         {
             ["a"] = "1",
-            ["b"] = "2",
+            ["b"] = "2"
         };
         var options = MacrosOptions.Default.WithVariables(seed);
         var lookup = options.Variables.GetAlternateLookup<ReadOnlySpan<byte>>();
@@ -104,9 +104,9 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariableStringRejectsNullOrEmptyName()
     {
-        await Assert.That(() => MacrosOptions.Default.WithVariable((string)null!, "v"))
+        await Assert.That(static () => MacrosOptions.Default.WithVariable((string)null!, "v"))
             .Throws<ArgumentException>();
-        await Assert.That(() => MacrosOptions.Default.WithVariable(string.Empty, "v"))
+        await Assert.That(static () => MacrosOptions.Default.WithVariable(string.Empty, "v"))
             .Throws<ArgumentException>();
     }
 
@@ -115,9 +115,9 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariableBytesRejectsNullOrEmptyName()
     {
-        await Assert.That(() => MacrosOptions.Default.WithVariable((byte[])null!, "v"u8.ToArray()))
+        await Assert.That(static () => MacrosOptions.Default.WithVariable((byte[])null!, [.. "v"u8]))
             .Throws<ArgumentNullException>();
-        await Assert.That(() => MacrosOptions.Default.WithVariable([], "v"u8.ToArray()))
+        await Assert.That(static () => MacrosOptions.Default.WithVariable([], [.. "v"u8]))
             .Throws<ArgumentException>();
     }
 
@@ -126,9 +126,9 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariablesRejectsNullMap()
     {
-        await Assert.That(() => MacrosOptions.Default.WithVariables((Dictionary<byte[], byte[]>)null!))
+        await Assert.That(static () => MacrosOptions.Default.WithVariables((Dictionary<byte[], byte[]>)null!))
             .Throws<ArgumentNullException>();
-        await Assert.That(() => MacrosOptions.Default.WithVariables((Dictionary<ApiCompatString, ApiCompatString>)null!))
+        await Assert.That(static () => MacrosOptions.Default.WithVariables((Dictionary<ApiCompatString, ApiCompatString>)null!))
             .Throws<ArgumentNullException>();
     }
 }

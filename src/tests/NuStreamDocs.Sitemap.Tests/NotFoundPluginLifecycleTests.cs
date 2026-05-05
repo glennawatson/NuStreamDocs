@@ -12,7 +12,7 @@ public class NotFoundPluginLifecycleTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new NotFoundPlugin();
+        NotFoundPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("404"u8)).IsTrue();
     }
 }

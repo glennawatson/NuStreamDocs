@@ -103,7 +103,7 @@ internal static class AttrListMarker
         Span<ByteRange> classBuffer = stackalloc ByteRange[MaxClassTokens];
         Span<KvRange> kvBuffer = stackalloc KvRange[MaxKvPairs];
         Span<bool> kvEmitted = stackalloc bool[MaxKvPairs];
-        var buffers = new AttrListBuffers(classBuffer, kvBuffer, kvEmitted);
+        AttrListBuffers buffers = new(classBuffer, kvBuffer, kvEmitted);
 
         ParseAttrList(source, attrListStart, attrListEnd, ref buffers);
 
@@ -149,25 +149,32 @@ internal static class AttrListMarker
                 continue;
             }
 
-            if (b is (byte)'#')
+            switch (b)
             {
-                i = ReadToken(source, i + 1, attrListEnd, out var range);
-                if (range.Length > 0)
-                {
-                    buffers.IdRange = range;
-                }
+                case (byte)'#':
+                    {
+                        i = ReadToken(source, i + 1, attrListEnd, out var range);
+                        if (range.Length > 0)
+                        {
+                            buffers.IdRange = range;
+                        }
 
-                continue;
+                        continue;
+                    }
+
+                case (byte)'.':
+                    {
+                        i = ReadToken(source, i + 1, attrListEnd, out var range);
+                        buffers.AppendClass(range);
+                        continue;
+                    }
+
+                default:
+                    {
+                        i = ReadKeyValue(source, i, attrListEnd, ref buffers);
+                        break;
+                    }
             }
-
-            if (b is (byte)'.')
-            {
-                i = ReadToken(source, i + 1, attrListEnd, out var range);
-                buffers.AppendClass(range);
-                continue;
-            }
-
-            i = ReadKeyValue(source, i, attrListEnd, ref buffers);
         }
     }
 
@@ -203,7 +210,7 @@ internal static class AttrListMarker
             offset++;
         }
 
-        var keyRange = new ByteRange(keyStart, offset - keyStart);
+        ByteRange keyRange = new(keyStart, offset - keyStart);
         if (offset >= end || source[offset] is not (byte)'=')
         {
             buffers.AppendKv(keyRange, new(NoOffset, 0));
@@ -339,15 +346,15 @@ internal static class AttrListMarker
     /// <returns>Cursor just past the value.</returns>
     private static int ReadHtmlAttributeValue(ReadOnlySpan<byte> source, int offset, int end, out ByteRange valueRange)
     {
-        if (offset >= end)
+        if (offset < end)
         {
-            valueRange = new(NoOffset, 0);
-            return offset;
+            return source[offset] is (byte)'"'
+                ? ReadQuotedValue(source, offset + 1, end, (byte)'"', out valueRange)
+                : ReadBareValue(source, offset, end, out valueRange);
         }
 
-        return source[offset] is (byte)'"'
-            ? ReadQuotedValue(source, offset + 1, end, (byte)'"', out valueRange)
-            : ReadBareValue(source, offset, end, out valueRange);
+        valueRange = new(NoOffset, 0);
+        return offset;
     }
 
     /// <summary>Emits one existing attribute, applying value overrides for id / class / kv when the name matches the new set.</summary>
@@ -387,12 +394,14 @@ internal static class AttrListMarker
         for (var i = 0; i < kvs.Length; i++)
         {
             var kvKey = source.Slice(kvs[i].Key.Start, kvs[i].Key.Length);
-            if (name.SequenceEqual(kvKey))
+            if (!name.SequenceEqual(kvKey))
             {
-                EmitKvAttr(source, kvs[i], sink);
-                buffers.KvEmitted[i] = true;
-                return;
+                continue;
             }
+
+            EmitKvAttr(source, kvs[i], sink);
+            buffers.KvEmitted[i] = true;
+            return;
         }
 
         EmitVerbatimAttr(source, nameRange, valueRange, sink);
@@ -506,17 +515,20 @@ internal static class AttrListMarker
         var afterBrace = afterWs + 1;
         var nextByte = source[afterBrace];
 
-        if (nextByte is (byte)':')
+        switch (nextByte)
         {
-            afterOpener = afterBrace + 1;
-            return true;
-        }
+            case (byte)':':
+                {
+                    afterOpener = afterBrace + 1;
+                    return true;
+                }
 
-        // {#id …} / {.class …} — python-markdown attr_list shorthand with no leading whitespace.
-        if (nextByte is (byte)'#' or (byte)'.')
-        {
-            afterOpener = afterBrace;
-            return true;
+            // {#id …} / {.class …} — python-markdown attr_list shorthand with no leading whitespace.
+            case (byte)'#' or (byte)'.':
+                {
+                    afterOpener = afterBrace;
+                    return true;
+                }
         }
 
         if (!AsciiByteHelpers.IsAsciiWhitespace(nextByte) || !LooksLikeAttrListInner(source, afterBrace))
@@ -538,7 +550,7 @@ internal static class AttrListMarker
             (< 0, < 0) => -1,
             (< 0, _) => b,
             (_, < 0) => a,
-            _ => Math.Min(a, b),
+            _ => Math.Min(a, b)
         };
 
     /// <summary>Returns true when the bytes after <paramref name="p"/> look like attr-list inner content.</summary>

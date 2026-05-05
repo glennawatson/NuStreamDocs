@@ -15,11 +15,11 @@ public class HeadingRewriterTests
     [Test]
     public async Task EmitsIdAndPermalinkAnchor()
     {
-        var html = "<h2>Hello World</h2>"u8.ToArray();
+        byte[] html = [.. "<h2>Hello World</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
-        var sink = new ArrayBufferWriter<byte>(128);
+        ArrayBufferWriter<byte> sink = new(128);
         HeadingRewriter.Rewrite(html, slugged, "¶"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
@@ -33,11 +33,11 @@ public class HeadingRewriterTests
     [Test]
     public async Task PreservesExistingId()
     {
-        var html = "<h2 id=\"keep\">Body</h2>"u8.ToArray();
+        byte[] html = [.. "<h2 id=\"keep\">Body</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
-        var sink = new ArrayBufferWriter<byte>(128);
+        ArrayBufferWriter<byte> sink = new(128);
         HeadingRewriter.Rewrite(html, slugged, "#"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
@@ -55,11 +55,11 @@ public class HeadingRewriterTests
     [Test]
     public async Task PreservesSurroundingContent()
     {
-        var html = "<p>before</p><h2>Title</h2><p>after</p>"u8.ToArray();
+        byte[] html = [.. "<p>before</p><h2>Title</h2><p>after</p>"u8];
         var headings = HeadingScanner.Scan(html);
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
-        var sink = new ArrayBufferWriter<byte>(128);
+        ArrayBufferWriter<byte> sink = new(128);
         HeadingRewriter.Rewrite(html, slugged, "¶"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 

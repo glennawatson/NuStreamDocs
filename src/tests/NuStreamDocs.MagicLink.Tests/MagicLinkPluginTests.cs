@@ -17,8 +17,8 @@ public class MagicLinkPluginTests
     [Test]
     public async Task PreRenderWrapsBareUrl()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("p.md", "see https://example.com here"u8, sink);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("p.md", "see https://example.com here"u8, sink);
         new MagicLinkPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("<https://example.com>");
     }
@@ -34,7 +34,7 @@ public class MagicLinkPluginTests
     [Test]
     public async Task UseMagicLinkRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseMagicLink()).IsSameReferenceAs(builder);
     }
 

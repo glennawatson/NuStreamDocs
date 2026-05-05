@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using NuStreamDocs.Building;
 using NuStreamDocs.Plugins;
 
@@ -16,14 +15,14 @@ public class SitemapPluginTests
     [Test]
     public async Task SitemapEmitsBothFiles()
     {
-        using var temp = new SitemapTempDir();
-        var plugin = new SitemapPlugin();
-        var ctx = new BuildConfigureContext("/in", temp.Root, [], new()) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test") };
+        using SitemapTempDir temp = new();
+        SitemapPlugin plugin = new();
+        BuildConfigureContext ctx = new("/in", temp.Root, [], new()) { SiteUrl = [.."https://docs.test"u8] };
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         ScanPage(plugin, "guide/intro.md");
         ScanPage(plugin, "index.md");
-        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "robots.txt"))).IsTrue();
@@ -34,13 +33,13 @@ public class SitemapPluginTests
     [Test]
     public async Task SitemapNoOpsWithoutSiteUrl()
     {
-        using var temp = new SitemapTempDir();
-        var plugin = new SitemapPlugin();
-        var ctx = new BuildConfigureContext("/in", temp.Root, [], new());
+        using SitemapTempDir temp = new();
+        SitemapPlugin plugin = new();
+        BuildConfigureContext ctx = new("/in", temp.Root, [], new());
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         ScanPage(plugin, "any.md");
-        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();
     }
@@ -50,13 +49,13 @@ public class SitemapPluginTests
     [Test]
     public async Task SitemapSkipsEmptyUrl()
     {
-        using var temp = new SitemapTempDir();
-        var plugin = new SitemapPlugin();
-        var ctx = new BuildConfigureContext("/in", temp.Root, [], new()) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test/") };
+        using SitemapTempDir temp = new();
+        SitemapPlugin plugin = new();
+        BuildConfigureContext ctx = new("/in", temp.Root, [], new()) { SiteUrl = [.. "https://docs.test/"u8] };
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         ScanPage(plugin, string.Empty);
-        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
         // No entries → no sitemap written.
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();
@@ -135,7 +134,7 @@ public class SitemapPluginTests
     /// <param name="relativePath">Source-relative markdown path.</param>
     private static void ScanPage(SitemapPlugin plugin, string relativePath)
     {
-        var ctx = new PageScanContext(relativePath, default, default);
+        PageScanContext ctx = new(relativePath, default, default);
         plugin.Scan(in ctx);
     }
 

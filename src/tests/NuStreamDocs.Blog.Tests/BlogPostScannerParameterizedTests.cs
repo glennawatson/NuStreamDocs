@@ -24,7 +24,7 @@ public class BlogPostScannerParameterizedTests
     [Arguments("2026-02-30-foo.md")]
     public async Task RejectedFilenames(string filename)
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, filename), "body");
         await Assert.That(BlogPostScanner.Scan(temp.Root, temp.Root).Length).IsEqualTo(0);
     }
@@ -42,7 +42,7 @@ public class BlogPostScannerParameterizedTests
     [Arguments("double--hyphen", "Double Hyphen")]
     public async Task HumanizedSlugVariants(string slug, string expected)
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, $"2026-01-15-{slug}.md"), "body");
         var posts = BlogPostScanner.Scan(temp.Root, temp.Root);
         await Assert.That(posts.Length).IsEqualTo(1);

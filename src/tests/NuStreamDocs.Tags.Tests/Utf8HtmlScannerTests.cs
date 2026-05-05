@@ -35,7 +35,7 @@ public class Utf8HtmlScannerTests
     [Test]
     public async Task TagWithAttributesBoundsToCloseAngle()
     {
-        var html = "<h2 id=\"intro\" class=\"x\">body</h2>"u8.ToArray();
+        byte[] html = [.. "<h2 id=\"intro\" class=\"x\">body</h2>"u8];
         var found = Utf8HtmlScanner.TryFindNextHeadingOpen(html, 0, out var tagStart, out var tagEnd, out var level);
         await Assert.That(found).IsTrue();
         await Assert.That(level).IsEqualTo(2);
@@ -125,7 +125,7 @@ public class Utf8HtmlScannerTests
     [Test]
     public async Task FindNextHeadingAdvancesPastPrevious()
     {
-        var html = "<h1>A</h1><p>x</p><h3>B</h3>"u8.ToArray();
+        byte[] html = [.. "<h1>A</h1><p>x</p><h3>B</h3>"u8];
         Utf8HtmlScanner.TryFindNextHeadingOpen(html, 0, out _, out var tagEnd, out var level1);
         await Assert.That(level1).IsEqualTo(1);
 

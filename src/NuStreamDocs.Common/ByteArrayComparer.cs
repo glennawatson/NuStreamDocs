@@ -74,7 +74,7 @@ public sealed class ByteArrayComparer
         {
             (null, null) => true,
             (byte[] xb, byte[] yb) => Equals(xb, yb),
-            _ => false,
+            _ => false
         };
 
     /// <inheritdoc/>
@@ -111,7 +111,7 @@ public sealed class ByteArrayComparer
     /// </remarks>
     private static int GetSpanHashCode(ReadOnlySpan<byte> bytes)
     {
-        var hash = default(HashCode);
+        HashCode hash = default;
         hash.AddBytes(bytes);
         return hash.ToHashCode();
     }

@@ -14,8 +14,8 @@ public class XrefsPluginCoverageTests
     [Test]
     public async Task RegistryCtor()
     {
-        var registry = new AutorefsRegistry();
-        var plugin = new XrefsPlugin(registry);
+        AutorefsRegistry registry = new();
+        XrefsPlugin plugin = new(registry);
         await Assert.That(plugin.Registry).IsEqualTo(registry);
     }
 }

@@ -36,27 +36,19 @@ public static class NavEntryFactory
     {
         ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(path);
-        if (path.Length is 0)
-        {
-            throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path));
-        }
-
-        return new(title, path, []);
+        return path.Length is 0
+            ? throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path))
+            : new(title, path, []);
     }
 
     /// <summary>Builds a leaf entry from byte spans; allocates two arrays.</summary>
     /// <param name="title">UTF-8 title bytes; empty span to derive at render time.</param>
     /// <param name="path">UTF-8 path bytes.</param>
     /// <returns>A leaf <see cref="NavEntry"/>.</returns>
-    public static NavEntry Leaf(ReadOnlySpan<byte> title, ReadOnlySpan<byte> path)
-    {
-        if (path.IsEmpty)
-        {
-            throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path));
-        }
-
-        return new(title.ToArray(), path.ToArray(), []);
-    }
+    public static NavEntry Leaf(ReadOnlySpan<byte> title, ReadOnlySpan<byte> path) =>
+        path.IsEmpty
+            ? throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path))
+            : new(title.ToArray(), path.ToArray(), []);
 
     /// <summary>Builds a pure section (no landing page) from a string title.</summary>
     /// <param name="title">Section display title.</param>
@@ -66,12 +58,9 @@ public static class NavEntryFactory
     {
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
         ArgumentNullException.ThrowIfNull(children);
-        if (children.Length is 0)
-        {
-            throw new ArgumentException(EmptyChildrenError, nameof(children));
-        }
-
-        return new(EncodeUtf8(title), [], children);
+        return children.Length is 0
+            ? throw new ArgumentException(EmptyChildrenError, nameof(children))
+            : new(EncodeUtf8(title), [], children);
     }
 
     /// <summary>Builds a pure section from UTF-8 title bytes.</summary>
@@ -87,12 +76,7 @@ public static class NavEntryFactory
             throw new ArgumentException("Title bytes must be non-empty for a section.", nameof(title));
         }
 
-        if (children.Length is 0)
-        {
-            throw new ArgumentException(EmptyChildrenError, nameof(children));
-        }
-
-        return new(title, [], children);
+        return children.Length is 0 ? throw new ArgumentException(EmptyChildrenError, nameof(children)) : new(title, [], children);
     }
 
     /// <summary>Builds a section that names a landing page (e.g. <c>guide/index.md</c>) from string inputs.</summary>
@@ -105,12 +89,9 @@ public static class NavEntryFactory
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
         ArgumentException.ThrowIfNullOrEmpty(indexPath.Value);
         ArgumentNullException.ThrowIfNull(children);
-        if (children.Length is 0)
-        {
-            throw new ArgumentException(EmptyChildrenError, nameof(children));
-        }
-
-        return new(EncodeUtf8(title), EncodeUtf8(indexPath), children);
+        return children.Length is 0
+            ? throw new ArgumentException(EmptyChildrenError, nameof(children))
+            : new(EncodeUtf8(title), EncodeUtf8(indexPath), children);
     }
 
     /// <summary>Builds a section with a landing page from UTF-8 title and path bytes.</summary>
@@ -133,12 +114,7 @@ public static class NavEntryFactory
             throw new ArgumentException("Index-path bytes must be non-empty for a section with a landing page.", nameof(indexPath));
         }
 
-        if (children.Length is 0)
-        {
-            throw new ArgumentException(EmptyChildrenError, nameof(children));
-        }
-
-        return new(title, indexPath, children);
+        return children.Length is 0 ? throw new ArgumentException(EmptyChildrenError, nameof(children)) : new(title, indexPath, children);
     }
 
     /// <summary>UTF-8-encodes <paramref name="value"/>; returns an empty array for an empty input.</summary>

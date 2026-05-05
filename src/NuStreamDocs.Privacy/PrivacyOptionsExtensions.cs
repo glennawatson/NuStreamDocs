@@ -11,7 +11,7 @@ namespace NuStreamDocs.Privacy;
 /// <remarks>
 /// Encodes the inputs once at construction so the per-page hot path stays byte-only. Callers building
 /// from YAML/TOML config readers (which produce strings) reach for the <c>WithXxx</c> overloads;
-/// callers with byte-literal sources construct the record directly with <c>"..."u8.ToArray()</c>.
+/// callers with byte-literal sources construct the record directly with <c>[.. "..."u8]</c>.
 /// </remarks>
 public static class PrivacyOptionsExtensions
 {

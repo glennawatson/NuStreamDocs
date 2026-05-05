@@ -103,12 +103,9 @@ internal static class NavPathHelper
     private static string CreateNormalized(string path, int sliceStart)
     {
         var length = path.Length - sliceStart;
-        if (length <= 0)
-        {
-            return string.Empty;
-        }
-
-        return string.Create(length, (path, sliceStart), static (span, state) =>
+        return length <= 0
+            ? string.Empty
+            : string.Create(length, (path, sliceStart), static (span, state) =>
         {
             var source = state.path.AsSpan(state.sliceStart);
             for (var i = 0; i < span.Length; i++)

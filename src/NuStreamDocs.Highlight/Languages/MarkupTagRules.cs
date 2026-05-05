@@ -36,6 +36,6 @@ internal static class MarkupTagRules
         new(LanguageCommon.SelfClose, TokenClass.Punctuation, LexerRule.PopState) { FirstBytes = LanguageCommon.SlashFirst },
 
         // > tag-close — pops back to root.
-        new(static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.AngleCloseFirst), TokenClass.Punctuation, LexerRule.PopState) { FirstBytes = LanguageCommon.AngleCloseFirst },
+        new(static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.AngleCloseFirst), TokenClass.Punctuation, LexerRule.PopState) { FirstBytes = LanguageCommon.AngleCloseFirst }
     ];
 }

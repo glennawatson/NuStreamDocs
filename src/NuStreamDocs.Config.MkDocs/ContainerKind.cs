@@ -14,5 +14,5 @@ internal enum ContainerKind
     Sequence,
 
     /// <summary>Mapping value with no payload yet; resolves on the next line.</summary>
-    Pending,
+    Pending
 }

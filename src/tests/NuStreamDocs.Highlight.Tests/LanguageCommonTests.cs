@@ -148,8 +148,8 @@ public class LanguageCommonTests
     public async Task LengthConstantsAlignWithMatcherResults()
     {
         // /// matches DocCommentPrefixLength bytes plus the rest-of-line length.
-        await Assert.That(LanguageCommon.XmlDocCommentToEol(UTF8.GetBytes("///"))).IsEqualTo(LanguageCommon.DocCommentPrefixLength);
-        await Assert.That(LanguageCommon.CharLiteral(UTF8.GetBytes("'a'"))).IsEqualTo(LanguageCommon.BasicCharLiteralLength);
-        await Assert.That(LanguageCommon.CharLiteral(UTF8.GetBytes("'\\n'"))).IsEqualTo(LanguageCommon.EscapedCharLiteralLength);
+        await Assert.That(LanguageCommon.XmlDocCommentToEol("///"u8)).IsEqualTo(LanguageCommon.DocCommentPrefixLength);
+        await Assert.That(LanguageCommon.CharLiteral("'a'"u8)).IsEqualTo(LanguageCommon.BasicCharLiteralLength);
+        await Assert.That(LanguageCommon.CharLiteral("'\\n'"u8)).IsEqualTo(LanguageCommon.EscapedCharLiteralLength);
     }
 }

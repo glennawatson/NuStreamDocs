@@ -58,7 +58,7 @@ public class HtmlMinifierTests
     [Test]
     public async Task RespectsCollapseDisabledOption()
     {
-        var options = new HtmlMinifyOptions(StripComments: true, CollapseWhitespace: false);
+        HtmlMinifyOptions options = new(StripComments: true, CollapseWhitespace: false);
         await Assert.That(Minify("<p>  a   b  </p>", options)).IsEqualTo("<p>  a   b  </p>");
     }
 
@@ -67,7 +67,7 @@ public class HtmlMinifierTests
     [Test]
     public async Task RespectsKeepCommentsOption()
     {
-        var options = new HtmlMinifyOptions(StripComments: false, CollapseWhitespace: true);
+        HtmlMinifyOptions options = new(StripComments: false, CollapseWhitespace: true);
         await Assert.That(Minify("<p>a<!-- keep -->b</p>", options)).IsEqualTo("<p>a<!-- keep -->b</p>");
     }
 
@@ -82,7 +82,7 @@ public class HtmlMinifierTests
     /// <returns>Minified HTML string.</returns>
     private static string Minify(string html, HtmlMinifyOptions options)
     {
-        var sink = new ArrayBufferWriter<byte>(Math.Max(1, html.Length));
+        ArrayBufferWriter<byte> sink = new(Math.Max(1, html.Length));
         HtmlMinifier.Minify(Encoding.UTF8.GetBytes(html), sink, options);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

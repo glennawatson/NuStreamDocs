@@ -66,7 +66,7 @@ public class BuildPipelineBenchmarks
                 1 => Path.Combine(_inputRoot, "guide"),
                 2 => Path.Combine(_inputRoot, "guide", "deep"),
                 3 => Path.Combine(_inputRoot, "reference"),
-                _ => Path.Combine(_inputRoot, "blog"),
+                _ => Path.Combine(_inputRoot, "blog")
             };
             Directory.CreateDirectory(dir);
             File.WriteAllText(Path.Combine(dir, $"page-{i}.md"), Page(i));

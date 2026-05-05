@@ -108,15 +108,12 @@ internal static class ArithmatexRewriter
     {
         for (var p = contentStart; p < source.Length; p++)
         {
-            var b = source[p];
-            if (b is (byte)'\n')
+            switch (source[p])
             {
-                return -1;
-            }
-
-            if (b is (byte)'$' && p > contentStart && IsValidInlineClose(source, p))
-            {
-                return p;
+                case (byte)'\n':
+                    return -1;
+                case (byte)'$' when p > contentStart && IsValidInlineClose(source, p):
+                    return p;
             }
         }
 

@@ -68,8 +68,8 @@ public class IconShortcodeBenchmarks
     {
         _mixedSource = BuildRepeated(
             ":material-rocket-launch: ship :material-source-branch: branch :material-not-an-icon: miss :fontawesome-brands-github: site\n");
-        _resolverHit = "rocket-launch"u8.ToArray();
-        _resolverMiss = "definitely-not-a-real-icon-name"u8.ToArray();
+        _resolverHit = [.. "rocket-launch"u8];
+        _resolverMiss = [.. "definitely-not-a-real-icon-name"u8];
 
         _mdiResolver = new();
         _withMdi = new(_mdiResolver);
@@ -104,7 +104,7 @@ public class IconShortcodeBenchmarks
     public int IconShortcodesWithMdi()
     {
         using var rental = PageBuilderPool.Rent(_mdiHint);
-        var ctx = new PagePreRenderContext("page.md", _mixedSource, rental.Writer);
+        PagePreRenderContext ctx = new("page.md", _mixedSource, rental.Writer);
         _withMdi.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
@@ -116,7 +116,7 @@ public class IconShortcodeBenchmarks
     public int IconShortcodesLigatureOnly()
     {
         using var rental = PageBuilderPool.Rent(_ligatureHint);
-        var ctx = new PagePreRenderContext("page.md", _mixedSource, rental.Writer);
+        PagePreRenderContext ctx = new("page.md", _mixedSource, rental.Writer);
         _ligatureOnly.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }

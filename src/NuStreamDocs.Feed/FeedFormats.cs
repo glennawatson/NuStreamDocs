@@ -18,5 +18,5 @@ public enum FeedFormats
     Atom = 2,
 
     /// <summary>Emit both RSS and Atom feeds.</summary>
-    Both = Rss | Atom,
+    Both = Rss | Atom
 }

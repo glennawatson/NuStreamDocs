@@ -17,7 +17,7 @@ public class AssemblySourceCoverageTests
     [Test]
     public async Task CompositeEmpty()
     {
-        var composite = new CompositeAssemblySource([]);
+        CompositeAssemblySource composite = new([]);
         var count = 0;
         await foreach (var g in composite.DiscoverAsync())
         {
@@ -32,7 +32,7 @@ public class AssemblySourceCoverageTests
     [Test]
     public async Task CompositeForwardsEmpty()
     {
-        var composite = new CompositeAssemblySource([new EmptySource()]);
+        CompositeAssemblySource composite = new([new EmptySource()]);
         var count = 0;
         await foreach (var g in composite.DiscoverAsync())
         {
@@ -51,7 +51,7 @@ public class AssemblySourceCoverageTests
         Directory.CreateDirectory(dir);
         try
         {
-            var local = new LocalAssemblySource("net10.0", [], [dir]);
+            LocalAssemblySource local = new("net10.0", [], [dir]);
             var count = 0;
             await foreach (var g in local.DiscoverAsync())
             {
@@ -71,7 +71,7 @@ public class AssemblySourceCoverageTests
     [Test]
     public async Task FactoryCreateSingle()
     {
-        var src = new EmptySource();
+        EmptySource src = new();
         var resolved = AssemblySourceFactory.Create([new CustomInput(src)], NullLogger.Instance);
         await Assert.That(resolved).IsEqualTo(src);
     }

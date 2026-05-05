@@ -24,8 +24,8 @@ internal static class ExternalLinkPipelineFactory
                     Window = TimeSpan.FromSeconds(options.WindowSeconds),
                     SegmentsPerWindow = Math.Max(1, options.WindowSeconds),
                     QueueLimit = int.MaxValue,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                }).AcquireAsync(permitCount: 1, args.Context.CancellationToken),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                }).AcquireAsync(permitCount: 1, args.Context.CancellationToken)
             })
             .AddRetry(new()
             {
@@ -36,8 +36,8 @@ internal static class ExternalLinkPipelineFactory
                 ShouldHandle = static args => args.Outcome.Exception switch
                 {
                     HttpRequestException or TaskCanceledException => PredicateResult.True(),
-                    _ => PredicateResult.False(),
-                },
+                    _ => PredicateResult.False()
+                }
             })
             .Build();
 }

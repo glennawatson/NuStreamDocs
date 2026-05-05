@@ -17,13 +17,13 @@ public class CuratedNavBuilderTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide.md"), "# Guide");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "extra.md"), "# Extra");
 
-        var entries = new[]
-        {
+        NavEntry[] entries =
+        [
             NavEntryFactory.Leaf("Home", "index.md"),
-            NavEntryFactory.Leaf("Guide", "guide.md"),
-        };
+            NavEntryFactory.Leaf("Guide", "guide.md")
+        ];
         var options = NavOptions.Default.WithCuratedEntries(entries);
-        var plugin = new NavPlugin(options);
+        NavPlugin plugin = new(options);
 
         await new Building.DocBuilder()
             .WithInput(fixture.Root)
@@ -47,7 +47,7 @@ public class CuratedNavBuilderTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide.md"), "# Guide");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "extra.md"), "# Extra");
 
-        var plugin = new NavPlugin(NavOptions.Default);
+        NavPlugin plugin = new(NavOptions.Default);
         await new Building.DocBuilder()
             .WithInput(fixture.Root)
             .WithOutput(fixture.Output)

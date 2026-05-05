@@ -39,7 +39,7 @@ public class BuildPipelineTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "x.md"), "# X");
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "y.md"), "# Y");
 
-        var counter = new CountingPlugin();
+        CountingPlugin counter = new();
         var rendered = await new DocBuilder()
             .WithInput(fixture.Input)
             .WithOutput(fixture.Output)

@@ -22,8 +22,8 @@ public class VersionsPluginTests
 
         try
         {
-            var plugin = new VersionsPlugin(VersionOptions.Latest("0.4.2", "0.4 (latest)"));
-            var context = new BuildFinalizeContext(versionRoot, []);
+            VersionsPlugin plugin = new(VersionOptions.Latest("0.4.2", "0.4 (latest)"));
+            BuildFinalizeContext context = new(versionRoot, []);
             await plugin.FinalizeAsync(context, CancellationToken.None);
 
             var entries = VersionsManifest.Read(siteRoot);
@@ -48,9 +48,9 @@ public class VersionsPluginTests
 
         try
         {
-            var first = new VersionsPlugin(new("0.4.2", "0.4 (initial)"));
-            var second = new VersionsPlugin(new("0.4.2", "0.4 (refreshed)", [[.. "latest"u8]]));
-            var context = new BuildFinalizeContext(versionRoot, []);
+            VersionsPlugin first = new(new("0.4.2", "0.4 (initial)"));
+            VersionsPlugin second = new(new("0.4.2", "0.4 (refreshed)", [[.. "latest"u8]]));
+            BuildFinalizeContext context = new(versionRoot, []);
 
             await first.FinalizeAsync(context, CancellationToken.None);
             await second.FinalizeAsync(context, CancellationToken.None);

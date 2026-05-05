@@ -30,15 +30,10 @@ public sealed class PluginTimingTable
     /// <summary>Begins a measurement scope for <paramref name="pluginName"/>; disposing the returned scope adds the elapsed ticks to the running total.</summary>
     /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes.</param>
     /// <returns>A scope to wrap with <c>using</c>.</returns>
-    public MeasurementScope Measure(ReadOnlySpan<byte> pluginName)
-    {
-        if (pluginName.Length is 0)
-        {
-            throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName));
-        }
-
-        return new(this, [.. pluginName]);
-    }
+    public MeasurementScope Measure(ReadOnlySpan<byte> pluginName) =>
+        pluginName.Length is 0
+            ? throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName))
+            : new(this, [.. pluginName]);
 
     /// <summary>Adds a pre-captured tick delta to <paramref name="pluginName"/>'s running total.</summary>
     /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes.</param>
@@ -85,7 +80,7 @@ public sealed class PluginTimingTable
     /// <returns>Per-plugin (UTF-8 name bytes, total seconds) entries.</returns>
     internal (byte[] Name, double Seconds)[] Snapshot()
     {
-        var pairs = _ticks.ToArray();
+        KeyValuePair<byte[], long>[] pairs = [.. _ticks];
         var result = new (byte[], double)[pairs.Length];
         for (var i = 0; i < pairs.Length; i++)
         {

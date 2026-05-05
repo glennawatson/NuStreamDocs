@@ -24,7 +24,7 @@ public class HtmlEscapeTests
     [Arguments("", "")]
     public async Task EscapeTextByte(string source, string expected)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HtmlEscape.EscapeText(Encoding.UTF8.GetBytes(source), sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(expected);
     }
@@ -42,7 +42,7 @@ public class HtmlEscapeTests
     [Arguments("", "")]
     public async Task EscapeAttribute(string source, string expected)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HtmlEscape.EscapeAttribute(Encoding.UTF8.GetBytes(source), sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(expected);
     }
@@ -52,7 +52,7 @@ public class HtmlEscapeTests
     [Test]
     public async Task EscapeAttributeMultiByteUntouched()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HtmlEscape.EscapeAttribute("café \"日本語\""u8, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("café &quot;日本語&quot;");
     }
@@ -63,9 +63,9 @@ public class HtmlEscapeTests
     public async Task EscapeTextCharsMatchesBytes()
     {
         const string Source = "a & b < c > d \"e\"";
-        var charSink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> charSink = new();
         HtmlEscape.EscapeText(Source.AsSpan(), charSink);
-        var byteSink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> byteSink = new();
         HtmlEscape.EscapeText(Encoding.UTF8.GetBytes(Source), byteSink);
         await Assert.That(charSink.WrittenSpan.SequenceEqual(byteSink.WrittenSpan)).IsTrue();
     }

@@ -15,15 +15,15 @@ public class MetadataPluginLifecycleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task ConfigureAsync() =>
-        await new MetadataPlugin().ConfigureAsync(new BuildConfigureContext("/in", "/out", [], new()), CancellationToken.None);
+        await new MetadataPlugin().ConfigureAsync(new("/in", "/out", [], new()), CancellationToken.None);
 
     /// <summary>PreRender passes the source through when no metadata is registered.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task PreRenderPassesThrough()
     {
-        var sink = new ArrayBufferWriter<byte>(16);
-        var ctx = new PagePreRenderContext("page.md", "hello"u8, sink);
+        ArrayBufferWriter<byte> sink = new(16);
+        PagePreRenderContext ctx = new("page.md", "hello"u8, sink);
         new MetadataPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
     }

@@ -34,14 +34,9 @@ internal static class MetadataCollector
         var sidecarSuffix = options.SidecarSuffix;
         var directoryStack = ReadDirectoryFiles(inputRoot, directoryFile);
 
-        var byPath = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, byte[]> byPath = new(StringComparer.OrdinalIgnoreCase);
         Walk(inputRoot, inputRoot, directoryStack, sidecarSuffix, byPath);
-        if (byPath.Count is 0)
-        {
-            return MetadataRegistry.Empty;
-        }
-
-        return new(byPath);
+        return byPath.Count is 0 ? MetadataRegistry.Empty : new(byPath);
     }
 
     /// <summary>Reads every <paramref name="directoryFile"/> rooted at <paramref name="inputRoot"/> into a path → bytes dictionary, used as a fast lookup during the walk.</summary>
@@ -50,7 +45,7 @@ internal static class MetadataCollector
     /// <returns>Absolute directory path → file bytes.</returns>
     private static Dictionary<string, byte[]> ReadDirectoryFiles(string inputRoot, string directoryFile)
     {
-        var result = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, byte[]> result = new(StringComparer.OrdinalIgnoreCase);
         foreach (var path in Directory.EnumerateFiles(inputRoot, directoryFile, SearchOption.AllDirectories))
         {
             var dir = Path.GetDirectoryName(path);
@@ -105,7 +100,7 @@ internal static class MetadataCollector
     /// <returns>Bytes per ancestor in inheritance order; closer ancestors win.</returns>
     private static byte[][] CollectInheritedChain(string root, string directory, Dictionary<string, byte[]> directoryStack)
     {
-        var chain = new List<byte[]>(8);
+        List<byte[]> chain = new(8);
         var cursor = directory;
         while (true)
         {
@@ -145,7 +140,7 @@ internal static class MetadataCollector
 
         using var rental = PageBuilderPool.Rent(256);
         var sink = rental.Writer;
-        var seen = new HashSet<byte[]>(ByteArrayComparer.Instance);
+        HashSet<byte[]> seen = new(ByteArrayComparer.Instance);
         var seenLookup = seen.AsUtf8Lookup();
 
         // Iterate from highest-priority (sidecar, then closest ancestor) to

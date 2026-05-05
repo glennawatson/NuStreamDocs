@@ -30,7 +30,7 @@ internal static class ApiIndexWriter
         "lib",
         "refs",
         "cache",
-        "_global",
+        "_global"
     };
 
     /// <summary>Gets the default page title bytes used when the caller doesn't override it.</summary>
@@ -63,7 +63,7 @@ internal static class ApiIndexWriter
             return 0;
         }
 
-        var sink = new ArrayBufferWriter<byte>(InitialBufferCapacity);
+        ArrayBufferWriter<byte> sink = new(InitialBufferCapacity);
         if (order is { } o)
         {
             WriteOrderFrontmatter(sink, o);
@@ -96,7 +96,7 @@ internal static class ApiIndexWriter
         // Direct BCL call so we can iterate by index — DirectoryPath.EnumerateDirectories
         // would yield wrapper structs we'd unwrap one-by-one.
         var dirs = Directory.GetDirectories(apiPath.Value);
-        var collected = new List<string>(dirs.Length);
+        List<string> collected = new(dirs.Length);
         for (var i = 0; i < dirs.Length; i++)
         {
             var name = Path.GetFileName(dirs[i]);

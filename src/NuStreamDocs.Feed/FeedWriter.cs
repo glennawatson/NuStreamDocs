@@ -32,7 +32,7 @@ public static class FeedWriter
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(posts);
 
-        var sink = new ArrayBufferWriter<byte>(InitialCapacity);
+        ArrayBufferWriter<byte> sink = new(InitialCapacity);
         sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
         sink.Write("<rss version=\"2.0\">\n  <channel>\n"u8);
 
@@ -62,7 +62,7 @@ public static class FeedWriter
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(posts);
 
-        var sink = new ArrayBufferWriter<byte>(InitialCapacity);
+        ArrayBufferWriter<byte> sink = new(InitialCapacity);
         sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
         sink.Write("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n"u8);
 
@@ -143,7 +143,7 @@ public static class FeedWriter
             WriteElement(sink, "      "u8, "author"u8, authorBytes);
         }
 
-        WriteElement(sink, "      "u8, "pubDate"u8, FormatDate(new DateTimeOffset(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), Rfc822Format));
+        WriteElement(sink, "      "u8, "pubDate"u8, FormatDate(new(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), Rfc822Format));
 
         for (var i = 0; i < tagBytes.Length; i++)
         {
@@ -177,7 +177,7 @@ public static class FeedWriter
         XmlEntityEscaper.WriteEscaped(sink, linkBytes, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("\" />\n"u8);
 
-        WriteElement(sink, "    "u8, "updated"u8, FormatDate(new DateTimeOffset(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), "o"));
+        WriteElement(sink, "    "u8, "updated"u8, FormatDate(new(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), "o"));
 
         if (authorBytes is [_, ..])
         {

@@ -46,5 +46,5 @@ public enum LocatorKind : byte
     Article = 7,
 
     /// <summary>Unknown label — emitted verbatim with the value (rare; mainly for forward-compat).</summary>
-    Other = 255,
+    Other = 255
 }

@@ -73,7 +73,7 @@ internal static class CriticMarkupRewriter
             ((byte)'~', (byte)'~') => CriticMarker.Substitute,
             ((byte)'=', (byte)'=') => CriticMarker.Highlight,
             ((byte)'>', (byte)'>') => CriticMarker.Comment,
-            _ => CriticMarker.None,
+            _ => CriticMarker.None
         };
 
     /// <summary>Searches for the closing marker matching <paramref name="marker"/>.</summary>
@@ -88,11 +88,13 @@ internal static class CriticMarkupRewriter
         var (a, b) = ClosePairFor(marker);
         for (var p = start; p + CloseBraceOffset < source.Length; p++)
         {
-            if (source[p] == a && source[p + 1] == b && source[p + CloseBraceOffset] is (byte)'}')
+            if (source[p] != a || source[p + 1] != b || source[p + CloseBraceOffset] is not (byte)'}')
             {
-                contentEnd = p;
-                return true;
+                continue;
             }
+
+            contentEnd = p;
+            return true;
         }
 
         return false;
@@ -107,7 +109,7 @@ internal static class CriticMarkupRewriter
         CriticMarker.Delete => ((byte)'-', (byte)'-'),
         CriticMarker.Substitute => ((byte)'~', (byte)'~'),
         CriticMarker.Highlight => ((byte)'=', (byte)'='),
-        _ => ((byte)'<', (byte)'<'),
+        _ => ((byte)'<', (byte)'<')
     };
 
     /// <summary>Emits the HTML for a single CriticMarkup span.</summary>
@@ -116,18 +118,21 @@ internal static class CriticMarkupRewriter
     /// <param name="writer">Sink.</param>
     private static void EmitSpan(ReadOnlySpan<byte> content, CriticMarker marker, IBufferWriter<byte> writer)
     {
-        if (marker is CriticMarker.Substitute)
+        switch (marker)
         {
-            EmitSubstitution(content, writer);
-            return;
-        }
+            case CriticMarker.Substitute:
+                {
+                    EmitSubstitution(content, writer);
+                    return;
+                }
 
-        if (marker is CriticMarker.Comment)
-        {
-            writer.Write("<span class=\"critic comment\">"u8);
-            writer.Write(content);
-            writer.Write("</span>"u8);
-            return;
+            case CriticMarker.Comment:
+                {
+                    writer.Write("<span class=\"critic comment\">"u8);
+                    writer.Write(content);
+                    writer.Write("</span>"u8);
+                    return;
+                }
         }
 
         writer.Write(OpenTagFor(marker));
@@ -164,7 +169,7 @@ internal static class CriticMarkupRewriter
     {
         CriticMarker.Insert => "<ins>"u8,
         CriticMarker.Delete => "<del>"u8,
-        _ => "<mark>"u8,
+        _ => "<mark>"u8
     };
 
     /// <summary>Returns the close tag for non-substitute markers.</summary>
@@ -174,6 +179,6 @@ internal static class CriticMarkupRewriter
     {
         CriticMarker.Insert => "</ins>"u8,
         CriticMarker.Delete => "</del>"u8,
-        _ => "</mark>"u8,
+        _ => "</mark>"u8
     };
 }

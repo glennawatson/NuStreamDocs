@@ -32,7 +32,7 @@ public class Utf8LineReaderTests
     [Test]
     public async Task LongLineGrowsBuffer()
     {
-        var longLine = new string('x', 32 * 1024);
+        string longLine = new('x', 32 * 1024);
         var lines = await ReadAll(longLine + "\nshort\n");
         await Assert.That(lines.Length).IsEqualTo(2);
         await Assert.That(lines[0].Length).IsEqualTo(32 * 1024);
@@ -44,7 +44,7 @@ public class Utf8LineReaderTests
     [Test]
     public async Task DisposeOwnedStreamDisposesIt()
     {
-        var stream = new MemoryStream("a\n"u8.ToArray());
+        MemoryStream stream = new([.. "a\n"u8]);
         using (new Utf8LineReader(stream, leaveOpen: false))
         {
             // ctor only
@@ -58,7 +58,7 @@ public class Utf8LineReaderTests
     [Test]
     public async Task LeaveOpenKeepsStreamAlive()
     {
-        var stream = new MemoryStream("a\n"u8.ToArray());
+        MemoryStream stream = new([.. "a\n"u8]);
         using (new Utf8LineReader(stream, leaveOpen: true))
         {
             // ctor only
@@ -72,9 +72,9 @@ public class Utf8LineReaderTests
     /// <returns>Decoded lines.</returns>
     private static async Task<string[]> ReadAll(string source)
     {
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(source));
-        using var reader = new Utf8LineReader(stream, leaveOpen: true);
-        var lines = new List<string>();
+        await using MemoryStream stream = new(Encoding.UTF8.GetBytes(source));
+        using Utf8LineReader reader = new(stream, leaveOpen: true);
+        List<string> lines = [];
         while (true)
         {
             var (hasLine, line) = await reader.TryReadLineAsync(CancellationToken.None);

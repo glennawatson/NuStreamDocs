@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Plugins;
-
 namespace NuStreamDocs.Blog.MkDocs.Tests;
 
 /// <summary>Lifecycle method coverage for <c>MkDocsBlogPlugin</c>.</summary>
@@ -14,10 +12,10 @@ public class MkDocsBlogPluginLifecycleTests
     [Test]
     public async Task DiscoverAsync()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         Directory.CreateDirectory(Path.Combine(temp.Root, "blog", "posts"));
-        var plugin = new MkDocsBlogPlugin(new("blog", [.. "Blog"u8]));
-        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
+        MkDocsBlogPlugin plugin = new(new("blog", [.. "Blog"u8]));
+        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
     }
 
     /// <summary>Disposable scratch directory.</summary>

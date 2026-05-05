@@ -54,5 +54,5 @@ public enum EntryType
     Manuscript,
 
     /// <summary>Catch-all when the type doesn't fit any of the above.</summary>
-    Other,
+    Other
 }

@@ -119,7 +119,7 @@ public class AutorefsRegistryBenchmarks
     [Benchmark]
     public int RegisterWithFragmentPreSized()
     {
-        var registry = new AutorefsRegistry(_idBytes.Length);
+        AutorefsRegistry registry = new(_idBytes.Length);
         for (var i = 0; i < _idBytes.Length; i++)
         {
             var idSpan = (ReadOnlySpan<byte>)_idBytes[i];

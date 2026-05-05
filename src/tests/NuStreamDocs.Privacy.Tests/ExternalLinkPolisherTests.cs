@@ -91,7 +91,7 @@ public class ExternalLinkPolisherTests
             Source,
             PrivacyOptions.Default with
             {
-                AddRelNoOpener = false, AddTargetBlank = false, UpgradeMixedContent = false,
+                AddRelNoOpener = false, AddTargetBlank = false, UpgradeMixedContent = false
             });
         await Assert.That(output).IsEqualTo(Source);
     }

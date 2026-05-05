@@ -23,7 +23,7 @@ namespace NuStreamDocs.Plugins;
 public static class HeadExtraComposer
 {
     /// <summary>UTF-8 prefix matched against each line to identify preconnect hints subject to dedup.</summary>
-    private static readonly byte[] PreconnectPrefix = "<link rel=\"preconnect\""u8.ToArray();
+    private static readonly byte[] PreconnectPrefix = [.. "<link rel=\"preconnect\""u8];
 
     /// <summary>Composes the head-extras byte array from every provider in <paramref name="plugins"/>.</summary>
     /// <param name="plugins">Registered plugins.</param>

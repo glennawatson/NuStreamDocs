@@ -55,30 +55,37 @@ public static class IconShortcodeRewriter
             // Bulk-copy every byte up to the next interesting one. Avoids the per-byte GetSpan(1)
             // pump that previously dominated the rewriter's per-page cost on prose-heavy pages.
             var rel = source[i..].IndexOfAny(InterestingBytes);
-            if (rel < 0)
+            switch (rel)
             {
-                writer.Write(source[i..]);
-                return;
+                case < 0:
+                    {
+                        writer.Write(source[i..]);
+                        return;
+                    }
+
+                case > 0:
+                    {
+                        writer.Write(source.Slice(i, rel));
+                        i += rel;
+                        break;
+                    }
             }
 
-            if (rel > 0)
+            switch (source[i])
             {
-                writer.Write(source.Slice(i, rel));
-                i += rel;
-            }
+                case (byte)'`':
+                    {
+                        var inlineEnd = MarkdownCodeScanner.ConsumeInlineCode(source, i);
+                        writer.Write(source[i..inlineEnd]);
+                        i = inlineEnd;
+                        continue;
+                    }
 
-            if (source[i] is (byte)'`')
-            {
-                var inlineEnd = MarkdownCodeScanner.ConsumeInlineCode(source, i);
-                writer.Write(source[i..inlineEnd]);
-                i = inlineEnd;
-                continue;
-            }
-
-            if (source[i] is (byte)':' && TryRewriteShortcode(source, i, writer, materialIconClass, resolver, out var consumed))
-            {
-                i += consumed;
-                continue;
+                case (byte)':' when TryRewriteShortcode(source, i, writer, materialIconClass, resolver, out var consumed):
+                    {
+                        i += consumed;
+                        continue;
+                    }
             }
 
             // The interesting byte (newline, or a colon that didn't match a shortcode) wasn't actionable

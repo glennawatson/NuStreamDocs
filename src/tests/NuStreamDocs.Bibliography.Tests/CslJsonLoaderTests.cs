@@ -15,9 +15,8 @@ public class CslJsonLoaderTests
     [Test]
     public async Task BookEntryParses()
     {
-        var json = """
-            [{"id":"g","type":"book","title":"Change and Continuity","author":[{"family":"Gummow","given":"William"}],"issued":{"date-parts":[[2018]]},"publisher":"Federation Press"}]
-            """u8;
+        var json =
+            """[{"id":"g","type":"book","title":"Change and Continuity","author":[{"family":"Gummow","given":"William"}],"issued":{"date-parts":[[2018]]},"publisher":"Federation Press"}]"""u8;
         var entries = CslJsonLoader.Parse(json.ToArray());
         await Assert.That(entries).HasSingleItem();
         var e = entries[0];
@@ -35,8 +34,8 @@ public class CslJsonLoaderTests
     public async Task LegalCaseEntryParses()
     {
         var json = """
-            [{"id":"mabo","type":"legal_case","title":"Mabo v Queensland (No 2)","references":"(1992) 175 CLR 1","issued":{"date-parts":[[1992]]}}]
-            """u8;
+                   [{"id":"mabo","type":"legal_case","title":"Mabo v Queensland (No 2)","references":"(1992) 175 CLR 1","issued":{"date-parts":[[1992]]}}]
+                   """u8;
         var entries = CslJsonLoader.Parse(json.ToArray());
         await Assert.That(entries[0].Type).IsEqualTo(EntryType.LegalCase);
         await Assert.That(entries[0].LawReportSeries.AsSpan().SequenceEqual("(1992) 175 CLR 1"u8)).IsTrue();
@@ -57,7 +56,7 @@ public class CslJsonLoaderTests
     [Test]
     public async Task EmptyArrayYieldsEmpty()
     {
-        var entries = CslJsonLoader.Parse("[]"u8.ToArray());
+        var entries = CslJsonLoader.Parse((byte[])[.. "[]"u8]);
         await Assert.That(entries).IsEmpty();
     }
 

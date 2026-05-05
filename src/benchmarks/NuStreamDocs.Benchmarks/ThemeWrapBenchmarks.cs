@@ -43,10 +43,10 @@ public class ThemeWrapBenchmarks
     public async Task Setup()
     {
         _plugin = new();
-        var configureContext = new BuildConfigureContext("/in", "/out", [_plugin], new CrossPageMarkerRegistry());
+        BuildConfigureContext configureContext = new("/in", "/out", [_plugin], new());
         await _plugin.ConfigureAsync(configureContext, CancellationToken.None);
 
-        var sb = new StringBuilder(BodyBytes);
+        StringBuilder sb = new(BodyBytes);
         while (sb.Length < BodyBytes)
         {
             sb.Append("<p>This is a paragraph that fills the synthetic page body. <a href=\"x\">link</a> &amp; more.</p>\n");
@@ -58,17 +58,14 @@ public class ThemeWrapBenchmarks
 
     /// <summary>Resets the output writer before each iteration so the plugin sees a fresh sink.</summary>
     [IterationSetup]
-    public void IterationSetup()
-    {
-        _html.ResetWrittenCount();
-    }
+    public void IterationSetup() => _html.ResetWrittenCount();
 
     /// <summary>One <c>MaterialThemePlugin.PostRender</c> invocation.</summary>
     /// <returns>Wrapped page byte count.</returns>
     [Benchmark]
     public int Wrap()
     {
-        var renderContext = new PagePostRenderContext("guide/page.md", default, _bodyTemplate, _html);
+        PagePostRenderContext renderContext = new("guide/page.md", default, _bodyTemplate, _html);
         _plugin.PostRender(in renderContext);
         return _html.WrittenCount;
     }

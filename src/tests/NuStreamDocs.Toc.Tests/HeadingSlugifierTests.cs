@@ -33,7 +33,7 @@ public class HeadingSlugifierTests
     [Test]
     public async Task DuplicateSlugsGetSuffixes()
     {
-        var html = "<h2>Intro</h2><h2>Intro</h2><h2>Intro</h2>"u8.ToArray();
+        byte[] html = [.. "<h2>Intro</h2><h2>Intro</h2><h2>Intro</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         var (slugged, collisions) = HeadingSlugifier.AssignSlugs(html, headings);
         await Assert.That(slugged.Length).IsEqualTo(3);
@@ -48,7 +48,7 @@ public class HeadingSlugifierTests
     [Test]
     public async Task ExistingIdIsRespected()
     {
-        var html = "<h2 id=\"custom\">Heading</h2>"u8.ToArray();
+        byte[] html = [.. "<h2 id=\"custom\">Heading</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
         await Assert.That(slugged[0].Slug.AsSpan().SequenceEqual("custom"u8)).IsTrue();

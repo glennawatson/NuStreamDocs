@@ -86,17 +86,8 @@ internal static class DocsAssetCopier
         }
 
         var extension = Path.GetExtension(sourcePath.AsSpan());
-        if (extension.Equals(MarkdownExtension, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        if (filter.HasRules && !filter.Matches(relative.Replace(Path.DirectorySeparatorChar, '/')))
-        {
-            return false;
-        }
-
-        return true;
+        return !extension.Equals(MarkdownExtension, StringComparison.OrdinalIgnoreCase)
+            && (!filter.HasRules || filter.Matches(relative.Replace(Path.DirectorySeparatorChar, '/')));
     }
 
     /// <summary>True when any segment of <paramref name="relative"/> begins with <c>.</c> — skips dotfiles and dot-prefixed directories like <c>.git</c> / <c>.cache</c>.</summary>

@@ -55,5 +55,5 @@ public enum BlockKind
     HtmlBlock,
 
     /// <summary>Continuation line inside an open HTML block; emitted verbatim by the renderer.</summary>
-    HtmlBlockContent,
+    HtmlBlockContent
 }

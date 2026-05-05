@@ -41,12 +41,7 @@ public static class DocFxTocReader
     {
         ArgumentException.ThrowIfNullOrEmpty(rootDirectory);
         var rootToc = Path.Combine(rootDirectory, TocFileName);
-        if (!File.Exists(rootToc))
-        {
-            return [];
-        }
-
-        return ReadOneFile(rootDirectory, rootToc, currentDirectory: rootDirectory);
+        return !File.Exists(rootToc) ? [] : ReadOneFile(rootDirectory, rootToc, currentDirectory: rootDirectory);
     }
 
     /// <summary>Reads <paramref name="tocFilePath"/> and resolves any nested toc references relative to <paramref name="currentDirectory"/>.</summary>
@@ -67,7 +62,7 @@ public static class DocFxTocReader
     /// <returns>Decoded entries.</returns>
     private static NavEntry[] ParseEntries(string rootDirectory, string currentDirectory, ReadOnlySpan<byte> utf8)
     {
-        var lines = new TocLineParser(utf8);
+        TocLineParser lines = new(utf8);
         return ParseSequenceAt(rootDirectory, currentDirectory, ref lines, baseIndent: -1);
     }
 
@@ -119,7 +114,7 @@ public static class DocFxTocReader
     /// <returns>The decoded entry.</returns>
     private static NavEntry ParseOneItem(string rootDirectory, string currentDirectory, ref TocLineParser lines)
     {
-        var fields = default(ItemFields);
+        ItemFields fields = default;
         if (!lines.TryConsume(out var firstLine))
         {
             return default;
@@ -189,12 +184,7 @@ public static class DocFxTocReader
         }
 
         var href = fields.Href ?? [];
-        if (href.Length is 0)
-        {
-            return new(name, [], []);
-        }
-
-        return MaterializeHref(rootDirectory, currentDirectory, name, href, fields.Homepage ?? []);
+        return href.Length is 0 ? new(name, [], []) : MaterializeHref(rootDirectory, currentDirectory, name, href, fields.Homepage ?? []);
     }
 
     /// <summary>Routes an item with a populated <c>href</c> to the right resolver.</summary>

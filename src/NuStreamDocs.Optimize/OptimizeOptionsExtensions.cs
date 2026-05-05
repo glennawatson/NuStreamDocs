@@ -10,7 +10,7 @@ namespace NuStreamDocs.Optimize;
 /// <remarks>
 /// Encodes the inputs once at construction so the plugin's per-file extension match runs against
 /// already-decoded data. Callers building from configuration files reach for the string overloads;
-/// callers with byte-literal sources can pass <c>"..."u8.ToArray()</c> directly.
+/// callers with byte-literal sources can pass <c>[.. "..."u8]</c> directly.
 /// </remarks>
 public static class OptimizeOptionsExtensions
 {

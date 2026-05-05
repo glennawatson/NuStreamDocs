@@ -59,7 +59,7 @@ public class LinkExtractorBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var sb = new StringBuilder(PageSizeKb * BytesPerKb);
+        StringBuilder sb = new(PageSizeKb * BytesPerKb);
         var totalBytes = PageSizeKb * BytesPerKb;
         var blockEvery = 200 / Math.Max(1, LinksPer200Bytes);
         var idx = 0;
@@ -74,7 +74,7 @@ public class LinkExtractorBenchmarks
                 1 => $"<a href=\"https://example{i}.com\">ext {i}</a>",
                 2 => $"<a href=\"image{i}.png\">img {i}</a>",
                 3 => $"<img src=\"https://cdn.test/x{i}.jpg\" />",
-                _ => $"<h2 id=\"section-{i}\">Section {i}</h2>",
+                _ => $"<h2 id=\"section-{i}\">Section {i}</h2>"
             };
             sb.Append(emitted);
             written += emitted.Length;

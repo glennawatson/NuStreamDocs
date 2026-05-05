@@ -23,7 +23,7 @@ namespace NuStreamDocs.Nav;
 internal static class CuratedNavBuilder
 {
     /// <summary>UTF-8 markdown extension bytes.</summary>
-    private static readonly byte[] MarkdownExtensionBytes = ".md"u8.ToArray();
+    private static readonly byte[] MarkdownExtensionBytes = [.. ".md"u8];
 
     /// <summary>Builds the nav tree from <paramref name="entries"/>.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
@@ -78,7 +78,7 @@ internal static class CuratedNavBuilder
             children = trimmed;
         }
 
-        var root = new NavNode([], default, isSection: true, children, useDirectoryUrls);
+        NavNode root = new([], default, isSection: true, children, useDirectoryUrls);
         root.AttachParents();
         return root;
     }
@@ -144,7 +144,7 @@ internal static class CuratedNavBuilder
         }
 
         byte[] title = entry.Title.Length is 0 ? [] : [.. entry.Title];
-        FilePath indexPath = entry.Path.Length is 0 ? default : Encoding.UTF8.GetString(entry.Path);
+        FilePath indexPath = entry.Path.Length is 0 ? null : Encoding.UTF8.GetString(entry.Path);
         return new(title, indexPath, isSection: true, children, indexPath, useDirectoryUrls);
     }
 

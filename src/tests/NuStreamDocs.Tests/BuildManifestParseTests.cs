@@ -24,7 +24,7 @@ public class BuildManifestParseTests
     [Arguments("{\"schema\":2,\"build\":\"x\",\"entries\":[\"not an object\"]}")]
     public async Task RejectedShapesReturnEmpty(string json)
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var path = Path.Combine(temp.Root, BuildManifest.FileName);
         await File.WriteAllTextAsync(path, json);
         var manifest = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
@@ -36,7 +36,7 @@ public class BuildManifestParseTests
     [Test]
     public async Task SkipsBadEntriesKeepsGood()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var path = Path.Combine(temp.Root, BuildManifest.FileName);
 
         // The "build" fingerprint and per-entry "hash" fields are both base64-encoded byte arrays.

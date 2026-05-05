@@ -30,7 +30,7 @@ public static class DocBuilderBibliographyExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(configureDatabase);
-        var dbBuilder = new BibliographyDatabaseBuilder();
+        BibliographyDatabaseBuilder dbBuilder = new();
         configureDatabase(dbBuilder);
         return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), Aglc4Style.Instance, WarnOnMissing: false));
     }
@@ -45,7 +45,7 @@ public static class DocBuilderBibliographyExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(style);
         ArgumentNullException.ThrowIfNull(configureDatabase);
-        var dbBuilder = new BibliographyDatabaseBuilder();
+        BibliographyDatabaseBuilder dbBuilder = new();
         configureDatabase(dbBuilder);
         return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), style, WarnOnMissing: false));
     }

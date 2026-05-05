@@ -17,5 +17,5 @@ public enum ExtraAssetSourceKind
     Embedded,
 
     /// <summary>An external URL; no asset is shipped, only a <c>&lt;link&gt;</c> / <c>&lt;script&gt;</c> tag.</summary>
-    Url,
+    Url
 }

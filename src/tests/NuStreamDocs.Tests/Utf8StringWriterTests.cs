@@ -22,7 +22,7 @@ public class Utf8StringWriterTests
     [Arguments("emoji😀")]
     public async Task WriteRoundTrip(string value)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.Write(sink, value);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(value);
     }
@@ -35,7 +35,7 @@ public class Utf8StringWriterTests
     [Arguments(null!)]
     public async Task WriteEmptyOrNullNoOp(string? value)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.Write(sink, value!);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -45,7 +45,7 @@ public class Utf8StringWriterTests
     [Test]
     public async Task WriteByteSpanCopies()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.Write(sink, "hello-world"u8);
         await Assert.That(sink.WrittenSpan.SequenceEqual("hello-world"u8)).IsTrue();
     }
@@ -55,7 +55,7 @@ public class Utf8StringWriterTests
     [Test]
     public async Task WriteByteSpanEmptyNoOp()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.Write(sink, default(ReadOnlySpan<byte>));
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -65,7 +65,7 @@ public class Utf8StringWriterTests
     [Test]
     public async Task WriteByteSpanSequentialConcatenates()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.Write(sink, "<a "u8);
         Utf8StringWriter.Write(sink, "href=\"#x\""u8);
         Utf8StringWriter.Write(sink, ">"u8);
@@ -84,7 +84,7 @@ public class Utf8StringWriterTests
     [Test]
     public async Task WriteByteSingleByte()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.WriteByte(sink, (byte)'X');
         await Assert.That(sink.WrittenCount).IsEqualTo(1);
         await Assert.That(sink.WrittenSpan[0]).IsEqualTo((byte)'X');
@@ -95,7 +95,7 @@ public class Utf8StringWriterTests
     [Test]
     public async Task WriteByteSequentialConcatenates()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.WriteByte(sink, (byte)' ');
         Utf8StringWriter.WriteByte(sink, (byte)'i');
         Utf8StringWriter.WriteByte(sink, (byte)'d');
@@ -122,7 +122,7 @@ public class Utf8StringWriterTests
     [Arguments(int.MaxValue, "2147483647")]
     public async Task WriteInt32RoundTrip(int value, string expected)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         Utf8StringWriter.WriteInt32(sink, value);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(expected);
     }

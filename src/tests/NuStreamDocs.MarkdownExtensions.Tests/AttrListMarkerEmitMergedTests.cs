@@ -87,7 +87,7 @@ public class AttrListMarkerEmitMergedTests
         var attrListStart = existingEnd + 2; // skip "{:"
         var attrListEnd = source.Length - 1; // skip "}"
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         AttrListMarker.EmitMerged(source, ExistingStart, existingEnd, attrListStart, attrListEnd, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

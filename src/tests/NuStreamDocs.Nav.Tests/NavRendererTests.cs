@@ -17,14 +17,14 @@ public class NavRendererTests
     [Test]
     public async Task FullRendererEmitsEveryNode()
     {
-        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
-        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
-        var guide = new NavNode("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
-        var blog = new NavNode("Blog", "blog", isSection: true, [post], indexPath: "blog/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [guide, blog]);
+        NavNode intro = new("Intro", "guide/intro.md", isSection: false, []);
+        NavNode post = new("Post", "blog/post.md", isSection: false, []);
+        NavNode guide = new("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
+        NavNode blog = new("Blog", "blog", isSection: true, [post], indexPath: "blog/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [guide, blog]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
         NavRenderer.RenderFull(tree, activeIdx, writer);
 
@@ -62,15 +62,15 @@ public class NavRendererTests
     [Test]
     public async Task SidebarScopesToActiveTopLevelSection()
     {
-        var home = new NavNode("Home", "index.md", isSection: false, []);
-        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
-        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
-        var guide = new NavNode("Guide", "guide", isSection: true, [intro]);
-        var blog = new NavNode("Blog", "blog", isSection: true, [post]);
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [home, guide, blog]);
+        NavNode home = new("Home", "index.md", isSection: false, []);
+        NavNode intro = new("Intro", "guide/intro.md", isSection: false, []);
+        NavNode post = new("Post", "blog/post.md", isSection: false, []);
+        NavNode guide = new("Guide", "guide", isSection: true, [intro]);
+        NavNode blog = new("Blog", "blog", isSection: true, [post]);
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [home, guide, blog]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
         NavRenderer.RenderSidebarFull(tree, activeIdx, writer);
 
@@ -86,13 +86,13 @@ public class NavRendererTests
     [Test]
     public async Task TabsLinkToSectionRootWhenSectionHasNoIndexPage()
     {
-        var home = new NavNode("Home", "index.md", isSection: false, []);
-        var apiIndex = new NavNode("API home", "api/index.md", isSection: false, []);
-        var api = new NavNode("API", "api", isSection: true, [apiIndex]);
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [home, api]);
+        NavNode home = new("Home", "index.md", isSection: false, []);
+        NavNode apiIndex = new("API home", "api/index.md", isSection: false, []);
+        NavNode api = new("API", "api", isSection: true, [apiIndex]);
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [home, api]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, apiIndex);
         NavRenderer.RenderTabs(tree, activeIdx, writer);
 
@@ -106,12 +106,12 @@ public class NavRendererTests
     [Test]
     public async Task SidebarLeafLinksAreRootRelative()
     {
-        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
-        var guide = new NavNode("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [guide]);
+        NavNode intro = new("Intro", "guide/intro.md", isSection: false, []);
+        NavNode guide = new("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [guide]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
         NavRenderer.RenderSidebarFull(tree, activeIdx, writer);
 
@@ -135,8 +135,8 @@ public class NavRendererTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", "post.md"), "# Post");
 
         var options = NavOptions.Default with { Tabs = true, UseDirectoryUrls = true };
-        var plugin = new NavPlugin(options);
-        var discoverContext = new BuildDiscoverContext(fixture.Root, fixture.Output, [plugin]) { UseDirectoryUrls = true };
+        NavPlugin plugin = new(options);
+        BuildDiscoverContext discoverContext = new(fixture.Root, fixture.Output, [plugin]) { UseDirectoryUrls = true };
         await plugin.DiscoverAsync(discoverContext, CancellationToken.None);
 
         var html = RunPostRender(plugin, "guide/index.md");
@@ -151,13 +151,13 @@ public class NavRendererTests
     [Test]
     public async Task SidebarSectionWithoutIndexUsesFirstDescendantHref()
     {
-        var blogs = new NavNode("Blogs", "docs/resources/blogs.md", isSection: false, [], useDirectoryUrls: true);
-        var videos = new NavNode("Videos", "docs/resources/videos.md", isSection: false, [], useDirectoryUrls: true);
-        var resources = new NavNode("Resources", "docs/resources", isSection: true, [blogs, videos], useDirectoryUrls: true);
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [resources], useDirectoryUrls: true);
+        NavNode blogs = new("Blogs", "docs/resources/blogs.md", isSection: false, [], useDirectoryUrls: true);
+        NavNode videos = new("Videos", "docs/resources/videos.md", isSection: false, [], useDirectoryUrls: true);
+        NavNode resources = new("Resources", "docs/resources", isSection: true, [blogs, videos], useDirectoryUrls: true);
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [resources], useDirectoryUrls: true);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, resources);
         NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
@@ -171,12 +171,12 @@ public class NavRendererTests
     [Test]
     public async Task SidebarOmitsRedundantNestedSectionTitle()
     {
-        var intro = new NavNode("Getting Started", "docs/getting-started/index.md", isSection: false, [], useDirectoryUrls: true);
-        var docs = new NavNode("Docs", "docs", isSection: true, [intro], indexPath: "docs/index.md", useDirectoryUrls: true);
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [docs], useDirectoryUrls: true);
+        NavNode intro = new("Getting Started", "docs/getting-started/index.md", isSection: false, [], useDirectoryUrls: true);
+        NavNode docs = new("Docs", "docs", isSection: true, [intro], indexPath: "docs/index.md", useDirectoryUrls: true);
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [docs], useDirectoryUrls: true);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, docs);
         NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
@@ -197,14 +197,14 @@ public class NavRendererTests
     [Test]
     public async Task SidebarKeepsActiveSectionHeaderWhenSectionHasManyChildren()
     {
-        var akavache = new NavNode("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
-        var core = new NavNode("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
-        var drawing = new NavNode("Akavache.Drawing", "api/Akavache.Drawing", isSection: true, [], indexPath: "api/Akavache.Drawing/index.md");
-        var api = new NavNode("API", "api", isSection: true, [akavache, core, drawing], indexPath: "api/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [api]);
+        NavNode akavache = new("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
+        NavNode core = new("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
+        NavNode drawing = new("Akavache.Drawing", "api/Akavache.Drawing", isSection: true, [], indexPath: "api/Akavache.Drawing/index.md");
+        NavNode api = new("API", "api", isSection: true, [akavache, core, drawing], indexPath: "api/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [api]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, api);
         NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
@@ -234,13 +234,13 @@ public class NavRendererTests
     [Test]
     public async Task ActiveSectionEmitsToggleAndContainerStructure()
     {
-        var akavache = new NavNode("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
-        var core = new NavNode("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
-        var api = new NavNode("API", "api", isSection: true, [akavache, core], indexPath: "api/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [api]);
+        NavNode akavache = new("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
+        NavNode core = new("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
+        NavNode api = new("API", "api", isSection: true, [akavache, core], indexPath: "api/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [api]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, api);
         NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
@@ -271,14 +271,14 @@ public class NavRendererTests
     [Test]
     public async Task NonActiveSectionsKeepLeafChevronShape()
     {
-        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
-        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
-        var guide = new NavNode("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
-        var blog = new NavNode("Blog", "blog", isSection: true, [post], indexPath: "blog/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [guide, blog]);
+        NavNode intro = new("Intro", "guide/intro.md", isSection: false, []);
+        NavNode post = new("Post", "blog/post.md", isSection: false, []);
+        NavNode guide = new("Guide", "guide", isSection: true, [intro], indexPath: "guide/index.md");
+        NavNode blog = new("Blog", "blog", isSection: true, [post], indexPath: "blog/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [guide, blog]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, intro);
         NavRenderer.RenderPruned(tree, activeIdx, writer);
 
@@ -299,14 +299,14 @@ public class NavRendererTests
     [Test]
     public async Task ToggleIdsAreUniquePerRender()
     {
-        var aIntro = new NavNode("A intro", "a/intro.md", isSection: false, []);
-        var bIntro = new NavNode("B intro", "b/intro.md", isSection: false, []);
-        var a = new NavNode("A", "a", isSection: true, [aIntro], indexPath: "a/index.md");
-        var b = new NavNode("B", "b", isSection: true, [bIntro], indexPath: "b/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [a, b]);
+        NavNode aIntro = new("A intro", "a/intro.md", isSection: false, []);
+        NavNode bIntro = new("B intro", "b/intro.md", isSection: false, []);
+        NavNode a = new("A", "a", isSection: true, [aIntro], indexPath: "a/index.md");
+        NavNode b = new("B", "b", isSection: true, [bIntro], indexPath: "b/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [a, b]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, aIntro);
         NavRenderer.RenderFull(tree, activeIdx, writer);
 
@@ -326,14 +326,14 @@ public class NavRendererTests
     [Test]
     public async Task SidebarTabsModeKeepsActiveSectionHeaderForSubSections()
     {
-        var home = new NavNode("Home", "index.md", isSection: false, []);
-        var akavache = new NavNode("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
-        var core = new NavNode("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
-        var api = new NavNode("API", "api", isSection: true, [akavache, core], indexPath: "api/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [home, api]);
+        NavNode home = new("Home", "index.md", isSection: false, []);
+        NavNode akavache = new("Akavache", "api/Akavache", isSection: true, [], indexPath: "api/Akavache/index.md");
+        NavNode core = new("Akavache.Core", "api/Akavache.Core", isSection: true, [], indexPath: "api/Akavache.Core/index.md");
+        NavNode api = new("API", "api", isSection: true, [akavache, core], indexPath: "api/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [home, api]);
         root.AttachParents();
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, api);
         NavRenderer.RenderSidebarPruned(tree, activeIdx, writer);
 
@@ -370,11 +370,11 @@ public class NavRendererTests
     [Test]
     public async Task BuildUrlIndexIncludesSectionIndex()
     {
-        var leaf = new NavNode("Intro", "guide/intro.md", isSection: false, []);
+        NavNode leaf = new("Intro", "guide/intro.md", isSection: false, []);
 
         // Sections expose IndexUrl via the 5-arg ctor's indexPath argument.
-        var section = new NavNode("Guide", relativePath: string.Empty, isSection: true, [leaf], indexPath: "guide/index.md");
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, [section]);
+        NavNode section = new("Guide", relativePath: string.Empty, isSection: true, [leaf], indexPath: "guide/index.md");
+        NavNode root = new(string.Empty, string.Empty, isSection: true, [section]);
         var tree = NavTreeFlattener.Flatten(root);
 
         var index = NavRenderer.BuildUrlIndex(tree);
@@ -389,7 +389,7 @@ public class NavRendererTests
     [Test]
     public async Task BuildUrlIndexEmptyTree()
     {
-        var root = new NavNode(string.Empty, string.Empty, isSection: true, []);
+        NavNode root = new(string.Empty, string.Empty, isSection: true, []);
         var tree = NavTreeFlattener.Flatten(root);
         var index = NavRenderer.BuildUrlIndex(tree);
         await Assert.That(index.Count).IsEqualTo(0);
@@ -399,7 +399,7 @@ public class NavRendererTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task BuildUrlIndexNullTreeThrows() =>
-        await Assert.That(() => NavRenderer.BuildUrlIndex(null!)).Throws<ArgumentNullException>();
+        await Assert.That(static () => NavRenderer.BuildUrlIndex(null!)).Throws<ArgumentNullException>();
 
     /// <summary>Builds the standard 2-section fixture and runs the plugin's per-page render path.</summary>
     /// <param name="prune">Prune mode flag.</param>
@@ -415,8 +415,8 @@ public class NavRendererTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", "post.md"), "# Post");
 
         var options = NavOptions.Default with { Prune = prune };
-        var plugin = new NavPlugin(options);
-        var discoverContext = new BuildDiscoverContext(fixture.Root, fixture.Output, [plugin]);
+        NavPlugin plugin = new(options);
+        BuildDiscoverContext discoverContext = new(fixture.Root, fixture.Output, [plugin]);
         await plugin.DiscoverAsync(discoverContext, CancellationToken.None);
 
         var sourcePath = currentPage.Replace(".html", ".md", StringComparison.Ordinal);
@@ -429,13 +429,13 @@ public class NavRendererTests
     /// <returns>Rewritten HTML.</returns>
     private static string RunPostRender(NavPlugin plugin, string sourcePath)
     {
-        var input = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> input = new();
         input.Write("<nav>"u8);
         input.Write(NavPlugin.NavMarker);
         input.Write("</nav>"u8);
 
-        var output = new ArrayBufferWriter<byte>();
-        var ctx = new PagePostRenderContext(sourcePath, default, input.WrittenSpan, output);
+        ArrayBufferWriter<byte> output = new();
+        PagePostRenderContext ctx = new(sourcePath, default, input.WrittenSpan, output);
         plugin.PostRender(in ctx);
         return Encoding.UTF8.GetString(output.WrittenSpan);
     }
@@ -444,10 +444,10 @@ public class NavRendererTests
     /// <returns>Tree root.</returns>
     private static NavNode BuildSampleTree()
     {
-        var intro = new NavNode("Intro", "guide/intro.md", isSection: false, []);
-        var post = new NavNode("Post", "blog/post.md", isSection: false, []);
-        var guide = new NavNode("Guide", string.Empty, isSection: true, [intro]);
-        var blog = new NavNode("Blog", string.Empty, isSection: true, [post]);
+        NavNode intro = new("Intro", "guide/intro.md", isSection: false, []);
+        NavNode post = new("Post", "blog/post.md", isSection: false, []);
+        NavNode guide = new("Guide", string.Empty, isSection: true, [intro]);
+        NavNode blog = new("Blog", string.Empty, isSection: true, [post]);
         return new(string.Empty, string.Empty, isSection: true, [guide, blog]);
     }
 }

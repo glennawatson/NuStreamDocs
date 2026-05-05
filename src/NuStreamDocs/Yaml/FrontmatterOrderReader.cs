@@ -45,12 +45,7 @@ public static class FrontmatterOrderReader
                 scalar = FrontmatterValueExtractor.GetScalar(buffer[..read], "order"u8);
             }
 
-            if (scalar.IsEmpty)
-            {
-                return false;
-            }
-
-            return Utf8IntParser.TryParseInt(scalar, out order);
+            return !scalar.IsEmpty && Utf8IntParser.TryParseInt(scalar, out order);
         }
         catch (FileNotFoundException)
         {

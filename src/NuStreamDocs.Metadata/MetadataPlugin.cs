@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Metadata;
@@ -64,7 +63,12 @@ public sealed class MetadataPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
     }
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    /// <remarks>
+    /// Splicing only happens when the configure-phase registry collected at least one entry from
+    /// directory-level <c>_meta.yml</c> files or per-page sidecars; corpora without any of those
+    /// skip the rewrite (and the pipeline's scratch rental) entirely.
+    /// </remarks>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => !ReferenceEquals(_registry, MetadataRegistry.Empty);
 
     /// <inheritdoc/>
     public void PreRender(in PagePreRenderContext context)

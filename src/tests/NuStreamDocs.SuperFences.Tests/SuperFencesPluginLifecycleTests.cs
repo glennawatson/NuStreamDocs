@@ -22,9 +22,9 @@ public class SuperFencesPluginLifecycleTests
     [Test]
     public async Task DiscoversHandlersAndDispatches()
     {
-        var plugin = new SuperFencesPlugin();
-        var stub = new StubHandler();
-        var ctx = new BuildConfigureContext("/in", "/out", [plugin, stub], new());
+        SuperFencesPlugin plugin = new();
+        StubHandler stub = new();
+        BuildConfigureContext ctx = new("/in", "/out", [plugin, stub], new());
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         var output = RunPostRender(plugin, "<pre><code class=\"language-stub\">body</code></pre>"u8);
@@ -36,8 +36,8 @@ public class SuperFencesPluginLifecycleTests
     [Test]
     public async Task NoOpWhenNoFenceMarkup()
     {
-        var plugin = new SuperFencesPlugin();
-        var ctx = new BuildConfigureContext("/in", "/out", [plugin, new StubHandler()], new());
+        SuperFencesPlugin plugin = new();
+        BuildConfigureContext ctx = new("/in", "/out", [plugin, new StubHandler()], new());
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         await Assert.That(plugin.NeedsRewrite("<p>plain</p>"u8)).IsFalse();
@@ -48,8 +48,8 @@ public class SuperFencesPluginLifecycleTests
     [Test]
     public async Task NoOpWhenNoHandlers()
     {
-        var plugin = new SuperFencesPlugin();
-        var ctx = new BuildConfigureContext("/in", "/out", [plugin], new());
+        SuperFencesPlugin plugin = new();
+        BuildConfigureContext ctx = new("/in", "/out", [plugin], new());
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         await Assert.That(plugin.NeedsRewrite("<pre><code class=\"language-stub\">x</code></pre>"u8)).IsFalse();
@@ -60,9 +60,9 @@ public class SuperFencesPluginLifecycleTests
     [Test]
     public async Task EmptyLanguageHandlerIgnored()
     {
-        var plugin = new SuperFencesPlugin();
-        var bad = new EmptyLanguageHandler();
-        var ctx = new BuildConfigureContext("/in", "/out", [plugin, bad], new());
+        SuperFencesPlugin plugin = new();
+        EmptyLanguageHandler bad = new();
+        BuildConfigureContext ctx = new("/in", "/out", [plugin, bad], new());
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         await Assert.That(plugin.NeedsRewrite("<pre><code class=\"language-stub\">x</code></pre>"u8)).IsFalse();
@@ -74,8 +74,8 @@ public class SuperFencesPluginLifecycleTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(SuperFencesPlugin plugin, ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>(128);
-        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        ArrayBufferWriter<byte> output = new(128);
+        PagePostRenderContext ctx = new("p.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];
     }

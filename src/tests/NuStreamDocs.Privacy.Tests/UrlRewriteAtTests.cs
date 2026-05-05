@@ -17,10 +17,10 @@ public class UrlRewriteAtTests
     public async Task AssetAttributeRewritesSrc()
     {
         byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
 
         // Candidate position is the 's' in "src=" inside the tag — index 5.
         var lastEmit = 0;
@@ -39,10 +39,10 @@ public class UrlRewriteAtTests
     public async Task AssetAttributeMissAdvancesOneByte()
     {
         byte[] html = [.. "hello world"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         // Index 6 is 'w' in "world" — definitely not src/href.
@@ -60,10 +60,10 @@ public class UrlRewriteAtTests
     public async Task SrcsetRewritesAttributeValue()
     {
         byte[] html = [.. "<img srcset=\"https://cdn.test/a.png 2x\">"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         // Index 5 is the 's' of 'srcset='.
@@ -82,10 +82,10 @@ public class UrlRewriteAtTests
     public async Task SrcsetMissDoesNotWrite()
     {
         byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         // Index 5 is 's' of 'src=' — not srcset.
@@ -103,10 +103,10 @@ public class UrlRewriteAtTests
     public async Task InlineStyleBlockRewritesUrlsInBody()
     {
         byte[] html = [.. "<style>.x { background: url(https://cdn.test/a.png); }</style>"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         // Index 0 is the '<' of '<style>'.
@@ -124,10 +124,10 @@ public class UrlRewriteAtTests
     public async Task InlineStyleBlockMissOnNonStyleTag()
     {
         byte[] html = [.. "<div>plain</div>"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         var changed = InlineStyleBlockBytes.TryRewriteBlock(html, 0, ctx, sink, ref lastEmit, out var advanceTo);
@@ -148,10 +148,10 @@ public class UrlRewriteAtTests
             + "<style>.x { background: url(https://cdn.test/c.png); }</style>"
             + "<a href=\"https://cdn.test/page\">link</a>";
         byte[] bytes = [.. Encoding.UTF8.GetBytes(Html)];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(bytes.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(bytes.Length);
 
         var changed = ExternalUrlScanner.RewriteInto(bytes, ctx, sink);
 
@@ -169,10 +169,10 @@ public class UrlRewriteAtTests
     public async Task CombinedWalkerNoMatchReturnsFalse()
     {
         byte[] html = [.. "<p>plain text with no urls</p>"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: null);
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
 
         var changed = ExternalUrlScanner.RewriteInto(html, ctx, sink);
 
@@ -186,10 +186,10 @@ public class UrlRewriteAtTests
     public async Task CombinedWalkerRespectsFilter()
     {
         byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
-        var registry = new ExternalAssetRegistry("local"u8.ToArray());
-        var filter = new HostFilter(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("only.test"));
-        var ctx = new UrlRewriteContext(filter, registry);
-        var sink = new ArrayBufferWriter<byte>(html.Length);
+        ExternalAssetRegistry registry = new([.. "local"u8]);
+        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("only.test"));
+        UrlRewriteContext ctx = new(filter, registry);
+        ArrayBufferWriter<byte> sink = new(html.Length);
 
         var changed = ExternalUrlScanner.RewriteInto(html, ctx, sink);
 

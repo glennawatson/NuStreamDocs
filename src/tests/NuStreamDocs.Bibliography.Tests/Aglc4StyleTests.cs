@@ -17,14 +17,14 @@ public class Aglc4StyleTests
     [Test]
     public async Task BookRendersAglc4Form()
     {
-        var entry = new CitationEntry
+        CitationEntry entry = new()
         {
-            Id = "x"u8.ToArray(),
+            Id = [.. "x"u8],
             Type = EntryType.Book,
-            Title = "Change and Continuity"u8.ToArray(),
+            Title = [.. "Change and Continuity"u8],
             Authors = [PersonName.Of("William", "Gummow")],
             Year = 2018,
-            Publisher = "Federation Press"u8.ToArray(),
+            Publisher = [.. "Federation Press"u8]
         };
         await Assert.That(RenderBibliography(entry))
             .IsEqualTo("William Gummow, *Change and Continuity* (Federation Press, 2018)");
@@ -35,13 +35,13 @@ public class Aglc4StyleTests
     [Test]
     public async Task CaseRendersWithSeries()
     {
-        var entry = new CitationEntry
+        CitationEntry entry = new()
         {
-            Id = "mabo"u8.ToArray(),
+            Id = [.. "mabo"u8],
             Type = EntryType.LegalCase,
-            Title = "Mabo v Queensland (No 2)"u8.ToArray(),
+            Title = [.. "Mabo v Queensland (No 2)"u8],
             Year = 1992,
-            LawReportSeries = "(1992) 175 CLR 1"u8.ToArray(),
+            LawReportSeries = [.. "(1992) 175 CLR 1"u8]
         };
         await Assert.That(RenderBibliography(entry)).IsEqualTo("*Mabo v Queensland (No 2)* (1992) 175 CLR 1");
     }
@@ -51,16 +51,16 @@ public class Aglc4StyleTests
     [Test]
     public async Task ArticleRendersWithSingleQuotedTitle()
     {
-        var entry = new CitationEntry
+        CitationEntry entry = new()
         {
-            Id = "smith"u8.ToArray(),
+            Id = [.. "smith"u8],
             Type = EntryType.ArticleJournal,
-            Title = "On Federalism"u8.ToArray(),
+            Title = [.. "On Federalism"u8],
             Authors = [PersonName.Of("Anne", "Smith")],
             Year = 2020,
-            ContainerTitle = "Australian Law Journal"u8.ToArray(),
-            Volume = "94"u8.ToArray(),
-            Page = "200"u8.ToArray(),
+            ContainerTitle = [.. "Australian Law Journal"u8],
+            Volume = [.. "94"u8],
+            Page = [.. "200"u8]
         };
         var output = RenderBibliography(entry);
         await Assert.That(output).Contains("'On Federalism'");
@@ -74,13 +74,13 @@ public class Aglc4StyleTests
     [Test]
     public async Task LegislationRendersAglc4Form()
     {
-        var entry = new CitationEntry
+        CitationEntry entry = new()
         {
-            Id = "hca-act"u8.ToArray(),
+            Id = [.. "hca-act"u8],
             Type = EntryType.Legislation,
-            Title = "High Court of Australia Act 1979"u8.ToArray(),
-            Jurisdiction = "Cth"u8.ToArray(),
-            Year = 1979,
+            Title = [.. "High Court of Australia Act 1979"u8],
+            Jurisdiction = [.. "Cth"u8],
+            Year = 1979
         };
         var output = RenderBibliography(entry);
         await Assert.That(output).IsEqualTo("*High Court of Australia Act 1979* (Cth)");
@@ -91,10 +91,10 @@ public class Aglc4StyleTests
     [Test]
     public async Task FootnoteAppendsLocator()
     {
-        var entry = new CitationEntry { Id = "x"u8.ToArray(), Type = EntryType.Book, Title = "T"u8.ToArray() };
-        var source = "23"u8.ToArray();
-        var locator = new CitationLocator(LocatorKind.Page, 0, source.Length);
-        var sink = new ArrayBufferWriter<byte>(64);
+        CitationEntry entry = new() { Id = [.. "x"u8], Type = EntryType.Book, Title = [.. "T"u8] };
+        byte[] source = [.. "23"u8];
+        CitationLocator locator = new(LocatorKind.Page, 0, source.Length);
+        ArrayBufferWriter<byte> sink = new(64);
         Aglc4Style.Instance.WriteFootnote(entry, locator, source, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).EndsWith(" 23");
     }
@@ -104,10 +104,10 @@ public class Aglc4StyleTests
     [Test]
     public async Task FootnoteParagraphLocatorIsBracketed()
     {
-        var entry = new CitationEntry { Id = "x"u8.ToArray(), Type = EntryType.Book, Title = "T"u8.ToArray() };
-        var source = "12"u8.ToArray();
-        var locator = new CitationLocator(LocatorKind.Paragraph, 0, source.Length);
-        var sink = new ArrayBufferWriter<byte>(64);
+        CitationEntry entry = new() { Id = [.. "x"u8], Type = EntryType.Book, Title = [.. "T"u8] };
+        byte[] source = [.. "12"u8];
+        CitationLocator locator = new(LocatorKind.Paragraph, 0, source.Length);
+        ArrayBufferWriter<byte> sink = new(64);
         Aglc4Style.Instance.WriteFootnote(entry, locator, source, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).EndsWith(" [12]");
     }
@@ -123,7 +123,7 @@ public class Aglc4StyleTests
     /// <returns>Decoded markdown line.</returns>
     private static string RenderBibliography(CitationEntry entry)
     {
-        var sink = new ArrayBufferWriter<byte>(128);
+        ArrayBufferWriter<byte> sink = new(128);
         Aglc4Style.Instance.WriteBibliography(entry, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

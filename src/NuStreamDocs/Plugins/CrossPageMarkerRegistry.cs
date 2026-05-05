@@ -29,7 +29,7 @@ public sealed class CrossPageMarkerRegistry
     public IReadOnlyList<byte[]> Markers => _markers;
 
     /// <summary>Registers a marker byte sequence whose presence indicates the page needs cross-page resolution.</summary>
-    /// <param name="needle">UTF-8 byte sequence identifying the cross-page marker (e.g. <c>"@autoref:"u8.ToArray()</c>).</param>
+    /// <param name="needle">UTF-8 byte sequence identifying the cross-page marker (e.g. <c>[.. "@autoref:"u8]</c>).</param>
     public void Register(byte[] needle)
     {
         ArgumentNullException.ThrowIfNull(needle);
@@ -40,7 +40,4 @@ public sealed class CrossPageMarkerRegistry
 
         _markers.Add(needle);
     }
-
-    /// <summary>Resets the registry to empty (used by watch-mode rebuilds that reuse the engine instance).</summary>
-    public void Clear() => _markers.Clear();
 }

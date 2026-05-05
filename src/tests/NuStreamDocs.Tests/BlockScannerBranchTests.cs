@@ -130,7 +130,7 @@ public class BlockScannerBranchTests
     /// <returns>Block descriptors.</returns>
     private static BlockSpan[] Scan(string markdown)
     {
-        var sink = new ArrayBufferWriter<BlockSpan>();
+        ArrayBufferWriter<BlockSpan> sink = new();
         BlockScanner.Scan(Encoding.UTF8.GetBytes(markdown), sink);
         return [.. sink.WrittenSpan];
     }

@@ -70,12 +70,8 @@ internal static class AdmonitionRewriter
         titleLen = 0;
         headerEnd = 0;
 
-        if (offset + Opener.Length > source.Length || !source[offset..].StartsWith(Opener))
-        {
-            return false;
-        }
-
-        return OpenerLineParser.TryParseTypeAndTitle(
+        return offset + Opener.Length <= source.Length && source[offset..].StartsWith(Opener)
+            && OpenerLineParser.TryParseTypeAndTitle(
             source,
             offset + Opener.Length,
             out typeStart,

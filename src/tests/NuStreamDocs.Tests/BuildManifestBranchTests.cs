@@ -15,7 +15,7 @@ public class BuildManifestBranchTests
     [Test]
     public async Task LoadAsyncMissingFile()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var manifest = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
         await Assert.That(manifest.Count).IsEqualTo(0);
     }
@@ -25,7 +25,7 @@ public class BuildManifestBranchTests
     [Test]
     public async Task LoadAsyncCorruptFile()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var path = Path.Combine(temp.Root, BuildManifest.FileName);
         await File.WriteAllTextAsync(path, "{not json");
         var manifest = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
@@ -38,9 +38,9 @@ public class BuildManifestBranchTests
     public async Task ReplaceFromQueue()
     {
         var manifest = BuildManifest.Empty();
-        var queue = new ConcurrentQueue<ManifestEntry>();
-        var aHash = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-        var bHash = new byte[] { 9, 10, 11, 12, 13, 14, 15, 16 };
+        ConcurrentQueue<ManifestEntry> queue = new();
+        byte[] aHash = [1, 2, 3, 4, 5, 6, 7, 8];
+        byte[] bHash = [9, 10, 11, 12, 13, 14, 15, 16];
         queue.Enqueue(new("a.md", aHash, 10));
         queue.Enqueue(new("b.md", bHash, 20));
         manifest.Replace(queue);
@@ -63,9 +63,9 @@ public class BuildManifestBranchTests
     [Test]
     public async Task SaveLoadRoundTrip()
     {
-        using var temp = new ScratchDir();
-        var manifest = BuildManifest.Empty("test-build"u8.ToArray());
-        var hash = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04 };
+        using ScratchDir temp = new();
+        var manifest = BuildManifest.Empty([.. "test-build"u8]);
+        byte[] hash = [0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04];
         manifest.Replace([new("p.md", hash, 99)]);
         await manifest.SaveAsync(temp.Root, CancellationToken.None);
         var loaded = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
@@ -80,12 +80,12 @@ public class BuildManifestBranchTests
     [Test]
     public async Task LoadAsyncRejectsDifferentBuildFingerprint()
     {
-        using var temp = new ScratchDir();
-        var manifest = BuildManifest.Empty("build-a"u8.ToArray());
+        using ScratchDir temp = new();
+        var manifest = BuildManifest.Empty([.. "build-a"u8]);
         manifest.Replace([new("p.md", [1, 2, 3, 4], 10)]);
         await manifest.SaveAsync(temp.Root, CancellationToken.None);
 
-        var loaded = await BuildManifest.LoadAsync(temp.Root, "build-b"u8.ToArray(), CancellationToken.None);
+        var loaded = await BuildManifest.LoadAsync(temp.Root, [.. "build-b"u8], CancellationToken.None);
         await Assert.That(loaded.Count).IsEqualTo(0);
     }
 

@@ -17,8 +17,8 @@ public class SmartSymbolsPluginTests
     [Test]
     public async Task PreRenderSubstitutes()
     {
-        var sink = new ArrayBufferWriter<byte>(32);
-        var ctx = new PagePreRenderContext("p.md", "(c) acme"u8, sink);
+        ArrayBufferWriter<byte> sink = new(32);
+        PagePreRenderContext ctx = new("p.md", "(c) acme"u8, sink);
         new SmartSymbolsPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("© acme");
     }
@@ -34,7 +34,7 @@ public class SmartSymbolsPluginTests
     [Test]
     public async Task UseSmartSymbolsRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseSmartSymbols()).IsSameReferenceAs(builder);
     }
 

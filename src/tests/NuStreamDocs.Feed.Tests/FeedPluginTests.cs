@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Logging.Abstractions;
-using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Feed.Tests;
 
@@ -15,7 +14,7 @@ public class FeedPluginTests
     [Test]
     public async Task TwoArgCtor()
     {
-        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), TimeProvider.System);
+        FeedPlugin plugin = new(new("https://x.test/", "T", "D", "blog"), TimeProvider.System);
         await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
     }
 
@@ -24,17 +23,17 @@ public class FeedPluginTests
     [Test]
     public async Task ConfigureAsyncSucceeds() =>
         await new FeedPlugin(new("https://x.test/", "T", "D", "blog"))
-            .ConfigureAsync(new BuildConfigureContext("/in", "/out", [], new()), CancellationToken.None);
+            .ConfigureAsync(new("/in", "/out", [], new()), CancellationToken.None);
 
     /// <summary>FinalizeAsync runs against an empty output dir without error.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task FinalizeAsyncEmptyDirSucceeds()
     {
-        using var dir = new TempDir();
-        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
-        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
+        using TempDir dir = new();
+        FeedPlugin plugin = new(new("https://x.test/", "T", "D", "blog"));
+        await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
     }
 
     /// <summary>FeedFormats.None short-circuits FinalizeAsync without writing anything.</summary>
@@ -42,11 +41,11 @@ public class FeedPluginTests
     [Test]
     public async Task FormatsNoneShortCircuits()
     {
-        using var dir = new TempDir();
-        var opts = new FeedOptions("https://x.test/", "T", "D", "blog") { Formats = FeedFormats.None };
-        var plugin = new FeedPlugin(opts);
-        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
-        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
+        using TempDir dir = new();
+        FeedOptions opts = new("https://x.test/", "T", "D", "blog") { Formats = FeedFormats.None };
+        FeedPlugin plugin = new(opts);
+        await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsFalse();
     }
@@ -56,9 +55,9 @@ public class FeedPluginTests
     [Test]
     public async Task EmptyInputRootShortCircuits()
     {
-        using var dir = new TempDir();
-        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
+        using TempDir dir = new();
+        FeedPlugin plugin = new(new("https://x.test/", "T", "D", "blog"));
+        await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
         await Assert.That(Directory.GetFiles(dir.Root, "*", SearchOption.AllDirectories)).IsEmpty();
     }
 
@@ -67,11 +66,11 @@ public class FeedPluginTests
     [Test]
     public async Task EmptyPostsDirNoOutput()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         Directory.CreateDirectory(Path.Combine(dir.Root, "blog"));
-        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
-        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
+        FeedPlugin plugin = new(new("https://x.test/", "T", "D", "blog"));
+        await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
     }
 
@@ -80,17 +79,17 @@ public class FeedPluginTests
     [Test]
     public async Task PopulatedPostsEmitsRssAndAtom()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         var posts = Path.Combine(dir.Root, "blog");
         Directory.CreateDirectory(posts);
         await File.WriteAllTextAsync(
             Path.Combine(posts, "2026-04-01-hello.md"),
             "---\ntitle: Hi\n---\nbody\n");
 
-        var clock = new FakeTimeProvider(new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
-        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), clock);
-        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
-        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
+        FakeTimeProvider clock = new(new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
+        FeedPlugin plugin = new(new("https://x.test/", "T", "D", "blog"), clock);
+        await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsTrue();
@@ -115,7 +114,7 @@ public class FeedPluginTests
     [Test]
     public async Task ThreeArgCtorAcceptsLogger()
     {
-        var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), TimeProvider.System, NullLogger.Instance);
+        FeedPlugin plugin = new(new("https://x.test/", "T", "D", "blog"), TimeProvider.System, NullLogger.Instance);
         await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
     }
 

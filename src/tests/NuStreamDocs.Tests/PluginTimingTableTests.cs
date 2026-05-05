@@ -15,7 +15,7 @@ public class PluginTimingTableTests
     [Test]
     public async Task EmptyTableSnapshotReturnsEmpty()
     {
-        var table = new PluginTimingTable();
+        PluginTimingTable table = new();
         var rows = SnapshotViaReflection(table);
         await Assert.That(rows.Length).IsEqualTo(0);
     }
@@ -25,8 +25,8 @@ public class PluginTimingTableTests
     [Test]
     public async Task MeasureScopeAccumulatesElapsed()
     {
-        var table = new PluginTimingTable();
-        using (table.Measure("plugin-a"u8.ToArray()))
+        PluginTimingTable table = new();
+        using (table.Measure([.. "plugin-a"u8]))
         {
             await Task.Delay(20);
         }
@@ -42,10 +42,10 @@ public class PluginTimingTableTests
     [Test]
     public async Task RepeatedMeasureScopesAccumulate()
     {
-        var table = new PluginTimingTable();
+        PluginTimingTable table = new();
         for (var i = 0; i < 3; i++)
         {
-            using (table.Measure("plugin-a"u8.ToArray()))
+            using (table.Measure([.. "plugin-a"u8]))
             {
                 await Task.Delay(10);
             }
@@ -61,10 +61,10 @@ public class PluginTimingTableTests
     [Test]
     public async Task SnapshotIsSortedDescending()
     {
-        var table = new PluginTimingTable();
-        table.Add("fast"u8.ToArray(), 1_000);
-        table.Add("slow"u8.ToArray(), 100_000_000);
-        table.Add("medium"u8.ToArray(), 1_000_000);
+        PluginTimingTable table = new();
+        table.Add([.. "fast"u8], 1_000);
+        table.Add([.. "slow"u8], 100_000_000);
+        table.Add([.. "medium"u8], 1_000_000);
 
         var rows = SnapshotViaReflection(table);
         await Assert.That(rows[0].Name.SequenceEqual("slow"u8)).IsTrue();
@@ -77,7 +77,7 @@ public class PluginTimingTableTests
     [Test]
     public async Task AddRejectsEmptyName()
     {
-        var table = new PluginTimingTable();
+        PluginTimingTable table = new();
         var ex1 = Assert.Throws<ArgumentException>(() => table.Add([], 1));
         var ex2 = Assert.Throws<ArgumentException>(() => table.Measure([]));
         await Assert.That(ex1).IsNotNull();
@@ -89,8 +89,8 @@ public class PluginTimingTableTests
     [Test]
     public async Task EmitOnEmptyTableDoesNothing()
     {
-        var table = new PluginTimingTable();
-        var logger = new RecordingLogger();
+        PluginTimingTable table = new();
+        RecordingLogger logger = new();
         table.Emit(logger);
         await Assert.That(logger.Records.Count).IsEqualTo(0);
     }
@@ -100,11 +100,11 @@ public class PluginTimingTableTests
     [Test]
     public async Task EmitWritesHeaderAndOneRowPerPlugin()
     {
-        var table = new PluginTimingTable();
-        table.Add("plugin-a"u8.ToArray(), System.Diagnostics.Stopwatch.Frequency); // ~1s
-        table.Add("plugin-b"u8.ToArray(), System.Diagnostics.Stopwatch.Frequency / 2); // ~0.5s
+        PluginTimingTable table = new();
+        table.Add([.. "plugin-a"u8], System.Diagnostics.Stopwatch.Frequency); // ~1s
+        table.Add([.. "plugin-b"u8], System.Diagnostics.Stopwatch.Frequency / 2); // ~0.5s
 
-        var logger = new RecordingLogger();
+        RecordingLogger logger = new();
         table.Emit(logger);
 
         await Assert.That(logger.Records.Count).IsEqualTo(3);
@@ -118,11 +118,11 @@ public class PluginTimingTableTests
     [Test]
     public async Task SubSignificantEntriesUseDebugLevel()
     {
-        var table = new PluginTimingTable();
-        table.Add("plugin-a"u8.ToArray(), System.Diagnostics.Stopwatch.Frequency); // ~1s
-        table.Add("plugin-fast"u8.ToArray(), 1); // ~0s
+        PluginTimingTable table = new();
+        table.Add([.. "plugin-a"u8], System.Diagnostics.Stopwatch.Frequency); // ~1s
+        table.Add([.. "plugin-fast"u8], 1); // ~0s
 
-        var logger = new RecordingLogger();
+        RecordingLogger logger = new();
         table.Emit(logger);
 
         var (slowLevel, _) = logger.Records.First(r => r.Message.Contains("plugin-a", StringComparison.Ordinal));

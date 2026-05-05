@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Globalization;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Plugins.ExtraAssets;
 
@@ -32,7 +33,7 @@ public class ExtraAssetsTests
             await builder.BuildAsync();
 
             var plugin = ExtractPlugin(builder);
-            var assetPaths = plugin.StaticAssets.Select(static p => p.Path).ToList();
+            List<FilePath> assetPaths = [.. plugin.StaticAssets.Select(static p => p.Path)];
             await Assert.That(assetPaths).Contains("assets/extra/one.css");
             await Assert.That(assetPaths).Contains("assets/extra/two.css");
         }
@@ -47,9 +48,9 @@ public class ExtraAssetsTests
     [Test]
     public async Task InlineCssIsExposedAsStaticAsset()
     {
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         plugin.AddCss(ExtraAssetSource.Inline("brand.css", [.. "body{}"u8]));
-        var context = new BuildConfigureContext("/in", "/out", [], new());
+        BuildConfigureContext context = new("/in", "/out", [], new());
         await plugin.ConfigureAsync(context, CancellationToken.None);
 
         var assets = plugin.StaticAssets;
@@ -62,13 +63,13 @@ public class ExtraAssetsTests
     [Test]
     public async Task HeadFragmentEmitsLinkAndScript()
     {
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         plugin.AddCss(ExtraAssetSource.Inline("a.css", [.. "x"u8]));
         plugin.AddJs(ExtraAssetSource.External("https://cdn.example/x.js"));
-        var context = new BuildConfigureContext("/in", "/out", [], new());
+        BuildConfigureContext context = new("/in", "/out", [], new());
         await plugin.ConfigureAsync(context, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
 
@@ -84,9 +85,9 @@ public class ExtraAssetsTests
     [Test]
     public async Task ExternalUrlShipsNoAsset()
     {
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         plugin.AddCss(ExtraAssetSource.External("https://cdn.example/x.css"));
-        var context = new BuildConfigureContext("/in", "/out", [], new());
+        BuildConfigureContext context = new("/in", "/out", [], new());
         await plugin.ConfigureAsync(context, CancellationToken.None);
 
         await Assert.That(plugin.StaticAssets).IsEmpty();
@@ -97,9 +98,9 @@ public class ExtraAssetsTests
     [Test]
     public async Task EmptyHeadFragmentIsNoOp()
     {
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         await plugin.ConfigureAsync(default, CancellationToken.None);
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -109,14 +110,14 @@ public class ExtraAssetsTests
     [Test]
     public async Task ExternalUrlSkipsStaticAssetEmit()
     {
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         plugin.AddCss(ExtraAssetSource.External("https://cdn.test/x.css"));
         plugin.AddJs(ExtraAssetSource.External("https://cdn.test/x.js"));
         await plugin.ConfigureAsync(default, CancellationToken.None);
 
         await Assert.That(plugin.StaticAssets.Length).IsEqualTo(0);
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).Contains("https://cdn.test/x.css");
@@ -132,7 +133,7 @@ public class ExtraAssetsTests
         var path = Path.Combine(dir.Root, "extra.css");
         await File.WriteAllTextAsync(path, "body { color: red; }");
 
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         plugin.AddCss(ExtraAssetSource.File(path));
         await plugin.ConfigureAsync(default, CancellationToken.None);
 
@@ -145,14 +146,14 @@ public class ExtraAssetsTests
     [Test]
     public async Task InlineKindShipsBytesAndEmitsScript()
     {
-        var plugin = new ExtraAssetsPlugin();
-        plugin.AddJs(ExtraAssetSource.Inline("inline.js", "console.log('hi')"u8.ToArray()));
+        ExtraAssetsPlugin plugin = new();
+        plugin.AddJs(ExtraAssetSource.Inline("inline.js", [.. "console.log('hi')"u8]));
         await plugin.ConfigureAsync(default, CancellationToken.None);
 
         await Assert.That(plugin.StaticAssets.Length).IsEqualTo(1);
         await Assert.That(plugin.StaticAssets[0].Path).IsEqualTo("assets/extra/inline.js");
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).Contains("/assets/extra/inline.js");
@@ -164,7 +165,7 @@ public class ExtraAssetsTests
     [Test]
     public async Task AddRejectsNull()
     {
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         await Assert.That(() => plugin.AddCss(null!)).Throws<ArgumentNullException>();
         await Assert.That(() => plugin.AddJs(null!)).Throws<ArgumentNullException>();
     }

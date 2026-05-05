@@ -79,8 +79,8 @@ public class YamlToJsonTests
     /// <returns>The compact UTF-8 JSON string.</returns>
     private static string Convert(ReadOnlySpan<byte> yaml)
     {
-        var buffer = new ArrayBufferWriter<byte>();
-        using (var writer = new Utf8JsonWriter(buffer))
+        ArrayBufferWriter<byte> buffer = new();
+        using (Utf8JsonWriter writer = new(buffer))
         {
             YamlToJson.Convert(yaml, writer);
         }

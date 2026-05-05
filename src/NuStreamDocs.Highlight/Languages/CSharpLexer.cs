@@ -33,10 +33,12 @@ public static class CSharpLexer
     /// <returns>Configured lexer.</returns>
     private static Lexer Build()
     {
-        var states = new LexerRule[3][];
-        states[Lexer.RootStateId] = CSharpRules.Build(BlockAccessorStateId, ArrowAccessorStateId);
-        states[BlockAccessorStateId] = CSharpRules.BuildBlockAccessorRules(BlockAccessorStateId);
-        states[ArrowAccessorStateId] = CSharpRules.BuildArrowAccessorRules();
+        LexerRule[][] states =
+        [
+            CSharpRules.Build(BlockAccessorStateId, ArrowAccessorStateId),
+            CSharpRules.BuildBlockAccessorRules(BlockAccessorStateId),
+            CSharpRules.BuildArrowAccessorRules()
+        ];
         return new(states);
     }
 }

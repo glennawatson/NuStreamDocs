@@ -56,7 +56,7 @@ public class SuperFencesDispatchBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var sb = new StringBuilder(PageSizeKb * BytesPerKb);
+        StringBuilder sb = new(PageSizeKb * BytesPerKb);
         var totalBytes = PageSizeKb * BytesPerKb;
         var blockEvery = 200 / Math.Max(1, FencesPer200Bytes);
         var idx = 0;
@@ -68,7 +68,7 @@ public class SuperFencesDispatchBenchmarks
             {
                 0 => $"<pre><code class=\"language-mermaid\">graph{i}</code></pre>",
                 1 => $"<pre><code class=\"language-math\">x_{i} = 1</code></pre>",
-                _ => $"<pre><code class=\"language-csharp\">var x{i} = 1;</code></pre>",
+                _ => $"<pre><code class=\"language-csharp\">var x{i} = 1;</code></pre>"
             };
             sb.Append(emitted);
             written += emitted.Length;
@@ -85,14 +85,14 @@ public class SuperFencesDispatchBenchmarks
 
         _html = Encoding.UTF8.GetBytes(sb.ToString());
 
-        var fullDict = new Dictionary<byte[], ICustomFenceHandler>(2, ByteArrayComparer.Instance)
+        Dictionary<byte[], ICustomFenceHandler> fullDict = new(2, ByteArrayComparer.Instance)
         {
-            ["mermaid"u8.ToArray()] = new StubMermaidHandler(),
-            ["math"u8.ToArray()] = new StubMathHandler(),
+            [[.. "mermaid"u8]] = new StubMermaidHandler(),
+            [[.. "math"u8]] = new StubMathHandler()
         };
         _allRegistered = fullDict.AsUtf8Lookup();
 
-        var emptyDict = new Dictionary<byte[], ICustomFenceHandler>(0, ByteArrayComparer.Instance);
+        Dictionary<byte[], ICustomFenceHandler> emptyDict = new(0, ByteArrayComparer.Instance);
         _noneRegistered = emptyDict.AsUtf8Lookup();
     }
 
@@ -101,7 +101,7 @@ public class SuperFencesDispatchBenchmarks
     [Benchmark]
     public int DispatchAllRegistered()
     {
-        var sink = new ArrayBufferWriter<byte>(_html.Length);
+        ArrayBufferWriter<byte> sink = new(_html.Length);
         if (!SuperFencesDispatcher.DispatchInto(_html, _allRegistered, sink))
         {
             sink.Write(_html);
@@ -119,7 +119,7 @@ public class SuperFencesDispatchBenchmarks
     [Benchmark]
     public int DispatchNoneRegistered()
     {
-        var sink = new ArrayBufferWriter<byte>(_html.Length);
+        ArrayBufferWriter<byte> sink = new(_html.Length);
         if (!SuperFencesDispatcher.DispatchInto(_html, _noneRegistered, sink))
         {
             sink.Write(_html);

@@ -23,7 +23,7 @@ public class PathFilterTests
     [Test]
     public async Task ExcludeDropsMatches()
     {
-        var filter = new PathFilter([], ["drafts/**", "**/_partial.md"]);
+        PathFilter filter = new([], ["drafts/**", "**/_partial.md"]);
 
         await Assert.That(filter.HasRules).IsTrue();
         await Assert.That(filter.Matches("guide/intro.md")).IsTrue();
@@ -36,7 +36,7 @@ public class PathFilterTests
     [Test]
     public async Task IncludeRestrictsToMatches()
     {
-        var filter = new PathFilter(["guide/**/*.md"], []);
+        PathFilter filter = new(["guide/**/*.md"], []);
 
         await Assert.That(filter.Matches("guide/intro.md")).IsTrue();
         await Assert.That(filter.Matches("guide/sub/page.md")).IsTrue();
@@ -48,7 +48,7 @@ public class PathFilterTests
     [Test]
     public async Task ExcludeBeatsInclude()
     {
-        var filter = new PathFilter(["guide/**/*.md"], ["**/_partial.md"]);
+        PathFilter filter = new(["guide/**/*.md"], ["**/_partial.md"]);
 
         await Assert.That(filter.Matches("guide/intro.md")).IsTrue();
         await Assert.That(filter.Matches("guide/_partial.md")).IsFalse();

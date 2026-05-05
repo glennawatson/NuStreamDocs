@@ -20,7 +20,7 @@ public class FrontmatterTitleReaderTests
         using var fixture = await TempFile.WriteAsync("---\ntitle: Hello\n---\n# Body\n");
         await Assert.That(ReadString(fixture.Path)).IsEqualTo("Hello");
         var bytes = FrontmatterTitleReader.ReadBytes((FilePath)fixture.Path);
-        await Assert.That(bytes is not null && Encoding.UTF8.GetString(bytes!) == "Hello").IsTrue();
+        await Assert.That(bytes is not null && Encoding.UTF8.GetString(bytes) == "Hello").IsTrue();
     }
 
     /// <summary>Capitalised <c>Title:</c> (Wyam convention) is honoured when no lower-case key is present.</summary>

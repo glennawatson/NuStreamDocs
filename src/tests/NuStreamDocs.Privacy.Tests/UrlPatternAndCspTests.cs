@@ -18,7 +18,7 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task GlobWildcardsMatchExpectedUrls()
     {
-        var matcher = new UrlPatternMatcher(["https://fonts.googleapis.com/css*"u8.ToArray()]);
+        UrlPatternMatcher matcher = new([[.. "https://fonts.googleapis.com/css*"u8]]);
         await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/css"u8)).IsTrue();
         await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/css?family=Roboto"u8)).IsTrue();
         await Assert.That(matcher.IsMatch("https://fonts.googleapis.com/recaptcha/foo"u8)).IsFalse();
@@ -29,7 +29,7 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task IncludePatternBroadensAllowSet()
     {
-        var filter = new HostFilter(
+        HostFilter filter = new(
             hostsToSkip: null,
             hostsAllowed: PrivacyTestHelpers.Utf8("allowed.example"),
             includePatterns: PrivacyTestHelpers.Utf8("https://other.example/css*"),
@@ -44,7 +44,7 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task ExcludePatternBlocksAllowedHost()
     {
-        var filter = new HostFilter(
+        HostFilter filter = new(
             hostsToSkip: null,
             hostsAllowed: null,
             includePatterns: null,
@@ -58,8 +58,8 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task CspHashCollectorEmitsStableSha256()
     {
-        var styles = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
-        var scripts = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> styles = new(Common.ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> scripts = new(Common.ByteArrayComparer.Instance);
         const string Html = "<style>body{color:red}</style><script>alert(1)</script>";
         CspHashCollector.Collect(Encoding.UTF8.GetBytes(Html), styles, scripts);
 
@@ -77,8 +77,8 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task CspHashCollectorSkipsEmptyBodies()
     {
-        var styles = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
-        var scripts = new ConcurrentDictionary<byte[], byte>(Common.ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> styles = new(Common.ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> scripts = new(Common.ByteArrayComparer.Instance);
         CspHashCollector.Collect([.. "<script src=\"/x.js\"></script>"u8], styles, scripts);
         await Assert.That(scripts).IsEmpty();
     }
@@ -92,13 +92,13 @@ public class UrlPatternAndCspTests
         Directory.CreateDirectory(outputRoot);
         try
         {
-            var plugin = new PrivacyPlugin(PrivacyOptions.Default with { GenerateCspManifest = true });
-            var configure = new BuildConfigureContext("/in", outputRoot, [], new());
+            PrivacyPlugin plugin = new(PrivacyOptions.Default with { GenerateCspManifest = true });
+            BuildConfigureContext configure = new("/in", outputRoot, [], new());
             await plugin.ConfigureAsync(configure, CancellationToken.None);
 
             RunRewrite(plugin, "<style>body{color:red}</style><script>alert(1)</script>"u8);
 
-            var finalize = new BuildFinalizeContext(outputRoot, []);
+            BuildFinalizeContext finalize = new(outputRoot, []);
             await plugin.FinalizeAsync(finalize, CancellationToken.None);
 
             var manifest = await File.ReadAllTextAsync(Path.Combine(outputRoot, "csp-hashes.json"));
@@ -124,8 +124,8 @@ public class UrlPatternAndCspTests
     /// <param name="html">Input HTML bytes.</param>
     private static void RunRewrite(PrivacyPlugin plugin, ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>();
-        var ctx = new PagePostRenderContext("page.md", default, html, output);
+        ArrayBufferWriter<byte> output = new();
+        PagePostRenderContext ctx = new("page.md", default, html, output);
         plugin.PostRender(in ctx);
     }
 }

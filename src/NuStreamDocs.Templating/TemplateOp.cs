@@ -28,5 +28,5 @@ public enum TemplateOp
     SectionClose,
 
     /// <summary>Partial inclusion (<c>{{&gt; name}}</c>).</summary>
-    Partial,
+    Partial
 }

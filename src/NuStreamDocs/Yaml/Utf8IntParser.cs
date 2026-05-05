@@ -24,14 +24,20 @@ internal static class Utf8IntParser
 
         var i = 0;
         var negative = false;
-        if (bytes[0] is (byte)'-')
+        switch (bytes[0])
         {
-            negative = true;
-            i = 1;
-        }
-        else if (bytes[0] is (byte)'+')
-        {
-            i = 1;
+            case (byte)'-':
+                {
+                    negative = true;
+                    i = 1;
+                    break;
+                }
+
+            case (byte)'+':
+                {
+                    i = 1;
+                    break;
+                }
         }
 
         if (i >= bytes.Length)

@@ -23,25 +23,29 @@ public static class HtmlEntityDecoder
         ArgumentNullException.ThrowIfNull(writer);
 
         var ampersand = bytes.IndexOf((byte)'&');
-        if (ampersand < 0)
+        switch (ampersand)
         {
-            if (bytes.Length is 0)
-            {
-                return;
-            }
+            case < 0:
+                {
+                    if (bytes.Length is 0)
+                    {
+                        return;
+                    }
 
-            var dst = writer.GetSpan(bytes.Length);
-            bytes.CopyTo(dst);
-            writer.Advance(bytes.Length);
-            return;
-        }
+                    var dst = writer.GetSpan(bytes.Length);
+                    bytes.CopyTo(dst);
+                    writer.Advance(bytes.Length);
+                    return;
+                }
 
-        // Copy the leading no-entity prefix in one bulk write before the per-byte scan.
-        if (ampersand > 0)
-        {
-            var dst = writer.GetSpan(ampersand);
-            bytes[..ampersand].CopyTo(dst);
-            writer.Advance(ampersand);
+            // Copy the leading no-entity prefix in one bulk write before the per-byte scan.
+            case > 0:
+                {
+                    var dst = writer.GetSpan(ampersand);
+                    bytes[..ampersand].CopyTo(dst);
+                    writer.Advance(ampersand);
+                    break;
+                }
         }
 
         var i = ampersand;

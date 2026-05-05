@@ -43,7 +43,7 @@ public class AutorefScannerTests
     [Test]
     public async Task TryFindNextPastEndIsFalse()
     {
-        var bytes = "abc"u8.ToArray();
+        byte[] bytes = [.. "abc"u8];
         var len = bytes.Length;
         var pastEnd = AutorefScanner.TryFindNext(bytes, len, out _);
         var farPast = AutorefScanner.TryFindNext(bytes, len + 5, out _);
@@ -56,7 +56,7 @@ public class AutorefScannerTests
     [Test]
     public async Task TryFindNextRunsToEnd()
     {
-        var bytes = "@autoref:System.IDisposable"u8.ToArray();
+        byte[] bytes = [.. "@autoref:System.IDisposable"u8];
         var ok = AutorefScanner.TryFindNext(bytes, 0, out var match);
         await Assert.That(ok).IsTrue();
         await Assert.That(match.IdEnd).IsEqualTo(bytes.Length);
@@ -83,7 +83,7 @@ public class AutorefScannerTests
     [Test]
     public async Task FindIdEndPastEndReturnsLength()
     {
-        var bytes = "abc"u8.ToArray();
+        byte[] bytes = [.. "abc"u8];
         var atEnd = AutorefScanner.FindIdEnd(bytes, bytes.Length);
         var pastEnd = AutorefScanner.FindIdEnd(bytes, bytes.Length + 1);
         await Assert.That(atEnd).IsEqualTo(bytes.Length);

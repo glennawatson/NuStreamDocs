@@ -25,12 +25,9 @@ public static class MacrosOptionsExtensions
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(value);
-        if (name.Length is 0)
-        {
-            throw new ArgumentException("Name must be non-empty.", nameof(name));
-        }
-
-        return WithVariableCore(options, name, value);
+        return name.Length is 0
+            ? throw new ArgumentException("Name must be non-empty.", nameof(name))
+            : WithVariableCore(options, name, value);
     }
 
     /// <summary>String adapter for <see cref="WithVariable(MacrosOptions, byte[], byte[])"/>.</summary>
@@ -55,7 +52,7 @@ public static class MacrosOptionsExtensions
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(variables);
-        var map = new Dictionary<byte[], byte[]>(variables.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], byte[]> map = new(variables.Count, ByteArrayComparer.Instance);
         foreach (var pair in variables)
         {
             ArgumentNullException.ThrowIfNull(pair.Key);
@@ -74,7 +71,7 @@ public static class MacrosOptionsExtensions
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(variables);
-        var map = new Dictionary<byte[], byte[]>(variables.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], byte[]> map = new(variables.Count, ByteArrayComparer.Instance);
         foreach (var pair in variables)
         {
             ArgumentException.ThrowIfNullOrEmpty(pair.Key.Value);
@@ -92,7 +89,7 @@ public static class MacrosOptionsExtensions
     /// <returns>The updated options.</returns>
     private static MacrosOptions WithVariableCore(MacrosOptions options, byte[] name, byte[] value)
     {
-        var map = new Dictionary<byte[], byte[]>(options.Variables.Count + 1, ByteArrayComparer.Instance);
+        Dictionary<byte[], byte[]> map = new(options.Variables.Count + 1, ByteArrayComparer.Instance);
         foreach (var pair in options.Variables)
         {
             map[pair.Key] = pair.Value;

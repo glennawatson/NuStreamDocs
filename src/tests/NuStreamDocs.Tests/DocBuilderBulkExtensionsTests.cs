@@ -14,9 +14,9 @@ public class DocBuilderBulkExtensionsTests
     [Test]
     public async Task UsePluginsRegistersAll()
     {
-        var builder = new DocBuilder();
-        var p1 = new RecordingPlugin();
-        var p2 = new RecordingPlugin();
+        DocBuilder builder = new();
+        RecordingPlugin p1 = new();
+        RecordingPlugin p2 = new();
         var returned = builder.UsePlugins(p1, p2);
         await Assert.That(returned).IsSameReferenceAs(builder);
     }
@@ -26,7 +26,7 @@ public class DocBuilderBulkExtensionsTests
     [Test]
     public async Task UsePluginsEmptyIsHarmless()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UsePlugins()).IsSameReferenceAs(builder);
     }
 

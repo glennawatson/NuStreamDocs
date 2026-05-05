@@ -58,7 +58,7 @@ internal static class AssemblySourceFactory
         NuGetPackagesInput p => CreateFromPackages(p, logger),
         LocalAssembliesInput l => new LocalAssemblySource(l.Tfm, l.AssemblyPaths, l.FallbackSearchPaths),
         CustomInput c => c.Source,
-        _ => throw new ArgumentException($"Unknown input shape: {input.GetType().FullName}", nameof(input)),
+        _ => throw new ArgumentException($"Unknown input shape: {input.GetType().FullName}", nameof(input))
     };
 
     /// <summary>
@@ -82,8 +82,8 @@ internal static class AssemblySourceFactory
     /// <returns>UTF-8 manifest bytes.</returns>
     internal static byte[] BuildManifestJson(NuGetPackagesInput input)
     {
-        var sink = new ArrayBufferWriter<byte>(initialCapacity: 256);
-        using (var writer = new Utf8JsonWriter(sink, new() { Indented = false }))
+        ArrayBufferWriter<byte> sink = new(initialCapacity: 256);
+        using (Utf8JsonWriter writer = new(sink, new() { Indented = false }))
         {
             writer.WriteStartObject();
 

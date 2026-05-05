@@ -17,8 +17,8 @@ public class ArithmatexPluginTests
     [Test]
     public async Task PreRenderWrapsInlineMath()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("p.md", "solve $x+1$"u8, sink);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("p.md", "solve $x+1$"u8, sink);
         new ArithmatexPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("arithmatex");
     }
@@ -34,7 +34,7 @@ public class ArithmatexPluginTests
     [Test]
     public async Task UseArithmatexRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseArithmatex()).IsSameReferenceAs(builder);
     }
 

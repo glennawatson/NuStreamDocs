@@ -14,9 +14,9 @@ public class CitationEntryTests
     [Test]
     public async Task MonthAndDayProperties()
     {
-        var entry = new CitationEntry
+        CitationEntry entry = new()
         {
-            Id = "test"u8.ToArray(),
+            Id = [.. "test"u8],
             Type = EntryType.Book,
             Year = 2026,
             Month = 5,

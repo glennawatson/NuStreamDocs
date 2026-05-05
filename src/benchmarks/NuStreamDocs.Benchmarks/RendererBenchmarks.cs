@@ -37,7 +37,7 @@ public class RendererBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         for (var i = 0; i < Paragraphs; i++)
         {
             sb.Append("# Heading ").Append(i).Append('\n')

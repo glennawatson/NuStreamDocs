@@ -35,7 +35,7 @@ public sealed class PathFilter
         ArgumentNullException.ThrowIfNull(includes);
         ArgumentNullException.ThrowIfNull(excludes);
 
-        var matcher = new Matcher(StringComparison.Ordinal);
+        Matcher matcher = new(StringComparison.Ordinal);
         if (includes is [_, ..])
         {
             for (var i = 0; i < includes.Length; i++)

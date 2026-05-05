@@ -16,7 +16,7 @@ public class VersionsRegistrationTests
     [Test]
     public async Task UseVersionsRegisters()
     {
-        var options = new VersionOptions("1.0", "Stable");
+        VersionOptions options = new("1.0", "Stable");
         await Assert.That(new DocBuilder().UseVersions(options)).IsTypeOf<DocBuilder>();
     }
 
@@ -25,7 +25,7 @@ public class VersionsRegistrationTests
     [Test]
     public async Task UseVersionsLoggerRegisters()
     {
-        var options = new VersionOptions("1.0", "Stable");
+        VersionOptions options = new("1.0", "Stable");
         await Assert.That(new DocBuilder().UseVersions(options, NullLogger.Instance)).IsTypeOf<DocBuilder>();
     }
 
@@ -44,7 +44,7 @@ public class VersionsRegistrationTests
     [Test]
     public async Task ValidateThrowsOnEmptyVersion()
     {
-        var opts = new VersionOptions(string.Empty, "Title");
+        VersionOptions opts = new(string.Empty, "Title");
         var ex = Assert.Throws<ArgumentException>(opts.Validate);
         await Assert.That(ex).IsNotNull();
     }
@@ -54,7 +54,7 @@ public class VersionsRegistrationTests
     [Test]
     public async Task ValidateThrowsOnEmptyTitle()
     {
-        var opts = new VersionOptions("1.0", string.Empty);
+        VersionOptions opts = new("1.0", string.Empty);
         var ex = Assert.Throws<ArgumentException>(opts.Validate);
         await Assert.That(ex).IsNotNull();
     }
@@ -96,7 +96,7 @@ public class VersionsRegistrationTests
     [Test]
     public async Task UseVersionsLoggerRejectsNullLogger()
     {
-        var options = new VersionOptions("1.0", "Stable");
+        VersionOptions options = new("1.0", "Stable");
         var ex = Assert.Throws<ArgumentNullException>(() => new DocBuilder().UseVersions(options, null!));
         await Assert.That(ex).IsNotNull();
     }

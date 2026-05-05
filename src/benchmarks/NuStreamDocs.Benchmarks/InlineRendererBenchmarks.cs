@@ -35,7 +35,7 @@ public class InlineRendererBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         for (var i = 0; i < Repetitions; i++)
         {
             sb.Append("Line with **bold**, *italic*, `code`, a [link](https://x/")

@@ -69,7 +69,7 @@ public class MermaidRetaggerTests
     /// <returns>Rewritten output.</returns>
     private static string Retag(string source)
     {
-        var sink = new ArrayBufferWriter<byte>(source.Length);
+        ArrayBufferWriter<byte> sink = new(source.Length);
         MermaidRetagger.Retag(Encoding.UTF8.GetBytes(source), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

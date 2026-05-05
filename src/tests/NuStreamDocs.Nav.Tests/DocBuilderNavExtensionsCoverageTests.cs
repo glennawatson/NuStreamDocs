@@ -15,7 +15,7 @@ public class DocBuilderNavExtensionsCoverageTests
     [Test]
     public async Task UseNavConfigure()
     {
-        var b = new DocBuilder().UseNav(o => o);
+        var b = new DocBuilder().UseNav(static o => o);
         await Assert.That(b).IsNotNull();
     }
 
@@ -35,8 +35,8 @@ public class DocBuilderNavExtensionsCoverageTests
     {
         var cmp = NavNodeTitleComparer.Instance;
         await Assert.That(cmp.Compare(null, null)).IsEqualTo(0);
-        var a = new NavNode("Apple", "/a", isSection: false, []);
-        var b = new NavNode("Banana", "/b", isSection: false, []);
+        NavNode a = new("Apple", "/a", isSection: false, []);
+        NavNode b = new("Banana", "/b", isSection: false, []);
         await Assert.That(cmp.Compare(a, null)).IsGreaterThan(0);
         await Assert.That(cmp.Compare(null, a)).IsLessThan(0);
         await Assert.That(cmp.Compare(a, b)).IsLessThan(0);

@@ -12,8 +12,8 @@ public class AutorefsRegistryClearTests
     [Test]
     public async Task ClearEmpties()
     {
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "/x.html"u8.ToArray(), fragment: default);
+        AutorefsRegistry registry = new();
+        registry.Register("Foo"u8, [.. "/x.html"u8], fragment: default);
         registry.Clear();
         await Assert.That(registry.Count).IsEqualTo(0);
         await Assert.That(registry.TryResolve("Foo"u8, out _)).IsFalse();

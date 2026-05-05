@@ -53,7 +53,7 @@ public class HeadingIdScannerBenchmarks
     private const int ManyHeadings = 32;
 
     /// <summary>Page-relative URL bytes shared across every <c>Register</c> call — encoded once per build, exactly as the production plugin does.</summary>
-    private static readonly byte[] PageUrl = "guide/intro.html"u8.ToArray();
+    private static readonly byte[] PageUrl = [.. "guide/intro.html"u8];
 
     /// <summary>Synthetic rendered-HTML payload sized by <see cref="PageSizeKb"/> and <see cref="HeadingCount"/>.</summary>
     private byte[] _html = [];
@@ -92,7 +92,7 @@ public class HeadingIdScannerBenchmarks
     /// <returns>UTF-8 byte payload.</returns>
     private static byte[] BuildHtml(int byteLength, int headingCount)
     {
-        var sb = new StringBuilder(byteLength + (headingCount * HeadingReserveBytes));
+        StringBuilder sb = new(byteLength + (headingCount * HeadingReserveBytes));
         var fillerSegmentBytes = headingCount > 0 ? byteLength / (headingCount + 1) : byteLength;
 
         for (var i = 0; i <= headingCount; i++)

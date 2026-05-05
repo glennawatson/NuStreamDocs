@@ -90,9 +90,9 @@ public class TemplateTests
     public async Task PartialIsIncludedAndRendered()
     {
         var partial = Template.Compile("{{name}}!"u8);
-        var partials = new Dictionary<string, Template>(StringComparer.Ordinal)
+        Dictionary<string, Template> partials = new(StringComparer.Ordinal)
         {
-            ["greeting"] = partial,
+            ["greeting"] = partial
         };
         var data = Build([("name", "world")], []);
         var html = RenderWithPartials("hi {{> greeting}}"u8, data, partials);
@@ -104,7 +104,7 @@ public class TemplateTests
     [Test]
     public async Task UnknownPartialRendersEmpty()
     {
-        var partials = new Dictionary<string, Template>(StringComparer.Ordinal);
+        Dictionary<string, Template> partials = new(StringComparer.Ordinal);
         var html = RenderWithPartials("a{{> missing}}b"u8, TemplateData.Empty, partials);
         await Assert.That(html).IsEqualTo("ab");
     }
@@ -148,8 +148,8 @@ public class TemplateTests
         Dictionary<string, Template> partials)
     {
         var template = Template.Compile(source);
-        var writer = new ArrayBufferWriter<byte>();
-        var bytePartials = new Dictionary<byte[], Template>(partials.Count, Common.ByteArrayComparer.Instance);
+        ArrayBufferWriter<byte> writer = new();
+        Dictionary<byte[], Template> bytePartials = new(partials.Count, Common.ByteArrayComparer.Instance);
         foreach (var pair in partials)
         {
             bytePartials[Encoding.UTF8.GetBytes(pair.Key)] = pair.Value;
@@ -166,7 +166,7 @@ public class TemplateTests
     private static string Render(ReadOnlySpan<byte> source, TemplateData data)
     {
         var template = Template.Compile(source);
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         template.Render(data, writer);
         return Encoding.UTF8.GetString(writer.WrittenSpan);
     }
@@ -179,13 +179,13 @@ public class TemplateTests
         (string Key, string Value)[] scalars,
         (string Key, TemplateData[] Items)[] sections)
     {
-        var s = new Dictionary<byte[], ReadOnlyMemory<byte>>(scalars.Length, Common.ByteArrayComparer.Instance);
+        Dictionary<byte[], ReadOnlyMemory<byte>> s = new(scalars.Length, Common.ByteArrayComparer.Instance);
         for (var i = 0; i < scalars.Length; i++)
         {
             s[Encoding.UTF8.GetBytes(scalars[i].Key)] = Encoding.UTF8.GetBytes(scalars[i].Value);
         }
 
-        var t = new Dictionary<byte[], TemplateData[]>(sections.Length, Common.ByteArrayComparer.Instance);
+        Dictionary<byte[], TemplateData[]> t = new(sections.Length, Common.ByteArrayComparer.Instance);
         for (var i = 0; i < sections.Length; i++)
         {
             t[Encoding.UTF8.GetBytes(sections[i].Key)] = sections[i].Items;

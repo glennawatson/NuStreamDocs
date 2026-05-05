@@ -73,7 +73,7 @@ public class SearchPluginTests
     [Test]
     public async Task EmptyHtmlSkipsDocument()
     {
-        var plugin = new SearchPlugin();
+        SearchPlugin plugin = new();
         ScanPage(plugin, "page.md", default, default);
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
@@ -83,7 +83,7 @@ public class SearchPluginTests
     [Test]
     public async Task NoHeadingFallsBackToFilenameStem()
     {
-        var plugin = new SearchPlugin();
+        SearchPlugin plugin = new();
         ScanPage(plugin, "guide/intro.md", default, "<p>just text</p>"u8);
         var docs = plugin.DocumentsSnapshot();
         await Assert.That(docs.Length).IsEqualTo(1);
@@ -95,7 +95,7 @@ public class SearchPluginTests
     [Test]
     public async Task SearchableFrontmatterKeysAppendBytes()
     {
-        var plugin = new SearchPlugin(SearchOptions.Default with { SearchableFrontmatterKeys = [[.. "tags"u8]] });
+        SearchPlugin plugin = new(SearchOptions.Default with { SearchableFrontmatterKeys = [[.. "tags"u8]] });
         ScanPage(plugin, "page.md", "---\ntags: [foo, bar]\n---\nbody"u8, "<h1>Hi</h1><p>body</p>"u8);
         var docs = plugin.DocumentsSnapshot();
         await Assert.That(docs.Length).IsEqualTo(1);
@@ -107,8 +107,8 @@ public class SearchPluginTests
     [Test]
     public async Task FinalizeAsyncEmptyRootNoOp()
     {
-        var plugin = new SearchPlugin();
-        await plugin.FinalizeAsync(new BuildFinalizeContext(string.Empty, []), CancellationToken.None);
+        SearchPlugin plugin = new();
+        await plugin.FinalizeAsync(new(string.Empty, []), CancellationToken.None);
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
 
@@ -118,11 +118,11 @@ public class SearchPluginTests
     public async Task SmallestCompressionWritesGzipAndBrotli()
     {
         using var fixture = TempBuildFixture.Create();
-        var plugin = new SearchPlugin(SearchOptions.Default with { Format = SearchFormat.Lunr, Compression = SearchCompression.Smallest });
+        SearchPlugin plugin = new(SearchOptions.Default with { Format = SearchFormat.Lunr, Compression = SearchCompression.Smallest });
 
-        await plugin.ConfigureAsync(new BuildConfigureContext(fixture.Root, fixture.Root, [], new()), CancellationToken.None);
+        await plugin.ConfigureAsync(new(fixture.Root, fixture.Root, [], new()), CancellationToken.None);
         ScanPage(plugin, "a.md", default, "<h1>Hi</h1><p>body content</p>"u8);
-        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
         var json = Path.Combine(fixture.Root, "search", "search_index.json");
         await Assert.That(File.Exists(json + ".gz")).IsTrue();
@@ -135,11 +135,11 @@ public class SearchPluginTests
     public async Task DefaultCompressionWritesOnlyGzip()
     {
         using var fixture = TempBuildFixture.Create();
-        var plugin = new SearchPlugin(SearchOptions.Default with { Format = SearchFormat.Lunr, Compression = SearchCompression.Default });
+        SearchPlugin plugin = new(SearchOptions.Default with { Format = SearchFormat.Lunr, Compression = SearchCompression.Default });
 
-        await plugin.ConfigureAsync(new BuildConfigureContext(fixture.Root, fixture.Root, [], new()), CancellationToken.None);
+        await plugin.ConfigureAsync(new(fixture.Root, fixture.Root, [], new()), CancellationToken.None);
         ScanPage(plugin, "a.md", default, "<h1>Hi</h1><p>body</p>"u8);
-        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
         var json = Path.Combine(fixture.Root, "search", "search_index.json");
         await Assert.That(File.Exists(json + ".gz")).IsTrue();
@@ -155,8 +155,8 @@ public class SearchPluginTests
     [Arguments(SearchFormat.Lunr, "search_index.json")]
     public async Task WriteHeadExtraFormatRouting(SearchFormat format, string expectedFragment)
     {
-        var plugin = new SearchPlugin(SearchOptions.Default with { Format = format });
-        var sink = new ArrayBufferWriter<byte>();
+        SearchPlugin plugin = new(SearchOptions.Default with { Format = format });
+        ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains(expectedFragment);
     }
@@ -174,7 +174,7 @@ public class SearchPluginTests
     /// <param name="html">Rendered HTML bytes.</param>
     private static void ScanPage(SearchPlugin plugin, string relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html)
     {
-        var ctx = new PageScanContext(relativePath, source, html);
+        PageScanContext ctx = new(relativePath, source, html);
         plugin.Scan(in ctx);
     }
 

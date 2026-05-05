@@ -30,7 +30,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task AdmonitionHeadExtra()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         new AdmonitionPlugin().WriteHeadExtra(sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("admonition");
     }
@@ -55,7 +55,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task DetailsHeadExtra()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         new DetailsPlugin().WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }
@@ -71,7 +71,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task CheckListHeadExtra()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         new CheckListPlugin().WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }
@@ -87,7 +87,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task TabsHeadExtra()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         new TabsPlugin().WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }

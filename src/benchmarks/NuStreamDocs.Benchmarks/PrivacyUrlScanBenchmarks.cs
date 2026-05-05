@@ -64,7 +64,7 @@ public class PrivacyUrlScanBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var sb = new StringBuilder(PageSizeKb * BytesPerKb);
+        StringBuilder sb = new(PageSizeKb * BytesPerKb);
         var totalBytes = PageSizeKb * BytesPerKb;
         var blockEvery = 200 / Math.Max(1, UrlsPer200Bytes);
         var idx = 0;
@@ -78,7 +78,7 @@ public class PrivacyUrlScanBenchmarks
                 1 => $"<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/c{i}\">",
                 2 => $"<img srcset=\"https://cdn.example/x{i}.png 2x, https://cdn.example/y{i}.png 1x\">",
                 3 => $"<style>.b{i} {{ background: url(https://cdn.example/bg{i}.png); }}</style>",
-                _ => $"<h2 id=\"section-{i}\">Section {i}</h2>",
+                _ => $"<h2 id=\"section-{i}\">Section {i}</h2>"
             };
             sb.Append(emitted);
             written += emitted.Length;
@@ -96,9 +96,9 @@ public class PrivacyUrlScanBenchmarks
         _html = Encoding.UTF8.GetBytes(sb.ToString());
         _acceptAll = new(hostsToSkip: null, hostsAllowed: null);
         _rejectAll = new(
-            hostsToSkip: ["cdn.example"u8.ToArray(), "fonts.googleapis.com"u8.ToArray()],
+            hostsToSkip: [[.. "cdn.example"u8], [.."fonts.googleapis.com"u8]],
             hostsAllowed: null);
-        _registry = new("assets/external"u8.ToArray());
+        _registry = new([.. "assets/external"u8]);
     }
 
     /// <summary>Audit pass with a filter that accepts every host — every URL is decoded + registered.</summary>
@@ -106,7 +106,7 @@ public class PrivacyUrlScanBenchmarks
     [Benchmark]
     public int AuditAcceptAll()
     {
-        var set = new ConcurrentDictionary<byte[], byte>(ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> set = new(ByteArrayComparer.Instance);
         ExternalUrlScanner.Audit(_html, _acceptAll, set);
         return set.Count;
     }
@@ -116,7 +116,7 @@ public class PrivacyUrlScanBenchmarks
     [Benchmark]
     public int AuditRejectAll()
     {
-        var set = new ConcurrentDictionary<byte[], byte>(ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> set = new(ByteArrayComparer.Instance);
         ExternalUrlScanner.Audit(_html, _rejectAll, set);
         return set.Count;
     }

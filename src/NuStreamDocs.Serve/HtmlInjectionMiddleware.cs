@@ -23,7 +23,7 @@ internal static class HtmlInjectionMiddleware
     public static async Task InvokeAsync(HttpContext ctx, RequestDelegate next)
     {
         var originalBody = ctx.Response.Body;
-        await using var buffer = new MemoryStream();
+        await using MemoryStream buffer = new();
         ctx.Response.Body = buffer;
         try
         {

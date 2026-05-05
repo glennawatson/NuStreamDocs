@@ -63,7 +63,7 @@ internal static class AttrListRewriter
 
         using var rentalA = PageBuilderPool.Rent(html.Length);
         using var rentalB = PageBuilderPool.Rent(html.Length);
-        var slots = new StageBuffers(rentalA.Writer, rentalB.Writer);
+        StageBuffers slots = new(rentalA.Writer, rentalB.Writer);
 
         // Stage 1 reads the original html span directly; subsequent stages
         // read from whichever two-buffer buffer holds the latest output.
@@ -91,7 +91,7 @@ internal static class AttrListRewriter
         {
             // No rewrite — materialize html as memory once so subsequent
             // stages don't need a ReadOnlySpan-vs-Memory branch.
-            return html.ToArray();
+            return new([.. html]);
         }
 
         var output = slots.Spare.WrittenMemory;

@@ -14,5 +14,5 @@ public enum Material3AssetSource
     Embedded = 0,
 
     /// <summary>Reference the assets from a CDN; skip the local write.</summary>
-    Cdn,
+    Cdn
 }

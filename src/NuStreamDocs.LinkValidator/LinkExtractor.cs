@@ -47,7 +47,7 @@ public static class LinkExtractor
             return [];
         }
 
-        var ids = new List<ByteRange>(8);
+        List<ByteRange> ids = new(8);
         var cursor = 0;
         while (cursor < html.Length
                && Utf8HtmlScanner.TryFindNextHeadingOpen(html, cursor, out var tagStart, out var tagEnd, out _))
@@ -76,7 +76,7 @@ public static class LinkExtractor
             return [];
         }
 
-        var ranges = new List<ByteRange>(16);
+        List<ByteRange> ranges = new(16);
         var cursor = 0;
         while (cursor < html.Length)
         {

@@ -15,7 +15,7 @@ public class TocFragmentRendererTests
     [Test]
     public async Task EmptyEmitsNothing()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         TocFragmentRenderer.Render([], [], TocOptions.Default, sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -25,9 +25,9 @@ public class TocFragmentRendererTests
     [Test]
     public async Task FilteredOut()
     {
-        var html = "<h1>x</h1>"u8.ToArray();
+        byte[] html = [.. "<h1>x</h1>"u8];
         var headings = HeadingScanner.Scan(html);
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         TocFragmentRenderer.Render(html, headings, new(MinLevel: 2, MaxLevel: 6, PermalinkSymbol: "#", MarkerSubstitute: false), sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -37,10 +37,10 @@ public class TocFragmentRendererTests
     [Test]
     public async Task NestedAndEscaped()
     {
-        var html = "<h2 id=\"a\">A &amp; B &gt; C</h2><h3 id=\"b\">child</h3><h2 id=\"c\">D</h2>"u8.ToArray();
+        byte[] html = [.. "<h2 id=\"a\">A &amp; B &gt; C</h2><h3 id=\"b\">child</h3><h2 id=\"c\">D</h2>"u8];
         var headings = HeadingScanner.Scan(html);
-        var slugged = headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() }).ToArray();
-        var sink = new ArrayBufferWriter<byte>();
+        Heading[] slugged = [.. headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() })];
+        ArrayBufferWriter<byte> sink = new();
         TocFragmentRenderer.Render(html, slugged, TocOptions.Default, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).Contains("<nav class=\"md-nav md-nav--secondary\"");
@@ -60,10 +60,10 @@ public class TocFragmentRendererTests
     [Test]
     public async Task SameLevelSiblingsStayFlat()
     {
-        var html = "<h2 id=\"top\">T</h2><h3 id=\"a\">A</h3><h3 id=\"b\">B</h3><h3 id=\"c\">C</h3>"u8.ToArray();
+        byte[] html = [.. "<h2 id=\"top\">T</h2><h3 id=\"a\">A</h3><h3 id=\"b\">B</h3><h3 id=\"c\">C</h3>"u8];
         var headings = HeadingScanner.Scan(html);
-        var slugged = headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() }).ToArray();
-        var sink = new ArrayBufferWriter<byte>();
+        Heading[] slugged = [.. headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() })];
+        ArrayBufferWriter<byte> sink = new();
         TocFragmentRenderer.Render(html, slugged, TocOptions.Default, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
@@ -80,15 +80,15 @@ public class TocFragmentRendererTests
     [Test]
     public async Task MixedDepthClosesAndReopensCleanly()
     {
-        var html = ("<h2 id=\"s1\">S1</h2>"
-            + "<h3 id=\"a\">A</h3>"
-            + "<h4 id=\"a1\">A1</h4>"
-            + "<h3 id=\"b\">B</h3>"
-            + "<h2 id=\"s2\">S2</h2>")
-            .Select(c => (byte)c).ToArray();
+        byte[] html = [.. ("<h2 id=\"s1\">S1</h2>"
+                       + "<h3 id=\"a\">A</h3>"
+                       + "<h4 id=\"a1\">A1</h4>"
+                       + "<h3 id=\"b\">B</h3>"
+                       + "<h2 id=\"s2\">S2</h2>")
+            .Select(c => (byte)c)];
         var headings = HeadingScanner.Scan(html);
-        var slugged = headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() }).ToArray();
-        var sink = new ArrayBufferWriter<byte>();
+        Heading[] slugged = [.. headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() })];
+        ArrayBufferWriter<byte> sink = new();
         TocFragmentRenderer.Render(html, slugged, TocOptions.Default, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 

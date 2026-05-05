@@ -85,7 +85,7 @@ public class CSharpApiGeneratorOptionsTests
     [Test]
     public async Task ValidateRejectsEmptyInputs()
     {
-        var options = new CSharpApiGeneratorOptions([], "api", CSharpApiGeneratorMode.EmitMarkdown);
+        CSharpApiGeneratorOptions options = new([], "api", CSharpApiGeneratorMode.EmitMarkdown);
         await Assert.That(options.Validate).Throws<ArgumentException>();
     }
 }

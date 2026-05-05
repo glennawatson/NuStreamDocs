@@ -12,7 +12,7 @@ public class VersionsManifestBranchTests
     [Test]
     public async Task ReadMissingFile()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await Assert.That(VersionsManifest.Read(temp.Root).Length).IsEqualTo(0);
     }
 
@@ -21,7 +21,7 @@ public class VersionsManifestBranchTests
     [Test]
     public async Task ReadFromUtf8NonArray()
     {
-        var bytes = "{\"x\":1}"u8.ToArray();
+        byte[] bytes = [.. "{\"x\":1}"u8];
         await Assert.That(VersionsManifest.ReadFromUtf8(bytes).Length).IsEqualTo(0);
     }
 
@@ -30,7 +30,7 @@ public class VersionsManifestBranchTests
     [Test]
     public async Task RoundTrip()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         VersionEntry[] entries = [new("1.0", "Stable", [[.. "latest"u8]]), new("2.0", "Next", [])];
         VersionsManifest.Write(temp.Root, entries);
         var roundTripped = VersionsManifest.Read(temp.Root);

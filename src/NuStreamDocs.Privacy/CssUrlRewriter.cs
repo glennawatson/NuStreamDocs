@@ -109,7 +109,7 @@ internal static class CssUrlRewriter
         }
 
         sink.Write(span[lastEmit..]);
-        return sink.WrittenSpan.ToArray();
+        return [.. sink.WrittenSpan];
     }
 
     /// <summary>Tries to read a <c>url(...)</c> token starting at <paramref name="start"/> in <paramref name="css"/>.</summary>

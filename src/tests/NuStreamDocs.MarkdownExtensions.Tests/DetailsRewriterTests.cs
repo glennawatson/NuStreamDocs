@@ -91,7 +91,7 @@ public class DetailsRewriterTests
     /// <returns>Rewritten output.</returns>
     private static string Rewrite(string source)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         DetailsRewriter.Rewrite(Encoding.UTF8.GetBytes(source), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

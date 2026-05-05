@@ -62,7 +62,7 @@ public class TablesRewriterParameterizedTests
     private static string Rewrite(string source)
     {
         var bytes = Encoding.UTF8.GetBytes(source);
-        var sink = new ArrayBufferWriter<byte>(Math.Max(bytes.Length, 1));
+        ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
         TablesRewriter.Rewrite(bytes, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

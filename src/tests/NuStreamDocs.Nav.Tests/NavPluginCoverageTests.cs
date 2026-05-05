@@ -12,7 +12,7 @@ public class NavPluginCoverageTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new NavPlugin();
+        NavPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("nav"u8)).IsTrue();
     }
 
@@ -21,7 +21,7 @@ public class NavPluginCoverageTests
     [Test]
     public async Task GetRootBeforeConfigure()
     {
-        var plugin = new NavPlugin();
+        NavPlugin plugin = new();
         await Assert.That(plugin.GetRoot()).IsNull();
     }
 }

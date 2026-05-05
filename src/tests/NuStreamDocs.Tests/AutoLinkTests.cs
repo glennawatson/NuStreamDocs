@@ -15,43 +15,43 @@ public class AutoLinkTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NewlineAborts() =>
-        await Assert.That(AutoLink.FindClose("<https://x.test\n>"u8.ToArray(), 1)).IsEqualTo(-1);
+        await Assert.That(AutoLink.FindClose([.. "<https://x.test\n>"u8], 1)).IsEqualTo(-1);
 
     /// <summary>Carriage return aborts the autolink scan with -1.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CarriageReturnAborts() =>
-        await Assert.That(AutoLink.FindClose("<https://x.test\r>"u8.ToArray(), 1)).IsEqualTo(-1);
+        await Assert.That(AutoLink.FindClose([.. "<https://x.test\r>"u8], 1)).IsEqualTo(-1);
 
     /// <summary>Space aborts the autolink scan with -1.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SpaceAborts() =>
-        await Assert.That(AutoLink.FindClose("<https://x.test >"u8.ToArray(), 1)).IsEqualTo(-1);
+        await Assert.That(AutoLink.FindClose([.. "<https://x.test >"u8], 1)).IsEqualTo(-1);
 
     /// <summary>Nested less-than aborts the scan.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NestedLessThanAborts() =>
-        await Assert.That(AutoLink.FindClose("<a<b>"u8.ToArray(), 1)).IsEqualTo(-1);
+        await Assert.That(AutoLink.FindClose([.. "<a<b>"u8], 1)).IsEqualTo(-1);
 
     /// <summary>End-of-input without close returns -1.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EndOfInputReturnsMinusOne() =>
-        await Assert.That(AutoLink.FindClose("<no-close"u8.ToArray(), 1)).IsEqualTo(-1);
+        await Assert.That(AutoLink.FindClose([.. "<no-close"u8], 1)).IsEqualTo(-1);
 
     /// <summary>Single-letter scheme is below MinSchemeLength so IsAutolink is false.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ShortSchemeRejected() =>
-        await Assert.That(AutoLink.IsAutolink("a:rest"u8.ToArray())).IsFalse();
+        await Assert.That(AutoLink.IsAutolink([.. "a:rest"u8])).IsFalse();
 
     /// <summary>Slice with no colon is not an autolink.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NoColonRejected() =>
-        await Assert.That(AutoLink.IsAutolink("no-colon"u8.ToArray())).IsFalse();
+        await Assert.That(AutoLink.IsAutolink([.. "no-colon"u8])).IsFalse();
 
     /// <summary>An angle bracket missing a scheme is not an autolink.</summary>
     /// <returns>Async test.</returns>
@@ -117,7 +117,7 @@ public class AutoLinkTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task FindCloseReturnsImmediateIndex() =>
-        await Assert.That(AutoLink.FindClose("ab>"u8.ToArray(), 0)).IsEqualTo(2);
+        await Assert.That(AutoLink.FindClose([.. "ab>"u8], 0)).IsEqualTo(2);
 
     /// <summary>An empty content (<c>&lt;&gt;</c>) is rejected as a non-autolink and renders as escaped text.</summary>
     /// <returns>Async test.</returns>
@@ -133,7 +133,7 @@ public class AutoLinkTests
     /// <returns>Rendered HTML.</returns>
     private static string Render(string input)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         InlineRenderer.Render(Encoding.UTF8.GetBytes(input), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

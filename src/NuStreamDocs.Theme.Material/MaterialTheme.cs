@@ -28,7 +28,7 @@ public sealed class MaterialTheme : IThemePackage
     [
         "assets/stylesheets/material.min.css",
         "assets/stylesheets/palette.min.css",
-        "assets/javascripts/material.min.js",
+        "assets/javascripts/material.min.js"
     ];
 
     /// <summary>Static assets as an indexable snapshot for write-out loops.</summary>

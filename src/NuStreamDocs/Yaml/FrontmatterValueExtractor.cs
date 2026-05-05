@@ -20,29 +20,18 @@ public static class FrontmatterValueExtractor
     /// <param name="listKey">UTF-8 list-key bytes (e.g. <c>"hide"u8</c>).</param>
     /// <param name="entry">UTF-8 entry bytes to look for (e.g. <c>"navigation"u8</c>).</param>
     /// <returns>True when the entry is present in the block-list.</returns>
-    public static bool ListContains(ReadOnlySpan<byte> source, ReadOnlySpan<byte> listKey, ReadOnlySpan<byte> entry)
-    {
-        if (listKey.IsEmpty || entry.IsEmpty || !TryGetFrontmatterAndKeyLine(source, listKey, out var frontmatter, out var lineEnd, out _))
-        {
-            return false;
-        }
-
-        return BlockListContains(frontmatter, lineEnd, entry);
-    }
+    public static bool ListContains(ReadOnlySpan<byte> source, ReadOnlySpan<byte> listKey, ReadOnlySpan<byte> entry) =>
+        !listKey.IsEmpty && !entry.IsEmpty && TryGetFrontmatterAndKeyLine(source, listKey, out var frontmatter, out var lineEnd, out _)
+        && BlockListContains(frontmatter, lineEnd, entry);
 
     /// <summary>Returns the trimmed inline scalar value bytes for the top-level key <paramref name="keyBytes"/>, or empty when absent / non-scalar.</summary>
     /// <param name="source">UTF-8 markdown source bytes (frontmatter + body).</param>
     /// <param name="keyBytes">UTF-8 key bytes (e.g. <c>"title"u8</c>).</param>
     /// <returns>Trimmed inline scalar slice into <paramref name="source"/>, or empty when no scalar value follows the key.</returns>
-    public static ReadOnlySpan<byte> GetScalar(ReadOnlySpan<byte> source, ReadOnlySpan<byte> keyBytes)
-    {
-        if (keyBytes.IsEmpty || !TryGetFrontmatterAndKeyLine(source, keyBytes, out _, out _, out var afterColon))
-        {
-            return [];
-        }
-
-        return YamlByteScanner.TrimWhitespace(afterColon);
-    }
+    public static ReadOnlySpan<byte> GetScalar(ReadOnlySpan<byte> source, ReadOnlySpan<byte> keyBytes) =>
+        keyBytes.IsEmpty || !TryGetFrontmatterAndKeyLine(source, keyBytes, out _, out _, out var afterColon)
+            ? []
+            : YamlByteScanner.TrimWhitespace(afterColon);
 
     /// <summary>
     /// Reads the frontmatter values for every key in <paramref name="keys"/>

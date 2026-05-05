@@ -9,9 +9,8 @@ namespace NuStreamDocs.Nav;
 /// <summary>One slot in the flat <see cref="NavTree"/> array consumed by <see cref="NavRenderer"/>.</summary>
 /// <param name="Title">UTF-8 display title bytes; encoded once at <see cref="NavTreeFlattener"/> time.</param>
 /// <param name="RelativePath">Source-relative path (file) or directory path (section).</param>
-/// <param name="IndexPath">Source-relative path of the section's promoted index page; empty when none.</param>
 /// <param name="RelativeUrlBytes">Pre-encoded served URL bytes derived from <see cref="RelativePath"/>.</param>
-/// <param name="IndexUrlBytes">Pre-encoded served URL bytes derived from <see cref="IndexPath"/>.</param>
+/// <param name="IndexUrlBytes">Pre-encoded served URL bytes for the section's promoted index page; empty when none.</param>
 /// <param name="ParentIndex">Index of this node's parent in <see cref="NavTree.Nodes"/>; <c>-1</c> for the root.</param>
 /// <param name="FirstChildIndex">Index of this node's first child; <c>-1</c> when there are no children.</param>
 /// <param name="ChildCount">Number of contiguous children at <see cref="FirstChildIndex"/>.</param>
@@ -19,7 +18,6 @@ namespace NuStreamDocs.Nav;
 internal readonly record struct NavTreeNode(
     byte[] Title,
     FilePath RelativePath,
-    FilePath IndexPath,
     byte[] RelativeUrlBytes,
     byte[] IndexUrlBytes,
     int ParentIndex,

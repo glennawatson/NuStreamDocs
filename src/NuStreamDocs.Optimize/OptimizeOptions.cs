@@ -35,7 +35,7 @@ public sealed record OptimizeOptions(
         [.. ".json"u8],
         [.. ".svg"u8],
         [.. ".xml"u8],
-        [.. ".txt"u8],
+        [.. ".txt"u8]
     ];
 
     /// <summary>Gets the default option set — both formats, smallest-size, default extensions, 1KiB minimum, default parallelism.</summary>

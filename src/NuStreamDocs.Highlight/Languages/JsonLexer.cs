@@ -29,7 +29,7 @@ public static class JsonLexer
     private static readonly SearchValues<byte> PunctuationFirst = SearchValues.Create("{}[],:"u8);
 
     /// <summary>Set of recognized JSON keyword constants.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create("true", "false", "null");
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
 
     /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = new(
@@ -54,6 +54,6 @@ public static class JsonLexer
             new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
 
             // Single-byte structural punctuation: { } [ ] , :
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationFirst), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationFirst },
+            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationFirst), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationFirst }
         ]));
 }

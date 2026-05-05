@@ -170,7 +170,7 @@ public class AttrListRewriterTests
     /// <returns>Rewritten HTML.</returns>
     private static string Rewrite(string source)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         AttrListRewriter.RewriteInto(Encoding.UTF8.GetBytes(source), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

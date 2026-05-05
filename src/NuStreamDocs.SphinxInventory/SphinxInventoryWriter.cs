@@ -99,8 +99,8 @@ internal static class SphinxInventoryWriter
     /// <param name="entries">Snapshot entries.</param>
     private static void WriteCompressedBody(Stream stream, (byte[] Id, byte[] Url)[] entries)
     {
-        using var zlib = new ZLibStream(stream, CompressionLevel.Optimal, leaveOpen: true);
-        var sink = new ArrayBufferWriter<byte>(1024);
+        using ZLibStream zlib = new(stream, CompressionLevel.Optimal, leaveOpen: true);
+        ArrayBufferWriter<byte> sink = new(1024);
         for (var i = 0; i < entries.Length; i++)
         {
             WriteEntry(sink, entries[i].Id, entries[i].Url);

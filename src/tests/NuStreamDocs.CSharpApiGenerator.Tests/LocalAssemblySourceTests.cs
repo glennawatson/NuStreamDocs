@@ -14,10 +14,10 @@ public class LocalAssemblySourceTests
     [Test]
     public async Task IndexCoversAssemblyDirectories()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         var asmA = await Touch(dir.Root, "A.dll");
         await Touch(dir.Root, "Sibling.dll");
-        var src = new LocalAssemblySource("net10.0", [asmA], []);
+        LocalAssemblySource src = new("net10.0", [asmA], []);
         var group = await FirstGroup(src);
         await Assert.That(group.FallbackIndex).ContainsKey("A.dll");
         await Assert.That(group.FallbackIndex).ContainsKey("Sibling.dll");
@@ -28,7 +28,7 @@ public class LocalAssemblySourceTests
     [Test]
     public async Task EmptyDirectoryComponentSkipped()
     {
-        var src = new LocalAssemblySource("net10.0", ["bare.dll"], []);
+        LocalAssemblySource src = new("net10.0", ["bare.dll"], []);
         var group = await FirstGroup(src);
         await Assert.That(group.FallbackIndex.Count).IsEqualTo(0);
     }
@@ -38,11 +38,11 @@ public class LocalAssemblySourceTests
     [Test]
     public async Task FallbackSearchPathsAdded()
     {
-        using var asmDir = new TempDir();
-        using var fallbackDir = new TempDir();
+        using TempDir asmDir = new();
+        using TempDir fallbackDir = new();
         var asmA = await Touch(asmDir.Root, "A.dll");
         await Touch(fallbackDir.Root, "Fallback.dll");
-        var src = new LocalAssemblySource("net10.0", [asmA], [fallbackDir.Root]);
+        LocalAssemblySource src = new("net10.0", [asmA], [fallbackDir.Root]);
         var group = await FirstGroup(src);
         await Assert.That(group.FallbackIndex).ContainsKey("Fallback.dll");
     }
@@ -52,9 +52,9 @@ public class LocalAssemblySourceTests
     [Test]
     public async Task NonexistentSearchPathSkipped()
     {
-        using var asmDir = new TempDir();
+        using TempDir asmDir = new();
         var asmA = await Touch(asmDir.Root, "A.dll");
-        var src = new LocalAssemblySource("net10.0", [asmA], ["/does-not-exist-" + Guid.NewGuid().ToString("N")]);
+        LocalAssemblySource src = new("net10.0", [asmA], ["/does-not-exist-" + Guid.NewGuid().ToString("N")]);
         var group = await FirstGroup(src);
         await Assert.That(group.FallbackIndex).ContainsKey("A.dll");
     }
@@ -64,12 +64,12 @@ public class LocalAssemblySourceTests
     [Test]
     public async Task DuplicateFilenameFirstWins()
     {
-        using var asmDir = new TempDir();
-        using var fallbackDir = new TempDir();
+        using TempDir asmDir = new();
+        using TempDir fallbackDir = new();
         var winner = await Touch(asmDir.Root, "Dup.dll");
         await Touch(fallbackDir.Root, "Dup.dll");
         await Touch(asmDir.Root, "Asm.dll");
-        var src = new LocalAssemblySource("net10.0", [Path.Combine(asmDir.Root, "Asm.dll")], [fallbackDir.Root]);
+        LocalAssemblySource src = new("net10.0", [Path.Combine(asmDir.Root, "Asm.dll")], [fallbackDir.Root]);
         var group = await FirstGroup(src);
         await Assert.That(group.FallbackIndex["Dup.dll"]).IsEqualTo(winner);
     }
@@ -90,7 +90,7 @@ public class LocalAssemblySourceTests
     /// <returns>The first yielded group.</returns>
     private static async Task<AssemblyGroup> FirstGroup(LocalAssemblySource src)
     {
-        var groups = new List<AssemblyGroup>();
+        List<AssemblyGroup> groups = [];
         await foreach (var g in src.DiscoverAsync())
         {
             groups.Add(g);

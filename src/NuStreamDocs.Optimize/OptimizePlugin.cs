@@ -71,10 +71,10 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <returns>A task representing the asynchronous walk.</returns>
     internal async Task CompressTreeAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
     {
-        var parallelOptions = new ParallelOptions
+        ParallelOptions parallelOptions = new()
         {
             CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = _options.Parallelism,
+            MaxDegreeOfParallelism = _options.Parallelism
         };
 
         var eligible = EnumerateEligible(outputRoot);
@@ -111,7 +111,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <returns>Eligible absolute paths.</returns>
     private FilePath[] EnumerateEligible(DirectoryPath root)
     {
-        var buffer = new List<FilePath>(capacity: 256);
+        List<FilePath> buffer = new(capacity: 256);
         foreach (var path in Directory.EnumerateFiles(root.Value, "*", SearchOption.AllDirectories))
         {
             if (path.EndsWith(".gz", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".br", StringComparison.OrdinalIgnoreCase))
@@ -126,7 +126,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
                 continue;
             }
 
-            var info = new FileInfo(path);
+            FileInfo info = new(path);
             if (info.Length < _options.MinimumBytes)
             {
                 OptimizeLoggingHelper.LogFileSkipped(_logger, path, "below minimum size");

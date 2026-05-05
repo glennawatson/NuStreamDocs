@@ -31,20 +31,20 @@ public class MaterialThemeTests
     public async Task PageTemplateRendersMaterialShell()
     {
         var theme = MaterialTheme.Load();
-        var data = new TemplateData(
+        TemplateData data = new(
             new(NuStreamDocs.Common.ByteArrayComparer.Instance)
             {
-                ["language"u8.ToArray()] = (byte[])[.. "en"u8],
-                ["site_name"u8.ToArray()] = (byte[])[.. "Test Site"u8],
-                ["site_root"u8.ToArray()] = (byte[])[.. "/"u8],
-                ["page_title"u8.ToArray()] = (byte[])[.. "Hi"u8],
-                ["body"u8.ToArray()] = (byte[])[.. "<h1>Hello</h1>"u8],
-                ["asset_root"u8.ToArray()] = (byte[])[.. "/assets"u8],
-                ["copyright"u8.ToArray()] = (byte[])[.. ""u8],
+                [[.. "language"u8]] = (byte[])[.. "en"u8],
+                [[.. "site_name"u8]] = (byte[])[.. "Test Site"u8],
+                [[.. "site_root"u8]] = (byte[])[.. "/"u8],
+                [[.. "page_title"u8]] = (byte[])[.. "Hi"u8],
+                [[.. "body"u8]] = (byte[])[.. "<h1>Hello</h1>"u8],
+                [[.. "asset_root"u8]] = (byte[])[.. "/assets"u8],
+                [[.. "copyright"u8]] = (byte[])[.. ""u8]
             },
             sections: null);
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         theme.Page.Render(data, theme.Partials, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
 
@@ -92,7 +92,7 @@ public class MaterialThemeTests
             .WithOutput(fixture.Site)
             .UseMaterialTheme(static opts => opts.WithCdnRoot("https://example.test/material") with
             {
-                AssetSource = MaterialAssetSource.Cdn,
+                AssetSource = MaterialAssetSource.Cdn
             })
             .BuildAsync();
 

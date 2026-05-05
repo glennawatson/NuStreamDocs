@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
-using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Sitemap.Tests;
 
@@ -34,11 +33,11 @@ public class SitemapWriterTests
     [Test]
     public async Task WriteSitemapEmitsXml()
     {
-        using var fixture = new TempDirectory();
+        using TempDirectory fixture = new();
         SitemapWriter.WriteSitemap(
             fixture.Root,
-            "https://docs.test/"u8.ToArray(),
-            ["index.html"u8.ToArray(), "guide/intro.html"u8.ToArray()]);
+            [.. "https://docs.test/"u8],
+            [[.. "index.html"u8], [.. "guide/intro.html"u8]]);
 
         var xml = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "sitemap.xml"));
         await Assert.That(xml).Contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -52,8 +51,8 @@ public class SitemapWriterTests
     [Test]
     public async Task WriteRobotsPointsAtSitemap()
     {
-        using var fixture = new TempDirectory();
-        SitemapWriter.WriteRobots(fixture.Root, "https://docs.test/"u8.ToArray());
+        using TempDirectory fixture = new();
+        SitemapWriter.WriteRobots(fixture.Root, [.. "https://docs.test/"u8]);
 
         var txt = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "robots.txt"));
         await Assert.That(txt).Contains("User-agent: *");
@@ -65,9 +64,9 @@ public class SitemapWriterTests
     [Test]
     public async Task NotFoundPluginWritesDefault()
     {
-        using var fixture = new TempDirectory();
-        var plugin = new NotFoundPlugin();
-        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
+        using TempDirectory fixture = new();
+        NotFoundPlugin plugin = new();
+        await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
         var path = Path.Combine(fixture.Root, "404.html");
         await Assert.That(File.Exists(path)).IsTrue();
@@ -80,12 +79,12 @@ public class SitemapWriterTests
     [Test]
     public async Task NotFoundPluginKeepsExistingPage()
     {
-        using var fixture = new TempDirectory();
+        using TempDirectory fixture = new();
         var path = Path.Combine(fixture.Root, "404.html");
         await File.WriteAllTextAsync(path, "user content");
 
-        var plugin = new NotFoundPlugin();
-        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
+        NotFoundPlugin plugin = new();
+        await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
         await Assert.That(await File.ReadAllTextAsync(path)).IsEqualTo("user content");
     }
@@ -95,9 +94,9 @@ public class SitemapWriterTests
     [Test]
     public async Task RedirectsPluginWritesStubs()
     {
-        using var fixture = new TempDirectory();
-        var plugin = new RedirectsPlugin(("old.html", "/new.html"), ("legacy/page.html", "/guide/intro.html"));
-        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
+        using TempDirectory fixture = new();
+        RedirectsPlugin plugin = new(("old.html", "/new.html"), ("legacy/page.html", "/guide/intro.html"));
+        await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "old.html"));
         await Assert.That(html).Contains("<meta http-equiv=\"refresh\" content=\"0; url=/new.html\">");

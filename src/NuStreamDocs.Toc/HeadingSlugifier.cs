@@ -50,7 +50,7 @@ internal static class HeadingSlugifier
         }
 
         var result = new Heading[headings.Length];
-        var seen = new Dictionary<byte[], int>(headings.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], int> seen = new(headings.Length, ByteArrayComparer.Instance);
         var collisions = 0;
 
         // One reusable text-decode buffer for the whole page; reset between headings.
@@ -161,7 +161,7 @@ internal static class HeadingSlugifier
         >= (byte)'A' and <= (byte)'Z' => (byte)(b + AsciiUpperToLowerOffset),
         >= (byte)'a' and <= (byte)'z' => b,
         >= (byte)'0' and <= (byte)'9' => b,
-        _ => 0,
+        _ => 0
     };
 
     /// <summary>Allocates a fresh <c>{baseSlug}-{n}</c> byte array.</summary>

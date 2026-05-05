@@ -43,11 +43,11 @@ public static class DiffLexer
     /// <summary>File-header line prefixes — checked in declaration order; longest first so a multi-byte prefix wins before its shorter substring.</summary>
     private static readonly byte[][] FileHeaderPrefixes =
     [
-        "---"u8.ToArray(),
-        "+++"u8.ToArray(),
-        "diff "u8.ToArray(),
-        "index "u8.ToArray(),
-        "Only in "u8.ToArray(),
+        [.. "---"u8],
+        [.. "+++"u8],
+        [.. "diff "u8],
+        [.. "index "u8],
+        [.. "Only in "u8]
     ];
 
     /// <summary>Gets the singleton lexer instance.</summary>
@@ -76,7 +76,7 @@ public static class DiffLexer
                 LexerRule.NoStateChange)
             {
                 FirstBytes = HunkFirst,
-                RequiresLineStart = true,
+                RequiresLineStart = true
             },
 
             // Added line: + ... line.
@@ -86,7 +86,7 @@ public static class DiffLexer
                 LexerRule.NoStateChange)
             {
                 FirstBytes = AddedFirst,
-                RequiresLineStart = true,
+                RequiresLineStart = true
             },
 
             // Removed line: - ... line.
@@ -96,7 +96,7 @@ public static class DiffLexer
                 LexerRule.NoStateChange)
             {
                 FirstBytes = RemovedFirst,
-                RequiresLineStart = true,
+                RequiresLineStart = true
             },
 
             // Context line: anything not starting with +, -, @ or a line terminator.
@@ -105,7 +105,7 @@ public static class DiffLexer
                 TokenClass.Text,
                 LexerRule.NoStateChange)
             {
-                RequiresLineStart = true,
+                RequiresLineStart = true
             },
 
             // Line terminator (\r\n, \r, \n).
@@ -114,7 +114,7 @@ public static class DiffLexer
                 TokenClass.Whitespace,
                 LexerRule.NoStateChange)
             {
-                FirstBytes = NewlineFirst,
-            },
+                FirstBytes = NewlineFirst
+            }
         ]));
 }

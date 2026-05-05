@@ -188,17 +188,14 @@ public static class MarkdownH1Scanner
 
         for (var i = 0; i < line.Length; i++)
         {
-            if (line[i] is (byte)'=')
+            switch (line[i])
             {
-                continue;
+                case (byte)'=':
+                case (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n':
+                    continue;
+                default:
+                    return false;
             }
-
-            if (line[i] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
-            {
-                continue;
-            }
-
-            return false;
         }
 
         return true;

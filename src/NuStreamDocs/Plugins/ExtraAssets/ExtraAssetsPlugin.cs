@@ -103,7 +103,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
             }
 
             var bytes = ReadBytes(src);
-            assets.Add((new FilePath($"{AssetDirectory}/{src.OutputName}"), bytes));
+            assets.Add((new($"{AssetDirectory}/{src.OutputName}"), bytes));
         }
     }
 
@@ -115,7 +115,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
         ExtraAssetSourceKind.File => File.ReadAllBytes(source.FilePath.Value),
         ExtraAssetSourceKind.Inline => source.InlineBytes!,
         ExtraAssetSourceKind.Embedded => ReadEmbedded(source),
-        _ => throw new InvalidOperationException($"Source kind {source.Kind} cannot be resolved to bytes."),
+        _ => throw new InvalidOperationException($"Source kind {source.Kind} cannot be resolved to bytes.")
     };
 
     /// <summary>Reads an embedded resource into a fresh byte array.</summary>
@@ -158,7 +158,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
             return [];
         }
 
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         for (var i = 0; i < _cssSources.Count; i++)
         {
             WriteCssLink(_cssSources[i], writer);

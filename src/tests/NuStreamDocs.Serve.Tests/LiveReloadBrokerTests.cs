@@ -12,7 +12,7 @@ public class LiveReloadBrokerTests
     [Test]
     public async Task ConnectedCount_reflects_tracked_clients()
     {
-        var broker = new LiveReloadBroker();
+        LiveReloadBroker broker = new();
         await Assert.That(broker.ConnectedCount).IsEqualTo(0);
 
         // We can't easily mock WebSocket here without a lot of boilerplate,

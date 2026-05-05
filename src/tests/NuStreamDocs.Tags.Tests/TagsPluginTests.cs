@@ -4,7 +4,6 @@
 
 using System.Text;
 using NuStreamDocs.Building;
-using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tags.Tests;
 
@@ -30,11 +29,11 @@ public class TagsPluginTests
     [Test]
     public async Task PageWithoutTagsSkipped()
     {
-        using var temp = new TagsTempDir();
+        using TagsTempDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "notag.md"), "no frontmatter");
 
-        var plugin = new TagsPlugin();
-        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
+        TagsPlugin plugin = new();
+        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
 
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
     }
@@ -44,12 +43,12 @@ public class TagsPluginTests
     [Test]
     public async Task EndToEndEmitsIndexAndPerTagPages()
     {
-        using var temp = new TagsTempDir();
+        using TagsTempDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "first.md"), "---\ntags:\n  - alpha\n  - beta\n---\n# First\n\nbody");
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "second.md"), "---\ntags:\n  - alpha\n---\n# Second\n\nbody");
 
-        var plugin = new TagsPlugin();
-        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
+        TagsPlugin plugin = new();
+        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
 
         var indexMd = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "index.md"));
         await Assert.That(indexMd).Contains("alpha");
@@ -65,12 +64,12 @@ public class TagsPluginTests
     [Test]
     public async Task CustomOptionsHonored()
     {
-        using var temp = new TagsTempDir();
+        using TagsTempDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "p.md"), "---\ntags:\n  - foo\n---\n# Page\n\nbody");
 
-        var options = new TagsOptions("topics", "all.html");
-        var plugin = new TagsPlugin(options);
-        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
+        TagsOptions options = new("topics", "all.html");
+        TagsPlugin plugin = new(options);
+        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
 
         // Discover writes markdown source files; the html filename option drives the slug naming convention.
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "topics"))).IsTrue();

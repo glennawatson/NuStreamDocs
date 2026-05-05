@@ -47,7 +47,7 @@ public class SuperFencesDispatcherTests
     {
         const string Source = "<pre><code class=\"language-mermaid\">A</code></pre> mid <pre><code class=\"language-math\">x</code></pre>";
         const string Expected = "<div class=\"mermaid\">A</div> mid <div class=\"math\">x</div>";
-        var handlers = new ICustomFenceHandler[] { new MermaidStubHandler(), new MathStubHandler() };
+        ICustomFenceHandler[] handlers = [new MermaidStubHandler(), new MathStubHandler()];
         await Assert.That(Dispatch(Source, handlers)).IsEqualTo(Expected);
     }
 
@@ -78,14 +78,14 @@ public class SuperFencesDispatcherTests
     /// <returns>Rewritten HTML.</returns>
     private static string Dispatch(string input, ICustomFenceHandler[] handlers)
     {
-        var index = new Dictionary<byte[], ICustomFenceHandler>(handlers.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], ICustomFenceHandler> index = new(handlers.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < handlers.Length; i++)
         {
             index[handlers[i].Language.ToArray()] = handlers[i];
         }
 
         var bytes = Encoding.UTF8.GetBytes(input);
-        var sink = new ArrayBufferWriter<byte>(Math.Max(bytes.Length, 1));
+        ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
         if (!SuperFencesDispatcher.DispatchInto(bytes, index.GetAlternateLookup<ReadOnlySpan<byte>>(), sink))
         {
             sink.Write(bytes);

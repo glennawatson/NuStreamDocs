@@ -20,7 +20,7 @@ public class IncrementalBuildTests
         using var fixture = TempBuildFixture.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "stable.md"), "# Hi");
 
-        var counter = new CountingPlugin();
+        CountingPlugin counter = new();
         var builder = new DocBuilder()
             .WithInput(fixture.Input)
             .WithOutput(fixture.Output)
@@ -44,7 +44,7 @@ public class IncrementalBuildTests
         await File.WriteAllTextAsync(stablePath, "# Stable");
         await File.WriteAllTextAsync(changingPath, "# Original");
 
-        var counter = new CountingPlugin();
+        CountingPlugin counter = new();
         var builder = new DocBuilder()
             .WithInput(fixture.Input)
             .WithOutput(fixture.Output)

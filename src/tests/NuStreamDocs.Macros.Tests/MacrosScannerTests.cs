@@ -96,11 +96,11 @@ public class MacrosScannerTests
     [Test]
     public async Task DottedAndHyphenatedNamesResolve()
     {
-        var vars = new Dictionary<ApiCompatString, ApiCompatString>
+        Dictionary<ApiCompatString, ApiCompatString> vars = new()
         {
             ["site.name"] = "S",
             ["my-var"] = "H",
-            ["snake_case"] = "K",
+            ["snake_case"] = "K"
         };
         var output = Rewrite("{{ site.name }} / {{ my-var }} / {{ snake_case }}", vars);
         await Assert.That(output).IsEqualTo("S / H / K");
@@ -129,9 +129,9 @@ public class MacrosScannerTests
     [Test]
     public async Task PluginNoVariablesIsNoOp()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         const string Input = "Hello {{ name }}.";
-        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(Input), sink);
+        PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(Input), sink);
         new MacrosPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Input);
     }
@@ -141,15 +141,15 @@ public class MacrosScannerTests
     [Test]
     public async Task MissingCallbackFires()
     {
-        var missing = new List<string>();
-        var sink = new ArrayBufferWriter<byte>(64);
+        List<string> missing = [];
+        ArrayBufferWriter<byte> sink = new(64);
         MacrosScanner.Rewrite(
             "Hi {{ name }}, {{ other }}"u8,
             (n, out v) =>
             {
                 if (n.SequenceEqual("name"u8))
                 {
-                    v = "world"u8.ToArray();
+                    v = [.. "world"u8];
                     return true;
                 }
 
@@ -171,9 +171,9 @@ public class MacrosScannerTests
     /// <returns>Rewritten markdown.</returns>
     private static string Rewrite(string input, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
-        var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables));
-        var sink = new ArrayBufferWriter<byte>(input.Length * 2);
-        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(input), sink);
+        MacrosPlugin plugin = new(MacrosOptions.Default.WithVariables(variables));
+        ArrayBufferWriter<byte> sink = new(input.Length * 2);
+        PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(input), sink);
         plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
@@ -184,9 +184,9 @@ public class MacrosScannerTests
     /// <returns>Rewritten markdown.</returns>
     private static string RewriteEscaped(string input, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
-        var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables) with { EscapeHtml = true });
-        var sink = new ArrayBufferWriter<byte>(input.Length * 2);
-        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(input), sink);
+        MacrosPlugin plugin = new(MacrosOptions.Default.WithVariables(variables) with { EscapeHtml = true });
+        ArrayBufferWriter<byte> sink = new(input.Length * 2);
+        PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(input), sink);
         plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

@@ -19,7 +19,7 @@ public static class HighlightEmitter
         ArgumentNullException.ThrowIfNull(lexer);
         ArgumentNullException.ThrowIfNull(writer);
 
-        var state = new EmitState(source, writer);
+        EmitState state = new(source, writer);
         lexer.Tokenize(source.Span, state, EmitFromState);
     }
 

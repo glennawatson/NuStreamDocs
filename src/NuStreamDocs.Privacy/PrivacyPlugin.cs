@@ -184,7 +184,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
         PrivacyLoggingHelper.LogLocalizationStart(_logger, registeredCount, root.Value);
 
         var cacheRoot = ResolveCacheRoot(root);
-        var settings = new ExternalAssetDownloader.DownloadSettings(
+        ExternalAssetDownloader.DownloadSettings settings = new(
             _options.DownloadParallelism,
             _options.DownloadTimeout,
             _options.MaxRetries);
@@ -232,7 +232,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
             }
         }
 
-        return Path.Combine(outputRoot.Value, new string(pathChars));
+        return Path.Combine(outputRoot.Value, new(pathChars));
     }
 
     /// <summary>Throws <see cref="PrivacyDownloadException"/> when <see cref="PrivacyOptions.FailOnError"/> is set and any download failed.</summary>
@@ -261,7 +261,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
         Directory.CreateDirectory(target.Directory.Value);
 
         using var stream = File.Create(target.Value);
-        using var json = new Utf8JsonWriter(stream, new() { Indented = true });
+        using Utf8JsonWriter json = new(stream, new() { Indented = true });
         json.WriteStartObject();
         json.WriteBoolean("auditOnly"u8, _options.AuditOnly);
         json.WritePropertyName("urls"u8);
@@ -292,7 +292,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
         Directory.CreateDirectory(target.Directory.Value);
 
         using var stream = File.Create(target.Value);
-        using var json = new Utf8JsonWriter(stream, new() { Indented = true });
+        using Utf8JsonWriter json = new(stream, new() { Indented = true });
         json.WriteStartObject();
         json.WritePropertyName("styleSrc"u8);
         WriteHashArray(json, _styleHashes);
@@ -304,15 +304,10 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
     /// <summary>Resolves the absolute cache root, falling back to <c>{outputRoot}/.cache/privacy</c> when the option is empty.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <returns>Absolute cache directory.</returns>
-    private DirectoryPath ResolveCacheRoot(DirectoryPath outputRoot)
-    {
-        if (_options.CacheDirectory is [])
-        {
-            return Path.Combine(outputRoot, ".cache", "privacy");
-        }
-
-        return Encoding.UTF8.GetString(_options.CacheDirectory);
-    }
+    private DirectoryPath ResolveCacheRoot(DirectoryPath outputRoot) =>
+        _options.CacheDirectory is []
+            ? (DirectoryPath)Path.Combine(outputRoot, ".cache", "privacy")
+            : (DirectoryPath)Encoding.UTF8.GetString(_options.CacheDirectory);
 
     /// <summary>Builds a snapshot of the audited URLs as UTF-8 byte arrays.</summary>
     /// <returns>Right-sized URL byte-array snapshot.</returns>

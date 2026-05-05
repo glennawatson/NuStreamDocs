@@ -50,7 +50,7 @@ public static class HtmlTextExtractor
 
         using var titleRental = PageBuilderPool.Rent();
         var titleBuffer = titleRental.Writer;
-        var state = new ExtractState(InsideTag: false, InsideScript: false, CapturingTitle: false, EmittedSpace: true, TitleAlreadyCaptured: false);
+        ExtractState state = new(InsideTag: false, InsideScript: false, CapturingTitle: false, EmittedSpace: true, TitleAlreadyCaptured: false);
 
         for (var i = 0; i < html.Length; i++)
         {
@@ -150,7 +150,7 @@ public static class HtmlTextExtractor
         return state with
         {
             InsideTag = true,
-            CapturingTitle = state.CapturingTitle || startCapture,
+            CapturingTitle = state.CapturingTitle || startCapture
         };
     }
 

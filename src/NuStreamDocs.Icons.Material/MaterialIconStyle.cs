@@ -19,5 +19,5 @@ public enum MaterialIconStyle
     SymbolsRounded,
 
     /// <summary>Material Symbols Sharp (variable font).</summary>
-    SymbolsSharp,
+    SymbolsSharp
 }

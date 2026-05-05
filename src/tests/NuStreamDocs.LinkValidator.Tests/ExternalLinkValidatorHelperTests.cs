@@ -12,7 +12,7 @@ public class ExternalLinkValidatorHelperTests
     [Test]
     public async Task BucketByHostGroups()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "page.html"),
             "<a href=\"https://a.test/x\">a</a><a href=\"https://A.test/y\">a2</a><a href=\"https://b.test/z\">b</a>");
@@ -30,7 +30,7 @@ public class ExternalLinkValidatorHelperTests
     [Test]
     public async Task BucketByHostEmpty()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var corpus = await ValidationCorpus.BuildAsync(temp.Root, parallelism: 1, CancellationToken.None);
         await Assert.That(ExternalLinkValidator.BucketByHost(corpus).Count).IsEqualTo(0);
     }

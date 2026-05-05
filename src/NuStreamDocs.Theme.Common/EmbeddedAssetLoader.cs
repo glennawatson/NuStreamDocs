@@ -29,7 +29,7 @@ public static class EmbeddedAssetLoader
 
         var nameBytes = ToResourceName(resourcePrefix, relativePath);
         using var stream = owningAssembly.GetManifestResourceStream(Encoding.UTF8.GetString(nameBytes))
-            ?? throw new FileNotFoundException($"Embedded asset '{relativePath.Value}' not found.", relativePath.Value);
+                           ?? throw new FileNotFoundException($"Embedded asset '{relativePath.Value}' not found.", relativePath.Value);
 
         var buffer = new byte[checked((int)stream.Length)];
         var read = 0;
@@ -77,7 +77,7 @@ public static class EmbeddedAssetLoader
             {
                 '/' => (byte)'.',
                 '@' or '-' when i < lastSlash => (byte)'_',
-                _ => (byte)c,
+                _ => (byte)c
             };
         }
 

@@ -54,7 +54,12 @@ public class PrivacyOptionsExtensionsTests
     public async Task AddHostsToSkipWithEmptyInputIsNoOp()
     {
         var updated = PrivacyOptions.Default.AddHostsToSkip(Array.Empty<string>());
-        await Assert.That(updated.HostsToSkip).IsEqualTo(PrivacyOptions.Default.HostsToSkip);
+        var defaults = PrivacyOptions.Default.HostsToSkip;
+        await Assert.That(updated.HostsToSkip.Length).IsEqualTo(defaults.Length);
+        for (var i = 0; i < defaults.Length; i++)
+        {
+            await Assert.That(updated.HostsToSkip[i].AsSpan().SequenceEqual(defaults[i])).IsTrue();
+        }
     }
 
     /// <summary><c>ClearHostsToSkip</c> empties the list — drops both defaults and any caller-added entries.</summary>
@@ -73,9 +78,13 @@ public class PrivacyOptionsExtensionsTests
     [Test]
     public async Task WithHostsToSkipByteOverloadStoresBytesVerbatim()
     {
-        byte[][] hosts = ["custom.example"u8.ToArray(), "another.example"u8.ToArray()];
+        byte[][] hosts = [[.. "custom.example"u8], [.. "another.example"u8]];
         var updated = PrivacyOptions.Default.WithHostsToSkip(hosts);
-        await Assert.That(updated.HostsToSkip).IsEqualTo(hosts);
+        await Assert.That(updated.HostsToSkip.Length).IsEqualTo(hosts.Length);
+        for (var i = 0; i < hosts.Length; i++)
+        {
+            await Assert.That(updated.HostsToSkip[i].AsSpan().SequenceEqual(hosts[i])).IsTrue();
+        }
     }
 
     /// <summary>The UTF-8 byte overload of <c>AddHostsToSkip</c> appends raw bytes to the existing list.</summary>
@@ -84,7 +93,7 @@ public class PrivacyOptionsExtensionsTests
     public async Task AddHostsToSkipByteOverloadAppends()
     {
         var defaultCount = PrivacyOptions.Default.HostsToSkip.Length;
-        byte[][] hosts = ["custom.example"u8.ToArray()];
+        byte[][] hosts = [[.. "custom.example"u8]];
         var updated = PrivacyOptions.Default.AddHostsToSkip(hosts);
         await Assert.That(updated.HostsToSkip.Length).IsEqualTo(defaultCount + 1);
         var decoded = Decode(updated.HostsToSkip);

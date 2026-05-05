@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Caching;
 using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
+using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Building;
@@ -93,7 +94,7 @@ public static class BuildPipeline
         var log = options.Logger ?? NullLogger.Instance;
         BuildPipelineLoggingHelper.LogBuildStart(log, inputRoot.Value, outputRoot.Value, plugins.Length);
         var stopwatch = Stopwatch.StartNew();
-        var pluginTiming = new PluginTimingTable();
+        PluginTimingTable pluginTiming = new();
         var buildFingerprint = BuildFingerprint.Create(plugins, options);
 
         Directory.CreateDirectory(outputRoot);
@@ -102,13 +103,13 @@ public static class BuildPipeline
         // ConcurrentQueue's segmented linked-list outperforms ConcurrentBag for the
         // append-only-from-many-threads / drain-once pattern, and ToArray() is a
         // single right-sized allocation rather than the [.. bag] enumerator copy.
-        var fresh = new ConcurrentQueue<ManifestEntry>();
-        var bufferedPages = new ConcurrentQueue<BufferedPage>();
+        ConcurrentQueue<ManifestEntry> fresh = new();
+        ConcurrentQueue<BufferedPage> bufferedPages = new();
 
         // Partition into per-phase sorted arrays (one allocation per phase, once per build).
         var phases = PluginPhases.Partition(plugins);
-        var crossPageMarkers = new CrossPageMarkerRegistry();
-        var shell = new BuildPhaseShell(inputRoot, outputRoot, options, pluginTiming, log);
+        CrossPageMarkerRegistry crossPageMarkers = new();
+        BuildPhaseShell shell = new(inputRoot, outputRoot, options, pluginTiming, log);
 
         BuildPipelineLoggingHelper.LogConfigureStart(log, phases.Configures.Length);
         await FireConfigureAsync(phases.Configures, plugins, shell, crossPageMarkers, cancellationToken).ConfigureAwait(false);
@@ -116,13 +117,13 @@ public static class BuildPipeline
 
         var processed = 0;
         var cacheHits = 0;
-        var parallelOptions = new ParallelOptions
+        ParallelOptions parallelOptions = new()
         {
             CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = DefaultParallelism,
+            MaxDegreeOfParallelism = DefaultParallelism
         };
 
-        var perPage = new PerPageDispatch(phases, previous, pluginTiming, bufferedPages, SnapshotMarkerNeedles(phases, crossPageMarkers));
+        PerPageDispatch perPage = new(phases, previous, pluginTiming, bufferedPages, SnapshotMarkerNeedles(phases, crossPageMarkers));
 
         BuildPipelineLoggingHelper.LogRenderStart(log, parallelOptions.MaxDegreeOfParallelism);
         var renderStarted = stopwatch.ElapsedMilliseconds;
@@ -225,7 +226,7 @@ public static class BuildPipeline
             }
 
             var rental = PageBuilderPool.Rent(source.Length * 2);
-            var scratchRentals = new List<PageBuilderRental>();
+            List<PageBuilderRental> scratchRentals = [];
             PageBuilderRental? owned = rental;
             try
             {
@@ -242,12 +243,12 @@ public static class BuildPipeline
                 FireScans(phases.Scans, item.RelativePath, source.Span, finalRental.Writer.WrittenSpan, pluginTiming);
 
                 var pageNeedsBarrier = phases.NeedsCrossPageBarrier
-                    && PageHasCrossPageMarker(finalRental.Writer.WrittenSpan, dispatch.CrossPageMarkerNeedles);
+                                       && PageHasCrossPageMarker(finalRental.Writer.WrittenSpan, dispatch.CrossPageMarkerNeedles);
                 if (pageNeedsBarrier)
                 {
                     // Transfer rental ownership to the buffered queue. The drain phase
                     // disposes the rental after PostResolve + Write.
-                    dispatch.Buffered.Enqueue(new BufferedPage(item.RelativePath, outputPath, finalRental, hash));
+                    dispatch.Buffered.Enqueue(new(item.RelativePath, outputPath, finalRental, hash));
                     owned = null;
                     return (default, false, true);
                 }
@@ -298,7 +299,7 @@ public static class BuildPipeline
             return;
         }
 
-        var scanContext = new PageScanContext(relativePath, source, html);
+        PageScanContext scanContext = new(relativePath, source, html);
         for (var i = 0; i < scans.Length; i++)
         {
             var plugin = scans[i];
@@ -344,6 +345,12 @@ public static class BuildPipeline
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
     /// <returns>The rewritten bytes, or <paramref name="source"/> unchanged when no participant rewrites.</returns>
+    /// <remarks>
+    /// Lazy-rents the ping-pong buffers — pages where every plugin says NeedsRewrite=false pay
+    /// nothing. On a 13.8K-page corpus where the only registered preprocessor matches zero pages,
+    /// the previous eager-rent shape allocated ~50 MB of <see cref="PageBuilderPool"/> scratch
+    /// that nothing wrote into; the cross-thread Rent/Return hop was driving Gen0/Gen1 GC pauses.
+    /// </remarks>
     private static ReadOnlyMemory<byte> ApplyPreRenders(
         ReadOnlyMemory<byte> source,
         IPagePreRenderPlugin[] plugins,
@@ -351,24 +358,23 @@ public static class BuildPipeline
         FilePath relativePath,
         PluginTimingTable pluginTiming)
     {
+        // CommonMark reference-style links are a core spec feature, not a plugin. Resolve them
+        // before any preprocessor sees the source so plugins like Tables (which inline-renders
+        // each cell at emission time) get already-inlined `[text](url)` links and emit proper
+        // anchors rather than the literal `[text][label]` text.
+        var current = source;
+        if (LinkReferenceRewriter.MayContainReferences(current.Span))
+        {
+            current = LinkReferenceRewriter.Rewrite(current.Span);
+        }
+
         if (plugins.Length is 0)
         {
-            return source;
+            return current;
         }
 
-        var capacity = source.Length * PreprocessorScratchMultiplier;
-        var front = PageBuilderPool.Rent(capacity);
-        scratch.Add(front);
-
+        PageBuilderRental? front = null;
         PageBuilderRental? back = null;
-        if (plugins.Length > 1)
-        {
-            var b = PageBuilderPool.Rent(capacity);
-            scratch.Add(b);
-            back = b;
-        }
-
-        var current = source;
         for (var i = 0; i < plugins.Length; i++)
         {
             var plugin = plugins[i];
@@ -377,21 +383,44 @@ public static class BuildPipeline
                 continue;
             }
 
-            front.Writer.ResetWrittenCount();
-            var ctx = new PagePreRenderContext(relativePath, current.Span, front.Writer);
+            // First-rewrite path: lazy-rent front, write, set current. Common case for single-plugin
+            // pipelines (Macros / Snippets / Bibliography) where the plugin's NeedsRewrite filters
+            // out 99%+ of pages.
+            if (front is null)
+            {
+                var capacity = source.Length * PreprocessorScratchMultiplier;
+                front = PageBuilderPool.Rent(capacity);
+                scratch.Add(front.Value);
+                var fr = front.Value;
+                fr.Writer.ResetWrittenCount();
+                PagePreRenderContext ctx0 = new(relativePath, current.Span, fr.Writer);
+                using (pluginTiming.Measure(plugin.Name))
+                {
+                    plugin.PreRender(in ctx0);
+                }
+
+                current = fr.Writer.WrittenMemory;
+                continue;
+            }
+
+            // Subsequent-rewrite path: lazy-rent back once, ping-pong each iteration.
+            if (back is null)
+            {
+                var capacity = source.Length * PreprocessorScratchMultiplier;
+                back = PageBuilderPool.Rent(capacity);
+                scratch.Add(back.Value);
+            }
+
+            var target = back.Value;
+            target.Writer.ResetWrittenCount();
+            PagePreRenderContext ctx = new(relativePath, current.Span, target.Writer);
             using (pluginTiming.Measure(plugin.Name))
             {
                 plugin.PreRender(in ctx);
             }
 
-            current = front.Writer.WrittenMemory;
-
-            if (back is null)
-            {
-                continue;
-            }
-
-            (front, back) = (back.Value, front);
+            current = target.Writer.WrittenMemory;
+            (front, back) = (back, front);
         }
 
         return current;
@@ -440,7 +469,7 @@ public static class BuildPipeline
 
             var swap = back.Value;
             swap.Writer.ResetWrittenCount();
-            var ctx = new PagePostRenderContext(relativePath, source, front.Writer.WrittenSpan, swap.Writer);
+            PagePostRenderContext ctx = new(relativePath, source, front.Writer.WrittenSpan, swap.Writer);
             using (pluginTiming.Measure(plugin.Name))
             {
                 plugin.PostRender(in ctx);
@@ -477,15 +506,15 @@ public static class BuildPipeline
         CancellationToken cancellationToken)
     {
         var pluginTiming = shell.PluginTiming;
-        var parallelOptions = new ParallelOptions
+        ParallelOptions parallelOptions = new()
         {
             CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = DefaultParallelism,
+            MaxDegreeOfParallelism = DefaultParallelism
         };
 
         await Parallel.ForEachAsync(bufferedPages, parallelOptions, (page, _) =>
         {
-            var scratch = new List<PageBuilderRental>();
+            List<PageBuilderRental> scratch = [];
             var owned = page.Rental;
             try
             {
@@ -560,7 +589,7 @@ public static class BuildPipeline
             }
 
             back.Writer.ResetWrittenCount();
-            var ctx = new PagePostResolveContext(relativePath, front.Writer.WrittenSpan, back.Writer);
+            PagePostResolveContext ctx = new(relativePath, front.Writer.WrittenSpan, back.Writer);
             using (pluginTiming.Measure(plugin.Name))
             {
                 plugin.Rewrite(in ctx);
@@ -606,12 +635,24 @@ public static class BuildPipeline
         // static-website mode) only honour /404.html for not-found responses.
         if (string.Equals(relativePath.Value, "404.md", StringComparison.OrdinalIgnoreCase))
         {
+            // 404.md always emits as /404.html at the site root, regardless of the
+            // directory-URL toggle — most static hosts (GitHub Pages, Netlify, S3
+            // static-website mode) only honour /404.html for not-found responses.
             return OutputPathBuilder.ForFlatUrls(outputRoot, relativePath);
         }
 
-        return useDirectoryUrls
-            ? OutputPathBuilder.ForDirectoryUrls(outputRoot, relativePath)
-            : OutputPathBuilder.ForFlatUrls(outputRoot, relativePath);
+        if (useDirectoryUrls)
+        {
+            // 404.md always emits as /404.html at the site root, regardless of the
+            // directory-URL toggle — most static hosts (GitHub Pages, Netlify, S3
+            // static-website mode) only honour /404.html for not-found responses.
+            return OutputPathBuilder.ForDirectoryUrls(outputRoot, relativePath);
+        }
+
+        // 404.md always emits as /404.html at the site root, regardless of the
+        // directory-URL toggle — most static hosts (GitHub Pages, Netlify, S3
+        // static-website mode) only honour /404.html for not-found responses.
+        return OutputPathBuilder.ForFlatUrls(outputRoot, relativePath);
     }
 
     /// <summary>Fires <see cref="IBuildConfigurePlugin.ConfigureAsync"/> on every plugin sorted by priority.</summary>
@@ -634,12 +675,12 @@ public static class BuildPipeline
         }
 
         var options = shell.Options;
-        var context = new BuildConfigureContext(shell.InputRoot, shell.OutputRoot, allPlugins, crossPageMarkers)
+        BuildConfigureContext context = new(shell.InputRoot, shell.OutputRoot, allPlugins, crossPageMarkers)
         {
             UseDirectoryUrls = options.UseDirectoryUrls,
             SiteName = options.SiteName ?? [],
             SiteUrl = options.SiteUrl ?? [],
-            SiteAuthor = options.SiteAuthor ?? [],
+            SiteAuthor = options.SiteAuthor ?? []
         };
         var log = shell.Log;
         var pluginTiming = shell.PluginTiming;
@@ -671,9 +712,9 @@ public static class BuildPipeline
             return;
         }
 
-        var context = new BuildDiscoverContext(shell.InputRoot, shell.OutputRoot, allPlugins)
+        BuildDiscoverContext context = new(shell.InputRoot, shell.OutputRoot, allPlugins)
         {
-            UseDirectoryUrls = shell.Options.UseDirectoryUrls,
+            UseDirectoryUrls = shell.Options.UseDirectoryUrls
         };
         var log = shell.Log;
         var pluginTiming = shell.PluginTiming;
@@ -705,7 +746,7 @@ public static class BuildPipeline
             return;
         }
 
-        var context = new BuildResolveContext(shell.OutputRoot, allPlugins);
+        BuildResolveContext context = new(shell.OutputRoot, allPlugins);
         var log = shell.Log;
         var pluginTiming = shell.PluginTiming;
         for (var i = 0; i < resolves.Length; i++)
@@ -736,7 +777,7 @@ public static class BuildPipeline
             return;
         }
 
-        var context = new BuildFinalizeContext(shell.OutputRoot, allPlugins);
+        BuildFinalizeContext context = new(shell.OutputRoot, allPlugins);
         var log = shell.Log;
         var pluginTiming = shell.PluginTiming;
         for (var i = 0; i < finalizes.Length; i++)

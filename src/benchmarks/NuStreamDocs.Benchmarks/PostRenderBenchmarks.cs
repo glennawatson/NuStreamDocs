@@ -68,7 +68,7 @@ public class PostRenderBenchmarks
     private int _emitMergedAttrListEnd;
 
     /// <summary>Shared registry used by URL-rewrite benchmarks.</summary>
-    private ExternalAssetRegistry _registry = new("local"u8.ToArray());
+    private ExternalAssetRegistry _registry = new([.. "local"u8]);
 
     /// <summary>Shared host filter — accepts every host so every URL exercises the rewrite path.</summary>
     private HostFilter _filter = new(hostsToSkip: null, hostsAllowed: null);
@@ -89,7 +89,7 @@ public class PostRenderBenchmarks
         _assetAttrHtml = Repeat("<img src=\"https://cdn.example/a.png\"><link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">");
         _srcsetHtml = Repeat("<img srcset=\"https://cdn.example/a.png 1x, https://cdn.example/b.png 2x, https://cdn.example/c.png 3x\">");
         _inlineStyleHtml = Repeat("<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>");
-        _registry = new("local"u8.ToArray());
+        _registry = new([.. "local"u8]);
         _filter = new(hostsToSkip: null, hostsAllowed: null);
 
         const string ExistingAttrs = " class=\"existing\" data-x=\"1\"";
@@ -111,7 +111,7 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int AttrListDirect()
     {
-        var sink = new ArrayBufferWriter<byte>(_attrListHtml.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_attrListHtml.Length * 2);
         AttrListRewriter.RewriteInto(_attrListHtml, sink);
         return sink.WrittenCount;
     }
@@ -121,7 +121,7 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int AttrListMarkerEmitMerged()
     {
-        var sink = new ArrayBufferWriter<byte>(_emitMergedSource.Length * OutputExpansionFactor);
+        ArrayBufferWriter<byte> sink = new(_emitMergedSource.Length * OutputExpansionFactor);
         for (var i = 0; i < Repetitions; i++)
         {
             AttrListMarker.EmitMerged(
@@ -151,7 +151,7 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int MixedContentBytesDirect()
     {
-        var sink = new ArrayBufferWriter<byte>(_mixedContentHtml.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_mixedContentHtml.Length * 2);
         MixedContentBytes.RewriteInto(_mixedContentHtml, sink);
         return sink.WrittenCount;
     }
@@ -161,7 +161,7 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int AnchorBytesDirect()
     {
-        var sink = new ArrayBufferWriter<byte>(_externalAnchorHtml.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_externalAnchorHtml.Length * 2);
         AnchorBytes.RewriteInto(_externalAnchorHtml, addRelNoOpener: true, addTargetBlank: true, sink);
         return sink.WrittenCount;
     }
@@ -171,8 +171,8 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int AssetAttributeBytesDirect()
     {
-        var sink = new ArrayBufferWriter<byte>(_assetAttrHtml.Length * 2);
-        var ctx = new UrlRewriteContext(_filter, _registry);
+        ArrayBufferWriter<byte> sink = new(_assetAttrHtml.Length * 2);
+        UrlRewriteContext ctx = new(_filter, _registry);
         AssetAttributeBytes.RewriteInto(_assetAttrHtml, ctx, sink);
         return sink.WrittenCount;
     }
@@ -182,8 +182,8 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int SrcsetBytesDirect()
     {
-        var sink = new ArrayBufferWriter<byte>(_srcsetHtml.Length * 2);
-        var ctx = new UrlRewriteContext(_filter, _registry);
+        ArrayBufferWriter<byte> sink = new(_srcsetHtml.Length * 2);
+        UrlRewriteContext ctx = new(_filter, _registry);
         SrcsetBytes.RewriteInto(_srcsetHtml, ctx, sink);
         return sink.WrittenCount;
     }
@@ -193,8 +193,8 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int InlineStyleBlockBytesDirect()
     {
-        var sink = new ArrayBufferWriter<byte>(_inlineStyleHtml.Length * 2);
-        var ctx = new UrlRewriteContext(_filter, _registry);
+        ArrayBufferWriter<byte> sink = new(_inlineStyleHtml.Length * 2);
+        UrlRewriteContext ctx = new(_filter, _registry);
         InlineStyleBlockBytes.RewriteInto(_inlineStyleHtml, ctx, sink);
         return sink.WrittenCount;
     }
@@ -205,8 +205,8 @@ public class PostRenderBenchmarks
     /// <returns>Bytes written by the plugin.</returns>
     private static int RunPostRender(IPagePostRenderPlugin plugin, byte[] html)
     {
-        var sink = new ArrayBufferWriter<byte>(html.Length * 2);
-        var context = new PagePostRenderContext("page.md", default, html, sink);
+        ArrayBufferWriter<byte> sink = new(html.Length * 2);
+        PagePostRenderContext context = new("page.md", default, html, sink);
         plugin.PostRender(in context);
         return sink.WrittenCount;
     }
@@ -216,7 +216,7 @@ public class PostRenderBenchmarks
     /// <returns>UTF-8 bytes.</returns>
     private static byte[] Repeat(string block)
     {
-        var sb = new StringBuilder(block.Length * Repetitions);
+        StringBuilder sb = new(block.Length * Repetitions);
         for (var i = 0; i < Repetitions; i++)
         {
             sb.Append(block);

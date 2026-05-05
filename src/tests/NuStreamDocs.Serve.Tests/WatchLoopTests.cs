@@ -17,8 +17,8 @@ public class WatchLoopTests
         var dir = CreateTempDir();
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            using var watcher = new WatchLoop(dir, ignoreRoot: null, debounceMs: 200, NullLogger.Instance);
+            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(10));
+            using WatchLoop watcher = new(dir, ignoreRoot: null, debounceMs: 200, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
             await Task.Delay(50, cts.Token);
@@ -48,8 +48,8 @@ public class WatchLoopTests
         Directory.CreateDirectory(ignored);
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(800));
-            using var watcher = new WatchLoop(dir, ignored, debounceMs: 200, NullLogger.Instance);
+            using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(800));
+            using WatchLoop watcher = new(dir, ignored, debounceMs: 200, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
             await Task.Delay(50, CancellationToken.None);

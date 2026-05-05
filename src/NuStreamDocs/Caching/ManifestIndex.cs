@@ -28,7 +28,7 @@ internal static class ManifestIndex
             return EmptyCollections.DictionaryFor<FilePath, ManifestEntry>();
         }
 
-        var working = new Dictionary<FilePath, ManifestEntry>(entries.Length);
+        Dictionary<FilePath, ManifestEntry> working = new(entries.Length);
         for (var i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];

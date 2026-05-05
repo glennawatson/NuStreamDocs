@@ -136,8 +136,8 @@ public class AnchorBytesTests
     [Test]
     public async Task NoOptionsNoRewrite()
     {
-        var sink = new ArrayBufferWriter<byte>();
-        var bytes = "<a href=\"https://example.com\">x</a>"u8.ToArray();
+        ArrayBufferWriter<byte> sink = new();
+        byte[] bytes = [.. "<a href=\"https://example.com\">x</a>"u8];
         var changed = AnchorBytes.RewriteInto(bytes, addRelNoOpener: false, addTargetBlank: false, sink);
         await Assert.That(changed).IsFalse();
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
@@ -228,7 +228,7 @@ public class AnchorBytesTests
     /// <returns>Rewritten string, or the input when no rewrite happened.</returns>
     private static string Rewrite(string html, bool addRel, bool addTarget)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var changed = AnchorBytes.RewriteInto(Encoding.UTF8.GetBytes(html), addRel, addTarget, sink);
         return changed ? Encoding.UTF8.GetString(sink.WrittenSpan) : html;
     }

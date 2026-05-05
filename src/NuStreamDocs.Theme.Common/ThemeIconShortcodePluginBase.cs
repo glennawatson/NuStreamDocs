@@ -28,7 +28,12 @@ public abstract class ThemeIconShortcodePluginBase : IPagePreRenderPlugin
     protected abstract ReadOnlySpan<byte> IconFontClass { get; }
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    /// <remarks>
+    /// Icon shortcodes are <c>:material-name:</c> / <c>:fontawesome-name:</c> — every match needs
+    /// at least one <c>:</c> byte, so pages without one skip both the rewriter scan and the
+    /// pipeline scratch rental.
+    /// </remarks>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)':') >= 0;
 
     /// <inheritdoc/>
     public void PreRender(in PagePreRenderContext context) =>

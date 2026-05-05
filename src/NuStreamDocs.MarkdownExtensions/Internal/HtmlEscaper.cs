@@ -23,7 +23,7 @@ internal static class HtmlEscaper
                 (byte)'<' => "&lt;"u8,
                 (byte)'>' => "&gt;"u8,
                 (byte)'"' => "&quot;"u8,
-                _ => default,
+                _ => default
             };
 
             if (entity.Length is 0)

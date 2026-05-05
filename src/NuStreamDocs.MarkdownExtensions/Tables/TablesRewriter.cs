@@ -34,7 +34,7 @@ internal static class TablesRewriter
         Right,
 
         /// <summary>Centre aligned.</summary>
-        Center,
+        Center
     }
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
@@ -126,12 +126,7 @@ internal static class TablesRewriter
     {
         lineEnd = MarkdownCodeScanner.LineEnd(source, offset);
         var line = source[offset..lineEnd];
-        if (IndentedBlockScanner.IsBlankLine(line))
-        {
-            return false;
-        }
-
-        return line.IndexOf((byte)'|') >= 0;
+        return !IndentedBlockScanner.IsBlankLine(line) && line.IndexOf((byte)'|') >= 0;
     }
 
     /// <summary>Returns true when the line at <paramref name="offset"/> is a GFM separator (<c>| --- | :---: |</c>).</summary>
@@ -179,7 +174,7 @@ internal static class TablesRewriter
                 (true, true) => Align.Center,
                 (false, true) => Align.Right,
                 (true, false) => Align.Left,
-                _ => Align.None,
+                _ => Align.None
             };
         }
 
@@ -329,7 +324,7 @@ internal static class TablesRewriter
             Align.Left => " style=\"text-align:left\""u8,
             Align.Right => " style=\"text-align:right\""u8,
             Align.Center => " style=\"text-align:center\""u8,
-            _ => default,
+            _ => default
         };
 
         writer.Write(attr);

@@ -35,7 +35,7 @@ internal static class PrivacyRewriter
 
         using var rentalA = PageBuilderPool.Rent(html.Length);
         using var rentalB = PageBuilderPool.Rent(html.Length);
-        var slots = new StageBuffers(rentalA.Writer, rentalB.Writer);
+        StageBuffers slots = new(rentalA.Writer, rentalB.Writer);
 
         ReadOnlyMemory<byte> current = default;
         var changed = false;
@@ -50,7 +50,7 @@ internal static class PrivacyRewriter
             TryRunAnchor(html, options, ref current, ref slots, ref changed);
         }
 
-        var ctx = new UrlRewriteContext(filter, registry);
+        UrlRewriteContext ctx = new(filter, registry);
         TryRunUrlPass(html, ctx, ref current, ref slots, ref changed);
 
         if (!changed)

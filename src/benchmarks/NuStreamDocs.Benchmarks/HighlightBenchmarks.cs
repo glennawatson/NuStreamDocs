@@ -44,6 +44,21 @@ public class HighlightBenchmarks
     /// <summary>Pre-built Bash fixture.</summary>
     private byte[] _bash = [];
 
+    /// <summary>Pre-built Python fixture.</summary>
+    private byte[] _python = [];
+
+    /// <summary>Pre-built F# fixture.</summary>
+    private byte[] _fsharp = [];
+
+    /// <summary>Pre-built JavaScript fixture.</summary>
+    private byte[] _javascript = [];
+
+    /// <summary>Pre-built PowerShell fixture.</summary>
+    private byte[] _powershell = [];
+
+    /// <summary>Pre-built Diff fixture.</summary>
+    private byte[] _diff = [];
+
     /// <summary>Generates the per-lexer code fixtures.</summary>
     [GlobalSetup]
     public void Setup()
@@ -56,6 +71,11 @@ public class HighlightBenchmarks
         _json = Repeat("{\"id\":1,\"name\":\"a\",\"items\":[1,2,3,true,null,{\"nested\":\"yes\"}]}\n"u8, Repetitions);
         _yaml = Repeat("name: example\nitems:\n  - id: 1\n    label: \"first\"\n  - id: 2\n    label: \"second\"\n"u8, Repetitions);
         _bash = Repeat("#!/usr/bin/env bash\nset -euo pipefail\nfor f in *.txt; do echo \"$f\"; done\n"u8, Repetitions);
+        _python = Repeat("def hello(name: str) -> None:\n    \"\"\"Greet someone.\"\"\"\n    print(f\"Hello, {name}!\")\n\nif __name__ == \"__main__\":\n    hello(\"world\")\n"u8, Repetitions);
+        _fsharp = Repeat("open System\nlet add x y = x + y\nlet result = [1; 2; 3] |> List.map (fun n -> n * n) |> List.sum\nprintfn \"%d\" result\n"u8, Repetitions);
+        _javascript = Repeat("const items = [1, 2, 3];\nfunction sum(xs) { return xs.reduce((a, b) => a + b, 0); }\nconsole.log(sum(items));\n"u8, Repetitions);
+        _powershell = Repeat("Get-ChildItem -Path . -Recurse | Where-Object { $_.Length -gt 1024 } | ForEach-Object { Write-Host $_.FullName }\n"u8, Repetitions);
+        _diff = Repeat("--- a/file.txt\n+++ b/file.txt\n@@ -1,3 +1,3 @@\n removed line context\n-old line\n+new line\n still context\n"u8, Repetitions);
     }
 
     /// <summary>Benchmark: C# lexer.</summary>
@@ -97,6 +117,31 @@ public class HighlightBenchmarks
     /// <returns>Bytes written.</returns>
     [Benchmark]
     public int Bash() => Run(BashLexer.Instance, _bash);
+
+    /// <summary>Benchmark: Python lexer.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int Python() => Run(PythonLexer.Instance, _python);
+
+    /// <summary>Benchmark: F# lexer.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int FSharp() => Run(FSharpLexer.Instance, _fsharp);
+
+    /// <summary>Benchmark: JavaScript lexer.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int JavaScript() => Run(JavaScriptLexer.Instance, _javascript);
+
+    /// <summary>Benchmark: PowerShell lexer.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int PowerShell() => Run(PowerShellLexer.Instance, _powershell);
+
+    /// <summary>Benchmark: Diff / patch lexer.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    public int Diff() => Run(DiffLexer.Instance, _diff);
 
     /// <summary>Repeats <paramref name="line"/> <paramref name="count"/> times into a fresh byte array.</summary>
     /// <param name="line">Single source line.</param>

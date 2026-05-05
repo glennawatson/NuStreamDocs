@@ -16,7 +16,7 @@ public class DocBuilderServeExtensionsTests
     [Test]
     public async Task WatchAndServeAsync_overloads_exist()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder).IsNotNull();
 
         // We won't actually call them as they are blocking/long-running.

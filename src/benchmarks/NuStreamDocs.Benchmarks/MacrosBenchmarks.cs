@@ -34,12 +34,12 @@ public class MacrosBenchmarks
         _markerHeavySource = BuildRepeated("Project: {{ project }} Version: {{ version }} Author: {{ author }}\n");
         _noMarkerSource = BuildRepeated("Plain prose line with no curly markers anywhere here at all.\n");
 
-        var vars = new Dictionary<byte[], byte[]>(Common.ByteArrayComparer.Instance)
+        Dictionary<byte[], byte[]> vars = new(Common.ByteArrayComparer.Instance)
         {
-            ["project"u8.ToArray()] = "ReactiveUI"u8.ToArray(),
-            ["version"u8.ToArray()] = "20.0.0"u8.ToArray(),
-            ["author"u8.ToArray()] = "Glenn Watson"u8.ToArray(),
-            ["year"u8.ToArray()] = "2026"u8.ToArray(),
+            [[.. "project"u8]] = [.."ReactiveUI"u8],
+            [[.. "version"u8]] = [.."20.0.0"u8],
+            [[.. "author"u8]] = [.."Glenn Watson"u8],
+            [[.. "year"u8]] = [.."2026"u8]
         };
         _plugin = new(new(vars, EscapeHtml: false, WarnOnMissing: false));
     }
@@ -49,8 +49,8 @@ public class MacrosBenchmarks
     [Benchmark]
     public int MarkerHeavyResolve()
     {
-        var sink = new ArrayBufferWriter<byte>(_markerHeavySource.Length * 2);
-        var ctx = new PagePreRenderContext("page.md", _markerHeavySource, sink);
+        ArrayBufferWriter<byte> sink = new(_markerHeavySource.Length * 2);
+        PagePreRenderContext ctx = new("page.md", _markerHeavySource, sink);
         _plugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
@@ -60,8 +60,8 @@ public class MacrosBenchmarks
     [Benchmark]
     public int NoMarkerPassThrough()
     {
-        var sink = new ArrayBufferWriter<byte>(_noMarkerSource.Length * 2);
-        var ctx = new PagePreRenderContext("page.md", _noMarkerSource, sink);
+        ArrayBufferWriter<byte> sink = new(_noMarkerSource.Length * 2);
+        PagePreRenderContext ctx = new("page.md", _noMarkerSource, sink);
         _plugin.PreRender(in ctx);
         return sink.WrittenCount;
     }

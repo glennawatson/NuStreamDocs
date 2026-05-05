@@ -32,8 +32,11 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     private static readonly byte[] HeadExtraSnippet =
         [.. "<link rel=\"stylesheet\" href=\""u8, .. "/assets/stylesheets/highlight.css"u8, .. "\">\n"u8];
 
-    /// <summary>The opening tag the rewriter searches for.</summary>
+    /// <summary>The opening tag for a labeled (language-tagged) code block.</summary>
     private static readonly byte[] PreOpen = [.. "<pre><code class=\"language-"u8];
+
+    /// <summary>The opening tag for an unlabeled code block (used by the auto-detect pass).</summary>
+    private static readonly byte[] PreOpenUnlabeled = [.. "<pre><code>"u8];
 
     /// <summary>The closing tag pattern that terminates a highlighted body.</summary>
     private static readonly byte[] CodeClose = [.. "</code>"u8];
@@ -73,7 +76,18 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
         [(HighlightStylesheet.AssetPath, HighlightStylesheet.GetBytes())];
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> html) => html.IndexOf("<pre><code class=\"language-"u8) >= 0;
+    public bool NeedsRewrite(ReadOnlySpan<byte> html)
+    {
+        if (html.IndexOf(PreOpen) >= 0)
+        {
+            return true;
+        }
+
+        // Auto-detect path matches plain `<pre><code>` openers (indented blocks, fences without
+        // a language tag). Off by default so corpora that author explicit fence languages pay
+        // nothing here — the labeled-only IndexOf above is the same single SIMD scan as before.
+        return _options.AutoDetectLanguage && html.IndexOf(PreOpenUnlabeled) >= 0;
+    }
 
     /// <inheritdoc/>
     public void PostRender(in PagePostRenderContext context) => Highlight(context.Html, context.Output);
@@ -118,12 +132,7 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
 
         var valStart = idx + marker.Length;
         var endRel = attrs[valStart..].IndexOf((byte)'"');
-        if (endRel < 0)
-        {
-            return [];
-        }
-
-        return HtmlUnescapeBytes(attrs.Slice(valStart, endRel));
+        return endRel < 0 ? [] : HtmlUnescapeBytes(attrs.Slice(valStart, endRel));
     }
 
     /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>
@@ -141,7 +150,13 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Walks <paramref name="source"/>, copying through verbatim and substituting highlighted bodies for every recognized <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block.</summary>
+    /// <summary>
+    /// Walks <paramref name="source"/>, copying through verbatim and substituting highlighted
+    /// bodies for every recognized <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block.
+    /// When <see cref="HighlightOptions.AutoDetectLanguage"/> is on, also runs the heuristic
+    /// detector against unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> blocks and labels-and-highlights
+    /// the high-confidence matches.
+    /// </summary>
     /// <param name="source">Snapshot of the rendered HTML.</param>
     /// <param name="writer">UTF-8 sink (the original page buffer).</param>
     private void Highlight(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
@@ -150,18 +165,84 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
         while (cursor < source.Length)
         {
             var rest = source[cursor..];
-            var openIdx = rest.IndexOf(PreOpen);
-            if (openIdx < 0)
+            var labeledRel = rest.IndexOf(PreOpen);
+            var unlabeledRel = _options.AutoDetectLanguage ? rest.IndexOf(PreOpenUnlabeled) : -1;
+
+            if (labeledRel < 0 && unlabeledRel < 0)
             {
                 Write(writer, rest);
                 return;
             }
 
-            var preStart = cursor + openIdx;
-            Write(writer, source[cursor..preStart]);
+            // Whichever opener appears first wins; the other gets handled by the next iteration.
+            var labeledFirst = labeledRel >= 0 && (unlabeledRel < 0 || labeledRel <= unlabeledRel);
+            if (labeledFirst)
+            {
+                var preStart = cursor + labeledRel;
+                Write(writer, source[cursor..preStart]);
+                cursor = ProcessBlock(source, preStart, writer);
+                continue;
+            }
 
-            cursor = ProcessBlock(source, preStart, writer);
+            var unlabeledStart = cursor + unlabeledRel;
+            Write(writer, source[cursor..unlabeledStart]);
+            cursor = ProcessUnlabeledBlock(source, unlabeledStart, writer);
         }
+    }
+
+    /// <summary>Processes one unlabeled block: runs the detector against the body and either emits a highlighted (labeled) form or copies the original through unchanged.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="preStart">Offset of <c>&lt;pre&gt;</c>.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Offset just past the closing <c>&lt;/pre&gt;</c> on success, otherwise the source length (caller's loop terminates).</returns>
+    private int ProcessUnlabeledBlock(ReadOnlySpan<byte> source, int preStart, IBufferWriter<byte> writer)
+    {
+        var bodyStart = preStart + PreOpenUnlabeled.Length;
+        var bodyEndRel = source[bodyStart..].IndexOf(CodeClose);
+        if (bodyEndRel < 0)
+        {
+            Write(writer, source[preStart..]);
+            return source.Length;
+        }
+
+        var bodyEnd = bodyStart + bodyEndRel;
+        var afterCodeClose = bodyEnd + CodeClose.Length;
+        var preCloseRel = source[afterCodeClose..].IndexOf(PreClose);
+        if (preCloseRel < 0)
+        {
+            Write(writer, source[preStart..]);
+            return source.Length;
+        }
+
+        var afterBlock = afterCodeClose + preCloseRel + PreClose.Length;
+        var body = source[bodyStart..bodyEnd];
+
+        if (!LanguageDetector.TryDetect(body, _registry, _options.DetectionLanguages, out var detectedLanguage))
+        {
+            // Pass through verbatim — leaves the unlabeled block as-is so the browser renders
+            // monospace plain text rather than a misclassified highlight.
+            Write(writer, source[preStart..afterBlock]);
+            return afterBlock;
+        }
+
+        EmitDetectedBlock(detectedLanguage, body, writer);
+        return afterBlock;
+    }
+
+    /// <summary>Emits the rewritten form of an auto-detected block: opening wrapper + <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> + highlighted body + close + closing wrapper.</summary>
+    /// <param name="languageBytes">Detected language alias bytes.</param>
+    /// <param name="body">Original (HTML-escaped) body bytes.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private void EmitDetectedBlock(ReadOnlySpan<byte> languageBytes, ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
+    {
+        EmitOpeningWrapper(default, writer);
+        Write(writer, "<pre><code class=\"language-"u8);
+        Write(writer, languageBytes);
+        Write(writer, "\">"u8);
+        EmitBody(writer, languageBytes, body);
+        Write(writer, CodeClose);
+        Write(writer, PreClose);
+        EmitClosingWrapper(writer);
     }
 
     /// <summary>Processes one matched <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block; emits the rewritten form and returns the offset to resume scanning at.</summary>

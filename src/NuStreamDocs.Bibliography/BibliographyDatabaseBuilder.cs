@@ -74,7 +74,7 @@ public sealed class BibliographyDatabaseBuilder
             Title = title,
             Authors = [author],
             Year = year,
-            Publisher = publisher,
+            Publisher = publisher
         });
     }
 
@@ -116,7 +116,7 @@ public sealed class BibliographyDatabaseBuilder
             Year = year,
             ContainerTitle = journal,
             Volume = volume,
-            Page = page,
+            Page = page
         });
     }
 
@@ -146,7 +146,7 @@ public sealed class BibliographyDatabaseBuilder
             Type = EntryType.LegalCase,
             Title = name,
             Year = year,
-            LawReportSeries = lawReportSeries,
+            LawReportSeries = lawReportSeries
         });
     }
 
@@ -176,7 +176,7 @@ public sealed class BibliographyDatabaseBuilder
             Type = EntryType.Legislation,
             Title = title,
             Jurisdiction = jurisdiction,
-            Year = year,
+            Year = year
         });
     }
 

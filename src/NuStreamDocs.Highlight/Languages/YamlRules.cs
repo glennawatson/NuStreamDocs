@@ -57,19 +57,19 @@ internal static class YamlRules
 
     /// <summary>Set of YAML literal constants — case-insensitive comparer matches Pygments' <c>IgnoreCase</c>.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateIgnoreCase(
-        "true",
-        "false",
-        "null",
-        "yes",
-        "no",
-        "on",
-        "off");
+        [.. "true"u8],
+        [.. "false"u8],
+        [.. "null"u8],
+        [.. "yes"u8],
+        [.. "no"u8],
+        [.. "on"u8],
+        [.. "off"u8]);
 
     /// <summary>Document-separator alternatives — longest first.</summary>
     private static readonly byte[][] DocumentSeparators =
     [
-        "---"u8.ToArray(),
-        "..."u8.ToArray(),
+        [.. "---"u8],
+        [.. "..."u8]
     ];
 
     /// <summary>
@@ -130,7 +130,7 @@ internal static class YamlRules
         new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationFirst), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationFirst },
 
         // Plain identifier — letters/digits/underscore/dot/dash, must start with letter or underscore.
-        new(static slice => TokenMatchers.MatchIdentifier(slice, IdentifierFirst, PlainKeyContinue), TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = IdentifierFirst },
+        new(static slice => TokenMatchers.MatchIdentifier(slice, IdentifierFirst, PlainKeyContinue), TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = IdentifierFirst }
     ];
 
     /// <summary>YAML tag — <c>!</c> or <c>!!</c> optionally followed by name bytes.</summary>
@@ -174,12 +174,7 @@ internal static class YamlRules
 
         // Pygments requires the colon to be followed by whitespace or end-of-input.
         var afterColon = colonAt + 1;
-        if (afterColon >= slice.Length || TokenMatchers.AsciiWhitespaceWithNewlines.Contains(slice[afterColon]))
-        {
-            return nameLen;
-        }
-
-        return 0;
+        return afterColon >= slice.Length || TokenMatchers.AsciiWhitespaceWithNewlines.Contains(slice[afterColon]) ? nameLen : 0;
     }
 
     /// <summary>Block-scalar indicator — <c>|</c> or <c>&gt;</c>, optional <c>+</c>/<c>-</c>, optional digit.</summary>
@@ -209,16 +204,10 @@ internal static class YamlRules
     /// <summary>YAML literal constant — case-insensitive keyword from <see cref="KeywordConstants"/>, or the bare <c>~</c> null sigil.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    private static int MatchKeywordConstant(ReadOnlySpan<byte> slice)
-    {
-        // Pygments' set includes "~" as a single-byte null literal.
-        if (slice is [(byte)'~', ..])
-        {
-            return 1;
-        }
+    private static int MatchKeywordConstant(ReadOnlySpan<byte> slice) =>
 
-        return TokenMatchers.MatchKeyword(slice, KeywordConstants);
-    }
+        // Pygments' set includes "~" as a single-byte null literal.
+        slice is [(byte)'~', ..] ? 1 : TokenMatchers.MatchKeyword(slice, KeywordConstants);
 
     /// <summary>List bullet at line start — optional indentation, then <c>-</c>, then a whitespace separator.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
@@ -231,11 +220,6 @@ internal static class YamlRules
             return 0;
         }
 
-        if (!TokenMatchers.AsciiWhitespaceWithNewlines.Contains(slice[indent + 1]))
-        {
-            return 0;
-        }
-
-        return indent + BulletMinimumLength;
+        return !TokenMatchers.AsciiWhitespaceWithNewlines.Contains(slice[indent + 1]) ? 0 : indent + BulletMinimumLength;
     }
 }

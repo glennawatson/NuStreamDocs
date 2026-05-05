@@ -27,31 +27,31 @@ public class TokenMatchersTests
     private static readonly SearchValues<byte> MarkupTextStop = SearchValues.Create("<&"u8);
 
     /// <summary>JSON's three keyword constants.</summary>
-    private static readonly ByteKeywordSet JsonKeywords = ByteKeywordSet.Create("true", "false", "null");
+    private static readonly ByteKeywordSet JsonKeywords = ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
 
     /// <summary>Case-insensitive YAML literal constants.</summary>
     private static readonly ByteKeywordSet YamlKeywords = ByteKeywordSet.CreateIgnoreCase(
-        "true",
-        "false",
-        "null",
-        "yes",
-        "no",
-        "on",
-        "off");
+        [.. "true"u8],
+        [.. "false"u8],
+        [.. "null"u8],
+        [.. "yes"u8],
+        [.. "no"u8],
+        [.. "off"u8],
+        [.. "on"u8]);
 
     /// <summary>Operators ordered longest-first so the alternation prefers the longer match.</summary>
     private static readonly byte[][] ShortOperators =
     [
-        "=="u8.ToArray(),
-        "=>"u8.ToArray(),
-        "="u8.ToArray(),
+        [.. "=="u8],
+        [.. "=>"u8],
+        [.. "="u8]
     ];
 
     /// <summary>HTML comment opener literal as bytes.</summary>
-    private static readonly byte[] HtmlCommentOpen = "<!--"u8.ToArray();
+    private static readonly byte[] HtmlCommentOpen = [.. "<!--"u8];
 
     /// <summary>HTML comment closer literal as bytes.</summary>
-    private static readonly byte[] HtmlCommentClose = "-->"u8.ToArray();
+    private static readonly byte[] HtmlCommentClose = [.. "-->"u8];
 
     /// <summary>ASCII whitespace runs match every contiguous space / tab / newline at the cursor.</summary>
     /// <param name="input">Input string.</param>

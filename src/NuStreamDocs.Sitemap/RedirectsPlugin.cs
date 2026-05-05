@@ -31,13 +31,13 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     private const byte AsciiCaseOffset = 32;
 
     /// <summary>HTML extension bytes used to swap a markdown extension on the rendered page URL.</summary>
-    private static readonly byte[] HtmlExtension = ".html"u8.ToArray();
+    private static readonly byte[] HtmlExtension = [.. ".html"u8];
 
     /// <summary>Markdown extension bytes recognized when computing the rendered URL.</summary>
-    private static readonly byte[] MarkdownExtension = ".md"u8.ToArray();
+    private static readonly byte[] MarkdownExtension = [.. ".md"u8];
 
     /// <summary>Trailing <c>index.html</c> appendix for directory-style aliases (<c>foo/</c>).</summary>
-    private static readonly byte[] IndexHtml = "index.html"u8.ToArray();
+    private static readonly byte[] IndexHtml = [.. "index.html"u8];
 
     /// <summary>Static <c>(from, to)</c> entries supplied at construction time, encoded once to UTF-8.</summary>
     private readonly Dictionary<byte[], byte[]> _seed;
@@ -120,7 +120,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <inheritdoc/>
     public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
-        var merged = new Dictionary<byte[], byte[]>(_seed.Count + _aliases.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], byte[]> merged = new(_seed.Count + _aliases.Count, ByteArrayComparer.Instance);
         foreach (var entry in _seed)
         {
             merged[entry.Key] = entry.Value;
@@ -205,12 +205,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
 
             var colon = line.IndexOf((byte)':');
             var inline = YamlByteScanner.TrimWhitespace(line[(colon + 1)..]);
-            if (inline is [(byte)'[', .., (byte)']'])
-            {
-                return ParseInlineList(inline[1..^1]);
-            }
-
-            return ParseBlockList(source, lineEnd);
+            return inline is [(byte)'[', .., (byte)']'] ? ParseInlineList(inline[1..^1]) : ParseBlockList(source, lineEnd);
         }
 
         return [];
@@ -221,21 +216,23 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <returns>One byte-array per comma-separated entry.</returns>
     private static byte[][] ParseInlineList(ReadOnlySpan<byte> span)
     {
-        var result = new List<byte[]>(4);
+        List<byte[]> result = new(4);
         var start = 0;
         for (var i = 0; i <= span.Length; i++)
         {
-            if (i == span.Length || span[i] == (byte)',')
+            if (i != span.Length && span[i] != (byte)',')
             {
-                var slice = YamlByteScanner.TrimWhitespace(span[start..i]);
-                slice = YamlByteScanner.Unquote(slice);
-                if (!slice.IsEmpty)
-                {
-                    result.Add(slice.ToArray());
-                }
-
-                start = i + 1;
+                continue;
             }
+
+            var slice = YamlByteScanner.TrimWhitespace(span[start..i]);
+            slice = YamlByteScanner.Unquote(slice);
+            if (!slice.IsEmpty)
+            {
+                result.Add(slice.ToArray());
+            }
+
+            start = i + 1;
         }
 
         return [.. result];
@@ -247,7 +244,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <returns>One byte-array per list entry.</returns>
     private static byte[][] ParseBlockList(ReadOnlySpan<byte> source, int cursor)
     {
-        var result = new List<byte[]>(4);
+        List<byte[]> result = new(4);
         while (cursor < source.Length)
         {
             var lineEnd = YamlByteScanner.LineEnd(source, cursor);
@@ -349,7 +346,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
             return IndexHtml;
         }
 
-        return EndsWithHtml(trimmed) ? default : HtmlExtension;
+        return EndsWithHtml(trimmed) ? null : HtmlExtension;
     }
 
     /// <summary>Returns true when <paramref name="value"/> ends with <c>.html</c> (case-insensitive ASCII).</summary>
@@ -392,7 +389,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
         var fromPath = Encoding.UTF8.GetString(fromPathBytes);
         var absolute = Path.GetFullPath(Path.Combine(outputRoot.Value, fromPath));
         Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
-        var sink = new ArrayBufferWriter<byte>(512);
+        ArrayBufferWriter<byte> sink = new(512);
         BuildStub(toUrlBytes, sink);
         await File.WriteAllBytesAsync(absolute, sink.WrittenMemory, cancellationToken).ConfigureAwait(false);
     }

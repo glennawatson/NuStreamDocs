@@ -85,7 +85,7 @@ public class TablesRewriterBenchmarks
     /// <returns>Markdown source.</returns>
     private static string BuildWide(int columns)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         for (var i = 0; i < columns; i++)
         {
             sb.Append("| h").Append(i).Append(' ');
@@ -118,7 +118,7 @@ public class TablesRewriterBenchmarks
     /// <returns>Markdown source.</returns>
     private static string BuildTall(int rows)
     {
-        var sb = new StringBuilder("| h1 | h2 | h3 |\n| --- | --- | --- |\n");
+        StringBuilder sb = new("| h1 | h2 | h3 |\n| --- | --- | --- |\n");
         for (var i = 0; i < rows; i++)
         {
             sb.Append("| r").Append(i).Append("a | r").Append(i).Append("b | r").Append(i).Append("c |\n");
@@ -134,7 +134,7 @@ public class TablesRewriterBenchmarks
     /// <returns>UTF-8 bytes.</returns>
     private static byte[] Repeat(string block, int count)
     {
-        var sb = new StringBuilder(block.Length * count);
+        StringBuilder sb = new(block.Length * count);
         for (var i = 0; i < count; i++)
         {
             sb.Append(block);

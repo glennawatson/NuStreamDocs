@@ -59,15 +59,10 @@ internal static class MacrosScanner
     /// <param name="onMissing">Missing-name callback.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Offset to resume from.</returns>
-    private static int ProcessOne(ReadOnlySpan<byte> source, int cursor, Lookup lookup, bool escapeHtml, MissingCallback? onMissing, IBufferWriter<byte> writer)
-    {
-        if (TryConsumeCodeRegion(source, cursor, writer, out var afterCode))
-        {
-            return afterCode;
-        }
-
-        return TryExpandMacro(source, cursor, lookup, escapeHtml, onMissing, writer);
-    }
+    private static int ProcessOne(ReadOnlySpan<byte> source, int cursor, Lookup lookup, bool escapeHtml, MissingCallback? onMissing, IBufferWriter<byte> writer) =>
+        TryConsumeCodeRegion(source, cursor, writer, out var afterCode)
+            ? afterCode
+            : TryExpandMacro(source, cursor, lookup, escapeHtml, onMissing, writer);
 
     /// <summary>Detects a fenced or inline-code region at <paramref name="cursor"/>; when found, copies it through verbatim.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -265,7 +260,7 @@ internal static class MacrosScanner
             (byte)'>' => "&gt;"u8,
             (byte)'"' => "&quot;"u8,
             (byte)'\'' => "&#39;"u8,
-            _ => default,
+            _ => default
         };
         Write(writer, entity);
     }

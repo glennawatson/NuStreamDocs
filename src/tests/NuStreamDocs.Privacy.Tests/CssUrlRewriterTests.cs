@@ -14,7 +14,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task RewritesAbsoluteUrl()
     {
-        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
+        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
         var output = Rewrite("@font-face { src: url(https://fonts.example/x.woff2) }", "https://example.com/fonts.css", registry);
         await Assert.That(output).Contains("url(/assets/external/");
         await Assert.That(output).DoesNotContain("https://fonts.example/x.woff2");
@@ -25,7 +25,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task ResolvesRelativeUrlAgainstBase()
     {
-        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
+        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
         var output = Rewrite("body { background: url(./bg.png) }", "https://example.com/styles/main.css", registry);
         await Assert.That(output).Contains("url(/assets/external/");
 
@@ -39,7 +39,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task LeavesDataUrlsAlone()
     {
-        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
+        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
         var output = Rewrite("a { background: url(data:image/png;base64,AAA) }", "https://example.com/x.css", registry);
         await Assert.That(output).Contains("url(data:image/png");
     }
@@ -49,7 +49,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task PreservesQuoteStyle()
     {
-        var registry = new ExternalAssetRegistry("assets/external"u8.ToArray());
+        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
         var output = Rewrite("a { src: url(\"https://x.test/a.woff2\") }", "https://x.test/", registry);
         await Assert.That(output).Contains("url(\"/assets/external/");
     }

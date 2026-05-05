@@ -14,11 +14,11 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteAllResolves()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "page.html"), "see <a href=\"@autoref:Foo\">Foo</a>");
 
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "/api/foo.html"u8.ToArray(), fragment: default);
+        AutorefsRegistry registry = new();
+        registry.Register("Foo"u8, [.. "/api/foo.html"u8], fragment: default);
 
         var count = AutorefsRewriter.RewriteAll(temp.Root, registry);
         await Assert.That(count).IsEqualTo(1);
@@ -31,12 +31,12 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteAllLoggedReportsCounts()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var pagePath = Path.Combine(temp.Root, "page.html");
         await File.WriteAllTextAsync(pagePath, "<a href=\"@autoref:Resolved\">x</a> and <a href=\"@autoref:Missing\">y</a>");
 
-        var registry = new AutorefsRegistry();
-        registry.Register("Resolved"u8, "/r.html"u8.ToArray(), fragment: default);
+        AutorefsRegistry registry = new();
+        registry.Register("Resolved"u8, [.. "/r.html"u8], fragment: default);
 
         var (resolved, missing) = AutorefsRewriter.RewriteAll(temp.Root, registry, NullLogger.Instance);
         await Assert.That(resolved).IsEqualTo(1);
@@ -68,7 +68,7 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteOneNoMarkers()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var path = Path.Combine(temp.Root, "plain.html");
         await File.WriteAllTextAsync(path, "<p>plain</p>");
         await Assert.That(AutorefsRewriter.RewriteOne(path, new())).IsFalse();
@@ -79,7 +79,7 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteOneAllMissing()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var path = Path.Combine(temp.Root, "missing.html");
         await File.WriteAllTextAsync(path, "<a href=\"@autoref:NotInRegistry\">x</a>");
         await Assert.That(AutorefsRewriter.RewriteOne(path, new())).IsFalse();
@@ -90,11 +90,11 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteOneResolves()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var path = Path.Combine(temp.Root, "good.html");
         await File.WriteAllTextAsync(path, "<a href=\"@autoref:Foo\">x</a>");
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "/foo.html"u8.ToArray(), fragment: default);
+        AutorefsRegistry registry = new();
+        registry.Register("Foo"u8, [.. "/foo.html"u8], fragment: default);
         await Assert.That(AutorefsRewriter.RewriteOne(path, registry)).IsTrue();
         var rewritten = await File.ReadAllTextAsync(path);
         await Assert.That(rewritten).Contains("/foo.html");
@@ -125,8 +125,9 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteAllRejectsNullRegistry()
     {
-        using var temp = new ScratchDir();
-        var ex = Assert.Throws<ArgumentNullException>(() => AutorefsRewriter.RewriteAll(temp.Root, null!));
+        using ScratchDir temp = new();
+        var root = temp.Root;
+        var ex = Assert.Throws<ArgumentNullException>(() => AutorefsRewriter.RewriteAll(root, null!));
         await Assert.That(ex).IsNotNull();
     }
 

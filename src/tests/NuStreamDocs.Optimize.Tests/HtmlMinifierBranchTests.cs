@@ -69,7 +69,7 @@ public class HtmlMinifierBranchTests
     /// <returns>Minified output.</returns>
     private static string Minify(string html)
     {
-        var sink = new ArrayBufferWriter<byte>(Math.Max(1, html.Length));
+        ArrayBufferWriter<byte> sink = new(Math.Max(1, html.Length));
         HtmlMinifier.Minify(Encoding.UTF8.GetBytes(html), sink, HtmlMinifyOptions.Default);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

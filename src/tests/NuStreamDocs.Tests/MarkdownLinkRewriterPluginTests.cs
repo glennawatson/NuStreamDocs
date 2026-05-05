@@ -24,8 +24,8 @@ public class MarkdownLinkRewriterPluginTests
     [Test]
     public async Task RewritesMdHrefToHtml()
     {
-        var plugin = new MarkdownLinkRewriterPlugin();
-        await plugin.ConfigureAsync(new BuildConfigureContext("/in", "/out", [], new()), CancellationToken.None);
+        MarkdownLinkRewriterPlugin plugin = new();
+        await plugin.ConfigureAsync(new("/in", "/out", [], new()), CancellationToken.None);
 
         var output = RunPostRender(plugin, "<a href=\"guide/intro.md\">x</a>"u8);
         await Assert.That(Encoding.UTF8.GetString(output)).Contains("guide/intro");
@@ -37,7 +37,7 @@ public class MarkdownLinkRewriterPluginTests
     public async Task NoOpWhenNoMdHref()
     {
         var html = "<p>plain</p>"u8;
-        var plugin = new MarkdownLinkRewriterPlugin();
+        MarkdownLinkRewriterPlugin plugin = new();
 
         await Assert.That(plugin.NeedsRewrite(html)).IsFalse();
     }
@@ -47,8 +47,8 @@ public class MarkdownLinkRewriterPluginTests
     [Test]
     public async Task ExplicitDirectoryUrlsOverridesConfig()
     {
-        var plugin = new MarkdownLinkRewriterPlugin(useDirectoryUrls: true);
-        var configCtx = new BuildConfigureContext("/in", "/out", [], new()) { UseDirectoryUrls = false };
+        MarkdownLinkRewriterPlugin plugin = new(useDirectoryUrls: true);
+        BuildConfigureContext configCtx = new("/in", "/out", [], new()) { UseDirectoryUrls = false };
         await plugin.ConfigureAsync(configCtx, CancellationToken.None);
 
         var output = RunPostRender(plugin, "<a href=\"intro.md\">x</a>"u8);
@@ -92,8 +92,8 @@ public class MarkdownLinkRewriterPluginTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(MarkdownLinkRewriterPlugin plugin, ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        ArrayBufferWriter<byte> output = new(64);
+        PagePostRenderContext ctx = new("p.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];
     }

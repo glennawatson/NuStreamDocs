@@ -17,5 +17,5 @@ public enum PageFlags
     Draft = 1 << 0,
 
     /// <summary>Page declares <c>not_in_nav: true</c> (or <c>nav_exclude</c>); built but excluded from the nav tree.</summary>
-    NotInNav = 1 << 1,
+    NotInNav = 1 << 1
 }

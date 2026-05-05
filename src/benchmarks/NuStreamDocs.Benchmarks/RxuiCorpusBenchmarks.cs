@@ -132,7 +132,7 @@ public class RxuiCorpusBenchmarks
     [Benchmark]
     public int FullStack()
     {
-        var registry = new AutorefsRegistry(RxuiHeadingHint);
+        AutorefsRegistry registry = new(RxuiHeadingHint);
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
@@ -166,7 +166,7 @@ public class RxuiCorpusBenchmarks
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
-            .UseMacros(opts => opts.WithVariable("project", "ReactiveUI"))
+            .UseMacros(static opts => opts.WithVariable("project", "ReactiveUI"))
             .BuildAsync()
             .GetAwaiter()
             .GetResult();
@@ -188,7 +188,7 @@ public class RxuiCorpusBenchmarks
     [Benchmark]
     public int WithMdiIcons()
     {
-        var resolver = new MdiIconResolver();
+        MdiIconResolver resolver = new();
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
@@ -203,7 +203,7 @@ public class RxuiCorpusBenchmarks
     [Benchmark]
     public int WithSphinxInventory()
     {
-        var registry = new AutorefsRegistry(RxuiHeadingHint);
+        AutorefsRegistry registry = new(RxuiHeadingHint);
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
@@ -219,13 +219,13 @@ public class RxuiCorpusBenchmarks
     [Benchmark]
     public int EverythingStack()
     {
-        var registry = new AutorefsRegistry(RxuiHeadingHint);
-        var iconResolver = new MdiIconResolver();
+        AutorefsRegistry registry = new(RxuiHeadingHint);
+        MdiIconResolver iconResolver = new();
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseSnippets()
-            .UseMacros(opts => opts.WithVariable("project", "ReactiveUI"))
+            .UseMacros(static opts => opts.WithVariable("project", "ReactiveUI"))
             .UseBibliography(BibliographyOptions.Default)
             .UseCommonMarkdownExtensions()
             .UseHighlight()

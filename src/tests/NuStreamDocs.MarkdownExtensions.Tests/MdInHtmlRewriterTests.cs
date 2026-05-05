@@ -93,7 +93,7 @@ public class MdInHtmlRewriterTests
     [Test]
     public async Task BareMarkdownAttributeIsDetectedByProbe()
     {
-        var source = Encoding.UTF8.GetBytes("<div class=\"grid cards\" markdown>");
+        byte[] source = [.. "<div class=\"grid cards\" markdown>"u8];
         await Assert.That(Markdown.Common.MarkdownMarkerProbes.HasMdInHtmlAttribute(source)).IsTrue();
     }
 
@@ -102,7 +102,7 @@ public class MdInHtmlRewriterTests
     [Test]
     public async Task LookalikeAttributeNamesAreRejected()
     {
-        var source = Encoding.UTF8.GetBytes("<div data-markdown-id=\"x\">y</div>");
+        byte[] source = [.. "<div data-markdown-id=\"x\">y</div>"u8];
         await Assert.That(Markdown.Common.MarkdownMarkerProbes.HasMdInHtmlAttribute(source)).IsFalse();
     }
 
@@ -243,7 +243,7 @@ public class MdInHtmlRewriterTests
     private static string Rewrite(string input)
     {
         var bytes = Encoding.UTF8.GetBytes(input);
-        var sink = new ArrayBufferWriter<byte>(Math.Max(bytes.Length, 1));
+        ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
         MdInHtmlRewriter.Rewrite(bytes, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

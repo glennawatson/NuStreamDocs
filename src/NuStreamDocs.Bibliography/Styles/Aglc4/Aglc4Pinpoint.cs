@@ -39,6 +39,6 @@ internal static class Aglc4Pinpoint
         LocatorKind.Section => "s "u8,
         LocatorKind.Schedule => "sch "u8,
         LocatorKind.Article => "art "u8,
-        _ => default,
+        _ => default
     };
 }

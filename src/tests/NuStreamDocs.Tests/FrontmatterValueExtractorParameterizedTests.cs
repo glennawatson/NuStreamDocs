@@ -81,7 +81,7 @@ public class FrontmatterValueExtractorParameterizedTests
             keyBytes[i] = Encoding.UTF8.GetBytes(keys[i]);
         }
 
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         FrontmatterValueExtractor.AppendKeysTo(bytes, keyBytes, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

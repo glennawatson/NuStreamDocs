@@ -94,7 +94,7 @@ internal static class SmartSymbolsRewriter
             (byte)'-' or (byte)'<' => TryDashOrLt(source, offset, writer, out consumed),
             (byte)'c' => TryCareOf(source, offset, writer, out consumed),
             (byte)'1' => TryNumericFraction(source, offset, writer, out consumed),
-            _ => false,
+            _ => false
         };
     }
 
@@ -105,7 +105,7 @@ internal static class SmartSymbolsRewriter
     {
         (byte)'C' => (byte)'c',
         (byte)'3' => (byte)'1',
-        _ => b,
+        _ => b
     };
 
     /// <summary>Dispatches the <c>+/-</c> and <c>=/=</c> / <c>==&gt;</c> tokens.</summary>
@@ -172,21 +172,16 @@ internal static class SmartSymbolsRewriter
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Cursor at the opening <c>(</c>.</param>
     /// <returns>The replacement bytes, or empty.</returns>
-    private static ReadOnlySpan<byte> TryParenLetter(ReadOnlySpan<byte> source, int offset)
-    {
-        if (offset + SuffixSecondByteOffset >= source.Length
-            || source[offset + SuffixSecondByteOffset] is not (byte)')')
-        {
-            return default;
-        }
-
-        return source[offset + 1] switch
-        {
-            (byte)'c' or (byte)'C' => Copyright,
-            (byte)'r' or (byte)'R' => Registered,
-            _ => default,
-        };
-    }
+    private static ReadOnlySpan<byte> TryParenLetter(ReadOnlySpan<byte> source, int offset) =>
+        offset + SuffixSecondByteOffset >= source.Length
+        || source[offset + SuffixSecondByteOffset] is not (byte)')'
+            ? default
+            : source[offset + 1] switch
+            {
+                (byte)'c' or (byte)'C' => Copyright,
+                (byte)'r' or (byte)'R' => Registered,
+                _ => default
+            };
 
     /// <summary>Returns true when the bytes at <paramref name="offset"/> spell <c>(tm)</c> case-insensitively.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -237,7 +232,7 @@ internal static class SmartSymbolsRewriter
         {
             ((byte)'/', (byte)'=') => NotEqual,
             ((byte)'=', (byte)'>') => DoubleArrowRight,
-            _ => default,
+            _ => default
         };
 
         if (glyph.IsEmpty)
@@ -292,7 +287,7 @@ internal static class SmartSymbolsRewriter
         }
 
         var bidirectional = offset + SuffixThirdByteOffset < source.Length
-            && source[offset + SuffixThirdByteOffset] is (byte)'>';
+                            && source[offset + SuffixThirdByteOffset] is (byte)'>';
 
         writer.Write(ArrowForLt(stroke, bidirectional));
         consumed = bidirectional ? QuadTokenLength : TripleTokenLength;
@@ -309,7 +304,7 @@ internal static class SmartSymbolsRewriter
             ((byte)'-', true) => ArrowBoth,
             ((byte)'-', false) => ArrowLeft,
             ((byte)'=', true) => DoubleArrowBoth,
-            _ => DoubleArrowLeft,
+            _ => DoubleArrowLeft
         };
 
     /// <summary><c>c/o</c> → <c>℅</c>; word-boundary on both sides.</summary>
@@ -344,7 +339,7 @@ internal static class SmartSymbolsRewriter
         {
             _ when AsciiWordBoundary.TryMatchBounded(source, offset, "1/2"u8) => OneHalf,
             _ when AsciiWordBoundary.TryMatchBounded(source, offset, "1/4"u8) => OneQuarter,
-            _ => default,
+            _ => default
         };
 
         if (glyph.IsEmpty)

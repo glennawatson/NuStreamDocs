@@ -48,7 +48,7 @@ public class DocBuilderFluentTests
     [Test]
     public async Task WithLoggerChains()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.WithLogger(NullLogger.Instance)).IsSameReferenceAs(builder);
     }
 
@@ -75,7 +75,7 @@ public class DocBuilderFluentTests
     [Test]
     public async Task WithInputOutputChain()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.WithInput("/in")).IsSameReferenceAs(builder);
         await Assert.That(builder.WithOutput("/out")).IsSameReferenceAs(builder);
     }
@@ -146,7 +146,7 @@ public class DocBuilderFluentTests
     [Test]
     public async Task GetOrAddPluginIdempotent()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var first = builder.GetOrAddPlugin<RecordingPlugin>();
         var second = builder.GetOrAddPlugin<RecordingPlugin>();
         await Assert.That(first).IsSameReferenceAs(second);

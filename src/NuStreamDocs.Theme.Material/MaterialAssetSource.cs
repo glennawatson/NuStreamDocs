@@ -32,5 +32,5 @@ public enum MaterialAssetSource
     /// many sites — at the cost of a runtime dependency on a third
     /// party.
     /// </remarks>
-    Cdn,
+    Cdn
 }

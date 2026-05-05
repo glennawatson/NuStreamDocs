@@ -50,9 +50,9 @@ public class MdiIconLookupTests
     public async Task ResolverWrapsPathDataInSvgEnvelope()
     {
         var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
-        var resolver = new MdiIconResolver(lookup);
+        MdiIconResolver resolver = new(lookup);
 
-        var sink = new ArrayBufferWriter<byte>(128);
+        ArrayBufferWriter<byte> sink = new(128);
         var found = resolver.TryResolve("rocket-launch"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
@@ -67,9 +67,9 @@ public class MdiIconLookupTests
     public async Task ResolverWritesNothingOnMiss()
     {
         var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
-        var resolver = new MdiIconResolver(lookup);
+        MdiIconResolver resolver = new(lookup);
 
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         var found = resolver.TryResolve("missing"u8, sink);
 
         await Assert.That(found).IsFalse();
@@ -82,8 +82,8 @@ public class MdiIconLookupTests
     public async Task RewriterInlinesResolvedSvg()
     {
         var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
-        var resolver = new MdiIconResolver(lookup);
-        var sink = new ArrayBufferWriter<byte>(128);
+        MdiIconResolver resolver = new(lookup);
+        ArrayBufferWriter<byte> sink = new(128);
 
         IconShortcodeRewriter.Rewrite(
             "Click :material-rocket-launch: now"u8,
@@ -102,8 +102,8 @@ public class MdiIconLookupTests
     public async Task UnresolvedFallsBackToFontLigature()
     {
         var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
-        var resolver = new MdiIconResolver(lookup);
-        var sink = new ArrayBufferWriter<byte>(128);
+        MdiIconResolver resolver = new(lookup);
+        ArrayBufferWriter<byte> sink = new(128);
 
         IconShortcodeRewriter.Rewrite(
             "Use :material-not-in-bundle: here"u8,

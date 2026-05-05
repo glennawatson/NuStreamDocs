@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Plugins;
-
 namespace NuStreamDocs.Blog.Tests;
 
 /// <summary>Lifecycle method coverage for <c>WyamBlogPlugin</c>.</summary>
@@ -14,10 +12,10 @@ public class WyamBlogPluginLifecycleTests
     [Test]
     public async Task DiscoverAsync()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         Directory.CreateDirectory(Path.Combine(temp.Root, "posts"));
-        var plugin = new WyamBlogPlugin(new("posts", [.. "Blog"u8]));
-        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
+        WyamBlogPlugin plugin = new(new("posts", [.. "Blog"u8]));
+        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
     }
 
     /// <summary>Disposable scratch directory.</summary>

@@ -12,7 +12,7 @@ public class PagefindIndexWriterTests
     [Test]
     public async Task EmptyCorpusWritesManifestOnly()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         PagefindIndexWriter.Write(dir.Root, []);
         var manifest = await File.ReadAllTextAsync(Path.Combine(dir.Root, "pagefind-entry.json"));
         await Assert.That(manifest).Contains("\"version\":\"1.4.0\"");
@@ -24,7 +24,7 @@ public class PagefindIndexWriterTests
     [Test]
     public async Task SafeCharsKeptInSlug()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         PagefindIndexWriter.Write(
             dir.Root,
             [new([.. "abc_123"u8], [.. "T"u8], [.. "B"u8])]);
@@ -36,7 +36,7 @@ public class PagefindIndexWriterTests
     [Test]
     public async Task UnsafeCharsBecomeHyphen()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         PagefindIndexWriter.Write(
             dir.Root,
             [new([.. "a/b.html"u8], [.. "T"u8], [.. "B"u8])]);
@@ -48,7 +48,7 @@ public class PagefindIndexWriterTests
     [Test]
     public async Task EmptyUrlFallsBackToOrdinal()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         PagefindIndexWriter.Write(
             dir.Root,
             [new([], [.. "T"u8], [.. "B"u8])]);
@@ -60,7 +60,7 @@ public class PagefindIndexWriterTests
     [Test]
     public async Task PerRecordPayloadShape()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         PagefindIndexWriter.Write(
             dir.Root,
             [new([.. "page"u8], [.. "Hi"u8], [.. "Body"u8])]);

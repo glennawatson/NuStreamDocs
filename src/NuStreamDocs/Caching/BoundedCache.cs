@@ -121,7 +121,7 @@ public sealed class BoundedCache<TKey, TValue>
                 return;
             }
 
-            var node = new LinkedListNode<Entry>(new(key, value, now));
+            LinkedListNode<Entry> node = new(new(key, value, now));
             _order.AddFirst(node);
             _index[key] = node;
 

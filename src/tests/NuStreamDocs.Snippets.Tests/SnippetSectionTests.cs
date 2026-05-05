@@ -16,7 +16,7 @@ public class SnippetSectionTests
     [Test]
     public async Task SectionIncludeSplicesOnlySection()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("doc.md", "Header\n<!-- @section example -->\nA\nB\n<!-- @endsection -->\nFooter\n");
         var result = fixture.Rewrite("Before.\n--8<-- \"doc.md#example\"\nAfter.");
         await Assert.That(result).IsEqualTo("Before.\nA\nB\nAfter.");
@@ -27,7 +27,7 @@ public class SnippetSectionTests
     [Test]
     public async Task UnknownSectionProducesErrorBlock()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("doc.md", "no markers here\n");
         var result = fixture.Rewrite("--8<-- \"doc.md#missing\"\n");
         await Assert.That(result).Contains("snippet section not found");
@@ -38,7 +38,7 @@ public class SnippetSectionTests
     [Test]
     public async Task FullFileSectionMatches()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("doc.md", "<!-- @section all -->\nbody\n<!-- @endsection -->\n");
         var result = fixture.Rewrite("--8<-- \"doc.md#all\"\n");
         await Assert.That(result).IsEqualTo("body\n");
@@ -49,7 +49,7 @@ public class SnippetSectionTests
     [Test]
     public async Task SectionNameIsCaseSensitive()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("doc.md", "<!-- @section Example -->\nbody\n<!-- @endsection -->\n");
         var result = fixture.Rewrite("--8<-- \"doc.md#example\"\n");
         await Assert.That(result).Contains("snippet section not found");
@@ -60,7 +60,7 @@ public class SnippetSectionTests
     [Test]
     public async Task TwoSectionsResolveIndependently()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write(
             "doc.md",
             "<!-- @section first -->\nA\n<!-- @endsection -->\n<!-- @section second -->\nB\n<!-- @endsection -->\n");
@@ -73,7 +73,7 @@ public class SnippetSectionTests
     [Test]
     public async Task SectionBodyExpandsNestedIncludes()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("inner.md", "INNER\n");
         fixture.Write(
             "outer.md",
@@ -106,8 +106,8 @@ public class SnippetSectionTests
         /// <returns>Decoded UTF-8 result.</returns>
         public string Rewrite(string source)
         {
-            var sink = new ArrayBufferWriter<byte>(256);
-            var cache = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance);
+            ArrayBufferWriter<byte> sink = new(256);
+            Dictionary<byte[], byte[]> cache = new(ByteArrayComparer.Instance);
             SnippetsRewriter.Rewrite(Encoding.UTF8.GetBytes(source), _root, cache, sink);
             return Encoding.UTF8.GetString(sink.WrittenSpan);
         }

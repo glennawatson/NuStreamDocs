@@ -14,7 +14,7 @@ public class ExtraAssetsPluginCoverageTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new ExtraAssetsPlugin();
+        ExtraAssetsPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("extra-assets"u8)).IsTrue();
     }
 }

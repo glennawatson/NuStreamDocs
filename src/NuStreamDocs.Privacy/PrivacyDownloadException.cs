@@ -50,6 +50,6 @@ public sealed class PrivacyDownloadException : Exception
         {
             0 => "Privacy plugin: no failed downloads.",
             1 => $"Privacy plugin: 1 external asset failed to download: {failedUrls[0]}",
-            _ => $"Privacy plugin: {failedUrls.Length} external assets failed to download (first: {failedUrls[0]})",
+            _ => $"Privacy plugin: {failedUrls.Length} external assets failed to download (first: {failedUrls[0]})"
         };
 }

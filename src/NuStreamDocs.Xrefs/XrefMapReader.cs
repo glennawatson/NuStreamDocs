@@ -27,10 +27,10 @@ internal static class XrefMapReader
     /// <returns>Parsed result.</returns>
     public static XrefMapPayload Read(ReadOnlySpan<byte> bytes)
     {
-        var entries = new List<(byte[] Uid, byte[] Href)>(64);
+        List<(byte[] Uid, byte[] Href)> entries = new(64);
         byte[] baseUrl = [];
 
-        var reader = new Utf8JsonReader(bytes, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(bytes, isFinalBlock: true, state: default);
         if (!reader.Read() || reader.TokenType is not JsonTokenType.StartObject)
         {
             return new(baseUrl, []);

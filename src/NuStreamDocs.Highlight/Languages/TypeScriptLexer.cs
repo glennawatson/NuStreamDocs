@@ -19,95 +19,95 @@ public static class TypeScriptLexer
 {
     /// <summary>Declaration-keyword set.</summary>
     private static readonly ByteKeywordSet DeclarationKeywords = ByteKeywordSet.Create(
-        "var",
-        "let",
-        "const",
-        "function",
-        "class",
-        "interface",
-        "enum",
-        "type",
-        "namespace",
-        "module",
-        "export",
-        "import",
-        "from",
-        "as",
-        "declare",
-        "abstract",
-        "public",
-        "private",
-        "protected",
-        "static",
-        "async");
+        [.. "var"u8],
+        [.. "let"u8],
+        [.. "const"u8],
+        [.. "function"u8],
+        [.. "class"u8],
+        [.. "interface"u8],
+        [.. "enum"u8],
+        [.. "type"u8],
+        [.. "namespace"u8],
+        [.. "module"u8],
+        [.. "export"u8],
+        [.. "import"u8],
+        [.. "from"u8],
+        [.. "as"u8],
+        [.. "declare"u8],
+        [.. "abstract"u8],
+        [.. "public"u8],
+        [.. "private"u8],
+        [.. "protected"u8],
+        [.. "static"u8],
+        [.. "async"u8]);
 
     /// <summary>General-keyword set.</summary>
     private static readonly ByteKeywordSet GeneralKeywords = ByteKeywordSet.Create(
-        "if",
-        "else",
-        "for",
-        "while",
-        "do",
-        "return",
-        "switch",
-        "case",
-        "default",
-        "break",
-        "continue",
-        "throw",
-        "try",
-        "catch",
-        "finally",
-        "new",
-        "delete",
-        "in",
-        "of",
-        "instanceof",
-        "typeof",
-        "void",
-        "yield",
-        "await",
-        "this",
-        "super",
-        "extends",
-        "implements");
+        [.. "if"u8],
+        [.. "else"u8],
+        [.. "for"u8],
+        [.. "while"u8],
+        [.. "do"u8],
+        [.. "return"u8],
+        [.. "switch"u8],
+        [.. "case"u8],
+        [.. "default"u8],
+        [.. "break"u8],
+        [.. "continue"u8],
+        [.. "throw"u8],
+        [.. "try"u8],
+        [.. "catch"u8],
+        [.. "finally"u8],
+        [.. "new"u8],
+        [.. "delete"u8],
+        [.. "in"u8],
+        [.. "of"u8],
+        [.. "instanceof"u8],
+        [.. "typeof"u8],
+        [.. "void"u8],
+        [.. "yield"u8],
+        [.. "await"u8],
+        [.. "this"u8],
+        [.. "super"u8],
+        [.. "extends"u8],
+        [.. "implements"u8]);
 
     /// <summary>Built-in TS type-keyword set.</summary>
     private static readonly ByteKeywordSet TypeKeywords = ByteKeywordSet.Create(
-        "any",
-        "boolean",
-        "number",
-        "string",
-        "void",
-        "never",
-        "unknown",
-        "object",
-        "symbol",
-        "bigint",
-        "readonly",
-        "keyof");
+        [.. "any"u8],
+        [.. "boolean"u8],
+        [.. "number"u8],
+        [.. "string"u8],
+        [.. "void"u8],
+        [.. "never"u8],
+        [.. "unknown"u8],
+        [.. "object"u8],
+        [.. "symbol"u8],
+        [.. "bigint"u8],
+        [.. "readonly"u8],
+        [.. "keyof"u8]);
 
     /// <summary>Boolean / null / undefined / NaN / Infinity literal set.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        "true",
-        "false",
-        "null",
-        "undefined",
-        "NaN",
-        "Infinity");
+        [.. "true"u8],
+        [.. "false"u8],
+        [.. "null"u8],
+        [.. "undefined"u8],
+        [.. "NaN"u8],
+        [.. "Infinity"u8]);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
     private static readonly byte[][] Operators =
     [
-        "??="u8.ToArray(), "?."u8.ToArray(), "..."u8.ToArray(), "<<="u8.ToArray(), ">>>="u8.ToArray(), ">>="u8.ToArray(),
-        "==="u8.ToArray(), "!=="u8.ToArray(), "&&="u8.ToArray(), "||="u8.ToArray(),
-        "**="u8.ToArray(), "<="u8.ToArray(), ">="u8.ToArray(), "=="u8.ToArray(), "!="u8.ToArray(),
-        "&&"u8.ToArray(), "||"u8.ToArray(), "++"u8.ToArray(), "--"u8.ToArray(), "<<"u8.ToArray(), ">>>"u8.ToArray(), ">>"u8.ToArray(),
-        "+="u8.ToArray(), "-="u8.ToArray(), "*="u8.ToArray(), "/="u8.ToArray(), "%="u8.ToArray(), "&="u8.ToArray(), "|="u8.ToArray(), "^="u8.ToArray(),
-        "**"u8.ToArray(), "??"u8.ToArray(), "=>"u8.ToArray(),
-        "<"u8.ToArray(), ">"u8.ToArray(), "+"u8.ToArray(), "-"u8.ToArray(), "*"u8.ToArray(), "/"u8.ToArray(),
-        "%"u8.ToArray(), "&"u8.ToArray(), "|"u8.ToArray(), "^"u8.ToArray(), "!"u8.ToArray(), "~"u8.ToArray(),
-        "="u8.ToArray(), "?"u8.ToArray(),
+        [.. "??="u8], [.. "?."u8], [.. "..."u8], [.. "<<="u8], [.. ">>>="u8], [.. ">>="u8],
+        [.. "==="u8], [.. "!=="u8], [.. "&&="u8], [.. "||="u8],
+        [.. "**="u8], [.. "<="u8], [.. ">="u8], [.. "=="u8], [.. "!="u8],
+        [.. "&&"u8], [.. "||"u8], [.. "++"u8], [.. "--"u8], [.. "<<"u8], [.. ">>>"u8], [.. ">>"u8],
+        [.. "+="u8], [.. "-="u8], [.. "*="u8], [.. "/="u8], [.. "%="u8], [.. "&="u8], [.. "|="u8], [.. "^="u8],
+        [.. "**"u8], [.. "??"u8], [.. "=>"u8],
+        [.. "<"u8], [.. ">"u8], [.. "+"u8], [.. "-"u8], [.. "*"u8], [.. "/"u8],
+        [.. "%"u8], [.. "&"u8], [.. "|"u8], [.. "^"u8], [.. "!"u8], [.. "~"u8],
+        [.. "="u8], [.. "?"u8]
     ];
 
     /// <summary>Identifier-continuation set: letters, digits, underscore, dollar.</summary>
@@ -147,9 +147,8 @@ public static class TypeScriptLexer
 
     /// <summary>Builds the rule list. Exposed internal so <see cref="JavaScriptLexer"/> can reuse the patterns.</summary>
     /// <returns>Ordered rule list.</returns>
-    internal static LexerRule[] BuildRules()
-    {
-        return LanguageRuleBuilder.BuildCStyleRules(
+    internal static LexerRule[] BuildRules() =>
+        LanguageRuleBuilder.BuildCStyleRules(
             new(
 
                 // [ \t\r\n]+ whitespace runs.
@@ -223,7 +222,6 @@ public static class TypeScriptLexer
                     static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.CCurlyPunctuationFirst),
                     TokenClass.Punctuation,
                     LexerRule.NoStateChange) { FirstBytes = LanguageCommon.CCurlyPunctuationFirst }));
-    }
 
     /// <summary>Builds the lexer.</summary>
     /// <returns>Configured lexer.</returns>

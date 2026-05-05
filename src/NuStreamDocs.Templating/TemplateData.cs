@@ -51,10 +51,10 @@ public sealed class TemplateData
     public TemplateData(Dictionary<byte[], ReadOnlyMemory<byte>>? scalars, Dictionary<byte[], TemplateData[]>? sections)
     {
         var scalarMap = scalars is { Count: > 0 }
-            ? new Dictionary<byte[], ReadOnlyMemory<byte>>(scalars, ByteArrayComparer.Instance)
+            ? new(scalars, ByteArrayComparer.Instance)
             : EmptyScalars;
         var sectionMap = sections is { Count: > 0 }
-            ? new Dictionary<byte[], TemplateData[]>(sections, ByteArrayComparer.Instance)
+            ? new(sections, ByteArrayComparer.Instance)
             : EmptySectionMap;
         _scalarLookup = scalarMap.AsUtf8Lookup();
         _sectionLookup = sectionMap.AsUtf8Lookup();
@@ -88,13 +88,7 @@ public sealed class TemplateData
     /// <summary>True when <paramref name="key"/> resolves to a non-empty section or a non-empty scalar.</summary>
     /// <param name="key">UTF-8 key bytes.</param>
     /// <returns>Truthiness for Mustache section semantics.</returns>
-    public bool IsTruthy(ReadOnlySpan<byte> key)
-    {
-        if (_sectionLookup.TryGetValue(key, out var items) && items.Length > 0)
-        {
-            return true;
-        }
-
-        return _scalarLookup.TryGetValue(key, out var bytes) && bytes.Length > 0;
-    }
+    public bool IsTruthy(ReadOnlySpan<byte> key) =>
+        (_sectionLookup.TryGetValue(key, out var items) && items.Length > 0)
+        || (_scalarLookup.TryGetValue(key, out var bytes) && bytes.Length > 0);
 }

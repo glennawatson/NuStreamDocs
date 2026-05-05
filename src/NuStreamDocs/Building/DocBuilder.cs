@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
+using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Building;
@@ -277,7 +278,7 @@ public sealed class DocBuilder
             }
         }
 
-        var fresh = new TPlugin();
+        TPlugin fresh = new();
         _plugins.Add(fresh);
         return fresh;
     }
@@ -416,8 +417,8 @@ public sealed class DocBuilder
             return Task.CompletedTask;
         }
 
-        var pluginTiming = new NuStreamDocs.Logging.PluginTimingTable();
-        var scratch = new List<PageBuilderRental>();
+        PluginTimingTable pluginTiming = new();
+        List<PageBuilderRental> scratch = [];
         var input = PageBuilderPool.Rent(html.WrittenCount);
         try
         {
@@ -464,16 +465,18 @@ public sealed class DocBuilder
         ReadOnlySpan<byte> source,
         IPagePostRenderPlugin[] plugins,
         FilePath relativePath,
-        NuStreamDocs.Logging.PluginTimingTable pluginTiming)
+        PluginTimingTable pluginTiming)
     {
         var anyRewrites = false;
         for (var i = 0; i < plugins.Length; i++)
         {
-            if (plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
+            if (!plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
             {
-                anyRewrites = true;
-                break;
+                continue;
             }
+
+            anyRewrites = true;
+            break;
         }
 
         if (!anyRewrites)
@@ -492,7 +495,7 @@ public sealed class DocBuilder
             }
 
             back.Writer.ResetWrittenCount();
-            var ctx = new PagePostRenderContext(relativePath, source, front.Writer.WrittenSpan, back.Writer);
+            PagePostRenderContext ctx = new(relativePath, source, front.Writer.WrittenSpan, back.Writer);
             using (pluginTiming.Measure(plugin.Name))
             {
                 plugin.PostRender(in ctx);

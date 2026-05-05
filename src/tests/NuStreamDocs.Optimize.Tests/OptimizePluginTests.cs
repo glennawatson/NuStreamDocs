@@ -20,7 +20,7 @@ public class OptimizePluginTests
             var page = Path.Combine(dir, "page.html");
             await File.WriteAllTextAsync(page, new string('x', 8192));
 
-            var plugin = new OptimizePlugin(OptimizeOptions.Default);
+            OptimizePlugin plugin = new(OptimizeOptions.Default);
             await plugin.CompressTreeAsync(dir, CancellationToken.None);
 
             await Assert.That(File.Exists(page + ".gz")).IsTrue();
@@ -44,7 +44,7 @@ public class OptimizePluginTests
             var tiny = Path.Combine(dir, "tiny.html");
             await File.WriteAllTextAsync(tiny, "small");
 
-            var plugin = new OptimizePlugin(OptimizeOptions.Default);
+            OptimizePlugin plugin = new(OptimizeOptions.Default);
             await plugin.CompressTreeAsync(dir, CancellationToken.None);
 
             await Assert.That(File.Exists(tiny + ".gz")).IsFalse();
@@ -68,7 +68,7 @@ public class OptimizePluginTests
             await File.WriteAllTextAsync(page, new string('y', 4096));
             await File.WriteAllTextAsync(page + ".gz", "preexisting");
 
-            var plugin = new OptimizePlugin(OptimizeOptions.Default with { Formats = OptimizeFormats.Gzip, MinimumBytes = 1024 });
+            OptimizePlugin plugin = new(OptimizeOptions.Default with { Formats = OptimizeFormats.Gzip, MinimumBytes = 1024 });
             await plugin.CompressTreeAsync(dir, CancellationToken.None);
 
             // .gz sibling will be overwritten via .gz of the source — but we never iterate into the .gz itself.

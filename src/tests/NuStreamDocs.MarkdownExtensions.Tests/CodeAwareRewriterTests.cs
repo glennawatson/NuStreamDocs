@@ -36,7 +36,7 @@ public class CodeAwareRewriterTests
     [Test]
     public async Task EmptyInput()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         CodeAwareRewriter.Run([], sink, NoopProbe);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -46,8 +46,8 @@ public class CodeAwareRewriterTests
     [Test]
     public async Task PassthroughWhenProbeNeverMatches()
     {
-        var input = "hello world"u8.ToArray();
-        var sink = new ArrayBufferWriter<byte>();
+        byte[] input = [.. "hello world"u8];
+        ArrayBufferWriter<byte> sink = new();
         CodeAwareRewriter.Run(input, sink, NoopProbe);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello world");
     }
@@ -57,7 +57,7 @@ public class CodeAwareRewriterTests
     [Test]
     public async Task ProbeSubstitutes()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         CodeAwareRewriter.Run("[X]middle[X]"u8, sink, AngleBracketX);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("<x/>middle<x/>");
     }
@@ -67,7 +67,7 @@ public class CodeAwareRewriterTests
     [Test]
     public async Task InlineCodePassThrough()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         CodeAwareRewriter.Run("a `code [X] inside` b"u8, sink, AngleBracketX);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).IsEqualTo("a `code [X] inside` b");
@@ -78,7 +78,7 @@ public class CodeAwareRewriterTests
     [Test]
     public async Task FencedCodePassThrough()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         CodeAwareRewriter.Run("before\n```\n[X]\n```\nafter [X]"u8, sink, AngleBracketX);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).Contains("```\n[X]\n```");

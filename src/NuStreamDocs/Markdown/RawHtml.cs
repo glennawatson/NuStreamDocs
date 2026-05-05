@@ -88,7 +88,7 @@ internal static class RawHtml
         {
             Slash => FindCloseTagEnd(source, pos),
             Bang => FindCommentEnd(source, pos),
-            _ => FindOpenTagEnd(source, pos),
+            _ => FindOpenTagEnd(source, pos)
         };
 
         if (end < 0)
@@ -127,18 +127,18 @@ internal static class RawHtml
         // we still bail on newlines (which would mean the tag is malformed/multi-line).
         while (p < source.Length)
         {
-            var b = source[p];
-            if (b == Gt)
+            switch (source[p])
             {
-                return p + 1;
+                case Gt:
+                    return p + 1;
+                case (byte)'\n':
+                    return -1;
+                default:
+                    {
+                        p++;
+                        break;
+                    }
             }
-
-            if (b == (byte)'\n')
-            {
-                return -1;
-            }
-
-            p++;
         }
 
         return -1;
@@ -168,12 +168,7 @@ internal static class RawHtml
             p++;
         }
 
-        if (p < source.Length && source[p] == Gt)
-        {
-            return p + 1;
-        }
-
-        return -1;
+        return p < source.Length && source[p] == Gt ? p + 1 : -1;
     }
 
     /// <summary>Locates the end of an HTML comment starting at <paramref name="start"/>.</summary>

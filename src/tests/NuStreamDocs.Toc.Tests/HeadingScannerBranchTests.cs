@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
+
 namespace NuStreamDocs.Toc.Tests;
 
 /// <summary>Branch-coverage edge cases for HeadingScanner.</summary>
@@ -16,14 +18,14 @@ public class HeadingScannerBranchTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task HeadingWithoutClose() =>
-        await Assert.That(HeadingScanner.Scan("<h2>no close"u8.ToArray()).Length).IsEqualTo(0);
+        await Assert.That(HeadingScanner.Scan([.. "<h2>no close"u8]).Length).IsEqualTo(0);
 
     /// <summary>Single-quoted id attribute is captured.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SingleQuotedId()
     {
-        var html = "<h2 id='single'>x</h2>"u8.ToArray();
+        byte[] html = [.. "<h2 id='single'>x</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("single"u8)).IsTrue();
     }
@@ -33,7 +35,7 @@ public class HeadingScannerBranchTests
     [Test]
     public async Task UnclosedQuoteId()
     {
-        var html = "<h2 id=\"never\">body</h2>"u8.ToArray();
+        byte[] html = [.. "<h2 id=\"never\">body</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
         await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("never"u8)).IsTrue();
@@ -44,7 +46,7 @@ public class HeadingScannerBranchTests
     [Test]
     public async Task UnquotedId()
     {
-        var html = "<h2 id=plain class=x>body</h2>"u8.ToArray();
+        byte[] html = [.. "<h2 id=plain class=x>body</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
         await Assert.That(headings[0].ExistingIdBytes(html).SequenceEqual("plain"u8)).IsTrue();
@@ -55,10 +57,10 @@ public class HeadingScannerBranchTests
     [Test]
     public async Task DecodeUnclosedInnerTag()
     {
-        var html = "<h2>Hello <code unclosed</h2>"u8.ToArray();
+        byte[] html = [.. "<h2>Hello <code unclosed</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        var sink = new System.Buffers.ArrayBufferWriter<byte>(16);
+        ArrayBufferWriter<byte> sink = new(16);
         HeadingScanner.DecodeTextInto(html, in headings[0], sink);
         await Assert.That(sink.WrittenSpan.SequenceEqual("Hello "u8)).IsTrue();
     }
@@ -67,11 +69,11 @@ public class HeadingScannerBranchTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task LevelZeroRejected() =>
-        await Assert.That(HeadingScanner.Scan("<h0>x</h0>"u8.ToArray()).Length).IsEqualTo(0);
+        await Assert.That(HeadingScanner.Scan([.. "<h0>x</h0>"u8]).Length).IsEqualTo(0);
 
     /// <summary>A stray less-than that does not start a tag is skipped.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task StrayLessThan() =>
-        await Assert.That(HeadingScanner.Scan("<<><<<h2>ok</h2>"u8.ToArray()).Length).IsEqualTo(1);
+        await Assert.That(HeadingScanner.Scan([.. "<<><<<h2>ok</h2>"u8]).Length).IsEqualTo(1);
 }

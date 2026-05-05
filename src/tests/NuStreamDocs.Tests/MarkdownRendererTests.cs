@@ -17,7 +17,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task RendersAtxHeading()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("# Hello"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<h1>");
@@ -29,7 +29,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task EscapesParagraphContent()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("a < b & c"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("&lt;");
@@ -41,7 +41,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task StripsLeadingFrontmatter()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("---\ntitle: Home\nhide:\n  - navigation\n  - toc\n---\n\n# Hello"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<h1>");
@@ -55,7 +55,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task EmitsType6HtmlBlockVerbatim()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("<div class=\"admonition info\">\n<p>inner</p>\n</div>"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<div class=\"admonition info\">");
@@ -68,7 +68,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task EmitsTableHtmlBlockVerbatim()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("<table>\n<tr><td>cell</td></tr>\n</table>"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<table>");
@@ -81,7 +81,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task EmitsDetailsHtmlBlockVerbatim()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("<details>\n<summary>Click</summary>\nhidden\n</details>"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<details>");
@@ -94,7 +94,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task EmitsType1PreBlockUntilCloseTag()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("<pre>\nfirst\n\nsecond\n</pre>"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<pre>");
@@ -109,7 +109,7 @@ public class MarkdownRendererTests
     [Test]
     public async Task Type6BlockEndsAtBlankLine()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("<div>raw</div>\n\n# After"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<div>raw</div>");
@@ -122,10 +122,97 @@ public class MarkdownRendererTests
     [Test]
     public async Task BareAngleBracketDoesNotOpenHtmlBlock()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         MarkdownRenderer.Render("< not-a-tag"u8, writer);
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
         await Assert.That(html).Contains("<p>");
         await Assert.That(html).Contains("&lt;");
+    }
+
+    /// <summary>
+    /// Full reference-style links (<c>[text][label]</c> with a trailing <c>[label]: url</c> definition)
+    /// resolve to <c>&lt;a&gt;</c> elements and the definition line is stripped from the output.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ResolvesFullReferenceStyleLinks()
+    {
+        ArrayBufferWriter<byte> writer = new();
+        MarkdownRenderer.Render("See [the docs][docs] for details.\n\n[docs]: https://example.com/docs"u8, writer);
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("<a href=\"https://example.com/docs\">");
+        await Assert.That(html).Contains(">the docs</a>");
+        await Assert.That(html).DoesNotContain("[docs]:");
+    }
+
+    /// <summary>Collapsed reference-style links (<c>[label][]</c>) reuse the visible label as the lookup key.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ResolvesCollapsedReferenceStyleLinks()
+    {
+        ArrayBufferWriter<byte> writer = new();
+        MarkdownRenderer.Render("Try [search][] later.\n\n[search]: /search/"u8, writer);
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("<a href=\"/search/\">");
+        await Assert.That(html).Contains(">search</a>");
+    }
+
+    /// <summary>Shortcut reference-style links (<c>[label]</c> with no second bracket pair) resolve when the label maps to a definition.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ResolvesShortcutReferenceStyleLinks()
+    {
+        ArrayBufferWriter<byte> writer = new();
+        MarkdownRenderer.Render("Read the [intro] first.\n\n[intro]: /guide/intro/"u8, writer);
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("<a href=\"/guide/intro/\">");
+        await Assert.That(html).Contains(">intro</a>");
+    }
+
+    /// <summary>Reference-link labels match case-insensitively and treat internal whitespace runs as a single space.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ReferenceLabelsMatchCaseInsensitively()
+    {
+        ArrayBufferWriter<byte> writer = new();
+        MarkdownRenderer.Render("See [Docs][CORE doc].\n\n[core  doc]: index.md"u8, writer);
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("<a href=\"index.md\">");
+        await Assert.That(html).Contains(">Docs</a>");
+    }
+
+    /// <summary>4-space indented code blocks render as <c>&lt;pre&gt;&lt;code&gt;</c> with the indent stripped; the previous behaviour leaked them as paragraphs.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task IndentedCodeRendersAsPreCodeBlock()
+    {
+        ArrayBufferWriter<byte> writer = new();
+        MarkdownRenderer.Render("Header line.\n\n    Install-Package ReactiveUI.WPF\n\nTrailing prose."u8, writer);
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("<pre><code>Install-Package ReactiveUI.WPF\n</code></pre>");
+        await Assert.That(html).DoesNotContain("<p>    Install-Package");
+    }
+
+    /// <summary>Multi-line indented blocks coalesce into a single <c>&lt;pre&gt;&lt;code&gt;</c>, with internal blank lines preserved as empty body lines (CommonMark §4.4).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task IndentedCodePreservesInternalBlankLines()
+    {
+        ArrayBufferWriter<byte> writer = new();
+        MarkdownRenderer.Render(":\n\n    line one\n\n    line three\n\nafter."u8, writer);
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("<pre><code>line one\n\nline three\n</code></pre>");
+    }
+
+    /// <summary>Definition titles are accepted by the parser; the href still resolves cleanly even when a title is present (titles are dropped pending native <c>LinkSpan</c> support).</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ReferenceDefinitionsAcceptTitles()
+    {
+        ArrayBufferWriter<byte> writer = new();
+        MarkdownRenderer.Render("Visit [home][h].\n\n[h]: /home \"Home page\""u8, writer);
+        var html = Encoding.UTF8.GetString(writer.WrittenSpan);
+        await Assert.That(html).Contains("href=\"/home\"");
+        await Assert.That(html).Contains(">home</a>");
     }
 }

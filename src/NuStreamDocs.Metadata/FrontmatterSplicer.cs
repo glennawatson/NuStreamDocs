@@ -157,7 +157,7 @@ internal static class FrontmatterSplicer
     /// <returns>Top-level UTF-8 key bytes, ordinal-compared via <see cref="ByteArrayComparer.Instance"/>.</returns>
     private static HashSet<byte[]> CollectKeys(ReadOnlySpan<byte> frontmatter)
     {
-        var keys = new HashSet<byte[]>(ByteArrayComparer.Instance);
+        HashSet<byte[]> keys = new(ByteArrayComparer.Instance);
         var cursor = YamlByteScanner.LineEnd(frontmatter, 0);
         while (cursor < frontmatter.Length)
         {

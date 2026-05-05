@@ -14,8 +14,8 @@ public class StaticAssetComposerTests
     [Test]
     public async Task ProviderAssetsWrittenToOutputRoot()
     {
-        using var dir = new TempDir();
-        var plugin = new TestProvider(("a/b.css", "AAA"u8.ToArray()), ("c.txt", "CCC"u8.ToArray()));
+        using TempDir dir = new();
+        TestProvider plugin = new(("a/b.css", [.. "AAA"u8]), ("c.txt", [.. "CCC"u8]));
 
         StaticAssetComposer.WriteAll([plugin], dir.Root);
 
@@ -28,8 +28,8 @@ public class StaticAssetComposerTests
     [Test]
     public async Task NonProviderPluginIgnored()
     {
-        using var dir = new TempDir();
-        var nonProvider = new NonProvider();
+        using TempDir dir = new();
+        NonProvider nonProvider = new();
         StaticAssetComposer.WriteAll([nonProvider], dir.Root);
         await Assert.That(Directory.GetFiles(dir.Root)).IsEmpty();
     }
@@ -39,7 +39,7 @@ public class StaticAssetComposerTests
     [Test]
     public async Task EmptyPluginListNoOp()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         StaticAssetComposer.WriteAll([], dir.Root);
         await Assert.That(Directory.GetFiles(dir.Root)).IsEmpty();
     }

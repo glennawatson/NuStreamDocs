@@ -1,5 +1,25 @@
 # CLAUDE.md
 
+## ⛔ STOP — DO NOT RUN DESTRUCTIVE GIT COMMANDS WITHOUT EXPLICIT PERMISSION ⛔
+
+**`git checkout HEAD -- <path>`, `git checkout .`, `git restore`, `git reset --hard`, `git clean -fd`, `git stash drop`, `rm -rf` over a tracked path — every one of these silently destroys uncommitted working-tree changes that cannot be recovered through `git reflog`.**
+
+**This means: if a file has unstaged edits — even ones the harness or a script applied a moment ago — running these commands erases them. There is no undo.**
+
+The rule, in big bold letters because it has been broken before:
+
+> ## **NEVER run a destructive git command on a path with uncommitted changes. CHECK first with `git status` / `git diff`. If anything is unstaged on that path, STOP and ASK the user before reverting, resetting, or cleaning. ALWAYS prefer fixing the file in place via the Edit tool over reverting.**
+
+If you find a file in a broken state and your instinct is "let me just revert it" — that instinct is wrong when the changes are uncommitted. The correct moves, in order:
+
+1. `git status --short <path>` — confirm whether the change is staged, unstaged, or both.
+2. `git diff <path>` — see what's actually different.
+3. **If the diff contains anything you didn't put there yourself** — the user, a linter, or any tool may have made intentional changes. **Ask before reverting.** Even if those changes look broken to you, they may be partially correct or in the middle of a multi-step transform.
+4. **Fix the broken parts in place via Edit.** A surgical fix preserves the surrounding intentional changes; a checkout/restore destroys them.
+5. Only after the user explicitly authorizes a revert: do it, scope it as narrowly as possible, and quote the exact command back to the user before running.
+
+Same rule applies to `--no-verify`, `--force`, force-push, branch deletion, stash dropping, and any other action that throws away work. **Reversibility is the default; destruction needs explicit permission every single time.**
+
 ## Repository Orientation
 
 - **Primary working directory for build/test:** `./src`
@@ -103,6 +123,7 @@ This repository currently uses TUnit/MTP-focused project tests under `src/tests/
 - Public APIs require XML documentation (`<GenerateDocumentationFile>true</GenerateDocumentationFile>`); SA1600 / SA1611 / SA1615 catch missing element / parameter / return docs.
 - Logging is source-generated `[LoggerMessage]` partial methods on `ILogger` parameters — no `logger.LogInformation("...")` direct calls (CA1848). Expensive argument expressions go behind `LogInvokerHelper.Invoke(...)` to gate evaluation on `IsEnabled`.
 - Public concrete classes that have an interface counterpart (`MetadataExtractor`/`IMetadataExtractor`, `NuGetFetcher`/`INuGetFetcher`, `SourceLinkValidator`/`ISourceLinkValidator`) keep their private helpers + `[LoggerMessage]` partials `static`; only the public entry point is instance.
+- **Check the common libraries before adding a new byte / UTF-8 / path / collection helper.** Most byte-level operations already exist in `NuStreamDocs.Common` (`AsciiByteHelpers` — `IsAsciiWhitespace`, `TrimAsciiWhitespace`, `SkipWhitespace`, `ToAsciiLowerByte`/`Char`, `ToLowerCaseInvariant`, `IsAsciiIdentifierByte`, `IsWordBoundary`, `RunLength`, `StartsWithIgnoreAsciiCase`, `AsciiCaseBit`; `ByteArrayComparer`, `ByteArrayCollectionExtensions`, `EmptyCollections`, the `Utf8*` family, `XmlEntityEscaper`, `HtmlSnapshotRewriter`, `PageBuilderPool`, the path/URL structs) or `NuStreamDocs.Markdown.Common` (`AsciiWordBoundary`, `CodeAwareRewriter`, `HtmlEntityDecoder`, `MarkdownCodeScanner`, `MarkdownMarkerProbes`, `ShortcodeScanner`, `TryRewriteAt`). Before writing a new `private static IsAsciiWhitespace` / `TrimAscii` / `ToLower` / "skip whitespace" / "find next special byte" helper, **grep the common library for an existing one and call it.** If the helper exists but is `private`, promote it (with proper docs + a one-line justification in the commit). If it doesn't exist and the operation is genuinely reusable (string-byte, UTF-8, ASCII case-fold, path manipulation), **add it to the appropriate common library** rather than inlining a duplicate in the consuming module — then have the consumer call it. Only keep a private helper when it encodes domain-specific behaviour no other module would want (e.g. CommonMark-link-label collapsed-space normalisation, plugin-specific marker shapes).
 - **Path-typed public APIs use the strongly-named `NuStreamDocs.Common` wrappers, never `string`, `DirectoryInfo`/`FileInfo`, or `Nuke.Common.IO.AbsolutePath`.** Five `readonly record struct` types, each holding a single `string` field (same memory cost as a string, free `Equals`/`GetHashCode`, never touch the filesystem) with bidirectional implicit string conversion so call sites + BCL interop stay trivial:
   - **`DirectoryPath`** — absolute or rooted directory. Use `/` to join (`inputRoot / "guide"`).
   - **`FilePath`** — absolute or rooted file. `.Directory` / `.FileName` / `.Extension` / `.WithExtension(...)` for path manipulation.

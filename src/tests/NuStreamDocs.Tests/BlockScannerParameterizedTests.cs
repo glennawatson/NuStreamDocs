@@ -53,7 +53,7 @@ public class BlockScannerParameterizedTests
     [Arguments(6)]
     public async Task BacktickFenceLengths(int length)
     {
-        var fence = new string('`', length);
+        string fence = new('`', length);
         var blocks = Scan($"{fence}\nbody\n{fence}\n");
         var fences = 0;
         var content = 0;
@@ -88,7 +88,7 @@ public class BlockScannerParameterizedTests
     [Arguments(5)]
     public async Task TildeFenceLengths(int length)
     {
-        var fence = new string('~', length);
+        string fence = new('~', length);
         var blocks = Scan($"{fence}\nbody\n{fence}\n");
         var fences = 0;
         for (var i = 0; i < blocks.Length; i++)
@@ -123,7 +123,7 @@ public class BlockScannerParameterizedTests
     /// <returns>Block descriptors.</returns>
     private static BlockSpan[] Scan(string markdown)
     {
-        var sink = new ArrayBufferWriter<BlockSpan>();
+        ArrayBufferWriter<BlockSpan> sink = new();
         BlockScanner.Scan(Encoding.UTF8.GetBytes(markdown), sink);
         return [.. sink.WrittenSpan];
     }

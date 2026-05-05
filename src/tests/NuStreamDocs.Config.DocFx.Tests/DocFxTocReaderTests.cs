@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
-using NuStreamDocs.Config.DocFx;
 using NuStreamDocs.Nav;
 
 namespace NuStreamDocs.Config.DocFx.Tests;

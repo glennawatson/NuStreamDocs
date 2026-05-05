@@ -17,7 +17,7 @@ public class ZensicalConfigReaderTests
     public async Task ReadsMinimalConfig()
     {
         var toml = "site_name = \"Hi\"\nsite_url = \"https://example.test\"\n\n[theme]\nname = \"material\"\n"u8;
-        var reader = new ZensicalConfigReader();
+        ZensicalConfigReader reader = new();
 
         var config = reader.Read(toml);
 
@@ -31,7 +31,7 @@ public class ZensicalConfigReaderTests
     [Test]
     public async Task RecognizesTomlExtensions()
     {
-        var reader = new ZensicalConfigReader();
+        ZensicalConfigReader reader = new();
         await Assert.That(reader.RecognizesExtension(".toml")).IsTrue();
         await Assert.That(reader.RecognizesExtension(".yml")).IsFalse();
     }
@@ -48,7 +48,7 @@ public class ZensicalConfigReaderTests
         byte[] bytes = [.. "site_name = \"Async\"\n[theme]\nname = \"material\"\n"u8];
         IConfigReader reader = new ZensicalConfigReader();
 
-        await using var stream = new MemoryStream(bytes);
+        await using MemoryStream stream = new(bytes);
         var fromStream = await reader.ReadAsync(stream, CancellationToken.None);
         var fromSpan = reader.Read(bytes);
 

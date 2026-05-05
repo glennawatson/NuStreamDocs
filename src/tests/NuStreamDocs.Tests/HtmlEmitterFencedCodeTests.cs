@@ -69,9 +69,9 @@ public class HtmlEmitterFencedCodeTests
     private static string Render(string markdown)
     {
         var bytes = Encoding.UTF8.GetBytes(markdown);
-        var blockSink = new ArrayBufferWriter<BlockSpan>();
+        ArrayBufferWriter<BlockSpan> blockSink = new();
         BlockScanner.Scan(bytes, blockSink);
-        var htmlSink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> htmlSink = new();
         HtmlEmitter.Emit(bytes, blockSink.WrittenSpan, htmlSink);
         return Encoding.UTF8.GetString(htmlSink.WrittenSpan);
     }

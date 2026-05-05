@@ -151,7 +151,7 @@ internal static class TemplateCompiler
             (byte)'/' => EmitSectionClose(source, openIndex, buffer, ref count, openStack, ref openCount),
             (byte)'&' => EmitRawVariable(source, openIndex, buffer, ref count),
             (byte)'>' => EmitPartial(source, openIndex, buffer, ref count),
-            _ => EmitEscapedVariable(source, openIndex, buffer, ref count),
+            _ => EmitEscapedVariable(source, openIndex, buffer, ref count)
         };
     }
 
@@ -329,12 +329,7 @@ internal static class TemplateCompiler
         int openIndex)
     {
         var rel = source[from..].IndexOf(delimiter);
-        if (rel < 0)
-        {
-            throw new TemplateSyntaxException("Unterminated tag.", openIndex);
-        }
-
-        return from + rel;
+        return rel < 0 ? throw new TemplateSyntaxException("Unterminated tag.", openIndex) : from + rel;
     }
 
     /// <summary>Trims surrounding whitespace from <paramref name="source"/> between <paramref name="start"/> and <paramref name="end"/>.</summary>

@@ -15,7 +15,7 @@ public class DocBuilderPrivacyExtensionsCoverageTests
     [Test]
     public async Task UsePrivacyConfigureLogger()
     {
-        var b = new DocBuilder().UsePrivacy(o => o, NullLogger.Instance);
+        var b = new DocBuilder().UsePrivacy(static o => o, NullLogger.Instance);
         await Assert.That(b).IsNotNull();
     }
 }

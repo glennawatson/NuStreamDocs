@@ -26,7 +26,7 @@ public class ExternalAssetDownloaderHelperTests
     [Arguments(HttpStatusCode.BadRequest, false)]
     public async Task IsTransientStatusCodes(HttpStatusCode status, bool expected)
     {
-        using var response = new HttpResponseMessage(status);
+        using HttpResponseMessage response = new(status);
         var outcome = Outcome.FromResult(response);
         await Assert.That(DownloadHttpClassifier.IsTransient(outcome)).IsEqualTo(expected);
     }
@@ -63,9 +63,9 @@ public class ExternalAssetDownloaderHelperTests
     [Test]
     public async Task LooksLikeCssByContentType()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK);
+        using HttpResponseMessage response = new(HttpStatusCode.OK);
         response.Content = new StringContent("body{}", Encoding.UTF8, "text/css");
-        var uri = new Uri("https://x.test/no-extension");
+        Uri uri = new("https://x.test/no-extension");
         await Assert.That(DownloadHttpClassifier.LooksLikeCss(uri, response)).IsTrue();
     }
 
@@ -74,9 +74,9 @@ public class ExternalAssetDownloaderHelperTests
     [Test]
     public async Task LooksLikeCssByExtension()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK);
+        using HttpResponseMessage response = new(HttpStatusCode.OK);
         response.Content = new StringContent("body{}", Encoding.UTF8, "application/octet-stream");
-        var uri = new Uri("https://x.test/path/style.CSS");
+        Uri uri = new("https://x.test/path/style.CSS");
         await Assert.That(DownloadHttpClassifier.LooksLikeCss(uri, response)).IsTrue();
     }
 
@@ -85,9 +85,9 @@ public class ExternalAssetDownloaderHelperTests
     [Test]
     public async Task LooksLikeCssNeitherFalse()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK);
+        using HttpResponseMessage response = new(HttpStatusCode.OK);
         response.Content = new StringContent("hi", Encoding.UTF8, "text/plain");
-        var uri = new Uri("https://x.test/page.html");
+        Uri uri = new("https://x.test/page.html");
         await Assert.That(DownloadHttpClassifier.LooksLikeCss(uri, response)).IsFalse();
     }
 }

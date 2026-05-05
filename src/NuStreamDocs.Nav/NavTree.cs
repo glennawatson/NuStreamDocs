@@ -28,30 +28,6 @@ internal sealed class NavTree
         Nodes = nodes;
     }
 
-    /// <summary>Gets the empty nav tree — single section root with no children.</summary>
-    public static NavTree Empty { get; } = new(
-    [
-        new(
-            Title: [],
-            RelativePath: default,
-            IndexPath: default,
-            RelativeUrlBytes: [],
-            IndexUrlBytes: [],
-            ParentIndex: -1,
-            FirstChildIndex: -1,
-            ChildCount: 0,
-            IsSection: true),
-    ]);
-
     /// <summary>Gets the BFS-ordered nodes; index <c>0</c> is the root.</summary>
     public NavTreeNode[] Nodes { get; }
-
-    /// <summary>Gets the children of the node at <paramref name="index"/> as a span over <see cref="Nodes"/>.</summary>
-    /// <param name="index">Parent index.</param>
-    /// <returns>Span of contiguous children; empty for leaves.</returns>
-    public ReadOnlySpan<NavTreeNode> ChildrenOf(int index)
-    {
-        var node = Nodes[index];
-        return node.ChildCount is 0 ? [] : Nodes.AsSpan(node.FirstChildIndex, node.ChildCount);
-    }
 }

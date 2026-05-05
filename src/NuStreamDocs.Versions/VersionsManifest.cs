@@ -37,8 +37,8 @@ public static class VersionsManifest
     /// <returns>The parsed entries.</returns>
     public static VersionEntry[] ReadFromUtf8(ReadOnlySpan<byte> bytes)
     {
-        var entries = new List<VersionEntry>(8);
-        var reader = new Utf8JsonReader(bytes, isFinalBlock: true, state: default);
+        List<VersionEntry> entries = new(8);
+        Utf8JsonReader reader = new(bytes, isFinalBlock: true, state: default);
         if (!reader.Read() || reader.TokenType != JsonTokenType.StartArray)
         {
             return [];
@@ -61,7 +61,7 @@ public static class VersionsManifest
         ArgumentNullException.ThrowIfNull(entries);
         Directory.CreateDirectory(parentDir);
 
-        var sink = new ArrayBufferWriter<byte>(256);
+        ArrayBufferWriter<byte> sink = new(256);
         WriteToUtf8(entries, sink);
         File.WriteAllBytes(Path.Combine(parentDir, FileName), sink.WrittenSpan);
     }
@@ -73,7 +73,7 @@ public static class VersionsManifest
     {
         ArgumentNullException.ThrowIfNull(entries);
         ArgumentNullException.ThrowIfNull(sink);
-        using var writer = new Utf8JsonWriter(sink, new() { Indented = true });
+        using Utf8JsonWriter writer = new(sink, new() { Indented = true });
         writer.WriteStartArray();
         for (var i = 0; i < entries.Length; i++)
         {
@@ -93,7 +93,7 @@ public static class VersionsManifest
         ArgumentNullException.ThrowIfNull(existing);
         ArgumentException.ThrowIfNullOrWhiteSpace(entry.Version);
 
-        var merged = new List<VersionEntry>(existing.Length + 1);
+        List<VersionEntry> merged = new(existing.Length + 1);
         var replaced = false;
         for (var i = 0; i < existing.Length; i++)
         {

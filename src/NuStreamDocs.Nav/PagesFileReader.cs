@@ -23,22 +23,14 @@ internal static class PagesFileReader
     /// <summary>Reads a <c>.pages</c> file from <paramref name="path"/>; returns <see cref="PagesFile.Empty"/> when missing.</summary>
     /// <param name="path">Absolute path to the candidate <c>.pages</c> file.</param>
     /// <returns>Parsed override.</returns>
-    public static PagesFile ReadOrEmpty(string path)
-    {
-        if (!File.Exists(path))
-        {
-            return PagesFile.Empty;
-        }
-
-        return Parse(File.ReadAllBytes(path));
-    }
+    public static PagesFile ReadOrEmpty(string path) => !File.Exists(path) ? PagesFile.Empty : Parse(File.ReadAllBytes(path));
 
     /// <summary>Parses <paramref name="source"/> into a <see cref="PagesFile"/>.</summary>
     /// <param name="source">UTF-8 file bytes.</param>
     /// <returns>Parsed override; defaults preserved when keys are absent.</returns>
     public static PagesFile Parse(ReadOnlySpan<byte> source)
     {
-        var title = Array.Empty<byte>();
+        byte[] title = [];
         var hide = false;
         byte[][] nav = [];
 
@@ -78,7 +70,7 @@ internal static class PagesFileReader
     /// <returns>Entry bytes.</returns>
     private static byte[][] ReadBlockList(ReadOnlySpan<byte> source, int cursor)
     {
-        var entries = new List<byte[]>(8);
+        List<byte[]> entries = new(8);
         while (cursor < source.Length)
         {
             var lineEnd = YamlByteScanner.LineEnd(source, cursor);

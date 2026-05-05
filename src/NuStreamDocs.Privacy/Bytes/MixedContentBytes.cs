@@ -208,11 +208,6 @@ internal static class MixedContentBytes
             return true;
         }
 
-        if (host.StartsWith(Ipv4Loopback))
-        {
-            return true;
-        }
-
-        return host.SequenceEqual(Ipv6LoopbackBare) || host.SequenceEqual(Ipv6LoopbackBracketed);
+        return host.StartsWith(Ipv4Loopback) || host.SequenceEqual(Ipv6LoopbackBare) || host.SequenceEqual(Ipv6LoopbackBracketed);
     }
 }

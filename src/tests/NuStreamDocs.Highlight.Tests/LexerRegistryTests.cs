@@ -55,7 +55,7 @@ public class LexerRegistryTests
     [Test]
     public async Task LongAliasMissesCleanly()
     {
-        var oversized = new string('a', 256);
+        string oversized = new('a', 256);
         var ok = LexerRegistry.Default.TryGet(Encoding.UTF8.GetBytes(oversized), out _);
         await Assert.That(ok).IsFalse();
     }
@@ -115,14 +115,14 @@ public class LexerRegistryTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task CreateFromStringLexersNullThrows() =>
-        await Assert.That(() => LexerRegistry.CreateFromStringLexers(null!))
+        await Assert.That(static () => LexerRegistry.CreateFromStringLexers(null!))
             .Throws<ArgumentNullException>();
 
     /// <summary>Empty pair array throws <see cref="ArgumentOutOfRangeException"/> — the byte-keyed path expects at least one entry.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CreateFromStringLexersEmptyThrows() =>
-        await Assert.That(() => LexerRegistry.CreateFromStringLexers())
+        await Assert.That(static () => LexerRegistry.CreateFromStringLexers())
             .Throws<ArgumentOutOfRangeException>();
 
     /// <summary>The byte-keyed <see cref="LexerRegistry.Build(LexerNameValue[])"/> overload accepts pre-encoded entries.</summary>
@@ -130,10 +130,10 @@ public class LexerRegistryTests
     [Test]
     public async Task BuildAcceptsPreEncodedEntries()
     {
-        var entries = new[]
-        {
-            new LexerNameValue("vibescript"u8.ToArray(), PassThroughLexer.Instance),
-        };
+        LexerNameValue[] entries =
+        [
+            new([.. "vibescript"u8], PassThroughLexer.Instance)
+        ];
         var registry = LexerRegistry.Build(entries);
         await Assert.That(registry.TryGet("vibescript"u8, out var lexer)).IsTrue();
         await Assert.That(lexer).IsEqualTo((Lexer)PassThroughLexer.Instance);

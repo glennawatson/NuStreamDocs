@@ -50,6 +50,6 @@ internal static class LocatorLabel
         _ when AsciiByteHelpers.EqualsIgnoreAsciiCase(label, "art"u8) => LocatorKind.Article,
         _ when AsciiByteHelpers.EqualsIgnoreAsciiCase(label, "article"u8) => LocatorKind.Article,
         _ when AsciiByteHelpers.EqualsIgnoreAsciiCase(label, "articles"u8) => LocatorKind.Article,
-        _ => LocatorKind.Other,
+        _ => LocatorKind.Other
     };
 }

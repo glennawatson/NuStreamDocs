@@ -12,8 +12,8 @@ public class AutorefsRegistryTests
     [Test]
     public async Task RegisterWithFragmentYieldsSuffix()
     {
-        var registry = new AutorefsRegistry();
-        registry.Register("intro"u8, "guide/intro.html"u8.ToArray(), "intro"u8);
+        AutorefsRegistry registry = new();
+        registry.Register("intro"u8, [.. "guide/intro.html"u8], "intro"u8);
 
         await Assert.That(registry.TryResolve("intro"u8, out var url)).IsTrue();
         await Assert.That(url.AsSpan().SequenceEqual("guide/intro.html#intro"u8)).IsTrue();
@@ -24,8 +24,8 @@ public class AutorefsRegistryTests
     [Test]
     public async Task RegisterWithoutFragmentYieldsBareUrl()
     {
-        var registry = new AutorefsRegistry();
-        registry.Register("home"u8, "index.html"u8.ToArray(), default);
+        AutorefsRegistry registry = new();
+        registry.Register("home"u8, [.. "index.html"u8], default);
 
         await Assert.That(registry.TryResolve("home"u8, out var url)).IsTrue();
         await Assert.That(url.AsSpan().SequenceEqual("index.html"u8)).IsTrue();
@@ -36,7 +36,7 @@ public class AutorefsRegistryTests
     [Test]
     public async Task TryResolveReportsMiss()
     {
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         await Assert.That(registry.TryResolve("missing"u8, out _)).IsFalse();
     }
 
@@ -45,9 +45,9 @@ public class AutorefsRegistryTests
     [Test]
     public async Task LastWriteWins()
     {
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "a.html"u8.ToArray(), "Foo"u8);
-        registry.Register("Foo"u8, "b.html"u8.ToArray(), "Foo"u8);
+        AutorefsRegistry registry = new();
+        registry.Register("Foo"u8, [.. "a.html"u8], "Foo"u8);
+        registry.Register("Foo"u8, [.. "b.html"u8], "Foo"u8);
 
         await Assert.That(registry.TryResolve("Foo"u8, out var url)).IsTrue();
         await Assert.That(url.AsSpan().SequenceEqual("b.html#Foo"u8)).IsTrue();

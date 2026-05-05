@@ -44,7 +44,7 @@ public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPl
     {
         _ = cancellationToken;
         var plugins = context.Plugins;
-        var seed = new Dictionary<byte[], ICustomFenceHandler>(plugins.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], ICustomFenceHandler> seed = new(plugins.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < plugins.Length; i++)
         {
             if (plugins[i] is not ICustomFenceHandler handler)
@@ -66,15 +66,7 @@ public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPl
     }
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> html)
-    {
-        if (_handlers is null || _handlers.Count is 0)
-        {
-            return false;
-        }
-
-        return SuperFencesDispatcher.NeedsDispatch(html);
-    }
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => _handlers is not null && _handlers.Count is not 0 && SuperFencesDispatcher.NeedsDispatch(html);
 
     /// <inheritdoc/>
     public void PostRender(in PagePostRenderContext context)

@@ -48,7 +48,7 @@ public static class BlogPostScanner
             return [];
         }
 
-        var posts = new List<BlogPost>(64);
+        List<BlogPost> posts = new(64);
         foreach (var path in postsRoot.EnumerateFiles("*.md", SearchOption.TopDirectoryOnly))
         {
             var post = TryReadPost(path, docsRoot);
@@ -209,21 +209,16 @@ public static class BlogPostScanner
     /// <summary>Normalizes a source-relative path to forward slashes.</summary>
     /// <param name="relativePath">Path to normalize.</param>
     /// <returns>Forward-slashed path.</returns>
-    private static string NormalizeRelativePath(string relativePath)
-    {
-        if (!relativePath.AsSpan().Contains('\\'))
-        {
-            return relativePath;
-        }
-
-        return string.Create(relativePath.Length, relativePath, static (dst, state) =>
-        {
-            for (var i = 0; i < state.Length; i++)
+    private static string NormalizeRelativePath(string relativePath) =>
+        !relativePath.AsSpan().Contains('\\')
+            ? relativePath
+            : string.Create(relativePath.Length, relativePath, static (dst, state) =>
             {
-                dst[i] = state[i] is '\\' ? '/' : state[i];
-            }
-        });
-    }
+                for (var i = 0; i < state.Length; i++)
+                {
+                    dst[i] = state[i] is '\\' ? '/' : state[i];
+                }
+            });
 
     /// <summary>Returns true when <paramref name="line"/> starts an ATX heading.</summary>
     /// <param name="line">Candidate line.</param>
@@ -258,12 +253,7 @@ public static class BlogPostScanner
                 return 1;
             }
 
-            if (y is null)
-            {
-                return -1;
-            }
-
-            return y.Published.CompareTo(x.Published);
+            return y is null ? -1 : y.Published.CompareTo(x.Published);
         }
     }
 }

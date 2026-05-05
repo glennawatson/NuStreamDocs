@@ -146,7 +146,7 @@ internal static class Emphasis
     {
         MaxRunLength => StrongEmOpen,
         StrongRun => StrongOpen,
-        _ => EmOpen,
+        _ => EmOpen
     };
 
     /// <summary>Returns the close the UTF-8 tag bytes for <paramref name="openLength"/>.</summary>
@@ -156,7 +156,7 @@ internal static class Emphasis
     {
         MaxRunLength => StrongEmClose,
         StrongRun => StrongClose,
-        _ => EmClose,
+        _ => EmClose
     };
 
     /// <summary>Returns true when an underscore run at <paramref name="pos"/> is intra-word and should not delimit emphasis.</summary>
@@ -169,14 +169,14 @@ internal static class Emphasis
     private static bool IsIntraWord(ReadOnlySpan<byte> source, int pos, int contentStart, int closeStart, int length)
     {
         var openIntraWord = pos > 0
-            && AsciiByteHelpers.IsAsciiIdentifierByte(source[pos - 1])
-            && contentStart < source.Length
-            && AsciiByteHelpers.IsAsciiIdentifierByte(source[contentStart]);
+                            && AsciiByteHelpers.IsAsciiIdentifierByte(source[pos - 1])
+                            && contentStart < source.Length
+                            && AsciiByteHelpers.IsAsciiIdentifierByte(source[contentStart]);
 
         var closeIntraWord = closeStart > 0
-            && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart - 1])
-            && closeStart + length < source.Length
-            && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart + length]);
+                             && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart - 1])
+                             && closeStart + length < source.Length
+                             && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart + length]);
 
         // Reject when *either* end is intra-word — the run can't legally delimit on that side.
         return openIntraWord || closeIntraWord;

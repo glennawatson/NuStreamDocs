@@ -23,8 +23,8 @@ internal static class NavTreeFlattener
         ArgumentNullException.ThrowIfNull(root);
 
         var capacity = EstimateCount(root);
-        var nodes = new List<NavTreeNode>(capacity);
-        var queue = new Queue<(int OwnIndex, NavNode Node)>(capacity);
+        List<NavTreeNode> nodes = new(capacity);
+        Queue<(int OwnIndex, NavNode Node)> queue = new(capacity);
 
         nodes.Add(BuildSlot(root, parentIndex: -1));
         queue.Enqueue((0, root));
@@ -86,7 +86,6 @@ internal static class NavTreeFlattener
         new(
             Title: node.Title,
             RelativePath: node.RelativePath,
-            IndexPath: node.IndexPath,
             RelativeUrlBytes: node.RelativeUrlBytes,
             IndexUrlBytes: node.IndexUrlBytes,
             ParentIndex: parentIndex,

@@ -44,7 +44,7 @@ public class FrontmatterValueExtractorTests
     [Test]
     public async Task EmptyKeyArrayIsNoOp()
     {
-        var sink = new ArrayBufferWriter<byte>(16);
+        ArrayBufferWriter<byte> sink = new(16);
         FrontmatterValueExtractor.AppendKeysTo("---\ntitle: A\n---\nbody"u8, [], sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -88,7 +88,7 @@ public class FrontmatterValueExtractorTests
     [Test]
     public async Task MultipleKeysAppendedInOrder()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         FrontmatterValueExtractor.AppendKeysTo(
             "---\ntitle: A\nauthor: B\n---\nbody"u8,
             [[.. "title"u8], [.. "author"u8]],
@@ -102,7 +102,7 @@ public class FrontmatterValueExtractorTests
     /// <returns>The collected text.</returns>
     private static string Extract(string source, string key)
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         FrontmatterValueExtractor.AppendKeysTo(Encoding.UTF8.GetBytes(source), [Encoding.UTF8.GetBytes(key)], sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

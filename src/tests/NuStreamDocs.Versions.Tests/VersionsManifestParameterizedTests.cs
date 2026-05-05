@@ -21,7 +21,7 @@ public class VersionsManifestParameterizedTests
     [Arguments("3.0", "With spaces in title", 1)]
     public async Task RoundTripShapes(string version, string title, int aliasCount)
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         var aliases = new byte[aliasCount][];
         for (var i = 0; i < aliasCount; i++)
         {

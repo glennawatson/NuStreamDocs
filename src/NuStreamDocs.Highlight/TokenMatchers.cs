@@ -136,15 +136,7 @@ public static class TokenMatchers
     /// <summary>Matches an unsigned ASCII float — at least one digit, a dot, at least one digit, optional <c>e/E</c> exponent. Equivalent to <c>\G\d+\.\d+(?:[eE][+-]?\d+)?</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or <c>0</c>.</returns>
-    public static int MatchUnsignedAsciiFloat(ReadOnlySpan<byte> slice)
-    {
-        if (slice is [] || !AsciiDigits.Contains(slice[0]))
-        {
-            return 0;
-        }
-
-        return MatchSignedAsciiFloat(slice);
-    }
+    public static int MatchUnsignedAsciiFloat(ReadOnlySpan<byte> slice) => slice is [] || !AsciiDigits.Contains(slice[0]) ? 0 : MatchSignedAsciiFloat(slice);
 
     /// <summary>Matches a body run of <paramref name="bodySet"/> followed by zero or more bytes from <paramref name="suffixSet"/>. Equivalent to <c>\G[bodySet]+[suffixSet]*</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
@@ -315,13 +307,13 @@ public static class TokenMatchers
         {
             if (slice[i] == quote)
             {
-                if (i + 1 < slice.Length && slice[i + 1] == quote)
+                if (i + 1 >= slice.Length || slice[i + 1] != quote)
                 {
-                    i += DoubledQuoteEscape;
-                    continue;
+                    return i + 1;
                 }
 
-                return i + 1;
+                i += DoubledQuoteEscape;
+                continue;
             }
 
             i++;
@@ -488,7 +480,7 @@ public static class TokenMatchers
             < 0 when slice is [] => 0,
             < 0 => slice.Length,
             0 => 0,
-            _ => stop,
+            _ => stop
         };
     }
 
@@ -590,7 +582,7 @@ public static class TokenMatchers
         {
             [(byte)'\r', (byte)'\n', ..] => CrLfLength,
             [(byte)'\r', ..] or [(byte)'\n', ..] => 1,
-            _ => 0,
+            _ => 0
         };
     }
 
@@ -631,7 +623,7 @@ public static class TokenMatchers
             < 0 when slice is [] => 0,
             < 0 => slice.Length,
             0 => 0,
-            _ => stop,
+            _ => stop
         };
     }
 

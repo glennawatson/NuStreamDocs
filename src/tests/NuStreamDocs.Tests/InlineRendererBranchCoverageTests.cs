@@ -98,7 +98,7 @@ public class InlineRendererBranchCoverageTests
     /// <returns>Rendered HTML.</returns>
     private static string Render(string markdown)
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         InlineRenderer.Render(Encoding.UTF8.GetBytes(markdown), writer);
         return Encoding.UTF8.GetString(writer.WrittenSpan);
     }

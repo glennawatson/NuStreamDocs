@@ -42,7 +42,7 @@ public class CSharpApiGeneratorHelperTests
         var label = CSharpApiGenerator.DescribeInputs(
         [
             new NuGetManifestInput("/r", "/c"),
-            new LocalAssembliesInput("net10.0", ["/x.dll"]),
+            new LocalAssembliesInput("net10.0", ["/x.dll"])
         ]);
         await Assert.That(label).IsEqualTo("manifest:/r,assemblies:1@net10.0");
     }
@@ -70,7 +70,7 @@ public class CSharpApiGeneratorHelperTests
     [Test]
     public async Task CreateOneCustom()
     {
-        var src = new EmptySource();
+        EmptySource src = new();
         var resolved = AssemblySourceFactory.CreateOne(new CustomInput(src), NullLogger.Instance);
         await Assert.That(resolved).IsEqualTo(src);
     }

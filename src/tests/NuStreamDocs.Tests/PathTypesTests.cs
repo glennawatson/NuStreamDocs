@@ -23,7 +23,7 @@ public class PathTypesTests
     [Test]
     public async Task CombineProducesChildDirectory()
     {
-        var root = new DirectoryPath("/docs");
+        DirectoryPath root = new("/docs");
         var child = root / "guide";
         await Assert.That(child.Value).IsEqualTo(Path.Combine("/docs", "guide"));
     }
@@ -33,7 +33,7 @@ public class PathTypesTests
     [Test]
     public async Task FileHelperComposesFilePath()
     {
-        var root = new DirectoryPath("/docs");
+        DirectoryPath root = new("/docs");
         var page = root.File("intro.md");
         await Assert.That(page.Value).IsEqualTo(Path.Combine("/docs", "intro.md"));
         await Assert.That(page.FileName).IsEqualTo("intro.md");
@@ -47,7 +47,7 @@ public class PathTypesTests
     public async Task FileDirectoryReturnsParent()
     {
         var pageValue = Path.Combine("/docs", "guide", "intro.md");
-        var page = new FilePath(pageValue);
+        FilePath page = new(pageValue);
         await Assert.That(page.Directory.Value).IsEqualTo(Path.GetDirectoryName(pageValue));
     }
 
@@ -56,7 +56,7 @@ public class PathTypesTests
     [Test]
     public async Task WithExtensionRenamesFile()
     {
-        var page = new FilePath("/docs/intro.md");
+        FilePath page = new("/docs/intro.md");
         var html = page.WithExtension(".html");
         await Assert.That(html.Value).IsEqualTo(Path.ChangeExtension("/docs/intro.md", ".html"));
     }
@@ -66,10 +66,10 @@ public class PathTypesTests
     [Test]
     public async Task ImplicitStringConversion()
     {
-        var dir = new DirectoryPath("/docs");
+        DirectoryPath dir = new("/docs");
         await Assert.That((string)dir).IsEqualTo("/docs");
 
-        var file = new FilePath("/docs/intro.md");
+        FilePath file = new("/docs/intro.md");
         await Assert.That((string)file).IsEqualTo("/docs/intro.md");
     }
 
@@ -78,8 +78,8 @@ public class PathTypesTests
     [Test]
     public async Task ValueEqualityHolds()
     {
-        await Assert.That(new DirectoryPath("/a")).IsEqualTo(new DirectoryPath("/a"));
-        await Assert.That(new FilePath("/a/b.md")).IsEqualTo(new FilePath("/a/b.md"));
+        await Assert.That(new DirectoryPath("/a")).IsEqualTo(new("/a"));
+        await Assert.That(new FilePath("/a/b.md")).IsEqualTo(new("/a/b.md"));
     }
 
     /// <summary>Implicit conversion from <see cref="string"/> wraps the value so callers can pass string literals.</summary>

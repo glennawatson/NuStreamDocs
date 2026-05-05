@@ -22,7 +22,7 @@ public class HtmlEscaperTests
     [Arguments("\"", "&quot;")]
     public async Task SpecialBytesEscape(string source, string expected)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HtmlEscaper.Escape(Encoding.UTF8.GetBytes(source), sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(expected);
     }
@@ -37,7 +37,7 @@ public class HtmlEscaperTests
     [Arguments("apostrophe '")]
     public async Task PlainBytesPassThrough(string source)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HtmlEscaper.Escape(Encoding.UTF8.GetBytes(source), sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(source);
     }
@@ -47,7 +47,7 @@ public class HtmlEscaperTests
     [Test]
     public async Task MixedRun()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HtmlEscaper.Escape("a&b<c>d\"e"u8, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("a&amp;b&lt;c&gt;d&quot;e");
     }
@@ -57,7 +57,7 @@ public class HtmlEscaperTests
     [Test]
     public async Task EmptyInput()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HtmlEscaper.Escape(default, sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }

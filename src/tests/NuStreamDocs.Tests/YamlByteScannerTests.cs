@@ -21,7 +21,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task LineEndCases()
     {
-        var bytes = "ab\ncd"u8.ToArray();
+        byte[] bytes = [.. "ab\ncd"u8];
         await Assert.That(YamlByteScanner.LineEnd(bytes, 0)).IsEqualTo(3);
         await Assert.That(YamlByteScanner.LineEnd(bytes, 3)).IsEqualTo(5);
     }
@@ -31,7 +31,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task TrimLeadingDropsAsciiWhitespace()
     {
-        var bytes = " \t\rfoo"u8.ToArray();
+        byte[] bytes = [.. " \t\rfoo"u8];
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.TrimLeading(bytes))).IsEqualTo("foo");
     }
 
@@ -40,7 +40,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task TrimWhitespaceDropsBothEnds()
     {
-        var bytes = "  foo\n"u8.ToArray();
+        byte[] bytes = [.. "  foo\n"u8];
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.TrimWhitespace(bytes))).IsEqualTo("foo");
     }
 
@@ -49,10 +49,10 @@ public class YamlByteScannerTests
     [Test]
     public async Task UnquoteVariants()
     {
-        var dq = "\"hi\""u8.ToArray();
-        var sq = "'hi'"u8.ToArray();
-        var none = "hi"u8.ToArray();
-        var mixed = "\"hi'"u8.ToArray();
+        byte[] dq = [.. "\"hi\""u8];
+        byte[] sq = [.. "'hi'"u8];
+        byte[] none = [.. "hi"u8];
+        byte[] mixed = [.. "\"hi'"u8];
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.Unquote(dq))).IsEqualTo("hi");
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.Unquote(sq))).IsEqualTo("hi");
         await Assert.That(Encoding.UTF8.GetString(YamlByteScanner.Unquote(none))).IsEqualTo("hi");
@@ -99,7 +99,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task AdvancePastValueIndents()
     {
-        var src = "  child: 1\n  - item\n# comment\n\nnext: x\n"u8.ToArray();
+        byte[] src = [.. "  child: 1\n  - item\n# comment\n\nnext: x\n"u8];
         var cursor = YamlByteScanner.AdvancePastValue(src, 0);
         await Assert.That(cursor).IsGreaterThan(0);
 
@@ -113,7 +113,7 @@ public class YamlByteScannerTests
     [Test]
     public async Task AdvancePastValueAtEnd()
     {
-        var src = "  child: 1\n"u8.ToArray();
+        byte[] src = [.. "  child: 1\n"u8];
         await Assert.That(YamlByteScanner.AdvancePastValue(src, 0)).IsEqualTo(src.Length);
     }
 }

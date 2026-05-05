@@ -18,10 +18,10 @@ public class VersionsManifestTests
     {
         VersionEntry[] input = [
             new("0.1.0", "0.1 (legacy)", []),
-            new("0.4.2", "0.4 (latest)", [[.. "latest"u8], [.. "stable"u8]]),
+            new("0.4.2", "0.4 (latest)", [[.. "latest"u8], [.. "stable"u8]])
         ];
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         VersionsManifest.WriteToUtf8(input, sink);
         var roundTripped = VersionsManifest.ReadFromUtf8(sink.WrittenSpan);
 
@@ -38,7 +38,7 @@ public class VersionsManifestTests
     {
         VersionEntry[] existing = [
             new("0.1.0", "0.1", []),
-            new("0.4.2", "0.4 (old)", []),
+            new("0.4.2", "0.4 (old)", [])
         ];
 
         var merged = VersionsManifest.Upsert(existing, new("0.4.2", "0.4 (latest)", [[.. "latest"u8]]));

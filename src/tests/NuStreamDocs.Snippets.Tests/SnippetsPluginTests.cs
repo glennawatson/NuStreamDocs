@@ -23,9 +23,9 @@ public class SnippetsPluginTests
     [Test]
     public async Task PreRenderPassesThroughBeforeConfigure()
     {
-        var plugin = new SnippetsPlugin();
-        var sink = new ArrayBufferWriter<byte>(32);
-        var ctx = new PagePreRenderContext("p.md", "hello"u8, sink);
+        SnippetsPlugin plugin = new();
+        ArrayBufferWriter<byte> sink = new(32);
+        PagePreRenderContext ctx = new("p.md", "hello"u8, sink);
         plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
     }
@@ -35,14 +35,14 @@ public class SnippetsPluginTests
     [Test]
     public async Task ConfigureCapturesInputRoot()
     {
-        using var temp = new TempDir();
+        using TempDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "include.md"), "spliced");
 
-        var plugin = new SnippetsPlugin();
-        await plugin.ConfigureAsync(new BuildConfigureContext(temp.Root, "/out", [], new()), CancellationToken.None);
+        SnippetsPlugin plugin = new();
+        await plugin.ConfigureAsync(new(temp.Root, "/out", [], new()), CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("page.md", "--8<-- \"include.md\""u8, sink);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("page.md", "--8<-- \"include.md\""u8, sink);
         plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("spliced");
     }
@@ -52,14 +52,14 @@ public class SnippetsPluginTests
     [Test]
     public async Task ExplicitBaseDirectoryWins()
     {
-        using var temp = new TempDir();
+        using TempDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "include.md"), "explicit");
 
-        var plugin = new SnippetsPlugin(temp.Root);
-        await plugin.ConfigureAsync(new BuildConfigureContext("/wrong", "/out", [], new()), CancellationToken.None);
+        SnippetsPlugin plugin = new(temp.Root);
+        await plugin.ConfigureAsync(new("/wrong", "/out", [], new()), CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("page.md", "--8<-- \"include.md\""u8, sink);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("page.md", "--8<-- \"include.md\""u8, sink);
         plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("explicit");
     }
@@ -69,7 +69,7 @@ public class SnippetsPluginTests
     [Test]
     public async Task UseSnippetsRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseSnippets()).IsSameReferenceAs(builder);
     }
 
@@ -78,7 +78,7 @@ public class SnippetsPluginTests
     [Test]
     public async Task UseSnippetsWithBaseRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseSnippets("/some/path")).IsSameReferenceAs(builder);
     }
 
@@ -96,7 +96,7 @@ public class SnippetsPluginTests
     [Test]
     public async Task UseSnippetsRejectsWhitespaceBase()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var ex = Assert.Throws<ArgumentException>(() => builder.UseSnippets("   "));
         await Assert.That(ex).IsNotNull();
     }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using NuStreamDocs.Common;
@@ -17,7 +18,7 @@ public class CommonCoverageTests
     [Test]
     public async Task Utf8SnapshotDecodeRoundTrips()
     {
-        var bytes = new[] { "alpha"u8.ToArray(), "β-rays"u8.ToArray(), [] };
+        byte[][] bytes = [[.. "alpha"u8], [.. "β-rays"u8], []];
         var decoded = Utf8Snapshot.Decode(bytes);
         await Assert.That(decoded.Length).IsEqualTo(3);
         await Assert.That(decoded[0]).IsEqualTo("alpha");
@@ -29,7 +30,7 @@ public class CommonCoverageTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task Utf8SnapshotDecodeRejectsNull() =>
-        await Assert.That(() => Utf8Snapshot.Decode(null!)).Throws<ArgumentNullException>();
+        await Assert.That(static () => Utf8Snapshot.Decode(null!)).Throws<ArgumentNullException>();
 
     /// <summary>Two-arg <see cref="Utf8Concat.Concat(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/> returns an empty array when both inputs are empty.</summary>
     /// <returns>Async test.</returns>
@@ -72,7 +73,7 @@ public class CommonCoverageTests
     [Test]
     public async Task Utf8ConcatManyJoinsInOrder()
     {
-        var parts = new[] { "x"u8.ToArray(), "yy"u8.ToArray(), "zzz"u8.ToArray() };
+        byte[][] parts = [[.. "x"u8], [.. "yy"u8], [.. "zzz"u8]];
         await Assert.That(Encoding.UTF8.GetString(Utf8Concat.ConcatMany(parts))).IsEqualTo("xyyzzz");
     }
 
@@ -81,7 +82,7 @@ public class CommonCoverageTests
     [Test]
     public async Task Utf8ConcatManyRejectsNullPart()
     {
-        var parts = new byte[][] { "ok"u8.ToArray(), null! };
+        byte[][] parts = [[.. "ok"u8], null!];
         await Assert.That(() => Utf8Concat.ConcatMany(parts)).Throws<ArgumentNullException>();
     }
 
@@ -90,7 +91,7 @@ public class CommonCoverageTests
     [Test]
     public async Task ByteArrayCollectionToStringSetUsesComparer()
     {
-        var source = new[] { "Foo"u8.ToArray(), "FOO"u8.ToArray(), "bar"u8.ToArray() };
+        byte[][] source = [[.. "Foo"u8], [.. "FOO"u8], [.. "bar"u8]];
         var ordinal = source.ToStringSet(StringComparer.Ordinal);
         var ordinalIgnoreCase = source.ToStringSet(StringComparer.OrdinalIgnoreCase);
         await Assert.That(ordinal.Count).IsEqualTo(3);
@@ -121,7 +122,8 @@ public class CommonCoverageTests
     [Test]
     public async Task ByteArrayCollectionToStringArrayDecodesEntries()
     {
-        var arr = new[] { "one"u8.ToArray(), "two"u8.ToArray() }.ToStringArray();
+        byte[][] source = [[.. "one"u8], [.. "two"u8]];
+        var arr = source.ToStringArray();
         await Assert.That(arr.Length).IsEqualTo(2);
         await Assert.That(arr[0]).IsEqualTo("one");
         await Assert.That(arr[1]).IsEqualTo("two");
@@ -131,7 +133,7 @@ public class CommonCoverageTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task ByteArrayCollectionToStringArrayRejectsNull() =>
-        await Assert.That(() => ((byte[][])null!).ToStringArray()).Throws<ArgumentNullException>();
+        await Assert.That(static () => ((byte[][])null!).ToStringArray()).Throws<ArgumentNullException>();
 
     /// <summary><see cref="ByteArrayComparer"/> equality covers null pairs and content equality.</summary>
     /// <returns>Async test.</returns>
@@ -139,11 +141,14 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerEqualityHandlesNullsAndContent()
     {
         var c = ByteArrayComparer.Instance;
+        byte[] a = [.. "a"u8];
+        byte[] abc = [.. "abc"u8];
+        byte[] abd = [.. "abd"u8];
         await Assert.That(c.Equals(null, null)).IsTrue();
-        await Assert.That(c.Equals("a"u8.ToArray(), null)).IsFalse();
-        await Assert.That(c.Equals(null, "a"u8.ToArray())).IsFalse();
-        await Assert.That(c.Equals("abc"u8.ToArray(), "abc"u8.ToArray())).IsTrue();
-        await Assert.That(c.Equals("abc"u8.ToArray(), "abd"u8.ToArray())).IsFalse();
+        await Assert.That(c.Equals(a, (byte[]?)null)).IsFalse();
+        await Assert.That(c.Equals((byte[]?)null, a)).IsFalse();
+        await Assert.That(c.Equals(abc, abc)).IsTrue();
+        await Assert.That(c.Equals(abc, abd)).IsFalse();
     }
 
     /// <summary>Equal arrays produce equal hash codes; distinct arrays usually don't.</summary>
@@ -152,7 +157,8 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerHashCodeMatchesContent()
     {
         var c = ByteArrayComparer.Instance;
-        await Assert.That(c.GetHashCode("hello"u8.ToArray())).IsEqualTo(c.GetHashCode("hello"u8.ToArray()));
+        byte[] hello = [.. "hello"u8];
+        await Assert.That(c.GetHashCode(hello)).IsEqualTo(c.GetHashCode(hello));
         await Assert.That(() => c.GetHashCode((byte[])null!)).Throws<ArgumentNullException>();
     }
 
@@ -162,12 +168,15 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerCompareRanksLexicographically()
     {
         var c = ByteArrayComparer.Instance;
+        byte[] a = [.. "a"u8];
+        byte[] b = [.. "b"u8];
+        byte[] x = [.. "x"u8];
         await Assert.That(c.Compare(null, null)).IsEqualTo(0);
-        await Assert.That(c.Compare(null, "x"u8.ToArray())).IsLessThan(0);
-        await Assert.That(c.Compare("x"u8.ToArray(), null)).IsGreaterThan(0);
-        await Assert.That(c.Compare("a"u8.ToArray(), "b"u8.ToArray())).IsLessThan(0);
-        await Assert.That(c.Compare("b"u8.ToArray(), "a"u8.ToArray())).IsGreaterThan(0);
-        await Assert.That(c.Compare("a"u8.ToArray(), "a"u8.ToArray())).IsEqualTo(0);
+        await Assert.That(c.Compare(null, x)).IsLessThan(0);
+        await Assert.That(c.Compare(x, null)).IsGreaterThan(0);
+        await Assert.That(c.Compare(a, b)).IsLessThan(0);
+        await Assert.That(c.Compare(b, a)).IsGreaterThan(0);
+        await Assert.That(c.Compare(a, a)).IsEqualTo(0);
     }
 
     /// <summary>Non-generic <see cref="IComparer.Compare(object, object)"/> handles nulls and rejects non-byte-array operands.</summary>
@@ -176,10 +185,13 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerNonGenericCompareValidates()
     {
         IComparer c = ByteArrayComparer.Instance;
+        byte[] a = [.. "a"u8];
+        byte[] b = [.. "b"u8];
+        byte[] x = [.. "x"u8];
         await Assert.That(c.Compare(null, null)).IsEqualTo(0);
-        await Assert.That(c.Compare(null, "x"u8.ToArray())).IsLessThan(0);
-        await Assert.That(c.Compare("x"u8.ToArray(), null)).IsGreaterThan(0);
-        await Assert.That(c.Compare("a"u8.ToArray(), "b"u8.ToArray())).IsLessThan(0);
+        await Assert.That(c.Compare(null, x)).IsLessThan(0);
+        await Assert.That(c.Compare(x, null)).IsGreaterThan(0);
+        await Assert.That(c.Compare(a, b)).IsLessThan(0);
         await Assert.That(() => c.Compare("not bytes", "also not")).Throws<ArgumentException>();
     }
 
@@ -189,11 +201,13 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerNonGenericEqualsMirrorsStrongTyped()
     {
         IEqualityComparer c = ByteArrayComparer.Instance;
+        byte[] abc = [.. "abc"u8];
+        byte[] abd = [.. "abd"u8];
         await Assert.That(c.Equals(null, null)).IsTrue();
-        await Assert.That(c.Equals("abc"u8.ToArray(), "abc"u8.ToArray())).IsTrue();
-        await Assert.That(c.Equals("abc"u8.ToArray(), "abd"u8.ToArray())).IsFalse();
-        await Assert.That(c.Equals("abc"u8.ToArray(), null)).IsFalse();
-        await Assert.That(c.Equals("abc"u8.ToArray(), "not bytes")).IsFalse();
+        await Assert.That(c.Equals(abc, abc)).IsTrue();
+        await Assert.That(c.Equals(abc, abd)).IsFalse();
+        await Assert.That(c.Equals(abc, null)).IsFalse();
+        await Assert.That(c.Equals(abc, "not bytes")).IsFalse();
     }
 
     /// <summary>Non-generic <see cref="IEqualityComparer.GetHashCode(object)"/> dispatches to the byte-array hash for arrays.</summary>
@@ -202,23 +216,23 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerNonGenericGetHashCodeDispatches()
     {
         IEqualityComparer c = ByteArrayComparer.Instance;
-        await Assert.That(c.GetHashCode("abc"u8.ToArray())).IsEqualTo(c.GetHashCode("abc"u8.ToArray()));
+        byte[] abc = [.. "abc"u8];
+        await Assert.That(c.GetHashCode(abc)).IsEqualTo(c.GetHashCode(abc));
         await Assert.That(() => c.GetHashCode(null!)).Throws<ArgumentNullException>();
 
         // Non-byte-array objects fall back to the object's own hash.
-        var obj = new object();
+        object obj = new();
         await Assert.That(c.GetHashCode(obj)).IsEqualTo(obj.GetHashCode());
     }
 
     /// <summary>Span-keyed alternate equality and Create round-trip span content into a byte[] copy.</summary>
     /// <returns>Async test.</returns>
     [Test]
+    [SuppressMessage("Performance", "CA1859:Use concrete types when possible for improved performance", Justification = "Object of test")]
     public async Task ByteArrayComparerAlternateLookupRoundTrips()
     {
-#pragma warning disable CA1859 // Want the alternate-comparer interface dispatch path here.
         IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]> alt = ByteArrayComparer.Instance;
-#pragma warning restore CA1859
-        var stored = "hello"u8.ToArray();
+        byte[] stored = [.. "hello"u8];
         await Assert.That(alt.Equals("hello"u8, stored)).IsTrue();
         await Assert.That(alt.Equals("nope"u8, stored)).IsFalse();
         await Assert.That(alt.GetHashCode("hello"u8)).IsEqualTo(ByteArrayComparer.Instance.GetHashCode(stored));
@@ -248,11 +262,11 @@ public class CommonCoverageTests
         UrlPath wrapped = "/foo/bar";
         string asString = wrapped;
         await Assert.That(asString).IsEqualTo("/foo/bar");
-        await Assert.That(((ReadOnlySpan<char>)wrapped).SequenceEqual("/foo/bar")).IsTrue();
+        await Assert.That((ReadOnlySpan<char>)wrapped is "/foo/bar").IsTrue();
         await Assert.That(wrapped.ToString()).IsEqualTo("/foo/bar");
         await Assert.That(UrlPath.FromString("/foo/bar").Value).IsEqualTo("/foo/bar");
         await Assert.That(UrlPath.ToStringValue(wrapped)).IsEqualTo("/foo/bar");
-        await Assert.That(UrlPath.ToReadOnlySpan(wrapped).SequenceEqual("/foo/bar")).IsTrue();
+        await Assert.That(UrlPath.ToReadOnlySpan(wrapped) is "/foo/bar").IsTrue();
 
         // Default URL ToString lands on string.Empty (Value is null).
         await Assert.That(default(UrlPath).ToString()).IsEqualTo(string.Empty);
@@ -270,7 +284,7 @@ public class CommonCoverageTests
         await Assert.That(url.StartsWith("HTTPS://".AsSpan(), StringComparison.OrdinalIgnoreCase)).IsTrue();
         await Assert.That(url.EndsWith(".svg".AsSpan())).IsTrue();
         await Assert.That(url.EndsWith(".SVG".AsSpan(), StringComparison.OrdinalIgnoreCase)).IsTrue();
-        await Assert.That(url.AsSpan().SequenceEqual("https://Example.test/Foo.svg")).IsTrue();
+        await Assert.That(url.AsSpan() is "https://Example.test/Foo.svg").IsTrue();
     }
 
     /// <summary><see cref="DirectoryPath"/> path-manipulation members (Name, Parent, Combine, /, File, AsSpan).</summary>
@@ -332,17 +346,17 @@ public class CommonCoverageTests
             var filePath = root.File("a.txt");
             await File.WriteAllTextAsync(filePath, "x");
 
-            var files = root.EnumerateFiles().ToArray();
+            FilePath[] files = [.. root.EnumerateFiles()];
             await Assert.That(files.Length).IsEqualTo(1);
             await Assert.That(files[0].FileName).IsEqualTo("a.txt");
 
-            var pattern = root.EnumerateFiles("*.txt").ToArray();
+            FilePath[] pattern = [.. root.EnumerateFiles("*.txt")];
             await Assert.That(pattern.Length).IsEqualTo(1);
 
-            var deep = root.EnumerateFiles("*", SearchOption.AllDirectories).ToArray();
+            FilePath[] deep = [.. root.EnumerateFiles("*", SearchOption.AllDirectories)];
             await Assert.That(deep.Length).IsEqualTo(1);
 
-            var dirs = root.EnumerateDirectories().ToArray();
+            DirectoryPath[] dirs = [.. root.EnumerateDirectories()];
             await Assert.That(dirs.Length).IsEqualTo(1);
             await Assert.That(dirs[0].Name).IsEqualTo("nested");
             await Assert.That(root.EnumerateDirectories("ne*").ToArray().Length).IsEqualTo(1);
@@ -388,13 +402,13 @@ public class CommonCoverageTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task DirectoryPathCombineRejectsEmptySegment() =>
-        await Assert.That(() => ((DirectoryPath)"/var").Combine(string.Empty)).Throws<ArgumentException>();
+        await Assert.That(static () => ((DirectoryPath)"/var").Combine(string.Empty)).Throws<ArgumentException>();
 
     /// <summary><see cref="DirectoryPath.File"/> rejects an empty file name.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DirectoryPathFileRejectsEmptyFileName() =>
-        await Assert.That(() => ((DirectoryPath)"/var").File(string.Empty)).Throws<ArgumentException>();
+        await Assert.That(static () => ((DirectoryPath)"/var").File(string.Empty)).Throws<ArgumentException>();
 
     /// <summary><see cref="DirectoryPath.Normalize"/> short-circuits on empty input.</summary>
     /// <returns>Async test.</returns>

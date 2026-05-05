@@ -9,10 +9,7 @@ internal sealed class TempTocTree : IDisposable
 {
     /// <summary>Initializes a new instance of the <see cref="TempTocTree"/> class.</summary>
     /// <param name="root">Absolute path of the temporary docs root.</param>
-    private TempTocTree(string root)
-    {
-        Root = root;
-    }
+    private TempTocTree(string root) => Root = root;
 
     /// <summary>Gets the absolute path of the temporary docs root.</summary>
     public string Root { get; }

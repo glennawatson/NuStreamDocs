@@ -101,7 +101,7 @@ internal static class KeysRewriter
     {
         // Pure ASCII fast path: lowercase into a stack buffer, no allocation, then probe the byte-keyed lookup.
         const int LookupStackLimit = 128;
-        Span<byte> lookupBuf = token.Length <= LookupStackLimit ? stackalloc byte[token.Length] : new byte[token.Length];
+        var lookupBuf = token.Length <= LookupStackLimit ? stackalloc byte[token.Length] : new byte[token.Length];
         for (var i = 0; i < token.Length; i++)
         {
             var b = token[i];
@@ -162,11 +162,13 @@ internal static class KeysRewriter
                 return false;
             }
 
-            if (source[p] is (byte)'+' && source[p + 1] is (byte)'+')
+            if (source[p] is not (byte)'+' || source[p + 1] is not (byte)'+')
             {
-                contentEnd = p;
-                return true;
+                continue;
             }
+
+            contentEnd = p;
+            return true;
         }
 
         return false;

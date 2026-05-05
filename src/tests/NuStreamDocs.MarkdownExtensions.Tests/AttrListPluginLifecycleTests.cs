@@ -32,8 +32,8 @@ public class AttrListPluginLifecycleTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        ArrayBufferWriter<byte> output = new(64);
+        PagePostRenderContext ctx = new("p.md", default, html, output);
         new AttrListPlugin().PostRender(in ctx);
         return [.. output.WrittenSpan];
     }

@@ -58,7 +58,7 @@ internal sealed class PluginPhases
             Scans = Collect<IPageScanPlugin>(plugins, static p => p.ScanPriority),
             Resolves = Collect<IBuildResolvePlugin>(plugins, static p => p.ResolvePriority),
             PostResolves = Collect<IPagePostResolvePlugin>(plugins, static p => p.PostResolvePriority),
-            Finalizes = Collect<IBuildFinalizePlugin>(plugins, static p => p.FinalizePriority),
+            Finalizes = Collect<IBuildFinalizePlugin>(plugins, static p => p.FinalizePriority)
         };
     }
 
@@ -70,7 +70,7 @@ internal sealed class PluginPhases
     private static T[] Collect<T>(IPlugin[] plugins, Func<T, PluginPriority> getPriority)
         where T : class, IPlugin
     {
-        var matches = new List<T>();
+        List<T> matches = new(plugins.Length);
         for (var i = 0; i < plugins.Length; i++)
         {
             if (plugins[i] is T t)

@@ -30,6 +30,6 @@ public readonly record struct MaterialIconsOptions(
                 MaterialIconStyle.SymbolsOutlined => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"u8],
                 MaterialIconStyle.SymbolsRounded => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"u8],
                 MaterialIconStyle.SymbolsSharp => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp"u8],
-                _ => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"u8],
+                _ => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"u8]
             };
 }

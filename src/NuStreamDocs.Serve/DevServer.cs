@@ -46,7 +46,7 @@ internal static class DevServer
         + "})();</script>";
 
     /// <summary>UTF-8 bytes for the closing body tag we splice the script before.</summary>
-    private static readonly byte[] BodyClose = "</body>"u8.ToArray();
+    private static readonly byte[] BodyClose = [.. "</body>"u8];
 
     /// <summary>UTF-8 bytes for the reload script.</summary>
     private static readonly byte[] ReloadScriptBytes = Encoding.UTF8.GetBytes(ReloadScript);
@@ -138,8 +138,8 @@ internal static class DevServer
             app.Use(HtmlInjectionMiddleware.InvokeAsync);
         }
 
-        var fileProvider = new PhysicalFileProvider(Path.GetFullPath(outputRoot));
-        var defaultFiles = new DefaultFilesOptions { FileProvider = fileProvider };
+        PhysicalFileProvider fileProvider = new(Path.GetFullPath(outputRoot));
+        DefaultFilesOptions defaultFiles = new() { FileProvider = fileProvider };
         defaultFiles.DefaultFileNames.Clear();
         defaultFiles.DefaultFileNames.Add("index.html");
         app.UseDefaultFiles(defaultFiles);
@@ -148,7 +148,7 @@ internal static class DevServer
             FileProvider = fileProvider,
             ContentTypeProvider = new FileExtensionContentTypeProvider(),
             ServeUnknownFileTypes = true,
-            DefaultContentType = "application/octet-stream",
+            DefaultContentType = "application/octet-stream"
         });
     }
 
@@ -179,7 +179,7 @@ internal static class DevServer
             return;
         }
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(1));
         try
         {
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "shutdown", cts.Token).ConfigureAwait(false);

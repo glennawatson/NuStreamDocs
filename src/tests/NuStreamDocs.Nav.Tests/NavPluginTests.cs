@@ -19,7 +19,7 @@ public class NavPluginTests
         Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
 
-        var plugin = new NavPlugin();
+        NavPlugin plugin = new();
         var builder = new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin);
 
         await builder.BuildAsync();
@@ -36,7 +36,7 @@ public class NavPluginTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "keep.md"), "k");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "drop.md"), "d");
 
-        var plugin = new NavPlugin(NavOptions.Default with { Excludes = ["drop.md"] });
+        NavPlugin plugin = new(NavOptions.Default with { Excludes = ["drop.md"] });
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         await Assert.That(plugin.Root).IsNotNull();
@@ -67,7 +67,7 @@ public class NavPluginTests
         Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
 
-        var plugin = new NavPlugin();
+        NavPlugin plugin = new();
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         await Assert.That(plugin.ShouldHidePrimarySidebar("license.md")).IsTrue();
@@ -81,7 +81,7 @@ public class NavPluginTests
         using var fixture = TempDocsTree.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
 
-        var plugin = new NavPlugin();
+        NavPlugin plugin = new();
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         await Assert.That(plugin.ShouldHidePrimarySidebar("index.md")).IsFalse();
@@ -98,7 +98,7 @@ public class NavPluginTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "advanced.md"), "# Advanced");
 
-        var plugin = new NavPlugin();
+        NavPlugin plugin = new();
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         await Assert.That(plugin.ShouldHidePrimarySidebar("guide/intro.md")).IsFalse();

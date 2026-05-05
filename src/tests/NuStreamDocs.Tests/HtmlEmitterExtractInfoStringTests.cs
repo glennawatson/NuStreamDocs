@@ -16,7 +16,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task BacktickWithLanguage()
     {
-        var bytes = "```csharp"u8.ToArray();
+        byte[] bytes = [.. "```csharp"u8];
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
     }
 
@@ -25,7 +25,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task TildeWithLanguage()
     {
-        var bytes = "~~~js"u8.ToArray();
+        byte[] bytes = [.. "~~~js"u8];
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("js");
     }
 
@@ -34,7 +34,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task NoLanguageYieldsEmpty()
     {
-        var bytes = "```"u8.ToArray();
+        byte[] bytes = [.. "```"u8];
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo(string.Empty);
     }
 
@@ -43,7 +43,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task LeadingWhitespaceTrimmed()
     {
-        var bytes = "```   csharp"u8.ToArray();
+        byte[] bytes = [.. "```   csharp"u8];
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
     }
 
@@ -52,7 +52,7 @@ public class HtmlEmitterExtractInfoStringTests
     [Test]
     public async Task ExtraMetadataDropped()
     {
-        var bytes = "```csharp title=\"hello.cs\""u8.ToArray();
+        byte[] bytes = [.. "```csharp title=\"hello.cs\""u8];
         await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
     }
 
@@ -62,7 +62,7 @@ public class HtmlEmitterExtractInfoStringTests
     /// <returns>The extracted info string as a UTF-16 string.</returns>
     private static string Decode(byte[] bytes, int openerLength)
     {
-        var opener = new BlockSpan(BlockKind.FencedCode, 0, openerLength, 3);
+        BlockSpan opener = new(BlockKind.FencedCode, 0, openerLength, 3);
         var info = HtmlEmitter.ExtractInfoString(bytes, opener);
         return Encoding.UTF8.GetString(info);
     }

@@ -11,5 +11,5 @@ public enum LinkSeverity
     Warning,
 
     /// <summary>Reportable in strict mode; non-zero exit code.</summary>
-    Error,
+    Error
 }

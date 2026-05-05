@@ -14,7 +14,7 @@ public class SearchPluginCoverageTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new SearchPlugin();
+        SearchPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("search"u8)).IsTrue();
     }
 
@@ -23,8 +23,8 @@ public class SearchPluginCoverageTests
     [Test]
     public async Task WriteHeadExtra()
     {
-        var plugin = new SearchPlugin();
-        var sink = new ArrayBufferWriter<byte>(64);
+        SearchPlugin plugin = new();
+        ArrayBufferWriter<byte> sink = new(64);
         plugin.WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }
@@ -34,7 +34,7 @@ public class SearchPluginCoverageTests
     [Test]
     public async Task DocumentsSnapshotEmpty()
     {
-        var plugin = new SearchPlugin();
+        SearchPlugin plugin = new();
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
 }

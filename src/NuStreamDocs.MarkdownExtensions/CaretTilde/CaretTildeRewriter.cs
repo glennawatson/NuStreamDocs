@@ -68,7 +68,7 @@ internal static class CaretTildeRewriter
             ((byte)'^', false) => "<sup>"u8,
             ((byte)'^', true) => "<ins>"u8,
             ((byte)'~', false) => "<sub>"u8,
-            _ => "<del>"u8,
+            _ => "<del>"u8
         };
         writer.Write(tag);
     }
@@ -84,7 +84,7 @@ internal static class CaretTildeRewriter
             ((byte)'^', false) => "</sup>"u8,
             ((byte)'^', true) => "</ins>"u8,
             ((byte)'~', false) => "</sub>"u8,
-            _ => "</del>"u8,
+            _ => "</del>"u8
         };
         writer.Write(tag);
     }
@@ -111,11 +111,13 @@ internal static class CaretTildeRewriter
                 return false;
             }
 
-            if (source[p] == marker && IsClosingRun(source, p, width))
+            if (source[p] != marker || !IsClosingRun(source, p, width))
             {
-                contentEnd = p;
-                return true;
+                continue;
             }
+
+            contentEnd = p;
+            return true;
         }
 
         return false;

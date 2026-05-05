@@ -5,7 +5,6 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
-using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Serve.Tests;
 
@@ -92,8 +91,8 @@ public class DevServerTests
     [Test]
     public async Task BuildUrlFormatsHostAndPort()
     {
-        var url1 = DevServer.BuildUrl(new WatchAndServeOptions { Host = "127.0.0.1", Port = 9100 });
-        var url2 = DevServer.BuildUrl(new WatchAndServeOptions { Host = "localhost", Port = 1234 });
+        var url1 = DevServer.BuildUrl(new() { Host = "127.0.0.1", Port = 9100 });
+        var url2 = DevServer.BuildUrl(new() { Host = "localhost", Port = 1234 });
         await Assert.That(url1.Value).IsEqualTo("http://127.0.0.1:9100");
         await Assert.That(url2.Value).IsEqualTo("http://localhost:1234");
     }
@@ -184,15 +183,15 @@ public class DevServerTests
             seed(root);
 
             var port = ReserveLoopbackPort();
-            var options = new WatchAndServeOptions
+            WatchAndServeOptions options = new()
             {
                 Host = "127.0.0.1",
                 Port = port,
-                LiveReload = liveReload,
+                LiveReload = liveReload
             };
 
             var app = await DevServer.StartAsync(root, options, new(), CancellationToken.None).ConfigureAwait(false);
-            var client = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{port}/", UriKind.Absolute) };
+            HttpClient client = new() { BaseAddress = new($"http://127.0.0.1:{port}/", UriKind.Absolute) };
             return new(root, app, client);
         }
 
@@ -202,7 +201,7 @@ public class DevServerTests
             Client.Dispose();
             try
             {
-                using var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                using CancellationTokenSource stopCts = new(TimeSpan.FromSeconds(2));
                 App.StopAsync(stopCts.Token).GetAwaiter().GetResult();
             }
             catch
@@ -236,7 +235,7 @@ public class DevServerTests
         /// <returns>Free port.</returns>
         private static int ReserveLoopbackPort()
         {
-            using var listener = new TcpListener(IPAddress.Loopback, 0);
+            using TcpListener listener = new(IPAddress.Loopback, 0);
             listener.Start();
             var port = ((IPEndPoint)listener.LocalEndpoint).Port;
             listener.Stop();

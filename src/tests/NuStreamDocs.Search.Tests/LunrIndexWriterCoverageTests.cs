@@ -12,7 +12,7 @@ public class LunrIndexWriterCoverageTests
     [Test]
     public async Task WriteSimpleOverload()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         var path = Path.Combine(dir.Root, "lunr.json");
         LunrIndexWriter.Write(path, "en", [new([.. "/a.html"u8], [.. "A"u8], [.. "body"u8])]);
         await Assert.That(File.Exists(path)).IsTrue();
@@ -24,7 +24,7 @@ public class LunrIndexWriterCoverageTests
     [Test]
     public async Task EmptyLanguageDefaultsToEn()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         var path = Path.Combine(dir.Root, "lunr.json");
         LunrIndexWriter.Write(path, string.Empty, [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])]);
         await Assert.That(await File.ReadAllTextAsync(path)).Contains("\"lang\":\"en\"");
@@ -35,7 +35,7 @@ public class LunrIndexWriterCoverageTests
     [Test]
     public async Task ExtraStopwordsEmittedWhenProvided()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         var path = Path.Combine(dir.Root, "lunr.json");
         LunrIndexWriter.Write(path, "en", [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])], [[.. "foo"u8], [.. "bar"u8]]);
         var json = await File.ReadAllTextAsync(path);
@@ -49,14 +49,14 @@ public class LunrIndexWriterCoverageTests
     [Test]
     public async Task MultipleDocumentsEmitted()
     {
-        using var dir = new TempDir();
+        using TempDir dir = new();
         var path = Path.Combine(dir.Root, "lunr.json");
         LunrIndexWriter.Write(
             path,
             "en",
             [
                 new([.. "/one.html"u8], [.. "T1"u8], [.. "X"u8]),
-                new([.. "/two.html"u8], [.. "T2"u8], [.. "Y"u8]),
+                new([.. "/two.html"u8], [.. "T2"u8], [.. "Y"u8])
             ]);
         var json = await File.ReadAllTextAsync(path);
         await Assert.That(json).Contains("/one.html");

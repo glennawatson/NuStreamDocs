@@ -14,8 +14,8 @@ internal static class EmbeddedResourceReader
     public static byte[] Read(ExtraAssetSource source)
     {
         using var stream = source.Assembly!.GetManifestResourceStream(source.ResourceName!)
-            ?? throw new InvalidOperationException(
-                $"Embedded resource '{source.ResourceName}' not found in '{source.Assembly!.GetName().Name}'.");
+                           ?? throw new InvalidOperationException(
+                               $"Embedded resource '{source.ResourceName}' not found in '{source.Assembly!.GetName().Name}'.");
         var buffer = new byte[stream.Length];
         var read = 0;
         while (read < buffer.Length)

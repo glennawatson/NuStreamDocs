@@ -47,7 +47,7 @@ internal static class SrcsetBytes
     /// <returns>True when the srcset was rewritten with at least one localized URL.</returns>
     internal static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
     {
-        if (!TryMatchHeader(html, p, out var valueStart, out var valueEnd, out _))
+        if (!TryMatchHeader(html, p, out var valueStart, out var valueEnd))
         {
             advanceTo = p + 1;
             return false;
@@ -78,7 +78,7 @@ internal static class SrcsetBytes
     /// <returns>True when at least one srcset entry was inspected.</returns>
     private static bool TryAuditAt(ReadOnlySpan<byte> html, int p, UrlAuditContext audit, out int advanceTo)
     {
-        if (!TryMatchHeader(html, p, out var valueStart, out var valueEnd, out _))
+        if (!TryMatchHeader(html, p, out var valueStart, out var valueEnd))
         {
             advanceTo = p + 1;
             return false;
@@ -189,13 +189,11 @@ internal static class SrcsetBytes
     /// <param name="p">Candidate offset.</param>
     /// <param name="valueStart">First value byte on success.</param>
     /// <param name="valueEnd">Offset of the closing quote on success.</param>
-    /// <param name="quote">Closing-quote byte.</param>
     /// <returns>True on a successful match.</returns>
-    private static bool TryMatchHeader(ReadOnlySpan<byte> html, int p, out int valueStart, out int valueEnd, out byte quote)
+    private static bool TryMatchHeader(ReadOnlySpan<byte> html, int p, out int valueStart, out int valueEnd)
     {
         valueStart = -1;
         valueEnd = -1;
-        quote = 0;
         if (!AsciiByteHelpers.IsWordBoundary(html, p) || !AsciiByteHelpers.StartsWithIgnoreAsciiCase(html, p, Srcset))
         {
             return false;
@@ -213,7 +211,7 @@ internal static class SrcsetBytes
             return false;
         }
 
-        quote = html[afterEq2];
+        var quote = html[afterEq2];
         valueStart = afterEq2 + 1;
         var endRel = html[valueStart..].IndexOf(quote);
         if (endRel < 0)

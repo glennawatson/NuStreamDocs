@@ -23,7 +23,7 @@ public class BlogPostScannerBranchCoverageTests
     [Test]
     public async Task IgnoresNonDateFilenames()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "abc.md"), "no date");
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "2026X01-02-foo.md"), "broken");
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "2026-99-99-bad.md"), "invalid date");
@@ -35,7 +35,7 @@ public class BlogPostScannerBranchCoverageTests
     [Test]
     public async Task ScanProducesPosts()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-01-15-hello-world.md"),
             "---\ntitle: Custom Title\nauthor: Alice\ntags: [a, b]\npublished: 2026-01-20\n---\n\nFirst para.\n\nSecond para.\n");

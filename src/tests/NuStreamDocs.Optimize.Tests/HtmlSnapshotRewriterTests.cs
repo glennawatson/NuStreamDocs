@@ -16,7 +16,7 @@ public class HtmlSnapshotRewriterTests
     [Test]
     public async Task EmptyBufferNoOp()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var invocations = 0;
         HtmlSnapshotRewriter.Rewrite(writer, 0, (_, _, _) => invocations++);
         await Assert.That(invocations).IsEqualTo(0);
@@ -28,7 +28,7 @@ public class HtmlSnapshotRewriterTests
     [Test]
     public async Task SnapshotMirrorsBufferAndWriterReset()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         WriteUtf8(writer, "hello");
         var observedSnapshot = string.Empty;
         var observedWriterCount = -1;
@@ -46,7 +46,7 @@ public class HtmlSnapshotRewriterTests
     [Test]
     public async Task RewriteOutputLandsInWriter()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         WriteUtf8(writer, "before");
         HtmlSnapshotRewriter.Rewrite(writer, "after", static (_, w, replacement) => WriteUtf8(w, replacement));
         await Assert.That(Encoding.UTF8.GetString(writer.WrittenSpan)).IsEqualTo("after");
@@ -57,7 +57,7 @@ public class HtmlSnapshotRewriterTests
     [Test]
     public async Task StateForwardedToCallback()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         WriteUtf8(writer, "x");
         var observed = 0;
         HtmlSnapshotRewriter.Rewrite(writer, 42, (_, _, state) => observed = state);
@@ -75,7 +75,7 @@ public class HtmlSnapshotRewriterTests
     [Test]
     public async Task NullRewriteThrows()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         WriteUtf8(writer, "x");
         await Assert.That(() => HtmlSnapshotRewriter.Rewrite(writer, 0, null!)).Throws<ArgumentNullException>();
     }

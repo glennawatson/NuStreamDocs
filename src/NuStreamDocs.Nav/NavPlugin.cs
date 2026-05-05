@@ -170,12 +170,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
             return false;
         }
 
-        if (html.IndexOf("<!--@@nav@@-->"u8) >= 0)
-        {
-            return true;
-        }
-
-        return _options.Tabs && html.IndexOf("<!--@@nav-tabs@@-->"u8) >= 0;
+        return html.IndexOf("<!--@@nav@@-->"u8) >= 0 || (_options.Tabs && html.IndexOf("<!--@@nav-tabs@@-->"u8) >= 0);
     }
 
     /// <inheritdoc/>
@@ -243,12 +238,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     public NavNeighbours GetNeighbours(FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
-        if (IsRootIndex(relativePath))
-        {
-            return NavNeighbours.None;
-        }
-
-        if (!TryResolveIndex(relativePath, out var idx))
+        if (IsRootIndex(relativePath) || !TryResolveIndex(relativePath, out var idx))
         {
             return NavNeighbours.None;
         }
@@ -261,12 +251,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     public NavNeighbours GetSectionNeighbours(FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
-        if (IsRootIndex(relativePath))
-        {
-            return NavNeighbours.None;
-        }
-
-        if (!TryResolveIndex(relativePath, out var idx))
+        if (IsRootIndex(relativePath) || !TryResolveIndex(relativePath, out var idx))
         {
             return NavNeighbours.None;
         }
@@ -274,12 +259,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         var (start, end) = _sectionSpans![idx];
 
         // Section of one: no real neighbours, suppress prev/next.
-        if (end - start <= 1)
-        {
-            return NavNeighbours.None;
-        }
-
-        return BoundedNeighbours(_orderedLeaves!, idx, start, end);
+        return end - start <= 1 ? NavNeighbours.None : BoundedNeighbours(_orderedLeaves!, idx, start, end);
     }
 
     /// <inheritdoc/>
@@ -342,12 +322,12 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
             return 0UL;
         }
 
-        var entries = new List<(string Path, long Ticks, long Length)>(capacity: 256);
+        List<(string Path, long Ticks, long Length)> entries = new(capacity: 256);
         AppendStats(inputRoot, "*.md", entries);
         AppendStats(inputRoot, ".pages", entries);
         entries.Sort(static (a, b) => string.CompareOrdinal(a.Path, b.Path));
 
-        var hash = new XxHash3();
+        XxHash3 hash = new();
         Span<byte> scratch = stackalloc byte[StatTupleLength];
         for (var i = 0; i < entries.Count; i++)
         {
@@ -369,7 +349,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         var files = Directory.GetFiles(root, searchPattern, SearchOption.AllDirectories);
         for (var i = 0; i < files.Length; i++)
         {
-            var info = new FileInfo(files[i]);
+            FileInfo info = new(files[i]);
             entries.Add((files[i], info.LastWriteTimeUtc.Ticks, info.Length));
         }
     }
@@ -379,8 +359,8 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <returns>The three index pieces.</returns>
     private static (NavNode[] Leaves, Dictionary<byte[], int> Index, (int Start, int End)[] Spans) BuildIndex(NavNode root)
     {
-        var leaves = new List<NavNode>();
-        var spans = new List<(int Start, int End)>();
+        List<NavNode> leaves = [];
+        List<(int Start, int End)> spans = [];
         Linearize(root, leaves, spans, 0);
 
         // Any leaf that bubbled all the way up to the root section is still
@@ -394,7 +374,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         }
 
         NavNode[] ordered = [.. leaves];
-        var index = new Dictionary<byte[], int>(leaves.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], int> index = new(leaves.Count, ByteArrayComparer.Instance);
         for (var i = 0; i < ordered.Length; i++)
         {
             index[Encoding.UTF8.GetBytes(ordered[i].RelativePath)] = i;
@@ -500,13 +480,13 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         var stem = path.AsSpan(0, keepLength);
         var lastSlash = stem.LastIndexOfAny('/', '\\');
         var fileName = lastSlash >= 0 ? stem[(lastSlash + 1)..] : stem;
-        if (!fileName.Equals("index", StringComparison.OrdinalIgnoreCase))
+        if (fileName.Equals("index", StringComparison.OrdinalIgnoreCase))
         {
-            destination[keptBytes] = (byte)'/';
-            return keptBytes + 1;
+            return lastSlash >= 0 ? Encoding.UTF8.GetBytes(stem[..(lastSlash + 1)], destination) : 0;
         }
 
-        return lastSlash >= 0 ? Encoding.UTF8.GetBytes(stem[..(lastSlash + 1)], destination) : 0;
+        destination[keptBytes] = (byte)'/';
+        return keptBytes + 1;
     }
 
     /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>

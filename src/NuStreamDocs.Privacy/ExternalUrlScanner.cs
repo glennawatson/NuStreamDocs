@@ -37,7 +37,7 @@ internal static class ExternalUrlScanner
     {
         ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(auditSet);
-        var ctx = new UrlAuditContext(filter, auditSet);
+        UrlAuditContext ctx = new(filter, auditSet);
         AssetAttributeBytes.AuditInto(html, ctx);
         SrcsetBytes.AuditInto(html, ctx);
         CssUrlBytes.AuditInto(html, ctx);
@@ -95,7 +95,7 @@ internal static class ExternalUrlScanner
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(filter);
 
-        var ctx = new UrlRewriteContext(filter, registry);
+        UrlRewriteContext ctx = new(filter, registry);
         using var rental = PageBuilderPool.Rent(html.Length);
         var sink = rental.Writer;
         return RewriteInto(html, ctx, sink) ? sink.WrittenSpan.ToArray() : html.ToArray();
@@ -109,21 +109,14 @@ internal static class ExternalUrlScanner
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when a URL was rewritten.</returns>
-    private static bool TryDispatchAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
-    {
-        var b = html[p];
-        if (b is (byte)'<')
+    private static bool TryDispatchAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo) =>
+        html[p] switch
         {
-            return InlineStyleBlockBytes.TryRewriteBlock(html, p, ctx, sink, ref lastEmit, out advanceTo);
-        }
+            (byte)'<' => InlineStyleBlockBytes.TryRewriteBlock(html, p, ctx, sink, ref lastEmit, out advanceTo),
 
-        // Try srcset first when the candidate could plausibly start one (longer name, more specific). Fall through to src / href on miss.
-        if (b is (byte)'s' or (byte)'S'
-            && SrcsetBytes.TryRewriteAt(html, p, ctx, sink, ref lastEmit, out advanceTo))
-        {
-            return true;
-        }
-
-        return AssetAttributeBytes.TryRewriteAt(html, p, ctx, sink, ref lastEmit, out advanceTo);
-    }
+            // Try srcset first when the candidate could plausibly start one (longer name, more specific). Fall through to src / href on miss.
+            (byte)'s' or (byte)'S'
+                when SrcsetBytes.TryRewriteAt(html, p, ctx, sink, ref lastEmit, out advanceTo) => true,
+            _ => AssetAttributeBytes.TryRewriteAt(html, p, ctx, sink, ref lastEmit, out advanceTo),
+        };
 }

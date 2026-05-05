@@ -16,7 +16,7 @@ public class NotFoundPageWriterTests
     [Test]
     public async Task RenderEmitsFullSkeletonWithAllArguments()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         NotFoundPageWriter.Render(
             writer,
             "Acme Docs"u8,
@@ -37,7 +37,7 @@ public class NotFoundPageWriterTests
     [Test]
     public async Task RenderOmitsSiteNamePiecesWhenEmpty()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         NotFoundPageWriter.Render(writer, [], "/css.css"u8, "/icon.svg"u8);
 
         var output = Encoding.UTF8.GetString(writer.WrittenSpan);
@@ -50,7 +50,7 @@ public class NotFoundPageWriterTests
     [Test]
     public async Task RenderOmitsStylesheetWhenEmpty()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         NotFoundPageWriter.Render(writer, "Site"u8, [], "/icon.svg"u8);
 
         var output = Encoding.UTF8.GetString(writer.WrittenSpan);
@@ -63,7 +63,7 @@ public class NotFoundPageWriterTests
     [Test]
     public async Task RenderOmitsFaviconWhenEmpty()
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         NotFoundPageWriter.Render(writer, "Site"u8, "/css.css"u8, []);
 
         var output = Encoding.UTF8.GetString(writer.WrittenSpan);
@@ -80,7 +80,7 @@ public class NotFoundPageWriterTests
         Directory.CreateDirectory(dir);
         try
         {
-            await NotFoundPageWriter.WriteIfMissingAsync(dir, "Site"u8.ToArray(), "/css.css"u8.ToArray(), "/icon.svg"u8.ToArray(), CancellationToken.None);
+            await NotFoundPageWriter.WriteIfMissingAsync(dir, [.. "Site"u8], [.. "/css.css"u8], [.. "/icon.svg"u8], CancellationToken.None);
             var path = Path.Combine(dir, "404.html");
             await Assert.That(File.Exists(path)).IsTrue();
             var html = await File.ReadAllTextAsync(path);
@@ -103,7 +103,7 @@ public class NotFoundPageWriterTests
         {
             var path = Path.Combine(dir, "404.html");
             await File.WriteAllTextAsync(path, "<!-- already there -->");
-            await NotFoundPageWriter.WriteIfMissingAsync(dir, "Site"u8.ToArray(), "/css.css"u8.ToArray(), "/icon.svg"u8.ToArray(), CancellationToken.None);
+            await NotFoundPageWriter.WriteIfMissingAsync(dir, [.. "Site"u8], [.. "/css.css"u8], [.. "/icon.svg"u8], CancellationToken.None);
             var html = await File.ReadAllTextAsync(path);
             await Assert.That(html).IsEqualTo("<!-- already there -->");
         }

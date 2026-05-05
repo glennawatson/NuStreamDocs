@@ -26,7 +26,7 @@ public class ApiIndexWriterTests
     [Test]
     public async Task ReturnsZeroWhenOnlyInfraDirectoriesPresent()
     {
-        using var fixture = new TempApiTree();
+        using TempApiTree fixture = new();
         Directory.CreateDirectory(Path.Combine(fixture.Root, "lib"));
         Directory.CreateDirectory(Path.Combine(fixture.Root, "refs"));
         Directory.CreateDirectory(Path.Combine(fixture.Root, "cache"));
@@ -43,7 +43,7 @@ public class ApiIndexWriterTests
     [Test]
     public async Task EmitsSortedNamespaceListWithDefaultTitle()
     {
-        using var fixture = new TempApiTree();
+        using TempApiTree fixture = new();
         Directory.CreateDirectory(Path.Combine(fixture.Root, "Akavache"));
         Directory.CreateDirectory(Path.Combine(fixture.Root, "ReactiveUI"));
         Directory.CreateDirectory(Path.Combine(fixture.Root, "Splat"));
@@ -77,7 +77,7 @@ public class ApiIndexWriterTests
     [Test]
     public async Task HonoursCustomTitleAndIntro()
     {
-        using var fixture = new TempApiTree();
+        using TempApiTree fixture = new();
         Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo.Bar"));
 
         var written = ApiIndexWriter.Write(
@@ -97,7 +97,7 @@ public class ApiIndexWriterTests
     [Test]
     public async Task IndexOrderEmitsFrontmatterBlock()
     {
-        using var fixture = new TempApiTree();
+        using TempApiTree fixture = new();
         Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo"));
 
         var written = ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], [], order: 2);
@@ -112,7 +112,7 @@ public class ApiIndexWriterTests
     [Test]
     public async Task LegacyOverloadEmitsNoFrontmatter()
     {
-        using var fixture = new TempApiTree();
+        using TempApiTree fixture = new();
         Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo"));
 
         ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], []);

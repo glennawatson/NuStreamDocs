@@ -36,7 +36,7 @@ public static class PagefindIndexWriter
 
         var manifestPath = searchRoot.File("pagefind-entry.json");
         using var manifestStream = File.Create(manifestPath.Value);
-        using var manifest = new Utf8JsonWriter(manifestStream);
+        using Utf8JsonWriter manifest = new(manifestStream);
 
         manifest.WriteStartObject();
         manifest.WriteString("version"u8, "1.4.0");
@@ -68,7 +68,7 @@ public static class PagefindIndexWriter
     private static void WriteRecord(FilePath path, in SearchDocument doc)
     {
         using var stream = File.Create(path.Value);
-        using var writer = new Utf8JsonWriter(stream);
+        using Utf8JsonWriter writer = new(stream);
         writer.WriteStartObject();
         writer.WriteString("url"u8, (ReadOnlySpan<byte>)doc.RelativeUrl);
         writer.WriteString("title"u8, (ReadOnlySpan<byte>)doc.Title);

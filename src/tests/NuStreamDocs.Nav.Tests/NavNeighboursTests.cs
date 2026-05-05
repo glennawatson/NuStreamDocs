@@ -22,7 +22,7 @@ public class NavNeighboursTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "alpha", "b.md"), "b");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "beta", "c.md"), "c");
 
-        var plugin = new NavPlugin(NavOptions.Default with { Indexes = false });
+        NavPlugin plugin = new(NavOptions.Default with { Indexes = false });
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         var neighbours = plugin.GetNeighbours("alpha/b.md");
@@ -42,7 +42,7 @@ public class NavNeighboursTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "alpha", "b.md"), "b");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "beta", "c.md"), "c");
 
-        var plugin = new NavPlugin(NavOptions.Default with { Indexes = false });
+        NavPlugin plugin = new(NavOptions.Default with { Indexes = false });
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         var neighbours = plugin.GetSectionNeighbours("alpha/b.md");
@@ -58,7 +58,7 @@ public class NavNeighboursTests
         using var fixture = TempDocsTree.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "only.md"), "only");
 
-        var plugin = new NavPlugin();
+        NavPlugin plugin = new();
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         var neighbours = plugin.GetNeighbours("not-in-tree.md");
@@ -75,7 +75,7 @@ public class NavNeighboursTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "index.md"), "intro");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "next.md"), "next");
 
-        var plugin = new NavPlugin(NavOptions.Default with { Indexes = true });
+        NavPlugin plugin = new(NavOptions.Default with { Indexes = true });
         await new DocBuilder().WithInput(fixture.Root).WithOutput(fixture.Output).UsePlugin(plugin).BuildAsync();
 
         var neighbours = plugin.GetNeighbours("guide/next.md");

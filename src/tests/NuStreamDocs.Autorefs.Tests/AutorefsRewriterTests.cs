@@ -15,11 +15,11 @@ public class AutorefsRewriterTests
     [Test]
     public async Task ResolvedMarkersGetRewritten()
     {
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "api/foo.html"u8.ToArray(), "Foo"u8);
+        AutorefsRegistry registry = new();
+        registry.Register("Foo"u8, [.. "api/foo.html"u8], "Foo"u8);
         var input = "<a href=\"@autoref:Foo\">Foo</a>"u8;
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var changed = AutorefsRewriter.RewriteSpan(input, registry, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -32,10 +32,10 @@ public class AutorefsRewriterTests
     [Test]
     public async Task UnresolvedMarkersStayVerbatim()
     {
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var input = "<a href=\"@autoref:Missing\">Missing</a>"u8;
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var changed = AutorefsRewriter.RewriteSpan(input, registry, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -48,12 +48,12 @@ public class AutorefsRewriterTests
     [Test]
     public async Task MultipleMarkersInOneDocument()
     {
-        var registry = new AutorefsRegistry();
-        registry.Register("a"u8, "a.html"u8.ToArray(), default);
-        registry.Register("b"u8, "b.html"u8.ToArray(), "b"u8);
+        AutorefsRegistry registry = new();
+        registry.Register("a"u8, [.. "a.html"u8], default);
+        registry.Register("b"u8, [.. "b.html"u8], "b"u8);
         var input = "see <a href=\"@autoref:a\">A</a> and <a href=\"@autoref:b\">B</a>"u8;
 
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         AutorefsRewriter.RewriteSpan(input, registry, sink);
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
 

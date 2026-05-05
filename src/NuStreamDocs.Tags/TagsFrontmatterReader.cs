@@ -29,12 +29,7 @@ internal static class TagsFrontmatterReader
 
         var frontmatter = source[..bodyStart];
         var tagsLineStart = FindTagsLine(frontmatter);
-        if (tagsLineStart < 0)
-        {
-            return [];
-        }
-
-        return ParseTagsValue(frontmatter, tagsLineStart);
+        return tagsLineStart < 0 ? [] : ParseTagsValue(frontmatter, tagsLineStart);
     }
 
     /// <summary>Finds the offset of a top-level <c>tags:</c> key in the frontmatter span.</summary>
@@ -92,7 +87,7 @@ internal static class TagsFrontmatterReader
             return [];
         }
 
-        var tags = new List<byte[]>(4);
+        List<byte[]> tags = new(4);
         var cursor = 0;
         while (cursor < span.Length)
         {
@@ -116,7 +111,7 @@ internal static class TagsFrontmatterReader
     /// <returns>UTF-8 tag arrays.</returns>
     private static byte[][] ParseBlockList(ReadOnlySpan<byte> frontmatter, int cursor)
     {
-        var tags = new List<byte[]>(4);
+        List<byte[]> tags = new(4);
         while (cursor < frontmatter.Length)
         {
             var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);

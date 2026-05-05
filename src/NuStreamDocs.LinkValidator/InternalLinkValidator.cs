@@ -43,11 +43,11 @@ public static class InternalLinkValidator
         ArgumentNullException.ThrowIfNull(corpus);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(parallelism);
 
-        var diagnostics = new ConcurrentBag<LinkDiagnostic>();
-        var parallelOptions = new ParallelOptions
+        ConcurrentBag<LinkDiagnostic> diagnostics = [];
+        ParallelOptions parallelOptions = new()
         {
             CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = parallelism,
+            MaxDegreeOfParallelism = parallelism
         };
 
         await Parallel.ForEachAsync(
@@ -197,7 +197,7 @@ public static class InternalLinkValidator
             return [];
         }
 
-        var segments = new List<(int Start, int Length)>(8);
+        List<(int Start, int Length)> segments = new(8);
         CollectSegments(path, segments);
         return segments is []
             ? []

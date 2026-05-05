@@ -93,10 +93,10 @@ public class TomlToJsonTests
     [Test]
     public async Task ConvertAsyncStreams()
     {
-        var sink = new ArrayBufferWriter<byte>();
-        await using var writer = new Utf8JsonWriter(sink);
+        ArrayBufferWriter<byte> sink = new();
+        await using Utf8JsonWriter writer = new(sink);
         const string Input = "a = 1\n[t]\nk = 2\n";
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(Input));
+        await using MemoryStream stream = new(Encoding.UTF8.GetBytes(Input));
         await TomlToJson.ConvertAsync(stream, writer, CancellationToken.None);
         await writer.FlushAsync();
         var json = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -109,8 +109,8 @@ public class TomlToJsonTests
     /// <returns>JSON output.</returns>
     private static string Convert(string toml)
     {
-        var sink = new ArrayBufferWriter<byte>();
-        using var writer = new Utf8JsonWriter(sink);
+        ArrayBufferWriter<byte> sink = new();
+        using Utf8JsonWriter writer = new(sink);
         TomlToJson.Convert(Encoding.UTF8.GetBytes(toml), writer);
         writer.Flush();
         return Encoding.UTF8.GetString(sink.WrittenSpan);

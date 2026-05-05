@@ -144,7 +144,7 @@ public class UseDirectoryUrlsTests
     [Test]
     public async Task DocBuilderFluentEnablesDirectoryUrls()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseDirectoryUrlsEnabled).IsFalse();
         builder.UseDirectoryUrls();
         await Assert.That(builder.UseDirectoryUrlsEnabled).IsTrue();

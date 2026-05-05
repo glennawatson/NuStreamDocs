@@ -24,7 +24,7 @@ public static class ByteArrayCollectionExtensions
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(comparer);
 
-        var set = new HashSet<string>(source.Length, comparer);
+        HashSet<string> set = new(source.Length, comparer);
         for (var i = 0; i < source.Length; i++)
         {
             set.Add(Encoding.UTF8.GetString(source[i]));

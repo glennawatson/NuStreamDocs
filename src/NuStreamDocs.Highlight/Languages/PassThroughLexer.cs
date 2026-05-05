@@ -25,6 +25,6 @@ public static class PassThroughLexer
     [
 
         // Consume one byte per step — every byte is classified as plain text.
-        new(static slice => slice is [_, ..] ? 1 : 0, TokenClass.Text, LexerRule.NoStateChange),
+        new(static slice => slice is [_, ..] ? 1 : 0, TokenClass.Text, LexerRule.NoStateChange)
     ]));
 }

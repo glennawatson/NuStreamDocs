@@ -78,7 +78,7 @@ internal sealed class ExternalAssetRegistry
 
         // Look up using a temporary copy to honor the ByteArrayComparer contract; the factory
         // only fires on first sight so the local-path alloc only pays for registered URLs.
-        var key = urlBytes.ToArray();
+        byte[] key = [.. urlBytes];
         return _urlToLocal.GetOrAdd(key, static (k, dir) => BuildLocalPathBytes(k, dir), _assetDirectoryBytes);
     }
 

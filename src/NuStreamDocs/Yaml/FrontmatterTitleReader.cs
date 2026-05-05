@@ -72,15 +72,10 @@ public static class FrontmatterTitleReader
     /// <summary>Drops one matching pair of YAML string quotes from <paramref name="value"/>.</summary>
     /// <param name="value">Scalar bytes.</param>
     /// <returns>Unquoted bytes, or <paramref name="value"/> unchanged.</returns>
-    private static ReadOnlySpan<byte> StripYamlQuotes(ReadOnlySpan<byte> value)
-    {
-        if (value.Length >= 2
-            && (value[0] is (byte)'"' or (byte)'\'')
-            && value[^1] == value[0])
-        {
-            return value[1..^1];
-        }
-
-        return value;
-    }
+    private static ReadOnlySpan<byte> StripYamlQuotes(ReadOnlySpan<byte> value) =>
+        value.Length >= 2
+        && value[0] is (byte)'"' or (byte)'\''
+        && value[^1] == value[0]
+            ? value[1..^1]
+            : value;
 }

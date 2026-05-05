@@ -37,7 +37,7 @@ public sealed class BibliographyDatabase
     {
         ArgumentNullException.ThrowIfNull(entries);
         _ordered = [.. entries];
-        var byteDict = new Dictionary<byte[], CitationEntry>(entries.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], CitationEntry> byteDict = new(entries.Count, ByteArrayComparer.Instance);
         for (var i = 0; i < _ordered.Length; i++)
         {
             var entry = _ordered[i];

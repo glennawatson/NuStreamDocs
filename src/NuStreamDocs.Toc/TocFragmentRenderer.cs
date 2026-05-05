@@ -87,7 +87,7 @@ internal static class TocFragmentRenderer
         //   - Between consecutive same-level siblings we close </li> then open <li>.
         //   - When level deepens we open <ul> inside the still-open parent <li>.
         //   - When level shallows we close </li></ul> for each level dropped.
-        var stack = new Stack<int>();
+        Stack<int> stack = new();
         for (var i = 0; i < filtered.Length; i++)
         {
             EmitHeading(snapshot, filtered[i], stack, writer);
@@ -247,7 +247,7 @@ internal static class TocFragmentRenderer
         (byte)'>' => EntityGt,
         (byte)'&' => EntityAmp,
         (byte)'"' => EntityQuot,
-        _ => default,
+        _ => default
     };
 
     /// <summary>Filters headings by level range.</summary>

@@ -44,7 +44,7 @@ public static class NotFoundPageWriter
             return ValueTask.CompletedTask;
         }
 
-        var writer = new ArrayBufferWriter<byte>(2048);
+        ArrayBufferWriter<byte> writer = new(2048);
         WriteDocument(writer, siteName, stylesheetUrl, faviconUrl);
         Directory.CreateDirectory(outputRoot.Value);
         return new(File.WriteAllBytesAsync(target, writer.WrittenMemory, cancellationToken));
@@ -76,14 +76,14 @@ public static class NotFoundPageWriter
         ReadOnlySpan<byte> stylesheetUrl,
         ReadOnlySpan<byte> faviconUrl)
     {
-        ReadOnlySpan<byte> head = """
-            <!doctype html>
-            <html lang="en" class="no-js">
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width,initial-scale=1">
-              <title>Page not found
-            """u8;
+        var head = """
+                   <!doctype html>
+                   <html lang="en" class="no-js">
+                   <head>
+                     <meta charset="utf-8">
+                     <meta name="viewport" content="width=device-width,initial-scale=1">
+                     <title>Page not found
+                   """u8;
         Write(writer, head);
         if (!siteName.IsEmpty)
         {
@@ -106,14 +106,14 @@ public static class NotFoundPageWriter
             Write(writer, "\">\n"u8);
         }
 
-        ReadOnlySpan<byte> chromeOpen = """
-            </head>
-            <body data-md-color-scheme="default">
-              <div class="md-container">
-                <header class="md-header">
-                  <nav class="md-header__inner md-grid" aria-label="Header">
-                    <a href="/" class="md-header__button md-logo" aria-label="Home">
-            """u8;
+        var chromeOpen = """
+                         </head>
+                         <body data-md-color-scheme="default">
+                           <div class="md-container">
+                             <header class="md-header">
+                               <nav class="md-header__inner md-grid" aria-label="Header">
+                                 <a href="/" class="md-header__button md-logo" aria-label="Home">
+                         """u8;
         Write(writer, chromeOpen);
         if (!siteName.IsEmpty)
         {
@@ -122,23 +122,23 @@ public static class NotFoundPageWriter
             Write(writer, "</span>"u8);
         }
 
-        ReadOnlySpan<byte> body = """
-            </a>
-                  </nav>
-                </header>
-                <main class="md-main">
-                  <div class="md-main__inner md-grid" style="grid-template-columns: minmax(0, 1fr)">
-                    <article class="md-content__inner md-typeset" id="md-content" style="text-align:center;padding:4rem 1rem;max-width:36rem;margin:0 auto">
-                      <h1>Page not found</h1>
-                      <p>Oops &mdash; the page you were looking for doesn&rsquo;t exist (or has moved).</p>
-                      <p><a href="/">&larr; Back to the home page</a></p>
-                    </article>
-                  </div>
-                </main>
-              </div>
-            </body>
-            </html>
-            """u8;
+        var body = """
+                   </a>
+                         </nav>
+                       </header>
+                       <main class="md-main">
+                         <div class="md-main__inner md-grid" style="grid-template-columns: minmax(0, 1fr)">
+                           <article class="md-content__inner md-typeset" id="md-content" style="text-align:center;padding:4rem 1rem;max-width:36rem;margin:0 auto">
+                             <h1>Page not found</h1>
+                             <p>Oops &mdash; the page you were looking for doesn&rsquo;t exist (or has moved).</p>
+                             <p><a href="/">&larr; Back to the home page</a></p>
+                           </article>
+                         </div>
+                       </main>
+                     </div>
+                   </body>
+                   </html>
+                   """u8;
         Write(writer, body);
     }
 

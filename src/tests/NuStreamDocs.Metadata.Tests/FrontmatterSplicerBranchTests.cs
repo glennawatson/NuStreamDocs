@@ -15,7 +15,7 @@ public class FrontmatterSplicerBranchTests
     [Test]
     public async Task EmptyExtraPassThrough()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice("# body"u8, [], sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("# body");
     }
@@ -25,7 +25,7 @@ public class FrontmatterSplicerBranchTests
     [Test]
     public async Task NoFrontmatterWraps()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice("# body\n"u8, "title: A\n"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).StartsWith("---\ntitle: A\n---\n");
@@ -37,7 +37,7 @@ public class FrontmatterSplicerBranchTests
     [Test]
     public async Task NoTrailingNewlineNormalized()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice("body"u8, "title: A"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).Contains("title: A\n---\n");
@@ -48,7 +48,7 @@ public class FrontmatterSplicerBranchTests
     [Test]
     public async Task ExistingKeysWin()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice(
             "---\ntitle: Page\n---\nbody"u8,
             "title: Inherited\nauthor: Inh\n"u8,
@@ -64,7 +64,7 @@ public class FrontmatterSplicerBranchTests
     [Test]
     public async Task UnclosedOpenerTreatedAsNone()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice(
             "---\ntitle: Open\nstill body\n"u8,
             "author: A\n"u8,
@@ -78,7 +78,7 @@ public class FrontmatterSplicerBranchTests
     [Test]
     public async Task DashesWithoutNewlineIgnored()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice("---"u8, "k: v\n"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).StartsWith("---\nk: v\n---\n");
@@ -89,7 +89,7 @@ public class FrontmatterSplicerBranchTests
     [Test]
     public async Task CrlfFrontmatter()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice(
             "---\r\ntitle: Crlf\r\n---\r\nbody"u8,
             "author: A\n"u8,

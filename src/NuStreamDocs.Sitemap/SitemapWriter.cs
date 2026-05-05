@@ -55,7 +55,7 @@ internal static class SitemapWriter
     /// <param name="urlPaths">UTF-8 URL byte paths relative to <paramref name="baseUrl"/>, sorted.</param>
     public static void WriteSitemap(DirectoryPath outputRoot, byte[] baseUrl, byte[][] urlPaths)
     {
-        var sink = new ArrayBufferWriter<byte>(8 * 1024);
+        ArrayBufferWriter<byte> sink = new(8 * 1024);
         sink.Write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"u8);
         sink.Write("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"u8);
 
@@ -76,7 +76,7 @@ internal static class SitemapWriter
     /// <param name="baseUrl">Site URL (with trailing slash), UTF-8 bytes.</param>
     public static void WriteRobots(DirectoryPath outputRoot, byte[] baseUrl)
     {
-        var sink = new ArrayBufferWriter<byte>(256);
+        ArrayBufferWriter<byte> sink = new(256);
         sink.Write("User-agent: *\nAllow: /\n\nSitemap: "u8);
         sink.Write(baseUrl);
         sink.Write("sitemap.xml\n"u8);

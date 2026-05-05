@@ -63,8 +63,8 @@ public static class CSharpApiGenerator
             static (l, result, secs) => CSharpApiGeneratorLoggingHelper.LogGeneratorComplete(l, result.CanonicalTypes, result.PagesEmitted, secs),
             async () =>
             {
-                var emitter = new ZensicalDocumentationEmitter();
-                var extractor = new MetadataExtractor();
+                ZensicalDocumentationEmitter emitter = new();
+                MetadataExtractor extractor = new();
                 return await extractor.RunAsync(source, outputRoot, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
             }).ConfigureAwait(false);
 
@@ -99,7 +99,7 @@ public static class CSharpApiGenerator
             static (l, result, secs) => CSharpApiGeneratorLoggingHelper.LogDirectExtractComplete(l, result.CanonicalTypes.Length, result.SourceLinks.Length, secs),
             async () =>
             {
-                var extractor = new MetadataExtractor();
+                MetadataExtractor extractor = new();
                 return await extractor.ExtractAsync(source, resolvedLogger, cancellationToken).ConfigureAwait(false);
             }).ConfigureAwait(false);
     }
@@ -132,7 +132,7 @@ public static class CSharpApiGenerator
         NuGetPackagesInput p => $"packages:{p.Packages.Length}",
         LocalAssembliesInput l => $"assemblies:{l.AssemblyPaths.Length}@{l.Tfm}",
         CustomInput => "custom-source",
-        _ => input.GetType().Name,
+        _ => input.GetType().Name
     };
 
     /// <summary>Emits the generator-start log only when the configured level is enabled, so <see cref="DescribeInputs"/>'s <c>string.Join</c> stays out of the cold path.</summary>

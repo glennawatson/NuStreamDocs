@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Highlight;
@@ -44,19 +43,19 @@ public sealed class ByteKeywordSet
         _ignoreCase = ignoreCase;
     }
 
-    /// <summary>Builds a case-sensitive set from the supplied ASCII string keywords.</summary>
-    /// <param name="keywords">Keyword list.</param>
+    /// <summary>Builds a case-sensitive set from the supplied UTF-8 keywords. Pass <c>[.. "name"u8]</c> or <c>[.. "name"u8]</c> per entry.</summary>
+    /// <param name="keywords">Keyword bytes; each entry must be non-empty.</param>
     /// <returns>Built set.</returns>
-    public static ByteKeywordSet Create(params string[] keywords)
+    public static ByteKeywordSet Create(params byte[][] keywords)
     {
         ArgumentNullException.ThrowIfNull(keywords);
         return Build(keywords, ignoreCase: false);
     }
 
     /// <summary>Builds a case-insensitive set; entries must already be lowercase ASCII.</summary>
-    /// <param name="lowercaseKeywords">Keyword list (lowercase).</param>
+    /// <param name="lowercaseKeywords">Lowercase UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
-    public static ByteKeywordSet CreateIgnoreCase(params string[] lowercaseKeywords)
+    public static ByteKeywordSet CreateIgnoreCase(params byte[][] lowercaseKeywords)
     {
         ArgumentNullException.ThrowIfNull(lowercaseKeywords);
         return Build(lowercaseKeywords, ignoreCase: true);
@@ -85,10 +84,10 @@ public sealed class ByteKeywordSet
     }
 
     /// <summary>Builds the length-indexed bucket table from the supplied keywords.</summary>
-    /// <param name="keywords">Keyword strings.</param>
+    /// <param name="keywords">Keyword bytes.</param>
     /// <param name="ignoreCase">Whether to use ASCII case-fold compare.</param>
     /// <returns>Built set.</returns>
-    private static ByteKeywordSet Build(string[] keywords, bool ignoreCase)
+    private static ByteKeywordSet Build(byte[][] keywords, bool ignoreCase)
     {
         if (keywords.Length is 0)
         {
@@ -99,7 +98,11 @@ public sealed class ByteKeywordSet
         for (var i = 0; i < keywords.Length; i++)
         {
             var kw = keywords[i];
-            ArgumentException.ThrowIfNullOrEmpty(kw);
+            if (kw is null or [])
+            {
+                throw new ArgumentException("Keyword bytes must be non-null and non-empty.", nameof(keywords));
+            }
+
             if (kw.Length > maxLen)
             {
                 maxLen = kw.Length;
@@ -122,7 +125,7 @@ public sealed class ByteKeywordSet
         for (var i = 0; i < keywords.Length; i++)
         {
             var kw = keywords[i];
-            byLength[kw.Length][cursors[kw.Length]++] = Encoding.UTF8.GetBytes(kw);
+            byLength[kw.Length][cursors[kw.Length]++] = kw;
         }
 
         return new(byLength, ignoreCase);

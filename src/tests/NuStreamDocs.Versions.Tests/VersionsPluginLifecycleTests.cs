@@ -12,7 +12,7 @@ public class VersionsPluginLifecycleTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new VersionsPlugin(new("1.0", "Stable"));
+        VersionsPlugin plugin = new(new("1.0", "Stable"));
         await Assert.That(plugin.Name.SequenceEqual("versions"u8)).IsTrue();
     }
 }

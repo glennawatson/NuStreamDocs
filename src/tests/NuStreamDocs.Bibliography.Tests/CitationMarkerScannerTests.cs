@@ -104,10 +104,10 @@ public class CitationMarkerScannerTests
             .AddCase("yes", "Case Yes", "[2020] 3", 2020)
             .AddCase("real", "Case Real", "[2020] 4", 2020)
             .Build();
-        var options = new BibliographyOptions(db, Aglc4Style.Instance, WarnOnMissing: false);
-        var plugin = new BibliographyPlugin(options);
-        var sink = new ArrayBufferWriter<byte>(Math.Max(markdown.Length * 4, 16));
-        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(markdown), sink);
+        BibliographyOptions options = new(db, Aglc4Style.Instance, WarnOnMissing: false);
+        BibliographyPlugin plugin = new(options);
+        ArrayBufferWriter<byte> sink = new(Math.Max(markdown.Length * 4, 16));
+        PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(markdown), sink);
         plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

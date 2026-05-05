@@ -68,6 +68,10 @@ public static class DocBuilderServeExtensions
     /// <param name="logger">Logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "AccessToDisposedClosure",
+        Justification = "Handler unregistered in finally before linkedCts dispose; catch ObjectDisposedException guards SIGINT race.")]
     public static async Task WatchAndServeAsync(this DocBuilder builder, WatchAndServeOptions options, ILogger logger, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -78,7 +82,7 @@ public static class DocBuilderServeExtensions
         // `await foreach` over the watcher never observes cancellation and the process hangs.
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var combinedToken = linkedCts.Token;
-        ConsoleCancelEventHandler? consoleHandler = (_, args) =>
+        ConsoleCancelEventHandler consoleHandler = (_, args) =>
         {
             args.Cancel = true;
             try
@@ -97,7 +101,7 @@ public static class DocBuilderServeExtensions
             // Initial build: synchronous in the lifecycle so the host has something to serve immediately.
             await builder.BuildAsync(combinedToken).ConfigureAwait(false);
 
-            var broker = new LiveReloadBroker();
+            LiveReloadBroker broker = new();
             var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, combinedToken).ConfigureAwait(false);
             var url = DevServer.BuildUrl(options);
             ServeLoggingHelper.LogServerStart(logger, url.Value, builder.InputRoot.Value, builder.OutputRoot.Value);
@@ -109,7 +113,7 @@ public static class DocBuilderServeExtensions
 
             try
             {
-                using var watcher = new WatchLoop(builder.InputRoot, options.WatchOutput ? builder.OutputRoot : null, options.DebounceMs, logger);
+                using WatchLoop watcher = new(builder.InputRoot, options.WatchOutput ? builder.OutputRoot : null, options.DebounceMs, logger);
                 await foreach (var changes in watcher.WaitAsync(combinedToken).ConfigureAwait(false))
                 {
                     await RebuildAndSignalAsync(builder, broker, logger, changes, combinedToken).ConfigureAwait(false);
@@ -128,7 +132,7 @@ public static class DocBuilderServeExtensions
                 // graceful close lets Ctrl+C hang forever.
                 broker.AbortAll();
 
-                using var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                using CancellationTokenSource stopCts = new(TimeSpan.FromSeconds(2));
                 try
                 {
                     await app.StopAsync(stopCts.Token).ConfigureAwait(false);
@@ -184,10 +188,10 @@ public static class DocBuilderServeExtensions
     {
         try
         {
-            var psi = new ProcessStartInfo
+            ProcessStartInfo psi = new()
             {
                 FileName = url,
-                UseShellExecute = true,
+                UseShellExecute = true
             };
             Process.Start(psi);
         }

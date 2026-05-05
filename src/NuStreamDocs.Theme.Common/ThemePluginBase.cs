@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Reflection;
 using System.Text.Encodings.Web;
 using NuStreamDocs.Common;
 using NuStreamDocs.Links;
@@ -27,110 +26,6 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
     /// <summary>Directory separator string length for relative output path translation.</summary>
     private const int DirectorySeparatorLength = 1;
-
-    /// <summary>Root-relative site URL used by the templates.</summary>
-    private static readonly byte[] SiteRootBytes = [.. "/"u8];
-
-    /// <summary>Template truthy flag emitted for enabled boolean options.</summary>
-    private static readonly byte[] TruthyBytes = [.. "1"u8];
-
-    /// <summary>UTF-8 template-data key for <c>language</c>.</summary>
-    private static readonly byte[] LanguageKey = "language"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>site_name</c>.</summary>
-    private static readonly byte[] SiteNameKey = "site_name"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>logo</c> — page-relative href to the site logo image.</summary>
-    private static readonly byte[] LogoKey = "logo"u8.ToArray();
-
-    /// <summary>UTF-8 template variable for the absolute site URL.</summary>
-    private static readonly byte[] SiteUrlKey = "site_url"u8.ToArray();
-
-    /// <summary>UTF-8 template variable for the per-page canonical URL.</summary>
-    private static readonly byte[] CanonicalUrlKey = "canonical_url"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>site_root</c>.</summary>
-    private static readonly byte[] SiteRootKey = "site_root"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>page_title</c>.</summary>
-    private static readonly byte[] PageTitleKey = "page_title"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>body</c>.</summary>
-    private static readonly byte[] BodyKey = "body"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>asset_root</c>.</summary>
-    private static readonly byte[] AssetRootKey = "asset_root"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>copyright</c>.</summary>
-    private static readonly byte[] CopyrightKey = "copyright"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>repo_url</c>.</summary>
-    private static readonly byte[] RepoUrlKey = "repo_url"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>repo_label</c> — the short host-less repo name shown next to the source icon.</summary>
-    private static readonly byte[] RepoLabelKey = "repo_label"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>edit_url</c>.</summary>
-    private static readonly byte[] EditUrlKey = "edit_url"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>scroll_to_top</c>.</summary>
-    private static readonly byte[] ScrollToTopKey = "scroll_to_top"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>toc_follow</c>.</summary>
-    private static readonly byte[] TocFollowKey = "toc_follow"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>prev_url</c>.</summary>
-    private static readonly byte[] PrevUrlKey = "prev_url"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>prev_title</c>.</summary>
-    private static readonly byte[] PrevTitleKey = "prev_title"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>next_url</c>.</summary>
-    private static readonly byte[] NextUrlKey = "next_url"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>next_title</c>.</summary>
-    private static readonly byte[] NextTitleKey = "next_title"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>head_extras</c>.</summary>
-    private static readonly byte[] HeadExtrasKey = "head_extras"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>description</c>.</summary>
-    private static readonly byte[] DescriptionKey = "description"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>author</c>.</summary>
-    private static readonly byte[] AuthorKey = "author"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>hide_navigation</c>.</summary>
-    private static readonly byte[] HideNavigationKey = "hide_navigation"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>hide_toc</c>.</summary>
-    private static readonly byte[] HideTocKey = "hide_toc"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>favicon</c>.</summary>
-    private static readonly byte[] FaviconKey = "favicon"u8.ToArray();
-
-    /// <summary>UTF-8 template-data key for <c>generator</c>.</summary>
-    private static readonly byte[] GeneratorKey = "generator"u8.ToArray();
-
-    /// <summary>UTF-8 generator value emitted as <c>nustreamdocs-{version}</c>; encoded once at type init.</summary>
-    private static readonly byte[] GeneratorBytes = BuildGeneratorBytes();
-
-    /// <summary>UTF-8 template-data key for <c>build_date</c> — ISO 8601 timestamp stamped onto every page.</summary>
-    private static readonly byte[] BuildDateKey = "build_date"u8.ToArray();
-
-    /// <summary>UTF-8 ISO 8601 build timestamp; captured once when this assembly first loads so every page in a single run reports the same value.</summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6354", Justification = "Build timestamp is intentionally wall-clock; not unit-tested for content.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6585", Justification = "ISO 8601 round-trip format is the wire format consumers expect.")]
-    private static readonly byte[] BuildDateBytes = System.Text.Encoding.UTF8.GetBytes(
-        DateTimeOffset.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
-
-    /// <summary>UTF-8 four-digit current year — used as the <c>{year}</c> token replacement in the configured copyright string.</summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6354", Justification = "Wall-clock by design — copyright stamping uses UTC year.")]
-    private static readonly byte[] CurrentYearBytes = System.Text.Encoding.UTF8.GetBytes(
-        DateTimeOffset.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture));
-
-    /// <summary>UTF-8 token consumers can embed in their copyright string; replaced with <see cref="CurrentYearBytes"/> at render time.</summary>
-    private static readonly byte[] YearTokenBytes = "{year}"u8.ToArray();
 
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly TOptions _options;
@@ -167,6 +62,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
     /// <summary>Whether the build emits pretty <c>foo/index.html</c> URLs.</summary>
     private bool _useDirectoryUrls;
+
+    /// <summary>Resolved asset-root bytes from the theme options; cached once at <see cref="ConfigureAsync"/> time.</summary>
+    private byte[] _assetRoot = [];
 
     /// <summary>Initializes a new instance of the <see cref="ThemePluginBase{TTheme, TOptions}"/> class.</summary>
     /// <param name="options">Theme options.</param>
@@ -205,8 +103,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         _repoLabel = BuildRepoLabel(_options.RepoUrl);
         _siteAuthor = context.SiteAuthor;
         _useDirectoryUrls = context.UseDirectoryUrls;
-        _resolvedFavicon = ResolveFavicon(context.InputRoot);
+        _assetRoot = [.. _options.ResolveAssetRoot()];
         _resolvedCopyright = ExpandYearToken(_options.Copyright);
+        _resolvedFavicon = ResolveFavicon(context.InputRoot);
 
         return ValueTask.CompletedTask;
     }
@@ -225,36 +124,36 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
             var pageTitle = ResolvePageTitle(context.Source, context.RelativePath);
             var neighbours = ResolveNeighbours(context.RelativePath);
-            var data = new TemplateData(
+            TemplateData data = new(
                 new(23, ByteArrayComparer.Instance)
                 {
-                    [LanguageKey] = _options.Language,
-                    [SiteNameKey] = _options.SiteName,
-                    [LogoKey] = ResolvePageRelativeUrl(_options.Logo, context.RelativePath, _useDirectoryUrls),
-                    [SiteUrlKey] = _options.SiteUrl,
-                    [CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath),
-                    [SiteRootKey] = SiteRootBytes,
-                    [PageTitleKey] = Utf8Encoder.Encode(pageTitle),
-                    [BodyKey] = new(bodyBuffer, 0, bodyLength),
-                    [AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_options.ResolveAssetRoot(), context.RelativePath, _useDirectoryUrls)]),
-                    [CopyrightKey] = _resolvedCopyright,
-                    [RepoUrlKey] = _options.RepoUrl,
-                    [RepoLabelKey] = _repoLabel,
-                    [EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
-                    [ScrollToTopKey] = _options.EnableScrollToTop ? TruthyBytes : null,
-                    [TocFollowKey] = _options.EnableTocFollow ? TruthyBytes : null,
-                    [PrevUrlKey] = ServedUrlBytes.FromPath(neighbours.PreviousPath, _useDirectoryUrls, leadingSlash: true),
-                    [PrevTitleKey] = neighbours.PreviousTitle,
-                    [NextUrlKey] = ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, leadingSlash: true),
-                    [NextTitleKey] = neighbours.NextTitle,
-                    [HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
-                    [DescriptionKey] = ResolveDescription(context.Source),
-                    [HideNavigationKey] = ShouldHideNavigation(context.Source, context.RelativePath) ? TruthyBytes : null,
-                    [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source, "hide"u8, "toc"u8) ? TruthyBytes : null,
-                    [GeneratorKey] = GeneratorBytes,
-                    [BuildDateKey] = BuildDateBytes,
-                    [FaviconKey] = _resolvedFavicon,
-                    [AuthorKey] = ResolveAuthor(context.Source, _siteAuthor),
+                    [ThemeShellBytes.LanguageKey] = _options.Language,
+                    [ThemeShellBytes.SiteNameKey] = _options.SiteName,
+                    [ThemeShellBytes.LogoKey] = ResolvePageRelativeUrl(_options.Logo, context.RelativePath, _useDirectoryUrls),
+                    [ThemeShellBytes.SiteUrlKey] = _options.SiteUrl,
+                    [ThemeShellBytes.CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath),
+                    [ThemeShellBytes.SiteRootKey] = ThemeShellBytes.SiteRoot,
+                    [ThemeShellBytes.PageTitleKey] = Utf8Encoder.Encode(pageTitle),
+                    [ThemeShellBytes.BodyKey] = new(bodyBuffer, 0, bodyLength),
+                    [ThemeShellBytes.AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_assetRoot, context.RelativePath, _useDirectoryUrls)]),
+                    [ThemeShellBytes.CopyrightKey] = _resolvedCopyright,
+                    [ThemeShellBytes.RepoUrlKey] = _options.RepoUrl,
+                    [ThemeShellBytes.RepoLabelKey] = _repoLabel,
+                    [ThemeShellBytes.EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
+                    [ThemeShellBytes.ScrollToTopKey] = _options.EnableScrollToTop ? ThemeShellBytes.Truthy : null,
+                    [ThemeShellBytes.TocFollowKey] = _options.EnableTocFollow ? ThemeShellBytes.Truthy : null,
+                    [ThemeShellBytes.PrevUrlKey] = ServedUrlBytes.FromPath(neighbours.PreviousPath, _useDirectoryUrls, leadingSlash: true),
+                    [ThemeShellBytes.PrevTitleKey] = neighbours.PreviousTitle,
+                    [ThemeShellBytes.NextUrlKey] = ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, leadingSlash: true),
+                    [ThemeShellBytes.NextTitleKey] = neighbours.NextTitle,
+                    [ThemeShellBytes.HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
+                    [ThemeShellBytes.DescriptionKey] = ResolveDescription(context.Source),
+                    [ThemeShellBytes.HideNavigationKey] = ShouldHideNavigation(context.Source, context.RelativePath) ? ThemeShellBytes.Truthy : null,
+                    [ThemeShellBytes.HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source, "hide"u8, "toc"u8) ? ThemeShellBytes.Truthy : null,
+                    [ThemeShellBytes.GeneratorKey] = ThemeShellBytes.Generator,
+                    [ThemeShellBytes.BuildDateKey] = ThemeShellBytes.BuildDate,
+                    [ThemeShellBytes.FaviconKey] = _resolvedFavicon,
+                    [ThemeShellBytes.AuthorKey] = ResolveAuthor(context.Source, _siteAuthor)
                 },
                 sections: null);
 
@@ -310,7 +209,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             "images/favicon.svg",
             "assets/favicon.ico",
             "favicon.ico",
-            "favicon.svg",
+            "favicon.svg"
         ];
 
         for (var i = 0; i < candidates.Length; i++)
@@ -347,12 +246,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     private static byte[] ResolveDescription(ReadOnlySpan<byte> source)
     {
         var raw = Yaml.FrontmatterValueExtractor.GetScalar(source, "description"u8);
-        if (raw.IsEmpty)
-        {
-            return [];
-        }
-
-        return StripYamlQuotes(raw).ToArray();
+        return raw.IsEmpty ? [] : [.. StripYamlQuotes(raw)];
     }
 
     /// <summary>Resolves the page author — front-matter <c>author:</c>, falling back to the site-wide value from the configure context.</summary>
@@ -362,12 +256,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     private static byte[] ResolveAuthor(ReadOnlySpan<byte> source, byte[] siteAuthor)
     {
         var raw = Yaml.FrontmatterValueExtractor.GetScalar(source, "author"u8);
-        if (!raw.IsEmpty)
-        {
-            return StripYamlQuotes(raw).ToArray();
-        }
-
-        return siteAuthor;
+        return !raw.IsEmpty ? [.. StripYamlQuotes(raw)] : siteAuthor;
     }
 
     /// <summary>Resolves the page title — front-matter <c>title:</c>, then the first markdown H1, then the file stem.</summary>
@@ -384,28 +273,20 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         var firstHeading = Markdown.MarkdownH1Scanner.FindFirst(source);
-        if (!firstHeading.IsEmpty)
-        {
-            return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading));
-        }
-
-        return HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(relativePath));
+        return !firstHeading.IsEmpty
+            ? HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading))
+            : HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(relativePath));
     }
 
     /// <summary>Drops a single matching pair of leading/trailing single- or double-quote bytes from <paramref name="value"/>.</summary>
     /// <param name="value">UTF-8 candidate.</param>
     /// <returns>Unquoted slice or <paramref name="value"/> unchanged.</returns>
-    private static ReadOnlySpan<byte> StripYamlQuotes(ReadOnlySpan<byte> value)
-    {
-        if (value.Length >= 2
-            && (value[0] is (byte)'"' or (byte)'\'')
-            && value[^1] == value[0])
-        {
-            return value[1..^1];
-        }
-
-        return value;
-    }
+    private static ReadOnlySpan<byte> StripYamlQuotes(ReadOnlySpan<byte> value) =>
+        value.Length >= 2
+        && value[0] is (byte)'"' or (byte)'\''
+        && value[^1] == value[0]
+            ? value[1..^1]
+            : value;
 
     /// <summary>Normalizes the repo/edit roots once per build for per-page edit URL composition.</summary>
     /// <param name="repoUrl">Configured UTF-8 repository URL.</param>
@@ -444,36 +325,6 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         return dst;
     }
 
-    /// <summary>Builds the <c>nustreamdocs-{version}</c> generator value; the version is read from the assembly informational version with any <c>+sha</c> build-metadata suffix stripped.</summary>
-    /// <returns>UTF-8 bytes of the generator string.</returns>
-    private static byte[] BuildGeneratorBytes()
-    {
-        const string Prefix = "nustreamdocs-";
-        var informational = typeof(ThemePluginBase<TTheme, TOptions>).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? string.Empty;
-        var span = informational.AsSpan();
-        var plus = span.IndexOf('+');
-        if (plus >= 0)
-        {
-            span = span[..plus];
-        }
-
-        var totalChars = Prefix.Length + span.Length;
-        var dst = new byte[totalChars];
-        for (var i = 0; i < Prefix.Length; i++)
-        {
-            dst[i] = (byte)Prefix[i];
-        }
-
-        for (var i = 0; i < span.Length; i++)
-        {
-            // Semantic-version characters are ASCII; safe to narrow.
-            dst[Prefix.Length + i] = (byte)span[i];
-        }
-
-        return dst;
-    }
-
     /// <summary>Replaces every literal <c>{year}</c> occurrence in <paramref name="copyright"/> with the current four-digit year.</summary>
     /// <param name="copyright">Configured copyright bytes (may be empty).</param>
     /// <returns>A fresh byte array with the token expanded; returns <paramref name="copyright"/> unchanged when no token is present.</returns>
@@ -485,15 +336,15 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return [];
         }
 
-        var token = YearTokenBytes.AsSpan();
+        var token = ThemeShellBytes.YearToken.AsSpan();
         var src = copyright.AsSpan();
         if (src.IndexOf(token) < 0)
         {
             return copyright;
         }
 
-        var writer = new System.Buffers.ArrayBufferWriter<byte>(copyright.Length);
-        var year = CurrentYearBytes.AsSpan();
+        ArrayBufferWriter<byte> writer = new(copyright.Length);
+        var year = ThemeShellBytes.CurrentYear.AsSpan();
         while (true)
         {
             var idx = src.IndexOf(token);
@@ -532,21 +383,16 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Translates forward slashes in <paramref name="relativePath"/> to the active directory separator when needed.</summary>
     /// <param name="relativePath">Relative output path using forward slashes.</param>
     /// <returns>OS-native relative path.</returns>
-    private static string TranslateDirectorySeparators(string relativePath)
-    {
-        if (Path.DirectorySeparatorChar is '/')
-        {
-            return relativePath;
-        }
-
-        return string.Create(relativePath.Length * DirectorySeparatorLength, relativePath, static (dst, state) =>
-        {
-            for (var i = 0; i < state.Length; i++)
+    private static string TranslateDirectorySeparators(string relativePath) =>
+        Path.DirectorySeparatorChar is '/'
+            ? relativePath
+            : string.Create(relativePath.Length * DirectorySeparatorLength, relativePath, static (dst, state) =>
             {
-                dst[i] = state[i] is '/' ? Path.DirectorySeparatorChar : state[i];
-            }
-        });
-    }
+                for (var i = 0; i < state.Length; i++)
+                {
+                    dst[i] = state[i] is '/' ? Path.DirectorySeparatorChar : state[i];
+                }
+            });
 
     /// <summary>Counts the depth of the served URL for page-relative asset composition.</summary>
     /// <param name="relativePath">Source-relative page path (e.g. <c>guide/intro.md</c>).</param>
@@ -689,7 +535,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         var prefix = PageRelativePrefixBytes(PageDepth(relativePath, useDirectoryUrls));
-        var writer = new ArrayBufferWriter<byte>(headExtras.Length);
+        ArrayBufferWriter<byte> writer = new(headExtras.Length);
         var cursor = 0;
         while (cursor < source.Length)
         {
@@ -800,24 +646,24 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return path[..^IndexStem.Length];
         }
 
-        if (path.EndsWith(MdExt, StringComparison.OrdinalIgnoreCase))
+        if (!path.EndsWith(MdExt, StringComparison.OrdinalIgnoreCase))
         {
-            var stem = path[..^MdExt.Length];
-            if (useDirectoryUrls)
-            {
-                var dst = new char[stem.Length + 1];
-                stem.CopyTo(dst);
-                dst[^1] = '/';
-                return dst;
-            }
-
-            var html = new char[stem.Length + ".html".Length];
-            stem.CopyTo(html);
-            ".html".CopyTo(html.AsSpan(stem.Length));
-            return html;
+            return path;
         }
 
-        return path;
+        var stem = path[..^MdExt.Length];
+        if (useDirectoryUrls)
+        {
+            var dst = new char[stem.Length + 1];
+            stem.CopyTo(dst);
+            dst[^1] = '/';
+            return dst;
+        }
+
+        var html = new char[stem.Length + ".html".Length];
+        stem.CopyTo(html);
+        ".html".CopyTo(html.AsSpan(stem.Length));
+        return html;
     }
 
     /// <summary>Writes a default <c>404.html</c> at the site root when the user hasn't supplied one.</summary>
@@ -827,8 +673,8 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     private ValueTask EmitDefault404Async(DirectoryPath root, CancellationToken cancellationToken)
     {
         var stylesheetRel = _options.PrimaryStylesheetRelativeUrl;
-        byte[] stylesheetUrl = stylesheetRel is [_, ..]
-            ? Utf8Concat.Concat(_options.ResolveAssetRoot(), stylesheetRel)
+        var stylesheetUrl = stylesheetRel is [_, ..]
+            ? Utf8Concat.Concat(_assetRoot, stylesheetRel)
             : [];
         return NotFoundPageWriter.WriteIfMissingAsync(root, _options.SiteName ?? [], stylesheetUrl, _resolvedFavicon, cancellationToken);
     }
@@ -851,7 +697,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
         var defaultRelative = _options.DefaultEmbeddedFaviconRelativeUrl;
         return defaultRelative is [_, ..] && _options.WriteEmbeddedAssets
-            ? Utf8Concat.Concat(_options.ResolveAssetRoot(), defaultRelative)
+            ? Utf8Concat.Concat(_assetRoot, defaultRelative)
             : [];
     }
 
@@ -860,15 +706,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True when the sidebar should be hidden.</returns>
     /// <remarks>Honours the page's <c>hide: [navigation]</c> frontmatter and the nav provider's hint for empty sidebars.</remarks>
-    private bool ShouldHideNavigation(ReadOnlySpan<byte> source, FilePath relativePath)
-    {
-        if (Yaml.FrontmatterValueExtractor.ListContains(source, "hide"u8, "navigation"u8))
-        {
-            return true;
-        }
-
-        return _neighbours?.ShouldHidePrimarySidebar(relativePath) ?? false;
-    }
+    private bool ShouldHideNavigation(ReadOnlySpan<byte> source, FilePath relativePath) =>
+        Yaml.FrontmatterValueExtractor.ListContains(source, "hide"u8, "navigation"u8)
+        || (_neighbours?.ShouldHidePrimarySidebar(relativePath) ?? false);
 
     /// <summary>Resolves prev/next neighbours according to the configured footer settings.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
@@ -880,9 +720,12 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return NavNeighbours.None;
         }
 
-        return _options.SectionScopedFooter
-            ? _neighbours.GetSectionNeighbours(relativePath)
-            : _neighbours.GetNeighbours(relativePath);
+        if (_options.SectionScopedFooter)
+        {
+            return _neighbours.GetSectionNeighbours(relativePath);
+        }
+
+        return _neighbours.GetNeighbours(relativePath);
     }
 
     /// <summary>Returns the canonical URL for the page; empty when no site URL is configured.</summary>

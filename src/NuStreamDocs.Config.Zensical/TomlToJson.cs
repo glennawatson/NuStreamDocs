@@ -98,7 +98,7 @@ public static class TomlToJson
 
         json.WriteStartObject();
         var openTables = 0;
-        using var reader = new Utf8LineReader(utf8Stream, leaveOpen: true);
+        using Utf8LineReader reader = new(utf8Stream, leaveOpen: true);
 
         var (hasLine, line) = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
         while (hasLine)

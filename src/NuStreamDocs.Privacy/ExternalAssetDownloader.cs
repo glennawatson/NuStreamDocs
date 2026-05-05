@@ -83,24 +83,20 @@ internal static class ExternalAssetDownloader
         ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(logger);
 
-        using var handler = new SocketsHttpHandler
-        {
-            PooledConnectionLifetime = PooledConnectionLifetime,
-            PooledConnectionIdleTimeout = PooledConnectionIdleTimeout,
-            EnableMultipleHttp2Connections = true,
-        };
-        using var client = new HttpClient(handler, disposeHandler: false)
-        {
-            Timeout = settings.Timeout,
-            DefaultRequestVersion = HttpVersion.Version20,
-            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower,
-        };
+        using SocketsHttpHandler handler = new();
+        handler.PooledConnectionLifetime = PooledConnectionLifetime;
+        handler.PooledConnectionIdleTimeout = PooledConnectionIdleTimeout;
+        handler.EnableMultipleHttp2Connections = true;
+        using HttpClient client = new(handler, disposeHandler: false);
+        client.Timeout = settings.Timeout;
+        client.DefaultRequestVersion = HttpVersion.Version20;
+        client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
         await using var perHostLimiter = BuildPerHostLimiter();
-        var environment = new DownloadEnvironment(client, BuildPipeline(settings.MaxRetries, perHostLimiter), registry, filter);
+        DownloadEnvironment environment = new(client, BuildPipeline(settings.MaxRetries, perHostLimiter), registry, filter);
 
-        var failures = new ConcurrentBag<string>();
-        var processed = new HashSet<byte[]>(ByteArrayComparer.Instance);
-        var iterationContext = new IterationContext(environment, settings, outputRoot, cacheRoot, failures, logger);
+        ConcurrentBag<string> failures = [];
+        HashSet<byte[]> processed = new(ByteArrayComparer.Instance);
+        IterationContext iterationContext = new(environment, settings, outputRoot, cacheRoot, failures, logger);
         for (var iteration = 0; iteration < MaxIterations; iteration++)
         {
             var pending = SnapshotPending(registry, processed);
@@ -122,7 +118,7 @@ internal static class ExternalAssetDownloader
     private static (UrlPath Url, FilePath LocalPath)[] SnapshotPending(ExternalAssetRegistry registry, HashSet<byte[]> processed)
     {
         var snapshot = registry.EntriesSnapshot();
-        var pendingBuffer = new List<(UrlPath Url, FilePath LocalPath)>(snapshot.Length);
+        List<(UrlPath Url, FilePath LocalPath)> pendingBuffer = new(snapshot.Length);
         for (var i = 0; i < snapshot.Length; i++)
         {
             // Skip the UTF-8 decode for entries we've already processed in an earlier pass — only decode when we're actually queuing the URL.
@@ -158,12 +154,12 @@ internal static class ExternalAssetDownloader
             new ParallelOptions
             {
                 MaxDegreeOfParallelism = ctx.Settings.Parallelism,
-                CancellationToken = cancellationToken,
+                CancellationToken = cancellationToken
             },
             async (entry, ct) =>
             {
                 var localPath = entry.LocalPath.Value.Replace('/', Path.DirectorySeparatorChar);
-                var target = new DownloadTarget(
+                DownloadTarget target = new(
                     entry.Url,
                     Path.Combine(ctx.OutputRoot.Value, localPath),
                     Path.Combine(ctx.CacheRoot.Value, localPath));
@@ -201,10 +197,10 @@ internal static class ExternalAssetDownloader
         PartitionedRateLimiter.Create<ResilienceContext, string>(static ctx =>
         {
             var host = ctx.Properties.GetValue(HostPropertyKey, string.Empty);
-            return RateLimitPartition.GetConcurrencyLimiter(host, static _ => new ConcurrencyLimiterOptions
+            return RateLimitPartition.GetConcurrencyLimiter(host, static _ => new()
             {
                 PermitLimit = MaxConcurrencyPerHost,
-                QueueLimit = int.MaxValue,
+                QueueLimit = int.MaxValue
             });
         });
 
@@ -217,14 +213,14 @@ internal static class ExternalAssetDownloader
         new ResiliencePipelineBuilder<HttpResponseMessage>()
             .AddRateLimiter(new RateLimiterStrategyOptions
             {
-                RateLimiter = args => perHostLimiter.AcquireAsync(args.Context, permitCount: 1, args.Context.CancellationToken),
+                RateLimiter = args => perHostLimiter.AcquireAsync(args.Context, permitCount: 1, args.Context.CancellationToken)
             })
             .AddRetry(new()
             {
                 MaxRetryAttempts = maxRetries,
                 BackoffType = DelayBackoffType.Exponential,
                 Delay = InitialRetryDelay,
-                ShouldHandle = static args => ValueTask.FromResult(DownloadHttpClassifier.IsTransient(args.Outcome)),
+                ShouldHandle = static args => ValueTask.FromResult(DownloadHttpClassifier.IsTransient(args.Outcome))
             })
             .Build();
 

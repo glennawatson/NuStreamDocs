@@ -22,7 +22,7 @@ public static class ThemeModelLoader
         "search",
         "sidebar",
         "sidebar_secondary",
-        "footer",
+        "footer"
     ];
 
     /// <summary>Compiles the shared top-level page template.</summary>
@@ -41,7 +41,7 @@ public static class ThemeModelLoader
     {
         ArgumentNullException.ThrowIfNull(readBytes);
 
-        var working = new Dictionary<byte[], Template>(StandardPartialNames.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], Template> working = new(StandardPartialNames.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < StandardPartialNames.Length; i++)
         {
             var name = StandardPartialNames[i];
@@ -60,7 +60,7 @@ public static class ThemeModelLoader
         ArgumentNullException.ThrowIfNull(staticAssetPaths);
         ArgumentNullException.ThrowIfNull(readBytes);
 
-        var working = new Dictionary<FilePath, byte[]>(staticAssetPaths.Length);
+        Dictionary<FilePath, byte[]> working = new(staticAssetPaths.Length);
         for (var i = 0; i < staticAssetPaths.Length; i++)
         {
             var path = staticAssetPaths[i];

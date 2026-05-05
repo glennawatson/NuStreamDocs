@@ -28,7 +28,7 @@ internal static class FootnotesRewriter
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        var defs = new List<Definition>();
+        List<Definition> defs = [];
         CollectAndStripDefs(source, defs, writer);
         if (defs.Count is 0)
         {

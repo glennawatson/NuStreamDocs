@@ -65,15 +65,10 @@ public sealed class ExtraAssetSource
     /// <summary>Creates a file-on-disk source.</summary>
     /// <param name="filePath">Absolute or relative path to a UTF-8 asset file. String literals convert via the implicit <see cref="NuStreamDocs.Common.FilePath"/> operator.</param>
     /// <returns>The source.</returns>
-    public static ExtraAssetSource File(FilePath filePath)
-    {
-        if (filePath.IsEmpty)
-        {
-            throw new ArgumentException("File path must be non-empty.", nameof(filePath));
-        }
-
-        return new(ExtraAssetSourceKind.File, filePath, null, null, null, Path.GetFileName(filePath.Value), null);
-    }
+    public static ExtraAssetSource File(FilePath filePath) =>
+        filePath.IsEmpty
+            ? throw new ArgumentException("File path must be non-empty.", nameof(filePath))
+            : new(ExtraAssetSourceKind.File, filePath, null, null, null, Path.GetFileName(filePath.Value), null);
 
     /// <summary>Creates an inline UTF-8 source.</summary>
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>

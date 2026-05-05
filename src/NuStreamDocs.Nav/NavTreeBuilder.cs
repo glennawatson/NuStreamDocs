@@ -92,7 +92,7 @@ internal static class NavTreeBuilder
 
         var matcher = BuildMatcher(in options);
         var root = BuildSection(inputRoot, inputRoot, matcher, in options, useDirectoryUrls, logger) ??
-            new([], default, isSection: true, [], useDirectoryUrls);
+                   new([], default, isSection: true, [], useDirectoryUrls);
 
         var (sections, leaves) = TallyTree(root);
         var pruned = candidateCount - leaves;
@@ -124,7 +124,7 @@ internal static class NavTreeBuilder
     private static void ReportOrphanPages(DirectoryPath inputRoot, NavNode root, Matcher? matcher, ILogger logger)
     {
         var navPaths = CollectNavLeafPaths(root);
-        var orphans = new List<string>();
+        List<string> orphans = [];
 
         if (matcher is null)
         {
@@ -169,7 +169,7 @@ internal static class NavTreeBuilder
     /// <returns>Set of leaf source-relative paths (forward-slash, ordinal).</returns>
     private static HashSet<string> CollectNavLeafPaths(NavNode root)
     {
-        var paths = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<string> paths = new(StringComparer.Ordinal);
         CollectPaths(root, paths);
         return paths;
     }
@@ -265,7 +265,7 @@ internal static class NavTreeBuilder
             return null;
         }
 
-        var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
+        Matcher matcher = new(StringComparison.OrdinalIgnoreCase);
         if (options.Includes.Length is 0)
         {
             matcher.AddInclude("**/*" + MarkdownExtension);
@@ -340,10 +340,10 @@ internal static class NavTreeBuilder
             // `Order: 0` on `guide/index.md` lifts the Guide section above its alpha siblings.
             var sectionOrder = indexPath.IsEmpty
                 ? int.MaxValue
-                : ResolveOrder(new FilePath(Path.Combine(root.Value, indexPath.Value)));
+                : ResolveOrder(new(Path.Combine(root.Value, indexPath.Value)));
             return new(sectionTitle, sectionRelative, isSection: true, children, indexPath, useDirectoryUrls)
             {
-                Order = sectionOrder,
+                Order = sectionOrder
             };
         }
         finally
@@ -468,7 +468,7 @@ internal static class NavTreeBuilder
             var order = ResolveOrder(file);
             buffer[count++] = new(title, relative, isSection: false, [], useDirectoryUrls)
             {
-                Order = order,
+                Order = order
             };
         }
 
@@ -494,12 +494,9 @@ internal static class NavTreeBuilder
             return [.. pagesOverride.Title];
         }
 
-        if (directory == root)
-        {
-            return [];
-        }
-
-        return ResolveIndexFrontmatterTitle(root, indexPath)
+        return directory == root
+            ? []
+            : ResolveIndexFrontmatterTitle(root, indexPath)
             ?? Path.GetFileName(directory.Value.AsSpan()).HumanizePathName();
     }
 
@@ -516,12 +513,7 @@ internal static class NavTreeBuilder
 
         var source = File.ReadAllBytes(file);
         var heading = MarkdownH1Scanner.FindFirst(source);
-        if (!heading.IsEmpty)
-        {
-            return [.. heading];
-        }
-
-        return Path.GetFileNameWithoutExtension(file.Value.AsSpan()).HumanizePathName();
+        return !heading.IsEmpty ? [.. heading] : Path.GetFileNameWithoutExtension(file.Value.AsSpan()).HumanizePathName();
     }
 
     /// <summary>Reads the section's index page frontmatter <c>title:</c> field, returning null when missing or unreadable.</summary>

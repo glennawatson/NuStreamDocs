@@ -138,13 +138,9 @@ internal static class AnchorBytes
     private static bool HasExternalHref(ReadOnlySpan<byte> attrs)
     {
         var href = AnchorAttributeFinder.Find(attrs, HrefName);
-        if (!href.Found)
-        {
-            return false;
-        }
-
-        return AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpsPrefix)
-            || AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpPrefix);
+        return href.Found
+            && (AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpsPrefix)
+            || AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpPrefix));
     }
 
     /// <summary>Emits <paramref name="attrs"/> into <paramref name="sink"/> with the configured hardening applied.</summary>

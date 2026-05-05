@@ -14,7 +14,7 @@ public class TagsIndexWriterTests
     [Test]
     public async Task EmptyEntriesNoFiles()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         TagsIndexWriter.Write(temp.Root, TagsOptions.Default, []);
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
     }
@@ -36,12 +36,12 @@ public class TagsIndexWriterTests
     [Test]
     public async Task WriteEmitsExpectedFiles()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         TagEntry[] entries =
         [
             new(Bytes("Alpha & Beta"), Bytes("guide/intro.html"), Bytes("<Title>")),
             new(Bytes("Alpha & Beta"), Bytes("ref/api.html"), Bytes("API")),
-            new(Bytes("gamma"), Bytes("guide/intro.html"), Bytes("<Title>")),
+            new(Bytes("gamma"), Bytes("guide/intro.html"), Bytes("<Title>"))
         ];
         TagsIndexWriter.Write(temp.Root, TagsOptions.Default, entries);
         var tagsDir = Path.Combine(temp.Root, "tags");
@@ -63,7 +63,7 @@ public class TagsIndexWriterTests
     [Test]
     public async Task SymbolOnlyTagSlug()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         TagsIndexWriter.Write(temp.Root, TagsOptions.Default, [new(Bytes("***"), Bytes("p.html"), Bytes("P"))]);
         await Assert.That(File.Exists(Path.Combine(temp.Root, "tags", "tag.html"))).IsTrue();
     }

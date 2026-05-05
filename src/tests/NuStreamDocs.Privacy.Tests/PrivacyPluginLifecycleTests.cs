@@ -19,7 +19,7 @@ public class PrivacyPluginLifecycleTests
     public async Task LocalizesExternalImageOnBuild()
     {
         using var fixture = TempSite.Create();
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             const string AssetText = "fake-png-bytes";
@@ -52,7 +52,7 @@ public class PrivacyPluginLifecycleTests
     public async Task DedupesAcrossPages()
     {
         using var fixture = TempSite.Create();
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             server.AddRoute("/shared.png", "image/png", [.. "shared"u8]);
@@ -78,7 +78,7 @@ public class PrivacyPluginLifecycleTests
     public async Task FollowsNestedCssUrls()
     {
         using var fixture = TempSite.Create();
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             const string FontBytes = "FONT-DATA";
@@ -115,7 +115,7 @@ public class PrivacyPluginLifecycleTests
     public async Task AuditOnlyModeEmitsManifestWithoutDownloading()
     {
         using var fixture = TempSite.Create();
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             server.AddRoute("/asset.png", "image/png", [.. "should-not-be-fetched"u8]);
@@ -147,23 +147,23 @@ public class PrivacyPluginLifecycleTests
     public async Task FailOnErrorRaisesOnUpstreamFailure()
     {
         using var fixture = TempSite.Create();
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             server.Start();
             var url = $"{server.BaseUrl}missing.png";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![]({url})");
+            var inputRoot = fixture.Root;
+            var outputRoot = fixture.Output;
+            await File.WriteAllTextAsync(Path.Combine(inputRoot, "page.md"), $"![]({url})");
 
             await Assert.That((Func<Task>)Build).Throws<PrivacyDownloadException>();
+
+            Task Build() =>
+                new DocBuilder().WithInput(inputRoot)
+                    .WithOutput(outputRoot)
+                    .UsePrivacy(static opts => opts with { FailOnError = true })
+                    .BuildAsync();
         }
-
-        return;
-
-        Task Build() =>
-            new DocBuilder().WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
-                .UsePrivacy(static opts => opts with { FailOnError = true })
-                .BuildAsync();
     }
 
     /// <summary>An explicit cache directory survives a clean build (i.e. fresh output dir): the second build hits the cache and never touches the network.</summary>
@@ -173,7 +173,7 @@ public class PrivacyPluginLifecycleTests
     {
         using var fixture = TempSite.Create();
         var cacheDir = Path.Combine(fixture.Root, "shared-cache");
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             server.AddRoute("/cached.png", "image/png", [.. "cached"u8]);
@@ -210,7 +210,7 @@ public class PrivacyPluginLifecycleTests
     public async Task PollyRetryRecoversFromTransientServerError()
     {
         using var fixture = TempSite.Create();
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             server.AddFlakyRoute("/flaky.png", "image/png", [.. "ok"u8], failuresBeforeSuccess: 1);
@@ -222,7 +222,7 @@ public class PrivacyPluginLifecycleTests
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(fixture.Output)
-                .UsePrivacy(opts => opts with { MaxRetries = 2 })
+                .UsePrivacy(static opts => opts with { MaxRetries = 2 })
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/flaky.png")).IsEqualTo(2);
@@ -237,7 +237,7 @@ public class PrivacyPluginLifecycleTests
     public async Task BuildSurvivesUpstreamFailure()
     {
         using var fixture = TempSite.Create();
-        var server = new LoopbackHttpServer();
+        LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
             server.Start();
@@ -395,7 +395,7 @@ public class PrivacyPluginLifecycleTests
         /// <returns>An unused port number.</returns>
         private static int GetFreePort()
         {
-            var l = new TcpListener(IPAddress.Loopback, 0);
+            TcpListener l = new(IPAddress.Loopback, 0);
             l.Start();
             try
             {

@@ -23,7 +23,7 @@ public class PluginThemeIntegrationTests
         Material,
 
         /// <summary>Material 3.</summary>
-        Material3,
+        Material3
     }
 
     /// <summary>A fenced csharp code block emits Pygments-class token spans plus the highlight wrapper, on both themes.</summary>
@@ -42,7 +42,7 @@ public class PluginThemeIntegrationTests
             ```
             """;
 
-        var html = await BuildPageAsync(theme, Source, b => b.UseHighlight());
+        var html = await BuildPageAsync(theme, Source, static b => b.UseHighlight());
         await Assert.That(html).Contains("class=\"highlight\"");
         await Assert.That(html).Contains("language-csharp");
 
@@ -66,7 +66,7 @@ public class PluginThemeIntegrationTests
                 A note body.
             """;
 
-        var html = await BuildPageAsync(theme, Source, b => b.UseAdmonitions());
+        var html = await BuildPageAsync(theme, Source, static b => b.UseAdmonitions());
         await Assert.That(html).Contains("class=\"admonition note\"");
         await Assert.That(html).Contains("admonition-title");
     }
@@ -89,7 +89,7 @@ public class PluginThemeIntegrationTests
                 second body
             """;
 
-        var html = await BuildPageAsync(theme, Source, b => b.UseTabs());
+        var html = await BuildPageAsync(theme, Source, static b => b.UseTabs());
         await Assert.That(html).Contains("tabbed-set");
         await Assert.That(html).Contains("First");
         await Assert.That(html).Contains("Second");
@@ -111,7 +111,7 @@ public class PluginThemeIntegrationTests
             - third
             """;
 
-        var html = await BuildPageAsync(theme, Source, _ => { });
+        var html = await BuildPageAsync(theme, Source, static _ => { });
         await Assert.That(html).Contains("<ul");
         await Assert.That(html).Contains("<li>first");
         await Assert.That(html).Contains("<li>third");
@@ -135,7 +135,7 @@ public class PluginThemeIntegrationTests
             after
             """;
 
-        var html = await BuildPageAsync(theme, Source, _ => { });
+        var html = await BuildPageAsync(theme, Source, static _ => { });
         await Assert.That(html).Contains("<hr />");
     }
 
@@ -151,11 +151,11 @@ public class PluginThemeIntegrationTests
         var html = await BuildPageAsync(
             theme,
             Source,
-            b => b.UseNav(static opts => opts with { Tabs = true }),
+            static b => b.UseNav(static opts => opts with { Tabs = true }),
             extraPages:
             [
                 ("first.md", "# First"),
-                ("second.md", "# Second"),
+                ("second.md", "# Second")
             ]);
 
         await Assert.That(html).Contains("class=\"md-tabs\"");

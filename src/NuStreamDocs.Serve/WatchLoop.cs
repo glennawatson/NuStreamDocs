@@ -50,13 +50,13 @@ internal sealed class WatchLoop : IDisposable
         _events = Channel.CreateUnbounded<string>(new()
         {
             SingleReader = true,
-            SingleWriter = false,
+            SingleWriter = false
         });
         _watcher = new(fullInput)
         {
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
-            EnableRaisingEvents = true,
+            EnableRaisingEvents = true
         };
         _watcher.Changed += OnEvent;
         _watcher.Created += OnEvent;
@@ -83,7 +83,7 @@ internal sealed class WatchLoop : IDisposable
                 yield break;
             }
 
-            var batch = new HashSet<string>(StringComparer.Ordinal) { first };
+            HashSet<string> batch = new(StringComparer.Ordinal) { first };
             await DrainDebounceWindowAsync(reader, batch, cancellationToken).ConfigureAwait(false);
             yield return batch;
         }
@@ -132,15 +132,7 @@ internal sealed class WatchLoop : IDisposable
     /// <summary>Returns true when <paramref name="path"/> falls inside the ignored output root.</summary>
     /// <param name="path">Absolute path from the watcher.</param>
     /// <returns>True when the event should be dropped.</returns>
-    private bool ShouldIgnore(string path)
-    {
-        if (_ignoreRoot is null)
-        {
-            return false;
-        }
-
-        return path.StartsWith(_ignoreRoot, StringComparison.Ordinal);
-    }
+    private bool ShouldIgnore(string path) => _ignoreRoot is not null && path.StartsWith(_ignoreRoot, StringComparison.Ordinal);
 
     /// <summary>FileSystemWatcher event handler for Changed/Created/Deleted.</summary>
     /// <param name="sender">Sender.</param>

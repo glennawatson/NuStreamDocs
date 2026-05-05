@@ -48,8 +48,8 @@ public static class ExternalLinkValidator
             return [];
         }
 
-        var diagnostics = new ConcurrentBag<LinkDiagnostic>();
-        var hostTasks = new List<Task>(byHost.Count);
+        ConcurrentBag<LinkDiagnostic> diagnostics = [];
+        List<Task> hostTasks = new(byHost.Count);
         foreach (var (host, urls) in byHost)
         {
             hostTasks.Add(ProcessHostAsync(host, urls, options, httpClient, diagnostics, cancellationToken));
@@ -71,7 +71,7 @@ public static class ExternalLinkValidator
     /// </remarks>
     internal static Dictionary<string, List<ExternalHit>> BucketByHost(ValidationCorpus corpus)
     {
-        var map = new Dictionary<string, List<ExternalHit>>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, List<ExternalHit>> map = new(StringComparer.OrdinalIgnoreCase);
         for (var p = 0; p < corpus.Pages.Length; p++)
         {
             var page = corpus.Pages[p];
@@ -123,8 +123,8 @@ public static class ExternalLinkValidator
     {
         _ = host;
         var pipeline = BuildPipeline(options);
-        using var concurrency = new SemaphoreSlim(options.MaxConcurrencyPerHost, options.MaxConcurrencyPerHost);
-        var tasks = new List<Task>(hits.Count);
+        using SemaphoreSlim concurrency = new(options.MaxConcurrencyPerHost, options.MaxConcurrencyPerHost);
+        List<Task> tasks = new(hits.Count);
         for (var i = 0; i < hits.Count; i++)
         {
             var hit = hits[i];
@@ -158,7 +158,7 @@ public static class ExternalLinkValidator
             await pipeline.ExecuteAsync(
                 async ct =>
                 {
-                    using var request = new HttpRequestMessage(HttpMethod.Head, hit.Uri);
+                    using HttpRequestMessage request = new(HttpMethod.Head, hit.Uri);
                     request.Headers.UserAgent.ParseAdd(options.UserAgent);
 
                     using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);

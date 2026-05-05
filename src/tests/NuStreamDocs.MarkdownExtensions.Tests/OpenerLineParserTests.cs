@@ -15,7 +15,7 @@ public class OpenerLineParserTests
     [Test]
     public async Task NoTitleReturnsTrue()
     {
-        var src = "rest"u8.ToArray();
+        byte[] src = [.. "rest"u8];
         var p = 0;
         await Assert.That(OpenerLineParser.TryParseTitle(src, ref p, out var ts, out var tl)).IsTrue();
         await Assert.That(p).IsEqualTo(0);
@@ -28,7 +28,7 @@ public class OpenerLineParserTests
     [Test]
     public async Task ParsesCompleteTitle()
     {
-        var src = "\"hello\" tail"u8.ToArray();
+        byte[] src = [.. "\"hello\" tail"u8];
         var p = 0;
         await Assert.That(OpenerLineParser.TryParseTitle(src, ref p, out var ts, out var tl)).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(src, ts, tl)).IsEqualTo("hello");
@@ -39,7 +39,7 @@ public class OpenerLineParserTests
     [Test]
     public async Task UnterminatedTitleReturnsFalse()
     {
-        var src = "\"hello\n"u8.ToArray();
+        byte[] src = [.. "\"hello\n"u8];
         var p = 0;
         await Assert.That(OpenerLineParser.TryParseTitle(src, ref p, out _, out _)).IsFalse();
     }
@@ -49,7 +49,7 @@ public class OpenerLineParserTests
     [Test]
     public async Task EndOfInputMidTitleReturnsFalse()
     {
-        var src = "\"hello"u8.ToArray();
+        byte[] src = [.. "\"hello"u8];
         var p = 0;
         await Assert.That(OpenerLineParser.TryParseTitle(src, ref p, out _, out _)).IsFalse();
     }
@@ -59,7 +59,7 @@ public class OpenerLineParserTests
     [Test]
     public async Task ScanWhileBranches()
     {
-        var src = "aaab"u8.ToArray();
+        byte[] src = [.. "aaab"u8];
         var end = OpenerLineParser.ScanWhile(src, 0, b => b is (byte)'a');
         await Assert.That(end).IsEqualTo(3);
         var endAtEnd = OpenerLineParser.ScanWhile(src, 4, b => b is (byte)'a');

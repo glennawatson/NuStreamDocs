@@ -164,7 +164,7 @@ public sealed class AutorefsPlugin
         var path = relativePath.AsSpan();
         var hasMd = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
         var sourceChars = hasMd ? path[..^MarkdownExtensionLength] : path;
-        ReadOnlySpan<byte> suffix = hasMd ? ".html"u8 : default;
+        var suffix = hasMd ? ".html"u8 : default;
 
         var size = Encoding.UTF8.GetByteCount(sourceChars) + suffix.Length;
         var result = new byte[size];

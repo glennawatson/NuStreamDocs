@@ -33,7 +33,7 @@ public class InlineEscapeTests
     public async Task PunctEscapesEmitLiteral(string escaped, string expected)
     {
         var bytes = Encoding.UTF8.GetBytes(escaped);
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var pos = 0;
         var pendingTextStart = 0;
         await Assert.That(InlineEscape.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsTrue();
@@ -53,7 +53,7 @@ public class InlineEscapeTests
     public async Task NonPunctEscapesReturnFalse(string source)
     {
         var bytes = Encoding.UTF8.GetBytes(source);
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         var pos = 0;
         var pendingTextStart = 0;
         await Assert.That(InlineEscape.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsFalse();
@@ -66,8 +66,8 @@ public class InlineEscapeTests
     [Test]
     public async Task TrailingBackslashReturnsFalse()
     {
-        var bytes = "\\"u8.ToArray();
-        var writer = new ArrayBufferWriter<byte>();
+        byte[] bytes = [.. "\\"u8];
+        ArrayBufferWriter<byte> writer = new();
         var pos = 0;
         var pendingTextStart = 0;
         await Assert.That(InlineEscape.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsFalse();
@@ -78,8 +78,8 @@ public class InlineEscapeTests
     [Test]
     public async Task PendingTextFlushedOnSuccess()
     {
-        var bytes = "hi\\!"u8.ToArray();
-        var writer = new ArrayBufferWriter<byte>();
+        byte[] bytes = [.. "hi\\!"u8];
+        ArrayBufferWriter<byte> writer = new();
         var pos = 2;
         var pendingTextStart = 0;
         await Assert.That(InlineEscape.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsTrue();

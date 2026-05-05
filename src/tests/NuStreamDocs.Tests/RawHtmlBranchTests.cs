@@ -64,7 +64,7 @@ public class RawHtmlBranchTests
     /// <returns>Rendered HTML.</returns>
     private static string Render(string input)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         InlineRenderer.Render(Encoding.UTF8.GetBytes(input), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

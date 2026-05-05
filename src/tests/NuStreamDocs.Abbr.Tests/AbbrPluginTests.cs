@@ -17,8 +17,8 @@ public class AbbrPluginTests
     [Test]
     public async Task PreRenderWrapsToken()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("p.md", "HTML rules.\n\n*[HTML]: Hyper Text Markup Language\n"u8, sink);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("p.md", "HTML rules.\n\n*[HTML]: Hyper Text Markup Language\n"u8, sink);
         new AbbrPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))
             .Contains("<abbr title=\"Hyper Text Markup Language\">HTML</abbr>");
@@ -35,7 +35,7 @@ public class AbbrPluginTests
     [Test]
     public async Task UseAbbreviationsRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseAbbreviations()).IsSameReferenceAs(builder);
     }
 

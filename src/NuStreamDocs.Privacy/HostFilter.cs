@@ -72,12 +72,8 @@ internal sealed class HostFilter
             return false;
         }
 
-        if (_includePatterns.HasPatterns && _includePatterns.IsMatch(urlBytes))
-        {
-            return true;
-        }
-
-        return !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);
+        return (_includePatterns.HasPatterns && _includePatterns.IsMatch(urlBytes))
+            || !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);
     }
 
     /// <summary>Returns a fresh ASCII-lowercased copy of <paramref name="hosts"/>; <c>[]</c> when the input is null/empty.</summary>
@@ -176,11 +172,6 @@ internal sealed class HostFilter
             return "https://"u8.Length;
         }
 
-        if (AsciiByteHelpers.StartsWithIgnoreAsciiCase(urlBytes, 0, "http://"u8))
-        {
-            return "http://"u8.Length;
-        }
-
-        return 0;
+        return AsciiByteHelpers.StartsWithIgnoreAsciiCase(urlBytes, 0, "http://"u8) ? "http://"u8.Length : 0;
     }
 }

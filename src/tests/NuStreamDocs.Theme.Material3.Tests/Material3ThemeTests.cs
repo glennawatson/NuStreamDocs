@@ -185,7 +185,7 @@ public class Material3ThemeTests
             .WithOutput(fixture.Site)
             .UseMaterial3Theme(static opts => opts.WithCdnRoot("https://example.test/md3") with
             {
-                AssetSource = Material3AssetSource.Cdn,
+                AssetSource = Material3AssetSource.Cdn
             })
             .BuildAsync();
 

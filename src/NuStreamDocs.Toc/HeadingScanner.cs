@@ -54,7 +54,7 @@ internal static class HeadingScanner
             return [];
         }
 
-        var found = new List<Heading>(16);
+        List<Heading> found = new(16);
         var cursor = 0;
         while (cursor < html.Length
                && Utf8HtmlScanner.TryFindNextHeadingOpen(html, cursor, out var tagStart, out var tagEnd, out var level))

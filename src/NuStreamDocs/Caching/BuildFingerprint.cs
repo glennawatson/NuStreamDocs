@@ -28,7 +28,7 @@ internal static class BuildFingerprint
     {
         ArgumentNullException.ThrowIfNull(plugins);
 
-        var buffer = new ArrayBufferWriter<byte>(256 + (plugins.Length * 96));
+        ArrayBufferWriter<byte> buffer = new(256 + (plugins.Length * 96));
         Write(buffer, "core="u8);
         AppendTypeFingerprint(buffer, typeof(BuildPipeline));
         Write(buffer, "|dir="u8);

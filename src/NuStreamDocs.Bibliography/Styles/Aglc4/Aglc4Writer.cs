@@ -73,13 +73,19 @@ internal static class Aglc4Writer
     {
         for (var i = 0; i < authors.Length; i++)
         {
-            if (i > 0 && i == authors.Length - 1)
+            switch (i)
             {
-                WriteBytes(" and "u8, writer);
-            }
-            else if (i > 0)
-            {
-                WriteBytes(", "u8, writer);
+                case > 0 when i == authors.Length - 1:
+                    {
+                        WriteBytes(" and "u8, writer);
+                        break;
+                    }
+
+                case > 0:
+                    {
+                        WriteBytes(", "u8, writer);
+                        break;
+                    }
             }
 
             WriteName(authors[i], writer);

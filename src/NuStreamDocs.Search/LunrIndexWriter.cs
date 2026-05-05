@@ -42,7 +42,7 @@ public static class LunrIndexWriter
 
         path.Directory.Create();
         using var stream = File.Create(path.Value);
-        using var writer = new Utf8JsonWriter(stream);
+        using Utf8JsonWriter writer = new(stream);
 
         writer.WriteStartObject();
 

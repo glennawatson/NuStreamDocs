@@ -18,7 +18,7 @@ public class SphinxInventoryWriterTests
     [Test]
     public async Task HeaderIsCanonicalSphinxV2()
     {
-        using var fixture = new InventoryFixture();
+        using InventoryFixture fixture = new();
         SphinxInventoryWriter.Write(fixture.Path, new("MyDocs", "1.2.3", "objects.inv"), []);
         var bytes = await File.ReadAllBytesAsync(fixture.Path);
         var header = ReadHeaderText(bytes, out _);
@@ -31,12 +31,12 @@ public class SphinxInventoryWriterTests
     [Test]
     public async Task BodyDecompressesToEntryLines()
     {
-        using var fixture = new InventoryFixture();
-        var entries = new (byte[] Id, byte[] Url)[]
-        {
+        using InventoryFixture fixture = new();
+        (byte[] Id, byte[] Url)[] entries =
+        [
             ([.. "MyType"u8], [.. "api/MyType.html"u8]),
-            ([.. "MyType.Method"u8], [.. "api/MyType.html#method"u8]),
-        };
+            ([.. "MyType.Method"u8], [.. "api/MyType.html#method"u8])
+        ];
         SphinxInventoryWriter.Write(fixture.Path, SphinxInventoryOptions.Default, entries);
 
         var bytes = await File.ReadAllBytesAsync(fixture.Path);
@@ -51,7 +51,7 @@ public class SphinxInventoryWriterTests
     [Test]
     public async Task EmptyRegistryProducesValidFile()
     {
-        using var fixture = new InventoryFixture();
+        using InventoryFixture fixture = new();
         SphinxInventoryWriter.Write(fixture.Path, SphinxInventoryOptions.Default, []);
         var bytes = await File.ReadAllBytesAsync(fixture.Path);
         _ = ReadHeaderText(bytes, out var bodyOffset);
@@ -64,11 +64,11 @@ public class SphinxInventoryWriterTests
     [Test]
     public async Task PluginEmitsFileAtFinalize()
     {
-        using var fixture = new InventoryFixture();
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "api/Foo.html"u8.ToArray(), fragment: default);
-        var plugin = new SphinxInventoryPlugin(registry, new("X", string.Empty, "objects.inv"));
-        var context = new BuildFinalizeContext(fixture.Directory, []);
+        using InventoryFixture fixture = new();
+        AutorefsRegistry registry = new();
+        registry.Register("Foo"u8, [.. "api/Foo.html"u8], fragment: default);
+        SphinxInventoryPlugin plugin = new(registry, new("X", string.Empty, "objects.inv"));
+        BuildFinalizeContext context = new(fixture.Directory, []);
         await plugin.FinalizeAsync(context, CancellationToken.None);
 
         var path = Path.Combine(fixture.Directory, "objects.inv");
@@ -84,7 +84,7 @@ public class SphinxInventoryWriterTests
     [Test]
     public async Task UseSphinxInventoryRegistersWithDefault()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.UseSphinxInventory()).IsSameReferenceAs(builder);
     }
 
@@ -93,8 +93,8 @@ public class SphinxInventoryWriterTests
     [Test]
     public async Task UseSphinxInventoryRegistersWithRegistry()
     {
-        var builder = new DocBuilder();
-        var registry = new AutorefsRegistry();
+        DocBuilder builder = new();
+        AutorefsRegistry registry = new();
         await Assert.That(builder.UseSphinxInventory(registry)).IsSameReferenceAs(builder);
     }
 
@@ -103,8 +103,8 @@ public class SphinxInventoryWriterTests
     [Test]
     public async Task UseSphinxInventoryRegistersWithOptions()
     {
-        var builder = new DocBuilder();
-        var registry = new AutorefsRegistry();
+        DocBuilder builder = new();
+        AutorefsRegistry registry = new();
         var options = SphinxInventoryOptions.Default;
         await Assert.That(builder.UseSphinxInventory(registry, options)).IsSameReferenceAs(builder);
     }
@@ -152,9 +152,9 @@ public class SphinxInventoryWriterTests
     /// <returns>Decoded body text.</returns>
     private static string DecompressBody(byte[] bytes, int bodyOffset)
     {
-        using var input = new MemoryStream(bytes, bodyOffset, bytes.Length - bodyOffset);
-        using var zlib = new ZLibStream(input, CompressionMode.Decompress);
-        using var output = new MemoryStream();
+        using MemoryStream input = new(bytes, bodyOffset, bytes.Length - bodyOffset);
+        using ZLibStream zlib = new(input, CompressionMode.Decompress);
+        using MemoryStream output = new();
         zlib.CopyTo(output);
         return Encoding.UTF8.GetString(output.ToArray());
     }

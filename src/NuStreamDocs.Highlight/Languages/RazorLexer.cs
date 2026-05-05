@@ -41,42 +41,42 @@ public static class RazorLexer
 
     /// <summary>Razor block-introducing directives that switch into C# state.</summary>
     private static readonly ByteKeywordSet BlockDirectives = ByteKeywordSet.Create(
-        "code",
-        "functions",
-        "inherits",
-        "model",
-        "page",
-        "using",
-        "namespace",
-        "attribute",
-        "implements",
-        "inject",
-        "layout",
-        "preservewhitespace",
-        "removetag",
-        "section",
-        "service",
-        "typeparam");
+        [.. "code"u8],
+        [.. "functions"u8],
+        [.. "inherits"u8],
+        [.. "model"u8],
+        [.. "page"u8],
+        [.. "using"u8],
+        [.. "namespace"u8],
+        [.. "attribute"u8],
+        [.. "implements"u8],
+        [.. "inject"u8],
+        [.. "layout"u8],
+        [.. "preservewhitespace"u8],
+        [.. "removetag"u8],
+        [.. "section"u8],
+        [.. "service"u8],
+        [.. "typeparam"u8]);
 
     /// <summary>Inline Razor control-flow keywords.</summary>
     private static readonly ByteKeywordSet ControlDirectives = ByteKeywordSet.Create(
-        "if",
-        "else",
-        "for",
-        "foreach",
-        "while",
-        "do",
-        "switch",
-        "case",
-        "default",
-        "return",
-        "try",
-        "catch",
-        "finally",
-        "lock",
-        "using",
-        "await",
-        "async");
+        [.. "if"u8],
+        [.. "else"u8],
+        [.. "for"u8],
+        [.. "foreach"u8],
+        [.. "while"u8],
+        [.. "do"u8],
+        [.. "switch"u8],
+        [.. "case"u8],
+        [.. "default"u8],
+        [.. "return"u8],
+        [.. "try"u8],
+        [.. "catch"u8],
+        [.. "finally"u8],
+        [.. "lock"u8],
+        [.. "using"u8],
+        [.. "await"u8],
+        [.. "async"u8]);
 
     /// <summary>Continuation set for inline <c>@expr</c> expressions: letters, digits, underscore, dot.</summary>
     private static readonly SearchValues<byte> InlineExpressionContinue = SearchValues.Create(
@@ -99,37 +99,36 @@ public static class RazorLexer
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115", Justification = "Rule lists read top-to-bottom with comments.")]
     private static Lexer Build()
     {
-        var states = new LexerRule[5][];
+        LexerRule[][] states =
+        [
+            MarkupRootRules.Build(
+                TagStateId,
 
-        states[Lexer.RootStateId] = MarkupRootRules.Build(
-            TagStateId,
+                // Markup literal-text run — anything up to the next < / & / @.
+                new(static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop), TokenClass.Text, LexerRule.NoStateChange),
 
-            // Markup literal-text run — anything up to the next < / & / @.
-            new(static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop), TokenClass.Text, LexerRule.NoStateChange),
+                // @* … *@ Razor block comment.
+                new(static slice => TokenMatchers.MatchDelimited(slice, "@*"u8, "*@"u8), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
 
-            // @* … *@ Razor block comment.
-            new(static slice => TokenMatchers.MatchDelimited(slice, "@*"u8, "*@"u8), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
+                // @@ escaped at-sign — emits as plain text.
+                new(static slice => slice is [(byte)'@', (byte)'@', ..] ? TwoCharRazorSigilLength : 0, TokenClass.Text, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
 
-            // @@ escaped at-sign — emits as plain text.
-            new(static slice => slice is [(byte)'@', (byte)'@', ..] ? TwoCharRazorSigilLength : 0, TokenClass.Text, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
+                // @code / @functions / @page / etc. — block directive that pushes the C# state.
+                new(static slice => MatchAtKeyword(slice, BlockDirectives), TokenClass.KeywordDeclaration, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
 
-            // @code / @functions / @page / etc. — block directive that pushes the C# state.
-            new(static slice => MatchAtKeyword(slice, BlockDirectives), TokenClass.KeywordDeclaration, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
+                // @if / @for / @while / etc. — control directive that pushes the C# state.
+                new(static slice => MatchAtKeyword(slice, ControlDirectives), TokenClass.Keyword, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
 
-            // @if / @for / @while / etc. — control directive that pushes the C# state.
-            new(static slice => MatchAtKeyword(slice, ControlDirectives), TokenClass.Keyword, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
+                // @{ — brace-block opener that pushes the C# state.
+                new(static slice => slice is [(byte)'@', (byte)'{', ..] ? TwoCharRazorSigilLength : 0, TokenClass.Punctuation, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
 
-            // @{ — brace-block opener that pushes the C# state.
-            new(static slice => slice is [(byte)'@', (byte)'{', ..] ? TwoCharRazorSigilLength : 0, TokenClass.Punctuation, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
-
-            // @identifier(.identifier)* — inline expression, stays in markup mode.
-            new(MatchInlineExpression, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst });
-
-        states[TagStateId] = MarkupTagRules.Build();
-        states[CSharpStateId] = BuildCsharpStateRules();
-        states[CSharpBlockAccessorStateId] = CSharpRules.BuildBlockAccessorRules(CSharpBlockAccessorStateId);
-        states[CSharpArrowAccessorStateId] = CSharpRules.BuildArrowAccessorRules();
-
+                // @identifier(.identifier)* — inline expression, stays in markup mode.
+                new(MatchInlineExpression, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst }),
+            MarkupTagRules.Build(),
+            BuildCsharpStateRules(),
+            CSharpRules.BuildBlockAccessorRules(CSharpBlockAccessorStateId),
+            CSharpRules.BuildArrowAccessorRules()
+        ];
         return new(states);
     }
 

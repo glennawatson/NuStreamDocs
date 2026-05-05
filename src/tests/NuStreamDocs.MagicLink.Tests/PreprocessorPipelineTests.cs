@@ -22,7 +22,7 @@ public class PreprocessorPipelineTests
     [Test]
     public async Task SmartSymbolsThenMagicLink()
     {
-        var pipeline = new IPagePreRenderPlugin[] { new SmartSymbolsPlugin(), new MagicLinkPlugin() };
+        IPagePreRenderPlugin[] pipeline = [new SmartSymbolsPlugin(), new MagicLinkPlugin()];
 
         const string Source = "Copyright (c) 2026 — see https://example.com.";
         const string Expected = "Copyright © 2026 — see <https://example.com>.";
@@ -35,7 +35,7 @@ public class PreprocessorPipelineTests
     [Test]
     public async Task MagicLinkThenSmartSymbols()
     {
-        var pipeline = new IPagePreRenderPlugin[] { new MagicLinkPlugin(), new SmartSymbolsPlugin() };
+        IPagePreRenderPlugin[] pipeline = [new MagicLinkPlugin(), new SmartSymbolsPlugin()];
 
         const string Source = "Visit https://example.com 1/2 of the time (c).";
         const string Expected = "Visit <https://example.com> ½ of the time ©.";
@@ -48,7 +48,7 @@ public class PreprocessorPipelineTests
     [Test]
     public async Task FencedCodeIsHonoredAcrossEveryPass()
     {
-        var pipeline = new IPagePreRenderPlugin[] { new SmartSymbolsPlugin(), new MagicLinkPlugin() };
+        IPagePreRenderPlugin[] pipeline = [new SmartSymbolsPlugin(), new MagicLinkPlugin()];
 
         const string Source = "Outside (c) https://x.test\n```\n(c) https://x.test\n```\nAfter (c) https://x.test.";
         const string Expected = "Outside © <https://x.test>\n```\n(c) https://x.test\n```\nAfter © <https://x.test>.";
@@ -80,7 +80,7 @@ public class PreprocessorPipelineTests
             back ??= new(Math.Max(current.Length, 1));
 
             front.ResetWrittenCount();
-            var ctx = new PagePreRenderContext("p.md", current.Span, front);
+            PagePreRenderContext ctx = new("p.md", current.Span, front);
             pipeline[i].PreRender(in ctx);
             current = front.WrittenMemory;
             (front, back) = (back, front);

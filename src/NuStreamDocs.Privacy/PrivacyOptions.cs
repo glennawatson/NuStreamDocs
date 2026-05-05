@@ -63,7 +63,7 @@ public readonly record struct PrivacyOptions(
         [.. "youtube.com"u8],
         [.. "www.youtube.com"u8],
         [.. "youtu.be"u8],
-        [.. "stackoverflow.com"u8],
+        [.. "stackoverflow.com"u8]
     ];
 
     /// <summary>Gets the option set with all defaults populated.</summary>

@@ -89,7 +89,7 @@ public sealed class Lexer
     {
         ArgumentNullException.ThrowIfNull(onToken);
 
-        var sink = new DelegateTokenSink(onToken);
+        DelegateTokenSink sink = new(onToken);
         Tokenize(source, ref sink);
     }
 
@@ -103,7 +103,7 @@ public sealed class Lexer
     {
         ArgumentNullException.ThrowIfNull(onToken);
 
-        var sink = new DelegateTokenSink<TState>(state, onToken);
+        DelegateTokenSink<TState> sink = new(state, onToken);
         Tokenize(source, ref sink);
     }
 
@@ -125,7 +125,7 @@ public sealed class Lexer
             return;
         }
 
-        var stateStack = new StateStack(stackalloc int[StateStackInitialCapacity]);
+        StateStack stateStack = new(stackalloc int[StateStackInitialCapacity]);
 
         try
         {
@@ -170,18 +170,22 @@ public sealed class Lexer
     /// <param name="stateStack">Stack to mutate.</param>
     private static void ApplyTransition(int nextState, ref StateStack stateStack)
     {
-        if (nextState == LexerRule.NoStateChange)
+        switch (nextState)
         {
-            return;
-        }
+            case LexerRule.NoStateChange:
+                return;
+            case LexerRule.PopState:
+                {
+                    stateStack.PopIfNotRoot();
+                    return;
+                }
 
-        if (nextState == LexerRule.PopState)
-        {
-            stateStack.PopIfNotRoot();
-            return;
+            default:
+                {
+                    stateStack.Push(nextState);
+                    break;
+                }
         }
-
-        stateStack.Push(nextState);
     }
 
     /// <summary>Advances one step: tries each rule for the current state, falls back to a single-byte text token on no match.</summary>

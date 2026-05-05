@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Plugins;
-
 namespace NuStreamDocs.Optimize.Tests;
 
 /// <summary>Lifecycle method coverage for <c>OptimizePlugin</c> and <c>HtmlMinifyPlugin</c>.</summary>
@@ -20,8 +18,8 @@ public class OptimizePluginLifecycleTests
     [Test]
     public async Task OptimizeFinalizeAsync()
     {
-        using var temp = new ScratchDir();
-        await new OptimizePlugin().FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
+        using ScratchDir temp = new();
+        await new OptimizePlugin().FinalizeAsync(new(temp.Root, []), CancellationToken.None);
     }
 
     /// <summary>HtmlMinifyPlugin.Name returns the registered string.</summary>

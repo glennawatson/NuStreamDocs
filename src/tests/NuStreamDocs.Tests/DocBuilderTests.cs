@@ -17,7 +17,7 @@ public class DocBuilderTests
     public async Task UsePluginGenericFiresRenderHook()
     {
         var builder = new DocBuilder().UsePlugin<RecordingPlugin>();
-        var html = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> html = new();
         await builder.RenderPageAsync("intro.md", new([.. "# Hi"u8]), html, CancellationToken.None);
 
         var output = Encoding.UTF8.GetString(html.WrittenSpan);

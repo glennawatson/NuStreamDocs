@@ -41,7 +41,7 @@ public class TocBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var sb = new StringBuilder(HeadingCount * 64);
+        StringBuilder sb = new(HeadingCount * 64);
         sb.Append("<aside><!--@@toc@@--></aside>");
         for (var i = 0; i < HeadingCount; i++)
         {
@@ -77,7 +77,7 @@ public class TocBenchmarks
     [Benchmark]
     public int Rewrite()
     {
-        var sink = new ArrayBufferWriter<byte>(_html.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_html.Length * 2);
         HeadingRewriter.Rewrite(_html, _slugged, "¶"u8, sink);
         return sink.WrittenCount;
     }
@@ -87,7 +87,7 @@ public class TocBenchmarks
     [Benchmark]
     public int Fragment()
     {
-        var sink = new ArrayBufferWriter<byte>(512);
+        ArrayBufferWriter<byte> sink = new(512);
         var opts = TocOptions.Default;
         TocFragmentRenderer.Render(_html, _slugged, in opts, sink);
         return sink.WrittenCount;
@@ -98,9 +98,9 @@ public class TocBenchmarks
     [Benchmark]
     public int OnRenderPage()
     {
-        var sink = new ArrayBufferWriter<byte>(_html.Length * 2);
-        var plugin = new TocPlugin();
-        var ctx = new PagePostRenderContext("page.md", default, _html, sink);
+        ArrayBufferWriter<byte> sink = new(_html.Length * 2);
+        TocPlugin plugin = new();
+        PagePostRenderContext ctx = new("page.md", default, _html, sink);
         plugin.PostRender(in ctx);
         return sink.WrittenCount;
     }

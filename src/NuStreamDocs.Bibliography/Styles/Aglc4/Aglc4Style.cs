@@ -102,7 +102,7 @@ public sealed class Aglc4Style : ICitationStyle
         EntryType.Report => Aglc4Reports.Write,
         EntryType.Thesis => Aglc4Thesis.Write,
         EntryType.Webpage => Aglc4Webpages.Write,
-        _ => null,
+        _ => null
     };
 
     /// <summary>Dispatches the legal entry types (case / legislation / treaty).</summary>
@@ -129,6 +129,6 @@ public sealed class Aglc4Style : ICitationStyle
         EntryType.LegalCase => Aglc4Cases.Write,
         EntryType.Legislation => Aglc4Legislation.Write,
         EntryType.Treaty => Aglc4Treaties.Write,
-        _ => null,
+        _ => null
     };
 }

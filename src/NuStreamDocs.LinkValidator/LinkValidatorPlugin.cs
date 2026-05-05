@@ -170,7 +170,7 @@ public sealed class LinkValidatorPlugin
         var path = relativePath.AsSpan();
         var hasMd = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
         var sourceChars = hasMd ? path[..^3] : path;
-        ReadOnlySpan<byte> suffix = hasMd ? ".html"u8 : default;
+        var suffix = hasMd ? ".html"u8 : default;
 
         var size = Encoding.UTF8.GetByteCount(sourceChars) + suffix.Length;
         var result = new byte[size];
@@ -228,12 +228,12 @@ public sealed class LinkValidatorPlugin
             return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, client, cancellationToken).ConfigureAwait(false);
         }
 
-        using var handler = new SocketsHttpHandler
+        using SocketsHttpHandler handler = new()
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-            PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15),
+            PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15)
         };
-        using var owned = new HttpClient(handler, disposeHandler: false);
+        using HttpClient owned = new(handler, disposeHandler: false);
         return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, owned, cancellationToken).ConfigureAwait(false);
     }
 }

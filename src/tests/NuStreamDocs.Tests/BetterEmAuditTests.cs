@@ -73,7 +73,7 @@ public class BetterEmAuditTests
     private static string Render(string markdown)
     {
         var bytes = Encoding.UTF8.GetBytes(markdown);
-        var sink = new ArrayBufferWriter<byte>(Math.Max(bytes.Length, 1));
+        ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
         MarkdownRenderer.Render(bytes, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

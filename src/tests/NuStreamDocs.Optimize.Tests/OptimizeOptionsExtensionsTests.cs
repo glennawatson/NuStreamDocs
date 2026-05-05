@@ -91,7 +91,7 @@ public class OptimizeOptionsExtensionsTests
     [Test]
     public async Task DefaultExtensionsContainsExpectedEntries()
     {
-        var decoded = new HashSet<string>();
+        HashSet<string> decoded = [];
         for (var i = 0; i < OptimizeOptions.DefaultExtensions.Length; i++)
         {
             decoded.Add(Encoding.UTF8.GetString(OptimizeOptions.DefaultExtensions[i]));

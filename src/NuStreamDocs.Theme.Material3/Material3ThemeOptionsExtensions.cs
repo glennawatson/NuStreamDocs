@@ -11,7 +11,7 @@ namespace NuStreamDocs.Theme.Material3;
 /// Encodes the inputs once at construction so the page-shell template flows pure UTF-8 from
 /// configure through every render. Callers building from configuration files (which produce
 /// strings) reach for these helpers; callers with byte-literal sources construct the record
-/// directly with <c>"..."u8.ToArray()</c>.
+/// directly with <c>[.. "..."u8]</c>.
 /// </remarks>
 public static class Material3ThemeOptionsExtensions
 {

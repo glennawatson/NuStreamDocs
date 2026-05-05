@@ -14,5 +14,5 @@ public enum NavSortBy
     Title,
 
     /// <summary>Preserve filesystem enumeration order.</summary>
-    None,
+    None
 }

@@ -34,8 +34,8 @@ public static class ConfigReaderJsonPipeline
     {
         ArgumentNullException.ThrowIfNull(convert);
 
-        var jsonBuffer = new ArrayBufferWriter<byte>();
-        using (var jsonWriter = new Utf8JsonWriter(jsonBuffer))
+        ArrayBufferWriter<byte> jsonBuffer = new();
+        using (Utf8JsonWriter jsonWriter = new(jsonBuffer))
         {
             convert(utf8Source, jsonWriter);
         }
@@ -53,8 +53,8 @@ public static class ConfigReaderJsonPipeline
         ArgumentNullException.ThrowIfNull(utf8Stream);
         ArgumentNullException.ThrowIfNull(convert);
 
-        var jsonBuffer = new ArrayBufferWriter<byte>();
-        await using (var jsonWriter = new Utf8JsonWriter(jsonBuffer))
+        ArrayBufferWriter<byte> jsonBuffer = new();
+        await using (Utf8JsonWriter jsonWriter = new(jsonBuffer))
         {
             await convert(utf8Stream, jsonWriter, cancellationToken).ConfigureAwait(false);
         }

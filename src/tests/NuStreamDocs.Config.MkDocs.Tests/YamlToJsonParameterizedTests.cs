@@ -63,8 +63,8 @@ public class YamlToJsonParameterizedTests
     /// <returns>JSON output.</returns>
     private static string Convert(string yaml)
     {
-        var buffer = new ArrayBufferWriter<byte>();
-        using (var writer = new Utf8JsonWriter(buffer))
+        ArrayBufferWriter<byte> buffer = new();
+        using (Utf8JsonWriter writer = new(buffer))
         {
             YamlToJson.Convert(Encoding.UTF8.GetBytes(yaml), writer);
         }

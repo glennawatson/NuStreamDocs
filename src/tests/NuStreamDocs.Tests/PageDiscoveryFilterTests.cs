@@ -23,8 +23,8 @@ public class PageDiscoveryFilterTests
             await File.WriteAllTextAsync(Path.Combine(root, "guide", "intro.md"), "# Intro");
             await File.WriteAllTextAsync(Path.Combine(root, "drafts", "wip.md"), "# WIP");
 
-            var filter = new PathFilter([], ["drafts/**"]);
-            var hits = new List<string>();
+            PathFilter filter = new([], ["drafts/**"]);
+            List<string> hits = [];
             await foreach (var item in PageDiscovery.EnumerateAsync(root, filter, CancellationToken.None))
             {
                 hits.Add(item.RelativePath);
@@ -52,8 +52,8 @@ public class PageDiscoveryFilterTests
             await File.WriteAllTextAsync(Path.Combine(root, "guide", "intro.md"), "# Intro");
             await File.WriteAllTextAsync(Path.Combine(root, "blog", "post.md"), "# Post");
 
-            var filter = new PathFilter(["guide/**/*.md"], []);
-            var hits = new List<string>();
+            PathFilter filter = new(["guide/**/*.md"], []);
+            List<string> hits = [];
             await foreach (var item in PageDiscovery.EnumerateAsync(root, filter, CancellationToken.None))
             {
                 hits.Add(item.RelativePath);

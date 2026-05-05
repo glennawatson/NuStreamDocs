@@ -506,6 +506,6 @@ internal static class EmojiIndex
         _ when shortcode.SequenceEqual("ping_pong"u8) => "🏓"u8,
         _ when shortcode.SequenceEqual("badminton"u8) => "🏸"u8,
 
-        _ => default,
+        _ => default
     };
 }

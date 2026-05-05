@@ -33,7 +33,7 @@ public class Utf8StackBufferTests
     [Test]
     public async Task OversizedInputFallsBackToPool()
     {
-        var big = new string('a', 32);
+        string big = new('a', 32);
         var copy = EncodeAndCopy(big, stackBufferSize: 8);
         await Assert.That(copy.Length).IsEqualTo(32);
         await Assert.That(Encoding.UTF8.GetString(copy)).IsEqualTo(big);
@@ -58,7 +58,7 @@ public class Utf8StackBufferTests
         Span<byte> stack = stackalloc byte[Utf8StackBuffer.StackSize];
 
         // Slicing the stack span lets the test exercise the small-stack pool-fallback path.
-        using var buf = new Utf8StackBuffer(value, stack[..stackBufferSize]);
+        using Utf8StackBuffer buf = new(value, stack[..stackBufferSize]);
         return buf.Bytes.ToArray();
     }
 
@@ -67,7 +67,7 @@ public class Utf8StackBufferTests
     private static void MakeBuffer(string value)
     {
         Span<byte> stack = stackalloc byte[Utf8StackBuffer.StackSize];
-        using var buf = new Utf8StackBuffer(value, stack);
+        using Utf8StackBuffer buf = new(value, stack);
         _ = buf.Bytes;
     }
 }

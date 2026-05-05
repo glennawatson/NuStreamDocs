@@ -12,7 +12,7 @@ public class PrivacyPluginCoverageTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new PrivacyPlugin();
+        PrivacyPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("privacy"u8)).IsTrue();
     }
 
@@ -21,7 +21,7 @@ public class PrivacyPluginCoverageTests
     [Test]
     public async Task AuditedUrlsEmpty()
     {
-        var plugin = new PrivacyPlugin();
+        PrivacyPlugin plugin = new();
         await Assert.That(plugin.AuditedUrls.Length).IsEqualTo(0);
     }
 }

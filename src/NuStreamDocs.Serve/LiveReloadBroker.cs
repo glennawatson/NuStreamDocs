@@ -15,7 +15,7 @@ namespace NuStreamDocs.Serve;
 internal sealed class LiveReloadBroker
 {
     /// <summary>The wire payload sent to connected browsers on rebuild.</summary>
-    private static readonly byte[] ReloadPayload = "reload"u8.ToArray();
+    private static readonly byte[] ReloadPayload = [.. "reload"u8];
 
     /// <summary>Tracks every currently-connected browser. Concurrent because clients connect/disconnect from request-handler threads.</summary>
     private readonly ConcurrentDictionary<Guid, WebSocket> _clients = new();

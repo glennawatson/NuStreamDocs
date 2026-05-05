@@ -12,7 +12,7 @@ public class FontAwesomePluginCoverageTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new FontAwesomePlugin();
+        FontAwesomePlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("fontawesome"u8)).IsTrue();
     }
 }

@@ -30,7 +30,7 @@ public sealed class ValidationCorpus
         [.. ".gif"u8], [.. ".svg"u8], [.. ".webp"u8],
         [.. ".ico"u8], [.. ".woff"u8], [.. ".woff2"u8],
         [.. ".ttf"u8], [.. ".map"u8], [.. ".xml"u8],
-        [.. ".pdf"u8], [.. ".zip"u8],
+        [.. ".pdf"u8], [.. ".zip"u8]
     ];
 
     /// <summary>Pages keyed by site-relative URL bytes (forward-slashed UTF-8).</summary>
@@ -49,7 +49,7 @@ public sealed class ValidationCorpus
     public static ValidationCorpus FromPages(IDictionary<byte[], PageLinks> pages)
     {
         ArgumentNullException.ThrowIfNull(pages);
-        var snapshot = new Dictionary<byte[], PageLinks>(pages, ByteArrayComparer.Instance);
+        Dictionary<byte[], PageLinks> snapshot = new(pages, ByteArrayComparer.Instance);
         return new(snapshot) { Pages = [.. snapshot.Values] };
     }
 
@@ -73,13 +73,13 @@ public sealed class ValidationCorpus
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(parallelism);
 
-        var fullRoot = new DirectoryPath(Path.GetFullPath(outputRoot.Value));
-        var pages = new ConcurrentDictionary<byte[], PageLinks>(ByteArrayComparer.Instance);
+        DirectoryPath fullRoot = new(Path.GetFullPath(outputRoot.Value));
+        ConcurrentDictionary<byte[], PageLinks> pages = new(ByteArrayComparer.Instance);
 
-        var parallelOptions = new ParallelOptions
+        ParallelOptions parallelOptions = new()
         {
             CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = parallelism,
+            MaxDegreeOfParallelism = parallelism
         };
 
         await Parallel.ForEachAsync(
@@ -92,7 +92,7 @@ public sealed class ValidationCorpus
                 pages[pageUrlBytes] = ScanPage(pageUrlBytes, bytes);
             }).ConfigureAwait(false);
 
-        var snapshot = new Dictionary<byte[], PageLinks>(pages, ByteArrayComparer.Instance);
+        Dictionary<byte[], PageLinks> snapshot = new(pages, ByteArrayComparer.Instance);
         return new(snapshot) { Pages = [.. snapshot.Values] };
     }
 
@@ -172,8 +172,8 @@ public sealed class ValidationCorpus
         var srcs = LinkExtractor.ExtractSrcRanges(bytes);
         var idRanges = LinkExtractor.ExtractHeadingIdRanges(bytes);
 
-        var internalLinks = new List<byte[]>(hrefs.Length);
-        var externalLinks = new List<byte[]>(4);
+        List<byte[]> internalLinks = new(hrefs.Length);
+        List<byte[]> externalLinks = new(4);
         for (var i = 0; i < hrefs.Length; i++)
         {
             var slice = hrefs[i].AsSpan(bytes);
@@ -200,7 +200,7 @@ public sealed class ValidationCorpus
             }
         }
 
-        var anchorIds = new HashSet<byte[]>(idRanges.Length, ByteArrayComparer.Instance);
+        HashSet<byte[]> anchorIds = new(idRanges.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < idRanges.Length; i++)
         {
             anchorIds.Add(idRanges[i].AsSpan(bytes).ToArray());

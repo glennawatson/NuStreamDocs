@@ -16,7 +16,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task SimpleIncludeSplicesFile()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("intro.md", "Hello from snippet.\n");
         const string Source = "Before.\n--8<-- \"intro.md\"\nAfter.";
         var result = fixture.Rewrite(Source);
@@ -28,7 +28,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task RecursiveIncludeExpands()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("a.md", "A then\n--8<-- \"b.md\"\n");
         fixture.Write("b.md", "B body\n");
         var result = fixture.Rewrite("--8<-- \"a.md\"\n");
@@ -40,7 +40,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task CycleProducesErrorBlock()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("loop.md", "loop\n--8<-- \"loop.md\"\n");
         var result = fixture.Rewrite("--8<-- \"loop.md\"\n");
         await Assert.That(result).Contains("snippet cycle detected");
@@ -51,7 +51,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task MissingSnippetProducesErrorBlock()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         var result = fixture.Rewrite("--8<-- \"nope.md\"\n");
         await Assert.That(result).Contains("snippet not found");
     }
@@ -61,7 +61,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task PathEscapeIsRefused()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         var result = fixture.Rewrite("--8<-- \"../escape.md\"\n");
         await Assert.That(result).Contains("snippet path escapes base directory");
     }
@@ -71,7 +71,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task IndentedMarkerStillTriggers()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         fixture.Write("foo.md", "X");
         var result = fixture.Rewrite("    --8<-- \"foo.md\"\n");
         await Assert.That(result).IsEqualTo("X");
@@ -82,7 +82,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task PlainTextRoundTrips()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         const string Source = "No includes here at all.";
         await Assert.That(fixture.Rewrite(Source)).IsEqualTo(Source);
     }
@@ -92,7 +92,7 @@ public class SnippetsRewriterTests
     [Test]
     public async Task EmptyInputEmptyOutput()
     {
-        using var fixture = new SnippetFixture();
+        using SnippetFixture fixture = new();
         await Assert.That(fixture.Rewrite(string.Empty)).IsEqualTo(string.Empty);
     }
 
@@ -127,8 +127,8 @@ public class SnippetsRewriterTests
         public string Rewrite(string source)
         {
             var bytes = Encoding.UTF8.GetBytes(source);
-            var sink = new ArrayBufferWriter<byte>(Math.Max(bytes.Length, 1));
-            var cache = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance);
+            ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
+            Dictionary<byte[], byte[]> cache = new(ByteArrayComparer.Instance);
             SnippetsRewriter.Rewrite(bytes, Root, cache, sink);
             return Encoding.UTF8.GetString(sink.WrittenSpan);
         }

@@ -26,7 +26,7 @@ public static class MkDocsConfigJsonParser
     /// <returns>The parsed config.</returns>
     public static MkDocsConfig FromJson(ReadOnlySpan<byte> utf8Json)
     {
-        var reader = new Utf8JsonReader(utf8Json, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(utf8Json, isFinalBlock: true, state: default);
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
 
@@ -47,24 +47,19 @@ public static class MkDocsConfigJsonParser
     {
         JsonValueKind.True => true,
         JsonValueKind.False => false,
-        _ => defaultValue,
+        _ => defaultValue
     };
 
     /// <summary>Reads the <c>theme</c> name from the config root.</summary>
     /// <param name="root">Root JSON element.</param>
     /// <returns>The configured theme name; defaults to <c>material</c>.</returns>
-    private static string ReadThemeName(in JsonElement root)
-    {
-        if (!root.TryGetProperty("theme"u8, out var theme))
-        {
-            return DefaultThemeName;
-        }
-
-        return theme.ValueKind switch
-        {
-            JsonValueKind.String => theme.GetString() ?? DefaultThemeName,
-            JsonValueKind.Object when theme.TryGetProperty("name"u8, out var name) => name.GetString() ?? DefaultThemeName,
-            _ => DefaultThemeName,
-        };
-    }
+    private static string ReadThemeName(in JsonElement root) =>
+        !root.TryGetProperty("theme"u8, out var theme)
+            ? DefaultThemeName
+            : theme.ValueKind switch
+            {
+                JsonValueKind.String => theme.GetString() ?? DefaultThemeName,
+                JsonValueKind.Object when theme.TryGetProperty("name"u8, out var name) => name.GetString() ?? DefaultThemeName,
+                _ => DefaultThemeName
+            };
 }

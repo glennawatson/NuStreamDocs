@@ -39,7 +39,7 @@ public class PageBuilderPoolTests
     [Test]
     public async Task ManyConcurrentRentalsPushToSharedQueue()
     {
-        var rentals = new List<PageBuilderRental>();
+        List<PageBuilderRental> rentals = [];
         try
         {
             for (var i = 0; i < 10; i++)

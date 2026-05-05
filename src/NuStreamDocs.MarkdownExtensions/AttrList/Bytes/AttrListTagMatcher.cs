@@ -79,7 +79,7 @@ internal static class AttrListTagMatcher
             (byte)'i' => TryName(source, p, "img"u8, out nameLen) || TryName(source, p, "input"u8, out nameLen),
             (byte)'b' => TryName(source, p, "br"u8, out nameLen),
             (byte)'h' => TryName(source, p, "hr"u8, out nameLen),
-            _ => false,
+            _ => false
         };
     }
 
@@ -98,7 +98,7 @@ internal static class AttrListTagMatcher
             (byte)'t' => TryName(source, p, "td"u8, out nameLen) || TryName(source, p, "th"u8, out nameLen),
             (byte)'d' => TryName(source, p, "dd"u8, out nameLen) || TryName(source, p, "dt"u8, out nameLen),
             (byte)'b' => TryName(source, p, "blockquote"u8, out nameLen),
-            _ => OutZero(out nameLen),
+            _ => OutZero(out nameLen)
         };
 
     /// <summary>Paired-inline dispatch for first letters <c>a</c>..<c>k</c>.</summary>
@@ -116,7 +116,7 @@ internal static class AttrListTagMatcher
             (byte)'e' => TryName(source, p, "em"u8, out nameLen),
             (byte)'i' => TryName(source, p, "ins"u8, out nameLen),
             (byte)'k' => TryName(source, p, "kbd"u8, out nameLen),
-            _ => OutZero(out nameLen),
+            _ => OutZero(out nameLen)
         };
 
     /// <summary>Paired-inline dispatch for first letters <c>m</c>..<c>t</c>.</summary>
@@ -132,7 +132,7 @@ internal static class AttrListTagMatcher
             (byte)'q' => TryName(source, p, "q"u8, out nameLen),
             (byte)'s' => TryInlinePairedS(source, p, out nameLen),
             (byte)'t' => TryName(source, p, "time"u8, out nameLen),
-            _ => OutZero(out nameLen),
+            _ => OutZero(out nameLen)
         };
 
     /// <summary>Sets <paramref name="nameLen"/> to <c>0</c> and returns false (helper for switch arms).</summary>

@@ -153,11 +153,13 @@ internal static class MdInHtmlRewriter
                 continue;
             }
 
-            if (TryMatchAttributeFromTokenStart(attrs, i, token.Length, out relEnd))
+            if (!TryMatchAttributeFromTokenStart(attrs, i, token.Length, out relEnd))
             {
-                relStart = i;
-                return true;
+                continue;
             }
+
+            relStart = i;
+            return true;
         }
 
         return false;
@@ -295,7 +297,7 @@ internal static class MdInHtmlRewriter
         }
 
         var afterName = offset + 1 + name.Length;
-        if (afterName >= source.Length || (source[afterName] is not (byte)'>' and not (byte)' ' and not (byte)'\t' and not (byte)'\n'))
+        if (afterName >= source.Length || source[afterName] is not (byte)'>' and not (byte)' ' and not (byte)'\t' and not (byte)'\n')
         {
             return false;
         }

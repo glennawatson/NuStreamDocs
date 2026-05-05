@@ -92,69 +92,69 @@ public static class BlockScanner
     /// <summary>Lowercased UTF-8 byte arrays for every Type 6 tag name (CommonMark spec § 4.6 whitelist).</summary>
     private static readonly byte[][] Type6Tags =
     [
-        "address"u8.ToArray(),
-        "article"u8.ToArray(),
-        "aside"u8.ToArray(),
-        "base"u8.ToArray(),
-        "basefont"u8.ToArray(),
-        "blockquote"u8.ToArray(),
-        "body"u8.ToArray(),
-        "caption"u8.ToArray(),
-        "center"u8.ToArray(),
-        "col"u8.ToArray(),
-        "colgroup"u8.ToArray(),
-        "dd"u8.ToArray(),
-        "details"u8.ToArray(),
-        "dialog"u8.ToArray(),
-        "dir"u8.ToArray(),
-        "div"u8.ToArray(),
-        "dl"u8.ToArray(),
-        "dt"u8.ToArray(),
-        "fieldset"u8.ToArray(),
-        "figcaption"u8.ToArray(),
-        "figure"u8.ToArray(),
-        "footer"u8.ToArray(),
-        "form"u8.ToArray(),
-        "frame"u8.ToArray(),
-        "frameset"u8.ToArray(),
-        "h1"u8.ToArray(),
-        "h2"u8.ToArray(),
-        "h3"u8.ToArray(),
-        "h4"u8.ToArray(),
-        "h5"u8.ToArray(),
-        "h6"u8.ToArray(),
-        "head"u8.ToArray(),
-        "header"u8.ToArray(),
-        "hr"u8.ToArray(),
-        "html"u8.ToArray(),
-        "iframe"u8.ToArray(),
-        "legend"u8.ToArray(),
-        "li"u8.ToArray(),
-        "link"u8.ToArray(),
-        "main"u8.ToArray(),
-        "menu"u8.ToArray(),
-        "menuitem"u8.ToArray(),
-        "nav"u8.ToArray(),
-        "noframes"u8.ToArray(),
-        "ol"u8.ToArray(),
-        "optgroup"u8.ToArray(),
-        "option"u8.ToArray(),
-        "p"u8.ToArray(),
-        "param"u8.ToArray(),
-        "search"u8.ToArray(),
-        "section"u8.ToArray(),
-        "source"u8.ToArray(),
-        "summary"u8.ToArray(),
-        "table"u8.ToArray(),
-        "tbody"u8.ToArray(),
-        "td"u8.ToArray(),
-        "tfoot"u8.ToArray(),
-        "th"u8.ToArray(),
-        "thead"u8.ToArray(),
-        "title"u8.ToArray(),
-        "tr"u8.ToArray(),
-        "track"u8.ToArray(),
-        "ul"u8.ToArray(),
+        [.. "address"u8],
+        [.. "article"u8],
+        [.. "aside"u8],
+        [.. "base"u8],
+        [.. "basefont"u8],
+        [.. "blockquote"u8],
+        [.. "body"u8],
+        [.. "caption"u8],
+        [.. "center"u8],
+        [.. "col"u8],
+        [.. "colgroup"u8],
+        [.. "dd"u8],
+        [.. "details"u8],
+        [.. "dialog"u8],
+        [.. "dir"u8],
+        [.. "div"u8],
+        [.. "dl"u8],
+        [.. "dt"u8],
+        [.. "fieldset"u8],
+        [.. "figcaption"u8],
+        [.. "figure"u8],
+        [.. "footer"u8],
+        [.. "form"u8],
+        [.. "frame"u8],
+        [.. "frameset"u8],
+        [.. "h1"u8],
+        [.. "h2"u8],
+        [.. "h3"u8],
+        [.. "h4"u8],
+        [.. "h5"u8],
+        [.. "h6"u8],
+        [.. "head"u8],
+        [.. "header"u8],
+        [.. "hr"u8],
+        [.. "html"u8],
+        [.. "iframe"u8],
+        [.. "legend"u8],
+        [.. "li"u8],
+        [.. "link"u8],
+        [.. "main"u8],
+        [.. "menu"u8],
+        [.. "menuitem"u8],
+        [.. "nav"u8],
+        [.. "noframes"u8],
+        [.. "ol"u8],
+        [.. "optgroup"u8],
+        [.. "option"u8],
+        [.. "p"u8],
+        [.. "param"u8],
+        [.. "search"u8],
+        [.. "section"u8],
+        [.. "source"u8],
+        [.. "summary"u8],
+        [.. "table"u8],
+        [.. "tbody"u8],
+        [.. "td"u8],
+        [.. "tfoot"u8],
+        [.. "th"u8],
+        [.. "thead"u8],
+        [.. "title"u8],
+        [.. "tr"u8],
+        [.. "track"u8],
+        [.. "ul"u8]
     ];
 
     /// <summary>Open HTML-block kind. <see cref="None"/> means no block is currently open.</summary>
@@ -176,7 +176,7 @@ public static class BlockScanner
         Textarea,
 
         /// <summary>Type 6 — recognized block-level tag; closes on the next blank line.</summary>
-        Type6,
+        Type6
     }
 
     /// <summary>
@@ -190,9 +190,9 @@ public static class BlockScanner
     {
         ArgumentNullException.ThrowIfNull(writer);
 
-        var fence = default(FenceState);
-        var html = default(HtmlBlockState);
-        var list = default(ListState);
+        FenceState fence = default;
+        HtmlBlockState html = default;
+        ListState list = default;
         var count = 0;
         var pos = 0;
         while (pos < utf8.Length)
@@ -352,12 +352,7 @@ public static class BlockScanner
             return BlockKind.BlockQuote;
         }
 
-        if (TryClassifyListItem(body, out level))
-        {
-            return BlockKind.ListItem;
-        }
-
-        return BlockKind.Paragraph;
+        return TryClassifyListItem(body, out level) ? BlockKind.ListItem : BlockKind.Paragraph;
     }
 
     /// <summary>Handles a line while a fenced code block is open.</summary>
@@ -580,17 +575,9 @@ public static class BlockScanner
     {
         level = 0;
         var first = body[0];
-        if (first is Hyphen or Star or Plus)
-        {
-            return TryClassifyBulletItem(body, out level);
-        }
-
-        if (first is not (>= (byte)'0' and <= (byte)'9'))
-        {
-            return false;
-        }
-
-        return TryClassifyOrderedItem(body, out level);
+        return first is Hyphen or Star or Plus
+            ? TryClassifyBulletItem(body, out level)
+            : first is >= (byte)'0' and <= (byte)'9' && TryClassifyOrderedItem(body, out level);
     }
 
     /// <summary>Recognizes a bullet list-item marker (<c>-</c>, <c>*</c>, <c>+</c>).</summary>
@@ -736,12 +723,9 @@ public static class BlockScanner
         }
 
         var length = end - offset;
-        if (length > lowercaseBuffer.Length || !IsValidTagTerminator(body, end))
-        {
-            return default;
-        }
-
-        return CopyToLowercaseBuffer(body.Slice(offset, length), lowercaseBuffer);
+        return length > lowercaseBuffer.Length || !IsValidTagTerminator(body, end)
+            ? default
+            : CopyToLowercaseBuffer(body.Slice(offset, length), lowercaseBuffer);
     }
 
     /// <summary>Returns true when the byte at <paramref name="offset"/> in <paramref name="body"/> (or end-of-line) terminates a tag name validly (whitespace, <c>&gt;</c>, <c>/</c>).</summary>
@@ -817,7 +801,7 @@ public static class BlockScanner
         HtmlBlockKind.Script => "</script>"u8,
         HtmlBlockKind.Style => "</style>"u8,
         HtmlBlockKind.Textarea => "</textarea>"u8,
-        _ => default,
+        _ => default
     };
 
     /// <summary>Case-insensitive ASCII <see cref="MemoryExtensions.IndexOf{T}(ReadOnlySpan{T}, ReadOnlySpan{T})"/> for the close-tag needles.</summary>
@@ -881,13 +865,13 @@ public static class BlockScanner
     /// <param name="b">Candidate byte.</param>
     /// <returns>True when in [A-Za-z].</returns>
     private static bool IsAsciiLetter(byte b) =>
-        b is (>= (byte)'A' and <= (byte)'Z') or (>= (byte)'a' and <= (byte)'z');
+        b is >= (byte)'A' and <= (byte)'Z' or >= (byte)'a' and <= (byte)'z';
 
     /// <summary>True when <paramref name="b"/> can continue an HTML tag name.</summary>
     /// <param name="b">Candidate byte.</param>
     /// <returns>True for letters, digits, or hyphens.</returns>
     private static bool IsTagNameContinue(byte b) =>
-        IsAsciiLetter(b) || b is (>= (byte)'0' and <= (byte)'9') or (byte)'-';
+        IsAsciiLetter(b) || b is >= (byte)'0' and <= (byte)'9' or (byte)'-';
 
     /// <summary>True when <paramref name="tag"/> matches one of the CommonMark Type 6 block-level tags.</summary>
     /// <param name="tag">Lowercased ASCII tag-name slice.</param>

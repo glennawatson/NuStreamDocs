@@ -163,18 +163,13 @@ public readonly record struct DirectoryPath(string Value)
     /// <returns>Matching file paths.</returns>
     public IEnumerable<FilePath> EnumerateFiles(string searchPattern, SearchOption searchOption)
     {
-        if (IsEmpty)
-        {
-            return [];
-        }
-
-        return Project(Directory.EnumerateFiles(Value, searchPattern, searchOption));
+        return IsEmpty ? [] : Project(Directory.EnumerateFiles(Value, searchPattern, searchOption));
 
         static IEnumerable<FilePath> Project(IEnumerable<string> source)
         {
             foreach (var entry in source)
             {
-                yield return new FilePath(entry);
+                yield return new(entry);
             }
         }
     }
@@ -194,18 +189,13 @@ public readonly record struct DirectoryPath(string Value)
     /// <returns>Matching directory paths.</returns>
     public IEnumerable<DirectoryPath> EnumerateDirectories(string searchPattern, SearchOption searchOption)
     {
-        if (IsEmpty)
-        {
-            return [];
-        }
-
-        return Project(Directory.EnumerateDirectories(Value, searchPattern, searchOption));
+        return IsEmpty ? [] : Project(Directory.EnumerateDirectories(Value, searchPattern, searchOption));
 
         static IEnumerable<DirectoryPath> Project(IEnumerable<string> source)
         {
             foreach (var entry in source)
             {
-                yield return new DirectoryPath(entry);
+                yield return new(entry);
             }
         }
     }

@@ -10,7 +10,7 @@ namespace NuStreamDocs.Search;
 /// <remarks>
 /// Encodes the inputs once at construction so the per-page frontmatter extractor and the index
 /// writer flow pure UTF-8. Callers building from configuration files reach for the string
-/// overloads; callers with byte-literal sources can pass <c>"..."u8.ToArray()</c> directly.
+/// overloads; callers with byte-literal sources can pass <c>[.. "..."u8]</c> directly.
 /// </remarks>
 public static class SearchOptionsExtensions
 {

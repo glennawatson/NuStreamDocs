@@ -39,8 +39,8 @@ internal static class XrefMapWriter
         (byte[] Id, byte[] Url)[] sorted = [.. entries];
         Array.Sort(sorted, static (a, b) => a.Id.AsSpan().SequenceCompareTo(b.Id.AsSpan()));
 
-        var sink = new ArrayBufferWriter<byte>(initialCapacity: 1024);
-        using (var writer = new Utf8JsonWriter(sink, new() { Indented = false }))
+        ArrayBufferWriter<byte> sink = new(initialCapacity: 1024);
+        using (Utf8JsonWriter writer = new(sink, new() { Indented = false }))
         {
             writer.WriteStartObject();
 

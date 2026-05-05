@@ -72,8 +72,8 @@ public class LinkSpanTests
     [Test]
     public async Task TryHandleEmitsAnchor()
     {
-        var bytes = "[hi](u)"u8.ToArray();
-        var writer = new ArrayBufferWriter<byte>();
+        byte[] bytes = [.. "[hi](u)"u8];
+        ArrayBufferWriter<byte> writer = new();
         var pos = 0;
         var pendingTextStart = 0;
         await Assert.That(LinkSpan.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsTrue();
@@ -86,8 +86,8 @@ public class LinkSpanTests
     [Test]
     public async Task TryHandleMalformedReturnsFalse()
     {
-        var bytes = "[unclosed"u8.ToArray();
-        var writer = new ArrayBufferWriter<byte>();
+        byte[] bytes = [.. "[unclosed"u8];
+        ArrayBufferWriter<byte> writer = new();
         var pos = 0;
         var pendingTextStart = 0;
         await Assert.That(LinkSpan.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsFalse();

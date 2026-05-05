@@ -84,7 +84,7 @@ public static class BlogContentGenerator
     /// <returns>Tag → posts map.</returns>
     private static SortedDictionary<byte[], List<BlogPost>> GroupByTag(BlogPost[] posts)
     {
-        var map = new SortedDictionary<byte[], List<BlogPost>>(ByteArrayComparer.Instance);
+        SortedDictionary<byte[], List<BlogPost>> map = new(ByteArrayComparer.Instance);
         for (var i = 0; i < posts.Length; i++)
         {
             var post = posts[i];

@@ -25,15 +25,10 @@ public static class MkDocsNavParser
     /// <returns>Curated entries; empty when no <c>nav:</c> block was present.</returns>
     public static NavEntry[] FromJson(ReadOnlySpan<byte> utf8Json)
     {
-        var reader = new Utf8JsonReader(utf8Json, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(utf8Json, isFinalBlock: true, state: default);
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
-        if (!root.TryGetProperty("nav"u8, out var nav) || nav.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        return ReadNavArray(nav);
+        return !root.TryGetProperty("nav"u8, out var nav) || nav.ValueKind != JsonValueKind.Array ? [] : ReadNavArray(nav);
     }
 
     /// <summary>Reads the YAML bytes of an mkdocs.yml file and returns its curated nav tree.</summary>
@@ -143,8 +138,8 @@ public static class MkDocsNavParser
     /// <returns>JSON bytes.</returns>
     private static byte[] ConvertYamlToJsonBytes(ReadOnlySpan<byte> utf8Yaml)
     {
-        var rented = new ArrayBufferWriter<byte>();
-        using var writer = new Utf8JsonWriter(rented);
+        ArrayBufferWriter<byte> rented = new();
+        using Utf8JsonWriter writer = new(rented);
         YamlToJson.Convert(utf8Yaml, writer);
         writer.Flush();
         return rented.WrittenSpan.ToArray();

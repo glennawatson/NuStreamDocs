@@ -17,5 +17,5 @@ internal enum TocKey
     Href,
 
     /// <summary>The <c>homepage</c> key (landing page for a directory ref).</summary>
-    Homepage,
+    Homepage
 }

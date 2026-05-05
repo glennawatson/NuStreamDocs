@@ -115,7 +115,7 @@ public class InlineRendererTests
     /// <returns>The rendered HTML string.</returns>
     private static string Render(string markdown)
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         InlineRenderer.Render(Encoding.UTF8.GetBytes(markdown), writer);
         return Encoding.UTF8.GetString(writer.WrittenSpan);
     }

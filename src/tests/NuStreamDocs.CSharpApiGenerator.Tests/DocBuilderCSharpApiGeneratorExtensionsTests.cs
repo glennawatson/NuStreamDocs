@@ -14,7 +14,7 @@ public class DocBuilderCSharpApiGeneratorExtensionsTests
     [Test]
     public async Task ReturnsSameBuilderForChaining()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var options = CSharpApiGeneratorOptions.FromManifest("/repo", "/cache");
         var result = builder.UseCSharpApiGenerator(options);
         await Assert.That(ReferenceEquals(builder, result)).IsTrue();
@@ -25,7 +25,7 @@ public class DocBuilderCSharpApiGeneratorExtensionsTests
     [Test]
     public async Task RejectsNullOptions()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(() => builder.UseCSharpApiGenerator(null!))
             .Throws<ArgumentNullException>();
     }

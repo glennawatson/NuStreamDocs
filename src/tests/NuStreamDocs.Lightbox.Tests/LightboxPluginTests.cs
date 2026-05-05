@@ -15,8 +15,8 @@ public class LightboxPluginTests
     [Test]
     public async Task HeadExtrasIncludeStylesheetAndScript()
     {
-        var plugin = new LightboxPlugin();
-        var sink = new ArrayBufferWriter<byte>();
+        LightboxPlugin plugin = new();
+        ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
 
         var html = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -30,8 +30,8 @@ public class LightboxPluginTests
     [Test]
     public async Task WrapImagesFalseLeavesHeadIntact()
     {
-        var plugin = new LightboxPlugin(LightboxOptions.Default with { WrapImages = false });
-        var sink = new ArrayBufferWriter<byte>();
+        LightboxPlugin plugin = new(LightboxOptions.Default with { WrapImages = false });
+        ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }
@@ -41,7 +41,7 @@ public class LightboxPluginTests
     [Test]
     public async Task EmptyStylesheetSkipsLink()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         new LightboxPlugin(LightboxOptions.Default with { StylesheetUrl = [] }).WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).DoesNotContain("<link rel=\"stylesheet\"");
@@ -53,7 +53,7 @@ public class LightboxPluginTests
     [Test]
     public async Task EmptyScriptSkipsScript()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         new LightboxPlugin(LightboxOptions.Default with { ScriptUrl = [] }).WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).Contains("<link rel=\"stylesheet\"");

@@ -43,13 +43,13 @@ public class XrefMapReaderTests
     public async Task IncompleteEntriesDropped()
     {
         var json = """
-            {"references":[
-                {"uid":"A","href":"/a"},
-                {"uid":"B"},
-                {"href":"/c"},
-                {"name":"unrelated"}
-            ]}
-            """u8;
+                   {"references":[
+                       {"uid":"A","href":"/a"},
+                       {"uid":"B"},
+                       {"href":"/c"},
+                       {"name":"unrelated"}
+                   ]}
+                   """u8;
         var payload = XrefMapReader.Read(json);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
         await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("A"u8)).IsTrue();

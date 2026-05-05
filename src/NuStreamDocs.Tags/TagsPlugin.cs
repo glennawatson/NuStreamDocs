@@ -90,7 +90,8 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         DirectoryPath tagsDir,
         CancellationToken cancellationToken)
     {
-        var map = new SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>>(ByteSequenceComparer.Instance);
+        const int InitialCapacity = 4;
+        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> map = new(ByteSequenceComparer.Instance);
         var files = Directory.GetFiles(inputRoot, "*.md", SearchOption.AllDirectories);
         for (var i = 0; i < files.Length; i++)
         {
@@ -116,7 +117,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             {
                 if (!map.TryGetValue(tags[t], out var bucket))
                 {
-                    bucket = new List<(byte[] Url, byte[] Title)>(4);
+                    bucket = new(InitialCapacity);
                     map[tags[t]] = bucket;
                 }
 
@@ -276,7 +277,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             return [.. "tag"u8];
         }
 
-        Span<byte> stack = tag.Length <= 256 ? stackalloc byte[tag.Length] : new byte[tag.Length];
+        var stack = tag.Length <= 256 ? stackalloc byte[tag.Length] : new byte[tag.Length];
         var written = SlugifyInto(tag, stack);
         return written is 0 ? [.. "tag"u8] : stack[..written].ToArray();
     }
@@ -292,23 +293,30 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         for (var i = 0; i < tag.Length; i++)
         {
             var b = tag[i];
-            if (b is >= (byte)'A' and <= (byte)'Z')
+            switch (b)
             {
-                count = FlushHyphen(dst, count, pendingHyphen);
-                dst[count++] = (byte)(b | AsciiCaseBit);
-                pendingHyphen = false;
-                continue;
-            }
+                case >= (byte)'A' and <= (byte)'Z':
+                    {
+                        count = FlushHyphen(dst, count, pendingHyphen);
+                        dst[count++] = (byte)(b | AsciiCaseBit);
+                        pendingHyphen = false;
+                        continue;
+                    }
 
-            if (b is >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9')
-            {
-                count = FlushHyphen(dst, count, pendingHyphen);
-                dst[count++] = b;
-                pendingHyphen = false;
-                continue;
-            }
+                case >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9':
+                    {
+                        count = FlushHyphen(dst, count, pendingHyphen);
+                        dst[count++] = b;
+                        pendingHyphen = false;
+                        continue;
+                    }
 
-            pendingHyphen = count is not 0;
+                default:
+                    {
+                        pendingHyphen = count is not 0;
+                        break;
+                    }
+            }
         }
 
         return count;

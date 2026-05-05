@@ -28,7 +28,7 @@ internal static class MarkdownLinkRewriter
         [.. "ftps://"u8],
         [.. "mailto:"u8],
         [.. "tel:"u8],
-        [.. "//"u8],
+        [.. "//"u8]
     ];
 
     /// <summary>Gets the UTF-8 bytes the plugin scans for to short-circuit pages without href attributes.</summary>
@@ -238,11 +238,6 @@ internal static class MarkdownLinkRewriter
             return query;
         }
 
-        if (query < 0)
-        {
-            return anchor;
-        }
-
-        return anchor < query ? anchor : query;
+        return query < 0 || anchor < query ? anchor : query;
     }
 }

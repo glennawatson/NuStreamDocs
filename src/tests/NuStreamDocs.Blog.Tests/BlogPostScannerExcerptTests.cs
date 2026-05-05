@@ -14,7 +14,7 @@ public class BlogPostScannerExcerptTests
     [Test]
     public async Task EmptyBodyHasNoExcerpt()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-01-empty.md"),
             "---\ntitle: Empty\n---\n");
@@ -28,7 +28,7 @@ public class BlogPostScannerExcerptTests
     [Test]
     public async Task AtxHeadingSkippedInExcerpt()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-02-heading.md"),
             "# Title\n\nFirst paragraph wins.\n");
@@ -42,7 +42,7 @@ public class BlogPostScannerExcerptTests
     [Test]
     public async Task OnlyBlankLines()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-03-blank.md"),
             "---\ntitle: Blank\n---\n\n\n\n");
@@ -55,7 +55,7 @@ public class BlogPostScannerExcerptTests
     [Test]
     public async Task NoTrailingNewline()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-04-noeol.md"),
             "Inline post with no trailing newline");
@@ -68,7 +68,7 @@ public class BlogPostScannerExcerptTests
     [Test]
     public async Task HumanizeMultipleHyphens()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-05-my-cool-post-name.md"),
             "Body");
@@ -81,7 +81,7 @@ public class BlogPostScannerExcerptTests
     [Test]
     public async Task HumanizeConsecutiveHyphens()
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-06-double--hyphen.md"),
             "Body");

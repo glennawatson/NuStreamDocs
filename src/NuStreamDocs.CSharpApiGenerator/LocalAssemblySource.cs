@@ -41,7 +41,7 @@ internal sealed record LocalAssemblySource(
     /// <remarks>The dictionary itself terminates at the SourceDocParser boundary (<see cref="AssemblyGroup.FallbackIndex"/>), so it stays string-shaped.</remarks>
     private Dictionary<string, string> BuildFallbackIndex()
     {
-        var index = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, string> index = new(StringComparer.OrdinalIgnoreCase);
         for (var i = 0; i < AssemblyPaths.Length; i++)
         {
             var dir = AssemblyPaths[i].Directory;

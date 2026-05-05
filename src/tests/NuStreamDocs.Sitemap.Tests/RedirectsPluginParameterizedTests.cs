@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Plugins;
-
 namespace NuStreamDocs.Sitemap.Tests;
 
 /// <summary>Parameterized frontmatter-shape tests for RedirectsPlugin.DiscoverAsync.</summary>
@@ -24,13 +22,13 @@ public class RedirectsPluginParameterizedTests
     [Arguments("aliases: [old.html]\nauthor: a\n")]
     public async Task FrontmatterAliasShapes(string frontmatter)
     {
-        using var input = new ScratchDir();
-        using var output = new ScratchDir();
+        using ScratchDir input = new();
+        using ScratchDir output = new();
         Directory.CreateDirectory(Path.Combine(input.Root, "guide"));
         await File.WriteAllTextAsync(Path.Combine(input.Root, "guide", "intro.md"), $"---\n{frontmatter}---\n# body");
 
-        var plugin = new RedirectsPlugin();
-        await plugin.DiscoverAsync(new BuildDiscoverContext(input.Root, output.Root, []), CancellationToken.None);
+        RedirectsPlugin plugin = new();
+        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
     }
 
     /// <summary>Frontmatter shapes that should NOT register an alias (no key, empty list, no frontmatter, etc.).</summary>
@@ -44,12 +42,12 @@ public class RedirectsPluginParameterizedTests
     [Arguments("aliases: [oops]\nno-frontmatter")]
     public async Task NoAliasesNoCrash(string source)
     {
-        using var input = new ScratchDir();
-        using var output = new ScratchDir();
+        using ScratchDir input = new();
+        using ScratchDir output = new();
         await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), source);
 
-        var plugin = new RedirectsPlugin();
-        await plugin.DiscoverAsync(new BuildDiscoverContext(input.Root, output.Root, []), CancellationToken.None);
+        RedirectsPlugin plugin = new();
+        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
     }
 
     /// <summary>Constructor surface — every overload returns a usable instance.</summary>

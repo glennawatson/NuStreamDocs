@@ -56,7 +56,7 @@ public class HtmlTextExtractorTests
     /// <returns>Tuple of decoded body text and title string.</returns>
     private static (string Text, string Title) Extract(ReadOnlySpan<byte> html)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var titleBytes = HtmlTextExtractor.Extract(html, sink);
         return (Encoding.UTF8.GetString(sink.WrittenSpan), Encoding.UTF8.GetString(titleBytes));
     }

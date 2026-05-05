@@ -48,7 +48,7 @@ internal static class TemplateRenderer
         var scopeBuffer = ArrayPool<TemplateData>.Shared.Rent(EstimateDepth(instructions.Length));
         var frameBuffer = ArrayPool<IterationFrame>.Shared.Rent(EstimateDepth(instructions.Length));
         scopeBuffer[0] = root;
-        var state = new RenderState(scopeBuffer, ScopeDepth: 1, frameBuffer, FrameDepth: 0);
+        RenderState state = new(scopeBuffer, ScopeDepth: 1, frameBuffer, FrameDepth: 0);
         try
         {
             var ip = 0;
@@ -96,7 +96,7 @@ internal static class TemplateRenderer
             TemplateOp.InvertedSectionOpen => EnterInvertedSection(source, instr, state.Scopes, state.ScopeDepth, ip),
             TemplateOp.SectionClose => ExitSection(instructions, instr, ref state, ip),
             TemplateOp.Partial => RenderPartial(source, instr, state.Scopes, state.ScopeDepth, partials, ip, writer),
-            _ => ip + 1,
+            _ => ip + 1
         };
     }
 

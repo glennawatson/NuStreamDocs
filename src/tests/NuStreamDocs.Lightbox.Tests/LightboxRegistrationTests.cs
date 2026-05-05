@@ -42,7 +42,7 @@ public class LightboxRegistrationTests
     [Test]
     public async Task SkipsWhenWrapDisabled()
     {
-        var plugin = new LightboxPlugin(LightboxOptions.Default with { WrapImages = false });
+        LightboxPlugin plugin = new(LightboxOptions.Default with { WrapImages = false });
         await Assert.That(plugin.NeedsRewrite("<p><img src=\"a.png\" alt=\"a\"></p>"u8)).IsFalse();
     }
 
@@ -91,8 +91,8 @@ public class LightboxRegistrationTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(LightboxPlugin plugin, ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>(128);
-        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        ArrayBufferWriter<byte> output = new(128);
+        PagePostRenderContext ctx = new("p.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];
     }

@@ -60,7 +60,7 @@ public static class AutorefsReferenceLinkPreprocessor
         ArgumentNullException.ThrowIfNull(writer);
 
         var definedLabels = CollectLinkDefinitions(source);
-        var state = default(ScanState);
+        ScanState state = default;
 
         // The fence-toggle path triggers on '\n' so a fence on the first line of the
         // file isn't seen by the per-byte scan. Detect a leading fence up-front.
@@ -106,18 +106,22 @@ public static class AutorefsReferenceLinkPreprocessor
             return;
         }
 
-        if (b is (byte)'`')
+        switch (b)
         {
-            SkipInlineCodeSpan(source, ref state.Cursor);
-            return;
-        }
+            case (byte)'`':
+                {
+                    SkipInlineCodeSpan(source, ref state.Cursor);
+                    return;
+                }
 
-        if (b is (byte)'[' && TryConsumeReferenceLink(source, definedLabels, writer, ref state))
-        {
-            return;
+            case (byte)'[' when TryConsumeReferenceLink(source, definedLabels, writer, ref state):
+                return;
+            default:
+                {
+                    state.Cursor++;
+                    break;
+                }
         }
-
-        state.Cursor++;
     }
 
     /// <summary>Attempts to consume a <c>[text][label]</c> sequence at the current cursor; rewrites it when the label has no document-level definition.</summary>
@@ -165,7 +169,7 @@ public static class AutorefsReferenceLinkPreprocessor
     /// <returns>Case-sensitive set of defined label byte sequences.</returns>
     private static HashSet<string> CollectLinkDefinitions(ReadOnlySpan<byte> source)
     {
-        var labels = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<string> labels = new(StringComparer.Ordinal);
         var cursor = 0;
         while (cursor < source.Length)
         {
@@ -224,15 +228,8 @@ public static class AutorefsReferenceLinkPreprocessor
     /// <param name="idStart">Inclusive start of the candidate label.</param>
     /// <param name="idEnd">Exclusive end of the candidate label.</param>
     /// <returns>True when the label is already defined.</returns>
-    private static bool IsDefinedLabel(HashSet<string> defined, ReadOnlySpan<byte> source, int idStart, int idEnd)
-    {
-        if (defined.Count is 0)
-        {
-            return false;
-        }
-
-        return defined.Contains(Encoding.UTF8.GetString(source.Slice(idStart, idEnd - idStart)));
-    }
+    private static bool IsDefinedLabel(HashSet<string> defined, ReadOnlySpan<byte> source, int idStart, int idEnd) =>
+        defined.Count is not 0 && defined.Contains(Encoding.UTF8.GetString(source.Slice(idStart, idEnd - idStart)));
 
     /// <summary>Tries to match a complete <c>[label][id]</c> structure starting at <paramref name="bracketIndex"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -250,7 +247,6 @@ public static class AutorefsReferenceLinkPreprocessor
         out int idStart,
         out int idEnd)
     {
-        labelEnd = -1;
         idStart = -1;
         idEnd = -1;
         labelStart = bracketIndex + 1;
@@ -266,12 +262,7 @@ public static class AutorefsReferenceLinkPreprocessor
         }
 
         idStart = afterLabel + 1;
-        if (!TryFindLabelClose(source, idStart, out idEnd))
-        {
-            return false;
-        }
-
-        return idEnd > idStart;
+        return TryFindLabelClose(source, idStart, out idEnd) && idEnd > idStart;
     }
 
     /// <summary>Walks <paramref name="source"/> from <paramref name="start"/> looking for the closing <c>]</c> on the same line.</summary>
@@ -285,16 +276,16 @@ public static class AutorefsReferenceLinkPreprocessor
         var maxIndex = Math.Min(source.Length, start + MaxLabelBytes);
         for (var i = start; i < maxIndex; i++)
         {
-            var b = source[i];
-            if (b is (byte)']')
+            switch (source[i])
             {
-                end = i;
-                return i > start;
-            }
+                case (byte)']':
+                    {
+                        end = i;
+                        return i > start;
+                    }
 
-            if (b is (byte)'\n' or (byte)'[')
-            {
-                return false;
+                case (byte)'\n' or (byte)'[':
+                    return false;
             }
         }
 
@@ -370,28 +361,35 @@ public static class AutorefsReferenceLinkPreprocessor
 
         while (cursor < source.Length)
         {
-            if (source[cursor] is (byte)'\n')
+            switch (source[cursor])
             {
-                cursor++;
-                return;
-            }
+                case (byte)'\n':
+                    {
+                        cursor++;
+                        return;
+                    }
 
-            if (source[cursor] is (byte)'`')
-            {
-                var closeStart = cursor;
-                while (cursor < source.Length && source[cursor] is (byte)'`')
-                {
-                    cursor++;
-                }
+                case (byte)'`':
+                    {
+                        var closeStart = cursor;
+                        while (cursor < source.Length && source[cursor] is (byte)'`')
+                        {
+                            cursor++;
+                        }
 
-                if (cursor - closeStart == openTicks)
-                {
-                    return;
-                }
-            }
-            else
-            {
-                cursor++;
+                        if (cursor - closeStart == openTicks)
+                        {
+                            return;
+                        }
+
+                        break;
+                    }
+
+                default:
+                    {
+                        cursor++;
+                        break;
+                    }
             }
         }
     }

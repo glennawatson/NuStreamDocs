@@ -55,7 +55,7 @@ public class WyamFrontmatterReaderTests
     [Test]
     public async Task BodyOffsetPointsPastClosingDelimiter()
     {
-        var source = "---\nTitle: Hello\n---\nBody starts here."u8.ToArray();
+        byte[] source = [.. "---\nTitle: Hello\n---\nBody starts here."u8];
         var fm = WyamFrontmatterReader.Parse(source);
         await Assert.That(Encoding.UTF8.GetString(source.AsSpan(fm.BodyStartOffset))).IsEqualTo("Body starts here.");
     }

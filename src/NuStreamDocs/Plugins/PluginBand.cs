@@ -31,5 +31,5 @@ public enum PluginBand
     Late = 50,
 
     /// <summary>Runs after everything else in the phase.</summary>
-    Latest = 100,
+    Latest = 100
 }

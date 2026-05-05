@@ -25,8 +25,8 @@ public class BibliographyPluginTests
     [Test]
     public async Task PassThroughWhenNoMarkers()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("p.md", "plain text\n"u8, sink);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("p.md", "plain text\n"u8, sink);
         new BibliographyPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("plain text\n");
     }
@@ -39,10 +39,10 @@ public class BibliographyPluginTests
         var db = new BibliographyDatabaseBuilder()
             .AddCase("mabo", "Mabo v Queensland (No 2)", "(1992) 175 CLR 1", 1992)
             .Build();
-        var options = new BibliographyOptions(db, Aglc4Style.Instance, WarnOnMissing: false);
-        var plugin = new BibliographyPlugin(options);
-        var sink = new ArrayBufferWriter<byte>(256);
-        var ctx = new PagePreRenderContext("p.md", "see [@mabo]\n"u8, sink);
+        BibliographyOptions options = new(db, Aglc4Style.Instance, WarnOnMissing: false);
+        BibliographyPlugin plugin = new(options);
+        ArrayBufferWriter<byte> sink = new(256);
+        PagePreRenderContext ctx = new("p.md", "see [@mabo]\n"u8, sink);
         plugin.PreRender(in ctx);
 
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -56,9 +56,9 @@ public class BibliographyPluginTests
     [Test]
     public async Task MissingKeyDoesNotProduceFootnote()
     {
-        var options = new BibliographyOptions(BibliographyDatabase.Empty, Aglc4Style.Instance, WarnOnMissing: true);
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("p.md", "[@nope]\n"u8, sink);
+        BibliographyOptions options = new(BibliographyDatabase.Empty, Aglc4Style.Instance, WarnOnMissing: true);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("p.md", "[@nope]\n"u8, sink);
         new BibliographyPlugin(options).PreRender(in ctx);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).DoesNotContain("[^bib-");
@@ -70,7 +70,7 @@ public class BibliographyPluginTests
     [Test]
     public async Task UseBibliographyOptionsRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.UseBibliography(BibliographyOptions.Default);
         await Assert.That(result).IsSameReferenceAs(builder);
     }
@@ -80,7 +80,7 @@ public class BibliographyPluginTests
     [Test]
     public async Task UseBibliographyFluentRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.UseBibliography(static b =>
             b.AddBook("g", "T", PersonName.Of("X", "Y"), 2000, "P"));
         await Assert.That(result).IsSameReferenceAs(builder);

@@ -28,7 +28,7 @@ public sealed class Material3Theme : IThemePackage
     [
         "assets/stylesheets/material3.css",
         "assets/javascripts/material3.js",
-        "assets/images/favicon.svg",
+        "assets/images/favicon.svg"
     ];
 
     /// <summary>Static assets as an indexable snapshot for write-out loops.</summary>

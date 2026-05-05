@@ -53,7 +53,7 @@ public class HighlightPluginTests
     public async Task WrapDisabledPreservesOriginalShape()
     {
         const string Html = "<pre><code class=\"language-zzz\">just text</code></pre>";
-        var plugin = new HighlightPlugin(HighlightOptions.Default with { WrapInHighlightDiv = false });
+        HighlightPlugin plugin = new(HighlightOptions.Default with { WrapInHighlightDiv = false });
         var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
         await Assert.That(Encoding.UTF8.GetString(output)).IsEqualTo(Html);
     }
@@ -72,7 +72,7 @@ public class HighlightPluginTests
     [Test]
     public async Task CopyButtonOptInEmitsButton()
     {
-        var plugin = new HighlightPlugin(HighlightOptions.Default with { CopyButton = true });
+        HighlightPlugin plugin = new(HighlightOptions.Default with { CopyButton = true });
         var output = RunPostRender(plugin, "<pre><code class=\"language-zzz\">x</code></pre>"u8);
         await Assert.That(Encoding.UTF8.GetString(output)).Contains("<button class=\"md-clipboard");
     }
@@ -116,14 +116,81 @@ public class HighlightPluginTests
         await Assert.That(ex).IsNotNull();
     }
 
+    /// <summary>With auto-detect off, an unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> block passes through untouched.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnlabeledBlocksUntouchedByDefault()
+    {
+        const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo {} }</code></pre>";
+        var output = RunPostRender(new(), Encoding.UTF8.GetBytes(Html));
+        await Assert.That(Encoding.UTF8.GetString(output)).IsEqualTo(Html);
+    }
+
+    /// <summary>With auto-detect on, an unlabeled C# block is detected and routed through the C# lexer.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task AutoDetectClassifiesObviousCSharp()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with { AutoDetectLanguage = true });
+        const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        var rendered = Encoding.UTF8.GetString(output);
+        await Assert.That(rendered).Contains("class=\"language-csharp\"");
+        await Assert.That(rendered).Contains("class=\"kd\"");
+    }
+
+    /// <summary>An unlabeled block that doesn't strongly resemble any registered language is left as-is when auto-detect is on.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task AutoDetectLeavesAmbiguousBlocksUntouched()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with { AutoDetectLanguage = true });
+        const string Html = "<pre><code>this is just plain prose with no code keywords at all</code></pre>";
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        await Assert.That(Encoding.UTF8.GetString(output)).IsEqualTo(Html);
+    }
+
+    /// <summary>The <see cref="HighlightOptions.DetectionLanguages"/> allow-list scopes the detector to a caller-declared subset; languages outside the list never match.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DetectionLanguagesAllowListExcludesOthers()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with
+        {
+            AutoDetectLanguage = true,
+            DetectionLanguages = [[.. "powershell"u8]]
+        });
+
+        // Strong C# signal — but C# isn't on the allow-list, so the detector must skip it.
+        const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        await Assert.That(Encoding.UTF8.GetString(output)).IsEqualTo(Html);
+    }
+
+    /// <summary>The allow-list still permits the matching language to be detected.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DetectionLanguagesAllowListLetsMatchingLanguageThrough()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with
+        {
+            AutoDetectLanguage = true,
+            DetectionLanguages = [[.. "powershell"u8]]
+        });
+
+        const string Html = "<pre><code>Install-Package ReactiveUI.WPF\nGet-Item .\\foo\nWrite-Host hello</code></pre>";
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("class=\"language-powershell\"");
+    }
+
     /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
     /// <param name="plugin">Plugin under test.</param>
     /// <param name="html">Input HTML bytes.</param>
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(HighlightPlugin plugin, ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>(128);
-        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        ArrayBufferWriter<byte> output = new(128);
+        PagePostRenderContext ctx = new("p.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];
     }

@@ -64,7 +64,7 @@ public class FrontmatterSplicerTests
     /// <returns>Spliced output as a string.</returns>
     private static string Splice(string source, string extra)
     {
-        var sink = new ArrayBufferWriter<byte>(Math.Max(1, source.Length + extra.Length));
+        ArrayBufferWriter<byte> sink = new(Math.Max(1, source.Length + extra.Length));
         FrontmatterSplicer.Splice(Encoding.UTF8.GetBytes(source), Encoding.UTF8.GetBytes(extra), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

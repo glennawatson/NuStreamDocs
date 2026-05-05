@@ -20,7 +20,7 @@ public class BlogPostScannerFrontmatterTests
     [Arguments("title: With-symbol!", "With-symbol!")]
     public async Task TitleShapes(string titleField, string expected)
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-01-slug.md"),
             $"---\n{titleField}\n---\nbody\n");
@@ -38,7 +38,7 @@ public class BlogPostScannerFrontmatterTests
     [Arguments("author: A.B.", "A.B.")]
     public async Task AuthorShapes(string authorField, string expected)
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-02-slug.md"),
             $"---\n{authorField}\n---\nbody\n");
@@ -56,7 +56,7 @@ public class BlogPostScannerFrontmatterTests
     [Arguments("tags: [a, b, c]", 3)]
     public async Task TagsListShapes(string tagsField, int expectedCount)
     {
-        using var temp = new ScratchDir();
+        using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-04-03-slug.md"),
             $"---\n{tagsField}\n---\nbody\n");

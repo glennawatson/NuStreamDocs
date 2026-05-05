@@ -15,7 +15,7 @@ public class PhaseTimerTests
     [Test]
     public async Task RunAsyncEmitsStartThenCompleteAroundTheWork()
     {
-        var sequence = new List<string>();
+        List<string> sequence = [];
 
         await PhaseTimer.RunAsync(
             NullLogger.Instance,
@@ -113,7 +113,7 @@ public class PhaseTimerTests
     [Test]
     public async Task RunEmitsStartThenCompleteAroundSynchronousWork()
     {
-        var sequence = new List<string>();
+        List<string> sequence = [];
         PhaseTimer.Run(
             NullLogger.Instance,
             _ => sequence.Add("start"),

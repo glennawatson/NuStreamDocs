@@ -70,7 +70,7 @@ public static class AutorefsRewriter
 
         Parallel.ForEach(files, file =>
         {
-            var local = default(RewriteTotals);
+            RewriteTotals local = default;
             RewriteOneLogged(file, registryLocal, loggerLocal, ref local);
             Interlocked.Add(ref resolved, local.Resolved);
             Interlocked.Add(ref missing, local.Missing);
@@ -116,7 +116,7 @@ public static class AutorefsRewriter
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(sink);
 
-        var totals = default(RewriteTotals);
+        RewriteTotals totals = default;
         return RewriteSpanCore(source, registry, sink, logger: null, sourcePage: null, ref totals);
     }
 
@@ -141,7 +141,7 @@ public static class AutorefsRewriter
         ArgumentNullException.ThrowIfNull(sink);
         ArgumentNullException.ThrowIfNull(logger);
 
-        var totals = default(RewriteTotals);
+        RewriteTotals totals = default;
         _ = RewriteSpanCore(source, registry, sink, logger, sourcePage, ref totals);
         return totals;
     }

@@ -12,7 +12,7 @@ public class TocPluginLifecycleTests
     [Test]
     public async Task NameAndMarker()
     {
-        var plugin = new TocPlugin();
+        TocPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("toc"u8)).IsTrue();
         await Assert.That(System.Text.Encoding.UTF8.GetString(TocPlugin.TocMarker)).IsEqualTo("<!--@@toc@@-->");
     }

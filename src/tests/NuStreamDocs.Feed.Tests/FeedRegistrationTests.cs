@@ -15,7 +15,7 @@ public class FeedRegistrationTests
     [Test]
     public async Task DefaultCtorUsesRecommendedCap()
     {
-        var opts = new FeedOptions("https://x.test/", "T", "D", "blog");
+        FeedOptions opts = new("https://x.test/", "T", "D", "blog");
         await Assert.That(opts.MaxItems).IsEqualTo(FeedOptions.DefaultMaxItems);
         await Assert.That(opts.Formats).IsEqualTo(FeedFormats.Both);
     }
@@ -38,7 +38,7 @@ public class FeedRegistrationTests
     [Test]
     public async Task UseFeedRegisters()
     {
-        var opts = new FeedOptions("https://x.test/", "T", "D", "blog");
+        FeedOptions opts = new("https://x.test/", "T", "D", "blog");
         await Assert.That(new DocBuilder().UseFeed(opts)).IsTypeOf<DocBuilder>();
     }
 
@@ -47,7 +47,7 @@ public class FeedRegistrationTests
     [Test]
     public async Task UseFeedLoggerRegisters()
     {
-        var opts = new FeedOptions("https://x.test/", "T", "D", "blog");
+        FeedOptions opts = new("https://x.test/", "T", "D", "blog");
         await Assert.That(new DocBuilder().UseFeed(opts, NullLogger.Instance)).IsTypeOf<DocBuilder>();
     }
 
@@ -56,7 +56,7 @@ public class FeedRegistrationTests
     [Test]
     public async Task UseFeedRejectsNullBuilder()
     {
-        var opts = new FeedOptions("https://x.test/", "T", "D", "blog");
+        FeedOptions opts = new("https://x.test/", "T", "D", "blog");
         var ex = Assert.Throws<ArgumentNullException>(() => DocBuilderFeedExtensions.UseFeed(null!, opts));
         await Assert.That(ex).IsNotNull();
     }
@@ -75,7 +75,7 @@ public class FeedRegistrationTests
     [Test]
     public async Task UseFeedLoggerRejectsNullLogger()
     {
-        var opts = new FeedOptions("https://x.test/", "T", "D", "blog");
+        FeedOptions opts = new("https://x.test/", "T", "D", "blog");
         var ex = Assert.Throws<ArgumentNullException>(() => new DocBuilder().UseFeed(opts, null!));
         await Assert.That(ex).IsNotNull();
     }

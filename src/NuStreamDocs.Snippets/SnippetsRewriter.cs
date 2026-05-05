@@ -32,7 +32,7 @@ internal static class SnippetsRewriter
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, DirectoryPath baseDirectory, Dictionary<byte[], byte[]> fileCache, IBufferWriter<byte> writer)
     {
-        var visited = new HashSet<byte[]>(ByteArrayComparer.Instance);
+        HashSet<byte[]> visited = new(ByteArrayComparer.Instance);
         RewriteCore(source, baseDirectory, fileCache, writer, visited, 0);
     }
 

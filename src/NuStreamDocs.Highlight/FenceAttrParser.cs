@@ -96,12 +96,9 @@ internal static class FenceAttrParser
         }
 
         var first = info[afterEq];
-        if (first is (byte)'"' or (byte)'\'')
-        {
-            return TryReadQuoted(info, afterEq, first, out value, out consumed);
-        }
-
-        return TryReadBare(info, afterEq, out value, out consumed);
+        return first is (byte)'"' or (byte)'\''
+            ? TryReadQuoted(info, afterEq, first, out value, out consumed)
+            : TryReadBare(info, afterEq, out value, out consumed);
     }
 
     /// <summary>Reads a quoted value (matching closing quote required).</summary>

@@ -18,5 +18,5 @@ public enum OptimizeFormats
     Brotli = 2,
 
     /// <summary>Emit both gzip and brotli siblings.</summary>
-    Both = Gzip | Brotli,
+    Both = Gzip | Brotli
 }

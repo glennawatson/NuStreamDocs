@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Autorefs;
-using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Xrefs.Tests;
 
@@ -16,12 +15,12 @@ public class XrefsPluginTests
     public async Task FinalizeEmitsRegistrySnapshot()
     {
         using var temp = TempDir.Create();
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo.Bar"u8, "api/Foo.Bar.html"u8.ToArray(), fragment: default);
-        registry.Register("Foo.Baz"u8, "api/Foo.Baz.html"u8.ToArray(), fragment: default);
-        var plugin = new XrefsPlugin(registry, XrefsOptions.Default);
+        AutorefsRegistry registry = new();
+        registry.Register("Foo.Bar"u8, [.. "api/Foo.Bar.html"u8], fragment: default);
+        registry.Register("Foo.Baz"u8, [.. "api/Foo.Baz.html"u8], fragment: default);
+        XrefsPlugin plugin = new(registry, XrefsOptions.Default);
 
-        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
         var bytes = await File.ReadAllBytesAsync(Path.Combine(temp.Root, "xrefmap.json"));
         var payload = XrefMapReader.Read(bytes);
@@ -37,14 +36,14 @@ public class XrefsPluginTests
         var importPath = Path.Combine(temp.Root, "external.json");
         XrefMapWriter.Write(importPath, baseUrl: [], [([.. "System.String"u8], [.. "api/System.String.html"u8])]);
 
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var options = XrefsOptions.Default with
         {
-            Imports = [new(importPath, "https://docs.microsoft.com/dotnet/")],
+            Imports = [new(importPath, "https://docs.microsoft.com/dotnet/")]
         };
-        var plugin = new XrefsPlugin(registry, options);
+        XrefsPlugin plugin = new(registry, options);
 
-        await plugin.ConfigureAsync(new BuildConfigureContext("/in", temp.Root, [], new()), CancellationToken.None);
+        await plugin.ConfigureAsync(new("/in", temp.Root, [], new()), CancellationToken.None);
 
         var resolved = registry.TryResolve("System.String"u8, out var url);
         await Assert.That(resolved).IsTrue();
@@ -60,14 +59,14 @@ public class XrefsPluginTests
         var importPath = Path.Combine(temp.Root, "external.json");
         XrefMapWriter.Write(importPath, baseUrl: [.. "https://example.com/docs/"u8], [([.. "Foo"u8], [.. "api/Foo.html"u8])]);
 
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var options = XrefsOptions.Default with
         {
-            Imports = [new(importPath)],
+            Imports = [new(importPath)]
         };
-        var plugin = new XrefsPlugin(registry, options);
+        XrefsPlugin plugin = new(registry, options);
 
-        await plugin.ConfigureAsync(new BuildConfigureContext("/in", temp.Root, [], new()), CancellationToken.None);
+        await plugin.ConfigureAsync(new("/in", temp.Root, [], new()), CancellationToken.None);
 
         registry.TryResolve("Foo"u8, out var url);
         await Assert.That(url.AsSpan().SequenceEqual("https://example.com/docs/api/Foo.html"u8)).IsTrue();
@@ -79,12 +78,12 @@ public class XrefsPluginTests
     public async Task EmitMapFalseSkipsFileWrite()
     {
         using var temp = TempDir.Create();
-        var registry = new AutorefsRegistry();
-        registry.Register("Foo"u8, "f.html"u8.ToArray(), fragment: default);
+        AutorefsRegistry registry = new();
+        registry.Register("Foo"u8, [.. "f.html"u8], fragment: default);
         var options = XrefsOptions.Default with { EmitMap = false };
-        var plugin = new XrefsPlugin(registry, options);
+        XrefsPlugin plugin = new(registry, options);
 
-        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "xrefmap.json"))).IsFalse();
     }
@@ -95,14 +94,14 @@ public class XrefsPluginTests
     public async Task MissingImportIsSkipped()
     {
         using var temp = TempDir.Create();
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var options = XrefsOptions.Default with
         {
-            Imports = [new(Path.Combine(temp.Root, "does-not-exist.json"))],
+            Imports = [new(Path.Combine(temp.Root, "does-not-exist.json"))]
         };
-        var plugin = new XrefsPlugin(registry, options);
+        XrefsPlugin plugin = new(registry, options);
 
-        await plugin.ConfigureAsync(new BuildConfigureContext("/in", temp.Root, [], new()), CancellationToken.None);
+        await plugin.ConfigureAsync(new("/in", temp.Root, [], new()), CancellationToken.None);
 
         await Assert.That(registry.Count).IsEqualTo(0);
     }

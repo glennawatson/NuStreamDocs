@@ -30,7 +30,12 @@ public sealed class ArithmatexPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    /// <remarks>
+    /// Math markers are anchored on <c>$</c> (inline <c>$…$</c>, block <c>$$…$$</c>) — pages
+    /// without a single <c>$</c> byte cannot contain math, so the rewriter's per-byte scan and
+    /// the pipeline's scratch rental can be skipped entirely.
+    /// </remarks>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)'$') >= 0;
 
     /// <inheritdoc/>
     public void PreRender(in PagePreRenderContext context) =>

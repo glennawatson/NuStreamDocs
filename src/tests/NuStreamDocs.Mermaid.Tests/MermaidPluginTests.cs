@@ -37,7 +37,7 @@ public class MermaidPluginTests
     [Test]
     public async Task WriteHeadExtraEmitsScript()
     {
-        var sink = new ArrayBufferWriter<byte>(256);
+        ArrayBufferWriter<byte> sink = new(256);
         new MermaidPlugin().WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).Contains("mermaid");
@@ -49,7 +49,7 @@ public class MermaidPluginTests
     [Test]
     public async Task WriteHeadExtraRejectsNullSink()
     {
-        var ex = Assert.Throws<ArgumentNullException>(() => new MermaidPlugin().WriteHeadExtra(null!));
+        var ex = Assert.Throws<ArgumentNullException>(static () => new MermaidPlugin().WriteHeadExtra(null!));
         await Assert.That(ex).IsNotNull();
     }
 
@@ -58,7 +58,7 @@ public class MermaidPluginTests
     [Test]
     public async Task CustomFenceRenderEmitsWrapper()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         ICustomFenceHandler handler = new MermaidPlugin();
         handler.Render("graph TD\nA-->B"u8, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("<pre class=\"mermaid\">graph TD\nA-->B</pre>");
@@ -104,8 +104,8 @@ public class MermaidPluginTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(MermaidPlugin plugin, ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>(128);
-        var ctx = new PagePostRenderContext("page.md", default, html, output);
+        ArrayBufferWriter<byte> output = new(128);
+        PagePostRenderContext ctx = new("page.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];
     }

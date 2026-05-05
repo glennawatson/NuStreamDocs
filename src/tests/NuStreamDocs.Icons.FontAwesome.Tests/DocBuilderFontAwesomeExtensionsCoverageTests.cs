@@ -14,7 +14,7 @@ public class DocBuilderFontAwesomeExtensionsCoverageTests
     [Test]
     public async Task UseFontAwesomeConfigure()
     {
-        var b = new DocBuilder().UseFontAwesome(o => o);
+        var b = new DocBuilder().UseFontAwesome(static o => o);
         await Assert.That(b).IsNotNull();
     }
 }

@@ -103,7 +103,7 @@ public static class YamlToJson
 
         var stack = ArrayPool<ContainerFrame>.Shared.Rent(16);
         var depth = OpenRoot(json, stack);
-        using var reader = new Utf8LineReader(utf8Stream, leaveOpen: true);
+        using Utf8LineReader reader = new(utf8Stream, leaveOpen: true);
 
         try
         {

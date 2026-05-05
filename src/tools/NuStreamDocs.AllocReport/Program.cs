@@ -85,8 +85,8 @@ internal static class Program
     /// <returns>The aggregated stats.</returns>
     private static AggregatedStats AggregateAllocations(string tracePath)
     {
-        var byType = new Dictionary<string, AllocStat>(StringComparer.Ordinal);
-        var byStack = new Dictionary<string, StackStat>(StringComparer.Ordinal);
+        Dictionary<string, AllocStat> byType = new(StringComparer.Ordinal);
+        Dictionary<string, StackStat> byStack = new(StringComparer.Ordinal);
         long totalBytes = 0;
         long totalSamples = 0;
 
@@ -94,7 +94,7 @@ internal static class Program
         var etlxPath = TraceLog.CreateFromEventPipeDataFile(tracePath);
         try
         {
-            using var traceLog = new TraceLog(etlxPath);
+            using TraceLog traceLog = new(etlxPath);
             var source = traceLog.Events.GetSource();
             source.Clr.GCAllocationTick += data =>
             {
@@ -190,7 +190,7 @@ internal static class Program
         >= 1L << GbShift => $"{bytes / (double)(1L << GbShift):F2} GB",
         >= 1L << MbShift => $"{bytes / (double)(1L << MbShift):F2} MB",
         >= 1L << KbShift => $"{bytes / (double)(1L << KbShift):F2} KB",
-        _ => $"{bytes} B",
+        _ => $"{bytes} B"
     };
 
     /// <summary>Walks <paramref name="stack"/> top-down and formats it as a single line, truncated to <paramref name="depth"/> frames.</summary>
@@ -199,7 +199,7 @@ internal static class Program
     /// <returns>The formatted stack line.</returns>
     private static string FormatStack(TraceCallStack stack, int depth)
     {
-        var frames = new List<string>(depth);
+        List<string> frames = new(depth);
         var current = stack;
         while (current is not null && frames.Count < depth)
         {

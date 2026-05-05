@@ -84,7 +84,7 @@ public class CommonHelperBenchmarks
             PayloadRepetitions)));
 
         // Fixture sized to the typical fence/marker run encountered by the inline pass.
-        _runLengthInput = "```bash code"u8.ToArray();
+        _runLengthInput = [.. "```bash code"u8];
     }
 
     /// <summary>Bulk UTF-8 string write into a pre-sized writer reused across invocations.</summary>
@@ -134,7 +134,7 @@ public class CommonHelperBenchmarks
     [Benchmark]
     public int XmlEntityEscaper_XmlMode()
     {
-        var writer = new ArrayBufferWriter<byte>(_xmlEscapeInput.Length * 2);
+        ArrayBufferWriter<byte> writer = new(_xmlEscapeInput.Length * 2);
         XmlEntityEscaper.WriteEscaped(writer, _xmlEscapeInput, XmlEntityEscaper.Mode.Xml);
         return writer.WrittenCount;
     }
@@ -144,7 +144,7 @@ public class CommonHelperBenchmarks
     [Benchmark]
     public int XmlEntityEscaper_HtmlAttributeMode()
     {
-        var writer = new ArrayBufferWriter<byte>(_xmlEscapeInput.Length * 2);
+        ArrayBufferWriter<byte> writer = new(_xmlEscapeInput.Length * 2);
         XmlEntityEscaper.WriteEscaped(writer, _xmlEscapeInput, XmlEntityEscaper.Mode.HtmlAttribute);
         return writer.WrittenCount;
     }
@@ -154,7 +154,7 @@ public class CommonHelperBenchmarks
     [Benchmark]
     public int HtmlSnapshotRewriter_FullPage()
     {
-        var writer = new ArrayBufferWriter<byte>(_snapshotInput.Length);
+        ArrayBufferWriter<byte> writer = new(_snapshotInput.Length);
         writer.Write(_snapshotInput);
         HtmlSnapshotRewriter.Rewrite(
             writer,

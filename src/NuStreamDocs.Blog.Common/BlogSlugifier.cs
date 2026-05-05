@@ -29,7 +29,7 @@ internal static class BlogSlugifier
 
         if (written == 0)
         {
-            return fallback.ToArray();
+            return [.. fallback];
         }
 
         if (written != dst.Length)
@@ -55,7 +55,12 @@ internal static class BlogSlugifier
             return (byte)(b + AsciiCaseShift);
         }
 
-        return b is (byte)' ' or (byte)'/' ? (byte)'-' : (byte)0;
+        if (b is (byte)' ' or (byte)'/')
+        {
+            return (byte)'-';
+        }
+
+        return (byte)0;
     }
 
     /// <summary>True for ASCII <c>a–z</c> or <c>0–9</c>.</summary>

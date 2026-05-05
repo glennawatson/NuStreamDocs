@@ -67,7 +67,7 @@ public class ProfiledPhaseBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         for (var i = 0; i < Paragraphs; i++)
         {
             sb.Append("# Heading ").Append(i).Append('\n')
@@ -109,7 +109,7 @@ public class ProfiledPhaseBenchmarks
     [Benchmark]
     public int BlockScan()
     {
-        var writer = new ArrayBufferWriter<BlockSpan>(_markdown.Length / 32);
+        ArrayBufferWriter<BlockSpan> writer = new(_markdown.Length / 32);
         return BlockScanner.Scan(_markdown, writer);
     }
 
@@ -118,7 +118,7 @@ public class ProfiledPhaseBenchmarks
     [Benchmark]
     public int MarkdownRender()
     {
-        var writer = new ArrayBufferWriter<byte>(_markdown.Length * 2);
+        ArrayBufferWriter<byte> writer = new(_markdown.Length * 2);
         MarkdownRenderer.Render(_markdown, writer);
         return writer.WrittenCount;
     }
@@ -128,7 +128,7 @@ public class ProfiledPhaseBenchmarks
     [Benchmark]
     public int LexerCSharp()
     {
-        var sink = new ArrayBufferWriter<byte>(_csharp.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_csharp.Length * 2);
         HighlightEmitter.Emit(CSharpLexer.Instance, _csharp, sink);
         return sink.WrittenCount;
     }

@@ -19,12 +19,10 @@ internal static class PagefindFallbackSlug
     public static byte[] For(int ordinal)
     {
         Span<byte> digits = stackalloc byte[16];
-        if (ordinal.TryFormat(digits, out var written, provider: CultureInfo.InvariantCulture))
-        {
-            return Utf8Concat.Concat(Prefix, digits[..written]);
-        }
 
-        // 16 bytes fits int.MinValue with sign; this is unreachable for int but keeps the API safe.
-        return Utf8Concat.Concat(Prefix, System.Text.Encoding.UTF8.GetBytes(ordinal.ToString(CultureInfo.InvariantCulture)));
+        // 16 bytes fits int.MinValue with sign; the false branch is unreachable for int but keeps the API safe.
+        return ordinal.TryFormat(digits, out var written, provider: CultureInfo.InvariantCulture)
+            ? Utf8Concat.Concat(Prefix, digits[..written])
+            : Utf8Concat.Concat(Prefix, System.Text.Encoding.UTF8.GetBytes(ordinal.ToString(CultureInfo.InvariantCulture)));
     }
 }

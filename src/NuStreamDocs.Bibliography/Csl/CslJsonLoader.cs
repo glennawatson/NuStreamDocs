@@ -40,13 +40,13 @@ internal static class CslJsonLoader
     /// <returns>Parsed entries.</returns>
     public static IReadOnlyList<CitationEntry> Parse(in ReadOnlyMemory<byte> json)
     {
-        var reader = new Utf8JsonReader(json.Span, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(json.Span, isFinalBlock: true, state: default);
         if (!reader.Read() || reader.TokenType is not JsonTokenType.StartArray)
         {
             return [];
         }
 
-        var entries = new List<CitationEntry>(64);
+        List<CitationEntry> entries = new(64);
         while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
         {
             if (reader.TokenType is not JsonTokenType.StartObject)
@@ -114,7 +114,7 @@ internal static class CslJsonLoader
         Court = [],
         Jurisdiction = [],
         LawReportSeries = [],
-        MediumNeutralCitation = [],
+        MediumNeutralCitation = []
     };
 
     /// <summary>Materializes the parsed <see cref="EntryFields"/> bag into a final <see cref="CitationEntry"/>.</summary>
@@ -141,7 +141,7 @@ internal static class CslJsonLoader
         Court = fields.Court,
         Jurisdiction = fields.Jurisdiction,
         LawReportSeries = fields.LawReportSeries,
-        MediumNeutralCitation = fields.MediumNeutralCitation,
+        MediumNeutralCitation = fields.MediumNeutralCitation
     };
 
     /// <summary>Dispatches one CSL property-name token to its field reader.</summary>
@@ -319,7 +319,7 @@ internal static class CslJsonLoader
             return [];
         }
 
-        var names = new List<PersonName>(8);
+        List<PersonName> names = new(8);
         while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
         {
             if (reader.TokenType is not JsonTokenType.StartObject)
@@ -532,7 +532,12 @@ internal static class CslJsonLoader
             return EntryType.Webpage;
         }
 
-        return span.SequenceEqual("manuscript"u8) ? EntryType.Manuscript : EntryType.Other;
+        if (span.SequenceEqual("manuscript"u8))
+        {
+            return EntryType.Manuscript;
+        }
+
+        return EntryType.Other;
     }
 
     /// <summary>Mutable per-entry field bag; passed by <c>ref</c> so the property-name dispatch helper writes through to the enclosing read scope.</summary>

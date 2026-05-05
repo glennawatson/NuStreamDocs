@@ -128,6 +128,6 @@ public static class InlineRenderer
             Lt => AutoLink.TryHandle(source, ref pos, ref pendingTextStart, writer)
                 || RawHtml.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Lf => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            _ => false,
+            _ => false
         };
 }

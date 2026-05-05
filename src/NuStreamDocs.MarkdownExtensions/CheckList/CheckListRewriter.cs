@@ -148,11 +148,7 @@ internal static class CheckListRewriter
         }
 
         marker = source[offset + MarkerCharOffset];
-        if (marker is not ((byte)' ' or (byte)'x' or (byte)'X'))
-        {
-            return false;
-        }
-
-        return source[offset + CloseBracketOffset] == (byte)']' && source[offset + TrailingSpaceOffset] == (byte)' ';
+        return marker is (byte)' ' or (byte)'x' or (byte)'X'
+            && source[offset + CloseBracketOffset] == (byte)']' && source[offset + TrailingSpaceOffset] == (byte)' ';
     }
 }

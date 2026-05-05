@@ -60,7 +60,7 @@ public class BibliographyBenchmarks
     public int MarkerHeavyResolve()
     {
         using var rental = PageBuilderPool.Rent(_markerHeavySource.Length * OutputExpansionFactor);
-        var ctx = new PagePreRenderContext("page.md", _markerHeavySource, rental.Writer);
+        PagePreRenderContext ctx = new("page.md", _markerHeavySource, rental.Writer);
         _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
@@ -71,7 +71,7 @@ public class BibliographyBenchmarks
     public int NoMarkerPassThrough()
     {
         using var rental = PageBuilderPool.Rent(_noMarkerSource.Length * OutputExpansionFactor);
-        var ctx = new PagePreRenderContext("page.md", _noMarkerSource, rental.Writer);
+        PagePreRenderContext ctx = new("page.md", _noMarkerSource, rental.Writer);
         _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }

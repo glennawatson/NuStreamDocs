@@ -70,13 +70,15 @@ public interface IConfigReader
                 }
 
                 written += read;
-                if (written == buffer.Length)
+                if (written != buffer.Length)
                 {
-                    var bigger = pool.Rent(buffer.Length * 2);
-                    buffer.AsSpan(0, written).CopyTo(bigger);
-                    pool.Return(buffer, clearArray: true);
-                    buffer = bigger;
+                    continue;
                 }
+
+                var bigger = pool.Rent(buffer.Length * 2);
+                buffer.AsSpan(0, written).CopyTo(bigger);
+                pool.Return(buffer, clearArray: true);
+                buffer = bigger;
             }
 
             return Read(buffer.AsSpan(0, written));

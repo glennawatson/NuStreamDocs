@@ -20,7 +20,7 @@ public static class XmlEntityEscaper
         Xml,
 
         /// <summary>HTML attribute-safe escape: adds <c>&quot;</c> to the minimal set.</summary>
-        HtmlAttribute,
+        HtmlAttribute
     }
 
     /// <summary>Streams <paramref name="bytes"/> to <paramref name="writer"/>, replacing reserved bytes with the named entities for <paramref name="mode"/>.</summary>
@@ -67,6 +67,6 @@ public static class XmlEntityEscaper
         (byte)'<' => "&lt;"u8,
         (byte)'>' => "&gt;"u8,
         (byte)'"' when mode is Mode.HtmlAttribute => "&quot;"u8,
-        _ => default,
+        _ => default
     };
 }

@@ -83,9 +83,8 @@ internal static class TagsIndexWriter
     /// <summary>Builds a <c>{slug}.html</c> file name from ASCII slug bytes in a single allocation.</summary>
     /// <param name="slug">Slug bytes (ASCII alphanumeric / hyphen only, by construction of <see cref="SlugifyInto"/>).</param>
     /// <returns>The slug followed by the <c>.html</c> extension as a single allocated string.</returns>
-    private static string BuildSlugFileName(byte[] slug)
-    {
-        return string.Create(slug.Length + HtmlExtensionLength, slug, static (dst, src) =>
+    private static string BuildSlugFileName(byte[] slug) =>
+        string.Create(slug.Length + HtmlExtensionLength, slug, static (dst, src) =>
         {
             for (var i = 0; i < src.Length; i++)
             {
@@ -94,14 +93,13 @@ internal static class TagsIndexWriter
 
             ".html".AsSpan().CopyTo(dst[src.Length..]);
         });
-    }
 
     /// <summary>Groups <paramref name="entries"/> by tag, yielding tags sorted alphabetically and pages within each tag sorted by URL.</summary>
     /// <param name="entries">Per-page entries.</param>
     /// <returns>Sorted byte-keyed tag → page list.</returns>
     private static SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> GroupByTag(TagEntry[] entries)
     {
-        var map = new SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>>(ByteSequenceComparer.Instance);
+        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> map = new(ByteSequenceComparer.Instance);
         for (var i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];
@@ -174,12 +172,12 @@ internal static class TagsIndexWriter
     {
         if (tag.IsEmpty)
         {
-            return "tag"u8.ToArray();
+            return [.. "tag"u8];
         }
 
-        Span<byte> stack = tag.Length <= 256 ? stackalloc byte[tag.Length] : new byte[tag.Length];
+        var stack = tag.Length <= 256 ? stackalloc byte[tag.Length] : new byte[tag.Length];
         var written = SlugifyInto(tag, stack);
-        return written is 0 ? "tag"u8.ToArray() : stack[..written].ToArray();
+        return written is 0 ? [.. "tag"u8] : stack[..written].ToArray();
     }
 
     /// <summary>Writes the slug form of <paramref name="tag"/> into <paramref name="dst"/> and returns the count.</summary>
@@ -193,23 +191,30 @@ internal static class TagsIndexWriter
         for (var i = 0; i < tag.Length; i++)
         {
             var b = tag[i];
-            if (b is >= (byte)'A' and <= (byte)'Z')
+            switch (b)
             {
-                count = FlushHyphen(dst, count, pendingHyphen);
-                dst[count++] = (byte)(b | AsciiCaseBit);
-                pendingHyphen = false;
-                continue;
-            }
+                case >= (byte)'A' and <= (byte)'Z':
+                    {
+                        count = FlushHyphen(dst, count, pendingHyphen);
+                        dst[count++] = (byte)(b | AsciiCaseBit);
+                        pendingHyphen = false;
+                        continue;
+                    }
 
-            if (b is >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9')
-            {
-                count = FlushHyphen(dst, count, pendingHyphen);
-                dst[count++] = b;
-                pendingHyphen = false;
-                continue;
-            }
+                case >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9':
+                    {
+                        count = FlushHyphen(dst, count, pendingHyphen);
+                        dst[count++] = b;
+                        pendingHyphen = false;
+                        continue;
+                    }
 
-            pendingHyphen = count is not 0;
+                default:
+                    {
+                        pendingHyphen = count is not 0;
+                        break;
+                    }
+            }
         }
 
         return count;

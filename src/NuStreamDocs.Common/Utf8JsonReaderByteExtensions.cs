@@ -34,7 +34,7 @@ public static class Utf8JsonReaderByteExtensions
             return [];
         }
 
-        var values = new List<byte[]>(4);
+        List<byte[]> values = new(4);
         while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
         {
             if (reader.TokenType == JsonTokenType.String)

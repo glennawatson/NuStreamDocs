@@ -18,7 +18,7 @@ public class CSharpApiGeneratorPluginCoverageTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
+        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
         await Assert.That(plugin.Name.SequenceEqual("csharp-apigenerator"u8)).IsTrue();
     }
 
@@ -27,8 +27,8 @@ public class CSharpApiGeneratorPluginCoverageTests
     [Test]
     public async Task CustomInputCtor()
     {
-        var src = new EmptySource();
-        var input = new CustomInput(src);
+        EmptySource src = new();
+        CustomInput input = new(src);
         await Assert.That(input.Source).IsEqualTo(src);
     }
 
@@ -57,33 +57,6 @@ public class CSharpApiGeneratorPluginCoverageTests
         {
             await Task.CompletedTask.ConfigureAwait(false);
             yield break;
-        }
-    }
-
-    /// <summary>Disposable scratch directory.</summary>
-    private sealed class TempDir : IDisposable
-    {
-        /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
-        public TempDir()
-        {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-csapi-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
-        }
-
-        /// <summary>Gets the absolute path to the scratch root.</summary>
-        public string Root { get; }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            try
-            {
-                Directory.Delete(Root, recursive: true);
-            }
-            catch (DirectoryNotFoundException)
-            {
-                // already gone
-            }
         }
     }
 }

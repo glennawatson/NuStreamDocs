@@ -19,7 +19,7 @@ public class XmlEntityEscaperTests
     [Arguments(XmlEntityEscaper.Mode.HtmlAttribute)]
     public async Task PassThroughPlainText(XmlEntityEscaper.Mode mode)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         XmlEntityEscaper.WriteEscaped(sink, "hello world"u8, mode);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello world");
     }
@@ -29,7 +29,7 @@ public class XmlEntityEscaperTests
     [Test]
     public async Task XmlModeKeepsQuotesUnescaped()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         XmlEntityEscaper.WriteEscaped(sink, "a & b < c > d \" e"u8, XmlEntityEscaper.Mode.Xml);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("a &amp; b &lt; c &gt; d \" e");
     }
@@ -39,7 +39,7 @@ public class XmlEntityEscaperTests
     [Test]
     public async Task HtmlAttributeModeEscapesQuotes()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         XmlEntityEscaper.WriteEscaped(sink, "a & b < c > d \" e"u8, XmlEntityEscaper.Mode.HtmlAttribute);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("a &amp; b &lt; c &gt; d &quot; e");
     }
@@ -49,7 +49,7 @@ public class XmlEntityEscaperTests
     [Test]
     public async Task EmptyInput()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         XmlEntityEscaper.WriteEscaped(sink, default, XmlEntityEscaper.Mode.Xml);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -59,7 +59,7 @@ public class XmlEntityEscaperTests
     [Test]
     public async Task SpecialAtBoundaries()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         XmlEntityEscaper.WriteEscaped(sink, "<a&b>"u8, XmlEntityEscaper.Mode.Xml);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("&lt;a&amp;b&gt;");
     }

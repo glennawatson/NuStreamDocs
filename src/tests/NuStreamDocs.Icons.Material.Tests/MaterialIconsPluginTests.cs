@@ -27,7 +27,7 @@ public class MaterialIconsPluginTests
     [Test]
     public async Task ClassicIconsEmitMaterialIcons()
     {
-        var plugin = new MaterialIconsPlugin(MaterialIconsOptions.Default with { Style = MaterialIconStyle.Classic });
+        MaterialIconsPlugin plugin = new(MaterialIconsOptions.Default with { Style = MaterialIconStyle.Classic });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).Contains("family=Material+Icons");
     }
@@ -48,7 +48,7 @@ public class MaterialIconsPluginTests
     [Test]
     public async Task DisablingPreconnectOmitsPreconnectLinks()
     {
-        var plugin = new MaterialIconsPlugin(MaterialIconsOptions.Default with { Preconnect = false });
+        MaterialIconsPlugin plugin = new(MaterialIconsOptions.Default with { Preconnect = false });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).DoesNotContain("preconnect");
     }
@@ -58,7 +58,7 @@ public class MaterialIconsPluginTests
     [Test]
     public async Task OverrideUrlWins()
     {
-        var plugin = new MaterialIconsPlugin(MaterialIconsOptions.Default with { StylesheetUrlOverride = [.. "https://example.test/icons.css"u8] });
+        MaterialIconsPlugin plugin = new(MaterialIconsOptions.Default with { StylesheetUrlOverride = [.. "https://example.test/icons.css"u8] });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).Contains("https://example.test/icons.css");
         await Assert.That(html).DoesNotContain("googleapis");
@@ -70,7 +70,7 @@ public class MaterialIconsPluginTests
     [SuppressMessage("Performance", "CA1859", Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
     private static string WriteHeadExtras(IHeadExtraProvider provider)
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         provider.WriteHeadExtra(writer);
         return Encoding.UTF8.GetString(writer.WrittenSpan);
     }

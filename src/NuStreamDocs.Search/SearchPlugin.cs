@@ -203,7 +203,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuild
     private static async Task WriteGzipAsync(string path, byte[] raw, CancellationToken cancellationToken)
     {
         await using var output = File.Create(path);
-        await using var gzip = new GZipStream(output, CompressionLevel.SmallestSize, leaveOpen: false);
+        await using GZipStream gzip = new(output, CompressionLevel.SmallestSize, leaveOpen: false);
         await gzip.WriteAsync(raw, cancellationToken).ConfigureAwait(false);
     }
 
@@ -215,7 +215,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuild
     private static async Task WriteBrotliAsync(string path, byte[] raw, CancellationToken cancellationToken)
     {
         await using var output = File.Create(path);
-        await using var brotli = new BrotliStream(output, CompressionLevel.SmallestSize, leaveOpen: false);
+        await using BrotliStream brotli = new(output, CompressionLevel.SmallestSize, leaveOpen: false);
         await brotli.WriteAsync(raw, cancellationToken).ConfigureAwait(false);
     }
 
@@ -226,7 +226,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuild
     private static SearchDocument[] FilterAndSort(ConcurrentBag<SearchDocument> bag, int minTokenLength)
     {
         var min = Math.Max(0, minTokenLength);
-        var docs = new List<SearchDocument>(bag.Count);
+        List<SearchDocument> docs = new(bag.Count);
         foreach (var doc in bag)
         {
             if (doc.Text.Length >= min)
@@ -260,7 +260,7 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuild
     private static ReadOnlySpan<byte> FormatNameBytes(SearchFormat format) => format switch
     {
         SearchFormat.Lunr => "lunr"u8,
-        _ => "pagefind"u8,
+        _ => "pagefind"u8
     };
 
     /// <summary>Builds the site-relative manifest URL bytes (e.g. <c>/search/pagefind-entry.json</c>) for the chosen format.</summary>
@@ -269,10 +269,10 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuild
     /// <returns>UTF-8 manifest URL bytes.</returns>
     private static byte[] BuildManifestUrlBytes(PathSegment outputSubdirectory, SearchFormat format)
     {
-        ReadOnlySpan<byte> filename = format switch
+        var filename = format switch
         {
             SearchFormat.Lunr => "/search_index.json"u8,
-            _ => "/pagefind-entry.json"u8,
+            _ => "/pagefind-entry.json"u8
         };
 
         var subdir = outputSubdirectory.Value.AsSpan();

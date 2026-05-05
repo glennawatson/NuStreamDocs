@@ -88,9 +88,9 @@ public class ValidationCorpusTests
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), "<h1 id=\"a\">Hi</h1>");
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 1, CancellationToken.None);
             await Assert.That(corpus.ContainsPage("index.html")).IsTrue();
-            await Assert.That(corpus.ContainsPage("index.html"u8.ToArray())).IsTrue();
+            await Assert.That(corpus.ContainsPage([.. "index.html"u8])).IsTrue();
             await Assert.That(corpus.ContainsPage("missing.html")).IsFalse();
-            await Assert.That(corpus.ContainsPage("missing.html"u8.ToArray())).IsFalse();
+            await Assert.That(corpus.ContainsPage([.. "missing.html"u8])).IsFalse();
         }
         finally
         {
@@ -102,7 +102,7 @@ public class ValidationCorpusTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task BuildAsyncRejectsZeroParallelism() =>
-        await Assert.That(async () => _ = await ValidationCorpus.BuildAsync("/tmp", 0, CancellationToken.None))
+        await Assert.That(static async () => _ = await ValidationCorpus.BuildAsync("/tmp", 0, CancellationToken.None))
             .Throws<ArgumentOutOfRangeException>();
 
     /// <summary>Disposable scratch directory.</summary>

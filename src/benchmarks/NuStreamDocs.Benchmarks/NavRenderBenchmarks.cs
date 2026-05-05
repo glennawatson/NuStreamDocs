@@ -145,8 +145,8 @@ public class NavRenderBenchmarks
     private static int Render(NavPlugin plugin, ArrayBufferWriter<byte> html)
     {
         html.ResetWrittenCount();
-        ReadOnlySpan<byte> body = "<nav><!--@@nav@@--></nav>"u8;
-        var context = new PagePostRenderContext(ActivePage, default, body, html);
+        var body = "<nav><!--@@nav@@--></nav>"u8;
+        PagePostRenderContext context = new(ActivePage, default, body, html);
         plugin.PostRender(in context);
         return html.WrittenCount;
     }
@@ -158,7 +158,7 @@ public class NavRenderBenchmarks
     /// <returns>A task representing the asynchronous setup.</returns>
     private static Task ConfigureAsync(NavPlugin plugin, string inputRoot, string outputRoot)
     {
-        var context = new BuildDiscoverContext(inputRoot, outputRoot, [plugin]);
+        BuildDiscoverContext context = new(inputRoot, outputRoot, [plugin]);
         return plugin.DiscoverAsync(context, CancellationToken.None).AsTask();
     }
 

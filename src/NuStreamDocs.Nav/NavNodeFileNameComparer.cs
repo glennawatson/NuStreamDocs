@@ -15,11 +15,8 @@ internal sealed class NavNodeFileNameComparer : IComparer<NavNode>
     {
         var xOrder = x?.Order ?? int.MaxValue;
         var yOrder = y?.Order ?? int.MaxValue;
-        if (xOrder != yOrder)
-        {
-            return xOrder.CompareTo(yOrder);
-        }
-
-        return string.Compare(x?.RelativePath, y?.RelativePath, StringComparison.OrdinalIgnoreCase);
+        return xOrder != yOrder
+            ? xOrder.CompareTo(yOrder)
+            : string.Compare(x?.RelativePath, y?.RelativePath, StringComparison.OrdinalIgnoreCase);
     }
 }

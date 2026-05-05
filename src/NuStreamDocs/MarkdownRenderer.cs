@@ -5,6 +5,7 @@
 using System.Buffers;
 using NuStreamDocs.Html;
 using NuStreamDocs.Markdown;
+using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs;
@@ -42,6 +43,17 @@ public static class MarkdownRenderer
             markdown = markdown[bodyStart..];
         }
 
+        // CommonMark reference-style links: collect `[label]: url "title"` definitions and rewrite
+        // every `[text][label]` / `[text][]` / collapsed `[label]` into the inline `[text](url)`
+        // form before block scanning. Skips when the source has no `]:` sequence at all so the
+        // common no-references hot path pays nothing beyond a vectorized IndexOf.
+        byte[]? rewrittenBuffer = null;
+        if (LinkReferenceRewriter.MayContainReferences(markdown))
+        {
+            rewrittenBuffer = LinkReferenceRewriter.Rewrite(markdown);
+            markdown = rewrittenBuffer;
+        }
+
         var blockBuffer = _blockBufferCache;
         _blockBufferCache = null;
         if (blockBuffer is null)
@@ -64,6 +76,8 @@ public static class MarkdownRenderer
             {
                 _blockBufferCache = blockBuffer;
             }
+
+            _ = rewrittenBuffer; // Keep alive for the duration of Render; nothing else owns it.
         }
     }
 }

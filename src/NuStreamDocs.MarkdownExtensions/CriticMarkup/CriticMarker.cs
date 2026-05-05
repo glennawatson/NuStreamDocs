@@ -23,5 +23,5 @@ internal enum CriticMarker
     Highlight,
 
     /// <summary><c>{&gt;&gt; … &lt;&lt;}</c> — comment.</summary>
-    Comment,
+    Comment
 }

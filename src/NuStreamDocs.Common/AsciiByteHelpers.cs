@@ -14,8 +14,11 @@ namespace NuStreamDocs.Common;
 /// </summary>
 public static class AsciiByteHelpers
 {
-    /// <summary>ASCII bit that distinguishes uppercase letters from lowercase letters; OR-ing with this folds case for ASCII letters.</summary>
-    private const byte AsciiCaseBit = 0x20;
+    /// <summary>The ASCII case-fold bit, available as both <c>private const</c> for inline use here and the public <see cref="AsciiCaseBit"/> property for callers.</summary>
+    private const byte CaseBit = 0x20;
+
+    /// <summary>Gets the ASCII bit that distinguishes uppercase letters from lowercase letters; OR-ing with this folds case for ASCII letters.</summary>
+    public static byte AsciiCaseBit => CaseBit;
 
     /// <summary>Returns true when <paramref name="b"/> contributes to an ASCII identifier (letter / digit / underscore).</summary>
     /// <param name="b">UTF-8 byte.</param>
@@ -30,6 +33,18 @@ public static class AsciiByteHelpers
     /// <param name="b">UTF-8 byte.</param>
     /// <returns>True for whitespace.</returns>
     public static bool IsAsciiWhitespace(byte b) => b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n';
+
+    /// <summary>Folds a single ASCII letter to lowercase; non-letters pass through unchanged.</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>Lowercased byte.</returns>
+    public static byte ToAsciiLowerByte(byte b) =>
+        b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+
+    /// <summary>Folds a single ASCII letter to a lowercase <see cref="char"/>; non-letters pass through unchanged.</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>Lowercased character.</returns>
+    public static char ToAsciiLowerChar(byte b) =>
+        (char)ToAsciiLowerByte(b);
 
     /// <summary>Returns true when offset <paramref name="offset"/> in <paramref name="source"/> is at an ASCII <c>\b</c> word boundary.</summary>
     /// <param name="source">UTF-8 source.</param>

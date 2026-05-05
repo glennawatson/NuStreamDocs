@@ -12,7 +12,7 @@ public class TemplateSyntaxExceptionTests
     [Test]
     public async Task DefaultCtor()
     {
-        var ex = new TemplateSyntaxException();
+        TemplateSyntaxException ex = new();
         await Assert.That(ex).IsNotNull();
     }
 
@@ -21,7 +21,7 @@ public class TemplateSyntaxExceptionTests
     [Test]
     public async Task MessageCtor()
     {
-        var ex = new TemplateSyntaxException("oops");
+        TemplateSyntaxException ex = new("oops");
         await Assert.That(ex.Message).IsEqualTo("oops");
     }
 
@@ -30,8 +30,8 @@ public class TemplateSyntaxExceptionTests
     [Test]
     public async Task MessageInnerCtor()
     {
-        var inner = new InvalidOperationException("inner");
-        var ex = new TemplateSyntaxException("oops", inner);
+        InvalidOperationException inner = new("inner");
+        TemplateSyntaxException ex = new("oops", inner);
         await Assert.That(ex.InnerException).IsEqualTo(inner);
     }
 
@@ -40,7 +40,7 @@ public class TemplateSyntaxExceptionTests
     [Test]
     public async Task MessageOffsetCtor()
     {
-        var ex = new TemplateSyntaxException("oops", 42);
+        TemplateSyntaxException ex = new("oops", 42);
         await Assert.That(ex.ByteOffset).IsEqualTo(42);
     }
 
@@ -49,8 +49,8 @@ public class TemplateSyntaxExceptionTests
     [Test]
     public async Task MessageOffsetInnerCtor()
     {
-        var inner = new InvalidOperationException("inner");
-        var ex = new TemplateSyntaxException("oops", 7, inner);
+        InvalidOperationException inner = new("inner");
+        TemplateSyntaxException ex = new("oops", 7, inner);
         await Assert.That(ex.ByteOffset).IsEqualTo(7);
         await Assert.That(ex.InnerException).IsEqualTo(inner);
     }

@@ -26,5 +26,5 @@ public enum SearchFormat
     /// <c>search_index.json</c> file with <c>config</c>, <c>docs</c>
     /// and <c>index</c> sections.
     /// </summary>
-    Lunr,
+    Lunr
 }

@@ -12,7 +12,7 @@ public class MaterialIconsPluginCoverageTests
     [Test]
     public async Task NameAccessor()
     {
-        var plugin = new MaterialIconsPlugin();
+        MaterialIconsPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("material-icons"u8)).IsTrue();
     }
 }

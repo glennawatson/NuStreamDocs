@@ -29,7 +29,7 @@ public class ThemePluginBaseTests
             {
                 EnableScrollToTop = true,
                 EnableTocFollow = true,
-                EnableNavigationFooter = true,
+                EnableNavigationFooter = true
             })
             .BuildAsync();
 
@@ -138,7 +138,7 @@ public class ThemePluginBaseTests
             .WithOutput(fixture.Site)
             .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
             {
-                AssetSource = MaterialAssetSource.Cdn,
+                AssetSource = MaterialAssetSource.Cdn
             })
             .BuildAsync();
 
@@ -255,10 +255,10 @@ public class ThemePluginBaseTests
 
         /// <inheritdoc/>
         public NavNeighbours GetNeighbours(FilePath relativePath) =>
-            new(globalUrl.TrimStart('/') + ".md", "Prev"u8.ToArray(), string.Empty, []);
+            new(globalUrl.TrimStart('/') + ".md", [.. "Prev"u8], string.Empty, []);
 
         /// <inheritdoc/>
         public NavNeighbours GetSectionNeighbours(FilePath relativePath) =>
-            new(sectionUrl.TrimStart('/') + ".md", "Section Prev"u8.ToArray(), string.Empty, []);
+            new(sectionUrl.TrimStart('/') + ".md", [.. "Section Prev"u8], string.Empty, []);
     }
 }

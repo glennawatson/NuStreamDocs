@@ -32,7 +32,7 @@ public class PageBuilderRentalEqualityTests
         using var b = PageBuilderPool.Rent(16);
         await Assert.That(a != b).IsTrue();
         await Assert.That(a.Equals((object?)null)).IsFalse();
-        await Assert.That(a.Equals("not a rental")).IsFalse();
+        await Assert.That(a.Equals((object)"not a rental")).IsFalse();
     }
 
     /// <summary>Default rental hashes to zero.</summary>
@@ -40,7 +40,7 @@ public class PageBuilderRentalEqualityTests
     [Test]
     public async Task DefaultRentalHash()
     {
-        var def = default(PageBuilderRental);
+        PageBuilderRental def = default;
         await Assert.That(def.GetHashCode()).IsEqualTo(0);
         def.Dispose();
     }

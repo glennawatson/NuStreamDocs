@@ -105,7 +105,7 @@ internal static class LanguageCommon
     {
         [(byte)'\'', (byte)'\\', _, (byte)'\'', ..] => EscapedCharLiteralLength,
         [(byte)'\'', _, (byte)'\'', ..] => BasicCharLiteralLength,
-        _ => 0,
+        _ => 0
     };
 
     /// <summary>C-style block comment — <c>/* ... */</c> non-greedy.</summary>
@@ -217,7 +217,12 @@ internal static class LanguageCommon
             return 0;
         }
 
-        return matched < slice.Length && suffix.Contains(slice[matched]) ? matched + 1 : matched;
+        if (matched < slice.Length && suffix.Contains(slice[matched]))
+        {
+            return matched + 1;
+        }
+
+        return matched;
     }
 
     /// <summary>XML / Razor tag name.</summary>

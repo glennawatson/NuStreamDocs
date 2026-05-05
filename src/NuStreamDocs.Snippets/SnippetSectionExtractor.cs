@@ -120,20 +120,13 @@ internal static class SnippetSectionExtractor
     /// <summary>Strips a single trailing <c>\r\n</c> or <c>\n</c> from <paramref name="line"/>.</summary>
     /// <param name="line">UTF-8 line bytes.</param>
     /// <returns>Slice without the line terminator.</returns>
-    private static ReadOnlySpan<byte> StripTrailingNewline(ReadOnlySpan<byte> line)
-    {
-        if (line is [.., (byte)'\r', (byte)'\n'])
+    private static ReadOnlySpan<byte> StripTrailingNewline(ReadOnlySpan<byte> line) =>
+        line switch
         {
-            return line[..^CrLfLength];
-        }
-
-        if (line is [.., (byte)'\n'])
-        {
-            return line[..^1];
-        }
-
-        return line;
-    }
+            [.., (byte)'\r', (byte)'\n'] => line[..^CrLfLength],
+            [.., (byte)'\n'] => line[..^1],
+            _ => line,
+        };
 
     /// <summary>Walks back from <paramref name="offset"/> to the start of the line that contains it.</summary>
     /// <param name="source">UTF-8 source.</param>

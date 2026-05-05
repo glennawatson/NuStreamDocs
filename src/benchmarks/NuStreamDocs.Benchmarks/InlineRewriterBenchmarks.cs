@@ -53,8 +53,8 @@ public class InlineRewriterBenchmarks
     [Benchmark]
     public int Abbr()
     {
-        var sink = new ArrayBufferWriter<byte>(_abbr.Length * 2);
-        var ctx = new PagePreRenderContext("page.md", _abbr, sink);
+        ArrayBufferWriter<byte> sink = new(_abbr.Length * 2);
+        PagePreRenderContext ctx = new("page.md", _abbr, sink);
         _abbrPlugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
@@ -64,8 +64,8 @@ public class InlineRewriterBenchmarks
     [Benchmark]
     public int SmartSymbols()
     {
-        var sink = new ArrayBufferWriter<byte>(_smartSymbols.Length * 2);
-        var ctx = new PagePreRenderContext("page.md", _smartSymbols, sink);
+        ArrayBufferWriter<byte> sink = new(_smartSymbols.Length * 2);
+        PagePreRenderContext ctx = new("page.md", _smartSymbols, sink);
         _smartSymbolsPlugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
@@ -76,7 +76,7 @@ public class InlineRewriterBenchmarks
     /// <returns>The concatenated string.</returns>
     private static string Repeat(string block, int count)
     {
-        var builder = new StringBuilder(block.Length * count);
+        StringBuilder builder = new(block.Length * count);
         for (var i = 0; i < count; i++)
         {
             builder.Append(block);

@@ -97,5 +97,5 @@ public enum TokenClass
     DiffFileHeader,
 
     /// <summary>Diff-format hunk header (<c>@@ … @@</c>); rendered as Pygments' <c>gu</c> CSS class.</summary>
-    DiffHunkHeader,
+    DiffHunkHeader
 }

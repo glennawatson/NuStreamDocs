@@ -39,9 +39,9 @@ public class YamlToJsonBranchTests
     [Test]
     public async Task AsyncStream()
     {
-        var buffer = new ArrayBufferWriter<byte>();
-        await using var writer = new Utf8JsonWriter(buffer);
-        var input = "a: 1\nb: 2\n"u8.ToArray();
+        ArrayBufferWriter<byte> buffer = new();
+        await using Utf8JsonWriter writer = new(buffer);
+        byte[] input = [.. "a: 1\nb: 2\n"u8];
         await using var stream = new MemoryStream(input);
         await YamlToJson.ConvertAsync(stream, writer, CancellationToken.None);
         await writer.FlushAsync();
@@ -69,8 +69,8 @@ public class YamlToJsonBranchTests
     /// <returns>JSON string.</returns>
     private static string Convert(ReadOnlySpan<byte> yaml)
     {
-        var buffer = new ArrayBufferWriter<byte>();
-        using (var writer = new Utf8JsonWriter(buffer))
+        ArrayBufferWriter<byte> buffer = new();
+        using (Utf8JsonWriter writer = new(buffer))
         {
             YamlToJson.Convert(yaml, writer);
         }

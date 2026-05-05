@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Markdown;
 
 namespace NuStreamDocs.Html;
@@ -38,7 +37,7 @@ public static class HtmlEmitter
         [.. "<h3>"u8],
         [.. "<h4>"u8],
         [.. "<h5>"u8],
-        [.. "<h6>"u8],
+        [.. "<h6>"u8]
     ];
 
     /// <summary>Close-tag UTF-8 literals indexed by heading level.</summary>
@@ -50,7 +49,7 @@ public static class HtmlEmitter
         [.. "</h3>\n"u8],
         [.. "</h4>\n"u8],
         [.. "</h5>\n"u8],
-        [.. "</h6>\n"u8],
+        [.. "</h6>\n"u8]
     ];
 
     /// <summary>
@@ -60,10 +59,6 @@ public static class HtmlEmitter
     /// <param name="source">Original UTF-8 source the block descriptors index into.</param>
     /// <param name="blocks">Block descriptors emitted by <see cref="BlockScanner"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    [SuppressMessage(
-        "Roslynator",
-        "RCS1239:Use 'for' statement instead of 'while' statement",
-        Justification = "Fenced-code emit consumes a variable number of sibling blocks per iteration; advancing 'i' inside the loop would trip S127 on a for-loop. While-loop keeps both rules happy.")]
     public static void Emit(
         ReadOnlySpan<byte> source,
         in ReadOnlySpan<BlockSpan> blocks,
@@ -74,44 +69,7 @@ public static class HtmlEmitter
         var i = 0;
         while (i < blocks.Length)
         {
-            var block = blocks[i];
-            switch (block.Kind)
-            {
-                case BlockKind.AtxHeading:
-                {
-                    EmitHeading(source, block, writer);
-                    break;
-                }
-
-                case BlockKind.Paragraph:
-                {
-                    EmitParagraph(source, block, writer);
-                    break;
-                }
-
-                case BlockKind.FencedCode:
-                {
-                    i = EmitFencedCode(source, blocks, i, writer);
-                    break;
-                }
-
-                case BlockKind.FencedCodeContent:
-                {
-                    // Reached only when fences are unbalanced (no opener
-                    // seen yet); treat as paragraph so the content still
-                    // surfaces in the output.
-                    EmitParagraph(source, block, writer);
-                    break;
-                }
-
-                default:
-                {
-                    i = EmitDispatch(source, blocks, i, writer);
-                    break;
-                }
-            }
-
-            i++;
+            i = EmitOne(source, blocks, i, writer);
         }
     }
 
@@ -140,6 +98,58 @@ public static class HtmlEmitter
         var rest = ExtractFenceInfoLine(source, opener);
         var space = rest.IndexOf((byte)' ');
         return space < 0 ? [] : rest[(space + 1)..].TrimStart((byte)' ');
+    }
+
+    /// <summary>Emits the block at <paramref name="index"/> and returns the cursor for the next iteration.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="blocks">All block descriptors.</param>
+    /// <param name="index">Cursor for the current block.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Next-iteration cursor; always strictly greater than <paramref name="index"/>.</returns>
+    /// <remarks>
+    /// Fenced-code blocks consume a variable number of sibling blocks (opener + content lines + closer),
+    /// so the helper that handles them returns the index of the consumed close fence and we advance one
+    /// past it. Single-block kinds simply return <paramref name="index"/> + 1.
+    /// </remarks>
+    private static int EmitOne(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int index,
+        IBufferWriter<byte> writer)
+    {
+        var block = blocks[index];
+        switch (block.Kind)
+        {
+            case BlockKind.AtxHeading:
+            {
+                EmitHeading(source, block, writer);
+                return index + 1;
+            }
+
+            case BlockKind.Paragraph:
+            {
+                EmitParagraph(source, block, writer);
+                return index + 1;
+            }
+
+            case BlockKind.FencedCode:
+            {
+                return EmitFencedCode(source, blocks, index, writer) + 1;
+            }
+
+            case BlockKind.FencedCodeContent:
+            {
+                // Reached only when fences are unbalanced (no opener seen yet); treat as paragraph
+                // so the content still surfaces in the output.
+                EmitParagraph(source, block, writer);
+                return index + 1;
+            }
+
+            default:
+            {
+                return EmitDispatch(source, blocks, index, writer) + 1;
+            }
+        }
     }
 
     /// <summary>Returns the trimmed body of the fence opener line, with the leading fence markers stripped.</summary>
@@ -295,6 +305,11 @@ public static class HtmlEmitter
                 return EmitList(source, blocks, i, writer);
             }
 
+            case BlockKind.IndentedCode:
+            {
+                return EmitIndentedCode(source, blocks, i, writer);
+            }
+
             case BlockKind.Blank:
             case BlockKind.None:
             {
@@ -307,6 +322,90 @@ public static class HtmlEmitter
                 return i;
             }
         }
+    }
+
+    /// <summary>
+    /// Writes a <c>&lt;pre&gt;&lt;code&gt;</c> block consuming a run of <see cref="BlockKind.IndentedCode"/> lines.
+    /// Interleaved <see cref="BlockKind.Blank"/> lines are preserved as empty content lines, matching CommonMark §4.4.
+    /// </summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="openerIndex">Index of the first <see cref="BlockKind.IndentedCode"/> block.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Index of the last block consumed by this run.</returns>
+    /// <remarks>
+    /// Internal blank lines do not terminate the block — they're part of the code body. The run ends
+    /// when a non-blank, non-indented-code line appears. The lookahead respects this by buffering blanks
+    /// and only emitting them when followed by another indented-code line.
+    /// </remarks>
+    private static int EmitIndentedCode(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int openerIndex, IBufferWriter<byte> writer)
+    {
+        Write("<pre><code>"u8, writer);
+
+        var lastConsumed = openerIndex;
+        var pendingBlanks = 0;
+        for (var j = openerIndex; j < blocks.Length; j++)
+        {
+            switch (blocks[j].Kind)
+            {
+                case BlockKind.IndentedCode:
+                    {
+                        while (pendingBlanks > 0)
+                        {
+                            Write("\n"u8, writer);
+                            pendingBlanks--;
+                        }
+
+                        EmitIndentedCodeLine(source, blocks[j], writer);
+                        lastConsumed = j;
+                        continue;
+                    }
+
+                case BlockKind.Blank:
+                    {
+                        pendingBlanks++;
+                        continue;
+                    }
+            }
+
+            // Any other block ends the run; trailing blanks are ignored (CommonMark trims trailing blank lines).
+            break;
+        }
+
+        Write("</code></pre>\n"u8, writer);
+        return lastConsumed;
+    }
+
+    /// <summary>Writes one indented-code body line, stripping the leading four-space indent and HTML-escaping the rest.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="block">Indented-code line block.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void EmitIndentedCodeLine(ReadOnlySpan<byte> source, in BlockSpan block, IBufferWriter<byte> writer)
+    {
+        var line = source.Slice(block.Start, block.Length);
+        var stripped = StripIndentPrefix(line);
+        HtmlEscape.EscapeText(stripped, writer);
+        Write("\n"u8, writer);
+    }
+
+    /// <summary>Strips the leading four-space indent (or one tab) from <paramref name="line"/>; falls back to the original slice when neither prefix is present.</summary>
+    /// <param name="line">UTF-8 line bytes.</param>
+    /// <returns>Slice without the indent prefix.</returns>
+    private static ReadOnlySpan<byte> StripIndentPrefix(ReadOnlySpan<byte> line)
+    {
+        const int IndentColumn = 4;
+        if (line.Length >= 1 && line[0] is (byte)'\t')
+        {
+            return line[1..];
+        }
+
+        var consumed = 0;
+        while (consumed < IndentColumn && consumed < line.Length && line[consumed] is (byte)' ')
+        {
+            consumed++;
+        }
+
+        return line[consumed..];
     }
 
     /// <summary>Emits a contiguous run of <see cref="BlockKind.ListItem"/> + <see cref="BlockKind.ListItemContent"/> + <see cref="BlockKind.Blank"/> blocks as a single <c>&lt;ul&gt;</c>.</summary>

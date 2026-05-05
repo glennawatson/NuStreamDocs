@@ -31,7 +31,7 @@ public class ConfigReaderJsonPipelineTests
     [Test]
     public async Task AsyncReadInvokesConverterAndParsesJson()
     {
-        await using var stream = new MemoryStream("ignored"u8.ToArray());
+        await using MemoryStream stream = new([.. "ignored"u8]);
         var config = await ConfigReaderJsonPipeline.ReadAsync(stream, WriteSiteNameJsonAsync, CancellationToken.None);
         await Assert.That(config.SiteName).IsEqualTo("AsyncHelper");
     }
@@ -49,7 +49,7 @@ public class ConfigReaderJsonPipelineTests
     [Test]
     public async Task AsyncReadNullConverterThrows()
     {
-        var stream = new MemoryStream();
+        MemoryStream stream = new();
         await Assert.That(async () =>
         {
             await using (stream)

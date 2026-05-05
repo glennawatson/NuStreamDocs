@@ -123,7 +123,7 @@ public class ByteHelpersTests
     [Test]
     public async Task EncodeStringIntoEmptyIsNoOp()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         AsciiByteHelpers.EncodeStringInto(string.Empty, sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -133,7 +133,7 @@ public class ByteHelpersTests
     [Test]
     public async Task EncodeStringIntoEmitsUtf8()
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         AsciiByteHelpers.EncodeStringInto("héllo🚀", sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("héllo🚀");
     }

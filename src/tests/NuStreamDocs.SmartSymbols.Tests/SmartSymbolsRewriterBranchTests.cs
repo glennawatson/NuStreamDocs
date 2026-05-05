@@ -109,7 +109,7 @@ public class SmartSymbolsRewriterBranchTests
     private static string Rewrite(string input)
     {
         var bytes = Encoding.UTF8.GetBytes(input);
-        var sink = new ArrayBufferWriter<byte>(Math.Max(bytes.Length, 1));
+        ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
         SmartSymbolsRewriter.Rewrite(bytes, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

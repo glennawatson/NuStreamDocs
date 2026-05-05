@@ -29,9 +29,9 @@ public class FontAwesomePluginTests
     [Test]
     public async Task CustomUrlFlowsThrough()
     {
-        var plugin = new FontAwesomePlugin(FontAwesomeOptions.Default with
+        FontAwesomePlugin plugin = new(FontAwesomeOptions.Default with
         {
-            StylesheetUrl = [.. "https://example.test/fa.css"u8],
+            StylesheetUrl = [.. "https://example.test/fa.css"u8]
         });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).Contains("https://example.test/fa.css");
@@ -42,7 +42,7 @@ public class FontAwesomePluginTests
     [Test]
     public async Task EmptyUrlProducesNothing()
     {
-        var plugin = new FontAwesomePlugin(FontAwesomeOptions.Default with { StylesheetUrl = [] });
+        FontAwesomePlugin plugin = new(FontAwesomeOptions.Default with { StylesheetUrl = [] });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).IsEqualTo(string.Empty);
     }
@@ -53,7 +53,7 @@ public class FontAwesomePluginTests
     [SuppressMessage("Performance", "CA1859", Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
     private static string WriteHeadExtras(IHeadExtraProvider provider)
     {
-        var writer = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> writer = new();
         provider.WriteHeadExtra(writer);
         return Encoding.UTF8.GetString(writer.WrittenSpan);
     }

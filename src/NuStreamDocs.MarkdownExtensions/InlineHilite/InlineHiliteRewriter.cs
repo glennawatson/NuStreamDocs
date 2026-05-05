@@ -212,6 +212,6 @@ internal static class InlineHiliteRewriter
         (byte)'>' => "&gt;"u8,
         (byte)'&' => "&amp;"u8,
         (byte)'"' => "&quot;"u8,
-        _ => default,
+        _ => default
     };
 }

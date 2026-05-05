@@ -31,30 +31,30 @@ public static class XmlLexer
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115", Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
     private static Lexer Build()
     {
-        var states = new LexerRule[2][];
+        LexerRule[][] states =
+        [
+            MarkupRootRules.Build(
+                TagStateId,
 
-        states[Lexer.RootStateId] = MarkupRootRules.Build(
-            TagStateId,
+                // Document text — anything up to the next < or &.
+                new(static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop), TokenClass.Text, LexerRule.NoStateChange),
 
-            // Document text — anything up to the next < or &.
-            new(static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop), TokenClass.Text, LexerRule.NoStateChange),
+                // [ \t\r\n]+ whitespace runs.
+                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst },
 
-            // [ \t\r\n]+ whitespace runs.
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst },
+                // <!-- … --> HTML comment.
+                new(static slice => TokenMatchers.MatchDelimited(slice, "<!--"u8, "-->"u8), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
 
-            // <!-- … --> HTML comment.
-            new(static slice => TokenMatchers.MatchDelimited(slice, "<!--"u8, "-->"u8), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
+                // <![CDATA[ … ]]> CDATA section.
+                new(static slice => TokenMatchers.MatchDelimited(slice, "<![CDATA["u8, "]]>"u8), TokenClass.CommentSpecial, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
 
-            // <![CDATA[ … ]]> CDATA section.
-            new(static slice => TokenMatchers.MatchDelimited(slice, "<![CDATA["u8, "]]>"u8), TokenClass.CommentSpecial, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
+                // <!DOCTYPE … > DOCTYPE declaration.
+                new(static slice => TokenMatchers.MatchDelimited(slice, "<!DOCTYPE"u8, ">"u8), TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
 
-            // <!DOCTYPE … > DOCTYPE declaration.
-            new(static slice => TokenMatchers.MatchDelimited(slice, "<!DOCTYPE"u8, ">"u8), TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
-
-            // <? … ?> processing instruction.
-            new(static slice => TokenMatchers.MatchDelimited(slice, "<?"u8, "?>"u8), TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst });
-
-        states[TagStateId] = MarkupTagRules.Build();
+                // <? … ?> processing instruction.
+                new(static slice => TokenMatchers.MatchDelimited(slice, "<?"u8, "?>"u8), TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst }),
+            MarkupTagRules.Build()
+        ];
         return new(states);
     }
 }

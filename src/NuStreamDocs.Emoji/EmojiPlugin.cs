@@ -27,7 +27,12 @@ public sealed class EmojiPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+    /// <remarks>
+    /// Emoji shortcodes are <c>:name:</c> — every match needs at least two <c>:</c> bytes. A
+    /// page without one cannot contain a shortcode, so the rewriter's per-byte scan and the
+    /// pipeline's scratch rental can be skipped.
+    /// </remarks>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)':') >= 0;
 
     /// <inheritdoc/>
     public void PreRender(in PagePreRenderContext context) =>

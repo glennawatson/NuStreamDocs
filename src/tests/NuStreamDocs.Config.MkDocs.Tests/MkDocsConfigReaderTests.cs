@@ -16,7 +16,7 @@ public class MkDocsConfigReaderTests
     public async Task ReadsMinimalConfig()
     {
         var yaml = "site_name: Hello\ntheme:\n  name: material\n"u8;
-        var reader = new MkDocsConfigReader();
+        MkDocsConfigReader reader = new();
 
         var config = reader.Read(yaml);
 
@@ -29,7 +29,7 @@ public class MkDocsConfigReaderTests
     [Test]
     public async Task RecognizesYamlExtensions()
     {
-        var reader = new MkDocsConfigReader();
+        MkDocsConfigReader reader = new();
         await Assert.That(reader.RecognizesExtension(".yml")).IsTrue();
         await Assert.That(reader.RecognizesExtension(".yaml")).IsTrue();
         await Assert.That(reader.RecognizesExtension(".toml")).IsFalse();
@@ -47,7 +47,7 @@ public class MkDocsConfigReaderTests
         byte[] bytes = [.. "site_name: From-Stream\ntheme: material\n"u8];
         IConfigReader reader = new MkDocsConfigReader();
 
-        await using var stream = new MemoryStream(bytes);
+        await using MemoryStream stream = new(bytes);
         var fromStream = await reader.ReadAsync(stream, CancellationToken.None);
         var fromSpan = reader.Read(bytes);
 

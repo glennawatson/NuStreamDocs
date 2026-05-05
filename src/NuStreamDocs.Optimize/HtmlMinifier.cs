@@ -36,7 +36,7 @@ internal static class HtmlMinifier
         [.. "code"u8],
         [.. "textarea"u8],
         [.. "script"u8],
-        [.. "style"u8],
+        [.. "style"u8]
     ];
 
     /// <summary>Minifies <paramref name="source"/> into <paramref name="writer"/> in a single forward pass.</summary>
@@ -257,12 +257,8 @@ internal static class HtmlMinifier
             return false;
         }
 
-        if (!EqualsAsciiCaseInsensitive(source.Slice(nameStart, name.Length), name))
-        {
-            return false;
-        }
-
-        return end == source.Length || IsTagBoundary(source[end]);
+        return EqualsAsciiCaseInsensitive(source.Slice(nameStart, name.Length), name)
+            && (end == source.Length || IsTagBoundary(source[end]));
     }
 
     /// <summary>Returns the index in <see cref="PreserveTags"/> matching a known length.</summary>

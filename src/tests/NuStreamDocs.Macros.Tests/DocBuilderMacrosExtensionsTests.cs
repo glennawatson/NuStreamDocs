@@ -14,7 +14,7 @@ public class DocBuilderMacrosExtensionsTests
     [Test]
     public async Task UseMacros_with_options_registers_plugin()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.UseMacros(MacrosOptions.Default);
         await Assert.That(result).IsSameReferenceAs(builder);
     }
@@ -24,8 +24,8 @@ public class DocBuilderMacrosExtensionsTests
     [Test]
     public async Task UseMacros_with_configure_registers_plugin()
     {
-        var builder = new DocBuilder();
-        var result = builder.UseMacros(opt => opt);
+        DocBuilder builder = new();
+        var result = builder.UseMacros(static opt => opt);
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
@@ -34,7 +34,7 @@ public class DocBuilderMacrosExtensionsTests
     [Test]
     public async Task UseMacros_default_registers_plugin()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.UseMacros();
         await Assert.That(result).IsSameReferenceAs(builder);
     }

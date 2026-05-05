@@ -14,7 +14,7 @@ public class SnippetsRewriterCopyByteTests
     [Test]
     public async Task WritesSingleByte()
     {
-        var sink = new ArrayBufferWriter<byte>(2);
+        ArrayBufferWriter<byte> sink = new(2);
         SnippetsByteWriter.WriteOne(sink, (byte)'X');
         await Assert.That(sink.WrittenCount).IsEqualTo(1);
         await Assert.That(sink.WrittenSpan[0]).IsEqualTo((byte)'X');

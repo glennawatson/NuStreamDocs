@@ -190,7 +190,7 @@ public sealed class BuildManifest
         var log = logger ?? NullLogger.Instance;
         var path = Path.Combine(outputRoot, FileName);
         await using var stream = File.Create(path);
-        await using var writer = new Utf8JsonWriter(stream);
+        await using Utf8JsonWriter writer = new(stream);
         writer.WriteStartObject();
         writer.WriteNumber("schema"u8, SchemaVersion);
         writer.WriteBase64String("build"u8, _buildFingerprint);
@@ -218,7 +218,7 @@ public sealed class BuildManifest
     /// <returns>The parsed manifest, or an empty manifest on a schema mismatch.</returns>
     private static BuildManifest Parse(ReadOnlySpan<byte> utf8)
     {
-        var reader = new Utf8JsonReader(utf8, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(utf8, isFinalBlock: true, state: default);
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
 

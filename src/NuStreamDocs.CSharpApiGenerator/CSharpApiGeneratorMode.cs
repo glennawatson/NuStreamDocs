@@ -22,5 +22,5 @@ public enum CSharpApiGeneratorMode
     /// keep the canonical <c>ApiType[]</c> in memory for downstream plugins
     /// to consume without writing intermediate Markdown to disk.
     /// </summary>
-    Direct,
+    Direct
 }

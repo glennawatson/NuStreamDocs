@@ -16,13 +16,13 @@ public class RawVariableTests
     public async Task RawVariableEmitsUnescaped()
     {
         var template = Template.Compile("hi {{&name}} bye"u8);
-        var data = new TemplateData(
+        TemplateData data = new(
             new(Common.ByteArrayComparer.Instance)
             {
-                ["name"u8.ToArray()] = "<b>X</b>"u8.ToArray(),
+                [[.. "name"u8]] = new([.. "<b>X</b>"u8])
             },
             sections: null);
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         template.Render(data, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hi <b>X</b> bye");
     }

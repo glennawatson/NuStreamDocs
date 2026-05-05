@@ -24,7 +24,7 @@ public class DocBuilderMaterialExtensionsCoverageTests
     [Test]
     public async Task IconShortcodeName()
     {
-        var plugin = new IconShortcodePlugin();
+        IconShortcodePlugin plugin = new();
         await Assert.That(plugin.Name.Length).IsPositive();
     }
 }

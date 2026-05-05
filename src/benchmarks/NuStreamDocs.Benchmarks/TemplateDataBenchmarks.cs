@@ -44,7 +44,7 @@ public class TemplateDataBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var scalars = new Dictionary<byte[], ReadOnlyMemory<byte>>(EntryCount, ByteArrayComparer.Instance);
+        Dictionary<byte[], ReadOnlyMemory<byte>> scalars = new(EntryCount, ByteArrayComparer.Instance);
         _keys = new byte[EntryCount][];
         _missKeys = new byte[EntryCount][];
         for (var i = 0; i < EntryCount; i++)

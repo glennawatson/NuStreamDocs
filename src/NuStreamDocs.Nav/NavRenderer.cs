@@ -50,7 +50,7 @@ internal static class NavRenderer
 
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
-        var ctx = new NavRenderContext(tree, chain, prune: false, writer);
+        NavRenderContext ctx = new(tree, chain, prune: false, writer);
         var toggleCounter = 0;
         var root = tree.Nodes[NavTree.RootIndex];
         WriteList(in ctx, root.FirstChildIndex, root.ChildCount, level: 0, ref toggleCounter);
@@ -68,7 +68,7 @@ internal static class NavRenderer
 
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
-        var ctx = new NavRenderContext(tree, chain, prune: false, writer);
+        NavRenderContext ctx = new(tree, chain, prune: false, writer);
         var toggleCounter = 0;
         WriteSidebar(in ctx, ref toggleCounter);
     }
@@ -85,7 +85,7 @@ internal static class NavRenderer
 
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
-        var ctx = new NavRenderContext(tree, chain, prune: true, writer);
+        NavRenderContext ctx = new(tree, chain, prune: true, writer);
         var toggleCounter = 0;
         var root = tree.Nodes[NavTree.RootIndex];
         WriteList(in ctx, root.FirstChildIndex, root.ChildCount, level: 0, ref toggleCounter);
@@ -103,7 +103,7 @@ internal static class NavRenderer
 
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
-        var ctx = new NavRenderContext(tree, chain, prune: true, writer);
+        NavRenderContext ctx = new(tree, chain, prune: true, writer);
         var toggleCounter = 0;
         WriteSidebar(in ctx, ref toggleCounter);
     }
@@ -142,19 +142,24 @@ internal static class NavRenderer
     public static Dictionary<byte[], int> BuildUrlIndex(NavTree tree)
     {
         ArgumentNullException.ThrowIfNull(tree);
-        var index = new Dictionary<byte[], int>(tree.Nodes.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], int> index = new(tree.Nodes.Length, ByteArrayComparer.Instance);
         var nodes = tree.Nodes;
         for (var i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
-            if (!node.IsSection && node.RelativeUrlBytes.Length > 0)
+            switch (node.IsSection)
             {
-                index[node.RelativeUrlBytes] = i;
-            }
+                case false when node.RelativeUrlBytes.Length > 0:
+                    {
+                        index[node.RelativeUrlBytes] = i;
+                        break;
+                    }
 
-            if (node.IsSection && node.IndexUrlBytes.Length > 0)
-            {
-                index[node.IndexUrlBytes] = i;
+                case true when node.IndexUrlBytes.Length > 0:
+                    {
+                        index[node.IndexUrlBytes] = i;
+                        break;
+                    }
             }
         }
 
@@ -218,13 +223,9 @@ internal static class NavRenderer
             return false;
         }
 
-        if (relative.AsSpan().IndexOfAny(['/', '\\']) >= 0)
-        {
-            return false;
-        }
-
-        return string.Equals(relative, "index.md", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(relative, "README.md", StringComparison.OrdinalIgnoreCase);
+        return relative.AsSpan().IndexOfAny(['/', '\\']) < 0
+            && (string.Equals(relative, "index.md", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(relative, "README.md", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>Resolves the scoped primary-sidebar item range for the active page and emits the resulting list.</summary>
@@ -357,9 +358,12 @@ internal static class NavRenderer
                 return "<li class=\"md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested\">"u8;
             }
 
-            return prune
-                ? "<li class=\"md-nav__item md-nav__item--pruned md-nav__item--nested\">"u8
-                : "<li class=\"md-nav__item md-nav__item--nested\">"u8;
+            if (prune)
+            {
+                return "<li class=\"md-nav__item md-nav__item--pruned md-nav__item--nested\">"u8;
+            }
+
+            return "<li class=\"md-nav__item md-nav__item--nested\">"u8;
         }
 
         if (active)
@@ -367,9 +371,12 @@ internal static class NavRenderer
             return "<li class=\"md-nav__item md-nav__item--active\">"u8;
         }
 
-        return prune
-            ? "<li class=\"md-nav__item md-nav__item--pruned\">"u8
-            : "<li class=\"md-nav__item\">"u8;
+        if (prune)
+        {
+            return "<li class=\"md-nav__item md-nav__item--pruned\">"u8;
+        }
+
+        return "<li class=\"md-nav__item\">"u8;
     }
 
     /// <summary>Writes a section node's expandable toggle + link + nested list, or a leaf-style chevron link.</summary>

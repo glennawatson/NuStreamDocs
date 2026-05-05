@@ -15,7 +15,7 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task AddExtraCssFileRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.AddExtraCss("style.css");
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         await Assert.That(plugin.StaticAssets).IsNotNull();
@@ -27,7 +27,7 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task AddExtraCssParamsRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.AddExtraCss("a.css", "b.css", "c.css");
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         await Assert.That(plugin.StaticAssets).IsNotNull();
@@ -39,8 +39,8 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task AddExtraCssInline()
     {
-        var builder = new DocBuilder();
-        var result = builder.AddExtraCssInline("inline.css", "body{}"u8.ToArray());
+        DocBuilder builder = new();
+        var result = builder.AddExtraCssInline("inline.css", [.. "body{}"u8]);
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
@@ -49,7 +49,7 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task AddExtraCssEmbedded()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.AddExtraCssEmbedded(typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "missing.resource", "x.css");
         await Assert.That(result).IsSameReferenceAs(builder);
     }
@@ -59,7 +59,7 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task AddExtraCssLink()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.AddExtraCssLink("https://x.test/a.css");
         await Assert.That(result).IsSameReferenceAs(builder);
     }
@@ -69,7 +69,7 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task AddExtraCssLinkParams()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.AddExtraCssLink("https://x.test/a.css", "https://x.test/b.css");
         await Assert.That(result).IsSameReferenceAs(builder);
     }
@@ -79,10 +79,10 @@ public class DocBuilderExtraAssetsExtensionsTests
     [Test]
     public async Task AddExtraJsAllShapes()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         await Assert.That(builder.AddExtraJs("x.js")).IsSameReferenceAs(builder);
         await Assert.That(builder.AddExtraJs("a.js", "b.js")).IsSameReferenceAs(builder);
-        await Assert.That(builder.AddExtraJsInline("inline.js", "var x;"u8.ToArray())).IsSameReferenceAs(builder);
+        await Assert.That(builder.AddExtraJsInline("inline.js", [.. "var x;"u8])).IsSameReferenceAs(builder);
         await Assert.That(builder.AddExtraJsEmbedded(typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "missing.js", "embed.js")).IsSameReferenceAs(builder);
         await Assert.That(builder.AddExtraJsLink("https://x.test/a.js")).IsSameReferenceAs(builder);
         await Assert.That(builder.AddExtraJsLink("https://x.test/a.js", "https://x.test/b.js")).IsSameReferenceAs(builder);

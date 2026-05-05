@@ -16,7 +16,7 @@ public class NavTreeBuilderParameterizedTests
     [Arguments(NavSortBy.None)]
     public async Task SortModes(NavSortBy sort)
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("a.md", "# A\n");
         await temp.WriteAsync("b.md", "# B\n");
         var options = NavOptions.Default with { SortBy = sort };
@@ -32,7 +32,7 @@ public class NavTreeBuilderParameterizedTests
     [Arguments(false)]
     public async Task IndexesToggle(bool indexes)
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("guide/index.md", "# Guide\n");
         await temp.WriteAsync("guide/intro.md", "# Intro\n");
         var options = NavOptions.Default with { Indexes = indexes };
@@ -48,7 +48,7 @@ public class NavTreeBuilderParameterizedTests
     [Arguments(false)]
     public async Task HideEmptySectionsToggle(bool hide)
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("a.md", "# A\n");
         Directory.CreateDirectory(Path.Combine(temp.Root, "empty"));
         var options = NavOptions.Default with { HideEmptySections = hide };
@@ -67,7 +67,7 @@ public class NavTreeBuilderParameterizedTests
     public async Task IncludePatterns(string[] patterns, int expectedChildren)
     {
         ArgumentNullException.ThrowIfNull(patterns);
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("a.md", "# A\n");
         await temp.WriteAsync("b.md", "# B\n");
         var includeGlobs = new Common.GlobPattern[patterns.Length];
@@ -86,7 +86,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task FrontmatterTitleWinsForAutoDiscovery()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("license.md", "---\ntitle: Licenses & Credits\n---\n# License\n");
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
@@ -98,7 +98,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task H1TitleWinsWhenFrontmatterTitleMissing()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("getting-started.md", "# Getting Started with ReactiveUI\n");
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
@@ -110,7 +110,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task SectionTitlesHumanizeDirectoryNames()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("getting-started/index.md", "# Getting Started with ReactiveUI\n");
         await temp.WriteAsync("getting-started/install.md", "# Install\n");
 
@@ -123,7 +123,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task DirectoryUrlsFlowIntoBuiltNodes()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("guide/index.md", "# Guide\n");
         await temp.WriteAsync("guide/intro.md", "# Intro\n");
 
@@ -142,7 +142,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task SectionTitlePrefersIndexFrontmatter()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync(
             "Akavache.Settings/index.md",
             "---\ntitle: Akavache Settings\n---\n# overview\n");
@@ -160,7 +160,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task SectionTitleFallsBackToDirectoryName()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("getting-started/index.md", "# Welcome\n");
         await temp.WriteAsync("getting-started/page.md", "# Page\n");
 
@@ -176,7 +176,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task PagesOverrideTitleWinsOverIndexFrontmatter()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync(
             "guide/index.md",
             "---\ntitle: Authored Title\n---\n# Welcome\n");
@@ -195,7 +195,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task ExplicitOrderSortsBeforeAlpha()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("alpha-late.md", "---\nOrder: 5\n---\n# Late\n");
         await temp.WriteAsync("bravo-early.md", "---\nOrder: 1\n---\n# Early\n");
         await temp.WriteAsync("charlie-no-order.md", "# Charlie\n");
@@ -203,7 +203,7 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
 
-        var pathOrder = string.Join(",", root.Children.Select(c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var pathOrder = string.Join(",", root.Children.Select(static c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
         await Assert.That(pathOrder).IsEqualTo("bravo-early,alpha-late,charlie-no-order,delta-no-order");
     }
 
@@ -212,7 +212,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task SectionOrderHonoursIndexFrontmatter()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("alpha/index.md", "---\nOrder: 5\n---\n# Alpha\n");
         await temp.WriteAsync("alpha/p.md", "# P\n");
         await temp.WriteAsync("bravo/index.md", "---\nOrder: 1\n---\n# Bravo\n");
@@ -222,7 +222,7 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var sectionOrder = string.Join(",", root.Children.Where(c => c.IsSection).Select(c => Path.GetFileName(c.RelativePath.Value)));
+        var sectionOrder = string.Join(",", root.Children.Where(static c => c.IsSection).Select(static c => Path.GetFileName(c.RelativePath.Value)));
         await Assert.That(sectionOrder).IsEqualTo("bravo,alpha,charlie");
     }
 
@@ -231,7 +231,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task ExplicitOrderInterleavesPagesAndSections()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("Slack.md", "---\nOrder: 4\n---\n# Slack\n");
         await temp.WriteAsync("Book.md", "---\nOrder: 6\n---\n# Book\n");
         await temp.WriteAsync("license.md", "# License\n");
@@ -248,7 +248,7 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var ordered = string.Join(",", root.Children.Select(c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var ordered = string.Join(",", root.Children.Select(static c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
         await Assert.That(ordered).IsEqualTo("docs,api,contribute,Slack,vs,Book,Announcements,articles,license");
     }
 
@@ -257,7 +257,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task UnannotatedTreesKeepPagesFirstThenSections()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("alpha.md", "# A\n");
         await temp.WriteAsync("zulu.md", "# Z\n");
         await temp.WriteAsync("guide/index.md", "# G\n");
@@ -267,7 +267,7 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var ordered = string.Join(",", root.Children.Select(c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var ordered = string.Join(",", root.Children.Select(static c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
 
         // Pages alpha-sorted first, then sections alpha-sorted — the existing default.
         await Assert.That(ordered).IsEqualTo("alpha,zulu,api,guide");
@@ -278,7 +278,7 @@ public class NavTreeBuilderParameterizedTests
     [Test]
     public async Task DuplicateOrderTieBreaksAlphabetically()
     {
-        using var temp = new ScratchTree();
+        using ScratchTree temp = new();
         await temp.WriteAsync("zulu.md", "---\nOrder: 1\n---\n# Z\n");
         await temp.WriteAsync("alpha.md", "---\nOrder: 1\n---\n# A\n");
         await temp.WriteAsync("mike.md", "---\nOrder: 1\n---\n# M\n");

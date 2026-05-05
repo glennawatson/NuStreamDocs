@@ -272,6 +272,6 @@ public class Material3DefaultsTests
 
         var rest = html.AsSpan(idx + Marker.Length);
         var end = rest.IndexOf('"');
-        return end > 0 ? new string(rest[..end]) : string.Empty;
+        return end > 0 ? new(rest[..end]) : string.Empty;
     }
 }

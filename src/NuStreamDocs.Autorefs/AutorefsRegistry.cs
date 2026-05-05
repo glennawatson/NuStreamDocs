@@ -69,7 +69,7 @@ public sealed class AutorefsRegistry
         }
 
         ArgumentNullException.ThrowIfNull(pageRelativeUrlBytes);
-        var idBytes = id.ToArray();
+        byte[] idBytes = [.. id];
 
         _anchors[idBytes] = new(pageRelativeUrlBytes, ResolveFragment(idBytes, fragment));
     }
@@ -142,7 +142,12 @@ public sealed class AutorefsRegistry
             return null;
         }
 
-        return fragment.SequenceEqual(idBytes) ? idBytes : fragment.ToArray();
+        if (fragment.SequenceEqual(idBytes))
+        {
+            return idBytes;
+        }
+
+        return fragment.ToArray();
     }
 
     /// <summary>Stored anchor — page URL bytes + optional fragment bytes, composed only at write/snapshot time.</summary>

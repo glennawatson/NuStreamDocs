@@ -16,7 +16,7 @@ public class ImageWrapperTests
     public async Task WrapsStandaloneImage()
     {
         var input = "<p><img src=\"/img/foo.png\" alt=\"foo\"></p>"u8;
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -30,7 +30,7 @@ public class ImageWrapperTests
     public async Task SkipsImagesAlreadyInsideAnchor()
     {
         var input = "<a href=\"https://example.com\"><img src=\"/img/foo.png\"></a>"u8;
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -44,7 +44,7 @@ public class ImageWrapperTests
     public async Task WrapsEveryStandaloneImage()
     {
         var input = "<img src=\"a.png\"><img src=\"b.png\">"u8;
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);

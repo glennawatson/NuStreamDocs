@@ -12,9 +12,9 @@ public class HeadingIdScannerTests
     [Test]
     public async Task ExtractsEveryHeadingId()
     {
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var html = "<h1 id=\"intro\">Intro</h1>\n<p>body</p>\n<h2 id=\"detail\">Detail</h2>\n<h3>NoId</h3>"u8;
-        HeadingIdScanner.ScanAndRegister(html, "guide/intro.html"u8.ToArray(), registry);
+        HeadingIdScanner.ScanAndRegister(html, [.. "guide/intro.html"u8], registry);
 
         await Assert.That(registry.Count).IsEqualTo(2);
         await Assert.That(registry.TryResolve("intro"u8, out var introUrl)).IsTrue();
@@ -28,9 +28,9 @@ public class HeadingIdScannerTests
     [Test]
     public async Task ExtractsEmptyAnchorIds()
     {
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var html = "<p>before</p><a href=\"\" id=\"T:Akavache.IFoo\"></a>\n<h1 id=\"intro\">Intro</h1>"u8;
-        HeadingIdScanner.ScanAndRegister(html, "api/foo.html"u8.ToArray(), registry);
+        HeadingIdScanner.ScanAndRegister(html, [.. "api/foo.html"u8], registry);
 
         await Assert.That(registry.Count).IsEqualTo(2);
         await Assert.That(registry.TryResolve("T:Akavache.IFoo"u8, out var anchorUrl)).IsTrue();
@@ -42,9 +42,9 @@ public class HeadingIdScannerTests
     [Test]
     public async Task IgnoresAnchorWithoutIdAndOtherATags()
     {
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var html = "<a href=\"x\">link</a><abbr id=\"nope\">abbr</abbr><article id=\"alsoNope\">x</article>"u8;
-        HeadingIdScanner.ScanAndRegister(html, "p.html"u8.ToArray(), registry);
+        HeadingIdScanner.ScanAndRegister(html, [.. "p.html"u8], registry);
         await Assert.That(registry.Count).IsEqualTo(0);
     }
 
@@ -53,9 +53,9 @@ public class HeadingIdScannerTests
     [Test]
     public async Task SkipsHeadingsWithoutId()
     {
-        var registry = new AutorefsRegistry();
+        AutorefsRegistry registry = new();
         var html = "<p>just a paragraph</p>"u8;
-        HeadingIdScanner.ScanAndRegister(html, "page.html"u8.ToArray(), registry);
+        HeadingIdScanner.ScanAndRegister(html, [.. "page.html"u8], registry);
         await Assert.That(registry.Count).IsEqualTo(0);
     }
 }

@@ -44,7 +44,7 @@ public static class ContentHasher
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
 
         await using var stream = File.OpenRead(path.Value);
-        var hasher = new XxHash3();
+        XxHash3 hasher = new();
 
         // 64 KiB read window; bounded so a multi-MB page doesn't spike
         // working set on the worker thread.

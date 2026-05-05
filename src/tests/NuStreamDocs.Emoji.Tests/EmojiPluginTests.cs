@@ -17,8 +17,8 @@ public class EmojiPluginTests
     [Test]
     public async Task PreRenderMatchesRewriter()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        var ctx = new PagePreRenderContext("p.md", "hi :rocket:"u8, sink);
+        ArrayBufferWriter<byte> sink = new(64);
+        PagePreRenderContext ctx = new("p.md", "hi :rocket:"u8, sink);
         new EmojiPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))
             .IsEqualTo("hi <span class=\"twemoji\">🚀</span>");
@@ -35,7 +35,7 @@ public class EmojiPluginTests
     [Test]
     public async Task UseEmojiRegisters()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var returned = builder.UseEmoji();
         await Assert.That(returned).IsSameReferenceAs(builder);
     }

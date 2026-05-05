@@ -16,7 +16,7 @@ internal static class LexerTestExtensions
     /// <returns>Rendered HTML.</returns>
     public static string Render(this Lexer lexer, ReadOnlySpan<byte> source)
     {
-        var sink = new ArrayBufferWriter<byte>();
+        ArrayBufferWriter<byte> sink = new();
         HighlightEmitter.Emit(lexer, source.ToArray(), sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

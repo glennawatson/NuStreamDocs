@@ -57,7 +57,7 @@ public class TocPluginTests
     [Test]
     public async Task MarkerSubstituteWithoutMarkerLeavesBodyAlone()
     {
-        var plugin = new TocPlugin(TocOptions.Default with { MarkerSubstitute = true });
+        TocPlugin plugin = new(TocOptions.Default with { MarkerSubstitute = true });
         var output = RunPostRender(plugin, "<h1>Heading</h1><p>body</p>"u8);
         var rendered = Encoding.UTF8.GetString(output);
         await Assert.That(rendered).Contains("<h1");
@@ -70,8 +70,8 @@ public class TocPluginTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(TocPlugin plugin, ReadOnlySpan<byte> html)
     {
-        var output = new ArrayBufferWriter<byte>(256);
-        var ctx = new PagePostRenderContext("page.md", default, html, output);
+        ArrayBufferWriter<byte> output = new(256);
+        PagePostRenderContext ctx = new("page.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];
     }

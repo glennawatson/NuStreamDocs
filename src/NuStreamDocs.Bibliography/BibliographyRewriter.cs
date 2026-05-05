@@ -110,16 +110,20 @@ internal static class BibliographyRewriter
             }
 
             var rel = source[cursor..].IndexOfAny(OpenChar);
-            if (rel < 0)
+            switch (rel)
             {
-                Write(body, source[cursor..]);
-                return;
-            }
+                case < 0:
+                {
+                    Write(body, source[cursor..]);
+                    return;
+                }
 
-            if (rel > 0)
-            {
-                Write(body, source.Slice(cursor, rel));
-                cursor += rel;
+                case > 0:
+                {
+                    Write(body, source.Slice(cursor, rel));
+                    cursor += rel;
+                    break;
+                }
             }
 
             if (TryEmitMarker(source, cursor, body, ref state, out var afterMarker))
@@ -194,7 +198,7 @@ internal static class BibliographyRewriter
         using var probeRental = PageBuilderPool.Rent(inner.Length);
         var probe = probeRental.Writer;
 
-        var scan = new CiteScanContext(inner, innerStart, probe);
+        CiteScanContext scan = new(inner, innerStart, probe);
         if (!TryEmitInner(in scan, ref state, out var resolvedAny))
         {
             // Malformed inner — undo any state we accumulated for this marker before returning.
@@ -582,7 +586,7 @@ internal static class BibliographyRewriter
         /// <returns>Fresh state. The caller must invoke <see cref="ReturnToPool"/> on every exit path to return the rented arrays to <see cref="ArrayPool{T}.Shared"/>.</returns>
         public static ResolveState Create(BibliographyDatabase database, ICitationStyle style, MissingCitationCallback? missing)
         {
-            var state = default(ResolveState);
+            ResolveState state = default;
             state.Database = database;
             state.Style = style;
             state.Missing = missing;

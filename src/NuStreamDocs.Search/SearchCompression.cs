@@ -14,5 +14,5 @@ public enum SearchCompression
     Default,
 
     /// <summary>Emit a sibling <c>.br</c> alongside the plain JSON for CDNs that prefer Brotli; smallest payload, slower build.</summary>
-    Smallest,
+    Smallest
 }

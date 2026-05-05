@@ -49,7 +49,7 @@ public class MarkdownExtensionPluginTests
     [Test]
     public async Task PreprocessorsRunWithoutThrowing()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
+        ArrayBufferWriter<byte> sink = new(64);
         RunPreRender(new AdmonitionPlugin(), sink);
         RunPreRender(new CaretTildePlugin(), sink);
         RunPreRender(new CheckListPlugin(), sink);
@@ -122,7 +122,7 @@ public class MarkdownExtensionPluginTests
     /// <param name="sink">Output writer.</param>
     private static void RunPreRender(IPagePreRenderPlugin plugin, IBufferWriter<byte> sink)
     {
-        var ctx = new PagePreRenderContext("p.md", "plain"u8, sink);
+        PagePreRenderContext ctx = new("p.md", "plain"u8, sink);
         plugin.PreRender(in ctx);
     }
 }

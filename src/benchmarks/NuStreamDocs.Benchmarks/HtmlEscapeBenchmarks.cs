@@ -41,8 +41,8 @@ public class HtmlEscapeBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var clean = new StringBuilder();
-        var heavy = new StringBuilder();
+        StringBuilder clean = new();
+        StringBuilder heavy = new();
         for (var i = 0; i < Repetitions; i++)
         {
             clean.Append("plain ascii line without any escape candidates here.\n");

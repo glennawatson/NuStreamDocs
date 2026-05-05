@@ -17,7 +17,7 @@ public class DocBuilderBibliographyExtensionsTests
     [Test]
     public async Task UseBibliography_registers_plugin()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var result = builder.UseBibliography(BibliographyOptions.Default);
         await Assert.That(result).IsSameReferenceAs(builder);
     }
@@ -27,9 +27,9 @@ public class DocBuilderBibliographyExtensionsTests
     [Test]
     public async Task UseBibliography_with_style_and_callback_registers_plugin()
     {
-        var builder = new DocBuilder();
+        DocBuilder builder = new();
         var style = Substitute.For<ICitationStyle>();
-        var result = builder.UseBibliography(style, static db => db.Add(new() { Id = "key"u8.ToArray(), Type = EntryType.Book, Title = "title"u8.ToArray() }));
+        var result = builder.UseBibliography(style, static db => db.Add(new() { Id = [.. "key"u8], Type = EntryType.Book, Title = [.. "title"u8] }));
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 }

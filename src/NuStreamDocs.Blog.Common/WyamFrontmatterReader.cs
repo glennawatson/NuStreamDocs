@@ -46,10 +46,10 @@ public static class WyamFrontmatterReader
         firstLineEnd += FrontmatterFenceLength;
         var bodyStart = -1;
         var cursor = firstLineEnd + 1;
-        var title = Array.Empty<byte>();
-        var author = Array.Empty<byte>();
-        var published = default(DateOnly);
-        var tags = new List<byte[]>(4);
+        byte[] title = [];
+        byte[] author = [];
+        DateOnly published = default;
+        List<byte[]> tags = new(4);
         var isBlog = false;
 
         while (cursor < markdown.Length)
@@ -72,12 +72,7 @@ public static class WyamFrontmatterReader
             cursor += lineEnd + 1;
         }
 
-        if (bodyStart < 0)
-        {
-            return new([], [], default, [], false, 0);
-        }
-
-        return new(title, author, published, [.. tags], isBlog, bodyStart);
+        return bodyStart < 0 ? new([], [], default, [], false, 0) : new(title, author, published, [.. tags], isBlog, bodyStart);
     }
 
     /// <summary>Applies one frontmatter line to the running parse state.</summary>

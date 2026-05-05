@@ -93,7 +93,7 @@ internal static class CssUrlBytes
         var urlBytes = source[urlStart..urlEnd];
         if (audit.Filter.ShouldLocalize(urlBytes))
         {
-            audit.Set.TryAdd(urlBytes.ToArray(), 0);
+            audit.Set.TryAdd([.. urlBytes], 0);
         }
 
         advanceTo = tokenEnd;

@@ -44,7 +44,7 @@ public class SphinxInventoryBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var registry = new AutorefsRegistry(EntryCount);
+        AutorefsRegistry registry = new(EntryCount);
         for (var i = 0; i < EntryCount; i++)
         {
             var idx = i.ToString(CultureInfo.InvariantCulture);
@@ -90,7 +90,7 @@ public class SphinxInventoryBenchmarks
     [Benchmark]
     public async ValueTask<long> FinalizeEmit()
     {
-        var ctx = new BuildFinalizeContext(_outputDir, [_plugin]);
+        BuildFinalizeContext ctx = new(_outputDir, [_plugin]);
         await _plugin.FinalizeAsync(ctx, CancellationToken.None).ConfigureAwait(false);
         return new FileInfo(Path.Combine(_outputDir, "objects.inv")).Length;
     }

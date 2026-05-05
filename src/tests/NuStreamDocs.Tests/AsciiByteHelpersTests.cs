@@ -34,7 +34,7 @@ public class AsciiByteHelpersTests
     [Test]
     public async Task RunLengthStopsAtEnd()
     {
-        var bytes = "***"u8.ToArray();
+        byte[] bytes = [.. "***"u8];
         await Assert.That(AsciiByteHelpers.RunLength(bytes, 1, (byte)'*')).IsEqualTo(2);
         await Assert.That(AsciiByteHelpers.RunLength(bytes, 3, (byte)'*')).IsEqualTo(0);
     }
@@ -44,7 +44,7 @@ public class AsciiByteHelpersTests
     [Test]
     public async Task RunLengthOutOfRange()
     {
-        var bytes = "abc"u8.ToArray();
+        byte[] bytes = [.. "abc"u8];
         await Assert.That(AsciiByteHelpers.RunLength(bytes, 3, (byte)'a')).IsEqualTo(0);
         await Assert.That(AsciiByteHelpers.RunLength(bytes, 100, (byte)'a')).IsEqualTo(0);
     }
@@ -54,8 +54,8 @@ public class AsciiByteHelpersTests
     [Test]
     public async Task ToLowerCaseInvariantAscii()
     {
-        var input = "HELLO world!"u8.ToArray();
-        var expected = "hello world!"u8.ToArray();
+        byte[] input = [.. "HELLO world!"u8];
+        byte[] expected = [.. "hello world!"u8];
         var actual = AsciiByteHelpers.ToLowerCaseInvariant(input);
         await Assert.That(actual.AsSpan().SequenceEqual(expected)).IsTrue();
     }
@@ -65,7 +65,7 @@ public class AsciiByteHelpersTests
     [Test]
     public async Task ToLowerCaseInvariantPreservesNonAscii()
     {
-        var input = "ΠΣ-Δ"u8.ToArray();
+        byte[] input = [.. "ΠΣ-Δ"u8];
         var actual = AsciiByteHelpers.ToLowerCaseInvariant(input);
         await Assert.That(actual.AsSpan().SequenceEqual(input)).IsTrue();
     }
@@ -84,8 +84,8 @@ public class AsciiByteHelpersTests
     [Test]
     public async Task ToLowerCaseInvariantFoldsMixedAscii()
     {
-        var input = "Hello-World_123"u8.ToArray();
-        var expected = "hello-world_123"u8.ToArray();
+        byte[] input = [.. "Hello-World_123"u8];
+        byte[] expected = [.. "hello-world_123"u8];
         var actual = AsciiByteHelpers.ToLowerCaseInvariant(input);
         await Assert.That(actual.AsSpan().SequenceEqual(expected)).IsTrue();
     }

@@ -25,6 +25,15 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 internal static class FSharpRules
 {
+    /// <summary>Length of the <c>///</c> doc-comment introducer.</summary>
+    private const int DocCommentPrefixLength = 3;
+
+    /// <summary>Length of a basic <c>'x'</c> character literal.</summary>
+    private const int BasicCharLiteralLength = 3;
+
+    /// <summary>Length of an escaped <c>'\x'</c> character literal.</summary>
+    private const int EscapedCharLiteralLength = 4;
+
     /// <summary>Minimum opening / closing quote run for a triple-quoted string literal (<c>"""</c>).</summary>
     private const int TripleQuoteLength = 3;
 
@@ -33,139 +42,139 @@ internal static class FSharpRules
 
     /// <summary>Control-flow / declaration keywords plus reserved words; pygments classifies the reserved set as keywords too.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        "abstract",
-        "as",
-        "assert",
-        "base",
-        "begin",
-        "class",
-        "default",
-        "delegate",
-        "do",
-        "done",
-        "downcast",
-        "downto",
-        "elif",
-        "else",
-        "end",
-        "exception",
-        "extern",
-        "finally",
-        "for",
-        "function",
-        "fun",
-        "global",
-        "if",
-        "inherit",
-        "inline",
-        "interface",
-        "internal",
-        "in",
-        "lazy",
-        "let",
-        "match",
-        "member",
-        "module",
-        "mutable",
-        "namespace",
-        "new",
-        "of",
-        "open",
-        "override",
-        "private",
-        "public",
-        "rec",
-        "return",
-        "select",
-        "static",
-        "struct",
-        "then",
-        "to",
-        "try",
-        "type",
-        "upcast",
-        "use",
-        "val",
-        "void",
-        "when",
-        "while",
-        "with",
-        "yield",
-        "atomic",
-        "break",
-        "checked",
-        "component",
-        "const",
-        "constraint",
-        "constructor",
-        "continue",
-        "eager",
-        "event",
-        "external",
-        "fixed",
-        "functor",
-        "include",
-        "method",
-        "mixin",
-        "object",
-        "parallel",
-        "process",
-        "protected",
-        "pure",
-        "sealed",
-        "tailcall",
-        "trait",
-        "virtual",
-        "volatile");
+        [.. "abstract"u8],
+        [.. "as"u8],
+        [.. "assert"u8],
+        [.. "base"u8],
+        [.. "begin"u8],
+        [.. "class"u8],
+        [.. "default"u8],
+        [.. "delegate"u8],
+        [.. "do"u8],
+        [.. "done"u8],
+        [.. "downcast"u8],
+        [.. "downto"u8],
+        [.. "elif"u8],
+        [.. "else"u8],
+        [.. "end"u8],
+        [.. "exception"u8],
+        [.. "extern"u8],
+        [.. "finally"u8],
+        [.. "for"u8],
+        [.. "function"u8],
+        [.. "fun"u8],
+        [.. "global"u8],
+        [.. "if"u8],
+        [.. "inherit"u8],
+        [.. "inline"u8],
+        [.. "interface"u8],
+        [.. "internal"u8],
+        [.. "in"u8],
+        [.. "lazy"u8],
+        [.. "let"u8],
+        [.. "match"u8],
+        [.. "member"u8],
+        [.. "module"u8],
+        [.. "mutable"u8],
+        [.. "namespace"u8],
+        [.. "new"u8],
+        [.. "of"u8],
+        [.. "open"u8],
+        [.. "override"u8],
+        [.. "private"u8],
+        [.. "public"u8],
+        [.. "rec"u8],
+        [.. "return"u8],
+        [.. "select"u8],
+        [.. "static"u8],
+        [.. "struct"u8],
+        [.. "then"u8],
+        [.. "to"u8],
+        [.. "try"u8],
+        [.. "type"u8],
+        [.. "upcast"u8],
+        [.. "use"u8],
+        [.. "val"u8],
+        [.. "void"u8],
+        [.. "when"u8],
+        [.. "while"u8],
+        [.. "with"u8],
+        [.. "yield"u8],
+        [.. "atomic"u8],
+        [.. "break"u8],
+        [.. "checked"u8],
+        [.. "component"u8],
+        [.. "const"u8],
+        [.. "constraint"u8],
+        [.. "constructor"u8],
+        [.. "continue"u8],
+        [.. "eager"u8],
+        [.. "event"u8],
+        [.. "external"u8],
+        [.. "fixed"u8],
+        [.. "functor"u8],
+        [.. "include"u8],
+        [.. "method"u8],
+        [.. "mixin"u8],
+        [.. "object"u8],
+        [.. "parallel"u8],
+        [.. "process"u8],
+        [.. "protected"u8],
+        [.. "pure"u8],
+        [.. "sealed"u8],
+        [.. "tailcall"u8],
+        [.. "trait"u8],
+        [.. "virtual"u8],
+        [.. "volatile"u8]);
 
     /// <summary>Boolean / null literal set.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create("true", "false", "null");
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
 
     /// <summary>Built-in primitive type set.</summary>
     private static readonly ByteKeywordSet PrimitiveTypes = ByteKeywordSet.Create(
-        "sbyte",
-        "byte",
-        "char",
-        "nativeint",
-        "unativeint",
-        "float32",
-        "single",
-        "float",
-        "double",
-        "int8",
-        "uint8",
-        "int16",
-        "uint16",
-        "int32",
-        "uint32",
-        "int64",
-        "uint64",
-        "decimal",
-        "unit",
-        "bool",
-        "string",
-        "list",
-        "exn",
-        "obj",
-        "enum");
+        [.. "sbyte"u8],
+        [.. "byte"u8],
+        [.. "char"u8],
+        [.. "nativeint"u8],
+        [.. "unativeint"u8],
+        [.. "float32"u8],
+        [.. "single"u8],
+        [.. "float"u8],
+        [.. "double"u8],
+        [.. "int8"u8],
+        [.. "uint8"u8],
+        [.. "int16"u8],
+        [.. "uint16"u8],
+        [.. "int32"u8],
+        [.. "uint32"u8],
+        [.. "int64"u8],
+        [.. "uint64"u8],
+        [.. "decimal"u8],
+        [.. "unit"u8],
+        [.. "bool"u8],
+        [.. "string"u8],
+        [.. "list"u8],
+        [.. "exn"u8],
+        [.. "obj"u8],
+        [.. "enum"u8]);
 
     /// <summary>Word operators classified separately so themes can render <c>and</c>/<c>or</c>/<c>not</c> with the operator colour.</summary>
-    private static readonly ByteKeywordSet WordOperators = ByteKeywordSet.Create("and", "or", "not");
+    private static readonly ByteKeywordSet WordOperators = ByteKeywordSet.Create([.."and"u8], [.."or"u8], [.."not"u8]);
 
     /// <summary>Operator alternation, sorted longest-first so multi-byte operators win before their single-byte prefixes.</summary>
     private static readonly byte[][] Operators =
     [
-        "<@@"u8.ToArray(), "@@>"u8.ToArray(),
-        "<-"u8.ToArray(), "->"u8.ToArray(), "<="u8.ToArray(), ">="u8.ToArray(),
-        "<>"u8.ToArray(), "<|"u8.ToArray(), "|>"u8.ToArray(), "||"u8.ToArray(), "&&"u8.ToArray(),
-        "::"u8.ToArray(), ":="u8.ToArray(), ":>"u8.ToArray(), ":?"u8.ToArray(),
-        "<@"u8.ToArray(), "@>"u8.ToArray(), "<<"u8.ToArray(), ">>"u8.ToArray(),
-        ".."u8.ToArray(), "!="u8.ToArray(), ";;"u8.ToArray(),
-        "["u8.ToArray(), "]"u8.ToArray(), "<"u8.ToArray(), ">"u8.ToArray(),
-        "+"u8.ToArray(), "-"u8.ToArray(), "*"u8.ToArray(), "/"u8.ToArray(),
-        "%"u8.ToArray(), "&"u8.ToArray(), "|"u8.ToArray(), "^"u8.ToArray(),
-        "!"u8.ToArray(), "~"u8.ToArray(), "="u8.ToArray(), "?"u8.ToArray(),
-        "@"u8.ToArray(),
+        [.. "<@@"u8], [.. "@@>"u8],
+        [.. "<-"u8], [.. "->"u8], [.. "<="u8], [.. ">="u8],
+        [.. "<>"u8], [.. "<|"u8], [.. "|>"u8], [.. "||"u8], [.. "&&"u8],
+        [.. "::"u8], [.. ":="u8], [.. ":>"u8], [.. ":?"u8],
+        [.. "<@"u8], [.. "@>"u8], [.. "<<"u8], [.. ">>"u8],
+        [.. ".."u8], [.. "!="u8], [.. ";;"u8],
+        [.. "["u8], [.. "]"u8], [.. "<"u8], [.. ">"u8],
+        [.. "+"u8], [.. "-"u8], [.. "*"u8], [.. "/"u8],
+        [.. "%"u8], [.. "&"u8], [.. "|"u8], [.. "^"u8],
+        [.. "!"u8], [.. "~"u8], [.. "="u8], [.. "?"u8],
+        [.. "@"u8]
     ];
 
     /// <summary>Integer suffix bytes — F# spec § 4.5: y/uy/s/us/l/u/L/UL/n/un/Q/R/Z/I/N/G/m/M.</summary>
@@ -227,7 +236,10 @@ internal static class FSharpRules
         rules[i++] = new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst };
 
         // /// xml-doc-comment to end-of-line — must precede the line-comment rule.
-        rules[i++] = new(LanguageCommon.XmlDocCommentToEol, TokenClass.CommentSpecial, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
+        rules[i++] = new(
+            static slice => slice is [(byte)'/', (byte)'/', (byte)'/', ..] ? DocCommentPrefixLength + TokenMatchers.LineLength(slice[DocCommentPrefixLength..]) : 0,
+            TokenClass.CommentSpecial,
+            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
 
         // // line comment to end-of-line.
         rules[i++] = new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
@@ -248,7 +260,15 @@ internal static class FSharpRules
         rules[i++] = new(MatchRegularString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = StringFirst };
 
         // 'x' or '\x' single-character literal.
-        rules[i++] = new(LanguageCommon.CharLiteral, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst };
+        rules[i++] = new(
+            static slice => slice switch
+            {
+                [(byte)'\'', (byte)'\\', _, (byte)'\'', ..] => EscapedCharLiteralLength,
+                [(byte)'\'', _, (byte)'\'', ..] => BasicCharLiteralLength,
+                _ => 0
+            },
+            TokenClass.StringSingle,
+            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst };
 
         // 0x[hex_]+[suffix]* hex integer literal — must precede the integer rule.
         rules[i++] = new(
@@ -365,6 +385,11 @@ internal static class FSharpRules
             return 0;
         }
 
-        return matched < slice.Length && slice[matched] is (byte)'B' ? matched + 1 : matched;
+        if (matched < slice.Length && slice[matched] is (byte)'B')
+        {
+            return matched + 1;
+        }
+
+        return matched;
     }
 }

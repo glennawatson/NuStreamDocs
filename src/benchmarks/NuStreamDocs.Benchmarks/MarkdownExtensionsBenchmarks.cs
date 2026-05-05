@@ -108,7 +108,7 @@ public class MarkdownExtensionsBenchmarks
     /// <returns>UTF-8 bytes of the repeated fragment.</returns>
     private static byte[] BuildRepeated(string block)
     {
-        var sb = new StringBuilder(block.Length * Repetitions);
+        StringBuilder sb = new(block.Length * Repetitions);
         for (var i = 0; i < Repetitions; i++)
         {
             sb.Append(block);
@@ -123,8 +123,8 @@ public class MarkdownExtensionsBenchmarks
     /// <returns>Bytes written to the sink.</returns>
     private static int Run(IPagePreRenderPlugin plugin, byte[] source)
     {
-        var sink = new ArrayBufferWriter<byte>(source.Length * 2);
-        var ctx = new PagePreRenderContext("page.md", source, sink);
+        ArrayBufferWriter<byte> sink = new(source.Length * 2);
+        PagePreRenderContext ctx = new("page.md", source, sink);
         plugin.PreRender(in ctx);
         return sink.WrittenCount;
     }

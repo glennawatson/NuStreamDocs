@@ -20,7 +20,7 @@ public class FeedWriterTests
         var posts = BuildPosts();
         var bytes = FeedWriter.WriteRss(options, posts, new(2024, 6, 1, 0, 0, 0, TimeSpan.Zero));
         var xml = Encoding.UTF8.GetString(bytes);
-        var doc = new XmlDocument();
+        XmlDocument doc = new();
         doc.LoadXml(xml);
 
         var titles = doc.SelectNodes("//item/title")!;
@@ -54,7 +54,7 @@ public class FeedWriterTests
         var posts = BuildPosts();
         var bytes = FeedWriter.WriteRss(options, posts, DateTimeOffset.UtcNow);
         var xml = Encoding.UTF8.GetString(bytes);
-        var doc = new XmlDocument();
+        XmlDocument doc = new();
         doc.LoadXml(xml);
 
         var items = doc.SelectNodes("//item")!;
@@ -71,19 +71,19 @@ public class FeedWriterTests
     private static BlogPost[] BuildPosts() => [
         new(
             "blog/2024-06-01-launch.md",
-            "launch"u8.ToArray(),
-            "Launch"u8.ToArray(),
-            "Author A"u8.ToArray(),
+            [.. "launch"u8],
+            [.. "Launch"u8],
+            [.. "Author A"u8],
             new(2024, 6, 1),
             [[.. "Release"u8]],
-            "Launch announcement."u8.ToArray()),
+            [.. "Launch announcement."u8]),
         new(
             "blog/2024-05-01-update.md",
-            "update"u8.ToArray(),
-            "Update"u8.ToArray(),
-            "Author B"u8.ToArray(),
+            [.. "update"u8],
+            [.. "Update"u8],
+            [.. "Author B"u8],
             new(2024, 5, 1),
             [[.. "Update"u8]],
-            "Update announcement."u8.ToArray()),
+            [.. "Update announcement."u8])
     ];
 }

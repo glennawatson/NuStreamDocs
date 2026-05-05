@@ -12,7 +12,7 @@ public class PrivacyDownloadExceptionTests
     [Test]
     public async Task DefaultCtor()
     {
-        var ex = new PrivacyDownloadException();
+        PrivacyDownloadException ex = new();
         await Assert.That(ex.FailedUrls.Length).IsEqualTo(0);
     }
 
@@ -21,7 +21,7 @@ public class PrivacyDownloadExceptionTests
     [Test]
     public async Task MessageCtor()
     {
-        var ex = new PrivacyDownloadException("download failed");
+        PrivacyDownloadException ex = new("download failed");
         await Assert.That(ex.Message).IsEqualTo("download failed");
         await Assert.That(ex.FailedUrls.Length).IsEqualTo(0);
     }
@@ -31,8 +31,8 @@ public class PrivacyDownloadExceptionTests
     [Test]
     public async Task MessageInnerCtor()
     {
-        var inner = new HttpRequestException("inner");
-        var ex = new PrivacyDownloadException("oops", inner);
+        HttpRequestException inner = new("inner");
+        PrivacyDownloadException ex = new("oops", inner);
         await Assert.That(ex.InnerException).IsEqualTo(inner);
     }
 }
