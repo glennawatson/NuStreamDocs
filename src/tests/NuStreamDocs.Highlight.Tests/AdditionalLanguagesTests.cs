@@ -120,6 +120,49 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"cm\">(* block *)</span>", StringComparison.Ordinal)).IsTrue();
     }
 
+    /// <summary>Python classifies <c>def</c>/<c>class</c> as keywords, <c>True</c>/<c>None</c> as constants, and built-in callables as <c>nb</c>.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PythonClassifiesKeywordsConstantsAndBuiltins()
+    {
+        var html = PythonLexer.Instance.Render("def greet(name: str) -> None:\n    print(f\"Hello, {name}\")\n    return None\n"u8);
+        await Assert.That(html.Contains("<span class=\"k\">def</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"nb\">print</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"nb\">str</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"kc\">None</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>Python classifies triple-quoted docstrings as a single <c>s2</c> token, with embedded newlines preserved.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PythonClassifiesTripleQuotedString()
+    {
+        var html = PythonLexer.Instance.Render("\"\"\"hello\nworld\"\"\""u8);
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;&quot;&quot;hello\nworld&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>PowerShell classifies <c>if</c>/<c>foreach</c> case-insensitively, <c>$variable</c> as a name, and <c>Get-ChildItem</c> verb-noun cmdlets as <c>nb</c>.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PowerShellClassifiesKeywordsVariablesAndVerbNoun()
+    {
+        var html = PowerShellLexer.Instance.Render("If ($name -eq 'admin') { Get-ChildItem -Path \"C:\\\" }"u8);
+        await Assert.That(html.Contains("<span class=\"k\">If</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"n\">$name</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"o\">-eq</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"nb\">Get-ChildItem</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
+    /// <summary>PowerShell block comment <c>&lt;# ... #&gt;</c> classifies as <c>cm</c>; the line comment <c>#</c> classifies as <c>c1</c>.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PowerShellClassifiesCommentStyles()
+    {
+        var html = PowerShellLexer.Instance.Render("<# block #>\n# line\n$x = 1\n"u8);
+        await Assert.That(html.Contains("<span class=\"cm\">&lt;# block #&gt;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"c1\"># line</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
     /// <summary>F# word operators <c>and</c>/<c>or</c>/<c>not</c> classify as operators (Pygments parity), not as identifiers.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

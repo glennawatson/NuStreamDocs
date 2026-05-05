@@ -142,11 +142,12 @@ public sealed class LexerRegistry
             ["diff"u8.ToArray()] = DiffLexer.Instance,
             ["patch"u8.ToArray()] = DiffLexer.Instance,
 
+            ["python"u8.ToArray()] = PythonLexer.Instance,
+            ["py"u8.ToArray()] = PythonLexer.Instance,
+
             // Placeholder pass-through lexers — registered, so authors
             // get the language-X CSS hook and escaped text today; each
             // can be promoted to a real lexer without touching consumers.
-            ["python"u8.ToArray()] = PassThroughLexer.Instance,
-            ["py"u8.ToArray()] = PassThroughLexer.Instance,
             ["toml"u8.ToArray()] = PassThroughLexer.Instance,
             ["c"u8.ToArray()] = PassThroughLexer.Instance,
             ["cpp"u8.ToArray()] = PassThroughLexer.Instance,
@@ -178,9 +179,11 @@ public sealed class LexerRegistry
             ["conf"u8.ToArray()] = PassThroughLexer.Instance,
             ["makefile"u8.ToArray()] = PassThroughLexer.Instance,
             ["make"u8.ToArray()] = PassThroughLexer.Instance,
-            ["powershell"u8.ToArray()] = PassThroughLexer.Instance,
-            ["ps1"u8.ToArray()] = PassThroughLexer.Instance,
-            ["pwsh"u8.ToArray()] = PassThroughLexer.Instance,
+            ["powershell"u8.ToArray()] = PowerShellLexer.Instance,
+            ["ps1"u8.ToArray()] = PowerShellLexer.Instance,
+            ["psm1"u8.ToArray()] = PowerShellLexer.Instance,
+            ["pwsh"u8.ToArray()] = PowerShellLexer.Instance,
+            ["posh"u8.ToArray()] = PowerShellLexer.Instance,
             ["nix"u8.ToArray()] = PassThroughLexer.Instance,
             ["text"u8.ToArray()] = PassThroughLexer.Instance,
             ["plain"u8.ToArray()] = PassThroughLexer.Instance,
