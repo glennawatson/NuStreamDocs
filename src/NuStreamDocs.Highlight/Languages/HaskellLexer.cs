@@ -16,16 +16,8 @@ public static class HaskellLexer
 {
     /// <summary>General-keyword set.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "then"u8],
-        [.. "else"u8],
-        [.. "case"u8],
-        [.. "of"u8],
+        [.. MlFamilyShared.CommonKeywords,
         [.. "do"u8],
-        [.. "where"u8],
-        [.. "let"u8],
-        [.. "in"u8],
-        [.. "as"u8],
         [.. "qualified"u8],
         [.. "hiding"u8],
         [.. "infix"u8],
@@ -33,7 +25,7 @@ public static class HaskellLexer
         [.. "infixr"u8],
         [.. "deriving"u8],
         [.. "default"u8],
-        [.. "foreign"u8]);
+        [.. "foreign"u8]]);
 
     /// <summary>Built-in nominal type keywords (Prelude).</summary>
     private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(

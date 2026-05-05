@@ -16,16 +16,8 @@ public static class ElmLexer
 {
     /// <summary>General-keyword set.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "then"u8],
-        [.. "else"u8],
-        [.. "case"u8],
-        [.. "of"u8],
-        [.. "let"u8],
-        [.. "in"u8],
-        [.. "as"u8],
-        [.. "exposing"u8],
-        [.. "where"u8]);
+        [.. MlFamilyShared.CommonKeywords,
+        [.. "exposing"u8]]);
 
     /// <summary>Built-in nominal type keywords.</summary>
     private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(

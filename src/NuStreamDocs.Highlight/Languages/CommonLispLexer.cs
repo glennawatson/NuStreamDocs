@@ -31,21 +31,12 @@ public static class CommonLispLexer
         [.. "in-package"u8],
         [.. "lambda"u8]);
 
-    /// <summary>Control-flow / binding forms.</summary>
+    /// <summary>Control-flow / binding forms — shared Lisp-family core plus Common Lisp specifics.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "when"u8],
-        [.. "unless"u8],
-        [.. "cond"u8],
-        [.. "case"u8],
-        [.. "and"u8],
-        [.. "or"u8],
-        [.. "not"u8],
-        [.. "do"u8],
+        [.. LispFamilyShared.CommonKeywords,
         [.. "do*"u8],
         [.. "dolist"u8],
         [.. "dotimes"u8],
-        [.. "let"u8],
         [.. "let*"u8],
         [.. "flet"u8],
         [.. "labels"u8],
@@ -62,8 +53,7 @@ public static class CommonLispLexer
         [.. "prog1"u8],
         [.. "prog2"u8],
         [.. "setf"u8],
-        [.. "setq"u8],
-        [.. "quote"u8]);
+        [.. "setq"u8]]);
 
     /// <summary>Constants — <c>nil</c> and <c>t</c> are the canonical Common Lisp booleans.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
