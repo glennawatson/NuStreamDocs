@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -134,10 +135,7 @@ public static class JuliaLexer
         [.. "?"u8]
     ];
 
-    /// <summary>First-byte set for whitespace.</summary>
-    private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
-
-    /// <summary>First-byte set for the <c>#</c> comment dispatch (line and <c>#=</c> block).</summary>
+    /// <summary>First-byte set for the <c>#</c> comment dispatch.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
 
     /// <summary>First-byte set for general keywords.</summary>
@@ -159,37 +157,26 @@ public static class JuliaLexer
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);
 
     /// <summary>Gets the singleton Julia lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Julia lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
-        [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-
-            // #= ... =# block comment dispatch must precede the # line-comment rule.
-            new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            // # line comment.
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordTypes), TokenClass.KeywordType, LexerRule.NoStateChange) { FirstBytes = KeywordTypeFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+        PreCommentRule = new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        IncludeDoubleQuotedString = true,
+        IncludeSingleQuotedString = true,
+        IncludeFloatLiteral = true,
+        IncludeIntegerLiteral = true,
+        KeywordConstants = KeywordConstants,
+        KeywordConstantFirst = KeywordConstantFirst,
+        KeywordTypes = KeywordTypes,
+        KeywordTypeFirst = KeywordTypeFirst,
+        KeywordDeclarations = KeywordDeclarations,
+        KeywordDeclarationFirst = KeywordDeclarationFirst,
+        Keywords = Keywords,
+        KeywordFirst = KeywordFirst,
+        Operators = OperatorTable,
+        OperatorFirst = OperatorFirst,
+        Punctuation = PunctuationSet
+    });
 
     /// <summary>Matches a Julia <c>#=</c> ... <c>=#</c> block comment.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

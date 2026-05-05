@@ -153,6 +153,6 @@ public static class ZigLexer
             SpecialString = null
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

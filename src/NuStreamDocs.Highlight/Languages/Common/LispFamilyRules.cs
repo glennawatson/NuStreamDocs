@@ -55,6 +55,12 @@ internal static class LispFamilyRules
     /// <summary>Bracket / brace / paren punctuation for Clojure-flavored dialects.</summary>
     private static readonly SearchValues<byte> ClojurePunctuation = SearchValues.Create("()[]{}"u8);
 
+    /// <summary>Builds a single-state Lisp-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
+    /// <param name="config">Per-language configuration.</param>
+    /// <returns>Built lexer.</returns>
+    public static Lexer CreateLexer(in LispFamilyConfig config) =>
+        new(LanguageRuleBuilder.BuildSingleState(Build(config)));
+
     /// <summary>Builds the Lisp-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>

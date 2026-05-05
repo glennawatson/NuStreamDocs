@@ -147,7 +147,7 @@ public static class RustLexer
             SpecialString = specialString
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 
     /// <summary>Matches Rust's raw-string and byte-string forms — <c>r"..."</c>, <c>r#"..."#</c>, <c>b"..."</c>, <c>br"..."</c>.</summary>

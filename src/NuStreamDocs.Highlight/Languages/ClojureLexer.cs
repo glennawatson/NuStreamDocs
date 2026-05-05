@@ -90,6 +90,6 @@ public static class ClojureLexer
             IncludeColonKeyword = true
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(LispFamilyRules.Build(config)));
+        return LispFamilyRules.CreateLexer(config);
     }
 }

@@ -131,6 +131,6 @@ public static class HclLexer
             Punctuation = PunctuationSet
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(SchemaFamilyRules.Build(config)));
+        return SchemaFamilyRules.CreateLexer(config);
     }
 }

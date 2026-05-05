@@ -145,6 +145,6 @@ public static class DartLexer
             SpecialString = tripleQuoted
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

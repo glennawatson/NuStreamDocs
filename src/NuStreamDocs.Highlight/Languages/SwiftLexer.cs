@@ -176,6 +176,6 @@ public static class SwiftLexer
             SpecialString = multiLineString
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

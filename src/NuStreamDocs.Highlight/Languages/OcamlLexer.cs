@@ -152,6 +152,6 @@ public static class OcamlLexer
             OperatorFirst = OperatorFirst
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(MlFamilyRules.Build(config)));
+        return MlFamilyRules.CreateLexer(config);
     }
 }

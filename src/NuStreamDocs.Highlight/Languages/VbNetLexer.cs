@@ -209,6 +209,6 @@ public static class VbNetLexer
             SpecialString = lineComment
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

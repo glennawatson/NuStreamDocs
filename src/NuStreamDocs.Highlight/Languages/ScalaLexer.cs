@@ -142,6 +142,6 @@ public static class ScalaLexer
             SpecialString = rawString
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

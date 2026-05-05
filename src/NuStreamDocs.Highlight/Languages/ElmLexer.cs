@@ -125,6 +125,6 @@ public static class ElmLexer
             OperatorFirst = OperatorFirst
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(MlFamilyRules.Build(config)));
+        return MlFamilyRules.CreateLexer(config);
     }
 }

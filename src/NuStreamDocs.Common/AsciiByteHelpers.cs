@@ -142,7 +142,13 @@ public static class AsciiByteHelpers
 
         for (var i = 0; i < lowerCase.Length; i++)
         {
-            if ((source[offset + i] | AsciiCaseBit) != lowerCase[i])
+            var b = source[offset + i];
+            if (b is >= (byte)'A' and <= (byte)'Z')
+            {
+                b |= AsciiCaseBit;
+            }
+
+            if (b != lowerCase[i])
             {
                 return false;
             }
@@ -155,6 +161,13 @@ public static class AsciiByteHelpers
     /// <param name="a">Span to test.</param>
     /// <param name="b">Lowercase ASCII span to compare against.</param>
     /// <returns>True when equal ignoring ASCII case.</returns>
+    /// <remarks>
+    /// Folds <c>A</c>-<c>Z</c> on <paramref name="a"/> only (callers supply <paramref name="b"/>
+    /// already-lowercased); other bytes (including <c>_</c>, <c>-</c>, digits) compare ordinally.
+    /// A blanket bit-5 OR would corrupt non-letter bytes whose bit-5 differs (e.g. <c>_</c> = 0x5F →
+    /// 0x7F), which would silently miss case-insensitive lookups for keywords like
+    /// <c>cmake_minimum_required</c> or <c>auto_increment</c>.
+    /// </remarks>
     public static bool EqualsIgnoreAsciiCase(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
     {
         if (a.Length != b.Length)
@@ -164,7 +177,13 @@ public static class AsciiByteHelpers
 
         for (var i = 0; i < a.Length; i++)
         {
-            if ((a[i] | AsciiCaseBit) != b[i])
+            var ai = a[i];
+            if (ai is >= (byte)'A' and <= (byte)'Z')
+            {
+                ai |= AsciiCaseBit;
+            }
+
+            if (ai != b[i])
             {
                 return false;
             }

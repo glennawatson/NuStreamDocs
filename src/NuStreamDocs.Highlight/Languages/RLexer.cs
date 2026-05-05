@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -84,9 +85,6 @@ public static class RLexer
     private static readonly SearchValues<byte> IdentifierContinue = SearchValues.Create(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."u8);
 
-    /// <summary>First-byte set for whitespace.</summary>
-    private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
-
     /// <summary>First-byte set for general keywords.</summary>
     private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("befilnrwsi"u8);
 
@@ -103,31 +101,22 @@ public static class RLexer
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,$@"u8);
 
     /// <summary>Gets the singleton R lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the R lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
-        [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("#"u8) },
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-            new(
-                static slice => TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, IdentifierContinue),
-                TokenClass.Name,
-                LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("#"u8) },
+        IncludeDoubleQuotedString = true,
+        IncludeSingleQuotedString = true,
+        IncludeFloatLiteral = true,
+        IncludeIntegerLiteral = true,
+        KeywordConstants = KeywordConstants,
+        KeywordConstantFirst = KeywordConstantFirst,
+        KeywordDeclarations = KeywordDeclarations,
+        KeywordDeclarationFirst = KeywordDeclarationFirst,
+        Keywords = Keywords,
+        KeywordFirst = KeywordFirst,
+        IdentifierContinue = IdentifierContinue,
+        Operators = OperatorTable,
+        OperatorFirst = OperatorFirst,
+        Punctuation = PunctuationSet
+    });
 }

@@ -98,6 +98,6 @@ public static class CommonLispLexer
             IncludeColonKeyword = true
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(LispFamilyRules.Build(config)));
+        return LispFamilyRules.CreateLexer(config);
     }
 }

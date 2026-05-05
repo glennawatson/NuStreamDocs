@@ -40,6 +40,6 @@ public static class IniLexer
             KeywordConstantFirst = null
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(IniFamilyRules.Build(config)));
+        return IniFamilyRules.CreateLexer(config);
     }
 }

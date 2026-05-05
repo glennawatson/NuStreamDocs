@@ -28,6 +28,6 @@ public static class LessLexer
             IncludeParentSelector = true
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CssFamilyRules.Build(config)));
+        return CssFamilyRules.CreateLexer(config);
     }
 }

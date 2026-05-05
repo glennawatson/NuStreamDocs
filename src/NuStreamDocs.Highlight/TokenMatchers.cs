@@ -496,6 +496,23 @@ public static class TokenMatchers
     public static int MatchDoubleQuotedDoubledEscape(ReadOnlySpan<byte> slice) =>
         MatchQuotedDoubledEscape(slice, (byte)'"');
 
+    /// <summary>Matches a prefix byte followed by a bracketed block — <c>{prefix}{open}…{close}</c>.</summary>
+    /// <param name="slice">Slice anchored at the cursor.</param>
+    /// <param name="prefix">Required prefix byte (e.g. <c>'$'</c>).</param>
+    /// <param name="open">Required opening byte (e.g. <c>'('</c>, <c>'{'</c>, <c>'&lt;'</c>).</param>
+    /// <param name="close">Required closing byte; the body excludes this byte.</param>
+    /// <returns>Length matched (including the prefix and both delimiters), or zero on miss / unterminated input.</returns>
+    public static int MatchPrefixedBracketedBlock(ReadOnlySpan<byte> slice, byte prefix, byte open, byte close)
+    {
+        if (slice is [] || slice[0] != prefix)
+        {
+            return 0;
+        }
+
+        var inner = MatchBracketedBlock(slice[1..], open, close);
+        return inner is 0 ? 0 : 1 + inner;
+    }
+
     /// <summary>Matches a paired block comment with two-byte open and close delimiters (no nesting).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="open">Two-byte opener (e.g. <c>"#="u8</c> for Julia, <c>"%{"u8</c> for MATLAB, <c>"#["u8</c> for Nim).</param>

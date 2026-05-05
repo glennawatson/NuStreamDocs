@@ -83,6 +83,6 @@ public static class SchemeLexer
             IncludeColonKeyword = true
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(LispFamilyRules.Build(config)));
+        return LispFamilyRules.CreateLexer(config);
     }
 }

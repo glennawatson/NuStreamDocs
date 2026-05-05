@@ -131,6 +131,6 @@ public static class VLexer
             SpecialString = null
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

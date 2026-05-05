@@ -141,6 +141,6 @@ public static class HaskellLexer
             OperatorFirst = OperatorFirst
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(MlFamilyRules.Build(config)));
+        return MlFamilyRules.CreateLexer(config);
     }
 }

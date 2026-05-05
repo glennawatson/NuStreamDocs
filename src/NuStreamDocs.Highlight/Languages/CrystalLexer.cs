@@ -161,6 +161,6 @@ public static class CrystalLexer
             SpecialString = hashComment
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

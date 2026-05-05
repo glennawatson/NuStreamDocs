@@ -30,6 +30,12 @@ internal static class MlFamilyRules
     /// <summary>Length of the two-byte block-comment opener / closer.</summary>
     private const int BlockDelimiterLength = 2;
 
+    /// <summary>Builds a single-state ML-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
+    /// <param name="config">Per-language configuration.</param>
+    /// <returns>Built lexer.</returns>
+    public static Lexer CreateLexer(in MlFamilyConfig config) =>
+        new(LanguageRuleBuilder.BuildSingleState(Build(config)));
+
     /// <summary>Builds the ML-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>

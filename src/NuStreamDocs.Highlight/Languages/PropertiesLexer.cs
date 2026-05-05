@@ -39,6 +39,6 @@ public static class PropertiesLexer
             KeywordConstantFirst = null
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(IniFamilyRules.Build(config)));
+        return IniFamilyRules.CreateLexer(config);
     }
 }

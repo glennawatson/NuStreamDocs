@@ -32,6 +32,12 @@ internal static class CFamilyRules
     /// <summary>First-byte set for whitespace runs that include line terminators.</summary>
     public static readonly SearchValues<byte> WhitespaceWithNewlinesFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
 
+    /// <summary>Builds a single-state C-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
+    /// <param name="config">Per-language configuration.</param>
+    /// <returns>Built lexer.</returns>
+    public static Lexer CreateLexer(in CFamilyConfig config) =>
+        new(LanguageRuleBuilder.BuildSingleState(Build(config)));
+
     /// <summary>Builds the canonical C-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>

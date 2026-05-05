@@ -70,6 +70,12 @@ internal static class CssFamilyRules
     /// <summary>Length of the literal text <c>important</c>.</summary>
     private const int ImportantWordLength = 9;
 
+    /// <summary>Builds a single-state CSS-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
+    /// <param name="config">Per-language configuration.</param>
+    /// <returns>Built lexer.</returns>
+    public static Lexer CreateLexer(in CssFamilyConfig config) =>
+        new(LanguageRuleBuilder.BuildSingleState(Build(config)));
+
     /// <summary>Builds the CSS-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>

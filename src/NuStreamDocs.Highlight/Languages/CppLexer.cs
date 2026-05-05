@@ -174,7 +174,7 @@ public static class CppLexer
             SpecialString = rawString
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 
     /// <summary>Matches a C++ raw-string literal — <c>R"delim(...)delim"</c> with an optional <c>L</c>/<c>u8</c>/<c>u</c>/<c>U</c> encoding prefix.</summary>

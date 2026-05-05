@@ -31,6 +31,12 @@ internal static class IniFamilyRules
     public static readonly SearchValues<byte> KeyContinue = SearchValues.Create(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-"u8);
 
+    /// <summary>Builds a single-state INI-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
+    /// <param name="config">Per-language configuration.</param>
+    /// <returns>Built lexer.</returns>
+    public static Lexer CreateLexer(in IniFamilyConfig config) =>
+        new(LanguageRuleBuilder.BuildSingleState(Build(config)));
+
     /// <summary>Builds the canonical INI-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>

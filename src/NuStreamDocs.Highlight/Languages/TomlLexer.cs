@@ -48,6 +48,6 @@ public static class TomlLexer
             KeywordConstantFirst = KeywordConstantFirst
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(IniFamilyRules.Build(config)));
+        return IniFamilyRules.CreateLexer(config);
     }
 }

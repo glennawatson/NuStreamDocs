@@ -96,6 +96,6 @@ public static class GraphQLLexer
             Punctuation = PunctuationSet
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(SchemaFamilyRules.Build(config)));
+        return SchemaFamilyRules.CreateLexer(config);
     }
 }

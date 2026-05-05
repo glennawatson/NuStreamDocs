@@ -105,6 +105,6 @@ public static class ProtobufLexer
             Punctuation = PunctuationSet
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(SchemaFamilyRules.Build(config)));
+        return SchemaFamilyRules.CreateLexer(config);
     }
 }

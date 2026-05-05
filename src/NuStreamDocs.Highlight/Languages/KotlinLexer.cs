@@ -176,6 +176,6 @@ public static class KotlinLexer
             SpecialString = rawString
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

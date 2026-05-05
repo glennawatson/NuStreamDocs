@@ -123,6 +123,6 @@ public static class JavaLexer
             SpecialString = textBlock
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }

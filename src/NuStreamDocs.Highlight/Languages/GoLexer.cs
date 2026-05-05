@@ -135,6 +135,6 @@ public static class GoLexer
             SpecialString = backtickRaw
         };
 
-        return new(LanguageRuleBuilder.BuildSingleState(CFamilyRules.Build(config)));
+        return CFamilyRules.CreateLexer(config);
     }
 }
