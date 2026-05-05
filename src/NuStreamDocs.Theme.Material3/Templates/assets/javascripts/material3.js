@@ -389,3 +389,41 @@
     });
   });
 })();
+
+/* Clipboard button — wires the <button class="md-clipboard"> emitted by
+   HighlightPlugin to copy the surrounding <pre><code> body via the
+   navigator.clipboard API. Adds a transient .md-clipboard--copied class so
+   the CSS can flash a "Copied" pill, then removes it after a short delay. */
+(function () {
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest(".md-clipboard");
+    if (!button) return;
+
+    var code = button.parentElement && button.parentElement.querySelector("pre > code");
+    if (!code) return;
+
+    var text = code.innerText;
+    if (!navigator.clipboard) {
+      // Older browser without async clipboard support — fall back to legacy execCommand.
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      try { document.execCommand("copy"); } catch (e) { /* swallow */ }
+      document.body.removeChild(area);
+      flashCopied(button);
+      return;
+    }
+
+    navigator.clipboard.writeText(text).then(function () { flashCopied(button); });
+  });
+
+  function flashCopied(button) {
+    button.classList.add("md-clipboard--copied");
+    window.setTimeout(function () {
+      button.classList.remove("md-clipboard--copied");
+    }, 1500);
+  }
+})();

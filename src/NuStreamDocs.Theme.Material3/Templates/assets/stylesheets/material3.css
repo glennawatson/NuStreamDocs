@@ -948,3 +948,73 @@ a:hover { text-decoration: underline; }
     margin-right: 0;
   }
 }
+
+/* ----- Code-block clipboard button: hover-fade copy affordance. ----- */
+/* The HighlightPlugin emits <button class="md-clipboard md-icon"> inside the
+   .highlight wrapper when HighlightOptions.CopyButton is on; this block
+   positions it, fades it on hover, paints the SVG via mask so it tracks
+   currentColor, and shows a transient "Copied" hint after a successful copy. */
+.highlight {
+  position: relative;
+}
+
+.md-clipboard {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  width: 1.5em;
+  height: 1.5em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.25s, color 0.25s;
+  color: var(--md-sys-color-on-surface-variant);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.md-clipboard::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: currentColor;
+  -webkit-mask: var(--md-clipboard-icon) center / contain no-repeat;
+          mask: var(--md-clipboard-icon) center / contain no-repeat;
+}
+
+.highlight:hover .md-clipboard,
+.md-clipboard:focus-visible {
+  opacity: 0.7;
+}
+
+.md-clipboard:hover,
+.md-clipboard:focus-visible {
+  color: var(--md-sys-color-primary);
+  opacity: 1;
+}
+
+.md-clipboard--copied {
+  color: var(--md-sys-color-primary);
+  opacity: 1;
+}
+
+.md-clipboard--copied::after {
+  content: "Copied";
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.5em);
+  transform: translateY(-50%);
+  padding: 0.15em 0.5em;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-radius: var(--md-shape-corner-small, 4px);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+:root {
+  --md-clipboard-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z"/></svg>');
+}

@@ -77,6 +77,24 @@ public class HighlightPluginTests
         await Assert.That(Encoding.UTF8.GetString(output)).Contains("<button class=\"md-clipboard");
     }
 
+    /// <summary>Auto-detected blocks emit the copy button too — both options on, button must accompany the rewritten <c>language-…</c> form.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task CopyButtonEmitsForAutoDetectedBlocks()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with
+        {
+            AutoDetectLanguage = true,
+            CopyButton = true,
+        });
+
+        const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        var rendered = Encoding.UTF8.GetString(output);
+        await Assert.That(rendered).Contains("class=\"language-csharp\"");
+        await Assert.That(rendered).Contains("<button class=\"md-clipboard");
+    }
+
     /// <summary>UseHighlight() registers.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -181,6 +199,113 @@ public class HighlightPluginTests
         const string Html = "<pre><code>Install-Package ReactiveUI.WPF\nGet-Item .\\foo\nWrite-Host hello</code></pre>";
         var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
         await Assert.That(Encoding.UTF8.GetString(output)).Contains("class=\"language-powershell\"");
+    }
+
+    /// <summary>
+    /// The rxui-style allow-list (csharp / xml / bash / powershell / fsharp / json) labels an indented C# class body —
+    /// the shape used by <c>docs/getting-started/compelling-example.md</c>.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task RxuiCompellingExampleCSharpClassBlockIsDetected()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with
+        {
+            AutoDetectLanguage = true,
+            DetectionLanguages =
+            [
+                [.. "csharp"u8],
+                [.. "xml"u8],
+                [.. "bash"u8],
+                [.. "powershell"u8],
+                [.. "fsharp"u8],
+                [.. "json"u8],
+            ],
+        });
+
+        // Body extracted verbatim from the rendered compelling-example/index.html (HTML-escaped, as the renderer emits).
+        const string Html = """
+            <pre><code>// AppViewModel is where we will describe the interaction of our application.
+            // We can describe the entire application in one class since it&#39;s very small now.
+            // Most ViewModels will derive off ReactiveObject, while most Model classes will
+            // most derive off INotifyPropertyChanged
+            public class AppViewModel : ReactiveObject
+            {
+                // In ReactiveUI, this is the syntax to declare a read-write property
+                // that will notify Observers, as well as WPF, that a property has
+                // changed. If we declared this as a normal property, we couldn&#39;t tell
+                // when it has changed!
+                private string _searchTerm;
+                public string SearchTerm
+                {
+                    get =&gt; _searchTerm;
+                    set =&gt; this.RaiseAndSetIfChanged(ref _searchTerm, value);
+                }
+            }</code></pre>
+            """;
+
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        var rendered = Encoding.UTF8.GetString(output);
+        await Assert.That(rendered).Contains("class=\"language-csharp\"");
+    }
+
+    /// <summary>The rxui allow-list labels a PowerShell <c>Install-Package</c> snippet — the shape used at the top of compelling-example.md.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task RxuiCompellingExamplePowerShellInstallPackageIsDetected()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with
+        {
+            AutoDetectLanguage = true,
+            DetectionLanguages =
+            [
+                [.. "csharp"u8],
+                [.. "xml"u8],
+                [.. "bash"u8],
+                [.. "powershell"u8],
+                [.. "fsharp"u8],
+                [.. "json"u8],
+            ],
+        });
+
+        // Two separate Install-Package blocks, the way the page emits them.
+        const string Html = "<pre><code>Install-Package ReactiveUI.WPF\nInstall-Package NuGet.Protocol</code></pre>";
+
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("class=\"language-powershell\"");
+    }
+
+    /// <summary>The rxui allow-list labels an indented XAML <c>&lt;reactiveui:ReactiveWindow&gt;</c> block as XML — the shape used in the View sections of compelling-example.md.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task RxuiCompellingExampleXamlBlockIsDetectedAsXml()
+    {
+        HighlightPlugin plugin = new(HighlightOptions.Default with
+        {
+            AutoDetectLanguage = true,
+            DetectionLanguages =
+            [
+                [.. "csharp"u8],
+                [.. "xml"u8],
+                [.. "bash"u8],
+                [.. "powershell"u8],
+                [.. "fsharp"u8],
+                [.. "json"u8],
+            ],
+        });
+
+        const string Html = """
+            <pre><code>&lt;reactiveui:ReactiveWindow
+                x:Class=&quot;ReactiveDemo.MainWindow&quot;
+                xmlns=&quot;http://schemas.microsoft.com/winfx/2006/xaml/presentation&quot;
+                xmlns:x=&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;
+                xmlns:reactiveui=&quot;http://reactiveui.net&quot;
+                Title=&quot;ReactiveDemo&quot;&gt;
+            &lt;/reactiveui:ReactiveWindow&gt;</code></pre>
+            """;
+
+        var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("class=\"language-xml\"");
     }
 
     /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>

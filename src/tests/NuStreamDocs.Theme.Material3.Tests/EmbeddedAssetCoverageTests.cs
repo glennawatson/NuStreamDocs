@@ -25,4 +25,32 @@ public class EmbeddedAssetCoverageTests
         var bytes = EmbeddedAsset.ReadBytes("assets/stylesheets/material3.css");
         await Assert.That(bytes.Length).IsGreaterThan(0);
     }
+
+    /// <summary>
+    /// The bundled stylesheet ships <c>.md-clipboard</c> rules with a hover-fade transition;
+    /// without these the copy button emitted by <c>HighlightPlugin</c> would be invisible.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BundledStylesheetIncludesClipboardRules()
+    {
+        var css = System.Text.Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes("assets/stylesheets/material3.css"));
+        await Assert.That(css).Contains(".md-clipboard");
+        await Assert.That(css).Contains("--md-clipboard-icon");
+        await Assert.That(css).Contains(".md-clipboard--copied");
+    }
+
+    /// <summary>
+    /// The bundled JS ships a click handler that wires the <c>.md-clipboard</c> button to the
+    /// <c>navigator.clipboard.writeText</c> API; without it the button is decorative only.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BundledJavascriptIncludesClipboardHandler()
+    {
+        var js = System.Text.Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes("assets/javascripts/material3.js"));
+        await Assert.That(js).Contains(".md-clipboard");
+        await Assert.That(js).Contains("navigator.clipboard");
+        await Assert.That(js).Contains("md-clipboard--copied");
+    }
 }

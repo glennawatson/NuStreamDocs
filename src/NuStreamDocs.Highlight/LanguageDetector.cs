@@ -51,7 +51,7 @@ internal static class LanguageDetector
         new(
             [.. "powershell"u8],
             [
-                new([.. "Install-Package"u8], 2),
+                new([.. "Install-Package"u8], 3),
                 new([.. "Get-"u8], 2),
                 new([.. "Set-"u8], 1),
                 new([.. "Write-Host"u8], 2),
