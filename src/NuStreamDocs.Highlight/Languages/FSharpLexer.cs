@@ -6,10 +6,9 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>F# lexer.</summary>
 /// <remarks>
-/// Pragmatic byte-shaped port of Pygments' <c>FSharpLexer</c>; rules
-/// live in <see cref="FSharpRules"/> so embedded-language scenarios
-/// (literate F# scripts, future Razor-with-F# components) can reuse
-/// the same classification.
+/// Byte-level F# lexer; rules live in <see cref="FSharpRules"/> so
+/// embedded-language scenarios (literate F# scripts, future
+/// Razor-with-F# components) can reuse the same classification.
 /// </remarks>
 public static class FSharpLexer
 {

@@ -8,11 +8,9 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>F# rule list factory.</summary>
 /// <remarks>
-/// Pragmatic single-state port of Pygments'
-/// <c>FSharpLexer</c> (<c>pygments/lexers/dotnet.py</c>). The Pygments
-/// shape is multi-state — separate states for triple-quoted strings,
-/// block comments (with nesting), and dotted-path lookups. We collapse
-/// to one state by:
+/// Pragmatic single-state F# lexer. A faithful F# grammar is multi-state
+/// — separate states for triple-quoted strings, block comments (with
+/// nesting), and dotted-path lookups. We collapse to one state by:
 /// <list type="bullet">
 /// <item><description>Triple-quoted <c>"""..."""</c> consumed as a single token via a
 ///   dedicated bytewise matcher (newlines included).</description></item>
@@ -40,7 +38,7 @@ internal static class FSharpRules
     /// <summary>Length of the <c>(*</c> block-comment opener.</summary>
     private const int BlockCommentDelimiterLength = 2;
 
-    /// <summary>Control-flow / declaration keywords plus reserved words; pygments classifies the reserved set as keywords too.</summary>
+    /// <summary>Control-flow / declaration keywords plus reserved words.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
         [.. "abstract"u8],
         [.. "as"u8],

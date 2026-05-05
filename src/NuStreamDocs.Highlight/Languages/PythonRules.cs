@@ -8,18 +8,17 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>Python rule list factory.</summary>
 /// <remarks>
-/// Pragmatic single-state port of Pygments' <c>PythonLexer</c>. The
-/// Pygments grammar is multi-state — separate states for triple-quoted
-/// strings, f-string interpolation, and the dotted-path lookup after
-/// <c>from</c> / <c>import</c>. We collapse to one state by:
+/// Pragmatic single-state Python lexer. A faithful Python grammar is
+/// multi-state — separate states for triple-quoted strings, f-string
+/// interpolation, and the dotted-path lookup after <c>from</c> /
+/// <c>import</c>. We collapse to one state by:
 /// <list type="bullet">
 /// <item><description>Triple-quoted <c>"""..."""</c> / <c>'''...'''</c> consumed as a single
 ///   token via dedicated bytewise matchers (newlines included).</description></item>
 /// <item><description>String prefixes (<c>r</c>, <c>b</c>, <c>f</c>, <c>u</c>, and any
 ///   case / order combination) are matched as part of the literal —
-///   f-string <c>{expr}</c> bodies stay inside the string token, which is
-///   the same trade-off Pygments accepts when the inner expression
-///   can't be re-entered without a state stack.</description></item>
+///   f-string <c>{expr}</c> bodies stay inside the string token — the
+///   inner expression isn't re-entered without a state stack.</description></item>
 /// <item><description><c>@decorator</c> consumed as a single name token so themes can
 ///   render the whole sigil + dotted path with the decorator colour.</description></item>
 /// </list>
@@ -35,7 +34,7 @@ internal static class PythonRules
     /// <summary>Index of the third byte in a triple-quote run (used as a slice index, not a magic count).</summary>
     private const int TripleQuoteThirdByteIndex = 2;
 
-    /// <summary>Control-flow / declaration keywords from Pygments' <c>PythonLexer.tokens['keywords']</c>.</summary>
+    /// <summary>Control-flow / declaration keywords.</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
         [.. "assert"u8],
         [.. "async"u8],
@@ -82,7 +81,7 @@ internal static class PythonRules
         [.. "NotImplemented"u8],
         [.. "Ellipsis"u8]);
 
-    /// <summary>Built-in callables and types — trimmed Pygments <c>builtins</c> list covering the names that appear in the rxui corpus.</summary>
+    /// <summary>Built-in callables and types — trimmed to the names that appear in the rxui corpus.</summary>
     private static readonly ByteKeywordSet Builtins = ByteKeywordSet.Create(
         [.. "abs"u8],
         [.. "all"u8],

@@ -6,10 +6,10 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>YAML lexer.</summary>
 /// <remarks>
-/// Pragmatic subset of Pygments' <c>YamlLexer</c>; rules live in
+/// Pragmatic subset of the YAML grammar; rules live in
 /// <see cref="YamlRules"/> so future YAML-embedding lexers
 /// (Ansible playbooks, Helm chart templates, GitHub Actions workflows)
-/// classify the same tokens with the same Pygments-shape CSS classes.
+/// classify the same tokens with the same short-form CSS classes.
 /// </remarks>
 public static class YamlLexer
 {

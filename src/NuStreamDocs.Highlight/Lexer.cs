@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace NuStreamDocs.Highlight;
 
 /// <summary>
-/// A compiled Pygments-shape state-machine lexer that operates on UTF-8 byte spans.
+/// A compiled state-machine lexer that operates on UTF-8 byte spans.
 /// </summary>
 /// <remarks>
 /// A lexer is an array of <see cref="LexerRule"/> arrays indexed by integer state id;

@@ -38,7 +38,7 @@ public class HighlightPluginTests
         await Assert.That(Encoding.UTF8.GetString(output)).Contains("class=\"kt\"");
     }
 
-    /// <summary>Unknown-language bodies pass through verbatim (no token spans), but the wrapper still applies — matches Pygments / mkdocs-material output shape.</summary>
+    /// <summary>Unknown-language bodies pass through verbatim (no token spans), but the wrapper still applies — matches the standard mkdocs-material output shape.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnknownLanguageBodyUnchanged()

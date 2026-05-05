@@ -4,22 +4,22 @@
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>Pygments-compatible CSS class names for each <see cref="TokenClass"/>.</summary>
+/// <summary>Short-form CSS class names for each <see cref="TokenClass"/>.</summary>
 /// <remarks>
-/// The bytes returned from <see cref="Css"/> match Pygments' short-form
+/// The bytes returned from <see cref="Css"/> use the established short-form
 /// taxonomy: <c>k</c>, <c>kc</c>, <c>kt</c>, <c>kd</c>, <c>s</c>,
 /// <c>s1</c>, <c>s2</c>, <c>se</c>, <c>n</c>, <c>nf</c>, <c>nc</c>,
 /// <c>nb</c>, <c>na</c>, <c>o</c>, <c>p</c>, <c>mi</c>, <c>mf</c>,
 /// <c>mh</c>, <c>c1</c>, <c>cm</c>, <c>cs</c>, <c>cp</c>,
-/// <c>gi</c>, <c>gd</c>, <c>gh</c>, <c>gu</c>. Themes that style
-/// Pygments output target these classes verbatim.
+/// <c>gi</c>, <c>gd</c>, <c>gh</c>, <c>gu</c>. Standard mkdocs-material
+/// stylesheets target these classes verbatim.
 /// </remarks>
 public static class TokenClassNames
 {
     /// <summary>Per-classification UTF-8 class-name table indexed by <see cref="TokenClass"/>.</summary>
     /// <remarks>
     /// Direct array lookup keeps the per-token dispatch branch-free; the
-    /// table is built once at type init from the same Pygments-shape
+    /// table is built once at type init from the same short-form
     /// taxonomy that drives the rest of the assembly.
     /// </remarks>
     private static readonly byte[][] CssTable = BuildTable();

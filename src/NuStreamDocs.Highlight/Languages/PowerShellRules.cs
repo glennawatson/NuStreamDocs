@@ -8,16 +8,15 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>PowerShell rule list factory.</summary>
 /// <remarks>
-/// Pragmatic single-state port of Pygments' <c>PowerShellLexer</c>
-/// (<c>pygments/lexers/shell.py</c>). PowerShell is case-insensitive,
-/// so every keyword / operator / verb / alias set uses
-/// <see cref="ByteKeywordSet.CreateIgnoreCase"/>.
+/// Pragmatic single-state PowerShell lexer. PowerShell is
+/// case-insensitive, so every keyword / operator / verb / alias set
+/// uses <see cref="ByteKeywordSet.CreateIgnoreCase"/>.
 /// <para>
-/// Pygments tracks <c>$(...)</c> expression substitutions inside
-/// double-quoted strings via a state stack; we collapse to a
-/// single-state lexer and treat the entire double-quoted body as one
-/// string token. The trade-off is the same one Bash takes for
-/// <c>${var}</c> — the surface form still classifies, themes still
+/// A faithful PowerShell grammar tracks <c>$(...)</c> expression
+/// substitutions inside double-quoted strings via a state stack; we
+/// collapse to a single-state lexer and treat the entire double-quoted
+/// body as one string token. The trade-off is the same one Bash takes
+/// for <c>${var}</c> — the surface form still classifies, themes still
 /// colour the literal, and the byte cost stays flat.
 /// </para>
 /// </remarks>
@@ -35,7 +34,7 @@ internal static class PowerShellRules
     /// <summary>Length of the bracket pair (<c>[</c> + <c>]</c>) wrapping a PowerShell type reference.</summary>
     private const int BracketPairLength = 2;
 
-    /// <summary>Control-flow / declaration keywords from Pygments' PowerShell <c>keywords</c> list (lowercased for case-insensitive lookup).</summary>
+    /// <summary>Control-flow / declaration keywords (lowercased for case-insensitive lookup).</summary>
     private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateIgnoreCase(
         [.. "begin"u8],
         [.. "break"u8],
@@ -567,9 +566,10 @@ internal static class PowerShellRules
     /// <returns>Length matched (dash + identifier), or <c>0</c>.</returns>
     /// <remarks>
     /// Both shapes classify as <see cref="TokenClass.Operator"/> here so
-    /// the rule list stays single-token; Pygments emits <c>Name</c> for
-    /// the parameter form, but the visual difference is negligible
-    /// against the operator colour and the rule order shrinks by one.
+    /// the rule list stays single-token. The parameter form could emit
+    /// <see cref="TokenClass.Name"/>, but the visual difference is
+    /// negligible against the operator colour and the rule order shrinks
+    /// by one.
     /// </remarks>
     private static int MatchDashOperatorOrParameter(ReadOnlySpan<byte> slice)
     {

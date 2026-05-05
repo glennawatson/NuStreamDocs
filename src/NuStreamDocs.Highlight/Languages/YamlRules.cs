@@ -55,7 +55,7 @@ internal static class YamlRules
     private static readonly SearchValues<byte> TagBody = SearchValues.Create(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_/-"u8);
 
-    /// <summary>Set of YAML literal constants — case-insensitive comparer matches Pygments' <c>IgnoreCase</c>.</summary>
+    /// <summary>Set of YAML literal constants — case-insensitive lookup.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateIgnoreCase(
         [.. "true"u8],
         [.. "false"u8],
@@ -172,7 +172,7 @@ internal static class YamlRules
             return 0;
         }
 
-        // Pygments requires the colon to be followed by whitespace or end-of-input.
+        // The colon must be followed by whitespace or end-of-input — otherwise it's part of a value.
         var afterColon = colonAt + 1;
         return afterColon >= slice.Length || TokenMatchers.AsciiWhitespaceWithNewlines.Contains(slice[afterColon]) ? nameLen : 0;
     }
@@ -206,7 +206,7 @@ internal static class YamlRules
     /// <returns>Length matched.</returns>
     private static int MatchKeywordConstant(ReadOnlySpan<byte> slice) =>
 
-        // Pygments' set includes "~" as a single-byte null literal.
+        // YAML's spec includes "~" as a single-byte null literal.
         slice is [(byte)'~', ..] ? 1 : TokenMatchers.MatchKeyword(slice, KeywordConstants);
 
     /// <summary>List bullet at line start — optional indentation, then <c>-</c>, then a whitespace separator.</summary>

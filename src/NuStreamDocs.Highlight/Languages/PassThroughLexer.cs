@@ -9,8 +9,8 @@ namespace NuStreamDocs.Highlight.Languages;
 /// input as <see cref="TokenClass.Text"/>.
 /// </summary>
 /// <remarks>
-/// Used for languages we register against the Pygments-equivalent name
-/// set but haven't fully ported yet. Authors writing
+/// Used for languages we register a name for but haven't fully ported
+/// yet. Authors writing
 /// <c>```rust</c> blocks get a registered lexer, escaped output, and
 /// the same plumbing as a real lexer — only the per-language
 /// classification is missing. Replacing the placeholder with a real

@@ -9,10 +9,10 @@ namespace NuStreamDocs.Highlight.Tests;
 /// <summary>Behavior tests for the C# lexer + emitter.</summary>
 public class CSharpLexerTests
 {
-    /// <summary>A keyword followed by an identifier and string lights up with Pygments classes.</summary>
+    /// <summary>A keyword followed by an identifier and string lights up with the short-form CSS classes.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task EmitsPygmentsClassesForBasicTokens()
+    public async Task EmitsShortFormCssClassesForBasicTokens()
     {
         var html = CSharpLexer.Instance.Render("var name = \"hi\";"u8);
         await Assert.That(html.Contains("<span class=\"kd\">var</span>", StringComparison.Ordinal)).IsTrue();

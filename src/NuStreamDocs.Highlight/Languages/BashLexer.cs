@@ -6,10 +6,10 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>Bash / sh / zsh lexer.</summary>
 /// <remarks>
-/// Pragmatic subset of Pygments' <c>BashLexer</c>; rules live in
-/// <see cref="BashRules"/> so future shell-embedding lexers
-/// (Dockerfile, GitHub Actions <c>run:</c> blocks) classify the same
-/// tokens with the same Pygments-shape CSS classes.
+/// Pragmatic subset of the Bash grammar; rules live in
+/// <see cref="BashRules"/> so future shell-embedding lexers (Dockerfile,
+/// GitHub Actions <c>run:</c> blocks) classify the same tokens with the
+/// same short-form CSS classes.
 /// </remarks>
 public static class BashLexer
 {

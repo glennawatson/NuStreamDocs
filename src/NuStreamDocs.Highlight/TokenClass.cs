@@ -4,14 +4,13 @@
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>
-/// Pygments-compatible token classifications.
-/// </summary>
+/// <summary>Token classifications used by the highlighter.</summary>
 /// <remarks>
-/// The string forms exposed by <see cref="TokenClassNames.Css"/> match
-/// Pygments' short-form CSS class taxonomy exactly so existing
-/// mkdocs-material stylesheets — and any other Pygments theme — light
-/// up against our output without re-skinning.
+/// The string forms exposed by <see cref="TokenClassNames.Css"/> use the
+/// established short-form CSS class taxonomy (<c>k</c>, <c>kd</c>,
+/// <c>kt</c>, <c>s</c>, <c>n</c>, <c>c1</c>, …) so existing
+/// mkdocs-material stylesheets light up against our output without
+/// re-skinning.
 /// </remarks>
 public enum TokenClass
 {
@@ -87,15 +86,15 @@ public enum TokenClass
     /// <summary>Preprocessor directive.</summary>
     CommentPreproc,
 
-    /// <summary>Diff-format added line (<c>+ ...</c>); rendered as Pygments' <c>gi</c> CSS class.</summary>
+    /// <summary>Diff-format added line (<c>+ ...</c>); rendered as the<c>gi</c> CSS class.</summary>
     DiffAddedLine,
 
-    /// <summary>Diff-format removed line (<c>- ...</c>); rendered as Pygments' <c>gd</c> CSS class.</summary>
+    /// <summary>Diff-format removed line (<c>- ...</c>); rendered as the<c>gd</c> CSS class.</summary>
     DiffRemovedLine,
 
-    /// <summary>Diff-format file header (<c>--- a/file</c>, <c>+++ b/file</c>, <c>diff …</c>, <c>index …</c>); rendered as Pygments' <c>gh</c> CSS class.</summary>
+    /// <summary>Diff-format file header (<c>--- a/file</c>, <c>+++ b/file</c>, <c>diff …</c>, <c>index …</c>); rendered as the<c>gh</c> CSS class.</summary>
     DiffFileHeader,
 
-    /// <summary>Diff-format hunk header (<c>@@ … @@</c>); rendered as Pygments' <c>gu</c> CSS class.</summary>
+    /// <summary>Diff-format hunk header (<c>@@ … @@</c>); rendered as the<c>gu</c> CSS class.</summary>
     DiffHunkHeader
 }

@@ -153,6 +153,150 @@ internal static class LanguageDetector
                 new([.. "\n+++ "u8], 2),
                 new([.. "\n--- "u8], 2),
                 new([.. "\n@@ "u8], 2)
+            ]),
+        new(
+            [.. "rust"u8],
+            [
+                new([.. "fn "u8], 2),
+                new([.. "let mut "u8], 3),
+                new([.. "impl "u8], 2),
+                new([.. "::&lt;"u8], 2),
+                new([.. "&amp;str"u8], 2),
+                new([.. "Vec&lt;"u8], 2),
+                new([.. "Option&lt;"u8], 2),
+                new([.. "Result&lt;"u8], 2),
+                new([.. "println!"u8], 2),
+                new([.. "use std::"u8], 2),
+                new([.. "pub fn "u8], 2)
+            ]),
+        new(
+            [.. "go"u8],
+            [
+                new([.. "package "u8], 2),
+                new([.. "func "u8], 2),
+                new([.. ":= "u8], 2),
+                new([.. "interface{"u8], 2),
+                new([.. "fmt."u8], 2),
+                new([.. "import (\n"u8], 2),
+                new([.. "go func("u8], 3),
+                new([.. "chan "u8], 2)
+            ]),
+        new(
+            [.. "c"u8],
+            [
+                new([.. "#include &lt;"u8], 2),
+                new([.. "int main("u8], 2),
+                new([.. "printf("u8], 2),
+                new([.. "malloc("u8], 2),
+                new([.. "sizeof("u8], 1),
+                new([.. "-&gt;"u8], 1),
+                new([.. "void "u8], 1)
+            ]),
+        new(
+            [.. "cpp"u8],
+            [
+                new([.. "std::"u8], 3),
+                new([.. "template&lt;"u8], 3),
+                new([.. "#include &lt;iostream&gt;"u8], 3),
+                new([.. "namespace "u8], 2),
+                new([.. "nullptr"u8], 2),
+                new([.. "cout &lt;&lt;"u8], 2),
+                new([.. "::"u8], 1)
+            ]),
+        new(
+            [.. "java"u8],
+            [
+                new([.. "public class "u8], 3),
+                new([.. "import java."u8], 3),
+                new([.. "@Override"u8], 3),
+                new([.. "System.out.println"u8], 3),
+                new([.. "public static void main"u8], 3),
+                new([.. "extends "u8], 1),
+                new([.. "implements "u8], 2)
+            ]),
+        new(
+            [.. "kotlin"u8],
+            [
+                new([.. "fun "u8], 2),
+                new([.. "val "u8], 2),
+                new([.. "var "u8], 1),
+                new([.. "?: "u8], 2),
+                new([.. "companion object"u8], 3),
+                new([.. "data class"u8], 3),
+                new([.. "println("u8], 1)
+            ]),
+        new(
+            [.. "swift"u8],
+            [
+                new([.. "func "u8], 2),
+                new([.. "guard "u8], 3),
+                new([.. "let "u8], 1),
+                new([.. "var "u8], 1),
+                new([.. "@objc"u8], 3),
+                new([.. "@IBOutlet"u8], 3),
+                new([.. "import Foundation"u8], 3),
+                new([.. "import UIKit"u8], 3),
+                new([.. "import SwiftUI"u8], 3),
+                new([.. "?? "u8], 2)
+            ]),
+        new(
+            [.. "ruby"u8],
+            [
+                new([.. "def "u8], 2),
+                new([.. "\nend\n"u8], 2),
+                new([.. "do |"u8], 3),
+                new([.. "puts "u8], 2),
+                new([.. "@@"u8], 3),
+                new([.. "require &#39;"u8], 2),
+                new([.. "require &quot;"u8], 2),
+                new([.. "attr_accessor"u8], 3)
+            ]),
+        new(
+            [.. "php"u8],
+            [
+                new([.. "&lt;?php"u8], 4),
+                new([.. "?&gt;"u8], 1),
+                new([.. "$_"u8], 2),
+                new([.. "echo "u8], 1),
+                new([.. "-&gt;"u8], 1),
+                new([.. "namespace "u8], 1),
+                new([.. "function "u8], 1)
+            ]),
+        new(
+            [.. "sql"u8],
+            [
+                new([.. "SELECT "u8], 3),
+                new([.. "FROM "u8], 2),
+                new([.. "WHERE "u8], 2),
+                new([.. "JOIN "u8], 2),
+                new([.. "INSERT INTO"u8], 3),
+                new([.. "UPDATE "u8], 2),
+                new([.. "CREATE TABLE"u8], 3),
+                new([.. "GROUP BY"u8], 2)
+            ]),
+        new(
+            [.. "dockerfile"u8],
+            [
+                new([.. "FROM "u8], 3),
+                new([.. "RUN "u8], 2),
+                new([.. "CMD ["u8], 3),
+                new([.. "WORKDIR "u8], 3),
+                new([.. "COPY "u8], 2),
+                new([.. "ENTRYPOINT"u8], 3),
+                new([.. "EXPOSE "u8], 2)
+            ]),
+        new(
+            [.. "markdown"u8],
+            [
+                new([.. "\n# "u8], 2),
+                new([.. "\n## "u8], 2),
+                new([.. "\n### "u8], 2),
+                new([.. "\n```"u8], 2),
+                new([.. "](http"u8], 2),
+                new([.. "\n- ["u8], 2),
+                new([.. "\n- "u8], 1),
+                new([.. "\n* "u8], 1),
+                new([.. "\n&gt; "u8], 1)
             ])
     ];
 

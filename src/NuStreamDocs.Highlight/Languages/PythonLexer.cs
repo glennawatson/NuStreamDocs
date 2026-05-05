@@ -6,10 +6,10 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>Python lexer.</summary>
 /// <remarks>
-/// Pragmatic single-state subset of Pygments' <c>PythonLexer</c>; rules
-/// live in <see cref="PythonRules"/> so future Python-embedding lexers
+/// Pragmatic single-state Python lexer; rules live in
+/// <see cref="PythonRules"/> so future Python-embedding lexers
 /// (Jupyter cells, doctest blocks) classify the same tokens with the
-/// same Pygments-shape CSS classes.
+/// same short-form CSS classes.
 /// </remarks>
 public static class PythonLexer
 {

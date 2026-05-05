@@ -26,7 +26,7 @@ public class PluginThemeIntegrationTests
         Material3
     }
 
-    /// <summary>A fenced csharp code block emits Pygments-class token spans plus the highlight wrapper, on both themes.</summary>
+    /// <summary>A fenced csharp code block emits short-form CSS-class token spans plus the highlight wrapper, on both themes.</summary>
     /// <param name="theme">Theme variant under test.</param>
     /// <returns>Async test.</returns>
     [Test]
@@ -46,7 +46,7 @@ public class PluginThemeIntegrationTests
         await Assert.That(html).Contains("class=\"highlight\"");
         await Assert.That(html).Contains("language-csharp");
 
-        // Token spans emit Pygments-shape classes — k = keyword, kd = keyword-declaration, kt = keyword-type.
+        // Token spans emit short-form CSS classes — k = keyword, kd = keyword-declaration, kt = keyword-type.
         // The C# lexer classifies `public` / `class` as keyword-declaration (`kd`) rather than plain keyword.
         await Assert.That(html).Contains("<span class=\"k");
     }

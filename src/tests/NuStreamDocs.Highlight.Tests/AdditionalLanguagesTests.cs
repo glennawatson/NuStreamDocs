@@ -44,7 +44,7 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
     }
 
-    /// <summary>Diff classifies hunk headers, additions, and deletions to Pygments' Generic.* CSS classes (<c>gi</c> / <c>gd</c> / <c>gu</c>).</summary>
+    /// <summary>Diff classifies hunk headers, additions, and deletions to the Generic.* CSS classes (<c>gi</c> / <c>gd</c> / <c>gu</c>).</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task DiffClassifiesAddedRemovedAndHunkHeader()
@@ -98,7 +98,7 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"n\">WhenAnyValue</span>", StringComparison.Ordinal)).IsTrue();
     }
 
-    /// <summary>F# classifies <c>true</c>/<c>false</c>/<c>null</c> as constants and primitives in the Pygments F# whitelist (<c>bool</c>, <c>string</c>, <c>list</c>, …) as type keywords.</summary>
+    /// <summary>F# classifies <c>true</c>/<c>false</c>/<c>null</c> as constants and the F# primitive type names (<c>bool</c>, <c>string</c>, <c>list</c>, …) as type keywords.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task FSharpClassifiesConstantsAndPrimitives()
@@ -163,7 +163,7 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"c1\"># line</span>", StringComparison.Ordinal)).IsTrue();
     }
 
-    /// <summary>F# word operators <c>and</c>/<c>or</c>/<c>not</c> classify as operators (Pygments parity), not as identifiers.</summary>
+    /// <summary>F# word operators <c>and</c>/<c>or</c>/<c>not</c> classify as operators, not as identifiers.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task FSharpClassifiesWordOperators()

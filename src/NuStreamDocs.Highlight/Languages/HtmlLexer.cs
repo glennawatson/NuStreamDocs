@@ -12,9 +12,8 @@ namespace NuStreamDocs.Highlight.Languages;
 /// the surface; we reuse <see cref="XmlLexer.Instance"/>'s state map
 /// under a different language identifier so authors can keep writing
 /// <c>```html</c> blocks. Embedded <c>&lt;script&gt;</c> /
-/// <c>&lt;style&gt;</c> bodies fall through as plain text for now —
-/// that's the same trade-off Pygments accepts when the embedded
-/// language can't be inferred from the attributes.
+/// <c>&lt;style&gt;</c> bodies fall through as plain text for now when
+/// the embedded language can't be inferred from the attributes.
 /// </remarks>
 public static class HtmlLexer
 {

@@ -6,10 +6,9 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>C# lexer.</summary>
 /// <remarks>
-/// Modeled on Pygments' <c>CSharpLexer</c>; rules live in
-/// <see cref="CSharpRules"/> so embedded-language scenarios
+/// Rules live in <see cref="CSharpRules"/> so embedded-language scenarios
 /// (Razor's <c>@code</c> blocks, future Blazor components) classify
-/// the same tokens with the same Pygments-shape CSS classes.
+/// the same tokens with the same short-form CSS classes.
 /// <para>
 /// Three states: root, block-accessor, arrow-accessor. The two accessor
 /// states recognize <c>field</c> and <c>value</c> as keywords so the

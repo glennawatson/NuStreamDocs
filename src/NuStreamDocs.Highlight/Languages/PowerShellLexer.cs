@@ -6,8 +6,8 @@ namespace NuStreamDocs.Highlight.Languages;
 
 /// <summary>PowerShell lexer.</summary>
 /// <remarks>
-/// Pragmatic single-state subset of Pygments' <c>PowerShellLexer</c>;
-/// rules live in <see cref="PowerShellRules"/>. Case-insensitive across
+/// Pragmatic single-state PowerShell lexer; rules live in
+/// <see cref="PowerShellRules"/>. Case-insensitive across
 /// keywords, dash-operators, verbs, and aliases — matching how
 /// PowerShell itself tokenizes.
 /// </remarks>

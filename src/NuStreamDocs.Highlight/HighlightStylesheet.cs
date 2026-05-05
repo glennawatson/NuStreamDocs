@@ -6,12 +6,12 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>The Pygments-default stylesheet bytes that style the token-class spans <see cref="HighlightEmitter"/> emits.</summary>
+/// <summary>The default stylesheet bytes that style the token-class spans <see cref="HighlightEmitter"/> emits.</summary>
 /// <remarks>
-/// Mirrors the upstream <c>pymdownx.highlight</c> default colors so authors get a familiar look without
-/// the theme having to bundle Pygments. Both light and dark schemes are scoped under the
-/// <c>.highlight</c> wrapper and the dark scheme is gated on <c>[data-md-color-scheme="slate"]</c>
-/// so the active theme's color toggle picks the right palette automatically.
+/// Ships a familiar light + dark palette out of the box so themes don't have to bundle their own.
+/// Both schemes are scoped under the <c>.highlight</c> wrapper and the dark scheme is gated on
+/// <c>[data-md-color-scheme="slate"]</c> so the active theme's color toggle picks the right
+/// palette automatically.
 /// </remarks>
 public static class HighlightStylesheet
 {
@@ -26,7 +26,7 @@ public static class HighlightStylesheet
         """
         /*
          * NuStreamDocs.Highlight default stylesheet.
-         * Pygments-compatible token classes for the spans emitted by HighlightEmitter.
+         * Standard short-form token classes for the spans emitted by HighlightEmitter.
          * Light scheme is the default; the dark scheme overrides apply when the page
          * carries data-md-color-scheme="slate" (matches mkdocs-material's Slate theme).
          */

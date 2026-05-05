@@ -10,9 +10,8 @@ namespace NuStreamDocs.Highlight.Languages;
 /// <summary>Unified-diff lexer.</summary>
 /// <remarks>
 /// Each diff-line shape gets its own descriptive token class; the CSS
-/// short forms still match Pygments' taxonomy so existing themes
-/// (mkdocs-material, the default Pygments stylesheets, GitHub's diff
-/// styling) light up unchanged:
+/// short forms match the established taxonomy so existing themes
+/// (mkdocs-material, GitHub's diff styling) light up unchanged:
 /// <list type="bullet">
 /// <item>added (<c>+...</c>) → <see cref="TokenClass.DiffAddedLine"/> (<c>gi</c>)</item>
 /// <item>removed (<c>-...</c>) → <see cref="TokenClass.DiffRemovedLine"/> (<c>gd</c>)</item>

@@ -9,10 +9,10 @@ namespace NuStreamDocs.Highlight.Languages;
 /// <summary>JSON lexer.</summary>
 /// <remarks>
 /// Strings, numbers, the literal keywords <c>true</c> / <c>false</c> /
-/// <c>null</c>, and structural punctuation. Pygments classifies
-/// property keys (strings followed by <c>:</c>) under <c>Name.Tag</c>
-/// (CSS class <c>nt</c>); we fold those into <see cref="TokenClass.NameAttribute"/>
-/// (CSS class <c>na</c>) which existing themes also style.
+/// <c>null</c>, and structural punctuation. Property keys (strings
+/// followed by <c>:</c>) classify as <see cref="TokenClass.NameAttribute"/>
+/// (CSS class <c>na</c>) which existing themes style as a distinct colour
+/// from value strings.
 /// </remarks>
 public static class JsonLexer
 {
