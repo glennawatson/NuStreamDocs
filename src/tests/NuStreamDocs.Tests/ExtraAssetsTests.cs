@@ -49,8 +49,8 @@ public class ExtraAssetsTests
     {
         var plugin = new ExtraAssetsPlugin();
         plugin.AddCss(ExtraAssetSource.Inline("brand.css", [.. "body{}"u8]));
-        var context = new PluginConfigureContext("/in", "/out", []);
-        await plugin.OnConfigureAsync(context, CancellationToken.None);
+        var context = new BuildConfigureContext("/in", "/out", [], new());
+        await plugin.ConfigureAsync(context, CancellationToken.None);
 
         var assets = plugin.StaticAssets;
         await Assert.That(assets).HasSingleItem();
@@ -65,8 +65,8 @@ public class ExtraAssetsTests
         var plugin = new ExtraAssetsPlugin();
         plugin.AddCss(ExtraAssetSource.Inline("a.css", [.. "x"u8]));
         plugin.AddJs(ExtraAssetSource.External("https://cdn.example/x.js"));
-        var context = new PluginConfigureContext("/in", "/out", []);
-        await plugin.OnConfigureAsync(context, CancellationToken.None);
+        var context = new BuildConfigureContext("/in", "/out", [], new());
+        await plugin.ConfigureAsync(context, CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>();
         plugin.WriteHeadExtra(sink);
@@ -86,8 +86,8 @@ public class ExtraAssetsTests
     {
         var plugin = new ExtraAssetsPlugin();
         plugin.AddCss(ExtraAssetSource.External("https://cdn.example/x.css"));
-        var context = new PluginConfigureContext("/in", "/out", []);
-        await plugin.OnConfigureAsync(context, CancellationToken.None);
+        var context = new BuildConfigureContext("/in", "/out", [], new());
+        await plugin.ConfigureAsync(context, CancellationToken.None);
 
         await Assert.That(plugin.StaticAssets).IsEmpty();
     }
@@ -98,7 +98,7 @@ public class ExtraAssetsTests
     public async Task EmptyHeadFragmentIsNoOp()
     {
         var plugin = new ExtraAssetsPlugin();
-        await plugin.OnConfigureAsync(default, CancellationToken.None);
+        await plugin.ConfigureAsync(default, CancellationToken.None);
         var sink = new ArrayBufferWriter<byte>();
         plugin.WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
@@ -112,7 +112,7 @@ public class ExtraAssetsTests
         var plugin = new ExtraAssetsPlugin();
         plugin.AddCss(ExtraAssetSource.External("https://cdn.test/x.css"));
         plugin.AddJs(ExtraAssetSource.External("https://cdn.test/x.js"));
-        await plugin.OnConfigureAsync(default, CancellationToken.None);
+        await plugin.ConfigureAsync(default, CancellationToken.None);
 
         await Assert.That(plugin.StaticAssets.Length).IsEqualTo(0);
 
@@ -134,7 +134,7 @@ public class ExtraAssetsTests
 
         var plugin = new ExtraAssetsPlugin();
         plugin.AddCss(ExtraAssetSource.File(path));
-        await plugin.OnConfigureAsync(default, CancellationToken.None);
+        await plugin.ConfigureAsync(default, CancellationToken.None);
 
         await Assert.That(plugin.StaticAssets.Length).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(plugin.StaticAssets[0].Bytes)).Contains("color: red");
@@ -147,7 +147,7 @@ public class ExtraAssetsTests
     {
         var plugin = new ExtraAssetsPlugin();
         plugin.AddJs(ExtraAssetSource.Inline("inline.js", "console.log('hi')"u8.ToArray()));
-        await plugin.OnConfigureAsync(default, CancellationToken.None);
+        await plugin.ConfigureAsync(default, CancellationToken.None);
 
         await Assert.That(plugin.StaticAssets.Length).IsEqualTo(1);
         await Assert.That(plugin.StaticAssets[0].Path).IsEqualTo("assets/extra/inline.js");

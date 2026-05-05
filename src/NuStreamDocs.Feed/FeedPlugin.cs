@@ -17,10 +17,10 @@ namespace NuStreamDocs.Feed;
 /// <remarks>
 /// Reuses <see cref="BlogPostScanner"/> as the post source so the
 /// same authoring directory powers the rendered blog and the feeds.
-/// Generation runs in <see cref="OnFinalizeAsync"/> so any blog plugin
+/// Generation runs in <see cref="FinalizeAsync"/> so any blog plugin
 /// that may have rewritten / appended posts has finished first.
 /// </remarks>
-public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger) : IDocPlugin
+public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger) : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly FeedOptions _options = ValidateOptions(options);
@@ -53,7 +53,13 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     public ReadOnlySpan<byte> Name => "feed"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _inputRoot = context.InputRoot;
         _ = cancellationToken;
@@ -61,15 +67,7 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         if (_options.Formats == FeedFormats.None || _inputRoot.IsEmpty)

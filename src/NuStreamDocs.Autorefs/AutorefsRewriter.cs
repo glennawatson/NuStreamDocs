@@ -120,6 +120,32 @@ public static class AutorefsRewriter
         return RewriteSpanCore(source, registry, sink, logger: null, sourcePage: null, ref totals);
     }
 
+    /// <summary>
+    /// Streams a rewrite of <paramref name="source"/> bytes into <paramref name="sink"/>, returning
+    /// the resolved / missing counts and emitting per-reference log events.
+    /// </summary>
+    /// <param name="source">UTF-8 input.</param>
+    /// <param name="registry">Registry to resolve against.</param>
+    /// <param name="sink">Writer to receive the rewritten bytes.</param>
+    /// <param name="logger">Logger for per-reference events.</param>
+    /// <param name="sourcePage">Page identifier surfaced in unresolved warnings.</param>
+    /// <returns>The number of resolved and missing references encountered while rewriting <paramref name="source"/>.</returns>
+    public static RewriteTotals RewriteSpan(
+        ReadOnlySpan<byte> source,
+        AutorefsRegistry registry,
+        IBufferWriter<byte> sink,
+        ILogger logger,
+        FilePath sourcePage)
+    {
+        ArgumentNullException.ThrowIfNull(registry);
+        ArgumentNullException.ThrowIfNull(sink);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        var totals = default(RewriteTotals);
+        _ = RewriteSpanCore(source, registry, sink, logger, sourcePage, ref totals);
+        return totals;
+    }
+
     /// <summary>Rewrites a single file in place, accumulating resolved/missing counts and emitting log events.</summary>
     /// <param name="path">Absolute path to the HTML file.</param>
     /// <param name="registry">Registry to resolve against.</param>
@@ -227,9 +253,4 @@ public static class AutorefsRewriter
         AutorefsLoggingHelper.LogReferenceUnresolved(logger, idSpan, sourcePage.Value);
         return false;
     }
-
-    /// <summary>Per-pass resolved / missing counters threaded through the core loop.</summary>
-    /// <param name="Resolved">Resolved-reference accumulator.</param>
-    /// <param name="Missing">Unresolved-reference accumulator.</param>
-    private record struct RewriteTotals(int Resolved, int Missing);
 }

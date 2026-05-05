@@ -43,6 +43,26 @@ public sealed class ValidationCorpus
     /// <summary>Gets every page in the corpus.</summary>
     public PageLinks[] Pages { get; private init; } = [];
 
+    /// <summary>Builds an immutable corpus from a previously-collected page set (e.g. accumulated from per-page Scan hooks).</summary>
+    /// <param name="pages">Pages keyed by URL bytes.</param>
+    /// <returns>The populated corpus.</returns>
+    public static ValidationCorpus FromPages(IDictionary<byte[], PageLinks> pages)
+    {
+        ArgumentNullException.ThrowIfNull(pages);
+        var snapshot = new Dictionary<byte[], PageLinks>(pages, ByteArrayComparer.Instance);
+        return new(snapshot) { Pages = [.. snapshot.Values] };
+    }
+
+    /// <summary>Scans one page's HTML into a <see cref="PageLinks"/>.</summary>
+    /// <param name="pageUrl">Page URL bytes.</param>
+    /// <param name="html">UTF-8 HTML bytes.</param>
+    /// <returns>The captured inventory.</returns>
+    public static PageLinks Scan(byte[] pageUrl, ReadOnlySpan<byte> html)
+    {
+        ArgumentNullException.ThrowIfNull(pageUrl);
+        return ScanPage(pageUrl, html);
+    }
+
     /// <summary>Walks <paramref name="outputRoot"/> in parallel and builds an immutable corpus.</summary>
     /// <param name="outputRoot">Absolute site output root.</param>
     /// <param name="parallelism">Maximum parallel readers.</param>

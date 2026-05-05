@@ -20,9 +20,9 @@ namespace NuStreamDocs.Privacy;
 /// downloads each unique URL once at finalize time.
 /// </summary>
 /// <remarks>
-/// Per-page <see cref="OnRenderPageAsync"/> rewrites the page HTML in
-/// place; URL-to-local-path mappings accumulate in a thread-safe
-/// registry. <see cref="OnFinalizeAsync"/> drives the actual HTTP fetches
+/// Per-page <see cref="Rewrite"/> rewrites the page HTML to localized
+/// asset paths; URL-to-local-path mappings accumulate in a thread-safe
+/// registry. <see cref="FinalizeAsync"/> drives the actual HTTP fetches
 /// in parallel. Already-downloaded assets (cache hits on subsequent
 /// builds) skip the network entirely.
 /// <para>
@@ -32,7 +32,7 @@ namespace NuStreamDocs.Privacy;
 /// production sites.
 /// </para>
 /// </remarks>
-public sealed class PrivacyPlugin : IDocPlugin
+public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostResolvePlugin, IBuildFinalizePlugin
 {
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly PrivacyOptions _options;
@@ -55,7 +55,7 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <summary>Logger captured at construction; defaults to <see cref="NullLogger.Instance"/> when no logger is supplied.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>Output root captured during <see cref="OnConfigureAsync"/>.</summary>
+    /// <summary>Output root captured during <see cref="ConfigureAsync"/>.</summary>
     private DirectoryPath _outputRoot;
 
     /// <summary>Initializes a new instance of the <see cref="PrivacyPlugin"/> class with default options.</summary>
@@ -87,6 +87,15 @@ public sealed class PrivacyPlugin : IDocPlugin
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "privacy"u8;
 
+    /// <inheritdoc/>
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority PostResolvePriority => new(PluginBand.Late);
+
+    /// <inheritdoc/>
+    public PluginPriority FinalizePriority => new(PluginBand.Late);
+
     /// <summary>Gets the snapshot of external URLs the plugin has seen so far as UTF-8 byte arrays.</summary>
     /// <remarks>
     /// Populated on every build; in audit mode it's the only output, in normal mode it's a side-channel
@@ -96,7 +105,7 @@ public sealed class PrivacyPlugin : IDocPlugin
     public byte[][] AuditedUrls => GetAuditedUrlBytesSnapshot();
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         _outputRoot = context.OutputRoot;
@@ -104,23 +113,26 @@ public sealed class PrivacyPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public bool NeedsRewrite(ReadOnlySpan<byte> html)
     {
-        _ = cancellationToken;
         if (!_options.Enabled)
         {
-            return ValueTask.CompletedTask;
+            return false;
         }
 
-        var html = context.Html;
-        var rendered = html.WrittenSpan;
+        var hasUrls = ExternalUrlScanner.MayHaveExternalUrls(html);
+        var hasLinks = ExternalLinkPolisher.MayHaveExternalLinks(html);
+        var hasInlineBlocks = _options.GenerateCspManifest && CspHashCollector.MayHaveInlineBlocks(html);
+        return hasUrls || hasLinks || hasInlineBlocks;
+    }
+
+    /// <inheritdoc/>
+    public void Rewrite(in PagePostResolveContext context)
+    {
+        var rendered = context.Html;
         var hasUrls = ExternalUrlScanner.MayHaveExternalUrls(rendered);
         var hasLinks = ExternalLinkPolisher.MayHaveExternalLinks(rendered);
         var hasInlineBlocks = _options.GenerateCspManifest && CspHashCollector.MayHaveInlineBlocks(rendered);
-        if (!hasUrls && !hasLinks && !hasInlineBlocks)
-        {
-            return ValueTask.CompletedTask;
-        }
 
         if (hasInlineBlocks)
         {
@@ -130,29 +142,30 @@ public sealed class PrivacyPlugin : IDocPlugin
         if (_options.AuditOnly)
         {
             ExternalUrlScanner.Audit(rendered, _filter, _auditedUrls);
-            return ValueTask.CompletedTask;
+
+            // Audit mode never mutates the HTML — pass the bytes through verbatim.
+            context.Output.Write(rendered);
+            return;
         }
 
-        // Snapshot the rendered span into a pooled buffer, reset the writer,
-        // and let the rewriter write the new HTML straight into the page
-        // sink — saves the intermediate byte[] the previous shape allocated
-        // on every page that carried an external URL.
-        HtmlSnapshotRewriter.Rewrite(html, this, static (snapshot, dst, self) =>
+        if (!hasUrls && !hasLinks)
         {
-            if (PrivacyRewriter.TryRewriteInto(snapshot, self._options, self._registry, self._filter, dst))
-            {
-                return;
-            }
+            // Inline-block CSP collection only — no HTML rewrite.
+            context.Output.Write(rendered);
+            return;
+        }
 
-            // No pass changed the input — restore the original bytes verbatim.
-            dst.Write(snapshot);
-        });
+        if (PrivacyRewriter.TryRewriteInto(rendered, _options, _registry, _filter, context.Output))
+        {
+            return;
+        }
 
-        return ValueTask.CompletedTask;
+        // No pass changed the input — emit the original bytes verbatim.
+        context.Output.Write(rendered);
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         var root = _outputRoot.IsEmpty ? context.OutputRoot : _outputRoot;
         if (!_options.Enabled || root.IsEmpty)

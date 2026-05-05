@@ -5,6 +5,7 @@
 using System.Buffers;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.CheckList;
 
@@ -13,7 +14,7 @@ namespace NuStreamDocs.MarkdownExtensions.CheckList;
 /// at list-item starts into inline disabled-checkbox HTML so the
 /// markdown renderer passes them through unchanged.
 /// </summary>
-public sealed class CheckListPlugin : MarkdownAssetPluginBase
+public sealed class CheckListPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
     private static readonly byte[] LinkBytes =
@@ -26,26 +27,30 @@ public sealed class CheckListPlugin : MarkdownAssetPluginBase
 .task-list-item input[type=checkbox]{margin-right:.4em;vertical-align:middle}
 """u8];
 
-    /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "checklist"u8;
+    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    private static readonly FilePath AssetFilePath = new("assets/extensions/checklist.css");
 
     /// <inheritdoc/>
-    protected override FilePath AssetPath => new("assets/extensions/checklist.css");
+    public ReadOnlySpan<byte> Name => "checklist"u8;
 
     /// <inheritdoc/>
-    protected override byte[] StylesheetBytes => CssBytes;
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    protected override byte[] HeadLink => LinkBytes;
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
     /// <inheritdoc/>
-    public override bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasCheckListBullet(source);
 
     /// <inheritdoc/>
-    public override void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public void PreRender(in PagePreRenderContext context) =>
+        CheckListRewriter.Rewrite(context.Source, context.Output);
+
+    /// <inheritdoc/>
+    public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        CheckListRewriter.Rewrite(source, writer);
+        writer.Write(LinkBytes);
     }
 }

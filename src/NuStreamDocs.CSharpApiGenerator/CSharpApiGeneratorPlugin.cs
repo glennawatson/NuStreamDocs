@@ -14,10 +14,10 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <remarks>
 /// <para>
 /// In <see cref="CSharpApiGeneratorMode.EmitMarkdown"/> the plugin walks
-/// the configured NuGet manifest during <see cref="OnConfigureAsync"/>
-/// and writes Markdown into <c>docs/{OutputMarkdownSubdirectory}</c> —
-/// by the time discovery runs the generated pages are on disk and look
-/// like any author-written content.
+/// the configured NuGet manifest in <see cref="DiscoverAsync"/> and
+/// writes Markdown into <c>docs/{OutputMarkdownSubdirectory}</c> — by
+/// the time page enumeration runs the generated pages are on disk and
+/// look like any author-written content.
 /// </para>
 /// <para>
 /// In <see cref="CSharpApiGeneratorMode.Direct"/> the plugin walks the
@@ -27,7 +27,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// intermediate Markdown is written to disk.
 /// </para>
 /// </remarks>
-public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IDocPlugin
+public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IBuildDiscoverPlugin
 {
     /// <summary>Configured options.</summary>
     private readonly CSharpApiGeneratorOptions _options = ValidateOptions(options);
@@ -49,7 +49,10 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     public ReadOnlySpan<byte> Name => "csharp-apigenerator"u8;
 
     /// <inheritdoc/>
-    public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority DiscoverPriority => new(PluginBand.Earliest);
+
+    /// <inheritdoc/>
+    public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
         if (_options.Mode is CSharpApiGeneratorMode.Direct)
         {
@@ -58,22 +61,6 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         }
 
         await CSharpApiGenerator.GenerateAsync(_options, context.InputRoot, _logger, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
     }
 
     /// <summary>Validates and returns <paramref name="opts"/>.</summary>

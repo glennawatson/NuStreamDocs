@@ -5,19 +5,21 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Arithmatex.Tests;
 
 /// <summary>Lifecycle / registration tests for <c>ArithmatexPlugin</c>.</summary>
 public class ArithmatexPluginTests
 {
-    /// <summary>Preprocess wraps inline math.</summary>
+    /// <summary>PreRender wraps inline math.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PreprocessWrapsInlineMath()
+    public async Task PreRenderWrapsInlineMath()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        new ArithmatexPlugin().Preprocess("solve $x+1$"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "solve $x+1$"u8, sink);
+        new ArithmatexPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("arithmatex");
     }
 
@@ -26,16 +28,6 @@ public class ArithmatexPluginTests
     [Test]
     public async Task NameIsStable() =>
         await Assert.That(new ArithmatexPlugin().Name.SequenceEqual("arithmatex"u8)).IsTrue();
-
-    /// <summary>Preprocess rejects null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessRejectsNullSink()
-    {
-        var plugin = new ArithmatexPlugin();
-        var ex = Assert.Throws<ArgumentNullException>(() => plugin.Preprocess(default, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>UseArithmatex registers the plugin.</summary>
     /// <returns>Async test.</returns>

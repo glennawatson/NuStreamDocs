@@ -14,8 +14,8 @@ namespace NuStreamDocs.Plugins;
 /// The canonical use case is icon-font / preconnect / meta-tag
 /// plugins (Font Awesome, Material Icons, OpenGraph, etc.) that ship
 /// in their own assemblies. Theme plugins discover providers during
-/// <see cref="IDocPlugin.OnConfigureAsync"/> by walking
-/// <see cref="PluginConfigureContext.Plugins"/>, ask each one to
+/// <see cref="IBuildConfigurePlugin.ConfigureAsync"/> by walking
+/// <see cref="BuildConfigureContext.Plugins"/>, ask each one to
 /// write its head fragment into a shared UTF-8 buffer, and pass the
 /// concatenated bytes to the page template's <c>head_extras</c> slot.
 /// <para>

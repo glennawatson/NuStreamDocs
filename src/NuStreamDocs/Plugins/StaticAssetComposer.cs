@@ -11,7 +11,7 @@ namespace NuStreamDocs.Plugins;
 /// contribution into the output tree.
 /// </summary>
 /// <remarks>
-/// Theme plugins call this once during <see cref="IDocPlugin.OnFinalizeAsync"/>
+/// Theme plugins call this once during <see cref="IBuildFinalizePlugin.FinalizeAsync"/>
 /// alongside their own static-asset emit, so markdown-extension and
 /// icon plugins work uniformly under both Material and Material 3
 /// themes.
@@ -21,7 +21,7 @@ public static class StaticAssetComposer
     /// <summary>Writes every provider's assets under <paramref name="outputRoot"/>.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="outputRoot">Absolute output root.</param>
-    public static void WriteAll(IDocPlugin[] plugins, DirectoryPath outputRoot)
+    public static void WriteAll(IPlugin[] plugins, DirectoryPath outputRoot)
     {
         ArgumentNullException.ThrowIfNull(plugins);
         if (outputRoot.IsEmpty)

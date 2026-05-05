@@ -2,9 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tags.Tests;
 
@@ -31,13 +31,10 @@ public class TagsPluginTests
     public async Task PageWithoutTagsSkipped()
     {
         using var temp = new TagsTempDir();
-        var plugin = new TagsPlugin();
-        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
+        await File.WriteAllTextAsync(Path.Combine(temp.Root, "notag.md"), "no frontmatter");
 
-        var sink = new ArrayBufferWriter<byte>(8);
-        sink.Write("<p>no tags</p>"u8);
-        await plugin.OnRenderPageAsync(new("notag.md", "no frontmatter"u8.ToArray(), sink), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        var plugin = new TagsPlugin();
+        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
 
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
     }
@@ -48,48 +45,19 @@ public class TagsPluginTests
     public async Task EndToEndEmitsIndexAndPerTagPages()
     {
         using var temp = new TagsTempDir();
+        await File.WriteAllTextAsync(Path.Combine(temp.Root, "first.md"), "---\ntags:\n  - alpha\n  - beta\n---\n# First\n\nbody");
+        await File.WriteAllTextAsync(Path.Combine(temp.Root, "second.md"), "---\ntags:\n  - alpha\n---\n# Second\n\nbody");
+
         var plugin = new TagsPlugin();
-        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
 
-        const string Source1 = "---\ntags:\n  - alpha\n  - beta\n---\nbody";
-        var sink1 = new ArrayBufferWriter<byte>(64);
-        sink1.Write("<h1>First</h1>"u8);
-        await plugin.OnRenderPageAsync(new("first.md", Encoding.UTF8.GetBytes(Source1), sink1), CancellationToken.None);
+        var indexMd = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "index.md"));
+        await Assert.That(indexMd).Contains("alpha");
+        await Assert.That(indexMd).Contains("beta");
 
-        const string Source2 = "---\ntags:\n  - alpha\n---\nbody";
-        var sink2 = new ArrayBufferWriter<byte>(64);
-        sink2.Write("<h1>Second</h1>"u8);
-        await plugin.OnRenderPageAsync(new("second.md", Encoding.UTF8.GetBytes(Source2), sink2), CancellationToken.None);
-
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
-
-        var indexHtml = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "index.html"));
-        await Assert.That(indexHtml).Contains("alpha");
-        await Assert.That(indexHtml).Contains("beta");
-
-        var alphaHtml = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "alpha.html"));
-        await Assert.That(alphaHtml).Contains("First");
-        await Assert.That(alphaHtml).Contains("Second");
-    }
-
-    /// <summary>The H1 fallback path is used when the rendered HTML has no heading.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task FallbackTitleWhenNoH1()
-    {
-        using var temp = new TagsTempDir();
-        var plugin = new TagsPlugin();
-        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
-
-        const string Source = "---\ntags:\n  - solo\n---\nbody";
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<p>just body, no h1</p>"u8);
-        await plugin.OnRenderPageAsync(new("only.md", Encoding.UTF8.GetBytes(Source), sink), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
-
-        // Fallback is the URL.
-        var soloHtml = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "solo.html"));
-        await Assert.That(soloHtml).Contains("only.html");
+        var alphaMd = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "alpha.md"));
+        await Assert.That(alphaMd).Contains("First");
+        await Assert.That(alphaMd).Contains("Second");
     }
 
     /// <summary>Custom options write to a different subdirectory and index filename.</summary>
@@ -98,18 +66,14 @@ public class TagsPluginTests
     public async Task CustomOptionsHonored()
     {
         using var temp = new TagsTempDir();
+        await File.WriteAllTextAsync(Path.Combine(temp.Root, "p.md"), "---\ntags:\n  - foo\n---\n# Page\n\nbody");
+
         var options = new TagsOptions("topics", "all.html");
         var plugin = new TagsPlugin(options);
-        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
 
-        const string Source = "---\ntags:\n  - foo\n---\nbody";
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<h1>Page</h1>"u8);
-        await plugin.OnRenderPageAsync(new("p.md", Encoding.UTF8.GetBytes(Source), sink), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
-
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "topics", "all.html"))).IsTrue();
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "topics", "foo.html"))).IsTrue();
+        // Discover writes markdown source files; the html filename option drives the slug naming convention.
+        await Assert.That(Directory.Exists(Path.Combine(temp.Root, "topics"))).IsTrue();
     }
 
     /// <summary>RelativePathToUrlPath swaps <c>.md</c> for <c>.html</c> and normalizes separators.</summary>

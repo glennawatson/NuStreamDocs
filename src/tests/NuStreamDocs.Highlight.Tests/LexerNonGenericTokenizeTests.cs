@@ -20,10 +20,4 @@ public class LexerNonGenericTokenizeTests
             (_, _, _) => tokens++);
         await Assert.That(tokens).IsGreaterThan(0);
     }
-
-    /// <summary>HighlightPlugin.OnConfigureAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PluginOnConfigure() =>
-        await new HighlightPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
 }

@@ -65,6 +65,11 @@ internal static class BibliographyRewriter
         ArgumentNullException.ThrowIfNull(style);
         ArgumentNullException.ThrowIfNull(writer);
 
+        if (source.IsEmpty)
+        {
+            return false;
+        }
+
         using var rental = PageBuilderPool.Rent(source.Length * 2);
         var body = rental.Writer;
         var state = ResolveState.Create(database, style, missing);

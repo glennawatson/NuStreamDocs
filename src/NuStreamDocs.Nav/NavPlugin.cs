@@ -26,14 +26,16 @@ namespace NuStreamDocs.Nav;
 /// extension method <c>builder.UseNav(...)</c> which captures
 /// non-default options.
 /// <para>
-/// During <see cref="OnRenderPageAsync"/> the plugin scans the rendered
-/// HTML for the marker <c>&lt;!--@@nav@@--&gt;</c> a theme template
-/// emits, replaces it with the rendered nav for the current page, and
-/// (when <see cref="NavOptions.Prune"/> is on) only emits the active
-/// branch — matching mkdocs-material <c>navigation.prune</c>.
+/// During <see cref="DiscoverAsync"/> the plugin scans the docs root,
+/// builds the nav tree, and caches the URL index for per-page lookup.
+/// During <see cref="PostRender"/> it replaces the marker
+/// <c>&lt;!--@@nav@@--&gt;</c> a theme template emits with the rendered
+/// nav for the current page; when <see cref="NavOptions.Prune"/> is on
+/// only the active branch is emitted — matching mkdocs-material
+/// <c>navigation.prune</c>.
 /// </para>
 /// </remarks>
-public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
+public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INavNeighboursProvider
 {
     /// <summary>Length of the <c>.md</c> extension stripped when computing served URLs.</summary>
     private const int MarkdownExtensionLength = 3;
@@ -50,13 +52,8 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Byte offset of the length field inside the stat tuple.</summary>
     private const int StatLengthOffset = 8;
 
-    /// <summary>Render thunk for the sidebar nav placeholder; static field to avoid re-allocating the delegate per page.</summary>
-    private static readonly Action<NavPlugin, ArrayBufferWriter<byte>, FilePath> _renderNavThunk =
-        static (self, html, path) => self.RenderNav(html, path);
-
-    /// <summary>Render thunk for the top-bar tabs placeholder; static field to avoid re-allocating the delegate per page.</summary>
-    private static readonly Action<NavPlugin, ArrayBufferWriter<byte>, FilePath> _renderTabsThunk =
-        static (self, html, path) => self.RenderTabs(html, path);
+    /// <summary>Tiebreak that orders nav-marker substitution after the theme shell wrap (which uses the bare <see cref="PluginBand.Latest"/>) and after <c>TocPlugin</c> (tiebreak 1).</summary>
+    private const int PostRenderTiebreak = 2;
 
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly NavOptions _options;
@@ -64,7 +61,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <summary>Logger handed to the tree builder.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>The nav tree built during <see cref="OnConfigureAsync"/>; null until then.</summary>
+    /// <summary>The nav tree built during <see cref="DiscoverAsync"/>; null until then.</summary>
     private NavNode? _root;
 
     /// <summary>Stat-based fingerprint of the input tree from the previous build; <c>0</c> when not yet computed.</summary>
@@ -80,10 +77,6 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     private NavNode[]? _orderedLeaves;
 
     /// <summary>UTF-8 path bytes → index lookup over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
-    /// <remarks>
-    /// Byte-keyed so the per-call probe doesn't pay a string-hash on the relative-path lookup;
-    /// <see cref="GetNeighbours(FilePath)"/> encodes once into a stack/heap buffer.
-    /// </remarks>
     private Dictionary<byte[], int>? _leafIndex;
 
     /// <summary>Per-leaf <c>[sectionStart, sectionEndExclusive)</c> spans over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
@@ -121,11 +114,17 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "nav"u8;
 
-    /// <summary>Gets the computed nav tree root; null before <see cref="OnConfigureAsync"/> has run.</summary>
+    /// <inheritdoc/>
+    public PluginPriority DiscoverPriority => new(PluginBand.Early);
+
+    /// <inheritdoc/>
+    public PluginPriority PostRenderPriority => new(PluginBand.Latest, PostRenderTiebreak);
+
+    /// <summary>Gets the computed nav tree root; null before <see cref="DiscoverAsync"/> has run.</summary>
     public object? Root => _root;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         var useDirectoryUrls = _options.UseDirectoryUrls ?? context.UseDirectoryUrls;
@@ -160,30 +159,78 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public bool NeedsRewrite(ReadOnlySpan<byte> html)
     {
-        _ = cancellationToken;
         if (_root is null)
         {
-            return ValueTask.CompletedTask;
+            return false;
         }
 
-        ReplaceMarker(context.Html, "<!--@@nav@@-->"u8, context.RelativePath, _renderNavThunk);
-        if (_options.Tabs)
+        if (html.IndexOf("<!--@@nav@@-->"u8) >= 0)
         {
-            ReplaceMarker(context.Html, "<!--@@nav-tabs@@-->"u8, context.RelativePath, _renderTabsThunk);
+            return true;
         }
 
-        return ValueTask.CompletedTask;
+        return _options.Tabs && html.IndexOf("<!--@@nav-tabs@@-->"u8) >= 0;
     }
 
     /// <inheritdoc/>
-    /// <remarks>Sitemap emission lands alongside the offline + feed plugins.</remarks>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public void PostRender(in PagePostRenderContext context)
     {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
+        if (_root is null)
+        {
+            context.Output.Write(context.Html);
+            return;
+        }
+
+        var html = context.Html;
+        var relativePath = context.RelativePath;
+        var output = context.Output;
+
+        // First-pass marker replacement: copy bytes through the writer, swapping
+        // every recognized marker with its rendered payload.
+        var cursor = 0;
+        while (cursor < html.Length)
+        {
+            var remaining = html[cursor..];
+            var navIdx = remaining.IndexOf("<!--@@nav@@-->"u8);
+            var tabsIdx = _options.Tabs ? remaining.IndexOf("<!--@@nav-tabs@@-->"u8) : -1;
+
+            if (navIdx < 0 && tabsIdx < 0)
+            {
+                Write(output, remaining);
+                return;
+            }
+
+            // Pick whichever marker comes first.
+            int markerOffset;
+            int markerLength;
+            bool isTabs;
+            if (navIdx >= 0 && (tabsIdx < 0 || navIdx <= tabsIdx))
+            {
+                markerOffset = navIdx;
+                markerLength = "<!--@@nav@@-->"u8.Length;
+                isTabs = false;
+            }
+            else
+            {
+                markerOffset = tabsIdx;
+                markerLength = "<!--@@nav-tabs@@-->"u8.Length;
+                isTabs = true;
+            }
+
+            Write(output, remaining[..markerOffset]);
+            if (isTabs)
+            {
+                RenderTabs(output, relativePath);
+            }
+            else
+            {
+                RenderNav(output, relativePath);
+            }
+
+            cursor += markerOffset + markerLength;
+        }
     }
 
     /// <summary>Looks up the previous and next leaf pages for <paramref name="relativePath"/> in the nav's natural traversal order.</summary>
@@ -245,9 +292,6 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
             return false;
         }
 
-        // Resolve the active node by URL. Bytes match how _urlIndex is keyed —
-        // NavRenderer.BuildUrlIndex stores NavNode.RelativeUrlBytes which is built
-        // via ServedUrlBytes.FromPath without a leading slash.
         var encoded = ServedUrlBytes.FromPath(relativePath, _useDirectoryUrls);
         if (!_urlIndex.TryGetValue(encoded, out var active))
         {
@@ -259,7 +303,7 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     }
 
     /// <summary>Gets the typed nav root; for use from the plugin's own assembly + tests.</summary>
-    /// <returns>The nav root, or null when <see cref="OnConfigureAsync"/> has not yet run.</returns>
+    /// <returns>The nav root, or null when <see cref="DiscoverAsync"/> has not yet run.</returns>
     internal NavNode? GetRoot() => _root;
 
     /// <summary>True when <paramref name="candidate"/> is a direct child of <paramref name="root"/>.</summary>
@@ -373,8 +417,6 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     {
         if (!node.IsSection)
         {
-            // End is patched by the closest section that contains this leaf when its
-            // recursion completes. Sentinel until then.
             leaves.Add(node);
             spans.Add((enclosingStart, UnsetSpanEnd));
             return;
@@ -394,9 +436,6 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
 
         var thisEnd = leaves.Count;
 
-        // Patch only spans inside our window that haven't been claimed by an inner
-        // section yet. Inner sections close first, so their leaves already have a
-        // concrete End and we leave them alone.
         for (var i = thisStart; i < thisEnd; i++)
         {
             if (spans[i].End == UnsetSpanEnd)
@@ -472,9 +511,9 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     }
 
     /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>
-    /// <param name="writer">UTF-8 sink — concrete <see cref="ArrayBufferWriter{T}"/> so the JIT keeps the call site direct.</param>
+    /// <param name="writer">UTF-8 sink.</param>
     /// <param name="bytes">Bytes to write.</param>
-    private static void Write(ArrayBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
+    private static void Write(IBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
     {
         if (bytes.IsEmpty)
         {
@@ -512,54 +551,10 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
         return _leafIndex!.TryGetValueByUtf8(keyBuffer[..written], out idx);
     }
 
-    /// <summary>Locates <paramref name="marker"/> in <paramref name="html"/> and replaces it with
-    /// <paramref name="render"/>'s output for <paramref name="relativePath"/>; no-op when the
-    /// marker is absent.</summary>
-    /// <param name="html">Page HTML buffer.</param>
-    /// <param name="marker">UTF-8 marker comment.</param>
-    /// <param name="relativePath">Source-relative path of the current page.</param>
-    /// <param name="render">Callback that writes the replacement bytes for the active page.</param>
-    private void ReplaceMarker(
-        ArrayBufferWriter<byte> html,
-        ReadOnlySpan<byte> marker,
-        FilePath relativePath,
-        Action<NavPlugin, ArrayBufferWriter<byte>, FilePath> render)
-    {
-        var written = html.WrittenSpan;
-        var markerIndex = written.IndexOf(marker);
-        if (markerIndex < 0)
-        {
-            return;
-        }
-
-        // Pooled snapshot: the rewrite reads from the snapshot while writing back into
-        // html, so we need a separate buffer for the read side. Renting from ArrayPool
-        // avoids a per-page byte[] alloc; the nav payload is bounded by the active
-        // branch (single-digit kilobytes even on 13K-page sites with prune on).
-        var length = written.Length;
-        var rental = ArrayPool<byte>.Shared.Rent(length);
-        try
-        {
-            written.CopyTo(rental);
-            html.ResetWrittenCount();
-
-            var prefix = rental.AsSpan(0, markerIndex);
-            var suffix = rental.AsSpan(markerIndex + marker.Length, length - markerIndex - marker.Length);
-
-            Write(html, prefix);
-            render(this, html, relativePath);
-            Write(html, suffix);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(rental);
-        }
-    }
-
     /// <summary>Renders the sidebar nav for the active page; switches between full and pruned trees per the configured options.</summary>
-    /// <param name="writer">UTF-8 sink — concrete <see cref="ArrayBufferWriter{T}"/> so the JIT keeps the call site direct.</param>
+    /// <param name="writer">UTF-8 sink.</param>
     /// <param name="relativePath">Source-relative path of the page being rendered.</param>
-    private void RenderNav(ArrayBufferWriter<byte> writer, FilePath relativePath)
+    private void RenderNav(IBufferWriter<byte> writer, FilePath relativePath)
     {
         const int StackUrlLimit = 256;
         var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Value.Length) + HtmlExtensionGrowth;
@@ -578,9 +573,9 @@ public sealed class NavPlugin : IDocPlugin, INavNeighboursProvider
     }
 
     /// <summary>Renders the top-level nav as a horizontal tab bar at the position of the page's <c>&lt;!--@@nav-tabs@@--&gt;</c> marker.</summary>
-    /// <param name="writer">Page HTML buffer.</param>
+    /// <param name="writer">UTF-8 sink.</param>
     /// <param name="relativePath">Source-relative path of the current page; resolves which tab is active.</param>
-    private void RenderTabs(ArrayBufferWriter<byte> writer, FilePath relativePath)
+    private void RenderTabs(IBufferWriter<byte> writer, FilePath relativePath)
     {
         const int StackUrlLimit = 256;
         var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Value.Length) + HtmlExtensionGrowth;

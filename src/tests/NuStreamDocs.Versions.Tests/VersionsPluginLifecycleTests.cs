@@ -15,16 +15,4 @@ public class VersionsPluginLifecycleTests
         var plugin = new VersionsPlugin(new("1.0", "Stable"));
         await Assert.That(plugin.Name.SequenceEqual("versions"u8)).IsTrue();
     }
-
-    /// <summary>OnConfigureAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnConfigure() =>
-        await new VersionsPlugin(new("1.0", "Stable")).OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
-
-    /// <summary>OnRenderPageAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRender() =>
-        await new VersionsPlugin(new("1.0", "Stable")).OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
 }

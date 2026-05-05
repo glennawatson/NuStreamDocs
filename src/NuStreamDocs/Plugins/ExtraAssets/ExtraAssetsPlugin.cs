@@ -17,10 +17,10 @@ namespace NuStreamDocs.Plugins.ExtraAssets;
 /// The builder API folds repeated <c>AddExtraCss</c> / <c>AddExtraJs</c>
 /// calls onto the same instance so registration produces one bundle,
 /// not one plugin per call. Sources are resolved lazily during
-/// <see cref="OnConfigureAsync"/> so file reads happen alongside the rest
+/// <see cref="ConfigureAsync"/> so file reads happen alongside the rest
 /// of the build's I/O.
 /// </remarks>
-public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadExtraProvider
+public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>Forward-slash directory the resolved assets are written under.</summary>
     private const string AssetDirectory = "assets/extra";
@@ -37,11 +37,14 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     /// <summary>Resolved JS assets ready to be shipped (file/inline/embedded only).</summary>
     private readonly List<(FilePath Path, byte[] Bytes)> _jsAssets = [];
 
-    /// <summary>UTF-8 head fragment composed once during <see cref="OnConfigureAsync"/>.</summary>
+    /// <summary>UTF-8 head fragment composed once during <see cref="ConfigureAsync"/>.</summary>
     private byte[] _headFragment = [];
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "extra-assets"u8;
+
+    /// <inheritdoc/>
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => [.. _cssAssets, .. _jsAssets];
@@ -63,7 +66,7 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
     }
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;
@@ -71,22 +74,6 @@ public sealed class ExtraAssetsPlugin : IDocPlugin, IStaticAssetProvider, IHeadE
         Resolve(_jsSources, _jsAssets);
         _headFragment = ComposeHead();
 
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
         return ValueTask.CompletedTask;
     }
 

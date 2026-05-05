@@ -17,6 +17,7 @@ using NuStreamDocs.MarkdownExtensions.Mark;
 using NuStreamDocs.MarkdownExtensions.MdInHtml;
 using NuStreamDocs.MarkdownExtensions.Tables;
 using NuStreamDocs.MarkdownExtensions.Tabs;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
@@ -49,18 +50,18 @@ public class MarkdownExtensionPluginTests
     public async Task PreprocessorsRunWithoutThrowing()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        new AdmonitionPlugin().Preprocess("plain"u8, sink);
-        new CaretTildePlugin().Preprocess("plain"u8, sink);
-        new CheckListPlugin().Preprocess("plain"u8, sink);
-        new CriticMarkupPlugin().Preprocess("plain"u8, sink);
-        new DefListPlugin().Preprocess("plain"u8, sink);
-        new DetailsPlugin().Preprocess("plain"u8, sink);
-        new FootnotesPlugin().Preprocess("plain"u8, sink);
-        new InlineHilitePlugin().Preprocess("plain"u8, sink);
-        new MarkPlugin().Preprocess("plain"u8, sink);
-        new MdInHtmlPlugin().Preprocess("plain"u8, sink);
-        new TablesPlugin().Preprocess("plain"u8, sink);
-        new TabsPlugin().Preprocess("plain"u8, sink);
+        RunPreRender(new AdmonitionPlugin(), sink);
+        RunPreRender(new CaretTildePlugin(), sink);
+        RunPreRender(new CheckListPlugin(), sink);
+        RunPreRender(new CriticMarkupPlugin(), sink);
+        RunPreRender(new DefListPlugin(), sink);
+        RunPreRender(new DetailsPlugin(), sink);
+        RunPreRender(new FootnotesPlugin(), sink);
+        RunPreRender(new InlineHilitePlugin(), sink);
+        RunPreRender(new MarkPlugin(), sink);
+        RunPreRender(new MdInHtmlPlugin(), sink);
+        RunPreRender(new TablesPlugin(), sink);
+        RunPreRender(new TabsPlugin(), sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }
 
@@ -114,5 +115,14 @@ public class MarkdownExtensionPluginTests
         Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseTables(null!));
         var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseAttrList(null!));
         await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>Drives <paramref name="plugin"/> over a tiny fixed source against the supplied <paramref name="sink"/>.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="sink">Output writer.</param>
+    private static void RunPreRender(IPagePreRenderPlugin plugin, IBufferWriter<byte> sink)
+    {
+        var ctx = new PagePreRenderContext("p.md", "plain"u8, sink);
+        plugin.PreRender(in ctx);
     }
 }

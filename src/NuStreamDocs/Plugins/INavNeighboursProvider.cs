@@ -15,7 +15,7 @@ namespace NuStreamDocs.Plugins;
 /// <remarks>
 /// Theme plugins look up the first registered
 /// <see cref="INavNeighboursProvider"/> during
-/// <see cref="IDocPlugin.OnConfigureAsync"/> and call
+/// <see cref="IBuildConfigurePlugin.ConfigureAsync"/> and call
 /// <see cref="GetNeighbours(FilePath)"/> per page during render. The
 /// provider is expected to be cheap (sub-microsecond): build any
 /// linear index up front in your own <c>OnConfigure</c> and serve

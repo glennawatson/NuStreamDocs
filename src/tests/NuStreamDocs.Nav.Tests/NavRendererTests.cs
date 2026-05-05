@@ -132,18 +132,10 @@ public class NavRendererTests
 
         var options = NavOptions.Default with { Tabs = true, UseDirectoryUrls = true };
         var plugin = new NavPlugin(options);
-        var configureContext = new PluginConfigureContext(fixture.Root, fixture.Output, [plugin]) { UseDirectoryUrls = true };
-        await plugin.OnConfigureAsync(configureContext, CancellationToken.None);
+        var discoverContext = new BuildDiscoverContext(fixture.Root, fixture.Output, [plugin]) { UseDirectoryUrls = true };
+        await plugin.DiscoverAsync(discoverContext, CancellationToken.None);
 
-        var page = new ArrayBufferWriter<byte>();
-        page.Write("<nav>"u8);
-        page.Write(NavPlugin.NavMarker);
-        page.Write("</nav>"u8);
-
-        var renderContext = new PluginRenderContext("guide/index.md", ReadOnlyMemory<byte>.Empty, page);
-        await plugin.OnRenderPageAsync(renderContext, CancellationToken.None);
-
-        var html = Encoding.UTF8.GetString(page.WrittenSpan);
+        var html = RunPostRender(plugin, "guide/index.md");
         await Assert.That(html).Contains("Home");
         await Assert.That(html).Contains("href=\"/guide/intro/\"");
         await Assert.That(html).DoesNotContain(">Guide<");
@@ -410,21 +402,28 @@ public class NavRendererTests
 
         var options = NavOptions.Default with { Prune = prune };
         var plugin = new NavPlugin(options);
-        var configureContext = new PluginConfigureContext(fixture.Root, fixture.Output, [plugin]);
-        await plugin.OnConfigureAsync(configureContext, CancellationToken.None);
-
-        var page = new ArrayBufferWriter<byte>();
-
-        // Surrogate "themed" payload — just the marker and trailing tag.
-        page.Write("<nav>"u8);
-        page.Write(NavPlugin.NavMarker);
-        page.Write("</nav>"u8);
+        var discoverContext = new BuildDiscoverContext(fixture.Root, fixture.Output, [plugin]);
+        await plugin.DiscoverAsync(discoverContext, CancellationToken.None);
 
         var sourcePath = currentPage.Replace(".html", ".md", StringComparison.Ordinal);
-        var renderContext = new PluginRenderContext(sourcePath, ReadOnlyMemory<byte>.Empty, page);
-        await plugin.OnRenderPageAsync(renderContext, CancellationToken.None);
+        return RunPostRender(plugin, sourcePath);
+    }
 
-        return Encoding.UTF8.GetString(page.WrittenSpan);
+    /// <summary>Drives one PostRender call against a synthesized "themed" payload (marker between nav tags) and returns the rewritten HTML.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="sourcePath">Source-relative markdown path for the active page.</param>
+    /// <returns>Rewritten HTML.</returns>
+    private static string RunPostRender(NavPlugin plugin, string sourcePath)
+    {
+        var input = new ArrayBufferWriter<byte>();
+        input.Write("<nav>"u8);
+        input.Write(NavPlugin.NavMarker);
+        input.Write("</nav>"u8);
+
+        var output = new ArrayBufferWriter<byte>();
+        var ctx = new PagePostRenderContext(sourcePath, default, input.WrittenSpan, output);
+        plugin.PostRender(in ctx);
+        return Encoding.UTF8.GetString(output.WrittenSpan);
     }
 
     /// <summary>Builds a small two-section tree used by the index-positive tests.</summary>

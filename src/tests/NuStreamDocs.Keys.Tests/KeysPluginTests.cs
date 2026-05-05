@@ -5,19 +5,21 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Keys.Tests;
 
 /// <summary>Lifecycle / registration tests for <c>KeysPlugin</c>.</summary>
 public class KeysPluginTests
 {
-    /// <summary>Preprocess wraps a key combo into kbd elements.</summary>
+    /// <summary>PreRender wraps a key combo into kbd elements.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PreprocessWrapsKeys()
+    public async Task PreRenderWrapsKeys()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        new KeysPlugin().Preprocess("press ++ctrl+c++"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "press ++ctrl+c++"u8, sink);
+        new KeysPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("<kbd");
     }
 
@@ -26,16 +28,6 @@ public class KeysPluginTests
     [Test]
     public async Task NameIsStable() =>
         await Assert.That(new KeysPlugin().Name.SequenceEqual("keys"u8)).IsTrue();
-
-    /// <summary>Preprocess rejects a null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessRejectsNullSink()
-    {
-        var plugin = new KeysPlugin();
-        var ex = Assert.Throws<ArgumentNullException>(() => plugin.Preprocess(default, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>UseKeys registers the plugin.</summary>
     /// <returns>Async test.</returns>

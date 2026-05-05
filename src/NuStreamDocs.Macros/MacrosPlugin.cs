@@ -18,7 +18,7 @@ namespace NuStreamDocs.Macros;
 /// the resolved value into the markdown stream before the parser runs.
 /// Closes the mkdocs-macros gap for the variable-substitution use case.
 /// </summary>
-public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class MacrosPlugin : IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>
     private readonly MacrosOptions _options;
@@ -63,12 +63,19 @@ public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
     }
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "macros"u8;
+    public ReadOnlySpan<byte> Name => "macros"u8;
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+    /// <inheritdoc/>
+    public void PreRender(in PagePreRenderContext context)
     {
-        ArgumentNullException.ThrowIfNull(writer);
+        var source = context.Source;
+        var writer = context.Output;
         if (_options.Variables.Count is 0 || source.IndexOf("{{"u8) < 0)
         {
             CopyThrough(source, writer);
@@ -77,13 +84,6 @@ public sealed class MacrosPlugin : DocPluginBase, IMarkdownPreprocessor
 
         MacrosScanner.Rewrite(source, _lookup, _options.EscapeHtml, _onMissing, writer);
     }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
-
-    /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
     /// <summary>Copies <paramref name="source"/> through to <paramref name="writer"/> without scanning.</summary>
     /// <param name="source">UTF-8 source.</param>

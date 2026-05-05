@@ -5,19 +5,21 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MagicLink.Tests;
 
 /// <summary>Lifecycle / registration tests for <c>MagicLinkPlugin</c>.</summary>
 public class MagicLinkPluginTests
 {
-    /// <summary>Preprocess wraps a bare URL.</summary>
+    /// <summary>PreRender wraps a bare URL.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PreprocessWrapsBareUrl()
+    public async Task PreRenderWrapsBareUrl()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        new MagicLinkPlugin().Preprocess("see https://example.com here"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "see https://example.com here"u8, sink);
+        new MagicLinkPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("<https://example.com>");
     }
 
@@ -26,16 +28,6 @@ public class MagicLinkPluginTests
     [Test]
     public async Task NameIsStable() =>
         await Assert.That(new MagicLinkPlugin().Name.SequenceEqual("magiclink"u8)).IsTrue();
-
-    /// <summary>Preprocess rejects null sinks.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessRejectsNullSink()
-    {
-        var plugin = new MagicLinkPlugin();
-        var ex = Assert.Throws<ArgumentNullException>(() => plugin.Preprocess(default, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>UseMagicLink registers the plugin.</summary>
     /// <returns>Async test.</returns>

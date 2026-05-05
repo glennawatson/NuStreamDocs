@@ -7,6 +7,7 @@ using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
 using NuStreamDocs.Icons.MaterialDesign;
+using NuStreamDocs.Plugins;
 using NuStreamDocs.Theme.Material.IconShortcode;
 
 namespace NuStreamDocs.Benchmarks;
@@ -103,7 +104,8 @@ public class IconShortcodeBenchmarks
     public int IconShortcodesWithMdi()
     {
         using var rental = PageBuilderPool.Rent(_mdiHint);
-        _withMdi.Preprocess(_mixedSource, rental.Writer);
+        var ctx = new PagePreRenderContext("page.md", _mixedSource, rental.Writer);
+        _withMdi.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
 
@@ -114,7 +116,8 @@ public class IconShortcodeBenchmarks
     public int IconShortcodesLigatureOnly()
     {
         using var rental = PageBuilderPool.Rent(_ligatureHint);
-        _ligatureOnly.Preprocess(_mixedSource, rental.Writer);
+        var ctx = new PagePreRenderContext("page.md", _mixedSource, rental.Writer);
+        _ligatureOnly.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
 

@@ -8,12 +8,12 @@ namespace NuStreamDocs.Sitemap;
 
 /// <summary>
 /// Emits a default <c>404.html</c> at the site root in
-/// <see cref="OnFinalizeAsync"/> when no <c>404.html</c> already exists
+/// <see cref="FinalizeAsync"/> when no <c>404.html</c> already exists
 /// — typically because the docs tree has no <c>404.md</c> source.
 /// Sites that ship their own <c>404.md</c> will see that page
 /// already in the output and this plugin no-ops.
 /// </summary>
-public sealed class NotFoundPlugin : IDocPlugin
+public sealed class NotFoundPlugin : IBuildFinalizePlugin
 {
     /// <summary>UTF-8 bytes of the default 404 document; styled as a minimal centred page.</summary>
     private static readonly byte[] DefaultDocument =
@@ -46,25 +46,12 @@ public sealed class NotFoundPlugin : IDocPlugin
     public ReadOnlySpan<byte> Name => "404"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        var path = Path.Combine(context.OutputRoot, "404.html");
+        var path = Path.Combine(context.OutputRoot.Value, "404.html");
         if (File.Exists(path))
         {
             return;

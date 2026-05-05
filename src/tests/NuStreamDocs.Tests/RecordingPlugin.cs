@@ -2,12 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
 
 /// <summary>Test plugin that records the last page path it saw.</summary>
-internal sealed class RecordingPlugin : IDocPlugin
+internal sealed class RecordingPlugin : IPagePostRenderPlugin
 {
     /// <summary>Gets or sets the relative path of the most recent rendered page.</summary>
     public static string? LastPath { get; set; }
@@ -16,26 +17,15 @@ internal sealed class RecordingPlugin : IDocPlugin
     public ReadOnlySpan<byte> Name => "recording"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
+
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context)
     {
         LastPath = context.RelativePath;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
+        context.Output.Write(context.Html);
     }
 }

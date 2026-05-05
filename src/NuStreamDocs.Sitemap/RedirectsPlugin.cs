@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -22,9 +21,11 @@ namespace NuStreamDocs.Sitemap;
 /// <c>(from, to)</c> tuples, an optional <c>redirects.yml</c> file at
 /// the input root (top-level <c>from: to</c> mapping), and per-page
 /// <c>aliases:</c> frontmatter lists (each alias becomes a redirect
-/// targeting that page).
+/// targeting that page). The frontmatter and config-file scans run
+/// during <see cref="DiscoverAsync"/>; the stubs are written during
+/// <see cref="FinalizeAsync"/> after all pages have been emitted.
 /// </remarks>
-public sealed class RedirectsPlugin : IDocPlugin
+public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
 {
     /// <summary>ASCII-only case offset between uppercase and lowercase letters.</summary>
     private const byte AsciiCaseOffset = 32;
@@ -41,17 +42,14 @@ public sealed class RedirectsPlugin : IDocPlugin
     /// <summary>Static <c>(from, to)</c> entries supplied at construction time, encoded once to UTF-8.</summary>
     private readonly Dictionary<byte[], byte[]> _seed;
 
-    /// <summary>Aliases harvested from page frontmatter during the parallel render pass.</summary>
-    private readonly ConcurrentDictionary<byte[], byte[]> _aliases = new(ByteArrayComparer.Instance);
+    /// <summary>Aliases harvested from page frontmatter during the discovery pass.</summary>
+    private readonly Dictionary<byte[], byte[]> _aliases = new(ByteArrayComparer.Instance);
 
     /// <summary>Plugin options.</summary>
     private readonly RedirectsOptions _options;
 
     /// <summary>UTF-8 byte form of <see cref="RedirectsOptions.AliasFrontmatterKey"/>; encoded once at construction so the per-page alias scan never re-encodes.</summary>
     private readonly byte[] _aliasKeyBytes;
-
-    /// <summary>Captured input root for config-file lookup.</summary>
-    private DirectoryPath _inputRoot;
 
     /// <summary>Initializes a new instance of the <see cref="RedirectsPlugin"/> class with default options and no static entries.</summary>
     public RedirectsPlugin()
@@ -89,58 +87,43 @@ public sealed class RedirectsPlugin : IDocPlugin
     public ReadOnlySpan<byte> Name => "redirects"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        _inputRoot = context.InputRoot;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority DiscoverPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public PluginPriority FinalizePriority => new(PluginBand.Late);
+
+    /// <inheritdoc/>
+    public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
-        _ = cancellationToken;
-        if (!_options.ScanFrontmatterAliases || _aliasKeyBytes.Length is 0)
+        var inputRoot = context.InputRoot;
+        if (inputRoot.IsEmpty || !Directory.Exists(inputRoot))
         {
-            return ValueTask.CompletedTask;
+            return;
         }
 
-        var aliases = ExtractAliases(context.Source.Span, _aliasKeyBytes);
-        if (aliases.Length is 0)
+        if (_options.ScanFrontmatterAliases && _aliasKeyBytes.Length > 0)
         {
-            return ValueTask.CompletedTask;
+            await ScanFrontmatterAliasesAsync(inputRoot, cancellationToken).ConfigureAwait(false);
         }
 
-        var pageUrl = ToHtmlUrlBytes(context.RelativePath);
-        for (var i = 0; i < aliases.Length; i++)
+        if (_options.LoadConfigFile && !string.IsNullOrEmpty(_options.ConfigFileName))
         {
-            var alias = NormalizeAlias(aliases[i]);
-            if (alias.Length > 0)
+            var configPath = Path.Combine(inputRoot.Value, _options.ConfigFileName);
+            if (File.Exists(configPath))
             {
-                _aliases[alias] = pageUrl;
+                var bytes = await File.ReadAllBytesAsync(configPath, cancellationToken).ConfigureAwait(false);
+                LoadFlatYaml(bytes, _seed);
             }
         }
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         var merged = new Dictionary<byte[], byte[]>(_seed.Count + _aliases.Count, ByteArrayComparer.Instance);
         foreach (var entry in _seed)
         {
             merged[entry.Key] = entry.Value;
-        }
-
-        if (_options.LoadConfigFile && !string.IsNullOrEmpty(_options.ConfigFileName) && !_inputRoot.IsEmpty)
-        {
-            var configPath = Path.Combine(_inputRoot, _options.ConfigFileName);
-            if (File.Exists(configPath))
-            {
-                var bytes = await File.ReadAllBytesAsync(configPath, cancellationToken).ConfigureAwait(false);
-                LoadFlatYaml(bytes, merged);
-            }
         }
 
         foreach (var entry in _aliases)
@@ -303,14 +286,14 @@ public sealed class RedirectsPlugin : IDocPlugin
     /// <summary>Translates a source-relative markdown path to its rendered HTML URL bytes.</summary>
     /// <param name="markdownPath">Source-relative path (e.g. <c>guide/intro.md</c>).</param>
     /// <returns>UTF-8 bytes of the site-relative URL with the <c>.html</c> extension and forward slashes; empty for an empty input.</returns>
-    private static byte[] ToHtmlUrlBytes(FilePath markdownPath)
+    private static byte[] ToHtmlUrlBytes(string markdownPath)
     {
-        if (markdownPath.IsEmpty)
+        if (string.IsNullOrEmpty(markdownPath))
         {
             return [];
         }
 
-        var pathSpan = markdownPath.Value.AsSpan();
+        var pathSpan = markdownPath.AsSpan();
         var byteCount = Encoding.UTF8.GetByteCount(pathSpan);
         var stripMd = pathSpan.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
         var output = new byte[stripMd ? byteCount - MarkdownExtension.Length + HtmlExtension.Length : byteCount];
@@ -428,5 +411,36 @@ public sealed class RedirectsPlugin : IDocPlugin
         sink.Write("\">"u8);
         XmlEntityEscaper.WriteEscaped(sink, urlBytes, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("</a>…</p>\n</body>\n</html>\n"u8);
+    }
+
+    /// <summary>Walks every <c>*.md</c> file under <paramref name="inputRoot"/> and harvests <c>aliases:</c>-style entries from each frontmatter into <see cref="_aliases"/>.</summary>
+    /// <param name="inputRoot">Absolute docs root.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when the walk has finished.</returns>
+    private async ValueTask ScanFrontmatterAliasesAsync(DirectoryPath inputRoot, CancellationToken cancellationToken)
+    {
+        var files = Directory.GetFiles(inputRoot, "*.md", SearchOption.AllDirectories);
+        for (var i = 0; i < files.Length; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var path = files[i];
+            var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+            var aliases = ExtractAliases(bytes, _aliasKeyBytes);
+            if (aliases.Length is 0)
+            {
+                continue;
+            }
+
+            var relative = Path.GetRelativePath(inputRoot.Value, path);
+            var pageUrl = ToHtmlUrlBytes(relative);
+            for (var a = 0; a < aliases.Length; a++)
+            {
+                var alias = NormalizeAlias(aliases[a]);
+                if (alias.Length > 0)
+                {
+                    _aliases[alias] = pageUrl;
+                }
+            }
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace NuStreamDocs.Plugins;
 /// <summary>
 /// Plugin contract that contributes a fence handler to the
 /// pymdownx-style superfences dispatcher. Any
-/// <see cref="IDocPlugin"/> can additionally implement this to
+/// <see cref="IPlugin"/> can additionally implement this to
 /// claim a fenced-code language and render it as bespoke HTML
 /// instead of the default <c>&lt;pre&gt;&lt;code&gt;</c> block.
 /// </summary>

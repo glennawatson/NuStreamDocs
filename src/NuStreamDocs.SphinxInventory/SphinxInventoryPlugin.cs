@@ -17,7 +17,7 @@ namespace NuStreamDocs.SphinxInventory;
 /// xrefs plugins write into, so any UID a NuStreamDocs page exposes is
 /// reachable from a Sphinx site that pulls this <c>objects.inv</c>.
 /// </remarks>
-public sealed class SphinxInventoryPlugin : IDocPlugin
+public sealed class SphinxInventoryPlugin : IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly SphinxInventoryOptions _options;
@@ -53,23 +53,10 @@ public sealed class SphinxInventoryPlugin : IDocPlugin
     public ReadOnlySpan<byte> Name => "sphinx-inventory"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
 

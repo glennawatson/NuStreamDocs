@@ -13,7 +13,7 @@ namespace NuStreamDocs.Plugins;
 /// UTF-8 byte array that theme plugins splice into <c>&lt;head&gt;</c>.
 /// </summary>
 /// <remarks>
-/// Theme plugins call this once during <see cref="IDocPlugin.OnConfigureAsync"/>
+/// Theme plugins call this once during <see cref="IBuildConfigurePlugin.ConfigureAsync"/>
 /// and stash the result for the lifetime of the build, since the
 /// providers' output is build-invariant in the common case.
 /// Duplicate <c>&lt;link rel="preconnect"&gt;</c> lines emitted by
@@ -28,7 +28,7 @@ public static class HeadExtraComposer
     /// <summary>Composes the head-extras byte array from every provider in <paramref name="plugins"/>.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>UTF-8 bytes; empty when no provider was registered.</returns>
-    public static byte[] Compose(IDocPlugin[] plugins)
+    public static byte[] Compose(IPlugin[] plugins)
     {
         ArgumentNullException.ThrowIfNull(plugins);
 

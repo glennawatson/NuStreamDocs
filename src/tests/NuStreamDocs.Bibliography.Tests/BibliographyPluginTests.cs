@@ -7,6 +7,7 @@ using System.Text;
 using NuStreamDocs.Bibliography.Model;
 using NuStreamDocs.Bibliography.Styles.Aglc4;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Bibliography.Tests;
 
@@ -25,7 +26,8 @@ public class BibliographyPluginTests
     public async Task PassThroughWhenNoMarkers()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        new BibliographyPlugin().Preprocess("plain text\n"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "plain text\n"u8, sink);
+        new BibliographyPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("plain text\n");
     }
 
@@ -40,7 +42,8 @@ public class BibliographyPluginTests
         var options = new BibliographyOptions(db, Aglc4Style.Instance, WarnOnMissing: false);
         var plugin = new BibliographyPlugin(options);
         var sink = new ArrayBufferWriter<byte>(256);
-        plugin.Preprocess("see [@mabo]\n"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "see [@mabo]\n"u8, sink);
+        plugin.PreRender(in ctx);
 
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).Contains("[^bib-mabo]");
@@ -55,7 +58,8 @@ public class BibliographyPluginTests
     {
         var options = new BibliographyOptions(BibliographyDatabase.Empty, Aglc4Style.Instance, WarnOnMissing: true);
         var sink = new ArrayBufferWriter<byte>(64);
-        new BibliographyPlugin(options).Preprocess("[@nope]\n"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "[@nope]\n"u8, sink);
+        new BibliographyPlugin(options).PreRender(in ctx);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).DoesNotContain("[^bib-");
         await Assert.That(output).DoesNotContain("## Bibliography");

@@ -90,8 +90,8 @@ public class SphinxInventoryBenchmarks
     [Benchmark]
     public async ValueTask<long> FinalizeEmit()
     {
-        var ctx = new PluginFinalizeContext(_outputDir);
-        await _plugin.OnFinalizeAsync(ctx, CancellationToken.None).ConfigureAwait(false);
+        var ctx = new BuildFinalizeContext(_outputDir, [_plugin]);
+        await _plugin.FinalizeAsync(ctx, CancellationToken.None).ConfigureAwait(false);
         return new FileInfo(Path.Combine(_outputDir, "objects.inv")).Length;
     }
 }

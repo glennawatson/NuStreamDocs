@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Abbr;
+using NuStreamDocs.Plugins;
 using NuStreamDocs.SmartSymbols;
 
 namespace NuStreamDocs.Benchmarks;
@@ -53,7 +54,8 @@ public class InlineRewriterBenchmarks
     public int Abbr()
     {
         var sink = new ArrayBufferWriter<byte>(_abbr.Length * 2);
-        _abbrPlugin.Preprocess(_abbr, sink);
+        var ctx = new PagePreRenderContext("page.md", _abbr, sink);
+        _abbrPlugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
 
@@ -63,7 +65,8 @@ public class InlineRewriterBenchmarks
     public int SmartSymbols()
     {
         var sink = new ArrayBufferWriter<byte>(_smartSymbols.Length * 2);
-        _smartSymbolsPlugin.Preprocess(_smartSymbols, sink);
+        var ctx = new PagePreRenderContext("page.md", _smartSymbols, sink);
+        _smartSymbolsPlugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
 

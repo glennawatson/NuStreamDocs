@@ -5,7 +5,6 @@
 using System.Buffers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Bibliography.Logging;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Bibliography;
@@ -15,7 +14,7 @@ namespace NuStreamDocs.Bibliography;
 /// — <c>[@key]</c>, <c>[@key, p 23]</c>, <c>[@a; @b]</c> — into footnote
 /// references and appends a Bibliography section to each page.
 /// </summary>
-public sealed class BibliographyPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class BibliographyPlugin : IPagePreRenderPlugin
 {
     /// <summary>Resolved options.</summary>
     private readonly BibliographyOptions _options;
@@ -52,32 +51,25 @@ public sealed class BibliographyPlugin : DocPluginBase, IMarkdownPreprocessor
     }
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "bibliography"u8;
+    public ReadOnlySpan<byte> Name => "bibliography"u8;
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+        _options.Database.Count > 0 && source.IndexOf("[@"u8) >= 0;
+
+    /// <inheritdoc/>
+    public void PreRender(in PagePreRenderContext context)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-        if (_options.Database.Count is 0 || source.IndexOf("[@"u8) < 0)
-        {
-            CopyThrough(source, writer);
-            return;
-        }
-
-        if (BibliographyRewriter.Rewrite(source, _options.Database, _options.Style, _onMissing, writer))
+        if (BibliographyRewriter.Rewrite(context.Source, _options.Database, _options.Style, _onMissing, context.Output))
         {
             return;
         }
 
-        CopyThrough(source, writer);
+        CopyThrough(context.Source, context.Output);
     }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
-
-    /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
     /// <summary>Copies <paramref name="source"/> through to <paramref name="writer"/> without rewriting.</summary>
     /// <param name="source">UTF-8 source.</param>

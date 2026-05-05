@@ -14,14 +14,14 @@ namespace NuStreamDocs.Blog;
 /// page discovery.
 /// </summary>
 /// <remarks>
-/// Generation runs during <see cref="OnConfigureAsync"/>: by the time the
-/// build pipeline begins discovery, <c>{PostsSubdirectory}/index.md</c>
-/// and any <c>{PostsSubdirectory}/tags/{tag}.md</c> files are on disk
-/// so they're picked up like author-written pages. The plugin does
-/// not move the post files themselves — they stay flat under the
-/// configured subdirectory and are rendered as ordinary pages.
+/// Generation runs in <see cref="DiscoverAsync"/>: by the time page
+/// enumeration begins, <c>{PostsSubdirectory}/index.md</c> and any
+/// <c>{PostsSubdirectory}/tags/{tag}.md</c> files are on disk so they
+/// are picked up like author-written pages. The plugin does not move
+/// the post files themselves — they stay flat under the configured
+/// subdirectory and are rendered as ordinary pages.
 /// </remarks>
-public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IDocPlugin
+public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IBuildDiscoverPlugin
 {
     /// <summary>Configured options.</summary>
     private readonly WyamBlogOptions _options = ValidateOptions(options);
@@ -40,7 +40,10 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : ID
     public ReadOnlySpan<byte> Name => "wyam-blog"u8;
 
     /// <inheritdoc/>
-    public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority DiscoverPriority => new(PluginBand.Earliest);
+
+    /// <inheritdoc/>
+    public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
         var postsRoot = context.InputRoot / _options.PostsSubdirectory;
         await BlogContentGenerator.GenerateAsync(
@@ -54,22 +57,6 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : ID
                 ArchiveRoot: postsRoot / "tags",
                 ArchiveFallbackSlug: "tag"),
             cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
     }
 
     /// <summary>Validates and returns <paramref name="opts"/>.</summary>

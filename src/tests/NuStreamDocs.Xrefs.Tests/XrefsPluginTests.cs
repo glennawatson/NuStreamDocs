@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Autorefs;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Xrefs.Tests;
 
@@ -20,7 +21,7 @@ public class XrefsPluginTests
         registry.Register("Foo.Baz"u8, "api/Foo.Baz.html"u8.ToArray(), fragment: default);
         var plugin = new XrefsPlugin(registry, XrefsOptions.Default);
 
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
 
         var bytes = await File.ReadAllBytesAsync(Path.Combine(temp.Root, "xrefmap.json"));
         var payload = XrefMapReader.Read(bytes);
@@ -43,7 +44,7 @@ public class XrefsPluginTests
         };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext("/in", temp.Root, [], new()), CancellationToken.None);
 
         var resolved = registry.TryResolve("System.String"u8, out var url);
         await Assert.That(resolved).IsTrue();
@@ -66,7 +67,7 @@ public class XrefsPluginTests
         };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext("/in", temp.Root, [], new()), CancellationToken.None);
 
         registry.TryResolve("Foo"u8, out var url);
         await Assert.That(url.AsSpan().SequenceEqual("https://example.com/docs/api/Foo.html"u8)).IsTrue();
@@ -83,7 +84,7 @@ public class XrefsPluginTests
         var options = XrefsOptions.Default with { EmitMap = false };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "xrefmap.json"))).IsFalse();
     }
@@ -101,7 +102,7 @@ public class XrefsPluginTests
         };
         var plugin = new XrefsPlugin(registry, options);
 
-        await plugin.OnConfigureAsync(new("/in", temp.Root, []), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext("/in", temp.Root, [], new()), CancellationToken.None);
 
         await Assert.That(registry.Count).IsEqualTo(0);
     }

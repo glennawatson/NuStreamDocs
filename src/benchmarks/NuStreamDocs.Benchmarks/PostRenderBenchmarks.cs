@@ -104,7 +104,7 @@ public class PostRenderBenchmarks
     /// <summary>Benchmark for <c>AttrListPlugin</c>'s post-render rewrite.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public Task<int> AttrList() => RunPluginAsync(new AttrListPlugin(), _attrListHtml);
+    public int AttrList() => RunPostRender(new AttrListPlugin(), _attrListHtml);
 
     /// <summary>Direct benchmark for <c>AttrListRewriter.RewriteInto</c> (skips the plugin context wrapping).</summary>
     /// <returns>Bytes written.</returns>
@@ -139,12 +139,12 @@ public class PostRenderBenchmarks
     /// <summary>Benchmark for <c>MermaidPlugin</c>'s post-render retag.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public Task<int> Mermaid() => RunPluginAsync(new MermaidPlugin(), _mermaidHtml);
+    public int Mermaid() => RunPostRender(new MermaidPlugin(), _mermaidHtml);
 
     /// <summary>Benchmark for <c>PrivacyPlugin</c>'s page scan (full pipeline through PrivacyRewriter).</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public Task<int> Privacy() => RunPluginAsync(new PrivacyPlugin(), _privacyHtml);
+    public int Privacy() => RunPostResolve(new PrivacyPlugin(), _privacyHtml);
 
     /// <summary>Direct benchmark for <c>MixedContentBytes.RewriteInto</c>.</summary>
     /// <returns>Bytes written.</returns>
@@ -199,16 +199,27 @@ public class PostRenderBenchmarks
         return sink.WrittenCount;
     }
 
-    /// <summary>Drives <paramref name="plugin"/>.OnRenderPageAsync against <paramref name="html"/>.</summary>
-    /// <param name="plugin">Plugin under test.</param>
+    /// <summary>Drives <paramref name="plugin"/>.PostRender against <paramref name="html"/>.</summary>
+    /// <param name="plugin">Post-render plugin under test.</param>
     /// <param name="html">Pre-rendered HTML bytes.</param>
     /// <returns>Bytes written by the plugin.</returns>
-    private static async Task<int> RunPluginAsync(IDocPlugin plugin, byte[] html)
+    private static int RunPostRender(IPagePostRenderPlugin plugin, byte[] html)
     {
         var sink = new ArrayBufferWriter<byte>(html.Length * 2);
-        sink.Write(html);
-        var context = new PluginRenderContext("page.md", html, sink);
-        await plugin.OnRenderPageAsync(context, CancellationToken.None);
+        var context = new PagePostRenderContext("page.md", default, html, sink);
+        plugin.PostRender(in context);
+        return sink.WrittenCount;
+    }
+
+    /// <summary>Drives <paramref name="plugin"/>.Rewrite against <paramref name="html"/>.</summary>
+    /// <param name="plugin">Post-resolve plugin under test.</param>
+    /// <param name="html">Pre-rendered HTML bytes.</param>
+    /// <returns>Bytes written by the plugin.</returns>
+    private static int RunPostResolve(IPagePostResolvePlugin plugin, byte[] html)
+    {
+        var sink = new ArrayBufferWriter<byte>(html.Length * 2);
+        var context = new PagePostResolveContext("page.md", html, sink);
+        plugin.Rewrite(in context);
         return sink.WrittenCount;
     }
 

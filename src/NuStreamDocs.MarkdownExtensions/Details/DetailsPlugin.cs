@@ -5,6 +5,7 @@
 using System.Buffers;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Details;
 
@@ -14,7 +15,7 @@ namespace NuStreamDocs.MarkdownExtensions.Details;
 /// (open) blocks into native <c>&lt;details&gt;</c> elements before
 /// the markdown renderer runs.
 /// </summary>
-public sealed class DetailsPlugin : MarkdownAssetPluginBase
+public sealed class DetailsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
     private static readonly byte[] LinkBytes =
@@ -36,26 +37,30 @@ public sealed class DetailsPlugin : MarkdownAssetPluginBase
             details.quote,details.cite{border-left-color:#9e9e9e;background:rgba(158,158,158,.06)}
             """u8];
 
-    /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "details"u8;
+    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    private static readonly FilePath AssetFilePath = new("assets/extensions/details.css");
 
     /// <inheritdoc/>
-    protected override FilePath AssetPath => new("assets/extensions/details.css");
+    public ReadOnlySpan<byte> Name => "details"u8;
 
     /// <inheritdoc/>
-    protected override byte[] StylesheetBytes => CssBytes;
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    protected override byte[] HeadLink => LinkBytes;
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
     /// <inheritdoc/>
-    public override bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasDetailsOpener(source);
 
     /// <inheritdoc/>
-    public override void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public void PreRender(in PagePreRenderContext context) =>
+        DetailsRewriter.Rewrite(context.Source, context.Output);
+
+    /// <inheritdoc/>
+    public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        DetailsRewriter.Rewrite(source, writer);
+        writer.Write(LinkBytes);
     }
 }

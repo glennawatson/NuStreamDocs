@@ -28,17 +28,17 @@ namespace NuStreamDocs.Snippets;
 /// error block so the build doesn't silently swallow typos.
 /// </para>
 /// </remarks>
-public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class SnippetsPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
 {
     /// <summary>Optional override for the snippet base directory; empty means use <c>InputRoot</c>.</summary>
     private readonly DirectoryPath _baseDirectoryOverride;
 
-    /// <summary>Resolved base directory captured at <see cref="OnConfigureAsync"/> time.</summary>
+    /// <summary>Resolved base directory captured at <see cref="ConfigureAsync"/> time.</summary>
     private DirectoryPath _baseDirectory;
 
     /// <summary>Build-scoped cache of resolved snippet bytes, keyed by the UTF-8 include-path bytes lifted directly from the source span (no <see cref="string"/> round-trip).</summary>
     /// <remarks>
-    /// Reset on every <see cref="OnConfigureAsync"/> call so a watch-mode rebuild that reconfigures the plugin
+    /// Reset on every <see cref="ConfigureAsync"/> call so a watch-mode rebuild that reconfigures the plugin
     /// drops every cached file before re-running. Lifetime is bounded by the plugin instance — the host already
     /// disposes plugins between builds, so the cache cannot outlive a build context. We deliberately do NOT cache
     /// by file mtime: the plugin trusts its host to reconfigure when content changes, and a stat-per-lookup would
@@ -57,10 +57,16 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
     public SnippetsPlugin(DirectoryPath baseDirectory) => _baseDirectoryOverride = baseDirectory;
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "snippets"u8;
+    public ReadOnlySpan<byte> Name => "snippets"u8;
 
     /// <inheritdoc/>
-    public override ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _baseDirectory = _baseDirectoryOverride.IsEmpty ? context.InputRoot : _baseDirectoryOverride;
         _fileCache = new(ByteArrayComparer.Instance);
@@ -69,9 +75,13 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
     }
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+    /// <inheritdoc/>
+    public void PreRender(in PagePreRenderContext context)
     {
-        ArgumentNullException.ThrowIfNull(writer);
+        var source = context.Source;
+        var writer = context.Output;
         if (_baseDirectory.IsEmpty)
         {
             writer.Write(source);
@@ -80,11 +90,4 @@ public sealed class SnippetsPlugin : DocPluginBase, IMarkdownPreprocessor
 
         SnippetsRewriter.Rewrite(source, _baseDirectory, _fileCache, writer);
     }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
-
-    /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 }

@@ -19,34 +19,27 @@ public class MarkdownLinkRewriterPluginTests
     public async Task NameIsStable() =>
         await Assert.That(new MarkdownLinkRewriterPlugin().Name.SequenceEqual("markdown-link-rewriter"u8)).IsTrue();
 
-    /// <summary>OnRenderPageAsync rewrites a <c>.md</c> href to <c>.html</c>.</summary>
+    /// <summary>PostRender rewrites a <c>.md</c> href to <c>.html</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RewritesMdHrefToHtml()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<a href=\"guide/intro.md\">x</a>"u8);
-
         var plugin = new MarkdownLinkRewriterPlugin();
-        await plugin.OnConfigureAsync(new PluginConfigureContext("/in", "/out", []), CancellationToken.None);
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext("/in", "/out", [], new()), CancellationToken.None);
 
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("guide/intro");
+        var output = RunPostRender(plugin, "<a href=\"guide/intro.md\">x</a>"u8);
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("guide/intro");
     }
 
-    /// <summary>HTML without a <c>.md</c> href is left untouched.</summary>
+    /// <summary>HTML without a <c>.md</c> href is signalled as no-op via <see cref="MarkdownLinkRewriterPlugin.NeedsRewrite"/>.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NoOpWhenNoMdHref()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        const string Html = "<p>plain</p>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-
+        var html = "<p>plain</p>"u8;
         var plugin = new MarkdownLinkRewriterPlugin();
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
 
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
+        await Assert.That(plugin.NeedsRewrite(html)).IsFalse();
     }
 
     /// <summary>Caller-supplied <c>useDirectoryUrls=true</c> overrides the config's false value.</summary>
@@ -54,25 +47,13 @@ public class MarkdownLinkRewriterPluginTests
     [Test]
     public async Task ExplicitDirectoryUrlsOverridesConfig()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<a href=\"intro.md\">x</a>"u8);
-
         var plugin = new MarkdownLinkRewriterPlugin(useDirectoryUrls: true);
-        var ctx = new PluginConfigureContext("/in", "/out", []) { UseDirectoryUrls = false };
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
+        var configCtx = new BuildConfigureContext("/in", "/out", [], new()) { UseDirectoryUrls = false };
+        await plugin.ConfigureAsync(configCtx, CancellationToken.None);
 
-        var output = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(output).DoesNotContain("intro.html");
-    }
-
-    /// <summary>OnFinalizeAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalizeAsyncNoOp()
-    {
-        var plugin = new MarkdownLinkRewriterPlugin();
-        await plugin.OnFinalizeAsync(new("/out"), CancellationToken.None);
+        var output = RunPostRender(plugin, "<a href=\"intro.md\">x</a>"u8);
+        var rewritten = Encoding.UTF8.GetString(output);
+        await Assert.That(rewritten).DoesNotContain("intro.html");
     }
 
     /// <summary>UseMarkdownLinks() registers the plugin.</summary>
@@ -103,5 +84,17 @@ public class MarkdownLinkRewriterPluginTests
     {
         var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderLinksExtensions.UseMarkdownLinks(null!, true));
         await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="html">Input HTML bytes.</param>
+    /// <returns>Rewritten output bytes.</returns>
+    private static byte[] RunPostRender(MarkdownLinkRewriterPlugin plugin, ReadOnlySpan<byte> html)
+    {
+        var output = new ArrayBufferWriter<byte>(64);
+        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        plugin.PostRender(in ctx);
+        return [.. output.WrittenSpan];
     }
 }

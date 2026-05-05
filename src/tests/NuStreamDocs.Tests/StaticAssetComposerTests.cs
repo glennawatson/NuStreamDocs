@@ -58,38 +58,20 @@ public class StaticAssetComposerTests
 
     /// <summary>Test plugin that exposes static assets.</summary>
     /// <param name="assets">Asset entries.</param>
-    private sealed class TestProvider(params (Common.FilePath Path, byte[] Bytes)[] assets) : IDocPlugin, IStaticAssetProvider
+    private sealed class TestProvider(params (Common.FilePath Path, byte[] Bytes)[] assets) : IPlugin, IStaticAssetProvider
     {
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Name => "test-provider"u8;
 
         /// <inheritdoc/>
         public (Common.FilePath Path, byte[] Bytes)[] StaticAssets { get; } = assets;
-
-        /// <inheritdoc/>
-        public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 
     /// <summary>Plugin that does not implement IStaticAssetProvider.</summary>
-    private sealed class NonProvider : IDocPlugin
+    private sealed class NonProvider : IPlugin
     {
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Name => "non-provider"u8;
-
-        /// <inheritdoc/>
-        public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 
     /// <summary>Disposable scratch directory.</summary>

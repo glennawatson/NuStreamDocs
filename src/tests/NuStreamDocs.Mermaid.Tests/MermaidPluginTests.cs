@@ -17,36 +17,20 @@ public class MermaidPluginTests
     [Test]
     public async Task NameIsStable() => await Assert.That(new MermaidPlugin().Name.SequenceEqual("mermaid"u8)).IsTrue();
 
-    /// <summary>OnRenderPageAsync rewrites <c>language-mermaid</c> code blocks.</summary>
+    /// <summary>PostRender rewrites <c>language-mermaid</c> code blocks.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnRenderPageRetagsMermaidBlock()
+    public async Task PostRenderRetagsMermaidBlock()
     {
-        var sink = new ArrayBufferWriter<byte>(128);
-        const string Html = "<pre><code class=\"language-mermaid\">graph TD\nA-->B</code></pre>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-
-        var plugin = new MermaidPlugin();
-        await plugin.OnRenderPageAsync(new("page.md", default, sink), CancellationToken.None);
-
-        var rewritten = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(rewritten).Contains("<pre class=\"mermaid\">");
+        var output = RunPostRender(new(), "<pre><code class=\"language-mermaid\">graph TD\nA-->B</code></pre>"u8);
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("<pre class=\"mermaid\">");
     }
 
-    /// <summary>HTML without a mermaid block is left unchanged.</summary>
+    /// <summary>HTML without a mermaid block is signalled as no-op via NeedsRewrite.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnRenderPageNoOpWhenAbsent()
-    {
-        var sink = new ArrayBufferWriter<byte>(64);
-        const string Html = "<p>plain</p>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-
-        var plugin = new MermaidPlugin();
-        await plugin.OnRenderPageAsync(new("page.md", default, sink), CancellationToken.None);
-
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
-    }
+    public async Task PostRenderNoOpWhenAbsent() =>
+        await Assert.That(new MermaidPlugin().NeedsRewrite("<p>plain</p>"u8)).IsFalse();
 
     /// <summary>WriteHeadExtra emits a script tag pulling in the runtime.</summary>
     /// <returns>Async test.</returns>
@@ -112,5 +96,17 @@ public class MermaidPluginTests
     {
         var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderMermaidExtensions.UseMermaid(null!));
         await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="html">Input HTML bytes.</param>
+    /// <returns>Rewritten output bytes.</returns>
+    private static byte[] RunPostRender(MermaidPlugin plugin, ReadOnlySpan<byte> html)
+    {
+        var output = new ArrayBufferWriter<byte>(128);
+        var ctx = new PagePostRenderContext("page.md", default, html, output);
+        plugin.PostRender(in ctx);
+        return [.. output.WrittenSpan];
     }
 }

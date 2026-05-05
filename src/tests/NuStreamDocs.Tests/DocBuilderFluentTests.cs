@@ -132,7 +132,7 @@ public class DocBuilderFluentTests
         await Assert.That(filter.HasRules).IsTrue();
     }
 
-    /// <summary>UsePlugin(IDocPlugin) rejects null.</summary>
+    /// <summary>UsePlugin(IPlugin) rejects null.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UsePluginRejectsNull()

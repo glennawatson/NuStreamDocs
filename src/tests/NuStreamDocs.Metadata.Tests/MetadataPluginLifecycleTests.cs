@@ -4,48 +4,27 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Metadata.Tests;
 
 /// <summary>Lifecycle method coverage for <c>MetadataPlugin</c>.</summary>
 public class MetadataPluginLifecycleTests
 {
-    /// <summary>OnConfigureAsync captures the input root.</summary>
+    /// <summary>ConfigureAsync captures the input root.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync() => await new MetadataPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
+    public async Task ConfigureAsync() =>
+        await new MetadataPlugin().ConfigureAsync(new BuildConfigureContext("/in", "/out", [], new()), CancellationToken.None);
 
-    /// <summary>OnRenderPageAsync is a no-op.</summary>
+    /// <summary>PreRender passes the source through when no metadata is registered.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnRenderPageAsync()
-    {
-        var plugin = new MetadataPlugin();
-        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
-    }
-
-    /// <summary>OnFinalizeAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalizeAsync() => await new MetadataPlugin().OnFinalizeAsync(new("/out"), CancellationToken.None);
-
-    /// <summary>Preprocess (single-arg overload) passes the source through.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessSingleArg()
+    public async Task PreRenderPassesThrough()
     {
         var sink = new ArrayBufferWriter<byte>(16);
-        new MetadataPlugin().Preprocess("hello"u8, sink);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
-    }
-
-    /// <summary>Preprocess (path overload) also passes through when no metadata is registered.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessPathOverload()
-    {
-        var sink = new ArrayBufferWriter<byte>(16);
-        new MetadataPlugin().Preprocess("hello"u8, sink, "page.md");
+        var ctx = new PagePreRenderContext("page.md", "hello"u8, sink);
+        new MetadataPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
     }
 }

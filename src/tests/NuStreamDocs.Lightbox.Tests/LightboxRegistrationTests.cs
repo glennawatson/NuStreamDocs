@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Lightbox.Tests;
 
@@ -27,28 +28,22 @@ public class LightboxRegistrationTests
         await Assert.That(defaults.Selector.AsSpan().SequenceEqual("glightbox"u8)).IsTrue();
     }
 
-    /// <summary>OnRenderPageAsync wraps a bare image when WrapImages is true.</summary>
+    /// <summary>PostRender wraps a bare image when WrapImages is true.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WrapsBareImages()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<p><img src=\"a.png\" alt=\"a\"></p>"u8);
-        await new LightboxPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("glightbox");
+        var output = RunPostRender(new(), "<p><img src=\"a.png\" alt=\"a\"></p>"u8);
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("glightbox");
     }
 
-    /// <summary>OnRenderPageAsync leaves images alone when WrapImages is false.</summary>
+    /// <summary>NeedsRewrite returns false when WrapImages is false.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SkipsWhenWrapDisabled()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        const string Html = "<p><img src=\"a.png\" alt=\"a\"></p>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
         var plugin = new LightboxPlugin(LightboxOptions.Default with { WrapImages = false });
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
+        await Assert.That(plugin.NeedsRewrite("<p><img src=\"a.png\" alt=\"a\"></p>"u8)).IsFalse();
     }
 
     /// <summary>UseLightbox registers the plugin.</summary>
@@ -88,5 +83,17 @@ public class LightboxRegistrationTests
     {
         var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseLightbox(null!));
         await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="html">Input HTML bytes.</param>
+    /// <returns>Rewritten output bytes.</returns>
+    private static byte[] RunPostRender(LightboxPlugin plugin, ReadOnlySpan<byte> html)
+    {
+        var output = new ArrayBufferWriter<byte>(128);
+        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        plugin.PostRender(in ctx);
+        return [.. output.WrittenSpan];
     }
 }

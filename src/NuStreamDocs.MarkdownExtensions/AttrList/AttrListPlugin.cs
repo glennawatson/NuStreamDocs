@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList;
@@ -24,27 +23,18 @@ namespace NuStreamDocs.MarkdownExtensions.AttrList;
 /// attr-list (e.g. <c>[Link]{: target="_blank" }</c>) is a
 /// follow-up — it needs hooks earlier in the rendering pipeline.
 /// </remarks>
-public sealed class AttrListPlugin : DocPluginBase
+public sealed class AttrListPlugin : IPagePostRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "attr-list"u8;
+    public ReadOnlySpan<byte> Name => "attr-list"u8;
 
     /// <inheritdoc/>
-    public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        var html = context.Html;
-        var rendered = html.WrittenSpan;
-        if (!AttrListRewriter.NeedsRewrite(rendered))
-        {
-            return ValueTask.CompletedTask;
-        }
+    public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
-        // Snapshot the rendered span into a pooled buffer, reset the writer,
-        // and let the rewriter encode the new HTML straight back into the
-        // page sink — saves the intermediate byte[] the previous shape
-        // allocated on every page that contained an attr-list marker.
-        HtmlSnapshotRewriter.Rewrite(html, state: 0, static (snapshot, dst, _) => AttrListRewriter.RewriteInto(snapshot, dst));
-        return ValueTask.CompletedTask;
-    }
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => AttrListRewriter.NeedsRewrite(html);
+
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context) =>
+        AttrListRewriter.RewriteInto(context.Html, context.Output);
 }

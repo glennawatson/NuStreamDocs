@@ -7,7 +7,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Read-only context handed to <see cref="IDocPlugin.OnFinalizeAsync"/>.
+/// Read-only context handed to <see cref="IBuildFinalizePlugin.FinalizeAsync"/>.
 /// </summary>
 /// <param name="OutputRoot">Absolute path to the site output directory.</param>
-public readonly record struct PluginFinalizeContext(DirectoryPath OutputRoot);
+/// <param name="Plugins">Every plugin registered with the builder; finalizers consult sibling state through their owning plugin instance.</param>
+public readonly record struct BuildFinalizeContext(
+    DirectoryPath OutputRoot,
+    IPlugin[] Plugins);

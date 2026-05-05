@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Optimize.Tests;
 
@@ -48,15 +49,15 @@ public class OptimizeRegistrationTests
     public async Task HtmlMinifyPluginName() =>
         await Assert.That(new HtmlMinifyPlugin().Name.SequenceEqual("html-minify"u8)).IsTrue();
 
-    /// <summary>HtmlMinifyPlugin minifies HTML at finalize.</summary>
+    /// <summary>HtmlMinifyPlugin minifies HTML in the post-resolve hook.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HtmlMinifyOnRenderPage()
+    public async Task HtmlMinifyRewrite()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<p>   spaces   </p>"u8);
-        await new HtmlMinifyPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).DoesNotContain("   spaces   ");
+        var output = new ArrayBufferWriter<byte>(64);
+        var ctx = new PagePostResolveContext("p.md", "<p>   spaces   </p>"u8, output);
+        new HtmlMinifyPlugin().Rewrite(in ctx);
+        await Assert.That(Encoding.UTF8.GetString(output.WrittenSpan)).DoesNotContain("   spaces   ");
     }
 
     /// <summary>UseOptimize rejects null builder.</summary>

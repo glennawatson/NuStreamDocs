@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Text;
 using NuStreamDocs.Bibliography.Model;
 using NuStreamDocs.Bibliography.Styles.Aglc4;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Bibliography.Tests;
 
@@ -106,7 +107,8 @@ public class CitationMarkerScannerTests
         var options = new BibliographyOptions(db, Aglc4Style.Instance, WarnOnMissing: false);
         var plugin = new BibliographyPlugin(options);
         var sink = new ArrayBufferWriter<byte>(Math.Max(markdown.Length * 4, 16));
-        plugin.Preprocess(Encoding.UTF8.GetBytes(markdown), sink);
+        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(markdown), sink);
+        plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

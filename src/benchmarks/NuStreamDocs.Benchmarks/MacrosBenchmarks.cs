@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Macros;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Benchmarks;
 
@@ -49,7 +50,8 @@ public class MacrosBenchmarks
     public int MarkerHeavyResolve()
     {
         var sink = new ArrayBufferWriter<byte>(_markerHeavySource.Length * 2);
-        _plugin.Preprocess(_markerHeavySource, sink);
+        var ctx = new PagePreRenderContext("page.md", _markerHeavySource, sink);
+        _plugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
 
@@ -59,7 +61,8 @@ public class MacrosBenchmarks
     public int NoMarkerPassThrough()
     {
         var sink = new ArrayBufferWriter<byte>(_noMarkerSource.Length * 2);
-        _plugin.Preprocess(_noMarkerSource, sink);
+        var ctx = new PagePreRenderContext("page.md", _noMarkerSource, sink);
+        _plugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
 

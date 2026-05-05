@@ -14,12 +14,12 @@ namespace NuStreamDocs.Optimize;
 /// file whose extension is in the configured set.
 /// </summary>
 /// <remarks>
-/// Runs once at <see cref="OnFinalizeAsync"/> after every page is written.
+/// Runs once at <see cref="FinalizeAsync"/> after every page is written.
 /// Files smaller than <see cref="OptimizeOptions.MinimumBytes"/> are
 /// skipped — gzip overhead can grow tiny payloads instead of shrinking
 /// them, and the runtime savings of pre-serving them are negligible.
 /// </remarks>
-public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IDocPlugin
+public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly OptimizeOptions _options = ValidateOptions(options);
@@ -52,23 +52,10 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : ID
     public ReadOnlySpan<byte> Name => "optimize"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority FinalizePriority => new(PluginBand.Latest, 1);
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         if (_options.Formats == OptimizeFormats.None || !Directory.Exists(context.OutputRoot))
         {

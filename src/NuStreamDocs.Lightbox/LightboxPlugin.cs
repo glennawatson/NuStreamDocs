@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Lightbox;
@@ -12,7 +11,7 @@ namespace NuStreamDocs.Lightbox;
 /// Plugin that pulls in glightbox for image lightbox behavior and
 /// optionally wraps content images in lightbox triggers.
 /// </summary>
-public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider
+public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
 {
     /// <summary>Configured options.</summary>
     private readonly LightboxOptions _options;
@@ -32,24 +31,17 @@ public sealed class LightboxPlugin : DocPluginBase, IHeadExtraProvider
     }
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "lightbox"u8;
+    public ReadOnlySpan<byte> Name => "lightbox"u8;
 
     /// <inheritdoc/>
-    public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        if (!_options.WrapImages)
-        {
-            return ValueTask.CompletedTask;
-        }
+    public PluginPriority PostRenderPriority => new(PluginBand.Late);
 
-        var html = context.Html;
-        byte[] snapshot = [.. html.WrittenSpan];
-        html.ResetWrittenCount();
-        ImageWrapper.Rewrite(snapshot, _options.Selector, html);
+    /// <inheritdoc/>
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => _options.WrapImages && html.IndexOf("<img "u8) >= 0;
 
-        return ValueTask.CompletedTask;
-    }
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context) =>
+        ImageWrapper.Rewrite(context.Html, _options.Selector, context.Output);
 
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)

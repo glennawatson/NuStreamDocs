@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Metadata;
@@ -17,11 +16,10 @@ namespace NuStreamDocs.Metadata;
 /// <para>
 /// Concept-level inspired by Statiq's directory / sidecar metadata
 /// model — but the implementation here is byte-level UTF-8: walks
-/// the input root once at <see cref="OnConfigureAsync"/> to build a
-/// <see cref="MetadataRegistry"/>, then implements
-/// <see cref="IMarkdownPreprocessor"/> so the per-page splice
-/// happens in the same scratch-buffer pass as every other Markdown
-/// preprocessor.
+/// the input root once during the configure phase to build a
+/// <see cref="MetadataRegistry"/>, then participates in the
+/// pre-render phase so the per-page splice happens in the same
+/// scratch-buffer pass as every other Markdown rewriter.
 /// </para>
 /// <para>
 /// Precedence: page's own frontmatter > sidecar > closest ancestor
@@ -30,12 +28,12 @@ namespace NuStreamDocs.Metadata;
 /// region with no reformatting.
 /// </para>
 /// </remarks>
-public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkdownPreprocessor
+public sealed class MetadataPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>
-    private readonly MetadataOptions _options = ValidateOptions(options);
+    private readonly MetadataOptions _options;
 
-    /// <summary>Registry built at configure time; nullable until the first <see cref="OnConfigureAsync"/> completes.</summary>
+    /// <summary>Registry built at configure time; <see cref="MetadataRegistry.Empty"/> until the first <see cref="ConfigureAsync"/> completes.</summary>
     private MetadataRegistry _registry = MetadataRegistry.Empty;
 
     /// <summary>Initializes a new instance of the <see cref="MetadataPlugin"/> class with default options.</summary>
@@ -44,11 +42,21 @@ public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkd
     {
     }
 
+    /// <summary>Initializes a new instance of the <see cref="MetadataPlugin"/> class.</summary>
+    /// <param name="options">Plugin options.</param>
+    public MetadataPlugin(MetadataOptions options) => _options = ValidateOptions(options);
+
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "metadata"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         _registry = MetadataCollector.Build(context.InputRoot, in _options);
@@ -56,46 +64,30 @@ public sealed class MetadataPlugin(MetadataOptions options) : IDocPlugin, IMarkd
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
     /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public void PreRender(in PagePreRenderContext context)
     {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
+        var writer = context.Output;
         ArgumentNullException.ThrowIfNull(writer);
 
-        // Path-blind callers (manual harnesses, tests against the no-arg overload)
-        // get an unmodified pass-through; metadata splicing is keyed on the page's
-        // relative path, which only the path-aware overload receives.
-        var dst = writer.GetSpan(source.Length);
-        source.CopyTo(dst);
-        writer.Advance(source.Length);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        ArgumentException.ThrowIfNullOrEmpty(relativePath);
+        var relativePath = context.RelativePath;
+        if (relativePath.IsEmpty)
+        {
+            // Path-blind callers (manual harnesses, tests with no source path) get
+            // an unmodified pass-through; metadata splicing is keyed on the page's
+            // relative path, so without one there's nothing to splice.
+            var source = context.Source;
+            var dst = writer.GetSpan(source.Length);
+            source.CopyTo(dst);
+            writer.Advance(source.Length);
+            return;
+        }
 
         var extra = _registry.ExtraFor(relativePath);
-        FrontmatterSplicer.Splice(source, extra, writer);
+        FrontmatterSplicer.Splice(context.Source, extra, writer);
     }
-
-    /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
     /// <summary>Validates and returns <paramref name="opts"/>.</summary>
     /// <param name="opts">Options to validate.</param>

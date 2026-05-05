@@ -34,7 +34,7 @@ public sealed class DocBuilder
         "call. Adding a parameter would defeat the point.";
 
     /// <summary>Registered plugin instances, in registration order.</summary>
-    private readonly List<IDocPlugin> _plugins = new(InitialPluginCapacity);
+    private readonly List<IPlugin> _plugins = new(InitialPluginCapacity);
 
     /// <summary>Configured include globs (forward-slashed, relative to the docs root).</summary>
     private readonly List<string> _includes = new(2);
@@ -57,13 +57,13 @@ public sealed class DocBuilder
     /// <summary>When true, pages whose frontmatter declares <c>draft: true</c> are still rendered; otherwise drafts are skipped.</summary>
     private bool _includeDrafts;
 
-    /// <summary>UTF-8 site name surfaced through <see cref="PluginConfigureContext.SiteName"/>; empty when none configured.</summary>
+    /// <summary>UTF-8 site name surfaced through <see cref="BuildConfigureContext.SiteName"/>; empty when none configured.</summary>
     private byte[] _siteName = [];
 
-    /// <summary>UTF-8 canonical site URL surfaced through <see cref="PluginConfigureContext.SiteUrl"/>; empty when none configured.</summary>
+    /// <summary>UTF-8 canonical site URL surfaced through <see cref="BuildConfigureContext.SiteUrl"/>; empty when none configured.</summary>
     private byte[] _siteUrl = [];
 
-    /// <summary>UTF-8 site-wide author name surfaced through <see cref="PluginConfigureContext.SiteAuthor"/>; empty when none configured.</summary>
+    /// <summary>UTF-8 site-wide author name surfaced through <see cref="BuildConfigureContext.SiteAuthor"/>; empty when none configured.</summary>
     private byte[] _siteAuthor = [];
 
     /// <summary>Gets a value indicating whether the build is configured for the directory-URL output shape.</summary>
@@ -222,7 +222,7 @@ public sealed class DocBuilder
     /// <summary>
     /// Registers a plugin via its parameterless constructor.
     /// </summary>
-    /// <typeparam name="TPlugin">Plugin type implementing <see cref="IDocPlugin"/>.</typeparam>
+    /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/>.</typeparam>
     /// <returns>This builder for chaining.</returns>
     /// <remarks>
     /// The <c>new()</c> constraint keeps the registration path
@@ -232,7 +232,7 @@ public sealed class DocBuilder
     /// </remarks>
     [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
     public DocBuilder UsePlugin<TPlugin>()
-        where TPlugin : IDocPlugin, new()
+        where TPlugin : IPlugin, new()
     {
         _plugins.Add(new TPlugin());
         return this;
@@ -247,7 +247,7 @@ public sealed class DocBuilder
     /// Used by extension methods that need to capture options before
     /// the plugin is added (most plugins).
     /// </remarks>
-    public DocBuilder UsePlugin(IDocPlugin plugin)
+    public DocBuilder UsePlugin(IPlugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin);
         _plugins.Add(plugin);
@@ -259,7 +259,7 @@ public sealed class DocBuilder
     /// if one is registered, otherwise constructs a fresh one, registers
     /// it, and returns it.
     /// </summary>
-    /// <typeparam name="TPlugin">Plugin type implementing <see cref="IDocPlugin"/> with a parameterless constructor.</typeparam>
+    /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/> with a parameterless constructor.</typeparam>
     /// <returns>The single registered instance of <typeparamref name="TPlugin"/>.</returns>
     /// <remarks>
     /// Used by accumulator-shaped extension methods (e.g. <c>AddExtraCss</c>)
@@ -267,7 +267,7 @@ public sealed class DocBuilder
     /// </remarks>
     [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
     public TPlugin GetOrAddPlugin<TPlugin>()
-        where TPlugin : class, IDocPlugin, new()
+        where TPlugin : class, IPlugin, new()
     {
         for (var i = 0; i < _plugins.Count; i++)
         {
@@ -394,24 +394,53 @@ public sealed class DocBuilder
     }
 
     /// <summary>
-    /// Renders a single in-memory document via every registered plugin's
-    /// page hook.
+    /// Renders a single in-memory document, threading every registered
+    /// post-render plugin sorted by priority. Reserved for tests and
+    /// programmatic rendering — production builds go through
+    /// <see cref="BuildPipeline.RunAsync(DirectoryPath, DirectoryPath, IPlugin[])"/>.
     /// </summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="html">Pre-allocated UTF-8 sink the renderer and plugins write into.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task that completes when every plugin's per-page hook has run.</returns>
-    public async Task RenderPageAsync(string relativePath, ReadOnlyMemory<byte> source, ArrayBufferWriter<byte> html, CancellationToken cancellationToken)
+    /// <returns>A task that completes when every post-render participant has run.</returns>
+    public Task RenderPageAsync(FilePath relativePath, ReadOnlyMemory<byte> source, ArrayBufferWriter<byte> html, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(html);
+        _ = cancellationToken;
         MarkdownRenderer.Render(source.Span, html);
 
-        var context = new PluginRenderContext(relativePath, source, html);
-        for (var i = 0; i < _plugins.Count; i++)
+        var phases = PluginPhases.Partition([.. _plugins]);
+        if (phases.PostRenders.Length is 0)
         {
-            await _plugins[i].OnRenderPageAsync(context, cancellationToken).ConfigureAwait(false);
+            return Task.CompletedTask;
         }
+
+        var pluginTiming = new NuStreamDocs.Logging.PluginTimingTable();
+        var scratch = new List<PageBuilderRental>();
+        var input = PageBuilderPool.Rent(html.WrittenCount);
+        try
+        {
+            input.Writer.Write(html.WrittenSpan);
+            var final = ApplyPostRendersExternal(input, scratch, source.Span, phases.PostRenders, relativePath, pluginTiming);
+            html.ResetWrittenCount();
+            html.Write(final.Writer.WrittenSpan);
+            if (!final.Equals(input))
+            {
+                final.Dispose();
+            }
+        }
+        finally
+        {
+            for (var i = 0; i < scratch.Count; i++)
+            {
+                scratch[i].Dispose();
+            }
+
+            input.Dispose();
+        }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>Builds the configured <see cref="PathFilter"/>.</summary>
@@ -420,4 +449,59 @@ public sealed class DocBuilder
         _includes is [] && _excludes is []
             ? PathFilter.Empty
             : new([.. _includes], [.. _excludes]);
+
+    /// <summary>External adapter mirroring <c>BuildPipeline.ApplyPostRenders</c> for the standalone <see cref="RenderPageAsync"/> path.</summary>
+    /// <param name="input">Rental holding the rendered HTML.</param>
+    /// <param name="scratch">Disposal list — caller disposes every entry.</param>
+    /// <param name="source">Original markdown bytes (passed via context).</param>
+    /// <param name="plugins">Sorted post-render participants.</param>
+    /// <param name="relativePath">Page path relative to the input root.</param>
+    /// <param name="pluginTiming">Per-plugin time accumulator.</param>
+    /// <returns>The rental whose writer holds the final post-render HTML.</returns>
+    private static PageBuilderRental ApplyPostRendersExternal(
+        PageBuilderRental input,
+        List<PageBuilderRental> scratch,
+        ReadOnlySpan<byte> source,
+        IPagePostRenderPlugin[] plugins,
+        FilePath relativePath,
+        NuStreamDocs.Logging.PluginTimingTable pluginTiming)
+    {
+        var anyRewrites = false;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            if (plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
+            {
+                anyRewrites = true;
+                break;
+            }
+        }
+
+        if (!anyRewrites)
+        {
+            return input;
+        }
+
+        var back = PageBuilderPool.Rent(Math.Max(input.Writer.WrittenCount, source.Length) * 2);
+        var front = input;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            var plugin = plugins[i];
+            if (!plugin.NeedsRewrite(front.Writer.WrittenSpan))
+            {
+                continue;
+            }
+
+            back.Writer.ResetWrittenCount();
+            var ctx = new PagePostRenderContext(relativePath, source, front.Writer.WrittenSpan, back.Writer);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                plugin.PostRender(in ctx);
+            }
+
+            (front, back) = (back, front);
+        }
+
+        scratch.Add(back);
+        return front;
+    }
 }

@@ -5,6 +5,7 @@
 using System.Buffers;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Tabs;
 
@@ -13,7 +14,7 @@ namespace NuStreamDocs.MarkdownExtensions.Tabs;
 /// blocks into a Material-flavored tabbed group (radio-button
 /// driven, no JavaScript) before the markdown renderer runs.
 /// </summary>
-public sealed class TabsPlugin : MarkdownAssetPluginBase
+public sealed class TabsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
     private static readonly byte[] LinkBytes =
@@ -30,26 +31,30 @@ public sealed class TabsPlugin : MarkdownAssetPluginBase
 .tabbed-set>input:checked+label+.tabbed-content{display:block}
 """u8];
 
-    /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "tabs"u8;
+    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    private static readonly FilePath AssetFilePath = new("assets/extensions/tabs.css");
 
     /// <inheritdoc/>
-    protected override FilePath AssetPath => new("assets/extensions/tabs.css");
+    public ReadOnlySpan<byte> Name => "tabs"u8;
 
     /// <inheritdoc/>
-    protected override byte[] StylesheetBytes => CssBytes;
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    protected override byte[] HeadLink => LinkBytes;
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
     /// <inheritdoc/>
-    public override bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasTabsOpener(source);
 
     /// <inheritdoc/>
-    public override void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public void PreRender(in PagePreRenderContext context) =>
+        TabsRewriter.Rewrite(context.Source, context.Output);
+
+    /// <inheritdoc/>
+    public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        TabsRewriter.Rewrite(source, writer);
+        writer.Write(LinkBytes);
     }
 }

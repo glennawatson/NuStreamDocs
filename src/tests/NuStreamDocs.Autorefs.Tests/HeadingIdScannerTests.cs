@@ -23,6 +23,31 @@ public class HeadingIdScannerTests
         await Assert.That(detailUrl.AsSpan().SequenceEqual("guide/intro.html#detail"u8)).IsTrue();
     }
 
+    /// <summary>Empty <c>&lt;a id="..."&gt;</c> anchors — the form the <c>[](){#id}</c> markdown shorthand expands to — also register.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task ExtractsEmptyAnchorIds()
+    {
+        var registry = new AutorefsRegistry();
+        var html = "<p>before</p><a href=\"\" id=\"T:Akavache.IFoo\"></a>\n<h1 id=\"intro\">Intro</h1>"u8;
+        HeadingIdScanner.ScanAndRegister(html, "api/foo.html"u8.ToArray(), registry);
+
+        await Assert.That(registry.Count).IsEqualTo(2);
+        await Assert.That(registry.TryResolve("T:Akavache.IFoo"u8, out var anchorUrl)).IsTrue();
+        await Assert.That(anchorUrl.AsSpan().SequenceEqual("api/foo.html#T:Akavache.IFoo"u8)).IsTrue();
+    }
+
+    /// <summary>An anchor without an <c>id</c> attribute, and unrelated tags whose name starts with <c>a</c>, do not register.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task IgnoresAnchorWithoutIdAndOtherATags()
+    {
+        var registry = new AutorefsRegistry();
+        var html = "<a href=\"x\">link</a><abbr id=\"nope\">abbr</abbr><article id=\"alsoNope\">x</article>"u8;
+        HeadingIdScanner.ScanAndRegister(html, "p.html"u8.ToArray(), registry);
+        await Assert.That(registry.Count).IsEqualTo(0);
+    }
+
     /// <summary>HTML without any heading IDs leaves the registry untouched.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

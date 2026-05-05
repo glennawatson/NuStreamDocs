@@ -5,19 +5,21 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Emoji.Tests;
 
 /// <summary>Lifecycle / registration tests for <c>EmojiPlugin</c>.</summary>
 public class EmojiPluginTests
 {
-    /// <summary>The preprocessor produces the same output as the rewriter.</summary>
+    /// <summary>The PreRender hook produces the same output as the rewriter.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PreprocessMatchesRewriter()
+    public async Task PreRenderMatchesRewriter()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        new EmojiPlugin().Preprocess("hi :rocket:"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "hi :rocket:"u8, sink);
+        new EmojiPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))
             .IsEqualTo("hi <span class=\"twemoji\">🚀</span>");
     }
@@ -27,16 +29,6 @@ public class EmojiPluginTests
     [Test]
     public async Task NameIsStable() =>
         await Assert.That(new EmojiPlugin().Name.SequenceEqual("emoji"u8)).IsTrue();
-
-    /// <summary>Preprocess with a null sink throws.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessRejectsNullSink()
-    {
-        var plugin = new EmojiPlugin();
-        var ex = Assert.Throws<ArgumentNullException>(() => plugin.Preprocess(default, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>UseEmoji registers the plugin and returns the builder.</summary>
     /// <returns>Async test.</returns>

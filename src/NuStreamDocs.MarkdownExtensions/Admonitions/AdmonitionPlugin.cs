@@ -5,6 +5,7 @@
 using System.Buffers;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 
@@ -15,7 +16,7 @@ namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 /// renderer runs, ships <c>admonition.css</c> as a static asset, and
 /// pulls it in via the page <c>&lt;head&gt;</c>.
 /// </summary>
-public sealed class AdmonitionPlugin : MarkdownAssetPluginBase
+public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
     private static readonly byte[] LinkBytes =
@@ -35,26 +36,30 @@ public sealed class AdmonitionPlugin : MarkdownAssetPluginBase
             .admonition.quote,.admonition.cite{border-left-color:#9e9e9e;background:rgba(158,158,158,.1)}
             """u8];
 
-    /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "admonitions"u8;
+    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    private static readonly FilePath AssetFilePath = new("assets/extensions/admonition.css");
 
     /// <inheritdoc/>
-    protected override FilePath AssetPath => new("assets/extensions/admonition.css");
+    public ReadOnlySpan<byte> Name => "admonitions"u8;
 
     /// <inheritdoc/>
-    protected override byte[] StylesheetBytes => CssBytes;
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    protected override byte[] HeadLink => LinkBytes;
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
     /// <inheritdoc/>
-    public override bool NeedsRewrite(ReadOnlySpan<byte> source) =>
+    public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasAdmonitionOpener(source);
 
     /// <inheritdoc/>
-    public override void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public void PreRender(in PagePreRenderContext context) =>
+        AdmonitionRewriter.Rewrite(context.Source, context.Output);
+
+    /// <inheritdoc/>
+    public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
-        AdmonitionRewriter.Rewrite(source, writer);
+        writer.Write(LinkBytes);
     }
 }

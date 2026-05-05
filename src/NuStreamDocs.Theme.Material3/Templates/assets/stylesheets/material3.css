@@ -239,10 +239,17 @@ a:hover { text-decoration: underline; }
 .md-header__topic + .md-header__topic {
   color: var(--md-sys-color-on-surface-variant);
 }
-.md-icon svg,
-.md-source__icon svg {
+.md-icon svg {
   width: 1.25rem;
   height: 1.25rem;
+  display: block;
+}
+/* Source-badge icon: trimmed from 1.25rem to 1.1rem so the GitHub octocat
+   path (whose geometry runs to y≈0.5 inside its 0-24 viewBox) doesn't kiss
+   the card's top/bottom edges inside the 6px-padded badge surface. */
+.md-source__icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
   display: block;
 }
 .md-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

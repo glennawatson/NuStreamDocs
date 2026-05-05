@@ -5,30 +5,36 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.MarkdownExtensions.AttrList;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
 
-/// <summary>OnRenderPageAsync coverage for <c>AttrListPlugin</c>.</summary>
+/// <summary>PostRender coverage for <c>AttrListPlugin</c>.</summary>
 public class AttrListPluginLifecycleTests
 {
-    /// <summary>OnRenderPageAsync rewrites <c>{ #id .class }</c> markup into HTML attributes.</summary>
+    /// <summary>PostRender rewrites <c>{ #id .class }</c> markup into HTML attributes.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnRenderPageAsync()
+    public async Task PostRenderRewrites()
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<h1>Title</h1>\n{ #lead }\n"u8);
-        await new AttrListPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("Title");
+        var output = RunPostRender("<h1>Title</h1>\n{ #lead }\n"u8);
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("Title");
     }
 
-    /// <summary>OnRenderPageAsync is a no-op when there's no AttrList markup.</summary>
+    /// <summary>PostRender is a no-op when there's no AttrList markup.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnRenderPageAsyncNoOp()
+    public async Task PostRenderNoOp() =>
+        await Assert.That(new AttrListPlugin().NeedsRewrite("<p>plain</p>"u8)).IsFalse();
+
+    /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
+    /// <param name="html">Input HTML bytes.</param>
+    /// <returns>Rewritten output bytes.</returns>
+    private static byte[] RunPostRender(ReadOnlySpan<byte> html)
     {
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<p>plain</p>"u8);
-        await new AttrListPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
+        var output = new ArrayBufferWriter<byte>(64);
+        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        new AttrListPlugin().PostRender(in ctx);
+        return [.. output.WrittenSpan];
     }
 }

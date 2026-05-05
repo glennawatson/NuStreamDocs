@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Mermaid;
@@ -19,11 +18,11 @@ namespace NuStreamDocs.Mermaid;
 /// Implements <see cref="ICustomFenceHandler"/> so the
 /// SuperFences dispatcher claims <c>language-mermaid</c> blocks
 /// during its scan. Without SuperFences the plugin's own
-/// <see cref="OnRenderPageAsync"/> pass walks the rendered HTML and
-/// retags the same blocks; with SuperFences the retag becomes a
-/// no-op because the dispatcher has already replaced them.
+/// post-render pass walks the rendered HTML and retags the same
+/// blocks; with SuperFences the retag becomes a no-op because the
+/// dispatcher has already replaced them.
 /// </remarks>
-public sealed class MermaidPlugin : DocPluginBase, IHeadExtraProvider, ICustomFenceHandler
+public sealed class MermaidPlugin : IPagePostRenderPlugin, IHeadExtraProvider, ICustomFenceHandler
 {
     /// <summary>UTF-8 head fragment that loads the mermaid runtime from a CDN and starts auto-discovery.</summary>
     private static readonly byte[] HeadFragment =
@@ -35,27 +34,25 @@ mermaid.initialize({ startOnLoad: true });
 """u8];
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "mermaid"u8;
+    public ReadOnlySpan<byte> Name => "mermaid"u8;
+
+    /// <inheritdoc/>
+    public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     ReadOnlySpan<byte> ICustomFenceHandler.Language => "mermaid"u8;
 
     /// <inheritdoc/>
-    public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => MermaidRetagger.NeedsRetag(html);
+
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context)
     {
-        _ = cancellationToken;
-        var html = context.Html;
-        var rendered = html.WrittenSpan;
-        if (!MermaidRetagger.NeedsRetag(rendered))
-        {
-            return ValueTask.CompletedTask;
-        }
-
-        var rewritten = MermaidRetagger.Retag(rendered);
-        html.ResetWrittenCount();
-        html.Write(rewritten);
-
-        return ValueTask.CompletedTask;
+        var rewritten = MermaidRetagger.Retag(context.Html);
+        var output = context.Output;
+        var dst = output.GetSpan(rewritten.Length);
+        rewritten.AsSpan().CopyTo(dst);
+        output.Advance(rewritten.Length);
     }
 
     /// <inheritdoc/>

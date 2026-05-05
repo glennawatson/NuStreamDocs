@@ -16,8 +16,8 @@ namespace NuStreamDocs.Plugins;
 /// (admonitions, tabs, details, mermaid) and icon plugins that need
 /// to drop a stylesheet or script into the output tree without owning
 /// a theme of their own. Theme plugins discover providers during
-/// <see cref="IDocPlugin.OnFinalizeAsync"/> by walking
-/// <see cref="PluginConfigureContext.Plugins"/> and write each
+/// <see cref="IBuildFinalizePlugin.FinalizeAsync"/> by walking
+/// <see cref="BuildFinalizeContext.Plugins"/> and write each
 /// <c>(relativePath, bytes)</c> tuple under the output root.
 /// <para>
 /// Both <c>NuStreamDocs.Theme.Material</c> and

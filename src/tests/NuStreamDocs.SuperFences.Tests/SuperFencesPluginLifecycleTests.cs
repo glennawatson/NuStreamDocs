@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Text;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SuperFences.Tests;
@@ -12,34 +11,24 @@ namespace NuStreamDocs.SuperFences.Tests;
 /// <summary>End-to-end lifecycle tests for <c>SuperFencesPlugin</c>.</summary>
 public class SuperFencesPluginLifecycleTests
 {
-    /// <summary>Without OnConfigureAsync the plugin is a no-op.</summary>
+    /// <summary>Without ConfigureAsync the plugin is signalled as no-op via NeedsRewrite.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NoOpBeforeConfigure()
-    {
-        var sink = new ArrayBufferWriter<byte>(64);
-        const string Html = "<pre><code class=\"language-mermaid\">x</code></pre>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-        await new SuperFencesPlugin().OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
-    }
+    public async Task NoOpBeforeConfigure() =>
+        await Assert.That(new SuperFencesPlugin().NeedsRewrite("<pre><code class=\"language-mermaid\">x</code></pre>"u8)).IsFalse();
 
-    /// <summary>OnConfigureAsync discovers ICustomFenceHandler plugins and dispatches matching blocks.</summary>
+    /// <summary>ConfigureAsync discovers ICustomFenceHandler plugins and dispatches matching blocks.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DiscoversHandlersAndDispatches()
     {
         var plugin = new SuperFencesPlugin();
         var stub = new StubHandler();
-        var ctx = new PluginConfigureContext("/in", "/out", [plugin, stub]);
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+        var ctx = new BuildConfigureContext("/in", "/out", [plugin, stub], new());
+        await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(128);
-        const string Html = "<pre><code class=\"language-stub\">body</code></pre>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("<stub>body</stub>");
+        var output = RunPostRender(plugin, "<pre><code class=\"language-stub\">body</code></pre>"u8);
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains("<stub>body</stub>");
     }
 
     /// <summary>HTML without any fence blocks short-circuits before dispatch.</summary>
@@ -48,14 +37,10 @@ public class SuperFencesPluginLifecycleTests
     public async Task NoOpWhenNoFenceMarkup()
     {
         var plugin = new SuperFencesPlugin();
-        var ctx = new PluginConfigureContext("/in", "/out", [plugin, new StubHandler()]);
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+        var ctx = new BuildConfigureContext("/in", "/out", [plugin, new StubHandler()], new());
+        await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(64);
-        const string Html = "<p>plain</p>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
+        await Assert.That(plugin.NeedsRewrite("<p>plain</p>"u8)).IsFalse();
     }
 
     /// <summary>An empty handler set is a no-op even when fences are present.</summary>
@@ -64,14 +49,10 @@ public class SuperFencesPluginLifecycleTests
     public async Task NoOpWhenNoHandlers()
     {
         var plugin = new SuperFencesPlugin();
-        var ctx = new PluginConfigureContext("/in", "/out", [plugin]);
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+        var ctx = new BuildConfigureContext("/in", "/out", [plugin], new());
+        await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(64);
-        const string Html = "<pre><code class=\"language-stub\">x</code></pre>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
+        await Assert.That(plugin.NeedsRewrite("<pre><code class=\"language-stub\">x</code></pre>"u8)).IsFalse();
     }
 
     /// <summary>Handlers that report a null/empty Language are silently dropped.</summary>
@@ -81,21 +62,29 @@ public class SuperFencesPluginLifecycleTests
     {
         var plugin = new SuperFencesPlugin();
         var bad = new EmptyLanguageHandler();
-        var ctx = new PluginConfigureContext("/in", "/out", [plugin, bad]);
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+        var ctx = new BuildConfigureContext("/in", "/out", [plugin, bad], new());
+        await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(64);
-        const string Html = "<pre><code class=\"language-stub\">x</code></pre>";
-        sink.Write(Encoding.UTF8.GetBytes(Html));
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Html);
+        await Assert.That(plugin.NeedsRewrite("<pre><code class=\"language-stub\">x</code></pre>"u8)).IsFalse();
+    }
+
+    /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="html">Input HTML bytes.</param>
+    /// <returns>Rewritten output bytes.</returns>
+    private static byte[] RunPostRender(SuperFencesPlugin plugin, ReadOnlySpan<byte> html)
+    {
+        var output = new ArrayBufferWriter<byte>(128);
+        var ctx = new PagePostRenderContext("p.md", default, html, output);
+        plugin.PostRender(in ctx);
+        return [.. output.WrittenSpan];
     }
 
     /// <summary>Stub fence handler used by the dispatch path tests.</summary>
-    private sealed class StubHandler : DocPluginBase, ICustomFenceHandler
+    private sealed class StubHandler : IPlugin, ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public override ReadOnlySpan<byte> Name => "stub-handler"u8;
+        public ReadOnlySpan<byte> Name => "stub-handler"u8;
 
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Language => "stub"u8;
@@ -103,6 +92,7 @@ public class SuperFencesPluginLifecycleTests
         /// <inheritdoc/>
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)
         {
+            ArgumentNullException.ThrowIfNull(writer);
             writer.Write("<stub>"u8);
             writer.Write(content);
             writer.Write("</stub>"u8);
@@ -110,10 +100,10 @@ public class SuperFencesPluginLifecycleTests
     }
 
     /// <summary>Handler that reports an empty language; should be filtered out.</summary>
-    private sealed class EmptyLanguageHandler : DocPluginBase, ICustomFenceHandler
+    private sealed class EmptyLanguageHandler : IPlugin, ICustomFenceHandler
     {
         /// <inheritdoc/>
-        public override ReadOnlySpan<byte> Name => "empty-lang"u8;
+        public ReadOnlySpan<byte> Name => "empty-lang"u8;
 
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Language => default;
@@ -122,6 +112,8 @@ public class SuperFencesPluginLifecycleTests
         public void Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)
         {
             // Should never be called.
+            _ = content;
+            _ = writer;
         }
     }
 }

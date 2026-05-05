@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Common;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Macros.Tests;
 
@@ -130,7 +131,8 @@ public class MacrosScannerTests
     {
         var sink = new ArrayBufferWriter<byte>(64);
         const string Input = "Hello {{ name }}.";
-        new MacrosPlugin().Preprocess(Encoding.UTF8.GetBytes(Input), sink);
+        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(Input), sink);
+        new MacrosPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Input);
     }
 
@@ -171,7 +173,8 @@ public class MacrosScannerTests
     {
         var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables));
         var sink = new ArrayBufferWriter<byte>(input.Length * 2);
-        plugin.Preprocess(Encoding.UTF8.GetBytes(input), sink);
+        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(input), sink);
+        plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 
@@ -183,7 +186,8 @@ public class MacrosScannerTests
     {
         var plugin = new MacrosPlugin(MacrosOptions.Default.WithVariables(variables) with { EscapeHtml = true });
         var sink = new ArrayBufferWriter<byte>(input.Length * 2);
-        plugin.Preprocess(Encoding.UTF8.GetBytes(input), sink);
+        var ctx = new PagePreRenderContext("p.md", Encoding.UTF8.GetBytes(input), sink);
+        plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

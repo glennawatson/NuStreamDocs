@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Icons.FontAwesome;
@@ -24,7 +23,7 @@ namespace NuStreamDocs.Icons.FontAwesome;
 /// encoding.
 /// </para>
 /// </remarks>
-public sealed class FontAwesomePlugin : DocPluginBase, IHeadExtraProvider
+public sealed class FontAwesomePlugin : IPlugin, IHeadExtraProvider
 {
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly FontAwesomeOptions _options;
@@ -40,7 +39,7 @@ public sealed class FontAwesomePlugin : DocPluginBase, IHeadExtraProvider
     public FontAwesomePlugin(in FontAwesomeOptions options) => _options = options;
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "fontawesome"u8;
+    public ReadOnlySpan<byte> Name => "fontawesome"u8;
 
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)

@@ -16,17 +16,17 @@ namespace NuStreamDocs.Highlight;
 /// produced by a <see cref="Lexer"/>.
 /// </summary>
 /// <remarks>
-/// Match the marker-replace pattern used by the Nav plugin: snapshot the
-/// rendered HTML once, walk it forward looking for <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c>,
-/// emit prefix bytes verbatim, swap the body for highlighted bytes, repeat.
-/// One copy per page; per-block work is the lexer pass plus an HTML escape.
+/// Match the marker-replace pattern used by the Nav plugin: walk the rendered HTML
+/// looking for <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c>, emit prefix bytes
+/// verbatim, swap the body for highlighted bytes, repeat. Per-block work is the
+/// lexer pass plus an HTML escape.
 /// <para>
 /// The whole pipeline stays UTF-8: the language alias and the unescaped
 /// body are passed to the lexer / emitter as <see cref="ReadOnlyMemory{Byte}"/>
 /// without any UTF-16 round-trip.
 /// </para>
 /// </remarks>
-public sealed class HighlightPlugin : IDocPlugin, IStaticAssetProvider, IHeadExtraProvider
+public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>The <c>&lt;link rel="stylesheet"&gt;</c> snippet the page-shell template injects into <c>&lt;head&gt;</c>.</summary>
     private static readonly byte[] HeadExtraSnippet =
@@ -66,38 +66,17 @@ public sealed class HighlightPlugin : IDocPlugin, IStaticAssetProvider, IHeadExt
     public ReadOnlySpan<byte> Name => "highlight"u8;
 
     /// <inheritdoc/>
+    public PluginPriority PostRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets =>
         [(HighlightStylesheet.AssetPath, HighlightStylesheet.GetBytes())];
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => html.IndexOf("<pre><code class=\"language-"u8) >= 0;
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        var html = context.Html;
-        if (html.WrittenSpan.IndexOf("<pre><code class=\"language-"u8) < 0)
-        {
-            return ValueTask.CompletedTask;
-        }
-
-        HtmlSnapshotRewriter.Rewrite(html, this, static (snapshot, writer, self) => self.Highlight(snapshot, writer));
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public void PostRender(in PagePostRenderContext context) => Highlight(context.Html, context.Output);
 
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)

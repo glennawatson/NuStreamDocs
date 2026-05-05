@@ -83,7 +83,7 @@ public class UrlPatternAndCspTests
         await Assert.That(scripts).IsEmpty();
     }
 
-    /// <summary>End-to-end: PrivacyPlugin.OnRenderPage feeds the CSP collector and OnFinalize emits the manifest.</summary>
+    /// <summary>End-to-end: PrivacyPlugin.Rewrite feeds the CSP collector and FinalizeAsync emits the manifest.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task PrivacyPluginEmitsCspManifest()
@@ -93,17 +93,13 @@ public class UrlPatternAndCspTests
         try
         {
             var plugin = new PrivacyPlugin(PrivacyOptions.Default with { GenerateCspManifest = true });
-            var configure = new PluginConfigureContext("/in", outputRoot, []);
-            await plugin.OnConfigureAsync(configure, CancellationToken.None);
+            var configure = new BuildConfigureContext("/in", outputRoot, [], new());
+            await plugin.ConfigureAsync(configure, CancellationToken.None);
 
-            byte[] html = [.. "<style>body{color:red}</style><script>alert(1)</script>"u8];
-            var sink = new ArrayBufferWriter<byte>();
-            sink.Write(html);
-            var render = new PluginRenderContext("page.md", html, sink);
-            await plugin.OnRenderPageAsync(render, CancellationToken.None);
+            RunRewrite(plugin, "<style>body{color:red}</style><script>alert(1)</script>"u8);
 
-            var finalize = new PluginFinalizeContext(outputRoot);
-            await plugin.OnFinalizeAsync(finalize, CancellationToken.None);
+            var finalize = new BuildFinalizeContext(outputRoot, []);
+            await plugin.FinalizeAsync(finalize, CancellationToken.None);
 
             var manifest = await File.ReadAllTextAsync(Path.Combine(outputRoot, "csp-hashes.json"));
             await Assert.That(manifest).Contains("\"styleSrc\"");
@@ -121,5 +117,15 @@ public class UrlPatternAndCspTests
                 // Best-effort cleanup.
             }
         }
+    }
+
+    /// <summary>Drives one Rewrite call against a fresh sink.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="html">Input HTML bytes.</param>
+    private static void RunRewrite(PrivacyPlugin plugin, ReadOnlySpan<byte> html)
+    {
+        var output = new ArrayBufferWriter<byte>();
+        var ctx = new PagePostResolveContext("page.md", html, output);
+        plugin.Rewrite(in ctx);
     }
 }

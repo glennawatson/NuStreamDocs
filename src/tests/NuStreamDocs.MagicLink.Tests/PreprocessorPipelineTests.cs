@@ -13,7 +13,7 @@ namespace NuStreamDocs.MagicLink.Tests;
 /// Integration tests that exercise multi-pass preprocessor chaining
 /// — the same shape <c>NuStreamDocs.Building.BuildPipeline</c>
 /// uses when it threads bytes through every registered
-/// <c>IMarkdownPreprocessor</c> in order.
+/// <see cref="IPagePreRenderPlugin"/> in order.
 /// </summary>
 public class PreprocessorPipelineTests
 {
@@ -22,9 +22,7 @@ public class PreprocessorPipelineTests
     [Test]
     public async Task SmartSymbolsThenMagicLink()
     {
-        var smart = new SmartSymbolsPlugin();
-        var magic = new MagicLinkPlugin();
-        var pipeline = new IMarkdownPreprocessor[] { smart, magic };
+        var pipeline = new IPagePreRenderPlugin[] { new SmartSymbolsPlugin(), new MagicLinkPlugin() };
 
         const string Source = "Copyright (c) 2026 — see https://example.com.";
         const string Expected = "Copyright © 2026 — see <https://example.com>.";
@@ -37,9 +35,7 @@ public class PreprocessorPipelineTests
     [Test]
     public async Task MagicLinkThenSmartSymbols()
     {
-        var magic = new MagicLinkPlugin();
-        var smart = new SmartSymbolsPlugin();
-        var pipeline = new IMarkdownPreprocessor[] { magic, smart };
+        var pipeline = new IPagePreRenderPlugin[] { new MagicLinkPlugin(), new SmartSymbolsPlugin() };
 
         const string Source = "Visit https://example.com 1/2 of the time (c).";
         const string Expected = "Visit <https://example.com> ½ of the time ©.";
@@ -52,9 +48,7 @@ public class PreprocessorPipelineTests
     [Test]
     public async Task FencedCodeIsHonoredAcrossEveryPass()
     {
-        var smart = new SmartSymbolsPlugin();
-        var magic = new MagicLinkPlugin();
-        var pipeline = new IMarkdownPreprocessor[] { smart, magic };
+        var pipeline = new IPagePreRenderPlugin[] { new SmartSymbolsPlugin(), new MagicLinkPlugin() };
 
         const string Source = "Outside (c) https://x.test\n```\n(c) https://x.test\n```\nAfter (c) https://x.test.";
         const string Expected = "Outside © <https://x.test>\n```\n(c) https://x.test\n```\nAfter © <https://x.test>.";
@@ -75,7 +69,7 @@ public class PreprocessorPipelineTests
     /// <param name="source">Markdown source.</param>
     /// <param name="pipeline">Preprocessor sequence.</param>
     /// <returns>Final pipeline output.</returns>
-    private static string RunPipeline(string source, IMarkdownPreprocessor[] pipeline)
+    private static string RunPipeline(string source, IPagePreRenderPlugin[] pipeline)
     {
         ReadOnlyMemory<byte> current = Encoding.UTF8.GetBytes(source);
         ArrayBufferWriter<byte>? front = null;
@@ -86,7 +80,8 @@ public class PreprocessorPipelineTests
             back ??= new(Math.Max(current.Length, 1));
 
             front.ResetWrittenCount();
-            pipeline[i].Preprocess(current.Span, front);
+            var ctx = new PagePreRenderContext("p.md", current.Span, front);
+            pipeline[i].PreRender(in ctx);
             current = front.WrittenMemory;
             (front, back) = (back, front);
         }

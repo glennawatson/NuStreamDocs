@@ -10,7 +10,7 @@ using NuStreamDocs.Theme.Material;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>Throughput + allocation benchmarks for <c>MaterialThemePlugin.OnRenderPageAsync</c> with a pre-built body.</summary>
+/// <summary>Throughput + allocation benchmarks for <c>MaterialThemePlugin.PostRender</c> with a pre-built body.</summary>
 /// <remarks>
 /// The plugin's hot path used to allocate one fresh <c>byte[]</c> per
 /// page for the body copy plus several <c>byte[]</c>s for option-string
@@ -34,7 +34,7 @@ public class ThemeWrapBenchmarks
     /// <summary>Pre-built UTF-8 body bytes copied into <c>html</c> at the start of every iteration.</summary>
     private byte[] _bodyTemplate = [];
 
-    /// <summary>The <c>ArrayBufferWriter{T}</c> the plugin reads + writes.</summary>
+    /// <summary>The <c>ArrayBufferWriter{T}</c> the plugin writes the wrapped page into.</summary>
     private ArrayBufferWriter<byte> _html = null!;
 
     /// <summary>Configures the plugin and generates the body fixture once.</summary>
@@ -43,8 +43,8 @@ public class ThemeWrapBenchmarks
     public async Task Setup()
     {
         _plugin = new();
-        var configureContext = new PluginConfigureContext("/in", "/out", []);
-        await _plugin.OnConfigureAsync(configureContext, CancellationToken.None);
+        var configureContext = new BuildConfigureContext("/in", "/out", [_plugin], new CrossPageMarkerRegistry());
+        await _plugin.ConfigureAsync(configureContext, CancellationToken.None);
 
         var sb = new StringBuilder(BodyBytes);
         while (sb.Length < BodyBytes)
@@ -56,22 +56,20 @@ public class ThemeWrapBenchmarks
         _html = new(BodyBytes * WrappedPageGrowthFactor);
     }
 
-    /// <summary>Restores the body bytes into <c>html</c> before each iteration so the plugin sees a fresh page.</summary>
+    /// <summary>Resets the output writer before each iteration so the plugin sees a fresh sink.</summary>
     [IterationSetup]
     public void IterationSetup()
     {
         _html.ResetWrittenCount();
-        _bodyTemplate.CopyTo(_html.GetSpan(_bodyTemplate.Length));
-        _html.Advance(_bodyTemplate.Length);
     }
 
-    /// <summary>One <c>MaterialThemePlugin.OnRenderPageAsync</c> invocation.</summary>
+    /// <summary>One <c>MaterialThemePlugin.PostRender</c> invocation.</summary>
     /// <returns>Wrapped page byte count.</returns>
     [Benchmark]
-    public async Task<int> Wrap()
+    public int Wrap()
     {
-        var renderContext = new PluginRenderContext("guide/page.md", _bodyTemplate, _html);
-        await _plugin.OnRenderPageAsync(renderContext, CancellationToken.None);
+        var renderContext = new PagePostRenderContext("guide/page.md", default, _bodyTemplate, _html);
+        _plugin.PostRender(in renderContext);
         return _html.WrittenCount;
     }
 }

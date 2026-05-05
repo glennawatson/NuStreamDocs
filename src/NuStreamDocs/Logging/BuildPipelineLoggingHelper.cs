@@ -36,7 +36,7 @@ internal static partial class BuildPipelineLoggingHelper
 
     /// <summary>Logs the start of one plugin's <c>OnConfigureAsync</c> hook (Debug — most plugins are no-ops on this hook so the per-plugin trail is too noisy at Info level).</summary>
     /// <param name="logger">Target logger.</param>
-    /// <param name="pluginName">Plugin name (<see cref="NuStreamDocs.Plugins.IDocPlugin.Name"/>).</param>
+    /// <param name="pluginName">Plugin name (<see cref="NuStreamDocs.Plugins.IPlugin.Name"/>).</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Configuring plugin: {PluginName}")]
     public static partial void LogPluginConfigure(ILogger logger, string pluginName);
 

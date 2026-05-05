@@ -24,7 +24,7 @@ internal static class BuildFingerprint
     /// <param name="plugins">Registered plugins, in execution order.</param>
     /// <param name="options">Pipeline options that affect emitted output.</param>
     /// <returns>Raw SHA-256 digest bytes for this build shape.</returns>
-    public static byte[] Create(IDocPlugin[] plugins, in BuildPipelineOptions options)
+    public static byte[] Create(IPlugin[] plugins, in BuildPipelineOptions options)
     {
         ArgumentNullException.ThrowIfNull(plugins);
 

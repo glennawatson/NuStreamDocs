@@ -17,10 +17,10 @@ namespace NuStreamDocs.Versions;
 /// The user is expected to point the build at a version-specific
 /// subdirectory (e.g. <c>builder.WithOutput("./site/0.4.2")</c>); the
 /// plugin then upserts the version's entry into <c>./site/versions.json</c>
-/// during <see cref="OnFinalizeAsync"/>. This keeps each version's content
+/// during <see cref="FinalizeAsync"/>. This keeps each version's content
 /// isolated and lets a deploy script swap the parent symlink atomically.
 /// </remarks>
-public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDocPlugin
+public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly VersionOptions _options = ValidateOptions(options);
@@ -39,23 +39,10 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IDo
     public ReadOnlySpan<byte> Name => "versions"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority FinalizePriority => new(PluginBand.Latest);
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         var parentDir = ResolveParentDirectory(context.OutputRoot);

@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SmartSymbols;
@@ -22,22 +20,18 @@ namespace NuStreamDocs.SmartSymbols;
 /// pymdownx.smartsymbols' inline-only scope. This is the parity
 /// list enabled by Zensical's default <c>zensical.toml</c>.
 /// </remarks>
-public sealed class SmartSymbolsPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class SmartSymbolsPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "smartsymbols"u8;
+    public ReadOnlySpan<byte> Name => "smartsymbols"u8;
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        SmartSymbolsRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+    /// <inheritdoc/>
+    public void PreRender(in PagePreRenderContext context) =>
+        SmartSymbolsRewriter.Rewrite(context.Source, context.Output);
 }

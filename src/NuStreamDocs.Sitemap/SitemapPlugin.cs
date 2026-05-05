@@ -10,7 +10,7 @@ namespace NuStreamDocs.Sitemap;
 /// <summary>
 /// Sitemap plugin. Collects every rendered page's URL during the
 /// build and writes <c>sitemap.xml</c> + <c>robots.txt</c> to the
-/// output root in <see cref="OnFinalizeAsync"/>.
+/// output root in <see cref="FinalizeAsync"/>.
 /// </summary>
 /// <remarks>
 /// Requires <c>site_url</c> in the config — without it the URLs in
@@ -18,7 +18,7 @@ namespace NuStreamDocs.Sitemap;
 /// note in the build log. <c>robots.txt</c> is emitted alongside
 /// pointing crawlers at the sitemap URL.
 /// </remarks>
-public sealed class SitemapPlugin : IDocPlugin
+public sealed class SitemapPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin
 {
     /// <summary>Per-page UTF-8 URL bytes collected during the build; drained at finalize time.</summary>
     private readonly ConcurrentQueue<byte[]> _entries = [];
@@ -30,7 +30,16 @@ public sealed class SitemapPlugin : IDocPlugin
     public ReadOnlySpan<byte> Name => "sitemap"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority ScanPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _baseUrlBytes = NormalizeBaseUrl(context.SiteUrl);
         _ = cancellationToken;
@@ -38,22 +47,19 @@ public sealed class SitemapPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public void Scan(in PageScanContext context)
     {
-        _ = cancellationToken;
         var url = SitemapWriter.RelativePathToUrlPath(context.RelativePath);
         if (url.Length is 0)
         {
-            return ValueTask.CompletedTask;
+            return;
         }
 
         _entries.Enqueue(url);
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         if (_baseUrlBytes is null || _entries.IsEmpty)

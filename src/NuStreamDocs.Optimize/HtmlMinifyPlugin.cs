@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Optimize;
@@ -12,7 +11,7 @@ namespace NuStreamDocs.Optimize;
 /// collapsed and HTML comments stripped. Pre/code/textarea/script/style
 /// blocks are passed through verbatim.
 /// </summary>
-public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IDocPlugin
+public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IPagePostResolvePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly HtmlMinifyOptions _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -27,29 +26,12 @@ public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IDocPlugin
     public ReadOnlySpan<byte> Name => "html-minify"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority PostResolvePriority => new(PluginBand.Latest);
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        HtmlSnapshotRewriter.Rewrite(
-            context.Html,
-            _options,
-            static (snapshot, writer, options) => HtmlMinifier.Minify(snapshot, writer, options));
-        return ValueTask.CompletedTask;
-    }
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
     /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public void Rewrite(in PagePostResolveContext context) =>
+        HtmlMinifier.Minify(context.Html, context.Output, _options);
 }

@@ -15,7 +15,7 @@ namespace NuStreamDocs.Privacy;
 
 /// <summary>
 /// Parallel HTTP downloader for the externalized assets registered
-/// during <see cref="PrivacyPlugin.OnRenderPageAsync"/>.
+/// during <see cref="PrivacyPlugin.Rewrite"/>.
 /// </summary>
 /// <remarks>
 /// Iterates fixed-point: each pass downloads every URL the registry

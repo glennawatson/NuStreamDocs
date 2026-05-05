@@ -7,7 +7,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Building;
 
 /// <summary>
-/// Bulk-registration helpers that wrap repeated <see cref="DocBuilder.UsePlugin(IDocPlugin)"/>
+/// Bulk-registration helpers that wrap repeated <see cref="DocBuilder.UsePlugin(IPlugin)"/>
 /// calls for ergonomics.
 /// </summary>
 /// <remarks>
@@ -21,7 +21,7 @@ public static class DocBuilderBulkExtensions
     /// <param name="builder">Doc builder.</param>
     /// <param name="plugins">Plugins to register.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UsePlugins(this DocBuilder builder, params ReadOnlySpan<IDocPlugin> plugins)
+    public static DocBuilder UsePlugins(this DocBuilder builder, params ReadOnlySpan<IPlugin> plugins)
     {
         ArgumentNullException.ThrowIfNull(builder);
         for (var i = 0; i < plugins.Length; i++)

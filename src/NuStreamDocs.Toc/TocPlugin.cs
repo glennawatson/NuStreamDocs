@@ -17,17 +17,20 @@ namespace NuStreamDocs.Toc;
 /// the mkdocs <c>toc</c> markdown extension's runtime behavior.
 /// </summary>
 /// <remarks>
-/// During <see cref="OnRenderPageAsync"/>:
+/// During the post-render phase:
 /// <list type="number">
-/// <item><description>Snapshot the page bytes into a pooled buffer.</description></item>
-/// <item><description>Scan for headings, slugify, and rewrite the body with id attributes + permalink anchors.</description></item>
+/// <item><description>Scan the input HTML for headings, slugify them.</description></item>
+/// <item><description>Rewrite the body with id attributes + permalink anchors.</description></item>
 /// <item><description>If <see cref="TocOptions.MarkerSubstitute"/> is true and a
-/// <c>&lt;!--@@toc@@--&gt;</c> marker is present, take a second snapshot and
+/// <c>&lt;!--@@toc@@--&gt;</c> marker is present in the rewritten output,
 /// splice the rendered TOC fragment in.</description></item>
 /// </list>
 /// </remarks>
-public sealed class TocPlugin : IDocPlugin
+public sealed class TocPlugin : IPagePostRenderPlugin
 {
+    /// <summary>Tiebreak that orders TOC marker substitution after the theme shell wrap (which uses the bare <see cref="PluginBand.Latest"/>).</summary>
+    private const int PostRenderTiebreak = 1;
+
     /// <summary>Configured option set.</summary>
     private readonly TocOptions _options;
 
@@ -70,102 +73,71 @@ public sealed class TocPlugin : IDocPlugin
     public ReadOnlySpan<byte> Name => "toc"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
+    public PluginPriority PostRenderPriority => new(PluginBand.Latest, PostRenderTiebreak);
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => !html.IsEmpty && html.IndexOf("<h"u8) >= 0;
+
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context)
     {
-        _ = cancellationToken;
-        var html = context.Html;
-        var written = html.WrittenSpan;
-        if (written.IsEmpty)
+        var snapshot = context.Html;
+        var output = context.Output;
+        if (snapshot.IsEmpty)
         {
-            return ValueTask.CompletedTask;
+            return;
         }
 
         TocLoggingHelper.LogTocStart(_logger, context.RelativePath.Value);
         var sw = Stopwatch.StartNew();
 
-        var length = written.Length;
-        var rental = ArrayPool<byte>.Shared.Rent(length);
-        try
+        var headings = HeadingScanner.Scan(snapshot);
+        if (headings.Length is 0)
         {
-            written.CopyTo(rental);
-            var snapshot = rental.AsSpan(0, length);
-
-            var headings = HeadingScanner.Scan(snapshot);
-            if (headings.Length is 0)
-            {
-                sw.Stop();
-                TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, 0, 0, sw.ElapsedMilliseconds);
-                return ValueTask.CompletedTask;
-            }
-
-            var (slugged, collisions) = HeadingSlugifier.AssignSlugs(snapshot, headings);
-
-            html.ResetWrittenCount();
-            HeadingRewriter.Rewrite(snapshot, slugged, _permalinkSymbolBytes, html);
-
-            if (_options.MarkerSubstitute)
-            {
-                SubstituteMarker(html, snapshot, slugged);
-            }
-
+            // No headings — pass through verbatim.
+            Utf8StringWriter.Write(output, snapshot);
             sw.Stop();
-            TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, slugged.Length, collisions, sw.ElapsedMilliseconds);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(rental);
-        }
-
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <summary>Locates the TOC marker in the freshly-rewritten body and substitutes the fragment.</summary>
-    /// <param name="html">Output buffer (already carries the heading-rewritten body).</param>
-    /// <param name="sourceSnapshot">Original pre-rewrite HTML snapshot used for heading-text slices.</param>
-    /// <param name="headings">Slugged headings.</param>
-    private void SubstituteMarker(ArrayBufferWriter<byte> html, ReadOnlySpan<byte> sourceSnapshot, Heading[] headings)
-    {
-        var written = html.WrittenSpan;
-        var markerIndex = written.IndexOf(TocMarker.AsSpan());
-        if (markerIndex < 0)
-        {
+            TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, 0, 0, sw.ElapsedMilliseconds);
             return;
         }
 
-        var length = written.Length;
-        var rental = ArrayPool<byte>.Shared.Rent(length);
-        try
-        {
-            written.CopyTo(rental);
-            html.ResetWrittenCount();
+        var (slugged, collisions) = HeadingSlugifier.AssignSlugs(snapshot, headings);
 
-            var snapshot = rental.AsSpan(0, length);
-            var prefix = snapshot[..markerIndex];
-            var suffix = snapshot[(markerIndex + TocMarker.Length)..];
-
-            Utf8StringWriter.Write(html, prefix);
-            TocFragmentRenderer.Render(sourceSnapshot, headings, in _options, html);
-            Utf8StringWriter.Write(html, suffix);
-        }
-        finally
+        if (_options.MarkerSubstitute)
         {
-            ArrayPool<byte>.Shared.Return(rental);
+            using var rental = PageBuilderPool.Rent(snapshot.Length);
+            var scratch = rental.Writer;
+            HeadingRewriter.Rewrite(snapshot, slugged, _permalinkSymbolBytes, scratch);
+            SubstituteMarker(scratch.WrittenSpan, snapshot, slugged, output);
         }
+        else
+        {
+            HeadingRewriter.Rewrite(snapshot, slugged, _permalinkSymbolBytes, output);
+        }
+
+        sw.Stop();
+        TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, slugged.Length, collisions, sw.ElapsedMilliseconds);
+    }
+
+    /// <summary>Locates the TOC marker in the heading-rewritten body and either splices the fragment in or copies the body verbatim.</summary>
+    /// <param name="rewritten">Heading-rewritten HTML produced for this page.</param>
+    /// <param name="sourceSnapshot">Original pre-rewrite HTML snapshot used for heading-text slices.</param>
+    /// <param name="headings">Slugged headings.</param>
+    /// <param name="output">Final output sink.</param>
+    private void SubstituteMarker(ReadOnlySpan<byte> rewritten, ReadOnlySpan<byte> sourceSnapshot, Heading[] headings, IBufferWriter<byte> output)
+    {
+        var markerIndex = rewritten.IndexOf(TocMarker.AsSpan());
+        if (markerIndex < 0)
+        {
+            Utf8StringWriter.Write(output, rewritten);
+            return;
+        }
+
+        var prefix = rewritten[..markerIndex];
+        var suffix = rewritten[(markerIndex + TocMarker.Length)..];
+
+        Utf8StringWriter.Write(output, prefix);
+        TocFragmentRenderer.Render(sourceSnapshot, headings, in _options, output);
+        Utf8StringWriter.Write(output, suffix);
     }
 }

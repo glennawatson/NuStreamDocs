@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
@@ -13,7 +14,7 @@ namespace NuStreamDocs.Tests;
 /// requires a <c>ref</c> to real storage, which property accessors cannot
 /// expose — this is the exception to the C# 14 <c>field</c> rule.
 /// </remarks>
-internal sealed class CountingPlugin : IDocPlugin
+internal sealed class CountingPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
 {
     /// <summary>Backing counter for <c>ConfigureHits</c>; touched via <c>Interlocked</c>.</summary>
     private int _configureHits;
@@ -27,17 +28,26 @@ internal sealed class CountingPlugin : IDocPlugin
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "counting"u8;
 
-    /// <summary>Gets the number of times <c>OnConfigureAsync</c> was invoked.</summary>
+    /// <inheritdoc/>
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority PostRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
+
+    /// <summary>Gets the number of times <c>ConfigureAsync</c> was invoked.</summary>
     public int ConfigureHits => Volatile.Read(ref _configureHits);
 
-    /// <summary>Gets the number of times <c>OnRenderPageAsync</c> was invoked.</summary>
+    /// <summary>Gets the number of times <c>PostRender</c> was invoked.</summary>
     public int PageHits => Volatile.Read(ref _pageHits);
 
-    /// <summary>Gets the number of times <c>OnFinalizeAsync</c> was invoked.</summary>
+    /// <summary>Gets the number of times <c>FinalizeAsync</c> was invoked.</summary>
     public int FinalizeHits => Volatile.Read(ref _finalizeHits);
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;
@@ -46,16 +56,17 @@ internal sealed class CountingPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
+
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context)
     {
-        _ = context;
-        _ = cancellationToken;
         Interlocked.Increment(ref _pageHits);
-        return ValueTask.CompletedTask;
+        context.Output.Write(context.Html);
     }
 
     /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;

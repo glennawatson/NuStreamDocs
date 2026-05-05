@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MagicLink;
@@ -22,22 +20,18 @@ namespace NuStreamDocs.MagicLink;
 /// are not in scope for the default-on behavior Zensical enables
 /// out of the box.
 /// </remarks>
-public sealed class MagicLinkPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class MagicLinkPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "magiclink"u8;
+    public ReadOnlySpan<byte> Name => "magiclink"u8;
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        MagicLinkRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+    /// <inheritdoc/>
+    public void PreRender(in PagePreRenderContext context) =>
+        MagicLinkRewriter.Rewrite(context.Source, context.Output);
 }

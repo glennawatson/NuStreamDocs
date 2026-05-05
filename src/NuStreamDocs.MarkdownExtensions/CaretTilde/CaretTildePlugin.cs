@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
@@ -16,23 +14,19 @@ namespace NuStreamDocs.MarkdownExtensions.CaretTilde;
 /// pymdownx.tilde defaults. Fenced and inline code are passed
 /// through verbatim.
 /// </summary>
-public sealed class CaretTildePlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class CaretTildePlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "caret-tilde"u8;
+    public ReadOnlySpan<byte> Name => "caret-tilde"u8;
+
+    /// <inheritdoc/>
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasCaretOrTilde(source);
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        CaretTildeRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public void PreRender(in PagePreRenderContext context) =>
+        CaretTildeRewriter.Rewrite(context.Source, context.Output);
 }

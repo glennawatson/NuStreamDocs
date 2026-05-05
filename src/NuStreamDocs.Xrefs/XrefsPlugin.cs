@@ -12,7 +12,7 @@ namespace NuStreamDocs.Xrefs;
 /// </summary>
 /// <remarks>
 /// <para>
-/// At <see cref="OnConfigureAsync"/> the plugin pulls every
+/// At <see cref="ConfigureAsync"/> the plugin pulls every
 /// configured <see cref="XrefImport"/> and registers each
 /// <c>(uid, href)</c> pair into the shared
 /// <see cref="AutorefsRegistry"/> with the import's base URL
@@ -20,14 +20,14 @@ namespace NuStreamDocs.Xrefs;
 /// the same <c>@autoref:</c> rewrite path the local registry uses.
 /// </para>
 /// <para>
-/// At <see cref="OnFinalizeAsync"/> the plugin snapshots the same
+/// At <see cref="FinalizeAsync"/> the plugin snapshots the same
 /// registry and writes <c>xrefmap.json</c> at the site root. Because
 /// imports were registered with their absolute base URLs, downstream
 /// consumers of the emitted map see only this site's contributions
 /// when filtered by base URL.
 /// </para>
 /// </remarks>
-public sealed class XrefsPlugin : IDocPlugin
+public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Long-lived <see cref="HttpClient"/> shared across import fetches; avoids socket exhaustion that a per-call <c>new HttpClient()</c> would cause.</summary>
     private static readonly HttpClient SharedClient = new();
@@ -67,7 +67,13 @@ public sealed class XrefsPlugin : IDocPlugin
     public ReadOnlySpan<byte> Name => "xrefs"u8;
 
     /// <inheritdoc/>
-    public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public async ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = context;
         if (_options.Imports.Length is 0)
@@ -82,15 +88,7 @@ public sealed class XrefsPlugin : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         if (!_options.EmitMap)

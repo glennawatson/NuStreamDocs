@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Arithmatex;
@@ -23,22 +21,18 @@ namespace NuStreamDocs.Arithmatex;
 /// followed by a digit (so prices like <c>$5</c> never trigger).
 /// Fenced and inline-code regions pass through verbatim.
 /// </remarks>
-public sealed class ArithmatexPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class ArithmatexPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "arithmatex"u8;
+    public ReadOnlySpan<byte> Name => "arithmatex"u8;
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        ArithmatexRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+    /// <inheritdoc/>
+    public void PreRender(in PagePreRenderContext context) =>
+        ArithmatexRewriter.Rewrite(context.Source, context.Output);
 }

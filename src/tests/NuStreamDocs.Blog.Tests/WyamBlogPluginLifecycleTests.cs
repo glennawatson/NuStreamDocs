@@ -2,38 +2,22 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Plugins;
+
 namespace NuStreamDocs.Blog.Tests;
 
 /// <summary>Lifecycle method coverage for <c>WyamBlogPlugin</c>.</summary>
 public class WyamBlogPluginLifecycleTests
 {
-    /// <summary>OnConfigureAsync runs without error against an empty posts directory.</summary>
+    /// <summary>DiscoverAsync runs without error against an empty posts directory.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync()
+    public async Task DiscoverAsync()
     {
         using var temp = new ScratchDir();
         Directory.CreateDirectory(Path.Combine(temp.Root, "posts"));
         var plugin = new WyamBlogPlugin(new("posts", "Blog"));
-        await plugin.OnConfigureAsync(new(temp.Root, "/out", []), CancellationToken.None);
-    }
-
-    /// <summary>OnRenderPageAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRenderPageAsync()
-    {
-        var plugin = new WyamBlogPlugin(new("posts", "Blog"));
-        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
-    }
-
-    /// <summary>OnFinalizeAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalizeAsync()
-    {
-        var plugin = new WyamBlogPlugin(new("posts", "Blog"));
-        await plugin.OnFinalizeAsync(new("/out"), CancellationToken.None);
+        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
     }
 
     /// <summary>Disposable scratch directory.</summary>

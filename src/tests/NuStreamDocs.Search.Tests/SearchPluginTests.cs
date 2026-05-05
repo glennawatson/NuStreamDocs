@@ -68,15 +68,13 @@ public class SearchPluginTests
         await Assert.That(docs[0].GetProperty("location"u8).GetString()).IsEqualTo("/page.html");
     }
 
-    /// <summary>An empty render-page buffer is skipped without adding a document.</summary>
+    /// <summary>An empty Scan input is skipped without adding a document.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptyHtmlSkipsDocument()
     {
         var plugin = new SearchPlugin();
-        var html = new ArrayBufferWriter<byte>();
-        var ctx = new PluginRenderContext("page.md", default, html);
-        await plugin.OnRenderPageAsync(ctx, CancellationToken.None);
+        ScanPage(plugin, "page.md", default, default);
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
 
@@ -86,10 +84,7 @@ public class SearchPluginTests
     public async Task NoHeadingFallsBackToFilenameStem()
     {
         var plugin = new SearchPlugin();
-        var html = new ArrayBufferWriter<byte>();
-        html.Write("<p>just text</p>"u8);
-        var ctx = new PluginRenderContext("guide/intro.md", default, html);
-        await plugin.OnRenderPageAsync(ctx, CancellationToken.None);
+        ScanPage(plugin, "guide/intro.md", default, "<p>just text</p>"u8);
         var docs = plugin.DocumentsSnapshot();
         await Assert.That(docs.Length).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(docs[0].Title)).IsEqualTo("intro");
@@ -101,23 +96,19 @@ public class SearchPluginTests
     public async Task SearchableFrontmatterKeysAppendBytes()
     {
         var plugin = new SearchPlugin(SearchOptions.Default with { SearchableFrontmatterKeys = [[.. "tags"u8]] });
-        var html = new ArrayBufferWriter<byte>();
-        html.Write("<h1>Hi</h1><p>body</p>"u8);
-        var source = "---\ntags: [foo, bar]\n---\nbody"u8.ToArray();
-        var ctx = new PluginRenderContext("page.md", source, html);
-        await plugin.OnRenderPageAsync(ctx, CancellationToken.None);
+        ScanPage(plugin, "page.md", "---\ntags: [foo, bar]\n---\nbody"u8, "<h1>Hi</h1><p>body</p>"u8);
         var docs = plugin.DocumentsSnapshot();
         await Assert.That(docs.Length).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(docs[0].Text)).Contains("foo");
     }
 
-    /// <summary>OnFinalizeAsync with an empty output root is a silent no-op.</summary>
+    /// <summary>FinalizeAsync with an empty output root is a silent no-op.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinalizeEmptyRootNoOp()
+    public async Task FinalizeAsyncEmptyRootNoOp()
     {
         var plugin = new SearchPlugin();
-        await plugin.OnFinalizeAsync(new(string.Empty), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(string.Empty, []), CancellationToken.None);
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
 
@@ -128,12 +119,10 @@ public class SearchPluginTests
     {
         using var fixture = TempBuildFixture.Create();
         var plugin = new SearchPlugin(SearchOptions.Default with { Format = SearchFormat.Lunr, Compression = SearchCompression.Smallest });
-        var html = new ArrayBufferWriter<byte>();
-        html.Write("<h1>Hi</h1><p>body content</p>"u8);
 
-        await plugin.OnConfigureAsync(new(fixture.Root, fixture.Root, []), CancellationToken.None);
-        await plugin.OnRenderPageAsync(new("a.md", default, html), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(fixture.Root, fixture.Root, [], new()), CancellationToken.None);
+        ScanPage(plugin, "a.md", default, "<h1>Hi</h1><p>body content</p>"u8);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
 
         var json = Path.Combine(fixture.Root, "search", "search_index.json");
         await Assert.That(File.Exists(json + ".gz")).IsTrue();
@@ -147,12 +136,10 @@ public class SearchPluginTests
     {
         using var fixture = TempBuildFixture.Create();
         var plugin = new SearchPlugin(SearchOptions.Default with { Format = SearchFormat.Lunr, Compression = SearchCompression.Default });
-        var html = new ArrayBufferWriter<byte>();
-        html.Write("<h1>Hi</h1><p>body</p>"u8);
 
-        await plugin.OnConfigureAsync(new(fixture.Root, fixture.Root, []), CancellationToken.None);
-        await plugin.OnRenderPageAsync(new("a.md", default, html), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(fixture.Root, fixture.Root, [], new()), CancellationToken.None);
+        ScanPage(plugin, "a.md", default, "<h1>Hi</h1><p>body</p>"u8);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
 
         var json = Path.Combine(fixture.Root, "search", "search_index.json");
         await Assert.That(File.Exists(json + ".gz")).IsTrue();
@@ -179,6 +166,17 @@ public class SearchPluginTests
     [Test]
     public async Task WriteHeadExtraNullWriterThrows() =>
         await Assert.That(() => new SearchPlugin().WriteHeadExtra(null!)).Throws<ArgumentNullException>();
+
+    /// <summary>Drives one Scan call against the plugin.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="relativePath">Source-relative markdown path.</param>
+    /// <param name="source">Markdown bytes (frontmatter + body).</param>
+    /// <param name="html">Rendered HTML bytes.</param>
+    private static void ScanPage(SearchPlugin plugin, string relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html)
+    {
+        var ctx = new PageScanContext(relativePath, source, html);
+        plugin.Scan(in ctx);
+    }
 
     /// <summary>Disposable fixture: writable temp docs/site directories that auto-clean.</summary>
     private sealed class TempBuildFixture : IDisposable

@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
@@ -21,23 +19,19 @@ namespace NuStreamDocs.MarkdownExtensions.InlineHilite;
 /// language-class envelope for inline code so the block and inline
 /// styles share their classes.
 /// </remarks>
-public sealed class InlineHilitePlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class InlineHilitePlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "inlinehilite"u8;
+    public ReadOnlySpan<byte> Name => "inlinehilite"u8;
+
+    /// <inheritdoc/>
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasInlineHiliteFence(source);
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        InlineHiliteRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public void PreRender(in PagePreRenderContext context) =>
+        InlineHiliteRewriter.Rewrite(context.Source, context.Output);
 }

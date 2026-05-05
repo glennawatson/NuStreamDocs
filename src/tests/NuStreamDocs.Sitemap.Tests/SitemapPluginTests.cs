@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
 using NuStreamDocs.Plugins;
@@ -19,13 +18,12 @@ public class SitemapPluginTests
     {
         using var temp = new SitemapTempDir();
         var plugin = new SitemapPlugin();
-        var ctx = new PluginConfigureContext("/in", temp.Root, []) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test") };
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+        var ctx = new BuildConfigureContext("/in", temp.Root, [], new()) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test") };
+        await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(8);
-        await plugin.OnRenderPageAsync(new("guide/intro.md", default, sink), CancellationToken.None);
-        await plugin.OnRenderPageAsync(new("index.md", default, sink), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        ScanPage(plugin, "guide/intro.md");
+        ScanPage(plugin, "index.md");
+        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "robots.txt"))).IsTrue();
@@ -38,12 +36,11 @@ public class SitemapPluginTests
     {
         using var temp = new SitemapTempDir();
         var plugin = new SitemapPlugin();
-        var ctx = new PluginConfigureContext("/in", temp.Root, []);
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+        var ctx = new BuildConfigureContext("/in", temp.Root, [], new());
+        await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(8);
-        await plugin.OnRenderPageAsync(new("any.md", default, sink), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        ScanPage(plugin, "any.md");
+        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();
     }
@@ -55,12 +52,11 @@ public class SitemapPluginTests
     {
         using var temp = new SitemapTempDir();
         var plugin = new SitemapPlugin();
-        var ctx = new PluginConfigureContext("/in", temp.Root, []) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test/") };
-        await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+        var ctx = new BuildConfigureContext("/in", temp.Root, [], new()) { SiteUrl = Encoding.UTF8.GetBytes("https://docs.test/") };
+        await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
-        var sink = new ArrayBufferWriter<byte>(8);
-        await plugin.OnRenderPageAsync(new(string.Empty, default, sink), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        ScanPage(plugin, string.Empty);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
 
         // No entries → no sitemap written.
         await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();
@@ -132,6 +128,15 @@ public class SitemapPluginTests
         var ex = Assert.Throws<ArgumentNullException>(static () =>
             DocBuilderSitemapExtensions.UseRedirects(null!, RedirectsOptions.Default));
         await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>Drives one Scan call against the plugin for the supplied relative path.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="relativePath">Source-relative markdown path.</param>
+    private static void ScanPage(SitemapPlugin plugin, string relativePath)
+    {
+        var ctx = new PageScanContext(relativePath, default, default);
+        plugin.Scan(in ctx);
     }
 
     /// <summary>Disposable scratch directory.</summary>

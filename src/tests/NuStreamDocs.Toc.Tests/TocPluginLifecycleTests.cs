@@ -16,16 +16,4 @@ public class TocPluginLifecycleTests
         await Assert.That(plugin.Name.SequenceEqual("toc"u8)).IsTrue();
         await Assert.That(System.Text.Encoding.UTF8.GetString(TocPlugin.TocMarker)).IsEqualTo("<!--@@toc@@-->");
     }
-
-    /// <summary>OnConfigureAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnConfigure() =>
-        await new TocPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
-
-    /// <summary>OnFinalizeAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalize() =>
-        await new TocPlugin().OnFinalizeAsync(new("/out"), CancellationToken.None);
 }

@@ -18,27 +18,12 @@ namespace NuStreamDocs.Building;
 /// per-page parse, render, plugin and write stages.
 /// </summary>
 /// <remarks>
-/// Memory stays proportional to the parallel-worker count, never the
-/// corpus size. Each worker:
-/// <list type="number">
-/// <item>reads the source file and computes its xxHash3 digest,</item>
-/// <item>looks up the previous-build manifest entry — when the hash
-/// matches and the cached output file is still on disk, the entry is
-/// kept verbatim and the rest of the per-page pipeline is skipped,</item>
-/// <item>otherwise rents a UTF-8 output writer from <see cref="PageBuilderPool"/>,</item>
-/// <item>runs the static <see cref="MarkdownRenderer"/>,</item>
-/// <item>fires <see cref="IDocPlugin.OnRenderPageAsync"/> on every plugin,</item>
-/// <item>writes the bytes to the output path and records the new entry.</item>
-/// </list>
-/// Plugin <c>OnConfigure</c> + <c>OnFinalize</c> are invoked once,
-/// outside the parallel section.
-/// <para>
-/// The freshly-recorded entries replace the on-disk manifest at the
-/// end of the build. Pages that were skipped keep their previous
-/// entry; pages that were re-rendered overwrite theirs; pages that no
-/// longer exist drop out. The manifest is intentionally idempotent —
-/// deleting it forces a full rebuild.
-/// </para>
+/// Pipeline phases run in order: Configure → Discover → (parallel per-page:
+/// PreRender → Render → PostRender → Scan → either immediate Write or
+/// buffer-for-Resolve) → cross-page Resolve barrier (sequential) → drain
+/// buffered pages (PostResolve → Write) → static-asset copy → manifest
+/// save → Finalize. Each phase iterates only the participants for that
+/// phase, sorted once at build start by <see cref="PluginPriority"/>.
 /// </remarks>
 public static class BuildPipeline
 {
@@ -51,7 +36,7 @@ public static class BuildPipeline
     /// <summary>Initial-capacity multiplier for preprocessor scratch buffers — pages typically grow only modestly through rewrites.</summary>
     private const int PreprocessorScratchMultiplier = 2;
 
-/// <summary>Per-thread cache of the most recently created output directory; pages in the same directory share the slot to skip the syscall.</summary>
+    /// <summary>Per-thread cache of the most recently created output directory; pages in the same directory share the slot to skip the syscall.</summary>
     [ThreadStatic]
     private static string? _lastCreatedDirectory;
 
@@ -60,7 +45,7 @@ public static class BuildPipeline
     /// <param name="outputRoot">Absolute path to the site output root.</param>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>The total number of pages processed (rendered + skipped).</returns>
-    public static Task<int> RunAsync(DirectoryPath inputRoot, DirectoryPath outputRoot, IDocPlugin[] plugins) =>
+    public static Task<int> RunAsync(DirectoryPath inputRoot, DirectoryPath outputRoot, IPlugin[] plugins) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, CancellationToken.None);
 
     /// <summary>Runs the build with cancellation support and default options.</summary>
@@ -72,7 +57,7 @@ public static class BuildPipeline
     public static Task<int> RunAsync(
         DirectoryPath inputRoot,
         DirectoryPath outputRoot,
-        IDocPlugin[] plugins,
+        IPlugin[] plugins,
         in CancellationToken cancellationToken) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, cancellationToken);
 
@@ -86,7 +71,7 @@ public static class BuildPipeline
     public static async Task<int> RunAsync(
         DirectoryPath inputRoot,
         DirectoryPath outputRoot,
-        IDocPlugin[] plugins,
+        IPlugin[] plugins,
         BuildPipelineOptions options,
         CancellationToken cancellationToken)
     {
@@ -118,8 +103,16 @@ public static class BuildPipeline
         // append-only-from-many-threads / drain-once pattern, and ToArray() is a
         // single right-sized allocation rather than the [.. bag] enumerator copy.
         var fresh = new ConcurrentQueue<ManifestEntry>();
+        var bufferedPages = new ConcurrentQueue<BufferedPage>();
 
-        await FireOnConfigureAsync(plugins, inputRoot, outputRoot, options, pluginTiming, cancellationToken, log).ConfigureAwait(false);
+        // Partition into per-phase sorted arrays (one allocation per phase, once per build).
+        var phases = PluginPhases.Partition(plugins);
+        var crossPageMarkers = new CrossPageMarkerRegistry();
+        var shell = new BuildPhaseShell(inputRoot, outputRoot, options, pluginTiming, log);
+
+        BuildPipelineLoggingHelper.LogConfigureStart(log, phases.Configures.Length);
+        await FireConfigureAsync(phases.Configures, plugins, shell, crossPageMarkers, cancellationToken).ConfigureAwait(false);
+        await FireDiscoverAsync(phases.Discovers, plugins, shell, cancellationToken).ConfigureAwait(false);
 
         var processed = 0;
         var cacheHits = 0;
@@ -128,6 +121,8 @@ public static class BuildPipeline
             CancellationToken = cancellationToken,
             MaxDegreeOfParallelism = DefaultParallelism,
         };
+
+        var perPage = new PerPageDispatch(phases, previous, pluginTiming, bufferedPages);
 
         BuildPipelineLoggingHelper.LogRenderStart(log, parallelOptions.MaxDegreeOfParallelism);
         var renderStarted = stopwatch.ElapsedMilliseconds;
@@ -141,8 +136,12 @@ public static class BuildPipeline
                     return;
                 }
 
-                var (entry, hit) = await ProcessOnePageAsync(item, outputRoot, plugins, previous, useDirectoryUrls, pluginTiming, ct).ConfigureAwait(false);
-                fresh.Enqueue(entry);
+                var (entry, hit, didBuffer) = await ProcessOnePageAsync(item, outputRoot, useDirectoryUrls, perPage, ct).ConfigureAwait(false);
+                if (!didBuffer)
+                {
+                    fresh.Enqueue(entry);
+                }
+
                 Interlocked.Increment(ref processed);
                 if (hit)
                 {
@@ -154,6 +153,12 @@ public static class BuildPipeline
 
         BuildPipelineLoggingHelper.LogRenderComplete(log, processed, (stopwatch.ElapsedMilliseconds - renderStarted) / MillisecondsPerSecond);
 
+        if (phases.NeedsCrossPageBarrier)
+        {
+            await FireResolveAsync(phases.Resolves, plugins, shell, cancellationToken).ConfigureAwait(false);
+            await DrainBufferedPagesAsync(bufferedPages, phases.PostResolves, fresh, shell, cancellationToken).ConfigureAwait(false);
+        }
+
         // Copy author-supplied static content from docs/ to site/ — images, fonts, vendor JS,
         // anything the page templates or theme options reference by docs-relative path. Runs
         // before finalize so plugins like sitemap/search/privacy see the assets in place.
@@ -163,37 +168,31 @@ public static class BuildPipeline
         previous.Replace(fresh);
         await previous.SaveAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
 
-        await FireOnFinalizeAsync(plugins, outputRoot, pluginTiming, cancellationToken, log).ConfigureAwait(false);
+        BuildPipelineLoggingHelper.LogFinalizeStart(log, phases.Finalizes.Length);
+        await FireFinalizeAsync(phases.Finalizes, plugins, shell, cancellationToken).ConfigureAwait(false);
+
         stopwatch.Stop();
         pluginTiming.Emit(log);
         BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, stopwatch.ElapsedMilliseconds / MillisecondsPerSecond);
         return processed;
     }
 
-    /// <summary>Renders one page or short-circuits via the manifest.</summary>
+    /// <summary>
+    /// Renders one page or short-circuits via the manifest. When the build needs cross-page
+    /// resolution, transfers the rendered rental to the buffered queue instead of writing
+    /// immediately.
+    /// </summary>
     /// <param name="item">Page work item.</param>
     /// <param name="outputRoot">Absolute output root.</param>
-    /// <param name="plugins">Registered plugins.</param>
-    /// <param name="previous">Previous-build manifest.</param>
-    /// <param name="useDirectoryUrls">Selects the output-path shape (flat <c>foo.html</c> vs <c>foo/index.html</c>).</param>
-    /// <param name="pluginTiming">End-of-build per-plugin time accumulator.</param>
+    /// <param name="useDirectoryUrls">Selects the output-path shape (flat vs <c>foo/index.html</c>).</param>
+    /// <param name="dispatch">Bundle of per-page shared state (phases, previous manifest, timing, buffered queue).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The fresh manifest entry for this page and a flag indicating whether the entry was a cache hit.</returns>
-    /// <remarks>
-    /// One state machine for the whole per-page pipeline. The hash check
-    /// short-circuits before we rent any pooled buffer, so the cache-hit
-    /// path stays cheap; the render path awaits each plugin's
-    /// <see cref="IDocPlugin.OnRenderPageAsync"/> via <see cref="ValueTask"/>
-    /// — most plugins return synchronously, so the average extra work
-    /// per page is a no-op state-machine resumption.
-    /// </remarks>
-    private static async ValueTask<(ManifestEntry Entry, bool CacheHit)> ProcessOnePageAsync(
+    /// <returns>The fresh manifest entry, a flag indicating cache hit, and a flag indicating whether the rental was transferred to the buffered queue.</returns>
+    private static async ValueTask<(ManifestEntry Entry, bool CacheHit, bool DidBuffer)> ProcessOnePageAsync(
         PageWorkItem item,
         DirectoryPath outputRoot,
-        IDocPlugin[] plugins,
-        BuildManifest previous,
         bool useDirectoryUrls,
-        PluginTimingTable pluginTiming,
+        PerPageDispatch dispatch,
         CancellationToken cancellationToken)
     {
         // Read into a pooled buffer instead of File.ReadAllBytesAsync — the
@@ -214,50 +213,71 @@ public static class BuildPipeline
             var source = sourceBuffer.AsMemory(0, sourceLength);
             var hash = ContentHasher.Hash(source.Span);
             var outputPath = OutputPathFor(outputRoot, item.RelativePath, useDirectoryUrls);
+            var phases = dispatch.Phases;
+            var pluginTiming = dispatch.PluginTiming;
 
-            if (previous.TryGet(item.RelativePath, out var stale) &&
+            if (dispatch.Previous.TryGet(item.RelativePath, out var stale) &&
                 stale.ContentHash.AsSpan().SequenceEqual(hash) &&
                 File.Exists(outputPath))
             {
-                // Hot incremental path: the source bytes match the previous
-                // build and the output is still on disk. Keep the entry
-                // unchanged so the next manifest write preserves it; skip
-                // render, plugin hooks, and the file write.
-                return (stale, true);
+                // Hot incremental path: source matches previous build and output is on disk.
+                return (stale, true, false);
             }
 
-            using var rental = PageBuilderPool.Rent(source.Length * 2);
-            var writer = rental.Writer;
+            var rental = PageBuilderPool.Rent(source.Length * 2);
             var scratchRentals = new List<PageBuilderRental>();
+            PageBuilderRental? owned = rental;
             try
             {
-                var processed = ApplyPreprocessors(source, plugins, scratchRentals, item.RelativePath);
-                MarkdownRenderer.Render(processed.Span, writer);
+                var processedSource = ApplyPreRenders(source, phases.PreRenders, scratchRentals, item.RelativePath, pluginTiming);
+                MarkdownRenderer.Render(processedSource.Span, rental.Writer);
 
-                var context = new PluginRenderContext(item.RelativePath, source, writer);
-                for (var i = 0; i < plugins.Length; i++)
+                var finalRental = ApplyPostRenders(rental, scratchRentals, source.Span, phases.PostRenders, item.RelativePath, pluginTiming);
+                if (!finalRental.Equals(rental))
                 {
-                    var plugin = plugins[i];
-                    using (pluginTiming.Measure(plugin.Name))
+                    // ApplyPostRenders moved `rental` into scratch (it's now stale). Track final instead.
+                    owned = finalRental;
+                }
+
+                if (phases.Scans.Length > 0)
+                {
+                    var scanContext = new PageScanContext(item.RelativePath, source.Span, finalRental.Writer.WrittenSpan);
+                    for (var i = 0; i < phases.Scans.Length; i++)
                     {
-                        await plugin.OnRenderPageAsync(context, cancellationToken).ConfigureAwait(false);
+                        var plugin = phases.Scans[i];
+                        using (pluginTiming.Measure(plugin.Name))
+                        {
+                            plugin.Scan(in scanContext);
+                        }
                     }
+                }
+
+                if (phases.NeedsCrossPageBarrier)
+                {
+                    // Transfer rental ownership to the buffered queue. The drain phase
+                    // disposes the rental after PostResolve + Write.
+                    dispatch.Buffered.Enqueue(new BufferedPage(item.RelativePath, outputPath, finalRental, hash));
+                    owned = null;
+                    return (default, false, true);
                 }
 
                 EnsureDirectory(outputPath);
 
                 // Sync write skips the BufferedFileStreamStrategy + ThreadPoolValueTaskSource
-                // alloc chain (~308 MB on a 13.8K-page baseline run). Page bytes are already
-                // in memory; there's nothing for async I/O to overlap with at this point.
-                File.WriteAllBytes(outputPath, writer.WrittenSpan);
-
-                return (new(item.RelativePath, hash, writer.WrittenCount), false);
+                // alloc chain. Page bytes are already in memory; nothing to overlap with.
+                File.WriteAllBytes(outputPath, finalRental.Writer.WrittenSpan);
+                return (new(item.RelativePath, hash, finalRental.Writer.WrittenCount), false, false);
             }
             finally
             {
                 for (var i = 0; i < scratchRentals.Count; i++)
                 {
                     scratchRentals[i].Dispose();
+                }
+
+                if (owned is { } o)
+                {
+                    o.Dispose();
                 }
             }
         }
@@ -267,14 +287,242 @@ public static class BuildPipeline
         }
     }
 
+    /// <summary>Threads <paramref name="source"/> through every <see cref="IPagePreRenderPlugin"/> sorted by priority.</summary>
+    /// <param name="source">UTF-8 markdown bytes as read from disk.</param>
+    /// <param name="plugins">Sorted pre-render participants.</param>
+    /// <param name="scratch">Output rental list — the caller disposes every entry.</param>
+    /// <param name="relativePath">Page path relative to the input root.</param>
+    /// <param name="pluginTiming">Per-plugin time accumulator.</param>
+    /// <returns>The rewritten bytes, or <paramref name="source"/> unchanged when no participant rewrites.</returns>
+    private static ReadOnlyMemory<byte> ApplyPreRenders(
+        ReadOnlyMemory<byte> source,
+        IPagePreRenderPlugin[] plugins,
+        List<PageBuilderRental> scratch,
+        FilePath relativePath,
+        PluginTimingTable pluginTiming)
+    {
+        if (plugins.Length is 0)
+        {
+            return source;
+        }
+
+        var capacity = source.Length * PreprocessorScratchMultiplier;
+        var front = PageBuilderPool.Rent(capacity);
+        scratch.Add(front);
+
+        PageBuilderRental? back = null;
+        if (plugins.Length > 1)
+        {
+            var b = PageBuilderPool.Rent(capacity);
+            scratch.Add(b);
+            back = b;
+        }
+
+        var current = source;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            var plugin = plugins[i];
+            if (!plugin.NeedsRewrite(current.Span))
+            {
+                continue;
+            }
+
+            front.Writer.ResetWrittenCount();
+            var ctx = new PagePreRenderContext(relativePath, current.Span, front.Writer);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                plugin.PreRender(in ctx);
+            }
+
+            current = front.Writer.WrittenMemory;
+
+            if (back is null)
+            {
+                continue;
+            }
+
+            (front, back) = (back.Value, front);
+        }
+
+        return current;
+    }
+
+    /// <summary>Runs every <see cref="IPagePostRenderPlugin"/> in priority order, ping-ponging buffers when a participant rewrites.</summary>
+    /// <param name="input">Rental holding the rendered HTML.</param>
+    /// <param name="scratch">Output rental list — the caller disposes every entry. <paramref name="input"/> is added here when a swap moves it out of the active position.</param>
+    /// <param name="source">Original UTF-8 markdown bytes (passed to plugins via context).</param>
+    /// <param name="plugins">Sorted post-render participants.</param>
+    /// <param name="relativePath">Page path relative to the input root.</param>
+    /// <param name="pluginTiming">Per-plugin time accumulator.</param>
+    /// <returns>The rental whose writer holds the final post-render HTML — may differ from <paramref name="input"/>.</returns>
+    private static PageBuilderRental ApplyPostRenders(
+        PageBuilderRental input,
+        List<PageBuilderRental> scratch,
+        ReadOnlySpan<byte> source,
+        IPagePostRenderPlugin[] plugins,
+        FilePath relativePath,
+        PluginTimingTable pluginTiming)
+    {
+        if (plugins.Length is 0)
+        {
+            return input;
+        }
+
+        var anyRewrites = false;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            if (plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
+            {
+                anyRewrites = true;
+                break;
+            }
+        }
+
+        if (!anyRewrites)
+        {
+            return input;
+        }
+
+        var capacity = Math.Max(input.Writer.WrittenCount, source.Length) * PreprocessorScratchMultiplier;
+        var back = PageBuilderPool.Rent(capacity);
+
+        var front = input;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            var plugin = plugins[i];
+            if (!plugin.NeedsRewrite(front.Writer.WrittenSpan))
+            {
+                continue;
+            }
+
+            back.Writer.ResetWrittenCount();
+            var ctx = new PagePostRenderContext(relativePath, source, front.Writer.WrittenSpan, back.Writer);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                plugin.PostRender(in ctx);
+            }
+
+            (front, back) = (back, front);
+        }
+
+        // `back` is now the stale rental — push to scratch for disposal.
+        scratch.Add(back);
+        return front;
+    }
+
+    /// <summary>Runs the cross-page resolve barrier sequentially, then drains buffered pages through PostResolve and writes them to disk.</summary>
+    /// <param name="bufferedPages">Pages held back from immediate write because the build registered cross-page-state plugins.</param>
+    /// <param name="postResolves">Sorted post-resolve participants.</param>
+    /// <param name="fresh">Manifest queue receiving entries for buffered pages once written.</param>
+    /// <param name="shell">Shared build-wide phase state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when every buffered page has been written and its rental disposed.</returns>
+    private static async Task DrainBufferedPagesAsync(
+        ConcurrentQueue<BufferedPage> bufferedPages,
+        IPagePostResolvePlugin[] postResolves,
+        ConcurrentQueue<ManifestEntry> fresh,
+        BuildPhaseShell shell,
+        CancellationToken cancellationToken)
+    {
+        var pluginTiming = shell.PluginTiming;
+        var parallelOptions = new ParallelOptions
+        {
+            CancellationToken = cancellationToken,
+            MaxDegreeOfParallelism = DefaultParallelism,
+        };
+
+        await Parallel.ForEachAsync(bufferedPages, parallelOptions, (page, _) =>
+        {
+            var scratch = new List<PageBuilderRental>();
+            var owned = page.Rental;
+            try
+            {
+                var finalRental = ApplyPostResolves(page.Rental, scratch, postResolves, page.RelativePath, pluginTiming);
+                if (!finalRental.Equals(page.Rental))
+                {
+                    owned = finalRental;
+                }
+
+                EnsureDirectory(page.OutputPath);
+                File.WriteAllBytes(page.OutputPath, finalRental.Writer.WrittenSpan);
+                fresh.Enqueue(new(page.RelativePath, page.Hash, finalRental.Writer.WrittenCount));
+            }
+            finally
+            {
+                for (var i = 0; i < scratch.Count; i++)
+                {
+                    scratch[i].Dispose();
+                }
+
+                owned.Dispose();
+            }
+
+            return ValueTask.CompletedTask;
+        }).ConfigureAwait(false);
+    }
+
+    /// <summary>Runs every <see cref="IPagePostResolvePlugin"/> in priority order, ping-ponging buffers when a participant rewrites.</summary>
+    /// <param name="input">Rental holding the post-render HTML.</param>
+    /// <param name="scratch">Output rental list — caller disposes every entry.</param>
+    /// <param name="plugins">Sorted post-resolve participants.</param>
+    /// <param name="relativePath">Page path relative to the input root.</param>
+    /// <param name="pluginTiming">Per-plugin time accumulator.</param>
+    /// <returns>The rental whose writer holds the final post-resolve HTML.</returns>
+    private static PageBuilderRental ApplyPostResolves(
+        PageBuilderRental input,
+        List<PageBuilderRental> scratch,
+        IPagePostResolvePlugin[] plugins,
+        FilePath relativePath,
+        PluginTimingTable pluginTiming)
+    {
+        if (plugins.Length is 0)
+        {
+            return input;
+        }
+
+        var anyRewrites = false;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            if (plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
+            {
+                anyRewrites = true;
+                break;
+            }
+        }
+
+        if (!anyRewrites)
+        {
+            return input;
+        }
+
+        var capacity = input.Writer.WrittenCount * PreprocessorScratchMultiplier;
+        var back = PageBuilderPool.Rent(capacity);
+
+        var front = input;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            var plugin = plugins[i];
+            if (!plugin.NeedsRewrite(front.Writer.WrittenSpan))
+            {
+                continue;
+            }
+
+            back.Writer.ResetWrittenCount();
+            var ctx = new PagePostResolveContext(relativePath, front.Writer.WrittenSpan, back.Writer);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                plugin.Rewrite(in ctx);
+            }
+
+            (front, back) = (back, front);
+        }
+
+        scratch.Add(back);
+        return front;
+    }
+
     /// <summary>Ensures the directory containing <paramref name="outputPath"/> exists, with a per-thread last-seen cache so repeat directories cost nothing.</summary>
     /// <param name="outputPath">Absolute output path.</param>
-    /// <remarks>
-    /// Path.GetDirectoryName(string) allocates a fresh string; the
-    /// ReadOnlySpan overload doesn't. Pages in the same directory share
-    /// the cache slot, so 13K pages spread over ~100 directories hit
-    /// Directory.CreateDirectory at most once per directory per thread.
-    /// </remarks>
     private static void EnsureDirectory(string outputPath)
     {
         var dirSpan = Path.GetDirectoryName(outputPath.AsSpan());
@@ -294,84 +542,6 @@ public static class BuildPipeline
         _lastCreatedDirectory = dir;
     }
 
-    /// <summary>Threads <paramref name="source"/> through every plugin that implements <see cref="IMarkdownPreprocessor"/>.</summary>
-    /// <param name="source">UTF-8 markdown bytes as read from disk.</param>
-    /// <param name="plugins">Registered plugins.</param>
-    /// <param name="scratch">Output rental list — the caller must dispose every entry to return the writers to <see cref="PageBuilderPool"/>.</param>
-    /// <param name="relativePath">Page path relative to the input root; passed to path-aware preprocessors (frontmatter inheritance, metadata injection).</param>
-    /// <returns>The rewritten bytes, or <paramref name="source"/> unchanged when no preprocessors are registered.</returns>
-    private static ReadOnlyMemory<byte> ApplyPreprocessors(in ReadOnlyMemory<byte> source, IDocPlugin[] plugins, List<PageBuilderRental> scratch, string relativePath)
-    {
-        // We need at most two pool rentals: one to write the next pass into, one
-        // holding the previous pass's bytes. With a single preprocessor registered
-        // we don't ping-pong at all — count first so we can size rentals to fit.
-        var preprocessorCount = CountPreprocessors(plugins);
-        if (preprocessorCount is 0)
-        {
-            return source;
-        }
-
-        var capacity = source.Length * PreprocessorScratchMultiplier;
-        var front = PageBuilderPool.Rent(capacity);
-        scratch.Add(front);
-
-        PageBuilderRental? back = null;
-        if (preprocessorCount > 1)
-        {
-            var backRental = PageBuilderPool.Rent(capacity);
-            scratch.Add(backRental);
-            back = backRental;
-        }
-
-        var current = source;
-        for (var i = 0; i < plugins.Length; i++)
-        {
-            if (plugins[i] is not IMarkdownPreprocessor pre)
-            {
-                continue;
-            }
-
-            // Vectorized marker probe — preprocessors override NeedsRewrite to do an IndexOf
-            // for their distinctive bytes. When no markers exist anywhere in the source we
-            // skip both the rewriter and the buffer swap, leaving `current` pointing at the
-            // previous pass's output.
-            if (!pre.NeedsRewrite(current.Span))
-            {
-                continue;
-            }
-
-            front.Writer.ResetWrittenCount();
-            pre.Preprocess(current.Span, front.Writer, relativePath);
-            current = front.Writer.WrittenMemory;
-
-            if (back is null)
-            {
-                continue;
-            }
-
-            (front, back) = (back.Value, front);
-        }
-
-        return current;
-    }
-
-    /// <summary>Counts how many of <paramref name="plugins"/> implement <see cref="IMarkdownPreprocessor"/>.</summary>
-    /// <param name="plugins">Registered plugins.</param>
-    /// <returns>Preprocessor count.</returns>
-    private static int CountPreprocessors(IDocPlugin[] plugins)
-    {
-        var count = 0;
-        for (var i = 0; i < plugins.Length; i++)
-        {
-            if (plugins[i] is IMarkdownPreprocessor)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
     /// <summary>Computes the on-disk output path for a relative source path.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
@@ -384,84 +554,182 @@ public static class BuildPipeline
         // static-website mode) only honour /404.html for not-found responses.
         if (string.Equals(relativePath.Value, "404.md", StringComparison.OrdinalIgnoreCase))
         {
-            return OutputPathForFlatUrls(outputRoot, relativePath);
+            return OutputPathBuilder.ForFlatUrls(outputRoot, relativePath);
         }
 
         return useDirectoryUrls
-            ? OutputPathForDirectoryUrls(outputRoot, relativePath)
-            : OutputPathForFlatUrls(outputRoot, relativePath);
+            ? OutputPathBuilder.ForDirectoryUrls(outputRoot, relativePath)
+            : OutputPathBuilder.ForFlatUrls(outputRoot, relativePath);
     }
 
-    /// <summary>Flat-URL form: <c>foo.md</c> → <c>foo.html</c>; everything else passes through.</summary>
-    /// <param name="outputRoot">Absolute output root.</param>
-    /// <param name="relativePath">Source-relative path.</param>
-    /// <returns>The absolute output path.</returns>
-    private static FilePath OutputPathForFlatUrls(DirectoryPath outputRoot, FilePath relativePath) =>
-        OutputPathBuilder.ForFlatUrls(outputRoot, relativePath);
-
-    /// <summary>Directory-URL form: <c>guide/foo.md</c> → <c>guide/foo/index.html</c>; <c>guide/index.md</c> stays as <c>guide/index.html</c>.</summary>
-    /// <param name="outputRoot">Absolute output root.</param>
-    /// <param name="relativePath">Source-relative path.</param>
-    /// <returns>The absolute output path.</returns>
-    private static FilePath OutputPathForDirectoryUrls(DirectoryPath outputRoot, FilePath relativePath) =>
-        OutputPathBuilder.ForDirectoryUrls(outputRoot, relativePath);
-
-    /// <summary>Fires <see cref="IDocPlugin.OnConfigureAsync"/> on every plugin.</summary>
-    /// <param name="plugins">Registered plugins.</param>
-    /// <param name="inputRoot">Absolute input root.</param>
-    /// <param name="outputRoot">Absolute output root.</param>
-    /// <param name="options">Pipeline options carrying URL shape + site-level metadata.</param>
-    /// <param name="pluginTiming">End-of-build per-plugin time accumulator.</param>
+    /// <summary>Fires <see cref="IBuildConfigurePlugin.ConfigureAsync"/> on every plugin sorted by priority.</summary>
+    /// <param name="configures">Sorted configure participants.</param>
+    /// <param name="allPlugins">Every registered plugin (passed to participants for sibling discovery).</param>
+    /// <param name="shell">Shared build-wide phase state.</param>
+    /// <param name="crossPageMarkers">Cross-page marker registry plugins seed during configure.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <param name="log">Logger for phase + per-plugin progress.</param>
-    /// <returns>A task that completes when every plugin's configure hook has settled.</returns>
-    private static async Task FireOnConfigureAsync(
-        IDocPlugin[] plugins,
-        DirectoryPath inputRoot,
-        DirectoryPath outputRoot,
-        BuildPipelineOptions options,
-        PluginTimingTable pluginTiming,
-        CancellationToken cancellationToken,
-        ILogger log)
+    /// <returns>A task that completes when every participant's configure hook has settled.</returns>
+    private static async Task FireConfigureAsync(
+        IBuildConfigurePlugin[] configures,
+        IPlugin[] allPlugins,
+        BuildPhaseShell shell,
+        CrossPageMarkerRegistry crossPageMarkers,
+        CancellationToken cancellationToken)
     {
-        var context = new PluginConfigureContext(inputRoot, outputRoot, plugins)
+        if (configures.Length is 0)
+        {
+            return;
+        }
+
+        var options = shell.Options;
+        var context = new BuildConfigureContext(shell.InputRoot, shell.OutputRoot, allPlugins, crossPageMarkers)
         {
             UseDirectoryUrls = options.UseDirectoryUrls,
             SiteName = options.SiteName ?? [],
             SiteUrl = options.SiteUrl ?? [],
             SiteAuthor = options.SiteAuthor ?? [],
         };
-        BuildPipelineLoggingHelper.LogConfigureStart(log, plugins.Length);
-        for (var i = 0; i < plugins.Length; i++)
+        var log = shell.Log;
+        var pluginTiming = shell.PluginTiming;
+        for (var i = 0; i < configures.Length; i++)
         {
-            var plugin = plugins[i];
+            var plugin = configures[i];
             BuildPipelineLoggingHelper.LogPluginConfigure(log, plugin.Name);
             using (pluginTiming.Measure(plugin.Name))
             {
-                await plugin.OnConfigureAsync(context, cancellationToken).ConfigureAwait(false);
+                await plugin.ConfigureAsync(context, cancellationToken).ConfigureAwait(false);
             }
         }
     }
 
-    /// <summary>Fires <see cref="IDocPlugin.OnFinalizeAsync"/> on every plugin.</summary>
-    /// <param name="plugins">Registered plugins.</param>
-    /// <param name="outputRoot">Absolute output root.</param>
-    /// <param name="pluginTiming">End-of-build per-plugin time accumulator.</param>
+    /// <summary>Fires <see cref="IBuildDiscoverPlugin.DiscoverAsync"/> on every plugin sorted by priority.</summary>
+    /// <param name="discovers">Sorted discover participants.</param>
+    /// <param name="allPlugins">Every registered plugin.</param>
+    /// <param name="shell">Shared build-wide phase state.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <param name="log">Logger for phase + per-plugin progress.</param>
-    /// <returns>A task that completes when every plugin's finalize hook has settled.</returns>
-    private static async Task FireOnFinalizeAsync(IDocPlugin[] plugins, DirectoryPath outputRoot, PluginTimingTable pluginTiming, CancellationToken cancellationToken, ILogger log)
+    /// <returns>A task that completes when every participant's discover hook has settled.</returns>
+    private static async Task FireDiscoverAsync(
+        IBuildDiscoverPlugin[] discovers,
+        IPlugin[] allPlugins,
+        BuildPhaseShell shell,
+        CancellationToken cancellationToken)
     {
-        var context = new PluginFinalizeContext(outputRoot);
-        BuildPipelineLoggingHelper.LogFinalizeStart(log, plugins.Length);
-        for (var i = 0; i < plugins.Length; i++)
+        if (discovers.Length is 0)
         {
-            var plugin = plugins[i];
-            BuildPipelineLoggingHelper.LogPluginFinalize(log, plugin.Name);
+            return;
+        }
+
+        var context = new BuildDiscoverContext(shell.InputRoot, shell.OutputRoot, allPlugins)
+        {
+            UseDirectoryUrls = shell.Options.UseDirectoryUrls,
+        };
+        var log = shell.Log;
+        var pluginTiming = shell.PluginTiming;
+        for (var i = 0; i < discovers.Length; i++)
+        {
+            var plugin = discovers[i];
+            BuildPipelineLoggingHelper.LogPluginConfigure(log, plugin.Name);
             using (pluginTiming.Measure(plugin.Name))
             {
-                await plugin.OnFinalizeAsync(context, cancellationToken).ConfigureAwait(false);
+                await plugin.DiscoverAsync(context, cancellationToken).ConfigureAwait(false);
             }
         }
     }
+
+    /// <summary>Fires <see cref="IBuildResolvePlugin.ResolveAsync"/> on every plugin sorted by priority.</summary>
+    /// <param name="resolves">Sorted resolve participants.</param>
+    /// <param name="allPlugins">Every registered plugin.</param>
+    /// <param name="shell">Shared build-wide phase state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when every participant's resolve hook has settled.</returns>
+    private static async Task FireResolveAsync(
+        IBuildResolvePlugin[] resolves,
+        IPlugin[] allPlugins,
+        BuildPhaseShell shell,
+        CancellationToken cancellationToken)
+    {
+        if (resolves.Length is 0)
+        {
+            return;
+        }
+
+        var context = new BuildResolveContext(shell.OutputRoot, allPlugins);
+        var log = shell.Log;
+        var pluginTiming = shell.PluginTiming;
+        for (var i = 0; i < resolves.Length; i++)
+        {
+            var plugin = resolves[i];
+            BuildPipelineLoggingHelper.LogPluginFinalize(log, plugin.Name);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                await plugin.ResolveAsync(context, cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>Fires <see cref="IBuildFinalizePlugin.FinalizeAsync"/> on every plugin sorted by priority.</summary>
+    /// <param name="finalizes">Sorted finalize participants.</param>
+    /// <param name="allPlugins">Every registered plugin.</param>
+    /// <param name="shell">Shared build-wide phase state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when every participant's finalize hook has settled.</returns>
+    private static async Task FireFinalizeAsync(
+        IBuildFinalizePlugin[] finalizes,
+        IPlugin[] allPlugins,
+        BuildPhaseShell shell,
+        CancellationToken cancellationToken)
+    {
+        if (finalizes.Length is 0)
+        {
+            return;
+        }
+
+        var context = new BuildFinalizeContext(shell.OutputRoot, allPlugins);
+        var log = shell.Log;
+        var pluginTiming = shell.PluginTiming;
+        for (var i = 0; i < finalizes.Length; i++)
+        {
+            var plugin = finalizes[i];
+            BuildPipelineLoggingHelper.LogPluginFinalize(log, plugin.Name);
+            using (pluginTiming.Measure(plugin.Name))
+            {
+                await plugin.FinalizeAsync(context, cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>Bundle of per-page shared state threaded through <see cref="ProcessOnePageAsync"/>.</summary>
+    /// <param name="Phases">Per-phase plugin arrays.</param>
+    /// <param name="Previous">Previous-build manifest.</param>
+    /// <param name="PluginTiming">Per-plugin time accumulator.</param>
+    /// <param name="Buffered">Queue receiving rentals when cross-page resolution is needed.</param>
+    private readonly record struct PerPageDispatch(
+        PluginPhases Phases,
+        BuildManifest Previous,
+        PluginTimingTable PluginTiming,
+        ConcurrentQueue<BufferedPage> Buffered);
+
+    /// <summary>One page held back from immediate write because the build needs cross-page resolution.</summary>
+    /// <param name="RelativePath">Source-relative path.</param>
+    /// <param name="OutputPath">Absolute output path.</param>
+    /// <param name="Rental">Pooled rental whose writer holds the post-render HTML; transferred ownership — the drain phase disposes it.</param>
+    /// <param name="Hash">Source-content xxHash3 digest used as the manifest cache key.</param>
+    private readonly record struct BufferedPage(
+        FilePath RelativePath,
+        FilePath OutputPath,
+        PageBuilderRental Rental,
+        byte[] Hash);
+
+    /// <summary>Bundle of shared build-wide state threaded through fire helpers.</summary>
+    /// <param name="InputRoot">Absolute input root.</param>
+    /// <param name="OutputRoot">Absolute output root.</param>
+    /// <param name="Options">Pipeline options.</param>
+    /// <param name="PluginTiming">Per-plugin time accumulator.</param>
+    /// <param name="Log">Logger.</param>
+    private readonly record struct BuildPhaseShell(
+        DirectoryPath InputRoot,
+        DirectoryPath OutputRoot,
+        BuildPipelineOptions Options,
+        PluginTimingTable PluginTiming,
+        ILogger Log);
 }

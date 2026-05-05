@@ -17,7 +17,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>Throughput + allocation benchmarks for every <c>IMarkdownPreprocessor</c> shipped in <c>NuStreamDocs.MarkdownExtensions</c>.</summary>
+/// <summary>Throughput + allocation benchmarks for every <c>IPagePreRenderPlugin</c> shipped in <c>NuStreamDocs.MarkdownExtensions</c>.</summary>
 [ShortRunJob]
 [MemoryDiagnoser]
 public class MarkdownExtensionsBenchmarks
@@ -117,14 +117,15 @@ public class MarkdownExtensionsBenchmarks
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    /// <summary>Runs <paramref name="plugin"/>'s <c>IMarkdownPreprocessor.Preprocess</c> against <paramref name="source"/>.</summary>
-    /// <param name="plugin">Preprocessor under test.</param>
+    /// <summary>Runs <paramref name="plugin"/>'s <c>IPagePreRenderPlugin.PreRender</c> against <paramref name="source"/>.</summary>
+    /// <param name="plugin">Pre-render plugin under test.</param>
     /// <param name="source">UTF-8 input bytes.</param>
     /// <returns>Bytes written to the sink.</returns>
-    private static int Run(IMarkdownPreprocessor plugin, byte[] source)
+    private static int Run(IPagePreRenderPlugin plugin, byte[] source)
     {
         var sink = new ArrayBufferWriter<byte>(source.Length * 2);
-        plugin.Preprocess(source, sink);
+        var ctx = new PagePreRenderContext("page.md", source, sink);
+        plugin.PreRender(in ctx);
         return sink.WrittenCount;
     }
 }

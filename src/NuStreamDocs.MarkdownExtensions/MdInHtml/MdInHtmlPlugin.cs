@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
@@ -22,23 +20,19 @@ namespace NuStreamDocs.MarkdownExtensions.MdInHtml;
 /// <c>md_in_html</c>; <c>markdown="span"</c> (inline-only) is
 /// treated the same as block mode for now.
 /// </remarks>
-public sealed class MdInHtmlPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class MdInHtmlPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "md_in_html"u8;
+    public ReadOnlySpan<byte> Name => "md_in_html"u8;
+
+    /// <inheritdoc/>
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasMdInHtmlAttribute(source);
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        MdInHtmlRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public void PreRender(in PagePreRenderContext context) =>
+        MdInHtmlRewriter.Rewrite(context.Source, context.Output);
 }

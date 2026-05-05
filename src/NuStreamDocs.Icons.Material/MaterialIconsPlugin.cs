@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Icons.Material;
@@ -18,7 +17,7 @@ namespace NuStreamDocs.Icons.Material;
 /// dev-controlled configuration so they are emitted without HTML
 /// encoding.
 /// </remarks>
-public sealed class MaterialIconsPlugin : DocPluginBase, IHeadExtraProvider
+public sealed class MaterialIconsPlugin : IPlugin, IHeadExtraProvider
 {
     /// <summary>Configured option set.</summary>
     private readonly MaterialIconsOptions _options;
@@ -34,7 +33,7 @@ public sealed class MaterialIconsPlugin : DocPluginBase, IHeadExtraProvider
     public MaterialIconsPlugin(in MaterialIconsOptions options) => _options = options;
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "material-icons"u8;
+    public ReadOnlySpan<byte> Name => "material-icons"u8;
 
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)

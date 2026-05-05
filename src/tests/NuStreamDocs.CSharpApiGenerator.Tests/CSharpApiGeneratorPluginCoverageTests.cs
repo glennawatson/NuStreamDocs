@@ -10,7 +10,7 @@ using SourceDocParser.Model;
 
 namespace NuStreamDocs.CSharpApiGenerator.Tests;
 
-/// <summary>Coverage for CSharpApiGeneratorPlugin Name + OnRender + OnFinalize, FromSource, CustomInput, builder extensions.</summary>
+/// <summary>Coverage for CSharpApiGeneratorPlugin Name + DiscoverAsync, FromSource, CustomInput, builder extensions.</summary>
 public class CSharpApiGeneratorPluginCoverageTests
 {
     /// <summary>Name returns the registered string.</summary>
@@ -20,24 +20,6 @@ public class CSharpApiGeneratorPluginCoverageTests
     {
         var plugin = new CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
         await Assert.That(plugin.Name.SequenceEqual("csharp-apigenerator"u8)).IsTrue();
-    }
-
-    /// <summary>OnRenderPageAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRenderNoOp()
-    {
-        var plugin = new CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
-        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
-    }
-
-    /// <summary>OnFinalizeAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalizeNoOp()
-    {
-        var plugin = new CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
-        await plugin.OnFinalizeAsync(new("/out"), CancellationToken.None);
     }
 
     /// <summary>CustomInput stores the supplied source.</summary>
@@ -75,6 +57,33 @@ public class CSharpApiGeneratorPluginCoverageTests
         {
             await Task.CompletedTask.ConfigureAwait(false);
             yield break;
+        }
+    }
+
+    /// <summary>Disposable scratch directory.</summary>
+    private sealed class TempDir : IDisposable
+    {
+        /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
+        public TempDir()
+        {
+            Root = Path.Combine(Path.GetTempPath(), "smkd-csapi-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Root);
+        }
+
+        /// <summary>Gets the absolute path to the scratch root.</summary>
+        public string Root { get; }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            try
+            {
+                Directory.Delete(Root, recursive: true);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                // already gone
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ public class NavPluginCoverageTests
         await Assert.That(plugin.Name.SequenceEqual("nav"u8)).IsTrue();
     }
 
-    /// <summary>GetRoot is null before OnConfigureAsync runs.</summary>
+    /// <summary>GetRoot is null before DiscoverAsync runs.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task GetRootBeforeConfigure()

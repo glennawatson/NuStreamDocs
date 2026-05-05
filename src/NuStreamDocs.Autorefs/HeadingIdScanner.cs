@@ -35,19 +35,83 @@ public static class HeadingIdScanner
             throw new ArgumentException("Page URL must be non-empty.", nameof(pageUrlBytes));
         }
 
+        ScanHeadings(html, pageUrlBytes, registry);
+        ScanAnchorTags(html, pageUrlBytes, registry);
+    }
+
+    /// <summary>Registers every <c>&lt;hN id="..."&gt;</c> heading.</summary>
+    /// <param name="html">UTF-8 rendered HTML.</param>
+    /// <param name="pageUrlBytes">Per-page URL byte array, shared across registrations.</param>
+    /// <param name="registry">Registry to publish into.</param>
+    private static void ScanHeadings(ReadOnlySpan<byte> html, byte[] pageUrlBytes, AutorefsRegistry registry)
+    {
         var cursor = 0;
         while (cursor < html.Length
                && Utf8HtmlScanner.TryFindNextHeadingOpen(html, cursor, out var tagStart, out var tagEnd, out _))
         {
-            var openTag = html[tagStart..tagEnd];
-            var (idLocalStart, idLength) = Utf8HtmlScanner.FindAttributeValue(openTag, "id"u8);
-            if (idLength > 0)
-            {
-                var idSpan = openTag.Slice(idLocalStart, idLength);
-                registry.Register(idSpan, pageUrlBytes, idSpan);
-            }
-
+            RegisterIdAttribute(html[tagStart..tagEnd], pageUrlBytes, registry);
             cursor = tagEnd;
         }
     }
+
+    /// <summary>Registers every <c>&lt;a id="..."&gt;</c> empty anchor — the form the <c>[](){#id}</c> markdown shorthand expands to.</summary>
+    /// <param name="html">UTF-8 rendered HTML.</param>
+    /// <param name="pageUrlBytes">Per-page URL byte array, shared across registrations.</param>
+    /// <param name="registry">Registry to publish into.</param>
+    private static void ScanAnchorTags(ReadOnlySpan<byte> html, byte[] pageUrlBytes, AutorefsRegistry registry)
+    {
+        var cursor = 0;
+        while (cursor < html.Length)
+        {
+            var rel = html[cursor..].IndexOf("<a"u8);
+            if (rel < 0)
+            {
+                return;
+            }
+
+            var tagStart = cursor + rel;
+            var afterStub = tagStart + 2;
+            if (afterStub >= html.Length || !IsTagBoundary(html[afterStub]))
+            {
+                cursor = afterStub;
+                continue;
+            }
+
+            var closeRel = html[afterStub..].IndexOf((byte)'>');
+            if (closeRel < 0)
+            {
+                return;
+            }
+
+            var tagEnd = afterStub + closeRel + 1;
+            RegisterIdAttribute(html[tagStart..tagEnd], pageUrlBytes, registry);
+            cursor = tagEnd;
+        }
+    }
+
+    /// <summary>Looks up the <c>id</c> attribute on <paramref name="openTag"/> and registers it when present.</summary>
+    /// <param name="openTag">Bytes from <c>&lt;</c> through <c>&gt;</c> inclusive.</param>
+    /// <param name="pageUrlBytes">Per-page URL byte array.</param>
+    /// <param name="registry">Registry to publish into.</param>
+    private static void RegisterIdAttribute(ReadOnlySpan<byte> openTag, byte[] pageUrlBytes, AutorefsRegistry registry)
+    {
+        var (idLocalStart, idLength) = Utf8HtmlScanner.FindAttributeValue(openTag, "id"u8);
+        if (idLength <= 0)
+        {
+            return;
+        }
+
+        var idSpan = openTag.Slice(idLocalStart, idLength);
+        registry.Register(idSpan, pageUrlBytes, idSpan);
+    }
+
+    /// <summary>
+    /// True when <paramref name="b"/> is a valid byte right after a tag-name
+    /// (whitespace, <c>&gt;</c>, or <c>/</c>); rules out <c>&lt;abbr&gt;</c>
+    /// being misread as an <c>&lt;a&gt;</c> open.
+    /// </summary>
+    /// <param name="b">Candidate byte.</param>
+    /// <returns>True for a tag boundary.</returns>
+    private static bool IsTagBoundary(byte b) =>
+        b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n' or (byte)'>' or (byte)'/';
 }

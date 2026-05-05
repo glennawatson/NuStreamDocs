@@ -27,7 +27,7 @@ namespace NuStreamDocs.Search;
 /// JS, or with <c>UseMaterial3Theme</c> + the default
 /// <see cref="SearchFormat.Pagefind"/> to scale to large corpora.
 /// </remarks>
-public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPlugin, IHeadExtraProvider
+public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin, IHeadExtraProvider
 {
     /// <summary>Configured option set.</summary>
     private readonly SearchOptions _options = options;
@@ -67,7 +67,16 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     public ReadOnlySpan<byte> Name => "search"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority ScanPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _outputRoot = context.OutputRoot;
         _useDirectoryUrls = context.UseDirectoryUrls;
@@ -76,13 +85,12 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public void Scan(in PageScanContext context)
     {
-        _ = cancellationToken;
-        var html = context.Html.WrittenSpan;
+        var html = context.Html;
         if (html.IsEmpty)
         {
-            return ValueTask.CompletedTask;
+            return;
         }
 
         using var textRental = PageBuilderPool.Rent(html.Length / 2);
@@ -91,23 +99,21 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IDocPl
         var url = ToHtmlUrl(context.RelativePath, _useDirectoryUrls);
         if (titleBytes.Length == 0)
         {
-            var fallback = Path.GetFileNameWithoutExtension(context.RelativePath);
+            var fallback = context.RelativePath.FileNameWithoutExtension;
             titleBytes = Encoding.UTF8.GetBytes(fallback);
         }
 
         if (_searchableFrontmatterKeyBytes.Length > 0)
         {
-            FrontmatterValueExtractor.AppendKeysTo(context.Source.Span, _searchableFrontmatterKeyBytes, textBuffer);
+            FrontmatterValueExtractor.AppendKeysTo(context.Source, _searchableFrontmatterKeyBytes, textBuffer);
         }
 
         _documents.Add(new(url, titleBytes, [.. textBuffer.WrittenSpan]));
         SearchLoggingHelper.LogDocumentIndexed(_logger, url, textBuffer.WrittenCount);
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         var root = _outputRoot.IsEmpty ? context.OutputRoot : _outputRoot;
         if (root.IsEmpty)

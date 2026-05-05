@@ -2,36 +2,50 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Autorefs.Tests;
 
 /// <summary>Lifecycle method coverage for <c>AutorefsPlugin</c>.</summary>
 public class AutorefsPluginLifecycleTests
 {
-    /// <summary>OnConfigureAsync is a no-op that completes synchronously.</summary>
+    /// <summary>ConfigureAsync registers the autoref cross-page marker and clears prior state.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync() => await new AutorefsPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
-
-    /// <summary>OnRenderPageAsync collects heading IDs into the registry.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRenderPageAsync()
+    public async Task ConfigureAsync()
     {
         var plugin = new AutorefsPlugin();
-        var sink = new ArrayBufferWriter<byte>(64);
-        sink.Write("<h1 id=\"hello\">Hello</h1>"u8);
-        await plugin.OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
+        var markers = new CrossPageMarkerRegistry();
+        await plugin.ConfigureAsync(new BuildConfigureContext("/in", "/out", [], markers), CancellationToken.None);
+        await Assert.That(markers.Markers.Count).IsGreaterThan(0);
     }
 
-    /// <summary>OnFinalizeAsync runs even when the registry is empty.</summary>
+    /// <summary>Scan publishes heading IDs into the registry from the post-render HTML.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnFinalizeAsyncEmpty()
+    public async Task ScanRegistersHeadings()
+    {
+        var plugin = new AutorefsPlugin();
+        ScanHtml(plugin, "<h1 id=\"hello\">Hello</h1>"u8);
+        await Assert.That(plugin.Registry.Count).IsGreaterThanOrEqualTo(1);
+    }
+
+    /// <summary>FinalizeAsync runs even when the registry is empty.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task FinalizeAsyncEmpty()
     {
         using var temp = new TempDir();
-        await new AutorefsPlugin().OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        await new AutorefsPlugin().FinalizeAsync(new BuildFinalizeContext(temp.Root, []), CancellationToken.None);
+    }
+
+    /// <summary>Drives one Scan call against the plugin.</summary>
+    /// <param name="plugin">Plugin under test.</param>
+    /// <param name="html">Rendered HTML bytes.</param>
+    private static void ScanHtml(AutorefsPlugin plugin, ReadOnlySpan<byte> html)
+    {
+        var ctx = new PageScanContext("p.md", default, html);
+        plugin.Scan(in ctx);
     }
 
     /// <summary>Disposable scratch directory.</summary>

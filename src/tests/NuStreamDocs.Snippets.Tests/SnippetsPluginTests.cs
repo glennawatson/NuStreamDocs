@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Snippets.Tests;
 
@@ -20,27 +21,29 @@ public class SnippetsPluginTests
     /// <summary>Without configure being called the source passes through untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PreprocessPassesThroughBeforeConfigure()
+    public async Task PreRenderPassesThroughBeforeConfigure()
     {
         var plugin = new SnippetsPlugin();
         var sink = new ArrayBufferWriter<byte>(32);
-        plugin.Preprocess("hello"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "hello"u8, sink);
+        plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
     }
 
-    /// <summary>OnConfigureAsync captures the input root when no override is supplied.</summary>
+    /// <summary>ConfigureAsync captures the input root when no override is supplied.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureCapturesInputRoot()
+    public async Task ConfigureCapturesInputRoot()
     {
         using var temp = new TempDir();
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "include.md"), "spliced");
 
         var plugin = new SnippetsPlugin();
-        await plugin.OnConfigureAsync(new(temp.Root, "/out", []), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(temp.Root, "/out", [], new()), CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(64);
-        plugin.Preprocess("--8<-- \"include.md\""u8, sink);
+        var ctx = new PagePreRenderContext("page.md", "--8<-- \"include.md\""u8, sink);
+        plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("spliced");
     }
 
@@ -53,21 +56,12 @@ public class SnippetsPluginTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "include.md"), "explicit");
 
         var plugin = new SnippetsPlugin(temp.Root);
-        await plugin.OnConfigureAsync(new("/wrong", "/out", []), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext("/wrong", "/out", [], new()), CancellationToken.None);
 
         var sink = new ArrayBufferWriter<byte>(64);
-        plugin.Preprocess("--8<-- \"include.md\""u8, sink);
+        var ctx = new PagePreRenderContext("page.md", "--8<-- \"include.md\""u8, sink);
+        plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("explicit");
-    }
-
-    /// <summary>Preprocess rejects a null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessRejectsNullSink()
-    {
-        var plugin = new SnippetsPlugin();
-        var ex = Assert.Throws<ArgumentNullException>(() => plugin.Preprocess(default, null!));
-        await Assert.That(ex).IsNotNull();
     }
 
     /// <summary>UseSnippets() registers the default-base plugin.</summary>

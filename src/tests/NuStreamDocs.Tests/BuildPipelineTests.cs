@@ -2,9 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Building;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
@@ -141,31 +139,23 @@ public class BuildPipelineTests
         await Assert.That(() => BuildPipeline.RunAsync("/in", "/out", null!)).Throws<ArgumentNullException>();
     }
 
-    /// <summary>Test preprocessor that replaces every <c>A</c> with <c>B</c>.</summary>
-    private sealed class ReplaceAToB : IDocPlugin, IMarkdownPreprocessor
+    /// <summary>Test pre-render plugin that replaces every <c>A</c> with <c>B</c>.</summary>
+    private sealed class ReplaceAToB : IPagePreRenderPlugin
     {
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Name => "a-to-b"u8;
 
         /// <inheritdoc/>
+        public PluginPriority PreRenderPriority => PluginPriority.Normal;
+
+        /// <inheritdoc/>
         public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
         /// <inheritdoc/>
-        public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-            Preprocess(source, writer);
-
-        /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+        public void PreRender(in PagePreRenderContext context)
         {
+            var source = context.Source;
+            var writer = context.Output;
             for (var i = 0; i < source.Length; i++)
             {
                 var dst = writer.GetSpan(1);
@@ -175,15 +165,23 @@ public class BuildPipelineTests
         }
     }
 
-    /// <summary>Test preprocessor that replaces every <c>B</c> with <c>C</c>.</summary>
-    private sealed class ReplaceBToC : IDocPlugin, IMarkdownPreprocessor
+    /// <summary>Test pre-render plugin that replaces every <c>B</c> with <c>C</c>.</summary>
+    private sealed class ReplaceBToC : IPagePreRenderPlugin
     {
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Name => "b-to-c"u8;
 
         /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+        public PluginPriority PreRenderPriority => PluginPriority.Normal;
+
+        /// <inheritdoc/>
+        public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+        /// <inheritdoc/>
+        public void PreRender(in PagePreRenderContext context)
         {
+            var source = context.Source;
+            var writer = context.Output;
             for (var i = 0; i < source.Length; i++)
             {
                 var dst = writer.GetSpan(1);
@@ -191,21 +189,5 @@ public class BuildPipelineTests
                 writer.Advance(1);
             }
         }
-
-        /// <inheritdoc/>
-        public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-            Preprocess(source, writer);
-
-        /// <inheritdoc/>
-        public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
-
-        /// <inheritdoc/>
-        public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 }

@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Emoji;
@@ -20,22 +18,18 @@ namespace NuStreamDocs.Emoji;
 /// they remain visible to downstream processors (an icon pack, a
 /// reverse-proxy renderer, or simply human eyes).
 /// </remarks>
-public sealed class EmojiPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class EmojiPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "emoji"u8;
+    public ReadOnlySpan<byte> Name => "emoji"u8;
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        EmojiRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
+
+    /// <inheritdoc/>
+    public void PreRender(in PagePreRenderContext context) =>
+        EmojiRewriter.Rewrite(context.Source, context.Output);
 }

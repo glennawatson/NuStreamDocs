@@ -7,7 +7,7 @@ using System.Buffers;
 namespace NuStreamDocs.Markdown.Common;
 
 /// <summary>
-/// Vectorized marker probes used by <c>IMarkdownPreprocessor.NeedsRewrite</c>
+/// Vectorized marker probes used by <c>IPagePreRenderPlugin.NeedsRewrite</c>
 /// implementations to short-circuit per-page rewrites when the source
 /// contains none of the plugin's distinctive bytes.
 /// </summary>

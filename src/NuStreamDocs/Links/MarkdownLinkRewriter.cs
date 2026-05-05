@@ -70,7 +70,7 @@ internal static class MarkdownLinkRewriter
     /// <param name="html">Rendered HTML.</param>
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c> (and <c>index.md</c> → empty); when false, <c>foo.md</c> → <c>foo.html</c>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, ArrayBufferWriter<byte> writer) =>
+    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, IBufferWriter<byte> writer) =>
         RewriteInto(html, useDirectoryUrls, prependParent: false, writer);
 
     /// <summary>
@@ -81,7 +81,7 @@ internal static class MarkdownLinkRewriter
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c>.</param>
     /// <param name="prependParent">Prepend <c>../</c> for non-index pages emitted under directory URLs.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, bool prependParent, ArrayBufferWriter<byte> writer)
+    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, bool prependParent, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
         if (html.IsEmpty)
@@ -120,7 +120,7 @@ internal static class MarkdownLinkRewriter
     /// <param name="sink">Output sink.</param>
     /// <param name="useDirectoryUrls">Selects the directory-URL output shape.</param>
     /// <param name="prependParent">When true, prepend <c>../</c> before the rewritten directory-style URL.</param>
-    private static void EmitHref(ReadOnlySpan<byte> href, ArrayBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
+    private static void EmitHref(ReadOnlySpan<byte> href, IBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
     {
         if (!IsRelative(href))
         {
@@ -158,7 +158,7 @@ internal static class MarkdownLinkRewriter
     /// <param name="stem">Path stem with the <c>.md</c> extension already removed.</param>
     /// <param name="tail">Anchor / query suffix (including the leading <c>#</c> or <c>?</c>) or empty.</param>
     /// <param name="sink">Output sink.</param>
-    private static void EmitDirectoryStyle(ReadOnlySpan<byte> stem, ReadOnlySpan<byte> tail, ArrayBufferWriter<byte> sink)
+    private static void EmitDirectoryStyle(ReadOnlySpan<byte> stem, ReadOnlySpan<byte> tail, IBufferWriter<byte> sink)
     {
         var lastSlash = stem.LastIndexOfAny((byte)'/', (byte)'\\');
         var fileName = lastSlash < 0 ? stem : stem[(lastSlash + 1)..];

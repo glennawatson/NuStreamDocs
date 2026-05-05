@@ -6,7 +6,7 @@ using NuStreamDocs.Autorefs;
 
 namespace NuStreamDocs.Xrefs.Tests;
 
-/// <summary>Coverage for XrefsPlugin one-arg ctor and OnRenderPageAsync.</summary>
+/// <summary>Coverage for XrefsPlugin one-arg ctor.</summary>
 public class XrefsPluginCoverageTests
 {
     /// <summary>One-arg ctor with a shared registry sets Registry.</summary>
@@ -17,14 +17,5 @@ public class XrefsPluginCoverageTests
         var registry = new AutorefsRegistry();
         var plugin = new XrefsPlugin(registry);
         await Assert.That(plugin.Registry).IsEqualTo(registry);
-    }
-
-    /// <summary>OnRenderPageAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRenderNoOp()
-    {
-        var plugin = new XrefsPlugin();
-        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 }

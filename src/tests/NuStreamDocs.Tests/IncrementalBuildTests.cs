@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using NuStreamDocs.Building;
 using NuStreamDocs.Caching;
 using NuStreamDocs.Plugins;
@@ -98,35 +99,24 @@ public class IncrementalBuildTests
         await Assert.That(html).Contains("pipeline-changed");
     }
 
-    /// <summary>Simple render plugin used to prove the fingerprint invalidates stale output.</summary>
-    private sealed class AppendCommentPlugin : IDocPlugin
+    /// <summary>Simple post-render plugin used to prove the fingerprint invalidates stale output.</summary>
+    private sealed class AppendCommentPlugin : IPagePostRenderPlugin
     {
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Name => "append-comment"u8;
 
         /// <inheritdoc/>
-        public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
-        {
-            _ = context;
-            _ = cancellationToken;
-            return ValueTask.CompletedTask;
-        }
+        public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
         /// <inheritdoc/>
-        public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-        {
-            _ = cancellationToken;
-            "<!--pipeline-changed-->"u8.CopyTo(context.Html.GetSpan("<!--pipeline-changed-->".Length));
-            context.Html.Advance("<!--pipeline-changed-->".Length);
-            return ValueTask.CompletedTask;
-        }
+        public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
         /// <inheritdoc/>
-        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+        public void PostRender(in PagePostRenderContext context)
         {
-            _ = context;
-            _ = cancellationToken;
-            return ValueTask.CompletedTask;
+            context.Output.Write(context.Html);
+            "<!--pipeline-changed-->"u8.CopyTo(context.Output.GetSpan("<!--pipeline-changed-->".Length));
+            context.Output.Advance("<!--pipeline-changed-->".Length);
         }
     }
 }

@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 using NuStreamDocs.LinkValidator.Logging;
@@ -11,9 +13,10 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.LinkValidator;
 
 /// <summary>
-/// Plugin that runs the link validator at build finalize. Builds a
-/// single corpus in one parallel pass, then runs both validators
-/// against it.
+/// Plugin that validates internal and external links across the
+/// rendered site. Pages are captured during the per-page scan phase;
+/// validation runs once during the cross-page resolve barrier against
+/// the accumulated corpus.
 /// </summary>
 /// <remarks>
 /// Mirror of the rxui website's source-link validator slot; takes
@@ -21,19 +24,23 @@ namespace NuStreamDocs.LinkValidator;
 /// stderr. Fails the process via the captured exit code only when
 /// the relevant strict flag is on, matching mkdocs' behavior.
 /// </remarks>
-public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpClient>? httpClientFactory, ILogger logger) : IDocPlugin
+public sealed class LinkValidatorPlugin
+    : IBuildConfigurePlugin, IPageScanPlugin, IBuildResolvePlugin
 {
     /// <summary>Process exit code returned when at least one fatal diagnostic surfaces.</summary>
     private const int StrictFailureExitCode = 2;
 
     /// <summary>Configured options.</summary>
-    private readonly LinkValidatorOptions _options = ValidateOptions(options);
+    private readonly LinkValidatorOptions _options;
 
     /// <summary>HTTP client factory; when null the plugin owns its own client.</summary>
-    private readonly Func<HttpClient>? _httpClientFactory = httpClientFactory;
+    private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger captured at construction; defaults to <see cref="NullLogger.Instance"/> when no logger is supplied.</summary>
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger;
+
+    /// <summary>Per-build accumulator filled during <see cref="Scan"/> and drained during <see cref="ResolveAsync"/>.</summary>
+    private ConcurrentDictionary<byte[], PageLinks> _pages = new(ByteArrayComparer.Instance);
 
     /// <summary>Initializes a new instance of the <see cref="LinkValidatorPlugin"/> class with default options.</summary>
     public LinkValidatorPlugin()
@@ -56,6 +63,20 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     {
     }
 
+    /// <summary>Initializes a new instance of the <see cref="LinkValidatorPlugin"/> class.</summary>
+    /// <param name="options">Plugin options.</param>
+    /// <param name="httpClientFactory">Factory producing the HTTP client used by the external validator. When null the plugin builds a default client.</param>
+    /// <param name="logger">Logger that receives validation diagnostics.</param>
+    public LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpClient>? httpClientFactory, ILogger logger)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(logger);
+        options.Validate();
+        _options = options;
+        _httpClientFactory = httpClientFactory;
+        _logger = logger;
+    }
+
     /// <summary>Gets the diagnostics from the most recent run; intended for tests.</summary>
     public LinkDiagnostic[] LastDiagnostics { get; private set; } = [];
 
@@ -63,25 +84,38 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
     public ReadOnlySpan<byte> Name => "link-validator"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority ScanPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority ResolvePriority => new(PluginBand.Late);
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = context;
         _ = cancellationToken;
+
+        // Watch-mode rebuilds reuse the plugin instance — drop the previous build's pages.
+        _pages = new(ByteArrayComparer.Instance);
+        LastDiagnostics = [];
         return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public void Scan(in PageScanContext context)
     {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
+        var pageUrl = ToPageUrlBytes(context.RelativePath);
+        _pages[pageUrl] = ValidationCorpus.Scan(pageUrl, context.Html);
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public async ValueTask ResolveAsync(BuildResolveContext context, CancellationToken cancellationToken)
     {
-        LastDiagnostics = await RunAsync(context.OutputRoot, cancellationToken).ConfigureAwait(false);
+        _ = context;
+        LastDiagnostics = await RunAsync(cancellationToken).ConfigureAwait(false);
         ReportToConsole(LastDiagnostics);
 
         if (!LinkValidatorReporter.HasFatal(LastDiagnostics))
@@ -92,23 +126,20 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
         Environment.ExitCode = StrictFailureExitCode;
     }
 
-    /// <summary>Runs the corpus build + both validators.</summary>
-    /// <param name="outputRoot">Site output root.</param>
+    /// <summary>Validates the corpus accumulated by <see cref="Scan"/> and returns the merged diagnostics.</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Combined diagnostics, with severity demoted when the matching strict flag is off.</returns>
-    public async Task<LinkDiagnostic[]> RunAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
+    public async Task<LinkDiagnostic[]> RunAsync(CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
-
         var merged = await PhaseTimer.RunAsync(
             _logger,
-            l => LinkValidatorLoggingHelper.LogValidationStart(l, outputRoot.Value),
+            l => LinkValidatorLoggingHelper.LogValidationStart(l, "<in-memory>"),
             static (l, m, secs) =>
             {
                 var (broken, warning) = LinkValidatorReporter.Tally(m);
                 LinkValidatorLoggingHelper.LogValidationComplete(l, broken, warning, secs);
             },
-            () => RunValidationAsync(outputRoot, cancellationToken)).ConfigureAwait(false);
+            () => RunValidationAsync(cancellationToken)).ConfigureAwait(false);
 
         for (var i = 0; i < merged.Length; i++)
         {
@@ -119,14 +150,33 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
         return merged;
     }
 
-    /// <summary>Validates and returns <paramref name="opts"/>.</summary>
-    /// <param name="opts">Options to validate.</param>
-    /// <returns>The validated options.</returns>
-    private static LinkValidatorOptions ValidateOptions(LinkValidatorOptions opts)
+    /// <summary>Builds the corpus from disk (test/diagnostic boundary) and runs both validators.</summary>
+    /// <param name="outputRoot">Site output root.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Combined diagnostics, with severity demoted when the matching strict flag is off.</returns>
+    public async Task<LinkDiagnostic[]> RunAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(opts);
-        opts.Validate();
-        return opts;
+        ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
+
+        var corpus = await ValidationCorpus.BuildAsync(outputRoot, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        return await ValidateAsync(corpus, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Maps a source-relative path to its served URL bytes (replaces <c>.md</c> with <c>.html</c>).</summary>
+    /// <param name="relativePath">Source-relative markdown path, forward-slashed.</param>
+    /// <returns>UTF-8 page-relative URL bytes.</returns>
+    private static byte[] ToPageUrlBytes(FilePath relativePath)
+    {
+        var path = relativePath.AsSpan();
+        var hasMd = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+        var sourceChars = hasMd ? path[..^3] : path;
+        ReadOnlySpan<byte> suffix = hasMd ? ".html"u8 : default;
+
+        var size = Encoding.UTF8.GetByteCount(sourceChars) + suffix.Length;
+        var result = new byte[size];
+        var written = Encoding.UTF8.GetBytes(sourceChars, result);
+        suffix.CopyTo(result.AsSpan(written));
+        return result;
     }
 
     /// <summary>Writes the diagnostics to stderr.</summary>
@@ -140,13 +190,21 @@ public sealed class LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpC
         }
     }
 
-    /// <summary>Builds the corpus, emits the corpus-summary log, runs both validators, and merges the diagnostics.</summary>
-    /// <param name="outputRoot">Site output root being validated.</param>
+    /// <summary>Builds the corpus from the accumulated pages and runs validation.</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The merged diagnostic array.</returns>
-    private async ValueTask<LinkDiagnostic[]> RunValidationAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
+    private async ValueTask<LinkDiagnostic[]> RunValidationAsync(CancellationToken cancellationToken)
     {
-        var corpus = await ValidationCorpus.BuildAsync(outputRoot, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        var corpus = ValidationCorpus.FromPages(_pages);
+        return await ValidateAsync(corpus, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Logs the corpus summary and runs the internal + external validators against <paramref name="corpus"/>.</summary>
+    /// <param name="corpus">Validation corpus.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The merged diagnostic array.</returns>
+    private async Task<LinkDiagnostic[]> ValidateAsync(ValidationCorpus corpus, CancellationToken cancellationToken)
+    {
         var (internalLinkCount, externalLinkCount) = LinkValidatorReporter.CountLinks(corpus);
         LinkValidatorLoggingHelper.LogValidationCorpus(_logger, corpus.Pages.Length, internalLinkCount, externalLinkCount);
 

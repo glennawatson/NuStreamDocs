@@ -68,8 +68,8 @@ public class SphinxInventoryWriterTests
         var registry = new AutorefsRegistry();
         registry.Register("Foo"u8, "api/Foo.html"u8.ToArray(), fragment: default);
         var plugin = new SphinxInventoryPlugin(registry, new("X", string.Empty, "objects.inv"));
-        var context = new PluginFinalizeContext(fixture.Directory);
-        await plugin.OnFinalizeAsync(context, CancellationToken.None);
+        var context = new BuildFinalizeContext(fixture.Directory, []);
+        await plugin.FinalizeAsync(context, CancellationToken.None);
 
         var path = Path.Combine(fixture.Directory, "objects.inv");
         await Assert.That(File.Exists(path)).IsTrue();

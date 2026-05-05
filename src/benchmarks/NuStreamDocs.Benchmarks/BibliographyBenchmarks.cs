@@ -8,6 +8,7 @@ using NuStreamDocs.Bibliography;
 using NuStreamDocs.Bibliography.Model;
 using NuStreamDocs.Bibliography.Styles.Aglc4;
 using NuStreamDocs.Common;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Benchmarks;
 
@@ -59,7 +60,8 @@ public class BibliographyBenchmarks
     public int MarkerHeavyResolve()
     {
         using var rental = PageBuilderPool.Rent(_markerHeavySource.Length * OutputExpansionFactor);
-        _plugin.Preprocess(_markerHeavySource, rental.Writer);
+        var ctx = new PagePreRenderContext("page.md", _markerHeavySource, rental.Writer);
+        _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
 
@@ -69,7 +71,8 @@ public class BibliographyBenchmarks
     public int NoMarkerPassThrough()
     {
         using var rental = PageBuilderPool.Rent(_noMarkerSource.Length * OutputExpansionFactor);
-        _plugin.Preprocess(_noMarkerSource, rental.Writer);
+        var ctx = new PagePreRenderContext("page.md", _noMarkerSource, rental.Writer);
+        _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
 

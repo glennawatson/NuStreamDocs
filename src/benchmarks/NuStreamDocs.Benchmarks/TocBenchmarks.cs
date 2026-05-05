@@ -93,16 +93,15 @@ public class TocBenchmarks
         return sink.WrittenCount;
     }
 
-    /// <summary>End-to-end benchmark of <c>TocPlugin.OnRenderPageAsync</c>.</summary>
+    /// <summary>End-to-end benchmark of <c>TocPlugin.PostRender</c>.</summary>
     /// <returns>The bytes written.</returns>
     [Benchmark]
-    public async Task<int> OnRenderPage()
+    public int OnRenderPage()
     {
         var sink = new ArrayBufferWriter<byte>(_html.Length * 2);
-        sink.Write(_html);
         var plugin = new TocPlugin();
-        var ctx = new PluginRenderContext("page.md", _html, sink);
-        await plugin.OnRenderPageAsync(ctx, CancellationToken.None);
+        var ctx = new PagePostRenderContext("page.md", default, _html, sink);
+        plugin.PostRender(in ctx);
         return sink.WrittenCount;
     }
 }

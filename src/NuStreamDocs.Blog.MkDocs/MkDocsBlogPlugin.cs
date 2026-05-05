@@ -20,7 +20,7 @@ namespace NuStreamDocs.Blog.MkDocs;
 /// <c>blog/category/</c>. Frontmatter still uses Tags and Author so
 /// the same authoring tooling works against both variants.
 /// </remarks>
-public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) : IDocPlugin
+public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) : IBuildDiscoverPlugin
 {
     /// <summary>Configured options.</summary>
     private readonly MkDocsBlogOptions _options = ValidateOptions(options);
@@ -39,7 +39,10 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
     public ReadOnlySpan<byte> Name => "mkdocs-blog"u8;
 
     /// <inheritdoc/>
-    public async ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority DiscoverPriority => new(PluginBand.Earliest);
+
+    /// <inheritdoc/>
+    public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
         var blogRoot = context.InputRoot / _options.BlogSubdirectory;
         await BlogContentGenerator.GenerateAsync(
@@ -53,22 +56,6 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
                 ArchiveRoot: blogRoot / "category",
                 ArchiveFallbackSlug: "category"),
             cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
-    {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
     }
 
     /// <summary>Validates and returns <paramref name="opts"/>.</summary>

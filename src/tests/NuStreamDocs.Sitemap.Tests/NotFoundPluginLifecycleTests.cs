@@ -15,16 +15,4 @@ public class NotFoundPluginLifecycleTests
         var plugin = new NotFoundPlugin();
         await Assert.That(plugin.Name.SequenceEqual("404"u8)).IsTrue();
     }
-
-    /// <summary>OnConfigureAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnConfigure() =>
-        await new NotFoundPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
-
-    /// <summary>OnRenderPageAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRender() =>
-        await new NotFoundPlugin().OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
 }

@@ -125,6 +125,25 @@ public class AutorefsReferenceLinkPreprocessorTests
         await Assert.That(AutorefsReferenceLinkPreprocessor.NeedsRewrite("[Foo][bar]\n"u8)).IsTrue();
     }
 
+    /// <summary>Reproduces the rxui table-cell shape — multiple crefs across a Markdown table row + a Returns line — to lock the regression where the preprocessor missed real-world inputs.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task RewritesAcrossMarkdownTableRows()
+    {
+        var src = string.Join(
+            "\n",
+            "| Name | Type | Description |",
+            "| ---- | ---- | ----------- |",
+            "| builder | [IAkavacheBuilder][T:Akavache.IAkavacheBuilder] | The Akavache builder to configure. |",
+            string.Empty,
+            "Returns: [IAkavacheBuilder][T:Akavache.IAkavacheBuilder] -- The builder instance for fluent configuration.",
+            string.Empty);
+        var output = Rewrite(src);
+
+        await Assert.That(output).Contains("[IAkavacheBuilder](@autoref:T:Akavache.IAkavacheBuilder)");
+        await Assert.That(output).DoesNotContain("[IAkavacheBuilder][T:Akavache.IAkavacheBuilder]");
+    }
+
     /// <summary>Reference links pointing at a plain identifier (no commentId prefix) rewrite when no link definition resolves the label.</summary>
     /// <returns>Async test.</returns>
     [Test]

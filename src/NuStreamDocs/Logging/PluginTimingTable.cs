@@ -28,7 +28,7 @@ public sealed class PluginTimingTable
     public static double SignificantSeconds => SignificantSecondsThreshold;
 
     /// <summary>Begins a measurement scope for <paramref name="pluginName"/>; disposing the returned scope adds the elapsed ticks to the running total.</summary>
-    /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IDocPlugin.Name"/> bytes.</param>
+    /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes.</param>
     /// <returns>A scope to wrap with <c>using</c>.</returns>
     public MeasurementScope Measure(ReadOnlySpan<byte> pluginName)
     {
@@ -41,7 +41,7 @@ public sealed class PluginTimingTable
     }
 
     /// <summary>Adds a pre-captured tick delta to <paramref name="pluginName"/>'s running total.</summary>
-    /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IDocPlugin.Name"/> bytes.</param>
+    /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes.</param>
     /// <param name="elapsedTicks"><see cref="Stopwatch"/>-frequency tick delta from a caller-managed timestamp.</param>
     /// <remarks>Exposed for hot paths that already have the delta in hand (e.g. callers timing several invocations in one shot); prefer <see cref="Measure"/> elsewhere.</remarks>
     public void Add(byte[] pluginName, long elapsedTicks)

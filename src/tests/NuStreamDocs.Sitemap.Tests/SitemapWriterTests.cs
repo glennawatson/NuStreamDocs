@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Sitemap.Tests;
 
@@ -66,7 +67,7 @@ public class SitemapWriterTests
     {
         using var fixture = new TempDirectory();
         var plugin = new NotFoundPlugin();
-        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
 
         var path = Path.Combine(fixture.Root, "404.html");
         await Assert.That(File.Exists(path)).IsTrue();
@@ -84,7 +85,7 @@ public class SitemapWriterTests
         await File.WriteAllTextAsync(path, "user content");
 
         var plugin = new NotFoundPlugin();
-        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
 
         await Assert.That(await File.ReadAllTextAsync(path)).IsEqualTo("user content");
     }
@@ -96,7 +97,7 @@ public class SitemapWriterTests
     {
         using var fixture = new TempDirectory();
         var plugin = new RedirectsPlugin(("old.html", "/new.html"), ("legacy/page.html", "/guide/intro.html"));
-        await plugin.OnFinalizeAsync(new(fixture.Root), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(fixture.Root, []), CancellationToken.None);
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "old.html"));
         await Assert.That(html).Contains("<meta http-equiv=\"refresh\" content=\"0; url=/new.html\">");

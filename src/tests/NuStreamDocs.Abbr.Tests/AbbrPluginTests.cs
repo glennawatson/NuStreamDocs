@@ -5,19 +5,21 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Abbr.Tests;
 
 /// <summary>Lifecycle / registration tests for the abbreviation plugin.</summary>
 public class AbbrPluginTests
 {
-    /// <summary>Preprocess wraps a known token in <c>&lt;abbr&gt;</c>.</summary>
+    /// <summary>PreRender wraps a known token in <c>&lt;abbr&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PreprocessWrapsToken()
+    public async Task PreRenderWrapsToken()
     {
         var sink = new ArrayBufferWriter<byte>(64);
-        new AbbrPlugin().Preprocess("HTML rules.\n\n*[HTML]: Hyper Text Markup Language\n"u8, sink);
+        var ctx = new PagePreRenderContext("p.md", "HTML rules.\n\n*[HTML]: Hyper Text Markup Language\n"u8, sink);
+        new AbbrPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))
             .Contains("<abbr title=\"Hyper Text Markup Language\">HTML</abbr>");
     }
@@ -27,16 +29,6 @@ public class AbbrPluginTests
     [Test]
     public async Task NameIsStable() =>
         await Assert.That(new AbbrPlugin().Name.SequenceEqual("abbr"u8)).IsTrue();
-
-    /// <summary>Preprocess rejects a null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PreprocessRejectsNullSink()
-    {
-        var plugin = new AbbrPlugin();
-        var ex = Assert.Throws<ArgumentNullException>(() => plugin.Preprocess(default, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>UseAbbreviations registers the plugin.</summary>
     /// <returns>Async test.</returns>

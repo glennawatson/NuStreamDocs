@@ -12,9 +12,9 @@ namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Focused benchmarks for the nav plugin's per-page render path.</summary>
 /// <remarks>
-/// Builds one synthetic docs tree on disk, configures full + pruned
+/// Builds one synthetic docs tree on disk, discovers full + pruned
 /// <see cref="NavPlugin"/> instances once, then repeatedly measures
-/// <see cref="NavPlugin.OnRenderPageAsync(PluginRenderContext, CancellationToken)"/>
+/// <see cref="NavPlugin.PostRender(in PagePostRenderContext)"/>
 /// against a themed page containing only the nav marker.
 /// <para>
 /// The corpus is deliberately section-heavy so we stress the active-path
@@ -97,14 +97,14 @@ public class NavRenderBenchmarks
     /// <summary>Measures the full-nav render path for a deep active page.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark(Baseline = true)]
-    public Task<int> RenderFull() =>
-        RenderAsync(_fullPlugin, _fullHtml);
+    public int RenderFull() =>
+        Render(_fullPlugin, _fullHtml);
 
     /// <summary>Measures the pruned-nav render path for the same deep active page.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public Task<int> RenderPruned() =>
-        RenderAsync(_prunedPlugin, _prunedHtml);
+    public int RenderPruned() =>
+        Render(_prunedPlugin, _prunedHtml);
 
     /// <summary>Creates the synthetic docs tree used by the benchmark.</summary>
     /// <param name="inputRoot">Absolute input root.</param>
@@ -142,34 +142,24 @@ public class NavRenderBenchmarks
     /// <param name="plugin">Configured plugin.</param>
     /// <param name="html">Writer reused across invocations.</param>
     /// <returns>Bytes written.</returns>
-    private static async Task<int> RenderAsync(NavPlugin plugin, ArrayBufferWriter<byte> html)
+    private static int Render(NavPlugin plugin, ArrayBufferWriter<byte> html)
     {
         html.ResetWrittenCount();
-        Write(html, "<nav><!--@@nav@@--></nav>"u8);
-        var context = new PluginRenderContext(ActivePage, ReadOnlyMemory<byte>.Empty, html);
-        await plugin.OnRenderPageAsync(context, CancellationToken.None).ConfigureAwait(false);
+        ReadOnlySpan<byte> body = "<nav><!--@@nav@@--></nav>"u8;
+        var context = new PagePostRenderContext(ActivePage, default, body, html);
+        plugin.PostRender(in context);
         return html.WrittenCount;
     }
 
-    /// <summary>Configures one plugin instance against the synthetic corpus.</summary>
-    /// <param name="plugin">Plugin to configure.</param>
+    /// <summary>Discovers one plugin instance against the synthetic corpus.</summary>
+    /// <param name="plugin">Plugin to discover.</param>
     /// <param name="inputRoot">Absolute input root.</param>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <returns>A task representing the asynchronous setup.</returns>
     private static Task ConfigureAsync(NavPlugin plugin, string inputRoot, string outputRoot)
     {
-        var context = new PluginConfigureContext(inputRoot, outputRoot, [plugin]);
-        return plugin.OnConfigureAsync(context, CancellationToken.None).AsTask();
-    }
-
-    /// <summary>Bulk-writes UTF-8 bytes into <paramref name="writer"/>.</summary>
-    /// <param name="writer">Target writer.</param>
-    /// <param name="bytes">Bytes to write.</param>
-    private static void Write(ArrayBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
-    {
-        var dst = writer.GetSpan(bytes.Length);
-        bytes.CopyTo(dst);
-        writer.Advance(bytes.Length);
+        var context = new BuildDiscoverContext(inputRoot, outputRoot, [plugin]);
+        return plugin.DiscoverAsync(context, CancellationToken.None).AsTask();
     }
 
     /// <summary>Best-effort recursive directory delete.</summary>

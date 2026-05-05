@@ -11,8 +11,8 @@ namespace NuStreamDocs.SuperFences;
 /// <summary>
 /// Custom-fence dispatcher (pymdownx superfences). Discovers
 /// every <see cref="ICustomFenceHandler"/> exposed by registered
-/// plugins during <see cref="OnConfigureAsync"/>, then walks each
-/// rendered page in <see cref="OnRenderPageAsync"/> looking for
+/// plugins during <see cref="ConfigureAsync"/>, then walks each
+/// rendered page in <see cref="PostRender"/> looking for
 /// <c>&lt;pre&gt;&lt;code class="language-{lang}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
 /// blocks whose language is claimed by a handler. Matched blocks
 /// are replaced with the handler's rendering.
@@ -23,21 +23,24 @@ namespace NuStreamDocs.SuperFences;
 /// the head-extras / static-asset providers use. Handlers receive
 /// the fence body with HTML entities decoded back to their
 /// literal bytes. The handler index is byte-keyed so the per-page
-/// dispatch loop never UTF-16 transcodes a language identifier;
-/// the rewrite streams straight into the page sink via
-/// <see cref="HtmlSnapshotRewriter"/> instead of materializing an
-/// intermediate replacement byte array.
+/// dispatch loop never UTF-16 transcodes a language identifier.
 /// </remarks>
-public sealed class SuperFencesPlugin : DocPluginBase
+public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
 {
-    /// <summary>Resolved handler index, keyed on the language bytes. Built once during <see cref="OnConfigureAsync"/>.</summary>
+    /// <summary>Resolved handler index, keyed on the language bytes. Built once during <see cref="ConfigureAsync"/>.</summary>
     private Dictionary<byte[], ICustomFenceHandler>? _handlers;
 
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "superfences"u8;
+    public ReadOnlySpan<byte> Name => "superfences"u8;
 
     /// <inheritdoc/>
-    public override ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority PostRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         var plugins = context.Plugins;
@@ -63,45 +66,28 @@ public sealed class SuperFencesPlugin : DocPluginBase
     }
 
     /// <inheritdoc/>
-    public override ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
+    public bool NeedsRewrite(ReadOnlySpan<byte> html)
     {
-        _ = cancellationToken;
-        var handlers = _handlers;
-        if (handlers is null || handlers.Count is 0)
+        if (_handlers is null || _handlers.Count is 0)
         {
-            return ValueTask.CompletedTask;
+            return false;
         }
 
-        var html = context.Html;
-        if (!SuperFencesDispatcher.NeedsDispatch(html.WrittenSpan))
-        {
-            return ValueTask.CompletedTask;
-        }
-
-        var altLookup = handlers.AsUtf8Lookup();
-        HtmlSnapshotRewriter.Rewrite(html, altLookup, RewriteCallback);
-
-        return ValueTask.CompletedTask;
+        return SuperFencesDispatcher.NeedsDispatch(html);
     }
 
-    /// <summary>
-    /// Static callback that runs inside <see cref="HtmlSnapshotRewriter"/>.
-    /// The dispatcher writes into <paramref name="sink"/> when it found
-    /// at least one fence; on no-op we copy the snapshot back verbatim.
-    /// </summary>
-    /// <param name="snapshot">Read-only snapshot of the page bytes.</param>
-    /// <param name="sink">Reset destination buffer.</param>
-    /// <param name="lookup">Span-keyed handler lookup.</param>
-    private static void RewriteCallback(
-        ReadOnlySpan<byte> snapshot,
-        ArrayBufferWriter<byte> sink,
-        Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> lookup)
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context)
     {
-        if (SuperFencesDispatcher.DispatchInto(snapshot, lookup, sink))
+        var handlers = _handlers!;
+        var altLookup = handlers.AsUtf8Lookup();
+        if (SuperFencesDispatcher.DispatchInto(context.Html, altLookup, context.Output))
         {
             return;
         }
 
-        sink.Write(snapshot);
+        // No handler matched a candidate block — the engine still expects the
+        // full page in the output sink, so copy the input through verbatim.
+        context.Output.Write(context.Html);
     }
 }

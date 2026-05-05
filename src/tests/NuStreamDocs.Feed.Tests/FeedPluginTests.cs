@@ -2,12 +2,12 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Feed.Tests;
 
-/// <summary>Tests for FeedPlugin's lifecycle hooks and OnFinalizeAsync conditionals.</summary>
+/// <summary>Tests for FeedPlugin's lifecycle hooks and FinalizeAsync conditionals.</summary>
 public class FeedPluginTests
 {
     /// <summary>Two-arg constructor sets defaults.</summary>
@@ -19,35 +19,25 @@ public class FeedPluginTests
         await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
     }
 
-    /// <summary>OnConfigureAsync is a no-op.</summary>
+    /// <summary>ConfigureAsync runs successfully.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsyncSucceeds() =>
+    public async Task ConfigureAsyncSucceeds() =>
         await new FeedPlugin(new("https://x.test/", "T", "D", "blog"))
-            .OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
+            .ConfigureAsync(new BuildConfigureContext("/in", "/out", [], new()), CancellationToken.None);
 
-    /// <summary>OnRenderPageAsync is a no-op.</summary>
+    /// <summary>FinalizeAsync runs against an empty output dir without error.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnRenderPageAsyncSucceeds()
-    {
-        var sink = new ArrayBufferWriter<byte>(8);
-        await new FeedPlugin(new("https://x.test/", "T", "D", "blog"))
-            .OnRenderPageAsync(new("p.md", default, sink), CancellationToken.None);
-    }
-
-    /// <summary>OnFinalizeAsync runs against an empty output dir without error.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalizeAsyncEmptyDirSucceeds()
+    public async Task FinalizeAsyncEmptyDirSucceeds()
     {
         using var dir = new TempDir();
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
     }
 
-    /// <summary>FeedFormats.None short-circuits OnFinalizeAsync without writing anything.</summary>
+    /// <summary>FeedFormats.None short-circuits FinalizeAsync without writing anything.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task FormatsNoneShortCircuits()
@@ -55,20 +45,20 @@ public class FeedPluginTests
         using var dir = new TempDir();
         var opts = new FeedOptions("https://x.test/", "T", "D", "blog") { Formats = FeedFormats.None };
         var plugin = new FeedPlugin(opts);
-        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsFalse();
     }
 
-    /// <summary>An empty input root short-circuits OnFinalizeAsync.</summary>
+    /// <summary>An empty input root short-circuits FinalizeAsync.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptyInputRootShortCircuits()
     {
         using var dir = new TempDir();
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
         await Assert.That(Directory.GetFiles(dir.Root, "*", SearchOption.AllDirectories)).IsEmpty();
     }
 
@@ -80,8 +70,8 @@ public class FeedPluginTests
         using var dir = new TempDir();
         Directory.CreateDirectory(Path.Combine(dir.Root, "blog"));
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"));
-        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
     }
 
@@ -99,8 +89,8 @@ public class FeedPluginTests
 
         var clock = new FakeTimeProvider(new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
         var plugin = new FeedPlugin(new("https://x.test/", "T", "D", "blog"), clock);
-        await plugin.OnConfigureAsync(new(dir.Root, dir.Root, []), CancellationToken.None);
-        await plugin.OnFinalizeAsync(new(dir.Root), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(dir.Root, dir.Root, [], new()), CancellationToken.None);
+        await plugin.FinalizeAsync(new BuildFinalizeContext(dir.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsTrue();

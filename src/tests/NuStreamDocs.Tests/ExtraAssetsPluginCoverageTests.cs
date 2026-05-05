@@ -6,7 +6,7 @@ using NuStreamDocs.Plugins.ExtraAssets;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>Coverage for ExtraAssetsPlugin Name + OnRenderPageAsync.</summary>
+/// <summary>Coverage for the ExtraAssetsPlugin name accessor.</summary>
 public class ExtraAssetsPluginCoverageTests
 {
     /// <summary>Name returns "extra-assets".</summary>
@@ -16,14 +16,5 @@ public class ExtraAssetsPluginCoverageTests
     {
         var plugin = new ExtraAssetsPlugin();
         await Assert.That(plugin.Name.SequenceEqual("extra-assets"u8)).IsTrue();
-    }
-
-    /// <summary>OnRenderPageAsync is a no-op.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRenderNoOp()
-    {
-        var plugin = new ExtraAssetsPlugin();
-        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
     }
 }

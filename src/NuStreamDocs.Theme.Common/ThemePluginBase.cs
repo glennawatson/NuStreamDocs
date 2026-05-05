@@ -17,7 +17,8 @@ namespace NuStreamDocs.Theme.Common;
 /// </summary>
 /// <typeparam name="TTheme">Loaded theme bundle type.</typeparam>
 /// <typeparam name="TOptions">Theme option shape.</typeparam>
-public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
+public abstract class ThemePluginBase<TTheme, TOptions>
+    : IBuildConfigurePlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
     where TTheme : class, IThemePackage
     where TOptions : struct, IThemeShellOptions
 {
@@ -134,16 +135,16 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly TOptions _options;
 
-    /// <summary>Output root captured during <see cref="OnConfigureAsync"/>.</summary>
+    /// <summary>Output root captured during <see cref="ConfigureAsync"/>.</summary>
     private DirectoryPath _outputRoot;
 
-    /// <summary>UTF-8 head-extras HTML assembled during <see cref="OnConfigureAsync"/>; empty until it runs.</summary>
+    /// <summary>UTF-8 head-extras HTML assembled during <see cref="ConfigureAsync"/>; empty until it runs.</summary>
     private byte[] _headExtras = [];
 
-    /// <summary>Plugin list captured during <see cref="OnConfigureAsync"/> for static-asset composition at finalize time.</summary>
-    private IDocPlugin[] _plugins = [];
+    /// <summary>Plugin list captured during <see cref="ConfigureAsync"/> for static-asset composition at finalize time.</summary>
+    private IPlugin[] _plugins = [];
 
-    /// <summary>First registered nav-neighbour provider, captured during <see cref="OnConfigureAsync"/>; null when none was registered.</summary>
+    /// <summary>First registered nav-neighbour provider, captured during <see cref="ConfigureAsync"/>; null when none was registered.</summary>
     private INavNeighboursProvider? _neighbours;
 
     /// <summary>Per-build edit-link prefix; bytes ending in <c>/</c> ready to concatenate with a relative page path. Empty when edit links are disabled.</summary>
@@ -179,11 +180,20 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <inheritdoc/>
     public abstract ReadOnlySpan<byte> Name { get; }
 
+    /// <inheritdoc/>
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority PostRenderPriority => new(PluginBand.Latest);
+
+    /// <inheritdoc/>
+    public PluginPriority FinalizePriority => PluginPriority.Normal;
+
     /// <summary>Gets the loaded theme.</summary>
     protected TTheme LoadedTheme { get; }
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         _outputRoot = context.OutputRoot;
@@ -202,19 +212,18 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        var html = context.Html;
-        var bodyLength = html.WrittenCount;
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
+    /// <inheritdoc/>
+    public void PostRender(in PagePostRenderContext context)
+    {
+        var bodyLength = context.Html.Length;
         var bodyBuffer = ArrayPool<byte>.Shared.Rent(bodyLength);
         try
         {
-            html.WrittenSpan.CopyTo(bodyBuffer);
-            html.ResetWrittenCount();
+            context.Html.CopyTo(bodyBuffer);
 
-            var pageTitle = ResolvePageTitle(context);
+            var pageTitle = ResolvePageTitle(context.Source, context.RelativePath);
             var neighbours = ResolveNeighbours(context.RelativePath);
             var data = new TemplateData(
                 new(23, ByteArrayComparer.Instance)
@@ -239,28 +248,26 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
                     [NextUrlKey] = ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, leadingSlash: true),
                     [NextTitleKey] = neighbours.NextTitle,
                     [HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
-                    [DescriptionKey] = ResolveDescription(context),
-                    [HideNavigationKey] = ShouldHideNavigation(context) ? TruthyBytes : null,
-                    [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "toc"u8) ? TruthyBytes : null,
+                    [DescriptionKey] = ResolveDescription(context.Source),
+                    [HideNavigationKey] = ShouldHideNavigation(context.Source, context.RelativePath) ? TruthyBytes : null,
+                    [HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source, "hide"u8, "toc"u8) ? TruthyBytes : null,
                     [GeneratorKey] = GeneratorBytes,
                     [BuildDateKey] = BuildDateBytes,
                     [FaviconKey] = _resolvedFavicon,
-                    [AuthorKey] = ResolveAuthor(context, _siteAuthor),
+                    [AuthorKey] = ResolveAuthor(context.Source, _siteAuthor),
                 },
                 sections: null);
 
-            LoadedTheme.Page.Render(data, LoadedTheme.Partials, html);
+            LoadedTheme.Page.Render(data, LoadedTheme.Partials, context.Output);
         }
         finally
         {
             ArrayPool<byte>.Shared.Return(bodyBuffer);
         }
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public async ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
         var root = _outputRoot.IsEmpty ? context.OutputRoot : _outputRoot;
         if (root.IsEmpty)
@@ -321,7 +328,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     /// <summary>Returns the first <see cref="INavNeighboursProvider"/> in <paramref name="plugins"/>, or null when none is registered.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>The provider, or null.</returns>
-    private static INavNeighboursProvider? FindNavNeighboursProvider(IDocPlugin[] plugins)
+    private static INavNeighboursProvider? FindNavNeighboursProvider(IPlugin[] plugins)
     {
         for (var i = 0; i < plugins.Length; i++)
         {
@@ -335,11 +342,11 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <summary>Resolves the page description — front-matter <c>description:</c>, or empty when absent.</summary>
-    /// <param name="context">Per-page render context.</param>
+    /// <param name="source">UTF-8 markdown source bytes.</param>
     /// <returns>UTF-8 description bytes, ready for direct emit; empty when no description.</returns>
-    private static byte[] ResolveDescription(in PluginRenderContext context)
+    private static byte[] ResolveDescription(ReadOnlySpan<byte> source)
     {
-        var raw = Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "description"u8);
+        var raw = Yaml.FrontmatterValueExtractor.GetScalar(source, "description"u8);
         if (raw.IsEmpty)
         {
             return [];
@@ -349,12 +356,12 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <summary>Resolves the page author — front-matter <c>author:</c>, falling back to the site-wide value from the configure context.</summary>
-    /// <param name="context">Per-page render context.</param>
+    /// <param name="source">UTF-8 markdown source bytes.</param>
     /// <param name="siteAuthor">Site-wide author bytes captured at configure time; empty when not configured.</param>
     /// <returns>UTF-8 author bytes; empty when neither front-matter nor site_author is set.</returns>
-    private static byte[] ResolveAuthor(in PluginRenderContext context, byte[] siteAuthor)
+    private static byte[] ResolveAuthor(ReadOnlySpan<byte> source, byte[] siteAuthor)
     {
-        var raw = Yaml.FrontmatterValueExtractor.GetScalar(context.Source.Span, "author"u8);
+        var raw = Yaml.FrontmatterValueExtractor.GetScalar(source, "author"u8);
         if (!raw.IsEmpty)
         {
             return StripYamlQuotes(raw).ToArray();
@@ -364,11 +371,11 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <summary>Resolves the page title — front-matter <c>title:</c>, then the first markdown H1, then the file stem.</summary>
-    /// <param name="context">Per-page render context.</param>
+    /// <param name="source">UTF-8 markdown source bytes.</param>
+    /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>HTML-encoded title text.</returns>
-    private static string ResolvePageTitle(in PluginRenderContext context)
+    private static string ResolvePageTitle(ReadOnlySpan<byte> source, FilePath relativePath)
     {
-        var source = context.Source.Span;
         var fromFrontMatter = Yaml.FrontmatterValueExtractor.GetScalar(source, "title"u8);
         if (!fromFrontMatter.IsEmpty)
         {
@@ -382,7 +389,7 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
             return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading));
         }
 
-        return HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(context.RelativePath));
+        return HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(relativePath));
     }
 
     /// <summary>Drops a single matching pair of leading/trailing single- or double-quote bytes from <paramref name="value"/>.</summary>
@@ -849,17 +856,18 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IDocPlugin
     }
 
     /// <summary>Returns true when the rendered page should hide the primary sidebar.</summary>
-    /// <param name="context">Per-page render context.</param>
+    /// <param name="source">UTF-8 markdown source bytes.</param>
+    /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True when the sidebar should be hidden.</returns>
     /// <remarks>Honours the page's <c>hide: [navigation]</c> frontmatter and the nav provider's hint for empty sidebars.</remarks>
-    private bool ShouldHideNavigation(PluginRenderContext context)
+    private bool ShouldHideNavigation(ReadOnlySpan<byte> source, FilePath relativePath)
     {
-        if (Yaml.FrontmatterValueExtractor.ListContains(context.Source.Span, "hide"u8, "navigation"u8))
+        if (Yaml.FrontmatterValueExtractor.ListContains(source, "hide"u8, "navigation"u8))
         {
             return true;
         }
 
-        return _neighbours?.ShouldHidePrimarySidebar(context.RelativePath) ?? false;
+        return _neighbours?.ShouldHidePrimarySidebar(relativePath) ?? false;
     }
 
     /// <summary>Resolves prev/next neighbours according to the configured footer settings.</summary>

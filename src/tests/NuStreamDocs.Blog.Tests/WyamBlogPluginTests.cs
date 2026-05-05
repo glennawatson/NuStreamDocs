@@ -29,8 +29,8 @@ public class WyamBlogPluginTests
                 "---\nTitle: Association\nAuthor: Rodney Littles, II\nTags: Announcement, Release\nPublished: 2021-01-04\n---\nThe announcement.");
 
             var plugin = new WyamBlogPlugin(new("Announcements", "Announcements"));
-            var ctx = new PluginConfigureContext(docsRoot, "/out", []);
-            await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+            var ctx = new BuildDiscoverContext(docsRoot, "/out", []);
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
             var index = await File.ReadAllTextAsync(Path.Combine(postsDir, "index.md"));
             await Assert.That(index.Contains("# Announcements", StringComparison.Ordinal)).IsTrue();
@@ -61,8 +61,8 @@ public class WyamBlogPluginTests
             await File.WriteAllTextAsync(Path.Combine(postsDir, "2024-01-01-new.md"), "---\nTitle: New\nPublished: 2024-01-01\n---\nNew body.");
 
             var plugin = new WyamBlogPlugin(new("blog", "Blog", EmitTagArchives: false));
-            var ctx = new PluginConfigureContext(docsRoot, "/out", []);
-            await plugin.OnConfigureAsync(ctx, CancellationToken.None);
+            var ctx = new BuildDiscoverContext(docsRoot, "/out", []);
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
             var index = await File.ReadAllTextAsync(Path.Combine(postsDir, "index.md"));
             var newPos = index.IndexOf("New", StringComparison.Ordinal);

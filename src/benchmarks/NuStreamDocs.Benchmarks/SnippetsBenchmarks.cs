@@ -59,10 +59,10 @@ public class SnippetsBenchmarks
 
         _plugin = new(_baseDir);
 
-        // The plugin captures _baseDir lazily on OnConfigureAsync; force it now so the
+        // The plugin captures _baseDir lazily on ConfigureAsync; force it now so the
         // benchmark only measures the per-page rewrite cost.
-        var ctx = new PluginConfigureContext(_baseDir, _baseDir, []);
-        await _plugin.OnConfigureAsync(ctx, CancellationToken.None).ConfigureAwait(false);
+        var ctx = new BuildConfigureContext(_baseDir, _baseDir, [_plugin], new CrossPageMarkerRegistry());
+        await _plugin.ConfigureAsync(ctx, CancellationToken.None).ConfigureAwait(false);
     }
 
     /// <summary>Cleans up the snippet fixtures.</summary>
@@ -90,7 +90,8 @@ public class SnippetsBenchmarks
     public int WholeFileInclude()
     {
         using var rental = PageBuilderPool.Rent(_wholeFileSource.Length * 2);
-        _plugin.Preprocess(_wholeFileSource, rental.Writer);
+        var ctx = new PagePreRenderContext("page.md", _wholeFileSource, rental.Writer);
+        _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
 
@@ -100,7 +101,8 @@ public class SnippetsBenchmarks
     public int SectionInclude()
     {
         using var rental = PageBuilderPool.Rent(_sectionSource.Length * 2);
-        _plugin.Preprocess(_sectionSource, rental.Writer);
+        var ctx = new PagePreRenderContext("page.md", _sectionSource, rental.Writer);
+        _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
 
@@ -110,7 +112,8 @@ public class SnippetsBenchmarks
     public int NoMarkerPassThrough()
     {
         using var rental = PageBuilderPool.Rent(_noMarkerSource.Length * 2);
-        _plugin.Preprocess(_noMarkerSource, rental.Writer);
+        var ctx = new PagePreRenderContext("page.md", _noMarkerSource, rental.Writer);
+        _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
 

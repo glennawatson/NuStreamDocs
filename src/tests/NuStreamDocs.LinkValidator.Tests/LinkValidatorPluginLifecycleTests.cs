@@ -2,29 +2,28 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Plugins;
+
 namespace NuStreamDocs.LinkValidator.Tests;
 
 /// <summary>Lifecycle method coverage for <c>LinkValidatorPlugin</c>.</summary>
 public class LinkValidatorPluginLifecycleTests
 {
-    /// <summary>OnConfigureAsync no-ops.</summary>
+    /// <summary>ConfigureAsync runs without error.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync() => await new LinkValidatorPlugin().OnConfigureAsync(new("/in", "/out", []), CancellationToken.None);
+    public async Task ConfigureAsync() =>
+        await new LinkValidatorPlugin().ConfigureAsync(new BuildConfigureContext("/in", "/out", [], new()), CancellationToken.None);
 
-    /// <summary>OnRenderPageAsync no-ops.</summary>
+    /// <summary>ResolveAsync drives the validator against an empty index.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnRenderPageAsync() => await new LinkValidatorPlugin().OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
-
-    /// <summary>OnFinalizeAsync drives RunAsync against an empty output directory.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalizeAsyncEmpty()
+    public async Task ResolveAsyncEmpty()
     {
         using var temp = new ScratchDir();
         var plugin = new LinkValidatorPlugin();
-        await plugin.OnFinalizeAsync(new(temp.Root), CancellationToken.None);
+        await plugin.ConfigureAsync(new BuildConfigureContext(temp.Root, temp.Root, [], new()), CancellationToken.None);
+        await plugin.ResolveAsync(new BuildResolveContext(temp.Root, []), CancellationToken.None);
         await Assert.That(plugin.LastDiagnostics).IsNotNull();
     }
 

@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
@@ -17,16 +16,16 @@ namespace NuStreamDocs.Links;
 /// <remarks>
 /// Honors the directory-URL toggle: when constructed with
 /// <c>useDirectoryUrls = true</c>, or when the config seen during
-/// <see cref="OnConfigureAsync"/> sets <c>use_directory_urls: true</c>,
+/// <see cref="ConfigureAsync"/> sets <c>use_directory_urls: true</c>,
 /// hrefs become <c>foo/</c> instead of <c>foo.html</c> and
 /// <c>index.md</c> targets resolve to the parent directory's root.
 /// </remarks>
-public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlugin
+public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IBuildConfigurePlugin, IPagePostRenderPlugin
 {
     /// <summary>Caller-supplied directory-URL override; null defers to the config.</summary>
     private readonly bool? _useDirectoryUrlsOverride = useDirectoryUrls;
 
-    /// <summary>Resolved directory-URL toggle captured during <see cref="OnConfigureAsync"/>.</summary>
+    /// <summary>Resolved directory-URL toggle captured during <see cref="ConfigureAsync"/>.</summary>
     private bool _useDirectoryUrls;
 
     /// <summary>Initializes a new instance of the <see cref="MarkdownLinkRewriterPlugin"/> class with no caller override (config-driven).</summary>
@@ -39,7 +38,13 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
     public ReadOnlySpan<byte> Name => "markdown-link-rewriter"u8;
 
     /// <inheritdoc/>
-    public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken)
+    public PluginPriority ConfigurePriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public PluginPriority PostRenderPriority => PluginPriority.Normal;
+
+    /// <inheritdoc/>
+    public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _useDirectoryUrls = _useDirectoryUrlsOverride ?? context.UseDirectoryUrls;
         _ = cancellationToken;
@@ -47,34 +52,13 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IDocPlu
     }
 
     /// <inheritdoc/>
-    public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        var html = context.Html;
-        var rendered = html.WrittenSpan;
-        if (!MarkdownLinkRewriter.NeedsRewrite(rendered))
-        {
-            return ValueTask.CompletedTask;
-        }
-
-        // Rewrite into a pooled scratch writer, then swap the bytes back into the page writer.
-        // Two-buffer dance is necessary because we read from html.WrittenSpan while writing the
-        // rewritten output — same writer can't be both source and sink.
-        using var scratch = PageBuilderPool.Rent(rendered.Length);
-        var prependParent = _useDirectoryUrls && IsNonIndexMarkdownPath(context.RelativePath);
-        MarkdownLinkRewriter.RewriteInto(rendered, _useDirectoryUrls, prependParent, scratch.Writer);
-        html.ResetWrittenCount();
-        html.Write(scratch.Writer.WrittenSpan);
-
-        return ValueTask.CompletedTask;
-    }
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => MarkdownLinkRewriter.NeedsRewrite(html);
 
     /// <inheritdoc/>
-    public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken)
+    public void PostRender(in PagePostRenderContext context)
     {
-        _ = context;
-        _ = cancellationToken;
-        return ValueTask.CompletedTask;
+        var prependParent = _useDirectoryUrls && IsNonIndexMarkdownPath(context.RelativePath);
+        MarkdownLinkRewriter.RewriteInto(context.Html, _useDirectoryUrls, prependParent, context.Output);
     }
 
     /// <summary>Returns true when <paramref name="relativePath"/> names a non-index markdown file (gains an extra directory level under directory-URL mode).</summary>

@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
-using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
@@ -14,23 +12,19 @@ namespace NuStreamDocs.MarkdownExtensions.Footnotes;
 /// block <c>[^id]: definition</c> entries into linked superscripts
 /// plus an appended <c>&lt;section class="footnotes"&gt;</c>.
 /// </summary>
-public sealed class FootnotesPlugin : DocPluginBase, IMarkdownPreprocessor
+public sealed class FootnotesPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
-    public override ReadOnlySpan<byte> Name => "footnotes"u8;
+    public ReadOnlySpan<byte> Name => "footnotes"u8;
+
+    /// <inheritdoc/>
+    public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasFootnoteMarker(source);
 
     /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-        FootnotesRewriter.Rewrite(source, writer);
-    }
-
-    /// <inheritdoc/>
-    public void Preprocess(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, FilePath relativePath) =>
-        Preprocess(source, writer);
+    public void PreRender(in PagePreRenderContext context) =>
+        FootnotesRewriter.Rewrite(context.Source, context.Output);
 }

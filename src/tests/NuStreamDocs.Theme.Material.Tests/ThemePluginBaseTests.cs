@@ -248,7 +248,7 @@ public class ThemePluginBaseTests
     /// <summary>Stub provider returning fixed prev/next on both global and section calls.</summary>
     /// <param name="globalUrl">Path returned from GetNeighbours; converted to a slug-like relative.</param>
     /// <param name="sectionUrl">Path returned from GetSectionNeighbours.</param>
-    private sealed class StubNeighbours(string globalUrl, string sectionUrl) : IDocPlugin, INavNeighboursProvider
+    private sealed class StubNeighbours(string globalUrl, string sectionUrl) : IPlugin, INavNeighboursProvider
     {
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Name => "stub-neighbours"u8;
@@ -260,14 +260,5 @@ public class ThemePluginBaseTests
         /// <inheritdoc/>
         public NavNeighbours GetSectionNeighbours(FilePath relativePath) =>
             new(sectionUrl.TrimStart('/') + ".md", "Section Prev"u8.ToArray(), string.Empty, []);
-
-        /// <inheritdoc/>
-        public ValueTask OnConfigureAsync(PluginConfigureContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnRenderPageAsync(PluginRenderContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        /// <inheritdoc/>
-        public ValueTask OnFinalizeAsync(PluginFinalizeContext context, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 }

@@ -2,38 +2,22 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Plugins;
+
 namespace NuStreamDocs.Blog.MkDocs.Tests;
 
 /// <summary>Lifecycle method coverage for <c>MkDocsBlogPlugin</c>.</summary>
 public class MkDocsBlogPluginLifecycleTests
 {
-    /// <summary>OnConfigureAsync runs without error against an empty blog tree.</summary>
+    /// <summary>DiscoverAsync runs without error against an empty blog tree.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OnConfigureAsync()
+    public async Task DiscoverAsync()
     {
         using var temp = new ScratchDir();
         Directory.CreateDirectory(Path.Combine(temp.Root, "blog", "posts"));
         var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
-        await plugin.OnConfigureAsync(new(temp.Root, "/out", []), CancellationToken.None);
-    }
-
-    /// <summary>OnRenderPageAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnRenderPageAsync()
-    {
-        var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
-        await plugin.OnRenderPageAsync(new("p.md", default, new(8)), CancellationToken.None);
-    }
-
-    /// <summary>OnFinalizeAsync no-ops.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task OnFinalizeAsync()
-    {
-        var plugin = new MkDocsBlogPlugin(new("blog", "Blog"));
-        await plugin.OnFinalizeAsync(new("/out"), CancellationToken.None);
+        await plugin.DiscoverAsync(new BuildDiscoverContext(temp.Root, "/out", []), CancellationToken.None);
     }
 
     /// <summary>Disposable scratch directory.</summary>
