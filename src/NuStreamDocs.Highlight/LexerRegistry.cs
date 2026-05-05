@@ -287,6 +287,10 @@ public sealed class LexerRegistry
             [[.. "wat"u8]] = WatLexer.Instance,
             [[.. "wast"u8]] = WatLexer.Instance,
             [[.. "wasm"u8]] = WatLexer.Instance,
+            [[.. "perl"u8]] = PerlLexer.Instance,
+            [[.. "pl"u8]] = PerlLexer.Instance,
+            [[.. "pm"u8]] = PerlLexer.Instance,
+            [[.. "perl5"u8]] = PerlLexer.Instance,
             [[.. "text"u8]] = PassThroughLexer.Instance,
             [[.. "plain"u8]] = PassThroughLexer.Instance,
             [[.. "txt"u8]] = PassThroughLexer.Instance
