@@ -71,6 +71,7 @@ public class FeedWriterTests
     private static BlogPost[] BuildPosts() => [
         new(
             "blog/2024-06-01-launch.md",
+            [.. "blog/2024-06-01-launch.html"u8],
             [.. "launch"u8],
             [.. "Launch"u8],
             [.. "Author A"u8],
@@ -79,6 +80,7 @@ public class FeedWriterTests
             [.. "Launch announcement."u8]),
         new(
             "blog/2024-05-01-update.md",
+            [.. "blog/2024-05-01-update.html"u8],
             [.. "update"u8],
             [.. "Update"u8],
             [.. "Author B"u8],

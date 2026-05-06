@@ -16,13 +16,24 @@ namespace NuStreamDocs.MagicLink;
 /// </summary>
 internal static class MagicLinkRewriter
 {
+    /// <summary>Maximum length of a GitHub username (matches the platform's documented 39-character cap).</summary>
+    private const int MaxGitHubUsernameLength = 39;
+
     /// <summary>Sentence-terminator bytes peeled off a permissive URL match.</summary>
     private static readonly SearchValues<byte> TrailingPunctuation = SearchValues.Create(".,;:!?)]}'*_"u8);
 
-    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
+    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> with no shortref expansion.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+        Rewrite(source, writer, default, false);
+
+    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> with optional GitHub-shortref expansion.</summary>
+    /// <param name="source">UTF-8 markdown bytes.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="defaultRepo"><c>org/repo</c> bytes used to expand bare <c>#NNN</c> issue refs; empty disables that pass.</param>
+    /// <param name="expandMentions">When true, <c>@user</c> mentions at word boundaries become <c>[@user](https://github.com/user)</c> Markdown links.</param>
+    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, ReadOnlySpan<byte> defaultRepo, bool expandMentions)
     {
         var i = 0;
         while (i < source.Length)
@@ -63,6 +74,18 @@ internal static class MagicLinkRewriter
                         i = skipEnd;
                         continue;
                     }
+
+                case (byte)'@' when expandMentions && TryRewriteUserMention(source, i, writer, out var mentionConsumed):
+                    {
+                        i += mentionConsumed;
+                        continue;
+                    }
+
+                case (byte)'#' when defaultRepo.Length > 0 && TryRewriteIssueRef(source, i, defaultRepo, writer, out var issueConsumed):
+                    {
+                        i += issueConsumed;
+                        continue;
+                    }
             }
 
             if (TryRewriteUrl(source, i, writer, out var consumed))
@@ -77,6 +100,133 @@ internal static class MagicLinkRewriter
             i++;
         }
     }
+
+    /// <summary>Tries to expand <c>@user</c> at <paramref name="offset"/> into a Markdown link.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Position of the <c>@</c> byte.</param>
+    /// <param name="writer">Sink for the rewritten span.</param>
+    /// <param name="consumed">Number of input bytes covered.</param>
+    /// <returns>True when a mention was rewritten.</returns>
+    private static bool TryRewriteUserMention(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    {
+        consumed = 0;
+        if (!AsciiWordBoundary.IsBefore(source, offset))
+        {
+            return false;
+        }
+
+        var nameStart = offset + 1;
+        var nameEnd = ScanUserName(source, nameStart);
+        if (nameEnd == nameStart)
+        {
+            return false;
+        }
+
+        // GitHub usernames must start with an alphanumeric, can't end with a hyphen.
+        var first = source[nameStart];
+        if (first is (byte)'-')
+        {
+            return false;
+        }
+
+        var trimmed = nameEnd;
+        while (trimmed > nameStart && source[trimmed - 1] is (byte)'-')
+        {
+            trimmed--;
+        }
+
+        if (trimmed == nameStart)
+        {
+            return false;
+        }
+
+        writer.Write("[@"u8);
+        writer.Write(source[nameStart..trimmed]);
+        writer.Write("](https://github.com/"u8);
+        writer.Write(source[nameStart..trimmed]);
+        writer.Write(")"u8);
+        consumed = trimmed - offset;
+        return true;
+    }
+
+    /// <summary>Tries to expand <c>#NNN</c> at <paramref name="offset"/> into a Markdown issue link against <paramref name="defaultRepo"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Position of the <c>#</c> byte.</param>
+    /// <param name="defaultRepo"><c>org/repo</c> path bytes (no leading or trailing slash).</param>
+    /// <param name="writer">Sink for the rewritten span.</param>
+    /// <param name="consumed">Number of input bytes covered.</param>
+    /// <returns>True when an issue ref was rewritten.</returns>
+    private static bool TryRewriteIssueRef(ReadOnlySpan<byte> source, int offset, ReadOnlySpan<byte> defaultRepo, IBufferWriter<byte> writer, out int consumed)
+    {
+        consumed = 0;
+        if (!AsciiWordBoundary.IsBefore(source, offset))
+        {
+            return false;
+        }
+
+        var numberStart = offset + 1;
+        var numberEnd = ScanDigits(source, numberStart);
+        if (numberEnd == numberStart)
+        {
+            return false;
+        }
+
+        // A valid GitHub issue / PR ref ends at a non-word byte.
+        if (numberEnd < source.Length && IsUserNameByte(source[numberEnd]))
+        {
+            return false;
+        }
+
+        writer.Write("[#"u8);
+        writer.Write(source[numberStart..numberEnd]);
+        writer.Write("](https://github.com/"u8);
+        writer.Write(defaultRepo);
+        writer.Write("/issues/"u8);
+        writer.Write(source[numberStart..numberEnd]);
+        writer.Write(")"u8);
+        consumed = numberEnd - offset;
+        return true;
+    }
+
+    /// <summary>Scans forward over GitHub-username bytes (alphanumeric + hyphen) starting at <paramref name="offset"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Cursor position.</param>
+    /// <returns>Exclusive end of the username span; capped at <see cref="MaxGitHubUsernameLength"/>.</returns>
+    private static int ScanUserName(ReadOnlySpan<byte> source, int offset)
+    {
+        var p = offset;
+        var max = Math.Min(source.Length, offset + MaxGitHubUsernameLength);
+        while (p < max && IsUserNameByte(source[p]))
+        {
+            p++;
+        }
+
+        return p;
+    }
+
+    /// <summary>Scans forward over ASCII digits starting at <paramref name="offset"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Cursor position.</param>
+    /// <returns>Exclusive end of the digit run.</returns>
+    private static int ScanDigits(ReadOnlySpan<byte> source, int offset)
+    {
+        var p = offset;
+        while (p < source.Length && source[p] is >= (byte)'0' and <= (byte)'9')
+        {
+            p++;
+        }
+
+        return p;
+    }
+
+    /// <summary>Returns true when <paramref name="b"/> is a permissible GitHub-username byte (ASCII alphanumeric or hyphen).</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>True for username constituents.</returns>
+    private static bool IsUserNameByte(byte b) =>
+        b is >= (byte)'A' and <= (byte)'Z'
+          or >= (byte)'a' and <= (byte)'z'
+          or >= (byte)'0' and <= (byte)'9'
+          or (byte)'-';
 
     /// <summary>Tries to wrap a bare URL starting at <paramref name="offset"/>.</summary>
     /// <param name="source">UTF-8 source.</param>

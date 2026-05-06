@@ -12,6 +12,7 @@ using NuStreamDocs.Building;
 using NuStreamDocs.Highlight;
 using NuStreamDocs.Icons.MaterialDesign;
 using NuStreamDocs.Macros;
+using NuStreamDocs.MagicLink;
 using NuStreamDocs.MarkdownExtensions;
 using NuStreamDocs.Mermaid;
 using NuStreamDocs.Nav;
@@ -127,7 +128,23 @@ public class RxuiCorpusBenchmarks
             .GetAwaiter()
             .GetResult();
 
-    /// <summary>Build with the full in-process plugin stack — markdown extensions + highlight + nav + autorefs + search + mermaid.</summary>
+    /// <summary>Build with magic-link URL autolinking + GitHub-shortref expansion against the rxui repo.</summary>
+    /// <returns>Pages processed.</returns>
+    [Benchmark]
+    public int WithMagicLink() =>
+        new DocBuilder()
+            .WithInput(RxuiDocsRoot)
+            .WithOutput(_outputRoot)
+            .UseMagicLink(new MagicLinkOptions
+            {
+                DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
+                ExpandUserMentions = true,
+            })
+            .BuildAsync()
+            .GetAwaiter()
+            .GetResult();
+
+    /// <summary>Build with the full in-process plugin stack — markdown extensions + highlight + magic-link + nav + autorefs + search + mermaid.</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
     public int FullStack()
@@ -138,6 +155,11 @@ public class RxuiCorpusBenchmarks
             .WithOutput(_outputRoot)
             .UseCommonMarkdownExtensions()
             .UseHighlight()
+            .UseMagicLink(new MagicLinkOptions
+            {
+                DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
+                ExpandUserMentions = true,
+            })
             .UseNav()
             .UseAutorefs(registry)
             .UseSearch()

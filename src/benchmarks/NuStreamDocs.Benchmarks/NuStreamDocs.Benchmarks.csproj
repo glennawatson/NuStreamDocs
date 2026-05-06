@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\NuStreamDocs.MarkdownExtensions\NuStreamDocs.MarkdownExtensions.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Mermaid\NuStreamDocs.Mermaid.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Highlight\NuStreamDocs.Highlight.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.MagicLink\NuStreamDocs.MagicLink.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Privacy\NuStreamDocs.Privacy.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Toc\NuStreamDocs.Toc.csproj" />

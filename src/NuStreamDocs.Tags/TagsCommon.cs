@@ -65,21 +65,24 @@ internal static class TagsCommon
         return written is 0 ? [.. "tag"u8] : stack[..written].ToArray();
     }
 
-    /// <summary>Builds a <c>{slug}{extension}</c> filename string in a single allocation.</summary>
+    /// <summary>Builds a slug filename from the slug and extension.</summary>
     /// <param name="slug">ASCII slug bytes (alphanumeric / hyphen only).</param>
-    /// <param name="extensionWithDot">Extension to append, including the leading dot (e.g. <c>".md"</c>, <c>".html"</c>).</param>
+    /// <param name="extensionWithDot">Extension bytes to append, including the leading dot (e.g. <c>".md"u8</c>, <c>".html"u8</c>); ASCII.</param>
     /// <returns>The slug followed by the extension as a single allocated string.</returns>
-    public static string BuildSlugFileName(byte[] slug, string extensionWithDot) =>
-        string.Create(slug.Length + extensionWithDot.Length, (slug, extensionWithDot), static (dst, state) =>
+    public static string BuildSlugFileName(ReadOnlySpan<byte> slug, ReadOnlySpan<byte> extensionWithDot)
+    {
+        var totalLength = slug.Length + extensionWithDot.Length;
+        var copy = new byte[totalLength];
+        slug.CopyTo(copy);
+        extensionWithDot.CopyTo(copy.AsSpan(slug.Length));
+        return string.Create(totalLength, copy, static (dst, src) =>
         {
-            var (src, ext) = state;
             for (var i = 0; i < src.Length; i++)
             {
                 dst[i] = (char)src[i];
             }
-
-            ext.AsSpan().CopyTo(dst[src.Length..]);
         });
+    }
 
     /// <summary>Writes the slug form of <paramref name="tag"/> into <paramref name="dst"/> and returns the count.</summary>
     /// <param name="tag">UTF-8 source bytes.</param>

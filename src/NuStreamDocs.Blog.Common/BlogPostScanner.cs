@@ -35,6 +35,12 @@ public static class BlogPostScanner
     /// <summary>Index of the third dash in the frontmatter fence.</summary>
     private const int FrontmatterFenceLastIndex = 2;
 
+    /// <summary>Length of the <c>.md</c> extension swapped for <c>.html</c> when computing post URLs.</summary>
+    private const int MarkdownExtensionLength = 3;
+
+    /// <summary>Gets the UTF-8 bytes of the rendered-post extension swapped in for <c>.md</c>.</summary>
+    private static ReadOnlySpan<byte> HtmlExtension => ".html"u8;
+
     /// <summary>Scans <paramref name="postsRoot"/> for Wyam-style blog posts.</summary>
     /// <param name="postsRoot">Absolute path to the directory holding the post files.</param>
     /// <param name="docsRoot">Absolute path to the docs root (used for the post's relative path).</param>
@@ -84,23 +90,97 @@ public static class BlogPostScanner
             return null;
         }
 
-        var slug = fileName[DatePrefixLength..];
+        var slugChars = fileName.AsSpan(DatePrefixLength);
+        var slugBytes = EncodeAscii(slugChars);
         var bytes = absolutePath.ReadAllBytes();
         var fm = WyamFrontmatterReader.Parse(bytes);
 
         var published = fm.Published == default ? fileDate : fm.Published;
-        var titleBytes = fm.Title is [_, ..] ? fm.Title : HumanizeBytes(slug);
+        var titleBytes = fm.Title is [_, ..] ? fm.Title : HumanizeAsciiSlug(slugBytes);
         var excerptBytes = ExtractExcerpt(bytes, fm.BodyStartOffset);
-        var relativePath = NormalizeRelativePath(Path.GetRelativePath(docsRoot.Value, absolutePath.Value));
+
+        // BCL boundary: Path.GetRelativePath operates on string paths.
+        var relativePathString = Path.GetRelativePath(docsRoot.Value, absolutePath.Value);
+        var relativePath = NormalizeRelativeFilePath(relativePathString);
+        var relativeUrlBytes = SwapMarkdownForHtml(NormalizeRelativePathBytes(relativePathString));
 
         return new(
             relativePath,
-            Encoding.UTF8.GetBytes(slug),
+            relativeUrlBytes,
+            slugBytes,
             titleBytes,
             fm.Author,
             published,
             fm.Tags,
             excerptBytes);
+    }
+
+    /// <summary>Encodes ASCII <paramref name="slug"/> chars (filename stem after the date prefix) as a fresh UTF-8 byte array.</summary>
+    /// <param name="slug">Slug chars; assumed ASCII.</param>
+    /// <returns>UTF-8 bytes.</returns>
+    private static byte[] EncodeAscii(ReadOnlySpan<char> slug)
+    {
+        if (slug.IsEmpty)
+        {
+            return [];
+        }
+
+        var dst = new byte[slug.Length];
+        for (var i = 0; i < slug.Length; i++)
+        {
+            dst[i] = (byte)slug[i];
+        }
+
+        return dst;
+    }
+
+    /// <summary>Normalizes a source-relative path to a forward-slashed <see cref="FilePath"/> at the BCL boundary; the wrapper exists purely for downstream filesystem-IO consumers.</summary>
+    /// <param name="relativePath">Source path returned from <see cref="Path.GetRelativePath(string, string)"/>.</param>
+    /// <returns>Forward-slashed file path.</returns>
+    private static FilePath NormalizeRelativeFilePath(string relativePath) =>
+        string.IsNullOrEmpty(relativePath) || !relativePath.AsSpan().Contains('\\')
+            ? (FilePath)relativePath
+            : (FilePath)relativePath.Replace('\\', '/');
+
+    /// <summary>Normalizes a source-relative path to forward-slashed UTF-8 bytes.</summary>
+    /// <param name="relativePath">Source path returned from <see cref="Path.GetRelativePath(string, string)"/>.</param>
+    /// <returns>Forward-slashed UTF-8 bytes.</returns>
+    private static byte[] NormalizeRelativePathBytes(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath))
+        {
+            return [];
+        }
+
+        var dst = new byte[Encoding.UTF8.GetByteCount(relativePath)];
+        var written = Encoding.UTF8.GetBytes(relativePath, dst);
+        for (var i = 0; i < written; i++)
+        {
+            if (dst[i] is (byte)'\\')
+            {
+                dst[i] = (byte)'/';
+            }
+        }
+
+        return dst;
+    }
+
+    /// <summary>Returns a copy of <paramref name="path"/> with a trailing <c>.md</c> swapped for <c>.html</c>; non-Markdown paths pass through unchanged.</summary>
+    /// <param name="path">Forward-slashed UTF-8 path bytes.</param>
+    /// <returns>UTF-8 URL bytes.</returns>
+    private static byte[] SwapMarkdownForHtml(byte[] path)
+    {
+        if (path.Length < MarkdownExtensionLength
+            || !AsciiByteHelpers.EqualsIgnoreAsciiCase(path.AsSpan(path.Length - MarkdownExtensionLength), ".md"u8))
+        {
+            return path;
+        }
+
+        var stemLength = path.Length - MarkdownExtensionLength;
+        var dst = new byte[stemLength + HtmlExtension.Length];
+        path.AsSpan(0, stemLength).CopyTo(dst);
+        HtmlExtension.CopyTo(dst.AsSpan(stemLength));
+        return dst;
     }
 
     /// <summary>Pulls the first non-empty paragraph from the body as a plain-text excerpt.</summary>
@@ -140,10 +220,10 @@ public static class BlogPostScanner
         return [];
     }
 
-    /// <summary>Title-cases <c>my-cool-post</c> into <c>My Cool Post</c> as a fallback when no Title frontmatter is present, emitting UTF-8 bytes.</summary>
-    /// <param name="slug">Hyphen-separated ASCII slug (filename stem).</param>
+    /// <summary>Title-cases <c>my-cool-post</c> ASCII slug bytes into <c>My Cool Post</c> as a fallback when no Title frontmatter is present.</summary>
+    /// <param name="slug">ASCII slug bytes.</param>
     /// <returns>Spaced title-case rendering as UTF-8 bytes.</returns>
-    private static byte[] HumanizeBytes(string slug)
+    private static byte[] HumanizeAsciiSlug(ReadOnlySpan<byte> slug)
     {
         var outputLength = GetHumanizedLength(slug);
         if (outputLength is 0)
@@ -158,7 +238,7 @@ public static class BlogPostScanner
         for (var i = 0; i < slug.Length; i++)
         {
             var c = slug[i];
-            if (c is '-')
+            if (c is (byte)'-')
             {
                 pendingSpace = write is not 0;
                 titleCaseNext = true;
@@ -171,24 +251,23 @@ public static class BlogPostScanner
                 pendingSpace = false;
             }
 
-            // Slug chars are ASCII (filename stem after the YYYY-MM-DD- prefix); narrow to byte directly.
-            dst[write++] = titleCaseNext ? (byte)char.ToUpperInvariant(c) : (byte)c;
+            dst[write++] = titleCaseNext ? AsciiToUpperByte(c) : c;
             titleCaseNext = false;
         }
 
         return dst;
     }
 
-    /// <summary>Counts the characters needed for the humanized title.</summary>
-    /// <param name="slug">Hyphen-separated slug.</param>
+    /// <summary>Counts the bytes needed for the humanized title.</summary>
+    /// <param name="slug">ASCII slug bytes.</param>
     /// <returns>Output length.</returns>
-    private static int GetHumanizedLength(string slug)
+    private static int GetHumanizedLength(ReadOnlySpan<byte> slug)
     {
         var outputLength = 0;
         var pendingSpace = false;
         for (var i = 0; i < slug.Length; i++)
         {
-            if (slug[i] is '-')
+            if (slug[i] is (byte)'-')
             {
                 pendingSpace = outputLength is not 0;
                 continue;
@@ -206,19 +285,11 @@ public static class BlogPostScanner
         return outputLength;
     }
 
-    /// <summary>Normalizes a source-relative path to forward slashes.</summary>
-    /// <param name="relativePath">Path to normalize.</param>
-    /// <returns>Forward-slashed path.</returns>
-    private static string NormalizeRelativePath(string relativePath) =>
-        !relativePath.AsSpan().Contains('\\')
-            ? relativePath
-            : string.Create(relativePath.Length, relativePath, static (dst, state) =>
-            {
-                for (var i = 0; i < state.Length; i++)
-                {
-                    dst[i] = state[i] is '\\' ? '/' : state[i];
-                }
-            });
+    /// <summary>Folds an ASCII letter to uppercase; non-letters pass through unchanged.</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>Uppercased byte.</returns>
+    private static byte AsciiToUpperByte(byte b) =>
+        b is >= (byte)'a' and <= (byte)'z' ? (byte)(b - AsciiByteHelpers.AsciiCaseBit) : b;
 
     /// <summary>Returns true when <paramref name="line"/> starts an ATX heading.</summary>
     /// <param name="line">Candidate line.</param>

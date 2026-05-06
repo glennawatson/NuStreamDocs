@@ -23,12 +23,6 @@ namespace NuStreamDocs.Blog.Common;
 /// </remarks>
 public static class BlogIndexEmitter
 {
-    /// <summary>Length of the <c>.md</c> extension stripped when computing post URLs.</summary>
-    private const int MarkdownExtensionLength = 3;
-
-    /// <summary>Length of the replacement <c>.html</c> extension.</summary>
-    private const int HtmlExtensionLength = 5;
-
     /// <summary>Date format used in the post summary line.</summary>
     private const string PublishedDateFormat = "yyyy-MM-dd";
 
@@ -42,7 +36,8 @@ public static class BlogIndexEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="title">UTF-8 page heading bytes, e.g. <c>"Blog"u8</c> or <c>"Announcements"u8</c>.</param>
     /// <param name="posts">Posts to list. Caller controls ordering.</param>
-    public static void WriteIndex(IBufferWriter<byte> writer, ReadOnlySpan<byte> title, BlogPost[] posts)
+    /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the index page's directory relative to the docs root.</param>
+    public static void WriteIndex(IBufferWriter<byte> writer, ReadOnlySpan<byte> title, BlogPost[] posts, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
         ArgumentNullException.ThrowIfNull(writer);
         if (title.IsEmpty)
@@ -64,7 +59,7 @@ public static class BlogIndexEmitter
 
         for (var i = 0; i < posts.Length; i++)
         {
-            AppendPostSummary(writer, posts[i]);
+            AppendPostSummary(writer, posts[i], pageDirectoryRelativeUtf8);
         }
     }
 
@@ -72,7 +67,8 @@ public static class BlogIndexEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="tag">The tag.</param>
     /// <param name="posts">Posts that carry the tag.</param>
-    public static void WriteTagArchive(IBufferWriter<byte> writer, byte[] tag, BlogPost[] posts)
+    /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the archive page's directory relative to the docs root (e.g. <c>"articles/tags"u8</c>).</param>
+    public static void WriteTagArchive(IBufferWriter<byte> writer, byte[] tag, BlogPost[] posts, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
         ArgumentNullException.ThrowIfNull(writer);
         ArgumentNullException.ThrowIfNull(tag);
@@ -89,7 +85,7 @@ public static class BlogIndexEmitter
 
         for (var i = 0; i < posts.Length; i++)
         {
-            AppendPostSummary(writer, posts[i]);
+            AppendPostSummary(writer, posts[i], pageDirectoryRelativeUtf8);
         }
     }
 
@@ -104,16 +100,17 @@ public static class BlogIndexEmitter
     /// <summary>Appends one post's summary block to <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="post">Post.</param>
+    /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the index / archive page's directory relative to the docs root.</param>
     [SuppressMessage(
         "Major Code Smell",
         "S6585:Do not hardcode the format specifier",
         Justification = "PublishedDateFormat is a named constant documented at its declaration.")]
-    private static void AppendPostSummary(IBufferWriter<byte> writer, BlogPost post)
+    private static void AppendPostSummary(IBufferWriter<byte> writer, BlogPost post, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
         writer.Write("## ["u8);
         Utf8StringWriter.Write(writer, post.Title);
         writer.Write("]("u8);
-        Utf8StringWriter.Write(writer, LinkPath(post.RelativePath));
+        Utf8RelativePath.WriteRelative(writer, pageDirectoryRelativeUtf8, post.RelativeUrlUtf8);
         writer.Write(")\n_"u8);
         WriteDate(writer, post.Published);
 
@@ -160,21 +157,7 @@ public static class BlogIndexEmitter
         }
     }
 
-    /// <summary>Translates a <c>.md</c> source-relative path to the served URL.</summary>
-    /// <param name="relativePath">Source relative path.</param>
-    /// <returns>Page-relative URL.</returns>
-    private static string LinkPath(string relativePath) =>
-        relativePath.AsSpan().EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-            ? string.Create(relativePath.Length + HtmlExtensionLength - MarkdownExtensionLength, relativePath, static (dst, state) =>
-            {
-                var src = state.AsSpan();
-                var stem = src[..^MarkdownExtensionLength];
-                stem.CopyTo(dst);
-                ".html".AsSpan().CopyTo(dst[stem.Length..]);
-            })
-            : relativePath;
-
-/// <summary>Formats <paramref name="published"/> directly into <paramref name="writer"/>.</summary>
+    /// <summary>Formats <paramref name="published"/> directly into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="published">Date to write.</param>
     [SuppressMessage(

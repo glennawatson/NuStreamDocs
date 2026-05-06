@@ -41,7 +41,7 @@ internal static class TagsIndexWriter
             sink.ResetWrittenCount();
             WriteTagPage(sink, pair.Key, pair.Value);
             var slug = TagsCommon.SlugifyTag(pair.Key);
-            File.WriteAllBytes(Path.Combine(tagsDir, TagsCommon.BuildSlugFileName(slug, ".html")), sink.WrittenSpan);
+            File.WriteAllBytes(Path.Combine(tagsDir, TagsCommon.BuildSlugFileName(slug, ".html"u8)), sink.WrittenSpan);
         }
     }
 

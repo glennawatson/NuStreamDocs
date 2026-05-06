@@ -9,19 +9,32 @@ namespace NuStreamDocs.MagicLink;
 /// <summary>
 /// Magic-link plugin. Pre-processes raw Markdown so that bare
 /// <c>http://</c>, <c>https://</c>, <c>ftp://</c>, <c>ftps://</c>,
-/// <c>mailto:</c>, and <c>www.</c> URLs become CommonMark
-/// autolinks (<c>&lt;url&gt;</c>) — which the inline renderer
-/// already turns into <c>&lt;a href&gt;</c> tags.
+/// and <c>mailto:</c> URLs become CommonMark autolinks
+/// (<c>&lt;url&gt;</c>) — which the inline renderer turns into
+/// <c>&lt;a href&gt;</c> tags.
 /// </summary>
 /// <remarks>
-/// Mirrors the URL-autolink slice of pymdownx.magiclink. Provider-
-/// specific shortcodes (<c>@user</c>, <c>repo#123</c>, commit
-/// hashes) require an explicit GitHub/GitLab provider hook and
-/// are not in scope for the default-on behavior Zensical enables
-/// out of the box.
+/// When configured with a <see cref="MagicLinkOptions.DefaultRepo"/>,
+/// the plugin also expands GitHub-style <c>#NNN</c> issue / pull-request
+/// shortrefs against that repo, mirroring the pymdownx-magiclink
+/// behavior. Setting <see cref="MagicLinkOptions.ExpandUserMentions"/>
+/// turns on <c>@user</c> → <c>https://github.com/user</c> rewriting.
 /// </remarks>
 public sealed class MagicLinkPlugin : IPagePreRenderPlugin
 {
+    /// <summary>Configured options.</summary>
+    private readonly MagicLinkOptions _options;
+
+    /// <summary>Initializes a new instance of the <see cref="MagicLinkPlugin"/> class with default (URL-only) settings.</summary>
+    public MagicLinkPlugin()
+        : this(new MagicLinkOptions())
+    {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="MagicLinkPlugin"/> class with caller-supplied options.</summary>
+    /// <param name="options">Options controlling shortref expansion.</param>
+    public MagicLinkPlugin(MagicLinkOptions options) => _options = options ?? throw new ArgumentNullException(nameof(options));
+
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "magiclink"u8;
 
@@ -33,5 +46,5 @@ public sealed class MagicLinkPlugin : IPagePreRenderPlugin
 
     /// <inheritdoc/>
     public void PreRender(in PagePreRenderContext context) =>
-        MagicLinkRewriter.Rewrite(context.Source, context.Output);
+        MagicLinkRewriter.Rewrite(context.Source, context.Output, _options.DefaultRepo, _options.ExpandUserMentions);
 }

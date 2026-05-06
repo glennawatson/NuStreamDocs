@@ -11,12 +11,23 @@ namespace NuStreamDocs.MagicLink;
 /// </summary>
 public static class DocBuilderMagicLinkExtensions
 {
-    /// <summary>Registers <see cref="MagicLinkPlugin"/> on <paramref name="builder"/>.</summary>
+    /// <summary>Registers <see cref="MagicLinkPlugin"/> with default (URL-only) settings.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMagicLink(this DocBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MagicLinkPlugin());
+    }
+
+    /// <summary>Registers <see cref="MagicLinkPlugin"/> with the supplied options.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="options">Options controlling GitHub-shortref expansion.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder UseMagicLink(this DocBuilder builder, MagicLinkOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+        return builder.UsePlugin(new MagicLinkPlugin(options));
     }
 }

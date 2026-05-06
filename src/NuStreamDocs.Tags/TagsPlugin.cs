@@ -66,7 +66,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             sink.ResetWrittenCount();
             WriteTagMarkdown(sink, pair.Key, pair.Value);
             var slug = TagsCommon.SlugifyTag(pair.Key);
-            var fileName = TagsCommon.BuildSlugFileName(slug, ".md");
+            var fileName = TagsCommon.BuildSlugFileName(slug, ".md"u8);
             await File.WriteAllBytesAsync(tagsDir.File(fileName), sink.WrittenMemory, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -124,8 +124,8 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         return map;
     }
 
-    /// <summary>Returns true when <paramref name="path"/> sits under <paramref name="directory"/>.</summary>
-    /// <param name="path">Absolute candidate path.</param>
+    /// <summary>Determines whether <paramref name="path"/> is under <paramref name="directory"/>.</summary>
+    /// <param name="path">Absolute candidate path (BCL boundary).</param>
     /// <param name="directory">Absolute directory.</param>
     /// <returns>True for descendants; false otherwise.</returns>
     private static bool IsUnder(string path, DirectoryPath directory)

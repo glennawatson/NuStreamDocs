@@ -10,6 +10,7 @@ namespace NuStreamDocs.Blog.Common;
 /// Parsed metadata for one blog post.
 /// </summary>
 /// <param name="RelativePath">Source-relative path of the markdown file (forward-slashed) — kept as <see cref="FilePath"/> because every consumer hands it to file IO.</param>
+/// <param name="RelativeUrlUtf8">Forward-slashed UTF-8 URL bytes for the rendered post.</param>
 /// <param name="Slug">URL-safe slug derived from the filename (after the date prefix), as UTF-8 bytes.</param>
 /// <param name="Title">Post title from <c>Title:</c> frontmatter, as UTF-8 bytes.</param>
 /// <param name="Author">Optional author name from <c>Author:</c> frontmatter, as UTF-8 bytes; empty when absent.</param>
@@ -18,6 +19,7 @@ namespace NuStreamDocs.Blog.Common;
 /// <param name="Excerpt">Plain-text excerpt — first paragraph of the body, used for index listings; empty when absent.</param>
 public sealed record BlogPost(
     FilePath RelativePath,
+    byte[] RelativeUrlUtf8,
     byte[] Slug,
     byte[] Title,
     byte[] Author,
