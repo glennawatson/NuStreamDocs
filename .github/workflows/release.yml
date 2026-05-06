@@ -43,7 +43,7 @@ jobs:
       - name: Compute next version + create tag
         id: ver
         run: |
-          VERSION="$(minver --auto-increment ${{ inputs.bump }} --default-pre-release-identifiers '')"
+          VERSION="$(minver --tag-prefix v --auto-increment ${{ inputs.bump }} --default-pre-release-identifiers '')"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           # Propagate to every downstream MSBuild call so per-project MinVer tasks short-circuit.

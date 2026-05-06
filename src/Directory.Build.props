@@ -29,6 +29,7 @@
     <!-- MinVer pre-release defaults: untagged commits ride the next minor as alpha. -->
     <MinVerAutoIncrement>minor</MinVerAutoIncrement>
     <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
     <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
 
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
