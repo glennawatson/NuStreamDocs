@@ -72,6 +72,74 @@ public sealed class ByteKeywordSet
         return Build(lowercaseKeywords, ignoreCase: true);
     }
 
+    /// <summary>Builds a case-sensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab.</summary>
+    /// <param name="spaceSeparated">Whitespace-delimited UTF-8 keyword bytes (e.g. <c>"if else for"u8</c>).</param>
+    /// <returns>Built set.</returns>
+    /// <remarks>
+    /// Empty runs (consecutive whitespace) are skipped silently; only ASCII space (<c>0x20</c>) and tab (<c>0x09</c>) act as separators.
+    /// </remarks>
+    public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparated) =>
+        Build(SplitSpaceSeparated(spaceSeparated), ignoreCase: false);
+
+    /// <summary>Builds a case-sensitive set from two space-delimited UTF-8 chunks (the second is appended after a synthetic separator).</summary>
+    /// <param name="spaceSeparatedFirst">First chunk of whitespace-delimited UTF-8 keyword bytes.</param>
+    /// <param name="spaceSeparatedSecond">Second chunk of whitespace-delimited UTF-8 keyword bytes.</param>
+    /// <returns>Built set.</returns>
+    /// <remarks>
+    /// Provided so very large keyword lists can be authored across multiple <c>"..."u8</c> literals
+    /// without exceeding the S103 200-character line cap.
+    /// </remarks>
+    public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparatedFirst, ReadOnlySpan<byte> spaceSeparatedSecond) =>
+        Build(SplitTwoChunks(spaceSeparatedFirst, spaceSeparatedSecond), ignoreCase: false);
+
+    /// <summary>Builds a case-sensitive set from three space-delimited UTF-8 chunks (each is appended after a synthetic separator).</summary>
+    /// <param name="spaceSeparatedFirst">First chunk.</param>
+    /// <param name="spaceSeparatedSecond">Second chunk.</param>
+    /// <param name="spaceSeparatedThird">Third chunk.</param>
+    /// <returns>Built set.</returns>
+    public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparatedFirst, ReadOnlySpan<byte> spaceSeparatedSecond, ReadOnlySpan<byte> spaceSeparatedThird) =>
+        Build(SplitThreeChunks(spaceSeparatedFirst, spaceSeparatedSecond, spaceSeparatedThird), ignoreCase: false);
+
+    /// <summary>Builds a case-sensitive set from four space-delimited UTF-8 chunks.</summary>
+    /// <param name="spaceSeparatedFirst">First chunk.</param>
+    /// <param name="spaceSeparatedSecond">Second chunk.</param>
+    /// <param name="spaceSeparatedThird">Third chunk.</param>
+    /// <param name="spaceSeparatedFourth">Fourth chunk.</param>
+    /// <returns>Built set.</returns>
+    public static ByteKeywordSet CreateFromSpaceSeparated(
+        ReadOnlySpan<byte> spaceSeparatedFirst,
+        ReadOnlySpan<byte> spaceSeparatedSecond,
+        ReadOnlySpan<byte> spaceSeparatedThird,
+        ReadOnlySpan<byte> spaceSeparatedFourth) =>
+        Build(SplitFourChunks(spaceSeparatedFirst, spaceSeparatedSecond, spaceSeparatedThird, spaceSeparatedFourth), ignoreCase: false);
+
+    /// <summary>Builds a case-insensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab; entries must already be lowercase ASCII.</summary>
+    /// <param name="spaceSeparatedLowercase">Whitespace-delimited lowercase UTF-8 keyword bytes (e.g. <c>"select from where"u8</c>).</param>
+    /// <returns>Built set.</returns>
+    /// <remarks>
+    /// Empty runs (consecutive whitespace) are skipped silently; only ASCII space (<c>0x20</c>) and tab (<c>0x09</c>) act as separators.
+    /// </remarks>
+    public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(ReadOnlySpan<byte> spaceSeparatedLowercase) =>
+        Build(SplitSpaceSeparated(spaceSeparatedLowercase), ignoreCase: true);
+
+    /// <summary>Builds a case-insensitive set from two space-delimited UTF-8 chunks (entries must already be lowercase ASCII).</summary>
+    /// <param name="spaceSeparatedLowercaseFirst">First chunk of whitespace-delimited lowercase UTF-8 keyword bytes.</param>
+    /// <param name="spaceSeparatedLowercaseSecond">Second chunk of whitespace-delimited lowercase UTF-8 keyword bytes.</param>
+    /// <returns>Built set.</returns>
+    public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(ReadOnlySpan<byte> spaceSeparatedLowercaseFirst, ReadOnlySpan<byte> spaceSeparatedLowercaseSecond) =>
+        Build(SplitTwoChunks(spaceSeparatedLowercaseFirst, spaceSeparatedLowercaseSecond), ignoreCase: true);
+
+    /// <summary>Builds a case-insensitive set from three space-delimited UTF-8 chunks (entries must already be lowercase ASCII).</summary>
+    /// <param name="spaceSeparatedLowercaseFirst">First chunk.</param>
+    /// <param name="spaceSeparatedLowercaseSecond">Second chunk.</param>
+    /// <param name="spaceSeparatedLowercaseThird">Third chunk.</param>
+    /// <returns>Built set.</returns>
+    public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(
+        ReadOnlySpan<byte> spaceSeparatedLowercaseFirst,
+        ReadOnlySpan<byte> spaceSeparatedLowercaseSecond,
+        ReadOnlySpan<byte> spaceSeparatedLowercaseThird) =>
+        Build(SplitThreeChunks(spaceSeparatedLowercaseFirst, spaceSeparatedLowercaseSecond, spaceSeparatedLowercaseThird), ignoreCase: true);
+
     /// <summary>Returns true when <paramref name="word"/> matches one of the registered keywords.</summary>
     /// <param name="word">Candidate word (UTF-8 bytes).</param>
     /// <returns>True on match.</returns>
@@ -92,6 +160,92 @@ public sealed class ByteKeywordSet
         }
 
         return false;
+    }
+
+    /// <summary>Splits a UTF-8 byte span on ASCII space / tab, skipping empty runs.</summary>
+    /// <param name="source">Source bytes.</param>
+    /// <returns>Per-token byte arrays.</returns>
+    private static byte[][] SplitSpaceSeparated(ReadOnlySpan<byte> source) =>
+        Languages.Common.WhitespaceSplitter.Split(source);
+
+    /// <summary>Splits two UTF-8 byte chunks on ASCII space / tab into a single token table; equivalent to splitting their concatenation with a separator between.</summary>
+    /// <param name="first">First source bytes.</param>
+    /// <param name="second">Second source bytes.</param>
+    /// <returns>Per-token byte arrays from both chunks.</returns>
+    private static byte[][] SplitTwoChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second)
+    {
+        var firstTokens = Languages.Common.WhitespaceSplitter.Split(first);
+        var secondTokens = Languages.Common.WhitespaceSplitter.Split(second);
+        if (secondTokens.Length is 0)
+        {
+            return firstTokens;
+        }
+
+        if (firstTokens.Length is 0)
+        {
+            return secondTokens;
+        }
+
+        var combined = new byte[firstTokens.Length + secondTokens.Length][];
+        Array.Copy(firstTokens, 0, combined, 0, firstTokens.Length);
+        Array.Copy(secondTokens, 0, combined, firstTokens.Length, secondTokens.Length);
+        return combined;
+    }
+
+    /// <summary>Splits three UTF-8 byte chunks on ASCII space / tab into a single token table.</summary>
+    /// <param name="first">First source bytes.</param>
+    /// <param name="second">Second source bytes.</param>
+    /// <param name="third">Third source bytes.</param>
+    /// <returns>Per-token byte arrays from all three chunks.</returns>
+    private static byte[][] SplitThreeChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, ReadOnlySpan<byte> third)
+    {
+        var firstTokens = Languages.Common.WhitespaceSplitter.Split(first);
+        var secondTokens = Languages.Common.WhitespaceSplitter.Split(second);
+        var thirdTokens = Languages.Common.WhitespaceSplitter.Split(third);
+        var total = firstTokens.Length + secondTokens.Length + thirdTokens.Length;
+        if (total is 0)
+        {
+            return firstTokens;
+        }
+
+        var combined = new byte[total][];
+        var cursor = 0;
+        Array.Copy(firstTokens, 0, combined, cursor, firstTokens.Length);
+        cursor += firstTokens.Length;
+        Array.Copy(secondTokens, 0, combined, cursor, secondTokens.Length);
+        cursor += secondTokens.Length;
+        Array.Copy(thirdTokens, 0, combined, cursor, thirdTokens.Length);
+        return combined;
+    }
+
+    /// <summary>Splits four UTF-8 byte chunks on ASCII space / tab into a single token table.</summary>
+    /// <param name="first">First source bytes.</param>
+    /// <param name="second">Second source bytes.</param>
+    /// <param name="third">Third source bytes.</param>
+    /// <param name="fourth">Fourth source bytes.</param>
+    /// <returns>Per-token byte arrays from all four chunks.</returns>
+    private static byte[][] SplitFourChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, ReadOnlySpan<byte> third, ReadOnlySpan<byte> fourth)
+    {
+        var firstTokens = Languages.Common.WhitespaceSplitter.Split(first);
+        var secondTokens = Languages.Common.WhitespaceSplitter.Split(second);
+        var thirdTokens = Languages.Common.WhitespaceSplitter.Split(third);
+        var fourthTokens = Languages.Common.WhitespaceSplitter.Split(fourth);
+        var total = firstTokens.Length + secondTokens.Length + thirdTokens.Length + fourthTokens.Length;
+        if (total is 0)
+        {
+            return firstTokens;
+        }
+
+        var combined = new byte[total][];
+        var cursor = 0;
+        Array.Copy(firstTokens, 0, combined, cursor, firstTokens.Length);
+        cursor += firstTokens.Length;
+        Array.Copy(secondTokens, 0, combined, cursor, secondTokens.Length);
+        cursor += secondTokens.Length;
+        Array.Copy(thirdTokens, 0, combined, cursor, thirdTokens.Length);
+        cursor += thirdTokens.Length;
+        Array.Copy(fourthTokens, 0, combined, cursor, fourthTokens.Length);
+        return combined;
     }
 
     /// <summary>Builds the length-indexed bucket table from the supplied keywords.</summary>

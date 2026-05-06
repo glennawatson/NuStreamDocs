@@ -16,98 +16,21 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class HlslLexer
 {
     /// <summary>General-keyword set — shared C-family control-flow plus HLSL's <c>discard</c>.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "discard"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "discard"u8);
 
     /// <summary>Built-in scalar / vector / matrix / texture / sampler types.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "void"u8],
-        [.. "bool"u8],
-        [.. "int"u8],
-        [.. "uint"u8],
-        [.. "half"u8],
-        [.. "float"u8],
-        [.. "double"u8],
-        [.. "min16float"u8],
-        [.. "min10float"u8],
-        [.. "min16int"u8],
-        [.. "min12int"u8],
-        [.. "min16uint"u8],
-        [.. "float2"u8],
-        [.. "float3"u8],
-        [.. "float4"u8],
-        [.. "float2x2"u8],
-        [.. "float3x3"u8],
-        [.. "float4x4"u8],
-        [.. "float2x4"u8],
-        [.. "float4x2"u8],
-        [.. "int2"u8],
-        [.. "int3"u8],
-        [.. "int4"u8],
-        [.. "uint2"u8],
-        [.. "uint3"u8],
-        [.. "uint4"u8],
-        [.. "bool2"u8],
-        [.. "bool3"u8],
-        [.. "bool4"u8],
-        [.. "matrix"u8],
-        [.. "vector"u8],
-        [.. "Texture1D"u8],
-        [.. "Texture2D"u8],
-        [.. "Texture3D"u8],
-        [.. "TextureCube"u8],
-        [.. "Texture2DArray"u8],
-        [.. "Texture2DMS"u8],
-        [.. "RWTexture1D"u8],
-        [.. "RWTexture2D"u8],
-        [.. "RWTexture3D"u8],
-        [.. "SamplerState"u8],
-        [.. "SamplerComparisonState"u8],
-        [.. "Buffer"u8],
-        [.. "RWBuffer"u8],
-        [.. "StructuredBuffer"u8],
-        [.. "RWStructuredBuffer"u8],
-        [.. "AppendStructuredBuffer"u8],
-        [.. "ConsumeStructuredBuffer"u8],
-        [.. "ByteAddressBuffer"u8],
-        [.. "RWByteAddressBuffer"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = BuildKeywordTypes();
 
     /// <summary>Storage / qualifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "in"u8],
-        [.. "out"u8],
-        [.. "inout"u8],
-        [.. "const"u8],
-        [.. "static"u8],
-        [.. "uniform"u8],
-        [.. "extern"u8],
-        [.. "shared"u8],
-        [.. "groupshared"u8],
-        [.. "volatile"u8],
-        [.. "precise"u8],
-        [.. "linear"u8],
-        [.. "nointerpolation"u8],
-        [.. "noperspective"u8],
-        [.. "centroid"u8],
-        [.. "sample"u8],
-        [.. "row_major"u8],
-        [.. "column_major"u8],
-        [.. "cbuffer"u8],
-        [.. "tbuffer"u8],
-        [.. "register"u8],
-        [.. "packoffset"u8],
-        [.. "struct"u8],
-        [.. "class"u8],
-        [.. "interface"u8],
-        [.. "namespace"u8],
-        [.. "typedef"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "in out inout const static uniform extern shared groupshared volatile precise linear nointerpolation"u8,
+        "noperspective centroid sample row_major column_major cbuffer tbuffer register packoffset struct class interface namespace typedef"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "NULL"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "true false NULL"u8);
 
     /// <summary>Gets the singleton HLSL lexer.</summary>
     public static Lexer Instance { get; } = CFamilyRules.CreateLexer(new()
@@ -127,4 +50,12 @@ public static class HlslLexer
         WhitespaceIncludesNewlines = true,
         SpecialString = null
     });
+
+    /// <summary>Builds the HLSL type keyword set across four UTF-8 chunks (scalars, vectors, matrices, resource handles).</summary>
+    /// <returns>HLSL type keyword set.</returns>
+    private static ByteKeywordSet BuildKeywordTypes() => ByteKeywordSet.CreateFromSpaceSeparated(
+        "void bool int uint half float double min16float min10float min16int min12int min16uint"u8,
+        "float2 float3 float4 float2x2 float3x3 float4x4 float2x4 float4x2 int2 int3 int4 uint2 uint3 uint4 bool2 bool3 bool4 matrix vector"u8,
+        "Texture1D Texture2D Texture3D TextureCube Texture2DArray Texture2DMS RWTexture1D RWTexture2D RWTexture3D SamplerState SamplerComparisonState"u8,
+        "Buffer RWBuffer StructuredBuffer RWStructuredBuffer AppendStructuredBuffer ConsumeStructuredBuffer ByteAddressBuffer RWByteAddressBuffer"u8);
 }

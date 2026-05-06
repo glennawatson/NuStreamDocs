@@ -15,70 +15,26 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class GoLexer
 {
     /// <summary>General-keyword set — shared C-family control-flow (Go has no try/catch/throw/finally; those entries simply don't fire) plus Go-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "defer"u8],
-        [.. "fallthrough"u8],
-        [.. "go"u8],
-        [.. "goto"u8],
-        [.. "range"u8],
-        [.. "select"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "defer fallthrough go goto range select"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "bool"u8],
-        [.. "byte"u8],
-        [.. "complex64"u8],
-        [.. "complex128"u8],
-        [.. "error"u8],
-        [.. "float32"u8],
-        [.. "float64"u8],
-        [.. "int"u8],
-        [.. "int8"u8],
-        [.. "int16"u8],
-        [.. "int32"u8],
-        [.. "int64"u8],
-        [.. "rune"u8],
-        [.. "string"u8],
-        [.. "uint"u8],
-        [.. "uint8"u8],
-        [.. "uint16"u8],
-        [.. "uint32"u8],
-        [.. "uint64"u8],
-        [.. "uintptr"u8],
-        [.. "any"u8],
-        [.. "comparable"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "bool byte complex64 complex128 error float32 float64 int int8 int16 int32 int64 rune string uint uint8 uint16 uint32 uint64 uintptr any comparable"u8);
 
     /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "const"u8],
-        [.. "func"u8],
-        [.. "import"u8],
-        [.. "interface"u8],
-        [.. "map"u8],
-        [.. "package"u8],
-        [.. "struct"u8],
-        [.. "type"u8],
-        [.. "var"u8],
-        [.. "chan"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "const func import interface map package struct type var chan"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "nil"u8],
-        [.. "iota"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "true false nil iota"u8);
 
-    /// <summary>Operator alternation — shared C-style core plus Go's bit-clear / channel-receive / short-decl / spread forms.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "&^="u8],
-        [.. ":="u8],
-        [.. "<-"u8],
-        [.. "..."u8],
-        [.. "&^"u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    /// <summary>Operator alternation — shared C-style core plus Go's bit-clear / channel-receive / short-decl / spread forms, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "&^= := <- ... &^"u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — Go has no <c>:</c> punctuation since <c>:</c> is part of <c>:=</c>.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,."u8);

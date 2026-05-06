@@ -15,71 +15,28 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class ElmLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. MlFamilyShared.CommonKeywords,
-        [.. "exposing"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        MlFamilyShared.CommonKeywordsLiteral,
+        "exposing"u8);
 
     /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "Bool"u8],
-        [.. "Char"u8],
-        [.. "Float"u8],
-        [.. "Int"u8],
-        [.. "String"u8],
-        [.. "List"u8],
-        [.. "Maybe"u8],
-        [.. "Result"u8],
-        [.. "Cmd"u8],
-        [.. "Sub"u8],
-        [.. "Html"u8],
-        [.. "Dict"u8],
-        [.. "Set"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "Bool Char Float Int String List Maybe Result Cmd Sub Html Dict Set"u8);
 
     /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "module"u8],
-        [.. "import"u8],
-        [.. "type"u8],
-        [.. "alias"u8],
-        [.. "port"u8],
-        [.. "effect"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "module import type alias port effect"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "True"u8],
-        [.. "False"u8],
-        [.. "Nothing"u8],
-        [.. "Just"u8],
-        [.. "Ok"u8],
-        [.. "Err"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "True False Nothing Just Ok Err"u8);
 
-    /// <summary>Operator alternation.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "::"u8],
-        [.. "->"u8],
-        [.. "<|"u8],
-        [.. "|>"u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "/="u8],
-        [.. "=="u8],
-        [.. "++"u8],
-        [.. ".."u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "."u8]
-    ];
+    /// <summary>Operator alternation, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        ":: -> <| |> <= >= /= == ++ .. && || + - * / = < > ."u8);
 
     /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/=<>|&!:."u8);
+    private static readonly SearchValues<byte> OperatorFirst = OperatorAlternationFactory.FirstBytesOf(OperatorTable);
 
     /// <summary>Gets the singleton Elm lexer.</summary>
     public static Lexer Instance { get; } = Build();

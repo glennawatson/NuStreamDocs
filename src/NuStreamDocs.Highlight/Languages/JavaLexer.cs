@@ -18,64 +18,25 @@ public static class JavaLexer
     private const int TextBlockMinQuotes = 3;
 
     /// <summary>General-keyword set — shared C-family control-flow plus Java-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "throws"u8],
-        [.. "new"u8],
-        [.. "this"u8],
-        [.. "super"u8],
-        [.. "instanceof"u8],
-        [.. "import"u8],
-        [.. "package"u8],
-        [.. "synchronized"u8],
-        [.. "yield"u8],
-        [.. "assert"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "throws new this super instanceof import package synchronized yield assert"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "boolean"u8],
-        [.. "byte"u8],
-        [.. "char"u8],
-        [.. "short"u8],
-        [.. "int"u8],
-        [.. "long"u8],
-        [.. "float"u8],
-        [.. "double"u8],
-        [.. "void"u8],
-        [.. "var"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "boolean byte char short int long float double void var"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "class"u8],
-        [.. "interface"u8],
-        [.. "enum"u8],
-        [.. "record"u8],
-        [.. "extends"u8],
-        [.. "implements"u8],
-        [.. "permits"u8],
-        [.. "sealed"u8],
-        [.. "abstract"u8],
-        [.. "final"u8],
-        [.. "static"u8],
-        [.. "public"u8],
-        [.. "private"u8],
-        [.. "protected"u8],
-        [.. "transient"u8],
-        [.. "volatile"u8],
-        [.. "native"u8],
-        [.. "strictfp"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "class interface enum record extends implements permits sealed abstract final static public private protected transient volatile native strictfp"u8);
 
     /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(CFamilyShared.TrueFalseNull);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
 
-    /// <summary>Operator alternation — shared C-style core plus Java's unsigned right-shift forms.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. ">>>="u8],
-        [.. ">>>"u8],
-        [.. "::"u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    /// <summary>Operator alternation — shared C-style core plus Java's unsigned right-shift forms, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        ">>>= >>> ::"u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Java <c>@</c> annotation marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);

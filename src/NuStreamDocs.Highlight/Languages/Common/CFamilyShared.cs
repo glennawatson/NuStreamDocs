@@ -8,11 +8,10 @@ namespace NuStreamDocs.Highlight.Languages.Common;
 
 /// <summary>Shared keyword / operator / constant byte tables for the C-family lexers.</summary>
 /// <remarks>
-/// Each <c>byte[][]</c> table is exposed so consumers can spread it through a
-/// collection expression (<c>[.. CFamilyShared.ControlFlow, [.. "match"u8]]</c>)
-/// when building their per-language <see cref="ByteKeywordSet"/>. The companion
-/// <c>SearchValues&lt;byte&gt;</c> first-byte sets cover every entry in the matching
-/// table so consumers can reuse them as-is for first-byte dispatch.
+/// Pass the <c>*Literal</c> spans to
+/// <see cref="ByteKeywordSet.CreateFromSpaceSeparated(System.ReadOnlySpan{byte}, System.ReadOnlySpan{byte})"/>
+/// (or <see cref="OperatorAlternationFactory.SplitLongestFirst(System.ReadOnlySpan{byte}, System.ReadOnlySpan{byte})"/>)
+/// when assembling per-language tables so the duplicated control-flow / operator entries only appear once across the project.
 /// </remarks>
 internal static class CFamilyShared
 {
@@ -55,44 +54,8 @@ internal static class CFamilyShared
     public static readonly SearchValues<byte> TrueFalseNullFirst = SearchValues.Create("tfn"u8);
 
     /// <summary>Standard C-style operator alternation, sorted longest-first. Covers every operator C/C++/Java/Kotlin/Scala/Groovy/Dart/Swift/Zig/Rust/Go/etc. share.</summary>
-    public static readonly byte[][] StandardOperators =
-    [
-        [.. "<<="u8],
-        [.. ">>="u8],
-        [.. "->"u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "<<"u8],
-        [.. ">>"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "&="u8],
-        [.. "|="u8],
-        [.. "^="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
-    ];
+    public static readonly byte[][] StandardOperators = OperatorAlternationFactory.SplitLongestFirst(
+        "<<= >>= -> ++ -- == != <= >= && || << >> += -= *= /= %= &= |= ^= + - * / % & | ^ ! ~ = < > ?"u8);
 
     /// <summary>
     /// First-byte dispatch set for <see cref="StandardOperators"/>. Includes <c>:</c>
@@ -117,4 +80,15 @@ internal static class CFamilyShared
 
     /// <summary>Common C-style float-literal suffix bytes (<c>f</c>, <c>F</c>, <c>l</c>, <c>L</c>).</summary>
     public static readonly SearchValues<byte> CFloatSuffix = SearchValues.Create("fFlL"u8);
+
+    /// <summary>Gets the control-flow keywords every brace-style C-family language ships with, as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> ControlFlowLiteral =>
+        "if else for while do switch case default break continue return throw try catch finally"u8;
+
+    /// <summary>Gets the canonical <c>true</c> / <c>false</c> / <c>null</c> constant triple as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> TrueFalseNullLiteral => "true false null"u8;
+
+    /// <summary>Gets the standard C-style operator alternation as a space-separated literal (lengths arbitrary; the alternation factory orders longest-first).</summary>
+    public static ReadOnlySpan<byte> StandardOperatorsLiteral =>
+        "<<= >>= -> ++ -- == != <= >= && || << >> += -= *= /= %= &= |= ^= + - * / % & | ^ ! ~ = < > ?"u8;
 }

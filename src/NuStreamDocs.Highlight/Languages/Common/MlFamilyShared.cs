@@ -8,31 +8,20 @@ namespace NuStreamDocs.Highlight.Languages.Common;
 
 /// <summary>Shared keyword / first-byte tables for the ML-family lexers (Haskell, OCaml, F#, Elm, ReasonML).</summary>
 /// <remarks>
-/// Spread these byte-array tables through a collection expression
-/// (<c>[.. MlFamilyShared.CommonKeywords, [.. "do"u8]]</c>) when building a per-language
-/// <see cref="ByteKeywordSet"/> so the duplicated <c>if</c>/<c>then</c>/<c>else</c>/… entries
-/// only appear once across the project.
+/// Pass <see cref="CommonKeywordsLiteral"/> as the first chunk to
+/// <see cref="ByteKeywordSet.CreateFromSpaceSeparated(System.ReadOnlySpan{byte}, System.ReadOnlySpan{byte})"/>
+/// when building a per-language keyword set so the duplicated
+/// <c>if</c>/<c>then</c>/<c>else</c>/… entries only appear once across the project.
 /// </remarks>
 internal static class MlFamilyShared
 {
-    /// <summary>Common control-flow / pattern-match keywords every ML-family dialect ships with.</summary>
-    public static readonly byte[][] CommonKeywords =
-    [
-        [.. "if"u8],
-        [.. "then"u8],
-        [.. "else"u8],
-        [.. "case"u8],
-        [.. "of"u8],
-        [.. "let"u8],
-        [.. "in"u8],
-        [.. "as"u8],
-        [.. "where"u8]
-    ];
-
     /// <summary>
-    /// First-byte dispatch set covering every byte that any <see cref="CommonKeywords"/>
+    /// First-byte dispatch set covering every byte that any common keyword
     /// entry starts with (<c>a</c>, <c>c</c>, <c>e</c>, <c>i</c>, <c>l</c>, <c>o</c>,
     /// <c>t</c>, <c>w</c>).
     /// </summary>
     public static readonly SearchValues<byte> CommonKeywordFirst = SearchValues.Create("aceilotw"u8);
+
+    /// <summary>Gets the common control-flow / pattern-match keywords every ML-family dialect ships with, as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> CommonKeywordsLiteral => "if then else case of let in as where"u8;
 }

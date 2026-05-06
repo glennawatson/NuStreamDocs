@@ -19,85 +19,25 @@ public static class DartLexer
     private const int TripleQuoteLength = 3;
 
     /// <summary>General-keyword set — shared C-family control-flow plus Dart-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "new"u8],
-        [.. "this"u8],
-        [.. "super"u8],
-        [.. "is"u8],
-        [.. "as"u8],
-        [.. "in"u8],
-        [.. "yield"u8],
-        [.. "async"u8],
-        [.. "await"u8],
-        [.. "import"u8],
-        [.. "library"u8],
-        [.. "part"u8],
-        [.. "show"u8],
-        [.. "hide"u8],
-        [.. "deferred"u8],
-        [.. "rethrow"u8],
-        [.. "assert"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "new this super is as in yield async await import library part show hide deferred rethrow assert"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "bool"u8],
-        [.. "int"u8],
-        [.. "double"u8],
-        [.. "num"u8],
-        [.. "String"u8],
-        [.. "void"u8],
-        [.. "dynamic"u8],
-        [.. "Object"u8],
-        [.. "Never"u8],
-        [.. "Null"u8],
-        [.. "Function"u8],
-        [.. "Future"u8],
-        [.. "Stream"u8],
-        [.. "List"u8],
-        [.. "Map"u8],
-        [.. "Set"u8],
-        [.. "Iterable"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "bool int double num String void dynamic Object Never Null Function Future Stream List Map Set Iterable"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "var"u8],
-        [.. "final"u8],
-        [.. "const"u8],
-        [.. "late"u8],
-        [.. "static"u8],
-        [.. "abstract"u8],
-        [.. "external"u8],
-        [.. "factory"u8],
-        [.. "covariant"u8],
-        [.. "operator"u8],
-        [.. "get"u8],
-        [.. "set"u8],
-        [.. "class"u8],
-        [.. "interface"u8],
-        [.. "mixin"u8],
-        [.. "enum"u8],
-        [.. "typedef"u8],
-        [.. "extends"u8],
-        [.. "implements"u8],
-        [.. "with"u8],
-        [.. "on"u8],
-        [.. "sealed"u8],
-        [.. "base"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "var final const late static abstract external factory covariant operator get set class interface mixin enum typedef extends implements with on sealed base"u8);
 
     /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(CFamilyShared.TrueFalseNull);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
 
-    /// <summary>Operator alternation — shared C-style core plus Dart's null-safe / cascade / spread forms.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "??="u8],
-        [.. "??"u8],
-        [.. "?."u8],
-        [.. "..."u8],
-        [.. ".."u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    /// <summary>Operator alternation — shared C-style core plus Dart's null-safe / cascade / spread forms, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "??= ?? ?. ... .."u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Dart <c>@</c> annotation marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);

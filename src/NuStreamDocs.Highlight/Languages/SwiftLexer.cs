@@ -19,109 +19,27 @@ public static class SwiftLexer
     private const int MultiLineStringMinQuotes = 3;
 
     /// <summary>General-keyword set — shared C-family control-flow plus Swift-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "guard"u8],
-        [.. "repeat"u8],
-        [.. "fallthrough"u8],
-        [.. "throws"u8],
-        [.. "rethrows"u8],
-        [.. "defer"u8],
-        [.. "where"u8],
-        [.. "as"u8],
-        [.. "is"u8],
-        [.. "in"u8],
-        [.. "self"u8],
-        [.. "Self"u8],
-        [.. "super"u8],
-        [.. "import"u8],
-        [.. "async"u8],
-        [.. "await"u8],
-        [.. "actor"u8],
-        [.. "some"u8],
-        [.. "any"u8],
-        [.. "inout"u8],
-        [.. "init"u8],
-        [.. "deinit"u8],
-        [.. "subscript"u8],
-        [.. "willSet"u8],
-        [.. "didSet"u8],
-        [.. "get"u8],
-        [.. "set"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "guard repeat fallthrough throws rethrows defer where as is in self Self super import async await actor some any inout init deinit subscript willSet didSet get set"u8);
 
     /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "Bool"u8],
-        [.. "Character"u8],
-        [.. "String"u8],
-        [.. "Int"u8],
-        [.. "Int8"u8],
-        [.. "Int16"u8],
-        [.. "Int32"u8],
-        [.. "Int64"u8],
-        [.. "UInt"u8],
-        [.. "UInt8"u8],
-        [.. "UInt16"u8],
-        [.. "UInt32"u8],
-        [.. "UInt64"u8],
-        [.. "Float"u8],
-        [.. "Double"u8],
-        [.. "Void"u8],
-        [.. "Any"u8],
-        [.. "AnyObject"u8],
-        [.. "Optional"u8],
-        [.. "Array"u8],
-        [.. "Dictionary"u8],
-        [.. "Set"u8],
-        [.. "Result"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "Bool Character String Int Int8 Int16 Int32 Int64 UInt UInt8 UInt16 UInt32 UInt64 Float Double Void Any AnyObject Optional Array Dictionary Set Result"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "let"u8],
-        [.. "var"u8],
-        [.. "func"u8],
-        [.. "class"u8],
-        [.. "struct"u8],
-        [.. "enum"u8],
-        [.. "protocol"u8],
-        [.. "extension"u8],
-        [.. "typealias"u8],
-        [.. "associatedtype"u8],
-        [.. "static"u8],
-        [.. "public"u8],
-        [.. "private"u8],
-        [.. "internal"u8],
-        [.. "fileprivate"u8],
-        [.. "open"u8],
-        [.. "final"u8],
-        [.. "lazy"u8],
-        [.. "weak"u8],
-        [.. "unowned"u8],
-        [.. "mutating"u8],
-        [.. "nonmutating"u8],
-        [.. "override"u8],
-        [.. "required"u8],
-        [.. "convenience"u8],
-        [.. "dynamic"u8],
-        [.. "indirect"u8],
-        [.. "operator"u8],
-        [.. "precedencegroup"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "let var func class struct enum protocol extension typealias associatedtype static public private internal fileprivate open final lazy weak unowned"u8,
+        "mutating nonmutating override required convenience dynamic indirect operator precedencegroup"u8);
 
     /// <summary>Constant keywords — Swift uses <c>nil</c> in place of the shared <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "nil"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "true false nil"u8);
 
-    /// <summary>Operator alternation — shared C-style core plus Swift's range / nil-coalesce / optional-chain forms.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "..."u8],
-        [.. "..<"u8],
-        [.. "??"u8],
-        [.. "?."u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    /// <summary>Operator alternation — shared C-style core plus Swift's range / nil-coalesce / optional-chain forms, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "... ..< ?? ?."u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Swift <c>@</c> attribute marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);

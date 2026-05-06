@@ -18,111 +18,25 @@ public static class KotlinLexer
     private const int RawStringMinQuotes = 3;
 
     /// <summary>General-keyword set — shared C-family control-flow plus Kotlin-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "when"u8],
-        [.. "is"u8],
-        [.. "as"u8],
-        [.. "in"u8],
-        [.. "out"u8],
-        [.. "by"u8],
-        [.. "where"u8],
-        [.. "yield"u8],
-        [.. "this"u8],
-        [.. "super"u8],
-        [.. "import"u8],
-        [.. "package"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "when is as in out by where yield this super import package"u8);
 
     /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "Boolean"u8],
-        [.. "Byte"u8],
-        [.. "Char"u8],
-        [.. "Short"u8],
-        [.. "Int"u8],
-        [.. "Long"u8],
-        [.. "Float"u8],
-        [.. "Double"u8],
-        [.. "String"u8],
-        [.. "Unit"u8],
-        [.. "Any"u8],
-        [.. "Nothing"u8],
-        [.. "Array"u8],
-        [.. "List"u8],
-        [.. "Map"u8],
-        [.. "Set"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "Boolean Byte Char Short Int Long Float Double String Unit Any Nothing Array List Map Set"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "val"u8],
-        [.. "var"u8],
-        [.. "fun"u8],
-        [.. "class"u8],
-        [.. "interface"u8],
-        [.. "object"u8],
-        [.. "enum"u8],
-        [.. "data"u8],
-        [.. "sealed"u8],
-        [.. "open"u8],
-        [.. "abstract"u8],
-        [.. "final"u8],
-        [.. "override"u8],
-        [.. "lateinit"u8],
-        [.. "const"u8],
-        [.. "inline"u8],
-        [.. "infix"u8],
-        [.. "tailrec"u8],
-        [.. "operator"u8],
-        [.. "suspend"u8],
-        [.. "vararg"u8],
-        [.. "noinline"u8],
-        [.. "crossinline"u8],
-        [.. "reified"u8],
-        [.. "internal"u8],
-        [.. "public"u8],
-        [.. "private"u8],
-        [.. "protected"u8],
-        [.. "companion"u8],
-        [.. "annotation"u8],
-        [.. "typealias"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "val var fun class interface object enum data sealed open abstract final override lateinit const inline infix tailrec operator suspend vararg noinline crossinline reified"u8,
+        "internal public private protected companion annotation typealias"u8);
 
     /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(CFamilyShared.TrueFalseNull);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "?:"u8],
-        [.. "..="u8],
-        [.. ".."u8],
-        [.. "->"u8],
-        [.. "::"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "?."u8],
-        [.. "!!"u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "!"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "?: ..= .. -> :: == != <= >= && || ++ -- += -= *= /= %= ?. !! + - * / % ! = < > ?"u8);
 
     /// <summary>Single-byte structural punctuation.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);

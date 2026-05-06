@@ -18,64 +18,25 @@ public static class GroovyLexer
     private const int TripleQuoteLength = 3;
 
     /// <summary>General-keyword set — shared C-family control-flow plus Groovy-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "throws"u8],
-        [.. "new"u8],
-        [.. "this"u8],
-        [.. "super"u8],
-        [.. "instanceof"u8],
-        [.. "import"u8],
-        [.. "package"u8],
-        [.. "as"u8],
-        [.. "in"u8],
-        [.. "assert"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "throws new this super instanceof import package as in assert"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "boolean"u8],
-        [.. "byte"u8],
-        [.. "char"u8],
-        [.. "short"u8],
-        [.. "int"u8],
-        [.. "long"u8],
-        [.. "float"u8],
-        [.. "double"u8],
-        [.. "void"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "boolean byte char short int long float double void"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "def"u8],
-        [.. "class"u8],
-        [.. "interface"u8],
-        [.. "trait"u8],
-        [.. "enum"u8],
-        [.. "extends"u8],
-        [.. "implements"u8],
-        [.. "abstract"u8],
-        [.. "final"u8],
-        [.. "static"u8],
-        [.. "public"u8],
-        [.. "private"u8],
-        [.. "protected"u8],
-        [.. "synchronized"u8],
-        [.. "transient"u8],
-        [.. "volatile"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "def class interface trait enum extends implements abstract final static public private protected synchronized transient volatile"u8);
 
     /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(CFamilyShared.TrueFalseNull);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
 
-    /// <summary>Operator alternation — shared C-style core plus Groovy's unsigned right-shift / null-safe / spread forms.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. ">>>="u8],
-        [.. ">>>"u8],
-        [.. "::"u8],
-        [.. "?:"u8],
-        [.. "?."u8],
-        [.. "*."u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    /// <summary>Operator alternation — shared C-style core plus Groovy's unsigned right-shift / null-safe / spread forms, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        ">>>= >>> :: ?: ?. *."u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Groovy <c>@</c> annotation marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);

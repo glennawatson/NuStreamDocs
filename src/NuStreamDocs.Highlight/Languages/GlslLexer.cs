@@ -19,92 +19,25 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class GlslLexer
 {
     /// <summary>General-keyword set — shared C-family control-flow plus GLSL's <c>discard</c>.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "discard"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "discard"u8);
 
     /// <summary>Built-in primitive / vector / matrix / sampler type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "void"u8],
-        [.. "bool"u8],
-        [.. "int"u8],
-        [.. "uint"u8],
-        [.. "float"u8],
-        [.. "double"u8],
-        [.. "vec2"u8],
-        [.. "vec3"u8],
-        [.. "vec4"u8],
-        [.. "ivec2"u8],
-        [.. "ivec3"u8],
-        [.. "ivec4"u8],
-        [.. "uvec2"u8],
-        [.. "uvec3"u8],
-        [.. "uvec4"u8],
-        [.. "bvec2"u8],
-        [.. "bvec3"u8],
-        [.. "bvec4"u8],
-        [.. "dvec2"u8],
-        [.. "dvec3"u8],
-        [.. "dvec4"u8],
-        [.. "mat2"u8],
-        [.. "mat3"u8],
-        [.. "mat4"u8],
-        [.. "mat2x2"u8],
-        [.. "mat2x3"u8],
-        [.. "mat2x4"u8],
-        [.. "mat3x2"u8],
-        [.. "mat3x3"u8],
-        [.. "mat3x4"u8],
-        [.. "mat4x2"u8],
-        [.. "mat4x3"u8],
-        [.. "mat4x4"u8],
-        [.. "sampler1D"u8],
-        [.. "sampler2D"u8],
-        [.. "sampler3D"u8],
-        [.. "samplerCube"u8],
-        [.. "sampler2DArray"u8],
-        [.. "sampler2DShadow"u8],
-        [.. "samplerCubeShadow"u8],
-        [.. "image2D"u8],
-        [.. "image3D"u8],
-        [.. "imageCube"u8],
-        [.. "atomic_uint"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "void bool int uint float double"u8,
+        "vec2 vec3 vec4 ivec2 ivec3 ivec4 uvec2 uvec3 uvec4 bvec2 bvec3 bvec4 dvec2 dvec3 dvec4"u8,
+        "mat2 mat3 mat4 mat2x2 mat2x3 mat2x4 mat3x2 mat3x3 mat3x4 mat4x2 mat4x3 mat4x4"u8,
+        "sampler1D sampler2D sampler3D samplerCube sampler2DArray sampler2DShadow samplerCubeShadow image2D image3D imageCube atomic_uint"u8);
 
     /// <summary>Storage / interface / qualifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "attribute"u8],
-        [.. "uniform"u8],
-        [.. "varying"u8],
-        [.. "buffer"u8],
-        [.. "shared"u8],
-        [.. "in"u8],
-        [.. "out"u8],
-        [.. "inout"u8],
-        [.. "const"u8],
-        [.. "centroid"u8],
-        [.. "sample"u8],
-        [.. "patch"u8],
-        [.. "flat"u8],
-        [.. "smooth"u8],
-        [.. "noperspective"u8],
-        [.. "layout"u8],
-        [.. "precision"u8],
-        [.. "highp"u8],
-        [.. "mediump"u8],
-        [.. "lowp"u8],
-        [.. "invariant"u8],
-        [.. "coherent"u8],
-        [.. "volatile"u8],
-        [.. "restrict"u8],
-        [.. "readonly"u8],
-        [.. "writeonly"u8],
-        [.. "subroutine"u8],
-        [.. "struct"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "attribute uniform varying buffer shared in out inout const centroid sample patch flat smooth noperspective layout"u8,
+        "precision highp mediump lowp invariant coherent volatile restrict readonly writeonly subroutine struct"u8);
 
     /// <summary>Constant keywords — GLSL has only <c>true</c> / <c>false</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "true false"u8);
 
     /// <summary>Gets the singleton GLSL lexer.</summary>
     public static Lexer Instance { get; } = CFamilyRules.CreateLexer(new()

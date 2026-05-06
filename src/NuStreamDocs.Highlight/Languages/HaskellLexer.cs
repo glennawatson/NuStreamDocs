@@ -15,87 +15,28 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class HaskellLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. MlFamilyShared.CommonKeywords,
-        [.. "do"u8],
-        [.. "qualified"u8],
-        [.. "hiding"u8],
-        [.. "infix"u8],
-        [.. "infixl"u8],
-        [.. "infixr"u8],
-        [.. "deriving"u8],
-        [.. "default"u8],
-        [.. "foreign"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        MlFamilyShared.CommonKeywordsLiteral,
+        "do qualified hiding infix infixl infixr deriving default foreign"u8);
 
     /// <summary>Built-in nominal type keywords (Prelude).</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "Bool"u8],
-        [.. "Char"u8],
-        [.. "Double"u8],
-        [.. "Float"u8],
-        [.. "Int"u8],
-        [.. "Integer"u8],
-        [.. "String"u8],
-        [.. "Maybe"u8],
-        [.. "Either"u8],
-        [.. "IO"u8],
-        [.. "Word"u8],
-        [.. "Word8"u8],
-        [.. "Word16"u8],
-        [.. "Word32"u8],
-        [.. "Word64"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "Bool Char Double Float Int Integer String Maybe Either IO Word Word8 Word16 Word32 Word64"u8);
 
     /// <summary>Declaration / module keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "module"u8],
-        [.. "import"u8],
-        [.. "data"u8],
-        [.. "newtype"u8],
-        [.. "type"u8],
-        [.. "class"u8],
-        [.. "instance"u8],
-        [.. "family"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "module import data newtype type class instance family"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "True"u8],
-        [.. "False"u8],
-        [.. "Nothing"u8],
-        [.. "Just"u8],
-        [.. "Left"u8],
-        [.. "Right"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "True False Nothing Just Left Right"u8);
 
-    /// <summary>Operator alternation.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "::"u8],
-        [.. "->"u8],
-        [.. "<-"u8],
-        [.. "=>"u8],
-        [.. "<>"u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. ".."u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "=="u8],
-        [.. "/="u8],
-        [.. "++"u8],
-        [.. "$$"u8],
-        [.. "$"u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "."u8],
-        [.. "@"u8]
-    ];
+    /// <summary>Operator alternation, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        ":: -> <- => <> <= >= .. && || == /= ++ $$ $ + - * / = < > . @"u8);
 
     /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/=<>|&!:.@$"u8);
+    private static readonly SearchValues<byte> OperatorFirst = OperatorAlternationFactory.FirstBytesOf(OperatorTable);
 
     /// <summary>Gets the singleton Haskell lexer.</summary>
     public static Lexer Instance { get; } = Build();

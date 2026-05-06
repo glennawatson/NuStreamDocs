@@ -17,78 +17,25 @@ namespace NuStreamDocs.Highlight.Languages;
 public static class VLexer
 {
     /// <summary>General-keyword set — shared C-family control-flow plus V-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "as"u8],
-        [.. "in"u8],
-        [.. "is"u8],
-        [.. "or"u8],
-        [.. "match"u8],
-        [.. "select"u8],
-        [.. "go"u8],
-        [.. "goto"u8],
-        [.. "defer"u8],
-        [.. "spawn"u8],
-        [.. "lock"u8],
-        [.. "rlock"u8],
-        [.. "unsafe"u8],
-        [.. "asm"u8],
-        [.. "shared"u8],
-        [.. "atomic"u8],
-        [.. "$if"u8],
-        [.. "$else"u8],
-        [.. "$for"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "as in is or match select go goto defer spawn lock rlock unsafe asm shared atomic $if $else $for"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "bool"u8],
-        [.. "byte"u8],
-        [.. "i8"u8],
-        [.. "i16"u8],
-        [.. "int"u8],
-        [.. "i64"u8],
-        [.. "u8"u8],
-        [.. "u16"u8],
-        [.. "u32"u8],
-        [.. "u64"u8],
-        [.. "f32"u8],
-        [.. "f64"u8],
-        [.. "rune"u8],
-        [.. "string"u8],
-        [.. "voidptr"u8],
-        [.. "size_t"u8],
-        [.. "char"u8],
-        [.. "any"u8],
-        [.. "none"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "bool byte i8 i16 int i64 u8 u16 u32 u64 f32 f64 rune string voidptr size_t char any none"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "fn"u8],
-        [.. "struct"u8],
-        [.. "interface"u8],
-        [.. "enum"u8],
-        [.. "type"u8],
-        [.. "module"u8],
-        [.. "import"u8],
-        [.. "pub"u8],
-        [.. "mut"u8],
-        [.. "const"u8],
-        [.. "static"u8],
-        [.. "__global"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "fn struct interface enum type module import pub mut const static __global"u8);
 
     /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(CFamilyShared.TrueFalseNull);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
 
-    /// <summary>Operator alternation — shared C-style core plus V's range / arrow forms.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "..."u8],
-        [.. ".."u8],
-        [.. ":="u8],
-        [.. "<-"u8],
-        [.. "->"u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    /// <summary>Operator alternation — shared C-style core plus V's range / arrow forms, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "... .. := <- ->"u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — shared C-curly set plus V's <c>@</c> attribute marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);

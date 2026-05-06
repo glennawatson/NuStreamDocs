@@ -18,83 +18,25 @@ public static class ScalaLexer
     private const int RawStringMinQuotes = 3;
 
     /// <summary>General-keyword set — shared C-family control-flow plus Scala-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "match"u8],
-        [.. "yield"u8],
-        [.. "new"u8],
-        [.. "this"u8],
-        [.. "super"u8],
-        [.. "import"u8],
-        [.. "package"u8],
-        [.. "with"u8],
-        [.. "extends"u8],
-        [.. "derives"u8],
-        [.. "as"u8],
-        [.. "given"u8],
-        [.. "using"u8],
-        [.. "then"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "match yield new this super import package with extends derives as given using then"u8);
 
     /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "Boolean"u8],
-        [.. "Byte"u8],
-        [.. "Short"u8],
-        [.. "Int"u8],
-        [.. "Long"u8],
-        [.. "Float"u8],
-        [.. "Double"u8],
-        [.. "Char"u8],
-        [.. "String"u8],
-        [.. "Unit"u8],
-        [.. "Any"u8],
-        [.. "AnyVal"u8],
-        [.. "AnyRef"u8],
-        [.. "Nothing"u8],
-        [.. "Null"u8],
-        [.. "Option"u8],
-        [.. "List"u8],
-        [.. "Seq"u8],
-        [.. "Map"u8],
-        [.. "Set"u8],
-        [.. "Array"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "Boolean Byte Short Int Long Float Double Char String Unit Any AnyVal AnyRef Nothing Null Option List Seq Map Set Array"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "val"u8],
-        [.. "var"u8],
-        [.. "def"u8],
-        [.. "type"u8],
-        [.. "class"u8],
-        [.. "object"u8],
-        [.. "trait"u8],
-        [.. "enum"u8],
-        [.. "abstract"u8],
-        [.. "final"u8],
-        [.. "sealed"u8],
-        [.. "open"u8],
-        [.. "implicit"u8],
-        [.. "lazy"u8],
-        [.. "override"u8],
-        [.. "private"u8],
-        [.. "protected"u8],
-        [.. "public"u8],
-        [.. "inline"u8],
-        [.. "transparent"u8],
-        [.. "opaque"u8],
-        [.. "extension"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "val var def type class object trait enum abstract final sealed open implicit lazy override private protected public inline transparent opaque extension"u8);
 
     /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(CFamilyShared.TrueFalseNull);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
 
-    /// <summary>Operator alternation — shared C-style core plus Scala's <c>&lt;-</c> / <c>=&gt;</c> / <c>::</c> arrows.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "<-"u8],
-        [.. "=>"u8],
-        [.. "::"u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    /// <summary>Operator alternation — shared C-style core plus Scala's <c>&lt;-</c> / <c>=&gt;</c> / <c>::</c> arrows, sorted longest-first.</summary>
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "<- => ::"u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Scala <c>@</c> annotation marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);
