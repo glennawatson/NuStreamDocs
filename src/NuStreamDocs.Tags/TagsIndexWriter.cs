@@ -10,46 +10,11 @@ namespace NuStreamDocs.Tags;
 /// <summary>Stateless helpers that emit the tags landing page and per-tag listing pages straight to byte buffers.</summary>
 internal static class TagsIndexWriter
 {
-    /// <summary>Length of the <c>.md</c> source extension stripped before composing URLs.</summary>
-    private const int MarkdownExtensionLength = 3;
-
-    /// <summary>Length of the replacement <c>.html</c> extension.</summary>
-    private const int HtmlExtensionLength = 5;
-
-    /// <summary>OR-mask that maps an ASCII uppercase letter to its lowercase form.</summary>
-    private const byte AsciiCaseBit = 0x20;
-
-    /// <summary>Initial-byte capacity hint for an emitted page; covers most pages without a resize.</summary>
-    private const int PageInitialCapacity = 2 * 1024;
-
     /// <summary>Maps a source-relative path (e.g. <c>guide/intro.md</c>) to a UTF-8 URL byte array (e.g. <c>guide/intro.html</c>).</summary>
     /// <param name="relativePath">Source path relative to the docs root.</param>
     /// <returns>UTF-8 URL bytes; an empty array when <paramref name="relativePath"/> is empty.</returns>
-    public static byte[] RelativePathToUrlPath(FilePath relativePath)
-    {
-        if (relativePath.IsEmpty)
-        {
-            return [];
-        }
-
-        ReadOnlySpan<char> span = relativePath;
-        var endsWithMd = span.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
-        var keep = endsWithMd ? span.Length - MarkdownExtensionLength : span.Length;
-        var totalLength = keep + (endsWithMd ? HtmlExtensionLength : 0);
-        var dst = new byte[totalLength];
-        for (var i = 0; i < keep; i++)
-        {
-            var c = span[i];
-            dst[i] = c is '\\' ? (byte)'/' : (byte)c;
-        }
-
-        if (endsWithMd)
-        {
-            ".html"u8.CopyTo(dst.AsSpan(keep));
-        }
-
-        return dst;
-    }
+    public static byte[] RelativePathToUrlPath(FilePath relativePath) =>
+        relativePath.IsEmpty ? [] : TagsCommon.MdRelativePathToHtmlUrlBytes(relativePath);
 
     /// <summary>Emits the all-tags index plus one listing page per distinct tag.</summary>
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
@@ -66,7 +31,7 @@ internal static class TagsIndexWriter
         var tagsDir = Path.Combine(outputRoot, options.OutputSubdirectory);
         Directory.CreateDirectory(tagsDir);
 
-        using var rental = PageBuilderPool.Rent(PageInitialCapacity);
+        using var rental = PageBuilderPool.Rent(TagsCommon.PageInitialCapacity);
         var sink = rental.Writer;
         WriteIndexPage(sink, grouped);
         File.WriteAllBytes(Path.Combine(tagsDir, options.IndexFileName), sink.WrittenSpan);
@@ -75,31 +40,17 @@ internal static class TagsIndexWriter
         {
             sink.ResetWrittenCount();
             WriteTagPage(sink, pair.Key, pair.Value);
-            var slug = SlugifyTag(pair.Key);
-            File.WriteAllBytes(Path.Combine(tagsDir, BuildSlugFileName(slug)), sink.WrittenSpan);
+            var slug = TagsCommon.SlugifyTag(pair.Key);
+            File.WriteAllBytes(Path.Combine(tagsDir, TagsCommon.BuildSlugFileName(slug, ".html")), sink.WrittenSpan);
         }
     }
-
-    /// <summary>Builds a <c>{slug}.html</c> file name from ASCII slug bytes in a single allocation.</summary>
-    /// <param name="slug">Slug bytes (ASCII alphanumeric / hyphen only, by construction of <see cref="SlugifyInto"/>).</param>
-    /// <returns>The slug followed by the <c>.html</c> extension as a single allocated string.</returns>
-    private static string BuildSlugFileName(byte[] slug) =>
-        string.Create(slug.Length + HtmlExtensionLength, slug, static (dst, src) =>
-        {
-            for (var i = 0; i < src.Length; i++)
-            {
-                dst[i] = (char)src[i];
-            }
-
-            ".html".AsSpan().CopyTo(dst[src.Length..]);
-        });
 
     /// <summary>Groups <paramref name="entries"/> by tag, yielding tags sorted alphabetically and pages within each tag sorted by URL.</summary>
     /// <param name="entries">Per-page entries.</param>
     /// <returns>Sorted byte-keyed tag → page list.</returns>
     private static SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> GroupByTag(TagEntry[] entries)
     {
-        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> map = new(ByteSequenceComparer.Instance);
+        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> map = new(ByteArrayComparer.Instance);
         for (var i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];
@@ -114,7 +65,7 @@ internal static class TagsIndexWriter
 
         foreach (var bucket in map.Values)
         {
-            bucket.Sort(static (a, b) => ByteSequenceComparer.Instance.Compare(a.Url, b.Url));
+            bucket.Sort(static (a, b) => ByteArrayComparer.Instance.Compare(a.Url, b.Url));
         }
 
         return map;
@@ -130,7 +81,7 @@ internal static class TagsIndexWriter
         foreach (var pair in grouped)
         {
             writer.Write("<li><a href=\""u8);
-            writer.Write(SlugifyTag(pair.Key));
+            writer.Write(TagsCommon.SlugifyTag(pair.Key));
             writer.Write(".html\">"u8);
             XmlEntityEscaper.WriteEscaped(writer, pair.Key, XmlEntityEscaper.Mode.HtmlAttribute);
             writer.Write("</a> <span class=\"tag-count\">("u8);
@@ -163,86 +114,5 @@ internal static class TagsIndexWriter
         }
 
         writer.Write("</ul>\n</main>\n</body>\n</html>\n"u8);
-    }
-
-    /// <summary>Lowercases <paramref name="tag"/> and replaces non-alphanumeric ASCII runs with single hyphens for use as a filename.</summary>
-    /// <param name="tag">UTF-8 tag display bytes.</param>
-    /// <returns>UTF-8 filesystem-safe slug bytes; <c>"tag"</c> when the input has no slug-safe bytes.</returns>
-    private static byte[] SlugifyTag(ReadOnlySpan<byte> tag)
-    {
-        if (tag.IsEmpty)
-        {
-            return [.. "tag"u8];
-        }
-
-        var stack = tag.Length <= 256 ? stackalloc byte[tag.Length] : new byte[tag.Length];
-        var written = SlugifyInto(tag, stack);
-        return written is 0 ? [.. "tag"u8] : stack[..written].ToArray();
-    }
-
-    /// <summary>Writes the slug form of <paramref name="tag"/> into <paramref name="dst"/> and returns the count.</summary>
-    /// <param name="tag">UTF-8 source bytes.</param>
-    /// <param name="dst">Destination span.</param>
-    /// <returns>Number of bytes written.</returns>
-    private static int SlugifyInto(ReadOnlySpan<byte> tag, Span<byte> dst)
-    {
-        var count = 0;
-        var pendingHyphen = false;
-        for (var i = 0; i < tag.Length; i++)
-        {
-            var b = tag[i];
-            switch (b)
-            {
-                case >= (byte)'A' and <= (byte)'Z':
-                    {
-                        count = FlushHyphen(dst, count, pendingHyphen);
-                        dst[count++] = (byte)(b | AsciiCaseBit);
-                        pendingHyphen = false;
-                        continue;
-                    }
-
-                case >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9':
-                    {
-                        count = FlushHyphen(dst, count, pendingHyphen);
-                        dst[count++] = b;
-                        pendingHyphen = false;
-                        continue;
-                    }
-
-                default:
-                    {
-                        pendingHyphen = count is not 0;
-                        break;
-                    }
-            }
-        }
-
-        return count;
-    }
-
-    /// <summary>Appends a queued hyphen when one is pending and the buffer is non-empty.</summary>
-    /// <param name="dst">Destination span.</param>
-    /// <param name="count">Current count.</param>
-    /// <param name="pendingHyphen">Whether a hyphen is queued.</param>
-    /// <returns>Updated count.</returns>
-    private static int FlushHyphen(Span<byte> dst, int count, bool pendingHyphen)
-    {
-        if (!pendingHyphen || count is 0)
-        {
-            return count;
-        }
-
-        dst[count] = (byte)'-';
-        return count + 1;
-    }
-
-    /// <summary>Ordinal byte-sequence comparer used for the sorted tag and url buckets.</summary>
-    private sealed class ByteSequenceComparer : IComparer<byte[]>
-    {
-        /// <summary>Singleton instance.</summary>
-        public static readonly ByteSequenceComparer Instance = new();
-
-        /// <inheritdoc/>
-        public int Compare(byte[]? x, byte[]? y) => x.AsSpan().SequenceCompareTo(y);
     }
 }

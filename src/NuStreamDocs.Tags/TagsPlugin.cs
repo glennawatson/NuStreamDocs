@@ -18,15 +18,6 @@ namespace NuStreamDocs.Tags;
 /// </summary>
 public sealed class TagsPlugin : IBuildDiscoverPlugin
 {
-    /// <summary>OR-mask that maps an ASCII uppercase letter to its lowercase form.</summary>
-    private const byte AsciiCaseBit = 0x20;
-
-    /// <summary>Initial-byte capacity hint for an emitted page; covers most pages without a resize.</summary>
-    private const int PageInitialCapacity = 2 * 1024;
-
-    /// <summary>Length of the <c>.md</c> source extension stripped before composing slugs.</summary>
-    private const int MarkdownExtensionLength = 3;
-
     /// <summary>Plugin options.</summary>
     private readonly TagsOptions _options;
 
@@ -64,7 +55,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
 
         Directory.CreateDirectory(tagsDir);
 
-        using var rental = PageBuilderPool.Rent(PageInitialCapacity);
+        using var rental = PageBuilderPool.Rent(TagsCommon.PageInitialCapacity);
         var sink = rental.Writer;
 
         WriteIndexMarkdown(sink, collected);
@@ -74,8 +65,8 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         {
             sink.ResetWrittenCount();
             WriteTagMarkdown(sink, pair.Key, pair.Value);
-            var slug = SlugifyTag(pair.Key);
-            var fileName = BuildSlugMarkdownFileName(slug);
+            var slug = TagsCommon.SlugifyTag(pair.Key);
+            var fileName = TagsCommon.BuildSlugFileName(slug, ".md");
             await File.WriteAllBytesAsync(tagsDir.File(fileName), sink.WrittenMemory, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -91,7 +82,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         CancellationToken cancellationToken)
     {
         const int InitialCapacity = 4;
-        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> map = new(ByteSequenceComparer.Instance);
+        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> map = new(ByteArrayComparer.Instance);
         var files = Directory.GetFiles(inputRoot, "*.md", SearchOption.AllDirectories);
         for (var i = 0; i < files.Length; i++)
         {
@@ -110,7 +101,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             }
 
             var relative = Path.GetRelativePath(inputRoot.Value, path);
-            var url = ToHtmlUrlBytes(relative);
+            var url = TagsCommon.MdRelativePathToHtmlUrlBytes(relative);
             var title = ExtractMarkdownTitle(bytes, fallback: url);
 
             for (var t = 0; t < tags.Length; t++)
@@ -127,7 +118,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
 
         foreach (var bucket in map.Values)
         {
-            bucket.Sort(static (a, b) => ByteSequenceComparer.Instance.Compare(a.Url, b.Url));
+            bucket.Sort(static (a, b) => ByteArrayComparer.Instance.Compare(a.Url, b.Url));
         }
 
         return map;
@@ -159,30 +150,6 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
 
         var next = path[dirValue.Length];
         return next == sep || next == altSep;
-    }
-
-    /// <summary>Translates a source-relative markdown path (e.g. <c>guide/intro.md</c>) to UTF-8 HTML URL bytes.</summary>
-    /// <param name="markdownRelativePath">Source-relative path with platform separators.</param>
-    /// <returns>UTF-8 forward-slashed bytes with the <c>.html</c> extension.</returns>
-    private static byte[] ToHtmlUrlBytes(string markdownRelativePath)
-    {
-        var span = markdownRelativePath.AsSpan();
-        var endsWithMd = span.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
-        var keep = endsWithMd ? span.Length - MarkdownExtensionLength : span.Length;
-        var totalLength = keep + (endsWithMd ? ".html".Length : 0);
-        var dst = new byte[totalLength];
-        for (var i = 0; i < keep; i++)
-        {
-            var c = span[i];
-            dst[i] = c is '\\' ? (byte)'/' : (byte)c;
-        }
-
-        if (endsWithMd)
-        {
-            ".html"u8.CopyTo(dst.AsSpan(keep));
-        }
-
-        return dst;
     }
 
     /// <summary>Pulls the first ATX <c>#</c> heading text out of <paramref name="markdownBytes"/> for use as the page title; falls back to <paramref name="fallback"/>.</summary>
@@ -226,7 +193,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             writer.Write("- ["u8);
             writer.Write(pair.Key);
             writer.Write("]("u8);
-            writer.Write(SlugifyTag(pair.Key));
+            writer.Write(TagsCommon.SlugifyTag(pair.Key));
             writer.Write(".md) ("u8);
             Utf8StringWriter.WriteInt32(writer, pair.Value.Count);
             writer.Write(")\n"u8);
@@ -251,100 +218,5 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             writer.Write(url);
             writer.Write(")\n"u8);
         }
-    }
-
-    /// <summary>Builds a <c>{slug}.md</c> file name from ASCII slug bytes in a single allocation.</summary>
-    /// <param name="slug">Slug bytes (ASCII alphanumeric / hyphen only, by construction of <see cref="SlugifyInto"/>).</param>
-    /// <returns>The slug followed by the <c>.md</c> extension.</returns>
-    private static string BuildSlugMarkdownFileName(byte[] slug) =>
-        string.Create(slug.Length + MarkdownExtensionLength, slug, static (dst, src) =>
-        {
-            for (var i = 0; i < src.Length; i++)
-            {
-                dst[i] = (char)src[i];
-            }
-
-            ".md".AsSpan().CopyTo(dst[src.Length..]);
-        });
-
-    /// <summary>Lowercases <paramref name="tag"/> and replaces non-alphanumeric ASCII runs with single hyphens for use as a filename.</summary>
-    /// <param name="tag">UTF-8 tag display bytes.</param>
-    /// <returns>UTF-8 filesystem-safe slug bytes; <c>"tag"</c> when the input has no slug-safe bytes.</returns>
-    private static byte[] SlugifyTag(ReadOnlySpan<byte> tag)
-    {
-        if (tag.IsEmpty)
-        {
-            return [.. "tag"u8];
-        }
-
-        var stack = tag.Length <= 256 ? stackalloc byte[tag.Length] : new byte[tag.Length];
-        var written = SlugifyInto(tag, stack);
-        return written is 0 ? [.. "tag"u8] : stack[..written].ToArray();
-    }
-
-    /// <summary>Writes the slug form of <paramref name="tag"/> into <paramref name="dst"/> and returns the count.</summary>
-    /// <param name="tag">UTF-8 source bytes.</param>
-    /// <param name="dst">Destination span.</param>
-    /// <returns>Number of bytes written.</returns>
-    private static int SlugifyInto(ReadOnlySpan<byte> tag, Span<byte> dst)
-    {
-        var count = 0;
-        var pendingHyphen = false;
-        for (var i = 0; i < tag.Length; i++)
-        {
-            var b = tag[i];
-            switch (b)
-            {
-                case >= (byte)'A' and <= (byte)'Z':
-                    {
-                        count = FlushHyphen(dst, count, pendingHyphen);
-                        dst[count++] = (byte)(b | AsciiCaseBit);
-                        pendingHyphen = false;
-                        continue;
-                    }
-
-                case >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9':
-                    {
-                        count = FlushHyphen(dst, count, pendingHyphen);
-                        dst[count++] = b;
-                        pendingHyphen = false;
-                        continue;
-                    }
-
-                default:
-                    {
-                        pendingHyphen = count is not 0;
-                        break;
-                    }
-            }
-        }
-
-        return count;
-    }
-
-    /// <summary>Appends a queued hyphen when one is pending and the buffer is non-empty.</summary>
-    /// <param name="dst">Destination span.</param>
-    /// <param name="count">Current count.</param>
-    /// <param name="pendingHyphen">Whether a hyphen is queued.</param>
-    /// <returns>Updated count.</returns>
-    private static int FlushHyphen(Span<byte> dst, int count, bool pendingHyphen)
-    {
-        if (!pendingHyphen || count is 0)
-        {
-            return count;
-        }
-
-        dst[count] = (byte)'-';
-        return count + 1;
-    }
-
-    /// <summary>Ordinal byte-sequence comparer used for the sorted tag and url buckets.</summary>
-    private sealed class ByteSequenceComparer : IComparer<byte[]>
-    {
-        /// <summary>Singleton instance.</summary>
-        public static readonly ByteSequenceComparer Instance = new();
-
-        /// <inheritdoc/>
-        public int Compare(byte[]? x, byte[]? y) => x.AsSpan().SequenceCompareTo(y);
     }
 }
