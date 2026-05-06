@@ -107,7 +107,9 @@ internal readonly record struct SingleStateLexerConfig
     /// <summary>Gets the optional operator alternation, sorted longest-first; <see langword="null"/> disables the rule.</summary>
     public byte[][]? Operators { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for <see cref="Operators"/>.</summary>
+    /// <summary>
+    /// Gets the optional first-byte dispatch set for <see cref="Operators"/>.
+    /// </summary>
     public SearchValues<byte>? OperatorFirst { get; init; }
 
     /// <summary>Gets the structural punctuation byte set; <see langword="null"/> disables the rule.</summary>

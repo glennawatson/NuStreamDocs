@@ -42,8 +42,11 @@ internal readonly record struct CFamilyConfig
     /// <summary>Gets the operator alternation, sorted longest-first.</summary>
     public byte[][] Operators { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for operators.</summary>
-    public SearchValues<byte> OperatorFirst { get; init; }
+    /// <summary>
+    /// Gets the optional first-byte dispatch set for operators;
+    /// <see langword="null"/> falls back to <see cref="OperatorAlternationFactory.FirstBytesOf"/> over <see cref="Operators"/>.
+    /// </summary>
+    public SearchValues<byte>? OperatorFirst { get; init; }
 
     /// <summary>Gets the structural punctuation byte set.</summary>
     public SearchValues<byte> Punctuation { get; init; }

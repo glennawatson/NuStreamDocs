@@ -76,7 +76,6 @@ public static class GraphQLLexer
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = null,
-            OperatorFirst = null,
             Punctuation = PunctuationSet
         };
 

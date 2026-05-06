@@ -186,16 +186,17 @@ internal static class SingleStateLexerRules
     /// <param name="firstBytes">First-byte dispatch set.</param>
     private static void AppendOperatorRule(List<LexerRule> rules, byte[][]? operators, SearchValues<byte>? firstBytes)
     {
-        if (operators is null || firstBytes is null)
+        if (operators is null)
         {
             return;
         }
 
         var captured = operators;
+        var dispatch = firstBytes ?? OperatorAlternationFactory.FirstBytesOf(operators);
         rules.Add(new(
             slice => TokenMatchers.MatchLongestLiteral(slice, captured),
             TokenClass.Operator,
-            LexerRule.NoStateChange) { FirstBytes = firstBytes });
+            LexerRule.NoStateChange) { FirstBytes = dispatch });
     }
 
     /// <summary>Appends the single-byte structural-punctuation rule to <paramref name="rules"/> when <paramref name="punctuation"/> is supplied.</summary>

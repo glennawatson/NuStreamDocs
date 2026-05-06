@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
@@ -14,54 +13,20 @@ namespace NuStreamDocs.Highlight.Languages;
 /// </remarks>
 public static class ElmLexer
 {
-    /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-        MlFamilyShared.CommonKeywordsLiteral,
-        "exposing"u8);
-
-    /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-        "Bool Char Float Int String List Maybe Result Cmd Sub Html Dict Set"u8);
-
-    /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-        "module import type alias port effect"u8);
-
-    /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
-        "True False Nothing Just Ok Err"u8);
-
     /// <summary>Operator alternation, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
         ":: -> <| |> <= >= /= == ++ .. && || + - * / = < > ."u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = OperatorAlternationFactory.FirstBytesOf(OperatorTable);
-
     /// <summary>Gets the singleton Elm lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Elm lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = MlFamilyRules.CreateLexer(new()
     {
-        MlFamilyConfig config = new()
-        {
-            BlockCommentOpen = [.. "{-"u8],
-            BlockCommentClose = [.. "-}"u8],
-            LineCommentPrefix = [.. "--"u8],
-            Keywords = Keywords,
-            KeywordFirst = Keywords.FirstByteSet,
-            KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypes.FirstByteSet,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarations.FirstByteSet,
-            KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstants.FirstByteSet,
-            Operators = OperatorTable,
-            OperatorFirst = OperatorFirst
-        };
-
-        return MlFamilyRules.CreateLexer(config);
-    }
+        BlockCommentOpen = [.. "{-"u8],
+        BlockCommentClose = [.. "-}"u8],
+        LineCommentPrefix = [.. "--"u8],
+        Keywords = ByteKeywordSet.CreateFromSpaceSeparated(MlFamilyShared.CommonKeywordsLiteral, "exposing"u8),
+        KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated("Bool Char Float Int String List Maybe Result Cmd Sub Html Dict Set"u8),
+        KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated("module import type alias port effect"u8),
+        KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("True False Nothing Just Ok Err"u8),
+        Operators = OperatorTable
+    });
 }

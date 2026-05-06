@@ -186,7 +186,8 @@ internal static class CFamilyRules
     private static LexerRule BuildOperatorRule(in CFamilyConfig config)
     {
         var operators = config.Operators;
-        return new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = config.OperatorFirst };
+        var firstBytes = config.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
+        return new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = firstBytes };
     }
 
     /// <summary>Single-byte punctuation rule.</summary>

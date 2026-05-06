@@ -57,7 +57,11 @@ internal readonly record struct SchemaFamilyConfig
     /// <summary>Gets the optional operator alternation, sorted longest-first; <see langword="null"/> disables the rule.</summary>
     public byte[][]? Operators { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for operators; only meaningful when <see cref="Operators"/> is non-null.</summary>
+    /// <summary>
+    /// Gets the optional first-byte dispatch set for operators;
+    /// <see langword="null"/> falls back to <see cref="OperatorAlternationFactory.FirstBytesOf"/> over <see cref="Operators"/>
+    /// (only meaningful when <see cref="Operators"/> is non-null).
+    /// </summary>
     public SearchValues<byte>? OperatorFirst { get; init; }
 
     /// <summary>Gets the structural punctuation byte set.</summary>

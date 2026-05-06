@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
@@ -34,9 +33,6 @@ public static class OcamlLexer
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
         "-> <- |> <> <= >= :: := && || == != + - * / = < > @ ^ !"u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = OperatorAlternationFactory.FirstBytesOf(OperatorTable);
-
     /// <summary>Gets the singleton OCaml lexer.</summary>
     public static Lexer Instance { get; } = Build();
 
@@ -53,8 +49,7 @@ public static class OcamlLexer
             KeywordTypes = KeywordTypes,
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
-            OperatorFirst = OperatorFirst
+            Operators = OperatorTable
         };
 
         return MlFamilyRules.CreateLexer(config);

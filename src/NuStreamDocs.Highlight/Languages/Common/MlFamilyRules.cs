@@ -80,7 +80,8 @@ internal static class MlFamilyRules
 
         // Operator alternation.
         var operators = config.Operators;
-        rules.Add(new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = config.OperatorFirst });
+        var operatorFirst = config.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
+        rules.Add(new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = operatorFirst });
 
         rules.Add(new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet });
 

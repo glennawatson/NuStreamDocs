@@ -85,7 +85,6 @@ public static class ProtobufLexer
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = null,
-            OperatorFirst = null,
             Punctuation = PunctuationSet
         };
 

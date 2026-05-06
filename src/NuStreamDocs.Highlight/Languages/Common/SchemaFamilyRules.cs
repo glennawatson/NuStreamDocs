@@ -91,8 +91,9 @@ internal static class SchemaFamilyRules
 
         rules.Add(new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart });
 
-        if (config.Operators is { } operators && config.OperatorFirst is { } opFirst)
+        if (config.Operators is { } operators)
         {
+            var opFirst = config.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
             rules.Add(new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = opFirst });
         }
 

@@ -39,9 +39,6 @@ public static class SqlLexer
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
         "<> != <= >= || + - * / % = < >"u8);
 
-    /// <summary>First-byte set for operators.</summary>
-    private static readonly SearchValues<byte> OperatorFirst = OperatorAlternationFactory.FirstBytesOf(OperatorTable);
-
     /// <summary>Single-byte structural punctuation.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(),;."u8);
 
@@ -71,7 +68,6 @@ public static class SqlLexer
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
             Punctuation = PunctuationSet,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,
