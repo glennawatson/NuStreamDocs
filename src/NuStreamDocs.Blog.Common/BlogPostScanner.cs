@@ -35,12 +35,6 @@ public static class BlogPostScanner
     /// <summary>Index of the third dash in the frontmatter fence.</summary>
     private const int FrontmatterFenceLastIndex = 2;
 
-    /// <summary>Length of the <c>.md</c> extension swapped for <c>.html</c> when computing post URLs.</summary>
-    private const int MarkdownExtensionLength = 3;
-
-    /// <summary>Gets the UTF-8 bytes of the rendered-post extension swapped in for <c>.md</c>.</summary>
-    private static ReadOnlySpan<byte> HtmlExtension => ".html"u8;
-
     /// <summary>Scans <paramref name="postsRoot"/> for Wyam-style blog posts.</summary>
     /// <param name="postsRoot">Absolute path to the directory holding the post files.</param>
     /// <param name="docsRoot">Absolute path to the docs root (used for the post's relative path).</param>
@@ -102,13 +96,15 @@ public static class BlogPostScanner
         // BCL boundary: Path.GetRelativePath operates on string paths.
         var relativePathString = Path.GetRelativePath(docsRoot.Value, absolutePath.Value);
         var relativePath = NormalizeRelativeFilePath(relativePathString);
-        var relativeUrlBytes = SwapMarkdownForHtml(NormalizeRelativePathBytes(relativePathString));
+        var relativeUrlBytes = NormalizeRelativePathBytes(relativePathString);
 
         return new(
             relativePath,
             relativeUrlBytes,
             slugBytes,
             titleBytes,
+            fm.Lead,
+            fm.Description,
             fm.Author,
             published,
             fm.Tags,
@@ -162,24 +158,6 @@ public static class BlogPostScanner
             }
         }
 
-        return dst;
-    }
-
-    /// <summary>Returns a copy of <paramref name="path"/> with a trailing <c>.md</c> swapped for <c>.html</c>; non-Markdown paths pass through unchanged.</summary>
-    /// <param name="path">Forward-slashed UTF-8 path bytes.</param>
-    /// <returns>UTF-8 URL bytes.</returns>
-    private static byte[] SwapMarkdownForHtml(byte[] path)
-    {
-        if (path.Length < MarkdownExtensionLength
-            || !AsciiByteHelpers.EqualsIgnoreAsciiCase(path.AsSpan(path.Length - MarkdownExtensionLength), ".md"u8))
-        {
-            return path;
-        }
-
-        var stemLength = path.Length - MarkdownExtensionLength;
-        var dst = new byte[stemLength + HtmlExtension.Length];
-        path.AsSpan(0, stemLength).CopyTo(dst);
-        HtmlExtension.CopyTo(dst.AsSpan(stemLength));
         return dst;
     }
 

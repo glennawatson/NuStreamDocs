@@ -20,9 +20,15 @@ public static class FrontmatterValueExtractor
     /// <param name="listKey">UTF-8 list-key bytes (e.g. <c>"hide"u8</c>).</param>
     /// <param name="entry">UTF-8 entry bytes to look for (e.g. <c>"navigation"u8</c>).</param>
     /// <returns>True when the entry is present in the block-list.</returns>
-    public static bool ListContains(ReadOnlySpan<byte> source, ReadOnlySpan<byte> listKey, ReadOnlySpan<byte> entry) =>
-        !listKey.IsEmpty && !entry.IsEmpty && TryGetFrontmatterAndKeyLine(source, listKey, out var frontmatter, out var lineEnd, out _)
-        && BlockListContains(frontmatter, lineEnd, entry);
+    public static bool ListContains(ReadOnlySpan<byte> source, ReadOnlySpan<byte> listKey, ReadOnlySpan<byte> entry)
+    {
+        if (listKey.IsEmpty || entry.IsEmpty || !TryGetFrontmatterAndKeyLine(source, listKey, out var frontmatter, out var lineEnd, out var afterColon))
+        {
+            return false;
+        }
+
+        return FlowListContains(afterColon, entry) || BlockListContains(frontmatter, lineEnd, entry);
+    }
 
     /// <summary>Returns the trimmed inline scalar value bytes for the top-level key <paramref name="keyBytes"/>, or empty when absent / non-scalar.</summary>
     /// <param name="source">UTF-8 markdown source bytes (frontmatter + body).</param>
@@ -200,6 +206,42 @@ public static class FrontmatterValueExtractor
                 WriteWithSpace(sink, value);
             }
         }
+    }
+
+    /// <summary>Returns true when the inline flow-style list (e.g. <c>[toc, navigation]</c>) contains <paramref name="entry"/>.</summary>
+    /// <param name="afterColon">Bytes after the colon on the key line.</param>
+    /// <param name="entry">Entry to search for.</param>
+    /// <returns>True when the flow list contains the entry.</returns>
+    private static bool FlowListContains(ReadOnlySpan<byte> afterColon, ReadOnlySpan<byte> entry)
+    {
+        var trimmed = YamlByteScanner.TrimWhitespace(afterColon);
+        if (trimmed is not [(byte)'[', .., (byte)']'])
+        {
+            return false;
+        }
+
+        var inner = trimmed[1..^1];
+        var cursor = 0;
+        while (cursor < inner.Length)
+        {
+            var rest = inner[cursor..];
+            var commaIdx = rest.IndexOf((byte)',');
+            var slice = commaIdx < 0 ? rest : rest[..commaIdx];
+            var item = YamlByteScanner.Unquote(YamlByteScanner.TrimWhitespace(slice));
+            if (item.SequenceEqual(entry))
+            {
+                return true;
+            }
+
+            if (commaIdx < 0)
+            {
+                break;
+            }
+
+            cursor += commaIdx + 1;
+        }
+
+        return false;
     }
 
     /// <summary>Probes the indented block-list children that follow <paramref name="cursor"/> for an item that equals <paramref name="entry"/>.</summary>

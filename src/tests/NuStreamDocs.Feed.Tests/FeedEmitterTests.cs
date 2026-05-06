@@ -77,7 +77,7 @@ public class FeedEmitterTests
     /// <summary>Builds a sample post that satisfies FeedWriter's required fields.</summary>
     /// <returns>One sample post.</returns>
     private static BlogPost TestPost() =>
-        new("posts/2026-01-01-hello.md", [.. "posts/2026-01-01-hello.html"u8], [.. "hello"u8], [.. "Hello"u8], [.. "Author"u8], new(2026, 1, 1), [], [.. "An excerpt."u8]);
+        new("posts/2026-01-01-hello.md", [.. "posts/2026-01-01-hello.html"u8], [.. "hello"u8], [.. "Hello"u8], [], [], [.. "Author"u8], new(2026, 1, 1), [], [.. "An excerpt."u8]);
 
     /// <summary>Builds a valid <see cref="FeedOptions"/> with the requested format flag.</summary>
     /// <param name="formats">Format flags.</param>

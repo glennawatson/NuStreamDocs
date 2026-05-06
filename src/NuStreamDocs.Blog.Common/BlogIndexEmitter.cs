@@ -17,20 +17,28 @@ namespace NuStreamDocs.Blog.Common;
 /// <remarks>
 /// Produces Markdown so the rest of the build pipeline (CommonMark
 /// scanner, plugin hooks, theme wrapping) treats blog index pages
-/// just like author-written pages. Posts are listed newest first;
-/// tags are emitted in alphabetical order; each post entry shows
-/// title (linked), publish date, author, and excerpt.
+/// just like author-written pages. Each post entry renders as a
+/// Material-3-style <c>&lt;article class="md-post"&gt;</c> card so the
+/// list reads like a magazine; the page itself emits
+/// <c>hide: [toc]</c> frontmatter so the right-side TOC sidebar
+/// disappears for catalogue pages.
 /// </remarks>
 public static class BlogIndexEmitter
 {
-    /// <summary>Date format used in the post summary line.</summary>
-    private const string PublishedDateFormat = "yyyy-MM-dd";
+    /// <summary>ISO date format used in the <c>datetime</c> attribute.</summary>
+    private const string IsoDateFormat = "yyyy-MM-dd";
+
+    /// <summary>Long display date format used as the visible <c>&lt;time&gt;</c> text.</summary>
+    private const string LongDateFormat = "MMMM d, yyyy";
 
     /// <summary>Initial byte-capacity hint for an emitted blog index page.</summary>
     private const int IndexInitialCapacity = 2 * 1024;
 
     /// <summary>Initial byte-capacity hint for an emitted archive page.</summary>
     private const int ArchiveInitialCapacity = 1024;
+
+    /// <summary>Gets the frontmatter block prefixed to every emitted index/archive page so the theme hides the right-side TOC sidebar.</summary>
+    private static ReadOnlySpan<byte> HideTocFrontmatter => "---\nhide:\n  - toc\n---\n\n"u8;
 
     /// <summary>Writes the blog index file bytes into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
@@ -47,6 +55,7 @@ public static class BlogIndexEmitter
 
         ArgumentNullException.ThrowIfNull(posts);
 
+        writer.Write(HideTocFrontmatter);
         writer.Write("# "u8);
         writer.Write(title);
         writer.Write("\n\n"u8);
@@ -59,7 +68,7 @@ public static class BlogIndexEmitter
 
         for (var i = 0; i < posts.Length; i++)
         {
-            AppendPostSummary(writer, posts[i], pageDirectoryRelativeUtf8);
+            AppendPostCard(writer, posts[i], pageDirectoryRelativeUtf8);
         }
     }
 
@@ -79,13 +88,14 @@ public static class BlogIndexEmitter
 
         ArgumentNullException.ThrowIfNull(posts);
 
+        writer.Write(HideTocFrontmatter);
         writer.Write("# Posts tagged \""u8);
         Utf8StringWriter.Write(writer, tag);
         writer.Write("\"\n\n"u8);
 
         for (var i = 0; i < posts.Length; i++)
         {
-            AppendPostSummary(writer, posts[i], pageDirectoryRelativeUtf8);
+            AppendPostCard(writer, posts[i], pageDirectoryRelativeUtf8);
         }
     }
 
@@ -97,77 +107,116 @@ public static class BlogIndexEmitter
     /// <returns>The writer.</returns>
     public static ArrayBufferWriter<byte> CreateArchiveWriter() => new(ArchiveInitialCapacity);
 
-    /// <summary>Appends one post's summary block to <paramref name="writer"/>.</summary>
+    /// <summary>Appends one post's card block to <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="post">Post.</param>
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the index / archive page's directory relative to the docs root.</param>
-    [SuppressMessage(
-        "Major Code Smell",
-        "S6585:Do not hardcode the format specifier",
-        Justification = "PublishedDateFormat is a named constant documented at its declaration.")]
-    private static void AppendPostSummary(IBufferWriter<byte> writer, BlogPost post, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
+    private static void AppendPostCard(IBufferWriter<byte> writer, BlogPost post, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
-        writer.Write("## ["u8);
-        Utf8StringWriter.Write(writer, post.Title);
-        writer.Write("]("u8);
+        writer.Write("<article class=\"md-post\">\n"u8);
+        AppendCardHeader(writer, post, pageDirectoryRelativeUtf8);
+        AppendCardMeta(writer, post);
+        AppendOptionalParagraph(writer, post.Description, "md-post__description"u8);
+        AppendOptionalParagraph(writer, post.Excerpt, "md-post__excerpt"u8);
+        AppendCardTags(writer, post.Tags);
+        writer.Write("</article>\n\n"u8);
+    }
+
+    /// <summary>Writes the header block (title link + optional lead).</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="post">Post.</param>
+    /// <param name="pageDirectoryRelativeUtf8">Page-relative directory bytes used for link rewriting.</param>
+    private static void AppendCardHeader(IBufferWriter<byte> writer, BlogPost post, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
+    {
+        writer.Write("  <header class=\"md-post__header\">\n"u8);
+        writer.Write("    <h3 class=\"md-post__title\"><a href=\""u8);
         Utf8RelativePath.WriteRelative(writer, pageDirectoryRelativeUtf8, post.RelativeUrlUtf8);
-        writer.Write(")\n_"u8);
-        WriteDate(writer, post.Published);
+        writer.Write("\">"u8);
+        XmlEntityEscaper.WriteEscaped(writer, post.Title, XmlEntityEscaper.Mode.Xml);
+        writer.Write("</a></h3>\n"u8);
+
+        if (post.Lead is [_, ..])
+        {
+            writer.Write("    <p class=\"md-post__lead\">"u8);
+            XmlEntityEscaper.WriteEscaped(writer, post.Lead, XmlEntityEscaper.Mode.Xml);
+            writer.Write("</p>\n"u8);
+        }
+
+        writer.Write("  </header>\n"u8);
+    }
+
+    /// <summary>Writes the meta block (publish date + optional author).</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="post">Post.</param>
+    private static void AppendCardMeta(IBufferWriter<byte> writer, BlogPost post)
+    {
+        writer.Write("  <div class=\"md-post__meta\">\n    <time datetime=\""u8);
+        WriteDate(writer, post.Published, IsoDateFormat);
+        writer.Write("\">"u8);
+        WriteDate(writer, post.Published, LongDateFormat);
+        writer.Write("</time>"u8);
 
         if (post.Author is [_, ..])
         {
-            writer.Write(" — "u8);
-            Utf8StringWriter.Write(writer, post.Author);
+            writer.Write("<span class=\"md-post__author\"> — "u8);
+            XmlEntityEscaper.WriteEscaped(writer, post.Author, XmlEntityEscaper.Mode.Xml);
+            writer.Write("</span>"u8);
         }
 
-        AppendTags(writer, post.Tags);
+        writer.Write("\n  </div>\n"u8);
+    }
 
-        writer.Write("_\n\n"u8);
-
-        if (post.Excerpt is [])
+    /// <summary>Writes a <c>&lt;p&gt;</c> with the given class when <paramref name="text"/> is non-empty.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="text">Body text bytes.</param>
+    /// <param name="cssClass">CSS class bytes.</param>
+    private static void AppendOptionalParagraph(IBufferWriter<byte> writer, byte[] text, ReadOnlySpan<byte> cssClass)
+    {
+        if (text is not [_, ..])
         {
             return;
         }
 
-        Utf8StringWriter.Write(writer, post.Excerpt);
-        writer.Write("\n\n"u8);
+        writer.Write("  <p class=\""u8);
+        writer.Write(cssClass);
+        writer.Write("\">"u8);
+        XmlEntityEscaper.WriteEscaped(writer, text, XmlEntityEscaper.Mode.Xml);
+        writer.Write("</p>\n"u8);
     }
 
-    /// <summary>Appends the tag suffix to a post-summary line when at least one tag is present.</summary>
+    /// <summary>Writes the tag pill row when at least one tag is present.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="tags">Tag list.</param>
-    private static void AppendTags(IBufferWriter<byte> writer, byte[][] tags)
+    private static void AppendCardTags(IBufferWriter<byte> writer, byte[][] tags)
     {
         if (tags is not [_, ..])
         {
             return;
         }
 
-        writer.Write(" — "u8);
+        writer.Write("  <div class=\"md-post__tags\">"u8);
         for (var t = 0; t < tags.Length; t++)
         {
-            if (t > 0)
-            {
-                writer.Write(", "u8);
-            }
-
-            writer.Write("`"u8);
-            Utf8StringWriter.Write(writer, tags[t]);
-            writer.Write("`"u8);
+            writer.Write("<span class=\"md-tag\">"u8);
+            XmlEntityEscaper.WriteEscaped(writer, tags[t], XmlEntityEscaper.Mode.Xml);
+            writer.Write("</span>"u8);
         }
+
+        writer.Write("</div>\n"u8);
     }
 
-    /// <summary>Formats <paramref name="published"/> directly into <paramref name="writer"/>.</summary>
+    /// <summary>Formats <paramref name="published"/> with <paramref name="format"/> directly into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="published">Date to write.</param>
+    /// <param name="format">Date format string.</param>
     [SuppressMessage(
         "Major Code Smell",
         "S6585:Do not hardcode the format specifier",
-        Justification = "PublishedDateFormat is a named constant documented at its declaration.")]
-    private static void WriteDate(IBufferWriter<byte> writer, in DateOnly published)
+        Justification = "IsoDateFormat / LongDateFormat are named constants documented at their declaration.")]
+    private static void WriteDate(IBufferWriter<byte> writer, in DateOnly published, string format)
     {
-        Span<char> chars = stackalloc char[PublishedDateFormat.Length];
-        if (!published.TryFormat(chars, out var written, PublishedDateFormat, CultureInfo.InvariantCulture))
+        Span<char> chars = stackalloc char[64];
+        if (!published.TryFormat(chars, out var written, format, CultureInfo.InvariantCulture))
         {
             return;
         }
