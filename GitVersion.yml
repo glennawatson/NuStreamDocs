@@ -1,0 +1,36 @@
+# GitVersion configuration.
+#
+# ContinuousDeployment mode: every commit on main produces a clean
+# MAJOR.MINOR.PATCH version. Patch increments per commit (height-driven);
+# major / minor bumps come from `+semver: major` / `+semver: minor`
+# trailers in commit messages, or by tagging.
+#
+# Tag prefix is `v` (matches the existing v0.0.0 / v0.0.0-alpha.* tags).
+
+mode: ContinuousDeployment
+tag-prefix: '[vV]?'
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{SemVer}+Branch.{BranchName}.Sha.{Sha}'
+
+branches:
+  main:
+    mode: ContinuousDeployment
+    label: ''
+    increment: Patch
+    is-main-branch: true
+
+  pull-request:
+    mode: ContinuousDelivery
+    label: 'PullRequest{Number}'
+    increment: Inherit
+
+  feature:
+    mode: ContinuousDelivery
+    label: 'alpha'
+    increment: Inherit
+
+ignore:
+  sha: []
+
+merge-message-formats: {}

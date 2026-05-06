@@ -26,20 +26,12 @@
 
     <ReportAnalyzer>true</ReportAnalyzer>
 
-    <!-- MinVer pre-release defaults: untagged commits ride the next minor as alpha. -->
-    <MinVerAutoIncrement>minor</MinVerAutoIncrement>
-    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
-    <MinVerTagPrefix>v</MinVerTagPrefix>
-    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
-
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
 
     <IsAotCompatible>true</IsAotCompatible>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <EnableAotAnalyzer>true</EnableAotAnalyzer>
 
-    <!-- Emit source-generator output to disk so generated files are reviewable.
-         Lands under obj/<Configuration>/<TargetFramework>/Generated/<GeneratorAssembly>/<GeneratorClass>. -->
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>$(MSBuildProjectDirectory)/obj/Generated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
@@ -52,7 +44,7 @@
     <TUnitImplicitUsings>true</TUnitImplicitUsings>
     <TUnitAssertionsImplicitUsings>true</TUnitAssertionsImplicitUsings>
   </PropertyGroup>
-  
+
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <PackageReference Include="TUnit" />
     <PackageReference Include="Verify.TUnit" />
@@ -60,8 +52,6 @@
     <PackageReference Include="NSubstitute" />
   </ItemGroup>
 
-  <!-- Per-test-assembly testconfig.json copied next to the binary so the
-       MTP coverage extension picks up format + exclusion rules. -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <None Include="$(MSBuildThisFileDirectory)testconfig.json">
       <Link>$(AssemblyName).testconfig.json</Link>
@@ -75,7 +65,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="MinVer" PrivateAssets="all" />
+    <PackageReference Include="GitVersion.MsBuild" PrivateAssets="all" />
     <PackageReference Include="stylecop.analyzers" PrivateAssets="all" />
     <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" />
     <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All" />

@@ -2,17 +2,15 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      bump:
-        description: "Auto-increment level for the new tag (major / minor / patch)."
-        required: true
-        default: "minor"
-        type: choice
-        options: [major, minor, patch]
 
 permissions:
   contents: write
   id-token: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 jobs:
   release:
@@ -37,21 +35,23 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Install minver-cli
-        run: dotnet tool install -g minver-cli
+      - name: Install GitVersion CLI
+        run: dotnet tool install -g GitVersion.Tool
 
-      - name: Compute next version + create tag
+      - name: Resolve version (GitVersion)
         id: ver
         run: |
-          VERSION="$(minver --tag-prefix v --auto-increment ${{ inputs.bump }} --default-pre-release-identifiers '')"
+          # GitVersion is the source of truth — ContinuousDeployment on main
+          # gives a clean MAJOR.MINOR.PATCH driven by height. No tag bumping,
+          # no manual choices.
+          VERSION="$(dotnet-gitversion /showvariable MajorMinorPatch)"
+          if [ -z "$VERSION" ]; then
+            echo "GitVersion returned empty version." >&2
+            exit 1
+          fi
+          echo "Resolved version: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-          # Propagate to every downstream MSBuild call so per-project MinVer tasks short-circuit.
-          echo "MINVERVERSIONOVERRIDE=$VERSION" >> "$GITHUB_ENV"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
+          echo "tag=v$VERSION"   >> "$GITHUB_OUTPUT"
 
       - name: Restore
         run: dotnet restore src/NuStreamDocs.slnx
@@ -105,4 +105,6 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+        # gh release create creates the tag at HEAD automatically — no explicit
+        # `git tag` step needed.
         run: gh release create "${{ steps.ver.outputs.tag }}" --repo "${{ github.repository }}" --title "${{ steps.ver.outputs.version }}" --notes-file release-notes.md ./signed/*.nupkg

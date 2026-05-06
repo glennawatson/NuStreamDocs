@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
 jobs:
   build:
     strategy:
@@ -16,9 +21,6 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    env:
-      # CI builds aren't shipped, so a static override skips MinVer's per-project git walk.
-      MINVERVERSIONOVERRIDE: 0.0.0-ci.0+${{ github.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
