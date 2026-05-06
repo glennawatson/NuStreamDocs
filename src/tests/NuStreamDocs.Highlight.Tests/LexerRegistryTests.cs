@@ -3,7 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
-using NuStreamDocs.Highlight.Languages;
+using NuStreamDocs.Highlight.Languages.Misc;
+using NuStreamDocs.Highlight.Languages.Scripting;
 
 namespace NuStreamDocs.Highlight.Tests;
 

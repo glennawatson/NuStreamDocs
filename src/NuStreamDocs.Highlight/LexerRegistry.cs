@@ -5,7 +5,16 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NuStreamDocs.Common;
-using NuStreamDocs.Highlight.Languages;
+using NuStreamDocs.Highlight.Languages.Asm;
+using NuStreamDocs.Highlight.Languages.Build;
+using NuStreamDocs.Highlight.Languages.CFamily;
+using NuStreamDocs.Highlight.Languages.Data;
+using NuStreamDocs.Highlight.Languages.Functional;
+using NuStreamDocs.Highlight.Languages.Markup;
+using NuStreamDocs.Highlight.Languages.Misc;
+using NuStreamDocs.Highlight.Languages.Schema;
+using NuStreamDocs.Highlight.Languages.Scripting;
+using NuStreamDocs.Highlight.Languages.Stylesheet;
 
 namespace NuStreamDocs.Highlight;
 

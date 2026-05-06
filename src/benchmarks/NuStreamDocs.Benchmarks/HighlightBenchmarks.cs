@@ -5,7 +5,12 @@
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
 using NuStreamDocs.Highlight;
-using NuStreamDocs.Highlight.Languages;
+using NuStreamDocs.Highlight.Languages.CFamily;
+using NuStreamDocs.Highlight.Languages.Data;
+using NuStreamDocs.Highlight.Languages.Functional;
+using NuStreamDocs.Highlight.Languages.Markup;
+using NuStreamDocs.Highlight.Languages.Misc;
+using NuStreamDocs.Highlight.Languages.Scripting;
 
 namespace NuStreamDocs.Benchmarks;
 

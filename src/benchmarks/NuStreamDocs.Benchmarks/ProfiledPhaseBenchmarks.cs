@@ -10,7 +10,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using NuStreamDocs.Building;
 using NuStreamDocs.Highlight;
-using NuStreamDocs.Highlight.Languages;
+using NuStreamDocs.Highlight.Languages.CFamily;
 using NuStreamDocs.Markdown;
 
 namespace NuStreamDocs.Benchmarks;

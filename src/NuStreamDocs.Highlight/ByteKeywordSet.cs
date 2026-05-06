@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight;
 
@@ -166,7 +167,7 @@ public sealed class ByteKeywordSet
     /// <param name="source">Source bytes.</param>
     /// <returns>Per-token byte arrays.</returns>
     private static byte[][] SplitSpaceSeparated(ReadOnlySpan<byte> source) =>
-        Languages.Common.WhitespaceSplitter.Split(source);
+        WhitespaceSplitter.Split(source);
 
     /// <summary>Splits two UTF-8 byte chunks on ASCII space / tab into a single token table; equivalent to splitting their concatenation with a separator between.</summary>
     /// <param name="first">First source bytes.</param>
@@ -174,8 +175,8 @@ public sealed class ByteKeywordSet
     /// <returns>Per-token byte arrays from both chunks.</returns>
     private static byte[][] SplitTwoChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second)
     {
-        var firstTokens = Languages.Common.WhitespaceSplitter.Split(first);
-        var secondTokens = Languages.Common.WhitespaceSplitter.Split(second);
+        var firstTokens = WhitespaceSplitter.Split(first);
+        var secondTokens = WhitespaceSplitter.Split(second);
         if (secondTokens.Length is 0)
         {
             return firstTokens;
@@ -199,9 +200,9 @@ public sealed class ByteKeywordSet
     /// <returns>Per-token byte arrays from all three chunks.</returns>
     private static byte[][] SplitThreeChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, ReadOnlySpan<byte> third)
     {
-        var firstTokens = Languages.Common.WhitespaceSplitter.Split(first);
-        var secondTokens = Languages.Common.WhitespaceSplitter.Split(second);
-        var thirdTokens = Languages.Common.WhitespaceSplitter.Split(third);
+        var firstTokens = WhitespaceSplitter.Split(first);
+        var secondTokens = WhitespaceSplitter.Split(second);
+        var thirdTokens = WhitespaceSplitter.Split(third);
         var total = firstTokens.Length + secondTokens.Length + thirdTokens.Length;
         if (total is 0)
         {
@@ -226,10 +227,10 @@ public sealed class ByteKeywordSet
     /// <returns>Per-token byte arrays from all four chunks.</returns>
     private static byte[][] SplitFourChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, ReadOnlySpan<byte> third, ReadOnlySpan<byte> fourth)
     {
-        var firstTokens = Languages.Common.WhitespaceSplitter.Split(first);
-        var secondTokens = Languages.Common.WhitespaceSplitter.Split(second);
-        var thirdTokens = Languages.Common.WhitespaceSplitter.Split(third);
-        var fourthTokens = Languages.Common.WhitespaceSplitter.Split(fourth);
+        var firstTokens = WhitespaceSplitter.Split(first);
+        var secondTokens = WhitespaceSplitter.Split(second);
+        var thirdTokens = WhitespaceSplitter.Split(third);
+        var fourthTokens = WhitespaceSplitter.Split(fourth);
         var total = firstTokens.Length + secondTokens.Length + thirdTokens.Length + fourthTokens.Length;
         if (total is 0)
         {

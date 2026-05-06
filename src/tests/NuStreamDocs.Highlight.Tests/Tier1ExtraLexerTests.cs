@@ -2,7 +2,11 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Highlight.Languages;
+using NuStreamDocs.Highlight.Languages.Build;
+using NuStreamDocs.Highlight.Languages.CFamily;
+using NuStreamDocs.Highlight.Languages.Data;
+using NuStreamDocs.Highlight.Languages.Markup;
+using NuStreamDocs.Highlight.Languages.Scripting;
 
 namespace NuStreamDocs.Highlight.Tests;
 
