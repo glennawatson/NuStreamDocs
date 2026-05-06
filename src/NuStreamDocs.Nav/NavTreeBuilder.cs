@@ -298,7 +298,7 @@ internal static class NavTreeBuilder
     /// <returns>The section node for <paramref name="directory"/>, or null when a <c>.pages</c> override hides the section.</returns>
     private static NavNode? BuildSection(DirectoryPath root, DirectoryPath directory, Matcher? matcher, in NavOptions options, bool useDirectoryUrls, ILogger logger)
     {
-        var pagesOverride = PagesFileReader.ReadOrEmpty(Path.Combine(directory, PagesFileName));
+        var pagesOverride = PagesFileReader.ReadOrEmpty(directory.File(PagesFileName));
         if (pagesOverride.Hide && directory != root)
         {
             var hiddenRelative = NavPathHelper.ToForwardSlashRelative(root, directory);

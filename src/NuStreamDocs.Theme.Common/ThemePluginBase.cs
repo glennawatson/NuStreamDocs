@@ -17,7 +17,7 @@ namespace NuStreamDocs.Theme.Common;
 /// <typeparam name="TTheme">Loaded theme bundle type.</typeparam>
 /// <typeparam name="TOptions">Theme option shape.</typeparam>
 public abstract class ThemePluginBase<TTheme, TOptions>
-    : IBuildConfigurePlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
+    : IBuildConfigurePlugin, IBuildDiscoverPlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
     where TTheme : class, IThemePackage
     where TOptions : struct, IThemeShellOptions
 {
@@ -87,8 +87,18 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <inheritdoc/>
     public PluginPriority FinalizePriority => PluginPriority.Normal;
 
+    /// <inheritdoc/>
+    public PluginPriority DiscoverPriority => new(PluginBand.Latest);
+
     /// <summary>Gets the loaded theme.</summary>
     protected TTheme LoadedTheme { get; }
+
+    /// <inheritdoc/>
+    public ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        return EnsureDefault404SourceAsync(context.InputRoot, TryReadThemeAsset);
+    }
 
     /// <inheritdoc/>
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
@@ -187,8 +197,12 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         StaticAssetComposer.WriteAll(_plugins, root);
-        await EmitDefault404Async(root, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>Reads an embedded asset (relative to the theme's <c>Templates/</c> root) as UTF-8 bytes; <see langword="null"/> when the theme does not ship the asset.</summary>
+    /// <param name="relativePath">Forward-slashed path under the theme's <c>Templates/</c>.</param>
+    /// <returns>Asset bytes, or <see langword="null"/> when absent.</returns>
+    protected virtual byte[]? TryReadThemeAsset(FilePath relativePath) => null;
 
     /// <summary>Probes <paramref name="inputRoot"/> for a conventional favicon file when the user hasn't configured one explicitly.</summary>
     /// <param name="inputRoot">Docs root.</param>
@@ -476,6 +490,13 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return assetRoot;
         }
 
+        // 404 pages are served by static hosts (and the dev server) for any not-found URL, so
+        // relative paths break — emit site-rooted URLs that resolve regardless of the request path.
+        if (Is404Page(relativePath))
+        {
+            return assetRoot is [(byte)'/', ..] ? assetRoot : SiteRooted(assetRoot);
+        }
+
         // Strip a leading '/' so concatenation with the page-relative prefix doesn't produce a site-root absolute URL.
         var trimmed = assetRoot is [(byte)'/', ..] ? assetRoot[1..] : assetRoot;
         var prefix = PageRelativePrefixBytes(PageDepth(relativePath, useDirectoryUrls));
@@ -490,6 +511,23 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         return dst;
     }
 
+    /// <summary>True when <paramref name="relativePath"/> is the conventional <c>404.md</c> at the site root.</summary>
+    /// <param name="relativePath">Source-relative page path.</param>
+    /// <returns>True for the 404 page.</returns>
+    private static bool Is404Page(FilePath relativePath) =>
+        string.Equals(relativePath.Value, "404.md", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Prefixes <paramref name="path"/> with <c>/</c> to anchor it at the site root.</summary>
+    /// <param name="path">UTF-8 path bytes.</param>
+    /// <returns>A site-rooted byte array.</returns>
+    private static byte[] SiteRooted(ReadOnlySpan<byte> path)
+    {
+        var dst = new byte[path.Length + 1];
+        dst[0] = (byte)'/';
+        path.CopyTo(dst.AsSpan(1));
+        return dst;
+    }
+
     /// <summary>Rewrites a configured href (site-root absolute <c>/foo</c> or relative <c>foo</c>) to be page-relative for the current page; leaves absolute http(s) URLs untouched.</summary>
     /// <param name="href">UTF-8 href from the theme options.</param>
     /// <param name="relativePath">Source-relative page path.</param>
@@ -500,6 +538,11 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         if (href is [] || IsAbsoluteUrl(href))
         {
             return href;
+        }
+
+        if (Is404Page(relativePath))
+        {
+            return href is [(byte)'/', ..] ? href : SiteRooted(href);
         }
 
         var span = href.AsSpan();
@@ -530,6 +573,11 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
         var source = headExtras.AsSpan();
         if (source.IndexOf("/assets/"u8) < 0)
+        {
+            return headExtras;
+        }
+
+        if (Is404Page(relativePath))
         {
             return headExtras;
         }
@@ -666,17 +714,25 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         return html;
     }
 
-    /// <summary>Writes a default <c>404.html</c> at the site root when the user hasn't supplied one.</summary>
-    /// <param name="root">Absolute output root.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <summary>Writes a default <c>404.md</c> source page from the theme's embedded <c>Templates/404.md</c> when the user hasn't authored one.</summary>
+    /// <param name="inputRoot">Absolute docs root.</param>
+    /// <param name="readThemeAsset">Per-theme embedded-resource reader.</param>
     /// <returns>Async task.</returns>
-    private ValueTask EmitDefault404Async(DirectoryPath root, CancellationToken cancellationToken)
+    private static ValueTask EnsureDefault404SourceAsync(DirectoryPath inputRoot, Func<FilePath, byte[]?> readThemeAsset)
     {
-        var stylesheetRel = _options.PrimaryStylesheetRelativeUrl;
-        var stylesheetUrl = stylesheetRel is [_, ..]
-            ? Utf8Concat.Concat(_assetRoot, stylesheetRel)
-            : [];
-        return NotFoundPageWriter.WriteIfMissingAsync(root, _options.SiteName ?? [], stylesheetUrl, _resolvedFavicon, cancellationToken);
+        if (inputRoot.IsEmpty || !Directory.Exists(inputRoot.Value))
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        var target = Path.Combine(inputRoot.Value, "404.md");
+        if (File.Exists(target))
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        var body = readThemeAsset((FilePath)"404.md");
+        return body is null ? ValueTask.CompletedTask : new(File.WriteAllBytesAsync(target, body));
     }
 
     /// <summary>Picks the effective favicon URL: explicit option → docs-tree probe → theme-bundled default → empty.</summary>

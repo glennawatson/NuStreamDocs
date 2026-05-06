@@ -186,7 +186,7 @@ public static class VersionsManifest
             return [];
         }
 
-        var bytes = File.ReadAllBytes(path);
+        var bytes = ((FilePath)path).ReadAllBytes();
         return ReadFromUtf8(bytes);
     }
 }

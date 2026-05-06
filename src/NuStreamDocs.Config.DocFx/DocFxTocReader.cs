@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Nav;
 
 namespace NuStreamDocs.Config.DocFx;
@@ -62,7 +63,7 @@ public static class DocFxTocReader
     /// <returns>Decoded entries.</returns>
     private static NavEntry[] ParseEntries(string rootDirectory, string currentDirectory, ReadOnlySpan<byte> utf8)
     {
-        TocLineParser lines = new(utf8);
+        TocLineParser lines = new(Utf8Bom.Strip(utf8));
         return ParseSequenceAt(rootDirectory, currentDirectory, ref lines, baseIndent: -1);
     }
 

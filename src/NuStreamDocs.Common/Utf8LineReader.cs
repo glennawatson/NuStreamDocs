@@ -53,6 +53,9 @@ public sealed class Utf8LineReader : IDisposable
     /// <summary>True when the underlying stream has reported end-of-input.</summary>
     private bool _streamExhausted;
 
+    /// <summary>True after the first line read has tested for a leading UTF-8 BOM and skipped it.</summary>
+    private bool _bomChecked;
+
     /// <summary>Initializes a new instance of the <see cref="Utf8LineReader"/> class.</summary>
     /// <param name="stream">UTF-8 source stream.</param>
     /// <param name="leaveOpen">When false, dispose the stream on <see cref="Dispose"/>.</param>
@@ -75,6 +78,11 @@ public sealed class Utf8LineReader : IDisposable
         // FillAsync which is guaranteed to either grow the buffer or
         // mark the stream exhausted — so at most O(file-size /
         // chunk-size) trips before we hit one of the return paths.
+        if (!_bomChecked)
+        {
+            await EnsureBomCheckedAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         while (!_streamExhausted || _end > _start)
         {
             var unread = _buffer.AsMemory(_start, _end - _start);
@@ -166,5 +174,19 @@ public sealed class Utf8LineReader : IDisposable
         }
 
         _end += read;
+    }
+
+    /// <summary>Skips a leading UTF-8 BOM if one is present at the start of the buffered stream.</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes once the BOM check has run.</returns>
+    private async ValueTask EnsureBomCheckedAsync(CancellationToken cancellationToken)
+    {
+        while (_end - _start < Utf8Bom.Length && !_streamExhausted)
+        {
+            await FillAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        _bomChecked = true;
+        _start += Utf8Bom.LengthOf(_buffer.AsSpan(_start, _end - _start));
     }
 }

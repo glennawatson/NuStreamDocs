@@ -147,7 +147,7 @@
           var terms = normalized.split(/\s+/).filter(Boolean);
           var records = Array.isArray(manifest.records) ? manifest.records : [];
           var matches = [];
-          for (var i = 0; i < records.length && matches.length < 20; i++) {
+          for (var i = 0; i < records.length; i++) {
             var record = records[i];
             var target = (cleanSearchText(record.title) + " " + record.url).toLowerCase();
             var matched = true;
@@ -163,7 +163,13 @@
             }
           }
 
-          renderMatches(matches);
+          matches.sort(function (a, b) {
+            var aApi = (a.url || "").indexOf("/api/") >= 0 ? 1 : 0;
+            var bApi = (b.url || "").indexOf("/api/") >= 0 ? 1 : 0;
+            return aApi - bApi;
+          });
+
+          renderMatches(matches.slice(0, 20));
         })
         .catch(function () {
           clearResults();
@@ -279,6 +285,16 @@
     apply(preferred());
     initializeSearch();
     initializeRepoStats();
+
+    var drawerBtn = document.querySelector("[data-md-component=\"hamburger\"]");
+    var drawerCheckbox = document.getElementById("__drawer");
+    if (drawerBtn && drawerCheckbox) {
+      drawerBtn.addEventListener("click", function () {
+        var next = !drawerCheckbox.checked;
+        drawerCheckbox.checked = next;
+        drawerBtn.setAttribute("aria-expanded", next ? "true" : "false");
+      });
+    }
 
     var btn = document.querySelector("[data-md-component=\"palette-toggle\"]");
     if (!btn) { return; }

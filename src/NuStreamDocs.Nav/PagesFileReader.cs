@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
@@ -23,7 +24,7 @@ internal static class PagesFileReader
     /// <summary>Reads a <c>.pages</c> file from <paramref name="path"/>; returns <see cref="PagesFile.Empty"/> when missing.</summary>
     /// <param name="path">Absolute path to the candidate <c>.pages</c> file.</param>
     /// <returns>Parsed override.</returns>
-    public static PagesFile ReadOrEmpty(string path) => !File.Exists(path) ? PagesFile.Empty : Parse(File.ReadAllBytes(path));
+    public static PagesFile ReadOrEmpty(FilePath path) => !path.Exists() ? PagesFile.Empty : Parse(path.ReadAllBytes());
 
     /// <summary>Parses <paramref name="source"/> into a <see cref="PagesFile"/>.</summary>
     /// <param name="source">UTF-8 file bytes.</param>

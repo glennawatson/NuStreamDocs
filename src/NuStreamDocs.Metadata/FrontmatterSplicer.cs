@@ -58,33 +58,8 @@ internal static class FrontmatterSplicer
     /// <returns>Byte offset of the first body byte; 0 when no frontmatter is present.</returns>
     private static int FindFrontmatterEnd(ReadOnlySpan<byte> source, out bool hasFrontmatter)
     {
-        hasFrontmatter = false;
-        if (!source.StartsWith("---"u8))
-        {
-            return 0;
-        }
-
-        var afterFirst = "---"u8.Length;
-        if (afterFirst >= source.Length || source[afterFirst] is not (byte)'\n' and not (byte)'\r')
-        {
-            return 0;
-        }
-
-        var cursor = YamlByteScanner.LineEnd(source, 0);
-        while (cursor < source.Length)
-        {
-            var lineEnd = YamlByteScanner.LineEnd(source, cursor);
-            var line = source[cursor..lineEnd].TrimEnd((byte)'\n').TrimEnd((byte)'\r');
-            if (line.SequenceEqual("---"u8))
-            {
-                hasFrontmatter = true;
-                return lineEnd;
-            }
-
-            cursor = lineEnd;
-        }
-
-        return 0;
+        hasFrontmatter = YamlByteScanner.TryFindFrontmatter(source, out _, out var bodyStart);
+        return hasFrontmatter ? bodyStart : 0;
     }
 
     /// <summary>Returns the offset of the first byte of the closing <c>---</c> line, given the offset of the first body byte (<paramref name="bodyStart"/>).</summary>

@@ -151,6 +151,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <param name="sink">Destination dictionary; existing keys are overwritten when re-declared in the file.</param>
     private static void LoadFlatYaml(ReadOnlySpan<byte> bytes, Dictionary<byte[], byte[]> sink)
     {
+        bytes = Utf8Bom.Strip(bytes);
         var cursor = 0;
         while (cursor < bytes.Length)
         {
@@ -181,6 +182,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <returns>Each list entry as raw UTF-8 bytes; empty when the key is absent or has no list value.</returns>
     private static byte[][] ExtractAliases(ReadOnlySpan<byte> source, ReadOnlySpan<byte> keyBytes)
     {
+        source = Utf8Bom.Strip(source);
         if (!source.StartsWith(YamlByteScanner.FrontmatterDelimiter))
         {
             return [];

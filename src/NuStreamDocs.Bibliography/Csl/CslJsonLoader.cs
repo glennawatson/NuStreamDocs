@@ -31,7 +31,7 @@ internal static class CslJsonLoader
     public static IReadOnlyList<CitationEntry> LoadFile(FilePath path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
-        var bytes = File.ReadAllBytes(path.Value);
+        var bytes = path.ReadAllBytes();
         return Parse(bytes);
     }
 

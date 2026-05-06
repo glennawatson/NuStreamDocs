@@ -211,8 +211,9 @@ public static class BuildPipeline
         try
         {
             await RandomAccess.ReadAsync(sourceHandle, sourceBuffer.AsMemory(0, sourceLength), 0, cancellationToken).ConfigureAwait(false);
-            var source = sourceBuffer.AsMemory(0, sourceLength);
-            var hash = ContentHasher.Hash(source.Span);
+            var raw = sourceBuffer.AsMemory(0, sourceLength);
+            var hash = ContentHasher.Hash(raw.Span);
+            var source = raw[Utf8Bom.LengthOf(raw.Span)..];
             var outputPath = OutputPathFor(outputRoot, item.RelativePath, useDirectoryUrls);
             var phases = dispatch.Phases;
             var pluginTiming = dispatch.PluginTiming;

@@ -115,19 +115,20 @@ public readonly record struct FilePath(string Value)
     /// <returns>True when the file exists; otherwise false.</returns>
     public bool Exists() => File.Exists(Value);
 
-    /// <summary>Reads the file's contents as raw UTF-8 bytes.</summary>
+    /// <summary>Reads the file's contents as UTF-8 bytes, stripping any leading BOM.</summary>
     /// <returns>The file bytes.</returns>
-    public byte[] ReadAllBytes() => File.ReadAllBytes(Value);
+    public byte[] ReadAllBytes() => Utf8Bom.StripIfPresent(File.ReadAllBytes(Value));
 
-    /// <summary>Asynchronously reads the file's contents as raw UTF-8 bytes.</summary>
+    /// <summary>Asynchronously reads the file's contents as UTF-8 bytes, stripping any leading BOM.</summary>
     /// <returns>The file bytes.</returns>
-    public Task<byte[]> ReadAllBytesAsync() => File.ReadAllBytesAsync(Value);
+    public async Task<byte[]> ReadAllBytesAsync() =>
+        Utf8Bom.StripIfPresent(await File.ReadAllBytesAsync(Value).ConfigureAwait(false));
 
-    /// <summary>Asynchronously reads the file's contents as raw UTF-8 bytes.</summary>
+    /// <summary>Asynchronously reads the file's contents as UTF-8 bytes, stripping any leading BOM.</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The file bytes.</returns>
-    public Task<byte[]> ReadAllBytesAsync(CancellationToken cancellationToken) =>
-        File.ReadAllBytesAsync(Value, cancellationToken);
+    public async Task<byte[]> ReadAllBytesAsync(CancellationToken cancellationToken) =>
+        Utf8Bom.StripIfPresent(await File.ReadAllBytesAsync(Value, cancellationToken).ConfigureAwait(false));
 
     /// <summary>Writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
     /// <param name="bytes">Source bytes.</param>

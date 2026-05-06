@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text.Json;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Config.MkDocs;
 
@@ -34,10 +35,11 @@ public static class ConfigReaderJsonPipeline
     {
         ArgumentNullException.ThrowIfNull(convert);
 
+        var stripped = Utf8Bom.Strip(utf8Source);
         ArrayBufferWriter<byte> jsonBuffer = new();
         using (Utf8JsonWriter jsonWriter = new(jsonBuffer))
         {
-            convert(utf8Source, jsonWriter);
+            convert(stripped, jsonWriter);
         }
 
         return MkDocsConfigJsonParser.FromJson(jsonBuffer.WrittenSpan);

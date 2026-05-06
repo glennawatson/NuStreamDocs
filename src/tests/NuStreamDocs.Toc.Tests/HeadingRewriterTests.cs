@@ -24,7 +24,7 @@ public class HeadingRewriterTests
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
         await Assert.That(output).Contains("<h2 id=\"hello-world\">");
-        await Assert.That(output).Contains("<a class=\"headerlink\" href=\"#hello-world\" title=\"Permanent link\">¶</a>");
+        await Assert.That(output).Contains("<a class=\"headerlink\" href=\"#hello-world\" title=\"Permanent link\" aria-label=\"Permalink to this section\">¶</a>");
         await Assert.That(output).Contains("</h2>");
     }
 

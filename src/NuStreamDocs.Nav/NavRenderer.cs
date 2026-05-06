@@ -481,7 +481,7 @@ internal static class NavRenderer
     /// <param name="writer">UTF-8 sink.</param>
     private static void WriteLeaf(in NavTreeNode node, bool active, IBufferWriter<byte> writer)
     {
-        WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
+        WriteUtf8(writer, active ? "<a class=\"md-nav__link md-nav__link--active\" aria-current=\"page\" href=\""u8 : "<a class=\"md-nav__link\" href=\""u8);
         WriteRootRelativeHref(writer, node.RelativeUrlBytes, appendTrailingSlash: false);
         WriteUtf8(writer, "\">"u8);
         WriteTitleSpan(writer, IsTopLevelHomePage(in node) ? "Home"u8 : node.Title);

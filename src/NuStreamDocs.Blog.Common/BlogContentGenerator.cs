@@ -60,6 +60,10 @@ public static class BlogContentGenerator
         BlogIndexEmitter.WriteIndex(writer, options.IndexTitle, posts, indexDirectoryRelativeUtf8);
         await File.WriteAllBytesAsync(options.IndexPath, writer.WrittenMemory, cancellationToken).ConfigureAwait(false);
 
+        var pagesFilePath = Path.Combine(indexDirectory.Value, ".pages");
+        var pagesBytes = BlogPagesFileEmitter.Render(posts);
+        await File.WriteAllBytesAsync(pagesFilePath, pagesBytes, cancellationToken).ConfigureAwait(false);
+
         if (!options.EmitArchives)
         {
             BlogLoggingHelper.LogIndexGenerated(logger, options.IndexPath.Value, 0);

@@ -40,9 +40,9 @@
       {{> footer}}
     </div>
     {{#scroll_to_top}}
-    <a href="#" class="md-top" data-md-component="top" aria-label="Back to top" hidden>&#8593;</a>
-    <style>.md-top{position:fixed;right:1rem;bottom:1rem;display:inline-flex;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;border-radius:50%;background:#448aff;color:#fff;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:opacity .15s ease}.md-top[hidden]{display:none}</style>
-    <script>(function(){var b=document.querySelector('[data-md-component=top]');if(!b)return;b.addEventListener('click',function(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'})});function u(){if(window.scrollY>200)b.removeAttribute('hidden');else b.setAttribute('hidden','')}u();window.addEventListener('scroll',u,{passive:true})})();</script>
+    <button type="button" class="md-top" data-md-component="top" aria-label="Back to top" hidden>&#8593;</button>
+    <style>.md-top{position:fixed;right:1rem;bottom:1rem;display:inline-flex;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;border-radius:50%;background:#448aff;color:#fff;border:0;cursor:pointer;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:opacity .15s ease}.md-top[hidden]{display:none}</style>
+    <script>(function(){var b=document.querySelector('[data-md-component=top]');if(!b)return;b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});function u(){if(window.scrollY>200)b.removeAttribute('hidden');else b.setAttribute('hidden','')}u();window.addEventListener('scroll',u,{passive:true})})();</script>
     {{/scroll_to_top}}
     {{#toc_follow}}
     <script>(function(){var hs=document.querySelectorAll('.md-content article :is(h1,h2,h3,h4,h5,h6)[id]');var ls=document.querySelectorAll('.md-sidebar--secondary .md-nav--secondary a[href^="#"]');if(!hs.length||!ls.length)return;function active(id){ls.forEach(function(a){a.classList.toggle('md-nav__link--active',a.getAttribute('href')==='#'+id)})}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)active(e.target.id)})},{rootMargin:'-30% 0px -65% 0px'});hs.forEach(function(h){io.observe(h)})})();</script>

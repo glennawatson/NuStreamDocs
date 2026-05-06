@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Yaml;
 
@@ -67,6 +68,7 @@ public static class FrontmatterFlagReader
     /// <returns>The detected flags.</returns>
     public static PageFlags ReadFlags(ReadOnlySpan<byte> bytes)
     {
+        bytes = Utf8Bom.Strip(bytes);
         if (!bytes.StartsWith(YamlByteScanner.FrontmatterDelimiter))
         {
             return PageFlags.None;
