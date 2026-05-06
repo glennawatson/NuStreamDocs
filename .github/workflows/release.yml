@@ -2,6 +2,16 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      bump:
+        description: "Auto-increment level for the new tag. You must pick one."
+        required: true
+        type: choice
+        options:
+          - "(pick one)"
+          - major
+          - minor
+          - patch
 
 permissions:
   contents: write
@@ -35,23 +45,42 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Install GitVersion CLI
-        run: dotnet tool install -g GitVersion.Tool
-
-      - name: Resolve version (GitVersion)
+      - name: Compute next version + create tag
         id: ver
         run: |
-          # GitVersion is the source of truth — ContinuousDeployment on main
-          # gives a clean MAJOR.MINOR.PATCH driven by height. No tag bumping,
-          # no manual choices.
-          VERSION="$(dotnet-gitversion /showvariable MajorMinorPatch)"
-          if [ -z "$VERSION" ]; then
-            echo "GitVersion returned empty version." >&2
+          # MinVer is tag-first and won't compute a clean RTM version when the
+          # working commit is past the latest tag (it appends pre-release +
+          # height by design). So compute the bump in shell from the latest
+          # RTM tag, tag HEAD, push — then propagate the version through
+          # MINVERVERSIONOVERRIDE so every downstream MSBuild project skips
+          # MinVer's per-project git walk and stamps this exact value.
+          case "${{ inputs.bump }}" in
+            major|minor|patch) ;;
+            *) echo "Pick a bump level (major / minor / patch)." >&2; exit 1 ;;
+          esac
+          LAST="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' \
+                  | grep -Ev -- '-' \
+                  | sort -V \
+                  | tail -1 \
+                  | sed 's/^v//')"
+          if [ -z "$LAST" ]; then
+            echo "No RTM tag (vX.Y.Z) found in history." >&2
             exit 1
           fi
-          echo "Resolved version: $VERSION"
+          IFS=. read -r MAJ MIN PAT <<<"$LAST"
+          case "${{ inputs.bump }}" in
+            major) VERSION="$((MAJ+1)).0.0" ;;
+            minor) VERSION="${MAJ}.$((MIN+1)).0" ;;
+            patch) VERSION="${MAJ}.${MIN}.$((PAT+1))" ;;
+          esac
+          echo "Latest RTM tag: v$LAST → next: v$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION"   >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "MINVERVERSIONOVERRIDE=$VERSION" >> "$GITHUB_ENV"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
 
       - name: Restore
         run: dotnet restore src/NuStreamDocs.slnx
@@ -105,6 +134,4 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        # gh release create creates the tag at HEAD automatically — no explicit
-        # `git tag` step needed.
         run: gh release create "${{ steps.ver.outputs.tag }}" --repo "${{ github.repository }}" --title "${{ steps.ver.outputs.version }}" --notes-file release-notes.md ./signed/*.nupkg

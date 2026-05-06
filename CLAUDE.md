@@ -284,7 +284,7 @@ The full type table + worked examples (including the `perf` shape with benchmark
 
 ## Versioning
 
-`GitVersion.MsBuild` (configured in [GitVersion.yml](GitVersion.yml), `ContinuousDeployment` mode on `main`) computes the version from git history on every build. Each commit on `main` produces a clean `MAJOR.MINOR.PATCH` where the patch component is height-driven — no manual tag bumping, no release ceremony. `Microsoft.SourceLink.GitHub` appends the commit sha to `InformationalVersion` so local + dev assemblies are traceable to a specific commit. The `Release` workflow (`workflow_dispatch`) reads the version GitVersion resolved, builds / packs / signs / pushes to NuGet, then creates the GitHub Release (which also creates the `v$VERSION` tag at HEAD as a side-effect — useful for human auditing, not required by GitVersion).
+`MinVer` derives the version from the most recent `v*` git tag. Untagged commits build as `{nextMinor}.0.0-alpha.0.{height}+sha` (auto-increment minor). Releases run via the `Release` workflow (`workflow_dispatch`) — pick `major` / `minor` / `patch`; the workflow computes the next version from the latest RTM tag in shell, creates the `v$VERSION` tag, propagates the version via `MINVERVERSIONOVERRIDE` so every downstream MSBuild project skips MinVer's per-project git walk, then builds / packs / signs / pushes to NuGet and creates the GitHub Release.
 
 ## Acknowledgements
 
