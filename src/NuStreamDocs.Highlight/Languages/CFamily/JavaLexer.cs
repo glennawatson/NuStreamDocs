@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
@@ -39,9 +38,6 @@ public static class JavaLexer
         ">>>= >>> ::"u8,
         CFamilyShared.StandardOperatorsLiteral);
 
-    /// <summary>Single-byte structural punctuation — shared C-curly set plus the Java <c>@</c> annotation marker.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);
-
     /// <summary>Gets the singleton Java lexer.</summary>
     public static Lexer Instance { get; } = Build();
 
@@ -62,7 +58,7 @@ public static class JavaLexer
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = PunctuationSet,
+            Punctuation = CFamilyShared.AnnotationPunctuation,
             IntegerSuffix = CFamilyShared.JvmIntegerSuffix,
             FloatSuffix = CFamilyShared.JvmFloatSuffix,
             IncludeDocComment = false,

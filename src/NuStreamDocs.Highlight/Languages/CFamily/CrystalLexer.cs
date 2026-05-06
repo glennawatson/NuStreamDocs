@@ -31,16 +31,12 @@ public static class CrystalLexer
         "def class struct module lib fun macro alias abstract private protected public enum type include extend annotation instance_sizeof sizeof"u8);
 
     /// <summary>Constant keywords — shared <c>true</c>/<c>false</c> plus Crystal's <c>nil</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
-        "true false nil"u8);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNilLiteral);
 
     /// <summary>Operator alternation — shared C-style core plus Crystal's range / heredoc-style forms, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
         "... .. <=> === -> => ::"u8,
         CFamilyShared.StandardOperatorsLiteral);
-
-    /// <summary>Single-byte structural punctuation — Crystal uses <c>@</c> for instance variables and <c>:</c> for symbols.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@:"u8);
 
     /// <summary>First-byte set for the special-string slot — used here to wire the <c>#</c> line-comment rule.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
@@ -68,7 +64,7 @@ public static class CrystalLexer
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = PunctuationSet,
+            Punctuation = CFamilyShared.AnnotationColonPunctuation,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,
             IncludeDocComment = false,

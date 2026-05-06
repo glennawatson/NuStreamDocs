@@ -150,6 +150,8 @@ public sealed class LexerRegistry
             [[.. "yml"u8]] = YamlLexer.Instance,
             [[.. "diff"u8]] = DiffLexer.Instance,
             [[.. "patch"u8]] = DiffLexer.Instance,
+            [[.. "csv"u8]] = CsvLexer.Instance,
+            [[.. "tsv"u8]] = CsvLexer.Instance,
 
             [[.. "python"u8]] = PythonLexer.Instance,
             [[.. "py"u8]] = PythonLexer.Instance,

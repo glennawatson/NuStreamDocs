@@ -70,6 +70,12 @@ internal static class CFamilyShared
     /// <summary>C-style structural punctuation (<c>(</c>, <c>)</c>, <c>{</c>, <c>}</c>, <c>[</c>, <c>]</c>, <c>;</c>, <c>,</c>, <c>.</c>, <c>:</c>).</summary>
     public static readonly SearchValues<byte> StandardPunctuation = LanguageCommon.CCurlyPunctuationFirst;
 
+    /// <summary>Structural punctuation plus the annotation marker <c>@</c> (Java / Kotlin / Scala / Groovy / Dart shape).</summary>
+    public static readonly SearchValues<byte> AnnotationPunctuation = SearchValues.Create("(){}[];,.@"u8);
+
+    /// <summary>Structural punctuation plus <c>:</c> and the annotation marker <c>@</c> (Swift / V / Zig / Crystal / Julia / Nim shape).</summary>
+    public static readonly SearchValues<byte> AnnotationColonPunctuation = SearchValues.Create("(){}[];,.:@"u8);
+
     /// <summary>Common JVM-style integer / hex literal suffix bytes (<c>l</c>, <c>L</c>).</summary>
     public static readonly SearchValues<byte> JvmIntegerSuffix = SearchValues.Create("lL"u8);
 
@@ -88,6 +94,22 @@ internal static class CFamilyShared
 
     /// <summary>Gets the canonical <c>true</c> / <c>false</c> / <c>null</c> constant triple as a space-separated literal.</summary>
     public static ReadOnlySpan<byte> TrueFalseNullLiteral => "true false null"u8;
+
+    /// <summary>Gets the <c>true</c> / <c>false</c> / <c>nil</c> constant triple (Swift / Crystal / Nim / Lua) as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> TrueFalseNilLiteral => "true false nil"u8;
+
+    /// <summary>Gets the canonical C primitive-type set (<c>char short int long float double void signed unsigned</c>) as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> CPrimitiveTypesLiteral => "char short int long float double void signed unsigned"u8;
+
+    /// <summary>
+    /// Gets the standard C99/C11 sized-integer typedef set (<c>size_t</c>, <c>ssize_t</c>, <c>ptrdiff_t</c>,
+    /// <c>int8_t</c>..<c>int64_t</c>, <c>uint8_t</c>..<c>uint64_t</c>) as a space-separated literal.
+    /// </summary>
+    public static ReadOnlySpan<byte> CSizedIntegerTypesLiteral =>
+        "size_t ssize_t ptrdiff_t int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t"u8;
+
+    /// <summary>Gets the C / ObjC / C++ extra <c>goto sizeof typedef</c> keyword fragment as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> CExtraKeywordsLiteral => "goto sizeof typedef"u8;
 
     /// <summary>Gets the standard C-style operator alternation as a space-separated literal (lengths arbitrary; the alternation factory orders longest-first).</summary>
     public static ReadOnlySpan<byte> StandardOperatorsLiteral =>

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Highlight.Languages.CFamily;
 using NuStreamDocs.Highlight.Languages.Schema;
 using NuStreamDocs.Highlight.Languages.Scripting;
@@ -85,6 +86,7 @@ public class Phase2BatchFourLexerTests
     /// <summary>GraphQL still classifies after the SchemaFamilyRules refactor.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
+    [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "GraphQL is a registered trademark.")]
     public async Task GraphQLAfterSchemaFamilyRefactor()
     {
         var html = GraphQLLexer.Instance.Render("type User { id: ID! }"u8);

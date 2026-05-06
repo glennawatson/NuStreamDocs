@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
+using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.Scripting;
 
@@ -39,9 +40,6 @@ public static class JuliaLexer
     /// <summary>First-byte set for the <c>#</c> comment dispatch.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
 
-    /// <summary>Single-byte structural punctuation.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);
-
     /// <summary>Gets the singleton Julia lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
@@ -56,7 +54,7 @@ public static class JuliaLexer
         KeywordDeclarations = KeywordDeclarations,
         Keywords = Keywords,
         Operators = OperatorTable,
-        Punctuation = PunctuationSet
+        Punctuation = CFamilyShared.AnnotationColonPunctuation
     });
 
     /// <summary>Matches a Julia <c>#=</c> ... <c>=#</c> block comment.</summary>

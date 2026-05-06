@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
+using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.Scripting;
 
@@ -29,7 +30,7 @@ public static class NimLexer
         "proc func method iterator converter template macro type var let const object enum static ref ptr concept distinct export"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false nil"u8);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNilLiteral);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
@@ -37,9 +38,6 @@ public static class NimLexer
 
     /// <summary>First-byte set for the <c>#</c> comment dispatch.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
-
-    /// <summary>Single-byte structural punctuation.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);
 
     /// <summary>Gets the singleton Nim lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
@@ -55,7 +53,7 @@ public static class NimLexer
         KeywordDeclarations = KeywordDeclarations,
         Keywords = Keywords,
         Operators = OperatorTable,
-        Punctuation = PunctuationSet
+        Punctuation = CFamilyShared.AnnotationColonPunctuation
     });
 
     /// <summary>Matches a Nim <c>#[ ... ]#</c> block comment.</summary>

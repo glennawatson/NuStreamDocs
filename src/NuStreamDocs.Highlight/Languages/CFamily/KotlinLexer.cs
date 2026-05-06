@@ -39,9 +39,6 @@ public static class KotlinLexer
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
         "?: ..= .. -> :: == != <= >= && || ++ -- += -= *= /= %= ?. !! + - * / % ! = < > ?"u8);
 
-    /// <summary>Single-byte structural punctuation.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);
-
     /// <summary>Integer-literal suffix bytes.</summary>
     private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("Llu"u8);
 
@@ -68,7 +65,7 @@ public static class KotlinLexer
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = PunctuationSet,
+            Punctuation = CFamilyShared.AnnotationPunctuation,
             IntegerSuffix = IntegerSuffixSet,
             FloatSuffix = FloatSuffixSet,
             IncludeDocComment = false,

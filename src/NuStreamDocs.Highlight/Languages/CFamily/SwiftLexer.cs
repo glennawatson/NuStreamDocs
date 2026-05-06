@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
@@ -34,16 +33,12 @@ public static class SwiftLexer
         "mutating nonmutating override required convenience dynamic indirect operator precedencegroup"u8);
 
     /// <summary>Constant keywords — Swift uses <c>nil</c> in place of the shared <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
-        "true false nil"u8);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNilLiteral);
 
     /// <summary>Operator alternation — shared C-style core plus Swift's range / nil-coalesce / optional-chain forms, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
         "... ..< ?? ?."u8,
         CFamilyShared.StandardOperatorsLiteral);
-
-    /// <summary>Single-byte structural punctuation — shared C-curly set plus the Swift <c>@</c> attribute marker.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);
 
     /// <summary>Gets the singleton Swift lexer.</summary>
     public static Lexer Instance { get; } = Build();
@@ -69,7 +64,7 @@ public static class SwiftLexer
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = PunctuationSet,
+            Punctuation = CFamilyShared.AnnotationColonPunctuation,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,
             IncludeDocComment = true,

@@ -48,6 +48,20 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
     }
 
+    /// <summary>CSV classifies the <c>,</c> separator, quoted fields, and unquoted fields with the doubled-quote escape preserved inside strings.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task CsvClassifiesSeparatorQuotedAndUnquotedFields()
+    {
+        var html = CsvLexer.Instance.Render("name,score\n\"Alice, A\",\"She said \"\"hi\"\"\"\nBob,42\n"u8);
+        await Assert.That(html.Contains("<span class=\"n\">name</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"p\">,</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;Alice, A&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;She said &quot;&quot;hi&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"n\">Bob</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"n\">42</span>", StringComparison.Ordinal)).IsTrue();
+    }
+
     /// <summary>Diff classifies hunk headers, additions, and deletions to the Generic.* CSS classes (<c>gi</c> / <c>gd</c> / <c>gu</c>).</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

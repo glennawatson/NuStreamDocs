@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
@@ -38,9 +37,6 @@ public static class VLexer
         "... .. := <- ->"u8,
         CFamilyShared.StandardOperatorsLiteral);
 
-    /// <summary>Single-byte structural punctuation — shared C-curly set plus V's <c>@</c> attribute marker.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);
-
     /// <summary>Gets the singleton V lexer.</summary>
     public static Lexer Instance { get; } = Build();
 
@@ -56,7 +52,7 @@ public static class VLexer
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = PunctuationSet,
+            Punctuation = CFamilyShared.AnnotationColonPunctuation,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,
             IncludeDocComment = false,

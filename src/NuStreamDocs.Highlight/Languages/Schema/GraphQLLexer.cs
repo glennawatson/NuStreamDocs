@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.Schema;
@@ -13,6 +14,7 @@ namespace NuStreamDocs.Highlight.Languages.Schema;
 /// / <c>enum</c> / <c>interface</c> / <c>union</c> declarations, <c>$variable</c>
 /// references, and the <c>!</c> non-null marker.
 /// </remarks>
+[SuppressMessage("ReSharper", "InconsistentNaming", Justification = "GraphQL is a registered trademark.")]
 public static class GraphQLLexer
 {
     /// <summary>General-keyword set.</summary>

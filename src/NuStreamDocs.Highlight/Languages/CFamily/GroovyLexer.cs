@@ -39,9 +39,6 @@ public static class GroovyLexer
         ">>>= >>> :: ?: ?. *."u8,
         CFamilyShared.StandardOperatorsLiteral);
 
-    /// <summary>Single-byte structural punctuation — shared C-curly set plus the Groovy <c>@</c> annotation marker.</summary>
-    private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);
-
     /// <summary>Gets the singleton Groovy lexer.</summary>
     public static Lexer Instance { get; } = Build();
 
@@ -62,7 +59,7 @@ public static class GroovyLexer
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = PunctuationSet,
+            Punctuation = CFamilyShared.AnnotationPunctuation,
             IntegerSuffix = SearchValues.Create("lLgG"u8),
             FloatSuffix = SearchValues.Create("fFdDgG"u8),
             IncludeDocComment = false,

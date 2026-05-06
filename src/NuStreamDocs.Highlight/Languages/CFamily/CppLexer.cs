@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.CFamily;
@@ -19,108 +20,30 @@ public static class CppLexer
     private const int Utf8PrefixLength = 2;
 
     /// <summary>General-keyword set — shared C-family control-flow plus C++-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "goto"u8],
-        [.. "sizeof"u8],
-        [.. "typedef"u8],
-        [.. "typeid"u8],
-        [.. "typename"u8],
-        [.. "decltype"u8],
-        [.. "new"u8],
-        [.. "delete"u8],
-        [.. "this"u8],
-        [.. "operator"u8],
-        [.. "and"u8],
-        [.. "or"u8],
-        [.. "not"u8],
-        [.. "xor"u8],
-        [.. "alignof"u8],
-        [.. "alignas"u8],
-        [.. "co_await"u8],
-        [.. "co_yield"u8],
-        [.. "co_return"u8],
-        [.. "concept"u8],
-        [.. "requires"u8],
-        [.. "static_cast"u8],
-        [.. "dynamic_cast"u8],
-        [.. "const_cast"u8],
-        [.. "reinterpret_cast"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        CFamilyShared.CExtraKeywordsLiteral,
+        "typeid typename decltype new delete this operator and or not xor alignof alignas co_await co_yield co_return concept requires static_cast dynamic_cast const_cast reinterpret_cast"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "char"u8],
-        [.. "char8_t"u8],
-        [.. "char16_t"u8],
-        [.. "char32_t"u8],
-        [.. "wchar_t"u8],
-        [.. "short"u8],
-        [.. "int"u8],
-        [.. "long"u8],
-        [.. "float"u8],
-        [.. "double"u8],
-        [.. "void"u8],
-        [.. "signed"u8],
-        [.. "unsigned"u8],
-        [.. "bool"u8],
-        [.. "size_t"u8],
-        [.. "ssize_t"u8],
-        [.. "ptrdiff_t"u8],
-        [.. "int8_t"u8],
-        [.. "int16_t"u8],
-        [.. "int32_t"u8],
-        [.. "int64_t"u8],
-        [.. "uint8_t"u8],
-        [.. "uint16_t"u8],
-        [.. "uint32_t"u8],
-        [.. "uint64_t"u8],
-        [.. "auto"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.CPrimitiveTypesLiteral,
+        CFamilyShared.CSizedIntegerTypesLiteral,
+        "char8_t char16_t char32_t wchar_t bool auto"u8);
 
     /// <summary>Declaration / qualifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "static"u8],
-        [.. "extern"u8],
-        [.. "const"u8],
-        [.. "constexpr"u8],
-        [.. "consteval"u8],
-        [.. "constinit"u8],
-        [.. "volatile"u8],
-        [.. "inline"u8],
-        [.. "mutable"u8],
-        [.. "virtual"u8],
-        [.. "explicit"u8],
-        [.. "override"u8],
-        [.. "final"u8],
-        [.. "friend"u8],
-        [.. "public"u8],
-        [.. "private"u8],
-        [.. "protected"u8],
-        [.. "class"u8],
-        [.. "struct"u8],
-        [.. "union"u8],
-        [.. "enum"u8],
-        [.. "namespace"u8],
-        [.. "using"u8],
-        [.. "template"u8],
-        [.. "register"u8],
-        [.. "thread_local"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "static extern const constexpr consteval constinit volatile inline mutable virtual explicit override final friend public private protected"u8,
+        "class struct union enum namespace using template register thread_local"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "nullptr"u8],
-        [.. "NULL"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "true false nullptr NULL"u8);
 
     /// <summary>Operator alternation — shared C-style core plus C++-specific multi-byte forms (<c>&lt;=&gt;</c>, <c>-&gt;*</c>, <c>.*</c>, <c>::</c>).</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "<=>"u8],
-        [.. "->*"u8],
-        [.. ".*"u8],
-        [.. "::"u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "<=> ->* .* ::"u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Integer-literal suffix bytes (extends the C set with <c>z</c> / <c>Z</c> for <c>size_t</c>).</summary>
     private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("uUlLzZ"u8);
