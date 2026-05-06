@@ -13,8 +13,8 @@ namespace NuStreamDocs.Optimize;
 /// <c>WithExtensions</c> / <c>AddExtensions</c> helpers, which encode once at the boundary.
 /// </remarks>
 /// <param name="Formats">Compression formats to emit.</param>
-/// <param name="GzipLevel">Compression level for gzip; <see cref="CompressionLevel.SmallestSize"/> by default.</param>
-/// <param name="BrotliLevel">Compression level for brotli; <see cref="CompressionLevel.SmallestSize"/> by default.</param>
+/// <param name="GzipLevel">Compression level for gzip.</param>
+/// <param name="BrotliLevel">Compression level for brotli.</param>
 /// <param name="Extensions">UTF-8 file-extension entries to compress (lowercase, leading dot, e.g. <c>.html</c>).</param>
 /// <param name="MinimumBytes">Skip compression when the source is smaller than this many bytes.</param>
 /// <param name="Parallelism">Maximum parallel compression workers.</param>
@@ -38,11 +38,11 @@ public sealed record OptimizeOptions(
         [.. ".txt"u8]
     ];
 
-    /// <summary>Gets the default option set — both formats, smallest-size, default extensions, 1KiB minimum, default parallelism.</summary>
+    /// <summary>Gets the default option set — both formats, optimal level, default extensions, 1KiB minimum, default parallelism.</summary>
     public static OptimizeOptions Default { get; } = new(
         OptimizeFormats.Both,
-        CompressionLevel.SmallestSize,
-        CompressionLevel.SmallestSize,
+        CompressionLevel.Optimal,
+        CompressionLevel.Optimal,
         DefaultExtensions,
         MinimumBytes: 1024,
         Parallelism: Math.Max(1, Environment.ProcessorCount));

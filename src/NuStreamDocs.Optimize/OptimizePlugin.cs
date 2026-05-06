@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 using NuStreamDocs.Optimize.Logging;
@@ -18,9 +19,17 @@ namespace NuStreamDocs.Optimize;
 /// Files smaller than <see cref="OptimizeOptions.MinimumBytes"/> are
 /// skipped — gzip overhead can grow tiny payloads instead of shrinking
 /// them, and the runtime savings of pre-serving them are negligible.
+/// Sibling outputs that are already at least as new as the source are
+/// left alone, so watch-loop rebuilds only re-compress changed files.
 /// </remarks>
 public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IBuildFinalizePlugin
 {
+    /// <summary>The <c>.gz</c> filename suffix.</summary>
+    private const string GzipSuffix = ".gz";
+
+    /// <summary>The <c>.br</c> filename suffix.</summary>
+    private const string BrotliSuffix = ".br";
+
     /// <summary>Configured options.</summary>
     private readonly OptimizeOptions _options = ValidateOptions(options);
 
@@ -112,9 +121,10 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     private FilePath[] EnumerateEligible(DirectoryPath root)
     {
         List<FilePath> buffer = new(capacity: 256);
-        foreach (var path in Directory.EnumerateFiles(root.Value, "*", SearchOption.AllDirectories))
+        foreach (var info in new DirectoryInfo(root.Value).EnumerateFiles("*", SearchOption.AllDirectories))
         {
-            if (path.EndsWith(".gz", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".br", StringComparison.OrdinalIgnoreCase))
+            var path = info.FullName;
+            if (path.EndsWith(GzipSuffix, StringComparison.OrdinalIgnoreCase) || path.EndsWith(BrotliSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -126,45 +136,76 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
                 continue;
             }
 
-            FileInfo info = new(path);
             if (info.Length < _options.MinimumBytes)
             {
                 OptimizeLoggingHelper.LogFileSkipped(_logger, path, "below minimum size");
                 continue;
             }
 
-            buffer.Add(new(path));
+            buffer.Add((FilePath)path);
         }
 
         return [.. buffer];
     }
 
-    /// <summary>Compresses one file into whichever sibling formats are configured.</summary>
-    /// <param name="path">Absolute path.</param>
+    /// <summary>Compresses one file into whichever sibling formats are configured, skipping siblings already up to date.</summary>
+    /// <param name="path">Source file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The total bytes saved across the configured formats (sum of original-minus-compressed for each emitted sibling).</returns>
+    /// <returns>The total bytes saved across the configured formats this run.</returns>
     private async Task<long> CompressOneAsync(FilePath path, CancellationToken cancellationToken)
     {
-        var pathValue = path.Value;
-        var originalBytes = new FileInfo(pathValue).Length;
+        var sourceInfo = new FileInfo(path.Value);
+        var originalBytes = sourceInfo.Length;
+        var sourceTimeUtc = sourceInfo.LastWriteTimeUtc;
         long saved = 0;
+
         if ((_options.Formats & OptimizeFormats.Gzip) == OptimizeFormats.Gzip)
         {
-            await Compressor.WriteGzipAsync(pathValue, _options.GzipLevel, cancellationToken).ConfigureAwait(false);
-            var gzBytes = new FileInfo(pathValue + ".gz").Length;
-            saved += originalBytes - gzBytes;
-            OptimizeLoggingHelper.LogFileProcessed(_logger, pathValue, originalBytes, gzBytes);
+            saved += await CompressIfStaleAsync(path, GzipSuffix, originalBytes, sourceTimeUtc, _options.GzipLevel, cancellationToken).ConfigureAwait(false);
         }
 
-        if ((_options.Formats & OptimizeFormats.Brotli) != OptimizeFormats.Brotli)
+        if ((_options.Formats & OptimizeFormats.Brotli) == OptimizeFormats.Brotli)
         {
-            return saved;
+            saved += await CompressIfStaleAsync(path, BrotliSuffix, originalBytes, sourceTimeUtc, _options.BrotliLevel, cancellationToken).ConfigureAwait(false);
         }
 
-        await Compressor.WriteBrotliAsync(pathValue, _options.BrotliLevel, cancellationToken).ConfigureAwait(false);
-        var brBytes = new FileInfo(pathValue + ".br").Length;
-        saved += originalBytes - brBytes;
-        OptimizeLoggingHelper.LogFileProcessed(_logger, pathValue, originalBytes, brBytes);
         return saved;
+    }
+
+    /// <summary>Compresses <paramref name="source"/> into <c>{source}{suffix}</c> when the sibling is missing or older than the source.</summary>
+    /// <param name="source">Source file.</param>
+    /// <param name="suffix">Sibling suffix (<c>.gz</c> / <c>.br</c>); also selects the writer.</param>
+    /// <param name="originalBytes">Source size in bytes.</param>
+    /// <param name="sourceTimeUtc">Source last-write time (UTC).</param>
+    /// <param name="level">Compression level.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Bytes saved by this sibling (original minus compressed); 0 when the sibling is already up to date.</returns>
+    private async Task<long> CompressIfStaleAsync(
+        FilePath source,
+        string suffix,
+        long originalBytes,
+        DateTime sourceTimeUtc,
+        CompressionLevel level,
+        CancellationToken cancellationToken)
+    {
+        var destInfo = new FileInfo(source.Value + suffix);
+        if (destInfo.Exists && destInfo.LastWriteTimeUtc >= sourceTimeUtc)
+        {
+            return 0;
+        }
+
+        if (suffix == GzipSuffix)
+        {
+            await Compressor.WriteGzipAsync(source, level, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await Compressor.WriteBrotliAsync(source, level, cancellationToken).ConfigureAwait(false);
+        }
+
+        destInfo.Refresh();
+        var compressedBytes = destInfo.Length;
+        OptimizeLoggingHelper.LogFileProcessed(_logger, source.Value, originalBytes, compressedBytes);
+        return originalBytes - compressedBytes;
     }
 }
