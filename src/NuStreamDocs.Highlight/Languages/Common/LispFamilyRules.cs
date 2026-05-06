@@ -94,12 +94,9 @@ internal static class LispFamilyRules
         rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
 
         // Keyword tables (case-sensitive). Constants first so `t` / `nil` win over the symbol rule.
-        var constants = config.KeywordConstants;
-        var declarations = config.KeywordDeclarations;
-        var keywords = config.Keywords;
-        rules.Add(new(slice => MatchSymbolKeyword(slice, constants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = config.KeywordConstantFirst });
-        rules.Add(new(slice => MatchSymbolKeyword(slice, declarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = config.KeywordDeclarationFirst });
-        rules.Add(new(slice => MatchSymbolKeyword(slice, keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = config.KeywordFirst });
+        rules.Add(BuildKeywordRule(config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant));
+        rules.Add(BuildKeywordRule(config.KeywordDeclarations, config.KeywordDeclarationFirst, TokenClass.KeywordDeclaration));
+        rules.Add(BuildKeywordRule(config.Keywords, config.KeywordFirst, TokenClass.Keyword));
 
         // Bare symbol — letters, digits, and the broad Lisp punctuation alphabet.
         rules.Add(new(MatchSymbol, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SymbolStart });
@@ -109,6 +106,17 @@ internal static class LispFamilyRules
         rules.Add(new(slice => TokenMatchers.MatchSingleByteOf(slice, punctuation), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = punctuation });
 
         return [.. rules];
+    }
+
+    /// <summary>Builds a keyword-set rule, falling back to the auto-derived first-byte set when no override is supplied.</summary>
+    /// <param name="keywords">Keyword set.</param>
+    /// <param name="firstBytes">Optional first-byte dispatch set.</param>
+    /// <param name="tokenClass">Classification.</param>
+    /// <returns>Rule matching any member of <paramref name="keywords"/>.</returns>
+    private static LexerRule BuildKeywordRule(ByteKeywordSet keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass)
+    {
+        var captured = keywords;
+        return new(slice => MatchSymbolKeyword(slice, captured), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet };
     }
 
     /// <summary>

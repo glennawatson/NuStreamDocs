@@ -109,18 +109,6 @@ public static class ZigLexer
         .. CFamilyShared.StandardOperators
     ];
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("aborcdefilnstuwv"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("abcfintuv"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("acefinopstuv"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfnu"u8);
-
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Zig <c>@</c> built-in marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:@"u8);
 
@@ -134,13 +122,9 @@ public static class ZigLexer
         CFamilyConfig config = new()
         {
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = PunctuationSet,

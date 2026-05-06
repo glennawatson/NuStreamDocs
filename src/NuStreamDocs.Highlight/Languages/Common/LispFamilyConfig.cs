@@ -18,20 +18,20 @@ internal readonly record struct LispFamilyConfig
     /// <summary>Gets the declaration-keyword set (<c>defun</c>, <c>defn</c>, <c>define</c>, …).</summary>
     public ByteKeywordSet KeywordDeclarations { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for declaration keywords.</summary>
-    public SearchValues<byte> KeywordDeclarationFirst { get; init; }
+    /// <summary>Gets the optional first-byte dispatch set for declaration keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
+    public SearchValues<byte>? KeywordDeclarationFirst { get; init; }
 
     /// <summary>Gets the general-keyword set (<c>if</c>, <c>cond</c>, <c>let</c>, <c>lambda</c>, …).</summary>
     public ByteKeywordSet Keywords { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for general keywords.</summary>
-    public SearchValues<byte> KeywordFirst { get; init; }
+    /// <summary>Gets the optional first-byte dispatch set for general keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
+    public SearchValues<byte>? KeywordFirst { get; init; }
 
     /// <summary>Gets the constant-keyword set (<c>nil</c>, <c>t</c>, <c>true</c>, <c>false</c>, …).</summary>
     public ByteKeywordSet KeywordConstants { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for constant keywords.</summary>
-    public SearchValues<byte> KeywordConstantFirst { get; init; }
+    /// <summary>Gets the optional first-byte dispatch set for constant keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
+    public SearchValues<byte>? KeywordConstantFirst { get; init; }
 
     /// <summary>Gets a value indicating whether <c>[]</c> and <c>{}</c> data brackets are recognized as punctuation (Clojure / EDN).</summary>
     public bool IncludeDataBrackets { get; init; }

@@ -161,18 +161,6 @@ public static class TypeScriptLexer
     /// <summary>First-byte set for backtick template literals.</summary>
     private static readonly SearchValues<byte> BacktickFirst = SearchValues.Create("`"u8);
 
-    /// <summary>First-byte set for keyword constants.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfnuNI"u8);
-
-    /// <summary>First-byte set for built-in type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("abnsvuokr"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("vlcfietnmpsad"u8);
-
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("iefwdrscbtnovya"u8);
-
     /// <summary>First-byte set for operator tokens.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("?=.<>!&|+-*/%^~"u8);
 
@@ -192,13 +180,9 @@ public static class TypeScriptLexer
         CFamilyConfig config = new()
         {
             Keywords = GeneralKeywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = TypeKeywords,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = DeclarationKeywords,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
             OperatorFirst = OperatorFirst,
             Punctuation = LanguageCommon.CCurlyPunctuationFirst,

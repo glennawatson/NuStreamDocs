@@ -63,18 +63,6 @@ public static class ProtobufLexer
         [.. "true"u8],
         [.. "false"u8]);
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("eipoorst"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("bdfisu"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("emorsop"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tf"u8);
-
     /// <summary>Single-byte structural punctuation (includes <c>=</c> as the field-tag assignment).</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.<>="u8);
 
@@ -93,13 +81,9 @@ public static class ProtobufLexer
             IncludeSingleQuotedString = true,
             SigilFirst = null,
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = null,
             OperatorFirst = null,
             Punctuation = PunctuationSet

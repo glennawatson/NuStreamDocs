@@ -87,15 +87,6 @@ public static class MatlabLexer
     /// <summary>First-byte set for the <c>%</c> comment dispatch.</summary>
     private static readonly SearchValues<byte> PercentFirst = SearchValues.Create("%"u8);
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("bcdefiortuw"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("cefgmp"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tf"u8);
-
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/\\^&|~=<>:."u8);
 
@@ -112,11 +103,8 @@ public static class MatlabLexer
         IncludeFloatLiteral = true,
         IncludeIntegerLiteral = true,
         KeywordConstants = KeywordConstants,
-        KeywordConstantFirst = KeywordConstantFirst,
         KeywordDeclarations = KeywordDeclarations,
-        KeywordDeclarationFirst = KeywordDeclarationFirst,
         Keywords = Keywords,
-        KeywordFirst = KeywordFirst,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
         Punctuation = PunctuationSet

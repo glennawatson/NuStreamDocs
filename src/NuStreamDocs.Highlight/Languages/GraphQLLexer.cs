@@ -51,18 +51,6 @@ public static class GraphQLLexer
         [.. "false"u8],
         [.. "null"u8]);
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("dfimoqrs"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("BFISI"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("teisuiu"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfn"u8);
-
     /// <summary>First-byte set for the <c>$variable</c> / <c>@directive</c> sigils.</summary>
     private static readonly SearchValues<byte> SigilFirst = SearchValues.Create("$@"u8);
 
@@ -84,13 +72,9 @@ public static class GraphQLLexer
             IncludeSingleQuotedString = false,
             SigilFirst = SigilFirst,
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = null,
             OperatorFirst = null,
             Punctuation = PunctuationSet

@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
@@ -110,29 +109,13 @@ public static class HlslLexer
         [.. "false"u8],
         [.. "NULL"u8]);
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("bcdefirstw"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("ABCRSTbdfhimuv"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("cegilnoprstuv"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfN"u8);
-
     /// <summary>Gets the singleton HLSL lexer.</summary>
     public static Lexer Instance { get; } = CFamilyRules.CreateLexer(new()
     {
         Keywords = Keywords,
-        KeywordFirst = KeywordFirst,
         KeywordTypes = KeywordTypes,
-        KeywordTypeFirst = KeywordTypeFirst,
         KeywordDeclarations = KeywordDeclarations,
-        KeywordDeclarationFirst = KeywordDeclarationFirst,
         KeywordConstants = KeywordConstants,
-        KeywordConstantFirst = KeywordConstantFirst,
         Operators = CFamilyShared.StandardOperators,
         OperatorFirst = CFamilyShared.StandardOperatorFirst,
         Punctuation = CFamilyShared.StandardPunctuation,

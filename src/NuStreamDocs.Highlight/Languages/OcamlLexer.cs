@@ -113,18 +113,6 @@ public static class OcamlLexer
         [.. "!"u8]
     ];
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abdefilmnoprtw"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("abcfilrsu"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("celfimopstv"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfNS"u8);
-
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/=<>|&!:^@"u8);
 
@@ -141,13 +129,9 @@ public static class OcamlLexer
             BlockCommentClose = [.. "*)"u8],
             LineCommentPrefix = null,
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
             OperatorFirst = OperatorFirst
         };

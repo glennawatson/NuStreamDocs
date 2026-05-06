@@ -124,15 +124,6 @@ public static class KotlinLexer
         [.. "?"u8]
     ];
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abcdefimoprstwy"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("ABCDFILMNSU"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("acdefilnopstvr"u8);
-
     /// <summary>Single-byte structural punctuation.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);
 
@@ -157,13 +148,9 @@ public static class KotlinLexer
         CFamilyConfig config = new()
         {
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = CFamilyShared.TrueFalseNullFirst,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = PunctuationSet,

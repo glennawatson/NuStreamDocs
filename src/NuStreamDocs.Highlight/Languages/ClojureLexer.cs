@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
@@ -62,15 +61,6 @@ public static class ClojureLexer
         [.. "false"u8],
         [.. "nil"u8]);
 
-    /// <summary>First-byte set for declaration forms.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("dn"u8);
-
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("bcdfilqrtvw"u8);
-
-    /// <summary>First-byte set for constants.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfn"u8);
-
     /// <summary>Gets the singleton Clojure lexer.</summary>
     public static Lexer Instance { get; } = Build();
 
@@ -81,11 +71,8 @@ public static class ClojureLexer
         LispFamilyConfig config = new()
         {
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             IncludeDataBrackets = true,
             IncludeColonKeyword = true
         };

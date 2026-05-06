@@ -98,20 +98,8 @@ public static class ObjectiveCLexer
     /// <summary>Operator alternation — shared C-style core (no ObjC additions over plain C).</summary>
     private static readonly byte[][] OperatorTable = CFamilyShared.StandardOperators;
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("bcdefginorstw"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("BCFINPSUVcdfilpsuv"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("acerivsu"u8);
-
     /// <summary>First-byte set for ObjC <c>@</c>-prefixed directives.</summary>
     private static readonly SearchValues<byte> AtDirectiveFirst = SearchValues.Create("@"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfYNn"u8);
 
     /// <summary>Gets the singleton Objective-C lexer.</summary>
     public static Lexer Instance { get; } = Build();
@@ -123,13 +111,9 @@ public static class ObjectiveCLexer
         CFamilyConfig config = new()
         {
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = CFamilyShared.StandardPunctuation,

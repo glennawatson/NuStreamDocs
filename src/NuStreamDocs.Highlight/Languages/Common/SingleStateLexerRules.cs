@@ -109,7 +109,7 @@ internal static class SingleStateLexerRules
     /// <param name="tokenClass">Classification.</param>
     private static void AppendKeywordRule(List<LexerRule> rules, ByteKeywordSet? keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass)
     {
-        if (keywords is null || firstBytes is null)
+        if (keywords is null)
         {
             return;
         }
@@ -118,7 +118,7 @@ internal static class SingleStateLexerRules
         rules.Add(new(
             slice => TokenMatchers.MatchKeyword(slice, captured),
             tokenClass,
-            LexerRule.NoStateChange) { FirstBytes = firstBytes });
+            LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet });
     }
 
     /// <summary>Appends the identifier rule to <paramref name="rules"/> — uses <paramref name="continueSet"/> when supplied, else the ASCII default.</summary>

@@ -92,18 +92,6 @@ public static class RustLexer
         .. CFamilyShared.StandardOperators
     ];
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abcdefilmrswuy"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("biuf"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("lmcsftueipu"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfNSOE"u8);
-
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Rust <c>#</c> attribute marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:#"u8);
 
@@ -128,13 +116,9 @@ public static class RustLexer
         CFamilyConfig config = new()
         {
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = PunctuationSet,

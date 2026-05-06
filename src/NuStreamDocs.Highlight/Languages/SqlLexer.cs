@@ -173,18 +173,6 @@ public static class SqlLexer
         [.. ">"u8]
     ];
 
-    /// <summary>First-byte set for general keywords (lower + upper for case-insensitive dispatch).</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abcdefghijklmnoprstuvwxABCDEFGHIJKLMNOPRSTUVWX"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("bcdfijnrtuvBCDFIJNRTUV"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("acdfiklmoprstuvxACDFIKLMOPRSTUVX"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfnuTFNU"u8);
-
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/%=<>!|"u8);
 
@@ -213,13 +201,9 @@ public static class SqlLexer
         CFamilyConfig config = new()
         {
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
             OperatorFirst = OperatorFirst,
             Punctuation = PunctuationSet,

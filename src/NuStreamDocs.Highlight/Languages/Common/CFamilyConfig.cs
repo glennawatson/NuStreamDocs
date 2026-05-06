@@ -18,26 +18,26 @@ internal readonly record struct CFamilyConfig
     /// <summary>Gets the general-keyword set (control flow, modifiers).</summary>
     public ByteKeywordSet Keywords { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for general keywords.</summary>
-    public SearchValues<byte> KeywordFirst { get; init; }
+    /// <summary>Gets the optional first-byte dispatch set for general keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
+    public SearchValues<byte>? KeywordFirst { get; init; }
 
     /// <summary>Gets the type-keyword set (built-in primitive type names).</summary>
     public ByteKeywordSet KeywordTypes { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for type keywords.</summary>
-    public SearchValues<byte> KeywordTypeFirst { get; init; }
+    /// <summary>Gets the optional first-byte dispatch set for type keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
+    public SearchValues<byte>? KeywordTypeFirst { get; init; }
 
     /// <summary>Gets the declaration-keyword set (class / struct / fn / def-style).</summary>
     public ByteKeywordSet KeywordDeclarations { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for declaration keywords.</summary>
-    public SearchValues<byte> KeywordDeclarationFirst { get; init; }
+    /// <summary>Gets the optional first-byte dispatch set for declaration keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
+    public SearchValues<byte>? KeywordDeclarationFirst { get; init; }
 
     /// <summary>Gets the constant-keyword set (true / false / null / nil-style).</summary>
     public ByteKeywordSet KeywordConstants { get; init; }
 
-    /// <summary>Gets the first-byte dispatch set for constant keywords.</summary>
-    public SearchValues<byte> KeywordConstantFirst { get; init; }
+    /// <summary>Gets the optional first-byte dispatch set for constant keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
+    public SearchValues<byte>? KeywordConstantFirst { get; init; }
 
     /// <summary>Gets the operator alternation, sorted longest-first.</summary>
     public byte[][] Operators { get; init; }

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Highlight;
@@ -37,11 +38,21 @@ public sealed class ByteKeywordSet
     /// <summary>Initializes a new instance of the <see cref="ByteKeywordSet"/> class.</summary>
     /// <param name="byLength">Length-indexed bucket table.</param>
     /// <param name="ignoreCase">Whether to use ASCII case-fold compare.</param>
-    private ByteKeywordSet(byte[][][] byLength, bool ignoreCase)
+    /// <param name="firstByteSet">First-byte dispatch set covering every entry's leading byte.</param>
+    private ByteKeywordSet(byte[][][] byLength, bool ignoreCase, SearchValues<byte> firstByteSet)
     {
         _byLength = byLength;
         _ignoreCase = ignoreCase;
+        FirstByteSet = firstByteSet;
     }
+
+    /// <summary>Gets the auto-derived first-byte dispatch set covering every keyword's leading byte (and the case-flipped variant for case-insensitive sets).</summary>
+    /// <remarks>
+    /// Computed once at construction by walking every entry. Use this in place of a hand-curated
+    /// <c>SearchValues.Create("…"u8)</c> when wiring a keyword rule's <c>FirstBytes</c> dispatch —
+    /// <see cref="LexerRule.FirstBytes"/> on the matching rule can be set straight to this property.
+    /// </remarks>
+    public SearchValues<byte> FirstByteSet { get; }
 
     /// <summary>Builds a case-sensitive set from the supplied UTF-8 keywords. Pass <c>[.. "name"u8]</c> or <c>[.. "name"u8]</c> per entry.</summary>
     /// <param name="keywords">Keyword bytes; each entry must be non-empty.</param>
@@ -91,7 +102,7 @@ public sealed class ByteKeywordSet
     {
         if (keywords.Length is 0)
         {
-            return new(new byte[1][][], ignoreCase);
+            return new(new byte[1][][], ignoreCase, SearchValues.Create(ReadOnlySpan<byte>.Empty));
         }
 
         var maxLen = 0;
@@ -128,6 +139,64 @@ public sealed class ByteKeywordSet
             byLength[kw.Length][cursors[kw.Length]++] = kw;
         }
 
-        return new(byLength, ignoreCase);
+        return new(byLength, ignoreCase, BuildFirstByteSet(keywords, ignoreCase));
+    }
+
+    /// <summary>Builds a <see cref="SearchValues{T}"/> covering every <paramref name="keywords"/> entry's leading byte; for case-insensitive sets the case-flipped variant is included too.</summary>
+    /// <param name="keywords">Keyword bytes.</param>
+    /// <param name="ignoreCase">Whether to include the case-flipped variant of each ASCII-letter first byte.</param>
+    /// <returns>First-byte dispatch set.</returns>
+    private static SearchValues<byte> BuildFirstByteSet(byte[][] keywords, bool ignoreCase)
+    {
+        const int AsciiByteCount = 256;
+        Span<bool> seen = stackalloc bool[AsciiByteCount];
+        for (var i = 0; i < keywords.Length; i++)
+        {
+            var first = keywords[i][0];
+            seen[first] = true;
+            if (ignoreCase)
+            {
+                seen[CaseFlip(first)] = true;
+            }
+        }
+
+        return MaterializeFlags(seen);
+    }
+
+    /// <summary>Returns the case-flipped variant for ASCII letters; non-letters pass through unchanged.</summary>
+    /// <param name="b">Byte to flip.</param>
+    /// <returns>Flipped byte (or original).</returns>
+    private static byte CaseFlip(byte b) => b switch
+    {
+        >= (byte)'a' and <= (byte)'z' => (byte)(b & ~AsciiByteHelpers.AsciiCaseBit),
+        >= (byte)'A' and <= (byte)'Z' => (byte)(b | AsciiByteHelpers.AsciiCaseBit),
+        _ => b
+    };
+
+    /// <summary>Builds a <see cref="SearchValues{T}"/> from a 256-slot bool flag table.</summary>
+    /// <param name="seen">Per-byte flag array.</param>
+    /// <returns>Search values covering every set byte.</returns>
+    private static SearchValues<byte> MaterializeFlags(ReadOnlySpan<bool> seen)
+    {
+        var distinctCount = 0;
+        for (var b = 0; b < seen.Length; b++)
+        {
+            if (seen[b])
+            {
+                distinctCount++;
+            }
+        }
+
+        var result = new byte[distinctCount];
+        var idx = 0;
+        for (var b = 0; b < seen.Length; b++)
+        {
+            if (seen[b])
+            {
+                result[idx++] = (byte)b;
+            }
+        }
+
+        return SearchValues.Create(result);
     }
 }

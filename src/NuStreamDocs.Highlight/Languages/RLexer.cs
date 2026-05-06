@@ -85,15 +85,6 @@ public static class RLexer
     private static readonly SearchValues<byte> IdentifierContinue = SearchValues.Create(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."u8);
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("befilnrwsi"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("f"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("TFNI"u8);
-
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/^&|!=<>?:%~"u8);
 
@@ -109,11 +100,8 @@ public static class RLexer
         IncludeFloatLiteral = true,
         IncludeIntegerLiteral = true,
         KeywordConstants = KeywordConstants,
-        KeywordConstantFirst = KeywordConstantFirst,
         KeywordDeclarations = KeywordDeclarations,
-        KeywordDeclarationFirst = KeywordDeclarationFirst,
         Keywords = Keywords,
-        KeywordFirst = KeywordFirst,
         IdentifierContinue = IdentifierContinue,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,

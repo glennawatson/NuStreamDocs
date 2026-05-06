@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
@@ -60,15 +59,6 @@ public static class CommonLispLexer
         [.. "nil"u8],
         [.. "t"u8]);
 
-    /// <summary>First-byte set for declaration forms.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("dil"u8);
-
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abcdfgilnopqrstuw"u8);
-
-    /// <summary>First-byte set for constants.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("nt"u8);
-
     /// <summary>Gets the singleton Common Lisp lexer.</summary>
     public static Lexer Instance { get; } = Build();
 
@@ -79,11 +69,8 @@ public static class CommonLispLexer
         LispFamilyConfig config = new()
         {
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             IncludeDataBrackets = false,
             IncludeColonKeyword = true
         };

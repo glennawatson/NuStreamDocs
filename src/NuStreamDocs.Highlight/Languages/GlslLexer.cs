@@ -106,29 +106,13 @@ public static class GlslLexer
         [.. "true"u8],
         [.. "false"u8]);
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("bcdefirstw"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("abdfimsuv"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("abciflmnoprsuvw"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tf"u8);
-
     /// <summary>Gets the singleton GLSL lexer.</summary>
     public static Lexer Instance { get; } = CFamilyRules.CreateLexer(new()
     {
         Keywords = Keywords,
-        KeywordFirst = KeywordFirst,
         KeywordTypes = KeywordTypes,
-        KeywordTypeFirst = KeywordTypeFirst,
         KeywordDeclarations = KeywordDeclarations,
-        KeywordDeclarationFirst = KeywordDeclarationFirst,
         KeywordConstants = KeywordConstants,
-        KeywordConstantFirst = KeywordConstantFirst,
         Operators = CFamilyShared.StandardOperators,
         OperatorFirst = CFamilyShared.StandardOperatorFirst,
         Punctuation = CFamilyShared.StandardPunctuation,

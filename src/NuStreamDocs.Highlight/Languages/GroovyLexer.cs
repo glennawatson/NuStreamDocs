@@ -77,15 +77,6 @@ public static class GroovyLexer
         .. CFamilyShared.StandardOperators
     ];
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abcdefinprstw"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("bcdfilsv"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("acdefilnprstv"u8);
-
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Groovy <c>@</c> annotation marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.@"u8);
 
@@ -104,13 +95,9 @@ public static class GroovyLexer
         CFamilyConfig config = new()
         {
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = CFamilyShared.TrueFalseNullFirst,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = PunctuationSet,

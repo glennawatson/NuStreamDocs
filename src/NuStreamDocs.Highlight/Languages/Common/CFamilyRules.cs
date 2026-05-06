@@ -159,13 +159,13 @@ internal static class CFamilyRules
             LexerRule.NoStateChange) { FirstBytes = LanguageCommon.IntegerFirst };
     }
 
-    /// <summary>Keyword-set rule.</summary>
+    /// <summary>Keyword-set rule. Falls back to <see cref="ByteKeywordSet.FirstByteSet"/> when <paramref name="firstBytes"/> is null.</summary>
     /// <param name="keywords">Keyword set.</param>
-    /// <param name="firstBytes">First-byte dispatch set.</param>
+    /// <param name="firstBytes">Optional first-byte dispatch override; null falls back to the auto-derived set.</param>
     /// <param name="tokenClass">Classification to emit.</param>
     /// <returns>The keyword rule.</returns>
-    private static LexerRule BuildKeywordRule(ByteKeywordSet keywords, SearchValues<byte> firstBytes, TokenClass tokenClass) =>
-        new(slice => TokenMatchers.MatchKeyword(slice, keywords), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes };
+    private static LexerRule BuildKeywordRule(ByteKeywordSet keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass) =>
+        new(slice => TokenMatchers.MatchKeyword(slice, keywords), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes ?? keywords.FirstByteSet };
 
     /// <summary>Identifier rule; uses the language-specific identifier-start / continue sets when supplied, else the ASCII-letter default.</summary>
     /// <param name="config">Configuration.</param>

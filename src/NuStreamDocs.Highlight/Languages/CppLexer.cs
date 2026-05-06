@@ -122,18 +122,6 @@ public static class CppLexer
         .. CFamilyShared.StandardOperators
     ];
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("acdefginortwsx_"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("abcdfilpsuvw"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("cefimnoprstuv"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfnN"u8);
-
     /// <summary>Integer-literal suffix bytes (extends the C set with <c>z</c> / <c>Z</c> for <c>size_t</c>).</summary>
     private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("uUlLzZ"u8);
 
@@ -155,13 +143,9 @@ public static class CppLexer
         CFamilyConfig config = new()
         {
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
             Operators = OperatorTable,
             OperatorFirst = CFamilyShared.StandardOperatorFirst,
             Punctuation = CFamilyShared.StandardPunctuation,

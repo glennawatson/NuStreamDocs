@@ -78,18 +78,6 @@ public static class ElmLexer
         [.. "."u8]
     ];
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("acehiloftw"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("BCDFHILMRS"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("aeimpt"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("TFNJOE"u8);
-
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/=<>|&!:."u8);
 
@@ -106,13 +94,13 @@ public static class ElmLexer
             BlockCommentClose = [.. "-}"u8],
             LineCommentPrefix = [.. "--"u8],
             Keywords = Keywords,
-            KeywordFirst = KeywordFirst,
+            KeywordFirst = Keywords.FirstByteSet,
             KeywordTypes = KeywordTypes,
-            KeywordTypeFirst = KeywordTypeFirst,
+            KeywordTypeFirst = KeywordTypes.FirstByteSet,
             KeywordDeclarations = KeywordDeclarations,
-            KeywordDeclarationFirst = KeywordDeclarationFirst,
+            KeywordDeclarationFirst = KeywordDeclarations.FirstByteSet,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst,
+            KeywordConstantFirst = KeywordConstants.FirstByteSet,
             Operators = OperatorTable,
             OperatorFirst = OperatorFirst
         };

@@ -138,18 +138,6 @@ public static class JuliaLexer
     /// <summary>First-byte set for the <c>#</c> comment dispatch.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
 
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("bcdefgilqrtuw"u8);
-
-    /// <summary>First-byte set for type keywords.</summary>
-    private static readonly SearchValues<byte> KeywordTypeFirst = SearchValues.Create("ABCDFIMSTNUV"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("abcfmpst"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfnm"u8);
-
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/%=<>!&|^~?."u8);
 
@@ -166,13 +154,9 @@ public static class JuliaLexer
         IncludeFloatLiteral = true,
         IncludeIntegerLiteral = true,
         KeywordConstants = KeywordConstants,
-        KeywordConstantFirst = KeywordConstantFirst,
         KeywordTypes = KeywordTypes,
-        KeywordTypeFirst = KeywordTypeFirst,
         KeywordDeclarations = KeywordDeclarations,
-        KeywordDeclarationFirst = KeywordDeclarationFirst,
         Keywords = Keywords,
-        KeywordFirst = KeywordFirst,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
         Punctuation = PunctuationSet
