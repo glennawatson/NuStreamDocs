@@ -39,6 +39,43 @@ internal static class CFamilyRules
     public static Lexer CreateLexer(in CFamilyConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
+    /// <summary>Builds a brace-style annotation-punctuation language lexer (Java / Kotlin / Scala / Dart / Groovy shape).</summary>
+    /// <param name="tables">Keyword + operator tables.</param>
+    /// <param name="integerSuffix">Integer literal suffix bytes.</param>
+    /// <param name="floatSuffix">Float literal suffix bytes.</param>
+    /// <param name="includeDocComment">Whether <c>///</c> doc comments are recognized.</param>
+    /// <param name="includeCharacterLiteral">Whether <c>'x'</c> character literals are recognized.</param>
+    /// <param name="specialString">Optional pre-string rule (raw / triple-quoted / interpolated).</param>
+    /// <returns>Built lexer.</returns>
+    public static Lexer CreateBraceAnnotationLexer(
+        in KeywordTablePack tables,
+        SearchValues<byte> integerSuffix,
+        SearchValues<byte> floatSuffix,
+        bool includeDocComment,
+        bool includeCharacterLiteral,
+        LexerRule? specialString) =>
+        CreateLexer(new()
+        {
+            Tables = tables,
+            Punctuation = CFamilyShared.AnnotationPunctuation,
+            IntegerSuffix = integerSuffix,
+            FloatSuffix = floatSuffix,
+            IncludeDocComment = includeDocComment,
+            IncludePreprocessor = false,
+            IncludeCharacterLiteral = includeCharacterLiteral,
+            WhitespaceIncludesNewlines = true,
+            SpecialString = specialString
+        });
+
+    /// <summary>Builds a triple-double-quoted raw-string rule (Java text blocks, Kotlin / Scala / Groovy / Dart triple-quoted strings).</summary>
+    /// <param name="minQuotes">Minimum opening / closing quote run length (typically 3).</param>
+    /// <returns>The triple-quoted raw-string rule.</returns>
+    public static LexerRule CreateTripleDoubleQuotedRawStringRule(int minQuotes) =>
+        new(slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', minQuotes), TokenClass.StringDouble, LexerRule.NoStateChange)
+        {
+            FirstBytes = LanguageCommon.DoubleQuoteFirst
+        };
+
     /// <summary>Builds the canonical C-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
@@ -57,10 +94,10 @@ internal static class CFamilyRules
             HexNumber: BuildHexNumberRule(config),
             FloatNumber: BuildFloatNumberRule(config),
             IntegerNumber: BuildIntegerNumberRule(config),
-            KeywordConstant: BuildKeywordRule(config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant),
-            KeywordType: BuildKeywordRule(config.KeywordTypes, config.KeywordTypeFirst, TokenClass.KeywordType),
-            KeywordDeclaration: BuildKeywordRule(config.KeywordDeclarations, config.KeywordDeclarationFirst, TokenClass.KeywordDeclaration),
-            Keyword: BuildKeywordRule(config.Keywords, config.KeywordFirst, TokenClass.Keyword),
+            KeywordConstant: BuildKeywordRule(config.Tables.KeywordConstants, config.Tables.KeywordConstantFirst, TokenClass.KeywordConstant),
+            KeywordType: BuildKeywordRule(config.Tables.KeywordTypes, config.Tables.KeywordTypeFirst, TokenClass.KeywordType),
+            KeywordDeclaration: BuildKeywordRule(config.Tables.KeywordDeclarations, config.Tables.KeywordDeclarationFirst, TokenClass.KeywordDeclaration),
+            Keyword: BuildKeywordRule(config.Tables.Keywords, config.Tables.KeywordFirst, TokenClass.Keyword),
             Identifier: BuildIdentifierRule(config),
             Operator: BuildOperatorRule(config),
             Punctuation: BuildPunctuationRule(config));
@@ -186,8 +223,8 @@ internal static class CFamilyRules
     /// <returns>The operator rule.</returns>
     private static LexerRule BuildOperatorRule(in CFamilyConfig config)
     {
-        var operators = config.Operators;
-        var firstBytes = config.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
+        var operators = config.Tables.Operators;
+        var firstBytes = config.Tables.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
         return new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = firstBytes };
     }
 

@@ -42,12 +42,15 @@ public static class CLexer
     {
         CFamilyConfig config = new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = CFamilyShared.StandardOperators,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst,
+            Tables = new()
+            {
+                Keywords = Keywords,
+                KeywordTypes = KeywordTypes,
+                KeywordDeclarations = KeywordDeclarations,
+                KeywordConstants = KeywordConstants,
+                Operators = CFamilyShared.StandardOperators,
+                OperatorFirst = CFamilyShared.StandardOperatorFirst
+            },
             Punctuation = CFamilyShared.StandardPunctuation,
             IntegerSuffix = CFamilyShared.CIntegerSuffix,
             FloatSuffix = CFamilyShared.CFloatSuffix,

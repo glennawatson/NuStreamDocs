@@ -24,15 +24,18 @@ public static class HaskellLexer
         BlockCommentOpen = [.. "{-"u8],
         BlockCommentClose = [.. "-}"u8],
         LineCommentPrefix = [.. "--"u8],
-        Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-            MlFamilyShared.CommonKeywordsLiteral,
-            "do qualified hiding infix infixl infixr deriving default foreign"u8),
-        KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-            "Bool Char Double Float Int Integer String Maybe Either IO Word Word8 Word16 Word32 Word64"u8),
-        KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-            "module import data newtype type class instance family"u8),
-        KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
-            "True False Nothing Just Left Right"u8),
-        Operators = OperatorTable
+        Tables = new()
+        {
+            Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+                MlFamilyShared.CommonKeywordsLiteral,
+                "do qualified hiding infix infixl infixr deriving default foreign"u8),
+            KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+                "Bool Char Double Float Int Integer String Maybe Either IO Word Word8 Word16 Word32 Word64"u8),
+            KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+                "module import data newtype type class instance family"u8),
+            KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+                "True False Nothing Just Left Right"u8),
+            Operators = OperatorTable
+        }
     });
 }

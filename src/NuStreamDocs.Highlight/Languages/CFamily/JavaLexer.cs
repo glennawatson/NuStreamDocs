@@ -43,31 +43,19 @@ public static class JavaLexer
 
     /// <summary>Builds the Java lexer.</summary>
     /// <returns>Lexer.</returns>
-    private static Lexer Build()
-    {
-        var textBlock = new LexerRule(
-            static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', TextBlockMinQuotes),
-            TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
-
-        CFamilyConfig config = new()
+    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+        new()
         {
             Keywords = Keywords,
             KeywordTypes = KeywordTypes,
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = CFamilyShared.AnnotationPunctuation,
-            IntegerSuffix = CFamilyShared.JvmIntegerSuffix,
-            FloatSuffix = CFamilyShared.JvmFloatSuffix,
-            IncludeDocComment = false,
-            IncludePreprocessor = false,
-            IncludeCharacterLiteral = true,
-            WhitespaceIncludesNewlines = true,
-            SpecialString = textBlock
-        };
-
-        return CFamilyRules.CreateLexer(config);
-    }
+            OperatorFirst = CFamilyShared.StandardOperatorFirst
+        },
+        integerSuffix: CFamilyShared.JvmIntegerSuffix,
+        floatSuffix: CFamilyShared.JvmFloatSuffix,
+        includeDocComment: false,
+        includeCharacterLiteral: true,
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(TextBlockMinQuotes));
 }

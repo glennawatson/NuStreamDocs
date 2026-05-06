@@ -64,11 +64,14 @@ public static class SqlLexer
 
         CFamilyConfig config = new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
+            Tables = new()
+            {
+                Keywords = Keywords,
+                KeywordTypes = KeywordTypes,
+                KeywordDeclarations = KeywordDeclarations,
+                KeywordConstants = KeywordConstants,
+                Operators = OperatorTable
+            },
             Punctuation = PunctuationSet,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,

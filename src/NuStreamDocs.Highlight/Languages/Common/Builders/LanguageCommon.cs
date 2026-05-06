@@ -60,6 +60,9 @@ internal static class LanguageCommon
     /// <summary>First-byte set for the at-sign Razor / verbatim-string trigger.</summary>
     public static readonly SearchValues<byte> AtFirst = SearchValues.Create("@"u8);
 
+    /// <summary>First-byte set for <c>#</c>-prefixed comments / directives.</summary>
+    public static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
+
     /// <summary>First-byte set for an XML / Razor tag name (ASCII letters and underscore).</summary>
     public static readonly SearchValues<byte> TagNameFirst = TokenMatchers.AsciiIdentifierStart;
 
@@ -89,6 +92,19 @@ internal static class LanguageCommon
     /// <returns>Length matched.</returns>
     public static int LineComment(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchLineCommentToEol(slice, (byte)'/', (byte)'/');
+
+    /// <summary>Builds a <c>#</c>-line-comment rule.</summary>
+    /// <returns>Configured rule.</returns>
+    public static LexerRule CreateHashLineCommentRule() =>
+        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst };
+
+    /// <summary>Builds a paired block-comment rule with the supplied opener / closer (e.g. <c>#[ ... ]#</c> or <c>#= ... =#</c>).</summary>
+    /// <param name="open">Opening delimiter bytes.</param>
+    /// <param name="close">Closing delimiter bytes.</param>
+    /// <param name="firstBytes">First-byte dispatch set.</param>
+    /// <returns>Configured rule.</returns>
+    public static LexerRule CreatePairedBlockCommentRule(byte[] open, byte[] close, SearchValues<byte> firstBytes) =>
+        new(slice => TokenMatchers.MatchPairedBlockComment(slice, open, close), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = firstBytes };
 
     /// <summary><c>///</c> XML doc-comment to end of line — must precede the regular <c>//</c> line-comment matcher.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

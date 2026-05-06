@@ -70,12 +70,15 @@ public static class TypeScriptLexer
 
         CFamilyConfig config = new()
         {
-            Keywords = GeneralKeywords,
-            KeywordTypes = TypeKeywords,
-            KeywordDeclarations = DeclarationKeywords,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
+            Tables = new()
+            {
+                Keywords = GeneralKeywords,
+                KeywordTypes = TypeKeywords,
+                KeywordDeclarations = DeclarationKeywords,
+                KeywordConstants = KeywordConstants,
+                Operators = OperatorTable,
+                OperatorFirst = OperatorFirst
+            },
             Punctuation = LanguageCommon.CCurlyPunctuationFirst,
             IntegerSuffix = BigintSuffix,
             FloatSuffix = BigintSuffix,

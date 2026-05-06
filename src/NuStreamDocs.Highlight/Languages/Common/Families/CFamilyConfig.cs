@@ -3,51 +3,20 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
 
 /// <summary>Per-language configuration consumed by <see cref="CFamilyRules.Build"/>.</summary>
 /// <remarks>
 /// Built via object-initializer syntax so call sites read as
-/// <c>new() { Keywords = …, … }</c> — there is no multi-argument
+/// <c>new() { Tables = …, … }</c> — there is no multi-argument
 /// constructor to drift out of order, and adding a new field never
 /// breaks an existing call.
 /// </remarks>
 internal readonly record struct CFamilyConfig
 {
-    /// <summary>Gets the general-keyword set (control flow, modifiers).</summary>
-    public ByteKeywordSet Keywords { get; init; }
-
-    /// <summary>Gets the optional first-byte dispatch set for general keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
-    public SearchValues<byte>? KeywordFirst { get; init; }
-
-    /// <summary>Gets the type-keyword set (built-in primitive type names).</summary>
-    public ByteKeywordSet KeywordTypes { get; init; }
-
-    /// <summary>Gets the optional first-byte dispatch set for type keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
-    public SearchValues<byte>? KeywordTypeFirst { get; init; }
-
-    /// <summary>Gets the declaration-keyword set (class / struct / fn / def-style).</summary>
-    public ByteKeywordSet KeywordDeclarations { get; init; }
-
-    /// <summary>Gets the optional first-byte dispatch set for declaration keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
-    public SearchValues<byte>? KeywordDeclarationFirst { get; init; }
-
-    /// <summary>Gets the constant-keyword set (true / false / null / nil-style).</summary>
-    public ByteKeywordSet KeywordConstants { get; init; }
-
-    /// <summary>Gets the optional first-byte dispatch set for constant keywords; <see langword="null"/> falls back to <see cref="ByteKeywordSet.FirstByteSet"/>.</summary>
-    public SearchValues<byte>? KeywordConstantFirst { get; init; }
-
-    /// <summary>Gets the operator alternation, sorted longest-first.</summary>
-    public byte[][] Operators { get; init; }
-
-    /// <summary>
-    /// Gets the optional first-byte dispatch set for operators;
-    /// <see langword="null"/> falls back to <see cref="OperatorAlternationFactory.FirstBytesOf"/> over <see cref="Operators"/>.
-    /// </summary>
-    public SearchValues<byte>? OperatorFirst { get; init; }
+    /// <summary>Gets the keyword + operator table bundle.</summary>
+    public KeywordTablePack Tables { get; init; }
 
     /// <summary>Gets the structural punctuation byte set.</summary>
     public SearchValues<byte> Punctuation { get; init; }

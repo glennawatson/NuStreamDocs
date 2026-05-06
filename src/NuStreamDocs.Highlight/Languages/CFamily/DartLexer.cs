@@ -44,31 +44,19 @@ public static class DartLexer
 
     /// <summary>Builds the Dart lexer.</summary>
     /// <returns>Lexer.</returns>
-    private static Lexer Build()
-    {
-        var tripleQuoted = new LexerRule(
-            static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', TripleQuoteLength),
-            TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
-
-        CFamilyConfig config = new()
+    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+        new()
         {
             Keywords = Keywords,
             KeywordTypes = KeywordTypes,
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = CFamilyShared.AnnotationPunctuation,
-            IntegerSuffix = CFamilyRules.NoSuffix,
-            FloatSuffix = CFamilyRules.NoSuffix,
-            IncludeDocComment = true,
-            IncludePreprocessor = false,
-            IncludeCharacterLiteral = false,
-            WhitespaceIncludesNewlines = true,
-            SpecialString = tripleQuoted
-        };
-
-        return CFamilyRules.CreateLexer(config);
-    }
+            OperatorFirst = CFamilyShared.StandardOperatorFirst
+        },
+        integerSuffix: CFamilyRules.NoSuffix,
+        floatSuffix: CFamilyRules.NoSuffix,
+        includeDocComment: true,
+        includeCharacterLiteral: false,
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(TripleQuoteLength));
 }

@@ -43,31 +43,19 @@ public static class ScalaLexer
 
     /// <summary>Builds the Scala lexer.</summary>
     /// <returns>Lexer.</returns>
-    private static Lexer Build()
-    {
-        var rawString = new LexerRule(
-            static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', RawStringMinQuotes),
-            TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
-
-        CFamilyConfig config = new()
+    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+        new()
         {
             Keywords = Keywords,
             KeywordTypes = KeywordTypes,
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = CFamilyShared.AnnotationPunctuation,
-            IntegerSuffix = CFamilyShared.JvmIntegerSuffix,
-            FloatSuffix = CFamilyShared.JvmFloatSuffix,
-            IncludeDocComment = false,
-            IncludePreprocessor = false,
-            IncludeCharacterLiteral = true,
-            WhitespaceIncludesNewlines = true,
-            SpecialString = rawString
-        };
-
-        return CFamilyRules.CreateLexer(config);
-    }
+            OperatorFirst = CFamilyShared.StandardOperatorFirst
+        },
+        integerSuffix: CFamilyShared.JvmIntegerSuffix,
+        floatSuffix: CFamilyShared.JvmFloatSuffix,
+        includeDocComment: false,
+        includeCharacterLiteral: true,
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(RawStringMinQuotes));
 }

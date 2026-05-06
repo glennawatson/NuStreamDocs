@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Buffers;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
@@ -36,14 +35,11 @@ public static class NimLexer
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
         "..= <<= >>= && || .. -> => <= >= == != += -= *= /= %= + - * / % & | ^ ! ~ = < > ?"u8);
 
-    /// <summary>First-byte set for the <c>#</c> comment dispatch.</summary>
-    private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
-
     /// <summary>Gets the singleton Nim lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        PreCommentRule = new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        PreCommentRule = LanguageCommon.CreatePairedBlockCommentRule([.. "#["u8], [.. "]#"u8], LanguageCommon.HashFirst),
+        LineComment = LanguageCommon.CreateHashLineCommentRule(),
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         IncludeFloatLiteral = true,
@@ -55,10 +51,4 @@ public static class NimLexer
         Operators = OperatorTable,
         Punctuation = CFamilyShared.AnnotationColonPunctuation
     });
-
-    /// <summary>Matches a Nim <c>#[ ... ]#</c> block comment.</summary>
-    /// <param name="slice">Slice anchored at the cursor.</param>
-    /// <returns>Length matched, or zero.</returns>
-    private static int MatchBlockComment(ReadOnlySpan<byte> slice) =>
-        TokenMatchers.MatchPairedBlockComment(slice, "#["u8, "]#"u8);
 }

@@ -42,12 +42,15 @@ public static class GlslLexer
     /// <summary>Gets the singleton GLSL lexer.</summary>
     public static Lexer Instance { get; } = CFamilyRules.CreateLexer(new()
     {
-        Keywords = Keywords,
-        KeywordTypes = KeywordTypes,
-        KeywordDeclarations = KeywordDeclarations,
-        KeywordConstants = KeywordConstants,
-        Operators = CFamilyShared.StandardOperators,
-        OperatorFirst = CFamilyShared.StandardOperatorFirst,
+        Tables = new()
+        {
+            Keywords = Keywords,
+            KeywordTypes = KeywordTypes,
+            KeywordDeclarations = KeywordDeclarations,
+            KeywordConstants = KeywordConstants,
+            Operators = CFamilyShared.StandardOperators,
+            OperatorFirst = CFamilyShared.StandardOperatorFirst
+        },
         Punctuation = CFamilyShared.StandardPunctuation,
         IntegerSuffix = SearchValues.Create("uU"u8),
         FloatSuffix = SearchValues.Create("fFlL"u8),

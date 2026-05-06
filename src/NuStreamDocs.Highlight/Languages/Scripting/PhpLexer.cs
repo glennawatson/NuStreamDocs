@@ -184,12 +184,15 @@ public static class PhpLexer
     {
         CFamilyConfig config = new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
-            OperatorFirst = OperatorFirst,
+            Tables = new()
+            {
+                Keywords = Keywords,
+                KeywordTypes = KeywordTypes,
+                KeywordDeclarations = KeywordDeclarations,
+                KeywordConstants = KeywordConstants,
+                Operators = OperatorTable,
+                OperatorFirst = OperatorFirst
+            },
             Punctuation = PunctuationSet,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,

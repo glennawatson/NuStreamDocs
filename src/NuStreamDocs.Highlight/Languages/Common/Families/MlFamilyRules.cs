@@ -71,17 +71,17 @@ internal static class MlFamilyRules
 
         // Keyword tables (case-sensitive). First-byte dispatch falls back to the keyword set's
         // auto-derived FirstByteSet when the per-language override is null.
-        rules.Add(BuildKeywordRule(config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant));
-        rules.Add(BuildKeywordRule(config.KeywordTypes, config.KeywordTypeFirst, TokenClass.KeywordType));
-        rules.Add(BuildKeywordRule(config.KeywordDeclarations, config.KeywordDeclarationFirst, TokenClass.KeywordDeclaration));
-        rules.Add(BuildKeywordRule(config.Keywords, config.KeywordFirst, TokenClass.Keyword));
+        rules.Add(BuildKeywordRule(config.Tables.KeywordConstants, config.Tables.KeywordConstantFirst, TokenClass.KeywordConstant));
+        rules.Add(BuildKeywordRule(config.Tables.KeywordTypes, config.Tables.KeywordTypeFirst, TokenClass.KeywordType));
+        rules.Add(BuildKeywordRule(config.Tables.KeywordDeclarations, config.Tables.KeywordDeclarationFirst, TokenClass.KeywordDeclaration));
+        rules.Add(BuildKeywordRule(config.Tables.Keywords, config.Tables.KeywordFirst, TokenClass.Keyword));
 
         // Identifier — letters / digits / underscore / trailing apostrophe (ML convention).
         rules.Add(new(MatchMlIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart });
 
         // Operator alternation.
-        var operators = config.Operators;
-        var operatorFirst = config.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
+        var operators = config.Tables.Operators;
+        var operatorFirst = config.Tables.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
         rules.Add(new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = operatorFirst });
 
         rules.Add(new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet });

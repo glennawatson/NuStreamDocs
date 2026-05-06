@@ -39,36 +39,30 @@ public static class GroovyLexer
         ">>>= >>> :: ?: ?. *."u8,
         CFamilyShared.StandardOperatorsLiteral);
 
+    /// <summary>Integer-literal suffix bytes.</summary>
+    private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("lLgG"u8);
+
+    /// <summary>Float-literal suffix bytes.</summary>
+    private static readonly SearchValues<byte> FloatSuffixSet = SearchValues.Create("fFdDgG"u8);
+
     /// <summary>Gets the singleton Groovy lexer.</summary>
     public static Lexer Instance { get; } = Build();
 
     /// <summary>Builds the Groovy lexer.</summary>
     /// <returns>Lexer.</returns>
-    private static Lexer Build()
-    {
-        var tripleQuoted = new LexerRule(
-            static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', TripleQuoteLength),
-            TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
-
-        CFamilyConfig config = new()
+    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+        new()
         {
             Keywords = Keywords,
             KeywordTypes = KeywordTypes,
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst,
-            Punctuation = CFamilyShared.AnnotationPunctuation,
-            IntegerSuffix = SearchValues.Create("lLgG"u8),
-            FloatSuffix = SearchValues.Create("fFdDgG"u8),
-            IncludeDocComment = false,
-            IncludePreprocessor = false,
-            IncludeCharacterLiteral = true,
-            WhitespaceIncludesNewlines = true,
-            SpecialString = tripleQuoted
-        };
-
-        return CFamilyRules.CreateLexer(config);
-    }
+            OperatorFirst = CFamilyShared.StandardOperatorFirst
+        },
+        integerSuffix: IntegerSuffixSet,
+        floatSuffix: FloatSuffixSet,
+        includeDocComment: false,
+        includeCharacterLiteral: true,
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(TripleQuoteLength));
 }

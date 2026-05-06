@@ -54,12 +54,15 @@ public static class ObjectiveCLexer
     {
         CFamilyConfig config = new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst,
+            Tables = new()
+            {
+                Keywords = Keywords,
+                KeywordTypes = KeywordTypes,
+                KeywordDeclarations = KeywordDeclarations,
+                KeywordConstants = KeywordConstants,
+                Operators = OperatorTable,
+                OperatorFirst = CFamilyShared.StandardOperatorFirst
+            },
             Punctuation = CFamilyShared.StandardPunctuation,
             IntegerSuffix = CFamilyShared.CIntegerSuffix,
             FloatSuffix = CFamilyShared.CFloatSuffix,

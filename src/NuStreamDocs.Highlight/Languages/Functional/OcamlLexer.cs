@@ -46,11 +46,14 @@ public static class OcamlLexer
             BlockCommentOpen = [.. "(*"u8],
             BlockCommentClose = [.. "*)"u8],
             LineCommentPrefix = null,
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable
+            Tables = new()
+            {
+                Keywords = Keywords,
+                KeywordTypes = KeywordTypes,
+                KeywordDeclarations = KeywordDeclarations,
+                KeywordConstants = KeywordConstants,
+                Operators = OperatorTable
+            }
         };
 
         return MlFamilyRules.CreateLexer(config);

@@ -65,12 +65,15 @@ public static class CppLexer
 
         CFamilyConfig config = new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst,
+            Tables = new()
+            {
+                Keywords = Keywords,
+                KeywordTypes = KeywordTypes,
+                KeywordDeclarations = KeywordDeclarations,
+                KeywordConstants = KeywordConstants,
+                Operators = OperatorTable,
+                OperatorFirst = CFamilyShared.StandardOperatorFirst
+            },
             Punctuation = CFamilyShared.StandardPunctuation,
             IntegerSuffix = IntegerSuffixSet,
             FloatSuffix = CFamilyShared.CFloatSuffix,
