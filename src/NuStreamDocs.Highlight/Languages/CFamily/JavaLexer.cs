@@ -14,48 +14,24 @@ namespace NuStreamDocs.Highlight.Languages.CFamily;
 /// </remarks>
 public static class JavaLexer
 {
-    /// <summary>Minimum opening / closing quote run for a text-block literal.</summary>
-    private const int TextBlockMinQuotes = 3;
-
-    /// <summary>General-keyword set — shared C-family control-flow plus Java-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-        CFamilyShared.ControlFlowLiteral,
-        "throws new this super instanceof import package synchronized yield assert"u8);
-
-    /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-        "boolean byte char short int long float double void var"u8);
-
-    /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-        "class interface enum record extends implements permits sealed abstract final static public private protected transient volatile native strictfp"u8);
-
-    /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
-
-    /// <summary>Operator alternation — shared C-style core plus Java's unsigned right-shift forms, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
-        ">>>= >>> ::"u8,
-        CFamilyShared.StandardOperatorsLiteral);
-
     /// <summary>Gets the singleton Java lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Java lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+    public static Lexer Instance { get; } = CFamilyRules.CreateBraceAnnotationLexer(
         new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
+            Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+                CFamilyShared.ControlFlowLiteral,
+                "throws new this super instanceof import package synchronized yield assert"u8),
+            KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+                "boolean byte char short int long float double void var"u8),
+            KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+                "class interface enum record extends implements permits sealed abstract final static public private protected transient volatile native strictfp"u8),
+            KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
+            Operators = OperatorAlternationFactory.SplitLongestFirst(">>>= >>> ::"u8, CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
         integerSuffix: CFamilyShared.JvmIntegerSuffix,
         floatSuffix: CFamilyShared.JvmFloatSuffix,
         includeDocComment: false,
         includeCharacterLiteral: true,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(TextBlockMinQuotes));
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
 }

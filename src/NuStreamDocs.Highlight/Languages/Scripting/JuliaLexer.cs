@@ -17,25 +17,6 @@ namespace NuStreamDocs.Highlight.Languages.Scripting;
 /// </remarks>
 public static class JuliaLexer
 {
-    /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-        "if elseif else end for while do begin let where in isa return break continue throw try catch finally import using export global local quote"u8);
-
-    /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-        "Bool Int Int8 Int16 Int32 Int64 Int128 UInt UInt8 UInt16 UInt32 UInt64 UInt128 Float16 Float32 Float64 Char String Symbol Any Nothing Missing Vector Matrix Array Tuple Dict Set"u8);
-
-    /// <summary>Declaration / structure keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-        "function macro module baremodule struct mutable abstract primitive type const"u8);
-
-    /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false nothing missing"u8);
-
-    /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
-        "<<= >>= ... <= >= == != && || << >> -> <: >: += -= *= /= %= // ^ + - * / % & | ! ~ = < > ?"u8);
-
     /// <summary>Gets the singleton Julia lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
@@ -45,11 +26,15 @@ public static class JuliaLexer
         IncludeSingleQuotedString = true,
         IncludeFloatLiteral = true,
         IncludeIntegerLiteral = true,
-        KeywordConstants = KeywordConstants,
-        KeywordTypes = KeywordTypes,
-        KeywordDeclarations = KeywordDeclarations,
-        Keywords = Keywords,
-        Operators = OperatorTable,
+        KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false nothing missing"u8),
+        KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+            "Bool Int Int8 Int16 Int32 Int64 Int128 UInt UInt8 UInt16 UInt32 UInt64 UInt128 Float16 Float32 Float64 Char String Symbol Any Nothing Missing Vector Matrix Array Tuple Dict Set"u8),
+        KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+            "function macro module baremodule struct mutable abstract primitive type const"u8),
+        Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+            "if elseif else end for while do begin let where in isa return break continue throw try catch finally import using export global local quote"u8),
+        Operators = OperatorAlternationFactory.SplitLongestFirst(
+            "<<= >>= ... <= >= == != && || << >> -> <: >: += -= *= /= %= // ^ + - * / % & | ! ~ = < > ?"u8),
         Punctuation = CFamilyShared.AnnotationColonPunctuation
     });
 }

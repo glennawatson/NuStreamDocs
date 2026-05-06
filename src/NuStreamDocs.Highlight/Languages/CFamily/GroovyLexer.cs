@@ -15,54 +15,24 @@ namespace NuStreamDocs.Highlight.Languages.CFamily;
 /// </remarks>
 public static class GroovyLexer
 {
-    /// <summary>Minimum opening / closing quote run for a triple-quoted string.</summary>
-    private const int TripleQuoteLength = 3;
-
-    /// <summary>General-keyword set — shared C-family control-flow plus Groovy-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-        CFamilyShared.ControlFlowLiteral,
-        "throws new this super instanceof import package as in assert"u8);
-
-    /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-        "boolean byte char short int long float double void"u8);
-
-    /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-        "def class interface trait enum extends implements abstract final static public private protected synchronized transient volatile"u8);
-
-    /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
-
-    /// <summary>Operator alternation — shared C-style core plus Groovy's unsigned right-shift / null-safe / spread forms, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
-        ">>>= >>> :: ?: ?. *."u8,
-        CFamilyShared.StandardOperatorsLiteral);
-
-    /// <summary>Integer-literal suffix bytes.</summary>
-    private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("lLgG"u8);
-
-    /// <summary>Float-literal suffix bytes.</summary>
-    private static readonly SearchValues<byte> FloatSuffixSet = SearchValues.Create("fFdDgG"u8);
-
     /// <summary>Gets the singleton Groovy lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Groovy lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+    public static Lexer Instance { get; } = CFamilyRules.CreateBraceAnnotationLexer(
         new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
+            Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+                CFamilyShared.ControlFlowLiteral,
+                "throws new this super instanceof import package as in assert"u8),
+            KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+                "boolean byte char short int long float double void"u8),
+            KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+                "def class interface trait enum extends implements abstract final static public private protected synchronized transient volatile"u8),
+            KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
+            Operators = OperatorAlternationFactory.SplitLongestFirst(">>>= >>> :: ?: ?. *."u8, CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
-        integerSuffix: IntegerSuffixSet,
-        floatSuffix: FloatSuffixSet,
+        integerSuffix: SearchValues.Create("lLgG"u8),
+        floatSuffix: SearchValues.Create("fFdDgG"u8),
         includeDocComment: false,
         includeCharacterLiteral: true,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(TripleQuoteLength));
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
 }

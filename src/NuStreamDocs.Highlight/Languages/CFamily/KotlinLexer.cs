@@ -15,54 +15,26 @@ namespace NuStreamDocs.Highlight.Languages.CFamily;
 /// </remarks>
 public static class KotlinLexer
 {
-    /// <summary>Minimum opening / closing quote run for a triple-quoted raw string.</summary>
-    private const int RawStringMinQuotes = 3;
-
-    /// <summary>General-keyword set — shared C-family control-flow plus Kotlin-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-        CFamilyShared.ControlFlowLiteral,
-        "when is as in out by where yield this super import package"u8);
-
-    /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-        "Boolean Byte Char Short Int Long Float Double String Unit Any Nothing Array List Map Set"u8);
-
-    /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-        "val var fun class interface object enum data sealed open abstract final override lateinit const inline infix tailrec operator suspend vararg noinline crossinline reified"u8,
-        "internal public private protected companion annotation typealias"u8);
-
-    /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
-
-    /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
-        "?: ..= .. -> :: == != <= >= && || ++ -- += -= *= /= %= ?. !! + - * / % ! = < > ?"u8);
-
-    /// <summary>Integer-literal suffix bytes.</summary>
-    private static readonly SearchValues<byte> IntegerSuffixSet = SearchValues.Create("Llu"u8);
-
-    /// <summary>Float-literal suffix bytes.</summary>
-    private static readonly SearchValues<byte> FloatSuffixSet = SearchValues.Create("fF"u8);
-
     /// <summary>Gets the singleton Kotlin lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Kotlin lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+    public static Lexer Instance { get; } = CFamilyRules.CreateBraceAnnotationLexer(
         new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
+            Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+                CFamilyShared.ControlFlowLiteral,
+                "when is as in out by where yield this super import package"u8),
+            KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+                "Boolean Byte Char Short Int Long Float Double String Unit Any Nothing Array List Map Set"u8),
+            KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+                "val var fun class interface object enum data sealed open abstract final override lateinit const inline infix tailrec operator suspend vararg noinline crossinline reified"u8,
+                "internal public private protected companion annotation typealias"u8),
+            KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
+            Operators = OperatorAlternationFactory.SplitLongestFirst(
+                "?: ..= .. -> :: == != <= >= && || ++ -- += -= *= /= %= ?. !! + - * / % ! = < > ?"u8),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
-        integerSuffix: IntegerSuffixSet,
-        floatSuffix: FloatSuffixSet,
+        integerSuffix: SearchValues.Create("Llu"u8),
+        floatSuffix: SearchValues.Create("fF"u8),
         includeDocComment: false,
         includeCharacterLiteral: true,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(RawStringMinQuotes));
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
 }

@@ -15,48 +15,24 @@ namespace NuStreamDocs.Highlight.Languages.CFamily;
 /// </remarks>
 public static class DartLexer
 {
-    /// <summary>Minimum opening / closing quote run for a triple-quoted raw string.</summary>
-    private const int TripleQuoteLength = 3;
-
-    /// <summary>General-keyword set — shared C-family control-flow plus Dart-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-        CFamilyShared.ControlFlowLiteral,
-        "new this super is as in yield async await import library part show hide deferred rethrow assert"u8);
-
-    /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-        "bool int double num String void dynamic Object Never Null Function Future Stream List Map Set Iterable"u8);
-
-    /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-        "var final const late static abstract external factory covariant operator get set class interface mixin enum typedef extends implements with on sealed base"u8);
-
-    /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
-
-    /// <summary>Operator alternation — shared C-style core plus Dart's null-safe / cascade / spread forms, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
-        "??= ?? ?. ... .."u8,
-        CFamilyShared.StandardOperatorsLiteral);
-
     /// <summary>Gets the singleton Dart lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Dart lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+    public static Lexer Instance { get; } = CFamilyRules.CreateBraceAnnotationLexer(
         new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
+            Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+                CFamilyShared.ControlFlowLiteral,
+                "new this super is as in yield async await import library part show hide deferred rethrow assert"u8),
+            KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+                "bool int double num String void dynamic Object Never Null Function Future Stream List Map Set Iterable"u8),
+            KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+                "var final const late static abstract external factory covariant operator get set class interface mixin enum typedef extends implements with on sealed base"u8),
+            KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
+            Operators = OperatorAlternationFactory.SplitLongestFirst("??= ?? ?. ... .."u8, CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
         integerSuffix: CFamilyRules.NoSuffix,
         floatSuffix: CFamilyRules.NoSuffix,
         includeDocComment: true,
         includeCharacterLiteral: false,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(TripleQuoteLength));
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
 }

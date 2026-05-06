@@ -14,48 +14,24 @@ namespace NuStreamDocs.Highlight.Languages.CFamily;
 /// </remarks>
 public static class ScalaLexer
 {
-    /// <summary>Minimum opening / closing quote run for a triple-quoted raw string.</summary>
-    private const int RawStringMinQuotes = 3;
-
-    /// <summary>General-keyword set — shared C-family control-flow plus Scala-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
-        CFamilyShared.ControlFlowLiteral,
-        "match yield new this super import package with extends derives as given using then"u8);
-
-    /// <summary>Built-in nominal type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
-        "Boolean Byte Short Int Long Float Double Char String Unit Any AnyVal AnyRef Nothing Null Option List Seq Map Set Array"u8);
-
-    /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
-        "val var def type class object trait enum abstract final sealed open implicit lazy override private protected public inline transparent opaque extension"u8);
-
-    /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
-
-    /// <summary>Operator alternation — shared C-style core plus Scala's <c>&lt;-</c> / <c>=&gt;</c> / <c>::</c> arrows, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
-        "<- => ::"u8,
-        CFamilyShared.StandardOperatorsLiteral);
-
     /// <summary>Gets the singleton Scala lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Scala lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build() => CFamilyRules.CreateBraceAnnotationLexer(
+    public static Lexer Instance { get; } = CFamilyRules.CreateBraceAnnotationLexer(
         new()
         {
-            Keywords = Keywords,
-            KeywordTypes = KeywordTypes,
-            KeywordDeclarations = KeywordDeclarations,
-            KeywordConstants = KeywordConstants,
-            Operators = OperatorTable,
+            Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+                CFamilyShared.ControlFlowLiteral,
+                "match yield new this super import package with extends derives as given using then"u8),
+            KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+                "Boolean Byte Short Int Long Float Double Char String Unit Any AnyVal AnyRef Nothing Null Option List Seq Map Set Array"u8),
+            KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+                "val var def type class object trait enum abstract final sealed open implicit lazy override private protected public inline transparent opaque extension"u8),
+            KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
+            Operators = OperatorAlternationFactory.SplitLongestFirst("<- => ::"u8, CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
         integerSuffix: CFamilyShared.JvmIntegerSuffix,
         floatSuffix: CFamilyShared.JvmFloatSuffix,
         includeDocComment: false,
         includeCharacterLiteral: true,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(RawStringMinQuotes));
+        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
 }
