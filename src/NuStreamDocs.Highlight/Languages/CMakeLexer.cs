@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -77,20 +78,11 @@ public static class CMakeLexer
         [.. "cmake_policy"u8],
         [.. "message"u8]);
 
-    /// <summary>First-byte set for whitespace.</summary>
-    private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
-
     /// <summary>First-byte set for the <c>#</c> comment dispatch.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
 
     /// <summary>First-byte set for the variable-expansion / generator-expression rule.</summary>
     private static readonly SearchValues<byte> DollarFirst = SearchValues.Create("$"u8);
-
-    /// <summary>First-byte set for general keywords (lower + upper-case dispatch).</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abcefinortwyABCEFINORTWY"u8);
-
-    /// <summary>First-byte set for declaration keywords (lower + upper-case dispatch).</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("acefimopstuACEFIMOPSTU"u8);
 
     /// <summary>Single-byte structural punctuation.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("();,"u8);
@@ -100,47 +92,19 @@ public static class CMakeLexer
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-."u8);
 
     /// <summary>Gets the singleton CMake lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the CMake lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
-        [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-
-            // #[[ ... ]] block comment must precede the # line-comment rule.
-            new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            // # line comment to end-of-line.
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            // ${VAR} variable, $<...> generator-expression — emit as one name token.
-            new(MatchDollarExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst },
-
-            // "..." string with backslash escapes.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-
-            // Numeric literal.
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-
-            // Declaration commands (set, function, add_executable, ...).
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-
-            // Control-flow commands (if, while, foreach, ...).
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-
-            new(
-                static slice => TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, IdentifierContinue),
-                TokenClass.Name,
-                LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+        PreCommentRule = new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        SpecialString = new(MatchDollarExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst },
+        IncludeDoubleQuotedString = true,
+        IncludeFloatLiteral = true,
+        IncludeIntegerLiteral = true,
+        KeywordDeclarations = KeywordDeclarations,
+        Keywords = Keywords,
+        IdentifierContinue = IdentifierContinue,
+        Punctuation = PunctuationSet
+    });
 
     /// <summary>Matches a CMake <c>#[[ ... ]]</c> block comment (with optional <c>=</c> level markers — same shape as Lua's long-bracket form).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

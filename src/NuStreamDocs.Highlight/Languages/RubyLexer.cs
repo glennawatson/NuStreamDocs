@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -155,66 +156,34 @@ public static class RubyLexer
     /// <summary>First-byte set for the equal-block-comment rule (<c>=begin</c>/<c>=end</c>).</summary>
     private static readonly SearchValues<byte> EqualFirst = SearchValues.Create("="u8);
 
-    /// <summary>First-byte set for the double-quoted string rule.</summary>
-    private static readonly SearchValues<byte> DoubleQuoteFirst = SearchValues.Create("\""u8);
-
-    /// <summary>First-byte set for the single-quoted string rule.</summary>
-    private static readonly SearchValues<byte> SingleQuoteFirst = SearchValues.Create("'"u8);
-
     /// <summary>Whitespace dispatch set.</summary>
     private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
 
     /// <summary>Gets the singleton Ruby lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Ruby lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
+        WhitespaceFirst = WhitespaceFirst,
+        PreCommentRule = new(MatchEqualBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualFirst, RequiresLineStart = true },
+        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        IncludeDoubleQuotedString = true,
+        IncludeSingleQuotedString = true,
+        PostStringRules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-
-            // =begin ... =end multi-line comment, line-anchored.
-            new(MatchEqualBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualFirst, RequiresLineStart = true },
-
-            // # line comment.
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            // "..." double-quoted string with backslash escapes (interpolation folded inside).
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst },
-
-            // '...' single-quoted string with backslash escape.
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst },
-
-            // :symbol literal — colon then identifier-continue bytes.
             new(MatchSymbol, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = ColonFirst },
-
-            // @var / @@var / $var sigil — emit sigil + identifier as one Name token.
-            new(MatchSigilVariable, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SigilFirst },
-
-            // 1.0 float, 1 integer.
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-
-            // true / false / nil.
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-
-            // def / class / module / attr_*.
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-
-            // if / for / when / etc.
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+            new(MatchSigilVariable, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SigilFirst }
+        ],
+        IncludeFloatLiteral = true,
+        IncludeIntegerLiteral = true,
+        KeywordConstants = KeywordConstants,
+        KeywordConstantFirst = KeywordConstantFirst,
+        KeywordDeclarations = KeywordDeclarations,
+        KeywordDeclarationFirst = KeywordDeclarationFirst,
+        Keywords = Keywords,
+        KeywordFirst = KeywordFirst,
+        Operators = OperatorTable,
+        OperatorFirst = OperatorFirst,
+        Punctuation = PunctuationSet
+    });
 
     /// <summary>Matches a Ruby <c>=begin ... =end</c> block comment, line-anchored.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

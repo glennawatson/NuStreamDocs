@@ -59,30 +59,52 @@ internal static class SingleStateLexerRules
                 LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst });
         }
 
-        AppendIfPresent(rules, config.PostStringRule);
+        AppendAll(rules, config.PostStringRules);
 
-        if (config.IncludeFloatLiteral)
+        var numberFirst = config.NumberFirst ?? TokenMatchers.AsciiDigits;
+        if (config.IncludeSignedFloatLiteral)
+        {
+            rules.Add(new(
+                TokenMatchers.MatchSignedAsciiFloat,
+                TokenClass.NumberFloat,
+                LexerRule.NoStateChange) { FirstBytes = numberFirst });
+        }
+        else if (config.IncludeFloatLiteral)
         {
             rules.Add(new(
                 TokenMatchers.MatchUnsignedAsciiFloat,
                 TokenClass.NumberFloat,
-                LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
+                LexerRule.NoStateChange) { FirstBytes = numberFirst });
         }
 
-        if (config.IncludeIntegerLiteral)
+        if (config.IncludeSignedIntegerLiteral)
+        {
+            rules.Add(new(
+                TokenMatchers.MatchSignedAsciiInteger,
+                TokenClass.NumberInteger,
+                LexerRule.NoStateChange) { FirstBytes = numberFirst });
+        }
+        else if (config.IncludeIntegerLiteral)
         {
             rules.Add(new(
                 TokenMatchers.MatchAsciiDigits,
                 TokenClass.NumberInteger,
-                LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
+                LexerRule.NoStateChange) { FirstBytes = numberFirst });
         }
 
-        AppendKeywordRule(rules, config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant);
-        AppendKeywordRule(rules, config.KeywordTypes, config.KeywordTypeFirst, TokenClass.KeywordType);
-        AppendKeywordRule(rules, config.KeywordDeclarations, config.KeywordDeclarationFirst, TokenClass.KeywordDeclaration);
-        AppendKeywordRule(rules, config.Keywords, config.KeywordFirst, TokenClass.Keyword);
+        var lineStart = config.KeywordsRequireLineStart;
+        AppendKeywordRule(rules, config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant, lineStart);
+        AppendKeywordRule(rules, config.KeywordTypes, config.KeywordTypeFirst, TokenClass.KeywordType, lineStart);
+        AppendKeywordRule(rules, config.KeywordDeclarations, config.KeywordDeclarationFirst, TokenClass.KeywordDeclaration, lineStart);
+        AppendKeywordRule(rules, config.Keywords, config.KeywordFirst, TokenClass.Keyword, lineStart);
+        AppendAll(rules, config.ExtraRules);
+        AppendKeywordRule(rules, config.BuiltinKeywords, config.BuiltinKeywordFirst, TokenClass.NameBuiltin, requiresLineStart: false);
 
-        AppendIdentifierRule(rules, config.IdentifierContinue);
+        if (!config.SuppressIdentifierRule)
+        {
+            AppendIdentifierRule(rules, config.IdentifierContinue);
+        }
+
         AppendOperatorRule(rules, config.Operators, config.OperatorFirst);
         AppendPunctuationRule(rules, config.Punctuation);
 
@@ -102,12 +124,29 @@ internal static class SingleStateLexerRules
         rules.Add(rule);
     }
 
+    /// <summary>Appends every rule in <paramref name="extras"/> when non-null.</summary>
+    /// <param name="rules">Target rule list.</param>
+    /// <param name="extras">Optional rule array.</param>
+    private static void AppendAll(List<LexerRule> rules, LexerRule[]? extras)
+    {
+        if (extras is null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < extras.Length; i++)
+        {
+            rules.Add(extras[i]);
+        }
+    }
+
     /// <summary>Appends a keyword-set rule to <paramref name="rules"/> when both <paramref name="keywords"/> and <paramref name="firstBytes"/> are supplied.</summary>
     /// <param name="rules">Target rule list.</param>
     /// <param name="keywords">Keyword set.</param>
     /// <param name="firstBytes">First-byte dispatch set.</param>
     /// <param name="tokenClass">Classification.</param>
-    private static void AppendKeywordRule(List<LexerRule> rules, ByteKeywordSet? keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass)
+    /// <param name="requiresLineStart">When true, only fires at start-of-line positions.</param>
+    private static void AppendKeywordRule(List<LexerRule> rules, ByteKeywordSet? keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass, bool requiresLineStart)
     {
         if (keywords is null)
         {
@@ -118,7 +157,7 @@ internal static class SingleStateLexerRules
         rules.Add(new(
             slice => TokenMatchers.MatchKeyword(slice, captured),
             tokenClass,
-            LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet });
+            LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet, RequiresLineStart = requiresLineStart });
     }
 
     /// <summary>Appends the identifier rule to <paramref name="rules"/> — uses <paramref name="continueSet"/> when supplied, else the ASCII default.</summary>

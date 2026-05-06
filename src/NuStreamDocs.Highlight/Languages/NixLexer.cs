@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -61,23 +62,11 @@ public static class NixLexer
         [.. ">"u8]
     ];
 
-    /// <summary>First-byte set for whitespace.</summary>
-    private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
-
     /// <summary>First-byte set for the <c>#</c> line-comment rule.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);
 
     /// <summary>First-byte set for path literals (<c>.</c>, <c>/</c>, <c>~</c>).</summary>
     private static readonly SearchValues<byte> PathFirst = SearchValues.Create("./~"u8);
-
-    /// <summary>First-byte set for general keywords.</summary>
-    private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("aeiotw"u8);
-
-    /// <summary>First-byte set for declaration keywords.</summary>
-    private static readonly SearchValues<byte> KeywordDeclarationFirst = SearchValues.Create("ilr"u8);
-
-    /// <summary>First-byte set for constant keywords.</summary>
-    private static readonly SearchValues<byte> KeywordConstantFirst = SearchValues.Create("tfn"u8);
 
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("+-*/<>!=&|?"u8);
@@ -94,44 +83,23 @@ public static class NixLexer
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-./"u8);
 
     /// <summary>Gets the singleton Nix lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Nix lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
-        [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst },
-
-            // Multi-line ''...'' string. Must precede the regular string rule.
-            new(MatchIndentedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
-
-            // "..." string with backslash escapes (interpolation folded inside).
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-
-            // Path literal (./foo, /abs, ~/home) — must precede the operator rule because `/` would otherwise be consumed as the update operator.
-            new(MatchPathLiteral, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = PathFirst },
-
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-
-            new(
-                static slice => TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, IdentifierContinue),
-                TokenClass.Name,
-                LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        BlockComment = new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst },
+        SpecialString = new(MatchIndentedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
+        IncludeDoubleQuotedString = true,
+        PostStringRules = [new(MatchPathLiteral, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = PathFirst }],
+        IncludeFloatLiteral = true,
+        IncludeIntegerLiteral = true,
+        KeywordConstants = KeywordConstants,
+        KeywordDeclarations = KeywordDeclarations,
+        Keywords = Keywords,
+        IdentifierContinue = IdentifierContinue,
+        Operators = OperatorTable,
+        OperatorFirst = OperatorFirst,
+        Punctuation = PunctuationSet
+    });
 
     /// <summary>Matches a Nix indented string <c>'' ... ''</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

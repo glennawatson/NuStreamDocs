@@ -44,14 +44,26 @@ internal readonly record struct SingleStateLexerConfig
     /// <summary>Gets a value indicating whether the single-quoted backslash-escape string rule is included.</summary>
     public bool IncludeSingleQuotedString { get; init; }
 
-    /// <summary>Gets the optional after-string rule emitted between strings and numbers (used for sigil-prefixed names like <c>$variable</c> or <c>:atom</c>).</summary>
-    public LexerRule? PostStringRule { get; init; }
+    /// <summary>Gets the optional after-string rules emitted between strings and numbers (used for sigil-prefixed names like <c>$variable</c> or <c>:atom</c>); appended in order.</summary>
+    public LexerRule[]? PostStringRules { get; init; }
+
+    /// <summary>Gets the optional extra rules appended after operators and before punctuation (used for language-specific shapes the helper doesn't model).</summary>
+    public LexerRule[]? ExtraRules { get; init; }
 
     /// <summary>Gets a value indicating whether the standard <c>1.0</c> float rule is included.</summary>
     public bool IncludeFloatLiteral { get; init; }
 
     /// <summary>Gets a value indicating whether the standard digit-run integer rule is included.</summary>
     public bool IncludeIntegerLiteral { get; init; }
+
+    /// <summary>Gets a value indicating whether the signed <c>-1.0</c> float rule is emitted (used in place of the unsigned form when set).</summary>
+    public bool IncludeSignedFloatLiteral { get; init; }
+
+    /// <summary>Gets a value indicating whether the signed <c>-1</c> integer rule is emitted (used in place of the unsigned form when set).</summary>
+    public bool IncludeSignedIntegerLiteral { get; init; }
+
+    /// <summary>Gets the optional first-byte dispatch set for the numeric literal rules; <see langword="null"/> falls back to <see cref="TokenMatchers.AsciiDigits"/>.</summary>
+    public SearchValues<byte>? NumberFirst { get; init; }
 
     /// <summary>Gets the constant-keyword set; <see langword="null"/> disables the rule.</summary>
     public ByteKeywordSet? KeywordConstants { get; init; }
@@ -77,8 +89,20 @@ internal readonly record struct SingleStateLexerConfig
     /// <summary>Gets the first-byte dispatch set for <see cref="Keywords"/>.</summary>
     public SearchValues<byte>? KeywordFirst { get; init; }
 
+    /// <summary>Gets the built-in / library-name keyword set classified as <see cref="TokenClass.NameBuiltin"/>; <see langword="null"/> disables the rule.</summary>
+    public ByteKeywordSet? BuiltinKeywords { get; init; }
+
+    /// <summary>Gets the first-byte dispatch set for <see cref="BuiltinKeywords"/>.</summary>
+    public SearchValues<byte>? BuiltinKeywordFirst { get; init; }
+
+    /// <summary>Gets a value indicating whether the four primary keyword rules require a line-start anchor (used by Makefile-shaped languages where directives must begin at column zero).</summary>
+    public bool KeywordsRequireLineStart { get; init; }
+
     /// <summary>Gets the optional identifier-continuation set; <see langword="null"/> falls back to ASCII letters / digits / underscore.</summary>
     public SearchValues<byte>? IdentifierContinue { get; init; }
+
+    /// <summary>Gets a value indicating whether the standard identifier rule is suppressed (for languages that emit their own identifier-shaped rules via <see cref="ExtraRules"/>).</summary>
+    public bool SuppressIdentifierRule { get; init; }
 
     /// <summary>Gets the optional operator alternation, sorted longest-first; <see langword="null"/> disables the rule.</summary>
     public byte[][]? Operators { get; init; }

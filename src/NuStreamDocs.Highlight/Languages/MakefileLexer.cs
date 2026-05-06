@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -118,46 +119,28 @@ public static class MakefileLexer
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-."u8);
 
     /// <summary>Gets the singleton Makefile lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Makefile lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
+        WhitespaceFirst = WhitespaceFirst,
+        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        PostStringRules = [new(MatchVariableExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst }],
+        IncludeDoubleQuotedString = true,
+        IncludeSingleQuotedString = true,
+        IncludeIntegerLiteral = true,
+        Keywords = Keywords,
+        KeywordFirst = KeywordFirst,
+        KeywordsRequireLineStart = true,
+        ExtraRules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            // $(VAR), ${VAR}, $@ / $< automatic-variable, $$ literal — must precede operator rule because $ would otherwise fall through.
-            new(MatchVariableExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst },
-
-            // "..." / '...' string literals.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
-
-            // Numbers.
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-
-            // Conditional directives — line-anchored so they only fire at start-of-line.
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst, RequiresLineStart = true },
-
-            // Module directives — line-anchored. Note `-include` starts with `-`.
-            new(MatchDeclarationDirective, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst, RequiresLineStart = true },
-
-            // Built-in function names recognized everywhere (e.g. inside $(shell ...)).
-            new(static slice => TokenMatchers.MatchKeyword(slice, Builtins), TokenClass.NameBuiltin, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-
-            new(
-                static slice => TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, IdentifierContinue),
-                TokenClass.Name,
-                LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+            new(MatchDeclarationDirective, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst, RequiresLineStart = true }
+        ],
+        BuiltinKeywords = Builtins,
+        BuiltinKeywordFirst = TokenMatchers.AsciiIdentifierStart,
+        IdentifierContinue = IdentifierContinue,
+        Operators = OperatorTable,
+        OperatorFirst = OperatorFirst,
+        Punctuation = PunctuationSet
+    });
 
     /// <summary>Matches Makefile variable expansion forms — <c>$(VAR)</c>, <c>${VAR}</c>, <c>$@</c>, <c>$&lt;</c>, <c>$$</c> literal.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

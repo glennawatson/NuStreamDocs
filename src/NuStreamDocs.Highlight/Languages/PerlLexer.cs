@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -213,68 +214,39 @@ public static class PerlLexer
     /// <summary>Quote-like operator first-byte set — <c>q</c>, <c>m</c>, <c>s</c>, <c>y</c>, <c>t</c> (for <c>tr</c>).</summary>
     private static readonly SearchValues<byte> QuoteOperatorFirst = SearchValues.Create("qmsty"u8);
 
+    /// <summary>First-byte set for the backtick-string rule.</summary>
+    private static readonly SearchValues<byte> BacktickFirst = SearchValues.Create("`"u8);
+
     /// <summary>Gets the singleton Perl lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Perl lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
+        WhitespaceFirst = WhitespaceFirst,
+        PreCommentRule = new(MatchPodBlock, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualsFirst, RequiresLineStart = true },
+        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        IncludeDoubleQuotedString = true,
+        IncludeSingleQuotedString = true,
+        PostStringRules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-
-            // POD block: =pod / =head1 / =over … =cut, line-anchored.
-            new(MatchPodBlock, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualsFirst, RequiresLineStart = true },
-
-            // # line comment.
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-
-            // Heredoc introducer: <<TAG / <<"TAG" / <<'TAG' / <<~TAG. Body bytes pass through as text.
             new(MatchHeredocIntroducer, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = AngleAngleFirst },
-
-            // q{...} / qq{...} / qw{...} / qr{...} / m{...} quote-like operators (paired delimiters or matching byte).
             new(MatchQuoteOperator, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = QuoteOperatorFirst },
-
-            // 'literal' single-quoted string with no interpolation.
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
-
-            // "interpolated" double-quoted string (interpolation folded into the body).
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-
-            // `command` backtick string.
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'`'), TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("`"u8) },
-
-            // $name / @name / %name sigil variables (and special $_ / $1 / @_).
+            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'`'), TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = BacktickFirst },
             new(MatchSigilVariable, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SigilFirst },
-
-            // 0x.. hex / 1.0 float / 1 integer.
-            new(
-                MatchHexLiteral,
-                TokenClass.NumberHex,
-                LexerRule.NoStateChange) { FirstBytes = LanguageCommon.HexFirst },
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-
-            // undef / __FILE__ / __LINE__ / etc. constants.
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-
-            // sub / my / our / package / use declarations.
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-
-            // if / while / for / etc. control-flow.
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-
-            // print / say / chomp / etc. builtins.
-            new(static slice => TokenMatchers.MatchKeyword(slice, Builtins), TokenClass.NameBuiltin, LexerRule.NoStateChange) { FirstBytes = BuiltinFirst },
-
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+            new(MatchHexLiteral, TokenClass.NumberHex, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.HexFirst }
+        ],
+        IncludeFloatLiteral = true,
+        IncludeIntegerLiteral = true,
+        KeywordConstants = KeywordConstants,
+        KeywordConstantFirst = KeywordConstantFirst,
+        KeywordDeclarations = KeywordDeclarations,
+        KeywordDeclarationFirst = KeywordDeclarationFirst,
+        Keywords = Keywords,
+        KeywordFirst = KeywordFirst,
+        BuiltinKeywords = Builtins,
+        BuiltinKeywordFirst = BuiltinFirst,
+        Operators = OperatorTable,
+        OperatorFirst = OperatorFirst,
+        Punctuation = PunctuationSet
+    });
 
     /// <summary>Matches a POD block — <c>=word</c> at line start through to a matching <c>=cut</c> on its own line.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
@@ -420,7 +392,7 @@ public static class PerlLexer
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
     private static int MatchHexLiteral(ReadOnlySpan<byte> slice) =>
-        TokenMatchers.MatchAsciiHexLiteral(slice, HexBody, Common.CFamilyRules.NoSuffix);
+        TokenMatchers.MatchAsciiHexLiteral(slice, HexBody, CFamilyRules.NoSuffix);
 
     /// <summary>Consumes the recognized prefix of a quote-like operator (<c>q</c>, <c>qq</c>, <c>qw</c>, <c>qr</c>, <c>m</c>, <c>s</c>, <c>tr</c>, <c>y</c>).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

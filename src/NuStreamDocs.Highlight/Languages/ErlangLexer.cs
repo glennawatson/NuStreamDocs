@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -149,43 +150,31 @@ public static class ErlangLexer
         "abcdefghijklmnopqrstuvwxyz"u8);
 
     /// <summary>Gets the singleton Erlang lexer.</summary>
-    public static Lexer Instance { get; } = Build();
-
-    /// <summary>Builds the Erlang lexer.</summary>
-    /// <returns>Lexer.</returns>
-    private static Lexer Build()
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LexerRule[] rules =
+        WhitespaceFirst = WhitespaceFirst,
+        LineComment = new(static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'%'), TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = PercentFirst },
+        PreCommentRule = new(MatchDashAttribute, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = DashFirst, RequiresLineStart = true },
+        IncludeDoubleQuotedString = true,
+        IncludeSingleQuotedString = true,
+        IncludeFloatLiteral = true,
+        IncludeIntegerLiteral = true,
+        KeywordConstants = KeywordConstants,
+        KeywordConstantFirst = KeywordConstantFirst,
+        KeywordTypes = KeywordTypes,
+        KeywordTypeFirst = KeywordTypeFirst,
+        Keywords = Keywords,
+        KeywordFirst = KeywordFirst,
+        ExtraRules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'%'), TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = PercentFirst },
-
-            // -module / -export / -spec / etc. attribute, line-anchored.
-            new(MatchDashAttribute, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = DashFirst, RequiresLineStart = true },
-
-            // 'quoted atom' — uses the doubled-escape matcher; Erlang uses backslash escapes inside.
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
-
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordTypes), TokenClass.KeywordType, LexerRule.NoStateChange) { FirstBytes = KeywordTypeFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-
-            // Variables (uppercase / underscore-leading) classify as Name.Class to distinguish from atoms.
             new(MatchVariable, TokenClass.NameClass, LexerRule.NoStateChange) { FirstBytes = VariableStart },
-
-            // Atoms (lowercase-leading) classify as Name.
-            new(MatchAtom, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = AtomStart },
-
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
-        ];
-
-        return new(LanguageRuleBuilder.BuildSingleState(rules));
-    }
+            new(MatchAtom, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = AtomStart }
+        ],
+        SuppressIdentifierRule = true,
+        Operators = OperatorTable,
+        OperatorFirst = OperatorFirst,
+        Punctuation = PunctuationSet
+    });
 
     /// <summary>Matches a leading <c>-attribute</c> at the start of a line.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

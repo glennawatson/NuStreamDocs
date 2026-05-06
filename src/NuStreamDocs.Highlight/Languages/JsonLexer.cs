@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common;
 
 namespace NuStreamDocs.Highlight.Languages;
 
@@ -32,28 +33,15 @@ public static class JsonLexer
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
 
     /// <summary>Gets the singleton lexer instance.</summary>
-    public static Lexer Instance { get; } = new(
-        LanguageRuleBuilder.BuildSingleState([
-
-            // [ \t\r\n]+ whitespace runs.
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines },
-
-            // "..." string followed by ":" — property key. Must precede the plain string rule.
-            new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = QuoteFirst },
-
-            // "..." string value with backslash escapes.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = QuoteFirst },
-
-            // -?\d+\.\d+([eE][+-]?\d+)? float literal — must precede the integer rule.
-            new(TokenMatchers.MatchSignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = NumberFirst },
-
-            // -?\d+ integer literal.
-            new(TokenMatchers.MatchSignedAsciiInteger, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = NumberFirst },
-
-            // true / false / null keyword constant.
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
-
-            // Single-byte structural punctuation: { } [ ] , :
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationFirst), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationFirst }
-        ]));
+    public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
+    {
+        SpecialString = new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = QuoteFirst },
+        IncludeDoubleQuotedString = true,
+        IncludeSignedFloatLiteral = true,
+        IncludeSignedIntegerLiteral = true,
+        NumberFirst = NumberFirst,
+        KeywordConstants = KeywordConstants,
+        KeywordConstantFirst = KeywordFirst,
+        Punctuation = PunctuationFirst
+    });
 }
