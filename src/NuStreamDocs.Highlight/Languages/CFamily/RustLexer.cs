@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.CFamily;
@@ -16,81 +17,26 @@ namespace NuStreamDocs.Highlight.Languages.CFamily;
 public static class RustLexer
 {
     /// <summary>General-keyword set — shared C-family control-flow plus Rust-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. CFamilyShared.ControlFlow,
-        [.. "as"u8],
-        [.. "in"u8],
-        [.. "loop"u8],
-        [.. "match"u8],
-        [.. "yield"u8],
-        [.. "where"u8],
-        [.. "async"u8],
-        [.. "await"u8],
-        [.. "move"u8],
-        [.. "dyn"u8],
-        [.. "unsafe"u8],
-        [.. "extern"u8],
-        [.. "ref"u8],
-        [.. "self"u8],
-        [.. "Self"u8],
-        [.. "super"u8],
-        [.. "crate"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        CFamilyShared.ControlFlowLiteral,
+        "as in loop match yield where async await move dyn unsafe extern ref self Self super crate"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "bool"u8],
-        [.. "char"u8],
-        [.. "str"u8],
-        [.. "i8"u8],
-        [.. "i16"u8],
-        [.. "i32"u8],
-        [.. "i64"u8],
-        [.. "i128"u8],
-        [.. "isize"u8],
-        [.. "u8"u8],
-        [.. "u16"u8],
-        [.. "u32"u8],
-        [.. "u64"u8],
-        [.. "u128"u8],
-        [.. "usize"u8],
-        [.. "f32"u8],
-        [.. "f64"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "bool char str i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128 usize f32 f64"u8);
 
     /// <summary>Declaration / modifier keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "let"u8],
-        [.. "mut"u8],
-        [.. "const"u8],
-        [.. "static"u8],
-        [.. "fn"u8],
-        [.. "struct"u8],
-        [.. "enum"u8],
-        [.. "trait"u8],
-        [.. "impl"u8],
-        [.. "type"u8],
-        [.. "mod"u8],
-        [.. "use"u8],
-        [.. "pub"u8],
-        [.. "union"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "let mut const static fn struct enum trait impl type mod use pub union"u8);
 
     /// <summary>Constant keywords — boolean / option / result variants.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "None"u8],
-        [.. "Some"u8],
-        [.. "Ok"u8],
-        [.. "Err"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "true false None Some Ok Err"u8);
 
     /// <summary>Operator alternation — shared C-style core plus Rust's range / arrow / path forms.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "..="u8],
-        [.. ".."u8],
-        [.. "=>"u8],
-        [.. "::"u8],
-        .. CFamilyShared.StandardOperators
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "..= .. => ::"u8,
+        CFamilyShared.StandardOperatorsLiteral);
 
     /// <summary>Single-byte structural punctuation — shared C-curly set plus the Rust <c>#</c> attribute marker.</summary>
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:#"u8);

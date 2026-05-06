@@ -17,93 +17,20 @@ namespace NuStreamDocs.Highlight.Languages.Scripting;
 public static class ElixirLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "unless"u8],
-        [.. "else"u8],
-        [.. "end"u8],
-        [.. "case"u8],
-        [.. "cond"u8],
-        [.. "do"u8],
-        [.. "for"u8],
-        [.. "with"u8],
-        [.. "when"u8],
-        [.. "in"u8],
-        [.. "fn"u8],
-        [.. "receive"u8],
-        [.. "try"u8],
-        [.. "rescue"u8],
-        [.. "catch"u8],
-        [.. "after"u8],
-        [.. "raise"u8],
-        [.. "throw"u8],
-        [.. "and"u8],
-        [.. "or"u8],
-        [.. "not"u8],
-        [.. "import"u8],
-        [.. "alias"u8],
-        [.. "require"u8],
-        [.. "use"u8],
-        [.. "quote"u8],
-        [.. "unquote"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "if unless else end case cond do for with when in fn receive try rescue catch after raise throw"u8,
+        "and or not import alias require use quote unquote"u8);
 
     /// <summary>Declaration / module keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "defmodule"u8],
-        [.. "defprotocol"u8],
-        [.. "defimpl"u8],
-        [.. "defstruct"u8],
-        [.. "def"u8],
-        [.. "defp"u8],
-        [.. "defmacro"u8],
-        [.. "defmacrop"u8],
-        [.. "defguard"u8],
-        [.. "defguardp"u8],
-        [.. "defcallback"u8],
-        [.. "defdelegate"u8],
-        [.. "defexception"u8],
-        [.. "defoverridable"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "defmodule defprotocol defimpl defstruct def defp defmacro defmacrop defguard defguardp defcallback defdelegate defexception defoverridable"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "nil"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false nil"u8);
 
     /// <summary>Operator alternation.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "==="u8],
-        [.. "!=="u8],
-        [.. "<>"u8],
-        [.. "|>"u8],
-        [.. "->"u8],
-        [.. "=>"u8],
-        [.. "::"u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "**"u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. ".."u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "=== !== <> |> -> => :: ++ -- ** && || == != <= >= .. + - * / % & | ^ ! ~ = < >"u8);
 
     /// <summary>First-byte set for the <c>#</c> line-comment rule.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);

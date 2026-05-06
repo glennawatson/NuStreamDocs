@@ -123,6 +123,8 @@
   --md-sys-elevation-level-1: 0 1px 2px 0 rgb(0 0 0 / 30%), 0 1px 3px 1px rgb(0 0 0 / 15%);
   --md-sys-elevation-level-2: 0 1px 2px 0 rgb(0 0 0 / 30%), 0 2px 6px 2px rgb(0 0 0 / 15%);
   --md-sys-elevation-level-3: 0 1px 3px 0 rgb(0 0 0 / 30%), 0 4px 8px 3px rgb(0 0 0 / 15%);
+
+  --md-clipboard-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z"/></svg>');
 }
 
 /* ----- Reset + base. ----- */
@@ -905,22 +907,35 @@ a:hover { text-decoration: underline; }
 
 .rxui-sample {
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .rxui-sample .tabbed-set {
   margin: 0;
+  max-width: 100%;
+}
+
+.rxui-sample .highlight {
+  max-width: 100%;
+}
+
+.rxui-sample .highlight pre {
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .rxui-sample .highlight pre > code {
   font-size: 0.78rem;
   line-height: 1.45;
+  white-space: pre;
 }
 
 /* ----- Drawer toggle: hidden by default; the narrow-viewport block below
    re-enables it and wires the click-to-slide behaviour against the
-   `__drawer` checkbox in the page chrome. The same `for="__drawer"` label
-   appears next to the logo as the "hamburger" icon. ----- */
-.md-header__button[for="__drawer"] {
+   `__drawer` checkbox in the page chrome. The hamburger is a
+   <button data-md-component="hamburger"> next to the logo. ----- */
+[data-md-component="hamburger"] {
   display: none;
 }
 .md-overlay {
@@ -967,11 +982,23 @@ a:hover { text-decoration: underline; }
     margin-right: 0;
   }
 
+  /* Tighten the C#/F# code sample on mobile so the highlight box fits the
+     viewport instead of forcing horizontal page scroll. */
+  .rxui-sample .highlight pre > code {
+    font-size: 0.72rem;
+  }
+
+  /* Hide the top-tabs strip on mobile — the drawer replaces it as the primary
+     navigation surface (matching mkdocs-material's mobile layout). */
+  .md-tabs {
+    display: none;
+  }
+
   /* Show the hamburger and turn the primary sidebar into a slide-in drawer.
      The `__drawer` checkbox flips when the user taps the hamburger; that
      state pulls the sidebar on-screen and shows the dim overlay. Tapping
      the overlay (or the X-equivalent) toggles the checkbox back off. */
-  .md-header__button[for="__drawer"] {
+  [data-md-component="hamburger"] {
     display: inline-flex;
   }
   .md-sidebar--primary {
@@ -1063,10 +1090,6 @@ a:hover { text-decoration: underline; }
   font-size: 0.75rem;
   white-space: nowrap;
   pointer-events: none;
-}
-
-:root {
-  --md-clipboard-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z"/></svg>');
 }
 
 /* ----- Blog post cards (md-post): index + tag-archive listings. ----- */

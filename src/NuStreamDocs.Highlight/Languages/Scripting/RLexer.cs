@@ -17,69 +17,19 @@ namespace NuStreamDocs.Highlight.Languages.Scripting;
 public static class RLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "else"u8],
-        [.. "for"u8],
-        [.. "while"u8],
-        [.. "repeat"u8],
-        [.. "break"u8],
-        [.. "next"u8],
-        [.. "return"u8],
-        [.. "in"u8],
-        [.. "library"u8],
-        [.. "require"u8],
-        [.. "source"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "if else for while repeat break next return in library require source"u8);
 
     /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "function"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated("function"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "TRUE"u8],
-        [.. "FALSE"u8],
-        [.. "NULL"u8],
-        [.. "NA"u8],
-        [.. "NaN"u8],
-        [.. "Inf"u8],
-        [.. "T"u8],
-        [.. "F"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "TRUE FALSE NULL NA NaN Inf T F"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "%/%"u8],
-        [.. "%%"u8],
-        [.. "%*%"u8],
-        [.. "%in%"u8],
-        [.. "<<-"u8],
-        [.. "->>"u8],
-        [.. "<-"u8],
-        [.. "->"u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. ":="u8],
-        [.. "**"u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "^"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "!"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8],
-        [.. "~"u8],
-        [.. ":"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "%in% %/% %*% %% <<- ->> <- -> <= >= == != && || := ** + - * / ^ & | ! = < > ? ~ :"u8);
 
     /// <summary>Identifier-continuation set — letters, digits, underscore, dot (R's identifier convention).</summary>
     private static readonly SearchValues<byte> IdentifierContinue = SearchValues.Create(

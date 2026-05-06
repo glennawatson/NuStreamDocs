@@ -14,36 +14,17 @@ namespace NuStreamDocs.Highlight.Languages.Functional;
 public static class SchemeLexer
 {
     /// <summary>Declaration forms.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "define"u8],
-        [.. "define-syntax"u8],
-        [.. "define-record-type"u8],
-        [.. "define-struct"u8],
-        [.. "lambda"u8],
-        [.. "let"u8],
-        [.. "let*"u8],
-        [.. "letrec"u8],
-        [.. "letrec*"u8],
-        [.. "let-syntax"u8],
-        [.. "letrec-syntax"u8],
-        [.. "set!"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "define define-syntax define-record-type define-struct lambda let let* letrec letrec* let-syntax letrec-syntax set!"u8);
 
     /// <summary>Control-flow forms — shared Lisp-family core plus Scheme-specific extras.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. LispFamilyShared.CommonKeywords,
-        [.. "begin"u8],
-        [.. "delay"u8],
-        [.. "force"u8],
-        [.. "quasiquote"u8],
-        [.. "unquote"u8],
-        [.. "syntax-rules"u8]]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        LispFamilyShared.CommonKeywordsLiteral,
+        "begin delay force quasiquote unquote syntax-rules"u8);
 
     /// <summary>Constants.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "#t"u8],
-        [.. "#f"u8],
-        [.. "true"u8],
-        [.. "false"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "#t #f true false"u8);
 
     /// <summary>Gets the singleton Scheme lexer.</summary>
     public static Lexer Instance { get; } = Build();

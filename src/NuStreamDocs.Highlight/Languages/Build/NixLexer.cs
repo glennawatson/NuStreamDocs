@@ -18,49 +18,19 @@ namespace NuStreamDocs.Highlight.Languages.Build;
 public static class NixLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "then"u8],
-        [.. "else"u8],
-        [.. "with"u8],
-        [.. "assert"u8],
-        [.. "or"u8],
-        [.. "import"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "if then else with assert or import"u8);
 
     /// <summary>Declaration / structure keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "let"u8],
-        [.. "in"u8],
-        [.. "rec"u8],
-        [.. "inherit"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "let in rec inherit"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "null"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "//"u8],
-        [.. "->"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "?"u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "!"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "// -> == != <= >= && || ? + - * / ! = < >"u8);
 
     /// <summary>First-byte set for the <c>#</c> line-comment rule.</summary>
     private static readonly SearchValues<byte> HashFirst = SearchValues.Create("#"u8);

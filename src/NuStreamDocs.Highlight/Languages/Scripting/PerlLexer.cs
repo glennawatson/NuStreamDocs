@@ -28,149 +28,26 @@ public static class PerlLexer
     private const int TwoBytePrefix = 2;
 
     /// <summary>General-keyword set (control-flow + word operators).</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "elsif"u8],
-        [.. "else"u8],
-        [.. "unless"u8],
-        [.. "while"u8],
-        [.. "until"u8],
-        [.. "for"u8],
-        [.. "foreach"u8],
-        [.. "do"u8],
-        [.. "last"u8],
-        [.. "next"u8],
-        [.. "redo"u8],
-        [.. "return"u8],
-        [.. "goto"u8],
-        [.. "die"u8],
-        [.. "warn"u8],
-        [.. "eval"u8],
-        [.. "and"u8],
-        [.. "or"u8],
-        [.. "not"u8],
-        [.. "xor"u8],
-        [.. "eq"u8],
-        [.. "ne"u8],
-        [.. "lt"u8],
-        [.. "gt"u8],
-        [.. "le"u8],
-        [.. "ge"u8],
-        [.. "cmp"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "if elsif else unless while until for foreach do last next redo return goto die warn eval"u8,
+        "and or not xor eq ne lt gt le ge cmp"u8);
 
     /// <summary>Declaration / scope keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "sub"u8],
-        [.. "package"u8],
-        [.. "use"u8],
-        [.. "no"u8],
-        [.. "require"u8],
-        [.. "my"u8],
-        [.. "our"u8],
-        [.. "local"u8],
-        [.. "state"u8],
-        [.. "BEGIN"u8],
-        [.. "END"u8],
-        [.. "INIT"u8],
-        [.. "CHECK"u8],
-        [.. "UNITCHECK"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "sub package use no require my our local state BEGIN END INIT CHECK UNITCHECK"u8);
 
     /// <summary>Common Perl built-ins (subset covering the highest-frequency calls).</summary>
-    private static readonly ByteKeywordSet Builtins = ByteKeywordSet.Create(
-        [.. "print"u8],
-        [.. "printf"u8],
-        [.. "say"u8],
-        [.. "sprintf"u8],
-        [.. "chomp"u8],
-        [.. "chop"u8],
-        [.. "split"u8],
-        [.. "join"u8],
-        [.. "length"u8],
-        [.. "lc"u8],
-        [.. "uc"u8],
-        [.. "lcfirst"u8],
-        [.. "ucfirst"u8],
-        [.. "reverse"u8],
-        [.. "sort"u8],
-        [.. "grep"u8],
-        [.. "map"u8],
-        [.. "ref"u8],
-        [.. "defined"u8],
-        [.. "exists"u8],
-        [.. "delete"u8],
-        [.. "keys"u8],
-        [.. "values"u8],
-        [.. "scalar"u8],
-        [.. "wantarray"u8],
-        [.. "open"u8],
-        [.. "close"u8],
-        [.. "read"u8],
-        [.. "write"u8],
-        [.. "binmode"u8],
-        [.. "bless"u8],
-        [.. "shift"u8],
-        [.. "unshift"u8],
-        [.. "push"u8],
-        [.. "pop"u8],
-        [.. "splice"u8]);
+    private static readonly ByteKeywordSet Builtins = ByteKeywordSet.CreateFromSpaceSeparated(
+        "print printf say sprintf chomp chop split join length lc uc lcfirst ucfirst reverse sort grep map ref"u8,
+        "defined exists delete keys values scalar wantarray open close read write binmode bless shift unshift push pop splice"u8);
 
     /// <summary>Constants.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "undef"u8],
-        [.. "__FILE__"u8],
-        [.. "__LINE__"u8],
-        [.. "__PACKAGE__"u8],
-        [.. "__SUB__"u8],
-        [.. "__DATA__"u8],
-        [.. "__END__"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "undef __FILE__ __LINE__ __PACKAGE__ __SUB__ __DATA__ __END__"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "<=>"u8],
-        [.. "**="u8],
-        [.. "&&="u8],
-        [.. "||="u8],
-        [.. "//="u8],
-        [.. "<<="u8],
-        [.. ">>="u8],
-        [.. "=~"u8],
-        [.. "!~"u8],
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "//"u8],
-        [.. "**"u8],
-        [.. "->"u8],
-        [.. "=>"u8],
-        [.. "::"u8],
-        [.. ".."u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. ".="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "."u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "<=> **= &&= ||= //= <<= >>= =~ !~ == != <= >= && || // ** -> => :: .. ++ -- += -= *= /= .= + - * / % . & | ^ ! ~ = < > ?"u8);
 
     /// <summary>First-byte set for whitespace.</summary>
     private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;

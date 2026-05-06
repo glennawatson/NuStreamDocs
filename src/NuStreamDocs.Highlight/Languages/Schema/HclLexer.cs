@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.Schema;
@@ -19,48 +20,19 @@ namespace NuStreamDocs.Highlight.Languages.Schema;
 public static class HclLexer
 {
     /// <summary>General-keyword set (<c>for</c>, <c>in</c>, …).</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "for"u8],
-        [.. "in"u8],
-        [.. "if"u8],
-        [.. "else"u8],
-        [.. "endfor"u8],
-        [.. "endif"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "for in if else endfor endif"u8);
 
     /// <summary>Built-in primitive type keywords (Terraform 0.12+ type constraints).</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "string"u8],
-        [.. "number"u8],
-        [.. "bool"u8],
-        [.. "any"u8],
-        [.. "list"u8],
-        [.. "map"u8],
-        [.. "set"u8],
-        [.. "object"u8],
-        [.. "tuple"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "string number bool any list map set object tuple"u8);
 
     /// <summary>Block-declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "resource"u8],
-        [.. "data"u8],
-        [.. "variable"u8],
-        [.. "output"u8],
-        [.. "locals"u8],
-        [.. "module"u8],
-        [.. "provider"u8],
-        [.. "terraform"u8],
-        [.. "backend"u8],
-        [.. "required_providers"u8],
-        [.. "required_version"u8],
-        [.. "dynamic"u8],
-        [.. "lifecycle"u8],
-        [.. "depends_on"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "resource data variable output locals module provider terraform backend required_providers required_version dynamic lifecycle depends_on"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "null"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
 
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("=!<>&|+-*/%?:"u8);
@@ -69,28 +41,8 @@ public static class HclLexer
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){}[];,.:"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "=="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "=>"u8],
-        [.. "->"u8],
-        [.. "..."u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "!"u8],
-        [.. "?"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "... == != <= >= && || => -> + - * / % = < > ! ?"u8);
 
     /// <summary>Gets the singleton HCL lexer.</summary>
     public static Lexer Instance { get; } = Build();

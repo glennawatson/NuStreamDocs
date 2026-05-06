@@ -32,4 +32,7 @@ internal static class LispFamilyShared
 
     /// <summary>First-byte dispatch set for <see cref="CommonKeywords"/>.</summary>
     public static readonly SearchValues<byte> CommonKeywordFirst = SearchValues.Create("acdilnoquw"u8);
+
+    /// <summary>Gets the common control-flow / binding forms shared across Lisp dialects, as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> CommonKeywordsLiteral => "if when unless cond case and or not do let lambda quote"u8;
 }

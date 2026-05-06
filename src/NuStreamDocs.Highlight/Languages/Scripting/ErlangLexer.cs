@@ -17,101 +17,24 @@ namespace NuStreamDocs.Highlight.Languages.Scripting;
 public static class ErlangLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "after"u8],
-        [.. "and"u8],
-        [.. "andalso"u8],
-        [.. "band"u8],
-        [.. "begin"u8],
-        [.. "bnot"u8],
-        [.. "bor"u8],
-        [.. "bsl"u8],
-        [.. "bsr"u8],
-        [.. "bxor"u8],
-        [.. "case"u8],
-        [.. "catch"u8],
-        [.. "cond"u8],
-        [.. "div"u8],
-        [.. "end"u8],
-        [.. "fun"u8],
-        [.. "if"u8],
-        [.. "let"u8],
-        [.. "not"u8],
-        [.. "of"u8],
-        [.. "or"u8],
-        [.. "orelse"u8],
-        [.. "receive"u8],
-        [.. "rem"u8],
-        [.. "try"u8],
-        [.. "when"u8],
-        [.. "xor"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "after and andalso band begin bnot bor bsl bsr bxor case catch cond div end fun if let"u8,
+        "not of or orelse receive rem try when xor"u8);
 
     /// <summary>Built-in primitive type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "integer"u8],
-        [.. "float"u8],
-        [.. "atom"u8],
-        [.. "binary"u8],
-        [.. "boolean"u8],
-        [.. "list"u8],
-        [.. "tuple"u8],
-        [.. "map"u8],
-        [.. "pid"u8],
-        [.. "port"u8],
-        [.. "reference"u8],
-        [.. "string"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "integer float atom binary boolean list tuple map pid port reference string"u8);
 
     /// <summary>Declaration / module-attribute keywords (matched after the leading <c>-</c> via the dash-attribute rule).</summary>
-    private static readonly ByteKeywordSet ModuleAttributes = ByteKeywordSet.Create(
-        [.. "module"u8],
-        [.. "export"u8],
-        [.. "import"u8],
-        [.. "behaviour"u8],
-        [.. "behavior"u8],
-        [.. "compile"u8],
-        [.. "include"u8],
-        [.. "include_lib"u8],
-        [.. "define"u8],
-        [.. "ifdef"u8],
-        [.. "ifndef"u8],
-        [.. "endif"u8],
-        [.. "spec"u8],
-        [.. "type"u8],
-        [.. "callback"u8],
-        [.. "record"u8],
-        [.. "vsn"u8],
-        [.. "author"u8],
-        [.. "on_load"u8]);
+    private static readonly ByteKeywordSet ModuleAttributes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "module export import behaviour behavior compile include include_lib define ifdef ifndef endif spec type callback record vsn author on_load"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false"u8);
 
     /// <summary>Operator alternation.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "=:="u8],
-        [.. "=/="u8],
-        [.. "->"u8],
-        [.. "<-"u8],
-        [.. "++"u8],
-        [.. "--"u8],
-        [.. "=="u8],
-        [.. "/="u8],
-        [.. "=<"u8],
-        [.. ">="u8],
-        [.. "||"u8],
-        [.. "::"u8],
-        [.. "!"u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "=:= =/= -> <- ++ -- == /= =< >= || :: ! + - * / = < >"u8);
 
     /// <summary>First-byte set for whitespace runs.</summary>
     private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;

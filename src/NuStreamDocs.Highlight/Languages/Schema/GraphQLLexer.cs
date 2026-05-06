@@ -18,40 +18,19 @@ namespace NuStreamDocs.Highlight.Languages.Schema;
 public static class GraphQLLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "query"u8],
-        [.. "mutation"u8],
-        [.. "subscription"u8],
-        [.. "fragment"u8],
-        [.. "on"u8],
-        [.. "schema"u8],
-        [.. "directive"u8],
-        [.. "extend"u8],
-        [.. "implements"u8],
-        [.. "repeatable"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "query mutation subscription fragment on schema directive extend implements repeatable"u8);
 
     /// <summary>Built-in scalar type keywords.</summary>
-    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.Create(
-        [.. "Int"u8],
-        [.. "Float"u8],
-        [.. "String"u8],
-        [.. "Boolean"u8],
-        [.. "ID"u8]);
+    private static readonly ByteKeywordSet KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated(
+        "Int Float String Boolean ID"u8);
 
     /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "type"u8],
-        [.. "scalar"u8],
-        [.. "enum"u8],
-        [.. "interface"u8],
-        [.. "union"u8],
-        [.. "input"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "type scalar enum interface union input"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "null"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
 
     /// <summary>First-byte set for the <c>$variable</c> / <c>@directive</c> sigils.</summary>
     private static readonly SearchValues<byte> SigilFirst = SearchValues.Create("$@"u8);

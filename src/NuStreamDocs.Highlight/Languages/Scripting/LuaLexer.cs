@@ -19,56 +19,18 @@ public static class LuaLexer
     private const int LineCommentPrefixLength = 2;
 
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "then"u8],
-        [.. "else"u8],
-        [.. "elseif"u8],
-        [.. "end"u8],
-        [.. "for"u8],
-        [.. "while"u8],
-        [.. "do"u8],
-        [.. "repeat"u8],
-        [.. "until"u8],
-        [.. "break"u8],
-        [.. "goto"u8],
-        [.. "return"u8],
-        [.. "in"u8],
-        [.. "and"u8],
-        [.. "or"u8],
-        [.. "not"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "if then else elseif end for while do repeat until break goto return in and or not"u8);
 
     /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "function"u8],
-        [.. "local"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated("function local"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "nil"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false nil"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "..."u8],
-        [.. ".."u8],
-        [.. "=="u8],
-        [.. "~="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "^"u8],
-        [.. "#"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "... .. == ~= <= >= + - * / % ^ # = < >"u8);
 
     /// <summary>First-byte set for whitespace runs.</summary>
     private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;

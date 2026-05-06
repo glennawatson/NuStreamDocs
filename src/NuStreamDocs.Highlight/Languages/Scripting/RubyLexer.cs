@@ -21,113 +21,21 @@ namespace NuStreamDocs.Highlight.Languages.Scripting;
 public static class RubyLexer
 {
     /// <summary>General-keyword set.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "if"u8],
-        [.. "unless"u8],
-        [.. "elsif"u8],
-        [.. "else"u8],
-        [.. "end"u8],
-        [.. "for"u8],
-        [.. "while"u8],
-        [.. "until"u8],
-        [.. "do"u8],
-        [.. "case"u8],
-        [.. "when"u8],
-        [.. "then"u8],
-        [.. "in"u8],
-        [.. "break"u8],
-        [.. "next"u8],
-        [.. "redo"u8],
-        [.. "retry"u8],
-        [.. "return"u8],
-        [.. "yield"u8],
-        [.. "begin"u8],
-        [.. "rescue"u8],
-        [.. "ensure"u8],
-        [.. "raise"u8],
-        [.. "and"u8],
-        [.. "or"u8],
-        [.. "not"u8],
-        [.. "self"u8],
-        [.. "super"u8],
-        [.. "loop"u8],
-        [.. "lambda"u8],
-        [.. "proc"u8],
-        [.. "require"u8],
-        [.. "require_relative"u8],
-        [.. "load"u8],
-        [.. "include"u8],
-        [.. "extend"u8],
-        [.. "puts"u8],
-        [.. "print"u8],
-        [.. "p"u8],
-        [.. "pp"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "if unless elsif else end for while until do case when then in break next redo retry return yield"u8,
+        "begin rescue ensure raise and or not self super loop lambda proc require require_relative load include extend puts print p pp"u8);
 
     /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "def"u8],
-        [.. "class"u8],
-        [.. "module"u8],
-        [.. "attr_accessor"u8],
-        [.. "attr_reader"u8],
-        [.. "attr_writer"u8],
-        [.. "private"u8],
-        [.. "public"u8],
-        [.. "protected"u8],
-        [.. "alias"u8],
-        [.. "alias_method"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "def class module attr_accessor attr_reader attr_writer private public protected alias alias_method"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "nil"u8],
-        [.. "__FILE__"u8],
-        [.. "__LINE__"u8],
-        [.. "__dir__"u8]);
+    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
+        "true false nil __FILE__ __LINE__ __dir__"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. "<=>"u8],
-        [.. "**"u8],
-        [.. "=="u8],
-        [.. "==="u8],
-        [.. "!="u8],
-        [.. "<="u8],
-        [.. ">="u8],
-        [.. "&&"u8],
-        [.. "||"u8],
-        [.. "=~"u8],
-        [.. "!~"u8],
-        [.. ".."u8],
-        [.. "..."u8],
-        [.. "->"u8],
-        [.. "=>"u8],
-        [.. "::"u8],
-        [.. "+="u8],
-        [.. "-="u8],
-        [.. "*="u8],
-        [.. "/="u8],
-        [.. "%="u8],
-        [.. "&="u8],
-        [.. "|="u8],
-        [.. "^="u8],
-        [.. "+"u8],
-        [.. "-"u8],
-        [.. "*"u8],
-        [.. "/"u8],
-        [.. "%"u8],
-        [.. "&"u8],
-        [.. "|"u8],
-        [.. "^"u8],
-        [.. "!"u8],
-        [.. "~"u8],
-        [.. "="u8],
-        [.. "<"u8],
-        [.. ">"u8],
-        [.. "?"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        "<=> === ** == != <= >= && || =~ !~ ... .. -> => :: += -= *= /= %= &= |= ^= + - * / % & | ^ ! ~ = < > ?"u8);
 
     /// <summary>First-byte set for general keywords.</summary>
     private static readonly SearchValues<byte> KeywordFirst = SearchValues.Create("abceiflmnoprstuwy"u8);

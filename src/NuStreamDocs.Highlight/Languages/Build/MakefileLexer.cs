@@ -17,64 +17,17 @@ namespace NuStreamDocs.Highlight.Languages.Build;
 public static class MakefileLexer
 {
     /// <summary>Conditional / control directives.</summary>
-    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.Create(
-        [.. "ifeq"u8],
-        [.. "ifneq"u8],
-        [.. "ifdef"u8],
-        [.. "ifndef"u8],
-        [.. "else"u8],
-        [.. "endif"u8],
-        [.. "if"u8],
-        [.. "or"u8],
-        [.. "and"u8]);
+    private static readonly ByteKeywordSet Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
+        "ifeq ifneq ifdef ifndef else endif if or and"u8);
 
     /// <summary>Declaration / module directives. The <c>-include</c> form is matched separately because <c>MatchKeyword</c> requires an ASCII-identifier start byte.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.Create(
-        [.. "include"u8],
-        [.. "sinclude"u8],
-        [.. "export"u8],
-        [.. "unexport"u8],
-        [.. "override"u8],
-        [.. "define"u8],
-        [.. "endef"u8],
-        [.. "vpath"u8],
-        [.. "private"u8],
-        [.. "undefine"u8]);
+    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
+        "include sinclude export unexport override define endef vpath private undefine"u8);
 
     /// <summary>Built-in function names recognized inside <c>$(name ...)</c> calls.</summary>
-    private static readonly ByteKeywordSet Builtins = ByteKeywordSet.Create(
-        [.. "shell"u8],
-        [.. "eval"u8],
-        [.. "call"u8],
-        [.. "if"u8],
-        [.. "foreach"u8],
-        [.. "filter"u8],
-        [.. "filter-out"u8],
-        [.. "patsubst"u8],
-        [.. "subst"u8],
-        [.. "wildcard"u8],
-        [.. "addprefix"u8],
-        [.. "addsuffix"u8],
-        [.. "basename"u8],
-        [.. "dir"u8],
-        [.. "notdir"u8],
-        [.. "suffix"u8],
-        [.. "realpath"u8],
-        [.. "abspath"u8],
-        [.. "info"u8],
-        [.. "warning"u8],
-        [.. "error"u8],
-        [.. "origin"u8],
-        [.. "flavor"u8],
-        [.. "value"u8],
-        [.. "strip"u8],
-        [.. "words"u8],
-        [.. "word"u8],
-        [.. "wordlist"u8],
-        [.. "firstword"u8],
-        [.. "lastword"u8],
-        [.. "join"u8],
-        [.. "sort"u8]);
+    private static readonly ByteKeywordSet Builtins = ByteKeywordSet.CreateFromSpaceSeparated(
+        "shell eval call if foreach filter filter-out patsubst subst wildcard addprefix addsuffix basename dir notdir suffix"u8,
+        "realpath abspath info warning error origin flavor value strip words word wordlist firstword lastword join sort"u8);
 
     /// <summary>First-byte set for whitespace.</summary>
     private static readonly SearchValues<byte> WhitespaceFirst = TokenMatchers.AsciiWhitespaceWithNewlines;
@@ -98,18 +51,8 @@ public static class MakefileLexer
     private static readonly SearchValues<byte> PunctuationSet = SearchValues.Create("(){};,."u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
-    private static readonly byte[][] OperatorTable =
-    [
-        [.. ":="u8],
-        [.. "?="u8],
-        [.. "+="u8],
-        [.. "!="u8],
-        [.. "=="u8],
-        [.. "::"u8],
-        [.. "="u8],
-        [.. ":"u8],
-        [.. "@"u8]
-    ];
+    private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
+        ":= ?= += != == :: = : @"u8);
 
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("=:?+!@"u8);
