@@ -306,7 +306,13 @@ a:hover { text-decoration: underline; }
   border-radius: var(--md-sys-shape-corner-md);
   color: var(--md-sys-color-on-surface-variant);
 }
-.md-sidebar--primary .md-nav__link { overflow-wrap: anywhere; }
+.md-sidebar--primary .md-nav__link,
+.md-sidebar--primary .md-nav__link .md-ellipsis {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
 .md-nav__link:hover {
   background: var(--md-sys-color-surface-container-high);
   color: var(--md-sys-color-on-surface);
@@ -922,6 +928,9 @@ a:hover { text-decoration: underline; }
 [data-md-component="hamburger"] {
   display: none;
 }
+/* Click on the inner SVG should register on the label, not the SVG — iOS Safari
+   sometimes drops the label `for` association when the tap lands on a child element. */
+[data-md-component="hamburger"] svg { pointer-events: none; }
 .md-overlay {
   display: none;
 }
@@ -1017,11 +1026,19 @@ a:hover { text-decoration: underline; }
     z-index: 20;
     will-change: transform;
   }
-  /* Drawer is fixed-height — inner column needs to scroll within it.
-     -webkit-overflow-scrolling enables momentum scrolling on iOS. */
+  /* Drawer is fixed-height — propagate height through the scrollwrap so the inner
+     column actually has a bound and overflow-y: auto engages. Without `height: 100%`
+     on the wrapper, `max-height: 100%` on the inner resolves to `auto` and touch
+     scroll has nothing to grab. `overscroll-behavior: contain` keeps drawer scroll
+     from chaining to the body. `-webkit-overflow-scrolling: touch` is the iOS
+     momentum-scroll opt-in. */
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    height: 100%;
+  }
   .md-sidebar--primary .md-sidebar__inner {
-    max-height: 100%;
+    height: 100%;
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
   .md-toggle[data-md-toggle="drawer"]:checked ~ .md-container .md-sidebar--primary {

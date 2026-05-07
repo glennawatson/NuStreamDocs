@@ -21,6 +21,12 @@ namespace NuStreamDocs.Search;
 /// <param name="SearchableFrontmatterKeys">UTF-8 frontmatter keys whose values are folded into each page's searchable text (e.g. <c>["author", "summary"]</c>). Empty for body-only indexing.</param>
 /// <param name="ExtraStopwords">UTF-8 stopwords appended to the language defaults; tokens matching any of these are dropped from the index.</param>
 /// <param name="Compression">Sibling-compression knob honored by the index writer.</param>
+/// <param name="SectionPriorities">
+/// UTF-8 comma-separated <c>prefix:weight</c> pairs (e.g. <c>"documentation/:80,api/:-200"</c>) that bias result ranking
+/// when a URL contains a given prefix. Higher weights bubble matching pages up; negative weights demote them. Empty
+/// disables section weighting and results sort by title relevance only. Surfaced via the
+/// <c>nustreamdocs:search-section-priorities</c> meta tag for theme JS to read.
+/// </param>
 public readonly record struct SearchOptions(
     SearchFormat Format,
     PathSegment OutputSubdirectory,
@@ -28,7 +34,8 @@ public readonly record struct SearchOptions(
     int MinTokenLength,
     byte[][] SearchableFrontmatterKeys,
     byte[][] ExtraStopwords,
-    SearchCompression Compression)
+    SearchCompression Compression,
+    byte[] SectionPriorities)
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static SearchOptions Default { get; } = new(
@@ -38,5 +45,6 @@ public readonly record struct SearchOptions(
         MinTokenLength: 3,
         SearchableFrontmatterKeys: [],
         ExtraStopwords: [],
-        Compression: SearchCompression.Default);
+        Compression: SearchCompression.Default,
+        SectionPriorities: []);
 }

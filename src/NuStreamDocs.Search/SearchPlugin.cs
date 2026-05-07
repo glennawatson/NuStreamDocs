@@ -172,11 +172,27 @@ public sealed class SearchPlugin(SearchOptions options, ILogger logger) : IBuild
         HeadExtraWriter.WriteUtf8(writer, "<meta name=\"nustreamdocs:search-index\" content=\""u8);
         HeadExtraWriter.WriteUtf8(writer, _manifestUrlBytes);
         HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
+        WriteSectionPrioritiesMeta(writer, _options.SectionPriorities);
     }
 
     /// <summary>Snapshots the documents harvested so far; exposed for tests.</summary>
     /// <returns>A fresh array copy of the bag's contents.</returns>
     internal SearchDocument[] DocumentsSnapshot() => [.. _documents];
+
+    /// <summary>Emits the <c>nustreamdocs:search-section-priorities</c> meta tag when the option is non-empty.</summary>
+    /// <param name="writer">Sink for the rendered tag.</param>
+    /// <param name="priorities">UTF-8 priority string from <see cref="SearchOptions.SectionPriorities"/>; empty no-ops.</param>
+    private static void WriteSectionPrioritiesMeta(IBufferWriter<byte> writer, byte[] priorities)
+    {
+        if (priorities is not { Length: > 0 })
+        {
+            return;
+        }
+
+        HeadExtraWriter.WriteUtf8(writer, "<meta name=\"nustreamdocs:search-section-priorities\" content=\""u8);
+        HeadExtraWriter.WriteUtf8(writer, priorities);
+        HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
+    }
 
     /// <summary>Emits <c>.gz</c> (and <c>.br</c> when <see cref="SearchCompression.Smallest"/>) siblings of the JSON index for CDN <c>Content-Encoding</c> negotiation.</summary>
     /// <param name="path">Absolute path to the just-written JSON index.</param>

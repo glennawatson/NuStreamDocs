@@ -128,6 +128,69 @@
       }
     }
 
+    /* Section priorities come from <meta name="nustreamdocs:search-section-priorities">
+       — a comma-separated `prefix:weight` list emitted by the search plugin. Theme JS stays
+       agnostic; sites configure their own bands via the `WithSectionPriorities` option. */
+    var sectionPriorities = parseSectionPriorities();
+
+    function parseSectionPriorities() {
+      var meta = document.querySelector("meta[name=\"nustreamdocs:search-section-priorities\"]");
+      if (!meta || !meta.content) { return []; }
+      var pairs = meta.content.split(",");
+      var out = [];
+      for (var i = 0; i < pairs.length; i++) {
+        var raw = pairs[i].trim();
+        if (!raw) { continue; }
+        var colon = raw.lastIndexOf(":");
+        if (colon < 1) { continue; }
+        var weight = parseInt(raw.substring(colon + 1), 10);
+        if (!isFinite(weight)) { continue; }
+        out.push({ prefix: raw.substring(0, colon).toLowerCase(), weight: weight });
+      }
+      return out;
+    }
+
+    function applySectionWeight(url) {
+      for (var i = 0; i < sectionPriorities.length; i++) {
+        if (url.indexOf(sectionPriorities[i].prefix) >= 0) {
+          return sectionPriorities[i].weight;
+        }
+      }
+      return 0;
+    }
+
+    /* AND-of-terms across the title + url + excerpt fields. */
+    function matchesAllTerms(terms, title, url, excerpt) {
+      for (var i = 0; i < terms.length; i++) {
+        var t = terms[i];
+        if (title.indexOf(t) < 0 && url.indexOf(t) < 0 && excerpt.indexOf(t) < 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /* Title relevance + meta-driven section bias. */
+    function scoreRecord(normalized, terms, title, url) {
+      var score = 0;
+      if (title === normalized) {
+        score += 1000;
+      } else if (title.indexOf(normalized) === 0) {
+        score += 500;
+      } else if (title.indexOf(normalized) >= 0) {
+        score += 200;
+      }
+
+      var titleTermHits = 0;
+      for (var i = 0; i < terms.length; i++) {
+        if (title.indexOf(terms[i]) >= 0) { titleTermHits++; }
+      }
+      if (terms.length > 1 && titleTermHits === terms.length) { score += 150; }
+      score += titleTermHits * 30;
+      score += applySectionWeight(url);
+      return score;
+    }
+
     var runSearch = debounce(function (value) {
       var normalized = value.trim().toLowerCase();
       if (normalized.length < 2) {
@@ -146,28 +209,25 @@
         .then(function (manifest) {
           var terms = normalized.split(/\s+/).filter(Boolean);
           var records = Array.isArray(manifest.records) ? manifest.records : [];
-          var matches = [];
+          var scored = [];
           for (var i = 0; i < records.length; i++) {
             var record = records[i];
-            var target = (cleanSearchText(record.title) + " " + record.url + " " + (record.excerpt || "")).toLowerCase();
-            var matched = true;
-            for (var j = 0; j < terms.length; j++) {
-              if (target.indexOf(terms[j]) < 0) {
-                matched = false;
-                break;
-              }
+            var title = cleanSearchText(record.title || "").toLowerCase();
+            var url = (record.url || "").toLowerCase();
+            var excerpt = (record.excerpt || "").toLowerCase();
+            if (!matchesAllTerms(terms, title, url, excerpt)) {
+              continue;
             }
 
-            if (matched) {
-              matches.push(record);
-            }
+            scored.push({
+              record: record,
+              score: scoreRecord(normalized, terms, title, url)
+            });
           }
 
-          matches.sort(function (a, b) {
-            var aApi = (a.url || "").indexOf("/api/") >= 0 ? 1 : 0;
-            var bApi = (b.url || "").indexOf("/api/") >= 0 ? 1 : 0;
-            return aApi - bApi;
-          });
+          scored.sort(function (a, b) { return b.score - a.score; });
+          var matches = [];
+          for (var k = 0; k < scored.length; k++) { matches.push(scored[k].record); }
 
           renderMatches(matches.slice(0, 20));
         })
@@ -286,23 +346,30 @@
     initializeSearch();
     initializeRepoStats();
 
-    /* Hamburger is a <label for="__drawer">; click is wired natively by HTML.
-       This block (a) mirrors the checkbox state into aria-expanded so screen
-       readers see the open/closed state, and (b) handles Space/Enter, which a
-       <label> doesn't activate on its own. */
+    /* Hamburger is a <label for="__drawer">. We hijack the click and toggle
+       the checkbox in JS — iOS Safari sometimes drops the label-for association
+       when the input is visually-hidden via clip-path, so taking the toggle
+       path explicitly is the most portable option. preventDefault stops the
+       native label action so we don't double-toggle.
+       The keydown handler covers Space/Enter (label doesn't activate on those
+       natively); change-listener mirrors checked state into aria-expanded. */
     var drawerBtn = document.querySelector("[data-md-component=\"hamburger\"]");
     var drawerCheckbox = document.getElementById("__drawer");
     if (drawerBtn && drawerCheckbox) {
       function syncExpanded() {
         drawerBtn.setAttribute("aria-expanded", drawerCheckbox.checked ? "true" : "false");
       }
-      syncExpanded();
-      drawerCheckbox.addEventListener("change", syncExpanded);
-      drawerBtn.addEventListener("keydown", function (event) {
-        if (event.key !== " " && event.key !== "Enter") { return; }
+      function toggleDrawer(event) {
         event.preventDefault();
         drawerCheckbox.checked = !drawerCheckbox.checked;
         drawerCheckbox.dispatchEvent(new Event("change"));
+      }
+      syncExpanded();
+      drawerCheckbox.addEventListener("change", syncExpanded);
+      drawerBtn.addEventListener("click", toggleDrawer);
+      drawerBtn.addEventListener("keydown", function (event) {
+        if (event.key !== " " && event.key !== "Enter") { return; }
+        toggleDrawer(event);
       });
     }
 

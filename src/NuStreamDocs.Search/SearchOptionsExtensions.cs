@@ -121,4 +121,28 @@ public static class SearchOptionsExtensions
     /// <returns>The updated options.</returns>
     public static SearchOptions ClearExtraStopwords(this SearchOptions options) =>
         options with { ExtraStopwords = [] };
+
+    /// <summary>Replaces the section-priority string with <paramref name="value"/>.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">Comma-separated <c>prefix:weight</c> pairs (e.g. <c>"documentation/:80,api/:-200"</c>).</param>
+    /// <returns>The updated options.</returns>
+    public static SearchOptions WithSectionPriorities(this SearchOptions options, ApiCompatString value) =>
+        options with { SectionPriorities = Utf8Encoder.Encode(value) };
+
+    /// <summary>Replaces the section-priority string with the supplied UTF-8 bytes.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">UTF-8 section-priority bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static SearchOptions WithSectionPriorities(this SearchOptions options, byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return options with { SectionPriorities = value };
+    }
+
+    /// <summary>Replaces the section-priority string with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">UTF-8 section-priority bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static SearchOptions WithSectionPriorities(this SearchOptions options, ReadOnlySpan<byte> value) =>
+        options with { SectionPriorities = value.ToArray() };
 }
