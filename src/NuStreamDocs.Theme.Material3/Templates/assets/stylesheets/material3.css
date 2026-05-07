@@ -1,12 +1,7 @@
-/* NuStreamDocs Material 3 theme — light + dark, MD3 design tokens. */
-/* Inspired by mkdocs-material 9.x's structure but rebuilt against
-   the Material Design 3 token system: sys.color roles, shape scale,
-   typography scale, elevation. */
+/* Material 3 theme — light + dark, MD3 design tokens. */
 
 /* ----- Visually-hidden infrastructure: skip-link + toggle checkboxes. ----- */
-/* The drawer/search toggle inputs and the skip-to-content link drive layout
-   via the :checked sibling selector and keyboard focus, but they should be
-   invisible until focused (skip link) or always (toggles). */
+/* Toggle inputs drive layout via `:checked` sibling selectors; the skip link is keyboard-only. */
 .md-toggle {
   position: absolute;
   width: 1px;
@@ -34,8 +29,7 @@
   top: 0.5rem;
 }
 
-/* Baseline focus ring for keyboard navigation. :where(...) keeps specificity
-   at 0 so per-element rules can still override. */
+/* `:where(...)` keeps specificity at 0 so per-element rules still override. */
 :where(a, button, label, input, [tabindex], summary):focus-visible {
   outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
@@ -149,11 +143,7 @@ a:hover { text-decoration: underline; }
 .md-container { min-height: 100vh; display: flex; flex-direction: column; }
 .md-main { flex: 1; padding: 24px 0; }
 .md-grid {
-  /* Cap the grid so the header bar, tab strip, and footer center on wide monitors with a
-     comfortable amount of deadspace at the rails. Wide enough that the article column inside the
-     grid still gets meaningful space — at 92rem with sidebars at 16rem + 14rem = 30rem, the
-     content column ends up around 60rem (~960px), which is the upper end of comfortable line
-     length without running paragraphs ridiculously wide on a 4K monitor. */
+  /* 92rem cap keeps line length under ~60rem (~960px) on 4K after the 30rem of sidebars. */
   max-width: 92rem;
   margin: 0 auto;
   padding: 0 16px;
@@ -164,18 +154,11 @@ a:hover { text-decoration: underline; }
   grid-template-columns: 16rem minmax(0, 1fr) 14rem;
   gap: 24px;
 }
-/* Pin the article to the centre track. With grid auto-placement, hiding the
-   primary sidebar (display: none via [hidden]) would let .md-content fall
-   back into column 1 (16rem), squashing it into a sidebar-width strip.
-   Anchor it explicitly so the article width stays stable whichever sidebars
-   are hidden. */
+/* Anchor to col 2 so a hidden primary sidebar doesn't reflow the article into the 16rem rail. */
 .md-main__inner > .md-content {
   grid-column: 2;
 }
-/* When both side columns are suppressed the template collapses to a single
-   centred track so we don't leave the article floating in a 92rem grid with
-   nothing in the rails. The primary + secondary sidebars use the `hidden`
-   attribute when their content is empty / suppressed. */
+/* Both sidebars hidden → collapse to a single centred track. */
 .md-main__inner:has(> .md-sidebar--primary[hidden]):has(> .md-sidebar--secondary[hidden]) {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -254,9 +237,6 @@ a:hover { text-decoration: underline; }
   height: 1.25rem;
   display: block;
 }
-/* Source-badge icon: matches the rest of the header icons. The octocat
-   path runs to y≈0.5 inside its 0-24 viewBox, so the badge needs at
-   least 8px of vertical padding for the mark to clear the border. */
 .md-source__icon svg {
   width: 1.25rem;
   height: 1.25rem;
@@ -279,9 +259,6 @@ a:hover { text-decoration: underline; }
   padding: 0;
   display: flex;
   align-items: center;
-  /* Center the tabs row within the page so "Home / API / Docs / …" sits in the middle of the
-     bar rather than hugging the left rail. Falls back to `flex-start` when the tabs would
-     overflow horizontally so the first tab stays reachable on narrow viewports. */
   justify-content: center;
   gap: 0.25rem;
   overflow-x: auto;
@@ -311,14 +288,16 @@ a:hover { text-decoration: underline; }
 
 /* ----- Sidebar nav. ----- */
 .md-sidebar { font: var(--md-sys-typescale-body-medium); }
-/* Right-rail TOC: viewport-pinned scroll column (short list, sticky-while-reading). */
+/* Right rail (TOC): viewport-pinned, sticky. */
 .md-sidebar--secondary .md-sidebar__inner {
   position: sticky;
   top: 80px;
   max-height: calc(100vh - 96px);
   overflow-y: auto;
 }
-/* Left-rail nav: extends with the page; no viewport cap so deep API trees stay reachable. */
+/* Left rail (primary nav): extends with the page; no viewport cap so deep trees stay reachable.
+   Long dot-separated identifiers wrap inside the column via `overflow-wrap: anywhere` (defined
+   below) — `break-word` won't break tokens lacking whitespace. */
 .md-nav__list { list-style: none; padding: 0; margin: 0; }
 .md-nav__item { margin: 0; }
 .md-nav__link {
@@ -327,6 +306,7 @@ a:hover { text-decoration: underline; }
   border-radius: var(--md-sys-shape-corner-md);
   color: var(--md-sys-color-on-surface-variant);
 }
+.md-sidebar--primary .md-nav__link { overflow-wrap: anywhere; }
 .md-nav__link:hover {
   background: var(--md-sys-color-surface-container-high);
   color: var(--md-sys-color-on-surface);
@@ -344,7 +324,7 @@ a:hover { text-decoration: underline; }
   font: var(--md-sys-typescale-label-large);
 }
 
-/* Hide the section-toggle checkboxes — they exist purely to drive expand/collapse via :checked. */
+/* Section-toggle checkboxes drive expand/collapse via `:checked`; visually hidden. */
 .md-sidebar--primary .md-nav__toggle {
   position: absolute;
   width: 1px;
@@ -356,12 +336,9 @@ a:hover { text-decoration: underline; }
   border: 0;
 }
 
-/* The drawer's per-section title above the children — visible inside the nested <nav>. Hidden in
-   the desktop sidebar (the top-level link does the labelling); shown on mobile when the nav opens
-   as a full-screen drawer. */
+/* Per-section title hidden on desktop (top-level link labels the section); revealed in the mobile drawer. */
 .md-sidebar--primary .md-nav__title { display: none; }
 
-/* Section row: link + chevron-label arranged side-by-side. */
 .md-sidebar--primary .md-nav__item--nested > .md-nav__container {
   display: flex;
   align-items: center;
@@ -376,7 +353,6 @@ a:hover { text-decoration: underline; }
   min-width: 0;
 }
 
-/* Chevron toggle label inside the section row. */
 .md-sidebar--primary .md-nav__item--nested > .md-nav__container > label.md-nav__link {
   flex: 0 0 auto;
   cursor: pointer;
@@ -388,8 +364,7 @@ a:hover { text-decoration: underline; }
   background: var(--md-sys-color-surface-container-high);
 }
 
-/* Chevron glyph — uses a CSS-drawn arrow so we don't need an icon font. Rotates when the section
-   is expanded (checkbox :checked). */
+/* Chevron glyph — masked SVG so we don't need an icon font. Rotates 90° when checkbox is `:checked`. */
 .md-sidebar--primary .md-nav__icon {
   display: inline-block;
   width: 1.25rem;
@@ -472,10 +447,17 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--md-sys-shape-corner-md);
   padding: 16px;
-  overflow-x: auto;
   margin: 0 0 16px;
 }
-.md-typeset pre code { padding: 0; background: transparent; }
+/* Wrap long single-line code inside the column rather than scrolling. `pre-wrap` preserves
+   intentional indentation; `overflow-wrap: anywhere` breaks inside long unbreakable identifiers
+   that `break-word` (whitespace-only) won't touch. */
+.md-typeset pre code {
+  padding: 0;
+  background: transparent;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 .md-typeset blockquote {
   margin: 0 0 16px;

@@ -286,13 +286,23 @@
     initializeSearch();
     initializeRepoStats();
 
+    /* Hamburger is a <label for="__drawer">; click is wired natively by HTML.
+       This block (a) mirrors the checkbox state into aria-expanded so screen
+       readers see the open/closed state, and (b) handles Space/Enter, which a
+       <label> doesn't activate on its own. */
     var drawerBtn = document.querySelector("[data-md-component=\"hamburger\"]");
     var drawerCheckbox = document.getElementById("__drawer");
     if (drawerBtn && drawerCheckbox) {
-      drawerBtn.addEventListener("click", function () {
-        var next = !drawerCheckbox.checked;
-        drawerCheckbox.checked = next;
-        drawerBtn.setAttribute("aria-expanded", next ? "true" : "false");
+      function syncExpanded() {
+        drawerBtn.setAttribute("aria-expanded", drawerCheckbox.checked ? "true" : "false");
+      }
+      syncExpanded();
+      drawerCheckbox.addEventListener("change", syncExpanded);
+      drawerBtn.addEventListener("keydown", function (event) {
+        if (event.key !== " " && event.key !== "Enter") { return; }
+        event.preventDefault();
+        drawerCheckbox.checked = !drawerCheckbox.checked;
+        drawerCheckbox.dispatchEvent(new Event("change"));
       });
     }
 
