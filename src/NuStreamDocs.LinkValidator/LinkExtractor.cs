@@ -25,6 +25,9 @@ public static class LinkExtractor
     /// <summary>Gets the UTF-8 marker introducing a <c>src=&quot;</c> attribute.</summary>
     private static ReadOnlySpan<byte> SrcMarker => " src=\""u8;
 
+    /// <summary>Gets the UTF-8 marker introducing an <c>id=&quot;</c> attribute on any element.</summary>
+    private static ReadOnlySpan<byte> IdMarker => " id=\""u8;
+
     /// <summary>Extracts every <c>href</c> attribute value as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
@@ -36,6 +39,17 @@ public static class LinkExtractor
     /// <returns>Byte ranges in document order.</returns>
     public static ByteRange[] ExtractSrcRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, SrcMarker);
+
+    /// <summary>Extracts every <c>id</c> attribute value (any element) as offset+length pairs.</summary>
+    /// <param name="html">UTF-8 HTML.</param>
+    /// <returns>Byte ranges in document order.</returns>
+    /// <remarks>
+    /// HTML <c>id</c> can appear on any element and is the only requirement for a fragment
+    /// target — the validator must recognise skip-link targets like <c>&lt;main id="md-content"&gt;</c>,
+    /// not just heading ids.
+    /// </remarks>
+    public static ByteRange[] ExtractIdRanges(ReadOnlySpan<byte> html) =>
+        ExtractAttributeRanges(html, IdMarker);
 
     /// <summary>Extracts every heading <c>id</c> attribute value as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>

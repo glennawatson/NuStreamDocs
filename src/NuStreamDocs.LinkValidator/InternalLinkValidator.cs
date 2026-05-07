@@ -104,7 +104,7 @@ public static class InternalLinkValidator
         }
 
         var resolved = ResolveTarget(source.PageUrl, target);
-        if (!corpus.TryGetPage(resolved, out var page))
+        if (!corpus.TryResolvePage(resolved, out var page))
         {
             sink.Add(BuildDiagnostic(source.PageUrl, link, $"Internal link target '{Encoding.UTF8.GetString(resolved)}' is not in the site."));
             return;

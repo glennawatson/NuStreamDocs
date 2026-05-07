@@ -105,6 +105,81 @@ public class ValidationCorpusTests
         await Assert.That(static async () => _ = await ValidationCorpus.BuildAsync("/tmp", 0, CancellationToken.None))
             .Throws<ArgumentOutOfRangeException>();
 
+    /// <summary>TryResolvePage matches the verbatim URL.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TryResolvePageMatchesVerbatim()
+    {
+        var corpus = BuildCorpus([.. "foo.html"u8]);
+        await Assert.That(corpus.TryResolvePage("foo.html"u8, out _)).IsTrue();
+    }
+
+    /// <summary>TryResolvePage maps directory-style URLs to the on-disk index file.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TryResolvePageHandlesTrailingSlashToIndex()
+    {
+        var corpus = BuildCorpus([.. "foo/index.html"u8]);
+        await Assert.That(corpus.TryResolvePage("foo/"u8, out _)).IsTrue();
+    }
+
+    /// <summary>TryResolvePage falls back to the source-page form when the corpus is keyed on the .html URL.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TryResolvePageHandlesTrailingSlashToHtml()
+    {
+        var corpus = BuildCorpus([.. "foo.html"u8]);
+        await Assert.That(corpus.TryResolvePage("foo/"u8, out _)).IsTrue();
+    }
+
+    /// <summary>TryResolvePage with an empty path resolves to the root index.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TryResolvePageEmptyPathResolvesRootIndex()
+    {
+        var corpus = BuildCorpus([.. "index.html"u8]);
+        await Assert.That(corpus.TryResolvePage(default, out _)).IsTrue();
+    }
+
+    /// <summary>TryResolvePage with a bare name resolves to {name}/index.html.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TryResolvePageBareNameToDirIndex()
+    {
+        var corpus = BuildCorpus([.. "Splat/index.html"u8]);
+        await Assert.That(corpus.TryResolvePage("Splat"u8, out _)).IsTrue();
+    }
+
+    /// <summary>TryResolvePage with a bare name falls back to {name}.html.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TryResolvePageBareNameToHtml()
+    {
+        var corpus = BuildCorpus([.. "Splat.html"u8]);
+        await Assert.That(corpus.TryResolvePage("Splat"u8, out _)).IsTrue();
+    }
+
+    /// <summary>TryResolvePage misses cleanly when no variant matches.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TryResolvePageMissReturnsFalse()
+    {
+        var corpus = BuildCorpus([.. "known.html"u8]);
+        await Assert.That(corpus.TryResolvePage("does-not-exist/"u8, out _)).IsFalse();
+    }
+
+    /// <summary>Builds an in-memory corpus seeded with one URL whose body is an empty HTML span.</summary>
+    /// <param name="url">The corpus URL.</param>
+    /// <returns>The populated corpus.</returns>
+    private static ValidationCorpus BuildCorpus(byte[] url)
+    {
+        var pages = new Dictionary<byte[], PageLinks>(Common.ByteArrayComparer.Instance)
+        {
+            [url] = ValidationCorpus.Scan(url, "<p>x</p>"u8),
+        };
+        return ValidationCorpus.FromPages(pages);
+    }
+
     /// <summary>Disposable scratch directory.</summary>
     /// <returns>Absolute path.</returns>
     private static string TempDir()

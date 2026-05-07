@@ -135,6 +135,71 @@ public sealed class ValidationCorpus
         return _pages.TryGetValue(Encoding.UTF8.GetBytes(pageUrl), out page!);
     }
 
+    /// <summary>Resolves a directory-URL-tolerant <paramref name="pageUrl"/> to its <see cref="PageLinks"/>.</summary>
+    /// <param name="pageUrl">Site-relative URL bytes.</param>
+    /// <param name="page">Resolved page on success.</param>
+    /// <returns>True when the URL or any of its directory-URL variants is in the corpus.</returns>
+    /// <remarks>
+    /// Tries the supplied bytes verbatim, then the directory-URL forms
+    /// <c>foo/</c> → <c>foo/index.html</c>, <c>foo</c> → <c>foo/index.html</c> / <c>foo.html</c>,
+    /// and <c>(empty)</c> → <c>index.html</c>. Required because <c>UseDirectoryUrls</c>
+    /// emits <c>page/index.html</c> on disk while in-page hrefs render as <c>page/</c>.
+    /// </remarks>
+    public bool TryResolvePage(ReadOnlySpan<byte> pageUrl, out PageLinks page)
+    {
+        var lookup = _pages.GetAlternateLookup<ReadOnlySpan<byte>>();
+
+        if (lookup.TryGetValue(pageUrl, out page!))
+        {
+            return true;
+        }
+
+        // Empty path → site root index.
+        if (pageUrl.IsEmpty)
+        {
+            return lookup.TryGetValue("index.html"u8, out page!);
+        }
+
+        // foo/ → try foo/index.html (disk-style) then foo.html (source-style).
+        if (pageUrl[^1] == (byte)'/')
+        {
+            Span<byte> withIndex = stackalloc byte[pageUrl.Length + "index.html"u8.Length];
+            pageUrl.CopyTo(withIndex);
+            "index.html"u8.CopyTo(withIndex[pageUrl.Length..]);
+            if (lookup.TryGetValue(withIndex, out page!))
+            {
+                return true;
+            }
+
+            var trimmed = pageUrl[..^1];
+            Span<byte> withHtmlNoSlash = stackalloc byte[trimmed.Length + ".html"u8.Length];
+            trimmed.CopyTo(withHtmlNoSlash);
+            ".html"u8.CopyTo(withHtmlNoSlash[trimmed.Length..]);
+            return lookup.TryGetValue(withHtmlNoSlash, out page!);
+        }
+
+        // foo (no trailing slash, no .html) → try foo/index.html, then foo.html.
+        if (!pageUrl.EndsWith(".html"u8))
+        {
+            Span<byte> withSlashIndex = stackalloc byte[pageUrl.Length + 1 + "index.html"u8.Length];
+            pageUrl.CopyTo(withSlashIndex);
+            withSlashIndex[pageUrl.Length] = (byte)'/';
+            "index.html"u8.CopyTo(withSlashIndex[(pageUrl.Length + 1)..]);
+            if (lookup.TryGetValue(withSlashIndex, out page!))
+            {
+                return true;
+            }
+
+            Span<byte> withHtml = stackalloc byte[pageUrl.Length + ".html"u8.Length];
+            pageUrl.CopyTo(withHtml);
+            ".html"u8.CopyTo(withHtml[pageUrl.Length..]);
+            return lookup.TryGetValue(withHtml, out page!);
+        }
+
+        page = null!;
+        return false;
+    }
+
     /// <summary>Yields every <c>.html</c> file under <paramref name="root"/>.</summary>
     /// <param name="root">Absolute site root.</param>
     /// <returns>Absolute paths.</returns>
@@ -170,7 +235,7 @@ public sealed class ValidationCorpus
     {
         var hrefs = LinkExtractor.ExtractHrefRanges(bytes);
         var srcs = LinkExtractor.ExtractSrcRanges(bytes);
-        var idRanges = LinkExtractor.ExtractHeadingIdRanges(bytes);
+        var idRanges = LinkExtractor.ExtractIdRanges(bytes);
 
         List<byte[]> internalLinks = new(hrefs.Length);
         List<byte[]> externalLinks = new(4);
