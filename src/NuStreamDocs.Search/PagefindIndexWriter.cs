@@ -23,6 +23,21 @@ namespace NuStreamDocs.Search;
 /// </remarks>
 public static class PagefindIndexWriter
 {
+    /// <summary>Maximum body-text bytes embedded in each manifest record's <c>excerpt</c> field.</summary>
+    /// <remarks>
+    /// Trade-off knob: the JS search matcher scans <c>title + url + excerpt</c>. Larger excerpts
+    /// catch more body-only mentions at the cost of manifest size. 512 bytes per page yields a
+    /// ~7 MB manifest on a 14 K-page corpus — small enough for a one-shot fetch, big enough that
+    /// the first paragraph of every page participates in matching.
+    /// </remarks>
+    private const int ManifestExcerptBytes = 512;
+
+    /// <summary>UTF-8 continuation-byte mask: bytes matching <c>10xxxxxx</c> are mid-codepoint and unsafe to truncate at.</summary>
+    private const int Utf8ContinuationMask = 0xC0;
+
+    /// <summary>UTF-8 continuation-byte signature (the lead two bits of a continuation byte).</summary>
+    private const int Utf8ContinuationSignature = 0x80;
+
     /// <summary>Writes <paramref name="documents"/> as a Pagefind manifest + per-record files.</summary>
     /// <param name="searchRoot">Absolute path to the search subdirectory.</param>
     /// <param name="documents">Document corpus.</param>
@@ -54,12 +69,34 @@ public static class PagefindIndexWriter
             manifest.WriteString("slug"u8, slug);
             manifest.WriteString("url"u8, (ReadOnlySpan<byte>)doc.RelativeUrl);
             manifest.WriteString("title"u8, (ReadOnlySpan<byte>)doc.Title);
+            manifest.WriteString("excerpt"u8, ExcerptBytes(doc.Text));
             manifest.WriteEndObject();
         }
 
         manifest.WriteEndArray();
         manifest.WriteEndObject();
         manifest.Flush();
+    }
+
+    /// <summary>Returns the first <see cref="ManifestExcerptBytes"/> bytes of <paramref name="text"/>, snapped to a UTF-8 boundary so we never split a multi-byte sequence.</summary>
+    /// <param name="text">Full body text bytes.</param>
+    /// <returns>A safe-truncated slice of <paramref name="text"/>.</returns>
+    private static ReadOnlySpan<byte> ExcerptBytes(byte[] text)
+    {
+        if (text is null || text.Length <= ManifestExcerptBytes)
+        {
+            return text;
+        }
+
+        // Walk back from the cap to the start of the most recent UTF-8 codepoint so the
+        // excerpt is always a valid UTF-8 string (continuation bytes 10xxxxxx are skipped).
+        var end = ManifestExcerptBytes;
+        while (end > 0 && (text[end] & Utf8ContinuationMask) is Utf8ContinuationSignature)
+        {
+            end--;
+        }
+
+        return text.AsSpan(0, end);
     }
 
     /// <summary>Writes one per-page record JSON.</summary>

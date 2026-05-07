@@ -13,15 +13,15 @@ public class LinkValidatorPluginLifecycleTests
     public async Task ConfigureAsync() =>
         await new LinkValidatorPlugin().ConfigureAsync(new("/in", "/out", [], new()), CancellationToken.None);
 
-    /// <summary>ResolveAsync drives the validator against an empty index.</summary>
+    /// <summary>FinalizeAsync drives the validator against an empty output tree.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task ResolveAsyncEmpty()
+    public async Task FinalizeAsyncEmpty()
     {
         using ScratchDir temp = new();
         LinkValidatorPlugin plugin = new();
         await plugin.ConfigureAsync(new(temp.Root, temp.Root, [], new()), CancellationToken.None);
-        await plugin.ResolveAsync(new(temp.Root, []), CancellationToken.None);
+        await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
         await Assert.That(plugin.LastDiagnostics).IsNotNull();
     }
 

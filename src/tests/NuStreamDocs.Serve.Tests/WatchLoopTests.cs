@@ -18,7 +18,7 @@ public class WatchLoopTests
         try
         {
             using CancellationTokenSource cts = new(TimeSpan.FromSeconds(10));
-            using WatchLoop watcher = new(dir, ignoreRoot: null, debounceMs: 200, NullLogger.Instance);
+            using WatchLoop watcher = new(dir, ignoreRoot: null, debounceMs: 200, ignoredSegments: null, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
             await Task.Delay(50, cts.Token);
@@ -49,12 +49,40 @@ public class WatchLoopTests
         try
         {
             using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(800));
-            using WatchLoop watcher = new(dir, ignored, debounceMs: 200, NullLogger.Instance);
+            using WatchLoop watcher = new(dir, ignored, debounceMs: 200, ignoredSegments: null, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
             await Task.Delay(50, CancellationToken.None);
 
             await File.WriteAllTextAsync(Path.Combine(ignored, "page.html"), "x", CancellationToken.None);
+
+            var advanced = await moveNext.AsTask();
+            await Assert.That(advanced).IsFalse();
+            await enumerator.DisposeAsync();
+        }
+        finally
+        {
+            CleanupTempDir(dir);
+        }
+    }
+
+    /// <summary>Events whose path contains a denylisted segment never reach the channel.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task EventsUnderIgnoredSegmentAreSuppressed()
+    {
+        var dir = CreateTempDir();
+        var binDir = Path.Combine(dir, "bin");
+        Directory.CreateDirectory(binDir);
+        try
+        {
+            using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(800));
+            using WatchLoop watcher = new(dir, ignoreRoot: null, debounceMs: 200, ignoredSegments: ["bin"], NullLogger.Instance);
+            var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
+            var moveNext = enumerator.MoveNextAsync();
+            await Task.Delay(50, CancellationToken.None);
+
+            await File.WriteAllTextAsync(Path.Combine(binDir, "noisy.dll"), "x", CancellationToken.None);
 
             var advanced = await moveNext.AsTask();
             await Assert.That(advanced).IsFalse();

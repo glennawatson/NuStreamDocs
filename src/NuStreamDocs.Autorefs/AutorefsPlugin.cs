@@ -2,10 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Autorefs.Logging;
-using NuStreamDocs.Common;
+using NuStreamDocs.Links;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Autorefs;
@@ -29,9 +28,6 @@ public sealed class AutorefsPlugin
       IPagePostResolvePlugin,
       IBuildFinalizePlugin
 {
-    /// <summary>Length of the <c>.md</c> extension, dropped when computing the served URL.</summary>
-    private const int MarkdownExtensionLength = 3;
-
     /// <summary>Logger used during the resolution pass.</summary>
     private readonly ILogger _logger;
 
@@ -40,6 +36,9 @@ public sealed class AutorefsPlugin
 
     /// <summary>Unresolved-marker counter accumulated across the post-resolve hook.</summary>
     private long _missingCount;
+
+    /// <summary>True when the build emits directory URLs; captured at <see cref="ConfigureAsync"/>.</summary>
+    private bool _useDirectoryUrls;
 
     /// <summary>Initializes a new instance of the <see cref="AutorefsPlugin"/> class.</summary>
     public AutorefsPlugin()
@@ -94,6 +93,8 @@ public sealed class AutorefsPlugin
     {
         _ = cancellationToken;
 
+        _useDirectoryUrls = context.UseDirectoryUrls;
+
         // Watch-mode rebuilds reuse the plugin instance — drop the previous build's registrations before any
         // Scan hook fires. Other plugins register from their per-page hook (which runs strictly
         // after ConfigureAsync), so this clear is safe regardless of registration order.
@@ -117,7 +118,7 @@ public sealed class AutorefsPlugin
     /// <inheritdoc/>
     public void Scan(in PageScanContext context)
     {
-        var pageUrlBytes = ToPageUrlBytes(context.RelativePath);
+        var pageUrlBytes = ServedUrlBytes.FromPath(context.RelativePath, _useDirectoryUrls, leadingSlash: true);
         HeadingIdScanner.ScanAndRegister(context.Html, pageUrlBytes, Registry);
     }
 
@@ -154,22 +155,5 @@ public sealed class AutorefsPlugin
         var missing = (int)Interlocked.Read(ref _missingCount);
         AutorefsLoggingHelper.LogResolutionComplete(_logger, resolved, missing);
         return ValueTask.CompletedTask;
-    }
-
-    /// <summary>Maps a source-relative <c>.md</c> path to the served-page URL as UTF-8 bytes (suffix swapped to <c>.html</c>).</summary>
-    /// <param name="relativePath">Source-relative markdown path, forward-slashed.</param>
-    /// <returns>Page-relative URL bytes.</returns>
-    private static byte[] ToPageUrlBytes(FilePath relativePath)
-    {
-        var path = relativePath.AsSpan();
-        var hasMd = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
-        var sourceChars = hasMd ? path[..^MarkdownExtensionLength] : path;
-        var suffix = hasMd ? ".html"u8 : default;
-
-        var size = Encoding.UTF8.GetByteCount(sourceChars) + suffix.Length;
-        var result = new byte[size];
-        var written = Encoding.UTF8.GetBytes(sourceChars, result);
-        suffix.CopyTo(result.AsSpan(written));
-        return result;
     }
 }

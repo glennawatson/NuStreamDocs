@@ -28,6 +28,9 @@ public static class LinkExtractor
     /// <summary>Gets the UTF-8 marker introducing an <c>id=&quot;</c> attribute on any element.</summary>
     private static ReadOnlySpan<byte> IdMarker => " id=\""u8;
 
+    /// <summary>Gets the UTF-8 marker introducing the obsolete <c>&lt;a name=&quot;</c> fragment-target attribute.</summary>
+    private static ReadOnlySpan<byte> AnchorNameMarker => "<a name=\""u8;
+
     /// <summary>Extracts every <c>href</c> attribute value as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
@@ -50,6 +53,16 @@ public static class LinkExtractor
     /// </remarks>
     public static ByteRange[] ExtractIdRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, IdMarker);
+
+    /// <summary>Extracts the values of obsolete HTML4 <c>&lt;a name="..."&gt;</c> fragment anchors as offset+length pairs.</summary>
+    /// <param name="html">UTF-8 HTML.</param>
+    /// <returns>Byte ranges in document order.</returns>
+    /// <remarks>
+    /// Browsers still scroll to <c>&lt;a name&gt;</c> targets but the attribute is obsolete in HTML5;
+    /// the validator surfaces a deprecation diagnostic instead of accepting them silently.
+    /// </remarks>
+    public static ByteRange[] ExtractDeprecatedNameAnchorRanges(ReadOnlySpan<byte> html) =>
+        ExtractAttributeRanges(html, AnchorNameMarker);
 
     /// <summary>Extracts every heading <c>id</c> attribute value as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>

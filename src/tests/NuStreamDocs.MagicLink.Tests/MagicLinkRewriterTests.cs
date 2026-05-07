@@ -51,6 +51,33 @@ public class MagicLinkRewriterTests
         await Assert.That(Rewrite("[label](https://example.com)"))
             .IsEqualTo("[label](https://example.com)");
 
+    /// <summary>A label containing nested <c>[]</c> (e.g. <c>byte[]</c>) does not split early and leak the destination URL out for autolinking.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task MarkdownLinkLabelWithNestedBracketsLeftAlone()
+    {
+        const string Source = "[IObservable<byte[]?>](https://learn.microsoft.com/dotnet/api/system.iobservable-1)";
+        await Assert.That(Rewrite(Source)).IsEqualTo(Source);
+    }
+
+    /// <summary>A destination containing balanced parens (e.g. wikipedia <c>(disambiguation)</c>) round-trips intact.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task MarkdownLinkDestinationWithNestedParensLeftAlone()
+    {
+        const string Source = "[wp](https://en.wikipedia.org/wiki/Foo_(bar))";
+        await Assert.That(Rewrite(Source)).IsEqualTo(Source);
+    }
+
+    /// <summary><c>@name:</c> shapes (e.g. autoref markers) are not mistaken for GitHub mentions.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ColonAfterMentionNameSuppressesRewriting()
+    {
+        const string Source = "see @autoref:T:ReactiveUI.IViewFor-1 for more";
+        await Assert.That(RewriteWithMentions(Source)).IsEqualTo(Source);
+    }
+
     /// <summary>Fenced code blocks pass through verbatim.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -90,6 +117,17 @@ public class MagicLinkRewriterTests
         var bytes = Encoding.UTF8.GetBytes(input);
         ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
         MagicLinkRewriter.Rewrite(bytes, sink);
+        return Encoding.UTF8.GetString(sink.WrittenSpan);
+    }
+
+    /// <summary>Rewrites <paramref name="input"/> with <c>ExpandUserMentions</c> on; default helper above leaves it off.</summary>
+    /// <param name="input">Markdown source.</param>
+    /// <returns>Rewritten text.</returns>
+    private static string RewriteWithMentions(string input)
+    {
+        var bytes = Encoding.UTF8.GetBytes(input);
+        ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
+        MagicLinkRewriter.Rewrite(bytes, sink, defaultRepo: default, expandMentions: true);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

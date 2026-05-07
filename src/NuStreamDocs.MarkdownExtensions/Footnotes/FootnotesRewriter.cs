@@ -42,27 +42,30 @@ internal static class FootnotesRewriter
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="defs">Definition list populated in encounter order.</param>
     /// <param name="writer">UTF-8 sink for the body output.</param>
+    /// <remarks>
+    /// Skips fenced code blocks and inline code spans verbatim so that bracket-heavy fragments inside code
+    /// (e.g. the regex character class <c>[^@\s]</c>) don't accidentally register as footnote references.
+    /// </remarks>
     private static void CollectAndStripDefs(ReadOnlySpan<byte> source, List<Definition> defs, IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < source.Length)
         {
-            if (MarkdownCodeScanner.AtLineStart(source, i)
-                && TryParseDefinition(source, i, out var idStart, out var idLen, out var bodyStart, out var bodyEnd, out var blockEnd))
+            if (TrySkipCodeSpan(source, i, writer, out var afterCode))
             {
-                defs.Add(new(
-                    source.Slice(idStart, idLen).ToArray(),
-                    [.. source[bodyStart..bodyEnd]]));
-                i = blockEnd;
+                i = afterCode;
                 continue;
             }
 
-            // Inline reference: [^id]
-            if (source[i] == (byte)'[' && i + 1 < source.Length && source[i + 1] == (byte)'^'
-                && TryParseInlineRef(source, i, out var refIdStart, out var refIdLen, out var refEnd))
+            if (TryConsumeDefinition(source, i, defs, out var afterDef))
             {
-                EmitReference(source.Slice(refIdStart, refIdLen), defs, writer);
-                i = refEnd;
+                i = afterDef;
+                continue;
+            }
+
+            if (TryEmitInlineReference(source, i, defs, writer, out var afterRef))
+            {
+                i = afterRef;
                 continue;
             }
 
@@ -71,6 +74,79 @@ internal static class FootnotesRewriter
             writer.Advance(1);
             i++;
         }
+    }
+
+    /// <summary>Skips a fenced or inline code span verbatim into <paramref name="writer"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Cursor.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="afterCode">Cursor position past the consumed span on success.</param>
+    /// <returns>True when a code span was consumed.</returns>
+    private static bool TrySkipCodeSpan(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int afterCode)
+    {
+        if (MarkdownCodeScanner.AtLineStart(source, offset)
+            && MarkdownCodeScanner.TryConsumeFence(source, offset, out var fenceEnd))
+        {
+            writer.Write(source[offset..fenceEnd]);
+            afterCode = fenceEnd;
+            return true;
+        }
+
+        if (source[offset] == (byte)'`')
+        {
+            var inlineEnd = MarkdownCodeScanner.ConsumeInlineCode(source, offset);
+            writer.Write(source[offset..inlineEnd]);
+            afterCode = inlineEnd;
+            return true;
+        }
+
+        afterCode = offset;
+        return false;
+    }
+
+    /// <summary>Tries to consume a <c>[^id]: definition</c> block at the line-start position <paramref name="offset"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Cursor.</param>
+    /// <param name="defs">Definition accumulator (mutated on success).</param>
+    /// <param name="afterDef">Cursor position past the consumed block on success.</param>
+    /// <returns>True when a definition was consumed.</returns>
+    private static bool TryConsumeDefinition(ReadOnlySpan<byte> source, int offset, List<Definition> defs, out int afterDef)
+    {
+        afterDef = offset;
+        if (!MarkdownCodeScanner.AtLineStart(source, offset)
+            || !TryParseDefinition(source, offset, out var idStart, out var idLen, out var bodyStart, out var bodyEnd, out var blockEnd))
+        {
+            return false;
+        }
+
+        defs.Add(new(
+            source.Slice(idStart, idLen).ToArray(),
+            [.. source[bodyStart..bodyEnd]]));
+        afterDef = blockEnd;
+        return true;
+    }
+
+    /// <summary>Tries to emit an inline <c>[^id]</c> reference at <paramref name="offset"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Cursor.</param>
+    /// <param name="defs">Known definitions / forward placeholders.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="afterRef">Cursor position past the consumed reference on success.</param>
+    /// <returns>True when a reference was emitted.</returns>
+    private static bool TryEmitInlineReference(ReadOnlySpan<byte> source, int offset, List<Definition> defs, IBufferWriter<byte> writer, out int afterRef)
+    {
+        afterRef = offset;
+        if (source[offset] != (byte)'['
+            || offset + 1 >= source.Length
+            || source[offset + 1] != (byte)'^'
+            || !TryParseInlineRef(source, offset, out var refIdStart, out var refIdLen, out var refEnd))
+        {
+            return false;
+        }
+
+        EmitReference(source.Slice(refIdStart, refIdLen), defs, writer);
+        afterRef = refEnd;
+        return true;
     }
 
     /// <summary>Tries to parse a <c>[^id]: definition</c> block at <paramref name="offset"/>.</summary>

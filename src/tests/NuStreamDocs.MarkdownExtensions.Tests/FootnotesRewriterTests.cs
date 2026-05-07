@@ -50,6 +50,28 @@ public class FootnotesRewriterTests
         await Assert.That(output).IsEqualTo("# Just a heading\n\nNothing to see here.\n");
     }
 
+    /// <summary>Bracket-heavy fragments inside fenced code (e.g. a regex character class) do not register as footnote references.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FencedCodeBracketShapesAreNotMistakenForReferences()
+    {
+        const string Source = "Before.\n\n```\nRegex.IsMatch(s, @\"^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$\")\n```\n\nAfter.\n";
+        var output = Rewrite(Source);
+        await Assert.That(output).DoesNotContain("fnref-");
+        await Assert.That(output).DoesNotContain("<sup");
+    }
+
+    /// <summary>Bracket-heavy fragments inside an inline code span do not register as footnote references.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task InlineCodeBracketShapesAreNotMistakenForReferences()
+    {
+        const string Source = "See `[^@\\s]+` for the regex shape.\n";
+        var output = Rewrite(Source);
+        await Assert.That(output).DoesNotContain("fnref-");
+        await Assert.That(output).DoesNotContain("<sup");
+    }
+
     /// <summary>Helper that runs the rewriter and returns the string result.</summary>
     /// <param name="source">UTF-8 source markdown.</param>
     /// <returns>Rewritten output.</returns>

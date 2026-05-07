@@ -138,6 +138,33 @@ public class InternalLinkValidatorTests
         }
     }
 
+    /// <summary>A fragment satisfied only by an obsolete <c>&lt;a name&gt;</c> raises the deprecation diagnostic instead of the generic missing-id message.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task DeprecatedNameAnchorRaisesGuidanceDiagnostic()
+    {
+        var dir = TempDir();
+        try
+        {
+            await File.WriteAllTextAsync(
+                Path.Combine(dir, "index.html"),
+                "<h2>Intro <a name=\"introduction\"></a></h2><a href=\"#introduction\">go</a>");
+
+            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
+
+            await Assert.That(diags.Length).IsEqualTo(1);
+            await Assert.That(diags[0].Severity).IsEqualTo(LinkSeverity.Error);
+            var message = diags[0].Message.Value ?? string.Empty;
+            await Assert.That(message).Contains("obsolete HTML4");
+            await Assert.That(message).Contains("introduction");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     /// <summary>Builds a unique temp directory for one test.</summary>
     /// <returns>Absolute path.</returns>
     private static string TempDir()

@@ -74,15 +74,17 @@ public class AutorefsRewriterFileWalkTests
         await Assert.That(AutorefsRewriter.RewriteOne(path, new())).IsFalse();
     }
 
-    /// <summary>RewriteOne returns false when the markers don't resolve (file unchanged).</summary>
+    /// <summary>RewriteOne returns true even when no marker resolves — the rewriter still collapses each marker to <c>#</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task RewriteOneAllMissing()
+    public async Task RewriteOneAllMissingCollapsesToNoOpAnchor()
     {
         using ScratchDir temp = new();
         var path = Path.Combine(temp.Root, "missing.html");
         await File.WriteAllTextAsync(path, "<a href=\"@autoref:NotInRegistry\">x</a>");
-        await Assert.That(AutorefsRewriter.RewriteOne(path, new())).IsFalse();
+        await Assert.That(AutorefsRewriter.RewriteOne(path, new())).IsTrue();
+        var rewritten = await File.ReadAllTextAsync(path);
+        await Assert.That(rewritten).IsEqualTo("<a href=\"#\">x</a>");
     }
 
     /// <summary>RewriteOne returns true when at least one marker resolves.</summary>

@@ -140,6 +140,13 @@ internal static class MagicLinkRewriter
             return false;
         }
 
+        // Suppress mention rewriting when the name is followed by ':' — that shape (@autoref:T:Foo,
+        // @user:host IRC handles, etc.) is reserved for non-mention markers we must leave alone.
+        if (trimmed < source.Length && source[trimmed] is (byte)':')
+        {
+            return false;
+        }
+
         writer.Write("[@"u8);
         writer.Write(source[nameStart..trimmed]);
         writer.Write("](https://github.com/"u8);
@@ -371,21 +378,59 @@ internal static class MagicLinkRewriter
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Position of the opening <c>[</c>.</param>
     /// <returns>Exclusive end past the closing <c>)</c>, or the input position + 1 when the bracket is bare.</returns>
+    /// <remarks>
+    /// Uses depth-tracked matching for both the <c>[…]</c> label and the <c>(…)</c> destination so a label
+    /// like <c>[IObservable&lt;byte[]?&gt;]</c> (which contains nested <c>[]</c>) does not split on its first
+    /// inner <c>]</c> and leak the destination URL out for autolink rewriting.
+    /// </remarks>
     private static int ConsumeBracketSpan(ReadOnlySpan<byte> source, int offset)
     {
-        var labelClose = source[offset..].IndexOf((byte)']');
+        var labelClose = FindMatchingDepth(source, offset + 1, (byte)'[', (byte)']');
         if (labelClose < 0)
         {
             return offset + 1;
         }
 
-        var afterLabel = offset + labelClose + 1;
+        var afterLabel = labelClose + 1;
         if (afterLabel >= source.Length || source[afterLabel] is not (byte)'(')
         {
             return afterLabel;
         }
 
-        var destClose = source[afterLabel..].IndexOf((byte)')');
-        return destClose < 0 ? afterLabel : afterLabel + destClose + 1;
+        var destClose = FindMatchingDepth(source, afterLabel + 1, (byte)'(', (byte)')');
+        return destClose < 0 ? afterLabel : destClose + 1;
+    }
+
+    /// <summary>Returns the index of the matching <paramref name="close"/> for an already-consumed opener; -1 when unbalanced.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="searchFrom">First byte to consider (one past the opener).</param>
+    /// <param name="open">Opener byte (e.g. <c>[</c> or <c>(</c>).</param>
+    /// <param name="close">Closer byte (e.g. <c>]</c> or <c>)</c>).</param>
+    /// <returns>Index of the matching closer, or -1.</returns>
+    private static int FindMatchingDepth(ReadOnlySpan<byte> source, int searchFrom, byte open, byte close)
+    {
+        var depth = 1;
+        for (var i = searchFrom; i < source.Length; i++)
+        {
+            var b = source[i];
+            if (b == open)
+            {
+                depth++;
+                continue;
+            }
+
+            if (b != close)
+            {
+                continue;
+            }
+
+            depth--;
+            if (depth == 0)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 }

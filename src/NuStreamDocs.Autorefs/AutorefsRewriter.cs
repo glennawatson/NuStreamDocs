@@ -242,15 +242,20 @@ public static class AutorefsRewriter
             return true;
         }
 
-        // Unresolved marker stays verbatim — the missing reference is then visible in the output for diagnosis.
-        sink.Write(source[match.MarkerStart..match.IdEnd]);
+        // Unresolved marker → emit '#' (no-op same-page anchor) instead of the literal marker bytes.
+        // The browser renders a clickable link that scrolls to top rather than 404-ing on
+        // the literal '@autoref:T:Foo' URL, and the link validator's same-page-anchor branch
+        // sees an empty target + empty fragment and skips it. Diagnostic still goes to the log
+        // so the corpus-completeness gap is surfaced for the maintainer to fix. Returns true
+        // because we still wrote bytes that differ from the input marker.
+        sink.Write("#"u8);
         totals.Missing++;
         if (logger is null || sourcePage is null)
         {
-            return false;
+            return true;
         }
 
         AutorefsLoggingHelper.LogReferenceUnresolved(logger, idSpan, sourcePage.Value);
-        return false;
+        return true;
     }
 }

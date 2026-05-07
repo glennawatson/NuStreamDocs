@@ -15,8 +15,12 @@ namespace NuStreamDocs.Autorefs;
 internal static class AutorefScanner
 {
     /// <summary>Bytes that terminate an autoref ID inside an HTML attribute or text run.</summary>
+    /// <remarks>
+    /// Excludes <c>(</c> and <c>)</c> so a trailing method signature like <c>(System.Int32,System.String)</c>
+    /// is treated as part of the ID rather than truncating it.
+    /// </remarks>
     private static readonly SearchValues<byte> IdTerminators =
-        SearchValues.Create("\"' <>)\n\r\t"u8);
+        SearchValues.Create("\"' <>\n\r\t"u8);
 
     /// <summary>Gets the UTF-8 marker prefix that introduces an autoref reference.</summary>
     public static ReadOnlySpan<byte> Marker => "@autoref:"u8;

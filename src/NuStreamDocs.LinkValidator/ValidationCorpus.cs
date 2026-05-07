@@ -236,12 +236,18 @@ public sealed class ValidationCorpus
         var hrefs = LinkExtractor.ExtractHrefRanges(bytes);
         var srcs = LinkExtractor.ExtractSrcRanges(bytes);
         var idRanges = LinkExtractor.ExtractIdRanges(bytes);
+        var nameRanges = LinkExtractor.ExtractDeprecatedNameAnchorRanges(bytes);
 
         List<byte[]> internalLinks = new(hrefs.Length);
         List<byte[]> externalLinks = new(4);
         for (var i = 0; i < hrefs.Length; i++)
         {
             var slice = hrefs[i].AsSpan(bytes);
+            if (IsNonValidatableScheme(slice))
+            {
+                continue;
+            }
+
             if (IsExternal(slice))
             {
                 externalLinks.Add(slice.ToArray());
@@ -259,6 +265,11 @@ public sealed class ValidationCorpus
         for (var i = 0; i < srcs.Length; i++)
         {
             var slice = srcs[i].AsSpan(bytes);
+            if (IsNonValidatableScheme(slice))
+            {
+                continue;
+            }
+
             if (IsExternal(slice))
             {
                 externalLinks.Add(slice.ToArray());
@@ -271,11 +282,31 @@ public sealed class ValidationCorpus
             anchorIds.Add(idRanges[i].AsSpan(bytes).ToArray());
         }
 
+        HashSet<byte[]> deprecatedNameAnchors = nameRanges.Length is 0
+            ? EmptyCollections.HashSetFor<byte[]>()
+            : BuildDeprecatedNameSet(nameRanges, bytes);
+
         return new(
             pageUrl,
             [.. internalLinks],
             [.. externalLinks],
-            anchorIds);
+            anchorIds,
+            deprecatedNameAnchors);
+    }
+
+    /// <summary>Materializes the obsolete <c>&lt;a name=&quot;&quot;&gt;</c> anchor values into a byte-array-keyed set.</summary>
+    /// <param name="ranges">Extracted name-attribute ranges.</param>
+    /// <param name="bytes">Page HTML bytes.</param>
+    /// <returns>Hash set keyed by the byte values of each name attribute.</returns>
+    private static HashSet<byte[]> BuildDeprecatedNameSet(ByteRange[] ranges, ReadOnlySpan<byte> bytes)
+    {
+        HashSet<byte[]> set = new(ranges.Length, ByteArrayComparer.Instance);
+        for (var i = 0; i < ranges.Length; i++)
+        {
+            set.Add(ranges[i].AsSpan(bytes).ToArray());
+        }
+
+        return set;
     }
 
     /// <summary>True for absolute schemes that need network validation.</summary>
@@ -284,6 +315,16 @@ public sealed class ValidationCorpus
     private static bool IsExternal(ReadOnlySpan<byte> url) =>
         AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "http://"u8)
         || AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "https://"u8);
+
+    /// <summary>True for schemes the validator can neither resolve internally nor probe over HTTP.</summary>
+    /// <param name="url">URL bytes.</param>
+    /// <returns>True for <c>mailto:</c>, <c>tel:</c>, <c>sms:</c>, <c>javascript:</c>, or <c>data:</c>.</returns>
+    private static bool IsNonValidatableScheme(ReadOnlySpan<byte> url) =>
+        AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "mailto:"u8)
+        || AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "tel:"u8)
+        || AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "sms:"u8)
+        || AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "javascript:"u8)
+        || AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "data:"u8);
 
     /// <summary>True for paths that look like static-asset references rather than pages.</summary>
     /// <param name="url">URL bytes (with optional fragment / query suffix).</param>

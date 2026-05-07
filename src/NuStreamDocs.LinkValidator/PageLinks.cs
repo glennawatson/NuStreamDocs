@@ -23,8 +23,13 @@ namespace NuStreamDocs.LinkValidator;
 /// <param name="InternalLinks">Relative <c>href</c>s + page-local <c>#fragment</c>s as raw UTF-8 byte arrays.</param>
 /// <param name="ExternalLinks">Absolute <c>http://</c> / <c>https://</c> hrefs as raw UTF-8 byte arrays.</param>
 /// <param name="AnchorIds">Heading <c>id</c>s on this page, byte-array keyed.</param>
+/// <param name="DeprecatedNameAnchors">
+/// Values of obsolete HTML4 <c>&lt;a name="..."&gt;</c> elements present on the page; surfaced as a
+/// specific deprecation diagnostic when a fragment resolves through one.
+/// </param>
 public sealed record PageLinks(
     byte[] PageUrl,
     byte[][] InternalLinks,
     byte[][] ExternalLinks,
-    HashSet<byte[]> AnchorIds);
+    HashSet<byte[]> AnchorIds,
+    HashSet<byte[]> DeprecatedNameAnchors);

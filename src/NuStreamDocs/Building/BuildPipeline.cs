@@ -223,6 +223,17 @@ public static class BuildPipeline
                 File.Exists(outputPath))
             {
                 // Hot incremental path: source matches previous build and output is on disk.
+                // Re-fire IPageScanPlugin.Scan against the cached output so plugins like
+                // SearchPlugin / LinkValidator still observe every page — without this,
+                // cached pages would be invisible to scan-phase plugins and incremental
+                // rebuilds would emit indexes / validators that only know about pages
+                // re-rendered this build.
+                if (phases.Scans.Length > 0)
+                {
+                    var cachedHtml = await File.ReadAllBytesAsync(outputPath, cancellationToken).ConfigureAwait(false);
+                    FireScans(phases.Scans, item.RelativePath, source.Span, cachedHtml, pluginTiming);
+                }
+
                 return (stale, true, false);
             }
 

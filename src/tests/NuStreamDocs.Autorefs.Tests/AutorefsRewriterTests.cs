@@ -27,10 +27,10 @@ public class AutorefsRewriterTests
         await Assert.That(result).IsEqualTo("<a href=\"api/foo.html#Foo\">Foo</a>");
     }
 
-    /// <summary>Unresolved markers are preserved verbatim.</summary>
+    /// <summary>Unresolved markers collapse to <c>#</c> so the rendered link becomes a no-op same-page anchor.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task UnresolvedMarkersStayVerbatim()
+    public async Task UnresolvedMarkersCollapseToNoOpAnchor()
     {
         AutorefsRegistry registry = new();
         var input = "<a href=\"@autoref:Missing\">Missing</a>"u8;
@@ -39,8 +39,8 @@ public class AutorefsRewriterTests
         var changed = AutorefsRewriter.RewriteSpan(input, registry, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(changed).IsFalse();
-        await Assert.That(result).IsEqualTo("<a href=\"@autoref:Missing\">Missing</a>");
+        await Assert.That(changed).IsTrue();
+        await Assert.That(result).IsEqualTo("<a href=\"#\">Missing</a>");
     }
 
     /// <summary>Multiple markers in one document all get rewritten.</summary>

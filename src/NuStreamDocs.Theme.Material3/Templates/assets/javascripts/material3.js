@@ -149,7 +149,7 @@
           var matches = [];
           for (var i = 0; i < records.length; i++) {
             var record = records[i];
-            var target = (cleanSearchText(record.title) + " " + record.url).toLowerCase();
+            var target = (cleanSearchText(record.title) + " " + record.url + " " + (record.excerpt || "")).toLowerCase();
             var matched = true;
             for (var j = 0; j < terms.length; j++) {
               if (target.indexOf(terms[j]) < 0) {

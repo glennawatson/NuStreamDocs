@@ -95,11 +95,12 @@ public static class InternalLinkValidator
         // Pure same-page anchor: #id
         if (target.IsEmpty)
         {
-            if (!fragment.IsEmpty && !ContainsAnchor(source.AnchorIds, fragment))
+            if (fragment.IsEmpty || ContainsAnchor(source.AnchorIds, fragment))
             {
-                sink.Add(BuildDiagnostic(source.PageUrl, link, $"Same-page anchor '#{Encoding.UTF8.GetString(fragment)}' has no matching heading id."));
+                return;
             }
 
+            sink.Add(BuildSamePageFragmentDiagnostic(source, link, fragment));
             return;
         }
 
@@ -115,7 +116,59 @@ public static class InternalLinkValidator
             return;
         }
 
-        sink.Add(BuildDiagnostic(source.PageUrl, link, $"Anchor '#{Encoding.UTF8.GetString(fragment)}' on '{Encoding.UTF8.GetString(resolved)}' has no matching heading id."));
+        sink.Add(BuildCrossPageFragmentDiagnostic(page, source.PageUrl, link, resolved, fragment));
+    }
+
+    /// <summary>
+    /// Builds a same-page-fragment diagnostic, escalating to the HTML4-anchor deprecation message
+    /// when the fragment is targeted by an obsolete <c>&lt;a name&gt;</c> on the source page.
+    /// </summary>
+    /// <param name="source">Source page.</param>
+    /// <param name="link">Raw link bytes (for the diagnostic record).</param>
+    /// <param name="fragment">Fragment bytes (no leading <c>#</c>).</param>
+    /// <returns>The diagnostic to record.</returns>
+    private static LinkDiagnostic BuildSamePageFragmentDiagnostic(PageLinks source, byte[] link, ReadOnlySpan<byte> fragment)
+    {
+        if (ContainsAnchor(source.DeprecatedNameAnchors, fragment))
+        {
+            return BuildDiagnostic(source.PageUrl, link, BuildDeprecatedNameAnchorMessage(fragment));
+        }
+
+        var fragText = Encoding.UTF8.GetString(fragment);
+        return BuildDiagnostic(source.PageUrl, link, $"Same-page anchor '#{fragText}' has no matching heading id.");
+    }
+
+    /// <summary>
+    /// Builds a cross-page-fragment diagnostic, escalating to the HTML4-anchor deprecation message
+    /// when the fragment is targeted by an obsolete <c>&lt;a name&gt;</c> on the destination page.
+    /// </summary>
+    /// <param name="destination">Resolved destination page.</param>
+    /// <param name="sourcePage">Source page URL bytes.</param>
+    /// <param name="link">Raw link bytes (for the diagnostic record).</param>
+    /// <param name="resolved">Resolved target bytes.</param>
+    /// <param name="fragment">Fragment bytes (no leading <c>#</c>).</param>
+    /// <returns>The diagnostic to record.</returns>
+    private static LinkDiagnostic BuildCrossPageFragmentDiagnostic(PageLinks destination, byte[] sourcePage, byte[] link, byte[] resolved, ReadOnlySpan<byte> fragment)
+    {
+        if (ContainsAnchor(destination.DeprecatedNameAnchors, fragment))
+        {
+            return BuildDiagnostic(sourcePage, link, BuildDeprecatedNameAnchorMessage(fragment));
+        }
+
+        var fragText = Encoding.UTF8.GetString(fragment);
+        var pageText = Encoding.UTF8.GetString(resolved);
+        return BuildDiagnostic(sourcePage, link, $"Anchor '#{fragText}' on '{pageText}' has no matching heading id.");
+    }
+
+    /// <summary>Composes the deprecation guidance message for a fragment satisfied only by an obsolete <c>&lt;a name&gt;</c> anchor.</summary>
+    /// <param name="fragment">Fragment bytes (no leading <c>#</c>).</param>
+    /// <returns>Message string to record on the diagnostic.</returns>
+    private static string BuildDeprecatedNameAnchorMessage(ReadOnlySpan<byte> fragment)
+    {
+        var name = Encoding.UTF8.GetString(fragment);
+        return $"Anchor '#{name}' is targeted only by an obsolete HTML4 '<a name=\"{name}\">' element. "
+             + $"Replace with the HTML5 heading-attribute syntax '## Heading {{ #{name} }}' "
+             + "(or rely on the auto-generated heading id) so the fragment binds to an 'id' attribute.";
     }
 
     /// <summary>Looks up a fragment span in <paramref name="anchors"/>.</summary>

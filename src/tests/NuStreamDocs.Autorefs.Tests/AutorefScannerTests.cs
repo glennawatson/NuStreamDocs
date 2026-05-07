@@ -72,10 +72,19 @@ public class AutorefScannerTests
         await Assert.That(AutorefScanner.FindIdEnd("Id "u8, 0)).IsEqualTo(2);
         await Assert.That(AutorefScanner.FindIdEnd("Id<"u8, 0)).IsEqualTo(2);
         await Assert.That(AutorefScanner.FindIdEnd("Id>"u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id)"u8, 0)).IsEqualTo(2);
         await Assert.That(AutorefScanner.FindIdEnd("Id\n"u8, 0)).IsEqualTo(2);
         await Assert.That(AutorefScanner.FindIdEnd("Id\r"u8, 0)).IsEqualTo(2);
         await Assert.That(AutorefScanner.FindIdEnd("Id\t"u8, 0)).IsEqualTo(2);
+    }
+
+    /// <summary>FindIdEnd treats a trailing method signature as part of the ID rather than truncating at <c>(</c>.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task FindIdEndIncludesMethodSignature()
+    {
+        var src = "M:Foo.Bar(System.Int32,System.String)\""u8;
+        var end = AutorefScanner.FindIdEnd(src, 0);
+        await Assert.That(end).IsEqualTo("M:Foo.Bar(System.Int32,System.String)".Length);
     }
 
     /// <summary>FindIdEnd returns source length when start is past the end.</summary>

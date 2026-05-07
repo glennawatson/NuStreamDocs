@@ -113,7 +113,7 @@ public static class DocBuilderServeExtensions
 
             try
             {
-                using WatchLoop watcher = new(builder.InputRoot, options.WatchOutput ? builder.OutputRoot : null, options.DebounceMs, logger);
+                using WatchLoop watcher = new(builder.InputRoot, options.WatchOutput ? builder.OutputRoot : null, options.DebounceMs, options.IgnoredPathSegments, logger);
                 await foreach (var changes in watcher.WaitAsync(combinedToken).ConfigureAwait(false))
                 {
                     await RebuildAndSignalAsync(builder, broker, logger, changes, combinedToken).ConfigureAwait(false);

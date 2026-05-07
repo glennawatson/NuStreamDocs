@@ -31,13 +31,19 @@ internal static partial class LinkValidatorLoggingHelper
     [LoggerMessage(Level = LogLevel.Information, Message = "Link validation complete: {BrokenCount} broken, {WarningCount} warning(s) in {ElapsedSeconds:F3}s")]
     public static partial void LogValidationComplete(ILogger logger, int brokenCount, int warningCount, double elapsedSeconds);
 
-    /// <summary>Logs a single broken-link diagnostic.</summary>
+    /// <summary>Logs a broken link at error severity (strict mode on).</summary>
     /// <param name="logger">Target logger.</param>
-    /// <param name="severity">Diagnostic severity.</param>
     /// <param name="sourcePage">Page on which the broken link was found.</param>
     /// <param name="message">Diagnostic message.</param>
-    [LoggerMessage(Level = LogLevel.Warning, Message = "[{Severity}] {SourcePage}: {Message}")]
-    public static partial void LogBrokenLink(ILogger logger, LinkSeverity severity, string sourcePage, string message);
+    [LoggerMessage(Level = LogLevel.Error, Message = "{SourcePage}: {Message}")]
+    public static partial void LogBrokenLinkError(ILogger logger, string sourcePage, string message);
+
+    /// <summary>Logs a broken link at warning severity (strict mode off).</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="sourcePage">Page on which the broken link was found.</param>
+    /// <param name="message">Diagnostic message.</param>
+    [LoggerMessage(Level = LogLevel.Warning, Message = "{SourcePage}: {Message}")]
+    public static partial void LogBrokenLinkWarning(ILogger logger, string sourcePage, string message);
 
     /// <summary>Logs an external rate-limit hit.</summary>
     /// <param name="logger">Target logger.</param>

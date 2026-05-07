@@ -311,12 +311,14 @@ a:hover { text-decoration: underline; }
 
 /* ----- Sidebar nav. ----- */
 .md-sidebar { font: var(--md-sys-typescale-body-medium); }
-.md-sidebar__inner {
+/* Right-rail TOC: viewport-pinned scroll column (short list, sticky-while-reading). */
+.md-sidebar--secondary .md-sidebar__inner {
   position: sticky;
   top: 80px;
   max-height: calc(100vh - 96px);
   overflow-y: auto;
 }
+/* Left-rail nav: extends with the page; no viewport cap so deep API trees stay reachable. */
 .md-nav__list { list-style: none; padding: 0; margin: 0; }
 .md-nav__item { margin: 0; }
 .md-nav__link {
@@ -972,6 +974,10 @@ a:hover { text-decoration: underline; }
     left: 1rem;
     right: 1rem;
     width: auto;
+    /* The desktop rule centres via translateX(-50%); reset for the
+       edge-anchored mobile layout otherwise the popup shifts left
+       by half its width and runs off the viewport. */
+    transform: none;
   }
   .md-tabs__link {
     min-height: 2.5rem;
@@ -1000,6 +1006,12 @@ a:hover { text-decoration: underline; }
      the overlay (or the X-equivalent) toggles the checkbox back off. */
   [data-md-component="hamburger"] {
     display: inline-flex;
+    /* Bump click target up to the iOS HIG 44 px floor (the desktop rule
+       sets 2.5 rem = 40 px). Slightly larger surface, same icon size. */
+    width: 2.75rem;
+    height: 2.75rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgb(0 0 0 / 12%);
   }
   .md-sidebar--primary {
     position: fixed;
@@ -1007,15 +1019,31 @@ a:hover { text-decoration: underline; }
     left: 0;
     width: 16rem;
     max-width: 85vw;
-    height: 100%;
+    /* Anchor to viewport units rather than 100% so the drawer fills the screen
+       even when ancestors have collapsed heights — pre-iOS 16 in particular
+       reports body/html as 0-height when nothing is laid out, leaving an
+       invisibly-tall fixed:0 element. */
+    height: 100vh;
     background: var(--md-sys-color-surface);
     box-shadow: var(--md-sys-elevation-level-2);
-    transform: translateX(-100%);
+    /* translate3d engages the GPU compositor on iOS Safari so the slide-in
+       doesn't stall behind a paint-on-main-thread that occasionally drops
+       the touch event. The 0,0,0 trailing axis is a no-op visually but
+       opts the element into the compositor layer. */
+    transform: translate3d(-100%, 0, 0);
     transition: transform 0.2s ease;
     z-index: 20;
+    will-change: transform;
+  }
+  /* Drawer is fixed-height — inner column needs to scroll within it.
+     -webkit-overflow-scrolling enables momentum scrolling on iOS. */
+  .md-sidebar--primary .md-sidebar__inner {
+    max-height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .md-toggle[data-md-toggle="drawer"]:checked ~ .md-container .md-sidebar--primary {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   .md-toggle[data-md-toggle="drawer"]:checked ~ .md-overlay {
     display: block;

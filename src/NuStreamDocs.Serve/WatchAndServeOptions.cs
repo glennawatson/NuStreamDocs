@@ -13,13 +13,19 @@ namespace NuStreamDocs.Serve;
 /// <param name="LiveReload">When true, connected browsers receive a reload signal over a websocket after each successful rebuild. Defaults to <see langword="true"/>.</param>
 /// <param name="OpenBrowser">When true, opens the default browser to the served URL on first start. Defaults to <see langword="false"/>.</param>
 /// <param name="WatchOutput">When true, ignores file-system events under the output root (the build itself writes there and would re-trigger). Defaults to <see langword="true"/>.</param>
+/// <param name="IgnoredPathSegments">
+/// Path-segment names whose presence anywhere in an event path skips the event. Defaults to common build / SCM / IDE
+/// noise (<c>bin</c>, <c>obj</c>, <c>.git</c>, <c>_intermediate</c>, <c>.api-cache</c>, <c>node_modules</c>, <c>.vs</c>,
+/// <c>.idea</c>).
+/// </param>
 public readonly record struct WatchAndServeOptions(
     string Host,
     int Port,
     int DebounceMs,
     bool LiveReload,
     bool OpenBrowser,
-    bool WatchOutput)
+    bool WatchOutput,
+    string[] IgnoredPathSegments)
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static WatchAndServeOptions Default { get; } = new(
@@ -28,5 +34,6 @@ public readonly record struct WatchAndServeOptions(
         DebounceMs: 250,
         LiveReload: true,
         OpenBrowser: false,
-        WatchOutput: true);
+        WatchOutput: true,
+        IgnoredPathSegments: ["bin", "obj", ".git", "_intermediate", ".api-cache", "node_modules", ".vs", ".idea"]);
 }
