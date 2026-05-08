@@ -23,17 +23,33 @@ internal static class AttrListMarker
     /// <summary>Gets the UTF-8 bytes for the canonical Python-Markdown <c>{:</c> opening marker.</summary>
     public static ReadOnlySpan<byte> OpenMarker => "{:"u8;
 
-    /// <summary>Returns the earliest opener offset (<c>{:</c> or <c>{ </c>) within <paramref name="span"/>, or -1 when neither is present.</summary>
+    /// <summary>Returns the earliest opener offset within <paramref name="span"/>, or -1 when none is present.</summary>
     /// <param name="span">UTF-8 search span.</param>
     /// <returns>Earliest opener offset or -1.</returns>
     /// <remarks>The caller still re-validates via <see cref="TryMatchMarker"/> so the lead-byte lookahead applies.</remarks>
     public static int IndexOfOpener(ReadOnlySpan<byte> span)
     {
-        var colonForm = span.IndexOf(OpenMarker);
-        var spaceForm = span.IndexOf("{ "u8);
-        var hashForm = span.IndexOf("{#"u8);
-        var dotForm = span.IndexOf("{."u8);
-        return MinNonNegative(MinNonNegative(colonForm, spaceForm), MinNonNegative(hashForm, dotForm));
+        var earliest = -1;
+        var p = 0;
+        while (p < span.Length)
+        {
+            var rel = span[p..].IndexOf((byte)'{');
+            if (rel < 0)
+            {
+                break;
+            }
+
+            var brace = p + rel;
+            if (brace + 1 < span.Length && IsRecognizedOpenerLead(span[brace + 1]))
+            {
+                earliest = brace;
+                break;
+            }
+
+            p = brace + 1;
+        }
+
+        return earliest;
     }
 
     /// <summary>Tries to match an optional-whitespace + <c>{:&#160;… }</c> / <c>{ … }</c> token starting at or just after <paramref name="p"/>.</summary>
@@ -531,6 +547,13 @@ internal static class AttrListMarker
                 }
         }
 
+        // {key=value …} — mkdocs-material shorthand for image / link attribute attachment.
+        if (IsAttrNameStart(nextByte))
+        {
+            afterOpener = afterBrace;
+            return true;
+        }
+
         if (!AsciiByteHelpers.IsAsciiWhitespace(nextByte) || !LooksLikeAttrListInner(source, afterBrace))
         {
             return false;
@@ -540,18 +563,13 @@ internal static class AttrListMarker
         return true;
     }
 
-    /// <summary>Returns the smaller of two offsets, treating -1 as "not found".</summary>
-    /// <param name="a">First offset.</param>
-    /// <param name="b">Second offset.</param>
-    /// <returns>The smaller non-negative offset, or -1 when both are -1.</returns>
-    private static int MinNonNegative(int a, int b) =>
-        (a, b) switch
-        {
-            (< 0, < 0) => -1,
-            (< 0, _) => b,
-            (_, < 0) => a,
-            _ => Math.Min(a, b)
-        };
+    /// <summary>Returns true when <paramref name="b"/> is a recognized post-<c>{</c> lead byte for an attr-list opener.</summary>
+    /// <param name="b">Byte immediately following <c>{</c>.</param>
+    /// <returns>True when <paramref name="b"/> is <c>:</c>, <c>#</c>, <c>.</c>, ASCII whitespace, or an attribute-name start byte.</returns>
+    private static bool IsRecognizedOpenerLead(byte b) =>
+        b is (byte)':' or (byte)'#' or (byte)'.'
+        || AsciiByteHelpers.IsAsciiWhitespace(b)
+        || IsAttrNameStart(b);
 
     /// <summary>Returns true when the bytes after <paramref name="p"/> look like attr-list inner content.</summary>
     /// <remarks>The lead byte must be one of <c>}</c> (empty marker), <c>.</c>, <c>#</c>, or an attribute-name start byte. Rules out incidental <c>{ </c> usage in code blocks / templates.</remarks>

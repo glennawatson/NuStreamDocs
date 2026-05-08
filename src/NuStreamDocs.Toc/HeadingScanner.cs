@@ -87,11 +87,16 @@ internal static class HeadingScanner
         return [.. found];
     }
 
-    /// <summary>Streams the inner-text bytes of <paramref name="heading"/> into <paramref name="sink"/>, stripping nested tags as it goes.</summary>
+    /// <summary>Streams the inner-text bytes of <paramref name="heading"/> into <paramref name="sink"/>, stripping nested tags and decoding HTML entities as it goes.</summary>
     /// <param name="html">Original HTML snapshot.</param>
     /// <param name="heading">Heading record.</param>
     /// <param name="sink">UTF-8 sink (caller-managed; not touched on empty input).</param>
-    /// <remarks>The output is *not* trimmed — the slugifier collapses leading/trailing whitespace as part of its rule.</remarks>
+    /// <remarks>
+    /// Entities like <c>&amp;gt;</c> get decoded back to <c>&gt;</c> before the slugifier sees them so a heading
+    /// like <c>## ENR -&gt; ENR</c> (rendered as <c>ENR -&amp;gt; ENR</c>) slugifies the same way as it would
+    /// from raw markdown — otherwise the literal letters <c>g</c><c>t</c> would leak into the slug.
+    /// The output is *not* trimmed — the slugifier collapses leading/trailing whitespace as part of its rule.
+    /// </remarks>
     public static void DecodeTextInto(ReadOnlySpan<byte> html, in Heading heading, IBufferWriter<byte> sink)
     {
         ArgumentNullException.ThrowIfNull(sink);
@@ -105,7 +110,7 @@ internal static class HeadingScanner
         var openRel = inner.IndexOf(OpenAngle);
         while (openRel >= 0)
         {
-            Utf8StringWriter.Write(sink, inner.Slice(runStart, openRel - runStart));
+            Markdown.Common.HtmlEntityDecoder.DecodeInto(sink, inner.Slice(runStart, openRel - runStart));
             var closeRel = inner[openRel..].IndexOf(CloseAngle);
             if (closeRel < 0)
             {
@@ -117,7 +122,7 @@ internal static class HeadingScanner
             openRel = nextRel < 0 ? -1 : runStart + nextRel;
         }
 
-        Utf8StringWriter.Write(sink, inner[runStart..]);
+        Markdown.Common.HtmlEntityDecoder.DecodeInto(sink, inner[runStart..]);
     }
 
     /// <summary>Finds the next <c>&lt;/hN&gt;</c> close tag.</summary>

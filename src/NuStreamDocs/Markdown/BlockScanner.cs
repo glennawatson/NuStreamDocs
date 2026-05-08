@@ -45,6 +45,10 @@ public static class BlockScanner
     private const int SetextLevelHyphen = 2;
 
     /// <summary>Line-feed byte.</summary>
+    /// <summary>Length of the HTML comment opener <c>&lt;!--</c>, used to skip past it when checking for a same-line close.</summary>
+    private const int CommentOpenerLength = 4;
+
+    /// <summary>Line-feed byte.</summary>
     private const byte Lf = (byte)'\n';
 
     /// <summary>Carriage-return byte.</summary>
@@ -175,6 +179,9 @@ public static class BlockScanner
         /// <summary>Type 1 — <c>&lt;textarea&gt;</c>; closes on <c>&lt;/textarea&gt;</c>.</summary>
         Textarea,
 
+        /// <summary>Type 2 — HTML comment <c>&lt;!--</c>; closes on <c>--&gt;</c> on any line.</summary>
+        Comment,
+
         /// <summary>Type 6 — recognized block-level tag; closes on the next blank line.</summary>
         Type6
     }
@@ -195,19 +202,21 @@ public static class BlockScanner
         ListState list = default;
         var count = 0;
         var pos = 0;
+        var prevKind = BlockKind.Blank;
         while (pos < utf8.Length)
         {
             var lineStart = pos;
             ReadLineExtents(utf8, pos, out var contentEnd, out var nextLine);
 
             var line = utf8[lineStart..contentEnd];
-            var kind = ClassifyLine(line, ref fence, ref html, ref list, out var level);
+            var kind = ClassifyLine(line, ref fence, ref html, ref list, prevKind, out var level);
 
             var span = writer.GetSpan(1);
             span[0] = new(kind, lineStart, contentEnd - lineStart, level);
             writer.Advance(1);
             count++;
 
+            prevKind = kind;
             pos = nextLine;
         }
 
@@ -239,9 +248,10 @@ public static class BlockScanner
     /// <param name="fence">Open fence state, mutated when this line opens or closes a fence.</param>
     /// <param name="html">Open html-block state, mutated when this line opens or closes a CommonMark HTML block.</param>
     /// <param name="list">Open list state, mutated when this line opens, continues, or closes a list.</param>
+    /// <param name="prevKind">Classification of the previous line; used to enforce the CommonMark rule that an indented code block cannot interrupt a paragraph.</param>
     /// <param name="level">Heading level / fence length / list indent populated on return.</param>
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
-    private static BlockKind ClassifyLine(ReadOnlySpan<byte> line, ref FenceState fence, ref HtmlBlockState html, ref ListState list, out int level)
+    private static BlockKind ClassifyLine(ReadOnlySpan<byte> line, ref FenceState fence, ref HtmlBlockState html, ref ListState list, BlockKind prevKind, out int level)
     {
         level = 0;
 
@@ -271,6 +281,15 @@ public static class BlockScanner
 
         if (indent >= IndentedCodeColumn)
         {
+            // CommonMark: an indented code block cannot interrupt a paragraph.
+            // When the previous line was a paragraph (or its continuation), this 4+-indent line
+            // is a lazy paragraph continuation, not a fresh code block.
+            if (prevKind is BlockKind.Paragraph)
+            {
+                level = 0;
+                return BlockKind.Paragraph;
+            }
+
             list = default;
             level = indent;
             return BlockKind.IndentedCode;
@@ -329,6 +348,7 @@ public static class BlockScanner
 
         if (TryClassifyHtmlBlockOpen(body, ref html))
         {
+            CheckSameLineHtmlBlockClose(body, ref html);
             return BlockKind.HtmlBlock;
         }
 
@@ -638,6 +658,12 @@ public static class BlockScanner
     /// </remarks>
     private static bool TryClassifyHtmlBlockOpen(ReadOnlySpan<byte> body, ref HtmlBlockState html)
     {
+        if (body.StartsWith("<!--"u8))
+        {
+            html = new(HtmlBlockKind.Comment);
+            return true;
+        }
+
         Span<byte> tagBuffer = stackalloc byte[MaxTagNameLength];
         var tag = ExtractOpenerTagName(body, tagBuffer);
         if (tag.IsEmpty)
@@ -758,9 +784,26 @@ public static class BlockScanner
     /// <param name="html">Open html-block state; reset to default when this line closes the block.</param>
     /// <returns>Always <see cref="BlockKind.HtmlBlockContent"/>; the closing line is part of the block (Type 1) or already excluded by the caller (Type 6).</returns>
     private static BlockKind ClassifyInsideHtmlBlock(ReadOnlySpan<byte> line, ref HtmlBlockState html) =>
-        html.Kind is HtmlBlockKind.Type6
-            ? ClassifyInsideType6Block(line, ref html)
-            : ClassifyInsideType1Block(line, ref html);
+        html.Kind switch
+        {
+            HtmlBlockKind.Type6 => ClassifyInsideType6Block(line, ref html),
+            HtmlBlockKind.Comment => ClassifyInsideCommentBlock(line, ref html),
+            _ => ClassifyInsideType1Block(line, ref html)
+        };
+
+    /// <summary>Classifies a line inside an open HTML comment block; closes on the line containing <c>--&gt;</c>.</summary>
+    /// <param name="line">Line bytes.</param>
+    /// <param name="html">Open state; reset to default when the block closes (the closing line is still part of the block and absorbed).</param>
+    /// <returns>Always <see cref="BlockKind.HtmlBlockContent"/>.</returns>
+    private static BlockKind ClassifyInsideCommentBlock(ReadOnlySpan<byte> line, ref HtmlBlockState html)
+    {
+        if (line.IndexOf("-->"u8) >= 0)
+        {
+            html = default;
+        }
+
+        return BlockKind.HtmlBlockContent;
+    }
 
     /// <summary>Classifies a line inside an open Type-6 HTML block; closes on a blank line.</summary>
     /// <param name="line">Line bytes.</param>
@@ -790,6 +833,28 @@ public static class BlockScanner
         }
 
         return BlockKind.HtmlBlockContent;
+    }
+
+    /// <summary>Closes <paramref name="html"/> when the opener line also contains the close marker.</summary>
+    /// <param name="opener">Opener body bytes.</param>
+    /// <param name="html">Open state; cleared on same-line close.</param>
+    private static void CheckSameLineHtmlBlockClose(ReadOnlySpan<byte> opener, ref HtmlBlockState html)
+    {
+        if (html.Kind is HtmlBlockKind.Comment
+            && opener.Length >= CommentOpenerLength
+            && opener[CommentOpenerLength..].IndexOf("-->"u8) >= 0)
+        {
+            html = default;
+            return;
+        }
+
+        var needle = Type1CloseNeedle(html.Kind);
+        if (needle.Length is 0 || IndexOfIgnoreCase(opener, needle) < 0)
+        {
+            return;
+        }
+
+        html = default;
     }
 
     /// <summary>Maps a Type-1 <see cref="HtmlBlockKind"/> to its lowercased close-tag bytes.</summary>

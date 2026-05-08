@@ -67,6 +67,16 @@ public class TocBenchmarks
     [Benchmark]
     public int SlugifyToBytes() => HeadingSlugifier.SlugifyToBytes("Some Heading Title 42"u8).Length;
 
+    /// <summary>Benchmark for <c>AssignSlugs</c> over headings whose text contains HTML entities, exercising the entity-decode path in <c>HeadingScanner.DecodeTextInto</c>.</summary>
+    /// <returns>The slugged heading count.</returns>
+    [Benchmark]
+    public int AssignSlugsWithEntities()
+    {
+        ReadOnlySpan<byte> html = "<h2>ENR -&gt; ENR</h2><h2>A &amp; B</h2><h2>X &lt; Y</h2><h2>R&#38;D</h2><h2>&quot;Quoted&quot;</h2>"u8;
+        var scanned = HeadingScanner.Scan(html);
+        return HeadingSlugifier.AssignSlugs(html.ToArray(), scanned).Slugged.Length;
+    }
+
     /// <summary>Benchmark for <c>HeadingScanner.Scan(ReadOnlySpan{byte})</c>.</summary>
     /// <returns>The scanned heading count.</returns>
     [Benchmark]

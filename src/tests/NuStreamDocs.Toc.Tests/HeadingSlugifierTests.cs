@@ -38,8 +38,8 @@ public class HeadingSlugifierTests
         var (slugged, collisions) = HeadingSlugifier.AssignSlugs(html, headings);
         await Assert.That(slugged.Length).IsEqualTo(3);
         await Assert.That(slugged[0].Slug.AsSpan().SequenceEqual("intro"u8)).IsTrue();
-        await Assert.That(slugged[1].Slug.AsSpan().SequenceEqual("intro-2"u8)).IsTrue();
-        await Assert.That(slugged[2].Slug.AsSpan().SequenceEqual("intro-3"u8)).IsTrue();
+        await Assert.That(slugged[1].Slug.AsSpan().SequenceEqual("intro_1"u8)).IsTrue();
+        await Assert.That(slugged[2].Slug.AsSpan().SequenceEqual("intro_2"u8)).IsTrue();
         await Assert.That(collisions).IsEqualTo(2);
     }
 

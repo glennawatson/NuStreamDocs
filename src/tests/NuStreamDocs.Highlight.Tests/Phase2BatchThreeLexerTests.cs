@@ -36,7 +36,7 @@ public class Phase2BatchThreeLexerTests
     /// <summary>GraphQL classifies <c>type</c>/<c>scalar</c>/<c>enum</c> and the built-in scalar types.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task GraphQLClassifiesSchemaDeclarations()
+    public async Task GraphQlClassifiesSchemaDeclarations()
     {
         var html = GraphQLLexer.Instance.Render("type User {\n  id: ID!\n  name: String\n  age: Int\n}\nenum Role { ADMIN USER }\n"u8);
         await Assert.That(html.Contains("<span class=\"kd\">type</span>", StringComparison.Ordinal)).IsTrue();
@@ -49,7 +49,7 @@ public class Phase2BatchThreeLexerTests
     /// <summary>GraphQL <c>$variable</c> references classify as Name.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task GraphQLClassifiesVariableSigil()
+    public async Task GraphQlClassifiesVariableSigil()
     {
         var html = GraphQLLexer.Instance.Render("query GetUser($id: ID!) { user(id: $id) { name } }"u8);
         await Assert.That(html.Contains("<span class=\"k\">query</span>", StringComparison.Ordinal)).IsTrue();

@@ -34,6 +34,9 @@ public class BlockScannerBenchmarks
     /// <remarks>Mirrors the per-thread cache that <c>MarkdownRenderer</c> uses in production.</remarks>
     private ArrayBufferWriter<BlockSpan> _writer = null!;
 
+    /// <summary>Pre-built UTF-8 input containing many same-line HTML comments that exercise the same-line-close branch.</summary>
+    private byte[] _commentSource = [];
+
     /// <summary>Gets or sets the number of paragraphs in the synthetic input document.</summary>
     [Params(SmallParagraphs, MediumParagraphs)]
     public int Paragraphs { get; set; }
@@ -63,5 +66,34 @@ public class BlockScannerBenchmarks
     {
         _writer.ResetWrittenCount();
         return BlockScanner.Scan(_source, _writer);
+    }
+
+    /// <summary>Block-scan over a comment-heavy synthetic doc; exercises <c>CheckSameLineHtmlBlockClose</c> for every paragraph.</summary>
+    /// <returns>The number of blocks scanned.</returns>
+    [Benchmark]
+    public int ScanCommentHeavy()
+    {
+        if (_commentSource.Length is 0)
+        {
+            BuildCommentFixture();
+        }
+
+        _writer.ResetWrittenCount();
+        return BlockScanner.Scan(_commentSource, _writer);
+    }
+
+    /// <summary>Builds the comment-heavy fixture lazily on first call so the parameter sweep only pays for it when needed.</summary>
+    private void BuildCommentFixture()
+    {
+        StringBuilder sb = new();
+        for (var i = 0; i < Paragraphs; i++)
+        {
+            sb.Append("<!-- single-line note ").Append(i).Append(" -->\n")
+              .Append("## Heading ").Append(i).Append('\n')
+              .Append("<!--- triple-dash form ").Append(i).Append(" --->\n")
+              .Append("Body paragraph ").Append(i).Append(".\n\n");
+        }
+
+        _commentSource = Encoding.UTF8.GetBytes(sb.ToString());
     }
 }

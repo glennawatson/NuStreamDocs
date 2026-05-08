@@ -25,6 +25,9 @@ internal static class MdInHtmlRewriter
     /// <summary>Length of the close-tag prefix (<c>&lt;/</c>) before the tag name.</summary>
     private const int CloseTagPrefixLength = 2;
 
+    /// <summary>Length of a <c>\r\n</c> line terminator in bytes.</summary>
+    private const int CrLfLength = 2;
+
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -76,11 +79,116 @@ internal static class MdInHtmlRewriter
         writer.Write(source[offset..attrStart]);
         writer.Write(source[attrEnd..openTagEnd]);
         writer.Write("\n\n"u8);
-        writer.Write(source[openTagEnd..closeStart]);
+        DedentAndWrite(source[openTagEnd..closeStart], writer);
         writer.Write("\n\n"u8);
         writer.Write(source[closeStart..closeEnd]);
         consumed = closeEnd - offset;
         return true;
+    }
+
+    /// <summary>Strips leading whitespace common to every non-empty line of <paramref name="body"/> before emitting it.</summary>
+    /// <param name="body">UTF-8 body span.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <remarks>
+    /// Authors typically indent inner content for readability when nesting markdown inside an HTML block.
+    /// Stripping the common indent restores the natural left margin without disturbing relative
+    /// sub-indentation (so list-item continuations still work).
+    /// </remarks>
+    private static void DedentAndWrite(ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
+    {
+        var commonIndent = MeasureCommonIndent(body);
+        if (commonIndent is 0)
+        {
+            writer.Write(body);
+            return;
+        }
+
+        var cursor = 0;
+        while (cursor < body.Length)
+        {
+            var lineEnd = FindLineEnd(body, cursor);
+            var line = body[cursor..lineEnd];
+            var skip = line.Length is 0 ? 0 : Math.Min(commonIndent, CountLeadingSpaces(line));
+            writer.Write(line[skip..]);
+
+            var nextCursor = AdvancePastLineTerminator(body, lineEnd);
+            if (nextCursor > lineEnd)
+            {
+                writer.Write(body[lineEnd..nextCursor]);
+            }
+
+            cursor = nextCursor;
+        }
+    }
+
+    /// <summary>Returns the smallest leading-space count across every non-empty line of <paramref name="body"/>.</summary>
+    /// <param name="body">UTF-8 body span.</param>
+    /// <returns>Common indent, in space-equivalent bytes; <c>0</c> when any non-empty line has no leading space.</returns>
+    private static int MeasureCommonIndent(ReadOnlySpan<byte> body)
+    {
+        var min = int.MaxValue;
+        var cursor = 0;
+        while (cursor < body.Length)
+        {
+            var lineEnd = FindLineEnd(body, cursor);
+            var line = body[cursor..lineEnd];
+            if (line.Length is not 0)
+            {
+                var indent = CountLeadingSpaces(line);
+                if (indent < line.Length)
+                {
+                    min = Math.Min(min, indent);
+                }
+            }
+
+            cursor = AdvancePastLineTerminator(body, lineEnd);
+        }
+
+        return min is int.MaxValue ? 0 : min;
+    }
+
+    /// <summary>Counts leading <c> </c> / <c>\t</c> bytes (tabs counted as one space; tab handling rarely matters in HTML-block bodies).</summary>
+    /// <param name="line">UTF-8 line span (no terminator).</param>
+    /// <returns>Leading-space count.</returns>
+    private static int CountLeadingSpaces(ReadOnlySpan<byte> line)
+    {
+        var count = 0;
+        while (count < line.Length && line[count] is (byte)' ' or (byte)'\t')
+        {
+            count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>Returns the index of the first line-terminator byte at or after <paramref name="cursor"/>, or <paramref name="span"/>.Length.</summary>
+    /// <param name="span">UTF-8 span.</param>
+    /// <param name="cursor">Search-start offset.</param>
+    /// <returns>Exclusive end of the current line content.</returns>
+    private static int FindLineEnd(ReadOnlySpan<byte> span, int cursor)
+    {
+        var rest = span[cursor..];
+        var hit = rest.IndexOfAny((byte)'\r', (byte)'\n');
+        return hit < 0 ? span.Length : cursor + hit;
+    }
+
+    /// <summary>Advances past <c>\r\n</c>, <c>\n</c>, or <c>\r</c> at <paramref name="lineEnd"/>.</summary>
+    /// <param name="span">UTF-8 span.</param>
+    /// <param name="lineEnd">Index of the first line-terminator byte (or span length).</param>
+    /// <returns>Index of the next line's first byte (or span length).</returns>
+    private static int AdvancePastLineTerminator(ReadOnlySpan<byte> span, int lineEnd)
+    {
+        if (lineEnd >= span.Length)
+        {
+            return span.Length;
+        }
+
+        if (span[lineEnd] is (byte)'\r' && lineEnd + 1 < span.Length && span[lineEnd + 1] is (byte)'\n')
+        {
+            return lineEnd + CrLfLength;
+        }
+
+        return lineEnd + 1;
     }
 
     /// <summary>Parses an open tag and locates its <c>markdown="…"</c> attribute when present.</summary>

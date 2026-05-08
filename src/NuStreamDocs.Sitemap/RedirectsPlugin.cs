@@ -399,17 +399,41 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <summary>Composes the meta-refresh HTML targeting <paramref name="urlBytes"/> directly into <paramref name="sink"/>.</summary>
     /// <param name="urlBytes">Destination URL as UTF-8 bytes.</param>
     /// <param name="sink">UTF-8 sink the stub bytes are written into.</param>
+    /// <remarks>
+    /// Site-relative paths (anything that isn't already an absolute URL or root-relative) are
+    /// prefixed with <c>/</c> so the meta-refresh resolves the same regardless of where the
+    /// redirect stub lives in the tree — without this, a stub at <c>/a/b/x.html</c> targeting
+    /// <c>a/c/y.html</c> would resolve to <c>/a/b/a/c/y.html</c>.
+    /// </remarks>
     private static void BuildStub(ReadOnlySpan<byte> urlBytes, ArrayBufferWriter<byte> sink)
     {
+        var normalized = NormalizeRedirectTarget(urlBytes);
         sink.Write("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Redirecting…</title>\n<meta http-equiv=\"refresh\" content=\"0; url="u8);
-        XmlEntityEscaper.WriteEscaped(sink, urlBytes, XmlEntityEscaper.Mode.HtmlAttribute);
+        XmlEntityEscaper.WriteEscaped(sink, normalized, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("\">\n<link rel=\"canonical\" href=\""u8);
-        XmlEntityEscaper.WriteEscaped(sink, urlBytes, XmlEntityEscaper.Mode.HtmlAttribute);
+        XmlEntityEscaper.WriteEscaped(sink, normalized, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("\">\n<meta name=\"robots\" content=\"noindex\">\n</head>\n<body>\n<p>Redirecting to <a href=\""u8);
-        XmlEntityEscaper.WriteEscaped(sink, urlBytes, XmlEntityEscaper.Mode.HtmlAttribute);
+        XmlEntityEscaper.WriteEscaped(sink, normalized, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("\">"u8);
-        XmlEntityEscaper.WriteEscaped(sink, urlBytes, XmlEntityEscaper.Mode.HtmlAttribute);
+        XmlEntityEscaper.WriteEscaped(sink, normalized, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("</a>…</p>\n</body>\n</html>\n"u8);
+    }
+
+    /// <summary>Returns <paramref name="urlBytes"/> unchanged when already absolute or root-relative; otherwise prepended with <c>/</c>.</summary>
+    /// <param name="urlBytes">UTF-8 redirect-target bytes.</param>
+    /// <returns>UTF-8 bytes the stub should embed.</returns>
+    private static ReadOnlySpan<byte> NormalizeRedirectTarget(ReadOnlySpan<byte> urlBytes)
+    {
+        if (urlBytes.IsEmpty || urlBytes[0] is (byte)'/'
+            || urlBytes.StartsWith("http://"u8) || urlBytes.StartsWith("https://"u8))
+        {
+            return urlBytes;
+        }
+
+        var buffer = new byte[urlBytes.Length + 1];
+        buffer[0] = (byte)'/';
+        urlBytes.CopyTo(buffer.AsSpan(1));
+        return buffer;
     }
 
     /// <summary>Walks every <c>*.md</c> file under <paramref name="inputRoot"/> and harvests <c>aliases:</c>-style entries from each frontmatter into <see cref="_aliases"/>.</summary>

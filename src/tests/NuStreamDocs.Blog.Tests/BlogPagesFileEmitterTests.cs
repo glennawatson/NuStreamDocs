@@ -24,8 +24,8 @@ public class BlogPagesFileEmitterTests
         var bytes = BlogPagesFileEmitter.Render(posts);
         var rendered = Encoding.UTF8.GetString(bytes);
 
-        const string expected = "nav:\n  - index.md\n  - 2026-01-01-charlie.md\n  - 2025-01-01-bravo.md\n  - 2024-01-01-alpha.md\n";
-        await Assert.That(rendered).IsEqualTo(expected);
+        const string Expected = "nav:\n  - index.md\n  - 2026-01-01-charlie.md\n  - 2025-01-01-bravo.md\n  - 2024-01-01-alpha.md\n";
+        await Assert.That(rendered).IsEqualTo(Expected);
     }
 
     /// <summary>Disposable scratch directory.</summary>

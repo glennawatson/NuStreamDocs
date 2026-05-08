@@ -88,6 +88,11 @@ public sealed class ValidationCorpus
             async (path, ct) =>
             {
                 var bytes = await File.ReadAllBytesAsync(path.Value, ct).ConfigureAwait(false);
+                if (IsRedirectStub(bytes))
+                {
+                    return;
+                }
+
                 var pageUrlBytes = ToPageUrlBytes(fullRoot, path);
                 pages[pageUrlBytes] = ScanPage(pageUrlBytes, bytes);
             }).ConfigureAwait(false);
@@ -308,6 +313,12 @@ public sealed class ValidationCorpus
 
         return set;
     }
+
+    /// <summary>True when <paramref name="html"/> is a meta-refresh redirect stub (no real content to validate).</summary>
+    /// <param name="html">UTF-8 page bytes.</param>
+    /// <returns>True for stubs emitted by the redirects plugin or hand-authored equivalents.</returns>
+    private static bool IsRedirectStub(ReadOnlySpan<byte> html) =>
+        html.IndexOf("http-equiv=\"refresh\""u8) >= 0;
 
     /// <summary>True for absolute schemes that need network validation.</summary>
     /// <param name="url">URL bytes.</param>

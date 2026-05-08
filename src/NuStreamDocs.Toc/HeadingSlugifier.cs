@@ -13,12 +13,15 @@ namespace NuStreamDocs.Toc;
 /// byte sequences and resolves duplicates within a single page.
 /// </summary>
 /// <remarks>
-/// Algorithm matches the mkdocs <c>toc</c> default slug:
+/// Algorithm matches the python-markdown <c>toc</c> default slugifier (which mkdocs and
+/// mkdocs-material inherit):
 /// <list type="bullet">
-/// <item><description>Lowercase ASCII letters, digits, and hyphens are retained.</description></item>
-/// <item><description>Whitespace and punctuation collapse to a single hyphen.</description></item>
+/// <item><description>Lowercase ASCII letters, digits, hyphens, and underscores are retained.</description></item>
+/// <item><description>Whitespace runs collapse to a single hyphen.</description></item>
+/// <item><description>Other punctuation (<c>/</c>, <c>:</c>, <c>,</c>, <c>.</c>, parens, etc.) is dropped without a separator,
+/// so <c>Sequencing/Flow</c> slugifies to <c>sequencingflow</c> rather than <c>sequencing-flow</c>.</description></item>
 /// <item><description>Leading and trailing hyphens are trimmed.</description></item>
-/// <item><description>Duplicates within the same page receive a numeric <c>-N</c> suffix starting at <c>2</c>.</description></item>
+/// <item><description>Duplicates within the same page receive a numeric <c>_N</c> suffix starting at <c>1</c>, matching python-markdown's <c>toc</c> default.</description></item>
 /// </list>
 /// Slug bytes are always ASCII per this rule, so the rewriter and TOC
 /// fragment renderer can splice them straight into the output stream.
@@ -27,6 +30,9 @@ internal static class HeadingSlugifier
 {
     /// <summary>The hyphen byte used as the only allowed punctuation in slugs.</summary>
     private const byte HyphenByte = (byte)'-';
+
+    /// <summary>The underscore byte used as the duplicate-suffix separator (matches python-markdown's <c>toc</c> default).</summary>
+    private const byte SuffixSeparatorByte = (byte)'_';
 
     /// <summary>ASCII offset to convert an upper-case letter to its lower-case counterpart.</summary>
     private const int AsciiUpperToLowerOffset = 32;
@@ -76,9 +82,8 @@ internal static class HeadingSlugifier
             if (seen.TryGetValue(baseSlug, out var hit))
             {
                 collisions++;
-                var next = hit + 1;
-                finalSlug = AppendSuffix(baseSlug, next);
-                seen[baseSlug] = next;
+                finalSlug = AppendSuffix(baseSlug, hit);
+                seen[baseSlug] = hit + 1;
             }
             else
             {
@@ -134,10 +139,16 @@ internal static class HeadingSlugifier
         var pendingHyphen = false;
         for (var i = 0; i < text.Length; i++)
         {
-            var slugByte = ToSlugByte(text[i]);
-            if (slugByte is 0)
+            var b = text[i];
+            if (IsSeparator(b))
             {
                 pendingHyphen = len > 0;
+                continue;
+            }
+
+            var slugByte = ToSlugByte(b);
+            if (slugByte is 0)
+            {
                 continue;
             }
 
@@ -150,23 +161,42 @@ internal static class HeadingSlugifier
             pendingHyphen = false;
         }
 
+        // Trim trailing hyphen if the last byte ended up being one (defensive — pendingHyphen
+        // wouldn't have flushed it, but a leading hyphen-as-slugByte path could leave one).
+        while (len > 0 && dst[len - 1] is HyphenByte)
+        {
+            len--;
+        }
+
         return len;
     }
 
-    /// <summary>Folds a single UTF-8 byte to its slug-rule byte (lowercase letter, digit) or <c>0</c> when not slug-eligible.</summary>
+    /// <summary>Folds a single UTF-8 byte to its slug-rule byte (lowercase letter, digit, underscore) or <c>0</c> when not slug-eligible.</summary>
     /// <param name="b">Source byte.</param>
     /// <returns>The slug byte, or <c>0</c> for non-slug input.</returns>
+    /// <remarks>Hyphens and whitespace are not handled here — see <see cref="IsSeparator"/>.</remarks>
     private static byte ToSlugByte(byte b) => b switch
     {
         >= (byte)'A' and <= (byte)'Z' => (byte)(b + AsciiUpperToLowerOffset),
         >= (byte)'a' and <= (byte)'z' => b,
         >= (byte)'0' and <= (byte)'9' => b,
+        (byte)'_' => b,
         _ => 0
     };
 
-    /// <summary>Allocates a fresh <c>{baseSlug}-{n}</c> byte array.</summary>
+    /// <summary>True for bytes that collapse to a single hyphen separator (ASCII whitespace + literal hyphen).</summary>
+    /// <param name="b">Source byte.</param>
+    /// <returns>True when the byte should trigger the pending-hyphen state instead of being emitted verbatim.</returns>
+    /// <remarks>
+    /// Mirrors python-markdown's <c>re.sub(r'[-\s]+', '-', ...)</c> — runs of hyphens and whitespace
+    /// (in any combination) become a single hyphen.
+    /// </remarks>
+    private static bool IsSeparator(byte b) =>
+        b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n' or (byte)'-';
+
+    /// <summary>Allocates a fresh <c>{baseSlug}_{n}</c> byte array.</summary>
     /// <param name="baseSlug">The base slug bytes.</param>
-    /// <param name="n">Suffix integer (1-based, but always &gt;= 2 in practice).</param>
+    /// <param name="n">Suffix integer (1-based; the first duplicate gets <c>_1</c>).</param>
     /// <returns>The combined slug bytes.</returns>
     private static byte[] AppendSuffix(byte[] baseSlug, int n)
     {
@@ -178,7 +208,7 @@ internal static class HeadingSlugifier
 
         var combined = new byte[baseSlug.Length + 1 + digitCount];
         baseSlug.CopyTo(combined, 0);
-        combined[baseSlug.Length] = HyphenByte;
+        combined[baseSlug.Length] = SuffixSeparatorByte;
         digits[..digitCount].CopyTo(combined.AsSpan(baseSlug.Length + 1));
         return combined;
     }

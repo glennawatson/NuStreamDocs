@@ -552,7 +552,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     private void RenderTabs(IBufferWriter<byte> writer, FilePath relativePath)
     {
         var activeIdx = ResolveActiveIndex(relativePath);
-        NavRenderer.RenderTabs(_tree!, activeIdx, writer);
+        NavRenderer.RenderTabs(_tree!, activeIdx, writer, _options.HomeTab, _options.HomeTabLabel);
     }
 
     /// <summary>Encodes <paramref name="relativePath"/> as the served URL bytes and probes <see cref="_urlIndex"/> for the active node's flat-tree index.</summary>

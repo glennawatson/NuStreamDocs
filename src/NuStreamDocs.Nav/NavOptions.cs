@@ -43,6 +43,10 @@ namespace NuStreamDocs.Nav;
 /// pipeline's <c>UseDirectoryUrls</c> flag captured during plugin configuration. When the
 /// effective flag is true, tab hrefs collapse <c>foo/index.html</c> and <c>foo.html</c> to
 /// <c>foo/</c> so they match the rest of the rendered link surface.</param>
+/// <param name="HomeTab">When true (default) and <see cref="Tabs"/> is true, prepends a synthetic Home tab
+/// to the tab strip whose href is the site root <c>/</c>. The tab's label is <see cref="HomeTabLabel"/>.</param>
+/// <param name="HomeTabLabel">UTF-8 label for the synthetic Home tab; ignored unless <see cref="HomeTab"/>
+/// is true. Defaults to <c>Home</c>.</param>
 public readonly record struct NavOptions(
     GlobPattern[] Includes,
     GlobPattern[] Excludes,
@@ -53,7 +57,9 @@ public readonly record struct NavOptions(
     bool WarnOnOrphanPages,
     bool Tabs,
     NavEntry[] CuratedEntries,
-    bool? UseDirectoryUrls)
+    bool? UseDirectoryUrls,
+    bool HomeTab,
+    byte[] HomeTabLabel)
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static NavOptions Default { get; } = new(
@@ -66,5 +72,7 @@ public readonly record struct NavOptions(
         WarnOnOrphanPages: true,
         Tabs: false,
         CuratedEntries: [],
-        UseDirectoryUrls: null);
+        UseDirectoryUrls: null,
+        HomeTab: true,
+        HomeTabLabel: [.. "Home"u8]);
 }

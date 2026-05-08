@@ -165,6 +165,37 @@ public class AttrListRewriterTests
         await Assert.That(output).DoesNotContain("{#M:");
     }
 
+    /// <summary>The mkdocs-material image-attribute shorthand <c>{ width="700" }</c> attaches a quoted kv to the preceding image.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SpaceFormLiftsQuotedKvOntoImg()
+    {
+        var output = Rewrite("<p><img src=\"x.png\" alt=\"x\">{ width=\"700\" }</p>");
+        await Assert.That(output).Contains("<img src=\"x.png\" alt=\"x\" width=\"700\">");
+        await Assert.That(output).DoesNotContain("&quot;");
+    }
+
+    /// <summary>The bare-shorthand <c>{key="val"}</c> (no leading whitespace, no colon) attaches to the preceding image.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task BareShorthandLiftsQuotedKvOntoImg()
+    {
+        var output = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=\"700\"}</p>");
+        await Assert.That(output).Contains("<img src=\"x.png\" alt=\"x\" width=\"700\">");
+        await Assert.That(output).DoesNotContain("&quot;");
+    }
+
+    /// <summary>Quoted kv attaches cleanly even when the preceding image's alt contains HTML-entity-escaped angle brackets and quotes (mimicking the post-Abbr rendered shape).</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task QuotedKvLiftsThroughAltWithEscapedHtml()
+    {
+        const string Source = "<p><img src=\"x.png\" alt=\"&lt;abbr title=&quot;Foo&quot;&gt;F&lt;/abbr&gt; structure\">{ width=\"700\" }</p>";
+        var output = Rewrite(Source);
+        await Assert.That(output).Contains("width=\"700\"");
+        await Assert.That(output).DoesNotContain("width=\"&quot;");
+    }
+
     /// <summary>Helper that runs the rewriter and returns the string result.</summary>
     /// <param name="source">HTML input.</param>
     /// <returns>Rewritten HTML.</returns>

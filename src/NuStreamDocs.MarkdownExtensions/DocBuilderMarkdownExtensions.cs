@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
+using NuStreamDocs.MarkdownExtensions.Abbr;
 using NuStreamDocs.MarkdownExtensions.Admonitions;
 using NuStreamDocs.MarkdownExtensions.AttrList;
 using NuStreamDocs.MarkdownExtensions.CaretTilde;
@@ -14,6 +16,7 @@ using NuStreamDocs.MarkdownExtensions.Footnotes;
 using NuStreamDocs.MarkdownExtensions.InlineHilite;
 using NuStreamDocs.MarkdownExtensions.Mark;
 using NuStreamDocs.MarkdownExtensions.MdInHtml;
+using NuStreamDocs.MarkdownExtensions.Snippets;
 using NuStreamDocs.MarkdownExtensions.Tables;
 using NuStreamDocs.MarkdownExtensions.Tabs;
 
@@ -144,6 +147,26 @@ public static class DocBuilderMarkdownExtensions
         return builder.UsePlugin(new AttrListPlugin());
     }
 
+    /// <summary>Registers <see cref="AbbrPlugin"/> for <c>*[ABBR]: definition</c> expansion into <c>&lt;abbr&gt;</c> elements.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder UseAbbreviations(this DocBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.UsePlugin(new AbbrPlugin());
+    }
+
+    /// <summary>Registers <see cref="SnippetsPlugin"/> for <c>--8&lt;-- "path"</c> file inclusions.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="basePaths">Directories to resolve snippet paths against, in priority order.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder UseSnippets(this DocBuilder builder, params DirectoryPath[] basePaths)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(basePaths);
+        return builder.UsePlugin(new SnippetsPlugin(basePaths));
+    }
+
     /// <summary>Registers every common Markdown extension in one call (admonitions, details, tabs, etc.).</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
@@ -160,5 +183,6 @@ public static class DocBuilderMarkdownExtensions
             .UseDefinitionLists()
             .UseFootnotes()
             .UseTables()
-            .UseAttrList();
+            .UseAttrList()
+            .UseAbbreviations();
 }

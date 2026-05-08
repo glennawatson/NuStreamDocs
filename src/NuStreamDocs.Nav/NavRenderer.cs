@@ -112,7 +112,15 @@ internal static class NavRenderer
     /// <param name="tree">Flat nav tree.</param>
     /// <param name="activeIndex">Active node index, or <c>-1</c> when no page is active.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RenderTabs(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
+    public static void RenderTabs(NavTree tree, int activeIndex, IBufferWriter<byte> writer) => RenderTabs(tree, activeIndex, writer, includeHomeTab: false, homeTabLabel: default);
+
+    /// <summary>Emits the top-level tab strip with optional synthetic Home tab.</summary>
+    /// <param name="tree">Flat nav tree.</param>
+    /// <param name="activeIndex">Index of the active node, or <c>-1</c> when not in nav.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="includeHomeTab">When true, prepends a synthetic Home tab whose href is the site root.</param>
+    /// <param name="homeTabLabel">UTF-8 label for the Home tab; ignored when <paramref name="includeHomeTab"/> is false.</param>
+    public static void RenderTabs(NavTree tree, int activeIndex, IBufferWriter<byte> writer, bool includeHomeTab, ReadOnlySpan<byte> homeTabLabel)
     {
         ArgumentNullException.ThrowIfNull(tree);
         ArgumentNullException.ThrowIfNull(writer);
@@ -122,6 +130,12 @@ internal static class NavRenderer
 
         WriteUtf8(writer, "<nav class=\"md-tabs\" aria-label=\"Tabs\" data-md-component=\"tabs\"><div class=\"md-tabs__inner md-grid\"><ul class=\"md-tabs__list\">"u8);
         var root = tree.Nodes[NavTree.RootIndex];
+
+        if (includeHomeTab)
+        {
+            WriteHomeTab(tree, activeIndex, homeTabLabel, writer);
+        }
+
         for (var i = 0; i < root.ChildCount; i++)
         {
             var childIdx = root.FirstChildIndex + i;
@@ -588,6 +602,20 @@ internal static class NavRenderer
         var dst = writer.GetSpan(bytes.Length);
         bytes.CopyTo(dst);
         writer.Advance(bytes.Length);
+    }
+
+    /// <summary>Emits the synthetic Home tab — href is the site root, active when the current page is the top-level <c>index.md</c>.</summary>
+    /// <param name="tree">Flat nav tree.</param>
+    /// <param name="activeIndex">Index of the active node.</param>
+    /// <param name="label">UTF-8 label for the Home tab.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void WriteHomeTab(NavTree tree, int activeIndex, ReadOnlySpan<byte> label, IBufferWriter<byte> writer)
+    {
+        var active = activeIndex >= 0 && IsTopLevelHomePage(tree.Nodes[activeIndex]);
+        WriteUtf8(writer, active ? "<li class=\"md-tabs__item md-tabs__item--active\">"u8 : "<li class=\"md-tabs__item\">"u8);
+        WriteUtf8(writer, "<a class=\"md-tabs__link\" href=\"/\">"u8);
+        WriteUtf8(writer, label);
+        WriteUtf8(writer, "</a></li>"u8);
     }
 
     /// <summary>Emits a single <c>&lt;li class="md-tabs__item"&gt;</c> for the node at <paramref name="nodeIndex"/>.</summary>

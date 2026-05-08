@@ -128,8 +128,7 @@ public static class HtmlEmitter
 
             case BlockKind.Paragraph:
             {
-                EmitParagraph(source, block, writer);
-                return index + 1;
+                return EmitParagraphRun(source, blocks, index, writer);
             }
 
             case BlockKind.FencedCode:
@@ -274,6 +273,46 @@ public static class HtmlEmitter
         Write("<p>"u8, writer);
         InlineRenderer.Render(source.Slice(block.Start, block.Length), writer);
         Write("</p>\n"u8, writer);
+    }
+
+    /// <summary>Emits one paragraph spanning every consecutive <see cref="BlockKind.Paragraph"/> block from <paramref name="openerIndex"/>.</summary>
+    /// <param name="source">UTF-8 source buffer.</param>
+    /// <param name="blocks">Full block descriptor span.</param>
+    /// <param name="openerIndex">Index of the first paragraph block.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Index of the first non-Paragraph block (i.e. the next block to dispatch).</returns>
+    /// <remarks>
+    /// CommonMark joins consecutive paragraph lines (no intervening blank) into a single
+    /// <c>&lt;p&gt;</c>; continuation lines have their leading whitespace removed and are joined to the
+    /// preceding line with a newline (rendered as a soft line break by the inline renderer).
+    /// </remarks>
+    private static int EmitParagraphRun(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int openerIndex,
+        IBufferWriter<byte> writer)
+    {
+        var end = openerIndex;
+        while (end < blocks.Length && blocks[end].Kind is BlockKind.Paragraph)
+        {
+            end++;
+        }
+
+        Write("<p>"u8, writer);
+        for (var i = openerIndex; i < end; i++)
+        {
+            if (i > openerIndex)
+            {
+                Write("\n"u8, writer);
+            }
+
+            var block = blocks[i];
+            var line = source.Slice(block.Start, block.Length).TrimStart((byte)' ');
+            InlineRenderer.Render(line, writer);
+        }
+
+        Write("</p>\n"u8, writer);
+        return end;
     }
 
     /// <summary>Dispatches block kinds the outer <see cref="Emit"/> switch defers to so its complexity stays under the analyzer ceiling.</summary>

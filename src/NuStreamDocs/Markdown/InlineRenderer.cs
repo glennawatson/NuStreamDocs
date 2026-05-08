@@ -44,6 +44,9 @@ public static class InlineRenderer
     /// <summary>Open-bracket byte (link label start).</summary>
     private const byte OpenBracket = (byte)'[';
 
+    /// <summary>Bang byte (image label start).</summary>
+    private const byte Bang = (byte)'!';
+
     /// <summary>Less-than byte (autolink open).</summary>
     private const byte Lt = (byte)'<';
 
@@ -58,7 +61,7 @@ public static class InlineRenderer
     /// this set so prose with normal spacing benefits from the leap.
     /// </remarks>
     private static readonly SearchValues<byte> SpecialBytes =
-        SearchValues.Create("\\`*_[<\n"u8);
+        SearchValues.Create("\\`*_[!<\n"u8);
 
     /// <summary>
     /// Renders the inline content of <paramref name="source"/> to
@@ -124,10 +127,29 @@ public static class InlineRenderer
             Backslash => InlineEscape.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Backtick => CodeSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Star or Underscore => Emphasis.TryHandle(source, ref pos, ref pendingTextStart, writer),
+            Lf => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
+            _ => TryHandleStructural(source, ref pos, ref pendingTextStart, b, writer)
+        };
+
+    /// <summary>Dispatches structural inline constructs (links, images, autolinks, raw HTML).</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="pos">Cursor; advanced past handled construct on success.</param>
+    /// <param name="pendingTextStart">Start of the pending escaped-text run.</param>
+    /// <param name="b">Byte at <paramref name="pos"/>.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>True when the byte opened a known structural construct.</returns>
+    private static bool TryHandleStructural(
+        ReadOnlySpan<byte> source,
+        ref int pos,
+        ref int pendingTextStart,
+        byte b,
+        IBufferWriter<byte> writer) =>
+        b switch
+        {
             OpenBracket => LinkSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
+            Bang => ImageSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Lt => AutoLink.TryHandle(source, ref pos, ref pendingTextStart, writer)
                 || RawHtml.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            Lf => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
             _ => false
         };
 }

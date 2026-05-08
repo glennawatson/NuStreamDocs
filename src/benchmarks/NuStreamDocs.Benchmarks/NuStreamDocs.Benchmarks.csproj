@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Toc\NuStreamDocs.Toc.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Templating\NuStreamDocs.Templating.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Layouts\NuStreamDocs.Layouts.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Theme.Material\NuStreamDocs.Theme.Material.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Autorefs\NuStreamDocs.Autorefs.csproj" />
