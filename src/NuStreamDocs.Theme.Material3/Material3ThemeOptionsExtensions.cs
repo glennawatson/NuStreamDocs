@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Common;
+using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material3;
 
@@ -144,6 +145,56 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithCopyright(this Material3ThemeOptions options, ReadOnlySpan<byte> value) =>
         options with { Copyright = value.ToArray() };
+
+    /// <summary>Replaces the raw-HTML copyright block with the supplied UTF-8 bytes; the bytes are emitted verbatim (no escaping) and override <see cref="Material3ThemeOptions.Copyright"/>.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">UTF-8 raw-HTML copyright block.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions WithCopyrightHtml(this Material3ThemeOptions options, byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return options with { CopyrightHtml = value };
+    }
+
+    /// <summary>Replaces the raw-HTML copyright block with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="value">UTF-8 raw-HTML copyright block.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions WithCopyrightHtml(this Material3ThemeOptions options, ReadOnlySpan<byte> value) =>
+        options with { CopyrightHtml = [.. value] };
+
+    /// <summary>Points the footer at an HTML partial whose contents replace the entire footer-meta inner block.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="path">UTF-8 path bytes — relative to the project root (e.g. <c>overrides/footer.html</c>) or absolute.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions WithFooterPartial(this Material3ThemeOptions options, byte[] path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        return options with { FooterPartialPath = path };
+    }
+
+    /// <summary>Points the footer at an HTML partial via a UTF-8 span (e.g. <c>"overrides/footer.html"u8</c>).</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="path">UTF-8 path bytes — relative to the project root or absolute.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions WithFooterPartial(this Material3ThemeOptions options, ReadOnlySpan<byte> path) =>
+        options with { FooterPartialPath = [.. path] };
+
+    /// <summary>Appends a social link to the footer's <c>md-social</c> list.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="url">UTF-8 destination URL bytes.</param>
+    /// <param name="title">UTF-8 link title / tooltip bytes.</param>
+    /// <param name="iconSvg">UTF-8 raw SVG markup bytes emitted verbatim inside the anchor.</param>
+    /// <returns>The updated options.</returns>
+    public static Material3ThemeOptions AddSocialLink(this Material3ThemeOptions options, byte[] url, byte[] title, byte[] iconSvg)
+    {
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentNullException.ThrowIfNull(title);
+        ArgumentNullException.ThrowIfNull(iconSvg);
+        var existing = options.SocialLinks;
+        ThemeSocialLink[] next = [.. existing, new(url, title, iconSvg)];
+        return options with { SocialLinks = next };
+    }
 
     /// <summary>Replaces the repository URL with <paramref name="value"/>.</summary>
     /// <param name="options">Source options.</param>

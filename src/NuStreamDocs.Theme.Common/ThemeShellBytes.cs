@@ -50,6 +50,27 @@ internal static class ThemeShellBytes
     /// <summary>UTF-8 template-data key for <c>copyright</c>.</summary>
     public static readonly byte[] CopyrightKey = [.. "copyright"u8];
 
+    /// <summary>UTF-8 template-data key for <c>copyright_html</c> (raw, unescaped HTML copyright block).</summary>
+    public static readonly byte[] CopyrightHtmlKey = [.. "copyright_html"u8];
+
+    /// <summary>UTF-8 template-data key for <c>footer_partial</c> (raw, unescaped HTML footer-meta replacement loaded from a configured file).</summary>
+    public static readonly byte[] FooterPartialKey = [.. "footer_partial"u8];
+
+    /// <summary>UTF-8 template-data key for the <c>social</c> section list.</summary>
+    public static readonly byte[] SocialKey = [.. "social"u8];
+
+    /// <summary>UTF-8 template-data key for the truthy <c>social_present</c> flag (set when the social-link list is non-empty).</summary>
+    public static readonly byte[] SocialPresentKey = [.. "social_present"u8];
+
+    /// <summary>UTF-8 template-data key for a social link's URL scalar.</summary>
+    public static readonly byte[] SocialUrlKey = [.. "social_url"u8];
+
+    /// <summary>UTF-8 template-data key for a social link's title / tooltip scalar.</summary>
+    public static readonly byte[] SocialTitleKey = [.. "social_title"u8];
+
+    /// <summary>UTF-8 template-data key for a social link's raw SVG icon scalar.</summary>
+    public static readonly byte[] SocialIconKey = [.. "social_icon"u8];
+
     /// <summary>UTF-8 template-data key for <c>repo_url</c>.</summary>
     public static readonly byte[] RepoUrlKey = [.. "repo_url"u8];
 

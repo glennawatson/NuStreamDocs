@@ -157,6 +157,9 @@ a:hover { text-decoration: underline; }
 /* Anchor to col 2 so a hidden primary sidebar doesn't reflow the article into the 16rem rail. */
 .md-main__inner > .md-content {
   grid-column: 2;
+  /* Without min-width:0 the grid track auto-stretches to the widest descendant
+     (e.g. a long table) — which then overflows into the secondary sidebar. */
+  min-width: 0;
 }
 /* Both sidebars hidden → collapse to a single centred track. */
 .md-main__inner:has(> .md-sidebar--primary[hidden]):has(> .md-sidebar--secondary[hidden]) {
@@ -287,7 +290,19 @@ a:hover { text-decoration: underline; }
 }
 
 /* ----- Sidebar nav. ----- */
-.md-sidebar { font: var(--md-sys-typescale-body-medium); }
+.md-sidebar {
+  font: var(--md-sys-typescale-body-medium);
+  /* Pin width to the grid track so long unbreakable tokens wrap inside the rail
+     instead of pushing the column over its allotted 16rem. */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.md-sidebar__scrollwrap,
+.md-sidebar__inner {
+  min-width: 0;
+  max-width: 100%;
+}
 /* Right rail (TOC): viewport-pinned, sticky. */
 .md-sidebar--secondary .md-sidebar__inner {
   position: sticky;
@@ -475,23 +490,46 @@ a:hover { text-decoration: underline; }
 }
 
 .md-typeset table {
-  border-collapse: collapse;
-  width: 100%;
+  /* `separate` + zero spacing keeps cells flush while letting the outer border-radius clip the
+     corner cells — `collapse` flattens corner curvature. */
+  border-collapse: separate;
+  border-spacing: 0;
+  /* Keep a real `display: table` so the rounded outer border hugs the cells exactly. Forcing
+     `display: block` forks the outer block's width from the anonymous inner table layout and the
+     shell ends up visibly wider than the rows. `width: auto` + `max-width: 100%` shrink-fit to
+     content while capping at the content track; the cell-level `overflow-wrap` below keeps long
+     tokens from pushing a column past the cap. */
+  width: auto;
+  max-width: 100%;
   margin: 0 0 16px;
   border-radius: var(--md-sys-shape-corner-md);
-  overflow: hidden;
   border: 1px solid var(--md-sys-color-outline-variant);
+  overflow: hidden;
+  table-layout: auto;
 }
 .md-typeset th, .md-typeset td {
   padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  /* Break long unbreakable tokens (URLs, login IDs) inside cells so they don't push column width
+     beyond the content track. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .md-typeset th {
   background: var(--md-sys-color-surface-container);
   font-weight: 600;
 }
 .md-typeset tr:last-child td { border-bottom: none; }
+/* Round the four outer corners — `overflow: hidden` on the table clips backgrounds into the radius. */
+.md-typeset thead tr:first-child th:first-child { border-top-left-radius: var(--md-sys-shape-corner-md); }
+.md-typeset thead tr:first-child th:last-child { border-top-right-radius: var(--md-sys-shape-corner-md); }
+.md-typeset table > tbody:first-child tr:first-child td:first-child,
+.md-typeset table > tr:first-child td:first-child { border-top-left-radius: var(--md-sys-shape-corner-md); }
+.md-typeset table > tbody:first-child tr:first-child td:last-child,
+.md-typeset table > tr:first-child td:last-child { border-top-right-radius: var(--md-sys-shape-corner-md); }
+.md-typeset tbody tr:last-child td:first-child { border-bottom-left-radius: var(--md-sys-shape-corner-md); }
+.md-typeset tbody tr:last-child td:last-child { border-bottom-right-radius: var(--md-sys-shape-corner-md); }
 
 /* ----- Admonitions (mkdocs-material parity). ----- */
 .md-typeset .admonition {
@@ -820,6 +858,32 @@ a:hover { text-decoration: underline; }
 }
 .md-footer-meta__inner {
   padding: 16px;
+}
+
+/* ----- Footer social links. ----- */
+.md-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0.4rem 0 0;
+  padding: 0.6rem 0;
+}
+.md-social__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: color 0.15s ease;
+}
+.md-social__link:hover {
+  color: var(--md-sys-color-primary);
+}
+.md-social__link svg {
+  fill: currentcolor;
+  max-height: 1rem;
+  max-width: 1rem;
 }
 
 /* ----- Cards + homepage hero compatibility. ----- */

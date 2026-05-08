@@ -20,6 +20,9 @@ namespace NuStreamDocs.Theme.Material3;
 /// <param name="SiteUrl">UTF-8 absolute site URL (e.g. <c>https://reactiveui.net</c>); empty when no canonical / og:url should be rendered. Mirrors mkdocs's <c>site_url</c>.</param>
 /// <param name="Language">UTF-8 HTML <c>lang</c> attribute value.</param>
 /// <param name="Copyright">UTF-8 footer copyright line.</param>
+/// <param name="CopyrightHtml">UTF-8 raw-HTML footer copyright block; when non-empty, replaces the plain-text <see cref="Copyright"/> rendering and is emitted verbatim (no HTML escaping).</param>
+/// <param name="SocialLinks">Footer social-link list rendered after the copyright block; empty when no social links should appear.</param>
+/// <param name="FooterPartialPath">Path bytes (relative to project root) of an HTML partial replacing the footer-meta inner block.</param>
 /// <param name="RepoUrl">UTF-8 canonical repository URL; empty when no source link should be rendered.</param>
 /// <param name="EditUri">UTF-8 path inside the repo that prefixes a page's relative path to form an edit URL; empty when no edit link should be rendered.</param>
 /// <param name="Favicon">UTF-8 href used for the page favicon (e.g. <c>./images/favicons/favicon.ico</c>); empty when no favicon link should be rendered.</param>
@@ -37,6 +40,9 @@ public readonly record struct Material3ThemeOptions(
     byte[] SiteUrl,
     byte[] Language,
     byte[] Copyright,
+    byte[] CopyrightHtml,
+    ThemeSocialLink[] SocialLinks,
+    byte[] FooterPartialPath,
     byte[] RepoUrl,
     byte[] EditUri,
     byte[] Favicon,
@@ -58,6 +64,9 @@ public readonly record struct Material3ThemeOptions(
         SiteUrl: [],
         Language: [.. "en"u8],
         Copyright: [],
+        CopyrightHtml: [],
+        SocialLinks: [],
+        FooterPartialPath: [],
         RepoUrl: [],
         EditUri: [],
         Favicon: [],

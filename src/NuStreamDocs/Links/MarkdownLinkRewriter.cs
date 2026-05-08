@@ -9,10 +9,12 @@ namespace NuStreamDocs.Links;
 
 /// <summary>
 /// Stateless rendered-HTML rewriter that swaps <c>.md</c> targets
-/// in <c>&lt;a href="…"&gt;</c> attributes for the <c>.html</c>
-/// filename the build pipeline writes. External URLs (anything
-/// with a scheme, server-root, or protocol-relative shape) are
-/// left untouched.
+/// in <c>&lt;a href="…"&gt;</c> and <c>&lt;img src="…"&gt;</c>
+/// attributes for the <c>.html</c> filename the build pipeline writes,
+/// and prepends <c>../</c> to non-<c>.md</c> relative URLs on directory-URL
+/// non-index pages so file-relative assets continue to resolve. External
+/// URLs (anything with a scheme, server-root, or protocol-relative shape)
+/// are left untouched.
 /// </summary>
 internal static class MarkdownLinkRewriter
 {
@@ -34,16 +36,20 @@ internal static class MarkdownLinkRewriter
     /// <summary>Gets the UTF-8 bytes the plugin scans for to short-circuit pages without href attributes.</summary>
     private static ReadOnlySpan<byte> HrefStub => "href=\""u8;
 
+    /// <summary>Gets the UTF-8 bytes the plugin scans for to find image / asset src attributes.</summary>
+    private static ReadOnlySpan<byte> SrcStub => "src=\""u8;
+
     /// <summary>Gets the source-extension suffix (with the leading dot) we replace.</summary>
     private static ReadOnlySpan<byte> MarkdownExtension => ".md"u8;
 
     /// <summary>Gets the replacement extension written into the rewritten href.</summary>
     private static ReadOnlySpan<byte> HtmlExtension => ".html"u8;
 
-    /// <summary>Returns true when <paramref name="html"/> contains at least one href candidate.</summary>
+    /// <summary>Returns true when <paramref name="html"/> contains at least one href or src candidate.</summary>
     /// <param name="html">Rendered HTML.</param>
-    /// <returns>True when the prefix is present.</returns>
-    public static bool NeedsRewrite(ReadOnlySpan<byte> html) => html.IndexOf(HrefStub) >= 0;
+    /// <returns>True when either prefix is present.</returns>
+    public static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
+        html.IndexOf(HrefStub) >= 0 || html.IndexOf(SrcStub) >= 0;
 
     /// <summary>Rewrites every relative <c>.md</c> href in <paramref name="html"/> to <c>.html</c> (flat URL form).</summary>
     /// <param name="html">Rendered HTML.</param>
@@ -92,14 +98,20 @@ internal static class MarkdownLinkRewriter
         var cursor = 0;
         while (cursor < html.Length)
         {
-            var rel = html[cursor..].IndexOf(HrefStub);
-            if (rel < 0)
+            var hrefRel = html[cursor..].IndexOf(HrefStub);
+            var srcRel = html[cursor..].IndexOf(SrcStub);
+            if (hrefRel < 0 && srcRel < 0)
             {
                 writer.Write(html[cursor..]);
                 break;
             }
 
-            var attrStart = cursor + rel + HrefStub.Length;
+            // Pick whichever attribute appears first; treat -1 as +infinity so the other side wins.
+            var preferHref = hrefRel >= 0 && (srcRel < 0 || hrefRel < srcRel);
+            var rel = preferHref ? hrefRel : srcRel;
+            var stubLength = preferHref ? HrefStub.Length : SrcStub.Length;
+
+            var attrStart = cursor + rel + stubLength;
             writer.Write(html[cursor..attrStart]);
 
             var quoteRel = html[attrStart..].IndexOf((byte)'"');
@@ -110,34 +122,43 @@ internal static class MarkdownLinkRewriter
             }
 
             var attrEnd = attrStart + quoteRel;
-            EmitHref(html[attrStart..attrEnd], writer, useDirectoryUrls, prependParent);
+            EmitUrl(html[attrStart..attrEnd], writer, useDirectoryUrls, prependParent);
             cursor = attrEnd;
         }
     }
 
-    /// <summary>Emits a (possibly rewritten) href attribute value into <paramref name="sink"/>.</summary>
-    /// <param name="href">Attribute value bytes (without the surrounding quotes).</param>
+    /// <summary>Emits a (possibly rewritten) URL attribute value into <paramref name="sink"/>.</summary>
+    /// <param name="url">Attribute value bytes (without the surrounding quotes).</param>
     /// <param name="sink">Output sink.</param>
     /// <param name="useDirectoryUrls">Selects the directory-URL output shape.</param>
-    /// <param name="prependParent">When true, prepend <c>../</c> before the rewritten directory-style URL.</param>
-    private static void EmitHref(ReadOnlySpan<byte> href, IBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
+    /// <param name="prependParent">When true, prepend <c>../</c> for relative paths so file-relative URLs resolve correctly under directory URLs.</param>
+    private static void EmitUrl(ReadOnlySpan<byte> url, IBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
     {
-        if (!IsRelative(href))
+        if (!IsRelative(url))
         {
-            sink.Write(href);
+            sink.Write(url);
             return;
         }
 
-        var pathEnd = FindPathEnd(href);
-        var path = pathEnd < 0 ? href : href[..pathEnd];
+        var pathEnd = FindPathEnd(url);
+        var path = pathEnd < 0 ? url : url[..pathEnd];
+        var tail = pathEnd < 0 ? default : url[pathEnd..];
         if (!path.EndsWith(MarkdownExtension))
         {
-            sink.Write(href);
+            // Non-markdown relative path (image, css, asset, plain href). Compensate for the extra
+            // directory level that directory-URL non-index pages introduce so file-relative URLs
+            // continue to resolve. Skip when the URL already starts with `../` — that signals the
+            // author wrote it URL-relative-to-rendered-page, matching mkdocs's behaviour.
+            if (prependParent && useDirectoryUrls && !path.StartsWith("../"u8))
+            {
+                sink.Write("../"u8);
+            }
+
+            sink.Write(url);
             return;
         }
 
         var stem = path[..^MarkdownExtension.Length];
-        var tail = pathEnd < 0 ? default : href[pathEnd..];
         if (useDirectoryUrls)
         {
             if (prependParent)

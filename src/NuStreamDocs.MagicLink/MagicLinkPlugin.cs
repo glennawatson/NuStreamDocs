@@ -27,7 +27,7 @@ public sealed class MagicLinkPlugin : IPagePreRenderPlugin
 
     /// <summary>Initializes a new instance of the <see cref="MagicLinkPlugin"/> class with default (URL-only) settings.</summary>
     public MagicLinkPlugin()
-        : this(new MagicLinkOptions())
+        : this(new())
     {
     }
 

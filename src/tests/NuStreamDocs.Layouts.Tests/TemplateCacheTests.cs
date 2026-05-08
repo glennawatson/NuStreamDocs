@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NuStreamDocs.Common;
-
 namespace NuStreamDocs.Layouts.Tests;
 
 /// <summary>Behavioural tests for <see cref="TemplateCache"/>.</summary>
@@ -29,7 +27,7 @@ public class TemplateCacheTests
         TemplateCache cache = new();
         var bytes = "<p>x</p>"u8.ToArray();
         var unit = TemplateUnit.From(bytes);
-        TemplateEntry entry = new(unit, new ApiCompatString("/tmp/home.html"));
+        TemplateEntry entry = new(unit, new("/tmp/home.html"));
         cache.Add("home.html"u8.ToArray(), entry);
 
         var hit = cache.TryGet("home.html"u8, out var observed);
@@ -45,7 +43,7 @@ public class TemplateCacheTests
     public async Task Clear_RemovesAllEntries()
     {
         TemplateCache cache = new();
-        TemplateEntry entry = new(TemplateUnit.From("<p>x</p>"u8.ToArray()), new ApiCompatString("/tmp/home.html"));
+        TemplateEntry entry = new(TemplateUnit.From("<p>x</p>"u8.ToArray()), new("/tmp/home.html"));
         cache.Add("home.html"u8.ToArray(), entry);
         await Assert.That(cache.Count).IsEqualTo(1);
 
@@ -63,8 +61,8 @@ public class TemplateCacheTests
     {
         TemplateCache cache = new();
         var bytes = "<p>x</p>"u8.ToArray();
-        TemplateEntry entryA = new(TemplateUnit.From(bytes), new ApiCompatString("/tmp/A.html"));
-        TemplateEntry entryB = new(TemplateUnit.From(bytes), new ApiCompatString("/tmp/B.html"));
+        TemplateEntry entryA = new(TemplateUnit.From(bytes), new("/tmp/A.html"));
+        TemplateEntry entryB = new(TemplateUnit.From(bytes), new("/tmp/B.html"));
 
         Task taskA = Task.Run(() => cache.Add("home.html"u8.ToArray(), entryA));
         Task taskB = Task.Run(() => cache.Add("home.html"u8.ToArray(), entryB));
@@ -83,8 +81,8 @@ public class TemplateCacheTests
     public async Task DistinctKeys_DoNotCollide()
     {
         TemplateCache cache = new();
-        TemplateEntry home = new(TemplateUnit.From("<p>home</p>"u8.ToArray()), new ApiCompatString("/tmp/home.html"));
-        TemplateEntry sidebar = new(TemplateUnit.From("<p>side</p>"u8.ToArray()), new ApiCompatString("/tmp/sidebar.html"));
+        TemplateEntry home = new(TemplateUnit.From("<p>home</p>"u8.ToArray()), new("/tmp/home.html"));
+        TemplateEntry sidebar = new(TemplateUnit.From("<p>side</p>"u8.ToArray()), new("/tmp/sidebar.html"));
         cache.Add("home.html"u8.ToArray(), home);
         cache.Add("sidebar.html"u8.ToArray(), sidebar);
 

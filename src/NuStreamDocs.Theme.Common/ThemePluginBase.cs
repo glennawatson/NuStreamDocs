@@ -27,6 +27,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Directory separator string length for relative output path translation.</summary>
     private const int DirectorySeparatorLength = 1;
 
+    /// <summary>Number of scalar entries (<c>social_url</c>, <c>social_title</c>, <c>social_icon</c>) on each social-section item.</summary>
+    private const int SocialItemScalarCount = 3;
+
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly TOptions _options;
 
@@ -56,6 +59,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
     /// <summary>Effective copyright bytes with any <c>{year}</c> token expanded to the current year — computed once during configure.</summary>
     private byte[] _resolvedCopyright = [];
+
+    /// <summary>Cached HTML bytes loaded from <see cref="IThemeShellOptions.FooterPartialPath"/>; empty when no partial is configured or the file is missing.</summary>
+    private byte[] _footerPartialBytes = [];
 
     /// <summary>Site-wide author captured from the configure context; used as the per-page <c>&lt;meta author&gt;</c> fallback when the page has no front-matter <c>author:</c>.</summary>
     private byte[] _siteAuthor = [];
@@ -116,6 +122,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         _assetRoot = [.. _options.ResolveAssetRoot()];
         _resolvedCopyright = ExpandYearToken(_options.Copyright);
         _resolvedFavicon = ResolveFavicon(context.InputRoot);
+        _footerPartialBytes = LoadFooterPartial(context.InputRoot, _options.FooterPartialPath);
 
         return ValueTask.CompletedTask;
     }
@@ -134,8 +141,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
             var pageTitle = ResolvePageTitle(context.Source, context.RelativePath);
             var neighbours = ResolveNeighbours(context.RelativePath);
+            var socialSection = BuildSocialSection(_options.SocialLinks);
             TemplateData data = new(
-                new(23, ByteArrayComparer.Instance)
+                new(26, ByteArrayComparer.Instance)
                 {
                     [ThemeShellBytes.LanguageKey] = _options.Language,
                     [ThemeShellBytes.SiteNameKey] = _options.SiteName,
@@ -147,6 +155,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
                     [ThemeShellBytes.BodyKey] = new(bodyBuffer, 0, bodyLength),
                     [ThemeShellBytes.AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_assetRoot, context.RelativePath, _useDirectoryUrls)]),
                     [ThemeShellBytes.CopyrightKey] = _resolvedCopyright,
+                    [ThemeShellBytes.CopyrightHtmlKey] = _options.CopyrightHtml,
+                    [ThemeShellBytes.FooterPartialKey] = _footerPartialBytes,
+                    [ThemeShellBytes.SocialPresentKey] = _options.SocialLinks is [_, ..] ? ThemeShellBytes.Truthy : null,
                     [ThemeShellBytes.RepoUrlKey] = _options.RepoUrl,
                     [ThemeShellBytes.RepoLabelKey] = _repoLabel,
                     [ThemeShellBytes.EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
@@ -165,7 +176,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
                     [ThemeShellBytes.FaviconKey] = _resolvedFavicon,
                     [ThemeShellBytes.AuthorKey] = ResolveAuthor(context.Source, _siteAuthor)
                 },
-                sections: null);
+                sections: socialSection);
 
             LoadedTheme.Page.Render(data, LoadedTheme.Partials, context.Output);
         }
@@ -236,6 +247,57 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         return [];
+    }
+
+    /// <summary>Reads the configured footer-partial file relative to <paramref name="inputRoot"/>'s parent so a path like <c>overrides/footer.html</c> resolves against the project root.</summary>
+    /// <param name="inputRoot">Build input root.</param>
+    /// <param name="path">UTF-8 path bytes; empty when no partial is configured.</param>
+    /// <returns>File bytes on success; empty when unset, missing, or unreadable.</returns>
+    private static byte[] LoadFooterPartial(DirectoryPath inputRoot, byte[] path)
+    {
+        if (path is { Length: 0 })
+        {
+            return [];
+        }
+
+        var pathString = System.Text.Encoding.UTF8.GetString(path);
+        var projectRoot = string.IsNullOrEmpty(inputRoot.Value)
+            ? string.Empty
+            : (Path.GetDirectoryName(inputRoot.Value.TrimEnd(Path.DirectorySeparatorChar, '/')) ?? string.Empty);
+        var absolute = Path.IsPathRooted(pathString)
+            ? pathString
+            : Path.GetFullPath(pathString, projectRoot);
+        return File.Exists(absolute) ? File.ReadAllBytes(absolute) : [];
+    }
+
+    /// <summary>Builds the <c>social</c> section data — one nested <see cref="TemplateData"/> per configured link — or <c>null</c> when no links are configured.</summary>
+    /// <param name="links">Configured social link list.</param>
+    /// <returns>Section dictionary keyed by <see cref="ThemeShellBytes.SocialKey"/>, or <c>null</c> when <paramref name="links"/> is empty.</returns>
+    private static Dictionary<byte[], TemplateData[]>? BuildSocialSection(ThemeSocialLink[] links)
+    {
+        if (links is null or [])
+        {
+            return null;
+        }
+
+        var items = new TemplateData[links.Length];
+        for (var i = 0; i < links.Length; i++)
+        {
+            var link = links[i];
+            items[i] = new(
+                new(SocialItemScalarCount, ByteArrayComparer.Instance)
+                {
+                    [ThemeShellBytes.SocialUrlKey] = link.Url,
+                    [ThemeShellBytes.SocialTitleKey] = link.Title,
+                    [ThemeShellBytes.SocialIconKey] = link.IconSvg,
+                },
+                sections: null);
+        }
+
+        return new(1, ByteArrayComparer.Instance)
+        {
+            [ThemeShellBytes.SocialKey] = items,
+        };
     }
 
     /// <summary>Returns the first <see cref="INavNeighboursProvider"/> in <paramref name="plugins"/>, or null when none is registered.</summary>

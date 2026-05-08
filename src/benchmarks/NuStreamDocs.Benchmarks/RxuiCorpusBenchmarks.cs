@@ -135,7 +135,7 @@ public class RxuiCorpusBenchmarks
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
-            .UseMagicLink(new MagicLinkOptions
+            .UseMagicLink(new()
             {
                 DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
                 ExpandUserMentions = true,
@@ -155,7 +155,7 @@ public class RxuiCorpusBenchmarks
             .WithOutput(_outputRoot)
             .UseCommonMarkdownExtensions()
             .UseHighlight()
-            .UseMagicLink(new MagicLinkOptions
+            .UseMagicLink(new()
             {
                 DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
                 ExpandUserMentions = true,

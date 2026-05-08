@@ -185,7 +185,7 @@ public class LayoutsPluginTests
         LayoutsPlugin plugin = new(opts);
 
         // First build.
-        BuildConfigureContext ctx = new(default, default, [], new CrossPageMarkerRegistry());
+        BuildConfigureContext ctx = new(default, default, [], new());
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
         var firstOutput = LayoutFixture.RunWith(plugin, Source, "<p>x</p>");
         await Assert.That(firstOutput).IsEqualTo("<main>FIRST <p>x</p></main>");

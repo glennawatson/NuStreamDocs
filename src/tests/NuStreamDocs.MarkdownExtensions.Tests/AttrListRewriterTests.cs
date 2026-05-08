@@ -185,6 +185,37 @@ public class AttrListRewriterTests
         await Assert.That(output).DoesNotContain("&quot;");
     }
 
+    /// <summary>Bare-shorthand marker whose <c>"</c> are HTML-escaped to <c>&amp;quot;</c> by the inline renderer still attaches as <c>width="700"</c>.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    /// <remarks>Regression guard for the case where the markdown renderer encodes <c>"</c> inside paragraph text before AttrList runs.</remarks>
+    [Test]
+    public async Task BareShorthandWithEntityEscapedQuotesAttaches()
+    {
+        var output = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=&quot;700&quot;}</p>");
+        await Assert.That(output).Contains("<img src=\"x.png\" alt=\"x\" width=\"700\">");
+        await Assert.That(output).DoesNotContain("{width=");
+    }
+
+    /// <summary><c>&amp;#34;</c> and <c>&amp;#x22;</c> numeric quote entities are equivalent to <c>"</c> inside markers.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task BareShorthandNumericQuoteEntitiesAttach()
+    {
+        var decimalForm = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=&#34;700&#34;}</p>");
+        await Assert.That(decimalForm).Contains("width=\"700\"");
+        var hexForm = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=&#x22;700&#x22;}</p>");
+        await Assert.That(hexForm).Contains("width=\"700\"");
+    }
+
+    /// <summary>Quote entities outside any <c>{...}</c> region pass through unchanged.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task QuoteEntitiesOutsideMarkerArePreserved()
+    {
+        var output = Rewrite("<p>The phrase &quot;hi&quot; stays intact.</p>");
+        await Assert.That(output).Contains("&quot;hi&quot;");
+    }
+
     /// <summary>Quoted kv attaches cleanly even when the preceding image's alt contains HTML-entity-escaped angle brackets and quotes (mimicking the post-Abbr rendered shape).</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

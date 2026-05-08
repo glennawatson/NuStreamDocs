@@ -100,7 +100,7 @@ internal static class LayoutRenderer
         if (File.Exists(path))
         {
             template = TemplateUnit.From(File.ReadAllBytes(path));
-            cache?.Add(templateName.ToArray(), new TemplateEntry(template, new ApiCompatString(path)));
+            cache?.Add(templateName.ToArray(), new(template, new(path)));
             return true;
         }
 
@@ -117,7 +117,7 @@ internal static class LayoutRenderer
         }
 
         template = TemplateUnit.From(File.ReadAllBytes(altPath));
-        cache?.Add(templateName.ToArray(), new TemplateEntry(template, new ApiCompatString(altPath)));
+        cache?.Add(templateName.ToArray(), new(template, new(altPath)));
         return true;
     }
 

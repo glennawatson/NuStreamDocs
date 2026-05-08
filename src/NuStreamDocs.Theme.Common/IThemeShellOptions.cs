@@ -35,6 +35,15 @@ public interface IThemeShellOptions
     /// <summary>Gets the UTF-8 footer copyright line.</summary>
     byte[] Copyright { get; }
 
+    /// <summary>Gets the UTF-8 raw-HTML footer copyright block; emitted verbatim when non-empty and overrides the plain-text <see cref="Copyright"/> rendering.</summary>
+    byte[] CopyrightHtml => [];
+
+    /// <summary>Gets the footer social-link list rendered after the copyright block; empty when no social links should appear.</summary>
+    ThemeSocialLink[] SocialLinks => [];
+
+    /// <summary>Gets the UTF-8 path bytes (relative to project root) of an HTML partial whose contents replace the entire footer-meta inner block.</summary>
+    byte[] FooterPartialPath => [];
+
     /// <summary>Gets the UTF-8 canonical repository URL; empty when no source link should be rendered.</summary>
     byte[] RepoUrl { get; }
 
