@@ -66,6 +66,12 @@ internal static class HeadingScanner
                 continue;
             }
 
+            if (IsInsideAnchor(html, tagStart))
+            {
+                cursor = closeIdx + CloseTagLength;
+                continue;
+            }
+
             var openTag = html[tagStart..tagEnd];
             var (idLocal, idLen) = Utf8HtmlScanner.FindAttributeValue(openTag, "id"u8);
             var idAbsStart = idLen is 0 ? -1 : tagStart + idLocal;
@@ -123,6 +129,44 @@ internal static class HeadingScanner
         }
 
         Markdown.Common.HtmlEntityDecoder.DecodeInto(sink, inner[runStart..]);
+    }
+
+    /// <summary>Returns true when the byte at <paramref name="position"/> sits inside an open <c>&lt;a&gt;</c> element.</summary>
+    /// <param name="html">Full snapshot.</param>
+    /// <param name="position">Heading-tag start offset.</param>
+    /// <returns>True when the most recent <c>&lt;a</c> open tag before <paramref name="position"/> has not yet been closed.</returns>
+    private static bool IsInsideAnchor(ReadOnlySpan<byte> html, int position)
+    {
+        var lastOpen = LastIndexOfAnchorOpen(html[..position]);
+        if (lastOpen < 0)
+        {
+            return false;
+        }
+
+        var lastClose = html[..position].LastIndexOf("</a>"u8);
+        return lastClose < lastOpen;
+    }
+
+    /// <summary>Returns the index of the last <c>&lt;a</c> open-tag prefix in <paramref name="span"/>, or <c>-1</c> when none.</summary>
+    /// <param name="span">Span to scan.</param>
+    /// <returns>Index of the <c>&lt;</c> byte, or <c>-1</c>.</returns>
+    private static int LastIndexOfAnchorOpen(ReadOnlySpan<byte> span)
+    {
+        // Smallest possible <a> opener is "<a>" (3 bytes); the loop indexes the '<' so we start two before the end.
+        const int MinTagSpan = 3;
+        for (var i = span.Length - MinTagSpan; i >= 0; i--)
+        {
+            const int NameOffset = 1;
+            const int NameEndOffset = 2;
+            if (span[i] is OpenAngle
+                && span[i + NameOffset] is (byte)'a' or (byte)'A'
+                && span[i + NameEndOffset] is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or CloseAngle)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>Finds the next <c>&lt;/hN&gt;</c> close tag.</summary>

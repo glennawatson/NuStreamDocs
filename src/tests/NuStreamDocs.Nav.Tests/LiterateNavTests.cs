@@ -47,6 +47,36 @@ public class LiterateNavTests
         await Assert.That(System.Text.Encoding.UTF8.GetString(section.Title)).IsEqualTo("User Guide");
     }
 
+    /// <summary>Awesome-pages <c>- Title: path</c> entries both reorder children and override the matched section's display title.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task AwesomePagesTitleMapAppliesOverride()
+    {
+        using var fixture = TempDocsTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# home");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "alpha.md"), "# Alpha");
+        var sub = Path.Combine(fixture.Root, "client");
+        Directory.CreateDirectory(sub);
+        await File.WriteAllTextAsync(Path.Combine(sub, "page.md"), "# Inner");
+        await File.WriteAllTextAsync(
+            Path.Combine(fixture.Root, ".pages"),
+            "nav:\n  - Client Usage: client\n  - alpha.md\n");
+
+        var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
+
+        var section = Array.Find(root.Children, static c => c.IsSection)!;
+        await Assert.That(System.Text.Encoding.UTF8.GetString(section.Title)).IsEqualTo("Client Usage");
+
+        // The matched section comes first because the .pages ordering puts client before alpha.md.
+        var clientIdx = Array.IndexOf(root.Children, section);
+        var alphaIdx = Array.FindIndex(root.Children, static c => !c.IsSection && Path.GetFileNameWithoutExtension(c.RelativePath) == "alpha");
+        await Assert.That(clientIdx < alphaIdx).IsTrue();
+
+        // Bare entries (no Title:) keep their natural display title.
+        var alpha = root.Children[alphaIdx];
+        await Assert.That(System.Text.Encoding.UTF8.GetString(alpha.Title)).IsEqualTo("Alpha");
+    }
+
     /// <summary><c>hide: true</c> drops the section from its parent's children.</summary>
     /// <returns>Async test.</returns>
     [Test]

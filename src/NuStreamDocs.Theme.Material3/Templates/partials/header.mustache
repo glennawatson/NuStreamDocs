@@ -10,7 +10,7 @@
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
         <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">{{page_title}}</span>
+          <span class="md-ellipsis">{{#page_title}}{{page_title}}{{/page_title}}{{^page_title}}{{site_name}}{{/page_title}}</span>
         </div>
       </div>
     </div>

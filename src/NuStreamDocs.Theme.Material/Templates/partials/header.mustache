@@ -4,7 +4,7 @@
       <span class="md-ellipsis">{{site_name}}</span>
     </a>
     <div class="md-header__title">
-      <span class="md-ellipsis">{{page_title}}</span>
+      <span class="md-ellipsis">{{#page_title}}{{page_title}}{{/page_title}}{{^page_title}}{{site_name}}{{/page_title}}</span>
     </div>
     {{> search}}
     {{#edit_url}}

@@ -38,6 +38,27 @@ public class ThemePluginBaseTests
         await Assert.That(html).Contains("edit/main/docs/intro.md");
     }
 
+    /// <summary>Home page falls back to the site name in <c>&lt;title&gt;</c> and the header topic when no explicit page title exists.</summary>
+    /// <remarks>Regression guard: an earlier version emitted <c>"My Site - index"</c> because the fallback resolved to the file stem.</remarks>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task HomePageFallsBackToSiteName()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "index.md"), string.Empty);
+
+        await new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseMaterialTheme(static opts => opts.WithSiteName("My Site"))
+            .BuildAsync();
+
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "index.html"));
+        await Assert.That(html).Contains("<title>My Site</title>");
+        await Assert.That(html).DoesNotContain("My Site - index");
+        await Assert.That(html).DoesNotContain(">index<");
+    }
+
     /// <summary>RepoUrl set but EditUri empty produces no edit URL.</summary>
     /// <returns>Async test.</returns>
     [Test]

@@ -328,7 +328,7 @@ internal static class NavTreeBuilder
             var children = MergeChildren(pageBuffer, pageCount, sectionBuffer, sectionCount);
             if (pagesOverride.OrderedEntries.Length > 0)
             {
-                children = ApplyOrdering(children, pagesOverride.OrderedEntries);
+                children = ApplyOrdering(children, pagesOverride.OrderedEntries, useDirectoryUrls);
             }
 
             var sectionTitle = ResolveSectionTitle(root, directory, indexPath, pagesOverride);
@@ -353,18 +353,20 @@ internal static class NavTreeBuilder
         }
     }
 
-    /// <summary>Reorders <paramref name="children"/> to match the order in <paramref name="ordered"/>; entries not in <paramref name="ordered"/> follow in their original order.</summary>
+    /// <summary>Reorders <paramref name="children"/> to match <paramref name="ordered"/> and applies any per-entry title overrides.</summary>
+    /// <remarks>Entries not in <paramref name="ordered"/> follow in their original order.</remarks>
     /// <param name="children">Built children.</param>
-    /// <param name="ordered">Filenames or directory names from a <c>.pages</c> override (UTF-8 bytes).</param>
+    /// <param name="ordered">Awesome-pages entries (path + optional title override).</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>A reordered child array.</returns>
-    private static NavNode[] ApplyOrdering(NavNode[] children, byte[][] ordered)
+    private static NavNode[] ApplyOrdering(NavNode[] children, PagesEntry[] ordered, bool useDirectoryUrls)
     {
         var result = new NavNode[children.Length];
         var taken = new bool[children.Length];
         var write = 0;
         for (var i = 0; i < ordered.Length; i++)
         {
-            var entry = Encoding.UTF8.GetString(ordered[i]);
+            var entry = Encoding.UTF8.GetString(ordered[i].Path);
             for (var j = 0; j < children.Length; j++)
             {
                 if (taken[j])
@@ -377,7 +379,9 @@ internal static class NavTreeBuilder
                     continue;
                 }
 
-                result[write++] = children[j];
+                result[write++] = ordered[i].Title.Length > 0
+                    ? CloneWithTitle(children[j], ordered[i].Title, useDirectoryUrls)
+                    : children[j];
                 taken[j] = true;
                 break;
             }
@@ -393,6 +397,17 @@ internal static class NavTreeBuilder
 
         return result;
     }
+
+    /// <summary>Returns a copy of <paramref name="node"/> with <paramref name="title"/> as its display label; other fields unchanged.</summary>
+    /// <param name="node">Source node.</param>
+    /// <param name="title">Replacement UTF-8 title bytes.</param>
+    /// <param name="useDirectoryUrls">URL-shape flag forwarded to the constructor.</param>
+    /// <returns>New node carrying the same children and order.</returns>
+    private static NavNode CloneWithTitle(NavNode node, byte[] title, bool useDirectoryUrls) =>
+        new(title, node.RelativePath, node.IsSection, node.Children, node.IndexPath, useDirectoryUrls)
+        {
+            Order = node.Order
+        };
 
     /// <summary>Determines whether <paramref name="node"/> is named by <paramref name="entry"/> (file name with or without <c>.md</c>, or section directory name).</summary>
     /// <param name="node">Candidate child.</param>

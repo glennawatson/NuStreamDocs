@@ -9,14 +9,15 @@ namespace NuStreamDocs.Nav;
 
 /// <summary>
 /// Reads a <c>.pages</c> YAML override (literate-nav). Supports the
-/// minimal subset:
+/// minimal subset, including the awesome-pages map form
+/// (<c>- Title: path</c>) used by mkdocs-awesome-pages-plugin:
 /// <code>
 /// title: Custom Title
 /// hide: true
 /// nav:
 ///   - intro.md
 ///   - subsection
-///   - reference.md
+///   - Reference: reference.md
 /// </code>
 /// </summary>
 internal static class PagesFileReader
@@ -33,7 +34,7 @@ internal static class PagesFileReader
     {
         byte[] title = [];
         var hide = false;
-        byte[][] nav = [];
+        PagesEntry[] nav = [];
 
         var cursor = 0;
         while (cursor < source.Length)
@@ -68,10 +69,10 @@ internal static class PagesFileReader
     /// <summary>Reads a YAML block list starting at <paramref name="cursor"/> until indentation drops or a non-list line is hit.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="cursor">Offset to start scanning from (just past <c>nav:</c>).</param>
-    /// <returns>Entry bytes.</returns>
-    private static byte[][] ReadBlockList(ReadOnlySpan<byte> source, int cursor)
+    /// <returns>Entry list.</returns>
+    private static PagesEntry[] ReadBlockList(ReadOnlySpan<byte> source, int cursor)
     {
-        List<byte[]> entries = new(8);
+        List<PagesEntry> entries = new(8);
         while (cursor < source.Length)
         {
             var lineEnd = YamlByteScanner.LineEnd(source, cursor);
@@ -91,13 +92,35 @@ internal static class PagesFileReader
             var entry = ReadScalar(YamlByteScanner.TrimLeading(trimmed[1..]));
             if (entry.Length > 0)
             {
-                entries.Add(entry);
+                entries.Add(SplitTitleAndPath(entry));
             }
 
             cursor = lineEnd;
         }
 
         return [.. entries];
+    }
+
+    /// <summary>Splits an awesome-pages entry into its <c>Title</c> and <c>Path</c> halves; bare-path entries return an empty title.</summary>
+    /// <param name="entry">Raw scalar bytes from a <c>nav:</c> list line.</param>
+    /// <returns>Decoded entry.</returns>
+    private static PagesEntry SplitTitleAndPath(byte[] entry)
+    {
+        var span = entry.AsSpan();
+        var colon = span.IndexOf((byte)':');
+        if (colon < 0)
+        {
+            return new(entry, []);
+        }
+
+        var after = YamlByteScanner.TrimLeading(span[(colon + 1)..]);
+        if (after.IsEmpty)
+        {
+            return new(entry, []);
+        }
+
+        var title = YamlByteScanner.Unquote(YamlByteScanner.TrimWhitespace(span[..colon]));
+        return new([.. after], title.IsEmpty ? [] : [.. title]);
     }
 
     /// <summary>Reads a YAML scalar — strips optional quotes and a trailing comment.</summary>

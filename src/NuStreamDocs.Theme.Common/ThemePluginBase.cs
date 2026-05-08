@@ -287,9 +287,18 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         var firstHeading = Markdown.MarkdownH1Scanner.FindFirst(source);
-        return !firstHeading.IsEmpty
-            ? HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading))
-            : HtmlEncoder.Default.Encode(Path.GetFileNameWithoutExtension(relativePath));
+        if (!firstHeading.IsEmpty)
+        {
+            return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading));
+        }
+
+        var stem = Path.GetFileNameWithoutExtension(relativePath);
+        if (string.Equals(stem, "index", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        return HtmlEncoder.Default.Encode(stem);
     }
 
     /// <summary>Drops a single matching pair of leading/trailing single- or double-quote bytes from <paramref name="value"/>.</summary>

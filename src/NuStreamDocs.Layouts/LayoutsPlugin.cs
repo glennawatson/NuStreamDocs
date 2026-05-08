@@ -19,8 +19,8 @@ namespace NuStreamDocs.Layouts;
 /// </summary>
 public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
 {
-    /// <summary>Tiebreak inside <see cref="PluginBand.Latest"/> chosen so the layout swap runs after heading-anchor rewriters (e.g. Toc).</summary>
-    private const int PostRenderTiebreak = 10;
+    /// <summary>Tiebreak inside <see cref="PluginBand.Latest"/> chosen so the layout swap runs immediately before the theme shell wraps the body in full-page chrome.</summary>
+    private const int PostRenderTiebreak = -1;
 
     /// <summary>Configured options.</summary>
     private readonly LayoutsOptions _options;

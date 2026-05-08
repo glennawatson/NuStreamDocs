@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="generator" content="{{generator}}">
     <meta name="build-date" content="{{build_date}}">
-    <title>{{#site_name}}{{site_name}} - {{/site_name}}{{page_title}}</title>
+    <title>{{#page_title}}{{page_title}}{{#site_name}} - {{site_name}}{{/site_name}}{{/page_title}}{{^page_title}}{{site_name}}{{/page_title}}</title>
     {{#description}}<meta name="description" content="{{description}}">
     <meta property="og:description" content="{{description}}">
     {{/description}}{{#canonical_url}}<link rel="canonical" href="{{canonical_url}}">
     <meta property="og:url" content="{{canonical_url}}">
     {{/canonical_url}}{{#site_name}}<meta property="og:site_name" content="{{site_name}}">
-    {{/site_name}}<meta property="og:title" content="{{page_title}}">
+    {{/site_name}}<meta property="og:title" content="{{#page_title}}{{page_title}}{{/page_title}}{{^page_title}}{{site_name}}{{/page_title}}">
     {{#prev_url}}<link rel="prev" href="{{prev_url}}">
     {{/prev_url}}{{#next_url}}<link rel="next" href="{{next_url}}">
     {{/next_url}}{{#favicon}}<link rel="icon" href="{{favicon}}">

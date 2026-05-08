@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Text;
-using System.Threading;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
@@ -198,6 +197,22 @@ public class LayoutsPluginTests
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
         var secondOutput = LayoutFixture.RunWith(plugin, Source, "<p>y</p>");
         await Assert.That(secondOutput).IsEqualTo("<main>SECOND <p>y</p></main>");
+    }
+
+    /// <summary>Regression guard for the priority ordering — Layouts must run before any theme-shell plugin at <c>Latest, 0</c>.</summary>
+    /// <remarks>
+    /// An earlier version put Layouts at tiebreak <c>10</c>, which made it run after the theme and
+    /// overwrite the full themed page with raw layout content (no chrome, no nav, no header).
+    /// </remarks>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task PostRenderPriority_RunsBeforeThemeShell()
+    {
+        var layouts = new LayoutsPlugin().PostRenderPriority;
+        PluginPriority themeShell = new(PluginBand.Latest);
+        await Assert.That(layouts.Band).IsEqualTo(PluginBand.Latest);
+        await Assert.That(layouts < themeShell).IsTrue();
+        await Assert.That(layouts.Tiebreak < 0).IsTrue();
     }
 
     /// <summary>Helper that wires up a temp template directory + plugin and exposes a one-shot run.</summary>

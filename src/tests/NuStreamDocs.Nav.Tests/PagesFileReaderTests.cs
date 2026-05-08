@@ -61,20 +61,66 @@ public class PagesFileReaderTests
         await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(0);
     }
 
+    /// <summary>Awesome-pages map form (<c>- Title: path</c>) extracts both halves.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ReadsAwesomePagesTitleMap()
+    {
+        var parsed = Parse("nav:\n  - Home: index.md\n  - Aerodromes: aerodromes\n  - bare.md\n");
+        await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(3);
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[0].Path)).IsEqualTo("index.md");
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[0].Title)).IsEqualTo("Home");
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[1].Path)).IsEqualTo("aerodromes");
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[1].Title)).IsEqualTo("Aerodromes");
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[2].Path)).IsEqualTo("bare.md");
+        await Assert.That(parsed.OrderedEntries[2].Title.Length).IsEqualTo(0);
+    }
+
+    /// <summary>Quoted titles in awesome-pages entries are unwrapped.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ReadsQuotedTitleInAwesomePagesEntry()
+    {
+        var parsed = Parse("nav:\n  - \"Home Page\": index.md\n");
+        await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(1);
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[0].Path)).IsEqualTo("index.md");
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[0].Title)).IsEqualTo("Home Page");
+    }
+
+    /// <summary>An empty path after the colon is treated as a bare entry rather than a partial title-map.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task EmptyPathAfterColonFallsBackToWholeEntry()
+    {
+        var parsed = Parse("nav:\n  - bare-with-colon:\n");
+        await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(1);
+        await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[0].Path)).IsEqualTo("bare-with-colon:");
+        await Assert.That(parsed.OrderedEntries[0].Title.Length).IsEqualTo(0);
+    }
+
+    /// <summary>Indentation under <c>nav:</c> doesn't matter — block-list scanning only checks the first non-whitespace byte.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task IndentedListEntriesAreCollected()
+    {
+        var parsed = Parse("nav:\n      - intro.md\n      - subsection\n");
+        await Assert.That(JoinEntries(parsed.OrderedEntries)).IsEqualTo("intro.md|subsection");
+    }
+
     /// <summary>Helper to drive the parser over UTF-8 bytes.</summary>
     /// <param name="text">Source text.</param>
     /// <returns>Parsed <c>PagesFile</c>.</returns>
     private static PagesFile Parse(string text) => PagesFileReader.Parse(Encoding.UTF8.GetBytes(text));
 
-    /// <summary>Decodes <paramref name="entries"/> and joins them with <c>|</c> for compact assertion.</summary>
-    /// <param name="entries">UTF-8 entries.</param>
+    /// <summary>Decodes <paramref name="entries"/> and joins paths with <c>|</c> for compact assertion.</summary>
+    /// <param name="entries">Parsed entries.</param>
     /// <returns>Pipe-joined string.</returns>
-    private static string JoinEntries(byte[][] entries)
+    private static string JoinEntries(PagesEntry[] entries)
     {
         var decoded = new string[entries.Length];
         for (var i = 0; i < entries.Length; i++)
         {
-            decoded[i] = Encoding.UTF8.GetString(entries[i]);
+            decoded[i] = Encoding.UTF8.GetString(entries[i].Path);
         }
 
         return string.Join('|', decoded);

@@ -66,4 +66,36 @@ public class HeadingScannerTests
         HeadingScanner.DecodeTextInto(html, in headings[0], sink);
         await Assert.That(sink.WrittenSpan.SequenceEqual("Hello World"u8)).IsTrue();
     }
+
+    /// <summary>Headings inside an <c>&lt;a&gt;</c> wrapper are skipped — they're clickable cards, not navigable section headings.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SkipsHeadingsInsideAnchor()
+    {
+        byte[] html = [.. "<div class=\"card\"><a href=\"page/\"><h3>Card Title</h3><p>body</p></a></div><h2>Real Section</h2>"u8];
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings.Length).IsEqualTo(1);
+        await Assert.That(headings[0].Level).IsEqualTo(2);
+    }
+
+    /// <summary>Anchor with attributes (<c>&lt;a href="…"&gt;</c>) still suppresses an enclosed heading.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task SkipsHeadingsInsideAnchorWithAttributes()
+    {
+        byte[] html = [.. "<a href=\"x/\" target=\"_blank\"><h3>Linked</h3></a>"u8];
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings.Length).IsEqualTo(0);
+    }
+
+    /// <summary>A heading after a closed <c>&lt;/a&gt;</c> is still picked up — only currently-open anchors mask their content.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FindsHeadingAfterClosedAnchor()
+    {
+        byte[] html = [.. "<a href=\"x/\">Link</a><h3>After</h3>"u8];
+        var headings = HeadingScanner.Scan(html);
+        await Assert.That(headings.Length).IsEqualTo(1);
+        await Assert.That(headings[0].Level).IsEqualTo(3);
+    }
 }
