@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Search.Pagefind</PackageId>
+    <Description>Pagefind-format search-index generation for NuStreamDocs. Phase 1 ships the JSON manifest used by the Material 3 theme's bespoke runtime; later phases bind the official Pagefind WASM runtime for sharded inverted-index search.</Description>
+    <RootNamespace>NuStreamDocs.Search.Pagefind</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <!-- Per-RID Pagefind native binaries.
+       Layout: runtimes/[rid]/native/pagefind[.exe]
+       Refreshed by `dotnet run` against src/tools/NuStreamDocs.Search.Pagefind.Refresh.
+       The NuGet runtimes/ convention ships only the binary matching the consumer's RID at
+       publish time, so a 30 MB package translates into ~6 MB on the consumer's bin/. -->
+  <ItemGroup>
+    <Content Include="runtimes\**\*"
+             Pack="true"
+             PackagePath="runtimes"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Pagefind.Tests" />
+  </ItemGroup>
+
+</Project>

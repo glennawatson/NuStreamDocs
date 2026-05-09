@@ -12,7 +12,7 @@ namespace NuStreamDocs.Building;
 /// </summary>
 /// <remarks>
 /// Per-plugin <c>Use{Plugin}</c> extensions ship from the plugin assemblies themselves
-/// (e.g. <c>UseAutorefs</c>, <c>UseSearch</c>, <c>UseNav</c>). These bulk helpers complement
+/// (e.g. <c>UseAutorefs</c>, <c>UsePagefindSearch</c>, <c>UseNav</c>). These bulk helpers complement
 /// them — handy when a host application loads a curated plugin list at startup.
 /// </remarks>
 public static class DocBuilderBulkExtensions

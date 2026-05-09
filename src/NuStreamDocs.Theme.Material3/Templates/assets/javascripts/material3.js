@@ -42,231 +42,47 @@
     return String(value);
   }
 
-  function cleanSearchText(value) {
-    return (value || "").replace(/\u00b6/g, "").trim();
-  }
-
-  function debounce(fn, delay) {
-    var timer = 0;
-    return function () {
-      var args = arguments;
-      clearTimeout(timer);
-      timer = window.setTimeout(function () { fn.apply(null, args); }, delay);
-    };
-  }
-
-  function getFieldValue(element) {
-    return element && typeof element.value === "string" ? element.value : "";
-  }
-
-  function initializeSearch() {
-    var formatMeta = document.querySelector("meta[name=\"nustreamdocs:search-format\"]");
-    var indexMeta = document.querySelector("meta[name=\"nustreamdocs:search-index\"]");
+  /* Search-overlay shell \u2014 pure UX, engine-agnostic. The actual search behavior
+     (fetching the index, scoring, rendering result rows) is contributed by the
+     selected search-engine plugin (Pagefind / Lunr) via its own glue script,
+     which finds the [data-md-component="search-query|search-list|search-status"]
+     hooks the overlay markup exposes. This function only handles:
+       - opening / closing via the __search checkbox
+       - focusing the query field when the overlay opens
+       - dismissing on Escape and the close button
+       - "Enter / form submit navigates to the first result" \u2014 works regardless
+         of which engine populated the list (we just look for the first <a>).
+     With no search engine plugin registered, the shell still hides cleanly. */
+  function initializeSearchShell() {
     var searchToggle = document.getElementById("__search");
     var query = byComponent("search-query");
     var results = byComponent("search-list");
-    var status = byComponent("search-status");
-    var closeButton = byComponent("search-close");
-    var form = query ? query.closest("form") : null;
-    if (!formatMeta || !indexMeta || !searchToggle || !query || !results || !status) {
+    if (!searchToggle || !query) {
       return;
     }
 
-    var manifestPromise;
-    function loadManifest() {
-      if (!manifestPromise) {
-        manifestPromise = fetch(indexMeta.content, { credentials: "same-origin" })
-          .then(function (response) {
-            if (!response.ok) {
-              throw new Error("Search index request failed.");
-            }
+    var closeButton = byComponent("search-close");
+    var form = query.closest("form");
 
-            return response.json();
-          });
-      }
-
-      return manifestPromise;
-    }
-
-    function setStatus(text) {
-      status.textContent = text;
-    }
-
-    function clearResults() {
-      results.textContent = "";
-    }
-
-    function renderMatches(matches) {
-      clearResults();
-      if (!matches.length) {
-        setStatus("No results found.");
-        return;
-      }
-
-      setStatus(matches.length === 1 ? "1 result" : matches.length + " results");
-      for (var i = 0; i < matches.length; i++) {
-        var match = matches[i];
-        var item = document.createElement("li");
-        item.className = "md-search__item";
-
-        var link = document.createElement("a");
-        link.className = "md-search__link";
-        link.href = match.url;
-
-        var title = document.createElement("span");
-        title.className = "md-search__title";
-        title.textContent = cleanSearchText(match.title) || match.url;
-        link.appendChild(title);
-
-        var path = document.createElement("span");
-        path.className = "md-search__path";
-        path.textContent = match.url;
-        link.appendChild(path);
-
-        item.appendChild(link);
-        results.appendChild(item);
-      }
-    }
-
-    /* Section priorities come from <meta name="nustreamdocs:search-section-priorities">
-       — a comma-separated `prefix:weight` list emitted by the search plugin. Theme JS stays
-       agnostic; sites configure their own bands via the `WithSectionPriorities` option. */
-    var sectionPriorities = parseSectionPriorities();
-
-    function parseSectionPriorities() {
-      var meta = document.querySelector("meta[name=\"nustreamdocs:search-section-priorities\"]");
-      if (!meta || !meta.content) { return []; }
-      var pairs = meta.content.split(",");
-      var out = [];
-      for (var i = 0; i < pairs.length; i++) {
-        var raw = pairs[i].trim();
-        if (!raw) { continue; }
-        var colon = raw.lastIndexOf(":");
-        if (colon < 1) { continue; }
-        var weight = parseInt(raw.substring(colon + 1), 10);
-        if (!isFinite(weight)) { continue; }
-        out.push({ prefix: raw.substring(0, colon).toLowerCase(), weight: weight });
-      }
-      return out;
-    }
-
-    function applySectionWeight(url) {
-      for (var i = 0; i < sectionPriorities.length; i++) {
-        if (url.indexOf(sectionPriorities[i].prefix) >= 0) {
-          return sectionPriorities[i].weight;
-        }
-      }
-      return 0;
-    }
-
-    /* AND-of-terms across the title + url + excerpt fields. */
-    function matchesAllTerms(terms, title, url, excerpt) {
-      for (var i = 0; i < terms.length; i++) {
-        var t = terms[i];
-        if (title.indexOf(t) < 0 && url.indexOf(t) < 0 && excerpt.indexOf(t) < 0) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    /* Title relevance + meta-driven section bias. */
-    function scoreRecord(normalized, terms, title, url) {
-      var score = 0;
-      if (title === normalized) {
-        score += 1000;
-      } else if (title.indexOf(normalized) === 0) {
-        score += 500;
-      } else if (title.indexOf(normalized) >= 0) {
-        score += 200;
-      }
-
-      var titleTermHits = 0;
-      for (var i = 0; i < terms.length; i++) {
-        if (title.indexOf(terms[i]) >= 0) { titleTermHits++; }
-      }
-      if (terms.length > 1 && titleTermHits === terms.length) { score += 150; }
-      score += titleTermHits * 30;
-      score += applySectionWeight(url);
-      return score;
-    }
-
-    var runSearch = debounce(function (value) {
-      var normalized = value.trim().toLowerCase();
-      if (normalized.length < 2) {
-        clearResults();
-        setStatus("Type at least 2 characters to search.");
-        return;
-      }
-
-      if (formatMeta.content !== "pagefind") {
-        clearResults();
-        setStatus("This theme currently supports Pagefind search indexes.");
-        return;
-      }
-
-      loadManifest()
-        .then(function (manifest) {
-          var terms = normalized.split(/\s+/).filter(Boolean);
-          var records = Array.isArray(manifest.records) ? manifest.records : [];
-          var scored = [];
-          for (var i = 0; i < records.length; i++) {
-            var record = records[i];
-            var title = cleanSearchText(record.title || "").toLowerCase();
-            var url = (record.url || "").toLowerCase();
-            var excerpt = (record.excerpt || "").toLowerCase();
-            if (!matchesAllTerms(terms, title, url, excerpt)) {
-              continue;
-            }
-
-            scored.push({
-              record: record,
-              score: scoreRecord(normalized, terms, title, url)
-            });
-          }
-
-          scored.sort(function (a, b) { return b.score - a.score; });
-          var matches = [];
-          for (var k = 0; k < scored.length; k++) { matches.push(scored[k].record); }
-
-          renderMatches(matches.slice(0, 20));
-        })
-        .catch(function () {
-          clearResults();
-          setStatus("Search is unavailable right now.");
-        });
-    }, 100);
-
-    query.addEventListener("input", function () {
-      runSearch(getFieldValue(query));
-    });
-
-    if (form) {
+    if (form && results) {
       form.addEventListener("submit", function (event) {
         var first = results.querySelector("a");
-        if (!first) {
-          event.preventDefault();
-          return;
+        event.preventDefault();
+        if (first) {
+          window.location.href = first.href;
         }
+      });
+    }
 
+    if (results) {
+      query.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter") { return; }
+        var first = results.querySelector("a");
+        if (!first) { return; }
         event.preventDefault();
         window.location.href = first.href;
       });
     }
-
-    query.addEventListener("keydown", function (event) {
-      if (event.key !== "Enter") {
-        return;
-      }
-
-      var first = results.querySelector("a");
-      if (!first) {
-        return;
-      }
-
-      event.preventDefault();
-      window.location.href = first.href;
-    });
 
     if (closeButton) {
       closeButton.addEventListener("click", function () {
@@ -343,7 +159,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     apply(preferred());
-    initializeSearch();
+    initializeSearchShell();
     initializeRepoStats();
 
     /* Hamburger is a <label for="__drawer">. We hijack the click and toggle

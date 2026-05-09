@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Search.Lunr</PackageId>
+    <Description>Lunr-format search-index generation for NuStreamDocs. Emits the search_index.json document corpus consumed by mkdocs-material's bundled Lunr.js runtime — pair with the Material 1 theme.</Description>
+    <RootNamespace>NuStreamDocs.Search.Lunr</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
+  </ItemGroup>
+
+  <!-- Vendored Lunr.js runtime — refreshed by `dotnet run` against
+       src/tools/NuStreamDocs.Search.Lunr.Refresh. Embedded in the dll so
+       the plugin can write it through IStaticAssetProvider without a
+       loose file dependency. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\lunr.min.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Lunr.Tests" />
+  </ItemGroup>
+
+</Project>

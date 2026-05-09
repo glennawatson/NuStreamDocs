@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="NuStreamDocs.Search.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Pagefind.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Lunr.Tests" />
   </ItemGroup>
 
 </Project>

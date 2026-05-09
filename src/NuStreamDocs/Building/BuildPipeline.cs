@@ -224,7 +224,7 @@ public static class BuildPipeline
             {
                 // Hot incremental path: source matches previous build and output is on disk.
                 // Re-fire IPageScanPlugin.Scan against the cached output so plugins like
-                // SearchPlugin / LinkValidator still observe every page — without this,
+                // SearchPluginBase / LinkValidator still observe every page — without this,
                 // cached pages would be invisible to scan-phase plugins and incremental
                 // rebuilds would emit indexes / validators that only know about pages
                 // re-rendered this build.

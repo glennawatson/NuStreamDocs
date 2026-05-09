@@ -16,7 +16,7 @@ using NuStreamDocs.MagicLink;
 using NuStreamDocs.MarkdownExtensions;
 using NuStreamDocs.Mermaid;
 using NuStreamDocs.Nav;
-using NuStreamDocs.Search;
+using NuStreamDocs.Search.Lunr;
 using NuStreamDocs.Snippets;
 using NuStreamDocs.SphinxInventory;
 using NuStreamDocs.Theme.Material.IconShortcode;
@@ -162,7 +162,7 @@ public class RxuiCorpusBenchmarks
             })
             .UseNav()
             .UseAutorefs(registry)
-            .UseSearch()
+            .UseLunrSearch()
             .UseMermaid()
             .BuildAsync()
             .GetAwaiter()
@@ -253,7 +253,7 @@ public class RxuiCorpusBenchmarks
             .UseHighlight()
             .UseNav()
             .UseAutorefs(registry)
-            .UseSearch()
+            .UseLunrSearch()
             .UseMermaid()
             .UseSphinxInventory(registry)
             .UsePlugin(new IconShortcodePlugin(iconResolver))

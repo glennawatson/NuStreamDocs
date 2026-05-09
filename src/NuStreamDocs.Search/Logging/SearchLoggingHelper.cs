@@ -9,7 +9,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Search.Logging;
 
 /// <summary>
-/// Source-generated logging helpers for the search-index plugin.
+/// Source-generated logging helpers for the search-index plugin family.
 /// </summary>
 /// <remarks>
 /// The public entry points self-gate on <see cref="ILogger.IsEnabled(LogLevel)"/>
@@ -23,17 +23,17 @@ internal static partial class SearchLoggingHelper
     /// <summary>Logs the start of an index build at information level.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="documentCount">Documents harvested from the rendered pages.</param>
-    /// <param name="format">Search backend (Pagefind / Lunr).</param>
+    /// <param name="formatName">Engine format name (UTF-8) — surfaced in the log message so multi-engine sites can tell builds apart.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogIndexBuildStart(ILogger logger, int documentCount, SearchFormat format, DirectoryPath outputDir)
+    public static void LogIndexBuildStart(ILogger logger, int documentCount, ReadOnlySpan<byte> formatName, DirectoryPath outputDir)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {
             return;
         }
 
-        LogIndexBuildStartCore(logger, documentCount, format, outputDir);
+        LogIndexBuildStartCore(logger, documentCount, Encoding.UTF8.GetString(formatName), outputDir);
     }
 
     /// <summary>Logs the end of an index build at information level.</summary>
@@ -70,10 +70,10 @@ internal static partial class SearchLoggingHelper
     /// <summary>Source-generated emitter for <see cref="LogIndexBuildStart"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="documentCount">Documents harvested from the rendered pages.</param>
-    /// <param name="format">Search backend (Pagefind / Lunr).</param>
+    /// <param name="formatName">Engine format name (already UTF-8 decoded).</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Building {Format} search index from {DocumentCount} document(s); output {OutputDir}")]
-    private static partial void LogIndexBuildStartCore(ILogger logger, int documentCount, SearchFormat format, string outputDir);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Building {FormatName} search index from {DocumentCount} document(s); output {OutputDir}")]
+    private static partial void LogIndexBuildStartCore(ILogger logger, int documentCount, string formatName, string outputDir);
 
     /// <summary>Source-generated emitter for <see cref="LogIndexBuildComplete"/>.</summary>
     /// <param name="logger">Target logger.</param>

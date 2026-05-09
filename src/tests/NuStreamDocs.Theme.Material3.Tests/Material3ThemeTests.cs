@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
-using NuStreamDocs.Search;
+using NuStreamDocs.Search.Pagefind;
 
 namespace NuStreamDocs.Theme.Material3.Tests;
 
@@ -62,7 +62,7 @@ public class Material3ThemeTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseSearch()
+            .UsePagefindSearch()
             .UseMaterial3Theme(static opts => opts
                 .WithSiteName("MD3 Site")
                 .WithRepoUrl("https://github.com/owner/repo"))
@@ -72,12 +72,20 @@ public class Material3ThemeTests
         var html = await File.ReadAllTextAsync(pagePath);
         await Assert.That(html).Contains("data-md-component=\"search\"");
         await Assert.That(html).Contains("data-md-component=\"search-results\"");
-        await Assert.That(html).Contains("name=\"nustreamdocs:search-index\"");
-        await Assert.That(html).Contains("https://github.com/owner/repo");
-        await Assert.That(html).Contains("data-md-component=\"source-facts\"");
-        await Assert.That(html).Contains("<input");
         await Assert.That(html).Contains("data-md-component=\"search-query\"");
         await Assert.That(html).Contains("data-md-component=\"search-close\"");
+        await Assert.That(html).Contains("<input");
+
+        // Pagefind ships its real WASM loader plus the bind glue via head-extras —
+        // no nustreamdocs:search-index meta tag (the loader is imported directly).
+        // The theme rewrites site-absolute /assets paths to page-relative paths, so
+        // top-level pages see "assets/..." here while deeper pages would see "../assets/...".
+        await Assert.That(html).Contains("/pagefind/pagefind.js");
+        await Assert.That(html).Contains("pagefind-bind.js");
+        await Assert.That(html).DoesNotContain("nustreamdocs:search-index");
+
+        await Assert.That(html).Contains("https://github.com/owner/repo");
+        await Assert.That(html).Contains("data-md-component=\"source-facts\"");
     }
 
     /// <summary>

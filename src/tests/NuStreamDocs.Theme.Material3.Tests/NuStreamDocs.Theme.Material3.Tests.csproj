@@ -9,7 +9,7 @@
     <ProjectReference Include="..\..\NuStreamDocs.Theme.Material3\NuStreamDocs.Theme.Material3.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Icons.FontAwesome\NuStreamDocs.Icons.FontAwesome.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Icons.Material\NuStreamDocs.Icons.Material.csproj" />
-    <ProjectReference Include="..\..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Search.Pagefind\NuStreamDocs.Search.Pagefind.csproj" />
   </ItemGroup>
 
 </Project>
