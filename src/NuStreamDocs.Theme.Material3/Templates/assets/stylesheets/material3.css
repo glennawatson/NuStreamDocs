@@ -497,13 +497,12 @@ a:hover { text-decoration: underline; }
      corner cells — `collapse` flattens corner curvature. */
   border-collapse: separate;
   border-spacing: 0;
-  /* Keep a real `display: table` so the rounded outer border hugs the cells exactly. Forcing
-     `display: block` forks the outer block's width from the anonymous inner table layout and the
-     shell ends up visibly wider than the rows. `width: auto` + `max-width: 100%` shrink-fit to
-     content while capping at the content track; the cell-level `overflow-wrap` below keeps long
-     tokens from pushing a column past the cap. */
-  width: auto;
-  max-width: 100%;
+  /* Fill the content track so tables line up flush with admonitions, code blocks, and other
+     block-level elements rendered against the same column. Real `display: table` (not `block`)
+     keeps the rounded outer border hugging the cells; the cell-level `overflow-wrap` below keeps
+     long tokens from pushing a column past the cap. */
+  display: table;
+  width: 100%;
   margin: 0 0 16px;
   border-radius: var(--md-sys-shape-corner-md);
   border: 1px solid var(--md-sys-color-outline-variant);

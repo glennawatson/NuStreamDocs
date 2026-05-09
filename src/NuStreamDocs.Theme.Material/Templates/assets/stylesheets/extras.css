@@ -6,16 +6,15 @@
  * (`.md-typeset__scrollwrap`) to keep desktop overflow from pushing into the TOC; we don't ship
  * that wrapper, so a wide table can otherwise extend into the secondary sidebar.
  *
- * Force the table itself to be the scroll container at all viewport sizes, shrink to content
- * width (so narrow tables match the visual width of the admonition below them rather than
- * stretching to 100%), and break long unbreakable tokens inside cells. */
+ * Force the table itself to be the scroll container at all viewport sizes, fill the content
+ * track so tables line up with admonitions and code blocks rendered against the same column,
+ * and break long unbreakable tokens inside cells. */
 .md-typeset table:not([class]) {
   /* Keep `display: table` so the rounded outer border hugs the cells exactly; `display: block`
      forks the outer block's width from the inner anonymous table and the shell appears wider
      than the rows. Cell-level `overflow-wrap` below handles long-token overflow. */
   display: table;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
   overflow: hidden;
 }
 .md-typeset table:not([class]) th,
