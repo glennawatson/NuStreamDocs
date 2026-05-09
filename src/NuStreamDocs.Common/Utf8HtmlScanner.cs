@@ -4,18 +4,7 @@
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Stateless byte-level helpers for the rendered-HTML pipelines —
-/// finding heading open tags, locating attribute values inside an
-/// open-tag span — without ever decoding the snapshot to UTF-16.
-/// </summary>
-/// <remarks>
-/// The renderer's emitter is the only authoritative source of these
-/// tags so the shape is stable; this is a tolerant scanner, not a
-/// full HTML parser. Three plugins share it: <c>Toc</c> (id splice +
-/// permalink anchor), <c>Autorefs</c> (heading-id registry build), and
-/// <c>LinkValidator</c> (per-page link/id inventory).
-/// </remarks>
+/// <summary>Byte-level helpers for finding heading open tags and attribute values in rendered UTF-8 HTML. Tolerant scanner, not a full HTML parser.</summary>
 public static class Utf8HtmlScanner
 {
     /// <summary>ASCII byte for the opening angle bracket.</summary>
@@ -40,11 +29,7 @@ public static class Utf8HtmlScanner
     /// <param name="tagEnd">Index just past the closing <c>&gt;</c> on success.</param>
     /// <param name="level">Decoded heading level (1..6) on success.</param>
     /// <returns>True when a heading open tag was found.</returns>
-    /// <remarks>
-    /// The trailing byte after the level digit must be <c>&gt;</c> or
-    /// ASCII whitespace, so <c>&lt;h1foo&gt;</c> is correctly rejected.
-    /// Case-insensitive on the <c>h</c>.
-    /// </remarks>
+    /// <remarks>Case-insensitive on the <c>h</c>; the byte after the level digit must be <c>&gt;</c> or ASCII whitespace, so <c>&lt;h1foo&gt;</c> is rejected.</remarks>
     public static bool TryFindNextHeadingOpen(
         ReadOnlySpan<byte> html,
         int from,
@@ -96,11 +81,7 @@ public static class Utf8HtmlScanner
     /// <param name="openTag">Bytes from the leading <c>&lt;</c> up to and including the closing <c>&gt;</c> (or any prefix that contains the attribute).</param>
     /// <param name="attrName">Attribute name in lowercase ASCII (e.g. <c>"id"u8</c>, <c>"href"u8</c>).</param>
     /// <returns>The local offset+length of the value into <paramref name="openTag"/>, or <c>(-1, 0)</c> when the attribute is missing or malformed.</returns>
-    /// <remarks>
-    /// Handles quoted (<c>"</c> / <c>'</c>) and unquoted attribute
-    /// values, and tolerates any ASCII whitespace before the attribute
-    /// name. Match is exact ASCII; pass the lowercase form.
-    /// </remarks>
+    /// <remarks>Handles quoted (<c>"</c> / <c>'</c>) and unquoted values; the attribute name match is case-sensitive.</remarks>
     public static (int Start, int Length) FindAttributeValue(
         ReadOnlySpan<byte> openTag,
         ReadOnlySpan<byte> attrName)

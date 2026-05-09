@@ -10,22 +10,13 @@ using Polly;
 
 namespace NuStreamDocs.LinkValidator;
 
-/// <summary>
-/// HTTP-checks every absolute URL recorded in a <see cref="ValidationCorpus"/>.
-/// </summary>
-/// <remarks>
-/// Reads from the pre-built corpus only — no second filesystem walk.
-/// Targets are bucketed by host; each bucket is processed through a
-/// per-host Polly pipeline that combines a sliding-window rate
-/// limiter with exponential-backoff retry. Buckets execute in
-/// parallel so two slow hosts don't block each other.
-/// </remarks>
+/// <summary>HTTP-checks every absolute URL recorded in a <see cref="ValidationCorpus"/>.</summary>
 public static class ExternalLinkValidator
 {
-    /// <summary>Initial bucket capacity for per-host hit lists; small constant since most hosts get a handful of links.</summary>
+    /// <summary>Initial bucket capacity for per-host hit lists.</summary>
     private const int HostBucketCapacity = 8;
 
-    /// <summary>Validates every external URL in <paramref name="corpus"/> through host-isolated Polly pipelines.</summary>
+    /// <summary>Validates every external URL in <paramref name="corpus"/>.</summary>
     /// <param name="corpus">The pre-built corpus.</param>
     /// <param name="options">Rate-limit + retry configuration.</param>
     /// <param name="httpClient">HTTP client to use; the caller owns its lifetime.</param>
@@ -59,16 +50,9 @@ public static class ExternalLinkValidator
         return [.. diagnostics];
     }
 
-    /// <summary>Buckets every external URL in the corpus by its host, recording each occurrence's source page.</summary>
+    /// <summary>Buckets every external URL in the corpus by host, recording each occurrence's source page.</summary>
     /// <param name="corpus">Corpus.</param>
     /// <returns>Map from host to per-URL hit list.</returns>
-    /// <remarks>
-    /// The corpus stores URLs as raw UTF-8 byte arrays; the
-    /// <see cref="Uri"/> ctor and the per-host <see cref="Dictionary{TKey, TValue}"/>
-    /// key both need strings, so this bucketing pass is the
-    /// decode-to-string boundary for external links. Pages whose URL
-    /// is invalid don't pay the page-URL string cost.
-    /// </remarks>
     internal static Dictionary<string, List<ExternalHit>> BucketByHost(ValidationCorpus corpus)
     {
         Dictionary<string, List<ExternalHit>> map = new(StringComparer.OrdinalIgnoreCase);

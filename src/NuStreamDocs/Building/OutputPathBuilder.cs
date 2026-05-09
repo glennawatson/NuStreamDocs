@@ -6,11 +6,11 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Building;
 
-/// <summary>Maps a source-relative <c>.md</c> path to an absolute output path under the build's output root.</summary>
-/// <remarks>
-/// Two variants are exposed: flat URLs (<c>guide/foo.md</c> → <c>guide/foo.html</c>) and directory URLs
-/// (<c>guide/foo.md</c> → <c>guide/foo/index.html</c>; <c>index.md</c> stays flat).
-/// </remarks>
+/// <summary>
+/// Maps a source-relative <c>.md</c> path to an absolute output path. Two variants: flat URLs
+/// (<c>guide/foo.md</c> → <c>guide/foo.html</c>) and directory URLs (<c>guide/foo.md</c> →
+/// <c>guide/foo/index.html</c>; <c>index.md</c> stays flat).
+/// </summary>
 internal static class OutputPathBuilder
 {
     /// <summary>Length of the source <c>.md</c> extension stripped before composing the output path.</summary>

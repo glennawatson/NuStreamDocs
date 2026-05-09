@@ -6,12 +6,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Abbr;
 
-/// <summary>
-/// Abbreviations plugin. Strips <c>*[ABBR]: definition</c> lines from each
-/// page, then wraps every body-text occurrence of <c>ABBR</c> in
-/// <c>&lt;abbr title="definition"&gt;ABBR&lt;/abbr&gt;</c>. Code spans and
-/// fenced code blocks are left alone.
-/// </summary>
+/// <summary>Abbreviations plugin — folds <c>*[ABBR]: definition</c> lines into <c>&lt;abbr title="..."&gt;</c> tags. Code spans are skipped.</summary>
 public sealed class AbbrPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>

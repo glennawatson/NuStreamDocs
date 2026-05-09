@@ -4,12 +4,7 @@
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>Flat, render-ready nav tree. The renderer walks <see cref="Nodes"/> by index and never dereferences a class instance per node.</summary>
-/// <remarks>
-/// Built once per build by <see cref="NavTreeFlattener"/>. Children of node at index <c>i</c> live
-/// at <c>Nodes[i.FirstChildIndex .. i.FirstChildIndex + i.ChildCount]</c>; parents are walked via
-/// <see cref="NavTreeNode.ParentIndex"/>. Root is at index <see cref="RootIndex"/>.
-/// </remarks>
+/// <summary>Flat, render-ready nav tree; root sits at <see cref="RootIndex"/>, children of node <c>i</c> at <c>Nodes[i.FirstChildIndex .. i.FirstChildIndex + i.ChildCount]</c>.</summary>
 internal sealed class NavTree
 {
     /// <summary>Index of the root node by convention.</summary>

@@ -6,16 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Templating;
 
-/// <summary>
-/// A compiled, reusable Mustache-style UTF-8 template.
-/// </summary>
-/// <remarks>
-/// Compile once, render many. The compiled instruction stream is
-/// immutable and shareable across worker threads — the renderer holds
-/// no per-template state and uses pooled scope buffers, so the same
-/// <see cref="Template"/> instance can serve every page in a parallel
-/// build.
-/// </remarks>
+/// <summary>A compiled, reusable Mustache-style UTF-8 template. Compile once, render many — the same instance is safe to share across worker threads.</summary>
 public sealed class Template
 {
     /// <summary>Original UTF-8 source kept for literal slices.</summary>
@@ -63,7 +54,6 @@ public sealed class Template
     /// <param name="data">Root data scope.</param>
     /// <param name="partials">UTF-8-byte-keyed map of partial-name to compiled <see cref="Template"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <remarks>The renderer probes <paramref name="partials"/> via <see cref="Dictionary{TKey,TValue}.AlternateLookup{TAlternateKey}"/> so the per-partial lookup never allocates a string.</remarks>
     public void Render(TemplateData data, Dictionary<byte[], Template> partials, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(data);

@@ -6,14 +6,10 @@ using System.Buffers;
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>
-/// Represents a rule used by the lexer to match a specific pattern in the input
-/// and assign a token classification. It also defines state transitions based
-/// on the parsing process.
-/// </summary>
-/// <param name="Match">The matcher used to identify the pattern in the input.</param>
-/// <param name="TokenClass">The classification assigned to the matched token.</param>
-/// <param name="NextState">The state to transition to after a successful match (see <see cref="NoStateChange"/> and <see cref="PopState"/>).</param>
+/// <summary>One rule the lexer evaluates: pattern matcher, token classification, and state transition.</summary>
+/// <param name="Match">Matcher used to identify the pattern.</param>
+/// <param name="TokenClass">Classification assigned on a successful match.</param>
+/// <param name="NextState">State to transition to after a match (see <see cref="NoStateChange"/> / <see cref="PopState"/>).</param>
 public sealed record LexerRule(LexerRuleMatcher Match, TokenClass TokenClass, int NextState)
 {
     /// <summary>Sentinel for <see cref="NextState"/> — leaves the state stack unchanged.</summary>

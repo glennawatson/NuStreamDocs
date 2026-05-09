@@ -6,12 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.MarkdownExtensions.Internal;
 
-/// <summary>
-/// Shared block-scanning helpers for preprocessors that consume an
-/// opener line followed by an indented body (admonitions, details,
-/// tabbed). Stateless so every preprocessor in the assembly reuses
-/// the same predicate set without duplicating the byte loop.
-/// </summary>
+/// <summary>Block-scanning helpers for preprocessors that consume an opener line followed by an indented body.</summary>
 internal static class IndentedBlockScanner
 {
     /// <summary>Body lines must start with this many spaces (or a tab) to belong to the block.</summary>

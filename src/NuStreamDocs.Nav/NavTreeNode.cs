@@ -7,7 +7,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Nav;
 
 /// <summary>One slot in the flat <see cref="NavTree"/> array consumed by <see cref="NavRenderer"/>.</summary>
-/// <param name="Title">UTF-8 display title bytes; encoded once at <see cref="NavTreeFlattener"/> time.</param>
+/// <param name="Title">UTF-8 display title bytes.</param>
 /// <param name="RelativePath">Source-relative path (file) or directory path (section).</param>
 /// <param name="RelativeUrlBytes">Pre-encoded served URL bytes derived from <see cref="RelativePath"/>.</param>
 /// <param name="IndexUrlBytes">Pre-encoded served URL bytes for the section's promoted index page; empty when none.</param>

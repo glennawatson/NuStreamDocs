@@ -9,22 +9,15 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Toc;
 
 /// <summary>
-/// Pure slug helper that maps heading text to ASCII identifier-safe
-/// byte sequences and resolves duplicates within a single page.
+/// Maps heading text to ASCII identifier-safe slug bytes (matching the python-markdown
+/// <c>toc</c> default) and resolves duplicates within a page with a numeric <c>_N</c>
+/// suffix starting at <c>1</c>.
 /// </summary>
 /// <remarks>
-/// Algorithm matches the python-markdown <c>toc</c> default slugifier (which mkdocs and
-/// mkdocs-material inherit):
-/// <list type="bullet">
-/// <item><description>Lowercase ASCII letters, digits, hyphens, and underscores are retained.</description></item>
-/// <item><description>Whitespace runs collapse to a single hyphen.</description></item>
-/// <item><description>Other punctuation (<c>/</c>, <c>:</c>, <c>,</c>, <c>.</c>, parens, etc.) is dropped without a separator,
-/// so <c>Sequencing/Flow</c> slugifies to <c>sequencingflow</c> rather than <c>sequencing-flow</c>.</description></item>
-/// <item><description>Leading and trailing hyphens are trimmed.</description></item>
-/// <item><description>Duplicates within the same page receive a numeric <c>_N</c> suffix starting at <c>1</c>, matching python-markdown's <c>toc</c> default.</description></item>
-/// </list>
-/// Slug bytes are always ASCII per this rule, so the rewriter and TOC
-/// fragment renderer can splice them straight into the output stream.
+/// Lowercase ASCII letters, digits, hyphens, and underscores are retained; whitespace
+/// and hyphen runs collapse to a single hyphen; other punctuation is dropped without a
+/// separator (so <c>Sequencing/Flow</c> becomes <c>sequencingflow</c>); leading/trailing
+/// hyphens are trimmed.
 /// </remarks>
 internal static class HeadingSlugifier
 {
@@ -171,10 +164,9 @@ internal static class HeadingSlugifier
         return len;
     }
 
-    /// <summary>Folds a single UTF-8 byte to its slug-rule byte (lowercase letter, digit, underscore) or <c>0</c> when not slug-eligible.</summary>
+    /// <summary>Folds a UTF-8 byte to its slug byte (lowercase letter, digit, underscore) or <c>0</c> when not slug-eligible.</summary>
     /// <param name="b">Source byte.</param>
-    /// <returns>The slug byte, or <c>0</c> for non-slug input.</returns>
-    /// <remarks>Hyphens and whitespace are not handled here — see <see cref="IsSeparator"/>.</remarks>
+    /// <returns>The slug byte, or <c>0</c>.</returns>
     private static byte ToSlugByte(byte b) => b switch
     {
         >= (byte)'A' and <= (byte)'Z' => (byte)(b + AsciiUpperToLowerOffset),
@@ -184,13 +176,9 @@ internal static class HeadingSlugifier
         _ => 0
     };
 
-    /// <summary>True for bytes that collapse to a single hyphen separator (ASCII whitespace + literal hyphen).</summary>
+    /// <summary>True for ASCII whitespace and literal hyphen (collapse to a single hyphen separator).</summary>
     /// <param name="b">Source byte.</param>
-    /// <returns>True when the byte should trigger the pending-hyphen state instead of being emitted verbatim.</returns>
-    /// <remarks>
-    /// Mirrors python-markdown's <c>re.sub(r'[-\s]+', '-', ...)</c> — runs of hyphens and whitespace
-    /// (in any combination) become a single hyphen.
-    /// </remarks>
+    /// <returns>True for separator bytes.</returns>
     private static bool IsSeparator(byte b) =>
         b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n' or (byte)'-';
 

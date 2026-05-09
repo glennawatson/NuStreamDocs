@@ -10,15 +10,15 @@ namespace NuStreamDocs.Bibliography;
 /// <summary>
 /// Configuration for <see cref="BibliographyPlugin"/>.
 /// </summary>
-/// <param name="Database">Resolved citation database; supplied via the fluent <see cref="BibliographyDatabaseBuilder"/> or one of the loader entry points.</param>
-/// <param name="Style">Citation style; defaults to AGLC4.</param>
+/// <param name="Database">Resolved citation database.</param>
+/// <param name="Style">Citation style.</param>
 /// <param name="WarnOnMissing">When true, an unresolved <c>[@key]</c> is logged at <c>Warning</c>.</param>
 public sealed record BibliographyOptions(
     BibliographyDatabase Database,
     ICitationStyle Style,
     bool WarnOnMissing)
 {
-    /// <summary>Gets the default option set — empty database, AGLC4 style, no warnings.</summary>
+    /// <summary>Gets the default options: empty database, AGLC4 style, warnings disabled.</summary>
     public static BibliographyOptions Default { get; } = new(
         Database: BibliographyDatabase.Empty,
         Style: Aglc4Style.Instance,

@@ -7,11 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Byte-level scanner that locates <c>srcset="..."</c> attributes,
-/// splits the comma-delimited entries, and rewrites each entry's URL
-/// to <c>/{local}</c> via the registry.
-/// </summary>
+/// <summary>Rewrites or audits comma-delimited URLs in <c>srcset="..."</c> attributes.</summary>
 internal static class SrcsetBytes
 {
     /// <summary>Bytes that may start a <c>srcset</c> attribute name (case-insensitive).</summary>

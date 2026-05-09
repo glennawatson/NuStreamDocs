@@ -8,16 +8,11 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Markdown.Common;
 
 /// <summary>
-/// Pre-render pass that resolves CommonMark reference-style links.
+/// Pre-render pass that resolves CommonMark reference-style links. Definition lines
+/// (<c>[label]: url</c>) are stripped from the output and every <c>[text][label]</c> /
+/// <c>[text][]</c> / collapsed <c>[label]</c> reference is rewritten to inline
+/// <c>[text](url)</c> form.
 /// </summary>
-/// <remarks>
-/// Walks each non-fenced line, builds a label → href map from definition lines
-/// (<c>[label]: url "optional title"</c>), then rewrites every <c>[text][label]</c> /
-/// <c>[text][]</c> / collapsed <c>[label]</c> reference into the inline form
-/// <c>[text](url "title")</c>. The definition lines themselves are stripped from the output. The
-/// downstream <c>InlineRenderer</c> never has to know about references — the rewriter hands it
-/// inline-form links it already understands.
-/// </remarks>
 public static class LinkReferenceRewriter
 {
     /// <summary>Bytes consumed when skipping a backslash-escaped pair (<c>\\X</c>).</summary>
@@ -252,10 +247,7 @@ public static class LinkReferenceRewriter
     /// <param name="text">Visible label bytes.</param>
     /// <param name="def">Resolved definition.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <remarks>
-    /// CommonMark titles are dropped: the downstream <c>LinkSpan</c> parser treats the entire
-    /// <c>(…)</c> body as the href, so emitting <c>(url "title")</c> would corrupt the rendered href.
-    /// </remarks>
+    /// <remarks>CommonMark link titles are dropped — the downstream <c>LinkSpan</c> parser treats the entire <c>(…)</c> body as the href.</remarks>
     private static void EmitInlineLink(ReadOnlySpan<byte> text, in Definition def, IBufferWriter<byte> writer)
     {
         Write(writer, "["u8);

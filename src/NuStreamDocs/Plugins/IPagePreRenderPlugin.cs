@@ -5,18 +5,11 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the per-page pre-render phase.
+/// Plugin participation in the per-page pre-render phase: byte → byte rewriters on raw markdown,
+/// threaded through every participating plugin in priority order before the renderer runs. Used by
+/// admonitions, content tabs, collapsible details, footnotes, and similar custom-syntax
+/// translators.
 /// </summary>
-/// <remarks>
-/// Byte → byte rewriters on raw markdown, threaded through every
-/// participating plugin in priority order before <c>MarkdownRenderer</c>
-/// runs. Implemented by plugins that translate a custom block syntax
-/// into HTML the renderer can pass through verbatim — admonitions
-/// (<c>!!! note</c>), Material tabs (<c>=== "Tab"</c>), collapsible
-/// details (<c>??? note</c>), footnotes, definition lists,
-/// reference-link rewrites. The contract is byte-in / byte-out so the
-/// UTF-8 pipeline stays allocation-light.
-/// </remarks>
 public interface IPagePreRenderPlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the pre-render phase.</summary>

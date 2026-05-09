@@ -10,16 +10,11 @@ using NuStreamDocs.Versions.Logging;
 namespace NuStreamDocs.Versions;
 
 /// <summary>
-/// Plugin that publishes a mike-compatible <c>versions.json</c> manifest
-/// in the parent directory of the build's output root.
+/// Publishes a mike-compatible <c>versions.json</c> manifest in the
+/// parent directory of the build's output root. Point the build at a
+/// version-specific subdirectory (e.g. <c>./site/0.4.2</c>) and the
+/// plugin upserts the entry into <c>./site/versions.json</c>.
 /// </summary>
-/// <remarks>
-/// The user is expected to point the build at a version-specific
-/// subdirectory (e.g. <c>builder.WithOutput("./site/0.4.2")</c>); the
-/// plugin then upserts the version's entry into <c>./site/versions.json</c>
-/// during <see cref="FinalizeAsync"/>. This keeps each version's content
-/// isolated and lets a deploy script swap the parent symlink atomically.
-/// </remarks>
 public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>

@@ -6,16 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Templating;
 
-/// <summary>
-/// Internal compiler that walks a UTF-8 template source once and emits
-/// a flat <see cref="TemplateInstruction"/> array.
-/// </summary>
-/// <remarks>
-/// All parsing happens here; <see cref="TemplateRenderer"/> only walks
-/// the precomputed instructions. Section open/close pairs are matched
-/// at compile time with a stack and their <c>JumpTarget</c>s are
-/// patched in-place so the renderer never re-scans.
-/// </remarks>
+/// <summary>Compiles a UTF-8 template source into a flat <see cref="TemplateInstruction"/> array.</summary>
 internal static class TemplateCompiler
 {
     /// <summary>Initial instruction-buffer capacity floor.</summary>

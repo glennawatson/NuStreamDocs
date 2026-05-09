@@ -7,13 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.CaretTilde;
 
-/// <summary>
-/// Stateless UTF-8 rewriter that emits <c>&lt;sup&gt;</c>,
-/// <c>&lt;ins&gt;</c>, <c>&lt;sub&gt;</c>, and <c>&lt;del&gt;</c>
-/// markup for the caret/tilde marker family. Runs as a
-/// preprocessor so the downstream inline pass treats the
-/// resulting tags as raw HTML (CommonMark §6.6).
-/// </summary>
+/// <summary>Rewrites <c>^x^</c>/<c>^^x^^</c>/<c>~x~</c>/<c>~~x~~</c> spans into <c>&lt;sup&gt;</c>/<c>&lt;ins&gt;</c>/<c>&lt;sub&gt;</c>/<c>&lt;del&gt;</c> respectively.</summary>
 internal static class CaretTildeRewriter
 {
     /// <summary>Width of a single-character marker (<c>^</c> or <c>~</c>).</summary>

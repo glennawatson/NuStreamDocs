@@ -7,19 +7,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Reads a <c>.pages</c> YAML override (literate-nav). Supports the
-/// minimal subset, including the awesome-pages map form
-/// (<c>- Title: path</c>) used by mkdocs-awesome-pages-plugin:
-/// <code>
-/// title: Custom Title
-/// hide: true
-/// nav:
-///   - intro.md
-///   - subsection
-///   - Reference: reference.md
-/// </code>
-/// </summary>
+/// <summary>Reads a <c>.pages</c> YAML override (literate-nav, mkdocs-awesome-pages compatible subset).</summary>
 internal static class PagesFileReader
 {
     /// <summary>Reads a <c>.pages</c> file from <paramref name="path"/>; returns <see cref="PagesFile.Empty"/> when missing.</summary>

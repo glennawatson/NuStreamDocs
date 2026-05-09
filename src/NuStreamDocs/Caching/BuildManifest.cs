@@ -11,19 +11,9 @@ using NuStreamDocs.Logging;
 namespace NuStreamDocs.Caching;
 
 /// <summary>
-/// Collection of <see cref="ManifestEntry"/> records persisted between
-/// builds and consulted at the start of each build to skip unchanged
-/// pages.
+/// Collection of <see cref="ManifestEntry"/> records persisted between builds and consulted at the
+/// start of each build to skip unchanged pages. Stored as UTF-8 JSON under the output root.
 /// </summary>
-/// <remarks>
-/// On-disk shape is a small UTF-8 JSON file under the output root —
-/// readable, diffable, schema-loose. Read via <see cref="JsonDocument"/>
-/// (no reflection) so the AOT-clean rule holds; written via
-/// <see cref="Utf8JsonWriter"/> straight to <c>FileStream</c>.
-/// In-memory the entries live in a <see cref="Dictionary{TKey,TValue}"/>
-/// keyed by relative path for O(1) lookup during the parallel render
-/// stage.
-/// </remarks>
 public sealed class BuildManifest
 {
     /// <summary>Schema version emitted in the JSON document; bumped on breaking changes.</summary>
@@ -64,10 +54,7 @@ public sealed class BuildManifest
         return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
     }
 
-    /// <summary>
-    /// Loads the manifest from <paramref name="outputRoot"/>; returns an
-    /// empty manifest when no file exists or it cannot be parsed.
-    /// </summary>
+    /// <summary>Loads the manifest from <paramref name="outputRoot"/>; returns an empty manifest when no file exists or it cannot be parsed.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest.</returns>
@@ -82,10 +69,7 @@ public sealed class BuildManifest
     public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, byte[] buildFingerprint, in CancellationToken cancellationToken) =>
         LoadAsync(outputRoot, buildFingerprint, cancellationToken, logger: null);
 
-    /// <summary>
-    /// Loads the manifest from <paramref name="outputRoot"/> with an optional logger;
-    /// returns an empty manifest when no file exists or it cannot be parsed.
-    /// </summary>
+    /// <summary>Loads the manifest from <paramref name="outputRoot"/> with an optional logger; returns an empty manifest when no file exists or it cannot be parsed.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="logger">Optional logger; pass <see langword="null"/> to silence diagnostics.</param>
@@ -154,11 +138,6 @@ public sealed class BuildManifest
 
     /// <summary>Replaces the entries by draining <paramref name="updated"/> in a single pass.</summary>
     /// <param name="updated">Concurrent queue of fresh entries; ownership transfers to the manifest.</param>
-    /// <remarks>
-    /// <see cref="ConcurrentQueue{T}.ToArray"/> performs a single pre-sized
-    /// allocation off the queue's segmented backing storage — cheaper than
-    /// the <c>[.. bag]</c> spread that materializes through an enumerator.
-    /// </remarks>
     public void Replace(ConcurrentQueue<ManifestEntry> updated)
     {
         ArgumentNullException.ThrowIfNull(updated);

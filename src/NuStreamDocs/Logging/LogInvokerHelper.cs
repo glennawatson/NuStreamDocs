@@ -5,15 +5,10 @@
 namespace NuStreamDocs.Logging;
 
 /// <summary>
-/// Gates a log invocation behind <see cref="ILogger.IsEnabled"/> so any
-/// expensive argument expressions (string joins, projections, ToString
-/// calls) only run when the resulting log line is actually written.
+/// Gates a log invocation behind <see cref="ILogger.IsEnabled"/> so expensive argument expressions
+/// only run when the log line is actually written. Pick the overload arity that matches the number
+/// of state values your action needs.
 /// </summary>
-/// <remarks>
-/// Use the static-lambda overloads with explicit state arguments to keep
-/// the invocation allocation-free. Each overload mirrors the next; pick
-/// the arity that matches the number of state values your action needs.
-/// </remarks>
 public static class LogInvokerHelper
 {
     /// <summary>Invokes <paramref name="action"/> with one state argument when <paramref name="logger"/> is enabled at <paramref name="level"/>.</summary>
@@ -54,10 +49,7 @@ public static class LogInvokerHelper
         action(logger, arg1, arg2);
     }
 
-    /// <summary>
-    /// Invokes <paramref name="action"/> with two state arguments and a projected third argument when
-    /// <paramref name="logger"/> is enabled at <paramref name="level"/>.
-    /// </summary>
+    /// <summary>Invokes <paramref name="action"/> with two state arguments and a projected third argument when <paramref name="logger"/> is enabled at <paramref name="level"/>.</summary>
     /// <typeparam name="T1">Type of the first state argument.</typeparam>
     /// <typeparam name="T2">Type of the second state argument.</typeparam>
     /// <typeparam name="T3">Type of the source argument to project.</typeparam>

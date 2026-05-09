@@ -4,24 +4,11 @@
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Allocation-conscious helpers for assembling <see cref="NavEntry"/> arrays.
-/// </summary>
-/// <remarks>
-/// Keeps the per-entry path off the heap by writing directly into a
-/// caller-rented buffer, then trimming in one move. Used by config
-/// readers (mkdocs.yml, docfx <c>toc.yml</c>, awesome-nav) and the auto-discovery
-/// builder to avoid <c>List&lt;T&gt;</c> resize churn on large sites.
-/// </remarks>
+/// <summary>Helpers for assembling <see cref="NavEntry"/> arrays.</summary>
 public static class NavBuilder
 {
-    /// <summary>
-    /// Returns a properly sized <see cref="NavEntry"/> array from a
-    /// <paramref name="buffer"/> partially populated up to
-    /// <paramref name="count"/>.
-    /// </summary>
-    /// <param name="buffer">Working buffer, typically rented from
-    /// <see cref="System.Buffers.ArrayPool{T}"/> by the caller.</param>
+    /// <summary>Returns a right-sized <see cref="NavEntry"/> array from <paramref name="buffer"/> populated up to <paramref name="count"/>.</summary>
+    /// <param name="buffer">Working buffer.</param>
     /// <param name="count">Number of valid entries at the start of <paramref name="buffer"/>.</param>
     /// <returns>A right-sized array; empty when <paramref name="count"/> is 0.</returns>
     public static NavEntry[] ToArray(NavEntry[] buffer, int count)

@@ -6,12 +6,7 @@ using System.Reflection;
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Non-generic carrier for the byte[] template-data keys and other UTF-8 constants that <see cref="ThemePluginBase{TTheme, TOptions}"/> shares across every closed generic instantiation.
-/// </summary>
-/// <remarks>
-/// Hoisted out of the generic so the same byte arrays back every theme rather than being duplicated per closed type.
-/// </remarks>
+/// <summary>Shared UTF-8 constants and template-data keys used by the theme shell.</summary>
 internal static class ThemeShellBytes
 {
     /// <summary>UTF-8 root-relative site URL.</summary>
@@ -125,10 +120,10 @@ internal static class ThemeShellBytes
     /// <summary>UTF-8 token consumers can embed in their copyright string; replaced with <see cref="CurrentYear"/> at render time.</summary>
     public static readonly byte[] YearToken = [.. "{year}"u8];
 
-    /// <summary>UTF-8 generator value emitted as <c>nustreamdocs-{version}</c>; encoded once at type init.</summary>
+    /// <summary>UTF-8 generator value emitted as <c>nustreamdocs-{version}</c>.</summary>
     public static readonly byte[] Generator = BuildGeneratorBytes();
 
-    /// <summary>UTF-8 ISO 8601 build timestamp; captured once when this assembly first loads.</summary>
+    /// <summary>UTF-8 ISO 8601 build timestamp.</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6354", Justification = "Build timestamp is intentionally wall-clock; not unit-tested for content.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6585", Justification = "ISO 8601 round-trip format is the wire format consumers expect.")]
     public static readonly byte[] BuildDate = System.Text.Encoding.UTF8.GetBytes(
@@ -139,7 +134,7 @@ internal static class ThemeShellBytes
     public static readonly byte[] CurrentYear = System.Text.Encoding.UTF8.GetBytes(
         DateTimeOffset.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-    /// <summary>Builds the <c>nustreamdocs-{version}</c> generator value; the version is read from the assembly informational version with any <c>+sha</c> build-metadata suffix stripped.</summary>
+    /// <summary>Builds the <c>nustreamdocs-{version}</c> generator value.</summary>
     /// <returns>UTF-8 bytes of the generator string.</returns>
     private static byte[] BuildGeneratorBytes()
     {

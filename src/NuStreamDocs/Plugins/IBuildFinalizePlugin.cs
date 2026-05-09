@@ -5,15 +5,10 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the build-wide finalize phase.
+/// Plugin participation in the build-wide finalize phase. Runs once per build, sequentially after
+/// every page has been written; use it to emit cross-page output files (search index JSON,
+/// sitemaps, feeds) and post-write transforms.
 /// </summary>
-/// <remarks>
-/// Runs once per build, sequentially in priority order, after every
-/// page has been written to disk. Plugins use this hook to serialize
-/// cross-page state into output files — search-index JSON, RSS/Atom
-/// feeds, sitemaps, redirects, version metadata — and to perform
-/// post-write transforms such as gzip compression.
-/// </remarks>
 public interface IBuildFinalizePlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the finalize phase.</summary>

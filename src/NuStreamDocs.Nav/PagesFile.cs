@@ -4,11 +4,7 @@
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Decoded contents of a literate-nav <c>.pages</c> override file
-/// (mkdocs-awesome-pages compatible, minimal subset). All fields default
-/// to "no override".
-/// </summary>
+/// <summary>Decoded contents of a literate-nav <c>.pages</c> override file (mkdocs-awesome-pages compatible).</summary>
 /// <param name="Title">Optional section title bytes; empty when not set.</param>
 /// <param name="OrderedEntries">Explicit child ordering. Empty when no <c>nav:</c> key is present.</param>
 /// <param name="Hide">When true, the parent should drop this section from the nav tree entirely.</param>

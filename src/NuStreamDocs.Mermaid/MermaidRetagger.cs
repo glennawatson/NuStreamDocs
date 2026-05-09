@@ -6,11 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Mermaid;
 
-/// <summary>
-/// Stateless retagger that rewrites
-/// <c>&lt;pre&gt;&lt;code class="language-mermaid"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
-/// blocks to <c>&lt;pre class="mermaid"&gt;…&lt;/pre&gt;</c>.
-/// </summary>
+/// <summary>Rewrites rendered mermaid code-block HTML into the <c>&lt;pre class="mermaid"&gt;</c> form the mermaid runtime discovers.</summary>
 internal static class MermaidRetagger
 {
     /// <summary>Gets the marker the renderer emits for fenced mermaid blocks.</summary>
@@ -32,7 +28,7 @@ internal static class MermaidRetagger
 
     /// <summary>Retags every mermaid block in <paramref name="html"/> directly into <paramref name="output"/>.</summary>
     /// <param name="html">Page HTML span.</param>
-    /// <param name="output">Destination sink — receives the rewritten bytes verbatim, no intermediate <see cref="byte"/> array.</param>
+    /// <param name="output">Destination sink for the rewritten HTML.</param>
     public static void Retag(ReadOnlySpan<byte> html, IBufferWriter<byte> output)
     {
         var i = 0;

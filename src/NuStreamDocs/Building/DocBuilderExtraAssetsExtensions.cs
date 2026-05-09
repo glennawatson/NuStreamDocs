@@ -9,16 +9,10 @@ using NuStreamDocs.Plugins.ExtraAssets;
 namespace NuStreamDocs.Building;
 
 /// <summary>
-/// Builder-extension surface for adding caller-supplied stylesheet and
-/// script assets to every page (the equivalent of mkdocs-material's
-/// <c>extra_css</c> and <c>extra_javascript</c> config keys).
+/// Adds caller-supplied stylesheet and script assets to every page (mkdocs-material's
+/// <c>extra_css</c> / <c>extra_javascript</c> equivalents). Emission order matches registration
+/// order.
 /// </summary>
-/// <remarks>
-/// Repeated <c>AddExtraCss</c> / <c>AddExtraJs</c> calls fold onto a
-/// single underlying <see cref="ExtraAssetsPlugin"/>; the order of
-/// emitted <c>&lt;link&gt;</c> / <c>&lt;script&gt;</c> tags matches
-/// registration order so consumers control cascade precedence.
-/// </remarks>
 public static class DocBuilderExtraAssetsExtensions
 {
     /// <summary>Adds an extra stylesheet from a file on disk; copied to <c>assets/extra/&lt;filename&gt;</c>.</summary>

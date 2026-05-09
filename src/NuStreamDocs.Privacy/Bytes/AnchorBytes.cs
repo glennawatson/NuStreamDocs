@@ -7,11 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Byte-level UTF-8 scanner that hardens external <c>&lt;a&gt;</c>
-/// anchors with <c>rel="noopener noreferrer"</c> and/or
-/// <c>target="_blank"</c>.
-/// </summary>
+/// <summary>Hardens external <c>&lt;a&gt;</c> anchors with <c>rel="noopener noreferrer"</c> and/or <c>target="_blank"</c>.</summary>
 internal static class AnchorBytes
 {
     /// <summary>Length of the <c>&lt;a</c> open-tag prefix consumed before attribute scanning.</summary>

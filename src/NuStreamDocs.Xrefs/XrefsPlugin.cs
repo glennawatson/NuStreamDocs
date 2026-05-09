@@ -7,29 +7,10 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Xrefs;
 
-/// <summary>
-/// DocFX-style xrefmap plugin.
-/// </summary>
-/// <remarks>
-/// <para>
-/// At <see cref="ConfigureAsync"/> the plugin pulls every
-/// configured <see cref="XrefImport"/> and registers each
-/// <c>(uid, href)</c> pair into the shared
-/// <see cref="AutorefsRegistry"/> with the import's base URL
-/// prepended — so cross-site UIDs resolve to absolute URLs through
-/// the same <c>@autoref:</c> rewrite path the local registry uses.
-/// </para>
-/// <para>
-/// At <see cref="FinalizeAsync"/> the plugin snapshots the same
-/// registry and writes <c>xrefmap.json</c> at the site root. Because
-/// imports were registered with their absolute base URLs, downstream
-/// consumers of the emitted map see only this site's contributions
-/// when filtered by base URL.
-/// </para>
-/// </remarks>
+/// <summary>DocFX-style xrefmap plugin: imports external xrefmaps into the shared <see cref="AutorefsRegistry"/> at configure time and emits <c>xrefmap.json</c> at finalize.</summary>
 public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
-    /// <summary>Long-lived <see cref="HttpClient"/> shared across import fetches; avoids socket exhaustion that a per-call <c>new HttpClient()</c> would cause.</summary>
+    /// <summary>Shared <see cref="HttpClient"/> for import fetches.</summary>
     private static readonly HttpClient SharedClient = new();
 
     /// <summary>Configured options.</summary>

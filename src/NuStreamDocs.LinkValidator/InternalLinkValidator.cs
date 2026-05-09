@@ -8,18 +8,7 @@ using System.Text;
 
 namespace NuStreamDocs.LinkValidator;
 
-/// <summary>
-/// Walks a <see cref="ValidationCorpus"/> in parallel and reports
-/// missing internal pages or unresolved <c>#fragment</c> anchors.
-/// </summary>
-/// <remarks>
-/// Mirrors the surface of <c>mkdocs --strict</c>: relative-link
-/// resolution and same-page heading-anchor checking, plus
-/// cross-page anchor resolution on top. Path math runs entirely on
-/// UTF-8 byte arrays — the source-page URL, link target, and
-/// fragment never UTF-16 round-trip during resolution; UTF-8 → string
-/// is deferred to the moment a diagnostic message is composed.
-/// </remarks>
+/// <summary>Walks a <see cref="ValidationCorpus"/> in parallel and reports missing internal pages or unresolved <c>#fragment</c> anchors.</summary>
 public static class InternalLinkValidator
 {
     /// <summary>Hash byte that separates a link target from its fragment.</summary>
@@ -204,11 +193,6 @@ public static class InternalLinkValidator
     /// <param name="anchors">The anchor-id set.</param>
     /// <param name="fragment">Fragment bytes (no leading <c>#</c>).</param>
     /// <returns>True when the set contains the fragment.</returns>
-    /// <remarks>
-    /// Uses the alternate-lookup surface on <see cref="HashSet{T}"/> so
-    /// the fragment span hits the set without allocating a temporary
-    /// <c>byte[]</c> per query.
-    /// </remarks>
     private static bool ContainsAnchor(HashSet<byte[]> anchors, ReadOnlySpan<byte> fragment) =>
         anchors.Count > 0 && anchors.GetAlternateLookup<ReadOnlySpan<byte>>().Contains(fragment);
 

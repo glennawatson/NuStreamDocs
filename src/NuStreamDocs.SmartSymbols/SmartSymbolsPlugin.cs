@@ -7,19 +7,12 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.SmartSymbols;
 
 /// <summary>
-/// Smart-symbols plugin. Pre-processes raw Markdown so that the
-/// pymdownx.smartsymbols default substitutions —
-/// <c>(c)</c>, <c>(r)</c>, <c>(tm)</c>, <c>c/o</c>, <c>+/-</c>,
-/// <c>=/=</c>, the four arrow forms, and the three common
-/// fractions — render as their Unicode characters in the final
-/// HTML.
+/// Pre-renders Markdown so the pymdownx.smartsymbols default
+/// substitutions (<c>(c)</c>, <c>(r)</c>, <c>(tm)</c>, <c>c/o</c>,
+/// <c>+/-</c>, <c>=/=</c>, the four arrow forms, and the common
+/// fractions) become their Unicode characters in the final HTML.
+/// Fenced-code regions and inline-code spans pass through unchanged.
 /// </summary>
-/// <remarks>
-/// The rewriter walks the source as UTF-8 bytes and skips fenced-
-/// code regions and inline-code spans verbatim, matching
-/// pymdownx.smartsymbols' inline-only scope. This is the parity
-/// list enabled by Zensical's default <c>zensical.toml</c>.
-/// </remarks>
 public sealed class SmartSymbolsPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>

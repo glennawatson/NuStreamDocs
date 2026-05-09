@@ -14,31 +14,13 @@ using NuStreamDocs.Privacy.Logging;
 namespace NuStreamDocs.Privacy;
 
 /// <summary>
-/// Privacy plugin. Detects external <c>http(s)://</c> assets
-/// referenced from rendered pages, rewrites the references to local
-/// paths under <see cref="PrivacyOptions.AssetDirectory"/>, and
-/// downloads each unique URL once at finalize time.
+/// Detects external <c>http(s)://</c> assets in rendered pages, rewrites them to local paths
+/// under <see cref="PrivacyOptions.AssetDirectory"/>, and downloads each unique URL once at
+/// finalize time. Audit mode records the URLs without rewriting or downloading.
 /// </summary>
-/// <remarks>
-/// Per-page <see cref="PostRender"/> rewrites the page HTML to localized
-/// asset paths; URL-to-local-path mappings accumulate in a thread-safe
-/// registry. <see cref="FinalizeAsync"/> drives the actual HTTP fetches
-/// in parallel. Already-downloaded assets (cache hits on subsequent
-/// builds) skip the network entirely.
-/// <para>
-/// In <see cref="PrivacyOptions.AuditOnly"/> mode the plugin records
-/// the external URLs it would have rewritten without touching the
-/// HTML or hitting the network — useful for compliance review on
-/// production sites.
-/// </para>
-/// </remarks>
 public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
 {
-    /// <summary>
-    /// Tiebreak that orders Privacy's URL rewriting after the theme shell wrap
-    /// (<see cref="PluginBand.Latest"/>) and after Nav (tiebreak 2) so external-URL
-    /// substitution covers shell + nav payloads too.
-    /// </summary>
+    /// <summary>PostRender tiebreak ordering Privacy after the theme shell wrap and Nav.</summary>
     private const int PostRenderTiebreak = 3;
 
     /// <summary>Configured option set; captured at registration time.</summary>
@@ -103,12 +85,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
     /// <inheritdoc/>
     public PluginPriority FinalizePriority => new(PluginBand.Late);
 
-    /// <summary>Gets the snapshot of external URLs the plugin has seen so far as UTF-8 byte arrays.</summary>
-    /// <remarks>
-    /// Populated on every build; in audit mode it's the only output, in normal mode it's a side-channel
-    /// for tooling. UTF-8 by default — consumers that want strings can decode via the
-    /// <see cref="DocBuilderPrivacyExtensions.AuditedUrlsAsStrings"/> extension.
-    /// </remarks>
+    /// <summary>Gets the snapshot of external URLs the plugin has seen as UTF-8 byte arrays.</summary>
     public byte[][] AuditedUrls => GetAuditedUrlBytesSnapshot();
 
     /// <inheritdoc/>
@@ -310,8 +287,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
             : (DirectoryPath)Encoding.UTF8.GetString(_options.CacheDirectory);
 
     /// <summary>Builds a snapshot of the audited URLs as UTF-8 byte arrays.</summary>
-    /// <returns>Right-sized URL byte-array snapshot.</returns>
-    /// <remarks>In normal mode the source is the registry of localized URLs; in audit mode it's the audit-only set of detected URLs.</remarks>
+    /// <returns>URL byte-array snapshot — registry contents in normal mode, audit-set contents in audit mode.</returns>
     private byte[][] GetAuditedUrlBytesSnapshot() =>
         _options.AuditOnly ? [.. _auditedUrls.Keys] : _registry.UrlsSnapshot();
 }

@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.LinkValidator.Logging;
 
-/// <summary>
-/// Source-generated logging helpers for the link validator plugin.
-/// </summary>
+/// <summary>Source-generated logging helpers for the link validator plugin.</summary>
 internal static partial class LinkValidatorLoggingHelper
 {
     /// <summary>Logs the start of a link validation run.</summary>

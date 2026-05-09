@@ -6,17 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
-/// <summary>
-/// Per-page context handed to <see cref="IPageScanPlugin.Scan"/>.
-/// </summary>
-/// <remarks>
-/// Read-only view of the post-render HTML. Scan plugins extract typed
-/// facts (heading IDs, search documents, feed entries) and publish into
-/// shared registries owned by their plugin instance. Scan must not
-/// mutate page bytes — that's the job of <see cref="IPagePostRenderPlugin"/>
-/// (before the cross-page barrier) or <see cref="IPagePostResolvePlugin"/>
-/// (after the cross-page barrier).
-/// </remarks>
+/// <summary>Per-page context handed to <see cref="IPageScanPlugin.Scan"/>; read-only view of the post-render HTML.</summary>
 public readonly ref struct PageScanContext
 {
     /// <summary>Initializes a new instance of the <see cref="PageScanContext"/> struct.</summary>

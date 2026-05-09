@@ -11,20 +11,12 @@ using NuStreamDocs.Yaml;
 namespace NuStreamDocs.Sitemap;
 
 /// <summary>
-/// Emits meta-refresh HTML stubs at <c>from</c> paths that point
-/// at <c>to</c> URLs — the static-site equivalent of an HTTP
-/// redirect.
-/// </summary>
-/// <remarks>
-/// Mirrors the <c>mkdocs-redirects</c> plugin shape. Mappings come
-/// from three sources, merged at finalize time: the registration-time
+/// Emits meta-refresh HTML stubs at <c>from</c> paths that point at
+/// <c>to</c> URLs. Mappings come from three sources: registration-time
 /// <c>(from, to)</c> tuples, an optional <c>redirects.yml</c> file at
-/// the input root (top-level <c>from: to</c> mapping), and per-page
-/// <c>aliases:</c> frontmatter lists (each alias becomes a redirect
-/// targeting that page). The frontmatter and config-file scans run
-/// during <see cref="DiscoverAsync"/>; the stubs are written during
-/// <see cref="FinalizeAsync"/> after all pages have been emitted.
-/// </remarks>
+/// the input root, and per-page <c>aliases:</c> frontmatter lists.
+/// Static entries win over per-page aliases on conflict.
+/// </summary>
 public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
 {
     /// <summary>ASCII-only case offset between uppercase and lowercase letters.</summary>
@@ -39,16 +31,16 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <summary>Trailing <c>index.html</c> appendix for directory-style aliases (<c>foo/</c>).</summary>
     private static readonly byte[] IndexHtml = [.. "index.html"u8];
 
-    /// <summary>Static <c>(from, to)</c> entries supplied at construction time, encoded once to UTF-8.</summary>
+    /// <summary>Static <c>(from, to)</c> entries supplied at construction.</summary>
     private readonly Dictionary<byte[], byte[]> _seed;
 
-    /// <summary>Aliases harvested from page frontmatter during the discovery pass.</summary>
+    /// <summary>Aliases harvested from page frontmatter.</summary>
     private readonly Dictionary<byte[], byte[]> _aliases = new(ByteArrayComparer.Instance);
 
     /// <summary>Plugin options.</summary>
     private readonly RedirectsOptions _options;
 
-    /// <summary>UTF-8 byte form of <see cref="RedirectsOptions.AliasFrontmatterKey"/>; encoded once at construction so the per-page alias scan never re-encodes.</summary>
+    /// <summary>UTF-8 form of <see cref="RedirectsOptions.AliasFrontmatterKey"/>.</summary>
     private readonly byte[] _aliasKeyBytes;
 
     /// <summary>Initializes a new instance of the <see cref="RedirectsPlugin"/> class with default options and no static entries.</summary>
@@ -396,14 +388,12 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
         await File.WriteAllBytesAsync(absolute, sink.WrittenMemory, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Composes the meta-refresh HTML targeting <paramref name="urlBytes"/> directly into <paramref name="sink"/>.</summary>
+    /// <summary>Composes the meta-refresh HTML targeting <paramref name="urlBytes"/>.</summary>
     /// <param name="urlBytes">Destination URL as UTF-8 bytes.</param>
-    /// <param name="sink">UTF-8 sink the stub bytes are written into.</param>
+    /// <param name="sink">UTF-8 sink.</param>
     /// <remarks>
-    /// Site-relative paths (anything that isn't already an absolute URL or root-relative) are
-    /// prefixed with <c>/</c> so the meta-refresh resolves the same regardless of where the
-    /// redirect stub lives in the tree — without this, a stub at <c>/a/b/x.html</c> targeting
-    /// <c>a/c/y.html</c> would resolve to <c>/a/b/a/c/y.html</c>.
+    /// Site-relative targets are prefixed with <c>/</c> so the meta-refresh
+    /// resolves the same regardless of where the stub lives in the tree.
     /// </remarks>
     private static void BuildStub(ReadOnlySpan<byte> urlBytes, ArrayBufferWriter<byte> sink)
     {

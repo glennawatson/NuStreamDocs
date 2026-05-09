@@ -6,16 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Lightbox;
 
-/// <summary>
-/// Streams an HTML rewrite that wraps every standalone <c>&lt;img&gt;</c>
-/// in a glightbox anchor.
-/// </summary>
-/// <remarks>
-/// Byte-level walker; no HTML parser. Skips images that are already
-/// children of an open <c>&lt;a&gt;</c> tag — they typically already
-/// link somewhere meaningful (CTA, internal nav) and shouldn't be
-/// hijacked into a lightbox.
-/// </remarks>
+/// <summary>Wraps every standalone <c>&lt;img&gt;</c> in a glightbox anchor. Images already inside an <c>&lt;a&gt;</c> tag are left alone.</summary>
 public static class ImageWrapper
 {
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="sink"/>, wrapping standalone images.</summary>

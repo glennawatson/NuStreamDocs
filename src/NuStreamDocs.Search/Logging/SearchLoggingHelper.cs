@@ -8,16 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Logging;
 
-/// <summary>
-/// Source-generated logging helpers for the search-index plugin family.
-/// </summary>
-/// <remarks>
-/// The public entry points self-gate on <see cref="ILogger.IsEnabled(LogLevel)"/>
-/// so call sites can hand <see cref="DirectoryPath"/> values and UTF-8 byte
-/// spans straight in without their own gating dance. The private <c>*Core</c>
-/// partials are the <c>[LoggerMessage]</c> source-gen targets and require
-/// strings.
-/// </remarks>
+/// <summary>Source-generated logging helpers for the search-index plugin family.</summary>
 internal static partial class SearchLoggingHelper
 {
     /// <summary>Logs the start of an index build at information level.</summary>

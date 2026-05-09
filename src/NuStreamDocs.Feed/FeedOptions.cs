@@ -14,7 +14,6 @@ namespace NuStreamDocs.Feed;
 /// <param name="OutputSubdirectory">Output subdirectory (under the site root) where the feed files are written.</param>
 /// <param name="Formats">Which formats to generate.</param>
 /// <param name="MaxItems">Cap on the number of items included; 0 means no cap.</param>
-/// <remarks>The <c>20</c>-item default mirrors mkdocs-rss-plugin's recommended cap.</remarks>
 public sealed record FeedOptions(
     string SiteUrl,
     string Title,
@@ -24,7 +23,7 @@ public sealed record FeedOptions(
     FeedFormats Formats,
     int MaxItems)
 {
-    /// <summary>Default per-feed item cap. Picked to match mkdocs-rss-plugin's recommended setting.</summary>
+    /// <summary>Default per-feed item cap.</summary>
     private const int DefaultMaxItemsValue = 20;
 
     /// <summary>Initializes a new instance of the <see cref="FeedOptions"/> class with both formats and the default item cap.</summary>
@@ -37,7 +36,7 @@ public sealed record FeedOptions(
     {
     }
 
-    /// <summary>Gets the default per-feed item cap; mirrors mkdocs-rss-plugin's default.</summary>
+    /// <summary>Gets the default per-feed item cap.</summary>
     public static int DefaultMaxItems => DefaultMaxItemsValue;
 
     /// <summary>Throws when any required field is empty.</summary>

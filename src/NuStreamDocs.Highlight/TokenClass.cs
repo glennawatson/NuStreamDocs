@@ -4,14 +4,7 @@
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>Token classifications used by the highlighter.</summary>
-/// <remarks>
-/// The string forms exposed by <see cref="TokenClassNames.Css"/> use the
-/// established short-form CSS class taxonomy (<c>k</c>, <c>kd</c>,
-/// <c>kt</c>, <c>s</c>, <c>n</c>, <c>c1</c>, …) so existing
-/// mkdocs-material stylesheets light up against our output without
-/// re-skinning.
-/// </remarks>
+/// <summary>Token classifications used by the highlighter; mapped to short-form CSS class names by <see cref="TokenClassNames.Css"/>.</summary>
 public enum TokenClass
 {
     /// <summary>Plain source text with no specific classification.</summary>

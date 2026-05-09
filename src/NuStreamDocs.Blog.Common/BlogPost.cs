@@ -9,8 +9,8 @@ namespace NuStreamDocs.Blog.Common;
 /// <summary>
 /// Parsed metadata for one blog post.
 /// </summary>
-/// <param name="RelativePath">Source-relative path of the markdown file (forward-slashed) — kept as <see cref="FilePath"/> because every consumer hands it to file IO.</param>
-/// <param name="RelativeUrlUtf8">Docs-root-relative <c>.md</c> path bytes; emitted inside <c>[Title](...)</c> so the link rewriter picks the build's URL form.</param>
+/// <param name="RelativePath">Source-relative path of the markdown file (forward-slashed).</param>
+/// <param name="RelativeUrlUtf8">Docs-root-relative <c>.md</c> path bytes.</param>
 /// <param name="Slug">URL-safe slug derived from the filename (after the date prefix), as UTF-8 bytes.</param>
 /// <param name="Title">Post title from <c>Title:</c> frontmatter, as UTF-8 bytes.</param>
 /// <param name="Lead">Optional lead-in paragraph from <c>Lead:</c> frontmatter, as UTF-8 bytes; empty when absent.</param>

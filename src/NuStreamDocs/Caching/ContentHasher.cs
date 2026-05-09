@@ -8,15 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Caching;
 
-/// <summary>
-/// xxHash3-based content hashing helper.
-/// </summary>
-/// <remarks>
-/// Wraps <see cref="XxHash3"/> from <c>System.IO.Hashing</c> — Microsoft's vector-friendly,
-/// 64-bit non-cryptographic hash. Digests are returned as raw 8-byte arrays (no hex / base64
-/// encoding) so consumers stay byte-shaped end-to-end; persistence layers re-encode at the
-/// boundary (e.g. <c>Utf8JsonWriter.WriteBase64StringValue</c>).
-/// </remarks>
+/// <summary>xxHash3-based content hashing helper. Digests are raw 8-byte arrays; persistence layers encode at the boundary.</summary>
 public static class ContentHasher
 {
     /// <summary>xxHash3 digest size in bytes; matches <c>System.IO.Hashing.XxHash3.HashLengthInBytes</c>.</summary>

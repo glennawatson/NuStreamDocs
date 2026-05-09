@@ -8,19 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Toc;
 
 /// <summary>
-/// Pure renderer that turns a <see cref="Heading"/> array into a
-/// <c>&lt;nav class="md-nav md-nav--secondary"&gt;</c> fragment matching
-/// mkdocs-material's per-page TOC shape.
+/// Renders a <see cref="Heading"/> array into a nested <c>&lt;nav&gt;</c>/<c>&lt;ul&gt;</c>
+/// fragment matching mkdocs-material's per-page TOC shape. Headings outside
+/// <see cref="TocOptions.MinLevel"/>/<see cref="TocOptions.MaxLevel"/> are skipped.
 /// </summary>
-/// <remarks>
-/// The output structure is a strict nested <c>&lt;ul&gt;</c>/<c>&lt;li&gt;</c>
-/// tree. Each list item carries an anchor pointing at the heading
-/// id; nested headings open a child <c>&lt;ul&gt;</c>. The renderer
-/// honors <see cref="TocOptions.MinLevel"/> / <see cref="TocOptions.MaxLevel"/>
-/// to decide which headings appear in the rendered fragment — out
-/// of range headings are simply skipped (their permalink anchors
-/// are still emitted by <see cref="HeadingRewriter"/>).
-/// </remarks>
 internal static class TocFragmentRenderer
 {
     /// <summary>Gets the UTF-8 entity for the <c>&amp;gt;</c> replacement.</summary>

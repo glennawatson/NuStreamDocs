@@ -9,10 +9,8 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Bibliography;
 
 /// <summary>
-/// Byte-level case-insensitive classifier that maps a pandoc / AGLC4
-/// locator label (e.g. <c>p</c>, <c>pp</c>, <c>para</c>, <c>ch</c>) to a
-/// <see cref="LocatorKind"/>. Operates on raw UTF-8 bytes so the scanner
-/// never allocates a label string just to switch on it.
+/// Maps a pandoc / AGLC4 locator label (e.g. <c>p</c>, <c>pp</c>, <c>para</c>,
+/// <c>ch</c>) to a <see cref="LocatorKind"/>.
 /// </summary>
 internal static class LocatorLabel
 {

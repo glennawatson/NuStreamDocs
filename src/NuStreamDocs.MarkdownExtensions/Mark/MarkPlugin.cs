@@ -7,11 +7,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Mark;
 
-/// <summary>
-/// Mark plugin. Rewrites inline <c>==text==</c> spans into
-/// <c>&lt;mark&gt;text&lt;/mark&gt;</c> before the markdown renderer
-/// runs. Fenced-code regions and inline-code spans are left alone.
-/// </summary>
+/// <summary>Mark plugin — rewrites <c>==text==</c> spans into <c>&lt;mark&gt;</c>. Code spans are skipped.</summary>
 public sealed class MarkPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>

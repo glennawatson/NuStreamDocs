@@ -9,18 +9,10 @@ using NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList;
 
-/// <summary>Stateless HTML post-pass that lifts <c>{: ... }</c> tokens out of the rendered HTML and into attributes on the matching opening tag.</summary>
-/// <remarks>
-/// Three patterns: paired inline (<c>&lt;a href="…"&gt;text&lt;/a&gt;{: .x }</c>),
-/// void inline (<c>&lt;img src="…"&gt;{: .x }</c>), and block
-/// (<c>&lt;hN&gt;Heading {: .x }&lt;/hN&gt;</c>). The stages run in
-/// that order so a <c>{: }</c> sitting inside a block element is
-/// claimed by the inline matcher first; running block first would let
-/// it swallow inline tokens that belong to nested elements. Stages
-/// share two two-buffer <see cref="ArrayBufferWriter{T}"/>s — only two
-/// buffer allocations regardless of how many stages rewrite, and zero
-/// per-stage <c>ToArray</c> copies.
-/// </remarks>
+/// <summary>
+/// HTML post-pass that lifts <c>{: ... }</c> tokens out of the rendered HTML and onto attributes
+/// on the matching opening tag. Handles paired-inline, void-inline, and block patterns.
+/// </summary>
 internal static class AttrListRewriter
 {
     /// <summary>Delegate matching the byte-level scanner signature for one of the three passes.</summary>
@@ -31,19 +23,7 @@ internal static class AttrListRewriter
 
     /// <summary>Returns true when <paramref name="html"/> may contain an attr-list marker.</summary>
     /// <param name="html">Page HTML span.</param>
-    /// <returns>True when one of the recognized opener byte-sequences appears anywhere in the
-    /// document; the per-position matchers in <see cref="AttrListMarker.TryMatchMarker"/> apply
-    /// the full position + shape check.</returns>
-    /// <remarks>
-    /// Two vectorized <see cref="System.MemoryExtensions.IndexOf{T}(System.ReadOnlySpan{T}, System.ReadOnlySpan{T})"/>
-    /// probes — canonical Python-Markdown <c>{:</c> anywhere, or the mkdocs-material shorthand
-    /// <c>{ </c> (open-brace + whitespace) which catches both the trailing-after-tag form
-    /// (<c>&lt;a&gt;text&lt;/a&gt;{ .class }</c>) and the in-body form
-    /// (<c>&lt;h1&gt;Heading { #id }&lt;/h1&gt;</c>). Pages whose only braces live in code
-    /// blocks <i>without</i> a following whitespace (e.g. <c>{foo:1}</c> JSON) skip all three
-    /// byte-stage scanners; the per-position matchers reject false positives where the gate
-    /// over-matches.
-    /// </remarks>
+    /// <returns>True when at least one recognized opener byte-sequence is present.</returns>
     public static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
         html.IndexOf("{:"u8) >= 0
         || html.IndexOf("{ "u8) >= 0
@@ -230,12 +210,7 @@ internal static class AttrListRewriter
         sink.Advance(1);
     }
 
-    /// <summary>
-    /// Runs the first stage with <paramref name="html"/> as the
-    /// source. When no rewrite happens we materialize a single byte[]
-    /// copy so subsequent stages have a uniform
-    /// <see cref="ReadOnlyMemory{T}"/> source.
-    /// </summary>
+    /// <summary>Runs the first stage with <paramref name="html"/> as the source.</summary>
     /// <param name="html">Original HTML span.</param>
     /// <param name="slots">Ping-pong buffer pair.</param>
     /// <param name="stage">Stage delegate.</param>
@@ -273,9 +248,9 @@ internal static class AttrListRewriter
         return output;
     }
 
-    /// <summary>Ping-pong buffer pair — <see cref="Spare"/> is the next stage's target; <see cref="Other"/> holds the prior output (or is empty on the first call).</summary>
+    /// <summary>Ping-pong buffer pair used between stages.</summary>
     /// <param name="Spare">Buffer the next stage writes into.</param>
-    /// <param name="Other">Buffer holding the prior stage's output (or unused before any stage has rewritten).</param>
+    /// <param name="Other">Buffer holding the prior stage's output.</param>
     private readonly record struct StageBuffers(ArrayBufferWriter<byte> Spare, ArrayBufferWriter<byte> Other)
     {
         /// <summary>Swaps the two buffers; called after a stage commits to a rewrite so the next stage writes into the freed buffer.</summary>

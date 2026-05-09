@@ -5,19 +5,13 @@
 namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
-/// Subset of mkdocs.yml fields the renderer consumes (site-level metadata only).
+/// Subset of mkdocs.yml site-level metadata fields the renderer consumes.
 /// </summary>
-/// <remarks>
-/// Nav-tree integration is owned by <c>NuStreamDocs.Nav.NavOptions.CuratedEntries</c>; reader
-/// assemblies populate it via fluent extensions (<c>NavOptions.FromMkDocsYaml(...)</c>,
-/// <c>NavOptions.FromDocFxTocs(...)</c>) so the core <c>MkDocsConfig</c> stays a flat
-/// site-metadata bag and dialect-specific nav serialization never leaks into core.
-/// </remarks>
 /// <param name="SiteName">Top-bar/site title.</param>
-/// <param name="SiteUrl">Canonical site URL (optional).</param>
+/// <param name="SiteUrl">Canonical site URL; optional.</param>
 /// <param name="ThemeName">Theme identifier (e.g. <c>material</c>, <c>zensical</c>).</param>
-/// <param name="UseDirectoryUrls">When true, pages emit as <c>foo/index.html</c> and links resolve to <c>foo/</c>; matches mkdocs' default behavior.</param>
-/// <param name="SiteAuthor">Site-wide author name surfaced through the rendered <c>&lt;meta name="author"&gt;</c> tag (optional).</param>
+/// <param name="UseDirectoryUrls">When true, pages emit as <c>foo/index.html</c> and links resolve to <c>foo/</c>.</param>
+/// <param name="SiteAuthor">Site-wide author name written into the <c>&lt;meta name="author"&gt;</c> tag; optional.</param>
 public readonly record struct MkDocsConfig(
     string SiteName,
     string? SiteUrl,

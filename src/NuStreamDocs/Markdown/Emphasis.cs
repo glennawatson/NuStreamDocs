@@ -8,17 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Greedy emphasis / strong handler.
+/// Greedy emphasis / strong handler. Recognizes <c>*em*</c>, <c>**strong**</c>, <c>***both***</c>
+/// and the underscore equivalents; honors CommonMark's intra-word rule for underscores so
+/// <c>foo_bar</c>-shaped identifiers don't trigger emphasis.
 /// </summary>
-/// <remarks>
-/// Recognizes <c>*em*</c>, <c>**strong**</c>, and the triple
-/// <c>***both***</c> shape (and the underscore equivalents) by
-/// probing the longest legal form first and falling back when no
-/// matching close run is available. Underscore emphasis honors
-/// CommonMark's intra-word rule: a <c>_</c> open or close
-/// surrounded by word bytes on both sides is rejected, so
-/// identifiers like <c>foo_bar_baz</c> never trigger emphasis.
-/// </remarks>
 internal static class Emphasis
 {
     /// <summary>Maximum emphasis-marker run length the probe considers (triple = strong + em).</summary>
@@ -45,9 +38,7 @@ internal static class Emphasis
     /// <summary>Gets the UTF-8 bytes for the combined <c>em</c>+<c>strong</c> close.</summary>
     private static ReadOnlySpan<byte> StrongEmClose => "</em></strong>"u8;
 
-    /// <summary>
-    /// Handles an emphasis marker run at <paramref name="pos"/>.
-    /// </summary>
+    /// <summary>Handles an emphasis marker run at <paramref name="pos"/>.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="pos">Cursor; advanced past the close run on success.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>

@@ -71,11 +71,11 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         }
     }
 
-    /// <summary>Walks <paramref name="inputRoot"/> for <c>*.md</c> files, parses the <c>tags:</c> frontmatter on each, and groups <c>(pageUrl, pageTitle)</c> pairs by tag.</summary>
+    /// <summary>Walks <paramref name="inputRoot"/> and groups pages by their <c>tags:</c> frontmatter.</summary>
     /// <param name="inputRoot">Absolute docs root.</param>
-    /// <param name="tagsDir">Output directory for generated tag pages; files under this directory are skipped during the walk to avoid feedback loops on incremental rebuilds.</param>
+    /// <param name="tagsDir">Output directory; files under this directory are skipped to avoid feedback loops.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Tag → list of <c>(url, title)</c> pairs, with tags sorted alphabetically and pages sorted by URL within each bucket.</returns>
+    /// <returns>Tag → list of <c>(url, title)</c> pairs, sorted by tag and by URL within each bucket.</returns>
     private static async ValueTask<SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>>> CollectAsync(
         DirectoryPath inputRoot,
         DirectoryPath tagsDir,

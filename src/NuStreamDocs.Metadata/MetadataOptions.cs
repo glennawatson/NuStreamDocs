@@ -9,7 +9,7 @@ namespace NuStreamDocs.Metadata;
 /// <param name="SidecarSuffix">Per-page sidecar suffix appended to the page filename (e.g. <c>.meta.yml</c> turns <c>intro.md</c> into <c>intro.md.meta.yml</c>).</param>
 public sealed record MetadataOptions(string DirectoryFileName, string SidecarSuffix)
 {
-    /// <summary>Gets the default option set — <c>_meta.yml</c> for directories, <c>.meta.yml</c> sidecars.</summary>
+    /// <summary>Gets the default options: <c>_meta.yml</c> for directories and <c>.meta.yml</c> sidecars.</summary>
     public static MetadataOptions Default { get; } = new("_meta.yml", ".meta.yml");
 
     /// <summary>Throws when any field is empty or whitespace.</summary>

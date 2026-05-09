@@ -7,26 +7,12 @@ using NuStreamDocs.Logging;
 namespace NuStreamDocs.Caching;
 
 /// <summary>
-/// Thread-safe size + age bounded LRU cache.
+/// Thread-safe size + age bounded LRU cache. <see cref="TryGet"/> evicts on read when an entry
+/// exceeds <see cref="MaxAge"/>; a periodic <see cref="Compact"/> sweep drops untouched stale
+/// entries.
 /// </summary>
 /// <typeparam name="TKey">Key type; equality compared.</typeparam>
 /// <typeparam name="TValue">Value type held by the cache.</typeparam>
-/// <remarks>
-/// Long-running watcher / build sessions can't accumulate cache
-/// state without bound. <see cref="BoundedCache{TKey, TValue}"/> caps
-/// both the entry count and the per-entry age:
-/// <list type="bullet">
-/// <item>Capacity-bound: the least-recently-used entry is evicted
-/// when adding past <see cref="Capacity"/>.</item>
-/// <item>Age-bound: <see cref="TryGet"/> evicts on read when an entry
-/// is older than <see cref="MaxAge"/>; a periodic
-/// <c>Compact</c> sweep drops anything
-/// the read path hasn't touched.</item>
-/// </list>
-/// Built on a <see cref="LinkedList{T}"/> + <see cref="Dictionary{TKey, TValue}"/>:
-/// O(1) get, set, and eviction; lock-protected so worker threads on
-/// the parallel render pipeline can share one cache without tearing.
-/// </remarks>
 public sealed class BoundedCache<TKey, TValue>
     where TKey : notnull
 {
@@ -254,11 +240,6 @@ public sealed class BoundedCache<TKey, TValue>
     }
 
     /// <summary>One bucket on the recency list.</summary>
-    /// <remarks>
-    /// Reference type so the same instance is shared by the
-    /// <see cref="LinkedList{T}"/> node and the dictionary lookup —
-    /// touching one mutates the other without copy back.
-    /// </remarks>
     private sealed class Entry(TKey key, TValue value, DateTimeOffset writeTime)
     {
         /// <summary>Gets the key that addresses this entry.</summary>

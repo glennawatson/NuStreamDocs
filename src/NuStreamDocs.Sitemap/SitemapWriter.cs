@@ -7,11 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Sitemap;
 
-/// <summary>
-/// Stateless helpers that compose <c>sitemap.xml</c> and
-/// <c>robots.txt</c> bytes and write them to disk under the build
-/// output root.
-/// </summary>
+/// <summary>Composes <c>sitemap.xml</c> and <c>robots.txt</c> and writes them to the output root.</summary>
 internal static class SitemapWriter
 {
     /// <summary>Length of the <c>.md</c> source extension stripped before composing URL paths.</summary>

@@ -13,7 +13,7 @@ namespace NuStreamDocs.Config.DocFx;
 /// Reads docfx-style <c>toc.yml</c> files and converts them into <see cref="NavEntry"/> trees.
 /// </summary>
 /// <remarks>
-/// Targets the narrow toc.yml subset docfx and the rxui website use:
+/// Supports the narrow toc.yml subset docfx-style sites use:
 /// <list type="bullet">
 ///   <item><description><c>- name: Title</c> + <c>href: foo.md</c> — leaf page.</description></item>
 ///   <item><description><c>- name: Title</c> + <c>href: subdir/toc.yml</c> — section loaded recursively.</description></item>
@@ -23,12 +23,7 @@ namespace NuStreamDocs.Config.DocFx;
 ///   </description></item>
 ///   <item><description><c>- name: Section</c> + <c>items:</c> + nested list — inline section without a sub-toc file.</description></item>
 /// </list>
-/// Out of scope: <c>uid:</c>-resolved cross-toc xrefs, <c>topicHref</c>, <c>tocHref</c> overrides — the rxui website doesn't use them and they aren't worth the parser complexity.
-/// <para>
-/// Hand-rolled line-based scanner — no YAML library dependency. Each toc.yml file is read once into
-/// a stack-bounded buffer (or pooled rental for large files), parsed in a single forward pass with
-/// the indent-tracking state machine, then UTF-8 strings flow through to <see cref="NavEntry"/>.
-/// </para>
+/// <c>uid:</c>-resolved cross-toc xrefs, <c>topicHref</c>, and <c>tocHref</c> overrides are not supported.
 /// </remarks>
 public static class DocFxTocReader
 {

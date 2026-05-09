@@ -7,20 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search;
 
-/// <summary>
-/// Strips HTML tags from a UTF-8 byte span and writes the visible
-/// text to an <see cref="IBufferWriter{T}"/>.
-/// </summary>
-/// <remarks>
-/// Works on rendered HTML (the output of the markdown emitter), not
-/// on arbitrary user-supplied HTML; we control the tags so we can
-/// stay simple — track whether we're inside a tag or a script/style
-/// block, collapse whitespace runs, drop everything else.
-/// <para>
-/// The first <c>&lt;h1&gt;</c> seen is captured separately as the
-/// page title so the search index can surface it on result hits.
-/// </para>
-/// </remarks>
+/// <summary>Strips HTML tags from UTF-8 bytes and writes visible text to an <see cref="IBufferWriter{T}"/>.</summary>
 public static class HtmlTextExtractor
 {
     /// <summary>Less-than byte (tag open).</summary>
@@ -38,12 +25,10 @@ public static class HtmlTextExtractor
     /// <summary>Space byte.</summary>
     private const byte Sp = (byte)' ';
 
-    /// <summary>
-    /// Walks <paramref name="html"/> and extracts visible text + first H1 title.
-    /// </summary>
+    /// <summary>Extracts visible text and the first H1 title from rendered HTML.</summary>
     /// <param name="html">UTF-8 HTML bytes.</param>
     /// <param name="text">UTF-8 sink for the stripped body text.</param>
-    /// <returns>The first H1 contents as a UTF-8 byte array, or empty when none.</returns>
+    /// <returns>The first H1 contents as UTF-8 bytes, or empty when none.</returns>
     public static byte[] Extract(ReadOnlySpan<byte> html, IBufferWriter<byte> text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -85,7 +70,7 @@ public static class HtmlTextExtractor
 
     /// <summary>Handles a single non-tag byte.</summary>
     /// <param name="b">Source byte.</param>
-    /// <param name="state">Walker state.</param>
+    /// <param name="state">Current state.</param>
     /// <param name="text">Text sink.</param>
     /// <param name="title">Title sink.</param>
     /// <param name="next">Updated state.</param>
@@ -118,11 +103,11 @@ public static class HtmlTextExtractor
         next = state with { EmittedSpace = false };
     }
 
-    /// <summary>Reacts to a <c>&lt;</c> by inspecting the upcoming tag name.</summary>
+    /// <summary>Handles a tag-open byte.</summary>
     /// <param name="html">Source bytes.</param>
     /// <param name="ltIndex">Index of the <c>&lt;</c>.</param>
-    /// <param name="state">Walker state.</param>
-    /// <returns>Updated state with InsideTag set, plus title-capture / script flags.</returns>
+    /// <param name="state">Current state.</param>
+    /// <returns>Updated state.</returns>
     private static ExtractState OpenTag(ReadOnlySpan<byte> html, int ltIndex, in ExtractState state)
     {
         var name = ReadTagName(html, ltIndex + 1);
@@ -154,11 +139,11 @@ public static class HtmlTextExtractor
         };
     }
 
-    /// <summary>No-op while inside a tag; preserved for future attribute-aware extraction.</summary>
+    /// <summary>No-op while inside a tag.</summary>
     /// <param name="html">Source bytes.</param>
     /// <param name="i">Current index.</param>
-    /// <param name="state">Walker state.</param>
-    /// <param name="title">Title sink (unused here).</param>
+    /// <param name="state">Current state.</param>
+    /// <param name="title">Title sink.</param>
     /// <returns>Unchanged state.</returns>
     private static ExtractState AdvancePastTag(ReadOnlySpan<byte> html, int i, in ExtractState state, ArrayBufferWriter<byte> title)
     {
@@ -168,10 +153,10 @@ public static class HtmlTextExtractor
         return state;
     }
 
-    /// <summary>Reads the tag-name run starting at <paramref name="from"/>, skipping a leading slash.</summary>
+    /// <summary>Reads the tag name starting at <paramref name="from"/>.</summary>
     /// <param name="html">Source bytes.</param>
     /// <param name="from">Start index (just past the <c>&lt;</c>).</param>
-    /// <returns>Span pointing at the tag name (lowercased on the source if applicable).</returns>
+    /// <returns>Span over the tag name bytes.</returns>
     private static ReadOnlySpan<byte> ReadTagName(ReadOnlySpan<byte> html, int from)
     {
         if (from < html.Length && html[from] == Slash)
@@ -188,7 +173,7 @@ public static class HtmlTextExtractor
         return html[from..end];
     }
 
-    /// <summary>True for ASCII alphanumerics; tag-name bytes per HTML's lax parsing.</summary>
+    /// <summary>True for ASCII alphanumeric tag-name bytes.</summary>
     /// <param name="b">Candidate byte.</param>
     /// <returns>True for letters and digits.</returns>
     private static bool IsTagNameByte(byte b) =>
@@ -199,7 +184,7 @@ public static class HtmlTextExtractor
     /// <summary>Case-insensitive ASCII tag-name comparison.</summary>
     /// <param name="actual">Candidate name bytes.</param>
     /// <param name="expected">Lowercase expected bytes.</param>
-    /// <returns>True when <paramref name="actual"/> matches <paramref name="expected"/> ignoring ASCII case.</returns>
+    /// <returns>True when names match ignoring ASCII case.</returns>
     private static bool TagEquals(ReadOnlySpan<byte> actual, ReadOnlySpan<byte> expected)
     {
         if (actual.Length != expected.Length)
@@ -234,11 +219,11 @@ public static class HtmlTextExtractor
         writer.Advance(1);
     }
 
-    /// <summary>State carried through the byte walker.</summary>
+    /// <summary>Walker state.</summary>
     /// <param name="InsideTag">Currently between <c>&lt;</c> and <c>&gt;</c>.</param>
     /// <param name="InsideScript">Currently inside a <c>&lt;script&gt;</c> or <c>&lt;style&gt;</c> block.</param>
     /// <param name="CapturingTitle">Currently inside the first <c>&lt;h1&gt;</c>.</param>
-    /// <param name="EmittedSpace">Last byte written to the text sink was whitespace; used to collapse runs.</param>
-    /// <param name="TitleAlreadyCaptured">Sticky flag — once a <c>&lt;h1&gt;</c> close has fired we never re-enter capture mode.</param>
+    /// <param name="EmittedSpace">Last text byte was whitespace.</param>
+    /// <param name="TitleAlreadyCaptured">First H1 has already been captured.</param>
     private readonly record struct ExtractState(bool InsideTag, bool InsideScript, bool CapturingTitle, bool EmittedSpace, bool TitleAlreadyCaptured);
 }

@@ -8,22 +8,16 @@ using System.Text;
 namespace NuStreamDocs.Common;
 
 /// <summary>
-/// Disposable rent-or-stack UTF-8 byte buffer for converting strings
-/// to byte spans without per-call <c>Encoding.UTF8.GetBytes</c>
-/// allocations.
+/// Disposable rent-or-stack UTF-8 byte buffer for encoding strings to byte spans without
+/// per-call allocations. Inputs that fit in the caller's stack span land there; longer inputs
+/// rent from <see cref="ArrayPool{T}.Shared"/> and are returned on <see cref="Dispose"/>.
 /// </summary>
 /// <remarks>
-/// Pattern:
+/// Usage:
 /// <code>
 /// using var buf = new Utf8StackBuffer(url, stackalloc byte[Utf8StackBuffer.StackSize]);
 /// return SomeByteApi(buf.Bytes);
 /// </code>
-/// Inputs whose UTF-8 encoding fits in the caller's stack span land
-/// there; longer inputs rent from <see cref="ArrayPool{T}.Shared"/> and
-/// the <see cref="Dispose"/> call returns the rental. The shape lets
-/// every byte-first API expose a thin <c>string</c> adapter that
-/// allocates nothing for sub-stack-budget URLs and a single pooled
-/// rental for the rest.
 /// </remarks>
 public ref struct Utf8StackBuffer
 {

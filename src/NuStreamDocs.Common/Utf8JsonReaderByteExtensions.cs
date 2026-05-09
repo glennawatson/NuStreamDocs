@@ -9,12 +9,6 @@ using System.Text.Json;
 namespace NuStreamDocs.Common;
 
 /// <summary>UTF-8 byte snapshot helpers for <see cref="Utf8JsonReader"/>.</summary>
-/// <remarks>
-/// Hand-rolled deserializers across the project (privacy, versions, search, …) repeatedly need
-/// to copy the current string token's bytes verbatim or pull a JSON array of strings into a
-/// <c>byte[][]</c>. These extensions consolidate the multi-segment / single-span branch and the
-/// list-pre-size pattern in one place so the call sites stay byte-shaped without boilerplate.
-/// </remarks>
 [SuppressMessage("Design", "CA1045:Do not pass types by reference", Justification = "Utf8JsonReader is a ref struct; mutating its position requires a ref parameter.")]
 public static class Utf8JsonReaderByteExtensions
 {

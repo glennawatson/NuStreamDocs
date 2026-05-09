@@ -7,14 +7,10 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Snippets;
 
-/// <summary>
-/// Snippets plugin. Expands lines of the form <c>--8&lt;-- "path/to/file.md"</c>
-/// into the contents of the referenced file before any other markdown rewriter
-/// runs, resolving each path against the configured base directories in order.
-/// </summary>
+/// <summary>Snippets plugin — expands <c>--8&lt;-- "path"</c> lines into the contents of the referenced file, resolving paths against the configured base directories in order.</summary>
 public sealed class SnippetsPlugin : IPagePreRenderPlugin
 {
-    /// <summary>Resolution roots in order; the first hit wins.</summary>
+    /// <summary>Resolution roots in lookup order.</summary>
     private readonly DirectoryPath[] _basePaths;
 
     /// <summary>Initializes a new instance of the <see cref="SnippetsPlugin"/> class with the given resolution roots.</summary>

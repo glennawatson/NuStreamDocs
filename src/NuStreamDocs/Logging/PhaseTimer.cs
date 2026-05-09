@@ -6,16 +6,11 @@ using System.Diagnostics;
 
 namespace NuStreamDocs.Logging;
 
-/// <summary>Runs a unit of work bracketed by paired "starting" / "completed" log entries with the elapsed time in seconds.</summary>
-/// <remarks>
-/// The start log fires immediately, the work runs, the end log fires from a
-/// <c>finally</c> block — so even when the work throws, the elapsed-time
-/// entry is still emitted with the time spent before the exception
-/// propagated. Both log delegates are typically the source-generated
-/// partial methods on a per-feature <c>*LoggingHelper</c>; the closure
-/// captures the per-iteration parameters (plugin name, file path, batch
-/// size) so the helper itself stays generic over what's being measured.
-/// </remarks>
+/// <summary>
+/// Runs a unit of work bracketed by paired "starting" / "completed" log entries with the elapsed
+/// time in seconds. The completion entry fires from a <c>finally</c> block so the elapsed time is
+/// logged even when the work throws.
+/// </summary>
 public static class PhaseTimer
 {
     /// <summary>Runs <paramref name="action"/> bracketed by the start / complete log entries; elapsed time covers the entire call.</summary>

@@ -16,13 +16,13 @@ namespace NuStreamDocs.Bibliography;
 /// </summary>
 public sealed class BibliographyPlugin : IPagePreRenderPlugin
 {
-    /// <summary>Resolved options.</summary>
+    /// <summary>Plugin options.</summary>
     private readonly BibliographyOptions _options;
 
-    /// <summary>Logger used for missing-citation warnings.</summary>
+    /// <summary>Logger.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>Cached missing-name callback (or null when warnings are off).</summary>
+    /// <summary>Missing-citation callback, or null when warnings are off.</summary>
     private readonly MissingCitationCallback? _onMissing;
 
     /// <summary>Initializes a new instance of the <see cref="BibliographyPlugin"/> class with default options.</summary>

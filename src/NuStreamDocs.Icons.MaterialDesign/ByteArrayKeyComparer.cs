@@ -4,14 +4,7 @@
 
 namespace NuStreamDocs.Icons.MaterialDesign;
 
-/// <summary>
-/// <see cref="IEqualityComparer{T}"/> for <c>byte[]</c> keys that also
-/// implements <see cref="IAlternateEqualityComparer{TAlternate, T}"/>
-/// for <see cref="ReadOnlySpan{T}"/> alternates so a
-/// <see cref="System.Collections.Frozen.FrozenDictionary{TKey, TValue}"/>
-/// keyed on <c>byte[]</c> can serve <see cref="ReadOnlySpan{T}"/> lookups
-/// with no per-call <c>byte[]</c> allocation.
-/// </summary>
+/// <summary>Equality comparer for <c>byte[]</c> keys with <see cref="ReadOnlySpan{T}"/> alternate lookups.</summary>
 internal sealed class ByteArrayKeyComparer : IEqualityComparer<byte[]>, IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>
 {
     /// <summary>Gets the singleton instance.</summary>

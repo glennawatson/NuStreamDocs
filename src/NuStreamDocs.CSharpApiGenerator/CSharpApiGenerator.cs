@@ -12,26 +12,7 @@ using SourceDocParser.Zensical;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// Static helpers that drive SourceDocParser against a configured
-/// <see cref="CSharpApiGeneratorOptions"/>.
-/// </summary>
-/// <remarks>
-/// <para>
-/// <see cref="GenerateAsync"/> runs the emit pipeline and writes
-/// Markdown into <c>{docsInputRoot}/{OutputMarkdownSubdirectory}</c>.
-/// </para>
-/// <para>
-/// <see cref="ExtractAsync"/> runs SourceDocParser's direct-mode
-/// extract and returns the merged catalog in memory, skipping disk
-/// emission entirely.
-/// </para>
-/// <para>
-/// Held outside the plugin class so callers (CLI verbs, tests) can
-/// invoke generation without going through <see cref="CSharpApiGeneratorPlugin"/>'s
-/// configure hook.
-/// </para>
-/// </remarks>
+/// <summary>Entry points that drive SourceDocParser against a configured <see cref="CSharpApiGeneratorOptions"/>.</summary>
 public static class CSharpApiGenerator
 {
     /// <summary>Runs the emit-mode pipeline and writes Markdown into <paramref name="docsInputRoot"/>/<see cref="CSharpApiGeneratorOptions.OutputMarkdownSubdirectory"/>.</summary>
@@ -135,9 +116,9 @@ public static class CSharpApiGenerator
         _ => input.GetType().Name
     };
 
-    /// <summary>Emits the generator-start log only when the configured level is enabled, so <see cref="DescribeInputs"/>'s <c>string.Join</c> stays out of the cold path.</summary>
+    /// <summary>Emits the generator-start log only when the configured level is enabled.</summary>
     /// <param name="logger">Target logger.</param>
-    /// <param name="options">Generator options used to describe the input shape.</param>
+    /// <param name="options">Generator options.</param>
     /// <param name="outputRoot">Resolved output directory.</param>
     [SuppressMessage(
         "Performance",
@@ -155,7 +136,7 @@ public static class CSharpApiGenerator
 
     /// <summary>Emits the direct-extract-start log only when the configured level is enabled.</summary>
     /// <param name="logger">Target logger.</param>
-    /// <param name="options">Generator options used to describe the input shape.</param>
+    /// <param name="options">Generator options.</param>
     [SuppressMessage(
         "Performance",
         "CA1873:Avoid potentially expensive logging",

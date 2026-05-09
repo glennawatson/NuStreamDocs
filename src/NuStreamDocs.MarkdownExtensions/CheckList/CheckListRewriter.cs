@@ -7,12 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.CheckList;
 
-/// <summary>
-/// Stateless UTF-8 check-list rewriter. Replaces the
-/// <c>[?]&lt;space&gt;</c> token that follows a list bullet with
-/// either a checked or unchecked disabled <c>&lt;input&gt;</c>
-/// element.
-/// </summary>
+/// <summary>Rewrites <c>- [ ]</c> / <c>- [x]</c> task markers into disabled checkbox <c>&lt;input&gt;</c> elements.</summary>
 internal static class CheckListRewriter
 {
     /// <summary>Length of the bullet plus its trailing space (<c>"- "</c>).</summary>

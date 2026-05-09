@@ -7,14 +7,10 @@ using System.Text.Json;
 namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
-/// Format-neutral helper that reads a <see cref="MkDocsConfig"/> from a UTF-8 JSON byte span.
+/// Reads a <see cref="MkDocsConfig"/> from a UTF-8 JSON byte span.
 /// </summary>
 /// <remarks>
-/// Both <c>NuStreamDocs.Config.MkDocs</c> (YAML) and <c>NuStreamDocs.Config.Zensical</c> (TOML)
-/// emit JSON with the same shape and route through this parser, so the post-conversion path stays
-/// shared and AOT-clean. Nav parsing lives in the dialect-specific reader assemblies and produces
-/// <c>NavEntry[]</c> directly into <c>NavOptions.CuratedEntries</c> — this parser handles only
-/// site-level metadata.
+/// Site-level metadata only; nav parsing is handled by the dialect-specific reader assemblies.
 /// </remarks>
 public static class MkDocsConfigJsonParser
 {

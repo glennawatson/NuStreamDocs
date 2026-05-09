@@ -7,14 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Emoji;
 
-/// <summary>
-/// Stateless UTF-8 emoji-shortcode rewriter. Walks the source byte
-/// stream, locating <c>:identifier:</c> shortcodes whose body is
-/// alphanumeric / underscore / plus / minus / hyphen / dot, and
-/// rewriting matched ones into a <c>&lt;span class="twemoji"&gt;</c>
-/// wrapper. Fenced and inline-code regions pass through verbatim;
-/// unknown shortcodes are left untouched.
-/// </summary>
+/// <summary>Rewrites known <c>:shortcode:</c> tokens into <c>&lt;span class="twemoji"&gt;</c> wrappers. Code spans pass through; unknown shortcodes are left alone.</summary>
 internal static class EmojiRewriter
 {
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>

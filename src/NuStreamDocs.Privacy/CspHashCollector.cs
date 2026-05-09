@@ -8,12 +8,7 @@ using System.Text;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// Stateless collector that pulls inline <c>&lt;style&gt;</c> and
-/// <c>&lt;script&gt;</c> bodies out of rendered HTML and adds their
-/// SHA-256 hashes (formatted for a Content-Security-Policy directive)
-/// to a thread-safe set.
-/// </summary>
+/// <summary>Hashes inline <c>&lt;style&gt;</c> and <c>&lt;script&gt;</c> bodies into <c>'sha256-…'</c> CSP source tokens.</summary>
 internal static class CspHashCollector
 {
     /// <summary>Returns true when <paramref name="html"/> contains any inline style or script tag worth hashing.</summary>

@@ -6,10 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Byte-only helper that emits a forward-slashed UTF-8 URL pointing at one
-/// docs-root-relative path, expressed relative to another such path's directory.
-/// </summary>
+/// <summary>Emits a forward-slashed UTF-8 URL for one docs-root-relative path, expressed relative to another such path's directory.</summary>
 public static class Utf8RelativePath
 {
     /// <summary>UTF-8 byte for the segment separator.</summary>
@@ -25,13 +22,7 @@ public static class Utf8RelativePath
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="from">Forward-slashed UTF-8 directory bytes that the relative URL is computed against; no leading or trailing slash.</param>
     /// <param name="target">Forward-slashed UTF-8 path bytes to point at; no leading slash.</param>
-    /// <remarks>
-    /// Walks both spans on segment boundaries to find their longest common prefix,
-    /// then emits one <c>../</c> per unmatched <paramref name="from"/> segment
-    /// followed by the unmatched suffix of <paramref name="target"/>. When
-    /// <paramref name="from"/> equals <paramref name="target"/> a single <c>.</c>
-    /// is emitted so the link still resolves to the current page.
-    /// </remarks>
+    /// <remarks>When <paramref name="from"/> equals <paramref name="target"/> a single <c>.</c> is emitted so the link still resolves to the current page.</remarks>
     public static void WriteRelative(IBufferWriter<byte> writer, ReadOnlySpan<byte> from, ReadOnlySpan<byte> target)
     {
         ArgumentNullException.ThrowIfNull(writer);

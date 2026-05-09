@@ -8,11 +8,6 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Privacy;
 
 /// <summary>String / span construction helpers for the byte-shaped <see cref="PrivacyOptions"/> record.</summary>
-/// <remarks>
-/// Encodes the inputs once at construction so the per-page hot path stays byte-only. Callers building
-/// from YAML/TOML config readers (which produce strings) reach for the <c>WithXxx</c> overloads;
-/// callers with byte-literal sources construct the record directly with <c>[.. "..."u8]</c>.
-/// </remarks>
 public static class PrivacyOptionsExtensions
 {
     /// <summary>Returns a copy of <paramref name="options"/> with <paramref name="assetDirectory"/> as the new asset directory.</summary>

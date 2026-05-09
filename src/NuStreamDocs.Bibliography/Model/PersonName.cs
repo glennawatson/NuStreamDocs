@@ -7,20 +7,13 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Bibliography.Model;
 
 /// <summary>
-/// Represents a single author / editor / contributor name. Field names
-/// align with CSL-JSON's name model so a future CSL backend slots in
-/// without schema migration.
+/// Single author / editor / contributor name. Field names align with
+/// CSL-JSON's name model.
 /// </summary>
-/// <param name="Family">UTF-8 family / surname bytes (CSL <c>family</c>).</param>
-/// <param name="Given">UTF-8 given / forename bytes (CSL <c>given</c>); may be empty for institutional authors.</param>
+/// <param name="Family">UTF-8 family / surname bytes.</param>
+/// <param name="Given">UTF-8 given / forename bytes; may be empty for institutional authors.</param>
 /// <param name="Suffix">UTF-8 generational or honorary suffix bytes ("Jr.", "III", "QC"); may be empty.</param>
-/// <param name="Literal">UTF-8 institutional-name bytes (CSL <c>literal</c>) — when non-empty, treats the name as a single string with no parts.</param>
-/// <remarks>
-/// All fields are byte-shaped so the AGLC4 emitter copies them straight into its
-/// <see cref="System.Buffers.IBufferWriter{T}"/> sinks without per-emit transcoding.
-/// String constructors are provided for callers building names from C# literals
-/// or YAML/CSL string sources; they encode once at the boundary.
-/// </remarks>
+/// <param name="Literal">UTF-8 institutional-name bytes; when non-empty, treats the name as a single string with no parts.</param>
 public sealed record PersonName(
     byte[] Family,
     byte[] Given,

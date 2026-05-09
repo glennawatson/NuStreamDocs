@@ -6,19 +6,10 @@ using System.Buffers;
 
 namespace NuStreamDocs.Autorefs;
 
-/// <summary>
-/// Stateless byte-level helpers shared by the rewriter's logged and
-/// unlogged passes. Pulled out so the marker-locate / id-extract /
-/// terminator-detect logic can be unit-tested directly without
-/// driving a whole rewrite pass.
-/// </summary>
+/// <summary>Locates <c>@autoref:&lt;id&gt;</c> markers and the byte ranges of their IDs.</summary>
 internal static class AutorefScanner
 {
-    /// <summary>Bytes that terminate an autoref ID inside an HTML attribute or text run.</summary>
-    /// <remarks>
-    /// Excludes <c>(</c> and <c>)</c> so a trailing method signature like <c>(System.Int32,System.String)</c>
-    /// is treated as part of the ID rather than truncating it.
-    /// </remarks>
+    /// <summary>Bytes that terminate an autoref ID; parentheses are intentionally excluded so trailing method signatures stay part of the ID.</summary>
     private static readonly SearchValues<byte> IdTerminators =
         SearchValues.Create("\"' <>\n\r\t"u8);
 

@@ -5,9 +5,7 @@
 namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
-/// <see cref="IConfigReader"/> implementation that reads
-/// <c>mkdocs.yml</c> through <see cref="YamlToJson"/> +
-/// <see cref="MkDocsConfigJsonParser"/>.
+/// <see cref="IConfigReader"/> implementation for <c>mkdocs.yml</c> files.
 /// </summary>
 public sealed class MkDocsConfigReader : IConfigReader
 {

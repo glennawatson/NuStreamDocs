@@ -8,11 +8,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Metadata;
 
-/// <summary>
-/// Splices <see cref="MetadataRegistry"/> keys into a page's UTF-8
-/// source bytes. Per-page metadata wins over inherited keys, so we
-/// only ever *append* keys not already declared by the page itself.
-/// </summary>
+/// <summary>Splices inherited frontmatter keys into a page's UTF-8 source; keys already declared by the page are not overwritten.</summary>
 internal static class FrontmatterSplicer
 {
     /// <summary>UTF-8 bytes of the YAML frontmatter delimiter <c>---\n</c>.</summary>
@@ -127,9 +123,9 @@ internal static class FrontmatterSplicer
         }
     }
 
-    /// <summary>Collects every top-level key from <paramref name="frontmatter"/> into a fresh byte-keyed hash set.</summary>
-    /// <param name="frontmatter">Page frontmatter bytes (including opening <c>---</c>).</param>
-    /// <returns>Top-level UTF-8 key bytes, ordinal-compared via <see cref="ByteArrayComparer.Instance"/>.</returns>
+    /// <summary>Collects every top-level key from <paramref name="frontmatter"/>.</summary>
+    /// <param name="frontmatter">Page frontmatter bytes including the opening <c>---</c>.</param>
+    /// <returns>Set of top-level UTF-8 key bytes, ordinal-compared.</returns>
     private static HashSet<byte[]> CollectKeys(ReadOnlySpan<byte> frontmatter)
     {
         HashSet<byte[]> keys = new(ByteArrayComparer.Instance);

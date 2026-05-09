@@ -8,12 +8,6 @@ using NuStreamDocs.Highlight.Languages.Common.Builders;
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
 
 /// <summary>Per-language configuration consumed by <see cref="SchemaFamilyRules.Build"/>.</summary>
-/// <remarks>
-/// Schema-shape languages (GraphQL, Protobuf, HCL, Cue, Thrift, JSON-Schema)
-/// share a flat shape of declarations / identifiers / strings / numbers /
-/// braces. Comment style, sigil bytes, operator/punctuation tables, and
-/// triple-quote handling are the only knobs that vary.
-/// </remarks>
 internal readonly record struct SchemaFamilyConfig
 {
     /// <summary>Gets a value indicating whether <c>#</c> line comments are recognized.</summary>

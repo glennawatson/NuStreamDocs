@@ -9,23 +9,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Xrefs;
 
 /// <summary>
-/// Writes a DocFX-compatible <c>xrefmap.json</c> document covering
-/// every <c>(uid, href)</c> pair in <see cref="Autorefs.AutorefsRegistry"/>.
+/// Writes a DocFX-compatible <c>xrefmap.json</c> covering every <c>(uid, href)</c> pair in
+/// <see cref="Autorefs.AutorefsRegistry"/>; entries are sorted ordinal-by-uid for deterministic
+/// diffs.
 /// </summary>
-/// <remarks>
-/// Schema:
-/// <code language="json">
-/// {
-///   "baseUrl": "https://example.com/docs/",
-///   "references": [
-///     { "uid": "Foo.Bar", "href": "api/Foo.Bar.html" },
-///     ...
-///   ]
-/// }
-/// </code>
-/// Order is sorted ordinal-by-uid so the file diffs cleanly between
-/// builds.
-/// </remarks>
 internal static class XrefMapWriter
 {
     /// <summary>Writes the snapshot to <paramref name="outputPath"/>.</summary>

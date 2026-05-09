@@ -6,13 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Theme.Material;
 
-/// <summary>String construction helpers for the byte-shaped <see cref="MaterialThemeOptions"/> record.</summary>
-/// <remarks>
-/// Encodes the inputs once at construction so the page-shell template flows pure UTF-8 from
-/// configure through every render. Callers building from configuration files (which produce
-/// strings) reach for these helpers; callers with byte-literal sources construct the record
-/// directly with <c>[.. "..."u8]</c>.
-/// </remarks>
+/// <summary>Construction helpers for <see cref="MaterialThemeOptions"/>.</summary>
 public static class MaterialThemeOptionsExtensions
 {
     /// <summary>Replaces the site name with <paramref name="value"/>.</summary>

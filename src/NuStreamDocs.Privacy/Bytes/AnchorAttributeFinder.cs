@@ -6,11 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Locates a single quoted attribute by name within a tag-body span,
-/// matching <c>name="value"</c> or <c>name='value'</c>
-/// case-insensitively with whitespace allowed around the <c>=</c>.
-/// </summary>
+/// <summary>Locates a quoted attribute by name within a tag-body span (case-insensitive, whitespace tolerant around <c>=</c>).</summary>
 internal static class AnchorAttributeFinder
 {
     /// <summary>Locates the first occurrence of the named quoted attribute in <paramref name="attrs"/>.</summary>

@@ -11,27 +11,22 @@ namespace NuStreamDocs.Feed;
 
 /// <summary>
 /// Plugin that emits RSS / Atom feeds for the configured posts
-/// directory. Generated files land under <c>{OutputRoot}/{OutputSubdirectory}/feed.xml</c>
-/// (RSS) and <c>atom.xml</c> (Atom).
+/// directory. Generated files land under
+/// <c>{OutputRoot}/{OutputSubdirectory}/feed.xml</c> (RSS) and
+/// <c>atom.xml</c> (Atom).
 /// </summary>
-/// <remarks>
-/// Reuses <see cref="BlogPostScanner"/> as the post source so the
-/// same authoring directory powers the rendered blog and the feeds.
-/// Generation runs in <see cref="FinalizeAsync"/> so any blog plugin
-/// that may have rewritten / appended posts has finished first.
-/// </remarks>
 public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger) : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly FeedOptions _options = ValidateOptions(options);
 
-    /// <summary>Wall-clock provider; injected so tests can substitute a deterministic clock.</summary>
+    /// <summary>Wall-clock provider.</summary>
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
-    /// <summary>Logger for diagnostics.</summary>
+    /// <summary>Logger.</summary>
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    /// <summary>Captured input root from the configure phase; required by finalize.</summary>
+    /// <summary>Input root captured from the configure phase.</summary>
     private DirectoryPath _inputRoot;
 
     /// <summary>Initializes a new instance of the <see cref="FeedPlugin"/> class.</summary>

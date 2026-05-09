@@ -6,18 +6,7 @@ using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material.IconShortcode;
 
-/// <summary>
-/// Material-theme icon shortcode preprocessor. Recognizes
-/// <c>:material-foo:</c> Material-Icons-font shortcodes and
-/// <c>:fontawesome-{style}-foo:</c> Font Awesome shortcodes and
-/// rewrites them into the markup the Material theme's bundled
-/// stylesheets render.
-/// </summary>
-/// <remarks>
-/// Material classic uses the <c>material-icons</c> font family.
-/// Material3 uses <c>material-symbols-outlined</c>; that variant
-/// lives in <c>NuStreamDocs.Theme.Material3</c>.
-/// </remarks>
+/// <summary>Rewrites <c>:material-foo:</c> and <c>:fontawesome-{style}-foo:</c> shortcodes into the Material theme's icon markup.</summary>
 public sealed class IconShortcodePlugin : ThemeIconShortcodePluginBase
 {
     /// <summary>Initializes a new instance of the <see cref="IconShortcodePlugin"/> class with the default font-ligature fallback only.</summary>

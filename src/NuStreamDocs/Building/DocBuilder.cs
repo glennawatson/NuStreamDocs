@@ -11,18 +11,10 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Building;
 
 /// <summary>
-/// Outer-layer fluent builder for assembling a documentation site.
+/// Fluent builder for assembling a documentation site. Plugins register via <see
+/// cref="UsePlugin{TPlugin}"/> (AOT-clean direct construction) or per-plugin <c>Use{Plugin}</c>
+/// extension methods.
 /// </summary>
-/// <remarks>
-/// One of the few **instance-shaped** types in the library: it holds
-/// genuine per-build configuration state. All inner-layer parser /
-/// emitter / search work happens through <c>static</c> methods invoked
-/// from <see cref="BuildAsync()"/>. Plugins are registered via the
-/// generic <see cref="UsePlugin{TPlugin}"/> method (AOT-clean: a
-/// direct <c>new TPlugin()</c> call, no reflection) or via
-/// <c>Use{Plugin}</c> extension methods shipped by each plugin
-/// assembly.
-/// </remarks>
 public sealed class DocBuilder
 {
     /// <summary>Initial slot capacity for registered plugins.</summary>
@@ -154,11 +146,7 @@ public sealed class DocBuilder
     /// <summary>Adds an include glob (forward-slashed, relative to the docs root).</summary>
     /// <param name="pattern">Glob pattern, e.g. <c>guide/**/*.md</c>.</param>
     /// <returns>This builder for chaining.</returns>
-    /// <remarks>
-    /// When at least one include is registered, only paths matching one
-    /// of the includes are processed. Paths still need to survive the
-    /// configured excludes.
-    /// </remarks>
+    /// <remarks>When at least one include is registered, only paths matching an include are processed (and must still survive the configured excludes).</remarks>
     public DocBuilder Include(GlobPattern pattern)
     {
         if (pattern.IsEmpty)
@@ -220,17 +208,9 @@ public sealed class DocBuilder
         return this;
     }
 
-    /// <summary>
-    /// Registers a plugin via its parameterless constructor.
-    /// </summary>
+    /// <summary>Registers a plugin via its parameterless constructor.</summary>
     /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/>.</typeparam>
     /// <returns>This builder for chaining.</returns>
-    /// <remarks>
-    /// The <c>new()</c> constraint keeps the registration path
-    /// reflection-free and AOT-safe. Plugin assemblies typically wrap
-    /// this in a <c>Use{Plugin}</c> extension method that also accepts
-    /// an options record.
-    /// </remarks>
     [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
     public DocBuilder UsePlugin<TPlugin>()
         where TPlugin : IPlugin, new()
@@ -239,15 +219,9 @@ public sealed class DocBuilder
         return this;
     }
 
-    /// <summary>
-    /// Registers a pre-constructed plugin instance.
-    /// </summary>
+    /// <summary>Registers a pre-constructed plugin instance.</summary>
     /// <param name="plugin">Plugin to register.</param>
     /// <returns>This builder for chaining.</returns>
-    /// <remarks>
-    /// Used by extension methods that need to capture options before
-    /// the plugin is added (most plugins).
-    /// </remarks>
     public DocBuilder UsePlugin(IPlugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin);
@@ -255,17 +229,9 @@ public sealed class DocBuilder
         return this;
     }
 
-    /// <summary>
-    /// Returns the existing plugin instance of <typeparamref name="TPlugin"/>
-    /// if one is registered, otherwise constructs a fresh one, registers
-    /// it, and returns it.
-    /// </summary>
+    /// <summary>Returns the existing plugin instance of <typeparamref name="TPlugin"/> if one is registered, otherwise constructs, registers, and returns a fresh one.</summary>
     /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/> with a parameterless constructor.</typeparam>
     /// <returns>The single registered instance of <typeparamref name="TPlugin"/>.</returns>
-    /// <remarks>
-    /// Used by accumulator-shaped extension methods (e.g. <c>AddExtraCss</c>)
-    /// that fold every chained call onto one underlying plugin.
-    /// </remarks>
     [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
     public TPlugin GetOrAddPlugin<TPlugin>()
         where TPlugin : class, IPlugin, new()
@@ -395,10 +361,9 @@ public sealed class DocBuilder
     }
 
     /// <summary>
-    /// Renders a single in-memory document, threading every registered
-    /// post-render plugin sorted by priority. Reserved for tests and
-    /// programmatic rendering — production builds go through
-    /// <see cref="BuildPipeline.RunAsync(DirectoryPath, DirectoryPath, IPlugin[])"/>.
+    /// Renders a single in-memory document, threading every registered post-render plugin in
+    /// priority order. Reserved for tests and programmatic rendering — production builds go
+    /// through <see cref="BuildPipeline.RunAsync(DirectoryPath, DirectoryPath, IPlugin[])"/>.
     /// </summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <param name="source">UTF-8 markdown bytes.</param>

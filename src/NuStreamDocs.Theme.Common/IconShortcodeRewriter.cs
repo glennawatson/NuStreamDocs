@@ -8,11 +8,7 @@ using NuStreamDocs.Markdown.Common;
 namespace NuStreamDocs.Theme.Common;
 
 /// <summary>
-/// Stateless UTF-8 icon-shortcode rewriter for Material-classic and Material 3.
-/// Recognizes <c>:material-{name}:</c> and
-/// <c>:fontawesome-{style}-{name}:</c> shortcodes and emits the
-/// span / <c>i</c>-tag shapes the bundled icon-font stylesheets
-/// expect. Fenced and inline code pass through verbatim.
+/// Rewrites <c>:material-{name}:</c> and <c>:fontawesome-{style}-{name}:</c> icon shortcodes into HTML markup. Fenced and inline code pass through verbatim.
 /// </summary>
 public static class IconShortcodeRewriter
 {
@@ -22,7 +18,7 @@ public static class IconShortcodeRewriter
     /// <summary>Length of the <c>fontawesome-</c> prefix.</summary>
     private const int FontAwesomePrefixLength = 12;
 
-    /// <summary>Bytes that interrupt the bulk-copy fast path — backtick (inline code), colon (shortcode), newline (potential fence start). Cached so the IndexOfAny is vectorized.</summary>
+    /// <summary>Bytes that interrupt the bulk-copy fast path: backtick, colon, newline.</summary>
     private static readonly SearchValues<byte> InterestingBytes = SearchValues.Create("`:\n"u8);
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>, emitting <paramref name="materialIconClass"/> for Material shortcodes.</summary>

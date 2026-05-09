@@ -7,18 +7,10 @@ using System.Collections;
 namespace NuStreamDocs.Common;
 
 /// <summary>
-/// Singleton ordinal-byte equality comparer for <see cref="byte"/>
-/// arrays — content-equal via vectorized <see cref="System.MemoryExtensions.SequenceEqual{T}(System.ReadOnlySpan{T}, System.ReadOnlySpan{T})"/>,
-/// hashed via the runtime's span content-hash.
+/// Singleton content-equality comparer for <see cref="byte"/> arrays. Use when keying
+/// dictionaries / sets on raw UTF-8 byte arrays. Supports span-keyed lookups via
+/// <see cref="IAlternateEqualityComparer{TAlternate, TKey}"/>.
 /// </summary>
-/// <remarks>
-/// Drop-in replacement for <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/>
-/// when keying dictionaries / sets on raw UTF-8 byte arrays — slug
-/// dedup tables, anchor-id sets, byte-keyed corpus lookups, and so
-/// on. Implements <see cref="IAlternateEqualityComparer{TAlternate, TKey}"/>
-/// so byte-array keyed dictionaries can be probed directly with a
-/// <see cref="ReadOnlySpan{T}"/> — no per-lookup byte[] allocation.
-/// </remarks>
 public sealed class ByteArrayComparer
     : IEqualityComparer<byte[]>,
       IEqualityComparer,
@@ -85,12 +77,6 @@ public sealed class ByteArrayComparer
     }
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Powers <see cref="System.Collections.Generic.Dictionary{TKey, TValue}.GetAlternateLookup{TAlternate}()"/>
-    /// so byte-keyed dictionaries can be probed with a
-    /// <see cref="ReadOnlySpan{T}"/> directly — no per-lookup
-    /// <c>byte[]</c> allocation.
-    /// </remarks>
     public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) =>
         other is not null && alternate.SequenceEqual(other);
 
@@ -103,12 +89,6 @@ public sealed class ByteArrayComparer
     /// <summary>Hashes the bytes of <paramref name="bytes"/> via <see cref="HashCode.AddBytes(ReadOnlySpan{byte})"/>.</summary>
     /// <param name="bytes">Span to hash.</param>
     /// <returns>32-bit hash code suitable for dictionary keying.</returns>
-    /// <remarks>
-    /// The BCL doesn't expose a content-hash on
-    /// <see cref="ReadOnlySpan{T}"/> (the instance method throws), so
-    /// <see cref="HashCode"/> is the only supported route. Centralized
-    /// so both array and span overloads agree byte-for-byte.
-    /// </remarks>
     private static int GetSpanHashCode(ReadOnlySpan<byte> bytes)
     {
         HashCode hash = default;

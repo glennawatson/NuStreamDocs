@@ -8,11 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.Details;
 
-/// <summary>
-/// Stateless UTF-8 details-block rewriter. Scans <c>??? type "title"</c>
-/// or <c>???+ type "title"</c> openers and emits the matching
-/// <c>&lt;details&gt;</c> element.
-/// </summary>
+/// <summary>Rewrites <c>???</c> / <c>???+</c> blocks into <c>&lt;details&gt;</c> elements.</summary>
 internal static class DetailsRewriter
 {
     /// <summary>Gets the collapsed-opener marker.</summary>

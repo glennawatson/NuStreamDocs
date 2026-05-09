@@ -7,23 +7,19 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Macros;
 
-/// <summary>
-/// Byte-level UTF-8 scanner that walks markdown source, copies bytes
-/// through verbatim, skips fenced and inline code regions, and replaces
-/// <c>{{ name }}</c> markers with values from a host-supplied lookup.
-/// </summary>
+/// <summary>Replaces <c>{{ name }}</c> markers in markdown with values from a lookup; fenced and inline code regions pass through verbatim.</summary>
 internal static class MacrosScanner
 {
-    /// <summary>HTML escape rules for the EscapeHtml option (matches the canonical 5-entity set).</summary>
+    /// <summary>Bytes triggering HTML entity escaping when <c>EscapeHtml</c> is on.</summary>
     private static readonly SearchValues<byte> EscapeChars = SearchValues.Create("&<>\"'"u8);
 
-    /// <summary>Lookup callback signature: UTF-8 name → UTF-8 value (true on hit).</summary>
+    /// <summary>Resolves a UTF-8 name to its UTF-8 value.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
-    /// <param name="value">Resolved UTF-8 value bytes on hit; the dict's stored array, the caller must not mutate.</param>
-    /// <returns>True when the lookup succeeded.</returns>
+    /// <param name="value">Resolved UTF-8 value bytes on hit; callers must not mutate.</param>
+    /// <returns>True when resolved.</returns>
     public delegate bool Lookup(ReadOnlySpan<byte> name, out byte[] value);
 
-    /// <summary>Missing-name callback signature; called for each <c>{{ name }}</c> with no resolved value.</summary>
+    /// <summary>Invoked for each <c>{{ name }}</c> with no resolved value.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
     public delegate void MissingCallback(ReadOnlySpan<byte> name);
 

@@ -7,12 +7,6 @@ using System.Buffers;
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
 
 /// <summary>Per-language configuration consumed by <see cref="CFamilyRules.Build"/>.</summary>
-/// <remarks>
-/// Built via object-initializer syntax so call sites read as
-/// <c>new() { Tables = …, … }</c> — there is no multi-argument
-/// constructor to drift out of order, and adding a new field never
-/// breaks an existing call.
-/// </remarks>
 internal readonly record struct CFamilyConfig
 {
     /// <summary>Gets the keyword + operator table bundle.</summary>

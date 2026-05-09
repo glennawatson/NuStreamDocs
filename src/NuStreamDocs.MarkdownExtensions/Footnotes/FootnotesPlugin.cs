@@ -7,11 +7,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Footnotes;
 
-/// <summary>
-/// Footnotes plugin. Rewrites inline <c>[^id]</c> references and
-/// block <c>[^id]: definition</c> entries into linked superscripts
-/// plus an appended <c>&lt;section class="footnotes"&gt;</c>.
-/// </summary>
+/// <summary>Footnotes plugin — rewrites <c>[^id]</c> references and <c>[^id]: definition</c> entries into linked superscripts plus a footnotes section.</summary>
 public sealed class FootnotesPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>

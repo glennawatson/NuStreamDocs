@@ -19,7 +19,7 @@ public static class FeedWriter
     /// <summary>Length of the <c>.md</c> extension stripped when computing the served URL.</summary>
     private const int MarkdownExtensionLength = 3;
 
-    /// <summary>Initial sink capacity (~30 entries x 256 bytes) — covers most feeds without a regrow.</summary>
+    /// <summary>Initial sink capacity.</summary>
     private const int InitialCapacity = 8 * 1024;
 
     /// <summary>Renders an RSS 2.0 document.</summary>
@@ -111,10 +111,10 @@ public static class FeedWriter
         sink.Write(">\n"u8);
     }
 
-    /// <summary>Encodes <paramref name="value"/> using <paramref name="format"/> against invariant culture into a fresh UTF-8 byte array.</summary>
+    /// <summary>Encodes <paramref name="value"/> using <paramref name="format"/> against invariant culture as UTF-8 bytes.</summary>
     /// <param name="value">Source date.</param>
-    /// <param name="format">Standard or custom format string accepted by <see cref="DateTimeOffset.ToString(string, IFormatProvider)"/>.</param>
-    /// <returns>UTF-8 bytes; the encode happens once per element.</returns>
+    /// <param name="format">Standard or custom format string.</param>
+    /// <returns>UTF-8 bytes.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "Major Code Smell",
         "S6585:Do not hardcode the format specifier",

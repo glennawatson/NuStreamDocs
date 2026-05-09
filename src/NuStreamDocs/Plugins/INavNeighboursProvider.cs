@@ -7,20 +7,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Optional companion contract for plugins that publish a linear page
-/// order (typically a navigation builder). Theme plugins use it to
-/// render prev/next page links in the page footer (the equivalent of
-/// mkdocs-material's <c>navigation.footer</c>).
+/// Optional contract for plugins publishing a linear page order (typically a navigation builder).
+/// Theme plugins use it to render prev/next links in the page footer. Implementations should serve
+/// reads from a precomputed lookup so per-page calls stay sub-microsecond.
 /// </summary>
-/// <remarks>
-/// Theme plugins look up the first registered
-/// <see cref="INavNeighboursProvider"/> during
-/// <see cref="IBuildConfigurePlugin.ConfigureAsync"/> and call
-/// <see cref="GetNeighbours(FilePath)"/> per page during render. The
-/// provider is expected to be cheap (sub-microsecond): build any
-/// linear index up front in your own <c>OnConfigure</c> and serve
-/// reads from a <see cref="System.Collections.Generic.Dictionary{TKey,TValue}"/>.
-/// </remarks>
 public interface INavNeighboursProvider
 {
     /// <summary>Looks up the previous and next pages in the global linear nav order.</summary>
@@ -35,12 +25,10 @@ public interface INavNeighboursProvider
 
     /// <summary>
     /// Returns true when the primary sidebar would have nothing useful to render for
-    /// <paramref name="relativePath"/> — e.g. a top-level leaf page with no descendants.
+    /// <paramref name="relativePath"/> (e.g. a top-level leaf page with no descendants).
+    /// Default: false.
     /// </summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>True when the sidebar should be hidden for the page.</returns>
-    /// <remarks>
-    /// Default returns <see langword="false"/> so existing providers keep their current behaviour.
-    /// </remarks>
     bool ShouldHidePrimarySidebar(FilePath relativePath) => false;
 }

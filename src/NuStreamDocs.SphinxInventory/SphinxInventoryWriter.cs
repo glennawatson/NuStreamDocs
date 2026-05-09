@@ -9,17 +9,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.SphinxInventory;
 
-/// <summary>
-/// Stateless writer that emits a Sphinx v2 <c>objects.inv</c> inventory
-/// for an autorefs snapshot. Header is plain UTF-8; body is one
-/// <c>NAME std:label -1 URI -</c> line per entry, zlib-compressed.
-/// All bytes are written through <see cref="IBufferWriter{T}"/> so the
-/// only string allocation on the hot path is the per-entry UTF-8
-/// encode of entry values supplied by the
-/// registry snapshot — those are <see cref="string"/>s already, so
-/// the encode is unavoidable; everything else (delimiters, fixed
-/// fields, header) is byte-literal.
-/// </summary>
+/// <summary>Emits a Sphinx v2 <c>objects.inv</c> inventory for an autorefs snapshot — plain UTF-8 header, zlib-compressed body of <c>NAME std:label -1 URI -</c> lines.</summary>
 internal static class SphinxInventoryWriter
 {
     /// <summary>Gets header line 1 — Sphinx version marker (must be byte-exact).</summary>
@@ -34,13 +24,7 @@ internal static class SphinxInventoryWriter
     /// <summary>Gets header line 4 — fixed string Sphinx tooling looks for verbatim.</summary>
     private static ReadOnlySpan<byte> HeaderCompressNote => "# The remainder of this file is compressed using zlib.\n"u8;
 
-    /// <summary>Gets the per-entry middle field — domain (<c>std</c>), role (<c>label</c>), priority (<c>-1</c>).</summary>
-    /// <remarks>
-    /// Sphinx requires each entry as <c>NAME DOMAIN:ROLE PRIORITY URI DISPNAME</c>.
-    /// We classify every uid as the generic <c>std:label</c> domain/role pair —
-    /// it's what Sphinx's <c>any</c> role matches against and is the safest fit
-    /// for arbitrary anchors. Priority <c>-1</c> defers to Sphinx's heuristics.
-    /// </remarks>
+    /// <summary>Gets the per-entry middle field — <c>std:label</c> domain/role with priority <c>-1</c>.</summary>
     private static ReadOnlySpan<byte> EntryMiddle => " std:label -1 "u8;
 
     /// <summary>Gets the per-entry trailer — <c>"-"</c> (DISPNAME = use NAME) plus newline.</summary>

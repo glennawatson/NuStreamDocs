@@ -6,18 +6,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Emoji;
 
-/// <summary>
-/// Emoji shortcode plugin. Turns <c>:name:</c> shortcodes into
-/// <c>&lt;span class="twemoji"&gt;…&lt;/span&gt;</c> wrappers
-/// around the matching Unicode glyph, matching the pymdownx.emoji
-/// default shape Zensical configures.
-/// </summary>
-/// <remarks>
-/// The bundled <see cref="EmojiIndex"/> ships ~80 of the most
-/// common shortcodes. Unknown shortcodes pass through verbatim so
-/// they remain visible to downstream processors (an icon pack, a
-/// reverse-proxy renderer, or simply human eyes).
-/// </remarks>
+/// <summary>Emoji shortcode plugin — rewrites known <c>:name:</c> shortcodes into <c>&lt;span class="twemoji"&gt;</c> wrappers. Unknown shortcodes pass through.</summary>
 public sealed class EmojiPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -27,11 +16,6 @@ public sealed class EmojiPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Emoji shortcodes are <c>:name:</c> — every match needs at least two <c>:</c> bytes. A
-    /// page without one cannot contain a shortcode, so the rewriter's per-byte scan and the
-    /// pipeline's scratch rental can be skipped.
-    /// </remarks>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)':') >= 0;
 
     /// <inheritdoc/>

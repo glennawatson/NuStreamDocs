@@ -9,11 +9,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Abbr;
 
-/// <summary>
-/// Stateless UTF-8 abbreviations rewriter. Two passes: collect every
-/// <c>*[ABBR]: definition</c> line (and remove it), then wrap each
-/// occurrence of <c>ABBR</c> in body text with <c>&lt;abbr title="…"&gt;ABBR&lt;/abbr&gt;</c>.
-/// </summary>
+/// <summary>Folds <c>*[ABBR]: definition</c> lines into <c>&lt;abbr title="..."&gt;</c> wrappers around occurrences in the body.</summary>
 internal static class AbbrRewriter
 {
     /// <summary>Length of a <c>\r\n</c> line terminator in bytes.</summary>

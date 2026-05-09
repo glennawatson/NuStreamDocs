@@ -7,15 +7,7 @@ using NuStreamDocs.Markdown;
 
 namespace NuStreamDocs.Html;
 
-/// <summary>
-/// Renders <see cref="BlockSpan"/> sequences to UTF-8 HTML.
-/// </summary>
-/// <remarks>
-/// Emits Material/Zensical-compatible markup: headings carry the
-/// permalink anchor used by the embedded theme stylesheet, paragraphs
-/// are wrapped in plain <c>&lt;p&gt;</c> elements. Inline parsing is
-/// not yet implemented — content is currently HTML-escaped raw.
-/// </remarks>
+/// <summary>Renders <see cref="BlockSpan"/> sequences to UTF-8 HTML.</summary>
 public static class HtmlEmitter
 {
     /// <summary>Lowest CommonMark ATX heading level.</summary>
@@ -24,11 +16,7 @@ public static class HtmlEmitter
     /// <summary>Highest CommonMark ATX heading level.</summary>
     private const int MaxHeadingLevel = 6;
 
-    /// <summary>Open-tag UTF-8 literals indexed by heading level.</summary>
-    /// <remarks>
-    /// Index 0 unused so <c>OpenTags[level]</c> is a direct lookup.
-    /// Pre-baked UTF-8 keeps the emit path branch-free.
-    /// </remarks>
+    /// <summary>Open-tag UTF-8 literals indexed by heading level (index 0 unused).</summary>
     private static readonly byte[][] OpenTags =
     [
         [.. "<h?>"u8],
@@ -52,10 +40,7 @@ public static class HtmlEmitter
         [.. "</h6>\n"u8]
     ];
 
-    /// <summary>
-    /// Renders <paramref name="blocks"/> against <paramref name="source"/>
-    /// into <paramref name="writer"/>.
-    /// </summary>
+    /// <summary>Renders <paramref name="blocks"/> against <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">Original UTF-8 source the block descriptors index into.</param>
     /// <param name="blocks">Block descriptors emitted by <see cref="BlockScanner"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -77,11 +62,6 @@ public static class HtmlEmitter
     /// <param name="source">UTF-8 source.</param>
     /// <param name="opener">Opener block.</param>
     /// <returns>Trimmed info string bytes; empty when none.</returns>
-    /// <remarks>
-    /// Exposed publicly so the parsing can be exercised directly from
-    /// unit tests; callers outside the test surface still typically go
-    /// through <see cref="Emit"/>.
-    /// </remarks>
     public static ReadOnlySpan<byte> ExtractInfoString(ReadOnlySpan<byte> source, in BlockSpan opener)
     {
         var rest = ExtractFenceInfoLine(source, opener);
@@ -106,11 +86,6 @@ public static class HtmlEmitter
     /// <param name="index">Cursor for the current block.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Next-iteration cursor; always strictly greater than <paramref name="index"/>.</returns>
-    /// <remarks>
-    /// Fenced-code blocks consume a variable number of sibling blocks (opener + content lines + closer),
-    /// so the helper that handles them returns the index of the consumed close fence and we advance one
-    /// past it. Single-block kinds simply return <paramref name="index"/> + 1.
-    /// </remarks>
     private static int EmitOne(
         ReadOnlySpan<byte> source,
         in ReadOnlySpan<BlockSpan> blocks,
@@ -281,11 +256,6 @@ public static class HtmlEmitter
     /// <param name="openerIndex">Index of the first paragraph block.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Index of the first non-Paragraph block (i.e. the next block to dispatch).</returns>
-    /// <remarks>
-    /// CommonMark joins consecutive paragraph lines (no intervening blank) into a single
-    /// <c>&lt;p&gt;</c>; continuation lines have their leading whitespace removed and are joined to the
-    /// preceding line with a newline (rendered as a soft line break by the inline renderer).
-    /// </remarks>
     private static int EmitParagraphRun(
         ReadOnlySpan<byte> source,
         in ReadOnlySpan<BlockSpan> blocks,
@@ -315,7 +285,7 @@ public static class HtmlEmitter
         return end;
     }
 
-    /// <summary>Dispatches block kinds the outer <see cref="Emit"/> switch defers to so its complexity stays under the analyzer ceiling.</summary>
+    /// <summary>Dispatches block kinds deferred from the outer <see cref="Emit"/> switch.</summary>
     /// <param name="source">UTF-8 source buffer.</param>
     /// <param name="blocks">Block descriptors.</param>
     /// <param name="i">Current block index.</param>
@@ -372,11 +342,7 @@ public static class HtmlEmitter
     /// <param name="openerIndex">Index of the first <see cref="BlockKind.IndentedCode"/> block.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Index of the last block consumed by this run.</returns>
-    /// <remarks>
-    /// Internal blank lines do not terminate the block — they're part of the code body. The run ends
-    /// when a non-blank, non-indented-code line appears. The lookahead respects this by buffering blanks
-    /// and only emitting them when followed by another indented-code line.
-    /// </remarks>
+    /// <remarks>Internal blank lines do not terminate the block — they're part of the code body. The run ends at the first non-blank, non-indented-code line.</remarks>
     private static int EmitIndentedCode(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int openerIndex, IBufferWriter<byte> writer)
     {
         Write("<pre><code>"u8, writer);
@@ -454,10 +420,9 @@ public static class HtmlEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Index of the last block consumed; the outer loop's post-increment lands on the next sibling.</returns>
     /// <remarks>
-    /// Each item's body is grouped by blank-line separators; an item containing any blank-separated
-    /// group becomes loose (every group wrapped in <c>&lt;p&gt;</c>). A body line whose stripped
-    /// content is a thematic-break shape (<c>---</c> / <c>***</c> / <c>___</c>) emits an
-    /// <c>&lt;hr/&gt;</c>. Nested lists are not yet handled.
+    /// Items containing any blank-separated group become loose (every group wrapped in
+    /// <c>&lt;p&gt;</c>); a body line that is a thematic-break shape emits <c>&lt;hr/&gt;</c>. Nested
+    /// lists are not yet handled.
     /// </remarks>
     private static int EmitList(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int start, IBufferWriter<byte> writer)
     {

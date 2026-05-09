@@ -6,14 +6,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Building;
 
-/// <summary>
-/// Per-phase plugin arrays sorted by priority bid.
-/// </summary>
-/// <remarks>
-/// Computed once at build start by <see cref="Partition"/>. The build
-/// pipeline iterates only the participants for each phase; plugins
-/// missing from a phase are not in the corresponding array.
-/// </remarks>
+/// <summary>Per-phase plugin arrays sorted by priority bid; computed once at build start by <see cref="Partition"/>.</summary>
 internal sealed class PluginPhases
 {
     /// <summary>Gets the sorted configure-phase participants.</summary>

@@ -8,11 +8,7 @@ using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.DefList;
 
-/// <summary>
-/// Stateless UTF-8 definition-list rewriter. Pairs every
-/// non-blank line followed by one or more <c>: definition</c> lines
-/// into a <c>&lt;dl&gt;</c> block.
-/// </summary>
+/// <summary>Rewrites term lines followed by <c>: definition</c> lines into <c>&lt;dl&gt;</c> blocks.</summary>
 internal static class DefListRewriter
 {
     /// <summary>Length of the <c>": "</c> definition prefix.</summary>

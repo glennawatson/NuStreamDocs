@@ -6,13 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Snapshot-then-callback helper for plugins that need to read the current
-/// rendered HTML while writing a transformed copy back into the same
-/// <see cref="ArrayBufferWriter{T}"/>. Pools the snapshot buffer through
-/// <see cref="ArrayPool{T}.Shared"/> so the per-page hot path stays
-/// allocation-free.
-/// </summary>
+/// <summary>Snapshot-then-callback helper for plugins that need to read the current rendered HTML while writing a transformed copy back into the same <see cref="ArrayBufferWriter{T}"/>.</summary>
 public static class HtmlSnapshotRewriter
 {
     /// <summary>Callback invoked with the read-only snapshot and the (now-empty) writer.</summary>

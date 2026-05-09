@@ -7,11 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Byte-level scanner that finds <c>&lt;style&gt;...&lt;/style&gt;</c>
-/// blocks and rewrites every <c>url(...)</c> token inside the block
-/// body via <see cref="CssUrlBytes"/>.
-/// </summary>
+/// <summary>Rewrites <c>url(...)</c> tokens inside <c>&lt;style&gt;...&lt;/style&gt;</c> blocks via <see cref="CssUrlBytes"/>.</summary>
 internal static class InlineStyleBlockBytes
 {
     /// <summary>Bytes that may start a <c>&lt;style</c> opening tag (case-insensitive).</summary>

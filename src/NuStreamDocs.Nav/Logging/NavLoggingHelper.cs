@@ -4,18 +4,7 @@
 
 namespace NuStreamDocs.Nav.Logging;
 
-/// <summary>
-/// Source-generated logging entry points for <see cref="NavPlugin"/> and
-/// <see cref="NavTreeBuilder"/>.
-/// </summary>
-/// <remarks>
-/// All methods are <see cref="LoggerMessageAttribute"/> partials so the
-/// generator emits the underlying <c>EventId</c> + cached delegate; we
-/// never call <see cref="ILogger"/> extension methods directly. Debug-
-/// level entries that bind expensive arguments should be invoked via
-/// <c>NuStreamDocs.Logging.LogInvokerHelper.Invoke</c> at the call site
-/// so the projection only runs when the level is enabled.
-/// </remarks>
+/// <summary>Source-generated logging entry points for <see cref="NavPlugin"/> and <see cref="NavTreeBuilder"/>.</summary>
 internal static partial class NavLoggingHelper
 {
     /// <summary>Logs the start of a nav build.</summary>

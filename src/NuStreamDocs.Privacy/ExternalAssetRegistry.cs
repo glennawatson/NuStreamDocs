@@ -8,18 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// Thread-safe registry that maps external URLs to their target local
-/// paths under the configured asset directory.
-/// </summary>
-/// <remarks>
-/// Per-page <see cref="PrivacyPlugin"/> hooks register URLs as they
-/// scan rendered HTML; the finalize pass enumerates the registry to
-/// download every unique URL once. Storage is byte-array keyed (with
-/// <see cref="ByteArrayComparer"/>) so hot-path scanners never UTF-16
-/// encode the URL just to register it; the downloader's
-/// <see cref="EntriesSnapshot"/> is the only place strings appear.
-/// </remarks>
+/// <summary>Thread-safe map from external URL bytes to the local path under the configured asset directory.</summary>
 internal sealed class ExternalAssetRegistry
 {
     /// <summary>Length in bytes of the xxHash3 digest used to derive filenames.</summary>
@@ -41,8 +30,7 @@ internal sealed class ExternalAssetRegistry
     private readonly ConcurrentDictionary<byte[], byte[]> _urlToLocal = new(ByteArrayComparer.Instance);
 
     /// <summary>Initializes a new instance of the <see cref="ExternalAssetRegistry"/> class.</summary>
-    /// <param name="assetDirectory">Forward-slash relative directory to write under (e.g. <c>assets/external</c>).</param>
-    /// <remarks>Trailing <c>/</c> is trimmed so the per-URL path concatenation always inserts exactly one separator.</remarks>
+    /// <param name="assetDirectory">Forward-slash relative directory to write under (e.g. <c>assets/external</c>); any trailing <c>/</c> is trimmed.</param>
     public ExternalAssetRegistry(byte[] assetDirectory)
     {
         ArgumentNullException.ThrowIfNull(assetDirectory);
@@ -83,12 +71,7 @@ internal sealed class ExternalAssetRegistry
     }
 
     /// <summary>Gets a snapshot of the registered <c>(url, localPath)</c> byte pairs.</summary>
-    /// <returns>Right-sized snapshot array; both entries are UTF-8 byte arrays the caller must not mutate.</returns>
-    /// <remarks>
-    /// Consumers needing strings (downloader's <see cref="Uri.TryCreate(string?, UriKind, out Uri?)"/>
-    /// + <see cref="Path.Combine(string, string)"/>) decode at the use site; consumers writing
-    /// through <see cref="System.Text.Json.Utf8JsonWriter"/> consume bytes directly.
-    /// </remarks>
+    /// <returns>Snapshot array; both entries are UTF-8 byte arrays the caller must not mutate.</returns>
     public (byte[] Url, byte[] LocalPath)[] EntriesSnapshot()
     {
         KeyValuePair<byte[], byte[]>[] snapshot = [.. _urlToLocal];

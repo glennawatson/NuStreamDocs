@@ -7,16 +7,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.CriticMarkup;
 
 /// <summary>
-/// Critic-markup plugin (pymdownx.critic). Rewrites the five
-/// CriticMarkup spans into the HTML pymdownx emits:
-/// <list type="bullet">
-/// <item><description><c>{++ins++}</c> → <c>&lt;ins&gt;ins&lt;/ins&gt;</c></description></item>
-/// <item><description><c>{--del--}</c> → <c>&lt;del&gt;del&lt;/del&gt;</c></description></item>
-/// <item><description><c>{~~old~&gt;new~~}</c> → <c>&lt;del&gt;old&lt;/del&gt;&lt;ins&gt;new&lt;/ins&gt;</c></description></item>
-/// <item><description><c>{==hl==}</c> → <c>&lt;mark&gt;hl&lt;/mark&gt;</c></description></item>
-/// <item><description><c>{&gt;&gt;cmt&lt;&lt;}</c> → <c>&lt;span class="critic comment"&gt;cmt&lt;/span&gt;</c></description></item>
-/// </list>
-/// Fenced and inline code pass through verbatim.
+/// CriticMarkup plugin — rewrites <c>{++…++}</c>, <c>{--…--}</c>, <c>{~~old~&gt;new~~}</c>,
+/// <c>{==…==}</c>, and <c>{&gt;&gt;…&lt;&lt;}</c> spans into pymdownx.critic-style HTML. Code
+/// spans pass through.
 /// </summary>
 public sealed class CriticMarkupPlugin : IPagePreRenderPlugin
 {

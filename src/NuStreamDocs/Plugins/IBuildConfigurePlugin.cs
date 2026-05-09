@@ -5,13 +5,10 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the build-wide configuration phase.
-/// </summary>
-/// <remarks>
-/// Runs once per build, sequentially in priority order, before discovery.
-/// Plugins use this hook to seed shared registries, register cross-page
+/// Plugin participation in the build-wide configuration phase. Runs once per build, sequentially
+/// in priority order, before discovery; use it to seed shared registries, register cross-page
 /// markers, and read site-wide options.
-/// </remarks>
+/// </summary>
 public interface IBuildConfigurePlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the configure phase.</summary>

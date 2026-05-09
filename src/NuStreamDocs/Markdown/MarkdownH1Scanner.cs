@@ -7,13 +7,9 @@ using NuStreamDocs.Yaml;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// UTF-8 scanner for the first H1 heading in a markdown document.
+/// UTF-8 scanner for the first H1 in a markdown document. Handles ATX (<c># Heading</c>) and
+/// Setext (<c>===</c>-underline) shapes; skips fenced-code blocks and leading YAML front-matter.
 /// </summary>
-/// <remarks>
-/// Recognizes both ATX (<c># Heading</c>) and Setext (<c>Heading</c> on one line, <c>===</c> underline on the next)
-/// per CommonMark. Skips fenced code blocks (<c>```</c> / <c>~~~</c>) so a heading-shaped line inside a code fence
-/// doesn't win, and skips a leading YAML front-matter block.
-/// </remarks>
 public static class MarkdownH1Scanner
 {
     /// <summary>Maximum leading-space indent CommonMark allows before a heading marker.</summary>

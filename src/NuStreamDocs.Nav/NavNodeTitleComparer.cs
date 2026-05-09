@@ -6,9 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>Singleton comparer that orders <see cref="NavNode"/>s by title.</summary>
-/// <remarks>Compares the UTF-8 title bytes via case-insensitive ASCII fold — sufficient for the
-/// repo's English-language titles and faster than decoding to <see cref="string"/> per compare.</remarks>
+/// <summary>Singleton comparer that orders <see cref="NavNode"/>s by explicit <c>Order:</c> first then case-insensitive title.</summary>
 internal sealed class NavNodeTitleComparer : IComparer<NavNode>
 {
     /// <summary>Gets the shared instance to avoid per-sort allocations.</summary>

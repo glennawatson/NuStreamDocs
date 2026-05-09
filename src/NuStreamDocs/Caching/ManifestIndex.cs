@@ -6,15 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Caching;
 
-/// <summary>
-/// Internal helper that builds a path-keyed
-/// <see cref="Dictionary{TKey,TValue}"/> from a
-/// <see cref="ManifestEntry"/> array.
-/// </summary>
-/// <remarks>
-/// Keyed by ordinal-string so paths compare exactly as written —
-/// culture-aware comparison is wrong for file paths.
-/// </remarks>
+/// <summary>Builds a path-keyed (ordinal) <see cref="Dictionary{TKey,TValue}"/> from a <see cref="ManifestEntry"/> array.</summary>
 internal static class ManifestIndex
 {
     /// <summary>Builds the path-keyed index over <paramref name="entries"/>.</summary>

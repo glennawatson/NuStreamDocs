@@ -8,18 +8,10 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Links;
 
 /// <summary>
-/// Post-render plugin that rewrites <c>&lt;a href="…/foo.md"&gt;</c>
-/// hrefs into the rendered <c>.html</c> filename so cross-page
-/// links resolve in the static-site output. External URLs and
-/// non-Markdown hrefs are passed through unchanged.
+/// Post-render plugin that rewrites <c>&lt;a href="…/foo.md"&gt;</c> hrefs into the rendered
+/// <c>.html</c> (or <c>foo/</c> directory-URL) form. External URLs and non-Markdown hrefs pass
+/// through unchanged.
 /// </summary>
-/// <remarks>
-/// Honors the directory-URL toggle: when constructed with
-/// <c>useDirectoryUrls = true</c>, or when the config seen during
-/// <see cref="ConfigureAsync"/> sets <c>use_directory_urls: true</c>,
-/// hrefs become <c>foo/</c> instead of <c>foo.html</c> and
-/// <c>index.md</c> targets resolve to the parent directory's root.
-/// </remarks>
 public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IBuildConfigurePlugin, IPagePostRenderPlugin
 {
     /// <summary>Caller-supplied directory-URL override; null defers to the config.</summary>

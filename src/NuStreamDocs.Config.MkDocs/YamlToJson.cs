@@ -14,17 +14,9 @@ namespace NuStreamDocs.Config.MkDocs;
 /// <remarks>
 /// Targets the subset of YAML real-world <c>mkdocs.yml</c> files use:
 /// nested block mappings, block sequences, quoted and plain scalars,
-/// and <c>#</c>-introduced comments. Out of scope: flow style
-/// (<c>{a: b}</c>, <c>[a, b]</c>), folded / literal scalars
-/// (<c>|</c>, <c>&gt;</c>), anchors / aliases / tags, and explicit
-/// document markers. Anything outside the supported subset is treated
-/// as a plain string.
-/// <para>
-/// Conversion is allocation-conscious: the input is consumed as a
-/// <see cref="ReadOnlySpan{Byte}"/> and JSON is produced with a
-/// caller-supplied <see cref="Utf8JsonWriter"/> — no UTF-16 round
-/// trip, no intermediate document model.
-/// </para>
+/// and <c>#</c>-introduced comments. Flow style, folded/literal scalars,
+/// anchors, aliases, tags, and document markers are not supported and
+/// are treated as plain strings.
 /// </remarks>
 public static class YamlToJson
 {

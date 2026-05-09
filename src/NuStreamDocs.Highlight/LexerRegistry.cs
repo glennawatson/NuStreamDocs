@@ -18,19 +18,10 @@ using NuStreamDocs.Highlight.Languages.Stylesheet;
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>
-/// Language → <see cref="Lexer"/> registry built once at configuring time.
-/// </summary>
-/// <remarks>
-/// Lookup is byte-keyed and case-insensitive — the alias arrives as a
-/// UTF-8 byte slice from the rendered HTML, so no string allocation is
-/// needed on the per-block hot path. Internally the registry stores
-/// each alias as a pre-lowercased <c>byte[]</c>; lookup folds the
-/// candidate's ASCII case via <see cref="AsciiByteHelpers"/>.
-/// </remarks>
+/// <summary>Language-alias → <see cref="Lexer"/> registry. Lookup is byte-keyed and ASCII-case-insensitive.</summary>
 public sealed class LexerRegistry
 {
-    /// <summary>Length-bucketed alias table — <c>_aliasesByLength[len][i]</c> is the lowercased alias bytes; <c>_lexersByLength[len][i]</c> is the matching lexer.</summary>
+    /// <summary>Length-bucketed alias table.</summary>
     private readonly byte[][][] _aliasesByLength;
 
     /// <summary>Length-bucketed lexer table parallel to <see cref="_aliasesByLength"/>.</summary>
@@ -53,7 +44,6 @@ public sealed class LexerRegistry
     /// <returns>A frozen registry.</returns>
     /// <exception cref="ArgumentNullException">When <paramref name="extra"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">When <paramref name="extra"/> is empty.</exception>
-    /// <remarks>Encodes each language id to UTF-8 once and ASCII-lowercases it so the per-block <see cref="TryGet(System.ReadOnlySpan{byte}, out Lexer?)"/> probe stays byte-only.</remarks>
     public static LexerRegistry CreateFromStringLexers(params (string LanguageId, Lexer Lexer)[] extra)
     {
         ArgumentNullException.ThrowIfNull(extra);
@@ -111,7 +101,6 @@ public sealed class LexerRegistry
 
     /// <summary>Returns the byte-keyed map of every built-in language alias to its <see cref="Lexer"/>.</summary>
     /// <returns>The built-in alias map.</returns>
-    /// <remarks>Pulled out of <see cref="Build(LexerNameValue[])"/> so the declarative section stays readable and the bucketing step can be reasoned about independently.</remarks>
     [SuppressMessage(
         "Major Code Smell",
         "S138:Methods should not have too many lines",
@@ -321,7 +310,7 @@ public sealed class LexerRegistry
             [[.. "txt"u8]] = PassThroughLexer.Instance
         };
 
-    /// <summary>Overlays <paramref name="extra"/> onto <paramref name="map"/> with last-write-wins semantics; each language id is ASCII-lowercased once at insert time.</summary>
+    /// <summary>Overlays <paramref name="extra"/> onto <paramref name="map"/> with last-write-wins semantics.</summary>
     /// <param name="map">Mutable alias map.</param>
     /// <param name="extra">Extras to apply.</param>
     private static void ApplyExtras(Dictionary<byte[], Lexer> map, LexerNameValue[] extra)
@@ -333,11 +322,10 @@ public sealed class LexerRegistry
         }
     }
 
-    /// <summary>Buckets <paramref name="map"/> by alias byte-length so per-block lookup folds the ASCII case across a single same-length subarray.</summary>
+    /// <summary>Buckets <paramref name="map"/> by alias byte-length.</summary>
     /// <param name="map">Alias → lexer source.</param>
-    /// <param name="extraParameterName">Name of the public parameter to cite when an alias exceeds the length cap.</param>
+    /// <param name="extraParameterName">Name of the public parameter to cite on length-cap violation.</param>
     /// <returns>The length-bucketed alias and lexer tables.</returns>
-    /// <remarks>Two foreach passes over the map's struct enumerator avoid the intermediate <c>KeyValuePair&lt;&gt;[]</c> snapshot that single materialization would cost.</remarks>
     private static (byte[][][] Aliases, Lexer[][] Lexers) BucketByLength(
         Dictionary<byte[], Lexer> map,
         string extraParameterName)

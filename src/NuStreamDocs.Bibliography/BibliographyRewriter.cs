@@ -18,29 +18,18 @@ namespace NuStreamDocs.Bibliography;
 /// in-text reference inline; appends a per-page footnote-definition block
 /// and a Bibliography section after the body.
 /// </summary>
-/// <remarks>
-/// Single-pass byte walker — no <c>List&lt;CitationMarker&gt;</c>, no per-marker
-/// <c>CitationReference[]</c>, no source <c>byte[]</c> copy. Body bytes are
-/// emitted to a pooled <see cref="ArrayBufferWriter{T}"/> rented from
-/// <see cref="PageBuilderPool"/>; only when the walk finishes do we flush
-/// to the caller's writer (so a page with no resolved cites doesn't
-/// disturb the upstream output). Per-cite locator value bytes are copied
-/// once into a small <see cref="byte"/> array on capture so the locator
-/// outlives the source span without requiring a whole-page <c>ToArray</c>.
-/// </remarks>
 internal static class BibliographyRewriter
 {
     /// <summary>Length of the <c>[@</c> opening sequence.</summary>
     private const int MarkerOpenLength = 2;
 
-    /// <summary>Initial capacity for per-page state buffers (footnote numbers, unique entries).</summary>
-    /// <remarks>Real pages cite a handful to a couple of dozen sources; the buffers grow on demand if a page exceeds this cap.</remarks>
+    /// <summary>Initial capacity for per-page state buffers.</summary>
     private const int InitialStateCapacity = 16;
 
     /// <summary>Growth factor applied each time a state buffer overflows.</summary>
     private const int StateGrowthFactor = 2;
 
-    /// <summary>Bytes that may begin a marker — single-byte <see cref="SearchValues{T}"/> keeps the bulk scan vectorized.</summary>
+    /// <summary>Bytes that may begin a marker.</summary>
     private static readonly SearchValues<byte> OpenChar = SearchValues.Create("["u8);
 
     /// <summary>Gets the UTF-8 separator between the original source and the appended footnote / bibliography blocks.</summary>
@@ -218,11 +207,11 @@ internal static class BibliographyRewriter
         return true;
     }
 
-    /// <summary>Parses the inner cite list of one marker and emits in-text refs to <paramref name="scan"/>.<see cref="CiteScanContext.Probe"/>.</summary>
-    /// <param name="scan">Bundle of (inner bytes, innerSourceOffset, probe writer) — a <c>ref struct</c> so it can carry <see cref="ReadOnlySpan{T}"/> alongside its sibling fields.</param>
+    /// <summary>Parses the inner cite list of one marker and emits in-text refs.</summary>
+    /// <param name="scan">Inner bytes, source offset, and probe writer bundle.</param>
     /// <param name="state">Resolve state.</param>
     /// <param name="resolvedAny">True when at least one cite resolved.</param>
-    /// <returns>True when the inner is well-formed (regardless of resolution); false to abort.</returns>
+    /// <returns>True when the inner is well-formed; false to abort.</returns>
     private static bool TryEmitInner(in CiteScanContext scan, ref ResolveState state, out bool resolvedAny)
     {
         resolvedAny = false;
@@ -369,7 +358,7 @@ internal static class BibliographyRewriter
         return true;
     }
 
-    /// <summary>Splits a locator span into kind + value byte offsets — the resulting offsets are absolute into the rewriter's source span (no per-locator allocation).</summary>
+    /// <summary>Splits a locator span into kind plus source-absolute value offsets.</summary>
     /// <param name="bytes">Raw locator bytes (may have leading/trailing whitespace).</param>
     /// <param name="bytesSourceOffset">Absolute offset of <paramref name="bytes"/>'s first byte within the rewriter's source span.</param>
     /// <returns>The parsed locator.</returns>
@@ -545,45 +534,45 @@ internal static class BibliographyRewriter
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Single-page citation resolution state — two parallel arrays indexed by 1-based footnote number plus the unique-entry list, all grown on demand.</summary>
+    /// <summary>Single-page citation resolution state.</summary>
     [SuppressMessage(
         "Sonar Code Smell",
         "S3898:Implement IEquatable<T>",
         Justification = "Internal scratch struct; never used as a dictionary key or compared for equality.")]
     private struct ResolveState
     {
-        /// <summary>Citation database; supplied by the caller and never mutated.</summary>
+        /// <summary>Citation database.</summary>
         public BibliographyDatabase Database;
 
-        /// <summary>Citation style; supplied by the caller and never mutated.</summary>
+        /// <summary>Citation style.</summary>
         public ICitationStyle Style;
 
         /// <summary>Optional missing-key callback.</summary>
         public MissingCitationCallback? Missing;
 
-        /// <summary>1-based; slot 0 is unused so the assignment number can stand in for the lookup index without a -1.</summary>
+        /// <summary>Entry indexed by 1-based footnote number; slot 0 is unused.</summary>
         public CitationEntry[] EntryByNum;
 
-        /// <summary>Parallel to <see cref="EntryByNum"/> — locator at the same footnote number.</summary>
+        /// <summary>Locator indexed by 1-based footnote number.</summary>
         public CitationLocator[] LocatorByNum;
 
         /// <summary>Each cited entry once, in first-citation order.</summary>
         public CitationEntry[] Unique;
 
-        /// <summary>Total assigned footnote numbers; <see cref="EntryByNum"/>[1..AssignedCount] is live.</summary>
+        /// <summary>Total assigned footnote numbers.</summary>
         public int AssignedCount;
 
         /// <summary>Live count in <see cref="Unique"/>.</summary>
         public int UniqueCount;
 
-        /// <summary>Snapshot recorded at the start of a marker — used to roll back partial accumulation when an inner parse fails halfway.</summary>
+        /// <summary>Snapshot recorded at the start of a marker, used to roll back on parse failure.</summary>
         public ResolveSnapshot Snapshot;
 
-        /// <summary>Initializes a new state with pool-rented buffers pre-sized for a typical page.</summary>
+        /// <summary>Initializes a new state. The caller must invoke <see cref="ReturnToPool"/> on every exit path.</summary>
         /// <param name="database">Citation database.</param>
         /// <param name="style">Citation style.</param>
         /// <param name="missing">Missing-key callback.</param>
-        /// <returns>Fresh state. The caller must invoke <see cref="ReturnToPool"/> on every exit path to return the rented arrays to <see cref="ArrayPool{T}.Shared"/>.</returns>
+        /// <returns>Fresh state.</returns>
         public static ResolveState Create(BibliographyDatabase database, ICitationStyle style, MissingCitationCallback? missing)
         {
             ResolveState state = default;
@@ -598,7 +587,7 @@ internal static class BibliographyRewriter
             return state;
         }
 
-        /// <summary>Returns every rented buffer to <see cref="ArrayPool{T}.Shared"/> and clears reference slots so the pool doesn't pin stale citation entries or locator byte arrays.</summary>
+        /// <summary>Returns rented buffers to the array pool.</summary>
         public void ReturnToPool()
         {
             if (EntryByNum is not null)
@@ -646,7 +635,7 @@ internal static class BibliographyRewriter
             UniqueCount = snapshot.UniqueCount;
         }
 
-        /// <summary>Grows <see cref="EntryByNum"/> + <see cref="LocatorByNum"/> via <see cref="ArrayPool{T}.Shared"/> when the next assignment would overflow.</summary>
+        /// <summary>Grows the assigned-number buffers when the next assignment would overflow.</summary>
         public void EnsureAssignedCapacity()
         {
             if (AssignedCount < EntryByNum.Length)
@@ -659,7 +648,7 @@ internal static class BibliographyRewriter
             LocatorByNum = GrowPooled(LocatorByNum, AssignedCount, grown);
         }
 
-        /// <summary>Grows <see cref="Unique"/> via <see cref="ArrayPool{T}.Shared"/> when the next unique would overflow.</summary>
+        /// <summary>Grows the unique-entry buffer when the next unique would overflow.</summary>
         public void EnsureUniqueCapacity()
         {
             if (UniqueCount < Unique.Length)
@@ -670,7 +659,7 @@ internal static class BibliographyRewriter
             Unique = GrowPooled(Unique, UniqueCount, Unique.Length * StateGrowthFactor);
         }
 
-        /// <summary>Rents a larger buffer from <see cref="ArrayPool{T}.Shared"/>, copies the live slice into it, and returns the old buffer to the pool.</summary>
+        /// <summary>Rents a larger buffer, copies the live slice into it, and returns the old buffer to the pool.</summary>
         /// <typeparam name="T">Element type.</typeparam>
         /// <param name="rented">Current rental.</param>
         /// <param name="liveCount">Number of populated slots to copy.</param>
@@ -685,18 +674,12 @@ internal static class BibliographyRewriter
         }
     }
 
-    /// <summary>Snapshot of the live counts in <see cref="ResolveState"/>; used to roll back a marker that turns out to be malformed mid-parse.</summary>
-    /// <param name="AssignedCount">Captured <see cref="ResolveState.AssignedCount"/>.</param>
-    /// <param name="UniqueCount">Captured <see cref="ResolveState.UniqueCount"/>.</param>
+    /// <summary>Snapshot of the live counts, used to roll back a marker that turns out to be malformed mid-parse.</summary>
+    /// <param name="AssignedCount">Captured assigned count.</param>
+    /// <param name="UniqueCount">Captured unique count.</param>
     private readonly record struct ResolveSnapshot(int AssignedCount, int UniqueCount);
 
-    /// <summary>Bundles one marker's parser inputs (inner bytes, source offset, probe writer) so the per-cite walker stays under the project's parameter cap.</summary>
-    /// <remarks>
-    /// Plain <c>readonly ref struct</c> rather than <c>record struct</c> — record struct cannot hold
-    /// <see cref="ReadOnlySpan{T}"/> fields (CS8345) and the C# grammar disallows the <c>ref</c> modifier on
-    /// a <c>record_struct_declaration</c> (CS0106), so positional record-struct shape is not available here.
-    /// Passed by <c>in</c> at every call site so the bundle never copies.
-    /// </remarks>
+    /// <summary>Bundles one marker's parser inputs (inner bytes, source offset, probe writer).</summary>
     private readonly ref struct CiteScanContext
     {
         /// <summary>Initializes a new instance of the <see cref="CiteScanContext"/> struct.</summary>

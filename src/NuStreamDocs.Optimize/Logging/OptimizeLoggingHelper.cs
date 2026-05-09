@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.Optimize.Logging;
 
-/// <summary>
-/// Source-generated logging helpers for the optimize plugin.
-/// </summary>
+/// <summary>Source-generated logging helpers for the optimize plugin.</summary>
 internal static partial class OptimizeLoggingHelper
 {
     /// <summary>Logs the start of an optimize pass.</summary>

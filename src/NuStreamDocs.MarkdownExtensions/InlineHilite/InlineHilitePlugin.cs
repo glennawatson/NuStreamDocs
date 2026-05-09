@@ -7,18 +7,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.InlineHilite;
 
-/// <summary>
-/// Inline-highlight plugin (pymdownx.inlinehilite). Rewrites
-/// inline code that begins with the <c>#!lang</c> shebang into a
-/// <c>&lt;code class="highlight language-lang"&gt;…&lt;/code&gt;</c>
-/// element so a syntax-highlighting layer can pick it up.
-/// </summary>
-/// <remarks>
-/// The block-level highlight pipeline lives in
-/// <c>NuStreamDocs.Highlight</c>; this plugin just emits the
-/// language-class envelope for inline code so the block and inline
-/// styles share their classes.
-/// </remarks>
+/// <summary>Inline-highlight plugin — rewrites <c>`#!lang code`</c> inline spans into a <c>&lt;code class="highlight language-lang"&gt;</c> element for downstream syntax highlighting.</summary>
 public sealed class InlineHilitePlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>

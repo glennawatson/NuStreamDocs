@@ -10,17 +10,9 @@ namespace NuStreamDocs.Blog;
 
 /// <summary>
 /// Plugin that scans a Wyam-style flat blog directory and writes the
-/// generated index + tag archives back into the docs tree before
+/// generated index plus tag archives back into the docs tree before
 /// page discovery.
 /// </summary>
-/// <remarks>
-/// Generation runs in <see cref="DiscoverAsync"/>: by the time page
-/// enumeration begins, <c>{PostsSubdirectory}/index.md</c> and any
-/// <c>{PostsSubdirectory}/tags/{tag}.md</c> files are on disk so they
-/// are picked up like author-written pages. The plugin does not move
-/// the post files themselves — they stay flat under the configured
-/// subdirectory and are rendered as ordinary pages.
-/// </remarks>
 public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IBuildDiscoverPlugin
 {
     /// <summary>Configured options.</summary>

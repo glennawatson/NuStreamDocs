@@ -7,12 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Macros;
 
-/// <summary>Construction helpers for the byte-shaped <see cref="MacrosOptions"/>.</summary>
-/// <remarks>
-/// The <see cref="byte"/>-shaped overloads are the canonical hot path — callers that already hold
-/// UTF-8 bytes use them directly. The <see cref="string"/> overloads encode once at construction
-/// for callers driven by YAML/TOML config readers that produce strings.
-/// </remarks>
+/// <summary>Construction helpers for <see cref="MacrosOptions"/>.</summary>
 public static class MacrosOptionsExtensions
 {
     /// <summary>Returns a copy of <paramref name="options"/> with one extra UTF-8 <c>(name, value)</c> pair added to the variables map.</summary>
@@ -35,7 +30,6 @@ public static class MacrosOptionsExtensions
     /// <param name="name">Variable name.</param>
     /// <param name="value">Variable value.</param>
     /// <returns>The updated options.</returns>
-    /// <remarks>Encodes both inputs to UTF-8 once and delegates to the byte overload.</remarks>
     public static MacrosOptions WithVariable(this MacrosOptions options, ApiCompatString name, ApiCompatString value)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -82,7 +76,7 @@ public static class MacrosOptionsExtensions
         return options with { Variables = map };
     }
 
-    /// <summary>Builds a new variables dictionary by copying every existing entry and overlaying <paramref name="name"/> / <paramref name="value"/>.</summary>
+    /// <summary>Returns a copy of <paramref name="options"/> with <paramref name="name"/> set to <paramref name="value"/>.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="name">UTF-8 name bytes.</param>
     /// <param name="value">UTF-8 value bytes.</param>

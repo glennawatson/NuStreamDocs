@@ -4,11 +4,7 @@
 
 namespace NuStreamDocs.Bibliography.Model;
 
-/// <summary>
-/// Citation entry types. Names match CSL's vocabulary (kebab-case in
-/// CSL-JSON; UpperCamelCase here) so a future CSL backend reads the
-/// same input data without translation.
-/// </summary>
+/// <summary>Citation entry types; names align with CSL's vocabulary.</summary>
 public enum EntryType
 {
     /// <summary>Book — full monograph with publisher.</summary>

@@ -7,11 +7,6 @@ using NuStreamDocs.Theme.Common;
 namespace NuStreamDocs.Theme.Material3;
 
 /// <summary>Configuration for <see cref="Material3ThemePlugin"/>.</summary>
-/// <remarks>
-/// Scalar text fields are stored as UTF-8 bytes per the project's byte-first pipeline rule.
-/// String-shaped construction goes through <c>Material3ThemeOptionsExtensions</c>'s
-/// <c>WithXxx</c> helpers, which encode once at the boundary.
-/// </remarks>
 /// <param name="AssetSource">Where the page template loads CSS / JS from.</param>
 /// <param name="EmbeddedAssetRoot">UTF-8 local URL prefix when assets are bundled.</param>
 /// <param name="CdnRoot">UTF-8 remote URL prefix when assets are served from a CDN.</param>

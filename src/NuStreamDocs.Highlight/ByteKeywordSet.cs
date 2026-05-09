@@ -9,22 +9,10 @@ using NuStreamDocs.Highlight.Languages.Common.Builders;
 namespace NuStreamDocs.Highlight;
 
 /// <summary>
-/// Small read-only ASCII keyword set keyed by UTF-8 bytes; the
-/// per-token alternative to a <c>FrozenSet&lt;string&gt;</c>.
+/// Read-only ASCII keyword set keyed by UTF-8 bytes. Both case-sensitive and
+/// case-insensitive variants are supported; case-insensitive entries must be
+/// supplied lowercase.
 /// </summary>
-/// <remarks>
-/// Keywords are bucketed by length on construction; lookup probes the
-/// bucket for the candidate's length and linear-scans the (typically
-/// 1–10 entry) bucket. For the size of a language keyword set this
-/// outperforms a generic hash set even with span lookup, because the
-/// hash itself dominates compared to a bounded SequenceEqual.
-/// <para>
-/// Both case-sensitive and case-insensitive variants are supported.
-/// The case-insensitive variant assumes ASCII letters and uses the
-/// bit-5 fold trick from <see cref="AsciiByteHelpers"/> — every entry
-/// must be supplied lowercase.
-/// </para>
-/// </remarks>
 public sealed class ByteKeywordSet
 {
     /// <summary>Empty bucket used as a sentinel for unused length slots.</summary>
@@ -47,12 +35,7 @@ public sealed class ByteKeywordSet
         FirstByteSet = firstByteSet;
     }
 
-    /// <summary>Gets the auto-derived first-byte dispatch set covering every keyword's leading byte (and the case-flipped variant for case-insensitive sets).</summary>
-    /// <remarks>
-    /// Computed once at construction by walking every entry. Use this in place of a hand-curated
-    /// <c>SearchValues.Create("…"u8)</c> when wiring a keyword rule's <c>FirstBytes</c> dispatch —
-    /// <see cref="LexerRule.FirstBytes"/> on the matching rule can be set straight to this property.
-    /// </remarks>
+    /// <summary>Gets a first-byte dispatch set covering every keyword's leading byte (and the case-flipped variant for case-insensitive sets).</summary>
     public SearchValues<byte> FirstByteSet { get; }
 
     /// <summary>Builds a case-sensitive set from the supplied UTF-8 keywords. Pass <c>[.. "name"u8]</c> or <c>[.. "name"u8]</c> per entry.</summary>
@@ -76,9 +59,6 @@ public sealed class ByteKeywordSet
     /// <summary>Builds a case-sensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab.</summary>
     /// <param name="spaceSeparated">Whitespace-delimited UTF-8 keyword bytes (e.g. <c>"if else for"u8</c>).</param>
     /// <returns>Built set.</returns>
-    /// <remarks>
-    /// Empty runs (consecutive whitespace) are skipped silently; only ASCII space (<c>0x20</c>) and tab (<c>0x09</c>) act as separators.
-    /// </remarks>
     public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparated) =>
         Build(SplitSpaceSeparated(spaceSeparated), ignoreCase: false);
 
@@ -86,10 +66,6 @@ public sealed class ByteKeywordSet
     /// <param name="spaceSeparatedFirst">First chunk of whitespace-delimited UTF-8 keyword bytes.</param>
     /// <param name="spaceSeparatedSecond">Second chunk of whitespace-delimited UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
-    /// <remarks>
-    /// Provided so very large keyword lists can be authored across multiple <c>"..."u8</c> literals
-    /// without exceeding the S103 200-character line cap.
-    /// </remarks>
     public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparatedFirst, ReadOnlySpan<byte> spaceSeparatedSecond) =>
         Build(SplitTwoChunks(spaceSeparatedFirst, spaceSeparatedSecond), ignoreCase: false);
 
@@ -117,9 +93,6 @@ public sealed class ByteKeywordSet
     /// <summary>Builds a case-insensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab; entries must already be lowercase ASCII.</summary>
     /// <param name="spaceSeparatedLowercase">Whitespace-delimited lowercase UTF-8 keyword bytes (e.g. <c>"select from where"u8</c>).</param>
     /// <returns>Built set.</returns>
-    /// <remarks>
-    /// Empty runs (consecutive whitespace) are skipped silently; only ASCII space (<c>0x20</c>) and tab (<c>0x09</c>) act as separators.
-    /// </remarks>
     public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(ReadOnlySpan<byte> spaceSeparatedLowercase) =>
         Build(SplitSpaceSeparated(spaceSeparatedLowercase), ignoreCase: true);
 

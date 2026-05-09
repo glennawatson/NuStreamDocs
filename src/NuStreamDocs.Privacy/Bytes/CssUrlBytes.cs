@@ -7,10 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Byte-level scanner for CSS <c>url(...)</c> tokens. Supports
-/// double-quoted, single-quoted, and unquoted forms.
-/// </summary>
+/// <summary>Scans CSS <c>url(...)</c> tokens (quoted and unquoted) and rewrites or audits them.</summary>
 internal static class CssUrlBytes
 {
     /// <summary>Bytes that may start a <c>url</c> token (case-insensitive).</summary>

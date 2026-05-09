@@ -8,23 +8,7 @@ using NuStreamDocs.Links;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// One node in the rendered navigation tree.
-/// </summary>
-/// <remarks>
-/// Reference-typed because nav trees are deeply shared (cross-page
-/// breadcrumbs, sidebar, search-scoping) and equality is identity, not
-/// structural. <see cref="Children"/> is a plain <c>NavNode[]</c>: each
-/// builder pass right-sizes the array up front so we never pay the
-/// <c>List&lt;T&gt;</c>-doubling overhead on large projects.
-/// <para>
-/// <see cref="RelativePath"/> / <see cref="IndexPath"/> are <see cref="FilePath"/>-typed —
-/// the source <c>.md</c> path used for filesystem lookups and Path.* helpers. The per-emit
-/// <see cref="Title"/> / <see cref="RelativeUrlBytes"/> / <see cref="IndexUrlBytes"/> hold the
-/// rendered <c>.html</c> URL bytes pre-encoded to UTF-8 once at construction so the renderer's
-/// per-page emit loop never re-encodes them.
-/// </para>
-/// </remarks>
+/// <summary>One node in the rendered navigation tree.</summary>
 internal sealed class NavNode
 {
     /// <summary>Initializes a new instance of the <see cref="NavNode"/> class from already-encoded title bytes.</summary>
@@ -110,7 +94,7 @@ internal sealed class NavNode
     {
     }
 
-    /// <summary>Gets the UTF-8 display title bytes; encoded once at construction so renderers never transcode per emit.</summary>
+    /// <summary>Gets the UTF-8 display title bytes.</summary>
     public byte[] Title { get; }
 
     /// <summary>Gets the source-relative path of the underlying file (or section directory).</summary>
@@ -134,10 +118,7 @@ internal sealed class NavNode
     /// <summary>Gets the UTF-8 page URL bytes derived from <see cref="IndexPath"/>; empty when this node has no promoted index page.</summary>
     public byte[] IndexUrlBytes { get; }
 
-    /// <summary>
-    /// Gets the explicit display order from front-matter <c>Order:</c>. Default <see cref="int.MaxValue"/>
-    /// signals "no explicit order" so the sort comparers can fall back to natural alpha.
-    /// </summary>
+    /// <summary>Gets the explicit display order from front-matter <c>Order:</c>; <see cref="int.MaxValue"/> means "no explicit order" (fall back to alpha sort).</summary>
     public int Order { get; init; } = int.MaxValue;
 
     /// <summary>Attaches <see cref="Parent"/> links for this node's subtree after construction.</summary>

@@ -8,25 +8,10 @@ using NuStreamDocs.Html;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Span-based UTF-8 inline parser and HTML renderer.
+/// Span-based UTF-8 inline parser and HTML renderer. Supports code spans, strong / emphasis,
+/// inline links, autolinks, raw HTML, and hard breaks; falls back to HTML-escaped text on
+/// unmatched specials.
 /// </summary>
-/// <remarks>
-/// Walks one block's inner UTF-8 byte slice and emits HTML straight to
-/// an <see cref="IBufferWriter{T}"/>. No string materialization; no
-/// allocations on the happy path. Supports the inline subset every
-/// markdown document uses heavily:
-/// <list type="bullet">
-/// <item>code spans (<c>`code`</c> / <c>``cod`e``</c>),</item>
-/// <item>strong (<c>**text**</c>) and emphasis (<c>*text*</c>, <c>_text_</c>),</item>
-/// <item>inline links (<c>[label](href)</c>),</item>
-/// <item>autolinks (<c>&lt;https://...&gt;</c>),</item>
-/// <item>hard breaks (two trailing spaces before a newline).</item>
-/// </list>
-/// The full emphasis-stack algorithm and reference-style links land
-/// alongside the link-reference-definition pass; this implementation
-/// is the line-of-sight version that handles every nesting case
-/// real-world docs hit and falls back to escaped text on the rest.
-/// </remarks>
 public static class InlineRenderer
 {
     /// <summary>Backslash byte (escape marker).</summary>
@@ -54,19 +39,10 @@ public static class InlineRenderer
     private const byte Lf = (byte)'\n';
 
     /// <summary>Bytes that may begin a recognized inline construct.</summary>
-    /// <remarks>
-    /// Vectorized via <see cref="SearchValues"/> so plain-text runs between specials are leapt over with one
-    /// hardware-accelerated <c>IndexOfAny</c> call rather than a per-byte switch dispatch. Hard breaks are
-    /// triggered by <c>\n</c> (which then walks back over trailing spaces); the space byte itself is NOT in
-    /// this set so prose with normal spacing benefits from the leap.
-    /// </remarks>
     private static readonly SearchValues<byte> SpecialBytes =
         SearchValues.Create("\\`*_[!<\n"u8);
 
-    /// <summary>
-    /// Renders the inline content of <paramref name="source"/> to
-    /// <paramref name="writer"/>.
-    /// </summary>
+    /// <summary>Renders the inline content of <paramref name="source"/> to <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 inner text of the block.</param>
     /// <param name="writer">UTF-8 HTML sink.</param>
     public static void Render(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

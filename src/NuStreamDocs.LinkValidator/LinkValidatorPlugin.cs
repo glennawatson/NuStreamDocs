@@ -9,18 +9,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.LinkValidator;
 
-/// <summary>
-/// Plugin that validates internal and external links across the
-/// rendered site. Pages are captured during the per-page scan phase;
-/// validation runs once during the cross-page resolve barrier against
-/// the accumulated corpus.
-/// </summary>
-/// <remarks>
-/// Mirror of the rxui website's source-link validator slot; takes
-/// <see cref="LinkValidatorOptions"/> and writes diagnostic lines to
-/// stderr. Fails the process via the captured exit code only when
-/// the relevant strict flag is on, matching mkdocs' behavior.
-/// </remarks>
+/// <summary>Plugin that validates internal and external links across the rendered site.</summary>
 public sealed class LinkValidatorPlugin
     : IBuildConfigurePlugin, IBuildFinalizePlugin
 {

@@ -10,7 +10,7 @@ namespace NuStreamDocs.Bibliography.Styles.Aglc4;
 /// <summary>AGLC4 pinpoint locator formatter — the <c>p 23</c> / <c>[12]</c> / <c>ch 4</c> trailing portion.</summary>
 internal static class Aglc4Pinpoint
 {
-    /// <summary>Writes the locator per AGLC4 conventions directly to <paramref name="writer"/>; the value bytes are sliced from <paramref name="source"/> using the locator's offsets.</summary>
+    /// <summary>Writes the locator per AGLC4 conventions.</summary>
     /// <param name="locator">Source locator.</param>
     /// <param name="source">Original source span the locator's offsets point into.</param>
     /// <param name="writer">UTF-8 sink.</param>

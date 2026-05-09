@@ -4,17 +4,10 @@
 
 namespace NuStreamDocs.Common;
 
-/// <summary>Generic helpers for joining two arrays of the same element type.</summary>
-/// <remarks>
-/// Used by option records' <c>AddXxx</c> helpers to append to an existing snapshot without
-/// touching either input. Skips the alloc entirely when one side is empty by returning the
-/// other side directly. Generic so it serves both byte-shaped storage (<c>byte[][]</c> via
-/// <c>T = byte[]</c>) and string-shaped storage (<c>string[]</c> via <c>T = string</c>) — the
-/// JIT specializes per element type.
-/// </remarks>
+/// <summary>Helpers for joining two arrays of the same element type.</summary>
 public static class ArrayJoiner
 {
-    /// <summary>Concatenates <paramref name="head"/> and <paramref name="tail"/> into a single right-sized array, returning the non-empty side directly when one is empty.</summary>
+    /// <summary>Concatenates <paramref name="head"/> and <paramref name="tail"/> into a single array; returns the non-empty side directly when one is empty.</summary>
     /// <typeparam name="T">Element type.</typeparam>
     /// <param name="head">Existing entries.</param>
     /// <param name="tail">Entries to append.</param>

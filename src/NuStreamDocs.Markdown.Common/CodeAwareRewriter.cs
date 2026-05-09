@@ -7,16 +7,10 @@ using System.Buffers;
 namespace NuStreamDocs.Markdown.Common;
 
 /// <summary>
-/// Drives the canonical code-aware rewrite scan loop:
-/// fenced-code regions and inline-code spans pass through verbatim,
-/// every other byte is offered to a per-cursor probe, and unmatched
-/// bytes are copied 1:1.
+/// Drives the code-aware rewrite scan loop: fenced-code regions and inline-code spans pass
+/// through verbatim, other bytes are offered to a per-cursor probe, and unmatched bytes are
+/// copied 1:1.
 /// </summary>
-/// <remarks>
-/// Replaces the hand-rolled copy of this loop that every preprocessor
-/// rewriter (caret/tilde, abbr, keys, emoji, arithmatex, critic-markup,
-/// inline-hilite, smart-symbols, etc.) used to carry inline.
-/// </remarks>
 public static class CodeAwareRewriter
 {
     /// <summary>Walks <paramref name="source"/> through the canonical scan loop, dispatching markers to <paramref name="tryRewrite"/>.</summary>

@@ -4,13 +4,7 @@
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>Configuration for <see cref="PrivacyPlugin"/>.</summary>
-/// <remarks>
-/// UTF-8 throughout: paths and host/pattern lists are <see cref="byte"/> arrays so the per-page
-/// filtering hot path stays byte-shaped end-to-end. String-shaped construction helpers live on
-/// <see cref="PrivacyOptionsExtensions"/> (encode-once at construction) for callers that build
-/// from configuration files or test literals.
-/// </remarks>
+/// <summary>Configuration for <see cref="PrivacyPlugin"/>; string-shaped construction helpers live on <see cref="PrivacyOptionsExtensions"/>.</summary>
 /// <param name="Enabled">Master switch. When false, the plugin is a no-op.</param>
 /// <param name="AssetDirectory">UTF-8 forward-slash relative directory the externalized assets are written to (default <c>assets/external</c>).</param>
 /// <param name="DownloadParallelism">Maximum number of concurrent HTTP downloads.</param>
@@ -49,8 +43,7 @@ public readonly record struct PrivacyOptions(
     bool GenerateCspManifest,
     byte[] CspManifestPath)
 {
-    /// <summary>Default <see cref="HostsToSkip"/> entries — hosts whose URLs are almost never the right thing to localize (source-control providers, social networks, video embeds).</summary>
-    /// <remarks>Encoded once at type init.</remarks>
+    /// <summary>Default <see cref="HostsToSkip"/> entries — well-known hosts that should remain external (source-control providers, social networks, video embeds).</summary>
     private static readonly byte[][] WellKnownHostsToSkip =
     [
         [.. "github.com"u8],
@@ -67,12 +60,6 @@ public readonly record struct PrivacyOptions(
     ];
 
     /// <summary>Gets the option set with all defaults populated.</summary>
-    /// <remarks>
-    /// <see cref="HostsToSkip"/> ships with a list of well-known "never localize" hosts.
-    /// Override with <see cref="PrivacyOptionsExtensions.WithHostsToSkip(PrivacyOptions, string[])"/>
-    /// to start fresh, extend with <see cref="PrivacyOptionsExtensions.AddHostsToSkip(PrivacyOptions, string[])"/>,
-    /// or empty with <see cref="PrivacyOptionsExtensions.ClearHostsToSkip(PrivacyOptions)"/>.
-    /// </remarks>
     public static PrivacyOptions Default { get; } = new(
         Enabled: true,
         AssetDirectory: [.. "assets/external"u8],

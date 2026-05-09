@@ -7,10 +7,9 @@ using System.Buffers;
 namespace NuStreamDocs.Optimize;
 
 /// <summary>
-/// Byte-level UTF-8 HTML minifier. Collapses inter-tag whitespace, strips
-/// comments, and copies the contents of <c>&lt;pre&gt;</c>, <c>&lt;code&gt;</c>,
-/// <c>&lt;textarea&gt;</c>, <c>&lt;script&gt;</c>, and <c>&lt;style&gt;</c>
-/// blocks verbatim so source samples and JS/CSS are preserved.
+/// UTF-8 HTML minifier — collapses inter-tag whitespace, strips comments, and preserves
+/// <c>&lt;pre&gt;</c> / <c>&lt;code&gt;</c> / <c>&lt;textarea&gt;</c> / <c>&lt;script&gt;</c> /
+/// <c>&lt;style&gt;</c> bodies verbatim.
 /// </summary>
 internal static class HtmlMinifier
 {

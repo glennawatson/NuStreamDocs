@@ -9,15 +9,7 @@ using NuStreamDocs.Privacy.Bytes;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>One-shot HTML rewriter that runs every privacy byte scanner against the same UTF-8 buffer.</summary>
-/// <remarks>
-/// Two non-URL stages (mixed-content upgrade, anchor hardening) and one combined URL stage rotate through two pooled
-/// <see cref="ArrayBufferWriter{T}"/>s rented from <see cref="PageBuilderPool"/> — the same two-buffer shape
-/// <c>AttrListRewriter</c> uses, so the rewrite is allocation-free across stages and the writers are returned to
-/// the per-thread pool on dispose. The URL stage still walks the HTML in a single pass via
-/// <see cref="ExternalUrlScanner.RewriteInto"/>, replacing the three sequential per-attribute-type stages the
-/// previous shape paid for.
-/// </remarks>
+/// <summary>Runs every privacy byte scanner (mixed-content, anchor hardening, URL rewrite) against the page HTML.</summary>
 internal static class PrivacyRewriter
 {
     /// <summary>Runs every privacy rewrite pass against <paramref name="html"/>, writing the result directly into <paramref name="sink"/>.</summary>

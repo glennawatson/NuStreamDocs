@@ -130,7 +130,7 @@ public static class BlogPostScanner
         return dst;
     }
 
-    /// <summary>Normalizes a source-relative path to a forward-slashed <see cref="FilePath"/> at the BCL boundary; the wrapper exists purely for downstream filesystem-IO consumers.</summary>
+    /// <summary>Normalizes a source-relative path to a forward-slashed <see cref="FilePath"/>.</summary>
     /// <param name="relativePath">Source path returned from <see cref="Path.GetRelativePath(string, string)"/>.</param>
     /// <returns>Forward-slashed file path.</returns>
     private static FilePath NormalizeRelativeFilePath(string relativePath) =>
@@ -283,7 +283,7 @@ public static class BlogPostScanner
         && line[1] is (byte)'-'
         && line[FrontmatterFenceLastIndex] is (byte)'-';
 
-    /// <summary>Comparer that orders posts by <see cref="BlogPost.Published"/> descending; cached as a singleton to avoid per-call lambda allocations.</summary>
+    /// <summary>Comparer that orders posts by <see cref="BlogPost.Published"/> descending.</summary>
     private sealed class BlogPostByPublishedDescending : IComparer<BlogPost>
     {
         /// <summary>Singleton instance.</summary>

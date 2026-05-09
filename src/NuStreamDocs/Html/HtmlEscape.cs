@@ -8,16 +8,7 @@ using System.Text;
 
 namespace NuStreamDocs.Html;
 
-/// <summary>
-/// UTF-8 HTML escaper.
-/// </summary>
-/// <remarks>
-/// Operates entirely on bytes — no string/UTF-16 round trip. The hot
-/// path advances over runs of unescaped bytes via vectorized
-/// <c>IndexOfAny(SearchValues&lt;byte&gt;)</c> and writes them in bulk to
-/// the destination, falling through to a per-byte switch only at
-/// escape points.
-/// </remarks>
+/// <summary>UTF-8 HTML escaper for text content and attribute values.</summary>
 public static class HtmlEscape
 {
     /// <summary>Bytes that require an HTML entity replacement in text content.</summary>
@@ -34,9 +25,9 @@ public static class HtmlEscape
         SearchValues.Create("&<>\"");
 
     /// <summary>
-    /// Writes <paramref name="source"/> to <paramref name="writer"/>,
-    /// replacing <c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>, and <c>&quot;</c>
-    /// with their named HTML entities.
+    /// Writes <paramref name="source"/> to <paramref name="writer"/>, replacing <c>&amp;</c>,
+    /// <c>&lt;</c>, <c>&gt;</c>, and <c>&quot;</c> with their named HTML entities. Pre-formed entity
+    /// references in the input are passed through verbatim.
     /// </summary>
     /// <param name="source">UTF-8 input span.</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -91,10 +82,8 @@ public static class HtmlEscape
 
     /// <summary>
     /// UTF-16 overload that writes the escaped, UTF-8-encoded form of
-    /// <paramref name="source"/> straight into <paramref name="writer"/>.
-    /// Same entity replacements as the byte overload — but no
-    /// intermediate buffer is rented, so per-call allocations stay at
-    /// zero on the highlight hot path.
+    /// <paramref name="source"/> straight into <paramref name="writer"/>. Same entity
+    /// replacements as the byte overload.
     /// </summary>
     /// <param name="source">UTF-16 input span.</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -133,11 +122,7 @@ public static class HtmlEscape
     /// <summary>Writes <paramref name="source"/> to <paramref name="writer"/>, escaping only <c>&amp;</c> and <c>"</c> for use inside a double-quoted HTML attribute value.</summary>
     /// <param name="source">UTF-8 input span.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <remarks>
-    /// Sister to the byte <c>EscapeText</c> overload for attribute-value callers.
-    /// <c>&lt;</c> and <c>&gt;</c> are literal inside attribute values, so escaping them is unnecessary
-    /// and can corrupt values that carry markup-like content.
-    /// </remarks>
+    /// <remarks><c>&lt;</c> and <c>&gt;</c> are literal inside attribute values; escaping them can corrupt values that carry markup-like content.</remarks>
     public static void EscapeAttribute(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         ArgumentNullException.ThrowIfNull(writer);

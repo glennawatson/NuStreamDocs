@@ -8,23 +8,13 @@ using NuStreamDocs.Serve.Logging;
 
 namespace NuStreamDocs.Serve;
 
-/// <summary>
-/// Owns the <see cref="FileSystemWatcher"/> + debounce window. Coalesces
-/// bursts of file-system events into a single rebuild trigger.
-/// </summary>
-/// <remarks>
-/// Editors save in a flurry — atomic-rename, format-on-save, multiple
-/// dirty buffers. We push every event onto an unbounded channel, then
-/// wait <c>DebounceMs</c> after the last one before yielding a tick to
-/// the caller. Callers run their rebuild then loop back for the next
-/// debounced batch.
-/// </remarks>
+/// <summary>Watches a directory and coalesces bursts of file-system events into debounced rebuild triggers.</summary>
 internal sealed class WatchLoop : IDisposable
 {
-    /// <summary>Sentinel path written into the channel when an OS-buffer overflow loses events; the next batch surfaces this so callers can do a full rebuild.</summary>
+    /// <summary>Sentinel path surfaced to callers after an OS-buffer overflow so they can do a full rebuild.</summary>
     public const string OverflowSentinel = "<<watcher-overflow>>";
 
-    /// <summary>OS-level event buffer in bytes — the practical maximum FSW documents (large enough to absorb most save/build bursts before the kernel overflows).</summary>
+    /// <summary>OS-level event buffer in bytes.</summary>
     private const int InternalBufferBytes = 64 * 1024;
 
     /// <summary>Output directory whose events we ignore (so the build doesn't trigger itself).</summary>
@@ -231,14 +221,9 @@ internal sealed class WatchLoop : IDisposable
         _events.Writer.TryWrite(e.FullPath);
     }
 
-    /// <summary>FileSystemWatcher error handler — buffer overflows and similar.</summary>
+    /// <summary>FileSystemWatcher error handler — pushes <see cref="OverflowSentinel"/> on buffer overflow.</summary>
     /// <param name="sender">Sender.</param>
     /// <param name="e">Error args.</param>
-    /// <remarks>
-    /// Buffer overflow ("InternalBufferException") drops every event in the burst. We push <see cref="OverflowSentinel"/>
-    /// onto the channel so the next yielded batch carries a recover-with-full-rebuild marker; without this the loop
-    /// would silently miss the burst and look "stalled".
-    /// </remarks>
     private void OnError(object sender, ErrorEventArgs e)
     {
         ServeLoggingHelper.LogWatchError(_logger, e.GetException());

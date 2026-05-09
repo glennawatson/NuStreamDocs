@@ -8,23 +8,13 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// Writes a single landing-page <c>index.md</c> at the root of the
-/// generated API tree, listing every per-namespace directory the
-/// emitter produced as a clickable link.
-/// </summary>
-/// <remarks>
-/// Runs once after the per-namespace emit pass. Pages discovery picks up
-/// the index.md alongside the rest of the docs tree; the navigation
-/// plugin then renders a "Namespaces" entry-point at the configured
-/// output subdirectory (typically <c>/api/</c>).
-/// </remarks>
+/// <summary>Writes the landing-page <c>index.md</c> at the API output root.</summary>
 internal static class ApiIndexWriter
 {
-    /// <summary>Initial buffer capacity; a few hundred bytes for the title + intro plus 32 B per namespace covers the common case without a grow.</summary>
+    /// <summary>Initial buffer capacity.</summary>
     private const int InitialBufferCapacity = 1024;
 
-    /// <summary>Directory names the emitter writes alongside per-namespace content that should not appear as namespaces in the index.</summary>
+    /// <summary>Subdirectory names that should not appear in the namespace index.</summary>
     private static readonly HashSet<string> InfraDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "lib",
@@ -88,13 +78,11 @@ internal static class ApiIndexWriter
         WriteSpan(sink, "\n---\n\n"u8);
     }
 
-    /// <summary>Returns the ordinal-sorted set of subdirectory names under <paramref name="apiPath"/>, skipping the well-known infrastructure dirs.</summary>
+    /// <summary>Returns the ordinal-sorted namespace subdirectory names under <paramref name="apiPath"/>.</summary>
     /// <param name="apiPath">API output root.</param>
     /// <returns>Sorted namespace directory names.</returns>
     private static string[] CollectNamespaceNames(DirectoryPath apiPath)
     {
-        // Direct BCL call so we can iterate by index — DirectoryPath.EnumerateDirectories
-        // would yield wrapper structs we'd unwrap one-by-one.
         var dirs = Directory.GetDirectories(apiPath.Value);
         List<string> collected = new(dirs.Length);
         for (var i = 0; i < dirs.Length; i++)

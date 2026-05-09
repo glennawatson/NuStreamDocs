@@ -11,21 +11,11 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Highlight;
 
 /// <summary>
-/// Plugin that finds <c>&lt;pre&gt;&lt;code class="language-X"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
-/// blocks emitted by the renderer and replaces the body with classed token spans
-/// produced by a <see cref="Lexer"/>.
+/// Replaces <c>&lt;pre&gt;&lt;code class="language-X"&gt;…&lt;/code&gt;&lt;/pre&gt;</c> bodies
+/// with classed token spans produced by a <see cref="Lexer"/>. When
+/// <see cref="HighlightOptions.AutoDetectLanguage"/> is on, unlabeled blocks are
+/// also scored and labelled when a high-confidence match is found.
 /// </summary>
-/// <remarks>
-/// Match the marker-replace pattern used by the Nav plugin: walk the rendered HTML
-/// looking for <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c>, emit prefix bytes
-/// verbatim, swap the body for highlighted bytes, repeat. Per-block work is the
-/// lexer pass plus an HTML escape.
-/// <para>
-/// The whole pipeline stays UTF-8: the language alias and the unescaped
-/// body are passed to the lexer / emitter as <see cref="ReadOnlyMemory{Byte}"/>
-/// without any UTF-16 round-trip.
-/// </para>
-/// </remarks>
 public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>The <c>&lt;link rel="stylesheet"&gt;</c> snippet the page-shell template injects into <c>&lt;head&gt;</c>.</summary>
@@ -99,7 +89,7 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
         writer.Write(HeadExtraSnippet);
     }
 
-    /// <summary>Decodes UTF-8 HTML-escaped bytes into a fresh byte array (no UTF-16 round-trip). When the input contains no entities the source bytes are copied verbatim.</summary>
+    /// <summary>Decodes HTML-escaped UTF-8 bytes into a fresh byte array; copies verbatim when no entities are present.</summary>
     /// <param name="bytes">Source bytes.</param>
     /// <returns>Decoded bytes.</returns>
     private static byte[] HtmlUnescapeBytes(ReadOnlySpan<byte> bytes)
@@ -150,13 +140,7 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>
-    /// Walks <paramref name="source"/>, copying through verbatim and substituting highlighted
-    /// bodies for every recognized <c>&lt;pre&gt;&lt;code class="language-…"&gt;</c> block.
-    /// When <see cref="HighlightOptions.AutoDetectLanguage"/> is on, also runs the heuristic
-    /// detector against unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> blocks and labels-and-highlights
-    /// the high-confidence matches.
-    /// </summary>
+    /// <summary>Walks <paramref name="source"/>, substituting highlighted bodies for every recognized code block.</summary>
     /// <param name="source">Snapshot of the rendered HTML.</param>
     /// <param name="writer">UTF-8 sink (the original page buffer).</param>
     private void Highlight(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)

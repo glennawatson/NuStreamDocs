@@ -52,24 +52,13 @@ internal static class AttrListMarker
         return earliest;
     }
 
-    /// <summary>Tries to match an optional-whitespace + <c>{:&#160;… }</c> / <c>{ … }</c> token starting at or just after <paramref name="p"/>.</summary>
+    /// <summary>Tries to match an attr-list marker (<c>{: ...}</c> or <c>{ ... }</c>) starting at or just after <paramref name="p"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <param name="p">Candidate offset (typically just after the closing <c>&gt;</c> or <c>&lt;/tag&gt;</c>).</param>
+    /// <param name="p">Candidate offset.</param>
     /// <param name="contentStart">First byte of the inner attr-list text on success.</param>
     /// <param name="contentEnd">Offset of the closing <c>}</c> on success.</param>
     /// <param name="markerEnd">Offset just past the closing <c>}</c> on success.</param>
     /// <returns>True when a well-formed marker was found.</returns>
-    /// <remarks>
-    /// Accepts two opener shapes:
-    /// <list type="bullet">
-    ///   <item><description>The canonical Python-Markdown form <c>{: …}</c>.</description></item>
-    ///   <item><description>The mkdocs-material shorthand <c>{ … }</c> (open-brace plus inner whitespace, no colon)
-    ///     where the inner content starts with one of <c>.</c>, <c>#</c>, an ASCII-letter
-    ///     attribute-name byte, or another whitespace/closing brace. The shape rules out the
-    ///     overwhelming majority of code-block uses of <c>{</c> while still catching the
-    ///     leading-space form mkdocs-material conventions emit.</description></item>
-    /// </list>
-    /// </remarks>
     public static bool TryMatchMarker(ReadOnlySpan<byte> source, int p, out int contentStart, out int contentEnd, out int markerEnd)
     {
         contentStart = NoOffset;
@@ -95,17 +84,13 @@ internal static class AttrListMarker
         return contentEnd >= contentStart;
     }
 
-    /// <summary>Emits the merged attribute fragment (with leading space when non-empty) directly into <paramref name="sink"/>.</summary>
+    /// <summary>Emits the merged attribute fragment into <paramref name="sink"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <param name="existingAttrsStart">Offset of the existing attribute fragment (between the tag name and the closing <c>&gt;</c>).</param>
+    /// <param name="existingAttrsStart">Offset of the existing attribute fragment.</param>
     /// <param name="existingAttrsEnd">Offset just past the existing attribute fragment.</param>
-    /// <param name="attrListStart">Offset of the inner attr-list text (between <c>{:</c> and <c>}</c>).</param>
+    /// <param name="attrListStart">Offset of the inner attr-list text.</param>
     /// <param name="attrListEnd">Offset just past the inner attr-list text.</param>
-    /// <param name="sink">UTF-8 sink to write the merged fragment into.</param>
-    /// <remarks>
-    /// No string materialization, no per-match heap allocation on typical input sizes —
-    /// the parsed attr-list ranges live in stackalloc buffers bundled into <see cref="AttrListBuffers"/>.
-    /// </remarks>
+    /// <param name="sink">UTF-8 sink.</param>
     public static void EmitMerged(
         ReadOnlySpan<byte> source,
         int existingAttrsStart,
@@ -630,14 +615,7 @@ internal static class AttrListMarker
     /// <param name="Value">Value range; sentinel start signals a bare flag attribute.</param>
     private readonly record struct KvRange(ByteRange Key, ByteRange Value);
 
-    /// <summary>Bundles the stack-allocated parse buffers and emit-flags for one <c>EmitMerged</c> call so internal helpers stay under the project's parameter cap.</summary>
-    /// <remarks>
-    /// Plain <c>ref struct</c> rather than <c>record struct</c>: the buffers are <c>stackalloc</c>-backed,
-    /// so the type must hold <see cref="Span{T}"/> fields. <see cref="Span{T}"/> may only live inside a
-    /// <c>ref struct</c> (CS8345), and the C# grammar disallows the <c>ref</c> modifier on a
-    /// <c>record_struct_declaration</c> (CS0106) — so positional record-struct shape is not available here.
-    /// Passed by <c>ref</c> so the mutable counters and emit-flag setters propagate to the caller.
-    /// </remarks>
+    /// <summary>Stack-allocated parse buffers and emit flags for one <c>EmitMerged</c> call.</summary>
     private ref struct AttrListBuffers
     {
         /// <summary>Initializes a new instance of the <see cref="AttrListBuffers"/> struct.</summary>

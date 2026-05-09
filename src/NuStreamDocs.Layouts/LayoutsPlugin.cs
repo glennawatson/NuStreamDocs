@@ -19,7 +19,7 @@ namespace NuStreamDocs.Layouts;
 /// </summary>
 public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
 {
-    /// <summary>Tiebreak inside <see cref="PluginBand.Latest"/> chosen so the layout swap runs immediately before the theme shell wraps the body in full-page chrome.</summary>
+    /// <summary>Tiebreak inside <see cref="PluginBand.Latest"/>; runs before the theme shell wraps the body.</summary>
     private const int PostRenderTiebreak = -1;
 
     /// <summary>Configured options.</summary>
@@ -28,7 +28,7 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
     /// <summary>Logger used for diagnostic warnings.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>Per-build parse cache so each unique template file parses exactly once even when hundreds of pages share it.</summary>
+    /// <summary>Per-build template parse cache.</summary>
     private readonly TemplateCache _cache = new();
 
     /// <summary>Initializes a new instance of the <see cref="LayoutsPlugin"/> class with default options.</summary>
@@ -64,16 +64,10 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
     /// <inheritdoc/>
     public PluginPriority ConfigurePriority => PluginPriority.Normal;
 
-    /// <summary>Empties the per-build template cache so every build (including each rebuild in serve mode) parses templates from disk afresh.</summary>
-    /// <param name="context">Build configuration context (unused — the cache is plugin-scoped).</param>
-    /// <param name="cancellationToken">Cancellation token (unused — the operation is synchronous).</param>
+    /// <summary>Clears the per-build template cache so every build re-parses templates from disk.</summary>
+    /// <param name="context">Build configuration context.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Completed task.</returns>
-    /// <remarks>
-    /// The cache is cleared at the start of each build so serve-mode
-    /// rebuilds always see fresh template bytes from disk. Cache lifetime
-    /// is therefore one build; the dictionary never accumulates stale
-    /// entries across builds.
-    /// </remarks>
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _cache.Clear();
@@ -81,12 +75,6 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
     }
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Returns <c>true</c> unconditionally — the only signal that decides whether to apply a layout
-    /// lives in the page's frontmatter, which the post-render hook reads from
-    /// <see cref="PagePostRenderContext.Source"/>. The <see cref="PostRender"/> body short-circuits
-    /// to a passthrough copy when no <c>template:</c> key is present.
-    /// </remarks>
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
     /// <inheritdoc/>
@@ -128,9 +116,9 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
         writer.Advance(source.Length);
     }
 
-    /// <summary>Builds the <c>page.url</c> bytes from the page's relative path — forward-slashes, no leading slash, <c>.md</c> stripped to <c>.html</c>-equivalent.</summary>
+    /// <summary>Builds the <c>page.url</c> bytes from the page's relative path.</summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
-    /// <returns>UTF-8 url bytes.</returns>
+    /// <returns>UTF-8 URL bytes (forward-slash separators, no leading slash).</returns>
     private static byte[] ToUrlBytes(FilePath relativePath)
     {
         if (relativePath.IsEmpty)

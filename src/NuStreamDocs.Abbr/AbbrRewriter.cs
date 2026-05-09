@@ -9,13 +9,7 @@ using static NuStreamDocs.Markdown.Common.MarkdownCodeScanner;
 
 namespace NuStreamDocs.Abbr;
 
-/// <summary>
-/// Stateless UTF-8 abbreviation rewriter. Collects
-/// <c>*[token]: definition</c> definition lines, strips them from
-/// the output, then wraps every word-boundary occurrence of a
-/// known token in <c>&lt;abbr&gt;</c>. Fenced and inline code are
-/// passed through verbatim during the wrap phase.
-/// </summary>
+/// <summary>Rewrites <c>*[token]: definition</c> markdown into <c>&lt;abbr&gt;</c> wrappers. Code spans are passed through verbatim.</summary>
 internal static class AbbrRewriter
 {
     /// <summary>Length of the <c>*[</c> opener prefix on a definition line.</summary>
@@ -40,10 +34,10 @@ internal static class AbbrRewriter
         WrapOccurrences(stripped, tokens, defs, writer);
     }
 
-    /// <summary>Walks <paramref name="source"/>, recording any abbreviation definition lines into <paramref name="defs"/>, and returns the source with those lines removed.</summary>
+    /// <summary>Strips definition lines from <paramref name="source"/>, populating <paramref name="defs"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <param name="defs">Definition map populated in place; keyed on the UTF-8 token bytes, value is the UTF-8 trimmed definition body.</param>
-    /// <returns>UTF-8 byte array with <c>*[…]: …</c> lines stripped.</returns>
+    /// <param name="defs">Token-to-definition map populated in place.</param>
+    /// <returns>Source with <c>*[…]: …</c> lines removed.</returns>
     private static byte[] StripDefinitions(ReadOnlySpan<byte> source, Dictionary<byte[], byte[]> defs)
     {
         if (source.IsEmpty)
@@ -73,11 +67,11 @@ internal static class AbbrRewriter
         return [.. keep.WrittenSpan];
     }
 
-    /// <summary>Tries to parse <paramref name="line"/> as a <c>*[token]: definition</c> definition line.</summary>
-    /// <param name="line">UTF-8 bytes of a single line including any trailing newline.</param>
-    /// <param name="token">Captured UTF-8 token bytes on success.</param>
-    /// <param name="definition">Captured UTF-8 definition bytes (trimmed) on success.</param>
-    /// <returns>True when <paramref name="line"/> matched.</returns>
+    /// <summary>Tries to parse <paramref name="line"/> as a <c>*[token]: definition</c> line.</summary>
+    /// <param name="line">UTF-8 line bytes including any trailing newline.</param>
+    /// <param name="token">Captured token on success.</param>
+    /// <param name="definition">Captured definition (trimmed) on success.</param>
+    /// <returns>True when the line matched.</returns>
     private static bool TryParseDefinition(ReadOnlySpan<byte> line, out byte[] token, out byte[] definition)
     {
         token = [];
@@ -113,10 +107,10 @@ internal static class AbbrRewriter
         return true;
     }
 
-    /// <summary>Walks <paramref name="source"/> and wraps every word-boundary occurrence of any <paramref name="tokens"/> entry into <c>&lt;abbr&gt;</c>.</summary>
-    /// <param name="source">Source with definition lines already stripped.</param>
+    /// <summary>Wraps every word-boundary occurrence of a token in <c>&lt;abbr&gt;</c>.</summary>
+    /// <param name="source">Source with definition lines stripped.</param>
     /// <param name="tokens">Tokens sorted longest-first.</param>
-    /// <param name="defs">Token-bytes-to-definition-bytes map.</param>
+    /// <param name="defs">Token-to-definition map.</param>
     /// <param name="writer">Sink.</param>
     private static void WrapOccurrences(ReadOnlySpan<byte> source, byte[][] tokens, Dictionary<byte[], byte[]> defs, IBufferWriter<byte> writer)
     {
@@ -136,12 +130,12 @@ internal static class AbbrRewriter
         }
     }
 
-    /// <summary>Tries each token (longest-first) against the source at <paramref name="offset"/>.</summary>
+    /// <summary>Tries each token at <paramref name="offset"/>, longest-first.</summary>
     /// <param name="source">Source bytes.</param>
     /// <param name="offset">Cursor.</param>
     /// <param name="tokens">Tokens sorted longest-first.</param>
-    /// <param name="matched">The first matching token, when found.</param>
-    /// <returns>True when a token matched at the current position with a trailing word boundary.</returns>
+    /// <param name="matched">First matching token, when found.</param>
+    /// <returns>True when a token matched with a word boundary.</returns>
     private static bool TryMatchAnyToken(ReadOnlySpan<byte> source, int offset, byte[][] tokens, out byte[] matched)
     {
         matched = [];

@@ -9,20 +9,14 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 
-/// <summary>
-/// Admonition plugin. Rewrites
-/// <c>!!! type "Optional title"</c> blocks into
-/// <c>&lt;div class="admonition type"&gt;</c> HTML before the markdown
-/// renderer runs, ships <c>admonition.css</c> as a static asset, and
-/// pulls it in via the page <c>&lt;head&gt;</c>.
-/// </summary>
+/// <summary>Admonition plugin — rewrites <c>!!! type "title"</c> blocks into <c>&lt;div class="admonition type"&gt;</c> HTML and ships the matching stylesheet.</summary>
 public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
+    /// <summary>Head-link snippet injected on every page.</summary>
     private static readonly byte[] LinkBytes =
         [.. """<link rel="stylesheet" href="/assets/extensions/admonition.css">"""u8];
 
-    /// <summary>UTF-8 stylesheet shipped to every site.</summary>
+    /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
         [.. """
             .admonition{border-left:4px solid #448aff;background:rgba(68,138,255,.1);padding:.6em 1em;margin:1em 0;border-radius:.2em}
@@ -36,7 +30,7 @@ public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvide
             .admonition.quote,.admonition.cite{border-left-color:#9e9e9e;background:rgba(158,158,158,.1)}
             """u8];
 
-    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    /// <summary>Relative path for the css asset.</summary>
     private static readonly FilePath AssetFilePath = new("assets/extensions/admonition.css");
 
     /// <inheritdoc/>

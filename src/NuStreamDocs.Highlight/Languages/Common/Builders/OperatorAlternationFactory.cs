@@ -6,23 +6,12 @@ using System.Buffers;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Builders;
 
-/// <summary>Helpers for assembling operator-alternation tables from a single UTF-8 byte literal.</summary>
-/// <remarks>
-/// Lexer operator tables must be ordered longest-first so the matcher prefers <c>+=</c> over <c>+</c>.
-/// Authoring them as a per-line <c>[.. "+="u8]</c>, <c>[.. "+"u8]</c>, … literal is verbose and trips the
-/// duplicate-line detector across every language file. This factory accepts a single space-delimited
-/// UTF-8 literal and returns a <c>byte[][]</c> already sorted by descending length, plus a helper to
-/// derive the corresponding first-byte dispatch set.
-/// </remarks>
+/// <summary>Helpers for assembling operator-alternation tables (longest-first) from space-delimited UTF-8 literals.</summary>
 internal static class OperatorAlternationFactory
 {
     /// <summary>Splits a space-delimited UTF-8 byte literal into a longest-first <c>byte[][]</c> alternation table.</summary>
     /// <param name="spaceSeparated">Whitespace-delimited UTF-8 operator bytes (e.g. <c>"+= -= + - *"u8</c>).</param>
-    /// <returns>Operator byte arrays sorted by descending length, ready for the lexer's operator rule.</returns>
-    /// <remarks>
-    /// Empty runs (consecutive whitespace) are skipped silently; only ASCII space (<c>0x20</c>) and tab (<c>0x09</c>) act as separators.
-    /// Within equal-length groups the original input order is preserved.
-    /// </remarks>
+    /// <returns>Operator byte arrays sorted by descending length.</returns>
     public static byte[][] SplitLongestFirst(ReadOnlySpan<byte> spaceSeparated) =>
         SortLongestFirst(SplitSpaceSeparated(spaceSeparated));
 

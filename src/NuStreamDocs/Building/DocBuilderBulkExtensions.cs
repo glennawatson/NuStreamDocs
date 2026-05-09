@@ -6,15 +6,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Building;
 
-/// <summary>
-/// Bulk-registration helpers that wrap repeated <see cref="DocBuilder.UsePlugin(IPlugin)"/>
-/// calls for ergonomics.
-/// </summary>
-/// <remarks>
-/// Per-plugin <c>Use{Plugin}</c> extensions ship from the plugin assemblies themselves
-/// (e.g. <c>UseAutorefs</c>, <c>UsePagefindSearch</c>, <c>UseNav</c>). These bulk helpers complement
-/// them — handy when a host application loads a curated plugin list at startup.
-/// </remarks>
+/// <summary>Bulk-registration helpers wrapping repeated <see cref="DocBuilder.UsePlugin(IPlugin)"/> calls.</summary>
 public static class DocBuilderBulkExtensions
 {
     /// <summary>Registers every plugin in <paramref name="plugins"/>, in order.</summary>

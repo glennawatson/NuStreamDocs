@@ -7,11 +7,6 @@ using System.Buffers;
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
 
 /// <summary>Per-language configuration consumed by <see cref="IniFamilyRules.Build"/>.</summary>
-/// <remarks>
-/// Populated via object-initializer syntax so a new dialect (INI, TOML, .properties,
-/// .editorconfig, systemd unit files) is one set of toggles + a comment-first-byte
-/// table away from a working lexer.
-/// </remarks>
 internal readonly record struct IniFamilyConfig
 {
     /// <summary>Gets the first-byte set for line comments (typically <c>;#</c>, <c>#</c>, or <c>#!</c>).</summary>

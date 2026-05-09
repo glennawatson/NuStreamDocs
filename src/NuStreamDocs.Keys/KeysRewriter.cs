@@ -7,12 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Keys;
 
-/// <summary>
-/// Stateless UTF-8 keys rewriter. Walks the source byte stream and
-/// replaces <c>++key1+key2+…++</c> spans with the keys-span markup
-/// pymdownx.keys produces. Fenced code and inline code are skipped
-/// verbatim.
-/// </summary>
+/// <summary>Rewrites <c>++key+key++</c> spans into pymdownx.keys-style <c>&lt;span class="keys"&gt;</c> markup. Code spans pass through.</summary>
 internal static class KeysRewriter
 {
     /// <summary>Width of the <c>++</c> opening/closing marker.</summary>

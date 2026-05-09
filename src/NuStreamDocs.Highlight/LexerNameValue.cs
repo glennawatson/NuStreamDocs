@@ -4,11 +4,7 @@
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>
-/// The name / value pair of UTF-8 language id and lexer instance — the
-/// shape callers use to register extra lexers with
-/// <see cref="LexerRegistry.Build(LexerNameValue[])"/>.
-/// </summary>
+/// <summary>UTF-8 language-id and lexer pair used to register extra lexers with <see cref="LexerRegistry.Build(LexerNameValue[])"/>.</summary>
 /// <param name="LanguageId">UTF-8 language id (lowercase by convention).</param>
 /// <param name="Lexer">Lexer instance.</param>
 public readonly record struct LexerNameValue(byte[] LanguageId, Lexer Lexer);

@@ -10,7 +10,7 @@ namespace NuStreamDocs.Search.Lunr;
 /// <summary>Writes a Lunr-compatible <c>search_index.json</c>.</summary>
 public static class LunrIndexWriter
 {
-    /// <summary>JsonWriter options reused across every emit; <c>SkipValidation</c> drops per-element structure-stack bookkeeping for our trusted writer call shape.</summary>
+    /// <summary>JSON writer options reused across emits.</summary>
     private static readonly JsonWriterOptions WriterOptions = new()
     {
         Indented = false,

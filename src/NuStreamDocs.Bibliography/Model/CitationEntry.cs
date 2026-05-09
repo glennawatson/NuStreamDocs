@@ -5,22 +5,9 @@
 namespace NuStreamDocs.Bibliography.Model;
 
 /// <summary>
-/// Single bibliography entry. Field names + types align with CSL-JSON's
-/// item model so a future CSL backend reads the same data unchanged.
+/// Single bibliography entry. Field names align with CSL-JSON's item model.
+/// Unused fields are left empty.
 /// </summary>
-/// <remarks>
-/// AGLC4 doesn't use every CSL field; unused values are kept empty.
-/// AGLC4-specific extras (<see cref="ShortTitle"/>, <see cref="Court"/>,
-/// <see cref="Jurisdiction"/>, <see cref="LawReportSeries"/>) live
-/// alongside the CSL fields without breaking the CSL shape.
-/// <para>
-/// All free-text fields are <see cref="byte"/> arrays in UTF-8 so the AGLC4 emitter copies them
-/// straight into its <see cref="System.Buffers.IBufferWriter{T}"/> sink without per-emit
-/// transcoding. The CSL JSON loader and per-page citation rewriter both produce byte arrays
-/// directly; <see cref="BibliographyDatabaseBuilder"/> exposes string-shaped <c>Add…</c> helpers
-/// at the public construction boundary that encode once.
-/// </para>
-/// </remarks>
 public sealed record CitationEntry
 {
     /// <summary>Gets the citation key bytes — the <c>id</c> a markdown <c>[@key]</c> resolves against.</summary>

@@ -14,10 +14,10 @@ namespace NuStreamDocs.Serve;
 /// </summary>
 internal sealed class LiveReloadBroker
 {
-    /// <summary>The wire payload sent to connected browsers on rebuild.</summary>
+    /// <summary>Wire payload sent to browsers on rebuild.</summary>
     private static readonly byte[] ReloadPayload = [.. "reload"u8];
 
-    /// <summary>Tracks every currently-connected browser. Concurrent because clients connect/disconnect from request-handler threads.</summary>
+    /// <summary>Currently-connected browser sockets.</summary>
     private readonly ConcurrentDictionary<Guid, WebSocket> _clients = new();
 
     /// <summary>Gets the current connected-client count.</summary>
@@ -83,12 +83,7 @@ internal sealed class LiveReloadBroker
         return sent;
     }
 
-    /// <summary>Aborts every tracked WebSocket so the request handlers exit promptly during shutdown.</summary>
-    /// <remarks>
-    /// Browsers don't always reply to the close handshake — relying on a graceful close would let
-    /// the dev server hang on Ctrl+C waiting forever. <see cref="WebSocket.Abort"/> tears the
-    /// connection down without waiting for the peer, then the registry clears.
-    /// </remarks>
+    /// <summary>Aborts every tracked WebSocket so request handlers exit promptly during shutdown.</summary>
     public void AbortAll()
     {
         foreach (var kvp in _clients)

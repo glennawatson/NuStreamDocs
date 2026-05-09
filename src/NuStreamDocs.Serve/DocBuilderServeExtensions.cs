@@ -11,18 +11,15 @@ using NuStreamDocs.Serve.Logging;
 
 namespace NuStreamDocs.Serve;
 
-/// <summary>
-/// Builder-extension surface for the watch / dev-server pipeline.
-/// </summary>
+/// <summary>Builder-extension surface for the watch / dev-server pipeline.</summary>
 /// <remarks>
-/// Usage:
+/// Example:
 /// <code>
 /// await new DocBuilder()
 ///     .WithInput("docs").WithOutput("site")
 ///     .UseMaterialTheme().UseNav()
 ///     .WatchAndServeAsync();
 /// </code>
-/// The call returns when the supplied cancellation token is triggered.
 /// </remarks>
 public static class DocBuilderServeExtensions
 {

@@ -4,25 +4,7 @@
 
 namespace NuStreamDocs.Search.Pagefind;
 
-/// <summary>
-/// Pagefind glue script — embedded as a UTF-8 byte literal so the engine ships
-/// it through <see cref="PagefindSearchPlugin"/>'s <c>StaticAssets</c> without
-/// disk I/O at build time.
-/// </summary>
-/// <remarks>
-/// <para>
-/// The script binds Pagefind's WASM API (<c>/pagefind/pagefind.js</c>) to the
-/// theme's search shell — the <c>data-md-component</c> hooks every theme
-/// (Material 1, Material 3, future themes) exposes. It runs only after
-/// <c>DOMContentLoaded</c> so the shell is in the DOM, then:
-/// </para>
-/// <list type="number">
-/// <item>Reads section-priority pairs from the existing <c>nustreamdocs:search-section-priorities</c> meta tag.</item>
-/// <item>Imports the Pagefind module lazily on the first user input — keeps the WASM out of the page-load critical path.</item>
-/// <item>Debounces queries, runs them through Pagefind's BM25-ranked search, then re-orders results by section priority.</item>
-/// <item>Renders each hit with title + URL + Pagefind-supplied excerpt; the excerpt already carries <c>&lt;mark&gt;</c> highlights.</item>
-/// </list>
-/// </remarks>
+/// <summary>Pagefind glue script — embedded as a UTF-8 byte literal.</summary>
 internal static class PagefindBindScript
 {
     /// <summary>Gets the UTF-8 bytes of the glue script.</summary>

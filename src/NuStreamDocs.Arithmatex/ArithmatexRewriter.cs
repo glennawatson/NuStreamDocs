@@ -7,12 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Arithmatex;
 
-/// <summary>
-/// Stateless UTF-8 arithmatex rewriter. Walks the source byte
-/// stream, skipping fenced and inline code, and wraps inline
-/// <c>$x$</c> / block <c>$$x$$</c> math spans in the generic
-/// pymdownx.arithmatex output shape.
-/// </summary>
+/// <summary>Wraps inline <c>$x$</c> and block <c>$$x$$</c> math spans in the generic pymdownx.arithmatex output shape.</summary>
 internal static class ArithmatexRewriter
 {
     /// <summary>Width of the block-math <c>$$</c> marker.</summary>

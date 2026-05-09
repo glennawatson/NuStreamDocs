@@ -8,18 +8,7 @@ using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material;
 
-/// <summary>
-/// Loads theme assets out of the assembly's embedded-resource table.
-/// </summary>
-/// <remarks>
-/// MSBuild rewrites <c>Templates/path/to/file.ext</c> into the
-/// resource name <c>NuStreamDocs.Theme.Material.Templates.path.to.file.ext</c>,
-/// where every directory separator becomes a dot and the leading
-/// folder collides with the assembly's root namespace. The resolver
-/// reverses that mapping for the caller-friendly path it stores in
-/// <see cref="EmbeddedAsset"/> records, then loads bytes via
-/// <see cref="Assembly.GetManifestResourceStream(string)"/>.
-/// </remarks>
+/// <summary>Loads Material theme assets from the assembly's embedded-resource table.</summary>
 public static class EmbeddedAsset
 {
     /// <summary>Root namespace prefix MSBuild prepends to every embedded resource.</summary>

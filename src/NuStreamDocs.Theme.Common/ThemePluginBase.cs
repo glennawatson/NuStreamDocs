@@ -21,55 +21,55 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     where TTheme : class, IThemePackage
     where TOptions : struct, IThemeShellOptions
 {
-    /// <summary>Separators added when composing the normalized repo/edit prefix (<c>/</c> between segments and trailing <c>/</c>).</summary>
+    /// <summary>Separator count when composing the repo/edit prefix.</summary>
     private const int EditUrlSeparatorCount = 2;
 
-    /// <summary>Directory separator string length for relative output path translation.</summary>
+    /// <summary>Directory separator length.</summary>
     private const int DirectorySeparatorLength = 1;
 
-    /// <summary>Number of scalar entries (<c>social_url</c>, <c>social_title</c>, <c>social_icon</c>) on each social-section item.</summary>
+    /// <summary>Scalar entries per social-section item.</summary>
     private const int SocialItemScalarCount = 3;
 
-    /// <summary>Configured option set; captured at registration time.</summary>
+    /// <summary>Configured options.</summary>
     private readonly TOptions _options;
 
-    /// <summary>Output root captured during <see cref="ConfigureAsync"/>.</summary>
+    /// <summary>Output root.</summary>
     private DirectoryPath _outputRoot;
 
-    /// <summary>UTF-8 head-extras HTML assembled during <see cref="ConfigureAsync"/>; empty until it runs.</summary>
+    /// <summary>Composed head-extras HTML.</summary>
     private byte[] _headExtras = [];
 
-    /// <summary>Plugin list captured during <see cref="ConfigureAsync"/> for static-asset composition at finalize time.</summary>
+    /// <summary>Registered plugins.</summary>
     private IPlugin[] _plugins = [];
 
-    /// <summary>First registered nav-neighbour provider, captured during <see cref="ConfigureAsync"/>; null when none was registered.</summary>
+    /// <summary>Nav-neighbour provider, when registered.</summary>
     private INavNeighboursProvider? _neighbours;
 
-    /// <summary>Per-build edit-link prefix; bytes ending in <c>/</c> ready to concatenate with a relative page path. Empty when edit links are disabled.</summary>
+    /// <summary>Edit-link prefix; empty when edit links are disabled.</summary>
     private byte[] _editUrlPrefix = [];
 
-    /// <summary>Short owner/repo label derived from the configured repo URL; empty when no repo URL is configured.</summary>
+    /// <summary>Short repo label.</summary>
     private byte[] _repoLabel = [];
 
-    /// <summary>Per-build canonical-URL prefix; empty when no site URL is configured.</summary>
+    /// <summary>Canonical-URL prefix; empty when no site URL is configured.</summary>
     private byte[] _canonicalUrlPrefix = [];
 
-    /// <summary>Effective favicon URL bytes — explicit option, then auto-discovered docs convention, then the theme's embedded default.</summary>
+    /// <summary>Resolved favicon URL.</summary>
     private byte[] _resolvedFavicon = [];
 
-    /// <summary>Effective copyright bytes with any <c>{year}</c> token expanded to the current year — computed once during configure.</summary>
+    /// <summary>Copyright bytes with the <c>{year}</c> token expanded.</summary>
     private byte[] _resolvedCopyright = [];
 
-    /// <summary>Cached HTML bytes loaded from <see cref="IThemeShellOptions.FooterPartialPath"/>; empty when no partial is configured or the file is missing.</summary>
+    /// <summary>Footer partial HTML; empty when none configured.</summary>
     private byte[] _footerPartialBytes = [];
 
-    /// <summary>Site-wide author captured from the configure context; used as the per-page <c>&lt;meta author&gt;</c> fallback when the page has no front-matter <c>author:</c>.</summary>
+    /// <summary>Site-wide author fallback.</summary>
     private byte[] _siteAuthor = [];
 
-    /// <summary>Whether the build emits pretty <c>foo/index.html</c> URLs.</summary>
+    /// <summary>True when pretty directory URLs are enabled.</summary>
     private bool _useDirectoryUrls;
 
-    /// <summary>Resolved asset-root bytes from the theme options; cached once at <see cref="ConfigureAsync"/> time.</summary>
+    /// <summary>Resolved asset-root bytes.</summary>
     private byte[] _assetRoot = [];
 
     /// <summary>Initializes a new instance of the <see cref="ThemePluginBase{TTheme, TOptions}"/> class.</summary>
@@ -218,7 +218,6 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Probes <paramref name="inputRoot"/> for a conventional favicon file when the user hasn't configured one explicitly.</summary>
     /// <param name="inputRoot">Docs root.</param>
     /// <returns>Site-rooted UTF-8 URL bytes pointing at the discovered favicon, or an empty array.</returns>
-    /// <remarks>Probes match mkdocs / mkdocs-material conventions in priority order.</remarks>
     private static byte[] DiscoverFavicon(DirectoryPath inputRoot)
     {
         if (inputRoot.IsEmpty)
@@ -413,7 +412,6 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Replaces every literal <c>{year}</c> occurrence in <paramref name="copyright"/> with the current four-digit year.</summary>
     /// <param name="copyright">Configured copyright bytes (may be empty).</param>
     /// <returns>A fresh byte array with the token expanded; returns <paramref name="copyright"/> unchanged when no token is present.</returns>
-    /// <remarks>Lets consumers write <c>"Copyright © {year} Acme Corp"u8</c> in <c>WithCopyright</c> and have the year stay correct without touching the build script each January.</remarks>
     private static byte[] ExpandYearToken(byte[] copyright)
     {
         if (copyright is null or [])
@@ -832,7 +830,6 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="source">UTF-8 markdown source bytes.</param>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True when the sidebar should be hidden.</returns>
-    /// <remarks>Honours the page's <c>hide: [navigation]</c> frontmatter and the nav provider's hint for empty sidebars.</remarks>
     private bool ShouldHideNavigation(ReadOnlySpan<byte> source, FilePath relativePath) =>
         Yaml.FrontmatterValueExtractor.ListContains(source, "hide"u8, "navigation"u8)
         || (_neighbours?.ShouldHidePrimarySidebar(relativePath) ?? false);

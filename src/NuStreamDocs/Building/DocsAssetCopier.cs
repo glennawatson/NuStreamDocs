@@ -6,18 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Building;
 
-/// <summary>
-/// Copies non-markdown content from the docs input root into the site output root —
-/// images, vendor JS/CSS, fonts, downloadable files, anything the user dropped into
-/// <c>docs/</c> that isn't a page.
-/// </summary>
-/// <remarks>
-/// Pages are handled by the per-page render pipeline; theme/plugin assets ride along
-/// via <c>IStaticAssetProvider</c>. This step plugs the third gap — content the
-/// site author placed under <c>docs/</c> directly (logo PNGs, favicons, embedded
-/// videos, custom JS, etc.) — so links from page templates and markdown resolve
-/// against real files in the output tree.
-/// </remarks>
+/// <summary>Copies non-markdown content (images, fonts, vendor JS/CSS, downloadable files) from the docs input root into the site output root.</summary>
 internal static class DocsAssetCopier
 {
     /// <summary>Markdown extension; pages are emitted by the render pipeline so we skip them here.</summary>

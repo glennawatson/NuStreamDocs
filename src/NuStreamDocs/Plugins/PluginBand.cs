@@ -5,17 +5,9 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Coarse ordering band a plugin bids for within a phase.
+/// Coarse ordering band a plugin bids for within a phase. The engine sorts per-phase arrays by
+/// ascending <see cref="PluginPriority.Band"/> then <see cref="PluginPriority.Tiebreak"/>.
 /// </summary>
-/// <remarks>
-/// Plugins declare a band per implemented phase via
-/// <see cref="PluginPriority"/>. The engine sorts each per-phase array
-/// once at build start by ascending <see cref="PluginPriority.Band"/>,
-/// then by <see cref="PluginPriority.Tiebreak"/>. Use the predefined
-/// bands so most plugins compose without coordinating numeric values;
-/// reach for <see cref="PluginPriority.Tiebreak"/> only when two
-/// plugins share a band and one must precede the other.
-/// </remarks>
 public enum PluginBand
 {
     /// <summary>Runs before everything else in the phase.</summary>

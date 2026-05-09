@@ -7,13 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.InlineHilite;
 
-/// <summary>
-/// Stateless UTF-8 inline-hilite rewriter. Walks the source byte
-/// stream, locating inline-code spans that begin with the
-/// <c>#!lang</c> shebang and rewriting them into a
-/// language-classed <c>code</c> element. Other inline-code spans
-/// and fenced-code regions are passed through verbatim.
-/// </summary>
+/// <summary>Rewrites <c>`#!lang code`</c> inline-code spans into a language-classed <c>&lt;code&gt;</c> element. Other code spans pass through.</summary>
 internal static class InlineHiliteRewriter
 {
     /// <summary>Width of the <c>#!</c> shebang prefix.</summary>

@@ -5,16 +5,10 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the build-wide discovery phase.
+/// Plugin participation in the build-wide discovery phase. Runs once per build, sequentially after
+/// configure and before page enumeration; use it to synthesize virtual pages (blog indexes,
+/// generated API reference, tag archives) under the docs root.
 /// </summary>
-/// <remarks>
-/// Runs once per build, sequentially in priority order, after configure
-/// and before page enumeration. Plugins use this hook to synthesize
-/// virtual pages — blog index/tag pages, generated API reference pages,
-/// auto-generated tag archives — by writing markdown files under the
-/// docs root so the page enumerator picks them up alongside
-/// author-supplied content.
-/// </remarks>
 public interface IBuildDiscoverPlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the discover phase.</summary>

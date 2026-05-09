@@ -14,15 +14,6 @@ namespace NuStreamDocs.Blog.Common;
 /// Renders a blog index page (Markdown) listing every post, plus
 /// per-tag archive pages.
 /// </summary>
-/// <remarks>
-/// Produces Markdown so the rest of the build pipeline (CommonMark
-/// scanner, plugin hooks, theme wrapping) treats blog index pages
-/// just like author-written pages. Each post entry renders as a
-/// Material-3-style <c>&lt;article class="md-post"&gt;</c> card so the
-/// list reads like a magazine; the page itself emits
-/// <c>hide: [toc]</c> frontmatter so the right-side TOC sidebar
-/// disappears for catalogue pages.
-/// </remarks>
 public static class BlogIndexEmitter
 {
     /// <summary>ISO date format used in the <c>datetime</c> attribute.</summary>
@@ -37,7 +28,7 @@ public static class BlogIndexEmitter
     /// <summary>Initial byte-capacity hint for an emitted archive page.</summary>
     private const int ArchiveInitialCapacity = 1024;
 
-    /// <summary>Gets the frontmatter block prefixed to every emitted index/archive page so the theme hides the right-side TOC sidebar.</summary>
+    /// <summary>Gets the frontmatter block that hides the right-side TOC sidebar.</summary>
     private static ReadOnlySpan<byte> HideTocFrontmatter => "---\nhide:\n  - toc\n---\n\n"u8;
 
     /// <summary>Writes the blog index file bytes into <paramref name="writer"/>.</summary>

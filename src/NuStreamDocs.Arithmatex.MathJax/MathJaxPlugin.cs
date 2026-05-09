@@ -10,23 +10,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Arithmatex.MathJax;
 
 /// <summary>
-/// Ships the MathJax 3 runtime to every rendered page so the
-/// <c>ArithmatexPlugin</c> output gets typeset client-side.
+/// Ships the MathJax 3 runtime to every rendered page so <c>ArithmatexPlugin</c> output is
+/// typeset client-side.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Pure head-extra plugin: emits a synchronous inline <c>window.MathJax</c> config
-/// (so the loader picks it up at startup) followed by an async <c>&lt;script&gt;</c>
-/// tag pointing at the configured CDN bundle. No <c>document$</c> dependency, no
-/// instant-navigation hooks — full page loads are all we need to retypeset.
-/// </para>
-/// <para>
-/// The default config matches what <c>ArithmatexPlugin</c> emits: inline math
-/// wrapped in <c>\(…\)</c>, display math in <c>\[…\]</c>, and only elements with
-/// <c>class="arithmatex"</c> are processed. Tweak through <see cref="MathJaxOptions"/>
-/// when integrating with a different math-emitting upstream.
-/// </para>
-/// </remarks>
 public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
 {
     /// <summary>Pre-encoded UTF-8 head fragment computed once at construction.</summary>

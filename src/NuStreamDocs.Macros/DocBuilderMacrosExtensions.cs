@@ -7,17 +7,7 @@ using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Macros;
 
-/// <summary>
-/// Builder-extension surface for the macros plugin.
-/// </summary>
-/// <remarks>
-/// <code>
-/// builder.UseMacros(opts =&gt; opts with
-/// {
-///     Variables = { ["site"] = "NuStreamDocs", ["version"] = "1.0" },
-/// });
-/// </code>
-/// </remarks>
+/// <summary>Builder-extension surface for the macros plugin.</summary>
 public static class DocBuilderMacrosExtensions
 {
     /// <summary>Registers <see cref="MacrosPlugin"/> with the default option set.</summary>

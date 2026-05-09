@@ -10,14 +10,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Caching;
 
-/// <summary>
-/// Computes the manifest fingerprint for the current build pipeline.
-/// </summary>
-/// <remarks>
-/// The incremental cache must invalidate when the generator or plugin binaries change, not
-/// just when the markdown bytes change. Using assembly MVIDs makes local rebuilds produce a
-/// fresh fingerprint even before a package version changes.
-/// </remarks>
+/// <summary>Computes the manifest fingerprint for the current build pipeline so the incremental cache invalidates whenever generator or plugin binaries change.</summary>
 internal static class BuildFingerprint
 {
     /// <summary>Returns the cache fingerprint for the current build configuration.</summary>

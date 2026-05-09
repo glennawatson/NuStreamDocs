@@ -4,18 +4,9 @@
 
 namespace NuStreamDocs.Xrefs;
 
-/// <summary>
-/// One external xrefmap to import at configure time.
-/// </summary>
-/// <param name="Source">
-/// Either an absolute path to a local <c>xrefmap.json</c> on disk, or
-/// an <c>http://</c> / <c>https://</c> URL the plugin will fetch.
-/// </param>
-/// <param name="BaseUrl">
-/// URL prefix prepended to every imported entry's <c>href</c>. When
-/// the imported file's <c>baseUrl</c> field is set we use that; this
-/// option overrides it. Empty leaves the imported hrefs as-is.
-/// </param>
+/// <summary>One external xrefmap to import at configure time.</summary>
+/// <param name="Source">Local <c>xrefmap.json</c> path or <c>http(s)://</c> URL.</param>
+/// <param name="BaseUrl">URL prefix prepended to every imported <c>href</c>; overrides the file's embedded <c>baseUrl</c>. Empty leaves hrefs untouched.</param>
 public readonly record struct XrefImport(string Source, string BaseUrl)
 {
     /// <summary>Initializes a new instance of the <see cref="XrefImport"/> struct without a base-URL override.</summary>

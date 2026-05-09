@@ -10,38 +10,28 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Search.Pagefind;
 
 /// <summary>Pagefind-format search-index plugin.</summary>
-/// <remarks>
-/// <para>
-/// Themes contribute only the search-shell markup (<c>data-md-component</c> hooks); this plugin
-/// ships everything else. At finalize, it invokes the bundled Pagefind CLI (<see cref="PagefindCli"/>)
-/// against the rendered output, which produces the WASM runtime + binary inverted-index shards under
-/// <c>&lt;site&gt;/pagefind/</c>. The plugin then drops the bind-glue script next to the runtime via
-/// <see cref="IStaticAssetProvider"/> and emits the corresponding <c>&lt;script&gt;</c> tags through
-/// <see cref="IHeadExtraProvider"/>.
-/// </para>
-/// </remarks>
 public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvider
 {
-    /// <summary>Forward-slash relative path the bind glue is written to in the rendered output.</summary>
+    /// <summary>Output path of the bind glue script.</summary>
     private static readonly FilePath BindScriptPath = new("assets/javascripts/pagefind-bind.js");
 
-    /// <summary>UTF-8 head-link snippet — the Pagefind WASM loader as an ES module followed by the glue script.</summary>
+    /// <summary>UTF-8 head-extra snippet referencing the Pagefind WASM loader and the glue script.</summary>
     private static readonly byte[] HeadExtraBytes =
         [.. """
 <script type="module">import("/pagefind/pagefind.js").catch(()=>{});</script>
 <script src="/assets/javascripts/pagefind-bind.js" defer></script>
 """u8];
 
-    /// <summary>Cached bind-script bytes; materialized once at type init so per-build <see cref="StaticAssets"/> reads are zero-allocation.</summary>
+    /// <summary>Cached bind-script bytes.</summary>
     private static readonly byte[] BindScriptBytes = PagefindBindScript.Bytes.ToArray();
 
-    /// <summary>Cached static-asset array; the (path, bytes) pair never varies, so the outer array also stays cached.</summary>
+    /// <summary>Cached static-asset array surfaced via <see cref="IStaticAssetProvider"/>.</summary>
     private static readonly (FilePath Path, byte[] Bytes)[] StaticAssetSet = [(BindScriptPath, BindScriptBytes)];
 
-    /// <summary>Captured option set; mirrored into the protected base properties.</summary>
+    /// <summary>Captured option set.</summary>
     private readonly PagefindOptions _options;
 
-    /// <summary>Logger captured for the post-write CLI invocation; stored here because the base type holds it privately.</summary>
+    /// <summary>Logger captured for the post-write CLI invocation.</summary>
     private readonly ILogger _logger;
 
     /// <summary>Initializes a new instance of the <see cref="PagefindSearchPlugin"/> class with default options.</summary>

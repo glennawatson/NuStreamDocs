@@ -10,16 +10,10 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Autorefs;
 
 /// <summary>
-/// Plugin that rewrites mkdocs-autorefs reference-link shapes into the
-/// <c>@autoref:</c> URL marker, scans rendered pages for heading anchor
-/// IDs, and substitutes the resolved URLs after the cross-page barrier.
+/// Resolves mkdocs-autorefs cross-page references: rewrites reference-link shapes to
+/// <c>@autoref:</c> markers, registers heading anchors, and substitutes resolved URLs after the
+/// cross-page barrier.
 /// </summary>
-/// <remarks>
-/// Theme plugins, API-generator plugins, and citation plugins all
-/// share one <see cref="AutorefsRegistry"/> via the plugin's
-/// <see cref="Registry"/> property, so cross-document references
-/// resolve no matter which plugin produced the destination.
-/// </remarks>
 public sealed class AutorefsPlugin
     : IBuildConfigurePlugin,
       IPagePreRenderPlugin,
@@ -28,16 +22,16 @@ public sealed class AutorefsPlugin
       IPagePostResolvePlugin,
       IBuildFinalizePlugin
 {
-    /// <summary>Logger used during the resolution pass.</summary>
+    /// <summary>Logger.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>Resolved / missing counters accumulated across the post-resolve hook for the final summary log.</summary>
+    /// <summary>Count of references resolved during the post-resolve pass.</summary>
     private long _resolvedCount;
 
-    /// <summary>Unresolved-marker counter accumulated across the post-resolve hook.</summary>
+    /// <summary>Count of references that could not be resolved.</summary>
     private long _missingCount;
 
-    /// <summary>True when the build emits directory URLs; captured at <see cref="ConfigureAsync"/>.</summary>
+    /// <summary>Whether the build emits directory URLs.</summary>
     private bool _useDirectoryUrls;
 
     /// <summary>Initializes a new instance of the <see cref="AutorefsPlugin"/> class.</summary>
@@ -85,7 +79,7 @@ public sealed class AutorefsPlugin
     /// <inheritdoc/>
     public PluginPriority FinalizePriority => PluginPriority.Normal;
 
-    /// <summary>Gets the shared registry. Other plugins may publish IDs into it during configure or render.</summary>
+    /// <summary>Gets the shared registry; other plugins publish IDs into it during configure or render.</summary>
     public AutorefsRegistry Registry { get; }
 
     /// <inheritdoc/>

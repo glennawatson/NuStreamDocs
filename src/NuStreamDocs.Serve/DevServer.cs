@@ -18,26 +18,18 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Serve;
 
 /// <summary>
-/// Wraps a slim AOT-compatible <see cref="WebApplication"/>: serves the
-/// output directory as static files, exposes a <c>/__livereload</c>
-/// websocket endpoint via middleware-style routing (no minimal-API
-/// reflection binding), and injects a tiny <c>&lt;script&gt;</c> tag
-/// into HTML responses so every page in the served output participates
-/// in live-reload without hand-editing.
+/// AOT-friendly dev server: serves the output directory as static files, exposes a
+/// <c>/__livereload</c> websocket, and injects a reload script into HTML responses.
 /// </summary>
 internal static class DevServer
 {
     /// <summary>Path of the websocket endpoint browsers connect to.</summary>
     private const string LiveReloadPath = "/__livereload";
 
-    /// <summary>Site-rooted path of the not-found page the dev server re-executes the pipeline against on a 404.</summary>
+    /// <summary>Site-rooted path served on a 404.</summary>
     private const string NotFoundPagePath = "/404.html";
 
-    /// <summary>
-    /// Injected JavaScript snippet used to enable live-reload functionality in served HTML pages.
-    /// This script establishes a WebSocket connection to the server at the live-reload endpoint
-    /// and listens for messages instructing the browser to reload the page.
-    /// </summary>
+    /// <summary>JavaScript snippet injected into HTML pages to enable live-reload.</summary>
     private const string ReloadScript =
         "<script>(function(){"
         + "var s=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'" + LiveReloadPath + "');"
@@ -58,11 +50,6 @@ internal static class DevServer
     public static ReadOnlySpan<byte> ReloadScriptMarker => ReloadScriptBytes;
 
     /// <summary>Gets the reload-script bytes as a <see cref="ReadOnlyMemory{T}"/>.</summary>
-    /// <remarks>
-    /// Async writers hand it to
-    /// <see cref="System.IO.Stream.WriteAsync(System.ReadOnlyMemory{byte}, System.Threading.CancellationToken)"/>
-    /// without a per-call <c>ToArray</c> copy.
-    /// </remarks>
     public static ReadOnlyMemory<byte> ReloadScriptMemory => ReloadScriptBytes;
 
     /// <summary>Builds and starts the AOT-friendly <see cref="WebApplication"/> bound to <paramref name="options"/>.</summary>

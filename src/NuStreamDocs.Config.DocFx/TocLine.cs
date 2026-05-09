@@ -5,10 +5,6 @@
 namespace NuStreamDocs.Config.DocFx;
 
 /// <summary>One line decoded from a docfx toc.yml — indent column, key kind, and value bytes.</summary>
-/// <remarks>
-/// Plain ref struct rather than record struct: holds <see cref="ReadOnlySpan{T}"/> fields, so
-/// must live on the stack. Lifetime is bounded by <see cref="TocLineParser"/>.
-/// </remarks>
 internal readonly ref struct TocLine
 {
     /// <summary>Initializes a new instance of the <see cref="TocLine"/> struct.</summary>

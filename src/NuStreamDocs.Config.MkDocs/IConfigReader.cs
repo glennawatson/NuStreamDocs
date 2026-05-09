@@ -11,19 +11,8 @@ namespace NuStreamDocs.Config.MkDocs;
 /// <see cref="MkDocsConfig"/> from on-disk source bytes.
 /// </summary>
 /// <remarks>
-/// One implementation per source format ships in its own assembly:
-/// <c>NuStreamDocs.Config.MkDocs</c> handles <c>mkdocs.yml</c>,
-/// <c>NuStreamDocs.Config.Zensical</c> handles Zensical's TOML.
 /// Implementations are registered with <see cref="Building.DocBuilder"/>
-/// through their assembly's <c>Use{Format}Config(...)</c> extension
-/// method so the core library never takes the format-specific
-/// dependency.
-/// <para>
-/// The <see cref="ReadAsync(System.IO.Stream, System.Threading.CancellationToken)"/>
-/// default implementation rents a pooled <c>byte[]</c> sized to the
-/// stream length where available and delegates to the span overload;
-/// implementations that can stream-parse override it.
-/// </para>
+/// through their assembly's <c>Use{Format}Config(...)</c> extension method.
 /// </remarks>
 public interface IConfigReader
 {
@@ -41,16 +30,11 @@ public interface IConfigReader
     MkDocsConfig Read(ReadOnlySpan<byte> utf8Source);
 
     /// <summary>
-    /// Reads <paramref name="utf8Stream"/> into a pooled buffer and parses it.
+    /// Reads <paramref name="utf8Stream"/> and parses it. Override to support incremental parsing.
     /// </summary>
     /// <param name="utf8Stream">UTF-8 source stream; positioned at the start of the document.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The parsed config.</returns>
-    /// <remarks>
-    /// Default behavior materializes the stream into a pooled
-    /// <c>byte[]</c> and forwards to <see cref="Read(System.ReadOnlySpan{byte})"/>.
-    /// Override on implementations that can parse incrementally.
-    /// </remarks>
     async Task<MkDocsConfig> ReadAsync(Stream utf8Stream, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(utf8Stream);

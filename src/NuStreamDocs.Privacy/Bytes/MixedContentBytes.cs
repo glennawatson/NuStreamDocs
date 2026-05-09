@@ -7,11 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// UTF-8 byte scanner that upgrades <c>http://</c> URLs in
-/// <c>src</c> / <c>href</c> attributes to <c>https://</c>, except for
-/// loopback hosts.
-/// </summary>
+/// <summary>Upgrades <c>http://</c> URLs in <c>src</c> / <c>href</c> attributes to <c>https://</c>, except for loopback hosts.</summary>
 internal static class MixedContentBytes
 {
     /// <summary>Bytes that may start a <c>src</c> or <c>href</c> attribute name (case-insensitive).</summary>
@@ -41,14 +37,10 @@ internal static class MixedContentBytes
     /// <summary>Gets UTF-8 bytes for the <c>href</c> attribute name.</summary>
     private static ReadOnlySpan<byte> Href => "href"u8;
 
-    /// <summary>
-    /// Walks <paramref name="html"/>, copying through verbatim, but
-    /// rewriting every <c>src=</c> / <c>href=</c> attribute that
-    /// references a non-loopback <c>http://</c> URL into <c>https://</c>.
-    /// </summary>
+    /// <summary>Rewrites every non-loopback <c>http://</c> URL in <c>src</c> / <c>href</c> attributes to <c>https://</c>.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
-    /// <returns>True when at least one URL was upgraded; false when the input passed through unchanged.</returns>
+    /// <returns>True when at least one URL was upgraded.</returns>
     public static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
     {
         ArgumentNullException.ThrowIfNull(sink);
@@ -114,14 +106,10 @@ internal static class MixedContentBytes
         return true;
     }
 
-    /// <summary>
-    /// Validates the attribute header pattern <c>(src|href)=("|')http://</c>
-    /// at <paramref name="p"/>, returning the offset just after the opening
-    /// quote so the caller can validate the host.
-    /// </summary>
+    /// <summary>Validates a <c>(src|href)=("|')http://</c> attribute header at <paramref name="p"/>.</summary>
     /// <param name="html">UTF-8 source.</param>
     /// <param name="p">Candidate offset.</param>
-    /// <param name="afterQuote">Offset of the first byte of the URL on success; otherwise the offset to advance the scan past.</param>
+    /// <param name="afterQuote">Offset of the first URL byte on success; otherwise the offset to advance the scan past.</param>
     /// <returns>True when a candidate <c>http://</c> attribute starts at <paramref name="p"/>.</returns>
     private static bool TryMatchAttributeHeader(ReadOnlySpan<byte> html, int p, out int afterQuote)
     {

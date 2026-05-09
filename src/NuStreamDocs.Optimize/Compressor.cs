@@ -7,19 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Optimize;
 
-/// <summary>
-/// Async file-to-file compression helper backed by the .NET 10
-/// <see cref="GZipStream"/> / <see cref="BrotliStream"/> async APIs.
-/// </summary>
-/// <remarks>
-/// Pre-.NET 10, the async overloads on <see cref="GZipStream"/> ran
-/// the actual compress on the calling thread — fine for one-shot
-/// CLI work, terrible for our parallel-page pipeline. The .NET 10
-/// implementation pushes the compress onto the IO threadpool, so a
-/// per-page <see cref="Stream.CopyToAsync(Stream, CancellationToken)"/>
-/// no longer serializes behind the file write. Use the async path
-/// everywhere; the bytes never round-trip through a managed buffer.
-/// </remarks>
+/// <summary>Async file-to-file gzip / brotli compression.</summary>
 internal static class Compressor
 {
     /// <summary>The <c>.gz</c> filename suffix.</summary>

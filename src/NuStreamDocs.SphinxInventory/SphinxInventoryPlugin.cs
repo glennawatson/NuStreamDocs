@@ -7,16 +7,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SphinxInventory;
 
-/// <summary>
-/// Emits a Sphinx-compatible <c>objects.inv</c> file at finalize time
-/// so external Sphinx sites can intersphinx-link into the build's
-/// rendered output.
-/// </summary>
-/// <remarks>
-/// Reads the same shared <see cref="AutorefsRegistry"/> the autorefs /
-/// xrefs plugins write into, so any UID a NuStreamDocs page exposes is
-/// reachable from a Sphinx site that pulls this <c>objects.inv</c>.
-/// </remarks>
+/// <summary>Emits a Sphinx-compatible <c>objects.inv</c> at finalize time so external Sphinx sites can intersphinx-link into the rendered output.</summary>
 public sealed class SphinxInventoryPlugin : IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>

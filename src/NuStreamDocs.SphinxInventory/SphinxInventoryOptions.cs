@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.SphinxInventory;
 
-/// <summary>
-/// Options for <see cref="SphinxInventoryPlugin"/>.
-/// </summary>
+/// <summary>Options for <see cref="SphinxInventoryPlugin"/>.</summary>
 /// <param name="ProjectName">Project name written to the inventory header (Sphinx <c>project</c>).</param>
 /// <param name="Version">Project version written to the inventory header (Sphinx <c>version</c>); empty when no version is set.</param>
 /// <param name="OutputFileName">File name written under the build output root; defaults to <c>objects.inv</c>.</param>

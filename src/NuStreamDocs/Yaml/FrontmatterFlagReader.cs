@@ -7,18 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Yaml;
 
-/// <summary>
-/// Detects boolean build-pipeline flags in a page's YAML frontmatter
-/// without parsing the whole document. Used by <c>PageDiscovery</c> to
-/// decide whether a page should build (drafts) and whether the nav
-/// tree should include it (<c>not_in_nav</c>).
-/// </summary>
-/// <remarks>
-/// Reads at most the first ~512 bytes of the source file — enough to
-/// cover the frontmatter region in every realistic page. The cost is
-/// one syscall per page; on a 13.8K-page corpus the total adds ~50ms
-/// to discovery.
-/// </remarks>
+/// <summary>Detects boolean build-pipeline flags (<c>draft</c>, <c>not_in_nav</c>) in a page's YAML frontmatter by peeking only the first ~1 KiB of the file.</summary>
 public static class FrontmatterFlagReader
 {
     /// <summary>Maximum bytes read off the front of each page; covers any plausible frontmatter region.</summary>

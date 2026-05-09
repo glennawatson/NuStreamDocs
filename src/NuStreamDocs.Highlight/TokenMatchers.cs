@@ -7,22 +7,10 @@ using System.Buffers;
 namespace NuStreamDocs.Highlight;
 
 /// <summary>
-/// Reusable byte-span matcher primitives shared by the language lexers.
+/// Reusable byte-span matcher primitives shared by the language lexers. Each helper
+/// takes a <see cref="ReadOnlySpan{Byte}"/> anchored at the lexer cursor and returns
+/// the number of UTF-8 bytes matched, or <c>0</c> on no match.
 /// </summary>
-/// <remarks>
-/// Every helper takes a <see cref="ReadOnlySpan{Byte}"/> anchored at the
-/// lexer cursor and returns the number of UTF-8 bytes matched, or
-/// <c>0</c> on no match. Returning <c>0</c> tells <see cref="Lexer"/> to
-/// fall through to the next rule.
-/// <para>
-/// Covers patterns that recur across the language lexers — whitespace
-/// runs, line comments, identifiers, integer / float literals, simple
-/// quoted strings, single-character punctuation against a
-/// <see cref="SearchValues{T}"/>, and keyword-set lookups against a
-/// <see cref="ByteKeywordSet"/>. Lexer-specific shapes (e.g. Razor
-/// transitions, YAML block scalars) live alongside their lexer.
-/// </para>
-/// </remarks>
 public static class TokenMatchers
 {
     /// <summary>ASCII whitespace + newlines (<c>' '</c>, <c>'\t'</c>, <c>'\r'</c>, <c>'\n'</c>).</summary>

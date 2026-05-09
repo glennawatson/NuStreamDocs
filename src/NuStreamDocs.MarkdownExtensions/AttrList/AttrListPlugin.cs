@@ -7,22 +7,10 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.AttrList;
 
 /// <summary>
-/// Block-level attr-list plugin. Recognizes a trailing
-/// <c>{: #id .class key=value}</c> token at the end of a block
-/// element's text and lifts its tokens into HTML attributes on the
-/// element's opening tag (the equivalent of pmdownx <c>attr_list</c>'s
-/// block syntax).
+/// Block attr-list plugin — lifts a trailing <c>{: #id .class key=value}</c> token into HTML
+/// attributes on the enclosing block element. Covers <c>h1-h6</c>, <c>p</c>, <c>li</c>,
+/// <c>td</c>, <c>th</c>, <c>dd</c>, <c>dt</c>, <c>blockquote</c>.
 /// </summary>
-/// <remarks>
-/// Runs as a post-render HTML rewriter rather than a source
-/// preprocessor: by the time markdown rendering has produced
-/// <c>&lt;h1&gt;Heading {: .my-class }&lt;/h1&gt;</c> we can detect
-/// the pattern unambiguously without re-parsing markdown. Block
-/// elements covered: <c>h1-h6</c>, <c>p</c>, <c>li</c>, <c>td</c>,
-/// <c>th</c>, <c>dd</c>, <c>dt</c>, <c>blockquote</c>. Inline
-/// attr-list (e.g. <c>[Link]{: target="_blank" }</c>) is a
-/// follow-up — it needs hooks earlier in the rendering pipeline.
-/// </remarks>
 public sealed class AttrListPlugin : IPagePostRenderPlugin
 {
     /// <inheritdoc/>

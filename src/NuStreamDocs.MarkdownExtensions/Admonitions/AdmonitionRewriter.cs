@@ -8,15 +8,10 @@ using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 
-/// <summary>
-/// Stateless UTF-8 admonition rewriter. Scans <c>!!! type "title"</c>
-/// openers and the indented body that follows, emits the matching
-/// <c>&lt;div class="admonition type"&gt;</c> HTML block, and copies
-/// every other byte through unchanged.
-/// </summary>
+/// <summary>Rewrites <c>!!! type "title"</c> blocks into <c>&lt;div class="admonition type"&gt;</c> HTML.</summary>
 internal static class AdmonitionRewriter
 {
-    /// <summary>Gets the opener marker: <c>!!! </c> with the trailing space.</summary>
+    /// <summary>Gets the opener marker.</summary>
     private static ReadOnlySpan<byte> Opener => "!!! "u8;
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>

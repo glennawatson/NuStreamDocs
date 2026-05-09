@@ -6,12 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Pagefind;
 
-/// <summary>String / span construction helpers for the byte-shaped <see cref="PagefindOptions"/> record.</summary>
-/// <remarks>
-/// Encodes the inputs once at construction so the per-page frontmatter extractor and the index
-/// writer flow pure UTF-8. Callers building from configuration files reach for the string
-/// overloads; callers with byte-literal sources can pass <c>[.. "..."u8]</c> directly.
-/// </remarks>
+/// <summary>Fluent helpers for building <see cref="PagefindOptions"/>.</summary>
 public static class PagefindOptionsExtensions
 {
     /// <summary>Replaces the output subdirectory.</summary>

@@ -6,11 +6,7 @@ using System.Reflection;
 
 namespace NuStreamDocs.Search.Lunr;
 
-/// <summary>
-/// Lazily reads the vendored <c>lunr.min.js</c> bundle out of the assembly's
-/// embedded resources. Cached on first use so the plugin's
-/// <c>StaticAssets</c> property is allocation-free on the second call onward.
-/// </summary>
+/// <summary>Provides the vendored <c>lunr.min.js</c> bundle from embedded resources.</summary>
 internal static class LunrAssets
 {
     /// <summary>The pinned upstream Lunr version — kept in sync with the bytes embedded under <c>Assets/lunr.min.js</c>.</summary>

@@ -8,26 +8,10 @@ using System.Text;
 namespace NuStreamDocs.Autorefs;
 
 /// <summary>
-/// Markdown preprocessor that rewrites mkdocs-autorefs reference-link shapes —
-/// <c>[shortName][some.anchor.id]</c> — into the project's <c>@autoref:</c>
-/// URL marker so the existing finalize-time <see cref="AutorefsRewriter"/>
-/// resolves them against the cross-page <see cref="AutorefsRegistry"/>.
+/// Rewrites mkdocs-autorefs <c>[label][id]</c> reference-link shapes into the <c>@autoref:</c>
+/// URL marker form. Reference-style links resolved by an inline <c>[label]: url</c> definition
+/// are left untouched, as are tokens inside fenced code blocks and inline code spans.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Format-agnostic: the label can be any anchor id the registry recognises.
-/// SourceDocParser's Zensical emitter writes Roslyn commentIds
-/// (<c>T:Foo</c>, <c>M:Foo.Bar(System.Int32)</c>) but the same shape works
-/// for any anchor a page declares via <c>[](){#anchor.id}</c>.
-/// </para>
-/// <para>
-/// Reference-style links that resolve through a CommonMark
-/// <c>[label]: url</c> definition in the same document are left untouched —
-/// the document already supplies the URL, no autoref lookup needed. Tokens
-/// inside fenced code blocks and inline code spans are passed through
-/// verbatim so prose snippets like <c>`[Foo][T:Bar]`</c> render as code.
-/// </para>
-/// </remarks>
 public static class AutorefsReferenceLinkPreprocessor
 {
     /// <summary>Length of the autoref marker prefix written into the rewritten link target.</summary>
@@ -36,15 +20,15 @@ public static class AutorefsReferenceLinkPreprocessor
     /// <summary>Number of fence-marker bytes (<c>```</c>) that flip a code-fence state.</summary>
     private const int FenceMarkerLength = 3;
 
-    /// <summary>Maximum byte count we allow for a label inside <c>[ ]</c> — keeps the scan bounded against pathological inputs.</summary>
+    /// <summary>Maximum byte count permitted for a label inside <c>[ ]</c>.</summary>
     private const int MaxLabelBytes = 256;
 
     /// <summary>Gets the UTF-8 prefix of the rewritten URL target.</summary>
     private static ReadOnlySpan<byte> AutorefPrefix => "@autoref:"u8;
 
-    /// <summary>Returns true when <paramref name="source"/> contains a <c>][</c> sequence — the cheapest signal that a reference-style link might be present.</summary>
+    /// <summary>Returns true when <paramref name="source"/> may contain a reference-style link worth rewriting.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
-    /// <returns>True when at least one <c>][</c> appears; false short-circuits the rewriter.</returns>
+    /// <returns>True when at least one <c>][</c> appears.</returns>
     public static bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         source.IndexOf("]["u8) >= 0;
 
@@ -429,12 +413,7 @@ public static class AutorefsReferenceLinkPreprocessor
         return true;
     }
 
-    /// <summary>Mutable cursor + emit-pointer + fence flag bundle threaded through the rewriter loop.</summary>
-    /// <remarks>
-    /// Record struct (no positional constructor) — gets <see cref="IEquatable{T}"/> +
-    /// hash + equality for free, while keeping fields mutable so the rewriter can
-    /// do <c>state.Cursor++</c> in place.
-    /// </remarks>
+    /// <summary>Cursor, emit-pointer, and fence flag threaded through the rewriter loop.</summary>
     private record struct ScanState
     {
         /// <summary>Current scan offset.</summary>

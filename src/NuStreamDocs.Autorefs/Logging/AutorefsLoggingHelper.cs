@@ -8,10 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Autorefs.Logging;
 
-/// <summary>
-/// Source-generated logging entry points for <see cref="AutorefsPlugin"/>
-/// and <see cref="AutorefsRewriter"/>.
-/// </summary>
+/// <summary>Logging entry points for <see cref="AutorefsPlugin"/> and <see cref="AutorefsRewriter"/>.</summary>
 internal static partial class AutorefsLoggingHelper
 {
     /// <summary>Logs the start of a resolution pass.</summary>
@@ -67,7 +64,7 @@ internal static partial class AutorefsLoggingHelper
         Message = "Autorefs resolution complete: {ResolvedCount} resolved, {MissingCount} missing")]
     public static partial void LogResolutionComplete(ILogger logger, int resolvedCount, int missingCount);
 
-    /// <summary>Source-generated emitter for <see cref="LogReferenceResolved"/>; takes the already-decoded strings.</summary>
+    /// <summary>Emitter for <see cref="LogReferenceResolved"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="id">Resolved ID.</param>
     /// <param name="targetPath">Resolved target URL or file path.</param>
@@ -77,7 +74,7 @@ internal static partial class AutorefsLoggingHelper
         Message = "Autorefs resolved {Id} -> {TargetPath}")]
     private static partial void LogReferenceResolvedCore(ILogger logger, string id, string targetPath);
 
-    /// <summary>Source-generated emitter for <see cref="LogReferenceUnresolved"/>; takes the already-decoded strings.</summary>
+    /// <summary>Emitter for <see cref="LogReferenceUnresolved"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="id">Unresolved ID.</param>
     /// <param name="sourcePage">Page that referenced the ID.</param>

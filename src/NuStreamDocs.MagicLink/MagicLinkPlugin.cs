@@ -7,19 +7,10 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MagicLink;
 
 /// <summary>
-/// Magic-link plugin. Pre-processes raw Markdown so that bare
-/// <c>http://</c>, <c>https://</c>, <c>ftp://</c>, <c>ftps://</c>,
-/// and <c>mailto:</c> URLs become CommonMark autolinks
-/// (<c>&lt;url&gt;</c>) — which the inline renderer turns into
-/// <c>&lt;a href&gt;</c> tags.
+/// Magic-link plugin — wraps bare URLs (<c>http</c>/<c>https</c>/<c>ftp</c>/<c>ftps</c>/
+/// <c>mailto</c>) as CommonMark autolinks, and optionally expands GitHub <c>#NNN</c> /
+/// <c>@user</c> shortrefs.
 /// </summary>
-/// <remarks>
-/// When configured with a <see cref="MagicLinkOptions.DefaultRepo"/>,
-/// the plugin also expands GitHub-style <c>#NNN</c> issue / pull-request
-/// shortrefs against that repo, mirroring the pymdownx-magiclink
-/// behavior. Setting <see cref="MagicLinkOptions.ExpandUserMentions"/>
-/// turns on <c>@user</c> → <c>https://github.com/user</c> rewriting.
-/// </remarks>
 public sealed class MagicLinkPlugin : IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>

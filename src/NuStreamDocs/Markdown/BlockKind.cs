@@ -4,14 +4,7 @@
 
 namespace NuStreamDocs.Markdown;
 
-/// <summary>
-/// CommonMark block-level construct identified by the scanner.
-/// </summary>
-/// <remarks>
-/// Plain <see langword="int"/> backing — Sonar's default analyzer
-/// rejects byte-backed enums even though the descriptors are kept
-/// pooled.
-/// </remarks>
+/// <summary>CommonMark block-level construct identified by the scanner.</summary>
 public enum BlockKind
 {
     /// <summary>Sentinel: scanner has not classified the line yet.</summary>

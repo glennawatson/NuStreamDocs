@@ -17,16 +17,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Internal static helper that walks the input tree and produces the
-/// in-memory <see cref="NavNode"/> hierarchy.
-/// </summary>
-/// <remarks>
-/// One static method per concern: directory walk, glob filter,
-/// ordering, override-file merging. Keeps allocations bounded by
-/// using <see cref="ArrayPool{T}"/> rentals for transient buffers and
-/// pre-sized arrays for the final tree.
-/// </remarks>
+/// <summary>Walks the input tree and produces the in-memory <see cref="NavNode"/> hierarchy.</summary>
 internal static class NavTreeBuilder
 {
     /// <summary>Markdown extension recognized when building the nav tree.</summary>
@@ -35,18 +26,14 @@ internal static class NavTreeBuilder
     /// <summary>File name of the literate-nav override (<c>.pages</c>) read from each section directory.</summary>
     private const string PagesFileName = ".pages";
 
-    /// <summary>
-    /// Builds the nav tree rooted at <paramref name="inputRoot"/>.
-    /// </summary>
+    /// <summary>Builds the nav tree rooted at <paramref name="inputRoot"/>.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
     public static NavNode Build(DirectoryPath inputRoot, in NavOptions options) =>
         Build(inputRoot, in options, useDirectoryUrls: false, NullLogger.Instance);
 
-    /// <summary>
-    /// Builds the nav tree rooted at <paramref name="inputRoot"/> with an explicit served URL shape.
-    /// </summary>
+    /// <summary>Builds the nav tree with an explicit served URL shape.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
@@ -54,9 +41,7 @@ internal static class NavTreeBuilder
     public static NavNode Build(DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls) =>
         Build(inputRoot, in options, useDirectoryUrls, NullLogger.Instance);
 
-    /// <summary>
-    /// Builds the nav tree rooted at <paramref name="inputRoot"/> emitting log events to <paramref name="logger"/>.
-    /// </summary>
+    /// <summary>Builds the nav tree with logging.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger that receives start/complete events.</param>
@@ -65,9 +50,7 @@ internal static class NavTreeBuilder
     public static NavNode Build(DirectoryPath inputRoot, in NavOptions options, ILogger logger)
         => Build(inputRoot, in options, useDirectoryUrls: false, logger);
 
-    /// <summary>
-    /// Builds the nav tree rooted at <paramref name="inputRoot"/> emitting log events to <paramref name="logger"/>.
-    /// </summary>
+    /// <summary>Builds the nav tree with an explicit served URL shape and logging.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>

@@ -4,14 +4,7 @@
 
 namespace NuStreamDocs.Markdown;
 
-/// <summary>
-/// Offset/length descriptor of a block discovered by the scanner.
-/// </summary>
-/// <remarks>
-/// Stores positions into the original UTF-8 buffer rather than copying
-/// slices, so a parse pass over a large document allocates O(blocks)
-/// rather than O(bytes).
-/// </remarks>
+/// <summary>Offset/length descriptor of a block discovered by the scanner; positions index into the original UTF-8 buffer.</summary>
 /// <param name="Kind">Classified block kind.</param>
 /// <param name="Start">Start byte offset in the source UTF-8 buffer.</param>
 /// <param name="Length">Length in bytes of the full block.</param>

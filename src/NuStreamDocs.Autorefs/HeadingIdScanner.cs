@@ -6,25 +6,12 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Autorefs;
 
-/// <summary>
-/// Scans rendered HTML bytes for heading <c>id="..."</c> attributes and
-/// publishes them to an <see cref="AutorefsRegistry"/>.
-/// </summary>
-/// <remarks>
-/// Byte-only walk on top of <see cref="Utf8HtmlScanner"/>: the
-/// renderer's own emitter is the one authoritative source of these
-/// tags so the shape is stable, no full HTML parser is needed. The
-/// caller supplies the page URL pre-encoded once per page; per-heading
-/// work then stays on byte spans and never decodes to <see cref="string"/>.
-/// </remarks>
+/// <summary>Scans rendered HTML for heading and anchor <c>id="..."</c> attributes and publishes them to an <see cref="AutorefsRegistry"/>.</summary>
 public static class HeadingIdScanner
 {
     /// <summary>Scans <paramref name="html"/> and registers every heading ID it finds.</summary>
     /// <param name="html">UTF-8 rendered HTML bytes.</param>
-    /// <param name="pageUrlBytes">
-    /// UTF-8 page URL bytes; the same array reference is shared across every heading registered for this page,
-    /// so the registry stores it once rather than copying it per heading.
-    /// </param>
+    /// <param name="pageUrlBytes">UTF-8 page URL bytes; the array reference is stored directly and must not be mutated after the call.</param>
     /// <param name="registry">Registry to publish into.</param>
     public static void ScanAndRegister(ReadOnlySpan<byte> html, byte[] pageUrlBytes, AutorefsRegistry registry)
     {
@@ -41,7 +28,7 @@ public static class HeadingIdScanner
 
     /// <summary>Registers every <c>&lt;hN id="..."&gt;</c> heading.</summary>
     /// <param name="html">UTF-8 rendered HTML.</param>
-    /// <param name="pageUrlBytes">Per-page URL byte array, shared across registrations.</param>
+    /// <param name="pageUrlBytes">Per-page URL byte array.</param>
     /// <param name="registry">Registry to publish into.</param>
     private static void ScanHeadings(ReadOnlySpan<byte> html, byte[] pageUrlBytes, AutorefsRegistry registry)
     {
@@ -56,7 +43,7 @@ public static class HeadingIdScanner
 
     /// <summary>Registers every <c>&lt;a id="..."&gt;</c> empty anchor — the form the <c>[](){#id}</c> markdown shorthand expands to.</summary>
     /// <param name="html">UTF-8 rendered HTML.</param>
-    /// <param name="pageUrlBytes">Per-page URL byte array, shared across registrations.</param>
+    /// <param name="pageUrlBytes">Per-page URL byte array.</param>
     /// <param name="registry">Registry to publish into.</param>
     private static void ScanAnchorTags(ReadOnlySpan<byte> html, byte[] pageUrlBytes, AutorefsRegistry registry)
     {
@@ -105,11 +92,7 @@ public static class HeadingIdScanner
         registry.Register(idSpan, pageUrlBytes, idSpan);
     }
 
-    /// <summary>
-    /// True when <paramref name="b"/> is a valid byte right after a tag-name
-    /// (whitespace, <c>&gt;</c>, or <c>/</c>); rules out <c>&lt;abbr&gt;</c>
-    /// being misread as an <c>&lt;a&gt;</c> open.
-    /// </summary>
+    /// <summary>True when <paramref name="b"/> is a valid byte immediately after a tag-name (whitespace, <c>&gt;</c>, or <c>/</c>).</summary>
     /// <param name="b">Candidate byte.</param>
     /// <returns>True for a tag boundary.</returns>
     private static bool IsTagBoundary(byte b) =>

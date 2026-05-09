@@ -8,27 +8,11 @@ using System.Diagnostics.CodeAnalysis;
 namespace NuStreamDocs.Highlight;
 
 /// <summary>
-/// A compiled state-machine lexer that operates on UTF-8 byte spans.
+/// A compiled state-machine lexer that operates on UTF-8 byte spans. A lexer is an array
+/// of <see cref="LexerRule"/> arrays indexed by integer state id; on no match the cursor
+/// advances by one byte with the <see cref="TokenClass.Text"/> classification, guaranteeing
+/// forward progress.
 /// </summary>
-/// <remarks>
-/// A lexer is an array of <see cref="LexerRule"/> arrays indexed by integer state id;
-/// <see cref="Tokenize(ReadOnlySpan{byte}, TokenSink)"/> walks the input once,
-/// advancing the cursor past the first rule that matches at each position.
-/// On no match the cursor advances by one byte with the <see cref="TokenClass.Text"/>
-/// classification, which guarantees forward progress and never throws from tokenization.
-/// <para>
-/// Built-in lexers ship <see cref="LexerRuleMatcher"/> methods backed by
-/// <see cref="TokenMatchers"/>, so the lexer instance is reused across every fenced block
-/// on every page without per-call allocation. Each matcher is a static method that returns
-/// the matched length in bytes.
-/// </para>
-/// <para>
-/// The per-call state stack uses caller stack memory for the common shallow case and rents
-/// from <see cref="ArrayPool{T}"/> only when the lexer state stack grows beyond the initial
-/// inline capacity. The hot token-emission path can use a struct sink to avoid delegate and
-/// closure allocation risk.
-/// </para>
-/// </remarks>
 public sealed class Lexer
 {
     /// <summary>The integer id of every lexer's root state.</summary>
@@ -66,9 +50,7 @@ public sealed class Lexer
     /// <param name="tokenClass">Classification.</param>
     public delegate void TokenSink<in TState>(TState state, int offset, int length, TokenClass tokenClass);
 
-    /// <summary>
-    /// Allocation-free token sink contract for hot callers that want to avoid delegate and closure allocation risk.
-    /// </summary>
+    /// <summary>Allocation-free token-sink contract for hot callers.</summary>
     public interface ITokenSink
     {
         /// <summary>Receives a token emitted by the lexer.</summary>
@@ -107,12 +89,10 @@ public sealed class Lexer
         Tokenize(source, ref sink);
     }
 
-    /// <summary>
-    /// Walks <paramref name="source"/> once, calling <paramref name="sink"/> for each emitted token.
-    /// </summary>
+    /// <summary>Walks <paramref name="source"/> once, calling <paramref name="sink"/> for each emitted token.</summary>
     /// <typeparam name="TSink">Caller-supplied sink shape.</typeparam>
     /// <param name="source">UTF-8 source bytes.</param>
-    /// <param name="sink">Sink invoked per token. Passed by reference to avoid copying stateful structs.</param>
+    /// <param name="sink">Sink invoked per token; passed by reference to avoid copying stateful structs.</param>
     [SuppressMessage(
         "Design",
         "CA1045:Do not pass types by reference",
@@ -131,11 +111,7 @@ public sealed class Lexer
         {
             stateStack.Push(RootStateId);
 
-            // Cache the current state's rule array across token steps and only refetch
-            // when the top of the state stack changes. State ids are simple ints, so
-            // the equality check is a single instruction. This cuts the indirect array
-            // lookup out of the per-token hot path; for single-state lexers, the table
-            // is consulted once for the whole file.
+            // Cache the current state's rule array across token steps; only refetch on state change.
             var pos = 0;
             var cachedStateId = -1;
             LexerRule[]? cachedRules = null;
@@ -340,11 +316,6 @@ public sealed class Lexer
         }
 
         /// <summary>Grows the stack storage, preserving all active state ids.</summary>
-        /// <remarks>
-        /// The method uses a commit flag so the newly rented array is returned if copying fails,
-        /// while the previous rented array is returned only after the new storage has become active.
-        /// This avoids leaking a newly rented array and avoids returning the active array prematurely.
-        /// </remarks>
         private void Grow()
         {
             var newCapacity = _items.Length == 0

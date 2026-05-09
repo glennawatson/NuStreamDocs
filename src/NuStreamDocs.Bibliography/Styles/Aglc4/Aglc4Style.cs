@@ -8,14 +8,10 @@ using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography.Styles.Aglc4;
 
-/// <summary>
-/// Implements the Australian Guide to Legal Citation (4th ed)
-/// formatting rules. All output is written directly to a UTF-8 sink —
-/// no intermediate <see cref="string"/> per format call.
-/// </summary>
+/// <summary>Australian Guide to Legal Citation (4th ed) formatting rules.</summary>
 public sealed class Aglc4Style : ICitationStyle
 {
-    /// <summary>Gets the singleton instance — the style is stateless.</summary>
+    /// <summary>Gets the singleton instance.</summary>
     public static Aglc4Style Instance { get; } = new();
 
     /// <inheritdoc/>

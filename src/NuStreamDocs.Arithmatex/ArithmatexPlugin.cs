@@ -7,18 +7,13 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Arithmatex;
 
 /// <summary>
-/// Arithmatex plugin (pymdownx.arithmatex generic mode).
-/// Replaces inline <c>$x$</c> with
-/// <c>&lt;span class="arithmatex"&gt;\(x\)&lt;/span&gt;</c> and
-/// block <c>$$x$$</c> with
-/// <c>&lt;div class="arithmatex"&gt;\[x\]&lt;/div&gt;</c> so a
-/// client-side MathJax/KaTeX renderer can pick them up.
+/// Arithmatex plugin (pymdownx.arithmatex generic mode); rewrites <c>$x$</c> / <c>$$x$$</c> math spans into
+/// <c>&lt;span class="arithmatex"&gt;\(x\)&lt;/span&gt;</c> / <c>&lt;div class="arithmatex"&gt;\[x\]&lt;/div&gt;</c>
+/// for a client-side MathJax/KaTeX renderer.
 /// </summary>
 /// <remarks>
-/// Inline boundaries follow pymdownx defaults: an opening <c>$</c>
-/// must not be immediately followed by whitespace, the closing
-/// <c>$</c> must not be preceded by whitespace and must not be
-/// followed by a digit (so prices like <c>$5</c> never trigger).
+/// Inline boundaries follow pymdownx defaults: opening <c>$</c> must not be followed by whitespace, closing <c>$</c>
+/// must not be preceded by whitespace and must not be followed by a digit (so prices like <c>$5</c> never trigger).
 /// Fenced and inline-code regions pass through verbatim.
 /// </remarks>
 public sealed class ArithmatexPlugin : IPagePreRenderPlugin
@@ -30,11 +25,6 @@ public sealed class ArithmatexPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Math markers are anchored on <c>$</c> (inline <c>$…$</c>, block <c>$$…$$</c>) — pages
-    /// without a single <c>$</c> byte cannot contain math, so the rewriter's per-byte scan and
-    /// the pipeline's scratch rental can be skipped entirely.
-    /// </remarks>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)'$') >= 0;
 
     /// <inheritdoc/>

@@ -9,16 +9,10 @@ using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.Tables;
 
-/// <summary>
-/// Stateless UTF-8 GFM-table rewriter. Detects a pipe-delimited
-/// header line followed by a separator line of the form
-/// <c>| --- | :--- | :---: |</c> and any number of body rows; emits
-/// the matching <c>&lt;table&gt;</c> HTML and consumes the bytes.
-/// </summary>
+/// <summary>Rewrites GFM pipe-tables (header + <c>| --- | :---: |</c> separator + body rows) into <c>&lt;table&gt;</c> HTML.</summary>
 internal static class TablesRewriter
 {
-    /// <summary>Stack-buffer cap for columns parsed out of one table.</summary>
-    /// <remarks>Real-world GFM tables stay well under this; rows with more cells silently fold the overflow into the last cell.</remarks>
+    /// <summary>Maximum columns per table; overflow rows fold extra cells into the last cell.</summary>
     private const int MaxColumns = 32;
 
     /// <summary>Column alignment.</summary>

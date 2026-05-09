@@ -6,14 +6,7 @@ using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Scripting;
 
-/// <summary>JavaScript lexer.</summary>
-/// <remarks>
-/// Reuses <see cref="TypeScriptLexer.BuildRules"/> — TypeScript is a
-/// strict superset, and the JavaScript tokens we care about classify
-/// into the same buckets. A future refinement could split out type-keyword
-/// rules that JavaScript shouldn't recognize; the CSS classes don't
-/// change either way.
-/// </remarks>
+/// <summary>JavaScript lexer (shares the TypeScript rule set).</summary>
 public static class JavaScriptLexer
 {
     /// <summary>Gets the singleton lexer instance.</summary>

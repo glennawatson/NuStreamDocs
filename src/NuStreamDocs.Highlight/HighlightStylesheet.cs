@@ -6,22 +6,16 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>The default stylesheet bytes that style the token-class spans <see cref="HighlightEmitter"/> emits.</summary>
-/// <remarks>
-/// Ships a familiar light + dark palette out of the box so themes don't have to bundle their own.
-/// Both schemes are scoped under the <c>.highlight</c> wrapper and the dark scheme is gated on
-/// <c>[data-md-color-scheme="slate"]</c> so the active theme's color toggle picks the right
-/// palette automatically.
-/// </remarks>
+/// <summary>Default stylesheet for the token-class spans <see cref="HighlightEmitter"/> emits; ships a light + dark palette gated by <c>[data-md-color-scheme="slate"]</c>.</summary>
 public static class HighlightStylesheet
 {
     /// <summary>Gets the site-relative path the stylesheet is written to.</summary>
     public static FilePath AssetPath => new("assets/stylesheets/highlight.css");
 
-    /// <summary>Gets the UTF-8 absolute URL bytes (<c>/</c>-prefixed) for the stylesheet, suitable for an HTML <c>href</c> emitted directly into the page <c>&lt;head&gt;</c>.</summary>
+    /// <summary>Gets the UTF-8 absolute-URL bytes (<c>/</c>-prefixed) for the stylesheet's <c>href</c>.</summary>
     public static byte[] AssetHref { get; } = [.. "/assets/stylesheets/highlight.css"u8];
 
-    /// <summary>Gets the UTF-8 stylesheet source as a span; <see cref="GetBytes"/> copies it per asset request.</summary>
+    /// <summary>Gets the UTF-8 stylesheet source bytes.</summary>
     private static ReadOnlySpan<byte> CssBytes =>
         """
         /*

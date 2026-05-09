@@ -9,15 +9,10 @@ using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.Tabs;
 
-/// <summary>
-/// Stateless UTF-8 content-tabs rewriter. Groups consecutive
-/// <c>=== "Title"</c> openers (with their indented bodies) into one
-/// tabbed-set <c>&lt;div&gt;</c>. The first tab in each set is
-/// checked.
-/// </summary>
+/// <summary>Rewrites consecutive <c>=== "Title"</c> openers into a single tabbed-set <c>&lt;div&gt;</c>. The first tab is checked.</summary>
 internal static class TabsRewriter
 {
-    /// <summary>Process-wide counter so tab radio-input names are unique across pages.</summary>
+    /// <summary>Process-wide counter for unique radio-input names.</summary>
     private static int _setCounter;
 
     /// <summary>Gets the opener marker.</summary>

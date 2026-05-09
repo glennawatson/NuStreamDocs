@@ -7,7 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Tags;
 
-/// <summary>Stateless helpers that emit the tags landing page and per-tag listing pages straight to byte buffers.</summary>
+/// <summary>Emits the tags landing page and per-tag listing pages.</summary>
 internal static class TagsIndexWriter
 {
     /// <summary>Maps a source-relative path (e.g. <c>guide/intro.md</c>) to a UTF-8 URL byte array (e.g. <c>guide/intro.html</c>).</summary>

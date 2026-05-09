@@ -4,10 +4,7 @@
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Byte-range record for a single quoted attribute located inside a tag-body span.
-/// All offsets are measured against the tag-body span the finder was given.
-/// </summary>
+/// <summary>Byte-range record for a quoted attribute located inside a tag-body span.</summary>
 /// <param name="Start">Offset of the first byte of the attribute name; <c>-1</c> when not found.</param>
 /// <param name="ValueStart">Offset of the first byte of the value (just past the opening quote).</param>
 /// <param name="ValueEnd">Offset of the closing quote (i.e. one past the last value byte).</param>

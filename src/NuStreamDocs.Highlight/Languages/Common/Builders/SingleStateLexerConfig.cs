@@ -7,13 +7,6 @@ using System.Buffers;
 namespace NuStreamDocs.Highlight.Languages.Common.Builders;
 
 /// <summary>Per-language configuration consumed by <see cref="SingleStateLexerRules.Build"/>.</summary>
-/// <remarks>
-/// Generic single-state lexer shape: whitespace, optional doc / line / block / pre-string
-/// rules, double / optional single string, integer / float, four keyword tables, identifier,
-/// operator alternation, and structural punctuation. Bespoke lexers (Nim, Julia, MATLAB, R,
-/// Lua, Erlang, Elixir, Ruby, …) all share this skeleton and only differ in the keyword
-/// tables, the comment shape, and a few first-byte sets.
-/// </remarks>
 internal readonly record struct SingleStateLexerConfig
 {
     /// <summary>Gets the whitespace-rule first-byte set (default <see cref="TokenMatchers.AsciiWhitespaceWithNewlines"/>).</summary>

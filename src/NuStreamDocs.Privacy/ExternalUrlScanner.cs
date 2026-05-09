@@ -9,15 +9,7 @@ using NuStreamDocs.Privacy.Bytes;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>Stateless HTML rewriter that finds <c>http(s)://</c> URLs in asset-bearing attributes and rewrites them to local paths obtained from an <see cref="ExternalAssetRegistry"/>.</summary>
-/// <remarks>
-/// One walker, one pass. The combined scanner unions the first-byte
-/// sets of the three URL-rewrite shapes (asset attributes, srcset,
-/// and inline-style <c>url()</c> blocks) and dispatches to the
-/// appropriate matcher inline — eliminating the two intermediate
-/// <see cref="ArrayBufferWriter{T}"/> + <c>ToArray</c> round-trips
-/// the previous three-stage shape paid per page.
-/// </remarks>
+/// <summary>Finds <c>http(s)://</c> URLs in asset-bearing attributes and rewrites them to local paths obtained from an <see cref="ExternalAssetRegistry"/>.</summary>
 internal static class ExternalUrlScanner
 {
     /// <summary>First-byte candidate set covering every URL-rewrite shape — <c>&lt;</c> for inline-style blocks, <c>s/S/h/H</c> for asset / srcset attributes.</summary>
@@ -43,11 +35,7 @@ internal static class ExternalUrlScanner
         CssUrlBytes.AuditInto(html, ctx);
     }
 
-    /// <summary>
-    /// Walks <paramref name="html"/> once and rewrites every external
-    /// URL match (asset attributes, srcset entries, and inline-style
-    /// <c>url()</c> tokens) directly into <paramref name="sink"/>.
-    /// </summary>
+    /// <summary>Rewrites every external URL match (asset attributes, srcset entries, and inline-style <c>url()</c> tokens) directly into <paramref name="sink"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="ctx">URL-rewrite context (filter + registry).</param>
     /// <param name="sink">Destination sink; only written to when at least one URL is rewritten.</param>

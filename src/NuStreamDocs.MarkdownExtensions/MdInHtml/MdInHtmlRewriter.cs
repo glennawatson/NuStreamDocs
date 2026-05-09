@@ -7,16 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.MdInHtml;
 
-/// <summary>
-/// Stateless UTF-8 rewriter for Markdown-in-HTML support. Walks
-/// the source byte stream, locating block-level HTML opens that
-/// carry the <c>markdown="1"</c> / <c>markdown="block"</c> /
-/// <c>markdown="span"</c> attribute. For each match the attribute
-/// is stripped and a blank line is inserted just inside the open
-/// tag and just before the matching close tag so CommonMark can
-/// parse the body as Markdown. Fenced-code regions pass through
-/// verbatim.
-/// </summary>
+/// <summary>Strips <c>markdown="1"</c> / <c>"block"</c> / <c>"span"</c> attributes from HTML opens and pads the inner content so the body parses as Markdown.</summary>
 internal static class MdInHtmlRewriter
 {
     /// <summary>Width of the trailing <c>"</c> that bounds the attribute value.</summary>
@@ -89,11 +80,6 @@ internal static class MdInHtmlRewriter
     /// <summary>Strips leading whitespace common to every non-empty line of <paramref name="body"/> before emitting it.</summary>
     /// <param name="body">UTF-8 body span.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <remarks>
-    /// Authors typically indent inner content for readability when nesting markdown inside an HTML block.
-    /// Stripping the common indent restores the natural left margin without disturbing relative
-    /// sub-indentation (so list-item continuations still work).
-    /// </remarks>
     private static void DedentAndWrite(ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
     {
         var commonIndent = MeasureCommonIndent(body);
@@ -238,17 +224,11 @@ internal static class MdInHtmlRewriter
         return true;
     }
 
-    /// <summary>Locates a <c>markdown</c> / <c>markdown="…"</c> attribute inside the attribute area of an open tag.</summary>
-    /// <param name="attrs">Attribute span (the bytes between the tag name and the closing <c>&gt;</c>).</param>
-    /// <param name="relStart">Relative start of the attribute (including the leading whitespace).</param>
-    /// <param name="relEnd">Relative end of the attribute (just past the closing quote, or just past the bare token).</param>
-    /// <returns>True when an attribute was found.</returns>
-    /// <remarks>
-    /// Recognizes both the quoted form (<c>markdown="1"</c> / <c>"block"</c> / <c>"span"</c>) and
-    /// the bare-attribute form (<c>markdown</c> with no <c>=</c>, treated as <c>markdown="1"</c>).
-    /// The bare form is the shorthand mkdocs-material conventions emit (e.g.
-    /// <c>&lt;div class="grid cards" markdown&gt;</c>).
-    /// </remarks>
+    /// <summary>Locates a <c>markdown</c> attribute (quoted or bare) inside the attribute area.</summary>
+    /// <param name="attrs">Attribute span between the tag name and the closing <c>&gt;</c>.</param>
+    /// <param name="relStart">Relative start including the leading whitespace.</param>
+    /// <param name="relEnd">Relative end just past the value or bare token.</param>
+    /// <returns>True when found.</returns>
     private static bool TryFindMarkdownAttribute(ReadOnlySpan<byte> attrs, out int relStart, out int relEnd)
     {
         relStart = 0;

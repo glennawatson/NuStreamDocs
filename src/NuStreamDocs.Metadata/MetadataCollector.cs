@@ -8,12 +8,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Metadata;
 
-/// <summary>
-/// Walks the input root, reads directory-level (<c>_meta.yml</c>) and
-/// per-page sidecar (<c>page.md.meta.yml</c>) metadata files, and
-/// builds a <see cref="MetadataRegistry"/> mapping each Markdown page
-/// to its merged-frontmatter byte payload.
-/// </summary>
+/// <summary>Builds a <see cref="MetadataRegistry"/> by walking the input root and reading directory-level and per-page sidecar metadata files.</summary>
 internal static class MetadataCollector
 {
     /// <summary>Markdown extension recognized by the walk.</summary>
@@ -39,10 +34,10 @@ internal static class MetadataCollector
         return byPath.Count is 0 ? MetadataRegistry.Empty : new(byPath);
     }
 
-    /// <summary>Reads every <paramref name="directoryFile"/> rooted at <paramref name="inputRoot"/> into a path → bytes dictionary, used as a fast lookup during the walk.</summary>
+    /// <summary>Reads every <paramref name="directoryFile"/> beneath <paramref name="inputRoot"/> into a directory-path keyed dictionary.</summary>
     /// <param name="inputRoot">Absolute docs root.</param>
     /// <param name="directoryFile">Directory-metadata filename.</param>
-    /// <returns>Absolute directory path → file bytes.</returns>
+    /// <returns>Absolute directory path to file bytes.</returns>
     private static Dictionary<string, byte[]> ReadDirectoryFiles(string inputRoot, string directoryFile)
     {
         Dictionary<string, byte[]> result = new(StringComparer.OrdinalIgnoreCase);
@@ -60,12 +55,12 @@ internal static class MetadataCollector
         return result;
     }
 
-    /// <summary>Recursively walks <paramref name="directory"/>, accumulating directory-level metadata into <paramref name="byPath"/> for every <c>.md</c> page found.</summary>
-    /// <param name="root">Absolute docs root (constant across recursion).</param>
-    /// <param name="directory">Directory currently being walked.</param>
-    /// <param name="directoryStack">All directory-metadata files keyed by absolute directory.</param>
+    /// <summary>Recursively walks <paramref name="directory"/> and records merged metadata for every <c>.md</c> page.</summary>
+    /// <param name="root">Absolute docs root.</param>
+    /// <param name="directory">Directory being walked.</param>
+    /// <param name="directoryStack">Directory-metadata files keyed by absolute directory.</param>
     /// <param name="sidecarSuffix">Per-page sidecar suffix.</param>
-    /// <param name="byPath">Accumulator keyed by forward-slash-normalized relative path.</param>
+    /// <param name="byPath">Accumulator keyed by forward-slash relative path.</param>
     private static void Walk(string root, string directory, Dictionary<string, byte[]> directoryStack, string sidecarSuffix, Dictionary<string, byte[]> byPath)
     {
         var inheritedChain = CollectInheritedChain(root, directory, directoryStack);
@@ -93,7 +88,7 @@ internal static class MetadataCollector
         }
     }
 
-    /// <summary>Builds the inheritance chain for <paramref name="directory"/> — root-most first, current last.</summary>
+    /// <summary>Builds the inheritance chain for <paramref name="directory"/>; root-most first, current directory last.</summary>
     /// <param name="root">Absolute docs root.</param>
     /// <param name="directory">Directory whose chain to assemble.</param>
     /// <param name="directoryStack">All directory-metadata files.</param>
@@ -127,10 +122,10 @@ internal static class MetadataCollector
         return [.. chain];
     }
 
-    /// <summary>Merges <paramref name="chain"/> + <paramref name="sidecar"/> into a single deduplicated YAML body. Closer-to-page sources override; later-defined keys win.</summary>
+    /// <summary>Merges <paramref name="chain"/> and <paramref name="sidecar"/> into a deduplicated YAML body; closer-to-page sources win.</summary>
     /// <param name="chain">Ancestor-first chain of directory-metadata bytes.</param>
-    /// <param name="sidecar">Sidecar bytes (may be empty).</param>
-    /// <returns>Merged YAML body bytes (no surrounding <c>---</c>); empty when nothing to inject.</returns>
+    /// <param name="sidecar">Sidecar bytes; may be empty.</param>
+    /// <returns>Merged YAML body bytes without surrounding <c>---</c>; empty when nothing to inject.</returns>
     private static byte[] MergeChain(byte[][] chain, byte[] sidecar)
     {
         if (chain.Length is 0 && sidecar.Length is 0)
@@ -160,8 +155,8 @@ internal static class MetadataCollector
 
     /// <summary>Appends every top-level key from <paramref name="source"/> to <paramref name="sink"/> that hasn't already been seen.</summary>
     /// <param name="source">Source YAML bytes.</param>
-    /// <param name="seen">Byte-keyed set of keys already written; updated in place.</param>
-    /// <param name="seenLookup">Span-keyed alternate lookup over <paramref name="seen"/>; cached so the per-line probe never allocates.</param>
+    /// <param name="seen">Set of keys already written; updated in place.</param>
+    /// <param name="seenLookup">Span-keyed alternate lookup over <paramref name="seen"/>.</param>
     /// <param name="sink">Output sink.</param>
     private static void AppendFreshKeys(
         ReadOnlySpan<byte> source,

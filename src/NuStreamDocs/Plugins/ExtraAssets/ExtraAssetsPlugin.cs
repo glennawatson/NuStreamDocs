@@ -8,18 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
-/// <summary>
-/// Plugin that ships caller-supplied stylesheet and script assets,
-/// and emits matching <c>&lt;link&gt;</c> / <c>&lt;script&gt;</c>
-/// tags into every page's <c>&lt;head&gt;</c>.
-/// </summary>
-/// <remarks>
-/// The builder API folds repeated <c>AddExtraCss</c> / <c>AddExtraJs</c>
-/// calls onto the same instance so registration produces one bundle,
-/// not one plugin per call. Sources are resolved lazily during
-/// <see cref="ConfigureAsync"/> so file reads happen alongside the rest
-/// of the build's I/O.
-/// </remarks>
+/// <summary>Plugin that ships caller-supplied stylesheet and script assets, emitting matching <c>&lt;link&gt;</c> / <c>&lt;script&gt;</c> tags into every page's <c>&lt;head&gt;</c>.</summary>
 public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>Forward-slash directory the resolved assets are written under.</summary>

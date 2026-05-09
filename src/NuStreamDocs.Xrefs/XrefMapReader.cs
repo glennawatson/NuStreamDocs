@@ -6,20 +6,7 @@ using System.Text.Json;
 
 namespace NuStreamDocs.Xrefs;
 
-/// <summary>
-/// Parses a DocFX-compatible <c>xrefmap.json</c> document into the
-/// <c>(uid, href)</c> pairs <see cref="XrefsPlugin"/> can register
-/// into the shared autorefs registry.
-/// </summary>
-/// <remarks>
-/// Tolerant: unknown top-level fields are ignored; entries missing
-/// either <c>uid</c> or <c>href</c> are skipped. The reader uses
-/// <see cref="Utf8JsonReader"/> directly so the file is parsed
-/// straight from UTF-8 bytes; values are unescaped into fresh
-/// <see cref="byte"/> arrays via <see cref="Utf8JsonReader.CopyString(System.Span{byte})"/>
-/// so the registry hot path receives byte arrays without going through
-/// <see cref="string"/>.
-/// </remarks>
+/// <summary>Parses a DocFX-compatible <c>xrefmap.json</c> into <c>(uid, href)</c> UTF-8 byte pairs. Unknown fields are ignored; entries missing either field are skipped.</summary>
 internal static class XrefMapReader
 {
     /// <summary>Decodes <paramref name="bytes"/> into a list of <c>(uid, href)</c> UTF-8 byte pairs and the document's <c>baseUrl</c> bytes (empty when absent).</summary>

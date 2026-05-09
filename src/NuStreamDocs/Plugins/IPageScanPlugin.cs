@@ -5,18 +5,11 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the per-page scan phase.
+/// Plugin participation in the per-page scan phase: read-only pass over post-render HTML used to
+/// extract typed facts (heading IDs, search documents, sitemap / feed metadata) into shared
+/// registries. Mutation of page bytes is forbidden in Scan — use <see
+/// cref="IPagePostRenderPlugin"/> or <see cref="IPagePostResolvePlugin"/> instead.
 /// </summary>
-/// <remarks>
-/// Read-only pass over the post-render HTML. Plugins extract typed
-/// facts (heading IDs, search documents, sitemap entries, feed
-/// metadata) and publish into shared registries owned by their plugin
-/// instance. The pass is synchronous — implementations must stay cheap
-/// because Scan runs on the per-page hot path with parallelism.
-/// Mutation of page bytes is forbidden in Scan; use
-/// <see cref="IPagePostRenderPlugin"/> (before the cross-page barrier)
-/// or <see cref="IPagePostResolvePlugin"/> (after) instead.
-/// </remarks>
 public interface IPageScanPlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the scan phase.</summary>

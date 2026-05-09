@@ -7,12 +7,6 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Nav;
 
 /// <summary>Construction helpers for <see cref="NavOptions"/>'s glob-pattern lists.</summary>
-/// <remarks>
-/// <see cref="NavOptions.Includes"/> / <see cref="NavOptions.Excludes"/> use
-/// <see cref="GlobPattern"/> so the "this is a glob, not a path" intent reads from the type.
-/// String literals at call sites convert via the implicit operator, so existing fluent calls
-/// (e.g. <c>opts.WithExcludes("articles/**")</c>) keep compiling unchanged.
-/// </remarks>
 public static class NavOptionsExtensions
 {
     /// <summary>Replaces the include list with <paramref name="patterns"/>.</summary>
@@ -73,13 +67,8 @@ public static class NavOptionsExtensions
 
     /// <summary>Replaces the curated nav list with <paramref name="entries"/>.</summary>
     /// <param name="options">Source options.</param>
-    /// <param name="entries">Curated entry tree (mkdocs.yml, docfx <c>toc.yml</c>, awesome-nav, etc.).</param>
+    /// <param name="entries">Curated entry tree.</param>
     /// <returns>The updated options.</returns>
-    /// <remarks>
-    /// Reader assemblies expose their own <c>From*</c> extensions on top of this primitive — see
-    /// <c>NuStreamDocs.Config.MkDocs</c> for <c>FromMkDocsYaml</c> and <c>NuStreamDocs.Config.DocFx</c>
-    /// for <c>FromDocFxTocs</c>.
-    /// </remarks>
     public static NavOptions WithCuratedEntries(this NavOptions options, NavEntry[] entries)
     {
         ArgumentNullException.ThrowIfNull(entries);

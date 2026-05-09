@@ -4,14 +4,7 @@
 
 namespace NuStreamDocs.Toc.Logging;
 
-/// <summary>
-/// Source-generated logging entry points for <see cref="TocPlugin"/>.
-/// </summary>
-/// <remarks>
-/// All methods are <see cref="LoggerMessageAttribute"/> partials so the
-/// generator emits the underlying <c>EventId</c> + cached delegate; we
-/// never call <see cref="ILogger"/> extension methods directly.
-/// </remarks>
+/// <summary>Source-generated logging entry points for <see cref="TocPlugin"/>.</summary>
 internal static partial class TocLoggingHelper
 {
     /// <summary>Logs the start of TOC processing for a page.</summary>

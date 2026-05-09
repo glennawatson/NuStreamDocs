@@ -9,19 +9,14 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Details;
 
-/// <summary>
-/// Collapsible-details plugin. Rewrites
-/// <c>??? type "title"</c> (collapsed) and <c>???+ type "title"</c>
-/// (open) blocks into native <c>&lt;details&gt;</c> elements before
-/// the markdown renderer runs.
-/// </summary>
+/// <summary>Collapsible-details plugin — rewrites <c>???</c> (collapsed) and <c>???+</c> (open) blocks into <c>&lt;details&gt;</c> elements.</summary>
 public sealed class DetailsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
+    /// <summary>Head-link snippet injected on every page.</summary>
     private static readonly byte[] LinkBytes =
         [.. """<link rel="stylesheet" href="/assets/extensions/details.css">"""u8];
 
-    /// <summary>UTF-8 stylesheet shipped to every site.</summary>
+    /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
         [.. """
             details{border-left:4px solid #448aff;background:rgba(68,138,255,.06);padding:.6em 1em;margin:1em 0;border-radius:.2em}
@@ -37,7 +32,7 @@ public sealed class DetailsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, 
             details.quote,details.cite{border-left-color:#9e9e9e;background:rgba(158,158,158,.06)}
             """u8];
 
-    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    /// <summary>Relative path for the css asset.</summary>
     private static readonly FilePath AssetFilePath = new("assets/extensions/details.css");
 
     /// <inheritdoc/>

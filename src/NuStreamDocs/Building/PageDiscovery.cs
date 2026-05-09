@@ -7,16 +7,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Building;
 
-/// <summary>
-/// Streams <see cref="PageWorkItem"/> descriptors from a docs root.
-/// </summary>
-/// <remarks>
-/// Backed by <see cref="Directory.EnumerateFiles(string, string, SearchOption)"/>,
-/// which yields entries lazily so the discover stage never materializes
-/// the full file list — even on large projects memory stays flat.
-/// Filtering / glob exclude is applied per-item
-/// during the walk, again to avoid an intermediate list.
-/// </remarks>
+/// <summary>Streams <see cref="PageWorkItem"/> descriptors from a docs root with per-item include/exclude filtering.</summary>
 public static class PageDiscovery
 {
     /// <summary>Markdown extension the discovery walker recognizes.</summary>

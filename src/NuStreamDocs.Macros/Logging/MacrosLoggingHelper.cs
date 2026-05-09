@@ -4,7 +4,7 @@
 
 namespace NuStreamDocs.Macros.Logging;
 
-/// <summary>Source-generated logging entry points for <see cref="MacrosPlugin"/>.</summary>
+/// <summary>Logging entry points for <see cref="MacrosPlugin"/>.</summary>
 internal static partial class MacrosLoggingHelper
 {
     /// <summary>Logs a single unresolved <c>{{ name }}</c>.</summary>

@@ -7,16 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
-/// <summary>
-/// Init-only bundle for <see cref="ExtraAssetSource"/>'s private ctor — collapses
-/// the eight per-kind fields into a single value so the ctor surface stays
-/// 1-arg even as new flags (modules, integrity hashes, …) get added.
-/// </summary>
-/// <remarks>
-/// Internal because callers should reach for <see cref="ExtraAssetSource"/>'s
-/// per-kind factory methods (<c>File</c>, <c>Inline</c>, <c>Embedded</c>,
-/// <c>External</c>) — this struct is purely a constructor-shape detail.
-/// </remarks>
+/// <summary>Init-only bundle for <see cref="ExtraAssetSource"/>'s private ctor; callers should use the per-kind factory methods on <see cref="ExtraAssetSource"/>.</summary>
 internal readonly record struct ExtraAssetSourceInit
 {
     /// <summary>Gets the source kind.</summary>

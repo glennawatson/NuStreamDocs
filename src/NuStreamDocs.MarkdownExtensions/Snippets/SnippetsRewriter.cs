@@ -7,11 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Snippets;
 
-/// <summary>
-/// Stateless UTF-8 snippets rewriter. Replaces lines of the form
-/// <c>--8&lt;-- "path/to/file.md"</c> with the contents of the referenced file,
-/// resolved against an ordered list of base directories.
-/// </summary>
+/// <summary>Expands <c>--8&lt;-- "path"</c> lines with the contents of the referenced file.</summary>
 internal static class SnippetsRewriter
 {
     /// <summary>Maximum nested-include depth before the rewriter stops recursing.</summary>

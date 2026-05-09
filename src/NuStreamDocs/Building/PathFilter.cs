@@ -8,20 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Building;
 
 /// <summary>
-/// Include/exclude glob filter applied during page discovery.
+/// Include/exclude glob filter applied during page discovery. Globs are forward-slashed,
+/// docs-root-relative, and follow gitignore-style double-star semantics. With no includes
+/// configured, every path passes (only excludes apply).
 /// </summary>
-/// <remarks>
-/// Wraps <see cref="Matcher"/> from
-/// <c>Microsoft.Extensions.FileSystemGlobbing</c>: globs are
-/// forward-slash, relative to the docs root, and follow gitignore-style
-/// double-star semantics (<c>**/*.md</c>, <c>drafts/**</c>). When no
-/// includes are configured every path is considered included and only
-/// the excludes apply — that's the typical mkdocs-material shape.
-/// <para>
-/// Built once at configure time and shared across the parallel
-/// discovery walk; the matcher is thread-safe for read-only use.
-/// </para>
-/// </remarks>
 public sealed class PathFilter
 {
     /// <summary>The configured matcher.</summary>
@@ -62,11 +52,7 @@ public sealed class PathFilter
     /// <summary>Gets a permissive filter that keeps every path.</summary>
     public static PathFilter Empty { get; } = new([], []);
 
-    /// <summary>Gets a value indicating whether any glob has been configured.</summary>
-    /// <remarks>
-    /// When false, callers may skip the matcher entirely on the hot path —
-    /// every path passes.
-    /// </remarks>
+    /// <summary>Gets a value indicating whether any glob has been configured. When false, callers may skip the matcher entirely.</summary>
     public bool HasRules { get; }
 
     /// <summary>Tests whether <paramref name="relativePath"/> survives the filter.</summary>

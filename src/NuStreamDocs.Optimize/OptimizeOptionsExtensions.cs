@@ -7,11 +7,6 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Optimize;
 
 /// <summary>String / span construction helpers for the byte-shaped <see cref="OptimizeOptions"/> record.</summary>
-/// <remarks>
-/// Encodes the inputs once at construction so the plugin's per-file extension match runs against
-/// already-decoded data. Callers building from configuration files reach for the string overloads;
-/// callers with byte-literal sources can pass <c>[.. "..."u8]</c> directly.
-/// </remarks>
 public static class OptimizeOptionsExtensions
 {
     /// <summary>Replaces the extension list with <paramref name="extensions"/>.</summary>

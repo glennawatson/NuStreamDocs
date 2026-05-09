@@ -6,13 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Yaml;
 
-/// <summary>
-/// Reads a page's front-matter <c>title:</c> without parsing the whole document.
-/// </summary>
-/// <remarks>
-/// The nav builders only need a lightweight title peek while walking the docs tree.
-/// This helper keeps that logic shared between curated and auto-discovered nav paths.
-/// </remarks>
+/// <summary>Reads a page's front-matter <c>title:</c> by peeking only the first ~1 KiB of the file.</summary>
 public static class FrontmatterTitleReader
 {
     /// <summary>Maximum bytes read from the head of each file.</summary>

@@ -13,33 +13,13 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Search;
 
-/// <summary>
-/// Template-method base for engine-specific search plugins. Drives the page
-/// scan, finalize, and head-extra emission stages; defers the actual on-disk
-/// index write — and any post-processing such as compression sidecars or CLI
-/// invocation — to the engine plugin supplied at construction.
-/// </summary>
-/// <remarks>
-/// <para>
-/// Engine plugins (<c>PagefindSearchPlugin</c>, <c>LunrSearchPlugin</c>) hold
-/// their own option records and override the protected knob properties
-/// (<see cref="OutputSubdirectory"/>, <see cref="MinTokenLength"/>, …). The
-/// base library has no shared user-facing options type because every engine
-/// has a different set of knobs.
-/// </para>
-/// <para>
-/// Compression of the manifest, glue-asset emission, head-script tag injection
-/// and any post-write tooling (e.g. running the Pagefind CLI to produce binary
-/// shards) are engine concerns — implement them by overriding
-/// <see cref="OnIndexWrittenAsync"/> and <see cref="WriteEngineHeadExtra"/>.
-/// </para>
-/// </remarks>
+/// <summary>Base class for engine-specific search plugins; drives page scan, finalize, and head-extra emission.</summary>
 public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin, IHeadExtraProvider
 {
-    /// <summary>Engine implementation that owns the on-disk format.</summary>
+    /// <summary>Engine implementation.</summary>
     private readonly ISearchEngine _engine;
 
-    /// <summary>Per-page documents collected during the parallel render stage.</summary>
+    /// <summary>Documents collected during scan.</summary>
     private readonly ConcurrentBag<SearchDocument> _documents = [];
 
     /// <summary>Logger for diagnostics.</summary>
@@ -51,12 +31,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     /// <summary>Whether the site emits directory-style URLs.</summary>
     private bool _useDirectoryUrls;
 
-    /// <summary>
-    /// Pre-encoded site-relative manifest URL bytes (e.g. <c>/search/search_index.json</c>);
-    /// computed once when the engine emits a manifest, and reused in <see cref="WriteHeadExtra"/>.
-    /// Empty when the engine has no manifest URL to advertise (real Pagefind ships a script
-    /// loader instead).
-    /// </summary>
+    /// <summary>Pre-encoded manifest URL; empty when the engine has no fetchable manifest.</summary>
     private byte[]? _manifestUrlBytes;
 
     /// <summary>Initializes a new instance of the <see cref="SearchPluginBase"/> class.</summary>
@@ -85,24 +60,16 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     /// <summary>Gets the site-relative search subdirectory (e.g. <c>search</c>).</summary>
     protected abstract PathSegment OutputSubdirectory { get; }
 
-    /// <summary>Gets the minimum-text-length filter — documents whose extracted body is shorter are dropped before write.</summary>
+    /// <summary>Gets the minimum text length to keep; shorter documents are dropped before write.</summary>
     protected abstract int MinTokenLength { get; }
 
     /// <summary>Gets the UTF-8 frontmatter keys whose values are folded into each page's searchable text. Empty for body-only indexing.</summary>
     protected abstract byte[][] SearchableFrontmatterKeys { get; }
 
-    /// <summary>
-    /// Gets the UTF-8 <c>prefix:weight</c> pairs surfaced via the
-    /// <c>nustreamdocs:search-section-priorities</c> meta tag for theme-JS-driven re-ranking.
-    /// Empty disables the meta tag.
-    /// </summary>
+    /// <summary>Gets UTF-8 <c>prefix:weight</c> pairs surfaced via the <c>nustreamdocs:search-section-priorities</c> meta tag. Empty disables the meta tag.</summary>
     protected abstract byte[] SectionPriorities { get; }
 
-    /// <summary>
-    /// Gets the path to the most recent index manifest written by <see cref="ISearchEngine.Write"/>;
-    /// <see cref="FilePath.IsEmpty"/> when the engine doesn't write a manifest. Exposed so engine
-    /// subclasses can build compression sidecars in their <see cref="OnIndexWrittenAsync"/> override.
-    /// </summary>
+    /// <summary>Gets the path to the most recent index manifest written by the engine; <see cref="FilePath.IsEmpty"/> when none was written.</summary>
     protected FilePath PrimaryIndexPath { get; private set; }
 
     /// <inheritdoc/>
@@ -195,15 +162,10 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     /// <returns>A fresh array copy of the bag's contents.</returns>
     internal SearchDocument[] DocumentsSnapshot() => [.. _documents];
 
-    /// <summary>
-    /// Override hook called after the engine's <see cref="ISearchEngine.Write"/> has produced (or
-    /// chosen not to produce) a manifest. Engines do all post-write work here — Pagefind invokes
-    /// its native CLI to build the WASM runtime + binary shards; Lunr emits <c>.gz</c> / <c>.br</c>
-    /// sidecars off <see cref="PrimaryIndexPath"/> for CDN <c>Content-Encoding</c> negotiation.
-    /// </summary>
-    /// <param name="siteRoot">Absolute path to the rendered site directory (the output root, not the per-engine search subdir).</param>
+    /// <summary>Override hook invoked after the engine writes its index; engines do post-write work here (CLI invocation, compression sidecars, etc.).</summary>
+    /// <param name="siteRoot">Absolute path to the rendered site directory.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task that completes when the post-processing has finished.</returns>
+    /// <returns>A task that completes when post-processing has finished.</returns>
     protected virtual ValueTask OnIndexWrittenAsync(DirectoryPath siteRoot, CancellationToken cancellationToken)
     {
         _ = siteRoot;
@@ -211,12 +173,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>
-    /// Override hook for engine-specific head-extras (script / link tags). Called from
-    /// <see cref="WriteHeadExtra"/> after the universal discovery meta tags. Pagefind emits the
-    /// <c>&lt;script type="module"&gt;</c> for its WASM loader plus the bind glue here; Lunr
-    /// emits its <c>lunr.min.js</c> + bind glue.
-    /// </summary>
+    /// <summary>Override hook for engine-specific head-extras (script / link tags) emitted after the universal meta tags.</summary>
     /// <param name="writer">Sink for the rendered tags.</param>
     protected virtual void WriteEngineHeadExtra(IBufferWriter<byte> writer)
     {
@@ -238,10 +195,10 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
         HeadExtraWriter.WriteUtf8(writer, "\">\n"u8);
     }
 
-    /// <summary>Filters out documents shorter than <paramref name="minTokenLength"/> + sorts deterministically.</summary>
-    /// <param name="bag">Concurrent bag of harvested docs.</param>
+    /// <summary>Filters out documents shorter than <paramref name="minTokenLength"/> and sorts the rest deterministically.</summary>
+    /// <param name="bag">Harvested documents.</param>
     /// <param name="minTokenLength">Minimum text length to keep.</param>
-    /// <returns>A right-sized, ordinal-sorted array.</returns>
+    /// <returns>An ordinal-sorted array of kept documents.</returns>
     private static SearchDocument[] FilterAndSort(ConcurrentBag<SearchDocument> bag, int minTokenLength)
     {
         var min = Math.Max(0, minTokenLength);
@@ -273,13 +230,9 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
         return ServedUrlBytes.FromPath(path, useDirectoryUrls, leadingSlash: true);
     }
 
-    /// <summary>
-    /// Builds the site-relative manifest URL bytes (e.g. <c>/search/search_index.json</c>) for the
-    /// chosen engine; returns an empty array when the engine doesn't ship a manifest the theme
-    /// should fetch.
-    /// </summary>
+    /// <summary>Builds the site-relative manifest URL bytes; empty when the engine ships no fetchable manifest.</summary>
     /// <param name="outputSubdirectory">Site-relative search directory.</param>
-    /// <param name="manifestFileName">Engine-supplied manifest filename component (already includes the leading <c>/</c>); empty when the engine has no fetchable manifest.</param>
+    /// <param name="manifestFileName">Engine-supplied manifest filename component (already includes the leading <c>/</c>); empty when none.</param>
     /// <returns>UTF-8 manifest URL bytes, or an empty array.</returns>
     private static byte[] BuildManifestUrlBytes(PathSegment outputSubdirectory, ReadOnlySpan<byte> manifestFileName)
     {

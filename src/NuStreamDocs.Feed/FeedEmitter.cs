@@ -7,12 +7,7 @@ using NuStreamDocs.Feed.Logging;
 
 namespace NuStreamDocs.Feed;
 
-/// <summary>
-/// Stateless emitter that drops the configured feed files into a
-/// caller-supplied output directory. Pulled out of
-/// <see cref="FeedPlugin"/> so the file-write path can be unit-tested
-/// without standing up a whole plugin lifecycle.
-/// </summary>
+/// <summary>Writes the configured feed files into a caller-supplied output directory.</summary>
 internal static class FeedEmitter
 {
     /// <summary>RSS output filename.</summary>

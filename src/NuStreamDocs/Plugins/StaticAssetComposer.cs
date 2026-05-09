@@ -6,16 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
-/// <summary>
-/// Walks a plugin list and writes every <see cref="IStaticAssetProvider"/>'s
-/// contribution into the output tree.
-/// </summary>
-/// <remarks>
-/// Theme plugins call this once during <see cref="IBuildFinalizePlugin.FinalizeAsync"/>
-/// alongside their own static-asset emit, so markdown-extension and
-/// icon plugins work uniformly under both Material and Material 3
-/// themes.
-/// </remarks>
+/// <summary>Walks a plugin list and writes every <see cref="IStaticAssetProvider"/>'s contribution into the output tree.</summary>
 public static class StaticAssetComposer
 {
     /// <summary>Writes every provider's assets under <paramref name="outputRoot"/>.</summary>

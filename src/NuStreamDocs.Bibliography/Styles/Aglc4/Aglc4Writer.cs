@@ -8,12 +8,7 @@ using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography.Styles.Aglc4;
 
-/// <summary>
-/// Byte-writing helpers shared across the AGLC4 formatters. All public methods write directly to
-/// a <see cref="IBufferWriter{T}"/> sink with no intermediate <see cref="string"/> allocation —
-/// every <see cref="CitationEntry"/> and <see cref="PersonName"/> field is already byte-shaped,
-/// so emit is a straight <see cref="ReadOnlySpan{T}.CopyTo(System.Span{T})"/> into the sink.
-/// </summary>
+/// <summary>Byte-writing helpers shared across the AGLC4 formatters.</summary>
 internal static class Aglc4Writer
 {
     /// <summary>Writes a UTF-8 byte literal to the sink.</summary>
@@ -31,13 +26,13 @@ internal static class Aglc4Writer
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Writes UTF-8 entry-field bytes straight to the sink — every <see cref="CitationEntry"/> field is byte-shaped, so this is the canonical write path.</summary>
+    /// <summary>Writes UTF-8 entry-field bytes to the sink.</summary>
     /// <param name="value">UTF-8 source bytes.</param>
     /// <param name="writer">Sink.</param>
     public static void WriteString(ReadOnlySpan<byte> value, IBufferWriter<byte> writer) =>
         WriteBytes(value, writer);
 
-    /// <summary>Writes an integer as ASCII (invariant culture) directly to the sink via <see cref="Utf8Formatter"/>.</summary>
+    /// <summary>Writes an integer as ASCII (invariant culture).</summary>
     /// <param name="value">Integer value.</param>
     /// <param name="writer">Sink.</param>
     public static void WriteInt(int value, IBufferWriter<byte> writer)

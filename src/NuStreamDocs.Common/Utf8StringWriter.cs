@@ -8,11 +8,7 @@ using System.Text;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Direct UTF-16 → UTF-8 helpers that both <c>TagsIndexWriter</c> and
-/// <c>BlogIndexEmitter</c> reach for when emitting HTML/JSON. Centralized
-/// here so the duplication-detector stops flagging the per-emitter copies.
-/// </summary>
+/// <summary>UTF-16 string → UTF-8 byte sink helpers for HTML / JSON emit.</summary>
 public static class Utf8StringWriter
 {
     /// <summary>UTF-8 encodes <paramref name="value"/> directly into <paramref name="writer"/>.</summary>

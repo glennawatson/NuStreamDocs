@@ -7,14 +7,6 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Search.Pagefind;
 
 /// <summary>Configuration for <see cref="PagefindSearchPlugin"/>.</summary>
-/// <remarks>
-/// <see cref="SearchableFrontmatterKeys"/> / <see cref="SectionPriorities"/> are stored as UTF-8
-/// bytes per the project's byte-first pipeline rule. String-shaped construction goes through
-/// <see cref="PagefindOptionsExtensions"/>'s <c>With*</c> / <c>Add*</c> helpers, which encode
-/// once at the boundary. There's intentionally no <c>Compression</c> knob — Pagefind owns its own
-/// on-disk encoding for the binary inverted-index shards, and the textual loader (<c>pagefind.js</c>)
-/// is small enough that gzip/brotli sidecars buy nothing.
-/// </remarks>
 /// <param name="OutputSubdirectory">Site-relative directory used for engine bookkeeping (e.g. <c>search</c>). Real Pagefind output always lands at <c>&lt;site&gt;/pagefind/</c>.</param>
 /// <param name="MinTokenLength">Documents whose extracted text is shorter than this are dropped from the index. Reduces noise from near-empty pages without harming recall.</param>
 /// <param name="SearchableFrontmatterKeys">UTF-8 frontmatter keys whose values are folded into each page's searchable text (e.g. <c>["author", "summary"]</c>). Empty for body-only indexing.</param>

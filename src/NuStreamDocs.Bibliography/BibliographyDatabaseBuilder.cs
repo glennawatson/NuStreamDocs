@@ -8,16 +8,11 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Bibliography;
 
 /// <summary>
-/// Fluent builder for assembling a <see cref="BibliographyDatabase"/>
-/// directly in <c>Program.cs</c>. Each <c>Add*</c> shortcut targets a
-/// common entry type; <see cref="Add(CitationEntry)"/> is the escape
-/// hatch for fields the shortcuts don't cover.
+/// Fluent builder for assembling a <see cref="BibliographyDatabase"/>.
+/// Each <c>Add*</c> shortcut targets a common entry type;
+/// <see cref="Add(CitationEntry)"/> is the escape hatch for fields the
+/// shortcuts don't cover.
 /// </summary>
-/// <remarks>
-/// Each typed shortcut has both a <see cref="string"/> overload (encodes once at construction)
-/// and a <see cref="byte"/>[] overload for callers that already hold UTF-8 byte arrays
-/// (CSL loader, snapshot replay).
-/// </remarks>
 /// <example>
 /// <code>
 /// var db = new BibliographyDatabaseBuilder()
@@ -31,10 +26,10 @@ namespace NuStreamDocs.Bibliography;
 /// </example>
 public sealed class BibliographyDatabaseBuilder
 {
-    /// <summary>Accumulator; entries are kept in insertion order.</summary>
+    /// <summary>Entries in insertion order.</summary>
     private readonly List<CitationEntry> _entries = [];
 
-    /// <summary>Adds an arbitrary entry; the escape hatch when the typed shortcuts don't cover the use case.</summary>
+    /// <summary>Adds an arbitrary entry.</summary>
     /// <param name="entry">Entry to add.</param>
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder Add(CitationEntry entry)
@@ -44,7 +39,7 @@ public sealed class BibliographyDatabaseBuilder
         return this;
     }
 
-    /// <summary>Adds a book entry from C# strings (encoded once to UTF-8).</summary>
+    /// <summary>Adds a book entry.</summary>
     /// <param name="id">Citation key.</param>
     /// <param name="title">Book title.</param>
     /// <param name="author">Single author; use the <see cref="CitationEntry"/> overload for multiple authors.</param>
@@ -54,7 +49,7 @@ public sealed class BibliographyDatabaseBuilder
     public BibliographyDatabaseBuilder AddBook(string id, string title, PersonName author, int year, string publisher) =>
         AddBook(Utf8Encoder.Encode(id), Utf8Encoder.Encode(title), author, year, Utf8Encoder.Encode(publisher));
 
-    /// <summary>Adds a book entry from already-encoded UTF-8 byte arrays.</summary>
+    /// <summary>Adds a book entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
     /// <param name="title">Book-title bytes.</param>
     /// <param name="author">Single author.</param>
@@ -78,7 +73,7 @@ public sealed class BibliographyDatabaseBuilder
         });
     }
 
-    /// <summary>Adds a journal-article entry from C# strings (encoded once to UTF-8).</summary>
+    /// <summary>Adds a journal-article entry.</summary>
     /// <param name="id">Citation key.</param>
     /// <param name="title">Article title.</param>
     /// <param name="author">Single author.</param>
@@ -90,7 +85,7 @@ public sealed class BibliographyDatabaseBuilder
     public BibliographyDatabaseBuilder AddArticle(string id, string title, PersonName author, int year, string journal, string volume, string page) =>
         AddArticle(Utf8Encoder.Encode(id), Utf8Encoder.Encode(title), author, year, Utf8Encoder.Encode(journal), Utf8Encoder.Encode(volume), Utf8Encoder.Encode(page));
 
-    /// <summary>Adds a journal-article entry from already-encoded UTF-8 byte arrays.</summary>
+    /// <summary>Adds a journal-article entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
     /// <param name="title">Article-title bytes.</param>
     /// <param name="author">Single author.</param>
@@ -120,7 +115,7 @@ public sealed class BibliographyDatabaseBuilder
         });
     }
 
-    /// <summary>Adds a legal-case entry from C# strings (encoded once to UTF-8).</summary>
+    /// <summary>Adds a legal-case entry.</summary>
     /// <param name="id">Citation key.</param>
     /// <param name="name">Case name (e.g. <c>"Mabo v Queensland (No 2)"</c>).</param>
     /// <param name="lawReportSeries">AGLC4 law-report-series citation (e.g. <c>"(1992) 175 CLR 1"</c>).</param>
@@ -129,7 +124,7 @@ public sealed class BibliographyDatabaseBuilder
     public BibliographyDatabaseBuilder AddCase(string id, string name, string lawReportSeries, int year) =>
         AddCase(Utf8Encoder.Encode(id), Utf8Encoder.Encode(name), Utf8Encoder.Encode(lawReportSeries), year);
 
-    /// <summary>Adds a legal-case entry from already-encoded UTF-8 byte arrays.</summary>
+    /// <summary>Adds a legal-case entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
     /// <param name="name">Case-name bytes.</param>
     /// <param name="lawReportSeries">AGLC4 law-report-series citation bytes.</param>
@@ -150,7 +145,7 @@ public sealed class BibliographyDatabaseBuilder
         });
     }
 
-    /// <summary>Adds a legislation entry from C# strings (encoded once to UTF-8).</summary>
+    /// <summary>Adds a legislation entry.</summary>
     /// <param name="id">Citation key.</param>
     /// <param name="title">Statute title (e.g. <c>"High Court of Australia Act 1979"</c>).</param>
     /// <param name="jurisdiction">Jurisdiction code (e.g. <c>"Cth"</c>, <c>"NSW"</c>).</param>
@@ -159,7 +154,7 @@ public sealed class BibliographyDatabaseBuilder
     public BibliographyDatabaseBuilder AddLegislation(string id, string title, string jurisdiction, int year) =>
         AddLegislation(Utf8Encoder.Encode(id), Utf8Encoder.Encode(title), Utf8Encoder.Encode(jurisdiction), year);
 
-    /// <summary>Adds a legislation entry from already-encoded UTF-8 byte arrays.</summary>
+    /// <summary>Adds a legislation entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
     /// <param name="title">Statute-title bytes.</param>
     /// <param name="jurisdiction">Jurisdiction-code bytes.</param>
@@ -181,6 +176,6 @@ public sealed class BibliographyDatabaseBuilder
     }
 
     /// <summary>Builds the immutable database.</summary>
-    /// <returns>The frozen <see cref="BibliographyDatabase"/>.</returns>
+    /// <returns>The built <see cref="BibliographyDatabase"/>.</returns>
     public BibliographyDatabase Build() => new(_entries);
 }

@@ -9,12 +9,7 @@ using SourceDocParser.Model;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// <see cref="IAssemblySource"/> over a fixed set of pre-built local
-/// assemblies. Yields a single <see cref="AssemblyGroup"/>; the resolver
-/// fallback index is built from <paramref name="FallbackSearchPaths"/>
-/// plus the directories of the supplied <paramref name="AssemblyPaths"/>.
-/// </summary>
+/// <summary><see cref="IAssemblySource"/> over a fixed set of pre-built local assemblies.</summary>
 /// <param name="Tfm">Target framework moniker stamped onto every walked type.</param>
 /// <param name="AssemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
 /// <param name="FallbackSearchPaths">Additional directories scanned for transitive references.</param>
@@ -36,9 +31,8 @@ internal sealed record LocalAssemblySource(
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    /// <summary>Builds a filename → absolute-path index covering every <c>.dll</c> next to the supplied assemblies plus every <see cref="FallbackSearchPaths"/> directory.</summary>
+    /// <summary>Builds a filename to absolute-path index for the resolver fallback.</summary>
     /// <returns>A case-insensitive lookup keyed by filename.</returns>
-    /// <remarks>The dictionary itself terminates at the SourceDocParser boundary (<see cref="AssemblyGroup.FallbackIndex"/>), so it stays string-shaped.</remarks>
     private Dictionary<string, string> BuildFallbackIndex()
     {
         Dictionary<string, string> index = new(StringComparer.OrdinalIgnoreCase);
@@ -59,8 +53,8 @@ internal sealed record LocalAssemblySource(
         return index;
     }
 
-    /// <summary>Adds every <c>.dll</c> in <paramref name="directory"/> to <paramref name="index"/>; later entries are skipped on duplicate filenames so the first directory wins.</summary>
-    /// <param name="index">Destination index, keyed by filename for SourceDocParser interop.</param>
+    /// <summary>Adds every <c>.dll</c> in <paramref name="directory"/> to <paramref name="index"/>; the first directory wins on duplicate filenames.</summary>
+    /// <param name="index">Destination index, keyed by filename.</param>
     /// <param name="directory">Directory to scan.</param>
     private static void AddDllsFromDirectory(Dictionary<string, string> index, DirectoryPath directory)
     {
@@ -69,7 +63,6 @@ internal sealed record LocalAssemblySource(
             return;
         }
 
-        // GetFiles over EnumerateFiles: we consume every entry into the dictionary, no short-circuit.
         var files = Directory.GetFiles(directory.Value, "*.dll", SearchOption.TopDirectoryOnly);
         for (var i = 0; i < files.Length; i++)
         {
@@ -81,7 +74,7 @@ internal sealed record LocalAssemblySource(
         }
     }
 
-    /// <summary>Materializes a <see cref="FilePath"/> array as a plain <c>string[]</c> at the SourceDocParser interop boundary.</summary>
+    /// <summary>Materializes a <see cref="FilePath"/> array as a plain <c>string[]</c>.</summary>
     /// <param name="paths">Source paths.</param>
     /// <returns>String view; empty when input is empty.</returns>
     private static string[] ToStringArray(FilePath[] paths)

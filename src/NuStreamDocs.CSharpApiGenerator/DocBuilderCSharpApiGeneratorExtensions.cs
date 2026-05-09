@@ -7,14 +7,6 @@ using NuStreamDocs.Building;
 namespace NuStreamDocs.CSharpApiGenerator;
 
 /// <summary>Builder extension that registers the C# reference plugin.</summary>
-/// <remarks>
-/// Two flavors: <c>UseCSharpApiGenerator</c> respects the
-/// <see cref="CSharpApiGeneratorOptions.Mode"/> field on the supplied
-/// options (defaults to <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>);
-/// <c>UseCSharpApiGeneratorDirect</c> is a sugar overload that flips the
-/// mode to <see cref="CSharpApiGeneratorMode.Direct"/> regardless of
-/// what the supplied options say.
-/// </remarks>
 public static class DocBuilderCSharpApiGeneratorExtensions
 {
     /// <summary>Registers <see cref="CSharpApiGeneratorPlugin"/> with the supplied options.</summary>

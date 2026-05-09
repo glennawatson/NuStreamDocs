@@ -8,18 +8,7 @@ using SourceDocParser.Model;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// <see cref="IAssemblySource"/> that concatenates the groups produced
-/// by every wrapped source, in declaration order. Lets a caller mix
-/// shapes — e.g. a NuGet manifest for third-party packages plus local
-/// DLLs for in-development assemblies — without writing a custom
-/// source.
-/// </summary>
-/// <remarks>
-/// Each wrapped source is walked sequentially; cancellation is checked
-/// between sources so a hung NuGet fetch on the second source still
-/// honors <see cref="CancellationToken"/>.
-/// </remarks>
+/// <summary><see cref="IAssemblySource"/> that concatenates the groups produced by each wrapped source.</summary>
 /// <param name="sources">Sources to concatenate, walked in order.</param>
 internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAssemblySource, IDisposable
 {
@@ -43,11 +32,6 @@ internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAsse
     }
 
     /// <summary>Disposes every wrapped source that implements <see cref="IDisposable"/>.</summary>
-    /// <remarks>
-    /// Walked in declaration order so each inner source releases its own external resources
-    /// (NuGet <see cref="HttpClient"/>, file handles, ...). Sources that don't implement
-    /// <see cref="IDisposable"/> are left alone.
-    /// </remarks>
     public void Dispose()
     {
         for (var i = 0; i < _sources.Length; i++)

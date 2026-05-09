@@ -7,13 +7,7 @@ using NuStreamDocs.Privacy.Bytes;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// Stateless HTML rewriter that hardens external <c>&lt;a&gt;</c>
-/// anchors with privacy-preserving attributes (<c>rel="noopener noreferrer"</c>,
-/// optional <c>target="_blank"</c>) and optionally upgrades mixed
-/// <c>http://</c> URLs to <c>https://</c> on both anchors and asset
-/// attributes.
-/// </summary>
+/// <summary>Hardens external <c>&lt;a&gt;</c> anchors and optionally upgrades <c>http://</c> URLs to <c>https://</c>.</summary>
 internal static class ExternalLinkPolisher
 {
     /// <summary>Returns true when <paramref name="html"/> may contain anchors or http URLs we'd touch.</summary>

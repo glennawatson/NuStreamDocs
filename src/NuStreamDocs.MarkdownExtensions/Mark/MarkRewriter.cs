@@ -7,11 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Mark;
 
-/// <summary>
-/// Stateless UTF-8 mark rewriter. Replaces matched <c>==…==</c>
-/// spans with <c>&lt;mark&gt;…&lt;/mark&gt;</c>, skipping fenced-code
-/// regions and inline-code spans.
-/// </summary>
+/// <summary>Rewrites <c>==text==</c> spans into <c>&lt;mark&gt;</c>. Code spans pass through.</summary>
 internal static class MarkRewriter
 {
     /// <summary>Width of the <c>==</c> marker on each side of a span.</summary>

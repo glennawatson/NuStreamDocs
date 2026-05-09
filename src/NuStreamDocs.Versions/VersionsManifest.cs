@@ -9,18 +9,13 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Versions;
 
 /// <summary>
-/// Reads and writes <c>versions.json</c> in the mike-compatible shape:
-/// a JSON array of <c>{ version, title, aliases }</c> objects.
+/// Reads and writes <c>versions.json</c> in the mike-compatible shape: a
+/// JSON array of <c>{ version, title, aliases }</c> objects. Unknown
+/// properties are tolerated and skipped on read.
 /// </summary>
-/// <remarks>
-/// Hand-written <see cref="Utf8JsonReader"/> + <see cref="Utf8JsonWriter"/>
-/// loop so the file path stays AOT-clean without a source-generated
-/// serializer. Reads are tolerant of additional unknown properties
-/// (mike's docVersion field, etc) — they're skipped.
-/// </remarks>
 public static class VersionsManifest
 {
-    /// <summary>Gets the on-disk filename. Matches mike's convention.</summary>
+    /// <summary>Gets the on-disk filename.</summary>
     public static string FileName => "versions.json";
 
     /// <summary>Reads the manifest at <paramref name="parentDir"/>/<see cref="FileName"/>.</summary>

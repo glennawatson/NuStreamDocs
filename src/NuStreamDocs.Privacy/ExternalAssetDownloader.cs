@@ -14,19 +14,10 @@ using Polly.RateLimiting;
 namespace NuStreamDocs.Privacy;
 
 /// <summary>
-/// Parallel HTTP downloader for the externalized assets registered
-/// during <see cref="PrivacyPlugin.PostRender"/>.
+/// Parallel HTTP downloader for the externalized assets registered during
+/// <see cref="PrivacyPlugin.PostRender"/>; iterates to a fixed point so nested CSS-discovered URLs
+/// are picked up.
 /// </summary>
-/// <remarks>
-/// Iterates fixed-point: each pass downloads every URL the registry
-/// holds; CSS files discovered along the way may register more nested
-/// URLs (e.g. font files inside Google Fonts CSS) which the next pass
-/// picks up. Capped to keep pathological CSS chains bounded. Each
-/// fetch goes through a Polly retry pipeline so transient network
-/// blips don't poison the result. A separate on-disk cache directory
-/// holds the bytes across builds so subsequent runs skip the network
-/// entirely.
-/// </remarks>
 internal static class ExternalAssetDownloader
 {
     /// <summary>Maximum number of fixed-point download passes. CSS-inside-CSS chains are rare; three is plenty.</summary>
@@ -35,26 +26,19 @@ internal static class ExternalAssetDownloader
     /// <summary>Minimum gap between in-flight progress beacons during a single iteration.</summary>
     private const long ProgressBeaconMillis = 5000;
 
-    /// <summary>
-    /// Per-host in-flight request ceiling — bounds how many simultaneous fetches we issue against
-    /// any single CDN even when global <see cref="DownloadSettings.Parallelism"/> is much higher.
-    /// </summary>
-    /// <remarks>
-    /// Most CDNs are happy with a few concurrent connections per origin; flooding one host
-    /// (e.g. <c>fonts.gstatic.com</c>) with 8+ parallel GETs invites HTTP 429 + retry storms.
-    /// </remarks>
+    /// <summary>Per-host in-flight request ceiling.</summary>
     private const int MaxConcurrencyPerHost = 4;
 
     /// <summary>Initial backoff delay between retries.</summary>
     private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(200);
 
-    /// <summary>Lifetime ceiling on a pooled connection — cap on how long DNS / TLS state stays warm before the handler force-recycles the socket.</summary>
+    /// <summary>Lifetime ceiling on a pooled connection.</summary>
     private static readonly TimeSpan PooledConnectionLifetime = TimeSpan.FromMinutes(2);
 
-    /// <summary>Idle ceiling on a pooled connection — drops sockets silent past this window so the pool releases promptly when the build's external-asset phase ends.</summary>
+    /// <summary>Idle ceiling on a pooled connection.</summary>
     private static readonly TimeSpan PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15);
 
-    /// <summary>Resilience-context property key carrying the destination host so the per-host rate limiter can partition on it.</summary>
+    /// <summary>Resilience-context property key carrying the destination host for per-host rate limit partitioning.</summary>
     private static readonly ResiliencePropertyKey<string> HostPropertyKey = new("nustreamdocs.privacy.host");
 
     /// <summary>Downloads every URL the <paramref name="registry"/> holds, iterating until the registry stops growing or the cap is reached.</summary>
@@ -208,7 +192,6 @@ internal static class ExternalAssetDownloader
     /// <param name="maxRetries">Maximum retry attempts.</param>
     /// <param name="perHostLimiter">Host-partitioned concurrency limiter shared across the batch.</param>
     /// <returns>A configured <see cref="ResiliencePipeline{TResult}"/> over <see cref="HttpResponseMessage"/>.</returns>
-    /// <remarks>The rate limiter is the outer strategy so retries do not re-acquire a host slot per attempt — one permit covers the full retry sequence.</remarks>
     private static ResiliencePipeline<HttpResponseMessage> BuildPipeline(int maxRetries, PartitionedRateLimiter<ResilienceContext> perHostLimiter) =>
         new ResiliencePipelineBuilder<HttpResponseMessage>()
             .AddRateLimiter(new RateLimiterStrategyOptions
@@ -288,12 +271,6 @@ internal static class ExternalAssetDownloader
     /// <param name="cachePath">Absolute cache file.</param>
     /// <param name="outputPath">Absolute output file.</param>
     /// <returns>True when the cache hit and the file was published into the output tree.</returns>
-    /// <remarks>
-    /// Uses <see cref="File.Copy(string, string, bool)"/> rather than the previous
-    /// <c>OpenRead → Create → CopyToAsync</c> pipeline. <see cref="File.Copy(string, string, bool)"/>
-    /// dispatches to a kernel-level copy (Linux <c>copy_file_range</c>/<c>sendfile</c>, Windows <c>CopyFile</c>),
-    /// avoiding the user-space byte shuffle. Synchronous — the disk is the bottleneck, not the thread.
-    /// </remarks>
     private static bool TryPublishFromCache(FilePath cachePath, FilePath outputPath)
     {
         if (!cachePath.Exists())
@@ -312,10 +289,6 @@ internal static class ExternalAssetDownloader
     /// <param name="bytes">Bytes to write.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the cache write + output copy finish.</returns>
-    /// <remarks>
-    /// One write to the cache, then a kernel-level <see cref="File.Copy(string, string, bool)"/> to the
-    /// output. Replaces the previous "write the same N bytes twice through user-space buffers" pattern.
-    /// </remarks>
     private static async Task WriteCacheAndOutputAsync(FilePath cachePath, FilePath outputPath, byte[] bytes, CancellationToken cancellationToken)
     {
         cachePath.Directory.Create();
@@ -347,7 +320,7 @@ internal static class ExternalAssetDownloader
         ExternalAssetRegistry Registry,
         HostFilter Filter);
 
-    /// <summary>Allocation-free state bundle for the static <c>ResiliencePipeline.ExecuteAsync</c> callback that takes a typed state argument.</summary>
+    /// <summary>State bundle for the <c>ResiliencePipeline.ExecuteAsync</c> static callback.</summary>
     /// <param name="Client">Shared HTTP client.</param>
     /// <param name="Uri">Absolute target URI.</param>
     private readonly record struct GetCallState(HttpClient Client, Uri Uri);

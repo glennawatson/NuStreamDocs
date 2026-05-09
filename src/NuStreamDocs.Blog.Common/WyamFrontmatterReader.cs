@@ -9,16 +9,12 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Blog.Common;
 
 /// <summary>
-/// Reads Wyam-style YAML frontmatter from a UTF-8 markdown source.
+/// Reads Wyam-style YAML frontmatter (simple <c>key: value</c> form) from
+/// a UTF-8 markdown source. Recognized keys: <c>Title</c>, <c>Lead</c>,
+/// <c>Description</c>, <c>Author</c>, <c>Published</c>, <c>Tags</c>,
+/// <c>IsBlog</c>. <c>Tags</c> accepts a single value or a comma-separated
+/// list.
 /// </summary>
-/// <remarks>
-/// Wyam used a simple <c>key: value</c> dialect — no nested objects,
-/// no anchors. The parser is intentionally narrow: it pulls the keys
-/// the blog plugin understands (<c>Title</c>, <c>Author</c>,
-/// <c>Published</c>, <c>Tags</c>, <c>NoTitle</c>, <c>IsBlog</c>) and
-/// ignores everything else. Tags accept either a single value or a
-/// comma-separated list; whitespace around commas is trimmed.
-/// </remarks>
 public static class WyamFrontmatterReader
 {
     /// <summary>Length of the frontmatter fence (<c>---</c>).</summary>

@@ -11,21 +11,9 @@ namespace NuStreamDocs.Icons.FontAwesome;
 /// Plugin that contributes a Font Awesome <c>&lt;link&gt;</c> stylesheet
 /// reference to every page's <c>&lt;head&gt;</c>.
 /// </summary>
-/// <remarks>
-/// Pure head-extras provider — no per-page work. Theme plugins
-/// discover this plugin via <see cref="IHeadExtraProvider"/> during
-/// configure and splice the returned bytes into their
-/// <c>head_styles</c> partial.
-/// <para>
-/// Writes UTF-8 bytes directly through the supplied
-/// <see cref="IBufferWriter{T}"/>; option strings come from
-/// dev-controlled configuration so they are emitted without HTML
-/// encoding.
-/// </para>
-/// </remarks>
 public sealed class FontAwesomePlugin : IPlugin, IHeadExtraProvider
 {
-    /// <summary>Configured option set; captured at registration time.</summary>
+    /// <summary>Configured option set.</summary>
     private readonly FontAwesomeOptions _options;
 
     /// <summary>Initializes a new instance of the <see cref="FontAwesomePlugin"/> class with default options.</summary>

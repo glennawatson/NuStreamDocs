@@ -4,17 +4,7 @@
 
 namespace NuStreamDocs.Highlight.Languages.Markup;
 
-/// <summary>
-/// HTML lexer.
-/// </summary>
-/// <remarks>
-/// HTML and XML use the same tag/attribute/comment/CDATA grammar at
-/// the surface; we reuse <see cref="XmlLexer.Instance"/>'s state map
-/// under a different language identifier so authors can keep writing
-/// <c>```html</c> blocks. Embedded <c>&lt;script&gt;</c> /
-/// <c>&lt;style&gt;</c> bodies fall through as plain text for now when
-/// the embedded language can't be inferred from the attributes.
-/// </remarks>
+/// <summary>HTML lexer (shares the XML grammar). Embedded <c>&lt;script&gt;</c> / <c>&lt;style&gt;</c> bodies pass through as plain text.</summary>
 public static class HtmlLexer
 {
     /// <summary>Gets the singleton lexer instance.</summary>

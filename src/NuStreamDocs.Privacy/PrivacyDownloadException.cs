@@ -4,11 +4,7 @@
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// Thrown from <see cref="PrivacyPlugin"/>'s finalize hook when one or
-/// more external assets failed to download and
-/// <see cref="PrivacyOptions.FailOnError"/> is set.
-/// </summary>
+/// <summary>Thrown when one or more external assets fail to download and <see cref="PrivacyOptions.FailOnError"/> is set.</summary>
 public sealed class PrivacyDownloadException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="PrivacyDownloadException"/> class.</summary>

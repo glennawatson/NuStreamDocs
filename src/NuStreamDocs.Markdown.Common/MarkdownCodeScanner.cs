@@ -4,19 +4,7 @@
 
 namespace NuStreamDocs.Markdown.Common;
 
-/// <summary>
-/// Stateless byte-level scanning helpers used by every preprocessor
-/// that needs to walk markdown source while passing fenced-code and
-/// inline-code regions through verbatim.
-/// </summary>
-/// <remarks>
-/// These were duplicated across <c>NuStreamDocs.Emoji</c>,
-/// <c>NuStreamDocs.Keys</c>, <c>NuStreamDocs.Abbr</c>,
-/// <c>NuStreamDocs.Arithmatex</c>, <c>NuStreamDocs.SmartSymbols</c>,
-/// <c>NuStreamDocs.MagicLink</c>, the <c>NuStreamDocs.MarkdownExtensions</c>
-/// caret/tilde, critic-markup and inline-hilite rewriters, and the
-/// theme-shared icon-shortcode rewriter. One copy now.
-/// </remarks>
+/// <summary>Byte-level scanning helpers for walking markdown source while passing fenced-code and inline-code regions through verbatim.</summary>
 public static class MarkdownCodeScanner
 {
     /// <summary>Gets the fenced-code triple-backtick marker.</summary>

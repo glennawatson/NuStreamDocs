@@ -6,20 +6,10 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Keys;
 
-/// <summary>
-/// Static map of the common pymdownx.keys aliases to their
-/// canonical class slug + display label.
-/// </summary>
-/// <remarks>
-/// Built once at startup so per-page lookups don't pay any setup cost. Keyed on the lowercase
-/// UTF-8 token bytes; the rewriter probes via
-/// <see cref="System.Collections.Generic.Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/>
-/// keyed on <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/> so the per-token dispatch never
-/// allocates.
-/// </remarks>
+/// <summary>Map of common pymdownx.keys aliases to their canonical class suffix and display label.</summary>
 internal static class KeyNames
 {
-    /// <summary>Lookup table keyed on the lower-case UTF-8 token bytes from the source markup.</summary>
+    /// <summary>Backing alias map.</summary>
     private static readonly Dictionary<byte[], KeyEntry> Map = BuildMap();
 
     /// <summary>Span-keyed alternate lookup over <see cref="Map"/>.</summary>
@@ -27,14 +17,14 @@ internal static class KeyNames
         Map.AsUtf8Lookup();
 
     /// <summary>Tries to resolve <paramref name="token"/> against the alias map.</summary>
-    /// <param name="token">Lower-case UTF-8 token bytes from the source markup.</param>
+    /// <param name="token">Lower-case UTF-8 token bytes.</param>
     /// <param name="entry">Resolved entry on success.</param>
-    /// <returns>True when the token is a known alias.</returns>
+    /// <returns>True when the token is known.</returns>
     public static bool TryGet(ReadOnlySpan<byte> token, out KeyEntry entry) =>
         SpanLookup.TryGetValue(token, out entry);
 
     /// <summary>Builds the alias map.</summary>
-    /// <returns>Byte-keyed dictionary with <see cref="ByteArrayComparer.Instance"/>.</returns>
+    /// <returns>The alias map.</returns>
     private static Dictionary<byte[], KeyEntry> BuildMap() =>
         new(ByteArrayComparer.Instance)
         {

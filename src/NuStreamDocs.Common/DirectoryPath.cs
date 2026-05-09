@@ -5,26 +5,11 @@
 namespace NuStreamDocs.Common;
 
 /// <summary>
-/// Lightweight type-safe wrapper around a directory path string. Pure path manipulation; never
-/// touches the filesystem. Single <see cref="string"/> field — same memory cost as a plain string,
-/// free <see cref="object.Equals(object?)"/> / <see cref="object.GetHashCode()"/> via the record
-/// struct.
+/// Type-safe directory path wrapper. Pure path manipulation; never touches the filesystem until
+/// an explicit method is called (<see cref="Exists"/>, <see cref="Create"/>, etc.). Implicitly
+/// converts to and from <see cref="string"/>; supports Nuke-style joins with the <c>/</c> operator.
 /// </summary>
-/// <remarks>
-/// Use across public APIs that accept a directory path so callers can't accidentally pass an
-/// arbitrary string. Interop with the BCL is implicit: <c>Directory.Exists(path)</c> works because
-/// of the conversion to <see cref="string"/>. Joins follow Nuke-style ergonomics with the
-/// <c>/</c> operator.
-/// <para>
-/// The wrapper deliberately avoids <see cref="DirectoryInfo"/>: that type allocates a heavier
-/// object, caches filesystem state on first access, and forces <c>Refresh()</c> calls to keep
-/// metadata current. <see cref="DirectoryPath"/> is a value-type contract — it describes a path
-/// and nothing more.
-/// </para>
-/// </remarks>
-/// <param name="Value">The underlying path string. Always normalized to forward slashes via
-/// <see cref="Normalize(string)"/> at construction time on non-Windows systems; on Windows the
-/// raw value is preserved so call sites that pass platform paths keep working.</param>
+/// <param name="Value">The underlying path string.</param>
 public readonly record struct DirectoryPath(string Value)
 {
     /// <summary>Gets a value indicating whether this path is empty (uninitialized / placeholder).</summary>
@@ -206,11 +191,7 @@ public readonly record struct DirectoryPath(string Value)
     /// <summary>Normalizes <paramref name="value"/> by replacing backslashes with forward slashes on non-Windows OSes.</summary>
     /// <param name="value">Source path.</param>
     /// <returns>Normalized path.</returns>
-    /// <remarks>
-    /// Runtime path normalization is intentionally minimal — we don't lower-case, don't resolve
-    /// relative segments, don't touch the filesystem. The wrapper is a name carrier; callers that
-    /// need canonicalization use <see cref="Path.GetFullPath(string)"/> at the boundary.
-    /// </remarks>
+    /// <remarks>Minimal — does not lower-case, resolve relative segments, or touch the filesystem. Use <see cref="Path.GetFullPath(string)"/> for canonicalization.</remarks>
     public static string Normalize(string value) =>
         string.IsNullOrEmpty(value) ? string.Empty : value;
 }

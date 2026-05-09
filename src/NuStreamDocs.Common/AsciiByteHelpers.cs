@@ -7,14 +7,10 @@ using System.Text;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Byte-level UTF-8 helpers shared across span scanners — case-
-/// insensitive ASCII compares, identifier / word-boundary detection,
-/// whitespace skip, and zero-allocation string emit.
-/// </summary>
+/// <summary>Byte-level UTF-8 helpers for ASCII case folding, identifier / word-boundary detection, whitespace handling, and string emit.</summary>
 public static class AsciiByteHelpers
 {
-    /// <summary>The ASCII case-fold bit, available as both <c>private const</c> for inline use here and the public <see cref="AsciiCaseBit"/> property for callers.</summary>
+    /// <summary>The ASCII case-fold bit.</summary>
     private const byte CaseBit = 0x20;
 
     /// <summary>Gets the ASCII bit that distinguishes uppercase letters from lowercase letters; OR-ing with this folds case for ASCII letters.</summary>
@@ -125,9 +121,8 @@ public static class AsciiByteHelpers
 
     /// <summary>
     /// Case-insensitive ASCII byte-prefix match at <paramref name="offset"/>.
-    /// The lowercase reference must contain only ASCII letters and bytes
-    /// whose bit-5 is already set in their lowercase form (digits, ASCII
-    /// punctuation other than <c>_</c>).
+    /// <paramref name="lowerCase"/> must already be lowercased and contain only ASCII letters or
+    /// bytes whose bit-5 is set in their lowercase form (digits, most ASCII punctuation excluding <c>_</c>).
     /// </summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Candidate offset.</param>
@@ -162,11 +157,9 @@ public static class AsciiByteHelpers
     /// <param name="b">Lowercase ASCII span to compare against.</param>
     /// <returns>True when equal ignoring ASCII case.</returns>
     /// <remarks>
-    /// Folds <c>A</c>-<c>Z</c> on <paramref name="a"/> only (callers supply <paramref name="b"/>
-    /// already-lowercased); other bytes (including <c>_</c>, <c>-</c>, digits) compare ordinally.
-    /// A blanket bit-5 OR would corrupt non-letter bytes whose bit-5 differs (e.g. <c>_</c> = 0x5F →
-    /// 0x7F), which would silently miss case-insensitive lookups for keywords like
-    /// <c>cmake_minimum_required</c> or <c>auto_increment</c>.
+    /// Folds only <c>A</c>-<c>Z</c> on <paramref name="a"/> (callers must supply <paramref name="b"/>
+    /// already-lowercased); other bytes compare ordinally so identifiers containing <c>_</c>, <c>-</c>,
+    /// or digits round-trip correctly.
     /// </remarks>
     public static bool EqualsIgnoreAsciiCase(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
     {
@@ -196,11 +189,7 @@ public static class AsciiByteHelpers
     /// <param name="a">Left span.</param>
     /// <param name="b">Right span.</param>
     /// <returns>Negative, zero, or positive per <see cref="IComparer{T}"/>.</returns>
-    /// <remarks>
-    /// Folds <c>A</c>-<c>Z</c> to <c>a</c>-<c>z</c> on both sides; non-letter bytes (including UTF-8
-    /// continuation bytes) compare ordinally. Suitable for sorting English-language UTF-8 titles; do
-    /// not rely on it for locale-aware compares.
-    /// </remarks>
+    /// <remarks>Not locale-aware; suitable for sorting English-language UTF-8 titles.</remarks>
     public static int CompareIgnoreAsciiCase(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
     {
         var min = a.Length < b.Length ? a.Length : b.Length;
@@ -249,11 +238,9 @@ public static class AsciiByteHelpers
     /// <param name="value">UTF-8 input; non-ASCII bytes are preserved verbatim.</param>
     /// <returns>Fresh byte array, same length as <paramref name="value"/>.</returns>
     /// <remarks>
-    /// Single-pass byte loop with no UTF-8↔char transcoding and no scratch buffer — the only allocation
-    /// is the returned array itself. Folds <c>A</c>-<c>Z</c> to <c>a</c>-<c>z</c> via the ASCII case bit;
-    /// any byte outside that range (including UTF-8 continuation bytes of multi-byte code points) is
-    /// copied through unchanged. Suitable for ASCII-only identifiers (language ids, HTML attribute
-    /// names, host names, etc.) — the only contexts the rest of the codebase actually uses this for.
+    /// Folds only <c>A</c>-<c>Z</c>; non-ASCII bytes (including UTF-8 continuation bytes) pass
+    /// through unchanged. Suitable for ASCII-only identifiers — language ids, HTML attribute
+    /// names, host names.
     /// </remarks>
     public static byte[] ToLowerCaseInvariant(ReadOnlySpan<byte> value)
     {

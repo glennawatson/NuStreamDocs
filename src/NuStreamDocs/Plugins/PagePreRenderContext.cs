@@ -8,15 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Per-page context handed to <see cref="IPagePreRenderPlugin.PreRender"/>.
+/// Per-page context handed to <see cref="IPagePreRenderPlugin.PreRender"/>. <see cref="Source"/>
+/// is the raw markdown for the first preprocessor and the prior preprocessor's output for
+/// subsequent ones.
 /// </summary>
-/// <remarks>
-/// Carries the raw markdown bytes (as read from disk for the first
-/// preprocessor; the previous preprocessor's output for subsequent ones)
-/// and a sink the rewritten markdown is written into. The build pipeline
-/// ping-pongs two pooled buffers so each preprocessor sees a fresh
-/// writer.
-/// </remarks>
 public readonly ref struct PagePreRenderContext
 {
     /// <summary>Initializes a new instance of the <see cref="PagePreRenderContext"/> struct.</summary>

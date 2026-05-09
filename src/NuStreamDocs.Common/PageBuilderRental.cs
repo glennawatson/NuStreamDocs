@@ -7,16 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Disposable rental wrapping a pooled <see cref="ArrayBufferWriter{T}"/>
-/// of UTF-8 bytes.
-/// </summary>
-/// <remarks>
-/// <see langword="readonly struct"/> so the rental itself never
-/// allocates. Callers <c>using var rental = PageBuilderPool.Rent(...)</c>
-/// and write through <see cref="Writer"/>; on dispose the writer is
-/// reset and parked back in the pool.
-/// </remarks>
+/// <summary>Disposable rental of a pooled <see cref="ArrayBufferWriter{T}"/> of UTF-8 bytes. Write through <see cref="Writer"/>; the writer is reset and returned to the pool on dispose.</summary>
 public readonly struct PageBuilderRental : IDisposable, IEquatable<PageBuilderRental>
 {
     /// <summary>Initializes a new instance of the <see cref="PageBuilderRental"/> struct.</summary>

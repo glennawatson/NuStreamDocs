@@ -4,17 +4,7 @@
 
 namespace NuStreamDocs.CSharpApiGenerator.Logging;
 
-/// <summary>
-/// Source-generated logging entry points for <see cref="CSharpApiGenerator"/>
-/// and <see cref="CSharpApiGeneratorPlugin"/>.
-/// </summary>
-/// <remarks>
-/// All methods are <see cref="LoggerMessageAttribute"/> partials so the
-/// generator emits the underlying <c>EventId</c> + cached delegate. The
-/// per-assembly and source-link-miss hooks are reserved for future
-/// pipeline points where SourceDocParser surfaces those events to the
-/// host plugin.
-/// </remarks>
+/// <summary>Source-generated logging entry points for the C# API generator.</summary>
 internal static partial class CSharpApiGeneratorLoggingHelper
 {
     /// <summary>Logs the start of a generator run.</summary>

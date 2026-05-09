@@ -12,7 +12,7 @@ namespace NuStreamDocs.Layouts;
 /// <summary>Executes a tokenized layout template against a <see cref="LayoutContext"/> and writes the result to an <see cref="IBufferWriter{T}"/>.</summary>
 internal static class LayoutRenderer
 {
-    /// <summary>Length of the literal <c>"page."</c> prefix used when constructing missing-variable diagnostics.</summary>
+    /// <summary>Prefix used when constructing missing-variable diagnostics.</summary>
     private const string PagePrefix = "page.";
 
     /// <summary>Renders <paramref name="templateName"/> against <paramref name="context"/> and writes the result to <paramref name="writer"/>.</summary>
@@ -22,10 +22,7 @@ internal static class LayoutRenderer
     /// <param name="maxDepth">Recursion cap on <c>{% include %}</c> / <c>{% extends %}</c> expansion.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="logger">Logger for warnings.</param>
-    /// <param name="cache">
-    /// Optional per-build template cache; when <see langword="null"/> every load round-trips the disk and re-parses
-    /// (used by tests and one-shot callers that don't own a plugin instance).
-    /// </param>
+    /// <param name="cache">Optional per-build template cache; when <see langword="null"/> every load re-reads from disk.</param>
     /// <returns>True when the template was loaded and rendered; false when the template file was missing.</returns>
     public static bool Render(
         ReadOnlySpan<byte> templateName,
@@ -58,10 +55,10 @@ internal static class LayoutRenderer
         return true;
     }
 
-    /// <summary>Loads a template file, trying both the literal name and a <c>.html</c>-appended variant; consults <paramref name="cache"/> when supplied.</summary>
+    /// <summary>Loads a template, trying both the literal name and a <c>.html</c>-appended variant.</summary>
     /// <param name="templateName">UTF-8 layout file name.</param>
     /// <param name="templateDirectory">Resolution root.</param>
-    /// <param name="cache">Optional per-build cache. On hit the parsed unit is returned without touching disk; on miss the loaded + parsed unit is written back.</param>
+    /// <param name="cache">Optional per-build cache.</param>
     /// <param name="template">Parsed template on success.</param>
     /// <param name="resolvedPath">Last attempted absolute path (for diagnostics).</param>
     /// <returns>True when the file was loaded.</returns>
@@ -440,7 +437,7 @@ internal static class LayoutRenderer
     /// <param name="MaxDepth">Recursion cap.</param>
     /// <param name="Writer">UTF-8 sink.</param>
     /// <param name="Logger">Logger.</param>
-    /// <param name="Cache">Optional per-build template cache; <see langword="null"/> disables caching for this render.</param>
+    /// <param name="Cache">Optional per-build template cache.</param>
     private readonly record struct RenderState(DirectoryPath TemplateDirectory, LayoutContext Context, int MaxDepth, IBufferWriter<byte> Writer, ILogger Logger, TemplateCache? Cache);
 
     /// <summary>Parent template + body range stashed for a <c>{{ super() }}</c> reference.</summary>
@@ -448,7 +445,7 @@ internal static class LayoutRenderer
     /// <param name="Range">Inclusive-exclusive body range.</param>
     private readonly record struct ParentEntry(TemplateUnit Template, BlockRange Range);
 
-    /// <summary>Tracks the child-block override map plus the parent body of the block currently being rendered (so <c>{{ super() }}</c> can splice it).</summary>
+    /// <summary>Tracks child block overrides and the parent body currently being rendered for <c>{{ super() }}</c>.</summary>
     private sealed class BlockOverlay
     {
         /// <summary>Initializes a new instance of the <see cref="BlockOverlay"/> class.</summary>

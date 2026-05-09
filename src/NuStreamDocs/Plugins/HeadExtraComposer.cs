@@ -8,18 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Walks a plugin list and concatenates every
-/// <see cref="IHeadExtraProvider"/>'s contribution into a single
-/// UTF-8 byte array that theme plugins splice into <c>&lt;head&gt;</c>.
+/// Walks a plugin list and concatenates every <see cref="IHeadExtraProvider"/>'s contribution into
+/// a single UTF-8 byte array. Duplicate <c>&lt;link rel="preconnect"&gt;</c> lines from
+/// independent providers are folded to a single emission.
 /// </summary>
-/// <remarks>
-/// Theme plugins call this once during <see cref="IBuildConfigurePlugin.ConfigureAsync"/>
-/// and stash the result for the lifetime of the build, since the
-/// providers' output is build-invariant in the common case.
-/// Duplicate <c>&lt;link rel="preconnect"&gt;</c> lines emitted by
-/// independent plugins (icon fonts most often share the Google Fonts
-/// origins) are folded to a single emission keyed on the line bytes.
-/// </remarks>
 public static class HeadExtraComposer
 {
     /// <summary>UTF-8 prefix matched against each line to identify preconnect hints subject to dedup.</summary>

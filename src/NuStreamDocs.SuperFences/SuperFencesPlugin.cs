@@ -9,25 +9,15 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.SuperFences;
 
 /// <summary>
-/// Custom-fence dispatcher (pymdownx superfences). Discovers
-/// every <see cref="ICustomFenceHandler"/> exposed by registered
-/// plugins during <see cref="ConfigureAsync"/>, then walks each
-/// rendered page in <see cref="PostRender"/> looking for
+/// Custom-fence dispatcher (pymdownx superfences). Plugins that also implement
+/// <see cref="ICustomFenceHandler"/> claim a language; matched
 /// <c>&lt;pre&gt;&lt;code class="language-{lang}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
-/// blocks whose language is claimed by a handler. Matched blocks
-/// are replaced with the handler's rendering.
+/// blocks are replaced with the handler's rendering. Handlers receive the fence
+/// body with HTML entities decoded back to their literal bytes.
 /// </summary>
-/// <remarks>
-/// Plugins claim a fence by additionally implementing
-/// <see cref="ICustomFenceHandler"/> — same composition pattern
-/// the head-extras / static-asset providers use. Handlers receive
-/// the fence body with HTML entities decoded back to their
-/// literal bytes. The handler index is byte-keyed so the per-page
-/// dispatch loop never UTF-16 transcodes a language identifier.
-/// </remarks>
 public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
 {
-    /// <summary>Resolved handler index, keyed on the language bytes. Built once during <see cref="ConfigureAsync"/>.</summary>
+    /// <summary>Handler index keyed on language bytes; built during configure.</summary>
     private Dictionary<byte[], ICustomFenceHandler>? _handlers;
 
     /// <inheritdoc/>

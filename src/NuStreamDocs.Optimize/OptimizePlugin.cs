@@ -10,18 +10,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Optimize;
 
-/// <summary>
-/// Plugin that emits precompressed sibling artifacts for every output
-/// file whose extension is in the configured set.
-/// </summary>
-/// <remarks>
-/// Runs once at <see cref="FinalizeAsync"/> after every page is written.
-/// Files smaller than <see cref="OptimizeOptions.MinimumBytes"/> are
-/// skipped — gzip overhead can grow tiny payloads instead of shrinking
-/// them, and the runtime savings of pre-serving them are negligible.
-/// Sibling outputs that are already at least as new as the source are
-/// left alone, so watch-loop rebuilds only re-compress changed files.
-/// </remarks>
+/// <summary>Plugin that emits precompressed (gzip / brotli) sibling files for every output whose extension is in the configured set.</summary>
 public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IBuildFinalizePlugin
 {
     /// <summary>The <c>.gz</c> filename suffix.</summary>
@@ -33,15 +22,11 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <summary>Configured options.</summary>
     private readonly OptimizeOptions _options = ValidateOptions(options);
 
-    /// <summary>
-    /// Lookup of compressible extensions; per-instance and small (~7 entries by default),
-    /// so a plain <see cref="HashSet{T}"/> outperforms <c>HashSet</c> here — the freeze
-    /// cost wouldn't repay itself at this volume.
-    /// </summary>
+    /// <summary>Lookup of compressible extensions.</summary>
     private readonly HashSet<string> _extensionLookup =
         (options ?? throw new ArgumentNullException(nameof(options))).Extensions.ToStringSet(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Logger captured at construction; defaults to <see cref="NullLogger.Instance"/> when no logger is supplied.</summary>
+    /// <summary>Logger captured at construction.</summary>
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>Initializes a new instance of the <see cref="OptimizePlugin"/> class with default options.</summary>

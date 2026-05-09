@@ -5,19 +5,11 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the per-page post-render phase.
+/// Plugin participation in the per-page post-render phase: byte → byte rewriters on rendered HTML,
+/// threaded through every participating plugin in priority order before the per-page <see
+/// cref="IPageScanPlugin"/> hook fires. Return <c>false</c> from <see cref="NeedsRewrite"/> to
+/// skip both the buffer swap and <see cref="PostRender"/>.
 /// </summary>
-/// <remarks>
-/// Byte → byte rewriters on rendered HTML, threaded through every
-/// participating plugin in priority order before the per-page
-/// <see cref="IPageScanPlugin"/> hook fires. Used by theme shell
-/// substitution, code-block highlighters, mermaid fence retagging,
-/// nav-marker substitution, lightbox image wrapping, and similar
-/// HTML-aware rewriters. Plugins return <c>false</c> from
-/// <see cref="NeedsRewrite"/> when the page contains nothing they need
-/// to touch — the engine then skips both the buffer swap and the call
-/// to <see cref="PostRender"/>.
-/// </remarks>
 public interface IPagePostRenderPlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the post-render phase.</summary>

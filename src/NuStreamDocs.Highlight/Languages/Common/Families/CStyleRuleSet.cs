@@ -5,11 +5,6 @@
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
 
 /// <summary>Declarative rule set for C-style single-state lexers.</summary>
-/// <remarks>
-/// This runs only at lexer construction time, so the abstraction helps us
-/// share the ordered rule-array shape across languages without affecting the
-/// hot tokenization path.
-/// </remarks>
 internal readonly record struct CStyleRuleSet(
     LexerRule Whitespace,
     LexerRule? DocComment,

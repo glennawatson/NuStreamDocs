@@ -6,13 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Yaml;
 
-/// <summary>
-/// Byte-level helper that pulls the raw scalar / inline-list / block-list bytes
-/// of one or more top-level frontmatter keys into an
-/// <see cref="IBufferWriter{T}"/> sink. Used by the search plugin to fold
-/// caller-selected frontmatter fields (title, summary, tags, author…) into
-/// each page's searchable text without materializing a string.
-/// </summary>
+/// <summary>Byte-level helper that extracts top-level frontmatter scalar / inline-list / block-list values into an <see cref="IBufferWriter{T}"/> sink.</summary>
 public static class FrontmatterValueExtractor
 {
     /// <summary>Returns true when the top-level block-list under <paramref name="listKey"/> contains an item whose trimmed value equals <paramref name="entry"/>.</summary>
@@ -39,13 +33,9 @@ public static class FrontmatterValueExtractor
             ? []
             : YamlByteScanner.TrimWhitespace(afterColon);
 
-    /// <summary>
-    /// Reads the frontmatter values for every key in <paramref name="keys"/>
-    /// from <paramref name="source"/> and appends each (separated by a single
-    /// space) to <paramref name="sink"/>.
-    /// </summary>
+    /// <summary>Reads the frontmatter values for every key in <paramref name="keys"/> and appends each (separated by a single space) to <paramref name="sink"/>.</summary>
     /// <param name="source">UTF-8 markdown source bytes (frontmatter + body).</param>
-    /// <param name="keys">Top-level UTF-8 key bytes to extract — caller-supplied set, typically small. Encode once at builder time so per-page extraction does no encoding work.</param>
+    /// <param name="keys">Top-level UTF-8 key bytes to extract.</param>
     /// <param name="sink">UTF-8 sink the matched values are appended into.</param>
     public static void AppendKeysTo(ReadOnlySpan<byte> source, byte[][] keys, IBufferWriter<byte> sink)
     {

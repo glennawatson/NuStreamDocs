@@ -7,18 +7,10 @@ using NuStreamDocs.Markdown.Common;
 namespace NuStreamDocs.Snippets;
 
 /// <summary>
-/// Byte-level extractor for snippet section markers
-/// (<c>&lt;!-- @section name --&gt;</c> ... <c>&lt;!-- @endsection --&gt;</c>).
-/// Operates on raw UTF-8 bytes; the caller passes the section name as a
-/// span so no <see cref="string"/> is allocated for the comparison.
+/// Extracts snippet sections delimited by
+/// <c>&lt;!-- @section name --&gt;</c> ... <c>&lt;!-- @endsection --&gt;</c>
+/// markers.
 /// </summary>
-/// <remarks>
-/// HTML comments were chosen over a sigil-based marker (e.g. pymdownx's
-/// <c>--;--</c>) because they are invisible to every CommonMark renderer
-/// even when the snippets plugin is not enabled — stripping the plugin
-/// from the build doesn't leave dangling marker bytes in the rendered
-/// HTML.
-/// </remarks>
 internal static class SnippetSectionExtractor
 {
     /// <summary>Length of the trailing <c>\r\n</c> line terminator stripped from a marker line.</summary>

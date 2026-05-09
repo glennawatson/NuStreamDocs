@@ -7,20 +7,10 @@ using System.Buffers;
 namespace NuStreamDocs.Common;
 
 /// <summary>
-/// Async UTF-8 line-by-line reader over a <see cref="System.IO.Stream"/>.
+/// Async UTF-8 line-by-line reader over a <see cref="System.IO.Stream"/>. Each yielded slice is
+/// valid only until the next <see cref="TryReadLineAsync"/> call — copy or process it first.
+/// CR/LF and lone LF terminators are stripped.
 /// </summary>
-/// <remarks>
-/// Used by the config readers so the whole file never has to live in
-/// memory at once. The reader maintains a pooled buffer that grows on
-/// demand to fit the longest line, slides completed lines off the
-/// front, and exposes each line as a <see cref="ReadOnlyMemory{Byte}"/>
-/// slice valid until the next call to <see cref="TryReadLineAsync"/>.
-/// <para>
-/// The yielded slice is over the internal buffer — copy or process it
-/// before the next read advances. CR/LF and lone LF terminators are
-/// both stripped from the returned slice.
-/// </para>
-/// </remarks>
 public sealed class Utf8LineReader : IDisposable
 {
     /// <summary>Carriage-return byte.</summary>

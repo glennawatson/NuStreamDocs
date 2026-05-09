@@ -6,11 +6,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Tables;
 
-/// <summary>
-/// GitHub-flavored tables plugin. Rewrites pipe-delimited table
-/// blocks into <c>&lt;table&gt;</c> HTML before the markdown
-/// renderer runs.
-/// </summary>
+/// <summary>GitHub-flavored tables plugin — rewrites pipe-delimited tables into <c>&lt;table&gt;</c> HTML.</summary>
 public sealed class TablesPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -20,11 +16,6 @@ public sealed class TablesPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// GitHub-flavored tables require a <c>|</c> separator on every row — pages without a single
-    /// pipe byte cannot contain a table, so the per-byte scan and the pipeline's scratch rental
-    /// can be skipped entirely.
-    /// </remarks>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)'|') >= 0;
 
     /// <inheritdoc/>

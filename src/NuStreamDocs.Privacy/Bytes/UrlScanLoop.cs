@@ -6,11 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Shared scan loop used by every URL-rewrite byte scanner. Walks
-/// <c>html</c>, copies through verbatim, and delegates each candidate
-/// site to the supplied predicate which either rewrites or advances.
-/// </summary>
+/// <summary>Shared scan loop for URL-rewrite byte scanners; copies the source verbatim and delegates each candidate site to a predicate.</summary>
 internal static class UrlScanLoop
 {
     /// <summary>Predicate that attempts to rewrite a URL at <paramref name="p"/>; returns true when rewriting occurred.</summary>

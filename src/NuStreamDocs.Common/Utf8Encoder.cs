@@ -7,13 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>UTF-8 encoding helpers that produce <see cref="byte"/> arrays in one shot — the inverse direction of <see cref="Utf8Snapshot"/>.</summary>
-/// <remarks>
-/// Use these at the natural string → bytes boundary (config readers, CLI flag values, frontmatter-derived
-/// scalars) so per-page hot paths stay byte-only. Each helper folds a common shape (encode + suffix
-/// guard, encode + slash normalization, etc.) so call sites don't repeat the byte-count + branch +
-/// fixup pattern.
-/// </remarks>
+/// <summary>UTF-8 encoding helpers that produce <see cref="byte"/> arrays in one shot.</summary>
 public static class Utf8Encoder
 {
     /// <summary>Highest single-byte UTF-8 value (anything above this is the leading byte of a multi-byte sequence).</summary>
@@ -23,12 +17,6 @@ public static class Utf8Encoder
     /// <param name="value">Source string; null/empty produces a single-byte array containing <paramref name="trailingAscii"/>.</param>
     /// <param name="trailingAscii">ASCII byte (&lt; 0x80) the result must end with.</param>
     /// <returns>UTF-8 bytes, always ending in <paramref name="trailingAscii"/>.</returns>
-    /// <remarks>
-    /// Inspects the source <see cref="string"/>'s last <see cref="char"/> directly to decide whether
-    /// the trailing byte is needed; valid only for ASCII trailing bytes since multi-byte UTF-8
-    /// trailing characters can't be detected from the char index alone. The single allocation is the
-    /// returned array itself — the encode writes straight into it.
-    /// </remarks>
     public static byte[] EncodeWithTrailingAscii(string? value, byte trailingAscii)
     {
         if (trailingAscii > AsciiMax)

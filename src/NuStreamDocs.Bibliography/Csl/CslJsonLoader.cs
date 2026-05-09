@@ -10,19 +10,9 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Bibliography.Csl;
 
 /// <summary>
-/// Loads a CSL-JSON bibliography file (the canonical machine-readable
-/// format used by pandoc, citation.js, Zotero export). Field names
-/// match CSL's vocabulary exactly so this is the no-translation-needed
-/// path for users who already maintain their bibliography in CSL-JSON.
+/// Loads a CSL-JSON bibliography file (the format used by pandoc,
+/// citation.js, and Zotero export).
 /// </summary>
-/// <remarks>
-/// Streaming <see cref="Utf8JsonReader"/> walk — no <see cref="JsonDocument"/>,
-/// no <see cref="JsonElement"/>, no <see cref="string"/> allocations for
-/// string values. <see cref="Utf8JsonReader.CopyString(System.Span{byte})"/>
-/// unescapes directly into a fresh <see cref="byte"/> array sized from the
-/// reader's own length hint, so escape-decoding and UTF-8 emission are a
-/// single pass.
-/// </remarks>
 internal static class CslJsonLoader
 {
     /// <summary>Loads a CSL-JSON file from disk and returns the parsed entries.</summary>
@@ -91,7 +81,7 @@ internal static class CslJsonLoader
         return true;
     }
 
-    /// <summary>Initializes a fresh <see cref="EntryFields"/> with empty arrays for every byte-shaped field so the parser only has to overwrite hits.</summary>
+    /// <summary>Initializes a fresh <see cref="EntryFields"/> with empty arrays.</summary>
     /// <returns>A zeroed field bag.</returns>
     private static EntryFields NewEntryFields() => new()
     {
@@ -117,9 +107,9 @@ internal static class CslJsonLoader
         MediumNeutralCitation = []
     };
 
-    /// <summary>Materializes the parsed <see cref="EntryFields"/> bag into a final <see cref="CitationEntry"/>.</summary>
+    /// <summary>Materializes the parsed field bag into a <see cref="CitationEntry"/>.</summary>
     /// <param name="fields">Parsed field bag.</param>
-    /// <returns>Frozen entry.</returns>
+    /// <returns>The built entry.</returns>
     private static CitationEntry BuildEntry(EntryFields fields) => new()
     {
         Id = fields.Id,
@@ -285,7 +275,7 @@ internal static class CslJsonLoader
         reader.Skip();
     }
 
-    /// <summary>Advances past the property-name token and returns the immediately-following string value as fresh UTF-8 bytes.</summary>
+    /// <summary>Reads the string value following the property-name token as UTF-8 bytes.</summary>
     /// <param name="reader">Reader positioned on the property-name token.</param>
     /// <returns>UTF-8 bytes; empty when the next token isn't a string.</returns>
     private static byte[] ReadStringBytes(ref Utf8JsonReader reader)
@@ -540,7 +530,7 @@ internal static class CslJsonLoader
         return EntryType.Other;
     }
 
-    /// <summary>Mutable per-entry field bag; passed by <c>ref</c> so the property-name dispatch helper writes through to the enclosing read scope.</summary>
+    /// <summary>Mutable per-entry field bag.</summary>
     [SuppressMessage(
         "Sonar Code Smell",
         "S3898:Implement IEquatable in value type",

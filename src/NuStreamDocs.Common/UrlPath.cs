@@ -4,15 +4,8 @@
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// URL path component (e.g. <c>/assets/stylesheets/highlight.css</c>, <c>https://example.com/foo/</c>)
-/// distinct from a filesystem path. Pure string carrier; never touches the filesystem and never
-/// tries to resolve a base URL — composition is up to the caller. Distinct from
-/// <see cref="DirectoryPath"/> / <see cref="FilePath"/> so the "this is a URL, not a disk path"
-/// intent reads from the type at every API boundary, even though both shapes happen to round-trip
-/// through forward-slashed strings.
-/// </summary>
-/// <param name="Value">The underlying URL string. Forward slashes preserved; no normalization.</param>
+/// <summary>Type-safe URL path wrapper (e.g. <c>/assets/stylesheets/highlight.css</c>, <c>https://example.com/foo/</c>). Pure string carrier; never resolves a base URL.</summary>
+/// <param name="Value">The underlying URL string. Forward slashes preserved; not normalized.</param>
 public readonly record struct UrlPath(string Value)
 {
     /// <summary>Gets a value indicating whether this URL is empty (uninitialized / placeholder).</summary>

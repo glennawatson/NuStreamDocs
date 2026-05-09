@@ -8,22 +8,7 @@ using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Templating;
 
-/// <summary>
-/// Static walker that drives a compiled instruction stream against a
-/// <see cref="TemplateData"/> stack and writes UTF-8 to an
-/// <see cref="IBufferWriter{T}"/>.
-/// </summary>
-/// <remarks>
-/// Iteration is multi-pass: when a section's key resolves to a
-/// non-empty <see cref="TemplateData"/> array, the body is rendered
-/// once per item, each time with that item pushed as the active scope.
-/// The iteration cursor lives on a parallel frame stack so the walker
-/// stays a single forward pass through the instruction stream.
-/// <para>
-/// Partial inclusions (<c>{{&gt; name}}</c>) recursively render the
-/// matching template from the partial map under the current scope.
-/// </para>
-/// </remarks>
+/// <summary>Walker that drives a compiled instruction stream against a <see cref="TemplateData"/> stack and writes UTF-8 to an <see cref="IBufferWriter{T}"/>.</summary>
 internal static class TemplateRenderer
 {
     /// <summary>Initial scope-stack capacity floor.</summary>
@@ -328,12 +313,7 @@ internal static class TemplateRenderer
     /// <param name="OpenIp">Instruction pointer of the matching SectionOpen.</param>
     private readonly record struct IterationFrame(TemplateData[] Items, int Index, int OpenIp);
 
-    /// <summary>
-    /// Bundle of mutable per-render state (scope stack, iteration frames).
-    /// Passed by <c>ref</c> through <see cref="Step"/> and the section
-    /// helpers so the dispatcher stays narrow without growing each method's
-    /// parameter list past the readability threshold.
-    /// </summary>
+    /// <summary>Mutable per-render state (scope stack, iteration frames) passed by <c>ref</c> through <see cref="Step"/> and section helpers.</summary>
     /// <param name="Scopes">Pooled scope-stack buffer.</param>
     /// <param name="ScopeDepth">Number of valid entries in <paramref name="Scopes"/>.</param>
     /// <param name="Frames">Pooled iteration-frame buffer.</param>

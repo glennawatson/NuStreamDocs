@@ -8,18 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// Stateless rewriter for CSS files: finds <c>url(...)</c> references
-/// to absolute http(s) URLs, resolves relative URLs against the
-/// stylesheet's own base, and registers + rewrites each one to its
-/// local path through an <see cref="ExternalAssetRegistry"/>.
-/// </summary>
-/// <remarks>
-/// Closes the Google Fonts loop: a fetched <c>fonts.css</c> typically
-/// references <c>https://fonts.gstatic.com/.../font.woff2</c> URLs
-/// inside <c>url()</c> tokens, which the per-page HTML scan never
-/// sees.
-/// </remarks>
+/// <summary>Rewrites <c>url(...)</c> references in CSS files, resolving relative URLs against the stylesheet base and registering each one through an <see cref="ExternalAssetRegistry"/>.</summary>
 internal static class CssUrlRewriter
 {
     /// <summary>Length of the literal <c>url(</c> prefix.</summary>

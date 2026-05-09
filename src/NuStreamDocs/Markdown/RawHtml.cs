@@ -8,29 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Raw-HTML pass-through for inline content per CommonMark §6.6.
+/// Raw-HTML pass-through for inline content per CommonMark §6.6. Recognizes open tags, close tags,
+/// self-closing tags, and HTML comments and emits them verbatim. Processing instructions, CDATA,
+/// and declarations are not handled.
 /// </summary>
-/// <remarks>
-/// Detects open tags, closing tags, self-closing tags, and HTML comments
-/// inline within a paragraph or other block, and emits them verbatim
-/// (no entity escaping). Falls back to <c>false</c> when the byte at the
-/// cursor doesn't begin a recognized raw-HTML construct, leaving the
-/// caller to treat <c>&lt;</c> as literal text.
-/// <para>
-/// Implemented as a small hand-rolled scanner — no regex, no
-/// allocations on the happy path. The recognized forms are:
-/// <list type="bullet">
-/// <item><c>&lt;tag attr="val"&gt;</c> open tag,</item>
-/// <item><c>&lt;tag /&gt;</c> self-closing tag,</item>
-/// <item><c>&lt;/tag&gt;</c> close tag,</item>
-/// <item><c>&lt;!-- comment --&gt;</c> HTML comment.</item>
-/// </list>
-/// Processing instructions (<c>&lt;?...?&gt;</c>), CDATA sections
-/// and declarations are intentionally omitted — they don't appear in
-/// real-world markdown the way the four forms above do, and keeping
-/// the scanner narrow keeps the per-byte cost low on the inline hot path.
-/// </para>
-/// </remarks>
 internal static class RawHtml
 {
     /// <summary>Greater-than byte.</summary>

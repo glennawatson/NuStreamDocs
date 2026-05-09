@@ -7,12 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Construction helpers for <see cref="NavEntry"/>. Internally <see cref="NavEntry"/> stores its
-/// title and path as UTF-8 byte arrays (encode-once at construction); these factories expose
-/// matching string and byte-form overloads so callers can pick whichever is cheapest at the call
-/// site without paying re-encoding round trips.
-/// </summary>
+/// <summary>Construction helpers for <see cref="NavEntry"/>; string and byte-form overloads for callers' choice.</summary>
 public static class NavEntryFactory
 {
     /// <summary>Diagnostic for a missing-children section construction.</summary>

@@ -6,27 +6,8 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Templating;
 
-/// <summary>
-/// Read-mostly data container handed to a <see cref="Template"/>'s <c>Render</c> method.
-/// </summary>
-/// <remarks>
-/// Scalars are stored as <see cref="ReadOnlyMemory{T}"/> over UTF-8 bytes so callers
-/// can hand in pooled / shared buffers without copying. Sections are arrays of nested
-/// <see cref="TemplateData"/> scopes so iteration is a <c>for</c> loop over an indexed
-/// array — no enumerator allocation.
-/// <para>
-/// Backed by byte-keyed <see cref="Dictionary{TKey, TValue}"/>s keyed ordinally on the
-/// UTF-8 key bytes. The renderer probes via the
-/// <see cref="Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/> shape so the
-/// per-token resolve never allocates a string for the lookup probe.
-/// </para>
-/// <para>
-/// Scalar lifetimes follow the caller: any <see cref="ReadOnlyMemory{T}"/> the caller
-/// passes in must remain valid until <c>Render</c> returns. Theme plugins typically rent
-/// the page body from <see cref="System.Buffers.ArrayPool{T}"/> and return after the
-/// render call.
-/// </para>
-/// </remarks>
+/// <summary>Read-mostly data container handed to a <see cref="Template"/>'s <c>Render</c> method. Scalars are UTF-8 byte memory; sections are arrays of nested scopes.</summary>
+/// <remarks>Any <see cref="ReadOnlyMemory{T}"/> handed in must remain valid until <c>Render</c> returns.</remarks>
 public sealed class TemplateData
 {
     /// <summary>Empty-section sentinel reused everywhere.</summary>
@@ -39,7 +20,6 @@ public sealed class TemplateData
     private static readonly Dictionary<byte[], TemplateData[]> EmptySectionMap = new(0, ByteArrayComparer.Instance);
 
     /// <summary>Span-keyed alternate lookup over the scalar map.</summary>
-    /// <remarks>The struct holds a reference to the underlying <see cref="Dictionary{TKey, TValue}"/> so it stays alive for the lifetime of this instance.</remarks>
     private readonly Dictionary<byte[], ReadOnlyMemory<byte>>.AlternateLookup<ReadOnlySpan<byte>> _scalarLookup;
 
     /// <summary>Span-keyed alternate lookup over the section map.</summary>

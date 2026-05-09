@@ -4,16 +4,7 @@
 
 namespace NuStreamDocs.Toc;
 
-/// <summary>
-/// Configuration for <see cref="TocPlugin"/>.
-/// </summary>
-/// <remarks>
-/// Mirrors the most-used knobs of the mkdocs <c>toc</c> markdown
-/// extension. Defaults are tuned for mkdocs-material's secondary
-/// nav: only <c>h2</c>+ are listed, the permalink glyph is the
-/// pilcrow, and the marker substitution is enabled so themes can
-/// embed <c>&lt;!--@@toc@@--&gt;</c> in their templates.
-/// </remarks>
+/// <summary>Configuration for <see cref="TocPlugin"/>; mirrors the mkdocs <c>toc</c> markdown extension.</summary>
 /// <param name="MinLevel">Minimum heading level (inclusive) to include in the rendered TOC fragment. Permalink anchors are still emitted on every heading the scanner finds.</param>
 /// <param name="MaxLevel">Maximum heading level (inclusive) to include in the rendered TOC fragment.</param>
 /// <param name="PermalinkSymbol">Glyph used inside the permalink anchor (e.g. <c>¶</c>, <c>#</c>). Rendered as the anchor's inner text.</param>

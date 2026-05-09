@@ -6,38 +6,22 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace NuStreamDocs.Emoji;
 
-/// <summary>
-/// Built-in shortcode → UTF-8 glyph table. Lookups operate on raw
-/// <see cref="ReadOnlySpan{T}"/> byte slices so the rewriter never
-/// allocates a <see cref="string"/> for the shortcode body or
-/// re-encodes the glyph on emit — the per-shortcode hot path is one
-/// vectorized <see cref="MemoryExtensions.SequenceEqual{T}(ReadOnlySpan{T}, ReadOnlySpan{T})"/>
-/// per candidate against a compile-time <c>"…"u8</c> key, returning the
-/// glyph as another compile-time <c>"…"u8</c> literal.
-/// </summary>
-/// <remarks>
-/// Coverage targets the high-frequency Twemoji subset that accounts for
-/// the bulk of real-world Markdown usage (issue threads, release notes,
-/// blog posts, status pages). Project consumers that need the full
-/// ~1500-entry Twemoji set can register additional plugins after this
-/// one in the preprocessor chain — unmatched shortcodes pass through
-/// verbatim.
-/// </remarks>
+/// <summary>Built-in shortcode-to-UTF-8-glyph table covering the high-frequency Twemoji subset. Unknown shortcodes return an empty span.</summary>
 internal static class EmojiIndex
 {
-    /// <summary>Tries to resolve <paramref name="shortcode"/> against the index.</summary>
-    /// <param name="shortcode">UTF-8 shortcode bytes (without the surrounding colons).</param>
-    /// <param name="glyph">Resolved UTF-8 glyph bytes on success.</param>
-    /// <returns>True when the shortcode is a known alias.</returns>
+    /// <summary>Tries to resolve <paramref name="shortcode"/> to a glyph.</summary>
+    /// <param name="shortcode">UTF-8 shortcode bytes (without surrounding colons).</param>
+    /// <param name="glyph">Resolved glyph bytes on success.</param>
+    /// <returns>True when the shortcode is known.</returns>
     public static bool TryGet(ReadOnlySpan<byte> shortcode, out ReadOnlySpan<byte> glyph)
     {
         glyph = MatchGlyph(shortcode);
         return glyph.Length > 0;
     }
 
-    /// <summary>Matches <paramref name="shortcode"/> against the curated Twemoji subset.</summary>
+    /// <summary>Matches <paramref name="shortcode"/> against the curated table.</summary>
     /// <param name="shortcode">UTF-8 shortcode bytes.</param>
-    /// <returns>UTF-8 glyph bytes on match, or an empty span on miss.</returns>
+    /// <returns>Glyph bytes on match, or an empty span on miss.</returns>
     [SuppressMessage(
         "Sonar Code Smell",
         "S1541:Methods should not be too complex",

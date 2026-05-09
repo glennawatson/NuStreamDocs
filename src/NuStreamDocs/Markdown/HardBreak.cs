@@ -7,17 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Markdown;
 
-/// <summary>
-/// Hard-break handler. Recognizes two-or-more spaces immediately before a
-/// newline and emits <c>&lt;br /&gt;\n</c>.
-/// </summary>
-/// <remarks>
-/// The trigger byte is <c>\n</c>: the inline-render dispatch hits a newline,
-/// hands it here, and we walk backward over trailing spaces to decide whether
-/// the line ends with a hard break. Firing on <c>\n</c> instead of every space
-/// lets the outer dispatch use <c>SearchValues.IndexOfAny</c> to leap over
-/// long prose runs between specials.
-/// </remarks>
+/// <summary>Hard-break handler. Recognizes two-or-more spaces immediately before a newline and emits <c>&lt;br /&gt;\n</c>.</summary>
 internal static class HardBreak
 {
     /// <summary>Space byte.</summary>
@@ -26,9 +16,7 @@ internal static class HardBreak
     /// <summary>Minimum trailing spaces required to form a hard break.</summary>
     private const int MinTrailingSpaces = 2;
 
-    /// <summary>
-    /// Handles a line feed at <paramref name="pos"/>; promotes it to <c>&lt;br /&gt;\n</c> when the immediately preceding bytes are 2+ spaces.
-    /// </summary>
+    /// <summary>Handles a line feed at <paramref name="pos"/>; promotes it to <c>&lt;br /&gt;\n</c> when the immediately preceding bytes are 2+ spaces.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="pos">Cursor positioned at the <c>\n</c>; advanced past the <c>\n</c> on success.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>

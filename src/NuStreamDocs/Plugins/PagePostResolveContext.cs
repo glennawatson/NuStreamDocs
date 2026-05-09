@@ -8,17 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Per-page context handed to <see cref="IPagePostResolvePlugin.Rewrite"/>.
+/// Per-page context handed to <see cref="IPagePostResolvePlugin.Rewrite"/>. Runs after the
+/// cross-page resolve barrier, so <see cref="Html"/> can be rewritten using a frozen view of
+/// cross-page state.
 /// </summary>
-/// <remarks>
-/// Runs after the cross-page <see cref="IBuildResolvePlugin"/> barrier,
-/// so <see cref="Html"/> can be rewritten using a frozen view of
-/// cross-page state (e.g. resolved <c>@autoref:</c> markers, redirect
-/// targets, privacy-rewritten asset URLs). Same ping-pong shape as
-/// <see cref="PagePostRenderContext"/>: plugins return <c>false</c>
-/// from <see cref="IPagePostResolvePlugin.NeedsRewrite"/> when there's
-/// nothing to do for this page.
-/// </remarks>
 public readonly ref struct PagePostResolveContext
 {
     /// <summary>Initializes a new instance of the <see cref="PagePostResolveContext"/> struct.</summary>

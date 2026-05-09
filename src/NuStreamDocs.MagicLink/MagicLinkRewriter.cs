@@ -8,12 +8,7 @@ using static NuStreamDocs.Markdown.Common.MarkdownCodeScanner;
 
 namespace NuStreamDocs.MagicLink;
 
-/// <summary>
-/// Stateless UTF-8 magic-link rewriter. Wraps bare URLs in
-/// CommonMark autolink brackets so the downstream inline renderer
-/// emits anchor tags. Skips fenced-code, inline-code, and any
-/// already-linked region (<c>[…](…)</c> or <c>&lt;url&gt;</c>).
-/// </summary>
+/// <summary>Wraps bare URLs in CommonMark autolink brackets and optionally expands GitHub shortrefs. Code spans and existing links pass through.</summary>
 internal static class MagicLinkRewriter
 {
     /// <summary>Maximum length of a GitHub username (matches the platform's documented 39-character cap).</summary>
@@ -374,15 +369,10 @@ internal static class MagicLinkRewriter
         return rel < 0 ? offset + 1 : offset + rel + 1;
     }
 
-    /// <summary>Consumes through a markdown link's bracket span — <c>[label](dest)</c> when present.</summary>
+    /// <summary>Consumes through a markdown link's bracket span — <c>[label](dest)</c> when present, with depth-tracked matching for nested brackets.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Position of the opening <c>[</c>.</param>
     /// <returns>Exclusive end past the closing <c>)</c>, or the input position + 1 when the bracket is bare.</returns>
-    /// <remarks>
-    /// Uses depth-tracked matching for both the <c>[…]</c> label and the <c>(…)</c> destination so a label
-    /// like <c>[IObservable&lt;byte[]?&gt;]</c> (which contains nested <c>[]</c>) does not split on its first
-    /// inner <c>]</c> and leak the destination URL out for autolink rewriting.
-    /// </remarks>
     private static int ConsumeBracketSpan(ReadOnlySpan<byte> source, int offset)
     {
         var labelClose = FindMatchingDepth(source, offset + 1, (byte)'[', (byte)']');

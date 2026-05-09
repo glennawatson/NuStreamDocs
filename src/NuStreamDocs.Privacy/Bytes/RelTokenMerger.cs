@@ -7,12 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Whitespace-separated token merger used by the anchor-hardening byte
-/// pass to combine an existing <c>rel</c> attribute value with the
-/// privacy-mandated tokens (<c>noopener noreferrer</c>) without
-/// duplicating tokens that are already present.
-/// </summary>
+/// <summary>Merges whitespace-separated <c>rel</c> tokens, deduplicating case-insensitively and normalizing to single-space separators.</summary>
 internal static class RelTokenMerger
 {
     /// <summary>Maximum tokens we expect on either side; well above any real-world <c>rel</c> attribute.</summary>

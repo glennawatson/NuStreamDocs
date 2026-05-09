@@ -5,18 +5,10 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Registers byte sequences that signal a page has cross-page work pending.
+/// Registers byte sequences that signal a page has cross-page work pending. The engine consults
+/// the registry after rendering each page; pages whose HTML contains none of the registered
+/// markers skip the cross-page barrier and write immediately.
 /// </summary>
-/// <remarks>
-/// The build engine consults this registry after rendering each page: if
-/// none of the registered markers appear in the emitted HTML, the page
-/// skips the cross-page barrier and writes immediately. Plugins that
-/// participate in <see cref="IBuildResolvePlugin"/> /
-/// <see cref="IPagePostResolvePlugin"/> register their distinguishing
-/// marker bytes during <see cref="IBuildConfigurePlugin.ConfigureAsync"/>
-/// (e.g. <c>"@autoref:"u8</c>) so the engine can skip the in-memory
-/// page-buffer hold for pages that contain no such markers.
-/// </remarks>
 public sealed class CrossPageMarkerRegistry
 {
     /// <summary>Initial slot capacity for registered markers.</summary>

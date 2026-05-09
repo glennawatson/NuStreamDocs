@@ -9,17 +9,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.SuperFences;
 
 /// <summary>
-/// Stateless rendered-HTML rewriter that dispatches matched
-/// <c>&lt;pre&gt;&lt;code class="language-{lang}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
-/// blocks to registered <see cref="ICustomFenceHandler"/>s.
+/// Dispatches matched <c>&lt;pre&gt;&lt;code class="language-{lang}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
+/// blocks in rendered HTML to registered <see cref="ICustomFenceHandler"/>s.
 /// </summary>
-/// <remarks>
-/// Handler lookup is byte-keyed via <see cref="System.Collections.Generic.Dictionary{TKey, TValue}.GetAlternateLookup{TAlternate}()"/>
-/// — the language slice off the rendered HTML drives the lookup with
-/// no UTF-16 transcoding and no per-fence byte-array allocation. The
-/// rewrite path streams straight into the caller's destination sink
-/// instead of materializing an intermediate replacement byte array.
-/// </remarks>
 internal static class SuperFencesDispatcher
 {
     /// <summary>Gets the UTF-8 bytes of the prefix every candidate block starts with.</summary>
@@ -101,12 +93,7 @@ internal static class SuperFencesDispatcher
         return changed;
     }
 
-    /// <summary>
-    /// Probes the block at <paramref name="blockStart"/>: validates
-    /// shape, resolves the language to a handler, and returns the body
-    /// span. Single hash + single equality call via the .NET 9
-    /// <c>Dictionary.AlternateLookup.TryGetValue</c> overload.
-    /// </summary>
+    /// <summary>Validates the block shape at <paramref name="blockStart"/>, resolves the language to a handler, and returns the body span.</summary>
     /// <param name="html">Rendered HTML.</param>
     /// <param name="blockStart">Offset of the leading <c>&lt;</c>.</param>
     /// <param name="handlers">Span-keyed handler lookup.</param>

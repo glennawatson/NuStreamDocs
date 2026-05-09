@@ -7,14 +7,11 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
-/// <summary>One extra-asset source contributed via the builder API.</summary>
-/// <remarks>
-/// Authored as a discriminated union so the builder-side API stays
-/// fluent (one method per source kind) while the plugin-side
-/// resolution stays one switch over <see cref="Kind"/>. Construction
-/// goes through <see cref="ExtraAssetSourceInit"/> so the ctor surface
-/// stays single-arg even as kinds add new flavour bits.
-/// </remarks>
+/// <summary>
+/// One extra-asset source contributed via the builder API. Construct via the per-kind factory
+/// methods (<see cref="File"/>, <see cref="Inline"/>, <see cref="Embedded"/>, <see
+/// cref="External"/>).
+/// </summary>
 public sealed class ExtraAssetSource
 {
     /// <summary>Initializes a new instance of the <see cref="ExtraAssetSource"/> class.</summary>

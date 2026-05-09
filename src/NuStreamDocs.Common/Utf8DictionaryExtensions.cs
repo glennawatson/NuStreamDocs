@@ -6,34 +6,18 @@ using System.Collections.Concurrent;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>UTF-8 byte-keyed <see cref="Dictionary{TKey, TValue}"/> / <see cref="HashSet{T}"/> probe helpers.</summary>
-/// <remarks>
-/// The .NET 9+ <see cref="Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/> /
-/// <see cref="HashSet{T}.AlternateLookup{TAlternateKey}"/> shapes let span-keyed probes
-/// hit a byte-array-keyed map without materializing a temporary <c>byte[]</c>, but the
-/// call-site syntax is verbose. These extensions wrap the shape so plugin code reads as
-/// <c>map.TryGetValueByUtf8(span, out var value)</c> instead of
-/// <c>map.GetAlternateLookup&lt;ReadOnlySpan&lt;byte&gt;&gt;().TryGetValue(span, out var value)</c>.
-/// <para>
-/// The <see cref="Dictionary{TKey, TValue}"/> must be constructed with a comparer that
-/// implements <see cref="System.Collections.Generic.IAlternateEqualityComparer{TAlternate, T}"/>
-/// for <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/> — i.e. <see cref="ByteArrayComparer.Instance"/>.
-/// Callers that need to probe many times in a hot loop should cache the alternate-lookup
-/// struct directly via <see cref="AsUtf8Lookup{TValue}(Dictionary{byte[], TValue})"/>
-/// to avoid the per-call construction.
-/// </para>
-/// </remarks>
+/// <summary>
+/// UTF-8 byte-keyed <see cref="Dictionary{TKey, TValue}"/> / <see cref="HashSet{T}"/> probe
+/// helpers. The dictionary or set must be constructed with <see cref="ByteArrayComparer.Instance"/>;
+/// for hot-path multi-probe use <see cref="AsUtf8Lookup{TValue}(Dictionary{byte[], TValue})"/>
+/// to cache the alternate lookup.
+/// </summary>
 public static class Utf8DictionaryExtensions
 {
     /// <summary>Returns the cached <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/> alternate lookup over <paramref name="dictionary"/>.</summary>
     /// <typeparam name="TValue">Dictionary value type.</typeparam>
     /// <param name="dictionary">Dictionary built with <see cref="ByteArrayComparer.Instance"/>.</param>
     /// <returns>The alternate-lookup struct; cache it once and reuse for hot-path probing.</returns>
-    /// <remarks>
-    /// For multi-probe paths (per-page renderers, per-token dispatchers) cache the result;
-    /// for one-shot probes use the <see cref="TryGetValueByUtf8{TValue}(Dictionary{byte[], TValue}, ReadOnlySpan{byte}, out TValue)"/>
-    /// extension instead.
-    /// </remarks>
     public static Dictionary<byte[], TValue>.AlternateLookup<ReadOnlySpan<byte>> AsUtf8Lookup<TValue>(this Dictionary<byte[], TValue> dictionary)
     {
         ArgumentNullException.ThrowIfNull(dictionary);

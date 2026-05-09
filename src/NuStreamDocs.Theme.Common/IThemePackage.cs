@@ -16,9 +16,8 @@ public interface IThemePackage
     Template Page { get; }
 
     /// <summary>Gets the compiled partial registry keyed by UTF-8 partial-name bytes.</summary>
-    /// <remarks>The renderer probes via the byte-keyed alternate-lookup pattern so per-partial dispatch never allocates a string.</remarks>
     Dictionary<byte[], Template> Partials { get; }
 
-    /// <summary>Gets the static assets as an indexable snapshot for write-out loops.</summary>
+    /// <summary>Gets the bundled static assets keyed by relative file path.</summary>
     (FilePath RelativePath, byte[] Bytes)[] StaticAssetEntries { get; }
 }

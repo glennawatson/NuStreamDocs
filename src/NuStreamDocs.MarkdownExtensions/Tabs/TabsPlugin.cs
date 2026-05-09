@@ -9,18 +9,14 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Tabs;
 
-/// <summary>
-/// Content-tabs plugin. Rewrites consecutive <c>=== "Title"</c>
-/// blocks into a Material-flavored tabbed group (radio-button
-/// driven, no JavaScript) before the markdown renderer runs.
-/// </summary>
+/// <summary>Content-tabs plugin — rewrites <c>=== "Title"</c> blocks into a radio-button-driven tabbed group.</summary>
 public sealed class TabsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
+    /// <summary>Head-link snippet injected on every page.</summary>
     private static readonly byte[] LinkBytes =
         [.. """<link rel="stylesheet" href="/assets/extensions/tabs.css">"""u8];
 
-    /// <summary>UTF-8 stylesheet shipped to every site.</summary>
+    /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
         [.. """
 .tabbed-set{display:flex;flex-flow:row wrap;position:relative;margin:1em 0;border-radius:.2em}
@@ -31,7 +27,7 @@ public sealed class TabsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHe
 .tabbed-set>input:checked+label+.tabbed-content{display:block}
 """u8];
 
-    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    /// <summary>Relative path for the css asset.</summary>
     private static readonly FilePath AssetFilePath = new("assets/extensions/tabs.css");
 
     /// <inheritdoc/>

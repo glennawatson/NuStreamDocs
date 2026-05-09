@@ -6,13 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>Stable per-render bundle threaded through <see cref="NavRenderer"/>'s private helpers to keep their arities small.</summary>
-/// <remarks>
-/// Ref struct so it can hold a <see cref="ReadOnlySpan{T}"/> chain without escaping. The
-/// per-render <c>toggleCounter</c> stays as a separate <c>ref int</c> parameter on the call chain
-/// — keeping it out of the bundle simplifies analyzer flow analysis and avoids the
-/// <c>ref</c>-field complexity for what's effectively just one mutable counter.
-/// </remarks>
+/// <summary>Per-render bundle threaded through <see cref="NavRenderer"/>'s helpers.</summary>
 internal readonly ref struct NavRenderContext
 {
     /// <summary>Initializes a new instance of the <see cref="NavRenderContext"/> struct.</summary>

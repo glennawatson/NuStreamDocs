@@ -6,14 +6,7 @@ using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material;
 
-/// <summary>
-/// Represents configuration options for the Material theme in the source documentation system.
-/// </summary>
-/// <remarks>
-/// Scalar text fields are stored as UTF-8 bytes per the project's byte-first pipeline rule.
-/// String-shaped construction goes through <c>MaterialThemeOptionsExtensions</c>'s <c>WithXxx</c>
-/// helpers, which encode once at the boundary.
-/// </remarks>
+/// <summary>Configuration for <see cref="MaterialThemePlugin"/>.</summary>
 /// <param name="AssetSource">Gets or sets the source of the assets.</param>
 /// <param name="EmbeddedAssetRoot">UTF-8 root path for embedded assets.</param>
 /// <param name="CdnRoot">UTF-8 root URL for assets hosted on a CDN.</param>
@@ -47,14 +40,6 @@ public readonly record struct MaterialThemeOptions(
     bool SectionScopedFooter) : IThemeShellOptions
 {
     /// <summary>Gets the default jsdelivr CDN root for the upstream Material bundle this assembly is pinned to.</summary>
-    /// <remarks>
-    /// Resolves through jsdelivr's GitHub mirror because the
-    /// <c>mkdocs-material</c> package on npm is a security placeholder
-    /// — the real distribution lives on GitHub + PyPI. Pinned to the
-    /// same Material build the lifted local bundle was taken from
-    /// (<c>9.7.6</c>); bump in lockstep with any refresh of the files
-    /// under <c>Templates/assets/</c>.
-    /// </remarks>
     public static byte[] DefaultCdnRoot { get; } =
         [.. "https://cdn.jsdelivr.net/gh/squidfunk/mkdocs-material@9.7.6/material/templates/assets"u8];
 

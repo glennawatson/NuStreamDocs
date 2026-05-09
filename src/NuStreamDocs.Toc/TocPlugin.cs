@@ -13,19 +13,11 @@ using NuStreamDocs.Toc.Logging;
 namespace NuStreamDocs.Toc;
 
 /// <summary>
-/// Per-page table-of-contents and permalink-anchor plugin, mirroring
-/// the mkdocs <c>toc</c> markdown extension's runtime behavior.
+/// Per-page table-of-contents and permalink-anchor plugin (mirrors mkdocs <c>toc</c>).
+/// In post-render: scans headings, slugifies them, splices <c>id</c> attributes and
+/// permalink anchors, and (when <see cref="TocOptions.MarkerSubstitute"/> is true)
+/// replaces a <c>&lt;!--@@toc@@--&gt;</c> marker with the rendered TOC fragment.
 /// </summary>
-/// <remarks>
-/// During the post-render phase:
-/// <list type="number">
-/// <item><description>Scan the input HTML for headings, slugify them.</description></item>
-/// <item><description>Rewrite the body with id attributes + permalink anchors.</description></item>
-/// <item><description>If <see cref="TocOptions.MarkerSubstitute"/> is true and a
-/// <c>&lt;!--@@toc@@--&gt;</c> marker is present in the rewritten output,
-/// splice the rendered TOC fragment in.</description></item>
-/// </list>
-/// </remarks>
 public sealed class TocPlugin : IPagePostRenderPlugin
 {
     /// <summary>Tiebreak that orders TOC marker substitution after the theme shell wrap (which uses the bare <see cref="PluginBand.Latest"/>).</summary>
@@ -37,7 +29,7 @@ public sealed class TocPlugin : IPagePostRenderPlugin
     /// <summary>Logger.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>UTF-8 bytes of <see cref="TocOptions.PermalinkSymbol"/> — encoded once at construction so the per-page rewrite never re-encodes the glyph.</summary>
+    /// <summary>UTF-8 bytes of the configured permalink glyph.</summary>
     private readonly byte[] _permalinkSymbolBytes;
 
     /// <summary>Initializes a new instance of the <see cref="TocPlugin"/> class with default options.</summary>

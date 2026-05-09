@@ -7,17 +7,10 @@ using System.Buffers;
 namespace NuStreamDocs.Markdown.Common;
 
 /// <summary>
-/// Vectorized marker probes used by <c>IPagePreRenderPlugin.NeedsRewrite</c>
-/// implementations to short-circuit per-page rewrites when the source
-/// contains none of the plugin's distinctive bytes.
+/// Vectorized marker probes for <c>IPagePreRenderPlugin.NeedsRewrite</c> implementations.
+/// Intentionally tolerates false-positives — the goal is the cheap "definitely no markers"
+/// answer that lets the build pipeline skip the rewriter pass entirely.
 /// </summary>
-/// <remarks>
-/// The probes intentionally accept some false-positives (e.g.
-/// <see cref="HasMarkSpan"/> matches any <c>==</c> sequence, which can
-/// also appear in code blocks) — the plugin's full rewriter will still
-/// scan precisely. The goal here is the cheap "definitely no markers"
-/// answer that lets the build pipeline skip the rewriter entirely.
-/// </remarks>
 public static class MarkdownMarkerProbes
 {
     /// <summary>Single-byte search set for caret / tilde markers (<c>^</c> + <c>~</c>).</summary>
@@ -68,12 +61,7 @@ public static class MarkdownMarkerProbes
     /// <summary>True when <paramref name="source"/> may contain the <c>markdown</c> attribute used by md-in-html.</summary>
     /// <param name="source">UTF-8 markdown source.</param>
     /// <returns>True when the source contains the bare or quoted form.</returns>
-    /// <remarks>
-    /// Recognizes both shapes mkdocs-material / Markdown Extra emit:
-    /// <c>&lt;div markdown="1"&gt;</c> and the bare <c>&lt;div markdown&gt;</c>. The token must be
-    /// followed by <c>=</c>, ASCII whitespace, or the tag-closing <c>&gt;</c> so plain prose
-    /// containing the word "markdown" doesn't trigger the rewriter pass.
-    /// </remarks>
+    /// <remarks>Recognizes <c>&lt;div markdown="1"&gt;</c> and the bare <c>&lt;div markdown&gt;</c>; prose containing the word "markdown" does not trigger.</remarks>
     public static bool HasMdInHtmlAttribute(ReadOnlySpan<byte> source)
     {
         const byte SkipPastTokenOffset = 8; // length of "markdown"

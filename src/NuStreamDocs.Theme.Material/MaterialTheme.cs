@@ -9,21 +9,10 @@ using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material;
 
-/// <summary>
-/// Material-styled theme: pre-compiled page + partial templates plus
-/// the shipped CSS / JS bundle.
-/// </summary>
-/// <remarks>
-/// Constructed once per build and shared across worker threads. The
-/// <see cref="Page"/> template is the entry point; partials resolve
-/// through <see cref="Partials"/> when a worker calls
-/// <c>page.Render(data, theme.Partials, writer)</c>. Static asset
-/// bytes are exposed through <see cref="StaticAssets"/> so the
-/// pipeline can write them out alongside rendered pages.
-/// </remarks>
+/// <summary>Material theme: compiled page + partial templates plus the bundled CSS / JS assets.</summary>
 public sealed class MaterialTheme : IThemePackage
 {
-    /// <summary>Embedded asset paths of the theme's static files.</summary>
+    /// <summary>Static asset paths shipped by the theme.</summary>
     private static readonly FilePath[] StaticAssetPaths =
     [
         "assets/stylesheets/material.min.css",
@@ -50,14 +39,9 @@ public sealed class MaterialTheme : IThemePackage
     public Template Page { get; }
 
     /// <summary>Gets the compiled partial registry, keyed by UTF-8 partial-name bytes.</summary>
-    /// <remarks>Built once at theme load and probed repeatedly across page renders via the byte-keyed alternate-lookup pattern.</remarks>
     public Dictionary<byte[], Template> Partials { get; }
 
-    /// <summary>
-    /// Gets the static-asset map, keyed by relative output path. Plain
-    /// <see cref="Dictionary{TKey, TValue}"/> exposed read-only — the bundle is tiny
-    /// (3-5 entries) and the freeze cost wouldn't repay itself.
-    /// </summary>
+    /// <summary>Gets the static-asset map, keyed by relative output path.</summary>
     public ReadOnlyDictionary<FilePath, byte[]> StaticAssets { get; }
 
     /// <inheritdoc/>

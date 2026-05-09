@@ -7,11 +7,6 @@ using System.IO.Compression;
 namespace NuStreamDocs.Optimize;
 
 /// <summary>Configuration for <see cref="OptimizePlugin"/>.</summary>
-/// <remarks>
-/// <see cref="Extensions"/> is stored as UTF-8 bytes per the project's byte-first pipeline rule.
-/// String-shaped construction goes through <c>OptimizeOptionsExtensions</c>'s
-/// <c>WithExtensions</c> / <c>AddExtensions</c> helpers, which encode once at the boundary.
-/// </remarks>
 /// <param name="Formats">Compression formats to emit.</param>
 /// <param name="GzipLevel">Compression level for gzip.</param>
 /// <param name="BrotliLevel">Compression level for brotli.</param>
@@ -26,7 +21,7 @@ public sealed record OptimizeOptions(
     int MinimumBytes,
     int Parallelism)
 {
-    /// <summary>Gets the default extension set worth precompressing — text-like assets that gain a lot from gzip/brotli.</summary>
+    /// <summary>Gets the default extension set — text-like assets worth precompressing.</summary>
     public static byte[][] DefaultExtensions { get; } =
     [
         [.. ".html"u8],

@@ -3,19 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using NuStreamDocs.Highlight.Languages.Scripting;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Builders;
 
-/// <summary>Generic single-state lexer rule-list builder for bespoke languages that don't fit a tighter family helper.</summary>
-/// <remarks>
-/// Consumed by <see cref="LuaLexer"/>, <see cref="NimLexer"/>, <see cref="JuliaLexer"/>,
-/// <see cref="MatlabLexer"/>, <see cref="RLexer"/>, <see cref="ErlangLexer"/>, and similar — each
-/// language declares its keyword sets, comment / string rules, and operator / punctuation tables
-/// once in a <see cref="SingleStateLexerConfig"/>, then calls <see cref="CreateLexer"/> to get a
-/// finished <see cref="Lexer"/>. The boilerplate <c>new(LanguageRuleBuilder.BuildSingleState(...))</c>
-/// triple, every keyword-rule line, and the standard whitespace / number rules all live here once.
-/// </remarks>
+/// <summary>
+/// Generic single-state lexer rule-list builder for languages that don't fit a tighter family
+/// helper.
+/// </summary>
 internal static class SingleStateLexerRules
 {
     /// <summary>Builds a single-state <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>

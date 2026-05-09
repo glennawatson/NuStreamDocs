@@ -9,27 +9,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Emits the nav tree as mkdocs-material-shaped HTML (<c>md-nav</c> /
-/// <c>md-nav__list</c>), straight into a UTF-8 buffer.
-/// </summary>
-/// <remarks>
-/// Two modes:
-/// <list type="bullet">
-/// <item><c>RenderFull</c> — every node, with the active branch flagged
-/// via <c>md-nav__item--active</c>. Matches mkdocs-material's default.</item>
-/// <item><c>RenderPruned</c> — only the ancestors of the current page
-/// plus its siblings + immediate children. Matches mkdocs-material's
-/// <c>navigation.prune</c>; on a 13K-page corpus this can drop per-page
-/// HTML by an order of magnitude.</item>
-/// </list>
-/// Both paths walk the flat <see cref="NavTree"/> by integer indices, write directly into the
-/// supplied <see cref="IBufferWriter{T}"/>, and never allocate a per-render buffer — the
-/// active-branch chain lives on the stack as a <see cref="Span{T}"/> of <c>int</c>. HTML attribute
-/// values come from controlled inputs (URLs we built, titles from frontmatter or filenames), so
-/// they're emitted without escaping; if the renderer ever takes untrusted input, the attribute
-/// writer needs encoding added.
-/// </remarks>
+/// <summary>Emits the nav tree as mkdocs-material-shaped HTML (<c>md-nav</c> / <c>md-nav__list</c>) into a UTF-8 buffer.</summary>
 internal static class NavRenderer
 {
     /// <summary>Stack-buffer slot count for the active-branch chain. ≥ realistic max nav depth on real corpora.</summary>

@@ -7,24 +7,10 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Mermaid;
 
-/// <summary>
-/// Mermaid diagram plugin. Rewrites
-/// <c>&lt;pre&gt;&lt;code class="language-mermaid"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
-/// blocks into a <c>&lt;pre class="mermaid"&gt;…&lt;/pre&gt;</c>
-/// container the mermaid runtime auto-discovers, and pulls the
-/// runtime in via a head <c>&lt;script&gt;</c> tag.
-/// </summary>
-/// <remarks>
-/// Implements <see cref="ICustomFenceHandler"/> so the
-/// SuperFences dispatcher claims <c>language-mermaid</c> blocks
-/// during its scan. Without SuperFences the plugin's own
-/// post-render pass walks the rendered HTML and retags the same
-/// blocks; with SuperFences the retag becomes a no-op because the
-/// dispatcher has already replaced them.
-/// </remarks>
+/// <summary>Renders <c>mermaid</c> fenced code blocks as mermaid diagrams and pulls in the mermaid runtime.</summary>
 public sealed class MermaidPlugin : IPagePostRenderPlugin, IHeadExtraProvider, ICustomFenceHandler
 {
-    /// <summary>UTF-8 head fragment that loads the mermaid runtime from a CDN and starts auto-discovery.</summary>
+    /// <summary>Head fragment that loads the mermaid runtime and starts auto-discovery.</summary>
     private static readonly byte[] HeadFragment =
         [.. """
 <script type="module">

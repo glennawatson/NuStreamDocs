@@ -6,12 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Versions;
 
-/// <summary>String / span construction helpers for the byte-shaped <see cref="VersionOptions"/> record.</summary>
-/// <remarks>
-/// Encodes the inputs once at construction so the <c>versions.json</c> writer flows pure UTF-8.
-/// Callers building from configuration files (which produce strings) reach for the string overloads;
-/// callers with byte-literal sources can pass <c>[.. "..."u8]</c> directly.
-/// </remarks>
+/// <summary>Construction helpers for <see cref="VersionOptions"/>.</summary>
 public static class VersionOptionsExtensions
 {
     /// <summary>Replaces the alias list with <paramref name="aliases"/>.</summary>

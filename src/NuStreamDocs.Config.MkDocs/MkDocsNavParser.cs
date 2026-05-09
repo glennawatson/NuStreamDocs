@@ -10,14 +10,9 @@ using NuStreamDocs.Nav;
 namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
-/// Parses an mkdocs.yml document's <c>nav:</c> tree (after the YAML→JSON conversion) into a
+/// Parses an mkdocs.yml document's <c>nav:</c> tree into a
 /// dialect-neutral <see cref="NavEntry"/> array.
 /// </summary>
-/// <remarks>
-/// Lives in the mkdocs reader assembly so dialect-specific shape parsing never leaks into core or
-/// the nav module. Recursive walker — each item is either a bare string (leaf with no title) or a
-/// single-key object whose value is a string (titled leaf or external link) or array (section).
-/// </remarks>
 public static class MkDocsNavParser
 {
     /// <summary>Reads the <c>nav</c> field from <paramref name="utf8Json"/> and returns the curated tree.</summary>

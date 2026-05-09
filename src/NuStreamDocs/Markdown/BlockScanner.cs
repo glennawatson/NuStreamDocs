@@ -7,23 +7,11 @@ using System.Buffers;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Single-pass UTF-8 block scanner.
+/// Single-pass UTF-8 block scanner. Emits one <see cref="BlockSpan"/> per line; multi-line block
+/// grouping (paragraph absorption, list bodies) is the downstream emitter's concern. Lines inside
+/// an open fenced-code block are classified as <see cref="BlockKind.FencedCodeContent"/>
+/// regardless of surface shape.
 /// </summary>
-/// <remarks>
-/// Walks the source as <see cref="ReadOnlySpan{Byte}"/> and emits one
-/// <see cref="BlockSpan"/> per line into a caller-supplied
-/// <see cref="IBufferWriter{T}"/>. No per-line allocations; no string
-/// materialization. Multi-line block grouping (paragraph absorption,
-/// list-item bodies, block-quote stitching) is a downstream concern —
-/// the inline parser and emitter walk the line stream and merge as
-/// needed.
-/// <para>
-/// Lines inside an open fenced code block are classified as
-/// <see cref="BlockKind.FencedCodeContent"/> regardless of their
-/// surface shape, so a stray <c>#</c> inside a fence does not look
-/// like a heading.
-/// </para>
-/// </remarks>
 public static class BlockScanner
 {
     /// <summary>Maximum heading level recognized by CommonMark ATX rules.</summary>
@@ -186,10 +174,7 @@ public static class BlockScanner
         Type6
     }
 
-    /// <summary>
-    /// Scans <paramref name="utf8"/> and writes one <see cref="BlockSpan"/> per
-    /// recognized line to <paramref name="writer"/>.
-    /// </summary>
+    /// <summary>Scans <paramref name="utf8"/> and writes one <see cref="BlockSpan"/> per recognized line to <paramref name="writer"/>.</summary>
     /// <param name="utf8">UTF-8 source buffer (no BOM expected).</param>
     /// <param name="writer">Sink for emitted block descriptors.</param>
     /// <returns>Number of blocks emitted.</returns>
@@ -307,13 +292,6 @@ public static class BlockScanner
     /// <param name="indent">Leading indent (bytes; tabs counted as 1, matching <see cref="LeadingIndent"/>).</param>
     /// <param name="markerLength">Marker length (bullet = 1, ordered = digit count + delimiter byte).</param>
     /// <returns>Content column where continuation lines must reach to stay inside the item.</returns>
-    /// <remarks>
-    /// CommonMark says one mandatory space after the marker, plus up to three additional spaces are
-    /// part of the marker indent. A single mandatory space gives the lower bound (<c>-foo</c>-style
-    /// items don't reach this branch — the classifier rejects them). Past one mandatory space, we
-    /// follow the actual whitespace run so author conventions like <c>-   text</c> (3 spaces, content
-    /// at column 4) keep continuation lines aligned with their author intent.
-    /// </remarks>
     private static int ComputeListContentIndent(ReadOnlySpan<byte> line, int indent, int markerLength)
     {
         var afterMarker = indent + markerLength;
@@ -649,12 +627,9 @@ public static class BlockScanner
     /// <param name="html">State to populate on success.</param>
     /// <returns>True when the line opens an HTML block.</returns>
     /// <remarks>
-    /// CommonMark spec § 4.6 defines seven HTML-block kinds. This implementation covers Type 1
-    /// (specific tags whose content is verbatim until a matching close tag) and Type 6 (a fixed
-    /// list of block-level tag names whose block ends at the next blank line). Types 2–5 (HTML
-    /// comment, processing instruction, declaration, CDATA) and Type 7 (any other complete tag
-    /// shape) are not yet handled — they don't surface in the API-page output the renderer was
-    /// failing on.
+    /// Covers Type 1 (specific tags closed by their matching close tag), Type 2 (HTML comment),
+    /// and Type 6 (fixed block-level tag whitelist closed by blank line). Other CommonMark
+    /// HTML-block kinds (PI, declaration, CDATA, Type 7) are not yet handled.
     /// </remarks>
     private static bool TryClassifyHtmlBlockOpen(ReadOnlySpan<byte> body, ref HtmlBlockState html)
     {
@@ -941,7 +916,6 @@ public static class BlockScanner
     /// <summary>True when <paramref name="tag"/> matches one of the CommonMark Type 6 block-level tags.</summary>
     /// <param name="tag">Lowercased ASCII tag-name slice.</param>
     /// <returns>True for any tag in the spec's Type 6 whitelist.</returns>
-    /// <remarks>The full Type 6 list per CommonMark spec § 4.6.</remarks>
     private static bool IsType6Tag(ReadOnlySpan<byte> tag)
     {
         var tags = Type6Tags;

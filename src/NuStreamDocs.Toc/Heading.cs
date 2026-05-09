@@ -4,17 +4,7 @@
 
 namespace NuStreamDocs.Toc;
 
-/// <summary>
-/// A heading the <see cref="HeadingScanner"/> located in rendered HTML.
-/// </summary>
-/// <remarks>
-/// All offsets index into the original UTF-8 byte snapshot. Existing
-/// <c>id</c> attribute values are stored as offset+length so the
-/// scanner never UTF-8 decodes them; the slug is computed once into a
-/// byte array (always ASCII per the slug rule) so the rewrite and TOC
-/// fragment passes can splice it back into the output stream without
-/// any further allocation or transcoding.
-/// </remarks>
+/// <summary>A heading located in rendered HTML. Offsets index into the original UTF-8 snapshot.</summary>
 /// <param name="Level">Heading level (1..6).</param>
 /// <param name="OpenTagStart">Byte offset of the <c>&lt;</c> in the open tag.</param>
 /// <param name="OpenTagEnd">Byte offset just past the <c>&gt;</c> of the open tag.</param>
@@ -23,7 +13,7 @@ namespace NuStreamDocs.Toc;
 /// <param name="TextEnd">Byte offset just past the last byte of inner content.</param>
 /// <param name="ExistingIdStart">Byte offset of an existing <c>id</c> attribute value, or <c>-1</c> when none.</param>
 /// <param name="ExistingIdLength">Length of the existing <c>id</c> attribute value, or <c>0</c> when none.</param>
-/// <param name="Slug">Final slug bytes assigned by <see cref="HeadingSlugifier"/>; ASCII per the slug rule. Empty until that pass runs.</param>
+/// <param name="Slug">Final slug bytes (ASCII); empty until <see cref="HeadingSlugifier"/> runs.</param>
 internal readonly record struct Heading(
     int Level,
     int OpenTagStart,

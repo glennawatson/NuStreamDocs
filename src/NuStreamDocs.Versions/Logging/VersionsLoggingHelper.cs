@@ -7,18 +7,10 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Versions.Logging;
 
-/// <summary>
-/// Source-generated logging helpers for the versions plugin.
-/// </summary>
-/// <remarks>
-/// The public entry points self-gate on
-/// <see cref="ILogger.IsEnabled(LogLevel)"/> so call sites can hand
-/// <see cref="DirectoryPath"/> values straight in without their own
-/// gating dance.
-/// </remarks>
+/// <summary>Source-generated logging helpers for the versions plugin.</summary>
 internal static partial class VersionsLoggingHelper
 {
-    /// <summary>Logs a manifest read at debug level — gated so the path conversion only runs when debug is enabled.</summary>
+    /// <summary>Logs a manifest read at debug level.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions discovered in the manifest.</param>
@@ -33,7 +25,7 @@ internal static partial class VersionsLoggingHelper
         LogManifestReadCore(logger, path, versionCount);
     }
 
-    /// <summary>Logs a manifest write at information level — gated so the path conversion only runs when information is enabled.</summary>
+    /// <summary>Logs a manifest write at information level.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions written to the manifest.</param>
@@ -48,14 +40,14 @@ internal static partial class VersionsLoggingHelper
         LogManifestWriteCore(logger, path, versionCount);
     }
 
-    /// <summary>Source-generated emitter for <see cref="LogManifestRead"/>; takes the already-converted path string.</summary>
+    /// <summary>Source-generated emitter for <see cref="LogManifestRead"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions discovered in the manifest.</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Read versions manifest from {Path}: {VersionCount} version(s)")]
     private static partial void LogManifestReadCore(ILogger logger, string path, int versionCount);
 
-    /// <summary>Source-generated emitter for <see cref="LogManifestWrite"/>; takes the already-converted path string.</summary>
+    /// <summary>Source-generated emitter for <see cref="LogManifestWrite"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions written to the manifest.</param>

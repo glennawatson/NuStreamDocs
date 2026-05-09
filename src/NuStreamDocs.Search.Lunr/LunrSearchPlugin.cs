@@ -13,30 +13,30 @@ namespace NuStreamDocs.Search.Lunr;
 /// <summary>Lunr-format search-index plugin.</summary>
 public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
 {
-    /// <summary>Forward-slash relative path the vendored Lunr runtime is written to in the rendered output.</summary>
+    /// <summary>Output path of the vendored Lunr runtime.</summary>
     private static readonly FilePath LunrRuntimePath = new("assets/javascripts/lunr.min.js");
 
-    /// <summary>Forward-slash relative path the bind glue is written to in the rendered output.</summary>
+    /// <summary>Output path of the bind glue script.</summary>
     private static readonly FilePath BindScriptPath = new("assets/javascripts/lunr-bind.js");
 
-    /// <summary>UTF-8 head-link snippet — the Lunr runtime followed by the deferred glue script.</summary>
+    /// <summary>UTF-8 head-extra snippet referencing the Lunr runtime and the deferred glue script.</summary>
     private static readonly byte[] HeadExtraBytes =
         [.. """
 <script src="/assets/javascripts/lunr.min.js" defer></script>
 <script src="/assets/javascripts/lunr-bind.js" defer></script>
 """u8];
 
-    /// <summary>Cached bind-script bytes; materialized once at type init so per-build <see cref="StaticAssets"/> reads don't re-copy the in-assembly literal.</summary>
+    /// <summary>Cached bind-script bytes.</summary>
     private static readonly byte[] BindScriptBytes = LunrBindScript.Bytes.ToArray();
 
-    /// <summary>Cached static-asset array; (path, bytes) pairs never vary so the outer array stays cached too.</summary>
+    /// <summary>Cached static-asset array surfaced via <see cref="IStaticAssetProvider"/>.</summary>
     private static readonly (FilePath Path, byte[] Bytes)[] StaticAssetSet =
     [
         (LunrRuntimePath, LunrAssets.LunrMinJsBytes()),
         (BindScriptPath, BindScriptBytes),
     ];
 
-    /// <summary>Captured option set; mirrored into the protected base properties.</summary>
+    /// <summary>Captured option set.</summary>
     private readonly LunrOptions _options;
 
     /// <summary>Initializes a new instance of the <see cref="LunrSearchPlugin"/> class with default options.</summary>

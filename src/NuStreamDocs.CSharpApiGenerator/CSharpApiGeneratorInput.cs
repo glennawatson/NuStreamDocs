@@ -5,14 +5,13 @@
 namespace NuStreamDocs.CSharpApiGenerator;
 
 /// <summary>
-/// Discriminated input source for <see cref="CSharpApiGeneratorOptions"/>.
-/// One of <see cref="NuGetManifestInput"/>, <see cref="NuGetPackagesInput"/>,
-/// <see cref="LocalAssembliesInput"/>, or <see cref="CustomInput"/> — the
-/// generator dispatches on the concrete shape at run time.
+/// Discriminated input source for <see cref="CSharpApiGeneratorOptions"/>. One of
+/// <see cref="NuGetManifestInput"/>, <see cref="NuGetPackagesInput"/>,
+/// <see cref="LocalAssembliesInput"/>, or <see cref="CustomInput"/>.
 /// </summary>
 public abstract record CSharpApiGeneratorInput
 {
-    /// <summary>Initializes a new instance of the <see cref="CSharpApiGeneratorInput"/> class. Internal-only constructor; sealed subtypes live in sibling files.</summary>
+    /// <summary>Initializes a new instance of the <see cref="CSharpApiGeneratorInput"/> class.</summary>
     private protected CSharpApiGeneratorInput()
     {
     }

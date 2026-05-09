@@ -7,9 +7,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace NuStreamDocs.Bibliography.Model;
 
 /// <summary>
-/// Classified locator label — the pandoc / AGLC4 universe of pinpoint
-/// kinds. <see cref="None"/> means "bare value, no label was present";
-/// the remaining members map to a concrete formatter prefix or shape.
+/// Classified locator label. <see cref="None"/> means "bare value, no label
+/// was present"; other members map to a concrete formatter prefix or shape.
 /// </summary>
 [SuppressMessage(
     "Design",

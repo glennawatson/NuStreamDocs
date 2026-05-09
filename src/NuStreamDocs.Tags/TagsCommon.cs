@@ -4,10 +4,10 @@
 
 namespace NuStreamDocs.Tags;
 
-/// <summary>Shared byte-level helpers used by both the discovery-time tag plugin and the post-build index writer.</summary>
+/// <summary>Shared helpers used by the tag plugin and the index writer.</summary>
 internal static class TagsCommon
 {
-    /// <summary>Initial-byte capacity hint for an emitted page; covers most pages without a resize.</summary>
+    /// <summary>Initial byte-capacity hint for an emitted page.</summary>
     public const int PageInitialCapacity = 2 * 1024;
 
     /// <summary>Length of the <c>.md</c> source extension stripped before composing slugs / URLs.</summary>

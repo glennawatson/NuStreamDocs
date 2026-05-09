@@ -4,12 +4,7 @@
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>Converts a build-time <see cref="NavNode"/> graph into the flat <see cref="NavTree"/> consumed by the renderer.</summary>
-/// <remarks>
-/// BFS layout: each node's direct children sit in a contiguous span inside
-/// <see cref="NavTree.Nodes"/>, so the renderer's child iteration is a span slice rather than a
-/// per-step class dereference. Run once per build during <see cref="NavPlugin.DiscoverAsync"/>.
-/// </remarks>
+/// <summary>Converts a build-time <see cref="NavNode"/> graph into the flat BFS-ordered <see cref="NavTree"/> consumed by the renderer.</summary>
 internal static class NavTreeFlattener
 {
     /// <summary>Default capacity hint for the working list.</summary>

@@ -9,16 +9,8 @@ namespace NuStreamDocs.Toc;
 
 /// <summary>
 /// Rewrites a UTF-8 HTML snapshot, splicing <c>id="slug"</c> attributes
-/// into heading open tags and inserting a permalink anchor right
-/// before the matching <c>&lt;/hN&gt;</c>.
+/// into heading open tags and inserting a permalink anchor before the matching close tag.
 /// </summary>
-/// <remarks>
-/// The rewriter walks the heading list in order and copies the spans
-/// between them straight from the snapshot, so untouched regions of
-/// the page (paragraphs, lists, code blocks) never round-trip through
-/// a <see cref="System.Text.StringBuilder"/>. Slug bytes come straight
-/// off the <see cref="Heading"/> record — they never UTF-16 round-trip.
-/// </remarks>
 internal static class HeadingRewriter
 {
     /// <summary>Length of the open-tag prefix <c>&lt;hN</c> the id attribute is injected after.</summary>
@@ -45,10 +37,7 @@ internal static class HeadingRewriter
     /// <summary>Writes the rewritten body of <paramref name="snapshot"/> into <paramref name="writer"/>.</summary>
     /// <param name="snapshot">Original HTML bytes.</param>
     /// <param name="headings">Headings the scanner returned, with slugs assigned.</param>
-    /// <param name="permalinkSymbolBytes">
-    /// UTF-8 bytes of the glyph rendered inside the permalink anchor; encoded once by the caller
-    /// (typically at plugin configure-time) so the rewrite never re-encodes per page.
-    /// </param>
+    /// <param name="permalinkSymbolBytes">UTF-8 bytes of the glyph rendered inside the permalink anchor.</param>
     /// <param name="writer">Target buffer writer.</param>
     public static void Rewrite(
         ReadOnlySpan<byte> snapshot,

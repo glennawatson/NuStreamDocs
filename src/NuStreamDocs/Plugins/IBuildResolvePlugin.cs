@@ -5,16 +5,11 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the build-wide cross-page resolve phase.
+/// Plugin participation in the build-wide cross-page resolve barrier. Runs sequentially after
+/// every page's <see cref="IPageScanPlugin.Scan"/> hook and before any page is written; use it to
+/// finalize cross-page state so <see cref="IPagePostResolvePlugin"/> hooks can rewrite each page
+/// against a frozen view.
 /// </summary>
-/// <remarks>
-/// Runs once after every page completes its <see cref="IPageScanPlugin.Scan"/>
-/// hook and before any page is written to disk. Sequential, in priority
-/// order. Plugins use this barrier to finalize cross-page state — resolve
-/// dangling references, build search indexes, validate links — so the
-/// per-page <see cref="IPagePostResolvePlugin"/> hook can rewrite each
-/// page's bytes against a frozen view of the world.
-/// </remarks>
 public interface IBuildResolvePlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the resolve phase.</summary>

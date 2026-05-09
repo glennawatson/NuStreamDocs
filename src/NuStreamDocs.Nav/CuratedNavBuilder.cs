@@ -9,17 +9,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Builds a <see cref="NavNode"/> tree from a curated <see cref="NavEntry"/> array (mkdocs.yml
-/// <c>nav:</c> or a docfx <c>toc.yml</c> reader). Falls back to <see cref="NavTreeBuilder"/> for
-/// the auto-discovery case.
-/// </summary>
-/// <remarks>
-/// Per-entry title resolution mirrors mkdocs / awesome-nav: explicit title from the entry first,
-/// then the file's front-matter <c>title:</c>, then a <see cref="Path.GetFileNameWithoutExtension(string)"/>
-/// fallback. UTF-8 stays the storage format end-to-end — the only string materialization is at the
-/// file-system boundary (one decode per leaf to compose the absolute path for front-matter peek).
-/// </remarks>
+/// <summary>Builds a <see cref="NavNode"/> tree from a curated <see cref="NavEntry"/> array (mkdocs.yml <c>nav:</c> or docfx <c>toc.yml</c>).</summary>
 internal static class CuratedNavBuilder
 {
     /// <summary>UTF-8 markdown extension bytes.</summary>

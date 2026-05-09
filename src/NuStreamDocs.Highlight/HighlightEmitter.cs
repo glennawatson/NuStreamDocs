@@ -23,7 +23,7 @@ public static class HighlightEmitter
         lexer.Tokenize(source.Span, state, EmitFromState);
     }
 
-    /// <summary>Static <see cref="Lexer.TokenSink{TState}"/> emitting one token from <paramref name="state"/>; method-group avoids the per-call closure alloc.</summary>
+    /// <summary>Emits one token from <paramref name="state"/>.</summary>
     /// <param name="state">Captured source + writer.</param>
     /// <param name="offset">Token offset.</param>
     /// <param name="length">Token length.</param>
@@ -66,10 +66,7 @@ public static class HighlightEmitter
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>
-    /// Encapsulates the state required for token emission during the highlighting process,
-    /// including the source data and the output writer.
-    /// </summary>
+    /// <summary>State captured for the token-emission callback.</summary>
     /// <param name="Source">UTF-8 source bytes.</param>
     /// <param name="Writer">UTF-8 sink.</param>
     private readonly record struct EmitState(ReadOnlyMemory<byte> Source, IBufferWriter<byte> Writer);

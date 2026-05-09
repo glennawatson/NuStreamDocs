@@ -7,15 +7,8 @@ using NuStreamDocs.Config.MkDocs;
 namespace NuStreamDocs.Config.Zensical;
 
 /// <summary>
-/// <see cref="IConfigReader"/> implementation that reads
-/// Zensical-flavored <c>zensical.toml</c> via the in-house TOML to
-/// UTF-8 JSON pipeline.
+/// <see cref="IConfigReader"/> implementation for Zensical-flavored <c>zensical.toml</c> files.
 /// </summary>
-/// <remarks>
-/// The TOML pipeline produces the same JSON shape
-/// <see cref="MkDocsConfigJsonParser"/> understands, so the post-
-/// conversion path is shared between formats.
-/// </remarks>
 public sealed class ZensicalConfigReader : IConfigReader
 {
     /// <inheritdoc/>

@@ -7,24 +7,13 @@ using System.Buffers;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin contract that contributes a fence handler to the
-/// pymdownx-style superfences dispatcher. Any
-/// <see cref="IPlugin"/> can additionally implement this to
-/// claim a fenced-code language and render it as bespoke HTML
-/// instead of the default <c>&lt;pre&gt;&lt;code&gt;</c> block.
+/// Plugin contract that contributes a fence handler to the superfences dispatcher; claims a
+/// fenced-code language and renders it as bespoke HTML instead of the default
+/// <c>&lt;pre&gt;&lt;code&gt;</c> block.
 /// </summary>
-/// <remarks>
-/// The dispatcher (in <c>NuStreamDocs.SuperFences</c>) collects
-/// every handler exposed by registered plugins during
-/// <c>OnConfigure</c>, then in <c>OnRenderPage</c> walks the
-/// rendered HTML looking for the <c>&lt;pre&gt;&lt;code class="language-{Language}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
-/// blocks whose language matches a registered handler. Matched
-/// blocks are replaced wholesale with the handler's output.
-/// </remarks>
 public interface ICustomFenceHandler
 {
     /// <summary>Gets the UTF-8 language identifier this handler claims (e.g. <c>"mermaid"u8</c>, <c>"math"u8</c>).</summary>
-    /// <remarks>Implementations should return a UTF-8 literal so the dispatcher's per-page byte-keyed lookup never has to transcode at registration or dispatch time.</remarks>
     ReadOnlySpan<byte> Language { get; }
 
     /// <summary>Renders <paramref name="content"/> into <paramref name="writer"/>.</summary>

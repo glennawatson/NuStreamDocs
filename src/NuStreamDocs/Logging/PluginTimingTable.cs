@@ -8,20 +8,17 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Logging;
 
-/// <summary>Owns per-plugin timing for one build: measures hook invocations, accumulates the totals, and emits the end-of-build summary log.</summary>
-/// <remarks>
-/// One instance per <c>BuildPipeline.RunAsync</c> call. Each hook invocation enters a
-/// <see cref="Measure"/> scope; <see cref="Emit"/> dumps the table at end-of-build, sorted by
-/// total time descending. Plugins under <see cref="SignificantSeconds"/> drop to Debug so the
-/// Info-level summary stays focused on the long-runners.
-/// </remarks>
+/// <summary>
+/// Owns per-plugin timing for one build: measures hook invocations, accumulates totals, and emits
+/// an end-of-build summary log sorted by total time descending. Plugins under <see
+/// cref="SignificantSeconds"/> drop to Debug.
+/// </summary>
 public sealed class PluginTimingTable
 {
-    /// <summary>Threshold (in seconds) under which an entry is logged at Debug level rather than Info.</summary>
-    /// <remarks>10ms — keeps end-of-build noise from no-op hooks out of the default-level summary.</remarks>
+    /// <summary>Threshold (in seconds) under which an entry is logged at Debug level rather than Info — 10ms.</summary>
     private const double SignificantSecondsThreshold = 0.010;
 
-    /// <summary>Plugin-name → cumulative ticks. <see cref="ConcurrentDictionary{TKey,TValue}"/> for the parallel-render hook path; configure / finalize fire serially.</summary>
+    /// <summary>Plugin-name → cumulative ticks.</summary>
     private readonly ConcurrentDictionary<byte[], long> _ticks = new(ByteArrayComparer.Instance);
 
     /// <summary>Gets the threshold under which an entry drops to Debug in <see cref="Emit"/>.</summary>
@@ -38,7 +35,7 @@ public sealed class PluginTimingTable
     /// <summary>Adds a pre-captured tick delta to <paramref name="pluginName"/>'s running total.</summary>
     /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes.</param>
     /// <param name="elapsedTicks"><see cref="Stopwatch"/>-frequency tick delta from a caller-managed timestamp.</param>
-    /// <remarks>Exposed for hot paths that already have the delta in hand (e.g. callers timing several invocations in one shot); prefer <see cref="Measure"/> elsewhere.</remarks>
+    /// <remarks>Prefer <see cref="Measure"/>; this overload is for callers that already have the delta in hand.</remarks>
     public void Add(byte[] pluginName, long elapsedTicks)
     {
         ArgumentNullException.ThrowIfNull(pluginName);
@@ -92,7 +89,6 @@ public sealed class PluginTimingTable
     }
 
     /// <summary>Disposable scope returned from <see cref="Measure"/>; captures <see cref="Stopwatch.GetTimestamp"/> at entry and accumulates the delta on disposal.</summary>
-    /// <remarks>The <c>using</c> compiler lowering disposes exactly once, so no re-entry guard is needed.</remarks>
     public readonly record struct MeasurementScope(PluginTimingTable Table, byte[] PluginName) : IDisposable
     {
         /// <summary>Stopwatch timestamp captured at scope entry.</summary>

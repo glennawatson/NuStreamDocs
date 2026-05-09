@@ -7,12 +7,6 @@ using System.Text;
 namespace NuStreamDocs.Common;
 
 /// <summary>String / set conversion helpers for UTF-8 byte snapshots stored as <c>byte[][]</c>.</summary>
-/// <remarks>
-/// Plugins keep their option-record list fields as <c>byte[][]</c> (encode-once-at-construction)
-/// but sometimes need a string-keyed lookup at run time — typically when matching against an API
-/// that already produces strings (e.g. <see cref="Path.GetExtension(string)"/>). These helpers
-/// consolidate the decode-once-at-build pattern so consumers only pass the source array.
-/// </remarks>
 public static class ByteArrayCollectionExtensions
 {
     /// <summary>Decodes every entry as UTF-8 into a <see cref="HashSet{T}"/> keyed by the supplied comparer.</summary>

@@ -8,18 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.LinkValidator;
 
-/// <summary>
-/// Single in-memory store populated by one parallel sweep of the
-/// emitted site. Both validators read from this; the disk tree is
-/// never re-walked.
-/// </summary>
-/// <remarks>
-/// Built via <see cref="BuildAsync"/> at finalize time. All keys and
-/// values are raw UTF-8 byte arrays; the corpus is keyed on a
-/// byte-array <see cref="Dictionary{TKey, TValue}"/> with
-/// <see cref="ByteArrayComparer"/> so the validator's per-link
-/// resolution does no UTF-16 transcoding.
-/// </remarks>
+/// <summary>In-memory inventory of every page in the rendered site, consumed by both validators.</summary>
 public sealed class ValidationCorpus
 {
     /// <summary>Lowercased asset extensions (with leading dot) treated as static assets rather than pages.</summary>
@@ -110,10 +99,9 @@ public sealed class ValidationCorpus
         return _pages.ContainsKey(pageUrl);
     }
 
-    /// <summary>Tests whether a page exists at <paramref name="pageUrl"/> via the string-shaped diagnostic boundary.</summary>
+    /// <summary>Tests whether a page exists at <paramref name="pageUrl"/>.</summary>
     /// <param name="pageUrl">Site-relative URL string.</param>
     /// <returns>True when the page is in the corpus.</returns>
-    /// <remarks>String adapter retained for tests and diagnostic-layer callers; performance-critical paths use the byte overload.</remarks>
     public bool ContainsPage(string pageUrl)
     {
         ArgumentException.ThrowIfNullOrEmpty(pageUrl);
@@ -130,7 +118,7 @@ public sealed class ValidationCorpus
         return _pages.TryGetValue(pageUrl, out page!);
     }
 
-    /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/> via the string-shaped diagnostic boundary.</summary>
+    /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>.</summary>
     /// <param name="pageUrl">Site-relative URL string.</param>
     /// <param name="page">Resolved page on success.</param>
     /// <returns>True when found.</returns>
@@ -140,16 +128,10 @@ public sealed class ValidationCorpus
         return _pages.TryGetValue(Encoding.UTF8.GetBytes(pageUrl), out page!);
     }
 
-    /// <summary>Resolves a directory-URL-tolerant <paramref name="pageUrl"/> to its <see cref="PageLinks"/>.</summary>
+    /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>, accepting directory-URL variants (<c>foo/</c>, <c>foo</c>, empty path).</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>
     /// <param name="page">Resolved page on success.</param>
-    /// <returns>True when the URL or any of its directory-URL variants is in the corpus.</returns>
-    /// <remarks>
-    /// Tries the supplied bytes verbatim, then the directory-URL forms
-    /// <c>foo/</c> → <c>foo/index.html</c>, <c>foo</c> → <c>foo/index.html</c> / <c>foo.html</c>,
-    /// and <c>(empty)</c> → <c>index.html</c>. Required because <c>UseDirectoryUrls</c>
-    /// emits <c>page/index.html</c> on disk while in-page hrefs render as <c>page/</c>.
-    /// </remarks>
+    /// <returns>True when the URL or any directory-URL variant is in the corpus.</returns>
     public bool TryResolvePage(ReadOnlySpan<byte> pageUrl, out PageLinks page)
     {
         var lookup = _pages.GetAlternateLookup<ReadOnlySpan<byte>>();
@@ -232,7 +214,7 @@ public sealed class ValidationCorpus
         return Encoding.UTF8.GetBytes(relative);
     }
 
-    /// <summary>Scans one page's HTML into a <see cref="PageLinks"/>, classifying values in bytes before allocating any byte array.</summary>
+    /// <summary>Scans one page's HTML into a <see cref="PageLinks"/>.</summary>
     /// <param name="pageUrl">Page URL bytes.</param>
     /// <param name="bytes">UTF-8 HTML.</param>
     /// <returns>The captured inventory.</returns>

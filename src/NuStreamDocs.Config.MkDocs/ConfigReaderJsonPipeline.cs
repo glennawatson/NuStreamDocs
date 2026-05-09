@@ -9,9 +9,8 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
-/// Shared YAML/TOML → UTF-8 JSON → <see cref="MkDocsConfig"/> pipeline used by
-/// every <see cref="IConfigReader"/>. The format-specific bit is the converter
-/// callback; the buffer-rent / json-write / parse plumbing is identical.
+/// Shared source-to-JSON-to-<see cref="MkDocsConfig"/> pipeline used by every
+/// <see cref="IConfigReader"/>; the caller supplies the format-specific converter.
 /// </summary>
 public static class ConfigReaderJsonPipeline
 {

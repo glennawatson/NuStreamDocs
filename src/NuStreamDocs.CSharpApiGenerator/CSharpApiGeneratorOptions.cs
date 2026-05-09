@@ -7,28 +7,7 @@ using SourceDocParser;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// Configuration options for the C# reference generator.
-/// </summary>
-/// <remarks>
-/// <para>
-/// <see cref="Inputs"/> is a list of input shapes — manifest, inline
-/// packages, local DLLs, custom <see cref="IAssemblySource"/> — that
-/// the generator concatenates into a single walk. A single entry runs
-/// the underlying source directly; multiple entries are wrapped in a
-/// composite, letting callers mix shapes (e.g. NuGet manifest for
-/// third-party packages plus local DLLs for in-development assemblies).
-/// </para>
-/// <para>
-/// <see cref="Mode"/> selects how the result is delivered: emit
-/// Markdown into the docs tree (the default, picked up by normal page
-/// discovery) or stash the catalog in memory for direct consumers.
-/// </para>
-/// <para>
-/// Use the <c>From*</c> factory helpers in callers; constructing the
-/// record by hand is supported but verbose.
-/// </para>
-/// </remarks>
+/// <summary>Configuration options for the C# reference generator.</summary>
 /// <param name="Inputs">Assembly-acquisition strategies; concatenated in order.</param>
 /// <param name="OutputMarkdownSubdirectory">Output subdirectory under the docs root for emit-mode Markdown.</param>
 /// <param name="Mode">How metadata is handed to the build pipeline; defaults to <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</param>

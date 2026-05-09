@@ -4,18 +4,8 @@
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Lightweight type-safe wrapper around a file path string. Pure path manipulation; never touches
-/// the filesystem. Single <see cref="string"/> field — same memory cost as a plain string, free
-/// <see cref="object.Equals(object?)"/> / <see cref="object.GetHashCode()"/> via the record struct.
-/// </summary>
-/// <remarks>
-/// Sister to <see cref="DirectoryPath"/>. Use across public APIs that take a path to a single file
-/// (page source, asset, manifest, etc.). BCL interop is implicit through the conversion to
-/// <see cref="string"/>; methods like <see cref="File"/>'s <c>OpenRead</c> work directly.
-/// </remarks>
-/// <param name="Value">The underlying path string. The wrapper does not normalize separators —
-/// callers that need canonicalization use <see cref="Path.GetFullPath(string)"/> at the boundary.</param>
+/// <summary>Type-safe file path wrapper. Pure path manipulation; never touches the filesystem until an explicit method is called. Implicitly converts to and from <see cref="string"/>.</summary>
+/// <param name="Value">The underlying path string. Not normalized — use <see cref="Path.GetFullPath(string)"/> for canonicalization.</param>
 public readonly record struct FilePath(string Value)
 {
     /// <summary>Gets a value indicating whether this path is empty (uninitialized / placeholder).</summary>

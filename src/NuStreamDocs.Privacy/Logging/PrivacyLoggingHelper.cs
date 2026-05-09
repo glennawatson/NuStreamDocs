@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.Privacy.Logging;
 
-/// <summary>
-/// Source-generated logging helpers for the privacy plugin.
-/// </summary>
+/// <summary>Source-generated logging helpers for the privacy plugin.</summary>
 internal static partial class PrivacyLoggingHelper
 {
     /// <summary>Logs the start of asset localization.</summary>

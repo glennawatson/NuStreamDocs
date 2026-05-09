@@ -11,12 +11,6 @@ namespace NuStreamDocs.Icons.Material;
 /// Plugin that contributes Google Material icon-font references to
 /// every page's <c>&lt;head&gt;</c>.
 /// </summary>
-/// <remarks>
-/// Writes UTF-8 bytes directly through the supplied
-/// <see cref="IBufferWriter{T}"/>; option strings come from
-/// dev-controlled configuration so they are emitted without HTML
-/// encoding.
-/// </remarks>
 public sealed class MaterialIconsPlugin : IPlugin, IHeadExtraProvider
 {
     /// <summary>Configured option set.</summary>

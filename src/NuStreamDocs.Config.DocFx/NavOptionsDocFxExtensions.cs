@@ -8,8 +8,7 @@ namespace NuStreamDocs.Config.DocFx;
 
 /// <summary>
 /// Fluent extensions that load a curated nav tree from docfx-style <c>toc.yml</c> files into
-/// <see cref="NavOptions.CuratedEntries"/>. Keeps docfx-specific serialization isolated from
-/// <c>NuStreamDocs.Nav</c> so the core nav module never references a config dialect.
+/// <see cref="NavOptions.CuratedEntries"/>.
 /// </summary>
 public static class NavOptionsDocFxExtensions
 {

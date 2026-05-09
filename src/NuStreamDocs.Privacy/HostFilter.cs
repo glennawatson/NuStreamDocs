@@ -6,9 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// A filter that accepts or rejects URLs based on their host name.
-/// </summary>
+/// <summary>Accepts or rejects URLs based on host allow/skip lists and optional URL-level glob patterns.</summary>
 internal sealed class HostFilter
 {
     /// <summary>Pre-encoded lowercase UTF-8 bytes of the skip list, for the byte fast-reject path.</summary>
@@ -79,7 +77,6 @@ internal sealed class HostFilter
     /// <summary>Returns a fresh ASCII-lowercased copy of <paramref name="hosts"/>; <c>[]</c> when the input is null/empty.</summary>
     /// <param name="hosts">UTF-8 host names; may be null.</param>
     /// <returns>Lowercased byte arrays.</returns>
-    /// <remarks>The byte path uses the lowercase form as the comparand for <see cref="AsciiByteHelpers.EqualsIgnoreAsciiCase"/>, which expects its second argument lowercase.</remarks>
     private static byte[][] ToLowerCopy(byte[][]? hosts)
     {
         if (hosts is null or [])

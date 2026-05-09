@@ -8,18 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Autorefs;
 
-/// <summary>
-/// Rewrites <c>@autoref:ID</c> markers inside emitted HTML to the URL
-/// resolved from an <see cref="AutorefsRegistry"/>.
-/// </summary>
-/// <remarks>
-/// The marker syntax is whatever a renderer or theme plugin emits:
-/// <c>href="@autoref:System.String"</c> on an anchor, for example.
-/// On finalize we walk every <c>.html</c> in the output tree, scan for
-/// the prefix, and substitute the resolved URL. Unresolved IDs are
-/// left in place — surfacing them in the output makes the missing
-/// reference obvious to a reader and to a strict-mode CI gate.
-/// </remarks>
+/// <summary>Rewrites <c>@autoref:ID</c> markers in emitted HTML to URLs resolved from an <see cref="AutorefsRegistry"/>; unresolved markers fall back to <c>#</c>.</summary>
 public static class AutorefsRewriter
 {
     /// <summary>Rewrites every <c>.html</c> file beneath <paramref name="outputRoot"/> in place.</summary>
@@ -120,16 +109,13 @@ public static class AutorefsRewriter
         return RewriteSpanCore(source, registry, sink, logger: null, sourcePage: null, ref totals);
     }
 
-    /// <summary>
-    /// Streams a rewrite of <paramref name="source"/> bytes into <paramref name="sink"/>, returning
-    /// the resolved / missing counts and emitting per-reference log events.
-    /// </summary>
+    /// <summary>Streams a rewrite of <paramref name="source"/> into <paramref name="sink"/>, emitting per-reference log events.</summary>
     /// <param name="source">UTF-8 input.</param>
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="sink">Writer to receive the rewritten bytes.</param>
     /// <param name="logger">Logger for per-reference events.</param>
     /// <param name="sourcePage">Page identifier surfaced in unresolved warnings.</param>
-    /// <returns>The number of resolved and missing references encountered while rewriting <paramref name="source"/>.</returns>
+    /// <returns>Resolved and missing reference counts.</returns>
     public static RewriteTotals RewriteSpan(
         ReadOnlySpan<byte> source,
         AutorefsRegistry registry,
@@ -170,7 +156,7 @@ public static class AutorefsRewriter
         File.WriteAllBytes(path.Value, sink.WrittenSpan);
     }
 
-    /// <summary>One canonical scan-and-substitute loop; logging fires only when <paramref name="logger"/> is non-null.</summary>
+    /// <summary>Scan-and-substitute loop; logging fires only when <paramref name="logger"/> is non-null.</summary>
     /// <param name="source">UTF-8 input.</param>
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="sink">Output sink.</param>
@@ -204,7 +190,7 @@ public static class AutorefsRewriter
         return changed;
     }
 
-    /// <summary>Emits one matched <c>@autoref:ID</c> — resolved bytes when the registry hits, or the original marker bytes when it misses.</summary>
+    /// <summary>Emits one matched <c>@autoref:ID</c>; on a miss writes <c>#</c>.</summary>
     /// <param name="source">UTF-8 input.</param>
     /// <param name="match">Match offsets covering the marker + ID.</param>
     /// <param name="registry">Registry to resolve against.</param>

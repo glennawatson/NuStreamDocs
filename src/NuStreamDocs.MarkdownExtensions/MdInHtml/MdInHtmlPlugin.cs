@@ -7,19 +7,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.MdInHtml;
 
-/// <summary>
-/// Markdown-in-HTML plugin (Markdown Extra <c>md_in_html</c>).
-/// Recognizes HTML block-level tags carrying
-/// <c>markdown="1"</c> / <c>markdown="block"</c>, strips the
-/// attribute, and pads the inner content with blank lines so the
-/// CommonMark block parser ends the surrounding HTML block early
-/// and parses the body as Markdown.
-/// </summary>
-/// <remarks>
-/// This is the block-mode subset of pymdownx + Markdown Extra's
-/// <c>md_in_html</c>; <c>markdown="span"</c> (inline-only) is
-/// treated the same as block mode for now.
-/// </remarks>
+/// <summary>Markdown-in-HTML plugin — strips <c>markdown="1"</c> / <c>markdown="block"</c> attributes from HTML blocks and pads the inner content so the body parses as Markdown.</summary>
 public sealed class MdInHtmlPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>

@@ -8,11 +8,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.CaretTilde;
 
 /// <summary>
-/// Caret + tilde plugin. Rewrites <c>^x^</c> as <c>&lt;sup&gt;</c>,
-/// <c>^^x^^</c> as <c>&lt;ins&gt;</c>, <c>~x~</c> as <c>&lt;sub&gt;</c>,
-/// and <c>~~x~~</c> as <c>&lt;del&gt;</c> — covering pymdownx.caret +
-/// pymdownx.tilde defaults. Fenced and inline code are passed
-/// through verbatim.
+/// Caret + tilde plugin — rewrites <c>^x^</c> / <c>^^x^^</c> / <c>~x~</c> / <c>~~x~~</c> into
+/// <c>&lt;sup&gt;</c> / <c>&lt;ins&gt;</c> / <c>&lt;sub&gt;</c> / <c>&lt;del&gt;</c>. Code spans
+/// pass through.
 /// </summary>
 public sealed class CaretTildePlugin : IPagePreRenderPlugin
 {

@@ -9,23 +9,13 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Config.Zensical;
 
 /// <summary>
-/// Minimal TOML to UTF-8 JSON converter targeting Zensical's config
-/// shape.
+/// Minimal TOML to UTF-8 JSON converter targeting Zensical's config shape.
 /// </summary>
 /// <remarks>
-/// Span-based; consumes <see cref="ReadOnlySpan{Byte}"/> and writes
-/// through a caller-supplied <see cref="Utf8JsonWriter"/> with no
-/// UTF-16 round trip. Recognized:
-/// <list type="bullet">
-/// <item>top-level <c>key = value</c> entries (string, int, bool),</item>
-/// <item><c>[table]</c> headers introducing nested objects,</item>
-/// <item><c>[table.subtable]</c> dotted-table headers,</item>
-/// <item><c>#</c> comments.</item>
-/// </list>
-/// Out of scope on the first ship: arrays-of-tables (<c>[[x]]</c>),
-/// inline tables (<c>{ a = 1 }</c>), arrays, multi-line strings,
-/// dates. The shape covers what Zensical's own
-/// <c>zensical.toml</c> uses today.
+/// Recognized: top-level <c>key = value</c> entries (string, int, bool),
+/// <c>[table]</c> and <c>[table.subtable]</c> headers, and <c>#</c> comments.
+/// Arrays-of-tables, inline tables, arrays, multi-line strings, and dates
+/// are not supported.
 /// </remarks>
 public static class TomlToJson
 {

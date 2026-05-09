@@ -6,21 +6,7 @@ using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// Builder-extension surface for <see cref="NavPlugin"/>.
-/// </summary>
-/// <remarks>
-/// Each plugin assembly ships its own <c>DocBuilder*Extensions</c>
-/// static class so consumers register with a single readable line:
-/// <code>
-/// new DocBuilder()
-///     .UseNav(opts =&gt; opts with { HideEmptySections = false })
-///     .Build();
-/// </code>
-/// The generic <c>UsePlugin&lt;TPlugin&gt;()</c> on
-/// <see cref="DocBuilder"/> remains the AOT seam; these helpers just
-/// capture options before the plugin instance is constructed.
-/// </remarks>
+/// <summary>Builder-extension surface for <see cref="NavPlugin"/>.</summary>
 public static class DocBuilderNavExtensions
 {
     /// <summary>Registers <see cref="NavPlugin"/> with default options.</summary>

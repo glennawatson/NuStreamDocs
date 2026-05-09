@@ -7,32 +7,17 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Metadata;
 
 /// <summary>
-/// Plugin that inherits frontmatter from directory-level
-/// <c>_meta.yml</c> files and per-page <c>page.md.meta.yml</c>
-/// sidecars into each page's frontmatter, byte-level.
+/// Inherits frontmatter from directory-level <c>_meta.yml</c> files and per-page
+/// <c>page.md.meta.yml</c> sidecars into each page's frontmatter. Precedence
+/// (highest to lowest): page's own frontmatter, sidecar, closest ancestor directory,
+/// further ancestors. Only keys absent from the page itself are spliced.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Concept-level inspired by Statiq's directory / sidecar metadata
-/// model — but the implementation here is byte-level UTF-8: walks
-/// the input root once during the configure phase to build a
-/// <see cref="MetadataRegistry"/>, then participates in the
-/// pre-render phase so the per-page splice happens in the same
-/// scratch-buffer pass as every other Markdown rewriter.
-/// </para>
-/// <para>
-/// Precedence: page's own frontmatter > sidecar > closest ancestor
-/// directory > further ancestor. Only keys absent from the page
-/// itself are spliced; keys are appended in the page's frontmatter
-/// region with no reformatting.
-/// </para>
-/// </remarks>
 public sealed class MetadataPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>
     private readonly MetadataOptions _options;
 
-    /// <summary>Registry built at configure time; <see cref="MetadataRegistry.Empty"/> until the first <see cref="ConfigureAsync"/> completes.</summary>
+    /// <summary>Registry built at configure time.</summary>
     private MetadataRegistry _registry = MetadataRegistry.Empty;
 
     /// <summary>Initializes a new instance of the <see cref="MetadataPlugin"/> class with default options.</summary>
@@ -63,11 +48,6 @@ public sealed class MetadataPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
     }
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Splicing only happens when the configure-phase registry collected at least one entry from
-    /// directory-level <c>_meta.yml</c> files or per-page sidecars; corpora without any of those
-    /// skip the rewrite (and the pipeline's scratch rental) entirely.
-    /// </remarks>
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => !ReferenceEquals(_registry, MetadataRegistry.Empty);
 
     /// <inheritdoc/>

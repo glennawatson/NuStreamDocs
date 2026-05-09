@@ -7,12 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.CriticMarkup;
 
-/// <summary>
-/// Stateless UTF-8 CriticMarkup rewriter. Replaces <c>{++ … ++}</c>
-/// / <c>{-- … --}</c> / <c>{~~ old ~&gt; new ~~}</c> /
-/// <c>{== … ==}</c> / <c>{&gt;&gt; … &lt;&lt;}</c> spans with the
-/// HTML pymdownx.critic produces.
-/// </summary>
+/// <summary>Rewrites CriticMarkup spans (<c>{++…++}</c>, <c>{--…--}</c>, <c>{~~old~&gt;new~~}</c>, <c>{==…==}</c>, <c>{&gt;&gt;…&lt;&lt;}</c>) into HTML.</summary>
 internal static class CriticMarkupRewriter
 {
     /// <summary>Width of the opening <c>{xx</c> stub (e.g. <c>{++</c>) and the closing <c>xx}</c> tail.</summary>

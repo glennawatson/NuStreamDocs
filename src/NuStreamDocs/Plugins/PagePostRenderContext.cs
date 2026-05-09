@@ -7,17 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
-/// <summary>
-/// Per-page context handed to <see cref="IPagePostRenderPlugin.PostRender"/>.
-/// </summary>
-/// <remarks>
-/// Carries the rendered HTML bytes and a sink the rewritten HTML is
-/// written into. The build pipeline ping-pongs two pooled buffers so
-/// each post-render plugin sees a fresh writer; plugins that don't need
-/// to rewrite return <c>false</c> from <see cref="IPagePostRenderPlugin.NeedsRewrite"/>
-/// and the engine skips both the buffer swap and the call to
-/// <see cref="IPagePostRenderPlugin.PostRender"/>.
-/// </remarks>
+/// <summary>Per-page context handed to <see cref="IPagePostRenderPlugin.PostRender"/>.</summary>
 public readonly ref struct PagePostRenderContext
 {
     /// <summary>Initializes a new instance of the <see cref="PagePostRenderContext"/> struct.</summary>

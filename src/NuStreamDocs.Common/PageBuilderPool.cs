@@ -7,47 +7,28 @@ using System.Collections.Concurrent;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>
-/// Thread-static cache of <see cref="ArrayBufferWriter{T}"/> instances
-/// used as the per-page UTF-8 HTML output buffer (and now also as
-/// preprocessor ping-pong scratch buffers).
-/// </summary>
-/// <remarks>
-/// Two-tier pool: a thread-static slot array keeps the hot rent/return
-/// pair allocation- and contention-free when a single thread does the
-/// whole page (no async hop). A shared <see cref="ConcurrentQueue{T}"/>
-/// catches writers when an async continuation Disposes the rental on a
-/// different worker than the one that Rented — without it the
-/// thread-static cache would miss every cross-thread page and we'd
-/// allocate fresh writers per page on a 13K-page corpus.
-/// <para>
-/// Both tiers cap at <see cref="MaxCachedCapacity"/> per writer so an
-/// outlier page doesn't pin multi-MB buffers, and the shared queue is
-/// bounded at <see cref="MaxSharedPoolSize"/> entries so the pool
-/// stops growing once warm.
-/// </para>
-/// </remarks>
+/// <summary>Pool of UTF-8 <see cref="ArrayBufferWriter{T}"/> instances used as per-page output buffers.</summary>
 public static class PageBuilderPool
 {
-    /// <summary>Default initial capacity hint when the caller passes 0.</summary>
+    /// <summary>Default initial capacity hint.</summary>
     private const int DefaultHintCapacity = 4 * 1024;
 
-    /// <summary>Cap above which a returned writer is dropped instead of parked back.</summary>
+    /// <summary>Cap above which returned writers are dropped instead of parked.</summary>
     private const int MaxCachedCapacity = 256 * 1024;
 
-    /// <summary>Number of parked writer slots per thread; covers the page-output buffer plus a couple of preprocessor ping-pong scratch buffers.</summary>
+    /// <summary>Number of parked writer slots per thread.</summary>
     private const int MaxParkedSlots = 4;
 
-    /// <summary>Cap on the shared cross-thread fallback pool. Roughly 4× the configured worker count plus a slack margin.</summary>
+    /// <summary>Cap on the shared cross-thread fallback pool.</summary>
     private const int MaxSharedPoolSize = 64;
 
-    /// <summary>Cross-thread fallback pool that catches Returns landing on a different thread than the originating Rent (typical when an <c>await</c> hops the continuation).</summary>
+    /// <summary>Cross-thread fallback pool.</summary>
     private static readonly ConcurrentQueue<ArrayBufferWriter<byte>> SharedPool = new();
 
-    /// <summary>Live count of writers currently parked in <see cref="SharedPool"/>; gates pushes once the cap is hit.</summary>
+    /// <summary>Live count of writers currently parked in <see cref="SharedPool"/>.</summary>
     private static int _sharedPoolCount;
 
-    /// <summary>Per-thread parked writers ready for the next rental. Lazily allocated on first use.</summary>
+    /// <summary>Per-thread parked writers ready for the next rental.</summary>
     [ThreadStatic]
     private static ArrayBufferWriter<byte>?[]? _slots;
 
@@ -90,7 +71,7 @@ public static class PageBuilderPool
         return new(new(hintCapacity));
     }
 
-    /// <summary>Returns <paramref name="writer"/> to the per-thread cache (or the shared queue if the slots are full).</summary>
+    /// <summary>Returns <paramref name="writer"/> to the pool.</summary>
     /// <param name="writer">The writer to park, already reset by the rental.</param>
     internal static void Return(ArrayBufferWriter<byte> writer)
     {

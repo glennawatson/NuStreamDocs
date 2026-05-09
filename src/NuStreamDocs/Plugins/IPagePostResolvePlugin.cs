@@ -5,17 +5,10 @@
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Plugin participation in the per-page post-resolve phase.
+/// Plugin participation in the per-page post-resolve phase: byte → byte rewriters on rendered HTML
+/// that consume cross-page state finalized in <see cref="IBuildResolvePlugin"/>. Return
+/// <c>false</c> from <see cref="NeedsRewrite"/> when the page needs no rewriting.
 /// </summary>
-/// <remarks>
-/// Byte → byte rewriters on rendered HTML that consume cross-page
-/// state finalized in <see cref="IBuildResolvePlugin"/>. Used by
-/// autoref marker resolution, redirect-marker substitution, and
-/// privacy URL rewriting. Same ping-pong shape as
-/// <see cref="IPagePostRenderPlugin"/>: plugins return <c>false</c>
-/// from <see cref="NeedsRewrite"/> when the page contains nothing they
-/// need to touch.
-/// </remarks>
 public interface IPagePostResolvePlugin : IPlugin
 {
     /// <summary>Gets the plugin's bid for ordering within the post-resolve phase.</summary>

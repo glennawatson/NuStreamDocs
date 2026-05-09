@@ -4,11 +4,7 @@
 
 namespace NuStreamDocs.LinkValidator;
 
-/// <summary>
-/// Stateless helpers extracted from <see cref="LinkValidatorPlugin"/>:
-/// the bits that don't touch HTTP / the file system, so they can be
-/// unit-tested directly without standing up a corpus.
-/// </summary>
+/// <summary>Stateless aggregation helpers for <see cref="LinkValidatorPlugin"/> diagnostics.</summary>
 internal static class LinkValidatorReporter
 {
     /// <summary>Sums up internal/external link counts across every page in <paramref name="corpus"/>.</summary>

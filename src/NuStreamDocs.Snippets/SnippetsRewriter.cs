@@ -10,12 +10,9 @@ using NuStreamDocs.Markdown.Common;
 namespace NuStreamDocs.Snippets;
 
 /// <summary>
-/// Stateless UTF-8 snippet-include rewriter. Walks the source
-/// byte stream, replacing <c>--8&lt;-- "file"</c> include markers
-/// at line starts with the contents of the referenced file
-/// resolved against a base directory. Recursion is bounded by
-/// <see cref="MaxIncludeDepth"/> so a self-referencing snippet
-/// renders an error rather than blowing the stack.
+/// Replaces <c>--8&lt;-- "file"</c> include markers at line starts with the
+/// referenced file's contents, resolved against a base directory. Recursive
+/// includes are bounded; cycles render an error stub.
 /// </summary>
 internal static class SnippetsRewriter
 {
@@ -125,7 +122,7 @@ internal static class SnippetsRewriter
         return pathLength > 0;
     }
 
-    /// <summary>Reads the snippet at <paramref name="pathBytes"/> via byte-keyed cache lookup (resolving + reading on miss) and recursively expands its includes.</summary>
+    /// <summary>Reads the snippet at <paramref name="pathBytes"/> and recursively expands its includes.</summary>
     /// <param name="pathBytes">UTF-8 path bytes lifted from the source span.</param>
     /// <param name="sectionBytes">UTF-8 section-name bytes; empty span means whole-file include.</param>
     /// <param name="baseDirectory">Snippet root.</param>
@@ -183,7 +180,7 @@ internal static class SnippetsRewriter
         }
     }
 
-    /// <summary>Resolves <paramref name="pathBytes"/> to file bytes via <paramref name="fileCache"/>, reading from disk on cache miss after a path-escape check.</summary>
+    /// <summary>Resolves <paramref name="pathBytes"/> to file bytes; emits an error stub on cycle, escape, or missing file.</summary>
     /// <param name="pathBytes">UTF-8 path bytes.</param>
     /// <param name="baseDirectory">Snippet root.</param>
     /// <param name="fileCache">Build-scoped byte-keyed cache.</param>

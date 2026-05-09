@@ -4,19 +4,7 @@
 
 namespace NuStreamDocs.Highlight.Languages.CFamily;
 
-/// <summary>C# lexer.</summary>
-/// <remarks>
-/// Rules live in <see cref="CSharpRules"/> so embedded-language scenarios
-/// (Razor's <c>@code</c> blocks, future Blazor components) classify
-/// the same tokens with the same short-form CSS classes.
-/// <para>
-/// Three states: root, block-accessor, arrow-accessor. The two accessor
-/// states recognize <c>field</c> and <c>value</c> as keywords so the
-/// C# 13 backing-field syntax highlights correctly inside property
-/// accessors — but those names stay as plain identifiers everywhere
-/// else.
-/// </para>
-/// </remarks>
+/// <summary>C# lexer. Three states (root, block-accessor, arrow-accessor) so <c>field</c>/<c>value</c> highlight as keywords inside property accessors only.</summary>
 public static class CSharpLexer
 {
     /// <summary>State id for an accessor's <c>{...}</c> body. Push on <c>get/set/init</c> + <c>{</c>; <c>{</c> nests, <c>}</c> pops.</summary>

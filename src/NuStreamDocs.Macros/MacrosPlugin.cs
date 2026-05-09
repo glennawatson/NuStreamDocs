@@ -11,13 +11,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Macros;
 
-/// <summary>
-/// Variable-substitution preprocessor for NuStreamDocs markdown. Reads
-/// <c>{{ name }}</c> markers from the source, looks each name up in the
-/// host-supplied <see cref="MacrosOptions.Variables"/> map, and emits
-/// the resolved value into the markdown stream before the parser runs.
-/// Closes the mkdocs-macros gap for the variable-substitution use case.
-/// </summary>
+/// <summary>Substitutes <c>{{ name }}</c> markers in markdown source with values from <see cref="MacrosOptions.Variables"/> before parsing.</summary>
 public sealed class MacrosPlugin : IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>
@@ -26,13 +20,13 @@ public sealed class MacrosPlugin : IPagePreRenderPlugin
     /// <summary>Logger used for missing-variable warnings.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>Cached lookup delegate so each preprocess call doesn't allocate a fresh closure.</summary>
+    /// <summary>Lookup delegate.</summary>
     private readonly MacrosScanner.Lookup _lookup;
 
-    /// <summary>Cached missing-name callback (or null when warnings are off).</summary>
+    /// <summary>Missing-name callback, or null when warnings are disabled.</summary>
     private readonly MacrosScanner.MissingCallback? _onMissing;
 
-    /// <summary>Span-keyed alternate lookup over <see cref="MacrosOptions.Variables"/>; cached so the per-marker probe never allocates.</summary>
+    /// <summary>Span-keyed alternate lookup over <see cref="MacrosOptions.Variables"/>.</summary>
     private readonly Dictionary<byte[], byte[]>.AlternateLookup<ReadOnlySpan<byte>> _variableLookup;
 
     /// <summary>Initializes a new instance of the <see cref="MacrosPlugin"/> class with default options.</summary>
@@ -100,16 +94,15 @@ public sealed class MacrosPlugin : IPagePreRenderPlugin
         writer.Advance(source.Length);
     }
 
-    /// <summary>Lookup callback bound to the configured <see cref="MacrosOptions.Variables"/> dictionary.</summary>
+    /// <summary>Resolves a variable name against the configured map.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
     /// <param name="value">Resolved UTF-8 value bytes on hit.</param>
     /// <returns>True when the name is in the dictionary.</returns>
     private bool ResolveVariable(ReadOnlySpan<byte> name, out byte[] value) =>
         _variableLookup.TryGetValue(name, out value!);
 
-    /// <summary>Missing-name callback that logs at <c>Warning</c> via the source-generated helper.</summary>
+    /// <summary>Logs an unresolved name at <c>Warning</c>.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
-    /// <remarks>Decodes once at the diagnostic boundary because the source-gen logger needs <see cref="string"/>; the hot path stays byte-only.</remarks>
     private void WarnMissing(ReadOnlySpan<byte> name) =>
         MacrosLoggingHelper.LogMissingVariable(_logger, Encoding.UTF8.GetString(name));
 }

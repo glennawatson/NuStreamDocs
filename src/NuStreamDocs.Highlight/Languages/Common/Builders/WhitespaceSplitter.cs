@@ -7,11 +7,6 @@ using System.Buffers;
 namespace NuStreamDocs.Highlight.Languages.Common.Builders;
 
 /// <summary>Splits a UTF-8 byte span on ASCII space / tab into per-token byte arrays.</summary>
-/// <remarks>
-/// Used by <see cref="ByteKeywordSet"/> and <see cref="OperatorAlternationFactory"/> so a language
-/// can author its keyword / operator tables as a single space-delimited UTF-8 literal instead of
-/// per-line <c>[.. "x"u8]</c> entries that the duplicate-line detector flags across every file.
-/// </remarks>
 internal static class WhitespaceSplitter
 {
     /// <summary>ASCII space + tab dispatch set.</summary>

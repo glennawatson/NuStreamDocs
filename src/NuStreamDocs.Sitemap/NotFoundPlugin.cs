@@ -7,15 +7,13 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Sitemap;
 
 /// <summary>
-/// Emits a default <c>404.html</c> at the site root in
-/// <see cref="FinalizeAsync"/> when no <c>404.html</c> already exists
-/// — typically because the docs tree has no <c>404.md</c> source.
-/// Sites that ship their own <c>404.md</c> will see that page
-/// already in the output and this plugin no-ops.
+/// Emits a default <c>404.html</c> at the site root when none exists.
+/// No-ops when a <c>404.html</c> is already present (e.g. produced from
+/// a user-supplied <c>404.md</c>).
 /// </summary>
 public sealed class NotFoundPlugin : IBuildFinalizePlugin
 {
-    /// <summary>UTF-8 bytes of the default 404 document; styled as a minimal centred page.</summary>
+    /// <summary>UTF-8 bytes of the default 404 document.</summary>
     private static readonly byte[] DefaultDocument =
         [.. """
 <!doctype html>

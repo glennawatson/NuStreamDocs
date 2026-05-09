@@ -6,12 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.MarkdownExtensions.Internal;
 
-/// <summary>
-/// Shared opener-line parser for admonitions, details, and tabbed —
-/// they all parse a leading marker, a type/identifier token,
-/// optional whitespace, an optional <c>"…"</c> title, then a line
-/// terminator.
-/// </summary>
+/// <summary>Opener-line parser shared by admonitions, details, and tabbed blocks.</summary>
 internal static class OpenerLineParser
 {
     /// <summary>ASCII offset between lowercase and uppercase letters.</summary>
@@ -81,11 +76,7 @@ internal static class OpenerLineParser
     /// <returns>True when allowed trailing the opener.</returns>
     public static bool IsTrailingHeaderByte(byte b) => b is (byte)' ' or (byte)'\t' or (byte)'\r';
 
-    /// <summary>
-    /// Parses the post-marker tail of an admonition / details opener:
-    /// type token, optional whitespace, optional <c>"…"</c> title,
-    /// trailing whitespace/CR, then a newline (or EOF).
-    /// </summary>
+    /// <summary>Parses the post-marker tail: type token, optional title, then a newline.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="markerEnd">Offset just past the opener marker (e.g. <c>!!! </c>).</param>
     /// <param name="typeStart">Offset of the type token on success.</param>

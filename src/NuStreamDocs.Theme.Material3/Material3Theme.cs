@@ -9,21 +9,10 @@ using NuStreamDocs.Theme.Common;
 
 namespace NuStreamDocs.Theme.Material3;
 
-/// <summary>
-/// Material Design 3 theme: pre-compiled page + partial templates plus
-/// the bundled theme assets and vendored official Material Web runtime subset.
-/// </summary>
+/// <summary>Material Design 3 theme: compiled page + partial templates plus the bundled CSS / JS assets.</summary>
 public sealed class Material3Theme : IThemePackage
 {
-    /// <summary>Embedded asset paths the theme ships.</summary>
-    /// <remarks>
-    /// Pure CSS + a single hand-written JS file plus the bundled favicon. The previous
-    /// Material Web component bundle (Lit + lit-element + lit-html + tslib + the
-    /// <c>@material/web</c> tree) shipped ~408 KB across 62 vendored JS files to support
-    /// two custom elements (<c>md-outlined-text-field</c> and <c>md-icon-button</c>);
-    /// both have been replaced with plain <c>&lt;input&gt;</c> / <c>&lt;button&gt;</c>
-    /// styled with MD3 tokens, so the entire vendor tree was deleted.
-    /// </remarks>
+    /// <summary>Static asset paths shipped by the theme.</summary>
     private static readonly FilePath[] StaticAssetPaths =
     [
         "assets/stylesheets/material3.css",
@@ -50,13 +39,9 @@ public sealed class Material3Theme : IThemePackage
     public Template Page { get; }
 
     /// <summary>Gets the compiled partial registry, keyed by UTF-8 partial-name bytes.</summary>
-    /// <remarks>Built once at theme load and probed repeatedly across page renders via the byte-keyed alternate-lookup pattern.</remarks>
     public Dictionary<byte[], Template> Partials { get; }
 
-    /// <summary>
-     /// Gets the static-asset map, keyed by relative output path. Plain
-     /// <see cref="Dictionary{TKey, TValue}"/> exposed read-only.
-     /// </summary>
+    /// <summary>Gets the static-asset map, keyed by relative output path.</summary>
     public ReadOnlyDictionary<FilePath, byte[]> StaticAssets { get; }
 
     /// <inheritdoc/>

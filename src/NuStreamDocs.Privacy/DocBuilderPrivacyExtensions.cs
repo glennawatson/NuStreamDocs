@@ -45,10 +45,9 @@ public static class DocBuilderPrivacyExtensions
         return builder.UsePlugin(new PrivacyPlugin(options, logger));
     }
 
-    /// <summary>Compatibility-string adapter over <see cref="PrivacyPlugin.AuditedUrls"/>.</summary>
+    /// <summary>Returns <see cref="PrivacyPlugin.AuditedUrls"/> as UTF-16 strings.</summary>
     /// <param name="plugin">Plugin instance.</param>
-    /// <returns>Right-sized URL array wrapped as <see cref="ApiCompatString"/> (implicitly convertible to <c>string</c>).</returns>
-    /// <remarks>For consumers that genuinely want UTF-16 strings (logging, assertions, JSON serialization that doesn't cross the <see cref="System.Text.Json.Utf8JsonWriter"/> byte path).</remarks>
+    /// <returns>Audited URLs wrapped as <see cref="ApiCompatString"/>.</returns>
     public static ApiCompatString[] AuditedUrlsAsStrings(this PrivacyPlugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin);

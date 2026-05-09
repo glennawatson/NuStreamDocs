@@ -4,12 +4,7 @@
 
 namespace NuStreamDocs.Privacy;
 
-/// <summary>
-/// Glob-pattern matcher for URL-level allow/exclude rules. Supports
-/// <c>*</c> (any chars, including empty) and <c>?</c> (exactly one
-/// char); every other byte is matched literally and case-
-/// insensitively against ASCII letters. Patterns are anchored at both ends.
-/// </summary>
+/// <summary>Glob-pattern matcher for URL-level allow/exclude rules; supports <c>*</c> and <c>?</c>, anchored at both ends, case-insensitive on ASCII letters.</summary>
 internal sealed class UrlPatternMatcher
 {
     /// <summary>Stored UTF-8 patterns; empty matcher matches nothing.</summary>
@@ -55,11 +50,7 @@ internal sealed class UrlPatternMatcher
         return false;
     }
 
-    /// <summary>
-    /// Iterative glob match with single-star backtracking. Linear in the
-    /// length of the input plus the pattern in the common case; the
-    /// backtrack is bounded by the position of the most recent <c>*</c>.
-    /// </summary>
+    /// <summary>Iterative glob match with single-star backtracking.</summary>
     /// <param name="pattern">UTF-8 glob pattern.</param>
     /// <param name="input">UTF-8 candidate input.</param>
     /// <returns>True when the whole input matches the whole pattern.</returns>

@@ -7,9 +7,8 @@ using System.Buffers;
 namespace NuStreamDocs.Common;
 
 /// <summary>
-/// Streams a UTF-8 byte span to an <see cref="IBufferWriter{T}"/> while
-/// expanding XML/HTML special bytes (<c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>,
-/// optionally <c>&quot;</c>) into named entities.
+/// Streams a UTF-8 byte span to an <see cref="IBufferWriter{T}"/> while expanding XML/HTML
+/// special bytes (<c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>, optionally <c>&quot;</c>) into named entities.
 /// </summary>
 public static class XmlEntityEscaper
 {

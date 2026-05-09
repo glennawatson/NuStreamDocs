@@ -6,11 +6,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Optimize;
 
-/// <summary>
-/// Plugin that rewrites the per-page HTML buffer in place with whitespace
-/// collapsed and HTML comments stripped. Pre/code/textarea/script/style
-/// blocks are passed through verbatim.
-/// </summary>
+/// <summary>Plugin that minifies per-page HTML — collapses whitespace and strips comments. Pre/code/textarea/script/style bodies pass through verbatim.</summary>
 public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IPagePostResolvePlugin
 {
     /// <summary>Configured options.</summary>

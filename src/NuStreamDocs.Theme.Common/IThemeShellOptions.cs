@@ -7,26 +7,15 @@ namespace NuStreamDocs.Theme.Common;
 /// <summary>
 /// Common page-shell knobs shared by the built-in themes.
 /// </summary>
-/// <remarks>
-/// Scalar text fields (site name, language, copyright, repo / edit URLs) are stored as UTF-8
-/// bytes per the project's byte-first pipeline rule — the page-shell template flows pure UTF-8
-/// from <c>OnConfigureAsync</c> through every render. String-shaped construction goes through
-/// each theme's option-extension class (<c>WithSiteName</c>, <c>WithCopyright</c>, …), which
-/// encodes once at the boundary.
-/// </remarks>
 public interface IThemeShellOptions
 {
     /// <summary>Gets the UTF-8 top-bar site title injected into every page.</summary>
     byte[] SiteName { get; }
 
-    /// <summary>
-    /// Gets the UTF-8 href used for the site logo image (e.g. <c>images/logo.png</c>);
-    /// empty when no logo image should be rendered and the site name should display
-    /// instead. Page-relative paths are rewritten per page.
-    /// </summary>
+    /// <summary>Gets the UTF-8 href for the site logo image (e.g. <c>images/logo.png</c>); empty to fall back to the site name.</summary>
     byte[] Logo => [];
 
-    /// <summary>Gets the UTF-8 absolute site URL (e.g. <c>https://reactiveui.net</c>); empty when no canonical / OpenGraph URL should be rendered. Mirrors mkdocs's <c>site_url</c> config.</summary>
+    /// <summary>Gets the UTF-8 absolute site URL (e.g. <c>https://reactiveui.net</c>); empty when no canonical / OpenGraph URL should be rendered.</summary>
     byte[] SiteUrl { get; }
 
     /// <summary>Gets the UTF-8 HTML <c>lang</c> attribute value.</summary>
@@ -53,18 +42,10 @@ public interface IThemeShellOptions
     /// <summary>Gets the UTF-8 href used for the page favicon; empty when no favicon link should be rendered.</summary>
     byte[] Favicon { get; }
 
-    /// <summary>
-    /// Gets the asset-relative path of the default favicon (e.g. <c>/images/favicon.svg</c>);
-    /// empty when the theme ships no default. Concatenated with <see cref="ResolveAssetRoot"/>
-    /// at request time to form the served URL.
-    /// </summary>
+    /// <summary>Gets the asset-relative path of the default favicon (e.g. <c>/images/favicon.svg</c>); empty when the theme ships no default.</summary>
     byte[] DefaultEmbeddedFaviconRelativeUrl => [];
 
-    /// <summary>
-    /// Gets the asset-relative URL of the theme's primary stylesheet — re-used by the
-    /// synthesised 404 page so it picks up the theme's color scheme. Empty when the theme
-    /// has no stylesheet to point at.
-    /// </summary>
+    /// <summary>Gets the asset-relative URL of the theme's primary stylesheet; empty when the theme has none.</summary>
     byte[] PrimaryStylesheetRelativeUrl => [];
 
     /// <summary>Gets a value indicating whether to render a scroll-to-top button.</summary>

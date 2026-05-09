@@ -8,9 +8,9 @@ using NuStreamDocs.Markdown.Common;
 namespace NuStreamDocs.SmartSymbols;
 
 /// <summary>
-/// Stateless UTF-8 smart-symbols rewriter. Replaces the pymdownx
-/// defaults inline; fenced-code regions and inline-code spans are
-/// copied through verbatim.
+/// Replaces smart-symbol tokens (e.g. <c>(c)</c>, <c>--&gt;</c>, <c>1/2</c>)
+/// with their Unicode equivalents. Fenced-code regions and inline-code
+/// spans pass through verbatim.
 /// </summary>
 internal static class SmartSymbolsRewriter
 {

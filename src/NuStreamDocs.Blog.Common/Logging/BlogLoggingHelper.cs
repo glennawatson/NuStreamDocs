@@ -32,7 +32,7 @@ internal static partial class BlogLoggingHelper
     [LoggerMessage(Level = LogLevel.Debug, Message = "Discovered post {Slug} ({Published}) — {Title}")]
     public static partial void LogPostDiscovered(ILogger logger, string slug, DateOnly published, string title);
 
-    /// <summary>UTF-8 byte overload for <see cref="LogPostDiscovered(ILogger, string, DateOnly, string)"/>; the encode step only runs when Debug is enabled.</summary>
+    /// <summary>UTF-8 byte overload for <see cref="LogPostDiscovered(ILogger, string, DateOnly, string)"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="slug">URL-safe slug as UTF-8 bytes.</param>
     /// <param name="published">Publish date.</param>

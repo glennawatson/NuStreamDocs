@@ -15,17 +15,10 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Building;
 
 /// <summary>
-/// Static driver that streams <see cref="PageWorkItem"/>s through the
-/// per-page parse, render, plugin and write stages.
+/// Static driver that streams <see cref="PageWorkItem"/>s through the build pipeline phases
+/// (Configure → Discover → parallel per-page render → cross-page Resolve barrier → drain buffered
+/// pages → asset copy → manifest save → Finalize).
 /// </summary>
-/// <remarks>
-/// Pipeline phases run in order: Configure → Discover → (parallel per-page:
-/// PreRender → Render → PostRender → Scan → either immediate Write or
-/// buffer-for-Resolve) → cross-page Resolve barrier (sequential) → drain
-/// buffered pages (PostResolve → Write) → static-asset copy → manifest
-/// save → Finalize. Each phase iterates only the participants for that
-/// phase, sorted once at build start by <see cref="PluginPriority"/>.
-/// </remarks>
 public static class BuildPipeline
 {
     /// <summary>Default parallel-worker cap; tuned for laptops and CI runners.</summary>
@@ -319,8 +312,9 @@ public static class BuildPipeline
     }
 
     /// <summary>
-    /// True when at least one <paramref name="needles"/> entry is present in <paramref name="html"/>;
-    /// false when no needles are registered (no cross-page work) or none match this page.
+    /// True when at least one <paramref name="needles"/> entry is present in
+    /// <paramref name="html"/>, or when <paramref name="needles"/> is empty (in which case every
+    /// page is buffered).
     /// </summary>
     /// <param name="html">UTF-8 HTML of the rendered page.</param>
     /// <param name="needles">Marker byte sequences registered by cross-page plugins during configure.</param>
@@ -353,12 +347,6 @@ public static class BuildPipeline
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
     /// <returns>The rewritten bytes, or <paramref name="source"/> unchanged when no participant rewrites.</returns>
-    /// <remarks>
-    /// Lazy-rents the ping-pong buffers — pages where every plugin says NeedsRewrite=false pay
-    /// nothing. On a 13.8K-page corpus where the only registered preprocessor matches zero pages,
-    /// the previous eager-rent shape allocated ~50 MB of <see cref="PageBuilderPool"/> scratch
-    /// that nothing wrote into; the cross-thread Rent/Return hop was driving Gen0/Gen1 GC pauses.
-    /// </remarks>
     private static ReadOnlyMemory<byte> ApplyPreRenders(
         ReadOnlyMemory<byte> source,
         IPagePreRenderPlugin[] plugins,
@@ -612,15 +600,6 @@ public static class BuildPipeline
 
     /// <summary>Ensures the directory containing <paramref name="outputPath"/> exists.</summary>
     /// <param name="outputPath">Absolute output path.</param>
-    /// <remarks>
-    /// Calls <see cref="Directory.CreateDirectory(string)"/> unconditionally — the BCL no-ops
-    /// when the directory already exists, so the cost is one stat() syscall per page (~µs).
-    /// We previously cached the last-created directory per thread, but the cache survived
-    /// across builds via thread-pool reuse and silently broke any "build → wipe output →
-    /// build again" flow (benchmarks with per-iteration output reset, dev-server restarts
-    /// after a manual <c>rm -rf site/</c>, sequential test fixtures). The cache's perf win
-    /// — a few ms across a 14k-page corpus — wasn't worth the correctness hazard.
-    /// </remarks>
     private static void EnsureDirectory(string outputPath)
     {
         var dirSpan = Path.GetDirectoryName(outputPath.AsSpan());

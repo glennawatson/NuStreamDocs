@@ -15,19 +15,10 @@ namespace NuStreamDocs.Highlight;
 /// <param name="EmitTitleBar">When a fence has <c>title="..."</c>, render it as <c>&lt;span class="filename"&gt;</c>; needs <c>WrapInHighlightDiv</c>.</param>
 /// <param name="CopyButton">Add a <c>&lt;button class="md-clipboard"&gt;</c> inside the wrapper; theme JS handles the click.</param>
 /// <param name="AutoDetectLanguage">
-/// When true, unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> blocks (indented or fenced without a language tag) are
-/// scored against a small byte-level heuristic table; high-confidence matches receive a
-/// <c>class="language-X"</c> attribute and pass through the regular highlighter. Default off — pages
-/// that author explicit fence languages pay zero for this feature, matching the docfx-style
-/// inference for legacy corpora that authored without language tags.
+/// When true, unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> blocks are scored heuristically;
+/// high-confidence matches receive a <c>class="language-X"</c> attribute. Default off.
 /// </param>
-/// <param name="DetectionLanguages">
-/// Optional allow-list scoping the auto-detector to a caller-declared subset of language aliases
-/// (e.g. <c>"csharp"u8</c>, <c>"powershell"u8</c>). Empty array means "consider every profile that
-/// matches a registered lexer" — equivalent to leaving the option at its default. Restricting the
-/// list improves both accuracy (no chance of misclassifying into a language the corpus never writes)
-/// and per-block scan cost (fewer profiles scored).
-/// </param>
+/// <param name="DetectionLanguages">Optional allow-list of language aliases the auto-detector may select (e.g. <c>"csharp"u8</c>). Empty array means "consider every registered lexer".</param>
 public sealed record HighlightOptions(
     in LexerNameValue[] ExtraLexers,
     bool WrapInHighlightDiv,
@@ -50,7 +41,6 @@ public sealed record HighlightOptions(
     /// <returns>A new <see cref="HighlightOptions"/> with the supplied lexers and the default flags.</returns>
     /// <exception cref="ArgumentNullException">When <paramref name="extra"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">When <paramref name="extra"/> is empty.</exception>
-    /// <remarks>Encodes each name to UTF-8 once and ASCII-lowercases it so the per-block lookup stays byte-only.</remarks>
     public static HighlightOptions CreateFromStringLexers(params (string LexerName, Lexer Lexer)[] extra)
     {
         ArgumentNullException.ThrowIfNull(extra);

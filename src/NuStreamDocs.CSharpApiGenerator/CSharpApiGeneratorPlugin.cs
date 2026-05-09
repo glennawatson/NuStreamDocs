@@ -12,20 +12,9 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// Plugin that runs the C# reference generator before page discovery.
 /// </summary>
 /// <remarks>
-/// <para>
-/// In <see cref="CSharpApiGeneratorMode.EmitMarkdown"/> the plugin walks
-/// the configured NuGet manifest in <see cref="DiscoverAsync"/> and
-/// writes Markdown into <c>docs/{OutputMarkdownSubdirectory}</c> — by
-/// the time page enumeration runs the generated pages are on disk and
-/// look like any author-written content.
-/// </para>
-/// <para>
-/// In <see cref="CSharpApiGeneratorMode.Direct"/> the plugin walks the
-/// same source via SourceDocParser's direct-extract API and stashes the
-/// merged catalog on <see cref="LastExtraction"/> for downstream
-/// renderers / tests / future virtual-page providers to consume — no
-/// intermediate Markdown is written to disk.
-/// </para>
+/// In <see cref="CSharpApiGeneratorMode.EmitMarkdown"/> mode the plugin writes Markdown
+/// into <c>docs/{OutputMarkdownSubdirectory}</c>; in <see cref="CSharpApiGeneratorMode.Direct"/>
+/// mode it stashes the merged catalog on <see cref="LastExtraction"/> without writing files.
 /// </remarks>
 public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IBuildDiscoverPlugin
 {

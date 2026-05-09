@@ -7,11 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
 
-/// <summary>
-/// Byte-level scanner that locates <c>src=</c> / <c>href=</c>
-/// attributes with absolute http(s) URLs and either rewrites them to
-/// <c>/{local}</c> via the registry or records them for audit.
-/// </summary>
+/// <summary>Rewrites or audits <c>src=</c> / <c>href=</c> attributes whose value is an absolute http(s) URL.</summary>
 internal static class AssetAttributeBytes
 {
     /// <summary>Bytes that may start a <c>src</c> or <c>href</c> attribute name (case-insensitive).</summary>
@@ -121,18 +117,10 @@ internal static class AssetAttributeBytes
         return true;
     }
 
-    /// <summary>True when the candidate <c>href=</c> / <c>src=</c> at <paramref name="attrOffset"/> sits inside a tag
-    /// whose attributes mark the URL as pointing at the canonical site (<c>&lt;link rel="canonical"&gt;</c>,
-    /// <c>&lt;meta property="og:url"&gt;</c>, <c>&lt;meta name="twitter:url"&gt;</c>).</summary>
+    /// <summary>True when the candidate URL sits inside a canonical / OpenGraph / Twitter URL tag (<c>&lt;link rel="canonical"&gt;</c>, <c>og:url</c>, <c>twitter:url</c>).</summary>
     /// <param name="html">UTF-8 source.</param>
     /// <param name="attrOffset">Offset of the candidate attribute name byte.</param>
-    /// <returns>True when this URL should be left untouched by the rewriter.</returns>
-    /// <remarks>
-    /// Walks back from <paramref name="attrOffset"/> to the most recent <c>&lt;</c> (capped at 256 bytes —
-    /// any well-formed open tag fits) and runs an ordinal-ignore-case search for the tell-tale rel /
-    /// property / name attribute on the same tag. False positives are harmless: the URL just keeps its
-    /// external form.
-    /// </remarks>
+    /// <returns>True when the URL should be left untouched by the rewriter.</returns>
     private static bool IsCanonicalOrSocialMetadataContext(ReadOnlySpan<byte> html, int attrOffset)
     {
         const int MaxBackscan = 256;

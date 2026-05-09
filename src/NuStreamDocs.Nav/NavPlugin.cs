@@ -14,27 +14,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Nav;
 
-/// <summary>
-/// mkdocs-nav-equivalent plugin.
-/// </summary>
-/// <remarks>
-/// Outer-layer instance type: holds the per-build option set and the
-/// computed <see cref="NavNode"/> root. All tree-walking and ordering
-/// is delegated to <see cref="NavTreeBuilder"/>'s static methods.
-/// Plugin instances are created either via the parameterless ctor
-/// (<c>builder.UsePlugin&lt;NavPlugin&gt;()</c>) or via the
-/// extension method <c>builder.UseNav(...)</c> which captures
-/// non-default options.
-/// <para>
-/// During <see cref="DiscoverAsync"/> the plugin scans the docs root,
-/// builds the nav tree, and caches the URL index for per-page lookup.
-/// During <see cref="PostRender"/> it replaces the marker
-/// <c>&lt;!--@@nav@@--&gt;</c> a theme template emits with the rendered
-/// nav for the current page; when <see cref="NavOptions.Prune"/> is on
-/// only the active branch is emitted — matching mkdocs-material
-/// <c>navigation.prune</c>.
-/// </para>
-/// </remarks>
+/// <summary>Discovers and renders the navigation tree, replacing <c>&lt;!--@@nav@@--&gt;</c> / <c>&lt;!--@@nav-tabs@@--&gt;</c> markers in rendered pages.</summary>
 public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INavNeighboursProvider
 {
     /// <summary>Length of the <c>.md</c> extension stripped when computing served URLs.</summary>
@@ -52,7 +32,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Byte offset of the length field inside the stat tuple.</summary>
     private const int StatLengthOffset = 8;
 
-    /// <summary>Tiebreak that orders nav-marker substitution after the theme shell wrap (which uses the bare <see cref="PluginBand.Latest"/>) and after <c>TocPlugin</c> (tiebreak 1).</summary>
+    /// <summary>PostRender tiebreak ordering nav substitution after the theme shell wrap and TocPlugin.</summary>
     private const int PostRenderTiebreak = 2;
 
     /// <summary>Configured option set; captured at registration time.</summary>
@@ -61,7 +41,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Logger handed to the tree builder.</summary>
     private readonly ILogger _logger;
 
-    /// <summary>The build-time nav tree (class graph) constructed during <see cref="DiscoverAsync"/>; null until then. Held for diagnostics, neighbour linearization, and orphan reporting.</summary>
+    /// <summary>The build-time nav tree constructed during <see cref="DiscoverAsync"/>; null until then.</summary>
     private NavNode? _root;
 
     /// <summary>The flat render-time nav tree consumed by <see cref="NavRenderer"/>; null until <see cref="DiscoverAsync"/> runs.</summary>
@@ -73,7 +53,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>True when the configured build emits directory-style served URLs.</summary>
     private bool _useDirectoryUrls;
 
-    /// <summary>UTF-8 URL bytes → flat-tree node-index lookup; built once per discover so per-page renders resolve the active node in O(1) without re-encoding the page URL.</summary>
+    /// <summary>UTF-8 URL bytes → flat-tree node-index lookup, rebuilt each discover.</summary>
     private Dictionary<byte[], int>? _urlIndex;
 
     /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(FilePath)"/> call.</summary>
@@ -504,7 +484,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Lazily builds the leaf/index/span tables on first call and resolves <paramref name="relativePath"/> to its leaf index via a single UTF-8 encode + byte-keyed probe.</summary>
+    /// <summary>Resolves <paramref name="relativePath"/> to its leaf index in the linearized leaf array, building the index lazily.</summary>
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="idx">Resolved index; -1 when not in the nav.</param>
     /// <returns>True when found.</returns>
@@ -555,7 +535,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         NavRenderer.RenderTabs(_tree!, activeIdx, writer, _options.HomeTab, _options.HomeTabLabel);
     }
 
-    /// <summary>Encodes <paramref name="relativePath"/> as the served URL bytes and probes <see cref="_urlIndex"/> for the active node's flat-tree index.</summary>
+    /// <summary>Resolves the active flat-tree node index for <paramref name="relativePath"/>.</summary>
     /// <param name="relativePath">Source-relative path of the page being rendered.</param>
     /// <returns>Active node index, or <c>-1</c> when the page is not in the nav.</returns>
     private int ResolveActiveIndex(FilePath relativePath)

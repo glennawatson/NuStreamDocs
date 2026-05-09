@@ -6,17 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.LinkValidator;
 
-/// <summary>
-/// Byte-only extractor for <c>href</c> / <c>src</c> URL values and
-/// heading anchor IDs from rendered HTML.
-/// </summary>
-/// <remarks>
-/// Returns offset+length pairs into the caller-supplied byte snapshot
-/// — never UTF-8 decodes the values. The decode-to-string boundary is
-/// the corpus / diagnostic layer; the extractor itself never produces
-/// strings. Built on <see cref="Utf8HtmlScanner"/> for the heading-open
-/// + attribute-value primitives.
-/// </remarks>
+/// <summary>Extracts <c>href</c> / <c>src</c> URL values and heading anchor IDs from rendered HTML as offset+length ranges.</summary>
 public static class LinkExtractor
 {
     /// <summary>Gets the UTF-8 marker introducing an <c>href=&quot;</c> attribute (with leading whitespace as the project's emitter produces).</summary>
@@ -46,21 +36,12 @@ public static class LinkExtractor
     /// <summary>Extracts every <c>id</c> attribute value (any element) as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
-    /// <remarks>
-    /// HTML <c>id</c> can appear on any element and is the only requirement for a fragment
-    /// target — the validator must recognise skip-link targets like <c>&lt;main id="md-content"&gt;</c>,
-    /// not just heading ids.
-    /// </remarks>
     public static ByteRange[] ExtractIdRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, IdMarker);
 
     /// <summary>Extracts the values of obsolete HTML4 <c>&lt;a name="..."&gt;</c> fragment anchors as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
-    /// <remarks>
-    /// Browsers still scroll to <c>&lt;a name&gt;</c> targets but the attribute is obsolete in HTML5;
-    /// the validator surfaces a deprecation diagnostic instead of accepting them silently.
-    /// </remarks>
     public static ByteRange[] ExtractDeprecatedNameAnchorRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, AnchorNameMarker);
 

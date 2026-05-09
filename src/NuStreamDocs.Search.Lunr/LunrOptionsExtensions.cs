@@ -6,7 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Lunr;
 
-/// <summary>String / span construction helpers for the byte-shaped <see cref="LunrOptions"/> record.</summary>
+/// <summary>Fluent helpers for building <see cref="LunrOptions"/>.</summary>
 public static class LunrOptionsExtensions
 {
     /// <summary>Replaces the output subdirectory.</summary>

@@ -10,16 +10,9 @@ namespace NuStreamDocs.Blog.MkDocs;
 
 /// <summary>
 /// mkdocs-material-style blog plugin: reads posts under
-/// <c>{BlogSubdirectory}/posts/</c> and writes an index + category
+/// <c>{BlogSubdirectory}/posts/</c> and writes an index plus category
 /// archives back into the docs tree before page discovery.
 /// </summary>
-/// <remarks>
-/// Reuses the Wyam parser pipeline from <see cref="NuStreamDocs.Blog"/>;
-/// the only behavioral difference is the directory layout — posts
-/// nest under <c>blog/posts/</c> and the category archive lives under
-/// <c>blog/category/</c>. Frontmatter still uses Tags and Author so
-/// the same authoring tooling works against both variants.
-/// </remarks>
 public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) : IBuildDiscoverPlugin
 {
     /// <summary>Configured options.</summary>

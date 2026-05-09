@@ -5,23 +5,13 @@
 namespace NuStreamDocs.Highlight;
 
 /// <summary>
-/// Heuristic language guesser for unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> blocks.
+/// Heuristic language guesser for unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> blocks. A match is
+/// reported only when the winning score crosses an absolute floor and beats the runner-up
+/// by a comfortable margin; below threshold the block passes through unlabeled.
 /// </summary>
-/// <remarks>
-/// Scores each candidate language by counting hits of a small fixed signature table — distinctive
-/// keywords or punctuation that strongly imply a particular language. The signatures are written
-/// against the HTML-escaped form of the body bytes so callers don't need to unescape before
-/// detection (saving an allocation per block on the no-confidence path).
-/// <para>
-/// A match is reported only when the winning score crosses an absolute floor and beats the
-/// runner-up by a comfortable margin — <see cref="HighlightOptions.AutoDetectLanguage"/>'s docs
-/// promise misclassification-resistance, not coverage. Below threshold the block stays unlabeled
-/// and the highlighter passes it through verbatim.
-/// </para>
-/// </remarks>
 internal static class LanguageDetector
 {
-    /// <summary>Maximum body bytes inspected. Caps worst-case cost on pathological multi-MB code dumps; every detectable language is identifiable from the first few hundred bytes.</summary>
+    /// <summary>Maximum body bytes inspected.</summary>
     private const int ScanLimit = 2048;
 
     /// <summary>Minimum score required for a match to be reported.</summary>
@@ -30,7 +20,7 @@ internal static class LanguageDetector
     /// <summary>Winning score must beat the runner-up by at least this multiplier (rounded).</summary>
     private const int LeaderRunnerUpRatio = 2;
 
-    /// <summary>Static profile table — appended to as new lexers gain signatures. Keep in sync with <see cref="LexerRegistry"/>'s built-in aliases.</summary>
+    /// <summary>Profile table; aliases match <see cref="LexerRegistry"/>'s built-in lexers.</summary>
     private static readonly LanguageProfile[] Profiles =
     [
         new(
@@ -304,14 +294,10 @@ internal static class LanguageDetector
     /// Tries to identify the language of <paramref name="escapedBody"/>; only languages with a registered
     /// lexer in <paramref name="registry"/> (and on the optional <paramref name="allowList"/>) are considered.
     /// </summary>
-    /// <param name="escapedBody">HTML-escaped UTF-8 body bytes (the slice between <c>&gt;</c> and <c>&lt;/code&gt;</c>).</param>
-    /// <param name="registry">Active lexer registry — restricts candidates to languages the highlighter can actually colour.</param>
-    /// <param name="allowList">
-    /// Optional caller-declared language alias allow-list. Empty array means "every registered language is in
-    /// scope" (the default). Each entry is a lowercased UTF-8 alias matching the <see cref="LexerRegistry"/>
-    /// aliases (e.g. <c>"csharp"u8</c>).
-    /// </param>
-    /// <param name="languageId">On success, the lowercased alias bytes; tied to a static buffer (do not mutate).</param>
+    /// <param name="escapedBody">HTML-escaped UTF-8 body bytes.</param>
+    /// <param name="registry">Active lexer registry; restricts candidates to languages the highlighter can colour.</param>
+    /// <param name="allowList">Optional language-alias allow-list (lowercase UTF-8); empty means no restriction.</param>
+    /// <param name="languageId">On success, the lowercased alias bytes (do not mutate — tied to a static buffer).</param>
     /// <returns>True when a confident match was found.</returns>
     public static bool TryDetect(ReadOnlySpan<byte> escapedBody, LexerRegistry registry, byte[][] allowList, out ReadOnlySpan<byte> languageId)
     {
@@ -414,12 +400,12 @@ internal static class LanguageDetector
     }
 
     /// <summary>Keyword and weight for a single language signature row.</summary>
-    /// <param name="Keyword">UTF-8 bytes the body is searched for. Distinctive substrings of the language; keep short and language-specific.</param>
-    /// <param name="Weight">Hit weight; <c>1</c> for "fairly common in this language", <c>2</c> for "almost-exclusive marker".</param>
+    /// <param name="Keyword">UTF-8 substring searched for in the body.</param>
+    /// <param name="Weight">Hit weight; higher means more language-specific.</param>
     private readonly record struct Signature(byte[] Keyword, int Weight);
 
     /// <summary>One language candidate the detector considers.</summary>
-    /// <param name="LanguageId">Lowercased UTF-8 alias the highlighter dispatches on (matches the <see cref="LexerRegistry"/> alias).</param>
+    /// <param name="LanguageId">Lowercase UTF-8 alias matching a <see cref="LexerRegistry"/> entry.</param>
     /// <param name="Signatures">Distinctive byte-keyword set; hits sum to the language's score.</param>
     private readonly record struct LanguageProfile(byte[] LanguageId, Signature[] Signatures);
 }

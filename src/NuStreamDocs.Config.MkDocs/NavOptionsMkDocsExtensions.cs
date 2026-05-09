@@ -8,9 +8,8 @@ using NuStreamDocs.Nav;
 namespace NuStreamDocs.Config.MkDocs;
 
 /// <summary>
-/// Fluent extensions that load a curated nav tree from an <c>mkdocs.yml</c> (or YAML byte stream)
-/// into <see cref="NavOptions.CuratedEntries"/>. Keeps mkdocs-specific serialization out of
-/// <c>NuStreamDocs.Nav</c> so the core nav module never references a config dialect.
+/// Fluent extensions that load a curated nav tree from an <c>mkdocs.yml</c> file or YAML byte
+/// stream into <see cref="NavOptions.CuratedEntries"/>.
 /// </summary>
 public static class NavOptionsMkDocsExtensions
 {

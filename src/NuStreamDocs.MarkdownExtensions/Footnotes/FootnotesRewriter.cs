@@ -10,14 +10,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Footnotes;
 
-/// <summary>
-/// Stateless UTF-8 footnotes rewriter. Two passes over the source:
-/// the first collects every <c>[^id]: definition</c> block (and
-/// strips it from the output), the second replaces each <c>[^id]</c>
-/// reference with a linked superscript. A trailing
-/// <c>&lt;section class="footnotes"&gt;</c> with the collected
-/// definitions is appended.
-/// </summary>
+/// <summary>Rewrites <c>[^id]</c> references and <c>[^id]: definition</c> blocks into linked superscripts and a trailing <c>&lt;section class="footnotes"&gt;</c>.</summary>
 internal static class FootnotesRewriter
 {
     /// <summary>Length of the <c>"[^"</c> reference prefix.</summary>
@@ -38,14 +31,10 @@ internal static class FootnotesRewriter
         EmitSection(defs, writer);
     }
 
-    /// <summary>Walks <paramref name="source"/> once, collecting definitions and emitting non-definition bytes (with <c>[^id]</c> references rewritten) to <paramref name="writer"/>.</summary>
+    /// <summary>Walks <paramref name="source"/>, collecting definitions and rewriting references. Code spans pass through verbatim.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="defs">Definition list populated in encounter order.</param>
     /// <param name="writer">UTF-8 sink for the body output.</param>
-    /// <remarks>
-    /// Skips fenced code blocks and inline code spans verbatim so that bracket-heavy fragments inside code
-    /// (e.g. the regex character class <c>[^@\s]</c>) don't accidentally register as footnote references.
-    /// </remarks>
     private static void CollectAndStripDefs(ReadOnlySpan<byte> source, List<Definition> defs, IBufferWriter<byte> writer)
     {
         var i = 0;

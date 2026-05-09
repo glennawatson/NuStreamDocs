@@ -7,25 +7,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>
-/// Optional companion contract for plugins that ship static assets
-/// (CSS, JS, fonts, images) into the site output alongside the active
-/// theme's own bundle.
+/// Optional contract for plugins shipping static assets (CSS, JS, fonts, images) into the site
+/// output. Theme plugins discover providers during finalize and write each
+/// <c>(relativePath, bytes)</c> pair under the output root.
 /// </summary>
-/// <remarks>
-/// The canonical use case is markdown-extension plugins
-/// (admonitions, tabs, details, mermaid) and icon plugins that need
-/// to drop a stylesheet or script into the output tree without owning
-/// a theme of their own. Theme plugins discover providers during
-/// <see cref="IBuildFinalizePlugin.FinalizeAsync"/> by walking
-/// <see cref="BuildFinalizeContext.Plugins"/> and write each
-/// <c>(relativePath, bytes)</c> tuple under the output root.
-/// <para>
-/// Both <c>NuStreamDocs.Theme.Material</c> and
-/// <c>NuStreamDocs.Theme.Material3</c> honor this contract, so a
-/// markdown-extension plugin written once works under either theme
-/// without recompilation.
-/// </para>
-/// </remarks>
 public interface IStaticAssetProvider
 {
     /// <summary>Gets the static assets this plugin contributes.</summary>

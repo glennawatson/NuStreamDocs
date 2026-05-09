@@ -5,17 +5,10 @@
 namespace NuStreamDocs.Common;
 
 /// <summary>
-/// Allocation-aware concatenation helpers for joining UTF-8 byte spans into a single
-/// right-sized <c>byte[]</c>. The byte-shaped equivalent of <c>string.Concat</c> — use it
-/// anywhere a per-piece <c>StringBuilder</c> or <c>+</c>-chain would otherwise materialize.
+/// Concatenation helpers for joining UTF-8 byte spans into a single right-sized <c>byte[]</c>.
+/// The byte-shaped equivalent of <c>string.Concat</c>. For more than four pieces use
+/// <see cref="ConcatMany"/>.
 /// </summary>
-/// <remarks>
-/// One pre-sized allocation per call; spans are copied straight into the destination, so
-/// callers can mix <c>"..."u8</c> literals, captured <c>byte[]</c> fields, and pooled
-/// rentals without forcing intermediate copies. For more than four pieces, switch to
-/// <see cref="ConcatMany"/> or the <see cref="System.Buffers.IBufferWriter{T}"/> path
-/// directly — the four-arg overload is the largest fixed-arity slot we ship.
-/// </remarks>
 public static class Utf8Concat
 {
     /// <summary>Concatenates two UTF-8 spans into a fresh <c>byte[]</c>.</summary>

@@ -8,22 +8,16 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Sitemap;
 
 /// <summary>
-/// Sitemap plugin. Collects every rendered page's URL during the
-/// build and writes <c>sitemap.xml</c> + <c>robots.txt</c> to the
-/// output root in <see cref="FinalizeAsync"/>.
+/// Collects every rendered page's URL during the build and writes
+/// <c>sitemap.xml</c> plus <c>robots.txt</c> to the output root.
+/// Requires <c>site_url</c> in the config; otherwise no-ops.
 /// </summary>
-/// <remarks>
-/// Requires <c>site_url</c> in the config — without it the URLs in
-/// the sitemap can't be made absolute, so the plugin no-ops with a
-/// note in the build log. <c>robots.txt</c> is emitted alongside
-/// pointing crawlers at the sitemap URL.
-/// </remarks>
 public sealed class SitemapPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin
 {
-    /// <summary>Per-page UTF-8 URL bytes collected during the build; drained at finalize time.</summary>
+    /// <summary>Collected UTF-8 URL bytes per page.</summary>
     private readonly ConcurrentQueue<byte[]> _entries = [];
 
-    /// <summary>Resolved canonical site URL bytes (with trailing slash) captured at configure time; null when missing.</summary>
+    /// <summary>Site URL bytes with trailing slash; null when not configured.</summary>
     private byte[]? _baseUrlBytes;
 
     /// <inheritdoc/>

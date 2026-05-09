@@ -9,26 +9,16 @@ using SourceDocParser.NuGet.Infrastructure;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// Builds an <see cref="IAssemblySource"/> from one or more
-/// <see cref="CSharpApiGeneratorInput"/> shapes. Centralizes the
-/// per-shape dispatch so <see cref="CSharpApiGenerator"/>'s public
-/// entry points stay shape-agnostic.
-/// </summary>
+/// <summary>Builds an <see cref="IAssemblySource"/> from one or more <see cref="CSharpApiGeneratorInput"/> shapes.</summary>
 internal static class AssemblySourceFactory
 {
-    /// <summary>Synthesized-manifest scratch directory name created under the supplied cache root.</summary>
+    /// <summary>Synthesized-manifest scratch directory name.</summary>
     private const string SynthesizedManifestDirectory = ".csharp-apigen-manifest";
 
-    /// <summary>Synthesized manifest filename matching the on-disk format <c>NuGetAssemblySource</c> reads.</summary>
+    /// <summary>Synthesized manifest filename.</summary>
     private const string ManifestFileName = "nuget-packages.json";
 
-    /// <summary>
-    /// Resolves <paramref name="inputs"/> into a single
-    /// <see cref="IAssemblySource"/>. When the array contains exactly
-    /// one entry the underlying source is returned directly; multiple
-    /// entries are wrapped in a <see cref="CompositeAssemblySource"/>.
-    /// </summary>
+    /// <summary>Resolves <paramref name="inputs"/> into a single <see cref="IAssemblySource"/>.</summary>
     /// <param name="inputs">Caller-supplied input shapes.</param>
     /// <param name="logger">Logger handed to NuGet-driven sources.</param>
     /// <returns>The resolved source.</returns>
@@ -61,10 +51,7 @@ internal static class AssemblySourceFactory
         _ => throw new ArgumentException($"Unknown input shape: {input.GetType().FullName}", nameof(input))
     };
 
-    /// <summary>
-    /// Synthesizes a transient <c>nuget-packages.json</c> under <paramref name="input"/>'s cache path and
-    /// returns a <see cref="NuGetAssemblySource"/> pointing at the scratch directory.
-    /// </summary>
+    /// <summary>Synthesizes a transient manifest for the inline package list and returns a <see cref="NuGetAssemblySource"/> over it.</summary>
     /// <param name="input">Inline-package input.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>A source ready to walk.</returns>

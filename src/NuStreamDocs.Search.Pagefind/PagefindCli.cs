@@ -13,14 +13,12 @@ namespace NuStreamDocs.Search.Pagefind;
 
 /// <summary>Locates and invokes the bundled <c>pagefind</c> CLI binary against a rendered site.</summary>
 /// <remarks>
-/// Resolution order: explicit <see cref="PagefindOptions.BinaryPath"/> override, the
-/// per-RID native shipped under <c>runtimes/&lt;rid&gt;/native/pagefind[.exe]</c>, then a
-/// bare <c>pagefind</c> on PATH. Missing-binary handling depends on
-/// <see cref="PagefindOptions.StrictBinaryRequired"/> — log+skip by default, throw when strict.
+/// Resolution order: explicit <see cref="PagefindOptions.BinaryPath"/> override, then the per-RID native under <c>runtimes/&lt;rid&gt;/native/</c>, then PATH.
+/// Missing-binary handling honors <see cref="PagefindOptions.StrictBinaryRequired"/> — log-and-skip by default, throw when strict.
 /// </remarks>
 public static class PagefindCli
 {
-    /// <summary>Stdio drain buffer size — 4 KB matches the typical OS pipe buffer; bigger doesn't help when stderr is a few hundred bytes.</summary>
+    /// <summary>Stdio drain buffer size in bytes.</summary>
     private const int DrainBufferSize = 4 * 1024;
 
     /// <summary>Gets the Pagefind release this package targets; matches the binary version under <c>runtimes/</c>.</summary>
@@ -68,7 +66,7 @@ public static class PagefindCli
         return false;
     }
 
-    /// <summary>Spawns Pagefind, drains its stdio as bytes, waits, and propagates the exit-code result.</summary>
+    /// <summary>Spawns Pagefind, waits for exit, and reports success based on the exit code.</summary>
     /// <param name="binary">Resolved binary path.</param>
     /// <param name="siteRoot">Rendered site directory (passed via <c>--site</c>).</param>
     /// <param name="options">Plugin options (carries the strict toggle).</param>
@@ -203,7 +201,7 @@ public static class PagefindCli
         }
     }
 
-    /// <summary>Saturating cast from <see cref="long"/> to <see cref="int"/>; capped because the logger emitter takes int.</summary>
+    /// <summary>Saturating cast from <see cref="long"/> to <see cref="int"/>.</summary>
     /// <param name="value">Source value.</param>
     /// <returns>Clamped value.</returns>
     private static int ClampToInt(long value) => value > int.MaxValue ? int.MaxValue : (int)value;

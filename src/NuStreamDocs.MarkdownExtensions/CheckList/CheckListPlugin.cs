@@ -9,25 +9,21 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.CheckList;
 
-/// <summary>
-/// Check-list plugin. Rewrites <c>- [ ] item</c> and <c>- [x] item</c>
-/// at list-item starts into inline disabled-checkbox HTML so the
-/// markdown renderer passes them through unchanged.
-/// </summary>
+/// <summary>Check-list plugin — rewrites <c>- [ ]</c> / <c>- [x]</c> tasks into disabled-checkbox HTML.</summary>
 public sealed class CheckListPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>UTF-8 head-link snippet pulled into every rendered page.</summary>
+    /// <summary>Head-link snippet injected on every page.</summary>
     private static readonly byte[] LinkBytes =
         [.. """<link rel="stylesheet" href="/assets/extensions/checklist.css">"""u8];
 
-    /// <summary>UTF-8 stylesheet shipped to every site.</summary>
+    /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
         [.. """
 .task-list-item{list-style:none;margin-left:-1.4em}
 .task-list-item input[type=checkbox]{margin-right:.4em;vertical-align:middle}
 """u8];
 
-    /// <summary>Forward-slash relative path the css asset is written to.</summary>
+    /// <summary>Relative path for the css asset.</summary>
     private static readonly FilePath AssetFilePath = new("assets/extensions/checklist.css");
 
     /// <inheritdoc/>
