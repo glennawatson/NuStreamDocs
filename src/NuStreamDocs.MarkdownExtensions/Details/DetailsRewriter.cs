@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.MarkdownExtensions.Internal;
 
@@ -39,7 +40,7 @@ internal static class DetailsRewriter
                 continue;
             }
 
-            var lineEnd = MarkdownCodeScanner.LineEnd(source, i);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, i);
             writer.Write(source[i..lineEnd]);
             i = lineEnd;
         }
@@ -104,7 +105,7 @@ internal static class DetailsRewriter
         }
         else
         {
-            HtmlEscaper.Escape(title, writer);
+            XmlEntityEscaper.WriteEscaped(writer, title, XmlEntityEscaper.Mode.HtmlAttribute);
         }
 
         writer.Write("</summary>\n\n"u8);

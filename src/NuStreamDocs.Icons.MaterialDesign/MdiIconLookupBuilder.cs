@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Builder for assembling an <see cref="MdiIconLookup"/> from <c>(name, svg)</c> pairs.</summary>
@@ -30,16 +28,6 @@ public sealed class MdiIconLookupBuilder
 
         _entries[nameKey] = (offset, svg.Length);
         return this;
-    }
-
-    /// <summary>Adds an icon whose name is a <see cref="string"/>.</summary>
-    /// <param name="name">Icon name; encoded as UTF-8.</param>
-    /// <param name="svg">UTF-8 SVG bytes.</param>
-    /// <returns>This builder for chaining.</returns>
-    public MdiIconLookupBuilder Add(string name, ReadOnlySpan<byte> svg)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        return Add(Encoding.UTF8.GetBytes(name), svg);
     }
 
     /// <summary>Builds the immutable lookup.</summary>

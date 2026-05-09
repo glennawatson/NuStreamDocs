@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.CheckList;
@@ -45,13 +46,13 @@ internal static class CheckListRewriter
                 writer.Write(source[i..afterIndent]);
                 writer.Write(source[afterIndent..bulletEnd]);
                 writer.Write(marker is (byte)'x' or (byte)'X' ? Checked : Unchecked);
-                var lineEnd = MarkdownCodeScanner.LineEnd(source, afterMarker);
+                var lineEnd = Utf8LineSpan.LfLineEnd(source, afterMarker);
                 writer.Write(source[afterMarker..lineEnd]);
                 i = lineEnd;
                 continue;
             }
 
-            var passEnd = MarkdownCodeScanner.LineEnd(source, i);
+            var passEnd = Utf8LineSpan.LfLineEnd(source, i);
             writer.Write(source[i..passEnd]);
             i = passEnd;
         }

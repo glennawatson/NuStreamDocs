@@ -5,7 +5,6 @@
 using System.Buffers;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
-using static NuStreamDocs.Markdown.Common.MarkdownCodeScanner;
 
 namespace NuStreamDocs.Abbr;
 
@@ -51,7 +50,7 @@ internal static class AbbrRewriter
         while (i < source.Length)
         {
             var lineStart = i;
-            var lineEnd = LineEnd(source, i);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, i);
 
             if (TryParseDefinition(source[lineStart..lineEnd], out var token, out var definition))
             {

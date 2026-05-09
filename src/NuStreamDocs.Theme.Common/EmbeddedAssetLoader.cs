@@ -59,25 +59,25 @@ public static class EmbeddedAssetLoader
         ArgumentException.ThrowIfNullOrEmpty(rel);
 
         var prefixBytes = Encoding.UTF8.GetBytes(prefix);
-        var relBytes = TranslateRelativePath(rel);
+        var relBytes = TranslateRelativePath(Encoding.UTF8.GetBytes(rel));
         return Utf8Concat.Concat(prefixBytes, TemplatesSegment, relBytes);
     }
 
     /// <summary>Translates the path's slashes to dots and substitutes <c>@</c>/<c>-</c> with <c>_</c> on every directory segment.</summary>
-    /// <param name="rel">Forward-slashed source path.</param>
-    /// <returns>UTF-8 bytes with the substitutions applied; ASCII-only paths fit one-to-one in bytes.</returns>
-    private static byte[] TranslateRelativePath(string rel)
+    /// <param name="rel">Forward-slashed source path bytes (UTF-8 / ASCII).</param>
+    /// <returns>UTF-8 bytes with the substitutions applied.</returns>
+    private static byte[] TranslateRelativePath(ReadOnlySpan<byte> rel)
     {
-        var lastSlash = rel.LastIndexOf('/');
+        var lastSlash = rel.LastIndexOf((byte)'/');
         var dst = new byte[rel.Length];
         for (var i = 0; i < rel.Length; i++)
         {
-            var c = rel[i];
-            dst[i] = c switch
+            var b = rel[i];
+            dst[i] = b switch
             {
-                '/' => (byte)'.',
-                '@' or '-' when i < lastSlash => (byte)'_',
-                _ => (byte)c
+                (byte)'/' => (byte)'.',
+                (byte)'@' or (byte)'-' when i < lastSlash => (byte)'_',
+                _ => b,
             };
         }
 

@@ -26,7 +26,7 @@ public class LinkValidatorPluginCtorTests
         try
         {
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 1, CancellationToken.None);
-            await Assert.That(corpus.ContainsPage("/missing.html")).IsFalse();
+            await Assert.That(corpus.ContainsPage([.. "/missing.html"u8])).IsFalse();
         }
         finally
         {

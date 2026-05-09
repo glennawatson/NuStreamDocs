@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Optimize;
 
@@ -21,9 +22,6 @@ internal static class HtmlMinifier
 
     /// <summary>Length of the <c>&lt;/</c> close-tag prefix.</summary>
     private const int CloseTagPrefixLength = 2;
-
-    /// <summary>Offset between an ASCII uppercase letter and its lowercase counterpart.</summary>
-    private const int AsciiUpperToLowerOffset = 32;
 
     /// <summary>Whitespace bytes recognized between tags.</summary>
     private static readonly SearchValues<byte> Whitespace = SearchValues.Create(" \t\r\n"u8);
@@ -141,7 +139,7 @@ internal static class HtmlMinifier
                 continue;
             }
 
-            if (!EqualsAsciiCaseInsensitive(source.Slice(nameStart, name.Length), name))
+            if (!AsciiByteHelpers.EqualsIgnoreAsciiCase(source.Slice(nameStart, name.Length), name))
             {
                 continue;
             }
@@ -161,33 +159,6 @@ internal static class HtmlMinifier
     /// <param name="b">Source byte.</param>
     /// <returns>True when the byte is a tag-name terminator.</returns>
     private static bool IsTagBoundary(byte b) => b is (byte)'>' or (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or (byte)'/';
-
-    /// <summary>Compares two ASCII byte spans case-insensitively.</summary>
-    /// <param name="a">First span.</param>
-    /// <param name="b">Second span.</param>
-    /// <returns>True when equal ignoring ASCII case.</returns>
-    private static bool EqualsAsciiCaseInsensitive(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
-    {
-        if (a.Length != b.Length)
-        {
-            return false;
-        }
-
-        for (var i = 0; i < a.Length; i++)
-        {
-            if (ToLowerAscii(a[i]) != ToLowerAscii(b[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>ASCII lower-case fold.</summary>
-    /// <param name="b">Source byte.</param>
-    /// <returns>Lower-cased byte for ASCII letters; passthrough otherwise.</returns>
-    private static byte ToLowerAscii(byte b) => b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b + AsciiUpperToLowerOffset) : b;
 
     /// <summary>Copies a preserve-tag block (open tag through matching close tag) verbatim into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -256,7 +227,7 @@ internal static class HtmlMinifier
             return false;
         }
 
-        return EqualsAsciiCaseInsensitive(source.Slice(nameStart, name.Length), name)
+        return AsciiByteHelpers.EqualsIgnoreAsciiCase(source.Slice(nameStart, name.Length), name)
             && (end == source.Length || IsTagBoundary(source[end]));
     }
 

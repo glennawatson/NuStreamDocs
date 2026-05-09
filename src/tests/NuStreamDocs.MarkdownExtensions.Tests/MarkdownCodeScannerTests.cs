@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
@@ -34,7 +35,7 @@ public class MarkdownCodeScannerTests
     [Arguments("abc\ndef", 4, 7)]
     [Arguments("no-newline", 0, 10)]
     public async Task LineEndReturnsExpected(string source, int offset, int expected) =>
-        await Assert.That(MarkdownCodeScanner.LineEnd(Encoding.UTF8.GetBytes(source), offset))
+        await Assert.That(Utf8LineSpan.LfLineEnd(Encoding.UTF8.GetBytes(source), offset))
             .IsEqualTo(expected);
 
     /// <summary>TryConsumeFence handles backticks, tildes, missing-close, and non-fence input.</summary>

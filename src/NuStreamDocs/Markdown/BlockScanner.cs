@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Markdown;
 
@@ -74,9 +75,6 @@ public static class BlockScanner
 
     /// <summary>Greater-than block-quote marker.</summary>
     private const byte Gt = (byte)'>';
-
-    /// <summary>ASCII case-fold bit; OR-ing with this on an ASCII letter yields its lowercase form.</summary>
-    private const byte AsciiCaseBit = 0x20;
 
     /// <summary>Maximum length of any recognized HTML-block tag name (<c>blockquote</c> = 10 letters; rounded up).</summary>
     private const int MaxTagNameLength = 11;
@@ -712,13 +710,13 @@ public static class BlockScanner
     /// <returns>Lowercased ASCII slice of the tag name (zero-length when invalid).</returns>
     private static ReadOnlySpan<byte> ExtractTagName(ReadOnlySpan<byte> body, int offset, Span<byte> lowercaseBuffer)
     {
-        if (offset >= body.Length || !IsAsciiLetter(body[offset]))
+        if (offset >= body.Length || !AsciiByteHelpers.IsAsciiLetter(body[offset]))
         {
             return default;
         }
 
         var end = offset;
-        while (end < body.Length && IsTagNameContinue(body[end]))
+        while (end < body.Length && (AsciiByteHelpers.IsAsciiLetter(body[end]) || AsciiByteHelpers.IsAsciiDigit(body[end]) || body[end] is (byte)'-'))
         {
             end++;
         }
@@ -748,7 +746,7 @@ public static class BlockScanner
         for (var i = 0; i < source.Length; i++)
         {
             var b = source[i];
-            dst[i] = b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+            dst[i] = AsciiByteHelpers.ToAsciiLowerByte(b);
         }
 
         return dst[..source.Length];
@@ -786,7 +784,7 @@ public static class BlockScanner
     /// <returns><see cref="BlockKind.Blank"/> on close, otherwise <see cref="BlockKind.HtmlBlockContent"/>.</returns>
     private static BlockKind ClassifyInsideType6Block(ReadOnlySpan<byte> line, ref HtmlBlockState html)
     {
-        if (line.IsEmpty || IsAllWhitespace(line))
+        if (line.IsEmpty || AsciiByteHelpers.IsAllAsciiWhitespace(line))
         {
             html = default;
             return BlockKind.Blank;
@@ -875,7 +873,7 @@ public static class BlockScanner
         for (var j = 0; j < lowerNeedle.Length; j++)
         {
             var h = haystack[j];
-            var lowered = h is >= (byte)'A' and <= (byte)'Z' ? (byte)(h | AsciiCaseBit) : h;
+            var lowered = AsciiByteHelpers.ToAsciiLowerByte(h);
             if (lowered != lowerNeedle[j])
             {
                 return false;
@@ -884,34 +882,6 @@ public static class BlockScanner
 
         return true;
     }
-
-    /// <summary>True when every byte in <paramref name="line"/> is ASCII whitespace.</summary>
-    /// <param name="line">Line bytes.</param>
-    /// <returns>True when the line is whitespace-only.</returns>
-    private static bool IsAllWhitespace(ReadOnlySpan<byte> line)
-    {
-        for (var i = 0; i < line.Length; i++)
-        {
-            if (line[i] is not (Sp or Tab or Cr or Lf))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>True when <paramref name="b"/> is an ASCII letter.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True when in [A-Za-z].</returns>
-    private static bool IsAsciiLetter(byte b) =>
-        b is >= (byte)'A' and <= (byte)'Z' or >= (byte)'a' and <= (byte)'z';
-
-    /// <summary>True when <paramref name="b"/> can continue an HTML tag name.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True for letters, digits, or hyphens.</returns>
-    private static bool IsTagNameContinue(byte b) =>
-        IsAsciiLetter(b) || b is >= (byte)'0' and <= (byte)'9' or (byte)'-';
 
     /// <summary>True when <paramref name="tag"/> matches one of the CommonMark Type 6 block-level tags.</summary>
     /// <param name="tag">Lowercased ASCII tag-name slice.</param>

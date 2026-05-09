@@ -144,7 +144,7 @@ internal static class RawHtml
         }
 
         // Optional whitespace before '>'.
-        while (p < source.Length && source[p] is (byte)' ' or (byte)'\t')
+        while (p < source.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[p]))
         {
             p++;
         }

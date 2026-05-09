@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Buffers.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.MarkdownExtensions.Internal;
 
@@ -33,7 +34,7 @@ internal static class TabsRewriter
                 continue;
             }
 
-            var lineEnd = MarkdownCodeScanner.LineEnd(source, i);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, i);
             writer.Write(source[i..lineEnd]);
             i = lineEnd;
         }
@@ -157,7 +158,7 @@ internal static class TabsRewriter
         writer.Write("_"u8);
         WriteInt(tabIndex, writer);
         writer.Write("\">"u8);
-        HtmlEscaper.Escape(title, writer);
+        XmlEntityEscaper.WriteEscaped(writer, title, XmlEntityEscaper.Mode.HtmlAttribute);
         writer.Write("</label>\n<div class=\"tabbed-content\">\n\n"u8);
         IndentedBlockScanner.WriteDeindented(body, writer);
         writer.Write("\n</div>\n"u8);
@@ -174,7 +175,7 @@ internal static class TabsRewriter
         {
             var rel = source[p..].IndexOf((byte)'\n');
             var lineEnd = rel < 0 ? source.Length : p + rel + 1;
-            if (!IndentedBlockScanner.IsBlankLine(source[p..lineEnd]))
+            if (!AsciiByteHelpers.IsAllAsciiWhitespace(source[p..lineEnd]))
             {
                 return p;
             }

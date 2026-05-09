@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Keys;
@@ -12,9 +13,6 @@ internal static class KeysRewriter
 {
     /// <summary>Width of the <c>++</c> opening/closing marker.</summary>
     private const int MarkerLength = 2;
-
-    /// <summary>OR-mask that maps an ASCII uppercase letter to its lowercase form (<c>'A'</c> <c>0x41</c> | <c>0x20</c> = <c>'a'</c> <c>0x61</c>).</summary>
-    private const byte AsciiCaseBit = 0x20;
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
@@ -100,7 +98,7 @@ internal static class KeysRewriter
         for (var i = 0; i < token.Length; i++)
         {
             var b = token[i];
-            lookupBuf[i] = b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+            lookupBuf[i] = AsciiByteHelpers.ToAsciiLowerByte(b);
         }
 
         var lookup = (ReadOnlySpan<byte>)lookupBuf;

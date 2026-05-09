@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Tags;
@@ -40,7 +41,7 @@ internal static class TagsFrontmatterReader
         var cursor = 0;
         while (cursor < frontmatter.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(frontmatter, cursor);
             var line = frontmatter[cursor..lineEnd];
             var trimmed = YamlByteScanner.TrimLeading(line);
             var indent = line.Length - trimmed.Length;
@@ -61,7 +62,7 @@ internal static class TagsFrontmatterReader
     /// <returns>Parsed UTF-8 tag arrays, or empty when the value is malformed.</returns>
     private static byte[][] ParseTagsValue(ReadOnlySpan<byte> frontmatter, int valueStart)
     {
-        var lineEnd = YamlByteScanner.LineEnd(frontmatter, valueStart);
+        var lineEnd = Utf8LineSpan.LfLineEnd(frontmatter, valueStart);
         var inline = YamlByteScanner.TrimWhitespace(frontmatter[valueStart..lineEnd]);
         if (inline is [(byte)'[', .., (byte)']'])
         {
@@ -114,7 +115,7 @@ internal static class TagsFrontmatterReader
         List<byte[]> tags = new(4);
         while (cursor < frontmatter.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(frontmatter, cursor);
             var line = frontmatter[cursor..lineEnd];
             var trimmed = YamlByteScanner.TrimLeading(line);
             if (trimmed.IsEmpty)

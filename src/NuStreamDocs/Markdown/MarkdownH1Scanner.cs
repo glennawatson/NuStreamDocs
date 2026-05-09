@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Markdown;
@@ -31,7 +32,7 @@ public static class MarkdownH1Scanner
         ReadOnlySpan<byte> previousLine = default;
         while (cursor < source.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             var trimmedLeading = TrimUpToThreeLeadingSpaces(line);
 

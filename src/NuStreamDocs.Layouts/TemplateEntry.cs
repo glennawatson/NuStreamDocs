@@ -9,4 +9,4 @@ namespace NuStreamDocs.Layouts;
 /// <summary>Cached parse of a single layout template plus the absolute path it was loaded from.</summary>
 /// <param name="Unit">Parsed template bytes and token stream.</param>
 /// <param name="ResolvedPath">Absolute path the template was loaded from (diagnostics only).</param>
-internal sealed record TemplateEntry(TemplateUnit Unit, ApiCompatString ResolvedPath);
+internal sealed record TemplateEntry(TemplateUnit Unit, FilePath ResolvedPath);

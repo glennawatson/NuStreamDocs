@@ -99,7 +99,7 @@ public static class LinkReferenceRewriter
 
         if (MarkdownCodeScanner.AtLineStart(source, pos))
         {
-            var lineEnd = MarkdownCodeScanner.LineEnd(source, pos);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, pos);
             if (TryParseDefinitionLine(source, pos, lineEnd, out _))
             {
                 return lineEnd;
@@ -291,7 +291,7 @@ public static class LinkReferenceRewriter
                 continue;
             }
 
-            var lineEnd = MarkdownCodeScanner.LineEnd(source, pos);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, pos);
             if (TryParseDefinitionLine(source, pos, lineEnd, out var def))
             {
                 map.TryAdd(def.Key, new(def.Href.ToArray()));
@@ -473,7 +473,7 @@ public static class LinkReferenceRewriter
     /// <returns>Updated index.</returns>
     private static int SkipSpaces(ReadOnlySpan<byte> source, int p, int lineEnd)
     {
-        while (p < lineEnd && source[p] is (byte)' ' or (byte)'\t')
+        while (p < lineEnd && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[p]))
         {
             p++;
         }

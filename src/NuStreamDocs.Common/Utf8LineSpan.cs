@@ -28,6 +28,20 @@ public static class Utf8LineSpan
     }
 
     /// <summary>
+    /// Returns the offset just past the next <c>\n</c> at or after <paramref name="offset"/>, or
+    /// <paramref name="source"/>.Length when no newline remains. LF-only — for inputs guaranteed
+    /// to use <c>\n</c> terminators (CommonMark, YAML, JSON-shaped configs).
+    /// </summary>
+    /// <param name="source">UTF-8 source bytes.</param>
+    /// <param name="offset">Search-start offset.</param>
+    /// <returns>Inclusive end of the current line (one past the <c>\n</c>) or source length.</returns>
+    public static int LfLineEnd(ReadOnlySpan<byte> source, int offset)
+    {
+        var rel = source[offset..].IndexOf((byte)'\n');
+        return rel < 0 ? source.Length : offset + rel + 1;
+    }
+
+    /// <summary>
     /// Advances past the line terminator at <paramref name="lineEnd"/>; consumes
     /// <c>\r\n</c>, <c>\n</c>, or <c>\r</c>.
     /// </summary>

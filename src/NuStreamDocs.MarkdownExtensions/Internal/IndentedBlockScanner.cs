@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Internal;
 
@@ -25,7 +26,7 @@ internal static class IndentedBlockScanner
             var rel = source[p..].IndexOf((byte)'\n');
             var lineEnd = rel < 0 ? source.Length : p + rel + 1;
 
-            if (IsBlankLine(source[p..lineEnd]))
+            if (AsciiByteHelpers.IsAllAsciiWhitespace(source[p..lineEnd]))
             {
                 p = lineEnd;
                 continue;
@@ -41,25 +42,6 @@ internal static class IndentedBlockScanner
         }
 
         return lastContent;
-    }
-
-    /// <summary>Returns true when <paramref name="line"/> contains only spaces, tabs, CR, or LF.</summary>
-    /// <param name="line">UTF-8 line bytes including any trailing newline.</param>
-    /// <returns>True when blank.</returns>
-    public static bool IsBlankLine(ReadOnlySpan<byte> line)
-    {
-        for (var i = 0; i < line.Length; i++)
-        {
-            var b = line[i];
-            if (b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
-            {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
     }
 
     /// <summary>Returns true when the line at <paramref name="offset"/> starts with at least <see cref="BodyIndent"/> spaces or a tab.</summary>
@@ -99,7 +81,7 @@ internal static class IndentedBlockScanner
             var lineEnd = rel < 0 ? body.Length : i + rel + 1;
             var line = body[i..lineEnd];
 
-            if (IsBlankLine(line))
+            if (AsciiByteHelpers.IsAllAsciiWhitespace(line))
             {
                 writer.Write(line);
                 i = lineEnd;

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.Tests;
@@ -66,18 +67,18 @@ public class OpenerLineParserTests
         await Assert.That(endAtEnd).IsEqualTo(4);
     }
 
-    /// <summary>Type-char predicate accepts identifier bytes only.</summary>
+    /// <summary>Slug-byte predicate accepts identifier bytes plus dash.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task TypeCharBranches()
+    public async Task SlugByteBranches()
     {
-        await Assert.That(OpenerLineParser.IsTypeChar((byte)'a')).IsTrue();
-        await Assert.That(OpenerLineParser.IsTypeChar((byte)'Z')).IsTrue();
-        await Assert.That(OpenerLineParser.IsTypeChar((byte)'9')).IsTrue();
-        await Assert.That(OpenerLineParser.IsTypeChar((byte)'-')).IsTrue();
-        await Assert.That(OpenerLineParser.IsTypeChar((byte)'_')).IsTrue();
-        await Assert.That(OpenerLineParser.IsTypeChar((byte)' ')).IsFalse();
-        await Assert.That(OpenerLineParser.IsTypeChar((byte)'!')).IsFalse();
+        await Assert.That(AsciiByteHelpers.IsAsciiSlugByte((byte)'a')).IsTrue();
+        await Assert.That(AsciiByteHelpers.IsAsciiSlugByte((byte)'Z')).IsTrue();
+        await Assert.That(AsciiByteHelpers.IsAsciiSlugByte((byte)'9')).IsTrue();
+        await Assert.That(AsciiByteHelpers.IsAsciiSlugByte((byte)'-')).IsTrue();
+        await Assert.That(AsciiByteHelpers.IsAsciiSlugByte((byte)'_')).IsTrue();
+        await Assert.That(AsciiByteHelpers.IsAsciiSlugByte((byte)' ')).IsFalse();
+        await Assert.That(AsciiByteHelpers.IsAsciiSlugByte((byte)'!')).IsFalse();
     }
 
     /// <summary>Whitespace + trailing-header predicate cases.</summary>
@@ -85,9 +86,9 @@ public class OpenerLineParserTests
     [Test]
     public async Task WhitespacePredicates()
     {
-        await Assert.That(OpenerLineParser.IsHorizontalSpace((byte)' ')).IsTrue();
-        await Assert.That(OpenerLineParser.IsHorizontalSpace((byte)'\t')).IsTrue();
-        await Assert.That(OpenerLineParser.IsHorizontalSpace((byte)'\n')).IsFalse();
+        await Assert.That(AsciiByteHelpers.IsAsciiHorizontalWhitespace((byte)' ')).IsTrue();
+        await Assert.That(AsciiByteHelpers.IsAsciiHorizontalWhitespace((byte)'\t')).IsTrue();
+        await Assert.That(AsciiByteHelpers.IsAsciiHorizontalWhitespace((byte)'\n')).IsFalse();
         await Assert.That(OpenerLineParser.IsTrailingHeaderByte((byte)'\r')).IsTrue();
         await Assert.That(OpenerLineParser.IsTrailingHeaderByte((byte)'\n')).IsFalse();
     }

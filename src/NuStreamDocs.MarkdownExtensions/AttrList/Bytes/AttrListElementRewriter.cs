@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
@@ -167,7 +168,7 @@ internal static class AttrListElementRewriter
         }
 
         var ws = gt - 1;
-        while (ws > nameEnd && html[ws - 1] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
+        while (ws > nameEnd && AsciiByteHelpers.IsAsciiWhitespace(html[ws - 1]))
         {
             ws--;
         }
@@ -200,7 +201,7 @@ internal static class AttrListElementRewriter
 
         var openMarker = innerStart + rel;
         var trimmedPrefixEnd = openMarker;
-        while (trimmedPrefixEnd > innerStart && html[trimmedPrefixEnd - 1] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
+        while (trimmedPrefixEnd > innerStart && AsciiByteHelpers.IsAsciiWhitespace(html[trimmedPrefixEnd - 1]))
         {
             trimmedPrefixEnd--;
         }

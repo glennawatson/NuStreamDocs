@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Autorefs;
 
@@ -157,7 +158,7 @@ public static class AutorefsReferenceLinkPreprocessor
         var cursor = 0;
         while (cursor < source.Length)
         {
-            while (cursor < source.Length && source[cursor] is (byte)' ' or (byte)'\t')
+            while (cursor < source.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[cursor]))
             {
                 cursor++;
             }
@@ -385,7 +386,7 @@ public static class AutorefsReferenceLinkPreprocessor
     private static bool TryAdvancePastFenceMarker(ReadOnlySpan<byte> source, ref int cursor)
     {
         var probe = cursor;
-        while (probe < source.Length && source[probe] is (byte)' ' or (byte)'\t')
+        while (probe < source.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[probe]))
         {
             probe++;
         }

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Bibliography.Model;
-using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Bibliography;
 
@@ -39,16 +38,6 @@ public sealed class BibliographyDatabaseBuilder
         return this;
     }
 
-    /// <summary>Adds a book entry.</summary>
-    /// <param name="id">Citation key.</param>
-    /// <param name="title">Book title.</param>
-    /// <param name="author">Single author; use the <see cref="CitationEntry"/> overload for multiple authors.</param>
-    /// <param name="year">Publication year.</param>
-    /// <param name="publisher">Publisher.</param>
-    /// <returns>This builder for chaining.</returns>
-    public BibliographyDatabaseBuilder AddBook(string id, string title, PersonName author, int year, string publisher) =>
-        AddBook(Utf8Encoder.Encode(id), Utf8Encoder.Encode(title), author, year, Utf8Encoder.Encode(publisher));
-
     /// <summary>Adds a book entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
     /// <param name="title">Book-title bytes.</param>
@@ -72,18 +61,6 @@ public sealed class BibliographyDatabaseBuilder
             Publisher = publisher
         });
     }
-
-    /// <summary>Adds a journal-article entry.</summary>
-    /// <param name="id">Citation key.</param>
-    /// <param name="title">Article title.</param>
-    /// <param name="author">Single author.</param>
-    /// <param name="year">Publication year.</param>
-    /// <param name="journal">Journal / container title.</param>
-    /// <param name="volume">Volume.</param>
-    /// <param name="page">Starting page or page range.</param>
-    /// <returns>This builder for chaining.</returns>
-    public BibliographyDatabaseBuilder AddArticle(string id, string title, PersonName author, int year, string journal, string volume, string page) =>
-        AddArticle(Utf8Encoder.Encode(id), Utf8Encoder.Encode(title), author, year, Utf8Encoder.Encode(journal), Utf8Encoder.Encode(volume), Utf8Encoder.Encode(page));
 
     /// <summary>Adds a journal-article entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
@@ -115,15 +92,6 @@ public sealed class BibliographyDatabaseBuilder
         });
     }
 
-    /// <summary>Adds a legal-case entry.</summary>
-    /// <param name="id">Citation key.</param>
-    /// <param name="name">Case name (e.g. <c>"Mabo v Queensland (No 2)"</c>).</param>
-    /// <param name="lawReportSeries">AGLC4 law-report-series citation (e.g. <c>"(1992) 175 CLR 1"</c>).</param>
-    /// <param name="year">Decision year.</param>
-    /// <returns>This builder for chaining.</returns>
-    public BibliographyDatabaseBuilder AddCase(string id, string name, string lawReportSeries, int year) =>
-        AddCase(Utf8Encoder.Encode(id), Utf8Encoder.Encode(name), Utf8Encoder.Encode(lawReportSeries), year);
-
     /// <summary>Adds a legal-case entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
     /// <param name="name">Case-name bytes.</param>
@@ -144,15 +112,6 @@ public sealed class BibliographyDatabaseBuilder
             LawReportSeries = lawReportSeries
         });
     }
-
-    /// <summary>Adds a legislation entry.</summary>
-    /// <param name="id">Citation key.</param>
-    /// <param name="title">Statute title (e.g. <c>"High Court of Australia Act 1979"</c>).</param>
-    /// <param name="jurisdiction">Jurisdiction code (e.g. <c>"Cth"</c>, <c>"NSW"</c>).</param>
-    /// <param name="year">Year of enactment.</param>
-    /// <returns>This builder for chaining.</returns>
-    public BibliographyDatabaseBuilder AddLegislation(string id, string title, string jurisdiction, int year) =>
-        AddLegislation(Utf8Encoder.Encode(id), Utf8Encoder.Encode(title), Utf8Encoder.Encode(jurisdiction), year);
 
     /// <summary>Adds a legislation entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>

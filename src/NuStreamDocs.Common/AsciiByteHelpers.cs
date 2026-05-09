@@ -25,10 +25,90 @@ public static class AsciiByteHelpers
             or >= (byte)'0' and <= (byte)'9'
             or (byte)'_';
 
+    /// <summary>Returns true when <paramref name="b"/> may appear inside a slug / kebab token (identifier byte or <c>-</c>).</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>True for slug bytes (letter / digit / <c>_</c> / <c>-</c>).</returns>
+    public static bool IsAsciiSlugByte(byte b) =>
+        IsAsciiIdentifierByte(b) || b is (byte)'-';
+
+    /// <summary>True when <paramref name="b"/> is an ASCII letter (<c>A</c>–<c>Z</c>, <c>a</c>–<c>z</c>).</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>True for ASCII letters.</returns>
+    public static bool IsAsciiLetter(byte b) =>
+        b is >= (byte)'A' and <= (byte)'Z' or >= (byte)'a' and <= (byte)'z';
+
+    /// <summary>True when <paramref name="b"/> is an ASCII decimal digit (<c>0</c>–<c>9</c>).</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>True for ASCII digits.</returns>
+    public static bool IsAsciiDigit(byte b) =>
+        b is >= (byte)'0' and <= (byte)'9';
+
+    /// <summary>True when <paramref name="b"/> is an ASCII hex digit (<c>0</c>–<c>9</c>, <c>A</c>–<c>F</c>, <c>a</c>–<c>f</c>).</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>True for ASCII hex digits.</returns>
+    public static bool IsAsciiHexDigit(byte b) =>
+        b is >= (byte)'0' and <= (byte)'9' or >= (byte)'A' and <= (byte)'F' or >= (byte)'a' and <= (byte)'f';
+
+    /// <summary>True when every byte in <paramref name="bytes"/> is ASCII whitespace, or the span is empty.</summary>
+    /// <param name="bytes">UTF-8 source.</param>
+    /// <returns>True for empty or whitespace-only spans.</returns>
+    public static bool IsAllAsciiWhitespace(ReadOnlySpan<byte> bytes)
+    {
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            if (!IsAsciiWhitespace(bytes[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /// <summary>Returns true when <paramref name="b"/> is ASCII whitespace.</summary>
     /// <param name="b">UTF-8 byte.</param>
     /// <returns>True for whitespace.</returns>
     public static bool IsAsciiWhitespace(byte b) => b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n';
+
+    /// <summary>True for ASCII horizontal whitespace (space or tab) — newlines do NOT count.</summary>
+    /// <param name="b">UTF-8 byte.</param>
+    /// <returns>True for space or tab.</returns>
+    public static bool IsAsciiHorizontalWhitespace(byte b) => b is (byte)' ' or (byte)'\t';
+
+    /// <summary>Skips ASCII horizontal whitespace (space + tab) from <paramref name="offset"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="offset">Starting offset.</param>
+    /// <returns>Offset of the first non-horizontal-whitespace byte.</returns>
+    public static int SkipHorizontalWhitespace(ReadOnlySpan<byte> source, int offset)
+    {
+        var p = offset;
+        while (p < source.Length && IsAsciiHorizontalWhitespace(source[p]))
+        {
+            p++;
+        }
+
+        return p;
+    }
+
+    /// <summary>Trims leading + trailing ASCII horizontal whitespace (space + tab) bytes from <paramref name="bytes"/>.</summary>
+    /// <param name="bytes">UTF-8 source.</param>
+    /// <returns>Trimmed slice; empty when <paramref name="bytes"/> contains only horizontal whitespace.</returns>
+    public static ReadOnlySpan<byte> TrimHorizontalWhitespace(ReadOnlySpan<byte> bytes)
+    {
+        var start = 0;
+        while (start < bytes.Length && IsAsciiHorizontalWhitespace(bytes[start]))
+        {
+            start++;
+        }
+
+        var end = bytes.Length;
+        while (end > start && IsAsciiHorizontalWhitespace(bytes[end - 1]))
+        {
+            end--;
+        }
+
+        return bytes[start..end];
+    }
 
     /// <summary>Folds a single ASCII letter to lowercase; non-letters pass through unchanged.</summary>
     /// <param name="b">UTF-8 byte.</param>

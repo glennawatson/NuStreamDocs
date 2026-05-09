@@ -53,7 +53,7 @@ internal static class SnippetsRewriter
                 continue;
             }
 
-            var lineEnd = MarkdownCodeScanner.LineEnd(source, lineStart);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, lineStart);
             if (TryParseIncludeLine(source[lineStart..lineEnd], out var pathStart, out var pathLength, out var sectionStart, out var sectionLength))
             {
                 var pathBytes = source.Slice(lineStart + pathStart, pathLength);
@@ -250,7 +250,7 @@ internal static class SnippetsRewriter
     private static int LeadingWhitespaceLength(ReadOnlySpan<byte> line)
     {
         var p = 0;
-        while (p < line.Length && line[p] is (byte)' ' or (byte)'\t')
+        while (p < line.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(line[p]))
         {
             p++;
         }

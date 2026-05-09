@@ -76,7 +76,7 @@ public static class HtmlTextExtractor
     /// <param name="next">Updated state.</param>
     private static void EmitTextByte(byte b, in ExtractState state, IBufferWriter<byte> text, IBufferWriter<byte> title, out ExtractState next)
     {
-        if (b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
+        if (AsciiByteHelpers.IsAsciiWhitespace(b))
         {
             if (state.EmittedSpace)
             {

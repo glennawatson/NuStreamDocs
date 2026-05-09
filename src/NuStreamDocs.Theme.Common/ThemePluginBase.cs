@@ -465,17 +465,23 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
     /// <summary>Translates forward slashes in <paramref name="relativePath"/> to the active directory separator when needed.</summary>
     /// <param name="relativePath">Relative output path using forward slashes.</param>
-    /// <returns>OS-native relative path.</returns>
-    private static string TranslateDirectorySeparators(string relativePath) =>
-        Path.DirectorySeparatorChar is '/'
-            ? relativePath
-            : string.Create(relativePath.Length * DirectorySeparatorLength, relativePath, static (dst, state) =>
+    /// <returns>OS-native relative path; implicitly converts to <see cref="string"/> for <see cref="Path.Combine(string, string)"/>.</returns>
+    private static FilePath TranslateDirectorySeparators(FilePath relativePath)
+    {
+        var value = relativePath.Value ?? string.Empty;
+        if (Path.DirectorySeparatorChar is '/')
+        {
+            return relativePath;
+        }
+
+        return new FilePath(string.Create(value.Length * DirectorySeparatorLength, value, static (dst, state) =>
+        {
+            for (var i = 0; i < state.Length; i++)
             {
-                for (var i = 0; i < state.Length; i++)
-                {
-                    dst[i] = state[i] is '/' ? Path.DirectorySeparatorChar : state[i];
-                }
-            });
+                dst[i] = state[i] is '/' ? Path.DirectorySeparatorChar : state[i];
+            }
+        }));
+    }
 
     /// <summary>Counts the depth of the served URL for page-relative asset composition.</summary>
     /// <param name="relativePath">Source-relative page path (e.g. <c>guide/intro.md</c>).</param>
@@ -574,10 +580,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return trimmed.ToArray();
         }
 
-        var dst = new byte[prefix.Length + trimmed.Length];
-        prefix.AsSpan().CopyTo(dst);
-        trimmed.CopyTo(dst.AsSpan(prefix.Length));
-        return dst;
+        return Utf8Concat.Concat(prefix, trimmed);
     }
 
     /// <summary>True when <paramref name="relativePath"/> is the conventional <c>404.md</c> at the site root.</summary>
@@ -622,10 +625,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return trimmed.ToArray();
         }
 
-        var dst = new byte[prefix.Length + trimmed.Length];
-        prefix.AsSpan().CopyTo(dst);
-        trimmed.CopyTo(dst.AsSpan(prefix.Length));
-        return dst;
+        return Utf8Concat.Concat(prefix, trimmed);
     }
 
     /// <summary>Rewrites every <c>"/assets/</c> / <c>'/assets/</c> href in the cached head-extras blob to be page-relative for the current page.</summary>
@@ -736,11 +736,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return [.. repoUrl];
         }
 
-        var dst = new byte[owner.Length + 1 + tail.Length];
-        owner.CopyTo(dst);
-        dst[owner.Length] = (byte)'/';
-        tail.CopyTo(dst.AsSpan(owner.Length + 1));
-        return dst;
+        return Utf8Concat.Concat(owner, "/"u8, tail);
     }
 
     /// <summary>Returns the URL slug for the page, matching the build pipeline's emit shape.</summary>

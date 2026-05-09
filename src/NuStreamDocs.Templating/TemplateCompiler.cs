@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Templating;
 
@@ -330,12 +331,12 @@ internal static class TemplateCompiler
     /// <returns>Range descriptor over the trimmed slice.</returns>
     private static (int Start, int Length) TrimRange(ReadOnlySpan<byte> source, int start, int end)
     {
-        while (start < end && source[start] is (byte)' ' or (byte)'\t')
+        while (start < end && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[start]))
         {
             start++;
         }
 
-        while (end > start && source[end - 1] is (byte)' ' or (byte)'\t')
+        while (end > start && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[end - 1]))
         {
             end--;
         }

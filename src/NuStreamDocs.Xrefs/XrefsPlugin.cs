@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Autorefs;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Xrefs;
@@ -102,19 +103,9 @@ public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
         }
 
         var needsSlash = prefix[^1] is not (byte)'/' && (suffix.IsEmpty || suffix[0] is not (byte)'/');
-        var dst = new byte[prefix.Length + (needsSlash ? 1 : 0) + suffix.Length];
-        prefix.CopyTo(dst);
-        if (needsSlash)
-        {
-            dst[prefix.Length] = (byte)'/';
-            suffix.CopyTo(dst.AsSpan(prefix.Length + 1));
-        }
-        else
-        {
-            suffix.CopyTo(dst.AsSpan(prefix.Length));
-        }
-
-        return dst;
+        return needsSlash
+            ? Utf8Concat.Concat(prefix, "/"u8, suffix)
+            : Utf8Concat.Concat(prefix, suffix);
     }
 
     /// <summary>Reads <paramref name="source"/> as a local file (when it exists) or fetches it as <c>http(s)://</c>.</summary>

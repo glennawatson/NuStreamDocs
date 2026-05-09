@@ -97,14 +97,15 @@ internal static class AutoLink
             return false;
         }
 
-        if (!IsSchemeStart(content[0]))
+        if (!AsciiByteHelpers.IsAsciiLetter(content[0]))
         {
             return false;
         }
 
         for (var i = 1; i < colon; i++)
         {
-            if (!IsSchemeChar(content[i]))
+            var b = content[i];
+            if (!AsciiByteHelpers.IsAsciiLetter(b) && !AsciiByteHelpers.IsAsciiDigit(b) && b is not ((byte)'+' or (byte)'-' or (byte)'.'))
             {
                 return false;
             }
@@ -112,16 +113,4 @@ internal static class AutoLink
 
         return true;
     }
-
-    /// <summary>True when <paramref name="b"/> may start a URI scheme.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True for ASCII letters.</returns>
-    private static bool IsSchemeStart(byte b) =>
-        b is >= (byte)'a' and <= (byte)'z' or >= (byte)'A' and <= (byte)'Z';
-
-    /// <summary>True when <paramref name="b"/> may continue a URI scheme.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True for letters, digits, <c>+</c>, <c>-</c>, <c>.</c>.</returns>
-    private static bool IsSchemeChar(byte b) =>
-        IsSchemeStart(b) || b is >= (byte)'0' and <= (byte)'9' or (byte)'+' or (byte)'-' or (byte)'.';
 }

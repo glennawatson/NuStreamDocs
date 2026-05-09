@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Internal;
 
@@ -60,17 +61,6 @@ internal static class OpenerLineParser
         return p;
     }
 
-    /// <summary>Returns true for ASCII identifier characters allowed in a type token.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True when the byte may appear inside a type token.</returns>
-    public static bool IsTypeChar(byte b) =>
-        b is >= (byte)'a' and <= (byte)'z' or >= (byte)'A' and <= (byte)'Z' or >= (byte)'0' and <= (byte)'9' or (byte)'-' or (byte)'_';
-
-    /// <summary>Returns true for ASCII space or tab.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True when horizontal whitespace.</returns>
-    public static bool IsHorizontalSpace(byte b) => b is (byte)' ' or (byte)'\t';
-
     /// <summary>Returns true for trailing header bytes — horizontal whitespace plus CR.</summary>
     /// <param name="b">Candidate byte.</param>
     /// <returns>True when allowed trailing the opener.</returns>
@@ -100,14 +90,14 @@ internal static class OpenerLineParser
         titleLen = 0;
         headerEnd = 0;
 
-        var p = ScanWhile(source, markerEnd, IsTypeChar);
+        var p = ScanWhile(source, markerEnd, AsciiByteHelpers.IsAsciiSlugByte);
         typeLen = p - markerEnd;
         if (typeLen is 0)
         {
             return false;
         }
 
-        p = ScanWhile(source, p, IsHorizontalSpace);
+        p = ScanWhile(source, p, AsciiByteHelpers.IsAsciiHorizontalWhitespace);
         if (!TryParseTitle(source, ref p, out titleStart, out titleLen))
         {
             return false;

@@ -168,7 +168,7 @@ internal static class MetadataCollector
         while (cursor < source.Length)
         {
             var lineStart = cursor;
-            var lineEnd = YamlByteScanner.LineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[lineStart..lineEnd];
 
             if (!YamlByteScanner.IsTopLevelKey(line))

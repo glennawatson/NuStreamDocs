@@ -167,7 +167,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         var cursor = bodyStart;
         while (cursor < markdownBytes.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(markdownBytes, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(markdownBytes, cursor);
             var line = markdownBytes[cursor..lineEnd];
             var trimmed = AsciiByteHelpers.TrimAsciiWhitespace(line);
             if (trimmed is [(byte)'#', (byte)' ', ..])

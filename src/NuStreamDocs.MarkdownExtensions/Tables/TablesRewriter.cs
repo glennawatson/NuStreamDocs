@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown;
 using NuStreamDocs.Markdown.Common;
-using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.Tables;
 
@@ -46,7 +46,7 @@ internal static class TablesRewriter
                 continue;
             }
 
-            var lineEnd = MarkdownCodeScanner.LineEnd(source, i);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, i);
             writer.Write(source[i..lineEnd]);
             i = lineEnd;
         }
@@ -118,9 +118,9 @@ internal static class TablesRewriter
     /// <returns>True when the line has a pipe and is non-blank.</returns>
     private static bool LineHasPipe(ReadOnlySpan<byte> source, int offset, out int lineEnd)
     {
-        lineEnd = MarkdownCodeScanner.LineEnd(source, offset);
+        lineEnd = Utf8LineSpan.LfLineEnd(source, offset);
         var line = source[offset..lineEnd];
-        return !IndentedBlockScanner.IsBlankLine(line) && line.IndexOf((byte)'|') >= 0;
+        return !AsciiByteHelpers.IsAllAsciiWhitespace(line) && line.IndexOf((byte)'|') >= 0;
     }
 
     /// <summary>Returns true when the line at <paramref name="offset"/> is a GFM separator (<c>| --- | :---: |</c>).</summary>
@@ -130,7 +130,7 @@ internal static class TablesRewriter
     /// <returns>True when the line is a separator.</returns>
     private static bool IsSeparatorLine(ReadOnlySpan<byte> source, int offset, out int lineEnd)
     {
-        lineEnd = MarkdownCodeScanner.LineEnd(source, offset);
+        lineEnd = Utf8LineSpan.LfLineEnd(source, offset);
         var line = TrimTerminator(source[offset..lineEnd]);
         if (line.IndexOf((byte)'|') < 0)
         {
@@ -204,7 +204,7 @@ internal static class TablesRewriter
     /// <returns>First non-whitespace offset, or <paramref name="to"/> when the range is all whitespace.</returns>
     private static int SkipLeadingWhitespace(ReadOnlySpan<byte> row, int from, int to)
     {
-        while (from < to && IsHorizontalWhitespace(row[from]))
+        while (from < to && AsciiByteHelpers.IsAsciiHorizontalWhitespace(row[from]))
         {
             from++;
         }
@@ -219,7 +219,7 @@ internal static class TablesRewriter
     /// <returns>Trimmed exclusive end.</returns>
     private static int SkipTrailingWhitespace(ReadOnlySpan<byte> row, int from, int to)
     {
-        while (to > from && IsHorizontalWhitespace(row[to - 1]))
+        while (to > from && AsciiByteHelpers.IsAsciiHorizontalWhitespace(row[to - 1]))
         {
             to--;
         }
@@ -277,11 +277,6 @@ internal static class TablesRewriter
         return count;
     }
 
-    /// <summary>True for ASCII space or tab; tables don't span lines so CR/LF are excluded.</summary>
-    /// <param name="b">UTF-8 byte.</param>
-    /// <returns>True for space or tab.</returns>
-    private static bool IsHorizontalWhitespace(byte b) => b is (byte)' ' or (byte)'\t';
-
     /// <summary>Emits the cells of one row.</summary>
     /// <param name="row">UTF-8 row bytes (no terminator).</param>
     /// <param name="aligns">Column alignments.</param>
@@ -331,12 +326,12 @@ internal static class TablesRewriter
     {
         var start = 0;
         var end = value.Length;
-        while (start < end && IsHorizontalWhitespace(value[start]))
+        while (start < end && AsciiByteHelpers.IsAsciiHorizontalWhitespace(value[start]))
         {
             start++;
         }
 
-        while (end > start && IsHorizontalWhitespace(value[end - 1]))
+        while (end > start && AsciiByteHelpers.IsAsciiHorizontalWhitespace(value[end - 1]))
         {
             end--;
         }

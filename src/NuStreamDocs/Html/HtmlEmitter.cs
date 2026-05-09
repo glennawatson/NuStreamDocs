@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown;
 
 namespace NuStreamDocs.Html;
@@ -477,7 +478,7 @@ public static class HtmlEmitter
     private static void EmitListItem(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int opener, int end, IBufferWriter<byte> writer)
     {
         var openerLine = source.Slice(blocks[opener].Start, blocks[opener].Length);
-        var openerInline = TrimTrailingNewline(StripBulletMarker(openerLine));
+        var openerInline = AsciiByteHelpers.TrimTrailingNewline(StripBulletMarker(openerLine));
         var contentIndent = ContentIndentFromContinuations(blocks, opener + 1, end);
         var loose = HasBlankSeparator(blocks, opener + 1, end);
 
@@ -628,7 +629,7 @@ public static class HtmlEmitter
                 continue;
             }
 
-            var line = TrimTrailingNewline(StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
+            var line = AsciiByteHelpers.TrimTrailingNewline(StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
             if (!first)
             {
                 Write("\n"u8, writer);
@@ -663,7 +664,7 @@ public static class HtmlEmitter
                 continue;
             }
 
-            var line = TrimTrailingNewline(StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
+            var line = AsciiByteHelpers.TrimTrailingNewline(StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
             Write("\n"u8, writer);
             InlineRenderer.Render(line, writer);
         }
@@ -676,7 +677,7 @@ public static class HtmlEmitter
     private static ReadOnlySpan<byte> StripContentIndent(ReadOnlySpan<byte> line, int contentIndent)
     {
         var i = 0;
-        while (i < line.Length && i < contentIndent && line[i] is (byte)' ' or (byte)'\t')
+        while (i < line.Length && i < contentIndent && AsciiByteHelpers.IsAsciiHorizontalWhitespace(line[i]))
         {
             i++;
         }
@@ -727,7 +728,7 @@ public static class HtmlEmitter
         var i = SkipSpaces(line, 0);
         i = SkipMarker(line, i);
         i = SkipSpaces(line, i);
-        return TrimTrailingNewline(line[i..]);
+        return AsciiByteHelpers.TrimTrailingNewline(line[i..]);
     }
 
     /// <summary>Advances <paramref name="index"/> past any run of ASCII spaces / tabs in <paramref name="line"/>.</summary>
@@ -736,7 +737,7 @@ public static class HtmlEmitter
     /// <returns>Offset of the first non-space byte at or after <paramref name="index"/>.</returns>
     private static int SkipSpaces(ReadOnlySpan<byte> line, int index)
     {
-        while (index < line.Length && IsSpaceByte(line[index]))
+        while (index < line.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(line[index]))
         {
             index++;
         }
@@ -758,17 +759,6 @@ public static class HtmlEmitter
         var b = line[index];
         return b is (byte)'-' or (byte)'*' or (byte)'+' ? index + 1 : index;
     }
-
-    /// <summary>Drops a single trailing <c>\n</c> from <paramref name="span"/>.</summary>
-    /// <param name="span">Input span.</param>
-    /// <returns>Trimmed span.</returns>
-    private static ReadOnlySpan<byte> TrimTrailingNewline(ReadOnlySpan<byte> span) =>
-        span.Length > 0 && span[^1] is (byte)'\n' ? span[..^1] : span;
-
-    /// <summary>True when <paramref name="b"/> is an ASCII space or tab.</summary>
-    /// <param name="b">Byte under test.</param>
-    /// <returns>True for <c>' '</c> or <c>'\t'</c>.</returns>
-    private static bool IsSpaceByte(byte b) => b is (byte)' ' or (byte)'\t';
 
     /// <summary>Bulk-writes <paramref name="bytes"/> to <paramref name="writer"/>.</summary>
     /// <param name="bytes">UTF-8 bytes to copy verbatim.</param>

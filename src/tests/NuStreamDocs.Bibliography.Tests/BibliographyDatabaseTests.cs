@@ -15,20 +15,20 @@ public class BibliographyDatabaseTests
     public async Task FluentBuilderPopulatesEntries()
     {
         var db = new BibliographyDatabaseBuilder()
-            .AddBook("g", "Change and Continuity", PersonName.Of("William", "Gummow"), 2018, "Federation Press")
-            .AddCase("mabo", "Mabo v Queensland (No 2)", "(1992) 175 CLR 1", 1992)
-            .AddLegislation("hca", "High Court of Australia Act", "Cth", 1979)
-            .AddArticle("smith", "On Federalism", PersonName.Of("Anne", "Smith"), 2020, "Australian Law Journal", "94", "200")
+            .AddBook([.. "g"u8], [.. "Change and Continuity"u8], PersonName.Of("William", "Gummow"), 2018, [.. "Federation Press"u8])
+            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
+            .AddLegislation([.. "hca"u8], [.. "High Court of Australia Act"u8], [.. "Cth"u8], 1979)
+            .AddArticle([.. "smith"u8], [.. "On Federalism"u8], PersonName.Of("Anne", "Smith"), 2020, [.. "Australian Law Journal"u8], [.. "94"u8], [.. "200"u8])
             .Build();
 
         await Assert.That(db.Count).IsEqualTo(4);
-        await Assert.That(db.TryGet("g", out var book)).IsTrue();
+        await Assert.That(db.TryGet("g"u8, out var book)).IsTrue();
         await Assert.That(book!.Type).IsEqualTo(EntryType.Book);
-        await Assert.That(db.TryGet("mabo", out var c)).IsTrue();
+        await Assert.That(db.TryGet("mabo"u8, out var c)).IsTrue();
         await Assert.That(c!.Type).IsEqualTo(EntryType.LegalCase);
-        await Assert.That(db.TryGet("hca", out var leg)).IsTrue();
+        await Assert.That(db.TryGet("hca"u8, out var leg)).IsTrue();
         await Assert.That(leg!.Type).IsEqualTo(EntryType.Legislation);
-        await Assert.That(db.TryGet("smith", out var art)).IsTrue();
+        await Assert.That(db.TryGet("smith"u8, out var art)).IsTrue();
         await Assert.That(art!.Type).IsEqualTo(EntryType.ArticleJournal);
     }
 
@@ -38,7 +38,7 @@ public class BibliographyDatabaseTests
     public async Task LookupMissesReturnFalse()
     {
         var db = new BibliographyDatabaseBuilder().Build();
-        await Assert.That(db.TryGet("nope", out _)).IsFalse();
+        await Assert.That(db.TryGet("nope"u8, out _)).IsFalse();
     }
 
     /// <summary>Duplicate ids are rejected at construction.</summary>
@@ -49,8 +49,8 @@ public class BibliographyDatabaseTests
         var ex = Assert.Throws<ArgumentException>(static () =>
         {
             _ = new BibliographyDatabaseBuilder()
-                .AddBook("dup", "A", PersonName.Of("X", "Y"), 2000, "P")
-                .AddBook("dup", "B", PersonName.Of("X", "Y"), 2001, "P")
+                .AddBook([.. "dup"u8], [.. "A"u8], PersonName.Of("X", "Y"), 2000, [.. "P"u8])
+                .AddBook([.. "dup"u8], [.. "B"u8], PersonName.Of("X", "Y"), 2001, [.. "P"u8])
                 .Build();
         });
         await Assert.That(ex).IsNotNull();
@@ -68,8 +68,8 @@ public class BibliographyDatabaseTests
     public async Task All_returns_ordered_snapshot()
     {
         var db = new BibliographyDatabaseBuilder()
-            .AddBook("b", "B", PersonName.Of("X", "Y"), 2000, "P")
-            .AddBook("a", "A", PersonName.Of("X", "Y"), 2001, "P")
+            .AddBook([.. "b"u8], [.. "B"u8], PersonName.Of("X", "Y"), 2000, [.. "P"u8])
+            .AddBook([.. "a"u8], [.. "A"u8], PersonName.Of("X", "Y"), 2001, [.. "P"u8])
             .Build();
 
         await Assert.That(db.All.Length).IsEqualTo(2);

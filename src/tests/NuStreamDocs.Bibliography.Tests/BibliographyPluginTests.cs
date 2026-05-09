@@ -37,7 +37,7 @@ public class BibliographyPluginTests
     public async Task ResolvedMarkerProducesFootnoteAndBibliography()
     {
         var db = new BibliographyDatabaseBuilder()
-            .AddCase("mabo", "Mabo v Queensland (No 2)", "(1992) 175 CLR 1", 1992)
+            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
             .Build();
         BibliographyOptions options = new(db, Aglc4Style.Instance, WarnOnMissing: false);
         BibliographyPlugin plugin = new(options);
@@ -82,7 +82,7 @@ public class BibliographyPluginTests
     {
         DocBuilder builder = new();
         var result = builder.UseBibliography(static b =>
-            b.AddBook("g", "T", PersonName.Of("X", "Y"), 2000, "P"));
+            b.AddBook([.. "g"u8], [.. "T"u8], PersonName.Of("X", "Y"), 2000, [.. "P"u8]));
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 

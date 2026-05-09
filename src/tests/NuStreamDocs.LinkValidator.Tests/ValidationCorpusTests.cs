@@ -26,7 +26,7 @@ public class ValidationCorpusTests
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), Html);
 
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
-            await Assert.That(corpus.TryGetPage("index.html", out var page)).IsTrue();
+            await Assert.That(corpus.TryGetPage([.. "index.html"u8], out var page)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "about.html"u8)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "https://example.com"u8)).IsFalse();
             await Assert.That(ContainsBytes(page.InternalLinks, "image.png"u8)).IsFalse();
@@ -54,7 +54,7 @@ public class ValidationCorpusTests
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), Html);
 
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
-            await Assert.That(corpus.TryGetPage("index.html", out var page)).IsTrue();
+            await Assert.That(corpus.TryGetPage([.. "index.html"u8], out var page)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "image.png?v=1"u8)).IsFalse();
             await Assert.That(ContainsBytes(page.InternalLinks, "style.css#section"u8)).IsFalse();
             await Assert.That(ContainsBytes(page.InternalLinks, "page.html?q=1"u8)).IsTrue();
@@ -87,9 +87,9 @@ public class ValidationCorpusTests
         {
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), "<h1 id=\"a\">Hi</h1>");
             var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 1, CancellationToken.None);
-            await Assert.That(corpus.ContainsPage("index.html")).IsTrue();
             await Assert.That(corpus.ContainsPage([.. "index.html"u8])).IsTrue();
-            await Assert.That(corpus.ContainsPage("missing.html")).IsFalse();
+            await Assert.That(corpus.ContainsPage([.. "index.html"u8])).IsTrue();
+            await Assert.That(corpus.ContainsPage([.. "missing.html"u8])).IsFalse();
             await Assert.That(corpus.ContainsPage([.. "missing.html"u8])).IsFalse();
         }
         finally

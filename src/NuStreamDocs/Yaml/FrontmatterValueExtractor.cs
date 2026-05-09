@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Yaml;
 
@@ -104,7 +105,7 @@ public static class FrontmatterValueExtractor
         var cursor = 0;
         while (cursor < frontmatter.Length)
         {
-            var thisLineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var thisLineEnd = Utf8LineSpan.LfLineEnd(frontmatter, cursor);
             var trimmed = YamlByteScanner.TrimLeading(frontmatter[cursor..thisLineEnd]);
             if (trimmed.Length > keyBytes.Length
                 && trimmed.StartsWith(keyBytes)
@@ -164,7 +165,7 @@ public static class FrontmatterValueExtractor
             return false;
         }
 
-        var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+        var lineEnd = Utf8LineSpan.LfLineEnd(frontmatter, cursor);
         var line = frontmatter[cursor..lineEnd];
         if (line.IsEmpty || line[0] is not ((byte)' ' or (byte)'\t' or (byte)'-'))
         {

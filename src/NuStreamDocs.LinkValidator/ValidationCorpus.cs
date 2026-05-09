@@ -99,15 +99,6 @@ public sealed class ValidationCorpus
         return _pages.ContainsKey(pageUrl);
     }
 
-    /// <summary>Tests whether a page exists at <paramref name="pageUrl"/>.</summary>
-    /// <param name="pageUrl">Site-relative URL string.</param>
-    /// <returns>True when the page is in the corpus.</returns>
-    public bool ContainsPage(string pageUrl)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(pageUrl);
-        return _pages.ContainsKey(Encoding.UTF8.GetBytes(pageUrl));
-    }
-
     /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>.</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>
     /// <param name="page">Resolved page on success.</param>
@@ -116,16 +107,6 @@ public sealed class ValidationCorpus
     {
         ArgumentNullException.ThrowIfNull(pageUrl);
         return _pages.TryGetValue(pageUrl, out page!);
-    }
-
-    /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>.</summary>
-    /// <param name="pageUrl">Site-relative URL string.</param>
-    /// <param name="page">Resolved page on success.</param>
-    /// <returns>True when found.</returns>
-    public bool TryGetPage(string pageUrl, out PageLinks page)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(pageUrl);
-        return _pages.TryGetValue(Encoding.UTF8.GetBytes(pageUrl), out page!);
     }
 
     /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>, accepting directory-URL variants (<c>foo/</c>, <c>foo</c>, empty path).</summary>

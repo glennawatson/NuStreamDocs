@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Markdown.Common;
 
 /// <summary>Byte-level scanning helpers for walking markdown source while passing fenced-code and inline-code regions through verbatim.</summary>
@@ -19,16 +21,6 @@ public static class MarkdownCodeScanner
     /// <returns>True when at line start.</returns>
     public static bool AtLineStart(ReadOnlySpan<byte> source, int offset) =>
         offset is 0 || source[offset - 1] == (byte)'\n';
-
-    /// <summary>Returns the byte offset just past the next newline (or <paramref name="source"/>'s length when absent).</summary>
-    /// <param name="source">UTF-8 source bytes.</param>
-    /// <param name="offset">Offset to start scanning from.</param>
-    /// <returns>Inclusive line-end offset.</returns>
-    public static int LineEnd(ReadOnlySpan<byte> source, int offset)
-    {
-        var rel = source[offset..].IndexOf((byte)'\n');
-        return rel < 0 ? source.Length : offset + rel + 1;
-    }
 
     /// <summary>Consumes a fenced-code block opening at <paramref name="offset"/>.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
@@ -52,19 +44,19 @@ public static class MarkdownCodeScanner
             return false;
         }
 
-        var p = LineEnd(source, offset);
+        var p = Utf8LineSpan.LfLineEnd(source, offset);
         while (p < source.Length)
         {
             if (AtLineStart(source, p)
                 && p + marker.Length <= source.Length
                 && source[p..].StartsWith(marker))
             {
-                p = LineEnd(source, p);
+                p = Utf8LineSpan.LfLineEnd(source, p);
                 fenceEnd = p;
                 return true;
             }
 
-            p = LineEnd(source, p);
+            p = Utf8LineSpan.LfLineEnd(source, p);
         }
 
         fenceEnd = source.Length;

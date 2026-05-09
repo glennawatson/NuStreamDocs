@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Html;
 
@@ -244,7 +245,7 @@ public static class HtmlEscape
         while (i < cursor.Length)
         {
             var b = cursor[i];
-            var isDigit = hex ? IsAsciiHexDigit(b) : b is >= (byte)'0' and <= (byte)'9';
+            var isDigit = hex ? AsciiByteHelpers.IsAsciiHexDigit(b) : AsciiByteHelpers.IsAsciiDigit(b);
             if (!isDigit)
             {
                 break;
@@ -261,29 +262,17 @@ public static class HtmlEscape
     /// <returns>End offset, or -1.</returns>
     private static int ScanNamedEntityBody(ReadOnlySpan<byte> cursor)
     {
-        if (!IsAsciiLetter(cursor[1]))
+        if (!AsciiByteHelpers.IsAsciiLetter(cursor[1]))
         {
             return -1;
         }
 
         var i = 2;
-        while (i < cursor.Length && (IsAsciiLetter(cursor[i]) || cursor[i] is >= (byte)'0' and <= (byte)'9'))
+        while (i < cursor.Length && (AsciiByteHelpers.IsAsciiLetter(cursor[i]) || AsciiByteHelpers.IsAsciiDigit(cursor[i])))
         {
             i++;
         }
 
         return i;
     }
-
-    /// <summary>True when <paramref name="b"/> is an ASCII hex digit.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True for <c>0-9 / a-f / A-F</c>.</returns>
-    private static bool IsAsciiHexDigit(byte b) =>
-        b is >= (byte)'0' and <= (byte)'9' or >= (byte)'a' and <= (byte)'f' or >= (byte)'A' and <= (byte)'F';
-
-    /// <summary>True when <paramref name="b"/> is an ASCII letter.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True for <c>a-z / A-Z</c>.</returns>
-    private static bool IsAsciiLetter(byte b) =>
-        b is >= (byte)'a' and <= (byte)'z' or >= (byte)'A' and <= (byte)'Z';
 }

@@ -397,12 +397,12 @@ internal static class BibliographyRewriter
     {
         start = 0;
         end = bytes.Length;
-        while (start < end && bytes[start] is (byte)' ' or (byte)'\t')
+        while (start < end && AsciiByteHelpers.IsAsciiHorizontalWhitespace(bytes[start]))
         {
             start++;
         }
 
-        while (end > start && bytes[end - 1] is (byte)' ' or (byte)'\t')
+        while (end > start && AsciiByteHelpers.IsAsciiHorizontalWhitespace(bytes[end - 1]))
         {
             end--;
         }
@@ -415,7 +415,7 @@ internal static class BibliographyRewriter
     private static int SkipSpaces(ReadOnlySpan<byte> source, int offset)
     {
         var p = offset;
-        while (p < source.Length && source[p] is (byte)' ' or (byte)'\t')
+        while (p < source.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[p]))
         {
             p++;
         }
@@ -426,19 +426,8 @@ internal static class BibliographyRewriter
     /// <summary>True for ASCII bytes valid in a citation key (matches pandoc's own grammar).</summary>
     /// <param name="b">UTF-8 byte.</param>
     /// <returns>True when allowed.</returns>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Single constant-pattern OR — JIT compiles to direct comparisons.")]
     private static bool IsKeyByte(byte b) =>
-        b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'_'
-          or (byte)'-'
-          or (byte)':'
-          or (byte)'.'
-          or (byte)'/';
+        AsciiByteHelpers.IsAsciiSlugByte(b) || b is (byte)':' or (byte)'.' or (byte)'/';
 
     /// <summary>Returns true when <paramref name="entry"/> is already in the first <paramref name="count"/> slots of <paramref name="buffer"/>.</summary>
     /// <param name="buffer">Scratch buffer.</param>

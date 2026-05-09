@@ -147,7 +147,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
         var cursor = 0;
         while (cursor < bytes.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(bytes, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(bytes, cursor);
             var line = bytes[cursor..lineEnd];
             cursor = lineEnd;
             if (!YamlByteScanner.IsTopLevelKey(line))
@@ -180,10 +180,10 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
             return [];
         }
 
-        var cursor = YamlByteScanner.LineEnd(source, 0);
+        var cursor = Utf8LineSpan.LfLineEnd(source, 0);
         while (cursor < source.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             if (line.TrimEnd((byte)'\n').TrimEnd((byte)'\r').SequenceEqual(YamlByteScanner.FrontmatterDelimiter))
             {
@@ -241,7 +241,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
         List<byte[]> result = new(4);
         while (cursor < source.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             if (line.IsEmpty)
             {

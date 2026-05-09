@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Yaml;
 
@@ -45,10 +46,10 @@ public static class YamlByteScanner
             return false;
         }
 
-        var cursor = LineEnd(source, 0);
+        var cursor = Utf8LineSpan.LfLineEnd(source, 0);
         while (cursor < source.Length)
         {
-            var nextLineEnd = LineEnd(source, cursor);
+            var nextLineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             if (source[cursor..nextLineEnd].TrimEnd((byte)'\n').TrimEnd((byte)'\r').SequenceEqual(FrontmatterDelimiter))
             {
                 closerStart = cursor;
@@ -60,16 +61,6 @@ public static class YamlByteScanner
         }
 
         return false;
-    }
-
-    /// <summary>Returns the offset just past the next newline, or <paramref name="source"/>.Length when none.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="offset">Cursor.</param>
-    /// <returns>Inclusive line-end offset.</returns>
-    public static int LineEnd(ReadOnlySpan<byte> source, int offset)
-    {
-        var rel = source[offset..].IndexOf((byte)'\n');
-        return rel < 0 ? source.Length : offset + rel + 1;
     }
 
     /// <summary>Trims leading inline whitespace (space + tab + CR).</summary>
@@ -163,7 +154,7 @@ public static class YamlByteScanner
     {
         while (cursor < source.Length)
         {
-            var lineEnd = LineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             if (line.IsEmpty)
             {

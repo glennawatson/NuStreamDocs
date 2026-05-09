@@ -92,7 +92,7 @@ internal static class FrontmatterSplicer
             while (cursor < extra.Length)
             {
                 var lineStart = cursor;
-                var lineEnd = YamlByteScanner.LineEnd(extra, cursor);
+                var lineEnd = Utf8LineSpan.LfLineEnd(extra, cursor);
                 var line = extra[lineStart..lineEnd];
                 if (!YamlByteScanner.IsTopLevelKey(line))
                 {
@@ -129,10 +129,10 @@ internal static class FrontmatterSplicer
     private static HashSet<byte[]> CollectKeys(ReadOnlySpan<byte> frontmatter)
     {
         HashSet<byte[]> keys = new(ByteArrayComparer.Instance);
-        var cursor = YamlByteScanner.LineEnd(frontmatter, 0);
+        var cursor = Utf8LineSpan.LfLineEnd(frontmatter, 0);
         while (cursor < frontmatter.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(frontmatter, cursor);
             var line = frontmatter[cursor..lineEnd];
             if (YamlByteScanner.IsTopLevelKey(line))
             {

@@ -39,7 +39,7 @@ internal static class LayoutRenderer
 
         if (!TryLoadTemplate(templateName, templateDirectory, cache, out var template, out var resolvedPath))
         {
-            LayoutsLoggingHelper.LogMissingTemplate(logger, resolvedPath);
+            LayoutsLoggingHelper.LogMissingTemplate(logger, resolvedPath.Value ?? string.Empty);
             return false;
         }
 
@@ -62,10 +62,10 @@ internal static class LayoutRenderer
     /// <param name="template">Parsed template on success.</param>
     /// <param name="resolvedPath">Last attempted absolute path (for diagnostics).</param>
     /// <returns>True when the file was loaded.</returns>
-    private static bool TryLoadTemplate(ReadOnlySpan<byte> templateName, DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out string resolvedPath)
+    private static bool TryLoadTemplate(ReadOnlySpan<byte> templateName, DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out FilePath resolvedPath)
     {
         template = default;
-        resolvedPath = string.Empty;
+        resolvedPath = default;
         if (templateName.IsEmpty || templateDirectory.IsEmpty)
         {
             return false;
@@ -74,7 +74,7 @@ internal static class LayoutRenderer
         if (cache is not null && cache.TryGet(templateName, out var hit))
         {
             template = hit.Unit;
-            resolvedPath = hit.ResolvedPath.Value ?? string.Empty;
+            resolvedPath = hit.ResolvedPath;
             return true;
         }
 
@@ -88,16 +88,16 @@ internal static class LayoutRenderer
     /// <param name="template">Parsed template on success.</param>
     /// <param name="resolvedPath">Last attempted absolute path.</param>
     /// <returns>True when the file was found and parsed.</returns>
-    private static bool TryLoadFromDisk(ReadOnlySpan<byte> templateName, DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out string resolvedPath)
+    private static bool TryLoadFromDisk(ReadOnlySpan<byte> templateName, DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out FilePath resolvedPath)
     {
         template = default;
         var nameString = Encoding.UTF8.GetString(templateName);
         var path = Path.GetFullPath(nameString, templateDirectory.Value);
-        resolvedPath = path;
+        resolvedPath = new(path);
         if (File.Exists(path))
         {
             template = TemplateUnit.From(File.ReadAllBytes(path));
-            cache?.Add(templateName.ToArray(), new(template, new(path)));
+            cache?.Add(templateName.ToArray(), new(template, resolvedPath));
             return true;
         }
 
@@ -107,14 +107,14 @@ internal static class LayoutRenderer
         }
 
         var altPath = Path.GetFullPath($"{nameString}.html", templateDirectory.Value);
-        resolvedPath = altPath;
+        resolvedPath = new(altPath);
         if (!File.Exists(altPath))
         {
             return false;
         }
 
         template = TemplateUnit.From(File.ReadAllBytes(altPath));
-        cache?.Add(templateName.ToArray(), new(template, new(altPath)));
+        cache?.Add(templateName.ToArray(), new(template, resolvedPath));
         return true;
     }
 
@@ -131,7 +131,7 @@ internal static class LayoutRenderer
             var t = tokens[i];
             if (t.Kind is LayoutTokenKind.Literal)
             {
-                if (!IsAllWhitespace(template.Bytes.AsSpan(t.Start, t.End - t.Start)))
+                if (!AsciiByteHelpers.IsAllAsciiWhitespace(template.Bytes.AsSpan(t.Start, t.End - t.Start)))
                 {
                     return false;
                 }
@@ -394,22 +394,6 @@ internal static class LayoutRenderer
     /// <param name="t">Token.</param>
     /// <returns>Zero-based index of <paramref name="t"/>; -1 when absent.</returns>
     private static int IndexOf(TemplateUnit template, LayoutToken t) => template.Tokens.IndexOf(t);
-
-    /// <summary>True when every byte of <paramref name="span"/> is ASCII whitespace.</summary>
-    /// <param name="span">UTF-8 bytes.</param>
-    /// <returns>True for whitespace-only.</returns>
-    private static bool IsAllWhitespace(ReadOnlySpan<byte> span)
-    {
-        for (var i = 0; i < span.Length; i++)
-        {
-            if (!AsciiByteHelpers.IsAsciiWhitespace(span[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     /// <summary>Bulk-writes <paramref name="bytes"/> to <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>

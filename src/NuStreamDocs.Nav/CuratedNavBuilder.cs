@@ -178,7 +178,7 @@ internal static class CuratedNavBuilder
         var tail = path[^MarkdownExtensionBytes.Length..];
         for (var i = 0; i < MarkdownExtensionBytes.Length; i++)
         {
-            var lhs = tail[i] is >= (byte)'A' and <= (byte)'Z' ? (byte)(tail[i] | 0x20) : tail[i];
+            var lhs = AsciiByteHelpers.ToAsciiLowerByte(tail[i]);
             if (lhs != MarkdownExtensionBytes[i])
             {
                 return false;

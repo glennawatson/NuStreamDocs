@@ -15,9 +15,6 @@ namespace NuStreamDocs.Bibliography;
 /// </summary>
 public sealed class BibliographyDatabase
 {
-    /// <summary>Stack buffer cap for the string-overload encode probe.</summary>
-    private const int IdStackBuffer = 256;
-
     /// <summary>Byte-keyed citation lookup.</summary>
     private readonly Dictionary<byte[], CitationEntry> _byIdBytes;
 
@@ -56,20 +53,6 @@ public sealed class BibliographyDatabase
 
     /// <summary>Gets every entry in insertion order.</summary>
     public ReadOnlySpan<CitationEntry> All => _ordered;
-
-    /// <summary>Tries to resolve a citation id to its entry.</summary>
-    /// <param name="id">Citation id.</param>
-    /// <param name="entry">Resolved entry on hit.</param>
-    /// <returns>True when the id is in the database.</returns>
-    public bool TryGet(string id, [MaybeNullWhen(false)] out CitationEntry entry)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(id);
-        Span<byte> stack = stackalloc byte[IdStackBuffer];
-        var maxBytes = Encoding.UTF8.GetMaxByteCount(id.Length);
-        var buffer = maxBytes <= stack.Length ? stack : new byte[maxBytes];
-        var written = Encoding.UTF8.GetBytes(id, buffer);
-        return TryGet(buffer[..written], out entry);
-    }
 
     /// <summary>Tries to resolve a UTF-8-encoded citation id to its entry.</summary>
     /// <param name="id">Citation id bytes (no <c>@</c> prefix).</param>

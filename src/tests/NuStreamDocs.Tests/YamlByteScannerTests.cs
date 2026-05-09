@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Tests;
@@ -22,8 +23,8 @@ public class YamlByteScannerTests
     public async Task LineEndCases()
     {
         byte[] bytes = [.. "ab\ncd"u8];
-        await Assert.That(YamlByteScanner.LineEnd(bytes, 0)).IsEqualTo(3);
-        await Assert.That(YamlByteScanner.LineEnd(bytes, 3)).IsEqualTo(5);
+        await Assert.That(Utf8LineSpan.LfLineEnd(bytes, 0)).IsEqualTo(3);
+        await Assert.That(Utf8LineSpan.LfLineEnd(bytes, 3)).IsEqualTo(5);
     }
 
     /// <summary>TrimLeading drops space, tab, and CR.</summary>

@@ -27,7 +27,7 @@ internal static class PagesFileReader
         var cursor = 0;
         while (cursor < source.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             var trimmed = YamlByteScanner.TrimLeading(line);
             var indent = line.Length - trimmed.Length;
@@ -63,7 +63,7 @@ internal static class PagesFileReader
         List<PagesEntry> entries = new(8);
         while (cursor < source.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             var trimmed = YamlByteScanner.TrimLeading(line);
             if (trimmed.IsEmpty)

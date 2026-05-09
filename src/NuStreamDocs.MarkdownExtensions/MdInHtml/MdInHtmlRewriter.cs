@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.MdInHtml;
@@ -15,9 +16,6 @@ internal static class MdInHtmlRewriter
 
     /// <summary>Length of the close-tag prefix (<c>&lt;/</c>) before the tag name.</summary>
     private const int CloseTagPrefixLength = 2;
-
-    /// <summary>Length of a <c>\r\n</c> line terminator in bytes.</summary>
-    private const int CrLfLength = 2;
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
@@ -92,12 +90,12 @@ internal static class MdInHtmlRewriter
         var cursor = 0;
         while (cursor < body.Length)
         {
-            var lineEnd = FindLineEnd(body, cursor);
+            var lineEnd = Utf8LineSpan.FindLineEnd(body, cursor);
             var line = body[cursor..lineEnd];
             var skip = line.Length is 0 ? 0 : Math.Min(commonIndent, CountLeadingSpaces(line));
             writer.Write(line[skip..]);
 
-            var nextCursor = AdvancePastLineTerminator(body, lineEnd);
+            var nextCursor = Utf8LineSpan.AdvancePastLineTerminator(body, lineEnd);
             if (nextCursor > lineEnd)
             {
                 writer.Write(body[lineEnd..nextCursor]);
@@ -116,7 +114,7 @@ internal static class MdInHtmlRewriter
         var cursor = 0;
         while (cursor < body.Length)
         {
-            var lineEnd = FindLineEnd(body, cursor);
+            var lineEnd = Utf8LineSpan.FindLineEnd(body, cursor);
             var line = body[cursor..lineEnd];
             if (line.Length is not 0)
             {
@@ -127,7 +125,7 @@ internal static class MdInHtmlRewriter
                 }
             }
 
-            cursor = AdvancePastLineTerminator(body, lineEnd);
+            cursor = Utf8LineSpan.AdvancePastLineTerminator(body, lineEnd);
         }
 
         return min is int.MaxValue ? 0 : min;
@@ -139,42 +137,12 @@ internal static class MdInHtmlRewriter
     private static int CountLeadingSpaces(ReadOnlySpan<byte> line)
     {
         var count = 0;
-        while (count < line.Length && line[count] is (byte)' ' or (byte)'\t')
+        while (count < line.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(line[count]))
         {
             count++;
         }
 
         return count;
-    }
-
-    /// <summary>Returns the index of the first line-terminator byte at or after <paramref name="cursor"/>, or <paramref name="span"/>.Length.</summary>
-    /// <param name="span">UTF-8 span.</param>
-    /// <param name="cursor">Search-start offset.</param>
-    /// <returns>Exclusive end of the current line content.</returns>
-    private static int FindLineEnd(ReadOnlySpan<byte> span, int cursor)
-    {
-        var rest = span[cursor..];
-        var hit = rest.IndexOfAny((byte)'\r', (byte)'\n');
-        return hit < 0 ? span.Length : cursor + hit;
-    }
-
-    /// <summary>Advances past <c>\r\n</c>, <c>\n</c>, or <c>\r</c> at <paramref name="lineEnd"/>.</summary>
-    /// <param name="span">UTF-8 span.</param>
-    /// <param name="lineEnd">Index of the first line-terminator byte (or span length).</param>
-    /// <returns>Index of the next line's first byte (or span length).</returns>
-    private static int AdvancePastLineTerminator(ReadOnlySpan<byte> span, int lineEnd)
-    {
-        if (lineEnd >= span.Length)
-        {
-            return span.Length;
-        }
-
-        if (span[lineEnd] is (byte)'\r' && lineEnd + 1 < span.Length && span[lineEnd + 1] is (byte)'\n')
-        {
-            return lineEnd + CrLfLength;
-        }
-
-        return lineEnd + 1;
     }
 
     /// <summary>Parses an open tag and locates its <c>markdown="…"</c> attribute when present.</summary>
@@ -309,7 +277,7 @@ internal static class MdInHtmlRewriter
     /// <param name="offset">Position to test.</param>
     /// <returns>True for an attribute-separator boundary.</returns>
     private static bool IsAttributeBoundary(ReadOnlySpan<byte> span, int offset) =>
-        span[offset] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n';
+        AsciiByteHelpers.IsAsciiWhitespace(span[offset]);
 
     /// <summary>Returns true when <paramref name="value"/> is one of the recognized <c>markdown</c> attribute values.</summary>
     /// <param name="value">Attribute value bytes.</param>

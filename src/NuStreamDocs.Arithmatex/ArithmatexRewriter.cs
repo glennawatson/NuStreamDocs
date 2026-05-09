@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Arithmatex;
@@ -121,7 +122,7 @@ internal static class ArithmatexRewriter
     /// <returns>True when the close passes pymdownx's whitespace + digit-suffix rules.</returns>
     private static bool IsValidInlineClose(ReadOnlySpan<byte> source, int offset)
     {
-        if (source[offset - 1] is (byte)' ' or (byte)'\t')
+        if (AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[offset - 1]))
         {
             return false;
         }

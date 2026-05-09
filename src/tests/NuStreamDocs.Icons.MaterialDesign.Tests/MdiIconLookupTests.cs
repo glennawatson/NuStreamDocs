@@ -17,8 +17,8 @@ public class MdiIconLookupTests
     public async Task BuilderRoundTripsPathData()
     {
         var lookup = new MdiIconLookupBuilder()
-            .Add("rocket-launch", "M1,1H2"u8)
-            .Add("source-branch", "M3,3H4"u8)
+            .Add("rocket-launch"u8, "M1,1H2"u8)
+            .Add("source-branch"u8, "M3,3H4"u8)
             .Build();
 
         await Assert.That(lookup.Count).IsEqualTo(2);
@@ -31,7 +31,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task UnknownNameMisses()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1H2"u8).Build();
         await Assert.That(Resolve(lookup, "no-such-icon")).IsEqualTo(string.Empty);
     }
 
@@ -40,7 +40,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task LookupIsCaseSensitive()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1H2"u8).Build();
         await Assert.That(Resolve(lookup, "Rocket-Launch")).IsEqualTo(string.Empty);
     }
 
@@ -49,7 +49,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task ResolverWrapsPathDataInSvgEnvelope()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
         MdiIconResolver resolver = new(lookup);
 
         ArrayBufferWriter<byte> sink = new(128);
@@ -66,7 +66,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task ResolverWritesNothingOnMiss()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
         MdiIconResolver resolver = new(lookup);
 
         ArrayBufferWriter<byte> sink = new(64);
@@ -81,7 +81,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task RewriterInlinesResolvedSvg()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
         MdiIconResolver resolver = new(lookup);
         ArrayBufferWriter<byte> sink = new(128);
 
@@ -101,7 +101,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task UnresolvedFallsBackToFontLigature()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch", "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
         MdiIconResolver resolver = new(lookup);
         ArrayBufferWriter<byte> sink = new(128);
 

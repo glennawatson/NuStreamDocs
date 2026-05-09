@@ -84,7 +84,6 @@ internal sealed class HostFilter
             return [];
         }
 
-        const byte AsciiCaseBit = 0x20;
         var result = new byte[hosts.Length][];
         for (var i = 0; i < hosts.Length; i++)
         {
@@ -92,8 +91,7 @@ internal sealed class HostFilter
             var dst = new byte[src.Length];
             for (var j = 0; j < src.Length; j++)
             {
-                var b = src[j];
-                dst[j] = b is >= (byte)'A' and <= (byte)'Z' ? (byte)(b | AsciiCaseBit) : b;
+                dst[j] = AsciiByteHelpers.ToAsciiLowerByte(src[j]);
             }
 
             result[i] = dst;

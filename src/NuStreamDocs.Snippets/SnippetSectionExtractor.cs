@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Snippets;
@@ -73,7 +74,7 @@ internal static class SnippetSectionExtractor
                 continue;
             }
 
-            var thisLineEnd = MarkdownCodeScanner.LineEnd(source, cursor);
+            var thisLineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..thisLineEnd];
             if (LineMatchesOpen(line, section))
             {

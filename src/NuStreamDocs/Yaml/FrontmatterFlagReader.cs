@@ -70,10 +70,10 @@ public static class FrontmatterFlagReader
         }
 
         var flags = PageFlags.None;
-        var cursor = YamlByteScanner.LineEnd(bytes, 0);
+        var cursor = Utf8LineSpan.LfLineEnd(bytes, 0);
         while (cursor < bytes.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(bytes, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(bytes, cursor);
             var line = bytes[cursor..lineEnd];
             var trimmed = line.TrimEnd((byte)'\n').TrimEnd((byte)'\r');
             if (trimmed.SequenceEqual(YamlByteScanner.FrontmatterDelimiter))

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Layouts;
@@ -31,7 +32,7 @@ internal static class FrontmatterReader
         var cursor = 0;
         while (cursor < frontmatter.Length)
         {
-            var lineEnd = YamlByteScanner.LineEnd(frontmatter, cursor);
+            var lineEnd = Utf8LineSpan.LfLineEnd(frontmatter, cursor);
             ConsumeLine(frontmatter[cursor..lineEnd], values);
             cursor = lineEnd;
         }

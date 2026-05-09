@@ -3,8 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
-using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.DefList;
 
@@ -30,7 +30,7 @@ internal static class DefListRewriter
                 continue;
             }
 
-            var lineEnd = MarkdownCodeScanner.LineEnd(source, i);
+            var lineEnd = Utf8LineSpan.LfLineEnd(source, i);
             writer.Write(source[i..lineEnd]);
             i = lineEnd;
         }
@@ -49,8 +49,8 @@ internal static class DefListRewriter
         while (p < source.Length)
         {
             // Term line — non-blank, non-": ", not already the start of a definition.
-            var termEnd = MarkdownCodeScanner.LineEnd(source, p);
-            if (IsBlankSlice(source[p..termEnd]) || IsDefinitionLine(source, p))
+            var termEnd = Utf8LineSpan.LfLineEnd(source, p);
+            if (AsciiByteHelpers.IsAllAsciiWhitespace(source[p..termEnd]) || IsDefinitionLine(source, p))
             {
                 break;
             }
@@ -65,7 +65,7 @@ internal static class DefListRewriter
             var afterDefs = termEnd;
             while (afterDefs < source.Length && IsDefinitionLine(source, afterDefs))
             {
-                afterDefs = MarkdownCodeScanner.LineEnd(source, afterDefs);
+                afterDefs = Utf8LineSpan.LfLineEnd(source, afterDefs);
             }
 
             foundPair = true;
@@ -90,11 +90,6 @@ internal static class DefListRewriter
             && source[offset] == (byte)':'
             && source[offset + 1] == (byte)' ';
 
-    /// <summary>Returns true when <paramref name="line"/> is blank.</summary>
-    /// <param name="line">UTF-8 line bytes including any trailing newline.</param>
-    /// <returns>True when blank.</returns>
-    private static bool IsBlankSlice(ReadOnlySpan<byte> line) => IndentedBlockScanner.IsBlankLine(line);
-
     /// <summary>Emits the <c>&lt;dl&gt;</c> block for one parsed group.</summary>
     /// <param name="group">UTF-8 bytes of the group (term + definitions interleaved).</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -105,17 +100,17 @@ internal static class DefListRewriter
         var i = 0;
         while (i < group.Length)
         {
-            var lineEnd = MarkdownCodeScanner.LineEnd(group, i);
+            var lineEnd = Utf8LineSpan.LfLineEnd(group, i);
             if (IsDefinitionLine(group, i))
             {
                 writer.Write("<dd>"u8);
-                HtmlEscaper.Escape(TrimNewline(group[(i + DefinitionPrefixLength)..lineEnd]), writer);
+                XmlEntityEscaper.WriteEscaped(writer, TrimNewline(group[(i + DefinitionPrefixLength)..lineEnd]), XmlEntityEscaper.Mode.HtmlAttribute);
                 writer.Write("</dd>\n"u8);
             }
             else
             {
                 writer.Write("<dt>"u8);
-                HtmlEscaper.Escape(TrimNewline(group[i..lineEnd]), writer);
+                XmlEntityEscaper.WriteEscaped(writer, TrimNewline(group[i..lineEnd]), XmlEntityEscaper.Mode.HtmlAttribute);
                 writer.Write("</dt>\n"u8);
             }
 

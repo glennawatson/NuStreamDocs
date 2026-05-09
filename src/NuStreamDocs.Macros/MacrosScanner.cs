@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Macros;
@@ -147,7 +148,7 @@ internal static class MacrosScanner
     private static int SkipSpace(ReadOnlySpan<byte> source, int offset)
     {
         var p = offset;
-        while (p < source.Length && source[p] is (byte)' ' or (byte)'\t')
+        while (p < source.Length && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[p]))
         {
             p++;
         }
@@ -163,7 +164,7 @@ internal static class MacrosScanner
     private static int TrimTrailingSpace(ReadOnlySpan<byte> source, int start, int end)
     {
         var p = end;
-        while (p > start && source[p - 1] is (byte)' ' or (byte)'\t')
+        while (p > start && AsciiByteHelpers.IsAsciiHorizontalWhitespace(source[p - 1]))
         {
             p--;
         }
@@ -183,7 +184,7 @@ internal static class MacrosScanner
 
         for (var i = 0; i < name.Length; i++)
         {
-            if (!IsNameByte(name[i]))
+            if (!AsciiByteHelpers.IsAsciiSlugByte(name[i]) && name[i] is not (byte)'.')
             {
                 return false;
             }
@@ -191,17 +192,6 @@ internal static class MacrosScanner
 
         return true;
     }
-
-    /// <summary>True for ASCII bytes valid in a macro name.</summary>
-    /// <param name="b">UTF-8 byte.</param>
-    /// <returns>True when allowed.</returns>
-    private static bool IsNameByte(byte b) =>
-        b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'.'
-          or (byte)'_'
-          or (byte)'-';
 
     /// <summary>Writes <paramref name="value"/> to <paramref name="writer"/>, optionally HTML-escaping.</summary>
     /// <param name="value">Resolved UTF-8 value bytes.</param>

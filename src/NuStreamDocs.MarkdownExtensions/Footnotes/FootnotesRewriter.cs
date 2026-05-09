@@ -177,7 +177,7 @@ internal static class FootnotesRewriter
         }
 
         bodyStart = p;
-        var lineEnd = MarkdownCodeScanner.LineEnd(source, p);
+        var lineEnd = Utf8LineSpan.LfLineEnd(source, p);
         bodyEnd = bodyStart + AsciiByteHelpers.TrimTrailingNewline(source[bodyStart..lineEnd]).Length;
         blockEnd = lineEnd;
         return true;

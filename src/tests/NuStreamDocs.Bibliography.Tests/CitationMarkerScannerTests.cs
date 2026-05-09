@@ -98,11 +98,11 @@ public class CitationMarkerScannerTests
     private static string Render(string markdown)
     {
         var db = new BibliographyDatabaseBuilder()
-            .AddCase("mabo", "Mabo v Queensland (No 2)", "(1992) 175 CLR 1", 1992)
-            .AddCase("one", "Case One", "[2020] 1", 2020)
-            .AddCase("two", "Case Two", "[2020] 2", 2020)
-            .AddCase("yes", "Case Yes", "[2020] 3", 2020)
-            .AddCase("real", "Case Real", "[2020] 4", 2020)
+            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
+            .AddCase([.. "one"u8], [.. "Case One"u8], [.. "[2020] 1"u8], 2020)
+            .AddCase([.. "two"u8], [.. "Case Two"u8], [.. "[2020] 2"u8], 2020)
+            .AddCase([.. "yes"u8], [.. "Case Yes"u8], [.. "[2020] 3"u8], 2020)
+            .AddCase([.. "real"u8], [.. "Case Real"u8], [.. "[2020] 4"u8], 2020)
             .Build();
         BibliographyOptions options = new(db, Aglc4Style.Instance, WarnOnMissing: false);
         BibliographyPlugin plugin = new(options);
