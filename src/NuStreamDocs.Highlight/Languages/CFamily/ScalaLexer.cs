@@ -15,7 +15,7 @@ namespace NuStreamDocs.Highlight.Languages.CFamily;
 public static class ScalaLexer
 {
     /// <summary>Gets the singleton Scala lexer.</summary>
-    public static Lexer Instance { get; } = CFamilyRules.CreateBraceAnnotationLexer(
+    public static Lexer Instance { get; } = CFamilyRules.CreateJvmTripleQuotedBraceLexer(
         new()
         {
             Keywords = ByteKeywordSet.CreateFromSpaceSeparated(
@@ -28,10 +28,5 @@ public static class ScalaLexer
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
             Operators = OperatorAlternationFactory.SplitLongestFirst("<- => ::"u8, CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
-        },
-        integerSuffix: CFamilyShared.JvmIntegerSuffix,
-        floatSuffix: CFamilyShared.JvmFloatSuffix,
-        includeDocComment: false,
-        includeCharacterLiteral: true,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
+        });
 }

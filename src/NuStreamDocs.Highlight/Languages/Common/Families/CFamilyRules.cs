@@ -67,6 +67,22 @@ internal static class CFamilyRules
             SpecialString = specialString
         });
 
+    /// <summary>
+    /// Builds a JVM-flavoured brace-annotation lexer with the standard JVM integer/float
+    /// suffixes, character literals, and a triple-double-quoted raw-string rule. Captures the
+    /// shape shared by Java text blocks and Scala / Kotlin / Groovy triple-quoted strings.
+    /// </summary>
+    /// <param name="tables">Keyword + operator tables.</param>
+    /// <returns>Built lexer.</returns>
+    public static Lexer CreateJvmTripleQuotedBraceLexer(in KeywordTablePack tables) =>
+        CreateBraceAnnotationLexer(
+            tables,
+            integerSuffix: CFamilyShared.JvmIntegerSuffix,
+            floatSuffix: CFamilyShared.JvmFloatSuffix,
+            includeDocComment: false,
+            includeCharacterLiteral: true,
+            specialString: CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
+
     /// <summary>Builds a triple-double-quoted raw-string rule (Java text blocks, Kotlin / Scala / Groovy / Dart triple-quoted strings).</summary>
     /// <param name="minQuotes">Minimum opening / closing quote run length (typically 3).</param>
     /// <returns>The triple-quoted raw-string rule.</returns>

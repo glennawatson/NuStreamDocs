@@ -12,9 +12,6 @@ namespace NuStreamDocs.MarkdownExtensions.Abbr;
 /// <summary>Folds <c>*[ABBR]: definition</c> lines into <c>&lt;abbr title="..."&gt;</c> wrappers around occurrences in the body.</summary>
 internal static class AbbrRewriter
 {
-    /// <summary>Length of a <c>\r\n</c> line terminator in bytes.</summary>
-    private const int CrLfLength = 2;
-
     /// <summary>Length of the <c>"]:"</c> separator between an abbreviation token and its definition body.</summary>
     private const int CloseBracketColonLength = 2;
 
@@ -49,16 +46,16 @@ internal static class AbbrRewriter
         var cursor = 0;
         while (cursor < source.Length)
         {
-            var lineEnd = FindLineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.FindLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             if (TryParseDefinition(line, out var token, out var title))
             {
                 definitions[Encoding.UTF8.GetString(token)] = title.ToArray();
-                cursor = AdvancePastLineTerminator(source, lineEnd);
+                cursor = Utf8LineSpan.AdvancePastLineTerminator(source, lineEnd);
                 continue;
             }
 
-            var nextCursor = AdvancePastLineTerminator(source, lineEnd);
+            var nextCursor = Utf8LineSpan.AdvancePastLineTerminator(source, lineEnd);
             sink.Write(source[cursor..nextCursor]);
             cursor = nextCursor;
         }
@@ -305,35 +302,5 @@ internal static class AbbrRewriter
         }
 
         return true;
-    }
-
-    /// <summary>Returns the index of the first line-terminator byte at or after <paramref name="cursor"/>, or <paramref name="source"/>.Length when none.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="cursor">Search-start offset.</param>
-    /// <returns>Exclusive end of the current line content.</returns>
-    private static int FindLineEnd(ReadOnlySpan<byte> source, int cursor)
-    {
-        var rest = source[cursor..];
-        var hit = rest.IndexOfAny((byte)'\r', (byte)'\n');
-        return hit < 0 ? source.Length : cursor + hit;
-    }
-
-    /// <summary>Advances past the line terminator at <paramref name="lineEnd"/>; consumes <c>\r\n</c>, <c>\n</c>, or <c>\r</c>.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="lineEnd">Index of the first line-terminator byte (or source length).</param>
-    /// <returns>Index of the next line's first byte (or source length).</returns>
-    private static int AdvancePastLineTerminator(ReadOnlySpan<byte> source, int lineEnd)
-    {
-        if (lineEnd >= source.Length)
-        {
-            return source.Length;
-        }
-
-        if (source[lineEnd] is (byte)'\r' && lineEnd + 1 < source.Length && source[lineEnd + 1] is (byte)'\n')
-        {
-            return lineEnd + CrLfLength;
-        }
-
-        return lineEnd + 1;
     }
 }

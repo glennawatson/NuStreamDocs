@@ -13,9 +13,6 @@ internal static class SnippetsRewriter
     /// <summary>Maximum nested-include depth before the rewriter stops recursing.</summary>
     private const int MaxIncludeDepth = 10;
 
-    /// <summary>Length of a <c>\r\n</c> line terminator in bytes.</summary>
-    private const int CrLfLength = 2;
-
     /// <summary>Gets the marker that introduces a snippet inclusion line.</summary>
     private static ReadOnlySpan<byte> Marker => "--8<--"u8;
 
@@ -40,17 +37,17 @@ internal static class SnippetsRewriter
         var cursor = 0;
         while (cursor < source.Length)
         {
-            var lineEnd = FindLineEnd(source, cursor);
+            var lineEnd = Utf8LineSpan.FindLineEnd(source, cursor);
             var lineBody = source[cursor..lineEnd];
             if (TryParseInclude(lineBody, out var path) && depth < MaxIncludeDepth && TryReadSnippet(path, basePaths, out var included))
             {
                 Expand(included, writer, basePaths, depth + 1);
-                cursor = AdvancePastLineTerminator(source, lineEnd);
+                cursor = Utf8LineSpan.AdvancePastLineTerminator(source, lineEnd);
                 continue;
             }
 
             // Pass the line through verbatim, including its line terminator.
-            var nextCursor = AdvancePastLineTerminator(source, lineEnd);
+            var nextCursor = Utf8LineSpan.AdvancePastLineTerminator(source, lineEnd);
             writer.Write(source[cursor..nextCursor]);
             cursor = nextCursor;
         }
@@ -101,35 +98,5 @@ internal static class SnippetsRewriter
         }
 
         return false;
-    }
-
-    /// <summary>Returns the index of the first line-terminator byte at or after <paramref name="cursor"/>, or <paramref name="source"/>.Length when none.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="cursor">Search-start offset.</param>
-    /// <returns>Exclusive end of the current line content (before any <c>\r</c> or <c>\n</c>).</returns>
-    private static int FindLineEnd(ReadOnlySpan<byte> source, int cursor)
-    {
-        var rest = source[cursor..];
-        var hit = rest.IndexOfAny((byte)'\r', (byte)'\n');
-        return hit < 0 ? source.Length : cursor + hit;
-    }
-
-    /// <summary>Advances past the line terminator at <paramref name="lineEnd"/>; consumes the matched <c>\r\n</c>, <c>\n</c>, or <c>\r</c>.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="lineEnd">Index of the first line-terminator byte (or source length).</param>
-    /// <returns>Index of the next line's first byte (or source length).</returns>
-    private static int AdvancePastLineTerminator(ReadOnlySpan<byte> source, int lineEnd)
-    {
-        if (lineEnd >= source.Length)
-        {
-            return source.Length;
-        }
-
-        if (source[lineEnd] is (byte)'\r' && lineEnd + 1 < source.Length && source[lineEnd + 1] is (byte)'\n')
-        {
-            return lineEnd + CrLfLength;
-        }
-
-        return lineEnd + 1;
     }
 }
