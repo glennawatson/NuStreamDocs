@@ -152,6 +152,69 @@ public static class DocBuilderExtraAssetsExtensions
         return builder;
     }
 
+    /// <summary>Adds an extra ES-module script from a file on disk; emitted as <c>&lt;script type="module"&gt;</c>.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="filePath">Absolute or relative path to a JS module file.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder AddExtraJsModule(this DocBuilder builder, FilePath filePath)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.File(filePath).AsModule());
+        return builder;
+    }
+
+    /// <summary>Adds one or more ES-module scripts from files on disk.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="filePaths">Absolute or relative paths to JS module files.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder AddExtraJsModule(this DocBuilder builder, params ReadOnlySpan<string> filePaths)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
+        for (var i = 0; i < filePaths.Length; i++)
+        {
+            plugin.AddJs(ExtraAssetSource.File(filePaths[i]).AsModule());
+        }
+
+        return builder;
+    }
+
+    /// <summary>Adds an inline UTF-8 ES-module script under a chosen output filename.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
+    /// <param name="utf8Js">UTF-8 JS bytes.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder AddExtraJsModuleInline(this DocBuilder builder, FilePath outputName, byte[] utf8Js)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Inline(outputName, utf8Js).AsModule());
+        return builder;
+    }
+
+    /// <summary>Adds an embedded-resource ES-module script from <paramref name="assembly"/>.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="assembly">Assembly carrying the resource.</param>
+    /// <param name="resourceName">Manifest resource name.</param>
+    /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder AddExtraJsModuleEmbedded(this DocBuilder builder, Assembly assembly, ApiCompatString resourceName, FilePath outputName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName).AsModule());
+        return builder;
+    }
+
+    /// <summary>References an external ES-module script by URL.</summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="url">External src.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder AddExtraJsModuleLink(this DocBuilder builder, UrlPath url)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.External(url).AsModule());
+        return builder;
+    }
+
     /// <summary>References an external script by URL; emits a <c>&lt;script&gt;</c> tag without shipping any asset.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="url">External src.</param>

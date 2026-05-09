@@ -112,6 +112,9 @@
   --md-sys-typescale-body-large: 400 16px/24px "Source Sans 3", system-ui, sans-serif;
   --md-sys-typescale-body-medium: 400 14px/20px "Source Sans 3", system-ui, sans-serif;
   --md-sys-typescale-label-large: 500 14px/20px "Source Sans 3", system-ui, sans-serif;
+  --md-sys-typescale-title-small: 600 14px/20px "Source Sans 3", system-ui, sans-serif;
+  --md-sys-typescale-body-small: 400 12px/16px "Source Sans 3", system-ui, sans-serif;
+  --md-sys-typescale-label-small: 500 11px/16px "Source Sans 3", system-ui, sans-serif;
 
   --md-sys-elevation-level-0: 0 0 0 0 transparent;
   --md-sys-elevation-level-1: 0 1px 2px 0 rgb(0 0 0 / 30%), 0 1px 3px 1px rgb(0 0 0 / 15%);
@@ -738,6 +741,39 @@ a:hover { text-decoration: underline; }
   border-radius: 0.125rem;
   padding: 0 0.125rem;
 }
+/* Sub-result rows — Pagefind groups multiple section hits per page; the bind
+   glue inlines up to two underneath the page link, indented with a left rule
+   so the visual hierarchy reads as "this hit belongs to the page above". */
+.md-search__link--sub {
+  margin-left: 0.5rem;
+  padding-left: 0.625rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-left: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: 0;
+}
+.md-search__link--sub:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+.md-search__subtitle {
+  display: block;
+  font: var(--md-sys-typescale-title-small);
+  color: var(--md-sys-color-on-surface);
+}
+/* "+ N more on this page" disclosure — links to the page itself; styled like
+   a quiet caption so it doesn't compete with the actual hit rows. */
+.md-search__more {
+  display: block;
+  margin-top: 0.25rem;
+  margin-left: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  font: var(--md-sys-typescale-label-small);
+  color: var(--md-sys-color-on-surface-variant);
+}
+.md-search__more:hover {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+}
 /* Repo badge — outlined card with the repo path on top and the stars/forks
    counts on a tinted second row, mirroring zensical's "card with shoulder"
    shape so the GitHub stats read as their own panel rather than a hover-only
@@ -1198,7 +1234,7 @@ a:hover { text-decoration: underline; }
   padding: 0.15em 0.5em;
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
-  border-radius: var(--md-shape-corner-small, 4px);
+  border-radius: var(--md-sys-shape-corner-xs, 4px);
   font-size: 0.75rem;
   white-space: nowrap;
   pointer-events: none;

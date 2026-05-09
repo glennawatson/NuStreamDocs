@@ -107,33 +107,78 @@ internal static class PagefindBindScript
       status.textContent = text;
     }
 
-    function renderHit(hit, data) {
-      var item = document.createElement("li");
-      item.className = "md-search__item";
+    /* Maximum sub-section hits inlined under each page card before the
+       "+ N more on this page" disclosure kicks in. mkdocs-material uses 2;
+       matches the user's existing muscle memory. */
+    var INLINE_SUB_RESULTS = 2;
 
+    function pageTitle(data) {
+      return (data.meta && data.meta.title) || data.url;
+    }
+
+    /* Builds one anchor (top page link OR a nested sub-result link). */
+    function buildLink(entry, kind) {
       var link = document.createElement("a");
-      link.className = "md-search__link";
-      link.href = data.url;
+      link.className = kind === "primary" ? "md-search__link" : "md-search__link md-search__link--sub";
+      link.href = entry.url || "#";
 
       var title = document.createElement("span");
-      title.className = "md-search__title";
-      title.textContent = data.meta && data.meta.title ? data.meta.title : data.url;
+      title.className = kind === "primary" ? "md-search__title" : "md-search__subtitle";
+      title.textContent = (entry.title || entry.url || "").trim() || entry.url || "";
       link.appendChild(title);
 
-      var path = document.createElement("span");
-      path.className = "md-search__path";
-      path.textContent = data.url;
-      link.appendChild(path);
+      if (kind === "primary") {
+        var path = document.createElement("span");
+        path.className = "md-search__path";
+        path.textContent = entry.url || "";
+        link.appendChild(path);
+      }
 
-      if (data.excerpt) {
+      if (entry.excerpt) {
         var excerpt = document.createElement("span");
         excerpt.className = "md-search__excerpt";
         /* Pagefind already wraps matched terms in <mark>; trust its output. */
-        excerpt.innerHTML = data.excerpt;
+        excerpt.innerHTML = entry.excerpt;
         link.appendChild(excerpt);
       }
 
-      item.appendChild(link);
+      return link;
+    }
+
+    /* Renders one Pagefind page result as a card containing:
+        1. Top link — the page title + URL + page-level excerpt.
+        2. Up to INLINE_SUB_RESULTS section hits (heading + excerpt, deeper anchor).
+        3. A "+ N more on this page" disclosure when more sub-results exist.
+       Sub-results carry the per-section anchor URL, so clicking them jumps
+       directly to the matched heading. */
+    function renderHit(data) {
+      var item = document.createElement("li");
+      item.className = "md-search__item";
+
+      var subs = Array.isArray(data.sub_results) ? data.sub_results : [];
+
+      item.appendChild(buildLink({
+        url: data.url,
+        title: pageTitle(data),
+        excerpt: data.excerpt,
+      }, "primary"));
+
+      var inline = subs.slice(0, INLINE_SUB_RESULTS);
+      for (var i = 0; i < inline.length; i++) {
+        item.appendChild(buildLink(inline[i], "sub"));
+      }
+
+      var leftover = subs.length - inline.length;
+      if (leftover > 0) {
+        var more = document.createElement("a");
+        more.className = "md-search__more";
+        more.href = data.url;
+        more.textContent = leftover === 1
+          ? "+ 1 more on this page"
+          : "+ " + leftover + " more on this page";
+        item.appendChild(more);
+      }
+
       results.appendChild(item);
     }
 
@@ -173,9 +218,9 @@ internal static class PagefindBindScript
             setStatus("No results found.");
             return;
           }
-          setStatus(hits.length === 1 ? "1 result" : hits.length + " results");
+          setStatus(hits.length === 1 ? "1 matching page" : hits.length + " matching pages");
           for (var k = 0; k < hits.length; k++) {
-            renderHit(hits[k].hit, hits[k].data);
+            renderHit(hits[k].data);
           }
           return;
         }
@@ -188,9 +233,9 @@ internal static class PagefindBindScript
         }
         var capped = hits.slice(0, MAX_RESULTS);
         var datas = await Promise.all(capped.map(function (h) { return h.data(); }));
-        setStatus(datas.length === 1 ? "1 result" : datas.length + " results");
-        for (var m = 0; m < capped.length; m++) {
-          renderHit(capped[m], datas[m]);
+        setStatus(datas.length === 1 ? "1 matching page" : datas.length + " matching pages");
+        for (var m = 0; m < datas.length; m++) {
+          renderHit(datas[m]);
         }
       } catch (err) {
         clearResults();

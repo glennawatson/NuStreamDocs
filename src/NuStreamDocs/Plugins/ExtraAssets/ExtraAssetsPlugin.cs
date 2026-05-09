@@ -136,7 +136,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
         writer.Write("\">"u8);
     }
 
-    /// <summary>Writes one <c>&lt;script src="…" defer&gt;</c> tag.</summary>
+    /// <summary>Writes one <c>&lt;script src="…" defer&gt;</c> (or <c>type="module"</c>) tag.</summary>
     /// <param name="source">JS source.</param>
     /// <param name="writer">UTF-8 sink.</param>
     private static void WriteJsScript(ExtraAssetSource source, IBufferWriter<byte> writer)
@@ -146,7 +146,11 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
             : $"/{AssetDirectory}/{source.OutputName}";
         writer.Write("<script src=\""u8);
         writer.Write(Encoding.UTF8.GetBytes(src));
-        writer.Write("\" defer></script>"u8);
+
+        // ES modules are deferred by spec, so emit `type="module"` instead of `defer`.
+        // Standard scripts get `defer` so they execute after the document is parsed but
+        // before DOMContentLoaded — the safest default for asset registration order.
+        writer.Write(source.IsModule ? "\" type=\"module\"></script>"u8 : "\" defer></script>"u8);
     }
 
     /// <summary>Composes the head fragment: one <c>&lt;link&gt;</c> per CSS source, one <c>&lt;script&gt;</c> per JS source.</summary>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Arithmatex.MathJax</PackageId>
+    <Description>Ships the MathJax 3 runtime to NuStreamDocs sites that use the Arithmatex rewriter. CDN-loaded by default; vendoring is a future option. Pair with NuStreamDocs.Arithmatex.</Description>
+    <RootNamespace>NuStreamDocs.Arithmatex.MathJax</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Arithmatex.MathJax.Tests" />
+  </ItemGroup>
+
+</Project>

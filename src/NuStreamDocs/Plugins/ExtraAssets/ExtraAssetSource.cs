@@ -11,34 +11,24 @@ namespace NuStreamDocs.Plugins.ExtraAssets;
 /// <remarks>
 /// Authored as a discriminated union so the builder-side API stays
 /// fluent (one method per source kind) while the plugin-side
-/// resolution stays one switch over <see cref="Kind"/>.
+/// resolution stays one switch over <see cref="Kind"/>. Construction
+/// goes through <see cref="ExtraAssetSourceInit"/> so the ctor surface
+/// stays single-arg even as kinds add new flavour bits.
 /// </remarks>
 public sealed class ExtraAssetSource
 {
     /// <summary>Initializes a new instance of the <see cref="ExtraAssetSource"/> class.</summary>
-    /// <param name="kind">Source kind.</param>
-    /// <param name="filePath">Disk path for <see cref="ExtraAssetSourceKind.File"/>; default for other kinds.</param>
-    /// <param name="inlineBytes">UTF-8 bytes for <see cref="ExtraAssetSourceKind.Inline"/>; otherwise null.</param>
-    /// <param name="assembly">Assembly for <see cref="ExtraAssetSourceKind.Embedded"/>; otherwise null.</param>
-    /// <param name="resourceName">Embedded-resource name; otherwise null.</param>
-    /// <param name="outputName">File name written under <c>assets/extra/</c>; null for <see cref="ExtraAssetSourceKind.Url"/>.</param>
-    /// <param name="url">External href for <see cref="ExtraAssetSourceKind.Url"/>; otherwise null.</param>
-    private ExtraAssetSource(
-        ExtraAssetSourceKind kind,
-        FilePath filePath,
-        byte[]? inlineBytes,
-        Assembly? assembly,
-        string? resourceName,
-        string? outputName,
-        string? url)
+    /// <param name="init">Per-kind init bundle.</param>
+    private ExtraAssetSource(in ExtraAssetSourceInit init)
     {
-        Kind = kind;
-        FilePath = filePath;
-        InlineBytes = inlineBytes;
-        Assembly = assembly;
-        ResourceName = resourceName;
-        OutputName = outputName;
-        Url = url;
+        Kind = init.Kind;
+        FilePath = init.FilePath;
+        InlineBytes = init.InlineBytes;
+        Assembly = init.Assembly;
+        ResourceName = init.ResourceName;
+        OutputName = init.OutputName;
+        Url = init.Url;
+        IsModule = init.IsModule;
     }
 
     /// <summary>Gets the source kind.</summary>
@@ -62,13 +52,26 @@ public sealed class ExtraAssetSource
     /// <summary>Gets the external href; non-null only for <see cref="ExtraAssetSourceKind.Url"/>.</summary>
     public string? Url { get; }
 
+    /// <summary>Gets a value indicating whether the JS asset should be loaded as an ES module (<c>type="module"</c>); ignored for CSS sources.</summary>
+    public bool IsModule { get; }
+
     /// <summary>Creates a file-on-disk source.</summary>
     /// <param name="filePath">Absolute or relative path to a UTF-8 asset file. String literals convert via the implicit <see cref="NuStreamDocs.Common.FilePath"/> operator.</param>
     /// <returns>The source.</returns>
-    public static ExtraAssetSource File(FilePath filePath) =>
-        filePath.IsEmpty
-            ? throw new ArgumentException("File path must be non-empty.", nameof(filePath))
-            : new(ExtraAssetSourceKind.File, filePath, null, null, null, Path.GetFileName(filePath.Value), null);
+    public static ExtraAssetSource File(FilePath filePath)
+    {
+        if (filePath.IsEmpty)
+        {
+            throw new ArgumentException("File path must be non-empty.", nameof(filePath));
+        }
+
+        return new(new ExtraAssetSourceInit
+        {
+            Kind = ExtraAssetSourceKind.File,
+            FilePath = filePath,
+            OutputName = Path.GetFileName(filePath.Value),
+        });
+    }
 
     /// <summary>Creates an inline UTF-8 source.</summary>
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
@@ -78,7 +81,12 @@ public sealed class ExtraAssetSource
     {
         ArgumentException.ThrowIfNullOrEmpty(outputName);
         ArgumentNullException.ThrowIfNull(utf8Bytes);
-        return new(ExtraAssetSourceKind.Inline, default, utf8Bytes, null, null, outputName, null);
+        return new(new ExtraAssetSourceInit
+        {
+            Kind = ExtraAssetSourceKind.Inline,
+            InlineBytes = utf8Bytes,
+            OutputName = outputName,
+        });
     }
 
     /// <summary>Creates an embedded-resource source.</summary>
@@ -91,7 +99,13 @@ public sealed class ExtraAssetSource
         ArgumentNullException.ThrowIfNull(assembly);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
         ArgumentException.ThrowIfNullOrEmpty(outputName);
-        return new(ExtraAssetSourceKind.Embedded, default, null, assembly, resourceName, outputName, null);
+        return new(new ExtraAssetSourceInit
+        {
+            Kind = ExtraAssetSourceKind.Embedded,
+            Assembly = assembly,
+            ResourceName = resourceName,
+            OutputName = outputName,
+        });
     }
 
     /// <summary>Creates an external-URL source. No asset is shipped — only a <c>&lt;link&gt;</c> or <c>&lt;script&gt;</c> tag.</summary>
@@ -100,6 +114,25 @@ public sealed class ExtraAssetSource
     public static ExtraAssetSource External(string url)
     {
         ArgumentException.ThrowIfNullOrEmpty(url);
-        return new(ExtraAssetSourceKind.Url, default, null, null, null, null, url);
+        return new(new ExtraAssetSourceInit
+        {
+            Kind = ExtraAssetSourceKind.Url,
+            Url = url,
+        });
     }
+
+    /// <summary>Returns a copy of this source flagged as an ES module so the head-extra emitter renders <c>type="module"</c>.</summary>
+    /// <returns>A new <see cref="ExtraAssetSource"/> with <see cref="IsModule"/> set; ignored for CSS sources.</returns>
+    public ExtraAssetSource AsModule() =>
+        new(new ExtraAssetSourceInit
+        {
+            Kind = Kind,
+            FilePath = FilePath,
+            InlineBytes = InlineBytes,
+            Assembly = Assembly,
+            ResourceName = ResourceName,
+            OutputName = OutputName,
+            Url = Url,
+            IsModule = true,
+        });
 }
