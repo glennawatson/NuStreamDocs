@@ -196,94 +196,219 @@ values you've already loaded from configuration.
 
 ## Plugins (overview)
 
-Every plugin ships in its own NuGet so you only pay for what you use.
+Every plugin ships in its own NuGet so you only pay for what you use. Each row
+links to the package on NuGet — the badge tracks the current published version.
 
 ### Essentials (most sites want all of these)
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.Nav` | `.UseNav()` | Glob includes, ordering hints, hidden sections, `.pages` overrides, `navigation.prune`, orphan-page warnings. |
-| `NuStreamDocs.Toc` | `.UseToc()` | Per-page table of contents and permalink heading anchors. |
-| `NuStreamDocs.Highlight` | `.UseHighlight()` | Server-side syntax highlighting. TextMate JSON grammars + `[GeneratedRegex]`. Wraps blocks in `<div class="highlight">` (Pygments / mkdocs-material convention); reads per-block fence-info attrs (`title="..."` for filename bar, opt-in copy button). No JS runtime. |
-| `NuStreamDocs.Search` | `.UseSearch()` | Build-time search index. Pagefind-compatible by default; Lunr-compatible alt. |
-| `NuStreamDocs.MarkdownExtensions` | `.UseCommonMarkdownExtensions()` | Admonitions, content tabs, collapsible details, check-lists, mark spans, footnotes, definition lists. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Nav`][Nav] | [![ver][NavV]][Nav] | `.UseNav()` | Glob includes, ordering hints, hidden sections, `.pages` overrides, `navigation.prune`, orphan-page warnings. |
+| [`NuStreamDocs.Toc`][Toc] | [![ver][TocV]][Toc] | `.UseToc()` | Per-page table of contents and permalink heading anchors. |
+| [`NuStreamDocs.Highlight`][Highlight] | [![ver][HighlightV]][Highlight] | `.UseHighlight()` | Server-side syntax highlighting. TextMate JSON grammars + `[GeneratedRegex]`. Wraps blocks in `<div class="highlight">` (Pygments / mkdocs-material convention); reads per-block fence-info attrs (`title="..."` for filename bar, opt-in copy button). No JS runtime. |
+| [`NuStreamDocs.Search`][Search] | [![ver][SearchV]][Search] | (base; pair with one of the engines below) | Shared `SearchPluginBase`, head-extra wiring, section-priority meta. |
+| [`NuStreamDocs.Search.Pagefind`][Pagefind] | [![ver][PagefindV]][Pagefind] | `.UsePagefindSearch()` | Pagefind WASM index with snippets. Ships per-RID native binary; runs the CLI at finalize. |
+| [`NuStreamDocs.Search.Lunr`][Lunr] | [![ver][LunrV]][Lunr] | `.UseLunrSearch()` | Lunr-compatible JSON index. Pure-JS runtime, no native binary. |
+| [`NuStreamDocs.MarkdownExtensions`][MdExt] | [![ver][MdExtV]][MdExt] | `.UseCommonMarkdownExtensions()` | Admonitions, content tabs, collapsible details, check-lists, mark spans, footnotes, definition lists, **abbreviations** (`*[…]: definition`), tables, attr-list, mark, caret/tilde, critic-markup, inline-hilite, markdown-in-html. |
 
 ### Authoring helpers
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.Macros` | `.UseMacros()` | Variable substitution. `{{ name }}` markers in markdown resolve through a host-supplied `Dictionary<string, string>`. Skips fenced + inline code regions. Closes the mkdocs-macros gap (variable substitution slice). |
-| `NuStreamDocs.Bibliography` | `.UseBibliography()` | Pandoc-style citations — `[@key]` / `[@key, p 23]` / `[@a; @b]` markers resolve through a `BibliographyDatabase` (fluent builder, CSL-JSON loader). Emits a numbered footnote per citation plus a bibliography section. Ships **AGLC4** (Australian Guide to Legal Citation, 4th ed) as the v1 style; CSL-aware data model so other styles slot in. Byte-level UTF-8, zero-string-alloc on the format hot path. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Macros`][Macros] | [![ver][MacrosV]][Macros] | `.UseMacros()` | Variable substitution. `{{ name }}` markers in markdown resolve through a host-supplied `Dictionary<string, string>`. Skips fenced + inline code regions. Closes the mkdocs-macros gap (variable substitution slice). |
+| [`NuStreamDocs.Bibliography`][Bib] | [![ver][BibV]][Bib] | `.UseBibliography()` | Pandoc-style citations — `[@key]` / `[@key, p 23]` / `[@a; @b]` markers resolve through a `BibliographyDatabase` (fluent builder, CSL-JSON loader). Emits a numbered footnote per citation plus a bibliography section. Ships **AGLC4** (Australian Guide to Legal Citation, 4th ed) as the v1 style; CSL-aware data model so other styles slot in. Byte-level UTF-8, zero-string-alloc on the format hot path. |
 
 ### Markdown syntax extensions (à la carte)
 
 Each is a separate assembly so you only pull what you use:
 
-| Package | Builder | Syntax |
-|---|---|---|
-| `NuStreamDocs.Abbr` | `.UseAbbreviations()` | `*[token]: definition` → `<abbr>` |
-| `NuStreamDocs.Arithmatex` | `.UseArithmatex()` | `$x$` / `$$x$$` math (MathJax/KaTeX-friendly markup) |
-| `NuStreamDocs.Emoji` | `.UseEmoji()` | `:name:` → twemoji `<span>` |
-| `NuStreamDocs.Keys` | `.UseKeys()` | `++ctrl+alt+del++` → keyboard `<span>` |
-| `NuStreamDocs.MagicLink` | `.UseMagicLink()` | Bare URLs become autolinks |
-| `NuStreamDocs.SmartSymbols` | `.UseSmartSymbols()` | © ® ™, c/o, ±, ≠, → … |
-| `NuStreamDocs.Snippets` | `.UseSnippets()` | Whole-file (`--8<-- "file"`) and section (`--8<-- "file#name"`) includes. Section boundaries inside snippet files use HTML comments — `<!-- @section name -->` / `<!-- @endsection -->` — invisible in any CommonMark renderer even when the plugin isn't loaded. |
-| `NuStreamDocs.SuperFences` | `.UseSuperFences()` | Custom-fence dispatcher (auto-discovers fence handlers) |
+| Package | NuGet | Builder | Syntax |
+|---|---|---|---|
+| [`NuStreamDocs.Arithmatex`][Arith] | [![ver][ArithV]][Arith] | `.UseArithmatex()` | `$x$` / `$$x$$` math (MathJax/KaTeX-friendly markup) |
+| [`NuStreamDocs.Arithmatex.MathJax`][ArithMJ] | [![ver][ArithMJV]][ArithMJ] | `.UseMathJax()` | Pairs with Arithmatex; injects MathJax 3 client-side runtime |
+| [`NuStreamDocs.Emoji`][Emoji] | [![ver][EmojiV]][Emoji] | `.UseEmoji()` | `:name:` → twemoji `<span>` |
+| [`NuStreamDocs.Keys`][Keys] | [![ver][KeysV]][Keys] | `.UseKeys()` | `++ctrl+alt+del++` → keyboard `<span>` |
+| [`NuStreamDocs.MagicLink`][Magic] | [![ver][MagicV]][Magic] | `.UseMagicLink()` | Bare URLs become autolinks |
+| [`NuStreamDocs.SmartSymbols`][Smart] | [![ver][SmartV]][Smart] | `.UseSmartSymbols()` | © ® ™, c/o, ±, ≠, → … |
+| [`NuStreamDocs.Snippets`][Snip] | [![ver][SnipV]][Snip] | `.UseSnippets()` | Whole-file (`--8<-- "file"`) and section (`--8<-- "file#name"`) includes. Section boundaries inside snippet files use HTML comments — `<!-- @section name -->` / `<!-- @endsection -->` — invisible in any CommonMark renderer even when the plugin isn't loaded. |
+| [`NuStreamDocs.SuperFences`][SF] | [![ver][SFV]][SF] | `.UseSuperFences()` | Custom-fence dispatcher (auto-discovers fence handlers) |
+
+> Abbreviations (`*[token]: definition` → `<abbr>`) ship as part of
+> `NuStreamDocs.MarkdownExtensions` — `.UseCommonMarkdownExtensions()` enables
+> them by default, or `.UseAbbreviations()` for a standalone opt-in.
 
 ### Site emitters
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.Sitemap` | `.UseSitemap()`, `.UseNotFoundPage()`, `.UseRedirects()` | sitemap.xml + robots.txt, default 404, redirect stubs |
-| `NuStreamDocs.Versions` | `.UseVersions()` | mike-equivalent versioning manifest (`versions.json`) |
-| `NuStreamDocs.Tags` | `.UseTags()` | Tag index + per-tag listing pages from `tags:` frontmatter |
-| `NuStreamDocs.Metadata` | `.UseMetadata()` | Directory-level (`_meta.yml`) + sidecar (`page.meta.yml`) frontmatter merging (Statiq-inspired) |
-| `NuStreamDocs.Autorefs` | `.UseAutorefs()` | `@autoref:ID` rewriting against collected heading anchors |
-| `NuStreamDocs.Xrefs` | `.UseXrefs()` | DocFX-style `xrefmap.json` emit + import |
-| `NuStreamDocs.SphinxInventory` | `.UseSphinxInventory()` | Sphinx-compatible `objects.inv` emitter. Snapshots the shared autorefs registry at finalize time and writes a v2 inventory file (zlib-compressed body) so external Sphinx sites can intersphinx-link into NuStreamDocs builds. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Sitemap`][Site] | [![ver][SiteV]][Site] | `.UseSitemap()`, `.UseNotFoundPage()`, `.UseRedirects()` | sitemap.xml + robots.txt, default 404, redirect stubs |
+| [`NuStreamDocs.Versions`][Ver] | [![ver][VerV]][Ver] | `.UseVersions()` | mike-equivalent versioning manifest (`versions.json`) |
+| [`NuStreamDocs.Tags`][Tags] | [![ver][TagsV]][Tags] | `.UseTags()` | Tag index + per-tag listing pages from `tags:` frontmatter |
+| [`NuStreamDocs.Metadata`][Meta] | [![ver][MetaV]][Meta] | `.UseMetadata()` | Directory-level (`_meta.yml`) + sidecar (`page.meta.yml`) frontmatter merging (Statiq-inspired) |
+| [`NuStreamDocs.Autorefs`][Auto] | [![ver][AutoV]][Auto] | `.UseAutorefs()` | `@autoref:ID` rewriting against collected heading anchors |
+| [`NuStreamDocs.Xrefs`][Xref] | [![ver][XrefV]][Xref] | `.UseXrefs()` | DocFX-style `xrefmap.json` emit + import |
+| [`NuStreamDocs.SphinxInventory`][Sphinx] | [![ver][SphinxV]][Sphinx] | `.UseSphinxInventory()` | Sphinx-compatible `objects.inv` emitter. Snapshots the shared autorefs registry at finalize time and writes a v2 inventory file (zlib-compressed body) so external Sphinx sites can intersphinx-link into NuStreamDocs builds. |
+| [`NuStreamDocs.Layouts`][Layouts] | [![ver][LayoutsV]][Layouts] | `.UseLayouts()` | Jinja-style `{% extends %}` / `{% block %}` template inheritance for shared page layouts. |
 
 ### Quality / validation
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.LinkValidator` | `.UseLinkValidator()` | Strict-mode link checker. Internal: relative + anchors + nav/disk consistency (mkdocs `--strict`). External: HTTP HEAD via Polly with host-batched throttling/retry. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.LinkValidator`][LV] | [![ver][LVV]][LV] | `.UseLinkValidator()` | Strict-mode link checker. Internal: relative + anchors + nav/disk consistency (mkdocs `--strict`). External: HTTP HEAD via Polly with host-batched throttling/retry. |
 
 ### Dev experience
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.Serve` | `.WatchAndServeAsync()` | Long-running watch + dev-server loop. FileSystemWatcher with debounced rebuild + Kestrel-hosted static file server + LiveReload websocket so connected browsers refresh on every successful rebuild. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Serve`][Serve] | [![ver][ServeV]][Serve] | `.WatchAndServeAsync()` | Long-running watch + dev-server loop. FileSystemWatcher with debounced rebuild + Kestrel-hosted static file server + LiveReload websocket so connected browsers refresh on every successful rebuild. |
 
 ### Blog & syndication
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.Blog` | `.UseWyamBlog()` | Wyam-flavored blog: `YYYY-MM-DD-slug.md` + Wyam frontmatter (NoTitle/IsBlog/Title/Tags/Author/Published). |
-| `NuStreamDocs.Blog.MkDocs` | `.UseMkDocsBlog()` | mkdocs-material flavored: posts under `blog/posts/` with categories/date/authors frontmatter. |
-| `NuStreamDocs.Feed` | `.UseFeed()` | RSS 2.0 / Atom feed generation off the same blog scanner. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Blog`][Blog] | [![ver][BlogV]][Blog] | `.UseWyamBlog()` | Wyam-flavored blog: `YYYY-MM-DD-slug.md` + Wyam frontmatter (NoTitle/IsBlog/Title/Tags/Author/Published). |
+| [`NuStreamDocs.Blog.MkDocs`][BlogMk] | [![ver][BlogMkV]][BlogMk] | `.UseMkDocsBlog()` | mkdocs-material flavored: posts under `blog/posts/` with categories/date/authors frontmatter. |
+| [`NuStreamDocs.Feed`][Feed] | [![ver][FeedV]][Feed] | `.UseFeed()` | RSS 2.0 / Atom feed generation off the same blog scanner. |
 
 ### Media
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.Mermaid` | `.UseMermaid()` | Retag fenced `mermaid` blocks for the Mermaid runtime. |
-| `NuStreamDocs.Lightbox` | `.UseLightbox()` | glightbox: wraps content images in lightbox triggers, ships glightbox CSS/JS. |
-| `NuStreamDocs.Icons.Material` | `.UseMaterialIcons()` | Google Material Icons / Material Symbols (Outlined/Rounded/Sharp) — emits the stylesheet `<link>` so font-ligature spans render. |
-| `NuStreamDocs.Icons.MaterialDesign` | `new MdiIconResolver()` | **Inline-SVG** Material Design Icons (Pictogrammers MDI, ~7,400 icons). Plugs into the icon-shortcode rewriter as an `IIconResolver` so `:material-foo:` shortcodes inline the actual SVG path data — matches what mkdocs-material emits and works for the much larger MDI namespace (which Google Material Symbols doesn't fully cover). Path data is baked into a generated bucket-by-length switch; zero startup cost, ~50 ns lookup. |
-| `NuStreamDocs.Icons.FontAwesome` | `.UseFontAwesome()` | Font Awesome Free from a configurable CDN. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Mermaid`][Mer] | [![ver][MerV]][Mer] | `.UseMermaid()` | Retag fenced `mermaid` blocks for the Mermaid runtime. |
+| [`NuStreamDocs.Lightbox`][LB] | [![ver][LBV]][LB] | `.UseLightbox()` | glightbox: wraps content images in lightbox triggers, ships glightbox CSS/JS. |
+| [`NuStreamDocs.Icons.Material`][IcM] | [![ver][IcMV]][IcM] | `.UseMaterialIcons()` | Google Material Icons / Material Symbols (Outlined/Rounded/Sharp) — emits the stylesheet `<link>` so font-ligature spans render. |
+| [`NuStreamDocs.Icons.MaterialDesign`][IcMD] | [![ver][IcMDV]][IcMD] | `new MdiIconResolver()` | **Inline-SVG** Material Design Icons (Pictogrammers MDI, ~7,400 icons). Plugs into the icon-shortcode rewriter as an `IIconResolver` so `:material-foo:` shortcodes inline the actual SVG path data — matches what mkdocs-material emits and works for the much larger MDI namespace (which Google Material Symbols doesn't fully cover). Path data is baked into a generated bucket-by-length switch; zero startup cost, ~50 ns lookup. |
+| [`NuStreamDocs.Icons.FontAwesome`][IcFA] | [![ver][IcFAV]][IcFA] | `.UseFontAwesome()` | Font Awesome Free from a configurable CDN. |
 
 ### Privacy & optimization
 
-| Package | Builder | What |
-|---|---|---|
-| `NuStreamDocs.Privacy` | `.UsePrivacy()` | Localizes external assets under `assets/external/` and rewrites HTML to point at the local copies. Byte-level UTF-8 throughout. |
-| `NuStreamDocs.Optimize` | `.UseOptimize()`, `.UseHtmlMinify()` | Pre-compresses emitted output as `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). HTML minify pass. |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Privacy`][Priv] | [![ver][PrivV]][Priv] | `.UsePrivacy()` | Localizes external assets under `assets/external/` and rewrites HTML to point at the local copies. Byte-level UTF-8 throughout. |
+| [`NuStreamDocs.Optimize`][Opt] | [![ver][OptV]][Opt] | `.UseOptimize()`, `.UseHtmlMinify()` | Pre-compresses emitted output as `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). HTML minify pass. |
 
 ### C# API reference
 
-| Package | Builder | What |
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.CSharpApiGenerator`][Api] | [![ver][ApiV]][Api] | `.UseCSharpApiGenerator()`, `.UseCSharpApiGeneratorDirect()` | Wraps SourceDocParser + the Zensical emitter. Pulls NuGet-packaged assemblies (or DLLs / manifest / custom callbacks), generates Markdown reference pages into the docs tree, and lets normal page discovery pick them up. |
+
+### Themes
+
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.Theme.Material`][TM] | [![ver][TMV]][TM] | `.UseMaterialTheme()` | Classic mkdocs-material look — Mustache page template + Material CSS/JS bundle, all embedded. |
+| [`NuStreamDocs.Theme.Material3`][TM3] | [![ver][TM3V]][TM3] | `.UseMaterial3Theme()` | Material Design 3 — design-token-driven (color roles, shape, typography, elevation), structurally inspired by mkdocs-material 9.x but rebuilt for the modern MD3 surface. |
+
+### Core (no `.UseX()` — every plugin pulls these in transitively)
+
+| Package | NuGet | What |
 |---|---|---|
-| `NuStreamDocs.CSharpApiGenerator` | `.UseCSharpApiGenerator()`, `.UseCSharpApiGeneratorDirect()` | Wraps SourceDocParser + the Zensical emitter. Pulls NuGet-packaged assemblies (or DLLs / manifest / custom callbacks), generates Markdown reference pages into the docs tree, and lets normal page discovery pick them up. |
+| [`NuStreamDocs`][Core] | [![ver][CoreV]][Core] | Markdown parser, HTML emitter, page pipeline, plugin contract, `DocBuilder`. |
+| [`NuStreamDocs.Common`][Cm] | [![ver][CmV]][Cm] | Byte-level helpers (`AsciiByteHelpers`, path/URL structs, `Utf8Concat`, …). |
+| [`NuStreamDocs.Markdown.Common`][Mc] | [![ver][McV]][Mc] | Shared markdown scanners (`MarkdownCodeScanner`, `AsciiWordBoundary`, …). |
+| [`NuStreamDocs.Templating`][Tp] | [![ver][TpV]][Tp] | Span/UTF-8 Mustache-style template engine. |
+| [`NuStreamDocs.Theme.Common`][Tc] | [![ver][TcV]][Tc] | Shared theme helpers — icon-shortcode rewriter, embedded-asset loader, page-shell base. |
+| [`NuStreamDocs.Config.MkDocs`][Cfg1] | [![ver][Cfg1V]][Cfg1] | `mkdocs.yml` reader (span/UTF-8 YAML→JSON, no YamlDotNet). |
+| [`NuStreamDocs.Config.Zensical`][Cfg2] | [![ver][Cfg2V]][Cfg2] | Zensical-flavored TOML config reader. |
+| [`NuStreamDocs.Blog.Common`][Bc] | [![ver][BcV]][Bc] | Shared blog pipeline used by `Blog` and `Blog.MkDocs`. |
+
+[Core]: https://www.nuget.org/packages/NuStreamDocs/
+[CoreV]: https://img.shields.io/nuget/v/NuStreamDocs.svg?label=
+[Cm]: https://www.nuget.org/packages/NuStreamDocs.Common/
+[CmV]: https://img.shields.io/nuget/v/NuStreamDocs.Common.svg?label=
+[Mc]: https://www.nuget.org/packages/NuStreamDocs.Markdown.Common/
+[McV]: https://img.shields.io/nuget/v/NuStreamDocs.Markdown.Common.svg?label=
+[Tp]: https://www.nuget.org/packages/NuStreamDocs.Templating/
+[TpV]: https://img.shields.io/nuget/v/NuStreamDocs.Templating.svg?label=
+[Tc]: https://www.nuget.org/packages/NuStreamDocs.Theme.Common/
+[TcV]: https://img.shields.io/nuget/v/NuStreamDocs.Theme.Common.svg?label=
+[TM]: https://www.nuget.org/packages/NuStreamDocs.Theme.Material/
+[TMV]: https://img.shields.io/nuget/v/NuStreamDocs.Theme.Material.svg?label=
+[TM3]: https://www.nuget.org/packages/NuStreamDocs.Theme.Material3/
+[TM3V]: https://img.shields.io/nuget/v/NuStreamDocs.Theme.Material3.svg?label=
+[Cfg1]: https://www.nuget.org/packages/NuStreamDocs.Config.MkDocs/
+[Cfg1V]: https://img.shields.io/nuget/v/NuStreamDocs.Config.MkDocs.svg?label=
+[Cfg2]: https://www.nuget.org/packages/NuStreamDocs.Config.Zensical/
+[Cfg2V]: https://img.shields.io/nuget/v/NuStreamDocs.Config.Zensical.svg?label=
+[Nav]: https://www.nuget.org/packages/NuStreamDocs.Nav/
+[NavV]: https://img.shields.io/nuget/v/NuStreamDocs.Nav.svg?label=
+[Toc]: https://www.nuget.org/packages/NuStreamDocs.Toc/
+[TocV]: https://img.shields.io/nuget/v/NuStreamDocs.Toc.svg?label=
+[Highlight]: https://www.nuget.org/packages/NuStreamDocs.Highlight/
+[HighlightV]: https://img.shields.io/nuget/v/NuStreamDocs.Highlight.svg?label=
+[Search]: https://www.nuget.org/packages/NuStreamDocs.Search/
+[SearchV]: https://img.shields.io/nuget/v/NuStreamDocs.Search.svg?label=
+[Pagefind]: https://www.nuget.org/packages/NuStreamDocs.Search.Pagefind/
+[PagefindV]: https://img.shields.io/nuget/v/NuStreamDocs.Search.Pagefind.svg?label=
+[Lunr]: https://www.nuget.org/packages/NuStreamDocs.Search.Lunr/
+[LunrV]: https://img.shields.io/nuget/v/NuStreamDocs.Search.Lunr.svg?label=
+[MdExt]: https://www.nuget.org/packages/NuStreamDocs.MarkdownExtensions/
+[MdExtV]: https://img.shields.io/nuget/v/NuStreamDocs.MarkdownExtensions.svg?label=
+[Macros]: https://www.nuget.org/packages/NuStreamDocs.Macros/
+[MacrosV]: https://img.shields.io/nuget/v/NuStreamDocs.Macros.svg?label=
+[Bib]: https://www.nuget.org/packages/NuStreamDocs.Bibliography/
+[BibV]: https://img.shields.io/nuget/v/NuStreamDocs.Bibliography.svg?label=
+[Arith]: https://www.nuget.org/packages/NuStreamDocs.Arithmatex/
+[ArithV]: https://img.shields.io/nuget/v/NuStreamDocs.Arithmatex.svg?label=
+[ArithMJ]: https://www.nuget.org/packages/NuStreamDocs.Arithmatex.MathJax/
+[ArithMJV]: https://img.shields.io/nuget/v/NuStreamDocs.Arithmatex.MathJax.svg?label=
+[Emoji]: https://www.nuget.org/packages/NuStreamDocs.Emoji/
+[EmojiV]: https://img.shields.io/nuget/v/NuStreamDocs.Emoji.svg?label=
+[Keys]: https://www.nuget.org/packages/NuStreamDocs.Keys/
+[KeysV]: https://img.shields.io/nuget/v/NuStreamDocs.Keys.svg?label=
+[Magic]: https://www.nuget.org/packages/NuStreamDocs.MagicLink/
+[MagicV]: https://img.shields.io/nuget/v/NuStreamDocs.MagicLink.svg?label=
+[Smart]: https://www.nuget.org/packages/NuStreamDocs.SmartSymbols/
+[SmartV]: https://img.shields.io/nuget/v/NuStreamDocs.SmartSymbols.svg?label=
+[Snip]: https://www.nuget.org/packages/NuStreamDocs.Snippets/
+[SnipV]: https://img.shields.io/nuget/v/NuStreamDocs.Snippets.svg?label=
+[SF]: https://www.nuget.org/packages/NuStreamDocs.SuperFences/
+[SFV]: https://img.shields.io/nuget/v/NuStreamDocs.SuperFences.svg?label=
+[Site]: https://www.nuget.org/packages/NuStreamDocs.Sitemap/
+[SiteV]: https://img.shields.io/nuget/v/NuStreamDocs.Sitemap.svg?label=
+[Ver]: https://www.nuget.org/packages/NuStreamDocs.Versions/
+[VerV]: https://img.shields.io/nuget/v/NuStreamDocs.Versions.svg?label=
+[Tags]: https://www.nuget.org/packages/NuStreamDocs.Tags/
+[TagsV]: https://img.shields.io/nuget/v/NuStreamDocs.Tags.svg?label=
+[Meta]: https://www.nuget.org/packages/NuStreamDocs.Metadata/
+[MetaV]: https://img.shields.io/nuget/v/NuStreamDocs.Metadata.svg?label=
+[Auto]: https://www.nuget.org/packages/NuStreamDocs.Autorefs/
+[AutoV]: https://img.shields.io/nuget/v/NuStreamDocs.Autorefs.svg?label=
+[Xref]: https://www.nuget.org/packages/NuStreamDocs.Xrefs/
+[XrefV]: https://img.shields.io/nuget/v/NuStreamDocs.Xrefs.svg?label=
+[Sphinx]: https://www.nuget.org/packages/NuStreamDocs.SphinxInventory/
+[SphinxV]: https://img.shields.io/nuget/v/NuStreamDocs.SphinxInventory.svg?label=
+[Layouts]: https://www.nuget.org/packages/NuStreamDocs.Layouts/
+[LayoutsV]: https://img.shields.io/nuget/v/NuStreamDocs.Layouts.svg?label=
+[LV]: https://www.nuget.org/packages/NuStreamDocs.LinkValidator/
+[LVV]: https://img.shields.io/nuget/v/NuStreamDocs.LinkValidator.svg?label=
+[Serve]: https://www.nuget.org/packages/NuStreamDocs.Serve/
+[ServeV]: https://img.shields.io/nuget/v/NuStreamDocs.Serve.svg?label=
+[Bc]: https://www.nuget.org/packages/NuStreamDocs.Blog.Common/
+[BcV]: https://img.shields.io/nuget/v/NuStreamDocs.Blog.Common.svg?label=
+[Blog]: https://www.nuget.org/packages/NuStreamDocs.Blog/
+[BlogV]: https://img.shields.io/nuget/v/NuStreamDocs.Blog.svg?label=
+[BlogMk]: https://www.nuget.org/packages/NuStreamDocs.Blog.MkDocs/
+[BlogMkV]: https://img.shields.io/nuget/v/NuStreamDocs.Blog.MkDocs.svg?label=
+[Feed]: https://www.nuget.org/packages/NuStreamDocs.Feed/
+[FeedV]: https://img.shields.io/nuget/v/NuStreamDocs.Feed.svg?label=
+[Mer]: https://www.nuget.org/packages/NuStreamDocs.Mermaid/
+[MerV]: https://img.shields.io/nuget/v/NuStreamDocs.Mermaid.svg?label=
+[LB]: https://www.nuget.org/packages/NuStreamDocs.Lightbox/
+[LBV]: https://img.shields.io/nuget/v/NuStreamDocs.Lightbox.svg?label=
+[IcM]: https://www.nuget.org/packages/NuStreamDocs.Icons.Material/
+[IcMV]: https://img.shields.io/nuget/v/NuStreamDocs.Icons.Material.svg?label=
+[IcMD]: https://www.nuget.org/packages/NuStreamDocs.Icons.MaterialDesign/
+[IcMDV]: https://img.shields.io/nuget/v/NuStreamDocs.Icons.MaterialDesign.svg?label=
+[IcFA]: https://www.nuget.org/packages/NuStreamDocs.Icons.FontAwesome/
+[IcFAV]: https://img.shields.io/nuget/v/NuStreamDocs.Icons.FontAwesome.svg?label=
+[Priv]: https://www.nuget.org/packages/NuStreamDocs.Privacy/
+[PrivV]: https://img.shields.io/nuget/v/NuStreamDocs.Privacy.svg?label=
+[Opt]: https://www.nuget.org/packages/NuStreamDocs.Optimize/
+[OptV]: https://img.shields.io/nuget/v/NuStreamDocs.Optimize.svg?label=
+[Api]: https://www.nuget.org/packages/NuStreamDocs.CSharpApiGenerator/
+[ApiV]: https://img.shields.io/nuget/v/NuStreamDocs.CSharpApiGenerator.svg?label=
 
 ---
 
@@ -381,7 +506,11 @@ await new DocBuilder()
     .UseToc()
     .UseHighlight()
     .UseMkDocsBlog()
-    .UseFeed(opts => opts with { SiteUrl = "https://example.com" })
+    .UseFeed(new FeedOptions(
+        siteUrl: [.. "https://example.com"u8],
+        title: [.. "Example blog"u8],
+        description: [.. "Latest posts."u8],
+        postsSubdirectory: (PathSegment)"blog/posts"))
     .UseSearch()
     .BuildAsync();
 ```
@@ -678,7 +807,6 @@ options-customizer+logger).
 | **`NuStreamDocs.SuperFences`** | `.UseSuperFences()` | Custom-fence dispatcher. Auto-discovers `ICustomFenceHandler` plugins and rewrites `<pre><code class="language-X">` blocks claimed by a registered handler. |
 | **`NuStreamDocs.Snippets`** | `.UseSnippets()` | pymdownx.snippets — `--8<-- "file"` includes spliced inline at preprocess time. |
 | **`NuStreamDocs.Macros`** | `.UseMacros()` | mkdocs-macros-equivalent variable substitution. `{{ name }}` markers resolve through a host-supplied dictionary; fenced and inline code regions pass through untouched. Optional HTML escaping; optional `Warning`-level logging for unresolved names. |
-| **`NuStreamDocs.Abbr`** | `.UseAbbreviations()` | Markdown Extra abbreviations — strips `*[token]: definition` lines and wraps occurrences in `<abbr>`. |
 | **`NuStreamDocs.Arithmatex`** | `.UseArithmatex()` | pymdownx.arithmatex (generic mode) — wraps `$x$` / `$$x$$` for client-side renderers. |
 | **`NuStreamDocs.Emoji`** | `.UseEmoji()` | pymdownx.emoji default — `:name:` shortcodes become twemoji spans backed by a built-in popular-emoji index. |
 | **`NuStreamDocs.Keys`** | `.UseKeys()` | pymdownx.keys — `++ctrl+alt+del++` becomes a structured keys span. |

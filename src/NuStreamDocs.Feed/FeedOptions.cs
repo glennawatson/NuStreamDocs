@@ -15,9 +15,9 @@ namespace NuStreamDocs.Feed;
 /// <param name="Formats">Which formats to generate.</param>
 /// <param name="MaxItems">Cap on the number of items included; 0 means no cap.</param>
 public sealed record FeedOptions(
-    string SiteUrl,
-    string Title,
-    string Description,
+    byte[] SiteUrl,
+    byte[] Title,
+    byte[] Description,
     PathSegment PostsSubdirectory,
     PathSegment OutputSubdirectory,
     FeedFormats Formats,
@@ -27,11 +27,11 @@ public sealed record FeedOptions(
     private const int DefaultMaxItemsValue = 20;
 
     /// <summary>Initializes a new instance of the <see cref="FeedOptions"/> class with both formats and the default item cap.</summary>
-    /// <param name="siteUrl">Absolute site URL.</param>
-    /// <param name="title">Feed title.</param>
-    /// <param name="description">Feed description.</param>
+    /// <param name="siteUrl">Absolute site URL bytes.</param>
+    /// <param name="title">Feed title bytes.</param>
+    /// <param name="description">Feed description bytes.</param>
     /// <param name="postsSubdirectory">Posts subdirectory.</param>
-    public FeedOptions(string siteUrl, string title, string description, PathSegment postsSubdirectory)
+    public FeedOptions(byte[] siteUrl, byte[] title, byte[] description, PathSegment postsSubdirectory)
         : this(siteUrl, title, description, postsSubdirectory, postsSubdirectory, FeedFormats.Both, DefaultMaxItemsValue)
     {
     }
@@ -40,12 +40,27 @@ public sealed record FeedOptions(
     public static int DefaultMaxItems => DefaultMaxItemsValue;
 
     /// <summary>Throws when any required field is empty.</summary>
-    /// <exception cref="ArgumentException">When a required field is null, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentException">When a required field is null or empty.</exception>
     public void Validate()
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(SiteUrl);
-        ArgumentException.ThrowIfNullOrWhiteSpace(Title);
-        ArgumentException.ThrowIfNullOrWhiteSpace(Description);
+        ArgumentNullException.ThrowIfNull(SiteUrl);
+        ArgumentNullException.ThrowIfNull(Title);
+        ArgumentNullException.ThrowIfNull(Description);
+        if (SiteUrl.Length is 0)
+        {
+            throw new ArgumentException("SiteUrl must not be empty.", nameof(SiteUrl));
+        }
+
+        if (Title.Length is 0)
+        {
+            throw new ArgumentException("Title must not be empty.", nameof(Title));
+        }
+
+        if (Description.Length is 0)
+        {
+            throw new ArgumentException("Description must not be empty.", nameof(Description));
+        }
+
         ArgumentException.ThrowIfNullOrEmpty(PostsSubdirectory.Value);
         ArgumentException.ThrowIfNullOrEmpty(OutputSubdirectory.Value);
     }

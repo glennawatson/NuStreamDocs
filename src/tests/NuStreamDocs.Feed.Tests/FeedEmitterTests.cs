@@ -83,7 +83,7 @@ public class FeedEmitterTests
     /// <param name="formats">Format flags.</param>
     /// <returns>Options.</returns>
     private static FeedOptions TestOptions(FeedFormats formats) =>
-        new("https://x.test/", "Site", "Description", "posts", "feeds", formats, MaxItems: 0);
+        new([.. "https://x.test/"u8], [.. "Site"u8], [.. "Description"u8], "posts", "feeds", formats, MaxItems: 0);
 
     /// <summary>Disposable scratch directory.</summary>
     private sealed class FeedTempDir : IDisposable

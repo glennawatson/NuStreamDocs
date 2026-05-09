@@ -64,7 +64,7 @@ public class FeedWriterTests
     /// <summary>Builds standard test options.</summary>
     /// <returns>Options.</returns>
     private static FeedOptions BuildOptions() =>
-        new("https://example.com", "Test Feed", "A test feed", "blog");
+        new([.. "https://example.com"u8], [.. "Test Feed"u8], [.. "A test feed"u8], "blog");
 
     /// <summary>Builds two posts for the writer to consume.</summary>
     /// <returns>Posts list.</returns>

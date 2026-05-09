@@ -36,12 +36,12 @@ public static class FeedWriter
         sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
         sink.Write("<rss version=\"2.0\">\n  <channel>\n"u8);
 
-        WriteElement(sink, "    "u8, "title"u8, Encoding.UTF8.GetBytes(options.Title));
-        WriteElement(sink, "    "u8, "link"u8, Encoding.UTF8.GetBytes(options.SiteUrl));
-        WriteElement(sink, "    "u8, "description"u8, Encoding.UTF8.GetBytes(options.Description));
+        WriteElement(sink, "    "u8, "title"u8, options.Title);
+        WriteElement(sink, "    "u8, "link"u8, options.SiteUrl);
+        WriteElement(sink, "    "u8, "description"u8, options.Description);
         WriteElement(sink, "    "u8, "lastBuildDate"u8, FormatDate(generatedUtc, Rfc822Format));
 
-        var siteUrlBytes = Encoding.UTF8.GetBytes(options.SiteUrl.TrimEnd('/'));
+        var siteUrlBytes = TrimTrailingSlash(options.SiteUrl);
         var limit = ResolveLimit(options, posts.Length);
         for (var i = 0; i < limit; i++)
         {
@@ -66,17 +66,17 @@ public static class FeedWriter
         sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
         sink.Write("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n"u8);
 
-        var siteUrlBytes = Encoding.UTF8.GetBytes(options.SiteUrl);
+        var siteUrlBytes = options.SiteUrl;
         WriteElement(sink, "  "u8, "id"u8, siteUrlBytes);
-        WriteElement(sink, "  "u8, "title"u8, Encoding.UTF8.GetBytes(options.Title));
-        WriteElement(sink, "  "u8, "subtitle"u8, Encoding.UTF8.GetBytes(options.Description));
+        WriteElement(sink, "  "u8, "title"u8, options.Title);
+        WriteElement(sink, "  "u8, "subtitle"u8, options.Description);
         WriteElement(sink, "  "u8, "updated"u8, FormatDate(generatedUtc, "o"));
 
         sink.Write("  <link href=\""u8);
         XmlEntityEscaper.WriteEscaped(sink, siteUrlBytes, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("\" />\n"u8);
 
-        var trimmedSiteUrl = Encoding.UTF8.GetBytes(options.SiteUrl.TrimEnd('/'));
+        var trimmedSiteUrl = TrimTrailingSlash(options.SiteUrl);
         var limit = ResolveLimit(options, posts.Length);
         for (var i = 0; i < limit; i++)
         {
@@ -93,6 +93,12 @@ public static class FeedWriter
     /// <returns>Effective limit.</returns>
     private static int ResolveLimit(FeedOptions options, int postCount) =>
         options.MaxItems <= 0 ? postCount : Math.Min(options.MaxItems, postCount);
+
+    /// <summary>Returns <paramref name="bytes"/> with one trailing <c>/</c> dropped (if present).</summary>
+    /// <param name="bytes">Source UTF-8 bytes.</param>
+    /// <returns>Trimmed slice or the original array.</returns>
+    private static byte[] TrimTrailingSlash(byte[] bytes) =>
+        bytes is [.., (byte)'/'] ? bytes[..^1] : bytes;
 
     /// <summary>Writes one <c>&lt;name&gt;value&lt;/name&gt;</c> element with the value XML-escaped.</summary>
     /// <param name="sink">UTF-8 sink.</param>

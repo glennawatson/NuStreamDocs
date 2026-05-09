@@ -5,7 +5,7 @@
 using System.Buffers;
 using System.Text;
 using BenchmarkDotNet.Attributes;
-using NuStreamDocs.Abbr;
+using NuStreamDocs.MarkdownExtensions.Abbr;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.SmartSymbols;
 
