@@ -11,15 +11,6 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Search.Lunr;
 
 /// <summary>Lunr-format search-index plugin.</summary>
-/// <remarks>
-/// <para>
-/// Emits <c>search_index.json</c> at build time and ships two static assets to the rendered output —
-/// the vendored <c>lunr.min.js</c> runtime (via <see cref="LunrAssets"/>) plus a small
-/// <see cref="LunrBindScript"/> glue that builds the inverted index in the browser on first query
-/// and binds the results to the theme's search shell. Theme-agnostic: works with Material 1, Material 3,
-/// and any future theme that exposes the <c>data-md-component</c> hooks.
-/// </para>
-/// </remarks>
 public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
 {
     /// <summary>Forward-slash relative path the vendored Lunr runtime is written to in the rendered output.</summary>
@@ -34,6 +25,16 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
 <script src="/assets/javascripts/lunr.min.js" defer></script>
 <script src="/assets/javascripts/lunr-bind.js" defer></script>
 """u8];
+
+    /// <summary>Cached bind-script bytes; materialized once at type init so per-build <see cref="StaticAssets"/> reads don't re-copy the in-assembly literal.</summary>
+    private static readonly byte[] BindScriptBytes = LunrBindScript.Bytes.ToArray();
+
+    /// <summary>Cached static-asset array; (path, bytes) pairs never vary so the outer array stays cached too.</summary>
+    private static readonly (FilePath Path, byte[] Bytes)[] StaticAssetSet =
+    [
+        (LunrRuntimePath, LunrAssets.LunrMinJsBytes()),
+        (BindScriptPath, BindScriptBytes),
+    ];
 
     /// <summary>Captured option set; mirrored into the protected base properties.</summary>
     private readonly LunrOptions _options;
@@ -55,7 +56,7 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public LunrSearchPlugin(in LunrOptions options, ILogger logger)
-        : base(new LunrEngine(options.Language, options.ExtraStopwords), logger)
+        : base(new LunrEngine(options.Language ?? [], options.ExtraStopwords), logger)
     {
         _options = options;
     }
@@ -64,11 +65,7 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     public static string PinnedRuntimeVersion => LunrAssets.PinnedVersion;
 
     /// <inheritdoc/>
-    public (FilePath Path, byte[] Bytes)[] StaticAssets =>
-    [
-        (LunrRuntimePath, LunrAssets.LunrMinJsBytes()),
-        (BindScriptPath, LunrBindScript.Bytes.ToArray()),
-    ];
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => StaticAssetSet;
 
     /// <inheritdoc/>
     protected override PathSegment OutputSubdirectory => _options.OutputSubdirectory;

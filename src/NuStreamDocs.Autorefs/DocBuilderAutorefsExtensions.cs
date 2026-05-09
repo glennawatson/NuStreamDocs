@@ -18,6 +18,22 @@ public static class DocBuilderAutorefsExtensions
         return builder.UsePlugin(new AutorefsPlugin());
     }
 
+    /// <summary>
+    /// Registers the autorefs plugin with a fresh registry pre-sized for
+    /// <paramref name="initialCapacity"/> entries — pass an estimate of the
+    /// total registered ID count for the corpus (typically <c>page count × 5</c>
+    /// for SDK doc sites with several headings per page).
+    /// </summary>
+    /// <param name="builder">Doc builder.</param>
+    /// <param name="initialCapacity">Expected total ID count; sites above ~15 K IDs benefit from passing this hint to skip the resize cliff.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static DocBuilder UseAutorefs(this DocBuilder builder, int initialCapacity)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCapacity);
+        return builder.UsePlugin(new AutorefsPlugin(new AutorefsRegistry(initialCapacity)));
+    }
+
     /// <summary>Registers the autorefs plugin against a pre-existing shared registry.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="registry">Shared registry; other plugins may already hold a reference and publish into it.</param>

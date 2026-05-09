@@ -16,14 +16,16 @@ public sealed class AutorefsRegistry
 {
     /// <summary>Default pre-sized capacity for the parameterless constructor.</summary>
     /// <remarks>
-    /// Sized to absorb typical small-to-medium sites (a few hundred to
-    /// a couple of thousand registered headings) without bucket
-    /// rehashes in the parallel render pass. For very large corpora
-    /// pass a capacity hint via the <see cref="AutorefsRegistry(int)"/>
-    /// overload — the bench data shows pre-sizing saves ~28% time and
-    /// ~50% allocation across the register-heavy scenarios.
+    /// Sized to absorb a typical mid-size SDK doc site (~3 K pages × 5 headings/page
+    /// ≈ 15 K registered IDs) without forcing the underlying ConcurrentDictionary
+    /// to grow. Each rehash above this capacity costs ~45 % wall time and doubles
+    /// allocation, per the <c>AutorefsRegistryBenchmarks.RegisterWithFragment</c>
+    /// 100 K-entry run vs the pre-sized variant. For corpora above ~15 K IDs,
+    /// pass an explicit capacity through <see cref="AutorefsRegistry(int)"/> or
+    /// the <c>UseAutorefs(int)</c> builder helper — the bench shows that erases
+    /// the resize cliff entirely (~50 % faster, ~50 % less allocation).
     /// </remarks>
-    private const int DefaultInitialCapacity = 2_048;
+    private const int DefaultInitialCapacity = 16_384;
 
     /// <summary>Default concurrency level when the caller does not pass a capacity hint.</summary>
     /// <remarks>

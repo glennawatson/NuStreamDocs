@@ -83,7 +83,7 @@ public class LunrIndexWriterBenchmarks
     {
         var corpus = Documents <= SmallDocCount ? _smallCorpus : _midCorpus;
         var path = Path.Combine(_tempRoot, "search_index_" + Documents + ".json");
-        LunrIndexWriter.Write(path, "en", corpus);
+        LunrIndexWriter.Write(path, "en"u8, corpus);
         return path;
     }
 

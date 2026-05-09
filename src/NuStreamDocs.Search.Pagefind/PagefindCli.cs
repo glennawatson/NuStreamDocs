@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,43 +11,27 @@ using NuStreamDocs.Search.Pagefind.Logging;
 
 namespace NuStreamDocs.Search.Pagefind;
 
-/// <summary>
-/// Locates and invokes the bundled <c>pagefind</c> CLI binary against a
-/// rendered site directory to produce the genuine Pagefind WASM runtime +
-/// binary inverted-index shards under <c>&lt;site&gt;/pagefind/</c>.
-/// </summary>
+/// <summary>Locates and invokes the bundled <c>pagefind</c> CLI binary against a rendered site.</summary>
 /// <remarks>
-/// <para>
-/// Per-RID binaries ship as content files under
-/// <c>runtimes/&lt;rid&gt;/native/pagefind[.exe]</c>; the SDK copies the
-/// matching one to the consumer's <c>bin/</c> on build. Resolution order at
-/// run time:
-/// </para>
-/// <list type="number">
-/// <item>An explicit <see cref="PagefindOptions.BinaryPath"/> override.</item>
-/// <item><c>runtimes/&lt;rid&gt;/native/pagefind[.exe]</c> next to the host assembly.</item>
-/// <item>A bare <c>pagefind</c> on PATH (developer fallback when natives haven't been pulled in).</item>
-/// </list>
-/// <para>
-/// When <see cref="PagefindOptions.RunCli"/> is true and no binary is found, the runner logs
-/// a warning and returns without throwing — the build still completes, but with no
-/// <c>pagefind/</c> directory, so search degrades to "unavailable" in the browser. Set
-/// <see cref="PagefindOptions.StrictBinaryRequired"/> to flip that to a hard failure (CI
-/// publishes that must produce real shards).
-/// </para>
+/// Resolution order: explicit <see cref="PagefindOptions.BinaryPath"/> override, the
+/// per-RID native shipped under <c>runtimes/&lt;rid&gt;/native/pagefind[.exe]</c>, then a
+/// bare <c>pagefind</c> on PATH. Missing-binary handling depends on
+/// <see cref="PagefindOptions.StrictBinaryRequired"/> — log+skip by default, throw when strict.
 /// </remarks>
 public static class PagefindCli
 {
-    /// <summary>Gets the Pagefind release this package targets.</summary>
-    /// <remarks>Matches the version of the binaries shipped in <c>runtimes/&lt;rid&gt;/native/</c>; bump in lockstep.</remarks>
+    /// <summary>Stdio drain buffer size — 4 KB matches the typical OS pipe buffer; bigger doesn't help when stderr is a few hundred bytes.</summary>
+    private const int DrainBufferSize = 4 * 1024;
+
+    /// <summary>Gets the Pagefind release this package targets; matches the binary version under <c>runtimes/</c>.</summary>
     public static string PinnedVersion => "1.5.2";
 
-    /// <summary>Discovers + invokes Pagefind against <paramref name="siteRoot"/>.</summary>
-    /// <param name="siteRoot">Absolute path to the rendered site directory containing the HTML pages.</param>
-    /// <param name="options">Plugin options — supplies the binary override, the output subdirectory, and the strict/run toggles.</param>
-    /// <param name="logger">Logger for diagnostics.</param>
+    /// <summary>Discovers and invokes Pagefind against <paramref name="siteRoot"/>.</summary>
+    /// <param name="siteRoot">Absolute path to the rendered site directory.</param>
+    /// <param name="options">Plugin options carrying the binary override + strict/run toggles.</param>
+    /// <param name="logger">Diagnostic logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>True when Pagefind ran and exited with code 0; false when the runner skipped (binary missing, <see cref="PagefindOptions.RunCli"/> off).</returns>
+    /// <returns>True when Pagefind ran and exited cleanly; false when skipped (binary missing with non-strict, or <c>RunCli=false</c>).</returns>
     public static async Task<bool> RunAsync(DirectoryPath siteRoot, PagefindOptions options, ILogger logger, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(siteRoot.Value);
@@ -66,10 +51,10 @@ public static class PagefindCli
         return await InvokeAsync(binary, siteRoot, options, logger, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>"Binary missing" branch — throws when strict, else logs a warning and returns false.</summary>
+    /// <summary>Either throws a strict-mode error or logs a soft warning.</summary>
     /// <param name="strict">When true, throws.</param>
     /// <param name="logger">Diagnostic logger.</param>
-    /// <returns>Always false (only return path that doesn't throw).</returns>
+    /// <returns>Always false (the soft path).</returns>
     private static bool HandleMissingBinary(bool strict, ILogger logger)
     {
         if (strict)
@@ -83,9 +68,9 @@ public static class PagefindCli
         return false;
     }
 
-    /// <summary>Spawns Pagefind, captures its stdio, waits, and propagates the result.</summary>
+    /// <summary>Spawns Pagefind, drains its stdio as bytes, waits, and propagates the exit-code result.</summary>
     /// <param name="binary">Resolved binary path.</param>
-    /// <param name="siteRoot">Rendered site directory.</param>
+    /// <param name="siteRoot">Rendered site directory (passed via <c>--site</c>).</param>
     /// <param name="options">Plugin options (carries the strict toggle).</param>
     /// <param name="logger">Diagnostic logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -104,20 +89,18 @@ public static class PagefindCli
         psi.ArgumentList.Add("--site");
         psi.ArgumentList.Add(siteRoot.Value);
 
-        // Place Pagefind output under <site>/pagefind/ — the canonical location its loader expects
-        // when consumers write `import("/pagefind/pagefind.js")`. The OutputSubdirectory is reserved
-        // for any future engine bookkeeping the runtime doesn't own.
+        // Place output under <site>/pagefind/ — the canonical location its loader expects when consumers
+        // write `import("/pagefind/pagefind.js")`. The OutputSubdirectory option is reserved for future use.
         psi.ArgumentList.Add("--output-subdir");
         psi.ArgumentList.Add("pagefind");
+
+        // --quiet suppresses Pagefind's progress chatter so stdout stays empty in the success case
+        // and our drain loop is a no-op.
+        psi.ArgumentList.Add("--quiet");
 
         PagefindCliLogging.LogInvoking(logger, binary, siteRoot);
 
         using var process = new Process { StartInfo = psi };
-        StringBuilder stdout = new();
-        StringBuilder stderr = new();
-        process.OutputDataReceived += (_, e) => AppendIfPresent(stdout, e.Data);
-        process.ErrorDataReceived += (_, e) => AppendIfPresent(stderr, e.Data);
-
         try
         {
             process.Start();
@@ -128,34 +111,19 @@ public static class PagefindCli
             return false;
         }
 
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        await WaitForExitOrKillAsync(process, cancellationToken).ConfigureAwait(false);
+        // Read stdio as raw bytes via the BaseStream — avoids the BeginOutputReadLine API which
+        // delivers strings (UTF-16 decode + per-line allocation). Stdout is just drained to a counter
+        // because the success log only surfaces the byte count; stderr is pooled into an
+        // ArrayBufferWriter and decoded to string only at the error-message boundary.
+        ArrayBufferWriter<byte> stderrSink = new();
+        var stdoutDrain = DrainStdoutAsync(process.StandardOutput.BaseStream, cancellationToken);
+        var stderrDrain = DrainIntoAsync(process.StandardError.BaseStream, stderrSink, cancellationToken);
 
-        if (process.ExitCode != 0)
-        {
-            PagefindCliLogging.LogFailed(logger, process.ExitCode, stderr.ToString());
-            if (options.StrictBinaryRequired)
-            {
-                throw new InvalidOperationException(
-                    $"Pagefind exited with code {process.ExitCode}. stderr: {stderr}");
-            }
-
-            return false;
-        }
-
-        PagefindCliLogging.LogSucceeded(logger, stdout.Length, stderr.Length);
-        return true;
-    }
-
-    /// <summary>Waits for <paramref name="process"/> to exit or, on cancellation, kills the tree before re-throwing.</summary>
-    /// <param name="process">Running process.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task that completes on exit.</returns>
-    private static async Task WaitForExitOrKillAsync(Process process, CancellationToken cancellationToken)
-    {
+        long stdoutBytes;
         try
         {
+            await stderrDrain.ConfigureAwait(false);
+            stdoutBytes = await stdoutDrain.ConfigureAwait(false);
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
@@ -163,9 +131,84 @@ public static class PagefindCli
             KillIfRunning(process);
             throw;
         }
+
+        if (process.ExitCode != 0)
+        {
+            var stderrText = Encoding.UTF8.GetString(stderrSink.WrittenSpan);
+            PagefindCliLogging.LogFailed(logger, process.ExitCode, stderrText);
+            if (options.StrictBinaryRequired)
+            {
+                throw new InvalidOperationException(
+                    $"Pagefind exited with code {process.ExitCode}. stderr: {stderrText}");
+            }
+
+            return false;
+        }
+
+        PagefindCliLogging.LogSucceeded(logger, ClampToInt(stdoutBytes), stderrSink.WrittenCount);
+        return true;
     }
 
-    /// <summary>Kills <paramref name="process"/> and tolerates "already exited" without bubbling.</summary>
+    /// <summary>Drains <paramref name="stream"/> into <paramref name="sink"/> a pooled chunk at a time.</summary>
+    /// <param name="stream">Source stream.</param>
+    /// <param name="sink">Byte sink.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when the stream signals EOF.</returns>
+    private static async ValueTask DrainIntoAsync(Stream stream, IBufferWriter<byte> sink, CancellationToken cancellationToken)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(DrainBufferSize);
+        try
+        {
+            while (true)
+            {
+                var read = await stream.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
+                if (read == 0)
+                {
+                    return;
+                }
+
+                sink.Write(buffer.AsSpan(0, read));
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>Drains <paramref name="stream"/> and returns the byte count.</summary>
+    /// <param name="stream">Source stream.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Total bytes read.</returns>
+    private static async ValueTask<long> DrainStdoutAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(DrainBufferSize);
+        try
+        {
+            long total = 0;
+            while (true)
+            {
+                var read = await stream.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
+                if (read == 0)
+                {
+                    return total;
+                }
+
+                total += read;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>Saturating cast from <see cref="long"/> to <see cref="int"/>; capped because the logger emitter takes int.</summary>
+    /// <param name="value">Source value.</param>
+    /// <returns>Clamped value.</returns>
+    private static int ClampToInt(long value) => value > int.MaxValue ? int.MaxValue : (int)value;
+
+    /// <summary>Kills <paramref name="process"/> tolerating "already exited".</summary>
     /// <param name="process">Process handle.</param>
     private static void KillIfRunning(Process process)
     {
@@ -179,22 +222,9 @@ public static class PagefindCli
         }
     }
 
-    /// <summary>Appends <paramref name="line"/> to <paramref name="sink"/> when non-null.</summary>
-    /// <param name="sink">Destination buffer.</param>
-    /// <param name="line">Captured line, or null when the stream signalled EOF.</param>
-    private static void AppendIfPresent(StringBuilder sink, string? line)
-    {
-        if (line is null)
-        {
-            return;
-        }
-
-        sink.AppendLine(line);
-    }
-
-    /// <summary>Resolves the absolute path of the Pagefind binary to invoke, or null when no binary is locatable.</summary>
+    /// <summary>Resolves the absolute path of the Pagefind binary to invoke, or null on miss.</summary>
     /// <param name="explicitOverride">User-supplied override; tried first.</param>
-    /// <returns>An absolute path to a binary that exists on disk, or null.</returns>
+    /// <returns>An absolute path that exists on disk, or null.</returns>
     private static string? ResolveBinaryPath(FilePath explicitOverride)
     {
         if (!explicitOverride.IsEmpty && File.Exists(explicitOverride.Value))
@@ -210,9 +240,8 @@ public static class PagefindCli
             return probe;
         }
 
-        // Fall back to a generic-RID probe (linux-x64, osx-arm64, etc.) — covers the case where
-        // RuntimeIdentifier reports something more specific (e.g. linux-musl-x64) but the package
-        // ships only the broader RID folder.
+        // Broader-RID fallback for hosts that report a more specific RID (e.g. linux-musl-x64
+        // when only linux-x64 is bundled).
         var fallback = Path.Combine(AppContext.BaseDirectory, "runtimes", FallbackRid(), "native", fileName);
         if (File.Exists(fallback))
         {
@@ -234,7 +263,7 @@ public static class PagefindCli
         return null;
     }
 
-    /// <summary>Maps the host's specific RID (e.g. <c>linux-musl-x64</c>) to the broader RID folder we ship (<c>linux-x64</c>).</summary>
+    /// <summary>Maps the host's specific RID to the broader RID folder we ship.</summary>
     /// <returns>A broad RID like <c>linux-x64</c>.</returns>
     private static string FallbackRid()
     {

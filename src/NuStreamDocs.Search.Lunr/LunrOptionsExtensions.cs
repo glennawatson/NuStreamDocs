@@ -7,11 +7,6 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Search.Lunr;
 
 /// <summary>String / span construction helpers for the byte-shaped <see cref="LunrOptions"/> record.</summary>
-/// <remarks>
-/// Encodes the inputs once at construction so the per-page frontmatter extractor and the index
-/// writer flow pure UTF-8. Callers building from configuration files reach for the string
-/// overloads; callers with byte-literal sources can pass <c>[.. "..."u8]</c> directly.
-/// </remarks>
 public static class LunrOptionsExtensions
 {
     /// <summary>Replaces the output subdirectory.</summary>
@@ -23,10 +18,27 @@ public static class LunrOptionsExtensions
 
     /// <summary>Replaces the Lunr stop-word + stemmer language code.</summary>
     /// <param name="options">Source options.</param>
-    /// <param name="language">Language code (e.g. <c>"en"</c>, <c>"fr"</c>); empty for English default.</param>
+    /// <param name="language">Language code string (e.g. <c>"en"</c>, <c>"fr"</c>); encoded once at the boundary. Empty for English default.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions WithLanguage(this LunrOptions options, string language) =>
-        options with { Language = language ?? string.Empty };
+    public static LunrOptions WithLanguage(this LunrOptions options, ApiCompatString language) =>
+        options with { Language = Utf8Encoder.Encode(language) };
+
+    /// <summary>Replaces the Lunr stop-word + stemmer language code with the supplied UTF-8 bytes.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="language">UTF-8 language-code bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static LunrOptions WithLanguage(this LunrOptions options, byte[] language)
+    {
+        ArgumentNullException.ThrowIfNull(language);
+        return options with { Language = language };
+    }
+
+    /// <summary>Replaces the Lunr stop-word + stemmer language code with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="language">UTF-8 language-code bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static LunrOptions WithLanguage(this LunrOptions options, ReadOnlySpan<byte> language) =>
+        options with { Language = language.ToArray() };
 
     /// <summary>Replaces the minimum-token-length filter.</summary>
     /// <param name="options">Source options.</param>

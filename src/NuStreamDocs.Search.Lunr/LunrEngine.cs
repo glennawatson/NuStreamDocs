@@ -7,25 +7,22 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Search.Lunr;
 
 /// <summary>Lunr-format <see cref="ISearchEngine"/> implementation.</summary>
-/// <remarks>
-/// Captures the Lunr-only knobs (<see cref="LunrOptions.Language"/>, <see cref="LunrOptions.ExtraStopwords"/>) at
-/// construction so the base plugin's <see cref="ISearchEngine.Write"/> contract stays format-agnostic.
-/// </remarks>
 public sealed class LunrEngine : ISearchEngine
 {
-    /// <summary>Lunr language code emitted into the <c>config</c> block.</summary>
-    private readonly string _language;
+    /// <summary>UTF-8 Lunr language code emitted into the <c>config</c> block.</summary>
+    private readonly byte[] _language;
 
     /// <summary>Extra stopwords emitted into the <c>config</c> block.</summary>
     private readonly byte[][] _extraStopwords;
 
     /// <summary>Initializes a new instance of the <see cref="LunrEngine"/> class.</summary>
-    /// <param name="language">Lunr language code.</param>
+    /// <param name="language">UTF-8 Lunr language code.</param>
     /// <param name="extraStopwords">UTF-8 stopwords surfaced to the runtime.</param>
-    public LunrEngine(string language, byte[][] extraStopwords)
+    public LunrEngine(byte[] language, byte[][] extraStopwords)
     {
+        ArgumentNullException.ThrowIfNull(language);
         ArgumentNullException.ThrowIfNull(extraStopwords);
-        _language = language ?? string.Empty;
+        _language = language;
         _extraStopwords = extraStopwords;
     }
 

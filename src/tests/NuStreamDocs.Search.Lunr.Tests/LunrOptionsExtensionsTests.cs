@@ -10,15 +10,32 @@ namespace NuStreamDocs.Search.Lunr.Tests;
 /// <summary>Behavior tests for <c>LunrOptionsExtensions</c>.</summary>
 public class LunrOptionsExtensionsTests
 {
-    /// <summary><c>WithLanguage</c> swaps the language code; null collapses to empty string.</summary>
+    /// <summary><c>WithLanguage</c> encodes the supplied string into UTF-8 bytes.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task WithLanguage()
+    public async Task WithLanguageString()
     {
         var fr = LunrOptions.Default.WithLanguage("fr");
-        await Assert.That(fr.Language).IsEqualTo("fr");
-        var nullToEmpty = LunrOptions.Default.WithLanguage(null!);
-        await Assert.That(nullToEmpty.Language).IsEqualTo(string.Empty);
+        await Assert.That(fr.Language.AsSpan().SequenceEqual("fr"u8)).IsTrue();
+    }
+
+    /// <summary>Span overload accepts a UTF-8 literal directly.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WithLanguageSpan()
+    {
+        var de = LunrOptions.Default.WithLanguage("de"u8);
+        await Assert.That(de.Language.AsSpan().SequenceEqual("de"u8)).IsTrue();
+    }
+
+    /// <summary>Byte-array overload stores the supplied array verbatim.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WithLanguageBytesStoresVerbatim()
+    {
+        byte[] lang = [.. "es"u8];
+        var es = LunrOptions.Default.WithLanguage(lang);
+        await Assert.That(es.Language).IsSameReferenceAs(lang);
     }
 
     /// <summary><c>WithExtraStopwords</c> replaces the existing list, encoding to UTF-8.</summary>

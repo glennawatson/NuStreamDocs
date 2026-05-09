@@ -7,34 +7,29 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Lunr;
 
-/// <summary>
-/// Writes a Lunr-compatible <c>search_index.json</c> for the upstream
-/// mkdocs-material bundled JS to consume.
-/// </summary>
-/// <remarks>
-/// The actual Lunr index is built client-side by the bundled JS from
-/// the <c>docs</c> array; we just emit the document corpus + config
-/// stub. Title and text are written through
-/// <see cref="Utf8JsonWriter"/>'s byte-span <c>WriteString</c>
-/// overloads so the per-page bytes go straight from
-/// <see cref="SearchDocument"/> to the file with no UTF-16
-/// round-trip.
-/// </remarks>
+/// <summary>Writes a Lunr-compatible <c>search_index.json</c>.</summary>
 public static class LunrIndexWriter
 {
+    /// <summary>JsonWriter options reused across every emit; <c>SkipValidation</c> drops per-element structure-stack bookkeeping for our trusted writer call shape.</summary>
+    private static readonly JsonWriterOptions WriterOptions = new()
+    {
+        Indented = false,
+        SkipValidation = true,
+    };
+
     /// <summary>Writes <paramref name="documents"/> as Lunr-compatible JSON to <paramref name="path"/>.</summary>
     /// <param name="path">Absolute output path.</param>
-    /// <param name="language">Language code emitted in the <c>config</c> block.</param>
+    /// <param name="language">UTF-8 language code emitted in the <c>config</c> block; empty falls back to <c>en</c>.</param>
     /// <param name="documents">Document corpus.</param>
-    public static void Write(FilePath path, ApiCompatString language, SearchDocument[] documents) =>
+    public static void Write(FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents) =>
         Write(path, language, documents, []);
 
     /// <summary>Writes <paramref name="documents"/> as Lunr-compatible JSON, including an <c>extra_stopwords</c> array.</summary>
     /// <param name="path">Absolute output path.</param>
-    /// <param name="language">Language code emitted in the <c>config</c> block.</param>
+    /// <param name="language">UTF-8 language code emitted in the <c>config</c> block; empty falls back to <c>en</c>.</param>
     /// <param name="documents">Document corpus.</param>
-    /// <param name="extraStopwords">UTF-8 stopwords to advertise in the <c>config</c> block; theme JS can layer them onto the language's default set.</param>
-    public static void Write(FilePath path, ApiCompatString language, SearchDocument[] documents, byte[][] extraStopwords)
+    /// <param name="extraStopwords">UTF-8 stopwords advertised in the <c>config</c> block.</param>
+    public static void Write(FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents, byte[][] extraStopwords)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
         ArgumentNullException.ThrowIfNull(documents);
@@ -42,21 +37,21 @@ public static class LunrIndexWriter
 
         path.Directory.Create();
         using var stream = File.Create(path.Value);
-        using Utf8JsonWriter writer = new(stream);
+        using Utf8JsonWriter writer = new(stream, WriterOptions);
 
         writer.WriteStartObject();
 
         writer.WritePropertyName("config"u8);
         writer.WriteStartObject();
-        writer.WriteString("lang"u8, language.IsEmpty ? "en" : language.Value);
-        writer.WriteString("separator"u8, @"[\s\-]+");
+        writer.WriteString("lang"u8, language.IsEmpty ? "en"u8 : language);
+        writer.WriteString("separator"u8, "[\\s\\-]+"u8);
         if (extraStopwords.Length > 0)
         {
             writer.WritePropertyName("extra_stopwords"u8);
             writer.WriteStartArray();
             for (var i = 0; i < extraStopwords.Length; i++)
             {
-                writer.WriteStringValue(extraStopwords[i]);
+                writer.WriteStringValue((ReadOnlySpan<byte>)extraStopwords[i]);
             }
 
             writer.WriteEndArray();

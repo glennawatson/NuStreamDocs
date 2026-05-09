@@ -4,24 +4,7 @@
 
 namespace NuStreamDocs.Search.Lunr;
 
-/// <summary>
-/// Lunr glue script — embedded as a UTF-8 byte literal so the engine ships
-/// it through <see cref="LunrSearchPlugin"/>'s <c>StaticAssets</c> without
-/// disk I/O at build time.
-/// </summary>
-/// <remarks>
-/// <para>
-/// Binds the vendored Lunr.js runtime (<c>/assets/javascripts/lunr.min.js</c>)
-/// + the engine's <c>search_index.json</c> to the theme's search shell — the
-/// <c>data-md-component</c> hooks every theme exposes. The bundle's full
-/// inverted index is built client-side once on first query, then reused.
-/// </para>
-/// <para>
-/// Behavior parity with the Pagefind glue: same component contract, same
-/// section-priority re-rank, same renderer (title + URL + excerpt with
-/// <c>&lt;mark&gt;</c> highlights around matched terms).
-/// </para>
-/// </remarks>
+/// <summary>Lunr glue script — embedded as a UTF-8 byte literal.</summary>
 internal static class LunrBindScript
 {
     /// <summary>Gets the UTF-8 bytes of the glue script.</summary>

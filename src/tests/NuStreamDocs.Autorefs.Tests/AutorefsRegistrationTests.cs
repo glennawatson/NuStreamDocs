@@ -25,7 +25,7 @@ public class AutorefsRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseAutorefsRegistryRegisters() =>
-        await Assert.That(new DocBuilder().UseAutorefs(new())).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseAutorefs(new AutorefsRegistry())).IsTypeOf<DocBuilder>();
 
     /// <summary>UseAutorefs(registry, logger) registers.</summary>
     /// <returns>Async test.</returns>

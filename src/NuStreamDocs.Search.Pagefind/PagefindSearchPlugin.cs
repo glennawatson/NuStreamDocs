@@ -26,16 +26,17 @@ public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvide
     private static readonly FilePath BindScriptPath = new("assets/javascripts/pagefind-bind.js");
 
     /// <summary>UTF-8 head-link snippet — the Pagefind WASM loader as an ES module followed by the glue script.</summary>
-    /// <remarks>
-    /// The loader is written as a module so Pagefind's <c>import.meta.url</c>-based asset resolution finds the
-    /// sibling <c>.wasm</c> + <c>.pagefind</c> shards relative to <c>/pagefind/pagefind.js</c>. The glue script
-    /// runs deferred so the DOM is ready when it queries the search-shell hooks.
-    /// </remarks>
     private static readonly byte[] HeadExtraBytes =
         [.. """
 <script type="module">import("/pagefind/pagefind.js").catch(()=>{});</script>
 <script src="/assets/javascripts/pagefind-bind.js" defer></script>
 """u8];
+
+    /// <summary>Cached bind-script bytes; materialized once at type init so per-build <see cref="StaticAssets"/> reads are zero-allocation.</summary>
+    private static readonly byte[] BindScriptBytes = PagefindBindScript.Bytes.ToArray();
+
+    /// <summary>Cached static-asset array; the (path, bytes) pair never varies, so the outer array also stays cached.</summary>
+    private static readonly (FilePath Path, byte[] Bytes)[] StaticAssetSet = [(BindScriptPath, BindScriptBytes)];
 
     /// <summary>Captured option set; mirrored into the protected base properties.</summary>
     private readonly PagefindOptions _options;
@@ -67,7 +68,7 @@ public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvide
     }
 
     /// <inheritdoc/>
-    public (FilePath Path, byte[] Bytes)[] StaticAssets => [(BindScriptPath, PagefindBindScript.Bytes.ToArray())];
+    public (FilePath Path, byte[] Bytes)[] StaticAssets => StaticAssetSet;
 
     /// <inheritdoc/>
     protected override PathSegment OutputSubdirectory => _options.OutputSubdirectory;
