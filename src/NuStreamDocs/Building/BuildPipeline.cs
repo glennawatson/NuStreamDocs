@@ -37,10 +37,6 @@ public static class BuildPipeline
     /// <summary>Initial-capacity multiplier for preprocessor scratch buffers — pages typically grow only modestly through rewrites.</summary>
     private const int PreprocessorScratchMultiplier = 2;
 
-    /// <summary>Per-thread cache of the most recently created output directory; pages in the same directory share the slot to skip the syscall.</summary>
-    [ThreadStatic]
-    private static string? _lastCreatedDirectory;
-
     /// <summary>Runs the build with no cancellation support and default options.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="outputRoot">Absolute path to the site output root.</param>
@@ -614,8 +610,17 @@ public static class BuildPipeline
         return front;
     }
 
-    /// <summary>Ensures the directory containing <paramref name="outputPath"/> exists, with a per-thread last-seen cache so repeat directories cost nothing.</summary>
+    /// <summary>Ensures the directory containing <paramref name="outputPath"/> exists.</summary>
     /// <param name="outputPath">Absolute output path.</param>
+    /// <remarks>
+    /// Calls <see cref="Directory.CreateDirectory(string)"/> unconditionally — the BCL no-ops
+    /// when the directory already exists, so the cost is one stat() syscall per page (~µs).
+    /// We previously cached the last-created directory per thread, but the cache survived
+    /// across builds via thread-pool reuse and silently broke any "build → wipe output →
+    /// build again" flow (benchmarks with per-iteration output reset, dev-server restarts
+    /// after a manual <c>rm -rf site/</c>, sequential test fixtures). The cache's perf win
+    /// — a few ms across a 14k-page corpus — wasn't worth the correctness hazard.
+    /// </remarks>
     private static void EnsureDirectory(string outputPath)
     {
         var dirSpan = Path.GetDirectoryName(outputPath.AsSpan());
@@ -624,15 +629,7 @@ public static class BuildPipeline
             return;
         }
 
-        var cached = _lastCreatedDirectory;
-        if (cached is not null && dirSpan.SequenceEqual(cached.AsSpan()))
-        {
-            return;
-        }
-
-        var dir = dirSpan.ToString();
-        Directory.CreateDirectory(dir);
-        _lastCreatedDirectory = dir;
+        Directory.CreateDirectory(dirSpan.ToString());
     }
 
     /// <summary>Computes the on-disk output path for a relative source path.</summary>
