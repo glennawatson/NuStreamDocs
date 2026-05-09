@@ -1,10 +1,15 @@
 <Project>
 
   <PropertyGroup>
-    <Copyright>Copyright (c) Glenn Watson and Contributors</Copyright>
+    <CopyrightStartYear>2026</CopyrightStartYear>
+    <CopyrightCurrentYear>$([System.DateTime]::UtcNow.ToString("yyyy"))</CopyrightCurrentYear>
+    <CopyrightYearRange Condition="'$(CopyrightCurrentYear)' == '$(CopyrightStartYear)'">$(CopyrightStartYear)</CopyrightYearRange>
+    <CopyrightYearRange Condition="'$(CopyrightCurrentYear)' != '$(CopyrightStartYear)'">$(CopyrightStartYear)-$(CopyrightCurrentYear)</CopyrightYearRange>
+    <Copyright>Copyright (c) $(CopyrightYearRange) Glenn Watson and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/glennawatson/NuStreamDocs</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>nustreamdocs.png</PackageIcon>
     <Authors>Glenn Watson and Contributors</Authors>
     <Owners>glennawatson</Owners>
     <PackageTags>markdown;static-site;mkdocs;zensical;material;aot;dotnet</PackageTags>
@@ -67,6 +72,7 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
     <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\icons\nustreamdocs.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
   
   <ItemGroup>

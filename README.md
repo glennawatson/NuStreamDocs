@@ -1,3 +1,20 @@
+[![CI Build](https://github.com/glennawatson/NuStreamDocs/actions/workflows/ci.yml/badge.svg)](https://github.com/glennawatson/NuStreamDocs/actions/workflows/ci.yml)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=glennawatson_NuStreamDocs&metric=coverage)](https://sonarcloud.io/summary/new_code?id=glennawatson_NuStreamDocs)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=glennawatson_NuStreamDocs&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=glennawatson_NuStreamDocs)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=glennawatson_NuStreamDocs&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=glennawatson_NuStreamDocs)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=glennawatson_NuStreamDocs&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=glennawatson_NuStreamDocs)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=glennawatson_NuStreamDocs&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=glennawatson_NuStreamDocs)
+[![NuGet](https://img.shields.io/nuget/v/NuStreamDocs.svg?logo=nuget&label=NuStreamDocs)](https://www.nuget.org/packages/NuStreamDocs/)
+[![Downloads](https://img.shields.io/nuget/dt/NuStreamDocs.svg?logo=nuget&label=downloads)](https://www.nuget.org/packages/NuStreamDocs/)
+[![GitHub stars](https://img.shields.io/github/stars/glennawatson/NuStreamDocs?style=social)](https://github.com/glennawatson/NuStreamDocs/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+<br>
+<a href="https://github.com/glennawatson/NuStreamDocs">
+  <img width="160" height="160" src="https://raw.githubusercontent.com/glennawatson/NuStreamDocs/main/icons/nustreamdocs.png" alt="NuStreamDocs">
+</a>
+<br>
+
 # NuStreamDocs
 
 A high-performance, AOT-friendly **library** for building static documentation
