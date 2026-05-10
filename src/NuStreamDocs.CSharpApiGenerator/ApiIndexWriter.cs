@@ -14,7 +14,7 @@ internal static class ApiIndexWriter
     /// <summary>Initial buffer capacity.</summary>
     private const int InitialBufferCapacity = 1024;
 
-    /// <summary>Subdirectory names that should not appear in the namespace index.</summary>
+    /// <summary>Subdirectory names that should not appear in the namespace index (case-sensitive on disk; matches the emitter's lower-cased / underscored naming).</summary>
     private static readonly HashSet<string> InfraDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "lib",
@@ -23,8 +23,63 @@ internal static class ApiIndexWriter
         "_global"
     };
 
+    /// <summary>
+    /// UTF-8 byte form of <see cref="InfraDirectoryNames"/> used by the byte-based
+    /// <see cref="IsInfraDirectory"/> predicate so the streaming sink never has to
+    /// round-trip through <see cref="string"/>.
+    /// </summary>
+    private static readonly byte[][] InfraDirectoryNamesUtf8 =
+    [
+        "lib"u8.ToArray(),
+        "refs"u8.ToArray(),
+        "cache"u8.ToArray(),
+        "_global"u8.ToArray(),
+    ];
+
     /// <summary>Gets the default page title bytes used when the caller doesn't override it.</summary>
     private static ReadOnlySpan<byte> DefaultTitleBytes => "API Reference"u8;
+
+    /// <summary>Renders the index page bytes for a caller-supplied namespace list, without touching disk.</summary>
+    /// <param name="namespaces">Ordered namespace folder names as UTF-8 byte arrays.</param>
+    /// <param name="title">UTF-8 page title bytes; falls back to <c>API Reference</c> when empty.</param>
+    /// <param name="introduction">Optional UTF-8 intro paragraph rendered between the title and the namespace list.</param>
+    /// <param name="order">Optional <c>Order:</c> integer; emitted as a YAML frontmatter block at the top of the page when set.</param>
+    /// <returns>The rendered UTF-8 page bytes, or an empty array when <paramref name="namespaces"/> is empty.</returns>
+    public static byte[] BuildBytes(byte[][] namespaces, ReadOnlySpan<byte> title, ReadOnlySpan<byte> introduction, int? order)
+    {
+        ArgumentNullException.ThrowIfNull(namespaces);
+        if (namespaces.Length is 0)
+        {
+            return [];
+        }
+
+        ArrayBufferWriter<byte> sink = new(InitialBufferCapacity);
+        if (order is { } o)
+        {
+            WriteOrderFrontmatter(sink, o);
+        }
+
+        WriteTitle(sink, title);
+        WriteIntroduction(sink, introduction);
+        WriteNamespaceListBytes(sink, namespaces);
+        return sink.WrittenSpan.ToArray();
+    }
+
+    /// <summary>Returns true when <paramref name="name"/> is a known infrastructure folder that should not appear in the namespace index.</summary>
+    /// <param name="name">UTF-8 folder-name bytes (top-level segment of an emitted page path).</param>
+    /// <returns>True when the folder should be filtered out.</returns>
+    public static bool IsInfraDirectory(ReadOnlySpan<byte> name)
+    {
+        for (var i = 0; i < InfraDirectoryNamesUtf8.Length; i++)
+        {
+            if (name.SequenceEqual(InfraDirectoryNamesUtf8[i]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>Writes <c>{apiPath}/index.md</c> listing every non-infra subdirectory of <paramref name="apiPath"/> as a namespace link.</summary>
     /// <param name="apiPath">Absolute path to the API output root the emitter wrote.</param>
@@ -124,7 +179,7 @@ internal static class ApiIndexWriter
 
     /// <summary>Writes the <c>## Namespaces</c> section followed by one bullet per namespace.</summary>
     /// <param name="sink">UTF-8 sink.</param>
-    /// <param name="namespaces">Sorted namespace directory names.</param>
+    /// <param name="namespaces">Sorted namespace directory names (string form; from the disk-scan path).</param>
     private static void WriteNamespaceList(IBufferWriter<byte> sink, string[] namespaces)
     {
         WriteSpan(sink, "## Namespaces\n\n"u8);
@@ -134,6 +189,22 @@ internal static class ApiIndexWriter
             WriteUtf8(sink, namespaces[i]);
             WriteSpan(sink, "`]("u8);
             WriteUtf8(sink, namespaces[i]);
+            WriteSpan(sink, "/)\n"u8);
+        }
+    }
+
+    /// <summary>Byte-shaped equivalent of <see cref="WriteNamespaceList"/> for the streaming sink path.</summary>
+    /// <param name="sink">UTF-8 sink.</param>
+    /// <param name="namespaces">Sorted namespace directory names as UTF-8 byte arrays.</param>
+    private static void WriteNamespaceListBytes(IBufferWriter<byte> sink, byte[][] namespaces)
+    {
+        WriteSpan(sink, "## Namespaces\n\n"u8);
+        for (var i = 0; i < namespaces.Length; i++)
+        {
+            WriteSpan(sink, "- [`"u8);
+            WriteSpan(sink, namespaces[i]);
+            WriteSpan(sink, "`]("u8);
+            WriteSpan(sink, namespaces[i]);
             WriteSpan(sink, "/)\n"u8);
         }
     }

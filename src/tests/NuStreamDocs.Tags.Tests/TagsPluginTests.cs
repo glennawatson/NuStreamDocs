@@ -5,6 +5,7 @@
 using System.Text;
 using NuStreamDocs.Building;
 using NuStreamDocs.Common;
+using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tags.Tests;
 
@@ -34,7 +35,7 @@ public class TagsPluginTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "notag.md"), "no frontmatter");
 
         TagsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(temp.Root, "/out", [], new SyntheticPageSink()), CancellationToken.None);
 
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
     }
@@ -49,13 +50,20 @@ public class TagsPluginTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "second.md"), "---\ntags:\n  - alpha\n---\n# Second\n\nbody");
 
         TagsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
+        SyntheticPageSink sink = new();
+        await plugin.DiscoverAsync(new(temp.Root, "/out", [], sink), CancellationToken.None);
 
-        var indexMd = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "index.md"));
+        // Source folder must remain untouched — no tags directory should ever be created on disk.
+        await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
+
+        var pages = sink.Snapshot();
+        var indexPage = pages.Single(p => p.RelativePath.Value == "tags/index.md");
+        var indexMd = Encoding.UTF8.GetString(indexPage.MarkdownBytes);
         await Assert.That(indexMd).Contains("alpha");
         await Assert.That(indexMd).Contains("beta");
 
-        var alphaMd = await File.ReadAllTextAsync(Path.Combine(temp.Root, "tags", "alpha.md"));
+        var alphaPage = pages.Single(p => p.RelativePath.Value == "tags/alpha.md");
+        var alphaMd = Encoding.UTF8.GetString(alphaPage.MarkdownBytes);
         await Assert.That(alphaMd).Contains("First");
         await Assert.That(alphaMd).Contains("Second");
     }
@@ -70,10 +78,14 @@ public class TagsPluginTests
 
         TagsOptions options = new("topics", "all.html");
         TagsPlugin plugin = new(options);
-        await plugin.DiscoverAsync(new(temp.Root, "/out", []), CancellationToken.None);
+        SyntheticPageSink sink = new();
+        await plugin.DiscoverAsync(new(temp.Root, "/out", [], sink), CancellationToken.None);
 
-        // Discover writes markdown source files; the html filename option drives the slug naming convention.
-        await Assert.That(Directory.Exists(Path.Combine(temp.Root, "topics"))).IsTrue();
+        // Pages register under the configured subdirectory; nothing lands on disk.
+        await Assert.That(Directory.Exists(Path.Combine(temp.Root, "topics"))).IsFalse();
+        var pages = sink.Snapshot();
+        await Assert.That(Array.Exists(pages, p => p.RelativePath.Value == "topics/index.md")).IsTrue();
+        await Assert.That(Array.Exists(pages, p => p.RelativePath.Value == "topics/foo.md")).IsTrue();
     }
 
     /// <summary>RelativePathToUrlPath swaps <c>.md</c> for <c>.html</c> and normalizes separators.</summary>

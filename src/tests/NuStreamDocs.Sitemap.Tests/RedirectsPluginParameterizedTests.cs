@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Plugins;
+
 namespace NuStreamDocs.Sitemap.Tests;
 
 /// <summary>Parameterized frontmatter-shape tests for RedirectsPlugin.DiscoverAsync.</summary>
@@ -28,7 +30,7 @@ public class RedirectsPluginParameterizedTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "guide", "intro.md"), $"---\n{frontmatter}---\n# body");
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
     }
 
     /// <summary>Frontmatter shapes that should NOT register an alias (no key, empty list, no frontmatter, etc.).</summary>
@@ -47,7 +49,7 @@ public class RedirectsPluginParameterizedTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), source);
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
     }
 
     /// <summary>Constructor surface — every overload returns a usable instance.</summary>

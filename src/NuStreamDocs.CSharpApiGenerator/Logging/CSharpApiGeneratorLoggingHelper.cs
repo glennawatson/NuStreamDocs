@@ -10,12 +10,11 @@ internal static partial class CSharpApiGeneratorLoggingHelper
     /// <summary>Logs the start of a generator run.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="rootDirectory">Repository root holding the package config.</param>
-    /// <param name="outputRoot">Destination directory for the emitted Markdown.</param>
     [LoggerMessage(
         EventId = 6001,
         Level = LogLevel.Information,
-        Message = "ApiGenerator starting: root={RootDirectory}, output={OutputRoot}")]
-    public static partial void LogGeneratorStart(ILogger logger, string rootDirectory, string outputRoot);
+        Message = "ApiGenerator starting: root={RootDirectory}")]
+    public static partial void LogGeneratorStart(ILogger logger, string rootDirectory);
 
     /// <summary>Logs the completion of a per-assembly walk.</summary>
     /// <param name="logger">Target logger.</param>

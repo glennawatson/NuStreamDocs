@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Tags;
 
 /// <summary>Shared helpers used by the tag plugin and the index writer.</summary>
@@ -40,20 +42,24 @@ internal static class TagsCommon
     /// <summary>Builds a slug filename from the slug and extension.</summary>
     /// <param name="slug">ASCII slug bytes (alphanumeric / hyphen only).</param>
     /// <param name="extensionWithDot">Extension bytes to append, including the leading dot (e.g. <c>".md"u8</c>, <c>".html"u8</c>); ASCII.</param>
-    /// <returns>The slug followed by the extension as a single allocated string.</returns>
-    public static string BuildSlugFileName(ReadOnlySpan<byte> slug, ReadOnlySpan<byte> extensionWithDot)
+    /// <returns>The slug followed by the extension as a path-typed file name.</returns>
+    public static FilePath BuildSlugFileName(ReadOnlySpan<byte> slug, ReadOnlySpan<byte> extensionWithDot)
     {
         var totalLength = slug.Length + extensionWithDot.Length;
-        var copy = new byte[totalLength];
-        slug.CopyTo(copy);
-        extensionWithDot.CopyTo(copy.AsSpan(slug.Length));
-        return string.Create(totalLength, copy, static (dst, src) =>
+        var fileName = string.Create(totalLength, (slug.ToArray(), extensionWithDot.ToArray()), static (dst, src) =>
         {
-            for (var i = 0; i < src.Length; i++)
+            var (slugBytes, extBytes) = src;
+            for (var i = 0; i < slugBytes.Length; i++)
             {
-                dst[i] = (char)src[i];
+                dst[i] = (char)slugBytes[i];
+            }
+
+            for (var i = 0; i < extBytes.Length; i++)
+            {
+                dst[slugBytes.Length + i] = (char)extBytes[i];
             }
         });
+        return FilePath.FromString(fileName);
     }
 
     /// <summary>Writes the slug form of <paramref name="tag"/> into <paramref name="dst"/> and returns the count.</summary>

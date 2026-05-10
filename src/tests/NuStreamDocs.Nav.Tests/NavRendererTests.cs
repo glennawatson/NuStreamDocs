@@ -136,7 +136,7 @@ public class NavRendererTests
 
         var options = NavOptions.Default with { Tabs = true, UseDirectoryUrls = true };
         NavPlugin plugin = new(options);
-        BuildDiscoverContext discoverContext = new(fixture.Root, fixture.Output, [plugin]) { UseDirectoryUrls = true };
+        BuildDiscoverContext discoverContext = new(fixture.Root, fixture.Output, [plugin], new SyntheticPageSink()) { UseDirectoryUrls = true };
         await plugin.DiscoverAsync(discoverContext, CancellationToken.None);
 
         var html = RunPostRender(plugin, "guide/index.md");
@@ -416,7 +416,7 @@ public class NavRendererTests
 
         var options = NavOptions.Default with { Prune = prune };
         NavPlugin plugin = new(options);
-        BuildDiscoverContext discoverContext = new(fixture.Root, fixture.Output, [plugin]);
+        BuildDiscoverContext discoverContext = new(fixture.Root, fixture.Output, [plugin], new SyntheticPageSink());
         await plugin.DiscoverAsync(discoverContext, CancellationToken.None);
 
         var sourcePath = currentPage.Replace(".html", ".md", StringComparison.Ordinal);

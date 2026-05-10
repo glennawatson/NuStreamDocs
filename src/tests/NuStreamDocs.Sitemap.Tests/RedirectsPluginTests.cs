@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Plugins;
+
 namespace NuStreamDocs.Sitemap.Tests;
 
 /// <summary>Behavior tests for <c>RedirectsPlugin</c> covering config file + frontmatter alias paths.</summary>
@@ -19,7 +21,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(configPath, ConfigBody);
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsTrue();
@@ -37,7 +39,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "guide", "intro.md"), "---\naliases:\n  - old/page\n  - really/old\n---\nbody");
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         var aliasHtml = await File.ReadAllTextAsync(Path.Combine(output.Root, "old", "page.html"));
@@ -54,7 +56,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "---\naliases: [\"old.html\", \"prev.html\"]\n---\nbody");
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsTrue();
@@ -71,7 +73,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "---\naliases:\n  - section/\n---\nbody");
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "section", "index.html"))).IsTrue();
@@ -88,7 +90,7 @@ public class RedirectsPluginTests
 
         var options = RedirectsOptions.Default with { ScanFrontmatterAliases = false, LoadConfigFile = false };
         RedirectsPlugin plugin = new(options, []);
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "skipped.html"))).IsFalse();
@@ -104,7 +106,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "loses.md"), "---\naliases:\n  - old.html\n---\nbody");
 
         RedirectsPlugin plugin = new(("old.html", "/wins.html"));
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         var html = await File.ReadAllTextAsync(Path.Combine(output.Root, "old.html"));
@@ -121,7 +123,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "just body");
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         // No stubs written.
@@ -142,7 +144,7 @@ public class RedirectsPluginTests
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
         RedirectsPlugin plugin = new(("good.html", "/dest.html"), (string.Empty, "/x"), ("from", "  "), ("   ", "   "));
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "good.html"))).IsTrue();
@@ -157,7 +159,7 @@ public class RedirectsPluginTests
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(Directory.GetFiles(output.Root)).IsEmpty();
@@ -173,7 +175,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "redirects.yml"), "old.html: /new.html\n");
 
         RedirectsPlugin plugin = new(RedirectsOptions.Default with { LoadConfigFile = false }, []);
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsFalse();
@@ -189,7 +191,7 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "---\naliases: [bare, already.html, with-ext.HTML]\n---\nbody");
 
         RedirectsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         await Assert.That(File.Exists(Path.Combine(output.Root, "bare.html"))).IsTrue();
@@ -205,7 +207,7 @@ public class RedirectsPluginTests
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
         RedirectsPlugin plugin = new(("from.html", "/dst?a=1&b=\"2\"<3>"));
-        await plugin.DiscoverAsync(new(input.Root, output.Root, []), CancellationToken.None);
+        await plugin.DiscoverAsync(new(input.Root, output.Root, [], new SyntheticPageSink()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
         var stub = await File.ReadAllTextAsync(Path.Combine(output.Root, "from.html"));

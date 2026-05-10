@@ -5,12 +5,14 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Caching;
 using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
+using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Building;
 
@@ -102,7 +104,8 @@ public static class BuildPipeline
 
         BuildPipelineLoggingHelper.LogConfigureStart(log, phases.Configures.Length);
         await FireConfigureAsync(phases.Configures, plugins, shell, crossPageMarkers, cancellationToken).ConfigureAwait(false);
-        await FireDiscoverAsync(phases.Discovers, plugins, shell, cancellationToken).ConfigureAwait(false);
+        SyntheticPageSink syntheticPages = new();
+        await FireDiscoverAsync(phases.Discovers, plugins, shell, syntheticPages, cancellationToken).ConfigureAwait(false);
 
         var processed = 0;
         var cacheHits = 0;
@@ -117,7 +120,7 @@ public static class BuildPipeline
         BuildPipelineLoggingHelper.LogRenderStart(log, parallelOptions.MaxDegreeOfParallelism);
         var renderStarted = stopwatch.ElapsedMilliseconds;
         await Parallel.ForEachAsync(
-            PageDiscovery.EnumerateAsync(inputRoot, filter, cancellationToken),
+            EnumerateDiskAndSyntheticAsync(inputRoot, filter, syntheticPages, cancellationToken),
             parallelOptions,
             async (item, ct) =>
             {
@@ -185,10 +188,15 @@ public static class BuildPipeline
         PerPageDispatch dispatch,
         CancellationToken cancellationToken)
     {
-        // Read into a pooled buffer instead of File.ReadAllBytesAsync — the
-        // latter allocates a fresh byte[] per page (158 MB on a 13.8K-page corpus).
-        // RandomAccess avoids the FileStream + BufferedFileStreamStrategy buffer
-        // chain entirely; the rented array is returned in the outer finally.
+        // Synthetic pages skip the file-read entirely — bytes already live in process memory,
+        // there's nothing to pool or release. Disk pages take the RandomAccess + ArrayPool
+        // path: File.ReadAllBytesAsync allocates a fresh byte[] per page (158 MB on a 13.8K-page
+        // corpus) and FileStream's BufferedFileStreamStrategy chain layers on more allocations.
+        if (item.InMemorySource is { } memorySource)
+        {
+            return await ProcessSourceAsync(item, memorySource.AsMemory(), outputRoot, useDirectoryUrls, dispatch, cancellationToken).ConfigureAwait(false);
+        }
+
         using var sourceHandle = File.OpenHandle(
             item.AbsolutePath,
             FileMode.Open,
@@ -200,83 +208,140 @@ public static class BuildPipeline
         try
         {
             await RandomAccess.ReadAsync(sourceHandle, sourceBuffer.AsMemory(0, sourceLength), 0, cancellationToken).ConfigureAwait(false);
-            var raw = sourceBuffer.AsMemory(0, sourceLength);
-            var hash = ContentHasher.Hash(raw.Span);
-            var source = raw[Utf8Bom.LengthOf(raw.Span)..];
-            var outputPath = OutputPathFor(outputRoot, item.RelativePath, useDirectoryUrls);
-            var phases = dispatch.Phases;
-            var pluginTiming = dispatch.PluginTiming;
-
-            if (dispatch.Previous.TryGet(item.RelativePath, out var stale) &&
-                stale.ContentHash.AsSpan().SequenceEqual(hash) &&
-                File.Exists(outputPath))
-            {
-                // Hot incremental path: source matches previous build and output is on disk.
-                // Re-fire IPageScanPlugin.Scan against the cached output so plugins like
-                // SearchPluginBase / LinkValidator still observe every page — without this,
-                // cached pages would be invisible to scan-phase plugins and incremental
-                // rebuilds would emit indexes / validators that only know about pages
-                // re-rendered this build.
-                if (phases.Scans.Length > 0)
-                {
-                    var cachedHtml = await File.ReadAllBytesAsync(outputPath, cancellationToken).ConfigureAwait(false);
-                    FireScans(phases.Scans, item.RelativePath, source.Span, cachedHtml, pluginTiming);
-                }
-
-                return (stale, true, false);
-            }
-
-            var rental = PageBuilderPool.Rent(source.Length * 2);
-            List<PageBuilderRental> scratchRentals = [];
-            PageBuilderRental? owned = rental;
-            try
-            {
-                var processedSource = ApplyPreRenders(source, phases.PreRenders, scratchRentals, item.RelativePath, pluginTiming);
-                MarkdownRenderer.Render(processedSource.Span, rental.Writer);
-
-                var finalRental = ApplyPostRenders(rental, scratchRentals, source.Span, phases.PostRenders, item.RelativePath, pluginTiming);
-                if (!finalRental.Equals(rental))
-                {
-                    // ApplyPostRenders moved `rental` into scratch (it's now stale). Track final instead.
-                    owned = finalRental;
-                }
-
-                FireScans(phases.Scans, item.RelativePath, source.Span, finalRental.Writer.WrittenSpan, pluginTiming);
-
-                var pageNeedsBarrier = phases.NeedsCrossPageBarrier
-                                       && PageHasCrossPageMarker(finalRental.Writer.WrittenSpan, dispatch.CrossPageMarkerNeedles);
-                if (pageNeedsBarrier)
-                {
-                    // Transfer rental ownership to the buffered queue. The drain phase
-                    // disposes the rental after PostResolve + Write.
-                    dispatch.Buffered.Enqueue(new(item.RelativePath, outputPath, finalRental, hash));
-                    owned = null;
-                    return (default, false, true);
-                }
-
-                EnsureDirectory(outputPath);
-
-                // Sync write skips the BufferedFileStreamStrategy + ThreadPoolValueTaskSource
-                // alloc chain. Page bytes are already in memory; nothing to overlap with.
-                File.WriteAllBytes(outputPath, finalRental.Writer.WrittenSpan);
-                return (new(item.RelativePath, hash, finalRental.Writer.WrittenCount), false, false);
-            }
-            finally
-            {
-                for (var i = 0; i < scratchRentals.Count; i++)
-                {
-                    scratchRentals[i].Dispose();
-                }
-
-                if (owned is { } o)
-                {
-                    o.Dispose();
-                }
-            }
+            return await ProcessSourceAsync(item, sourceBuffer.AsMemory(0, sourceLength), outputRoot, useDirectoryUrls, dispatch, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             ArrayPool<byte>.Shared.Return(sourceBuffer);
+        }
+    }
+
+    /// <summary>
+    /// Renders one page given its already-materialized UTF-8 source. Shared body of <see cref="ProcessOnePageAsync"/>'s
+    /// disk-loaded and synthetic-page branches — they differ only in how they obtain the source memory.
+    /// </summary>
+    /// <param name="item">Page work item.</param>
+    /// <param name="raw">UTF-8 source bytes (BOM still present; stripped below).</param>
+    /// <param name="outputRoot">Absolute output root.</param>
+    /// <param name="useDirectoryUrls">Selects the output-path shape (flat vs <c>foo/index.html</c>).</param>
+    /// <param name="dispatch">Bundle of per-page shared state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The fresh manifest entry, a flag indicating cache hit, and a flag indicating whether the rental was transferred to the buffered queue.</returns>
+    private static async ValueTask<(ManifestEntry Entry, bool CacheHit, bool DidBuffer)> ProcessSourceAsync(
+        PageWorkItem item,
+        ReadOnlyMemory<byte> raw,
+        DirectoryPath outputRoot,
+        bool useDirectoryUrls,
+        PerPageDispatch dispatch,
+        CancellationToken cancellationToken)
+    {
+        var hash = ContentHasher.Hash(raw.Span);
+        var source = raw[Utf8Bom.LengthOf(raw.Span)..];
+        var outputPath = OutputPathFor(outputRoot, item.RelativePath, useDirectoryUrls);
+        var phases = dispatch.Phases;
+        var pluginTiming = dispatch.PluginTiming;
+
+        if (dispatch.Previous.TryGet(item.RelativePath, out var stale) &&
+            stale.ContentHash.AsSpan().SequenceEqual(hash) &&
+            File.Exists(outputPath))
+        {
+            // Hot incremental path: source matches previous build and output is on disk.
+            // Re-fire IPageScanPlugin.Scan against the cached output so plugins like
+            // SearchPluginBase / LinkValidator still observe every page — without this,
+            // cached pages would be invisible to scan-phase plugins and incremental
+            // rebuilds would emit indexes / validators that only know about pages
+            // re-rendered this build.
+            if (phases.Scans.Length > 0)
+            {
+                var cachedHtml = await File.ReadAllBytesAsync(outputPath, cancellationToken).ConfigureAwait(false);
+                FireScans(phases.Scans, item.RelativePath, source.Span, cachedHtml, pluginTiming);
+            }
+
+            return (stale, true, false);
+        }
+
+        var rental = PageBuilderPool.Rent(source.Length * 2);
+        List<PageBuilderRental> scratchRentals = [];
+        PageBuilderRental? owned = rental;
+        try
+        {
+            var processedSource = ApplyPreRenders(source, phases.PreRenders, scratchRentals, item.RelativePath, pluginTiming);
+            MarkdownRenderer.Render(processedSource.Span, rental.Writer);
+
+            var finalRental = ApplyPostRenders(rental, scratchRentals, source.Span, phases.PostRenders, item.RelativePath, pluginTiming);
+            if (!finalRental.Equals(rental))
+            {
+                // ApplyPostRenders moved `rental` into scratch (it's now stale). Track final instead.
+                owned = finalRental;
+            }
+
+            FireScans(phases.Scans, item.RelativePath, source.Span, finalRental.Writer.WrittenSpan, pluginTiming);
+
+            var pageNeedsBarrier = phases.NeedsCrossPageBarrier
+                                   && PageHasCrossPageMarker(finalRental.Writer.WrittenSpan, dispatch.CrossPageMarkerNeedles);
+            if (pageNeedsBarrier)
+            {
+                // Transfer rental ownership to the buffered queue. The drain phase
+                // disposes the rental after PostResolve + Write.
+                dispatch.Buffered.Enqueue(new(item.RelativePath, outputPath, finalRental, hash));
+                owned = null;
+                return (default, false, true);
+            }
+
+            EnsureDirectory(outputPath);
+
+            // Sync write skips the BufferedFileStreamStrategy + ThreadPoolValueTaskSource
+            // alloc chain. Page bytes are already in memory; nothing to overlap with.
+            File.WriteAllBytes(outputPath, finalRental.Writer.WrittenSpan);
+            return (new(item.RelativePath, hash, finalRental.Writer.WrittenCount), false, false);
+        }
+        finally
+        {
+            for (var i = 0; i < scratchRentals.Count; i++)
+            {
+                scratchRentals[i].Dispose();
+            }
+
+            if (owned is { } o)
+            {
+                o.Dispose();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Streams disk-loaded markdown pages first, then drains the synthetic-page sink so
+    /// plugin-registered in-memory pages flow through the same render pipeline without
+    /// ever landing in the source folder.
+    /// </summary>
+    /// <param name="inputRoot">Absolute docs root.</param>
+    /// <param name="filter">Include/exclude path filter.</param>
+    /// <param name="syntheticPages">Sink populated during the discover phase.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Combined async stream of work items.</returns>
+    private static async IAsyncEnumerable<PageWorkItem> EnumerateDiskAndSyntheticAsync(
+        DirectoryPath inputRoot,
+        PathFilter filter,
+        SyntheticPageSink syntheticPages,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (var item in PageDiscovery.EnumerateAsync(inputRoot.Value, filter, cancellationToken).ConfigureAwait(false))
+        {
+            yield return item;
+        }
+
+        if (syntheticPages.Count is 0 && syntheticPages.StreamCount is 0)
+        {
+            yield break;
+        }
+
+        // Drain eager pages first, then any registered streams. The sink yields one item at a
+        // time so a high-fanout producer (e.g. the C# API generator) keeps peak memory low —
+        // each page renders and writes before the next one is pulled.
+        await foreach (var page in syntheticPages.DrainAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var flags = FrontmatterFlagReader.ReadFlags(page.MarkdownBytes);
+            yield return new(default, page.RelativePath, flags) { InMemorySource = page.MarkdownBytes };
         }
     }
 
@@ -687,12 +752,17 @@ public static class BuildPipeline
     /// <param name="discovers">Sorted discover participants.</param>
     /// <param name="allPlugins">Every registered plugin.</param>
     /// <param name="shell">Shared build-wide phase state.</param>
+    /// <param name="syntheticPages">
+    /// Sink that collects in-memory pages plugins want to flow through the regular render
+    /// pipeline without writing intermediate <c>.md</c> files into the source folder.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every participant's discover hook has settled.</returns>
     private static async Task FireDiscoverAsync(
         IBuildDiscoverPlugin[] discovers,
         IPlugin[] allPlugins,
         BuildPhaseShell shell,
+        SyntheticPageSink syntheticPages,
         CancellationToken cancellationToken)
     {
         if (discovers.Length is 0)
@@ -700,7 +770,7 @@ public static class BuildPipeline
             return;
         }
 
-        BuildDiscoverContext context = new(shell.InputRoot, shell.OutputRoot, allPlugins)
+        BuildDiscoverContext context = new(shell.InputRoot, shell.OutputRoot, allPlugins, syntheticPages)
         {
             UseDirectoryUrls = shell.Options.UseDirectoryUrls
         };

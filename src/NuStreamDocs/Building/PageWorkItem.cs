@@ -7,10 +7,14 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Building;
 
 /// <summary>One unit of work flowing through the build pipeline.</summary>
-/// <param name="AbsolutePath">Absolute on-disk path to the source markdown.</param>
+/// <param name="AbsolutePath">Absolute on-disk path to the source markdown; empty for in-memory synthetic pages (see <see cref="InMemorySource"/>).</param>
 /// <param name="RelativePath">Path relative to the input root, forward-slashed.</param>
 /// <param name="Flags">Frontmatter-derived flags (<c>draft</c>, <c>not_in_nav</c>) read once during discovery.</param>
 public readonly record struct PageWorkItem(
     FilePath AbsolutePath,
     FilePath RelativePath,
-    PageFlags Flags);
+    PageFlags Flags)
+{
+    /// <summary>Gets the in-memory UTF-8 markdown source when this work item came from a discovery-phase synthetic-page registration; <c>null</c> for disk-loaded pages.</summary>
+    public byte[]? InMemorySource { get; init; }
+}

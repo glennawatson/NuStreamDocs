@@ -29,7 +29,7 @@ public class WyamBlogPluginTests
                 "---\nTitle: Association\nAuthor: Rodney Littles, II\nTags: Announcement, Release\nPublished: 2021-01-04\n---\nThe announcement.");
 
             WyamBlogPlugin plugin = new(new("Announcements", [.. "Announcements"u8]));
-            BuildDiscoverContext ctx = new(docsRoot, "/out", []);
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new SyntheticPageSink());
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
             var index = await File.ReadAllTextAsync(Path.Combine(postsDir, "index.md"));
@@ -61,7 +61,7 @@ public class WyamBlogPluginTests
             await File.WriteAllTextAsync(Path.Combine(postsDir, "2024-01-01-new.md"), "---\nTitle: New\nPublished: 2024-01-01\n---\nNew body.");
 
             WyamBlogPlugin plugin = new(new("blog", [.. "Blog"u8], EmitTagArchives: false));
-            BuildDiscoverContext ctx = new(docsRoot, "/out", []);
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new SyntheticPageSink());
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
             var index = await File.ReadAllTextAsync(Path.Combine(postsDir, "index.md"));

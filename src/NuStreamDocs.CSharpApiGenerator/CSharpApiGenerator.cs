@@ -15,46 +15,36 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <summary>Entry points that drive SourceDocParser against a configured <see cref="CSharpApiGeneratorOptions"/>.</summary>
 public static class CSharpApiGenerator
 {
-    /// <summary>Runs the emit-mode pipeline and writes Markdown into <paramref name="docsInputRoot"/>/<see cref="CSharpApiGeneratorOptions.OutputMarkdownSubdirectory"/>.</summary>
+    /// <summary>Runs the emit-mode pipeline and streams every rendered page through <paramref name="sink"/>.</summary>
     /// <param name="options">Generator options.</param>
-    /// <param name="docsInputRoot">Absolute path to the docs input root the build pipeline discovers.</param>
+    /// <param name="sink">Destination sink each page is written through; the caller chooses on-disk vs in-memory routing.</param>
     /// <param name="logger">Optional logger; <see cref="NullLogger.Instance"/> by default.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The absolute path to the directory that received the generated Markdown.</returns>
-    public static async Task<string> GenerateAsync(
+    /// <returns>The extraction summary (canonical type count + emitted page count).</returns>
+    public static async Task<ExtractionResult> GenerateAsync(
         CSharpApiGeneratorOptions options,
-        string docsInputRoot,
+        IPageSink sink,
         ILogger? logger,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(docsInputRoot);
+        ArgumentNullException.ThrowIfNull(sink);
         options.Validate();
-
-        var outputRoot = Path.Combine(docsInputRoot, options.OutputMarkdownSubdirectory);
-        Directory.CreateDirectory(outputRoot);
 
         var resolvedLogger = logger ?? NullLogger.Instance;
         var source = AssemblySourceFactory.Create(options.Inputs, resolvedLogger);
         using var sourceLifetime = source as IDisposable;
 
-        await PhaseTimer.RunAsync(
+        return await PhaseTimer.RunAsync(
             resolvedLogger,
-            l => LogGeneratorStartIfEnabled(l, options, outputRoot),
+            l => LogGeneratorStartIfEnabled(l, options),
             static (l, result, secs) => CSharpApiGeneratorLoggingHelper.LogGeneratorComplete(l, result.CanonicalTypes, result.PagesEmitted, secs),
             async () =>
             {
                 ZensicalDocumentationEmitter emitter = new();
                 MetadataExtractor extractor = new();
-                return await extractor.RunAsync(source, outputRoot, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
+                return await extractor.RunAsync(source, sink, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
             }).ConfigureAwait(false);
-
-        if (options.EmitIndexPage)
-        {
-            ApiIndexWriter.Write(outputRoot, options.IndexTitle.AsSpan(), options.IndexIntroduction.AsSpan(), options.IndexOrder);
-        }
-
-        return outputRoot;
     }
 
     /// <summary>Runs the direct-mode pipeline and returns the merged catalog without touching disk.</summary>
@@ -119,19 +109,18 @@ public static class CSharpApiGenerator
     /// <summary>Emits the generator-start log only when the configured level is enabled.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="options">Generator options.</param>
-    /// <param name="outputRoot">Resolved output directory.</param>
     [SuppressMessage(
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "DescribeInputs is gated on logger.IsEnabled; analyzer doesn't see through the source-generated [LoggerMessage] partial.")]
-    private static void LogGeneratorStartIfEnabled(ILogger logger, CSharpApiGeneratorOptions options, string outputRoot)
+    private static void LogGeneratorStartIfEnabled(ILogger logger, CSharpApiGeneratorOptions options)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {
             return;
         }
 
-        CSharpApiGeneratorLoggingHelper.LogGeneratorStart(logger, DescribeInputs(options.Inputs), outputRoot);
+        CSharpApiGeneratorLoggingHelper.LogGeneratorStart(logger, DescribeInputs(options.Inputs));
     }
 
     /// <summary>Emits the direct-extract-start log only when the configured level is enabled.</summary>

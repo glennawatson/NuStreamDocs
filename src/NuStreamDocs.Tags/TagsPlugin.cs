@@ -10,11 +10,13 @@ using NuStreamDocs.Yaml;
 namespace NuStreamDocs.Tags;
 
 /// <summary>
-/// Tags plugin. Walks every <c>*.md</c> page under the docs root,
-/// reads each page's <c>tags:</c> frontmatter, and synthesizes virtual
-/// markdown pages — a tags landing page (<c>{OutputSubdirectory}/index.md</c>)
-/// plus one listing page per distinct tag (<c>{OutputSubdirectory}/{slug}.md</c>) —
-/// so the page enumerator picks them up alongside author content.
+/// Tags plugin. Walks every <c>*.md</c> page under the docs root, reads each page's
+/// <c>tags:</c> frontmatter, and registers in-memory synthetic pages with
+/// <see cref="BuildDiscoverContext.SyntheticPages"/> — a tags landing page
+/// (<c>{OutputSubdirectory}/index.md</c>) plus one listing page per distinct tag
+/// (<c>{OutputSubdirectory}/{slug}.md</c>). The pages flow through the regular render
+/// pipeline (theme, search index, sitemap, canonical) without leaving any intermediate
+/// files in the source folder.
 /// </summary>
 public sealed class TagsPlugin : IBuildDiscoverPlugin
 {
@@ -53,27 +55,29 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             return;
         }
 
-        Directory.CreateDirectory(tagsDir);
+        // Build a *relative* DirectoryPath rooted at the output subdirectory; the synthetic
+        // page enumerator joins it onto InputRoot when it yields the work item, so the page
+        // appears at `{InputRoot}/{OutputSubdirectory}/...` virtually without ever touching disk.
+        var virtualDir = DirectoryPath.FromString(_options.OutputSubdirectory);
 
         using var rental = PageBuilderPool.Rent(TagsCommon.PageInitialCapacity);
-        var sink = rental.Writer;
+        var writer = rental.Writer;
 
-        WriteIndexMarkdown(sink, collected);
-        await File.WriteAllBytesAsync(tagsDir.File("index.md"), sink.WrittenMemory, cancellationToken).ConfigureAwait(false);
+        WriteIndexMarkdown(writer, collected);
+        context.SyntheticPages.Add(new(virtualDir.File("index.md"), writer.WrittenSpan.ToArray()));
 
         foreach (var pair in collected)
         {
-            sink.ResetWrittenCount();
-            WriteTagMarkdown(sink, pair.Key, pair.Value);
+            writer.ResetWrittenCount();
+            WriteTagMarkdown(writer, pair.Key, pair.Value);
             var slug = TagsCommon.SlugifyTag(pair.Key);
-            var fileName = TagsCommon.BuildSlugFileName(slug, ".md"u8);
-            await File.WriteAllBytesAsync(tagsDir.File(fileName), sink.WrittenMemory, cancellationToken).ConfigureAwait(false);
+            context.SyntheticPages.Add(new(virtualDir.File(TagsCommon.BuildSlugFileName(slug, ".md"u8)), writer.WrittenSpan.ToArray()));
         }
     }
 
     /// <summary>Walks <paramref name="inputRoot"/> and groups pages by their <c>tags:</c> frontmatter.</summary>
     /// <param name="inputRoot">Absolute docs root.</param>
-    /// <param name="tagsDir">Output directory; files under this directory are skipped to avoid feedback loops.</param>
+    /// <param name="tagsDir">Output directory; legacy on-disk files under it are skipped so a stale pre-virtual-page-pipeline tags folder cannot re-feed itself into a fresh build.</param>
     /// <param name="useDirectoryUrls">Build-pipeline directory-URL mode flag, forwarded into per-page URL composition so emitted hrefs match the pages the build will write.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Tag → list of <c>(url, title)</c> pairs, sorted by tag and by URL within each bucket.</returns>
@@ -89,20 +93,20 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         for (var i = 0; i < files.Length; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var path = files[i];
+            var path = (FilePath)files[i];
             if (IsUnder(path, tagsDir))
             {
                 continue;
             }
 
-            var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+            var bytes = await path.ReadAllBytesAsync(cancellationToken).ConfigureAwait(false);
             var tags = TagsFrontmatterReader.Read(bytes);
             if (tags.Length is 0)
             {
                 continue;
             }
 
-            var relative = Path.GetRelativePath(inputRoot.Value, path);
+            var relative = (FilePath)Path.GetRelativePath(inputRoot.Value, path.Value);
             var url = Utf8MarkdownUrl.FromRelativePath(relative, useDirectoryUrls);
             var title = ExtractMarkdownTitle(bytes, fallback: url);
 
@@ -127,31 +131,30 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
     }
 
     /// <summary>Determines whether <paramref name="path"/> is under <paramref name="directory"/>.</summary>
-    /// <param name="path">Absolute candidate path (BCL boundary).</param>
+    /// <param name="path">Absolute candidate path.</param>
     /// <param name="directory">Absolute directory.</param>
     /// <returns>True for descendants; false otherwise.</returns>
-    private static bool IsUnder(string path, DirectoryPath directory)
+    private static bool IsUnder(FilePath path, DirectoryPath directory)
     {
         if (directory.IsEmpty)
         {
             return false;
         }
 
-        var dirValue = directory.Value;
-        var sep = Path.DirectorySeparatorChar;
-        var altSep = Path.AltDirectorySeparatorChar;
-        if (path.Length <= dirValue.Length)
+        var dirSpan = directory.AsSpan();
+        var pathSpan = path.AsSpan();
+        if (pathSpan.Length <= dirSpan.Length)
         {
             return false;
         }
 
-        if (!path.StartsWith(dirValue, StringComparison.OrdinalIgnoreCase))
+        if (!pathSpan.StartsWith(dirSpan, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
 
-        var next = path[dirValue.Length];
-        return next == sep || next == altSep;
+        var next = pathSpan[dirSpan.Length];
+        return next == Path.DirectorySeparatorChar || next == Path.AltDirectorySeparatorChar;
     }
 
     /// <summary>Pulls the first ATX <c>#</c> heading text out of <paramref name="markdownBytes"/> for use as the page title; falls back to <paramref name="fallback"/>.</summary>
