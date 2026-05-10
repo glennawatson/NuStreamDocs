@@ -105,6 +105,6 @@ internal static class ExternalUrlScanner
             // Try srcset first when the candidate could plausibly start one (longer name, more specific). Fall through to src / href on miss.
             (byte)'s' or (byte)'S'
                 when SrcsetBytes.TryRewriteAt(html, p, ctx, sink, ref lastEmit, out advanceTo) => true,
-            _ => AssetAttributeBytes.TryRewriteAt(html, p, ctx, sink, ref lastEmit, out advanceTo),
+            _ => AssetAttributeBytes.TryRewriteAt(html, p, ctx, sink, ref lastEmit, out advanceTo)
         };
 }

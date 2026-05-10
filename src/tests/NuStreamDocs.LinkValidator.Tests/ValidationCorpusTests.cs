@@ -175,7 +175,7 @@ public class ValidationCorpusTests
     {
         var pages = new Dictionary<byte[], PageLinks>(Common.ByteArrayComparer.Instance)
         {
-            [url] = ValidationCorpus.Scan(url, "<p>x</p>"u8),
+            [url] = ValidationCorpus.Scan(url, "<p>x</p>"u8)
         };
         return ValidationCorpus.FromPages(pages);
     }

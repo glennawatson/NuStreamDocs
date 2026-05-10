@@ -51,7 +51,7 @@ public class BlogContentGeneratorBenchmarks
         "Release Notes",
         "Tutorial",
         "Announcement",
-        "Deep Dive",
+        "Deep Dive"
     ];
 
     /// <summary>Absolute path to the synthetic docs root; the posts root is the <c>articles</c> subdirectory and the archive root is <c>articles/tags</c>.</summary>
@@ -80,7 +80,7 @@ public class BlogContentGeneratorBenchmarks
             File.WriteAllText(path, BuildPostBody(i, tag));
         }
 
-        _options = new BlogGenerationOptions(
+        _options = new(
             PostsRoot: (DirectoryPath)postsRoot,
             DocsRoot: (DirectoryPath)_docsRoot,
             IndexPath: ((DirectoryPath)postsRoot).File("index.md"),

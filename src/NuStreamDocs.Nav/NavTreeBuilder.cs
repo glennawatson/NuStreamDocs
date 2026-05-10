@@ -30,7 +30,7 @@ internal static class NavTreeBuilder
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
-    public static NavNode Build(DirectoryPath inputRoot, in NavOptions options) =>
+    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options) =>
         Build(inputRoot, in options, useDirectoryUrls: false, NullLogger.Instance);
 
     /// <summary>Builds the nav tree with an explicit served URL shape.</summary>
@@ -38,7 +38,7 @@ internal static class NavTreeBuilder
     /// <param name="options">Plugin options.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
-    public static NavNode Build(DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls) =>
+    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls) =>
         Build(inputRoot, in options, useDirectoryUrls, NullLogger.Instance);
 
     /// <summary>Builds the nav tree with logging.</summary>
@@ -47,7 +47,7 @@ internal static class NavTreeBuilder
     /// <param name="logger">Logger that receives start/complete events.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "Logging is not a performance bottleneck.")]
-    public static NavNode Build(DirectoryPath inputRoot, in NavOptions options, ILogger logger)
+    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, ILogger logger)
         => Build(inputRoot, in options, useDirectoryUrls: false, logger);
 
     /// <summary>Builds the nav tree with an explicit served URL shape and logging.</summary>
@@ -57,7 +57,7 @@ internal static class NavTreeBuilder
     /// <param name="logger">Logger that receives start/complete events.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "Logging is not a performance bottleneck.")]
-    public static NavNode Build(DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls, ILogger logger)
+    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
 
@@ -104,7 +104,7 @@ internal static class NavTreeBuilder
     /// <param name="root">Built nav tree.</param>
     /// <param name="matcher">Glob matcher used for the nav build.</param>
     /// <param name="logger">Target logger.</param>
-    private static void ReportOrphanPages(DirectoryPath inputRoot, NavNode root, Matcher? matcher, ILogger logger)
+    private static void ReportOrphanPages(in DirectoryPath inputRoot, NavNode root, Matcher? matcher, ILogger logger)
     {
         var navPaths = CollectNavLeafPaths(root);
         List<string> orphans = [];
@@ -187,7 +187,7 @@ internal static class NavTreeBuilder
     /// <summary>Counts every <c>.md</c> file under <paramref name="root"/> for the build-start log line.</summary>
     /// <param name="root">Absolute docs root.</param>
     /// <returns>Total markdown file count.</returns>
-    private static int CountMarkdownFiles(DirectoryPath root)
+    private static int CountMarkdownFiles(in DirectoryPath root)
     {
         var count = 0;
         var enumerable = Directory.EnumerateFiles(root, "*" + MarkdownExtension, SearchOption.AllDirectories);
@@ -279,7 +279,7 @@ internal static class NavTreeBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger for prune diagnostics.</param>
     /// <returns>The section node for <paramref name="directory"/>, or null when a <c>.pages</c> override hides the section.</returns>
-    private static NavNode? BuildSection(DirectoryPath root, DirectoryPath directory, Matcher? matcher, in NavOptions options, bool useDirectoryUrls, ILogger logger)
+    private static NavNode? BuildSection(in DirectoryPath root, in DirectoryPath directory, Matcher? matcher, in NavOptions options, bool useDirectoryUrls, ILogger logger)
     {
         var pagesOverride = PagesFileReader.ReadOrEmpty(directory.File(PagesFileName));
         if (pagesOverride.Hide && directory != root)
@@ -428,7 +428,7 @@ internal static class NavTreeBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger for prune diagnostics.</param>
     /// <returns>Number of pages written into <paramref name="buffer"/>.</returns>
-    private static int AppendPages(DirectoryPath root, string[] files, Matcher? matcher, NavNode[] buffer, bool useDirectoryUrls, ILogger logger)
+    private static int AppendPages(in DirectoryPath root, string[] files, Matcher? matcher, NavNode[] buffer, bool useDirectoryUrls, ILogger logger)
     {
         var count = 0;
         for (var i = 0; i < files.Length; i++)
@@ -476,7 +476,7 @@ internal static class NavTreeBuilder
     /// <summary>Reads the front-matter <c>Order:</c> integer for <paramref name="file"/>; defaults to <see cref="int.MaxValue"/> when absent.</summary>
     /// <param name="file">Absolute markdown file path.</param>
     /// <returns>The explicit order, or <see cref="int.MaxValue"/> meaning "unordered".</returns>
-    private static int ResolveOrder(FilePath file) =>
+    private static int ResolveOrder(in FilePath file) =>
         FrontmatterOrderReader.TryRead(file, out var order) ? order : int.MaxValue;
 
     /// <summary>Picks the section's display title, preferring an explicit <c>.pages</c> override, then index-page front-matter, then the humanised directory name.</summary>
@@ -485,7 +485,7 @@ internal static class NavTreeBuilder
     /// <param name="indexPath">Source-relative path of the section's index page; empty when the section has none.</param>
     /// <param name="pagesOverride">Parsed <c>.pages</c> file contents.</param>
     /// <returns>UTF-8 title bytes; empty for the docs root.</returns>
-    private static byte[] ResolveSectionTitle(DirectoryPath root, DirectoryPath directory, FilePath indexPath, PagesFile pagesOverride)
+    private static byte[] ResolveSectionTitle(in DirectoryPath root, in DirectoryPath directory, in FilePath indexPath, in PagesFile pagesOverride)
     {
         if (pagesOverride.Title.Length > 0)
         {
@@ -501,7 +501,7 @@ internal static class NavTreeBuilder
     /// <summary>Resolves a leaf title from front-matter, then the first markdown H1, then a humanized file stem.</summary>
     /// <param name="file">Absolute markdown file path.</param>
     /// <returns>UTF-8 display title bytes.</returns>
-    private static byte[] ResolveLeafTitle(FilePath file)
+    private static byte[] ResolveLeafTitle(in FilePath file)
     {
         var title = FrontmatterTitleReader.ReadBytes(file);
         if (title is [_, ..])
@@ -518,7 +518,7 @@ internal static class NavTreeBuilder
     /// <param name="root">Absolute input root used to resolve <paramref name="indexPath"/>.</param>
     /// <param name="indexPath">Source-relative path to the section's index page; empty when the section has none.</param>
     /// <returns>The frontmatter title bytes, or null when absent — letting the caller fall back to the directory name.</returns>
-    private static byte[]? ResolveIndexFrontmatterTitle(DirectoryPath root, FilePath indexPath)
+    private static byte[]? ResolveIndexFrontmatterTitle(in DirectoryPath root, in FilePath indexPath)
     {
         if (indexPath.IsEmpty)
         {
@@ -539,7 +539,7 @@ internal static class NavTreeBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger for prune diagnostics.</param>
     /// <returns>Number of sections written into <paramref name="buffer"/>.</returns>
-    private static int AppendSections(DirectoryPath root, string[] subdirectories, Matcher? matcher, in NavOptions options, NavNode[] buffer, bool useDirectoryUrls, ILogger logger)
+    private static int AppendSections(in DirectoryPath root, string[] subdirectories, Matcher? matcher, in NavOptions options, NavNode[] buffer, bool useDirectoryUrls, ILogger logger)
     {
         var count = 0;
         for (var i = 0; i < subdirectories.Length; i++)

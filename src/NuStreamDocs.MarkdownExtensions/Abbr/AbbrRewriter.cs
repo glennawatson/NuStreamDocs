@@ -254,9 +254,8 @@ internal static class AbbrRewriter
         title = default;
         var bestLen = 0;
         byte[]? bestTitle = null;
-        foreach (var pair in definitions)
+        foreach (var (key, value) in definitions)
         {
-            var key = pair.Key;
             if (key.Length <= bestLen)
             {
                 continue;
@@ -274,7 +273,7 @@ internal static class AbbrRewriter
             }
 
             bestLen = key.Length;
-            bestTitle = pair.Value;
+            bestTitle = value;
         }
 
         if (bestTitle is null)

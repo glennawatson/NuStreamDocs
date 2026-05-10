@@ -33,7 +33,7 @@ public static class AssetReferenceValidator
         ParallelOptions parallelOptions = new()
         {
             CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = parallelism,
+            MaxDegreeOfParallelism = parallelism
         };
 
         await Parallel.ForEachAsync(
@@ -206,7 +206,7 @@ public static class AssetReferenceValidator
         /// <param name="source">Combined path bytes.</param>
         /// <param name="destination">Pre-sized output span.</param>
         /// <returns>Number of bytes written.</returns>
-        private static int Normalize(ReadOnlySpan<byte> source, Span<byte> destination)
+        private static int Normalize(ReadOnlySpan<byte> source, in Span<byte> destination)
         {
             var written = 0;
             var segmentStart = 0;
@@ -229,16 +229,14 @@ public static class AssetReferenceValidator
         /// <param name="destination">Output buffer.</param>
         /// <param name="written">Bytes written so far.</param>
         /// <returns>New write position.</returns>
-        private static int ApplySegment(ReadOnlySpan<byte> segment, Span<byte> destination, int written)
+        private static int ApplySegment(ReadOnlySpan<byte> segment, in Span<byte> destination, int written)
         {
-            if (segment is [(byte)'.', (byte)'.'])
+            switch (segment)
             {
-                return PopParent(destination, written);
-            }
-
-            if (segment is [(byte)'.'] or [])
-            {
-                return written;
+                case [(byte)'.', (byte)'.']:
+                    return PopParent(destination, written);
+                case [(byte)'.'] or []:
+                    return written;
             }
 
             if (written > 0)
@@ -254,7 +252,7 @@ public static class AssetReferenceValidator
         /// <param name="destination">Output buffer.</param>
         /// <param name="written">Bytes written so far.</param>
         /// <returns>New write position.</returns>
-        private static int PopParent(Span<byte> destination, int written)
+        private static int PopParent(in Span<byte> destination, int written)
         {
             while (written > 0 && destination[written - 1] != SlashByte)
             {

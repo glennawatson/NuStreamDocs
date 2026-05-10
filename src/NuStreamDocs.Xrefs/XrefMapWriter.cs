@@ -19,7 +19,7 @@ internal static class XrefMapWriter
     /// <param name="outputPath">Absolute path to write to.</param>
     /// <param name="baseUrl">Optional base URL embedded as the <c>baseUrl</c> field; empty omits the field.</param>
     /// <param name="entries">Snapshot from <c>AutorefsRegistry.Snapshot()</c>.</param>
-    public static void Write(FilePath outputPath, byte[] baseUrl, (byte[] Id, byte[] Url)[] entries)
+    public static void Write(in FilePath outputPath, byte[] baseUrl, (byte[] Id, byte[] Url)[] entries)
     {
         // Copy then sort by UID byte sequence — ordinal UTF-8 byte compare matches
         // ordinal string compare for valid UTF-8 and gives deterministic build-to-build ordering.

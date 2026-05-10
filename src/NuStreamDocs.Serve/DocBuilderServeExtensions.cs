@@ -181,7 +181,7 @@ public static class DocBuilderServeExtensions
 
     /// <summary>Best-effort cross-platform "open URL in default browser" — silently swallows any failure.</summary>
     /// <param name="url">URL to open.</param>
-    private static void TryOpenBrowser(UrlPath url)
+    private static void TryOpenBrowser(in UrlPath url)
     {
         try
         {

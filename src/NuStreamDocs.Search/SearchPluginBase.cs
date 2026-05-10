@@ -175,10 +175,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
 
     /// <summary>Override hook for engine-specific head-extras (script / link tags) emitted after the universal meta tags.</summary>
     /// <param name="writer">Sink for the rendered tags.</param>
-    protected virtual void WriteEngineHeadExtra(IBufferWriter<byte> writer)
-    {
-        _ = writer;
-    }
+    protected virtual void WriteEngineHeadExtra(IBufferWriter<byte> writer) => _ = writer;
 
     /// <summary>Emits the <c>nustreamdocs:search-section-priorities</c> meta tag when the option is non-empty.</summary>
     /// <param name="writer">Sink for the rendered tag.</param>
@@ -219,7 +216,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     /// <param name="markdownPath">Source-relative path (e.g. <c>guide/intro.md</c>).</param>
     /// <param name="useDirectoryUrls">True when the site emits directory-style URLs.</param>
     /// <returns>Root-relative rendered URL bytes.</returns>
-    private static byte[] ToHtmlUrl(FilePath markdownPath, bool useDirectoryUrls)
+    private static byte[] ToHtmlUrl(in FilePath markdownPath, bool useDirectoryUrls)
     {
         if (markdownPath.IsEmpty)
         {
@@ -234,7 +231,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     /// <param name="outputSubdirectory">Site-relative search directory.</param>
     /// <param name="manifestFileName">Engine-supplied manifest filename component (already includes the leading <c>/</c>); empty when none.</param>
     /// <returns>UTF-8 manifest URL bytes, or an empty array.</returns>
-    private static byte[] BuildManifestUrlBytes(PathSegment outputSubdirectory, ReadOnlySpan<byte> manifestFileName)
+    private static byte[] BuildManifestUrlBytes(in PathSegment outputSubdirectory, ReadOnlySpan<byte> manifestFileName)
     {
         if (manifestFileName.IsEmpty)
         {

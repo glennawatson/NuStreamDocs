@@ -17,7 +17,7 @@ public static class NavEntryFactory
     /// <param name="title">Display title; pass <see cref="string.Empty"/> to derive from the file at render time.</param>
     /// <param name="path">Source-relative markdown path (forward slashes) or absolute URL.</param>
     /// <returns>A leaf <see cref="NavEntry"/>.</returns>
-    public static NavEntry Leaf(ApiCompatString title, FilePath path)
+    public static NavEntry Leaf(in ApiCompatString title, in FilePath path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
         return new(EncodeUtf8(title), EncodeUtf8(path), []);
@@ -49,7 +49,7 @@ public static class NavEntryFactory
     /// <param name="title">Section display title.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
-    public static NavEntry Section(ApiCompatString title, NavEntry[] children)
+    public static NavEntry Section(in ApiCompatString title, NavEntry[] children)
     {
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
         ArgumentNullException.ThrowIfNull(children);
@@ -79,7 +79,7 @@ public static class NavEntryFactory
     /// <param name="indexPath">Source-relative landing-page path.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
-    public static NavEntry SectionWithIndex(ApiCompatString title, FilePath indexPath, NavEntry[] children)
+    public static NavEntry SectionWithIndex(in ApiCompatString title, in FilePath indexPath, NavEntry[] children)
     {
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
         ArgumentException.ThrowIfNullOrEmpty(indexPath.Value);

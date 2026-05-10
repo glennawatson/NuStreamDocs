@@ -26,10 +26,7 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
 
     /// <summary>Initializes a new instance of the <see cref="MathJaxPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
-    public MathJaxPlugin(in MathJaxOptions options)
-    {
-        _headExtraBytes = ComposeHead(options);
-    }
+    public MathJaxPlugin(in MathJaxOptions options) => _headExtraBytes = ComposeHead(options);
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "mathjax"u8;
@@ -54,20 +51,20 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
         // Inline math delimiters mirror Arithmatex's output: `\(…\)` for inline, `\[…\]` for
         // display. Escape only the chars that matter inside a single-quoted JS string literal
         // ('\\' for backslash, "'" for the quote itself).
-        const string configTemplate =
-            "<script>window.MathJax={{tex:{{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']]," +
+        const string ConfigTemplate =
+            @"<script>window.MathJax={{tex:{{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]," +
             "processEscapes:true,processEnvironments:true}}," +
             "options:{{ignoreHtmlClass:'{0}',processHtmlClass:'{1}'}}}};</script>";
-        const string loaderTemplate = "<script src=\"{0}\" async></script>";
+        const string LoaderTemplate = "<script src=\"{0}\" async></script>";
 
         var config = string.Format(
             CultureInfo.InvariantCulture,
-            configTemplate,
+            ConfigTemplate,
             EscapeJsString(ignoreClass),
             EscapeJsString(processClass));
         var loaderTag = string.Format(
             CultureInfo.InvariantCulture,
-            loaderTemplate,
+            LoaderTemplate,
             EscapeAttribute(loader));
         return Encoding.UTF8.GetBytes(config + loaderTag);
     }
@@ -76,7 +73,7 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
     /// <param name="value">Source string.</param>
     /// <returns>Escaped form safe to drop between single quotes.</returns>
     private static string EscapeJsString(string value) =>
-        value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("'", "\\'", StringComparison.Ordinal);
+        value.Replace("\\", @"\\", StringComparison.Ordinal).Replace("'", "\\'", StringComparison.Ordinal);
 
     /// <summary>Escapes the two characters meaningful inside a double-quoted HTML attribute value: ampersand and double-quote.</summary>
     /// <param name="value">Source URL/string.</param>

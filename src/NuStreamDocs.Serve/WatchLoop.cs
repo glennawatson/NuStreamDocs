@@ -108,7 +108,7 @@ internal sealed class WatchLoop : IDisposable
     /// <param name="path">Absolute path span.</param>
     /// <param name="segment">Segment name to search for (no separators).</param>
     /// <returns>True when the segment is present as a complete directory or file-name component.</returns>
-    private static bool ContainsPathSegment(ReadOnlySpan<char> path, string segment)
+    private static bool ContainsPathSegment(in ReadOnlySpan<char> path, string segment)
     {
         var cursor = 0;
         while (cursor < path.Length)

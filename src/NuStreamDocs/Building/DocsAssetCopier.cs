@@ -20,7 +20,7 @@ internal static class DocsAssetCopier
     /// <param name="outputRoot">Absolute site output root.</param>
     /// <param name="filter">Path filter from the build options; honors the same include/exclude globs that govern page discovery.</param>
     /// <returns>Number of files copied.</returns>
-    public static int Copy(DirectoryPath inputRoot, DirectoryPath outputRoot, PathFilter filter)
+    public static int Copy(in DirectoryPath inputRoot, in DirectoryPath outputRoot, PathFilter filter)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot.Value);
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);

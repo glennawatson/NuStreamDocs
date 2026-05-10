@@ -20,7 +20,7 @@ public static class Utf8PathHumanizer
     /// <param name="name">Path token without separators.</param>
     /// <returns>UTF-8 title bytes.</returns>
     /// <remarks>Replaces <c>-</c>/<c>_</c> separators with spaces and title-cases the leading letter of each word. Non-ASCII runs are preserved verbatim.</remarks>
-    public static byte[] HumanizePathName(this ReadOnlySpan<char> name)
+    public static byte[] HumanizePathName(this in ReadOnlySpan<char> name)
     {
         if (name.IsEmpty)
         {
@@ -46,7 +46,7 @@ public static class Utf8PathHumanizer
     /// <param name="name">Source path token.</param>
     /// <param name="destination">Pre-rented buffer sized for the worst-case UTF-8 expansion of <paramref name="name"/>.</param>
     /// <returns>Number of bytes written.</returns>
-    private static int WriteHumanized(ReadOnlySpan<char> name, byte[] destination)
+    private static int WriteHumanized(in ReadOnlySpan<char> name, byte[] destination)
     {
         var written = 0;
         var makeUpper = true;
@@ -87,7 +87,7 @@ public static class Utf8PathHumanizer
     /// <param name="destination">Slice of the output buffer at the current write offset.</param>
     /// <param name="makeUpper">Tracks whether the next ASCII letter should be upper-cased; updated in place.</param>
     /// <returns>Number of bytes written (always 1).</returns>
-    private static int WriteAsciiChar(char current, Span<byte> destination, ref bool makeUpper)
+    private static int WriteAsciiChar(char current, in Span<byte> destination, ref bool makeUpper)
     {
         if (current is '-' or '_')
         {

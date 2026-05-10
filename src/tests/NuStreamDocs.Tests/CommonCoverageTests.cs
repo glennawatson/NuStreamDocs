@@ -274,7 +274,7 @@ public class CommonCoverageTests
         await Assert.That(fromNull.IsEmpty).IsTrue();
     }
 
-    /// <summary><see cref="UrlPath.StartsWith(ReadOnlySpan{char})"/>/<see cref="UrlPath.EndsWith(ReadOnlySpan{char})"/> in both ordinal + comparison overloads.</summary>
+    /// <summary>Checks that StartsWith and EndsWith in both ordinal and comparison overloads.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UrlPathStartsAndEndsWithCoverBothOverloads()

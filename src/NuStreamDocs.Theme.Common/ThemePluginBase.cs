@@ -219,7 +219,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Probes <paramref name="inputRoot"/> for a conventional favicon file when the user hasn't configured one explicitly.</summary>
     /// <param name="inputRoot">Docs root.</param>
     /// <returns>Site-rooted UTF-8 URL bytes pointing at the discovered favicon, or an empty array.</returns>
-    private static byte[] DiscoverFavicon(DirectoryPath inputRoot)
+    private static byte[] DiscoverFavicon(in DirectoryPath inputRoot)
     {
         if (inputRoot.IsEmpty)
         {
@@ -253,7 +253,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="inputRoot">Build input root.</param>
     /// <param name="path">UTF-8 path bytes; empty when no partial is configured.</param>
     /// <returns>File bytes on success; empty when unset, missing, or unreadable.</returns>
-    private static byte[] LoadFooterPartial(DirectoryPath inputRoot, byte[] path)
+    private static byte[] LoadFooterPartial(in DirectoryPath inputRoot, byte[] path)
     {
         if (path is { Length: 0 })
         {
@@ -289,14 +289,14 @@ public abstract class ThemePluginBase<TTheme, TOptions>
                 {
                     [ThemeShellBytes.SocialUrlKey] = link.Url,
                     [ThemeShellBytes.SocialTitleKey] = link.Title,
-                    [ThemeShellBytes.SocialIconKey] = link.IconSvg,
+                    [ThemeShellBytes.SocialIconKey] = link.IconSvg
                 },
                 sections: null);
         }
 
         return new(1, ByteArrayComparer.Instance)
         {
-            [ThemeShellBytes.SocialKey] = items,
+            [ThemeShellBytes.SocialKey] = items
         };
     }
 
@@ -339,7 +339,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="source">UTF-8 markdown source bytes.</param>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>HTML-encoded title text.</returns>
-    private static string ResolvePageTitle(ReadOnlySpan<byte> source, FilePath relativePath)
+    private static string ResolvePageTitle(ReadOnlySpan<byte> source, in FilePath relativePath)
     {
         var fromFrontMatter = Yaml.FrontmatterValueExtractor.GetScalar(source, "title"u8);
         if (!fromFrontMatter.IsEmpty)
@@ -398,7 +398,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
     /// <summary>Throws when <paramref name="diagnostic"/> carries a non-empty diagnostic message.</summary>
     /// <param name="diagnostic">Diagnostic returned by <see cref="ThemeUrlValidator.Inspect"/>.</param>
-    private static void ThrowIfMalformed(DiagnosticMessage diagnostic)
+    private static void ThrowIfMalformed(in DiagnosticMessage diagnostic)
     {
         if (diagnostic.IsEmpty)
         {
@@ -502,7 +502,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Translates forward slashes in <paramref name="relativePath"/> to the active directory separator when needed.</summary>
     /// <param name="relativePath">Relative output path using forward slashes.</param>
     /// <returns>OS-native relative path; implicitly converts to <see cref="string"/> for <see cref="Path.Combine(string, string)"/>.</returns>
-    private static FilePath TranslateDirectorySeparators(FilePath relativePath)
+    private static FilePath TranslateDirectorySeparators(in FilePath relativePath)
     {
         var value = relativePath.Value ?? string.Empty;
         if (Path.DirectorySeparatorChar is '/')
@@ -510,7 +510,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return relativePath;
         }
 
-        return new FilePath(string.Create(value.Length * DirectorySeparatorLength, value, static (dst, state) =>
+        return new(string.Create(value.Length * DirectorySeparatorLength, value, static (dst, state) =>
         {
             for (var i = 0; i < state.Length; i++)
             {
@@ -526,7 +526,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <c>/guide/intro/</c>); the served path is then one level deeper than the source path.
     /// </param>
     /// <returns>Number of <c>../</c> hops a relative href on this page needs to reach the site root.</returns>
-    private static int PageDepth(FilePath relativePath, bool useDirectoryUrls)
+    private static int PageDepth(in FilePath relativePath, bool useDirectoryUrls)
     {
         ReadOnlySpan<char> path = relativePath;
         if (path is ['/', ..])
@@ -557,7 +557,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>True when <paramref name="path"/>'s filename is <c>index.md</c> (case-insensitive).</summary>
     /// <param name="path">Source-relative path span.</param>
     /// <returns>True when the page is an index file whose served URL is its parent directory.</returns>
-    private static bool IsIndexPage(ReadOnlySpan<char> path)
+    private static bool IsIndexPage(in ReadOnlySpan<char> path)
     {
         var lastSep = path.LastIndexOfAny('/', '\\');
         var fileName = lastSep < 0 ? path : path[(lastSep + 1)..];
@@ -594,7 +594,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <param name="useDirectoryUrls">True when non-index pages serve at directory URLs (one extra <c>../</c> hop).</param>
     /// <returns>Page-relative asset-root bytes, or the original bytes when the input is an absolute URL.</returns>
-    private static ReadOnlySpan<byte> ResolvePageRelativeAssetRoot(ReadOnlySpan<byte> assetRoot, FilePath relativePath, bool useDirectoryUrls)
+    private static ReadOnlySpan<byte> ResolvePageRelativeAssetRoot(ReadOnlySpan<byte> assetRoot, in FilePath relativePath, bool useDirectoryUrls)
     {
         if (IsAbsoluteUrl(assetRoot))
         {
@@ -622,7 +622,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>True when <paramref name="relativePath"/> is the conventional <c>404.md</c> at the site root.</summary>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True for the 404 page.</returns>
-    private static bool Is404Page(FilePath relativePath) =>
+    private static bool Is404Page(in FilePath relativePath) =>
         string.Equals(relativePath.Value, "404.md", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Prefixes <paramref name="path"/> with <c>/</c> to anchor it at the site root.</summary>
@@ -641,7 +641,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <param name="useDirectoryUrls">True when non-index pages serve at directory URLs (one extra <c>../</c> hop).</param>
     /// <returns>Page-relative href bytes; the original bytes when the input is empty or an absolute URL.</returns>
-    private static byte[] ResolvePageRelativeUrl(byte[] href, FilePath relativePath, bool useDirectoryUrls)
+    private static byte[] ResolvePageRelativeUrl(byte[] href, in FilePath relativePath, bool useDirectoryUrls)
     {
         if (href is [] || IsAbsoluteUrl(href))
         {
@@ -669,7 +669,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <param name="useDirectoryUrls">True when non-index pages serve at directory URLs (one extra <c>../</c> hop).</param>
     /// <returns>Rewritten bytes; the original blob when no occurrences match or the page is at depth 0 and only the leading slash needs trimming.</returns>
-    private static byte[] RewriteHeadExtraAssetHrefs(byte[] headExtras, FilePath relativePath, bool useDirectoryUrls)
+    private static byte[] RewriteHeadExtraAssetHrefs(byte[] headExtras, in FilePath relativePath, bool useDirectoryUrls)
     {
         if (headExtras is [])
         {
@@ -677,12 +677,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         var source = headExtras.AsSpan();
-        if (source.IndexOf("/assets/"u8) < 0)
-        {
-            return headExtras;
-        }
-
-        if (Is404Page(relativePath))
+        if (source.IndexOf("/assets/"u8) < 0 || Is404Page(relativePath))
         {
             return headExtras;
         }
@@ -779,7 +774,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="useDirectoryUrls">Whether non-index pages collapse to directory slugs.</param>
     /// <returns>The slug span (no leading <c>/</c>); empty when the page is the root <c>index</c>.</returns>
-    private static ReadOnlySpan<char> ToCanonicalSlug(FilePath relativePath, bool useDirectoryUrls)
+    private static ReadOnlySpan<char> ToCanonicalSlug(in FilePath relativePath, bool useDirectoryUrls)
     {
         ReadOnlySpan<char> path = relativePath;
         if (path is ['/', ..])
@@ -819,7 +814,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="inputRoot">Absolute docs root.</param>
     /// <param name="readThemeAsset">Per-theme embedded-resource reader.</param>
     /// <returns>Async task.</returns>
-    private static ValueTask EnsureDefault404SourceAsync(DirectoryPath inputRoot, Func<FilePath, byte[]?> readThemeAsset)
+    private static ValueTask EnsureDefault404SourceAsync(in DirectoryPath inputRoot, Func<FilePath, byte[]?> readThemeAsset)
     {
         if (inputRoot.IsEmpty || !Directory.Exists(inputRoot.Value))
         {
@@ -839,7 +834,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Picks the effective favicon URL: explicit option → docs-tree probe → theme-bundled default → empty.</summary>
     /// <param name="inputRoot">Docs root passed through to the discovery probe.</param>
     /// <returns>UTF-8 URL bytes the page template renders into the <c>&lt;link rel="icon"&gt;</c> attribute.</returns>
-    private byte[] ResolveFavicon(DirectoryPath inputRoot)
+    private byte[] ResolveFavicon(in DirectoryPath inputRoot)
     {
         if (_options.Favicon is [_, ..])
         {
@@ -862,14 +857,14 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="source">UTF-8 markdown source bytes.</param>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True when the sidebar should be hidden.</returns>
-    private bool ShouldHideNavigation(ReadOnlySpan<byte> source, FilePath relativePath) =>
+    private bool ShouldHideNavigation(ReadOnlySpan<byte> source, in FilePath relativePath) =>
         Yaml.FrontmatterValueExtractor.ListContains(source, "hide"u8, "navigation"u8)
         || (_neighbours?.ShouldHidePrimarySidebar(relativePath) ?? false);
 
     /// <summary>Resolves prev/next neighbours according to the configured footer settings.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The neighbours; <see cref="NavNeighbours.None"/> when the footer is disabled or no provider is registered.</returns>
-    private NavNeighbours ResolveNeighbours(FilePath relativePath)
+    private NavNeighbours ResolveNeighbours(in FilePath relativePath)
     {
         if (!_options.EnableNavigationFooter || _neighbours is null)
         {
@@ -887,7 +882,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Returns the canonical URL for the page; empty when no site URL is configured.</summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <returns>The canonical URL bytes, or an empty array.</returns>
-    private byte[] ResolveCanonicalUrlBytes(FilePath relativePath)
+    private byte[] ResolveCanonicalUrlBytes(in FilePath relativePath)
     {
         if (_canonicalUrlPrefix is [])
         {
@@ -915,7 +910,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Builds the per-page edit URL from the configured repo URL + edit prefix + the page's relative path.</summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <returns>The edit URL bytes, or an empty array when not configured.</returns>
-    private byte[] ResolveEditUrlBytes(FilePath relativePath)
+    private byte[] ResolveEditUrlBytes(in FilePath relativePath)
     {
         if (_editUrlPrefix is [])
         {

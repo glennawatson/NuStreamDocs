@@ -27,16 +27,19 @@ public static class Utf8RelativePath
     {
         ArgumentNullException.ThrowIfNull(writer);
 
-        if (from.IsEmpty && target.IsEmpty)
+        switch (from.IsEmpty)
         {
-            WriteSelfReference(writer);
-            return;
-        }
+            case true when target.IsEmpty:
+                {
+                    WriteSelfReference(writer);
+                    return;
+                }
 
-        if (from.IsEmpty)
-        {
-            writer.Write(target);
-            return;
+            case true:
+                {
+                    writer.Write(target);
+                    return;
+                }
         }
 
         var sharedBoundary = FindSharedBoundary(from, target);

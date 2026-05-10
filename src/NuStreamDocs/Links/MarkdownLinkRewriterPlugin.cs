@@ -56,7 +56,7 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IBuildC
     /// <summary>Returns true when <paramref name="relativePath"/> names a non-index markdown file (gains an extra directory level under directory-URL mode).</summary>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True for non-index markdown pages.</returns>
-    private static bool IsNonIndexMarkdownPath(FilePath relativePath)
+    private static bool IsNonIndexMarkdownPath(in FilePath relativePath)
     {
         if (relativePath.IsEmpty)
         {

@@ -20,7 +20,7 @@ public static class FrontmatterOrderReader
     /// <param name="absolutePath">Absolute path to a markdown page.</param>
     /// <param name="order">The parsed integer on success.</param>
     /// <returns>True when an integer <c>Order:</c> (or lower-cased <c>order:</c>) value is present and parsed cleanly.</returns>
-    public static bool TryRead(FilePath absolutePath, out int order)
+    public static bool TryRead(in FilePath absolutePath, out int order)
     {
         order = 0;
         if (absolutePath.IsEmpty)

@@ -17,7 +17,7 @@ internal static partial class SearchLoggingHelper
     /// <param name="formatName">Engine format name (UTF-8) — surfaced in the log message so multi-engine sites can tell builds apart.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogIndexBuildStart(ILogger logger, int documentCount, ReadOnlySpan<byte> formatName, DirectoryPath outputDir)
+    public static void LogIndexBuildStart(ILogger logger, int documentCount, ReadOnlySpan<byte> formatName, in DirectoryPath outputDir)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {
@@ -33,7 +33,7 @@ internal static partial class SearchLoggingHelper
     /// <param name="totalContentBytes">Total UTF-8 byte length of the indexed text.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogIndexBuildComplete(ILogger logger, int recordCount, long totalContentBytes, DirectoryPath outputDir)
+    public static void LogIndexBuildComplete(ILogger logger, int recordCount, long totalContentBytes, in DirectoryPath outputDir)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {

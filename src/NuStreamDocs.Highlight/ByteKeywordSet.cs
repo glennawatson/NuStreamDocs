@@ -304,7 +304,7 @@ public sealed class ByteKeywordSet
     /// <summary>Builds a <see cref="SearchValues{T}"/> from a 256-slot bool flag table.</summary>
     /// <param name="seen">Per-byte flag array.</param>
     /// <returns>Search values covering every set byte.</returns>
-    private static SearchValues<byte> MaterializeFlags(ReadOnlySpan<bool> seen)
+    private static SearchValues<byte> MaterializeFlags(in ReadOnlySpan<bool> seen)
     {
         var distinctCount = 0;
         for (var b = 0; b < seen.Length; b++)

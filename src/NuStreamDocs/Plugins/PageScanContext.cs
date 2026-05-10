@@ -13,7 +13,7 @@ public readonly ref struct PageScanContext
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <param name="source">Original UTF-8 markdown bytes.</param>
     /// <param name="html">UTF-8 HTML bytes (post-render, pre-resolve).</param>
-    public PageScanContext(FilePath relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html)
+    public PageScanContext(in FilePath relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html)
     {
         RelativePath = relativePath;
         Source = source;

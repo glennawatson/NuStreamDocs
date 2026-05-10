@@ -30,7 +30,7 @@ public static class Utf8MarkdownUrl
     /// <param name="relativePath">Source path relative to the docs root.</param>
     /// <param name="useDirectoryUrls">True for directory-URL mode (<c>foo/bar/</c>); false for flat-URL mode (<c>foo/bar.html</c>).</param>
     /// <returns>UTF-8 URL bytes; an empty array when <paramref name="relativePath"/> is empty.</returns>
-    public static byte[] FromRelativePath(FilePath relativePath, bool useDirectoryUrls)
+    public static byte[] FromRelativePath(in FilePath relativePath, bool useDirectoryUrls)
     {
         if (relativePath.IsEmpty)
         {
@@ -66,7 +66,7 @@ public static class Utf8MarkdownUrl
     /// <param name="path">Source path span.</param>
     /// <param name="suffix">UTF-8 suffix bytes (e.g. <c>.html</c> or <c>/</c>); empty for no suffix.</param>
     /// <returns>UTF-8 forward-slashed bytes followed by <paramref name="suffix"/>.</returns>
-    private static byte[] CopyWithForwardSlashes(ReadOnlySpan<char> path, ReadOnlySpan<byte> suffix)
+    private static byte[] CopyWithForwardSlashes(in ReadOnlySpan<char> path, ReadOnlySpan<byte> suffix)
     {
         var dst = new byte[path.Length + suffix.Length];
         for (var i = 0; i < path.Length; i++)

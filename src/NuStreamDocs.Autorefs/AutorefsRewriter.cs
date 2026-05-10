@@ -15,7 +15,7 @@ public static class AutorefsRewriter
     /// <param name="outputRoot">Absolute path to the site output root.</param>
     /// <param name="registry">Registry to resolve against.</param>
     /// <returns>Number of files rewritten.</returns>
-    public static int RewriteAll(DirectoryPath outputRoot, AutorefsRegistry registry)
+    public static int RewriteAll(in DirectoryPath outputRoot, AutorefsRegistry registry)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentNullException.ThrowIfNull(registry);
@@ -40,7 +40,7 @@ public static class AutorefsRewriter
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="logger">Logger that receives per-reference debug/warning events.</param>
     /// <returns>Counts of resolved and missing references across the site.</returns>
-    public static (int Resolved, int Missing) RewriteAll(DirectoryPath outputRoot, AutorefsRegistry registry, ILogger logger)
+    public static (int Resolved, int Missing) RewriteAll(in DirectoryPath outputRoot, AutorefsRegistry registry, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentNullException.ThrowIfNull(registry);
@@ -72,7 +72,7 @@ public static class AutorefsRewriter
     /// <param name="path">Absolute path to the HTML file.</param>
     /// <param name="registry">Registry to resolve against.</param>
     /// <returns>True when the file contained at least one resolvable marker.</returns>
-    public static bool RewriteOne(FilePath path, AutorefsRegistry registry)
+    public static bool RewriteOne(in FilePath path, AutorefsRegistry registry)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
         ArgumentNullException.ThrowIfNull(registry);
@@ -121,7 +121,7 @@ public static class AutorefsRewriter
         AutorefsRegistry registry,
         IBufferWriter<byte> sink,
         ILogger logger,
-        FilePath sourcePage)
+        in FilePath sourcePage)
     {
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(sink);
@@ -137,7 +137,7 @@ public static class AutorefsRewriter
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="logger">Logger for per-reference events.</param>
     /// <param name="totals">Resolved + missing counters threaded across files.</param>
-    private static void RewriteOneLogged(FilePath path, AutorefsRegistry registry, ILogger logger, ref RewriteTotals totals)
+    private static void RewriteOneLogged(in FilePath path, AutorefsRegistry registry, ILogger logger, ref RewriteTotals totals)
     {
         var source = File.ReadAllBytes(path.Value);
         if (source.AsSpan().IndexOf(AutorefScanner.Marker) < 0)

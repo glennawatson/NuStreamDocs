@@ -36,7 +36,7 @@ public sealed class SnippetsPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
 
     /// <summary>Initializes a new instance of the <see cref="SnippetsPlugin"/> class with a caller-supplied base directory.</summary>
     /// <param name="baseDirectory">Absolute path to the snippet root, or <see langword="default"/> to use the docs root.</param>
-    public SnippetsPlugin(DirectoryPath baseDirectory) => _baseDirectoryOverride = baseDirectory;
+    public SnippetsPlugin(in DirectoryPath baseDirectory) => _baseDirectoryOverride = baseDirectory;
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "snippets"u8;

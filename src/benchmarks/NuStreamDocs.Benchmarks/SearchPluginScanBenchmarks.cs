@@ -69,7 +69,7 @@ public class SearchPluginScanBenchmarks
         _pagefindPlain = new();
         _pagefindWithFrontmatter = new(PagefindOptions.Default with
         {
-            SearchableFrontmatterKeys = [[.. "tags"u8], [.. "author"u8], [.. "summary"u8]],
+            SearchableFrontmatterKeys = [[.. "tags"u8], [.. "author"u8], [.. "summary"u8]]
         });
         _lunrPlain = new();
     }

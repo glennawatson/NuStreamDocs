@@ -39,7 +39,7 @@ public static class BlogPostScanner
     /// <param name="postsRoot">Absolute path to the directory holding the post files.</param>
     /// <param name="docsRoot">Absolute path to the docs root (used for the post's relative path).</param>
     /// <returns>Parsed posts, ordered by publish date descending.</returns>
-    public static BlogPost[] Scan(DirectoryPath postsRoot, DirectoryPath docsRoot)
+    public static BlogPost[] Scan(in DirectoryPath postsRoot, in DirectoryPath docsRoot)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(postsRoot.Value);
         ArgumentException.ThrowIfNullOrWhiteSpace(docsRoot.Value);
@@ -67,7 +67,7 @@ public static class BlogPostScanner
     /// <param name="absolutePath">Absolute path to the post file.</param>
     /// <param name="docsRoot">Absolute docs root.</param>
     /// <returns>The parsed post, or null when the file isn't a Wyam-style post.</returns>
-    private static BlogPost? TryReadPost(FilePath absolutePath, DirectoryPath docsRoot)
+    private static BlogPost? TryReadPost(in FilePath absolutePath, in DirectoryPath docsRoot)
     {
         var fileName = absolutePath.FileNameWithoutExtension;
         if (fileName.Length <= DatePrefixLength
@@ -114,7 +114,7 @@ public static class BlogPostScanner
     /// <summary>Encodes ASCII <paramref name="slug"/> chars (filename stem after the date prefix) as a fresh UTF-8 byte array.</summary>
     /// <param name="slug">Slug chars; assumed ASCII.</param>
     /// <returns>UTF-8 bytes.</returns>
-    private static byte[] EncodeAscii(ReadOnlySpan<char> slug)
+    private static byte[] EncodeAscii(in ReadOnlySpan<char> slug)
     {
         if (slug.IsEmpty)
         {
@@ -272,12 +272,12 @@ public static class BlogPostScanner
     /// <summary>Returns true when <paramref name="line"/> starts an ATX heading.</summary>
     /// <param name="line">Candidate line.</param>
     /// <returns>True when the line starts with <c>#</c>.</returns>
-    private static bool IsAtxHeading(in ReadOnlySpan<byte> line) => line is [(byte)'#', ..];
+    private static bool IsAtxHeading(ReadOnlySpan<byte> line) => line is [(byte)'#', ..];
 
     /// <summary>Returns true when <paramref name="line"/> is exactly a frontmatter fence.</summary>
     /// <param name="line">Candidate line.</param>
     /// <returns>True when the line is exactly <c>---</c>.</returns>
-    private static bool IsFrontmatterFence(in ReadOnlySpan<byte> line) =>
+    private static bool IsFrontmatterFence(ReadOnlySpan<byte> line) =>
         line.Length == FrontmatterFenceLength
         && line[0] is (byte)'-'
         && line[1] is (byte)'-'

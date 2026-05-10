@@ -14,14 +14,14 @@ public static class LunrIndexWriter
     private static readonly JsonWriterOptions WriterOptions = new()
     {
         Indented = false,
-        SkipValidation = true,
+        SkipValidation = true
     };
 
     /// <summary>Writes <paramref name="documents"/> as Lunr-compatible JSON to <paramref name="path"/>.</summary>
     /// <param name="path">Absolute output path.</param>
     /// <param name="language">UTF-8 language code emitted in the <c>config</c> block; empty falls back to <c>en</c>.</param>
     /// <param name="documents">Document corpus.</param>
-    public static void Write(FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents) =>
+    public static void Write(in FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents) =>
         Write(path, language, documents, []);
 
     /// <summary>Writes <paramref name="documents"/> as Lunr-compatible JSON, including an <c>extra_stopwords</c> array.</summary>
@@ -29,7 +29,7 @@ public static class LunrIndexWriter
     /// <param name="language">UTF-8 language code emitted in the <c>config</c> block; empty falls back to <c>en</c>.</param>
     /// <param name="documents">Document corpus.</param>
     /// <param name="extraStopwords">UTF-8 stopwords advertised in the <c>config</c> block.</param>
-    public static void Write(FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents, byte[][] extraStopwords)
+    public static void Write(in FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents, byte[][] extraStopwords)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
         ArgumentNullException.ThrowIfNull(documents);
@@ -44,7 +44,7 @@ public static class LunrIndexWriter
         writer.WritePropertyName("config"u8);
         writer.WriteStartObject();
         writer.WriteString("lang"u8, language.IsEmpty ? "en"u8 : language);
-        writer.WriteString("separator"u8, "[\\s\\-]+"u8);
+        writer.WriteString("separator"u8, @"[\s\-]+"u8);
         if (extraStopwords.Length > 0)
         {
             writer.WritePropertyName("extra_stopwords"u8);

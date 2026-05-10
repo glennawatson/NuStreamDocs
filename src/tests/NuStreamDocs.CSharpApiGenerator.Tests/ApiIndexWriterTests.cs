@@ -27,7 +27,7 @@ public class ApiIndexWriterTests
         [
             "Akavache"u8.ToArray(),
             "ReactiveUI"u8.ToArray(),
-            "Splat"u8.ToArray(),
+            "Splat"u8.ToArray()
         ];
 
         var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], order: null));

@@ -23,7 +23,7 @@ public sealed record NuGetPackagesInput(
     /// <summary>Initializes a new instance of the <see cref="NuGetPackagesInput"/> class with <see cref="DefaultTfmPreference"/>.</summary>
     /// <param name="packages">Packages to fetch.</param>
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
-    public NuGetPackagesInput(NuGetPackageReference[] packages, DirectoryPath apiCachePath)
+    public NuGetPackagesInput(NuGetPackageReference[] packages, in DirectoryPath apiCachePath)
         : this(packages, apiCachePath, DefaultTfmPreference)
     {
     }

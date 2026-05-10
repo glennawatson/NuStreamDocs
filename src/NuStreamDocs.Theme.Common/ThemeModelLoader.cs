@@ -28,7 +28,7 @@ public static class ThemeModelLoader
     /// <summary>Compiles the shared top-level page template.</summary>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
     /// <returns>The compiled template.</returns>
-    public static Template LoadPage(Func<FilePath, byte[]> readBytes)
+    public static Template LoadPage(PartialLoader readBytes)
     {
         ArgumentNullException.ThrowIfNull(readBytes);
         return Template.Compile(readBytes("page.mustache"));
@@ -37,7 +37,7 @@ public static class ThemeModelLoader
     /// <summary>Compiles the standard <c>partials/*.mustache</c> set into a byte-keyed registry.</summary>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
     /// <returns>A UTF-8 byte-keyed registry of compiled partials.</returns>
-    public static Dictionary<byte[], Template> LoadStandardPartials(Func<FilePath, byte[]> readBytes)
+    public static Dictionary<byte[], Template> LoadStandardPartials(PartialLoader readBytes)
     {
         ArgumentNullException.ThrowIfNull(readBytes);
 
@@ -55,7 +55,7 @@ public static class ThemeModelLoader
     /// <param name="staticAssetPaths">Relative asset paths.</param>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
     /// <returns>A plain dictionary keyed by relative output path.</returns>
-    public static Dictionary<FilePath, byte[]> LoadStaticAssets(FilePath[] staticAssetPaths, Func<FilePath, byte[]> readBytes)
+    public static Dictionary<FilePath, byte[]> LoadStaticAssets(FilePath[] staticAssetPaths, PartialLoader readBytes)
     {
         ArgumentNullException.ThrowIfNull(staticAssetPaths);
         ArgumentNullException.ThrowIfNull(readBytes);

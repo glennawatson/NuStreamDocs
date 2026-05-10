@@ -15,7 +15,7 @@ public static class FrontmatterTitleReader
     /// <summary>Returns the front-matter <c>title:</c> bytes for <paramref name="absolutePath"/> when present.</summary>
     /// <param name="absolutePath">Absolute path to a markdown page.</param>
     /// <returns>The UTF-8 title bytes, or <see langword="null"/> when absent or unreadable.</returns>
-    public static byte[]? ReadBytes(FilePath absolutePath)
+    public static byte[]? ReadBytes(in FilePath absolutePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(absolutePath.Value);
         return ReadTitleBytes(absolutePath.Value);

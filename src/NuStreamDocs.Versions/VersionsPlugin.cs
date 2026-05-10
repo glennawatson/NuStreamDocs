@@ -64,12 +64,12 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IBu
     /// <summary>Returns the parent directory of <paramref name="outputRoot"/>, or empty when <paramref name="outputRoot"/> is at the filesystem root.</summary>
     /// <param name="outputRoot">Build output root.</param>
     /// <returns>Parent directory, or an empty <see cref="DirectoryPath"/>.</returns>
-    private static DirectoryPath ResolveParentDirectory(DirectoryPath outputRoot) =>
+    private static DirectoryPath ResolveParentDirectory(in DirectoryPath outputRoot) =>
         Path.GetDirectoryName(outputRoot.Value.TrimEnd('/', '\\'));
 
     /// <summary>Reads the existing manifest in <paramref name="parentDir"/>, upserts this build's entry, and writes it back.</summary>
     /// <param name="parentDir">Directory that owns <c>versions.json</c>.</param>
-    private void UpsertManifest(DirectoryPath parentDir)
+    private void UpsertManifest(in DirectoryPath parentDir)
     {
         DirectoryPath manifestPath = Path.Combine(parentDir.Value, VersionsManifest.FileName);
         var existing = VersionsManifest.Read(parentDir);

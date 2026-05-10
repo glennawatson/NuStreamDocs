@@ -73,10 +73,8 @@ public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvide
     protected override byte[] SectionPriorities => _options.SectionPriorities;
 
     /// <inheritdoc/>
-    protected override async ValueTask OnIndexWrittenAsync(DirectoryPath siteRoot, CancellationToken cancellationToken)
-    {
+    protected override async ValueTask OnIndexWrittenAsync(DirectoryPath siteRoot, CancellationToken cancellationToken) =>
         await PagefindCli.RunAsync(siteRoot, _options, _logger, cancellationToken).ConfigureAwait(false);
-    }
 
     /// <inheritdoc/>
     protected override void WriteEngineHeadExtra(IBufferWriter<byte> writer)

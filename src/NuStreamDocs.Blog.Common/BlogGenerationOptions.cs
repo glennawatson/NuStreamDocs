@@ -52,7 +52,7 @@ public record BlogGenerationOptions(
     /// <summary>Throws when <paramref name="value"/> is empty.</summary>
     /// <param name="value">Directory path to validate.</param>
     /// <param name="paramName">Name carried into the exception.</param>
-    private static void ThrowIfEmptyDirectory(DirectoryPath value, string paramName)
+    private static void ThrowIfEmptyDirectory(in DirectoryPath value, string paramName)
     {
         if (!value.IsEmpty)
         {
@@ -65,7 +65,7 @@ public record BlogGenerationOptions(
     /// <summary>Throws when <paramref name="value"/> is empty.</summary>
     /// <param name="value">File path to validate.</param>
     /// <param name="paramName">Name carried into the exception.</param>
-    private static void ThrowIfEmptyFile(FilePath value, string paramName)
+    private static void ThrowIfEmptyFile(in FilePath value, string paramName)
     {
         if (!value.IsEmpty)
         {

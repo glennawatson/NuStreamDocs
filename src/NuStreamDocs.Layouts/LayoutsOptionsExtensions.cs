@@ -13,7 +13,7 @@ public static class LayoutsOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="templateDirectory">Directory layouts are loaded from.</param>
     /// <returns>The updated options.</returns>
-    public static LayoutsOptions WithTemplateDirectory(this LayoutsOptions options, DirectoryPath templateDirectory)
+    public static LayoutsOptions WithTemplateDirectory(this LayoutsOptions options, in DirectoryPath templateDirectory)
     {
         ArgumentNullException.ThrowIfNull(options);
         return options with { TemplateDirectory = templateDirectory };

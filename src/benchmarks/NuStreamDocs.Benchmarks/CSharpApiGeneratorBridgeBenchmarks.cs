@@ -66,11 +66,11 @@ public class CSharpApiGeneratorBridgeBenchmarks
     [Benchmark]
     public int Bridge()
     {
-        var channel = Channel.CreateUnbounded<SyntheticPage>(new UnboundedChannelOptions
+        var channel = Channel.CreateUnbounded<SyntheticPage>(new()
         {
             SingleReader = true,
             SingleWriter = true,
-            AllowSynchronousContinuations = false,
+            AllowSynchronousContinuations = false
         });
 
         // Producer — mirrors what CSharpApiGeneratorPlugin's CallbackPageSink does:
@@ -82,7 +82,7 @@ public class CSharpApiGeneratorBridgeBenchmarks
                 for (var i = 0; i < _emitterRelativePaths.Length; i++)
                 {
                     var virtualPath = (FilePath)("api/" + _emitterRelativePaths[i]);
-                    channel.Writer.TryWrite(new SyntheticPage(virtualPath, PagePayload));
+                    channel.Writer.TryWrite(new(virtualPath, PagePayload));
                 }
             }
             finally

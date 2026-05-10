@@ -41,7 +41,7 @@ internal static partial class BlogLoggingHelper
         "Performance",
         "CA1873:Avoid potentially expensive logging arguments",
         Justification = "Caller gates on IsEnabled before the encode runs; the analyzer cannot see across the wrapper.")]
-    public static void LogPostDiscovered(ILogger logger, ReadOnlySpan<byte> slug, DateOnly published, ReadOnlySpan<byte> title)
+    public static void LogPostDiscovered(ILogger logger, ReadOnlySpan<byte> slug, in DateOnly published, ReadOnlySpan<byte> title)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
         {

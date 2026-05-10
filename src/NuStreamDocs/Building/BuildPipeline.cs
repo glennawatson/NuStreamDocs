@@ -37,7 +37,7 @@ public static class BuildPipeline
     /// <param name="outputRoot">Absolute path to the site output root.</param>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>The total number of pages processed (rendered + skipped).</returns>
-    public static Task<int> RunAsync(DirectoryPath inputRoot, DirectoryPath outputRoot, IPlugin[] plugins) =>
+    public static Task<int> RunAsync(in DirectoryPath inputRoot, in DirectoryPath outputRoot, IPlugin[] plugins) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, CancellationToken.None);
 
     /// <summary>Runs the build with cancellation support and default options.</summary>
@@ -47,8 +47,8 @@ public static class BuildPipeline
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The total number of pages processed.</returns>
     public static Task<int> RunAsync(
-        DirectoryPath inputRoot,
-        DirectoryPath outputRoot,
+        in DirectoryPath inputRoot,
+        in DirectoryPath outputRoot,
         IPlugin[] plugins,
         in CancellationToken cancellationToken) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, cancellationToken);
@@ -358,7 +358,7 @@ public static class BuildPipeline
     /// <param name="source">Original UTF-8 markdown bytes.</param>
     /// <param name="html">Post-render HTML bytes.</param>
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
-    private static void FireScans(IPageScanPlugin[] scans, FilePath relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html, PluginTimingTable pluginTiming)
+    private static void FireScans(IPageScanPlugin[] scans, in FilePath relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html, PluginTimingTable pluginTiming)
     {
         if (scans.Length is 0)
         {
@@ -413,10 +413,10 @@ public static class BuildPipeline
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
     /// <returns>The rewritten bytes, or <paramref name="source"/> unchanged when no participant rewrites.</returns>
     private static ReadOnlyMemory<byte> ApplyPreRenders(
-        ReadOnlyMemory<byte> source,
+        in ReadOnlyMemory<byte> source,
         IPagePreRenderPlugin[] plugins,
         List<PageBuilderRental> scratch,
-        FilePath relativePath,
+        in FilePath relativePath,
         PluginTimingTable pluginTiming)
     {
         // CommonMark reference-style links are a core spec feature, not a plugin. Resolve them
@@ -496,11 +496,11 @@ public static class BuildPipeline
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
     /// <returns>The rental whose writer holds the final post-render HTML — may differ from <paramref name="input"/>.</returns>
     private static PageBuilderRental ApplyPostRenders(
-        PageBuilderRental input,
+        in PageBuilderRental input,
         List<PageBuilderRental> scratch,
         ReadOnlySpan<byte> source,
         IPagePostRenderPlugin[] plugins,
-        FilePath relativePath,
+        in FilePath relativePath,
         PluginTimingTable pluginTiming)
     {
         if (plugins.Length is 0)
@@ -611,10 +611,10 @@ public static class BuildPipeline
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
     /// <returns>The rental whose writer holds the final post-resolve HTML.</returns>
     private static PageBuilderRental ApplyPostResolves(
-        PageBuilderRental input,
+        in PageBuilderRental input,
         List<PageBuilderRental> scratch,
         IPagePostResolvePlugin[] plugins,
-        FilePath relativePath,
+        in FilePath relativePath,
         PluginTimingTable pluginTiming)
     {
         if (plugins.Length is 0)
@@ -681,7 +681,7 @@ public static class BuildPipeline
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="useDirectoryUrls">When true, emits non-index pages as <c>foo/index.html</c>; when false, emits as <c>foo.html</c>.</param>
     /// <returns>The absolute output path with the <c>.html</c> extension.</returns>
-    private static FilePath OutputPathFor(DirectoryPath outputRoot, FilePath relativePath, bool useDirectoryUrls)
+    private static FilePath OutputPathFor(in DirectoryPath outputRoot, in FilePath relativePath, bool useDirectoryUrls)
     {
         // 404.md always emits as /404.html at the site root, regardless of the
         // directory-URL toggle — most static hosts (GitHub Pages, Netlify, S3

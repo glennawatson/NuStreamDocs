@@ -58,7 +58,7 @@ public sealed class PathFilter
     /// <summary>Tests whether <paramref name="relativePath"/> survives the filter.</summary>
     /// <param name="relativePath">Forward-slashed path relative to the docs root.</param>
     /// <returns>True when the path is kept by the configured globs.</returns>
-    public bool Matches(FilePath relativePath)
+    public bool Matches(in FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath.Value);
         return _matcher.Match(relativePath.Value).HasMatches;

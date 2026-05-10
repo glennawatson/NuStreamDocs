@@ -12,7 +12,7 @@ public static class StaticAssetComposer
     /// <summary>Writes every provider's assets under <paramref name="outputRoot"/>.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="outputRoot">Absolute output root.</param>
-    public static void WriteAll(IPlugin[] plugins, DirectoryPath outputRoot)
+    public static void WriteAll(IPlugin[] plugins, in DirectoryPath outputRoot)
     {
         ArgumentNullException.ThrowIfNull(plugins);
         if (outputRoot.IsEmpty)

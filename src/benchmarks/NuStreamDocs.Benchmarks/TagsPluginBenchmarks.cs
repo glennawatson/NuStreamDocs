@@ -42,7 +42,7 @@ public class TagsPluginBenchmarks
         "reference",
         "concept",
         "release",
-        "deprecated",
+        "deprecated"
     ];
 
     /// <summary>Absolute path to the synthetic docs root.</summary>
@@ -68,7 +68,7 @@ public class TagsPluginBenchmarks
             File.WriteAllText(Path.Combine(_docsRoot, "page-" + i.ToString(CultureInfo.InvariantCulture) + ".md"), BuildPostBody(i, tag));
         }
 
-        _plugin = new TagsPlugin();
+        _plugin = new();
     }
 
     /// <summary>Cleans the corpus once at the end.</summary>

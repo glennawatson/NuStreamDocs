@@ -14,7 +14,7 @@ internal readonly ref struct NavRenderContext
     /// <param name="chain">Active-branch chain over <see cref="NavTree.Nodes"/> indices.</param>
     /// <param name="prune">Prune-mode flag.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public NavRenderContext(NavTree tree, ReadOnlySpan<int> chain, bool prune, IBufferWriter<byte> writer)
+    public NavRenderContext(NavTree tree, in ReadOnlySpan<int> chain, bool prune, IBufferWriter<byte> writer)
     {
         Tree = tree;
         Chain = chain;

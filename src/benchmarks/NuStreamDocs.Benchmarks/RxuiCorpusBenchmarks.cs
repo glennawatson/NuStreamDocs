@@ -138,7 +138,7 @@ public class RxuiCorpusBenchmarks
             .UseMagicLink(new()
             {
                 DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
-                ExpandUserMentions = true,
+                ExpandUserMentions = true
             })
             .BuildAsync()
             .GetAwaiter()
@@ -158,7 +158,7 @@ public class RxuiCorpusBenchmarks
             .UseMagicLink(new()
             {
                 DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
-                ExpandUserMentions = true,
+                ExpandUserMentions = true
             })
             .UseNav()
             .UseAutorefs(registry)

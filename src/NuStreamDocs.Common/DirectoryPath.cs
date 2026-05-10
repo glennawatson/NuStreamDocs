@@ -36,11 +36,11 @@ public readonly record struct DirectoryPath(string Value)
 
     /// <summary>Implicitly unwraps to a plain <see cref="string"/> for BCL interop.</summary>
     /// <param name="path">Source path.</param>
-    public static implicit operator string(DirectoryPath path) => path.Value ?? string.Empty;
+    public static implicit operator string(in DirectoryPath path) => path.Value;
 
     /// <summary>Implicitly unwraps to a <see cref="ReadOnlySpan{Char}"/> for span-shaped APIs.</summary>
     /// <param name="path">Source path.</param>
-    public static implicit operator ReadOnlySpan<char>(DirectoryPath path) => (path.Value ?? string.Empty).AsSpan();
+    public static implicit operator ReadOnlySpan<char>(in DirectoryPath path) => path.Value.AsSpan();
 
     /// <summary>Implicitly wraps a <see cref="string"/> path so callers can pass string literals to APIs that take a <see cref="DirectoryPath"/>.</summary>
     /// <param name="value">Source path string; null becomes an empty <see cref="DirectoryPath"/>.</param>
@@ -50,13 +50,13 @@ public readonly record struct DirectoryPath(string Value)
     /// <param name="path">Source directory.</param>
     /// <param name="segment">Relative directory segment.</param>
     /// <returns>The combined directory path.</returns>
-    public static DirectoryPath operator /(DirectoryPath path, string segment) => path.Combine(segment);
+    public static DirectoryPath operator /(in DirectoryPath path, string segment) => path.Combine(segment);
 
     /// <summary>Joins <paramref name="path"/> and <paramref name="segment"/> as nested directories.</summary>
     /// <param name="path">Source directory.</param>
     /// <param name="segment">Nested directory.</param>
     /// <returns>The combined directory path.</returns>
-    public static DirectoryPath operator /(DirectoryPath path, DirectoryPath segment) =>
+    public static DirectoryPath operator /(in DirectoryPath path, in DirectoryPath segment) =>
         segment.IsEmpty ? path : path.Combine(segment.Value);
 
     /// <summary>Friendly named alias for the string→<see cref="DirectoryPath"/> implicit operator (CA2225).</summary>
@@ -67,24 +67,24 @@ public readonly record struct DirectoryPath(string Value)
     /// <summary>Friendly named alias for the <see cref="DirectoryPath"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source directory.</param>
     /// <returns>The underlying path string.</returns>
-    public static string ToStringValue(DirectoryPath path) => path;
+    public static string ToStringValue(in DirectoryPath path) => path;
 
     /// <summary>Friendly named alias for the <see cref="DirectoryPath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source directory.</param>
     /// <returns>The underlying path as a span.</returns>
-    public static ReadOnlySpan<char> ToReadOnlySpan(DirectoryPath path) => path;
+    public static ReadOnlySpan<char> ToReadOnlySpan(in DirectoryPath path) => path;
 
     /// <summary>Friendly named alias for the <c>/</c> string-segment operator (CA2225).</summary>
     /// <param name="left">Source directory.</param>
     /// <param name="right">Relative directory segment.</param>
     /// <returns>The combined directory path.</returns>
-    public static DirectoryPath Divide(DirectoryPath left, string right) => left / right;
+    public static DirectoryPath Divide(in DirectoryPath left, string right) => left / right;
 
     /// <summary>Friendly named alias for the <c>/</c> nested-directory operator (CA2225).</summary>
     /// <param name="left">Source directory.</param>
     /// <param name="right">Nested directory.</param>
     /// <returns>The combined directory path.</returns>
-    public static DirectoryPath Divide(DirectoryPath left, DirectoryPath right) => left / right;
+    public static DirectoryPath Divide(in DirectoryPath left, in DirectoryPath right) => left / right;
 
     /// <summary>Joins this directory with <paramref name="segment"/> via <see cref="Path.Combine(string, string)"/>.</summary>
     /// <param name="segment">Relative segment.</param>
@@ -114,7 +114,7 @@ public readonly record struct DirectoryPath(string Value)
     /// </summary>
     /// <param name="fileName"><see cref="UrlPath"/> identifying the file within this directory; URL-shaped (forward-slashed).</param>
     /// <returns>The composed file path with forward-slash separators.</returns>
-    public FilePath UrlJoin(UrlPath fileName)
+    public FilePath UrlJoin(in UrlPath fileName)
     {
         if (fileName.IsEmpty)
         {
@@ -131,14 +131,9 @@ public readonly record struct DirectoryPath(string Value)
     /// </summary>
     /// <param name="absolute">Absolute (or rooted) file path under this directory.</param>
     /// <returns>The relative file path, or the original when this directory is empty.</returns>
-    public FilePath Relative(FilePath absolute)
+    public FilePath Relative(in FilePath absolute)
     {
-        if (absolute.IsEmpty)
-        {
-            return absolute;
-        }
-
-        if (IsEmpty)
+        if (absolute.IsEmpty || IsEmpty)
         {
             return absolute;
         }
@@ -150,14 +145,9 @@ public readonly record struct DirectoryPath(string Value)
     /// <summary>Returns <paramref name="absolute"/> rewritten relative to this directory.</summary>
     /// <param name="absolute">Absolute (or rooted) directory under this directory.</param>
     /// <returns>The relative directory path, or the original when this directory is empty.</returns>
-    public DirectoryPath Relative(DirectoryPath absolute)
+    public DirectoryPath Relative(in DirectoryPath absolute)
     {
-        if (absolute.IsEmpty)
-        {
-            return absolute;
-        }
-
-        if (IsEmpty)
+        if (absolute.IsEmpty || IsEmpty)
         {
             return absolute;
         }

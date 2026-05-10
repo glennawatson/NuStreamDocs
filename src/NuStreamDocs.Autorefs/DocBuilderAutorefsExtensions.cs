@@ -26,7 +26,7 @@ public static class DocBuilderAutorefsExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentOutOfRangeException.ThrowIfNegative(initialCapacity);
-        return builder.UsePlugin(new AutorefsPlugin(new AutorefsRegistry(initialCapacity)));
+        return builder.UsePlugin(new AutorefsPlugin(new(initialCapacity)));
     }
 
     /// <summary>Registers the autorefs plugin against a pre-existing shared registry.</summary>

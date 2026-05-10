@@ -32,5 +32,5 @@ internal enum LayoutTokenKind
     Unsupported,
 
     /// <summary>An unterminated marker that did not close — emitted as a literal so the renderer copies the source bytes through.</summary>
-    Malformed,
+    Malformed
 }

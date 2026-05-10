@@ -34,7 +34,7 @@ internal static class SphinxInventoryWriter
     /// <param name="outputPath">Absolute output path.</param>
     /// <param name="options">Header options (project, version, file name).</param>
     /// <param name="entries">Snapshot from the autorefs registry — <c>(uid, href)</c> pairs.</param>
-    public static void Write(FilePath outputPath, SphinxInventoryOptions options, (byte[] Id, byte[] Url)[] entries)
+    public static void Write(in FilePath outputPath, SphinxInventoryOptions options, (byte[] Id, byte[] Url)[] entries)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         using var stream = File.Create(outputPath);

@@ -26,7 +26,7 @@ internal static class LayoutRenderer
     /// <returns>True when the template was loaded and rendered; false when the template file was missing.</returns>
     public static bool Render(
         ReadOnlySpan<byte> templateName,
-        DirectoryPath templateDirectory,
+        in DirectoryPath templateDirectory,
         LayoutContext context,
         int maxDepth,
         IBufferWriter<byte> writer,
@@ -62,7 +62,7 @@ internal static class LayoutRenderer
     /// <param name="template">Parsed template on success.</param>
     /// <param name="resolvedPath">Last attempted absolute path (for diagnostics).</param>
     /// <returns>True when the file was loaded.</returns>
-    private static bool TryLoadTemplate(ReadOnlySpan<byte> templateName, DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out FilePath resolvedPath)
+    private static bool TryLoadTemplate(ReadOnlySpan<byte> templateName, in DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out FilePath resolvedPath)
     {
         template = default;
         resolvedPath = default;
@@ -88,7 +88,7 @@ internal static class LayoutRenderer
     /// <param name="template">Parsed template on success.</param>
     /// <param name="resolvedPath">Last attempted absolute path.</param>
     /// <returns>True when the file was found and parsed.</returns>
-    private static bool TryLoadFromDisk(ReadOnlySpan<byte> templateName, DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out FilePath resolvedPath)
+    private static bool TryLoadFromDisk(ReadOnlySpan<byte> templateName, in DirectoryPath templateDirectory, TemplateCache? cache, out TemplateUnit template, out FilePath resolvedPath)
     {
         template = default;
         var nameString = Encoding.UTF8.GetString(templateName);
@@ -122,30 +122,28 @@ internal static class LayoutRenderer
     /// <param name="template">Template unit.</param>
     /// <param name="parentTarget">Resolved parent template name on success.</param>
     /// <returns>True when the first non-literal-only-whitespace token is an extends.</returns>
-    private static bool TryFindExtends(TemplateUnit template, out byte[] parentTarget)
+    private static bool TryFindExtends(in TemplateUnit template, out byte[] parentTarget)
     {
         parentTarget = [];
         var tokens = template.Tokens;
         for (var i = 0; i < tokens.Count; i++)
         {
             var t = tokens[i];
-            if (t.Kind is LayoutTokenKind.Literal)
+            switch (t.Kind)
             {
-                if (!AsciiByteHelpers.IsAllAsciiWhitespace(template.Bytes.AsSpan(t.Start, t.End - t.Start)))
-                {
+                case LayoutTokenKind.Literal when !AsciiByteHelpers.IsAllAsciiWhitespace(template.Bytes.AsSpan(t.Start, t.End - t.Start)):
                     return false;
-                }
+                case LayoutTokenKind.Literal:
+                    continue;
+                case LayoutTokenKind.Extends:
+                    {
+                        parentTarget = template.Bytes[t.PayloadStart..t.PayloadEnd];
+                        return true;
+                    }
 
-                continue;
+                default:
+                    return false;
             }
-
-            if (t.Kind is LayoutTokenKind.Extends)
-            {
-                parentTarget = template.Bytes[t.PayloadStart..t.PayloadEnd];
-                return true;
-            }
-
-            return false;
         }
 
         return false;
@@ -155,7 +153,7 @@ internal static class LayoutRenderer
     /// <param name="parentTarget">UTF-8 parent template name.</param>
     /// <param name="child">Child template.</param>
     /// <param name="state">Render state.</param>
-    private static void RenderWithInheritance(byte[] parentTarget, TemplateUnit child, RenderState state)
+    private static void RenderWithInheritance(byte[] parentTarget, in TemplateUnit child, in RenderState state)
     {
         if (!TryLoadTemplate(parentTarget, state.TemplateDirectory, state.Cache, out var parent, out var parentPath))
         {
@@ -176,7 +174,7 @@ internal static class LayoutRenderer
     /// <summary>Walks <paramref name="template"/> and records the token-index range of each top-level <c>{% block name %}</c>.</summary>
     /// <param name="template">Template unit.</param>
     /// <param name="blocks">Sink dictionary, name → block range.</param>
-    private static void CollectBlocks(TemplateUnit template, Dictionary<byte[], BlockRange> blocks)
+    private static void CollectBlocks(in TemplateUnit template, Dictionary<byte[], BlockRange> blocks)
     {
         var tokens = template.Tokens;
         var i = 0;
@@ -202,7 +200,7 @@ internal static class LayoutRenderer
     /// <param name="blocks">Optional child-block overlay.</param>
     /// <param name="currentBlock">Block currently being rendered (drives <c>{{ super() }}</c>).</param>
     /// <param name="depth">Current include depth.</param>
-    private static void RenderTokens(TemplateUnit template, RenderState state, BlockOverlay? blocks, byte[]? currentBlock, int depth) =>
+    private static void RenderTokens(in TemplateUnit template, in RenderState state, BlockOverlay? blocks, byte[]? currentBlock, int depth) =>
         RenderRange(template, new(0, template.Tokens.Count), state, blocks, currentBlock, depth);
 
     /// <summary>Renders a token-index range from <paramref name="template"/>.</summary>
@@ -212,7 +210,7 @@ internal static class LayoutRenderer
     /// <param name="blocks">Block overlay.</param>
     /// <param name="currentBlock">Current block name.</param>
     /// <param name="depth">Current include depth.</param>
-    private static void RenderRange(TemplateUnit template, BlockRange range, RenderState state, BlockOverlay? blocks, byte[]? currentBlock, int depth)
+    private static void RenderRange(in TemplateUnit template, in BlockRange range, in RenderState state, BlockOverlay? blocks, byte[]? currentBlock, int depth)
     {
         var i = range.Start;
         while (i < range.End)
@@ -230,7 +228,7 @@ internal static class LayoutRenderer
     /// <param name="currentBlock">Block currently being rendered.</param>
     /// <param name="depth">Current include depth.</param>
     /// <returns>Index of the last token consumed by this call.</returns>
-    private static int RenderOne(TemplateUnit template, int i, RenderState state, BlockOverlay? blocks, byte[]? currentBlock, int depth)
+    private static int RenderOne(in TemplateUnit template, int i, in RenderState state, BlockOverlay? blocks, byte[]? currentBlock, int depth)
     {
         var t = template.Tokens[i];
         return t.Kind switch
@@ -242,7 +240,7 @@ internal static class LayoutRenderer
             LayoutTokenKind.BlockOpen => RenderBlock(template, i, state, blocks, depth),
             LayoutTokenKind.Unsupported => EmitUnsupported(template, t, state, i),
             LayoutTokenKind.Malformed => EmitLiteral(template, t, state),
-            _ => i,
+            _ => i
         };
     }
 
@@ -251,7 +249,7 @@ internal static class LayoutRenderer
     /// <param name="t">Token.</param>
     /// <param name="state">Render state.</param>
     /// <returns>The token's own index; the caller advances past it.</returns>
-    private static int EmitLiteral(TemplateUnit template, LayoutToken t, RenderState state)
+    private static int EmitLiteral(in TemplateUnit template, in LayoutToken t, in RenderState state)
     {
         Write(state.Writer, template.Bytes.AsSpan(t.Start, t.End - t.Start));
         return IndexOf(template, t);
@@ -262,7 +260,7 @@ internal static class LayoutRenderer
     /// <param name="t">Variable token.</param>
     /// <param name="state">Render state.</param>
     /// <returns>The token's own index.</returns>
-    private static int EmitVariable(TemplateUnit template, LayoutToken t, RenderState state)
+    private static int EmitVariable(in TemplateUnit template, in LayoutToken t, in RenderState state)
     {
         var bareName = template.Bytes.AsSpan(t.PayloadStart, t.PayloadEnd - t.PayloadStart);
         if (state.Context.TryGetValue(bareName, out var value))
@@ -284,7 +282,7 @@ internal static class LayoutRenderer
     /// <param name="depth">Current include depth.</param>
     /// <param name="tokenIndex">Index of the super token (returned as the consumed index).</param>
     /// <returns><paramref name="tokenIndex"/>.</returns>
-    private static int EmitSuper(byte[]? currentBlock, BlockOverlay? blocks, RenderState state, int depth, int tokenIndex)
+    private static int EmitSuper(byte[]? currentBlock, BlockOverlay? blocks, in RenderState state, int depth, int tokenIndex)
     {
         if (currentBlock is null || blocks is null || !blocks.TryGetParentRange(currentBlock, out var entry))
         {
@@ -304,7 +302,7 @@ internal static class LayoutRenderer
     /// <param name="depth">Current include depth.</param>
     /// <param name="tokenIndex">Index of the include token (returned as the consumed index).</param>
     /// <returns><paramref name="tokenIndex"/>.</returns>
-    private static int EmitInclude(TemplateUnit template, LayoutToken t, RenderState state, BlockOverlay? blocks, int depth, int tokenIndex)
+    private static int EmitInclude(in TemplateUnit template, in LayoutToken t, in RenderState state, BlockOverlay? blocks, int depth, int tokenIndex)
     {
         var includeName = template.Bytes.AsSpan(t.PayloadStart, t.PayloadEnd - t.PayloadStart);
         if (depth >= state.MaxDepth)
@@ -329,7 +327,7 @@ internal static class LayoutRenderer
     /// <param name="state">Render state.</param>
     /// <param name="tokenIndex">Index of the tag token.</param>
     /// <returns><paramref name="tokenIndex"/>.</returns>
-    private static int EmitUnsupported(TemplateUnit template, LayoutToken t, RenderState state, int tokenIndex)
+    private static int EmitUnsupported(in TemplateUnit template, in LayoutToken t, in RenderState state, int tokenIndex)
     {
         var body = template.Bytes.AsSpan(t.PayloadStart, t.PayloadEnd - t.PayloadStart);
         LayoutsLoggingHelper.LogUnsupportedTag(state.Logger, Encoding.UTF8.GetString(body));
@@ -344,7 +342,7 @@ internal static class LayoutRenderer
     /// <param name="blocks">Block overlay.</param>
     /// <param name="depth">Current include depth.</param>
     /// <returns>Index of the matching <c>{% endblock %}</c>.</returns>
-    private static int RenderBlock(TemplateUnit template, int openIndex, RenderState state, BlockOverlay? blocks, int depth)
+    private static int RenderBlock(in TemplateUnit template, int openIndex, in RenderState state, BlockOverlay? blocks, int depth)
     {
         var open = template.Tokens[openIndex];
         var blockName = template.Bytes[open.PayloadStart..open.PayloadEnd];
@@ -371,17 +369,24 @@ internal static class LayoutRenderer
         for (var j = openIndex + 1; j < tokens.Count; j++)
         {
             var t = tokens[j];
-            if (t.Kind is LayoutTokenKind.BlockOpen)
+            switch (t.Kind)
             {
-                depth++;
-            }
-            else if (t.Kind is LayoutTokenKind.BlockClose)
-            {
-                depth--;
-                if (depth is 0)
-                {
-                    return (openIndex + 1, j, j);
-                }
+                case LayoutTokenKind.BlockOpen:
+                    {
+                        depth++;
+                        break;
+                    }
+
+                case LayoutTokenKind.BlockClose:
+                    {
+                        depth--;
+                        if (depth is 0)
+                        {
+                            return (openIndex + 1, j, j);
+                        }
+
+                        break;
+                    }
             }
         }
 
@@ -393,7 +398,7 @@ internal static class LayoutRenderer
     /// <param name="template">Template unit.</param>
     /// <param name="t">Token.</param>
     /// <returns>Zero-based index of <paramref name="t"/>; -1 when absent.</returns>
-    private static int IndexOf(TemplateUnit template, LayoutToken t) => template.Tokens.IndexOf(t);
+    private static int IndexOf(in TemplateUnit template, in LayoutToken t) => template.Tokens.IndexOf(t);
 
     /// <summary>Bulk-writes <paramref name="bytes"/> to <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
@@ -435,7 +440,7 @@ internal static class LayoutRenderer
         /// <summary>Initializes a new instance of the <see cref="BlockOverlay"/> class.</summary>
         /// <param name="childBlocks">Child block-name → token range.</param>
         /// <param name="child">Child template unit.</param>
-        public BlockOverlay(Dictionary<byte[], BlockRange> childBlocks, TemplateUnit child)
+        public BlockOverlay(Dictionary<byte[], BlockRange> childBlocks, in TemplateUnit child)
         {
             ArgumentNullException.ThrowIfNull(childBlocks);
             Children = childBlocks;
@@ -463,7 +468,7 @@ internal static class LayoutRenderer
         /// <param name="name">UTF-8 block name.</param>
         /// <param name="parent">Parent template unit.</param>
         /// <param name="range">Inclusive-exclusive parent body range.</param>
-        public void RememberParent(byte[] name, TemplateUnit parent, BlockRange range) =>
+        public void RememberParent(byte[] name, in TemplateUnit parent, in BlockRange range) =>
             Parents[name] = new(parent, range);
 
         /// <summary>Pulls the parent body range previously stashed by <see cref="RememberParent"/>.</summary>

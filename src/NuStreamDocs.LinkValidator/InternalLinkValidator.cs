@@ -194,7 +194,7 @@ public static class InternalLinkValidator
         /// <param name="destination">Caller-owned scratch span; receives the canonical site-relative bytes.</param>
         /// <param name="combinedScratch">Caller-owned scratch buffer for the intermediate <c>sourceDir + '/' + target</c> blob.</param>
         /// <returns>Bytes written into <paramref name="destination"/>, or <c>-1</c> when either scratch is too small (caller falls back to a heap-allocating overflow path).</returns>
-        private static int TryResolveTarget(ReadOnlySpan<byte> sourcePage, ReadOnlySpan<byte> target, Span<byte> destination, byte[] combinedScratch)
+        private static int TryResolveTarget(ReadOnlySpan<byte> sourcePage, ReadOnlySpan<byte> target, in Span<byte> destination, byte[] combinedScratch)
         {
             if (target is [SlashByte, ..])
             {
@@ -276,7 +276,7 @@ public static class InternalLinkValidator
         /// <param name="path">Source path bytes.</param>
         /// <param name="destination">Caller-owned output span.</param>
         /// <returns>Bytes written, or <c>-1</c> when <paramref name="destination"/> is too small.</returns>
-        private static int Normalize(ReadOnlySpan<byte> path, Span<byte> destination)
+        private static int Normalize(ReadOnlySpan<byte> path, in Span<byte> destination)
         {
             if (path.IsEmpty)
             {

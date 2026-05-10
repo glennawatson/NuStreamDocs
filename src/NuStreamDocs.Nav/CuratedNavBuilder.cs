@@ -19,7 +19,7 @@ internal static class CuratedNavBuilder
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="entries">Top-level curated entries.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries) =>
+    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries) =>
         Build(inputRoot, entries, useDirectoryUrls: false, NullLogger.Instance);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with an explicit served URL shape.</summary>
@@ -27,7 +27,7 @@ internal static class CuratedNavBuilder
     /// <param name="entries">Top-level curated entries.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls) =>
+    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls) =>
         Build(inputRoot, entries, useDirectoryUrls, NullLogger.Instance);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with a logger for orphan / missing-file diagnostics.</summary>
@@ -35,7 +35,7 @@ internal static class CuratedNavBuilder
     /// <param name="entries">Top-level curated entries.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries, ILogger logger)
+    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, ILogger logger)
         => Build(inputRoot, entries, useDirectoryUrls: false, logger);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with a logger for orphan / missing-file diagnostics.</summary>
@@ -44,7 +44,7 @@ internal static class CuratedNavBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls, ILogger logger)
+    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
         ArgumentNullException.ThrowIfNull(entries);
@@ -79,7 +79,7 @@ internal static class CuratedNavBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The built node or null.</returns>
-    private static NavNode? BuildEntry(DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
+    private static NavNode? BuildEntry(in DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
     {
         if (entry.IsSection)
         {
@@ -100,7 +100,7 @@ internal static class CuratedNavBuilder
     /// <param name="entry">Leaf entry.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>Node.</returns>
-    private static NavNode BuildLeafEntry(DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls)
+    private static NavNode BuildLeafEntry(in DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls)
     {
         FilePath path = Encoding.UTF8.GetString(entry.Path);
         var title = ResolveTitle(inputRoot, entry, path);
@@ -113,7 +113,7 @@ internal static class CuratedNavBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Section node.</returns>
-    private static NavNode BuildSectionEntry(DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
+    private static NavNode BuildSectionEntry(in DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
     {
         var children = new NavNode[entry.Children.Length];
         var written = 0;
@@ -143,7 +143,7 @@ internal static class CuratedNavBuilder
     /// <param name="entry">Leaf entry.</param>
     /// <param name="path">Decoded path.</param>
     /// <returns>Title bytes.</returns>
-    private static byte[] ResolveTitle(DirectoryPath inputRoot, in NavEntry entry, FilePath path)
+    private static byte[] ResolveTitle(in DirectoryPath inputRoot, in NavEntry entry, in FilePath path)
     {
         if (entry.Title.Length > 0)
         {

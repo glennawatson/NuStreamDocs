@@ -119,7 +119,7 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
     /// <summary>Builds the <c>page.url</c> bytes from the page's relative path.</summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <returns>UTF-8 URL bytes (forward-slash separators, no leading slash).</returns>
-    private static byte[] ToUrlBytes(FilePath relativePath)
+    private static byte[] ToUrlBytes(in FilePath relativePath)
     {
         if (relativePath.IsEmpty)
         {

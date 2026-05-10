@@ -95,22 +95,22 @@ public static class RustLexer
             pos++;
         }
 
-        var hasRawPrefix = pos < slice.Length && slice[pos] is (byte)'r';
-        if (hasRawPrefix)
+        switch (pos < slice.Length && slice[pos] is (byte)'r')
         {
-            pos++;
-        }
+            case true:
+                {
+                    pos++;
+                    break;
+                }
 
-        if (!hasRawPrefix)
-        {
             // Plain b"..." with backslash escapes.
-            if (!hasBytePrefix)
-            {
+            case false when !hasBytePrefix:
                 return 0;
-            }
-
-            var quoted = TokenMatchers.MatchDoubleQuotedWithBackslashEscape(slice[pos..]);
-            return quoted is 0 ? 0 : pos + quoted;
+            case false:
+                {
+                    var quoted = TokenMatchers.MatchDoubleQuotedWithBackslashEscape(slice[pos..]);
+                    return quoted is 0 ? 0 : pos + quoted;
+                }
         }
 
         return MatchRustRawStringTail(slice, pos);

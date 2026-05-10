@@ -83,7 +83,7 @@ public class ExtraAssetsHeadBenchmarks
         }
 
         _plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
-        _ctx = new BuildConfigureContext(_tempRoot, _tempRoot, [], new());
+        _ctx = new(_tempRoot, _tempRoot, [], new());
         await _plugin.ConfigureAsync(_ctx, default).ConfigureAwait(false);
         _sink = new(SinkCapacity);
     }

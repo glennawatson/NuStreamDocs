@@ -58,7 +58,7 @@ public sealed class BuildManifest
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest.</returns>
-    public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
+    public static ValueTask<BuildManifest> LoadAsync(in DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
         LoadAsync(outputRoot, cancellationToken, logger: null);
 
     /// <summary>Loads the manifest and rejects it when its build fingerprint differs from <paramref name="buildFingerprint"/>.</summary>
@@ -66,7 +66,7 @@ public sealed class BuildManifest
     /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest, or an empty manifest on a fingerprint mismatch.</returns>
-    public static ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, byte[] buildFingerprint, in CancellationToken cancellationToken) =>
+    public static ValueTask<BuildManifest> LoadAsync(in DirectoryPath outputRoot, byte[] buildFingerprint, in CancellationToken cancellationToken) =>
         LoadAsync(outputRoot, buildFingerprint, cancellationToken, logger: null);
 
     /// <summary>Loads the manifest from <paramref name="outputRoot"/> with an optional logger; returns an empty manifest when no file exists or it cannot be parsed.</summary>
@@ -125,7 +125,7 @@ public sealed class BuildManifest
     /// <param name="relativePath">Relative path key.</param>
     /// <param name="entry">Found entry on success.</param>
     /// <returns>True when an entry was found.</returns>
-    public bool TryGet(FilePath relativePath, out ManifestEntry entry) =>
+    public bool TryGet(in FilePath relativePath, out ManifestEntry entry) =>
         _entries.TryGetValue(relativePath, out entry);
 
     /// <summary>Replaces the entries with <paramref name="updated"/>.</summary>
@@ -149,7 +149,7 @@ public sealed class BuildManifest
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the file is written.</returns>
-    public Task SaveAsync(DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
+    public Task SaveAsync(in DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
         SaveAsync(outputRoot, cancellationToken, logger: null);
 
     /// <summary>Persists the manifest under <paramref name="outputRoot"/> with an optional logger.</summary>

@@ -127,7 +127,7 @@ public static class BlogContentGenerator
     /// <param name="docsRoot">Absolute docs root.</param>
     /// <param name="absoluteDirectory">Absolute directory path.</param>
     /// <returns>Forward-slashed UTF-8 bytes; empty when no relative segments are needed.</returns>
-    private static byte[] ComputeRelativeDirectoryUtf8(DirectoryPath docsRoot, DirectoryPath absoluteDirectory)
+    private static byte[] ComputeRelativeDirectoryUtf8(in DirectoryPath docsRoot, in DirectoryPath absoluteDirectory)
     {
         if (absoluteDirectory.IsEmpty)
         {

@@ -23,7 +23,7 @@ public readonly record struct DiagnosticMessage(string? Value)
     /// <summary>Implicitly unwraps to <see cref="string"/> for sinks that demand one.</summary>
     /// <param name="value">The wrapper.</param>
     /// <returns>The underlying message, or <see cref="string.Empty"/> when null.</returns>
-    public static implicit operator string(DiagnosticMessage value) => value.Value ?? string.Empty;
+    public static implicit operator string(in DiagnosticMessage value) => value.Value ?? string.Empty;
 
     /// <summary>Implicitly wraps a <see cref="string"/> from an interpolated diagnostic site.</summary>
     /// <param name="value">Composed diagnostic text.</param>

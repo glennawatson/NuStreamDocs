@@ -56,7 +56,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>UTF-8 URL bytes → flat-tree node-index lookup, rebuilt each discover.</summary>
     private Dictionary<byte[], int>? _urlIndex;
 
-    /// <summary>Linearized leaf-page nodes in nav order; built lazily on the first <see cref="GetNeighbours(FilePath)"/> call.</summary>
+    /// <summary>The flat-tree node array, ordered by nav order, rebuilt each discover.</summary>
     private NavNode[]? _orderedLeaves;
 
     /// <summary>UTF-8 path bytes → index lookup over <see cref="_orderedLeaves"/>; built lazily alongside it.</summary>
@@ -215,7 +215,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Looks up the previous and next leaf pages for <paramref name="relativePath"/> in the nav's natural traversal order.</summary>
     /// <param name="relativePath">Source-relative path of the current page (e.g. <c>guide/intro.md</c>).</param>
     /// <returns>The neighbours; empty fields when there is no previous or no next, or <see cref="NavNeighbours.None"/> when the page is not in the nav.</returns>
-    public NavNeighbours GetNeighbours(FilePath relativePath)
+    public NavNeighbours GetNeighbours(in FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
         if (IsRootIndex(relativePath) || !TryResolveIndex(relativePath, out var idx))
@@ -228,7 +228,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     }
 
     /// <inheritdoc/>
-    public NavNeighbours GetSectionNeighbours(FilePath relativePath)
+    public NavNeighbours GetSectionNeighbours(in FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
         if (IsRootIndex(relativePath) || !TryResolveIndex(relativePath, out var idx))
@@ -243,7 +243,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     }
 
     /// <inheritdoc/>
-    public bool ShouldHidePrimarySidebar(FilePath relativePath)
+    public bool ShouldHidePrimarySidebar(in FilePath relativePath)
     {
         if (relativePath.IsEmpty || _tree is null || _urlIndex is null)
         {
@@ -286,7 +286,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Returns true when <paramref name="relativePath"/> is the docs-root <c>index.md</c>.</summary>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True for the root landing page.</returns>
-    private static bool IsRootIndex(FilePath relativePath)
+    private static bool IsRootIndex(in FilePath relativePath)
     {
         var value = relativePath.Value;
         return value is "index.md" or "index.MD" or "INDEX.md" or "INDEX.MD";
@@ -295,7 +295,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Computes a cheap stat-only fingerprint over every <c>.md</c> and <c>.pages</c> file under <paramref name="inputRoot"/>.</summary>
     /// <param name="inputRoot">Absolute docs root.</param>
     /// <returns>xxHash3 over sorted (path|ticks|length) tuples; <c>0</c> when the root is missing.</returns>
-    private static ulong ComputeTreeFingerprint(DirectoryPath inputRoot)
+    private static ulong ComputeTreeFingerprint(in DirectoryPath inputRoot)
     {
         if (!Directory.Exists(inputRoot))
         {
@@ -324,7 +324,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <param name="root">Absolute docs root.</param>
     /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
     /// <param name="entries">Accumulator.</param>
-    private static void AppendStats(DirectoryPath root, string searchPattern, List<(string Path, long Ticks, long Length)> entries)
+    private static void AppendStats(in DirectoryPath root, string searchPattern, List<(string Path, long Ticks, long Length)> entries)
     {
         var files = Directory.GetFiles(root, searchPattern, SearchOption.AllDirectories);
         for (var i = 0; i < files.Length; i++)
@@ -440,7 +440,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <param name="useDirectoryUrls">True when the served site uses directory-style URLs.</param>
     /// <param name="destination">UTF-8 destination span sized for the worst-case served-path output.</param>
     /// <returns>Number of bytes written to <paramref name="destination"/>.</returns>
-    private static int EncodePageUrlBytes(FilePath relativePath, bool useDirectoryUrls, Span<byte> destination)
+    private static int EncodePageUrlBytes(in FilePath relativePath, bool useDirectoryUrls, in Span<byte> destination)
     {
         var path = relativePath.Value;
         var endsWithMd = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
@@ -488,7 +488,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="idx">Resolved index; -1 when not in the nav.</param>
     /// <returns>True when found.</returns>
-    private bool TryResolveIndex(FilePath relativePath, out int idx)
+    private bool TryResolveIndex(in FilePath relativePath, out int idx)
     {
         idx = -1;
         if (_root is null)
@@ -513,7 +513,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Renders the sidebar nav for the active page; switches between full and pruned trees per the configured options.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="relativePath">Source-relative path of the page being rendered.</param>
-    private void RenderNav(IBufferWriter<byte> writer, FilePath relativePath)
+    private void RenderNav(IBufferWriter<byte> writer, in FilePath relativePath)
     {
         var activeIdx = ResolveActiveIndex(relativePath);
 
@@ -529,7 +529,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Renders the top-level nav as a horizontal tab bar at the position of the page's <c>&lt;!--@@nav-tabs@@--&gt;</c> marker.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="relativePath">Source-relative path of the current page; resolves which tab is active.</param>
-    private void RenderTabs(IBufferWriter<byte> writer, FilePath relativePath)
+    private void RenderTabs(IBufferWriter<byte> writer, in FilePath relativePath)
     {
         var activeIdx = ResolveActiveIndex(relativePath);
         NavRenderer.RenderTabs(_tree!, activeIdx, writer, _options.HomeTab, _options.HomeTabLabel);
@@ -538,7 +538,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Resolves the active flat-tree node index for <paramref name="relativePath"/>.</summary>
     /// <param name="relativePath">Source-relative path of the page being rendered.</param>
     /// <returns>Active node index, or <c>-1</c> when the page is not in the nav.</returns>
-    private int ResolveActiveIndex(FilePath relativePath)
+    private int ResolveActiveIndex(in FilePath relativePath)
     {
         const int StackUrlLimit = 256;
         var capacity = Encoding.UTF8.GetMaxByteCount(relativePath.Value.Length) + HtmlExtensionGrowth;

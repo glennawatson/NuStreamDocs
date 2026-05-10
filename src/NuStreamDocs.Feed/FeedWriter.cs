@@ -27,7 +27,7 @@ public static class FeedWriter
     /// <param name="posts">Posts to include.</param>
     /// <param name="generatedUtc">Generation timestamp written into the feed metadata.</param>
     /// <returns>UTF-8 XML.</returns>
-    public static byte[] WriteRss(FeedOptions options, BlogPost[] posts, DateTimeOffset generatedUtc)
+    public static byte[] WriteRss(FeedOptions options, BlogPost[] posts, in DateTimeOffset generatedUtc)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(posts);
@@ -57,7 +57,7 @@ public static class FeedWriter
     /// <param name="posts">Posts to include.</param>
     /// <param name="generatedUtc">Generation timestamp.</param>
     /// <returns>UTF-8 XML.</returns>
-    public static byte[] WriteAtom(FeedOptions options, BlogPost[] posts, DateTimeOffset generatedUtc)
+    public static byte[] WriteAtom(FeedOptions options, BlogPost[] posts, in DateTimeOffset generatedUtc)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(posts);
@@ -125,7 +125,7 @@ public static class FeedWriter
         "Major Code Smell",
         "S6585:Do not hardcode the format specifier",
         Justification = "Callers pass a named constant (Rfc822Format) or the standard ISO 8601 spec 'o'.")]
-    private static byte[] FormatDate(DateTimeOffset value, string format) =>
+    private static byte[] FormatDate(in DateTimeOffset value, string format) =>
         Encoding.UTF8.GetBytes(value.ToString(format, CultureInfo.InvariantCulture));
 
     /// <summary>Writes one RSS 2.0 <c>&lt;item&gt;</c> element.</summary>
@@ -204,7 +204,7 @@ public static class FeedWriter
     /// <param name="siteUrlBytes">Trimmed site root (no trailing <c>/</c>).</param>
     /// <param name="relativePath">Post relative path.</param>
     /// <returns>Absolute URL bytes.</returns>
-    private static byte[] BuildLinkBytes(byte[] siteUrlBytes, FilePath relativePath)
+    private static byte[] BuildLinkBytes(byte[] siteUrlBytes, in FilePath relativePath)
     {
         var rel = relativePath.Value ?? string.Empty;
         var endsMd = rel.EndsWith(".md", StringComparison.OrdinalIgnoreCase);

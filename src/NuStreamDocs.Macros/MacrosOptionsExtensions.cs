@@ -30,7 +30,7 @@ public static class MacrosOptionsExtensions
     /// <param name="name">Variable name.</param>
     /// <param name="value">Variable value.</param>
     /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariable(this MacrosOptions options, ApiCompatString name, ApiCompatString value)
+    public static MacrosOptions WithVariable(this MacrosOptions options, in ApiCompatString name, in ApiCompatString value)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrEmpty(name);

@@ -56,7 +56,7 @@ internal sealed record LocalAssemblySource(
     /// <summary>Adds every <c>.dll</c> in <paramref name="directory"/> to <paramref name="index"/>; the first directory wins on duplicate filenames.</summary>
     /// <param name="index">Destination index, keyed by filename.</param>
     /// <param name="directory">Directory to scan.</param>
-    private static void AddDllsFromDirectory(Dictionary<string, string> index, DirectoryPath directory)
+    private static void AddDllsFromDirectory(Dictionary<string, string> index, in DirectoryPath directory)
     {
         if (!directory.Exists())
         {

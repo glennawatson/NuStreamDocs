@@ -13,14 +13,14 @@ internal static class NavPathHelper
     /// <param name="root">Absolute docs root.</param>
     /// <param name="path">Absolute path under <paramref name="root"/> (file or directory).</param>
     /// <returns>The relative path, slash-normalized. Empty when <paramref name="path"/> equals <paramref name="root"/>.</returns>
-    public static FilePath ToForwardSlashRelative(DirectoryPath root, FilePath path) =>
+    public static FilePath ToForwardSlashRelative(in DirectoryPath root, in FilePath path) =>
         ToForwardSlashRelativeCore(root.Value ?? string.Empty, path.Value ?? string.Empty);
 
     /// <summary>Computes <paramref name="directory"/>'s source-relative location under <paramref name="root"/> with forward-slash separators.</summary>
     /// <param name="root">Absolute docs root.</param>
     /// <param name="directory">Absolute directory under <paramref name="root"/>.</param>
     /// <returns>The relative directory path. Empty when <paramref name="directory"/> equals <paramref name="root"/>.</returns>
-    public static DirectoryPath ToForwardSlashRelative(DirectoryPath root, DirectoryPath directory) =>
+    public static DirectoryPath ToForwardSlashRelative(in DirectoryPath root, in DirectoryPath directory) =>
         ToForwardSlashRelativeCore(root.Value ?? string.Empty, directory.Value ?? string.Empty);
 
     /// <summary>Shared core that does the slash-normalized relative-path computation.</summary>

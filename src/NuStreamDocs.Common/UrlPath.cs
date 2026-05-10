@@ -20,11 +20,11 @@ public readonly record struct UrlPath(string Value)
 
     /// <summary>Implicitly unwraps to a plain <see cref="string"/> for HTML-attribute / JSON / logger interop.</summary>
     /// <param name="url">Source URL.</param>
-    public static implicit operator string(UrlPath url) => url.Value ?? string.Empty;
+    public static implicit operator string(in UrlPath url) => url.Value ?? string.Empty;
 
     /// <summary>Implicitly unwraps to a <see cref="ReadOnlySpan{Char}"/> for span-shaped APIs.</summary>
     /// <param name="url">Source URL.</param>
-    public static implicit operator ReadOnlySpan<char>(UrlPath url) => (url.Value ?? string.Empty).AsSpan();
+    public static implicit operator ReadOnlySpan<char>(in UrlPath url) => (url.Value ?? string.Empty).AsSpan();
 
     /// <summary>Implicitly wraps a <see cref="string"/> so callers can pass URL literals to APIs that take a <see cref="UrlPath"/>.</summary>
     /// <param name="value">Source URL string; null becomes an empty <see cref="UrlPath"/>.</param>
@@ -38,12 +38,12 @@ public readonly record struct UrlPath(string Value)
     /// <summary>Friendly named alias for the <see cref="UrlPath"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="url">Source URL.</param>
     /// <returns>The underlying URL string.</returns>
-    public static string ToStringValue(UrlPath url) => url;
+    public static string ToStringValue(in UrlPath url) => url;
 
     /// <summary>Friendly named alias for the <see cref="UrlPath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
     /// <param name="url">Source URL.</param>
     /// <returns>The underlying URL as a span.</returns>
-    public static ReadOnlySpan<char> ToReadOnlySpan(UrlPath url) => url;
+    public static ReadOnlySpan<char> ToReadOnlySpan(in UrlPath url) => url;
 
     /// <summary>Returns the underlying URL as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
     /// <returns>The URL span; empty when the wrapper is default.</returns>
@@ -52,27 +52,27 @@ public readonly record struct UrlPath(string Value)
     /// <summary>Returns true when this URL ends with <paramref name="value"/> ordinally.</summary>
     /// <param name="value">Suffix to test for.</param>
     /// <returns>True when the URL ends with <paramref name="value"/>.</returns>
-    public bool EndsWith(ReadOnlySpan<char> value) =>
+    public bool EndsWith(in ReadOnlySpan<char> value) =>
         AsSpan().EndsWith(value, StringComparison.Ordinal);
 
     /// <summary>Returns true when this URL ends with <paramref name="value"/> using the supplied comparison.</summary>
     /// <param name="value">Suffix to test for.</param>
     /// <param name="comparison">Comparison kind.</param>
     /// <returns>True when the URL ends with <paramref name="value"/>.</returns>
-    public bool EndsWith(ReadOnlySpan<char> value, StringComparison comparison) =>
+    public bool EndsWith(in ReadOnlySpan<char> value, StringComparison comparison) =>
         AsSpan().EndsWith(value, comparison);
 
     /// <summary>Returns true when this URL starts with <paramref name="value"/> ordinally.</summary>
     /// <param name="value">Prefix to test for.</param>
     /// <returns>True when the URL starts with <paramref name="value"/>.</returns>
-    public bool StartsWith(ReadOnlySpan<char> value) =>
+    public bool StartsWith(in ReadOnlySpan<char> value) =>
         AsSpan().StartsWith(value, StringComparison.Ordinal);
 
     /// <summary>Returns true when this URL starts with <paramref name="value"/> using the supplied comparison.</summary>
     /// <param name="value">Prefix to test for.</param>
     /// <param name="comparison">Comparison kind.</param>
     /// <returns>True when the URL starts with <paramref name="value"/>.</returns>
-    public bool StartsWith(ReadOnlySpan<char> value, StringComparison comparison) =>
+    public bool StartsWith(in ReadOnlySpan<char> value, StringComparison comparison) =>
         AsSpan().StartsWith(value, comparison);
 
     /// <inheritdoc/>

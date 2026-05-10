@@ -564,7 +564,7 @@ public static class LinkReferenceRewriter
     /// <param name="buf">Destination buffer.</param>
     /// <param name="written">Current write index; advanced on emit.</param>
     /// <param name="prevSpace">Tracks whether the previous emitted character was the collapsed space.</param>
-    private static void AppendCollapsedSpace(Span<char> buf, ref int written, ref bool prevSpace)
+    private static void AppendCollapsedSpace(in Span<char> buf, ref int written, ref bool prevSpace)
     {
         if (prevSpace || written is 0)
         {

@@ -21,7 +21,7 @@ public static class EmbeddedAssetLoader
     /// <param name="resourcePrefix">Root namespace prefix MSBuild prepends to the resource.</param>
     /// <param name="relativePath">Forward-slashed path under the <c>Templates/</c> root.</param>
     /// <returns>The asset bytes.</returns>
-    public static byte[] ReadBytes(Assembly owningAssembly, ApiCompatString resourcePrefix, FilePath relativePath)
+    public static byte[] ReadBytes(Assembly owningAssembly, in ApiCompatString resourcePrefix, in FilePath relativePath)
     {
         ArgumentNullException.ThrowIfNull(owningAssembly);
         ArgumentException.ThrowIfNullOrEmpty(resourcePrefix.Value);
@@ -51,7 +51,7 @@ public static class EmbeddedAssetLoader
     /// <param name="resourcePrefix">Root namespace prefix MSBuild prepends to the resource.</param>
     /// <param name="relativePath">Forward-slashed path under <c>Templates/</c>.</param>
     /// <returns>The fully-qualified manifest resource name as UTF-8 bytes.</returns>
-    public static byte[] ToResourceName(ApiCompatString resourcePrefix, FilePath relativePath)
+    public static byte[] ToResourceName(in ApiCompatString resourcePrefix, in FilePath relativePath)
     {
         var prefix = resourcePrefix.Value ?? string.Empty;
         var rel = relativePath.Value ?? string.Empty;
@@ -77,7 +77,7 @@ public static class EmbeddedAssetLoader
             {
                 (byte)'/' => (byte)'.',
                 (byte)'@' or (byte)'-' when i < lastSlash => (byte)'_',
-                _ => b,
+                _ => b
             };
         }
 

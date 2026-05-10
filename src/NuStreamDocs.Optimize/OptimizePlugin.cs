@@ -103,7 +103,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <summary>Returns every file under <paramref name="root"/> whose extension is compressible and whose size meets the minimum.</summary>
     /// <param name="root">Output root.</param>
     /// <returns>Eligible absolute paths.</returns>
-    private FilePath[] EnumerateEligible(DirectoryPath root)
+    private FilePath[] EnumerateEligible(in DirectoryPath root)
     {
         List<FilePath> buffer = new(capacity: 256);
         foreach (var info in new DirectoryInfo(root.Value).EnumerateFiles("*", SearchOption.AllDirectories))

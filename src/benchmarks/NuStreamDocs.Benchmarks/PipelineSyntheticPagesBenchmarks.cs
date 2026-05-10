@@ -103,7 +103,7 @@ public class PipelineSyntheticPagesBenchmarks
             .GetAwaiter()
             .GetResult();
 
-    /// <summary>Eager synthetic: a discover plugin pre-registers every page via <see cref="SyntheticPageSink.Add(SyntheticPage)"/>.</summary>
+    /// <summary>Eager synthetic: a discover plugin pre-registers every page.</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
     public int SyntheticEager() =>
@@ -115,7 +115,7 @@ public class PipelineSyntheticPagesBenchmarks
             .GetAwaiter()
             .GetResult();
 
-    /// <summary>Streamed synthetic: a discover plugin registers an <see cref="IAsyncEnumerable{SyntheticPage}"/> the pipeline pulls one at a time.</summary>
+    /// <summary>Streamed synthetic: a discover plugin registers an the pipeline pulls one at a time.</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
     public int SyntheticStreamed() =>

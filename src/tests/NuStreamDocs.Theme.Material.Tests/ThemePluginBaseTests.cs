@@ -275,11 +275,11 @@ public class ThemePluginBaseTests
         public ReadOnlySpan<byte> Name => "stub-neighbours"u8;
 
         /// <inheritdoc/>
-        public NavNeighbours GetNeighbours(FilePath relativePath) =>
+        public NavNeighbours GetNeighbours(in FilePath relativePath) =>
             new(globalUrl.TrimStart('/') + ".md", [.. "Prev"u8], string.Empty, []);
 
         /// <inheritdoc/>
-        public NavNeighbours GetSectionNeighbours(FilePath relativePath) =>
+        public NavNeighbours GetSectionNeighbours(in FilePath relativePath) =>
             new(sectionUrl.TrimStart('/') + ".md", [.. "Section Prev"u8], string.Empty, []);
     }
 }

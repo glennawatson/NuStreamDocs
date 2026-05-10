@@ -31,7 +31,7 @@ public sealed record FeedOptions(
     /// <param name="title">Feed title bytes.</param>
     /// <param name="description">Feed description bytes.</param>
     /// <param name="postsSubdirectory">Posts subdirectory.</param>
-    public FeedOptions(byte[] siteUrl, byte[] title, byte[] description, PathSegment postsSubdirectory)
+    public FeedOptions(byte[] siteUrl, byte[] title, byte[] description, in PathSegment postsSubdirectory)
         : this(siteUrl, title, description, postsSubdirectory, postsSubdirectory, FeedFormats.Both, DefaultMaxItemsValue)
     {
     }

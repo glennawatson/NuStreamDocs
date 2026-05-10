@@ -83,7 +83,7 @@ public class MagicLinkShortrefTests
     [Test]
     public async Task IssueRefWithoutRepoIsLiteral()
     {
-        var bytes = Encoding.UTF8.GetBytes("see #377");
+        byte[] bytes = [.. "see #377"u8];
         ArrayBufferWriter<byte> sink = new(bytes.Length);
         MagicLinkRewriter.Rewrite(bytes, sink, [], false);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("see #377");

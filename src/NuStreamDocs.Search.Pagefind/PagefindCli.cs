@@ -74,7 +74,7 @@ public static class PagefindCli
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardError = true,
-            RedirectStandardOutput = true,
+            RedirectStandardOutput = true
         };
         psi.ArgumentList.Add("--site");
         psi.ArgumentList.Add(siteRoot.Value);
@@ -223,7 +223,7 @@ public static class PagefindCli
     /// <summary>Resolves the absolute path of the Pagefind binary to invoke, or null on miss.</summary>
     /// <param name="explicitOverride">User-supplied override; tried first.</param>
     /// <returns>An absolute path that exists on disk, or null.</returns>
-    private static string? ResolveBinaryPath(FilePath explicitOverride)
+    private static string? ResolveBinaryPath(in FilePath explicitOverride)
     {
         if (!explicitOverride.IsEmpty && File.Exists(explicitOverride.Value))
         {
@@ -269,7 +269,7 @@ public static class PagefindCli
         {
             Architecture.X64 => "x64",
             Architecture.Arm64 => "arm64",
-            _ => "x64",
+            _ => "x64"
         };
 
         if (OperatingSystem.IsWindows())

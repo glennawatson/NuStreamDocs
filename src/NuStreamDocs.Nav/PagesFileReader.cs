@@ -13,7 +13,7 @@ internal static class PagesFileReader
     /// <summary>Reads a <c>.pages</c> file from <paramref name="path"/>; returns <see cref="PagesFile.Empty"/> when missing.</summary>
     /// <param name="path">Absolute path to the candidate <c>.pages</c> file.</param>
     /// <returns>Parsed override.</returns>
-    public static PagesFile ReadOrEmpty(FilePath path) => !path.Exists() ? PagesFile.Empty : Parse(path.ReadAllBytes());
+    public static PagesFile ReadOrEmpty(in FilePath path) => !path.Exists() ? PagesFile.Empty : Parse(path.ReadAllBytes());
 
     /// <summary>Parses <paramref name="source"/> into a <see cref="PagesFile"/>.</summary>
     /// <param name="source">UTF-8 file bytes.</param>

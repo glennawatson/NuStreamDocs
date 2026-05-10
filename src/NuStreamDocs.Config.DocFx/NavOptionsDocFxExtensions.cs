@@ -16,7 +16,7 @@ public static class NavOptionsDocFxExtensions
     /// <param name="options">Source options.</param>
     /// <param name="rootDirectory">Absolute path to the directory holding the root <c>toc.yml</c>.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions FromDocFxTocs(this NavOptions options, string rootDirectory)
+    public static NavOptions FromDocFxTocs(this in NavOptions options, string rootDirectory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(rootDirectory);
         return options.WithCuratedEntries(DocFxTocReader.ReadTree(rootDirectory));

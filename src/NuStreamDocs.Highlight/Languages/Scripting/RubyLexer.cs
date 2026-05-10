@@ -148,21 +148,27 @@ public static class RubyLexer
         }
 
         var pos = 0;
-        if (slice[pos] is (byte)'@')
+        switch (slice[pos])
         {
-            pos++;
-            if (pos < slice.Length && slice[pos] is (byte)'@')
-            {
-                pos++;
-            }
-        }
-        else if (slice[pos] is (byte)'$')
-        {
-            pos++;
-        }
-        else
-        {
-            return 0;
+            case (byte)'@':
+                {
+                    pos++;
+                    if (pos < slice.Length && slice[pos] is (byte)'@')
+                    {
+                        pos++;
+                    }
+
+                    break;
+                }
+
+            case (byte)'$':
+                {
+                    pos++;
+                    break;
+                }
+
+            default:
+                return 0;
         }
 
         var idLen = TokenMatchers.MatchAsciiIdentifier(slice[pos..]);

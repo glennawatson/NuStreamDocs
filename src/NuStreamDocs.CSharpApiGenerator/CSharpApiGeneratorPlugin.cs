@@ -64,11 +64,11 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         // The build pipeline pulls one page at a time so peak memory tracks the in-flight
         // page rather than the full catalog.
         var subdir = _options.OutputMarkdownSubdirectory;
-        var channel = Channel.CreateUnbounded<SyntheticPage>(new UnboundedChannelOptions
+        var channel = Channel.CreateUnbounded<SyntheticPage>(new()
         {
             SingleReader = true,
             SingleWriter = false,
-            AllowSynchronousContinuations = false,
+            AllowSynchronousContinuations = false
         });
 
         ConcurrentDictionary<byte[], byte> namespaces = new(ByteArrayComparer.Instance);
@@ -89,7 +89,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
                 }
             }
 
-            channel.Writer.TryWrite(new SyntheticPage(BuildVirtualPath(subdir, relBytes), bytes));
+            channel.Writer.TryWrite(new(BuildVirtualPath(subdir, relBytes), bytes));
         });
 
         var generation = Task.Run(
@@ -129,7 +129,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     /// <param name="subdir">Configured output subdirectory (PathSegment, e.g. <c>api</c>).</param>
     /// <param name="emitterRelative">UTF-8 bytes of the per-page relative path the emitter produced.</param>
     /// <returns>Forward-slashed virtual path under <c>InputRoot</c>.</returns>
-    private static FilePath BuildVirtualPath(PathSegment subdir, byte[] emitterRelative)
+    private static FilePath BuildVirtualPath(in PathSegment subdir, byte[] emitterRelative)
     {
         // Single UTF-8 → string decode at the BCL boundary; UrlJoin then composes with
         // explicit '/' separators (no Path.Combine, so Windows / Linux match).
@@ -172,7 +172,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     /// <param name="namespaces">Distinct namespace folder names captured from the emitter callback.</param>
     private void EmitIndexPageIfRequested(
         ChannelWriter<SyntheticPage> writer,
-        PathSegment subdir,
+        in PathSegment subdir,
         ConcurrentDictionary<byte[], byte> namespaces)
     {
         if (!_options.EmitIndexPage || namespaces.IsEmpty)
@@ -198,6 +198,6 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
             return;
         }
 
-        writer.TryWrite(new SyntheticPage(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexBytes));
+        writer.TryWrite(new(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexBytes));
     }
 }

@@ -85,7 +85,7 @@ public class HighlightPluginTests
         HighlightPlugin plugin = new(HighlightOptions.Default with
         {
             AutoDetectLanguage = true,
-            CopyButton = true,
+            CopyButton = true
         });
 
         const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
@@ -219,8 +219,8 @@ public class HighlightPluginTests
                 [.. "bash"u8],
                 [.. "powershell"u8],
                 [.. "fsharp"u8],
-                [.. "json"u8],
-            ],
+                [.. "json"u8]
+            ]
         });
 
         // Body extracted verbatim from the rendered compelling-example/index.html (HTML-escaped, as the renderer emits).
@@ -264,8 +264,8 @@ public class HighlightPluginTests
                 [.. "bash"u8],
                 [.. "powershell"u8],
                 [.. "fsharp"u8],
-                [.. "json"u8],
-            ],
+                [.. "json"u8]
+            ]
         });
 
         // Two separate Install-Package blocks, the way the page emits them.
@@ -290,8 +290,8 @@ public class HighlightPluginTests
                 [.. "bash"u8],
                 [.. "powershell"u8],
                 [.. "fsharp"u8],
-                [.. "json"u8],
-            ],
+                [.. "json"u8]
+            ]
         });
 
         const string Html = """

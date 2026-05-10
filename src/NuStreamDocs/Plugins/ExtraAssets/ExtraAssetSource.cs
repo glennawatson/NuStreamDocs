@@ -55,18 +55,18 @@ public sealed class ExtraAssetSource
     /// <summary>Creates a file-on-disk source.</summary>
     /// <param name="filePath">Absolute or relative path to a UTF-8 asset file. String literals convert via the implicit <see cref="NuStreamDocs.Common.FilePath"/> operator.</param>
     /// <returns>The source.</returns>
-    public static ExtraAssetSource File(FilePath filePath)
+    public static ExtraAssetSource File(in FilePath filePath)
     {
         if (filePath.IsEmpty)
         {
             throw new ArgumentException("File path must be non-empty.", nameof(filePath));
         }
 
-        return new(new ExtraAssetSourceInit
+        return new(new()
         {
             Kind = ExtraAssetSourceKind.File,
             FilePath = filePath,
-            OutputName = Path.GetFileName(filePath.Value),
+            OutputName = Path.GetFileName(filePath.Value)
         });
     }
 
@@ -78,11 +78,11 @@ public sealed class ExtraAssetSource
     {
         ArgumentException.ThrowIfNullOrEmpty(outputName);
         ArgumentNullException.ThrowIfNull(utf8Bytes);
-        return new(new ExtraAssetSourceInit
+        return new(new()
         {
             Kind = ExtraAssetSourceKind.Inline,
             InlineBytes = utf8Bytes,
-            OutputName = outputName,
+            OutputName = outputName
         });
     }
 
@@ -96,12 +96,12 @@ public sealed class ExtraAssetSource
         ArgumentNullException.ThrowIfNull(assembly);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
         ArgumentException.ThrowIfNullOrEmpty(outputName);
-        return new(new ExtraAssetSourceInit
+        return new(new()
         {
             Kind = ExtraAssetSourceKind.Embedded,
             Assembly = assembly,
             ResourceName = resourceName,
-            OutputName = outputName,
+            OutputName = outputName
         });
     }
 
@@ -111,17 +111,17 @@ public sealed class ExtraAssetSource
     public static ExtraAssetSource External(string url)
     {
         ArgumentException.ThrowIfNullOrEmpty(url);
-        return new(new ExtraAssetSourceInit
+        return new(new()
         {
             Kind = ExtraAssetSourceKind.Url,
-            Url = url,
+            Url = url
         });
     }
 
     /// <summary>Returns a copy of this source flagged as an ES module so the head-extra emitter renders <c>type="module"</c>.</summary>
     /// <returns>A new <see cref="ExtraAssetSource"/> with <see cref="IsModule"/> set; ignored for CSS sources.</returns>
     public ExtraAssetSource AsModule() =>
-        new(new ExtraAssetSourceInit
+        new(new()
         {
             Kind = Kind,
             FilePath = FilePath,
@@ -130,6 +130,6 @@ public sealed class ExtraAssetSource
             ResourceName = ResourceName,
             OutputName = OutputName,
             Url = Url,
-            IsModule = true,
+            IsModule = true
         });
 }

@@ -134,7 +134,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
     /// <param name="path">Absolute candidate path.</param>
     /// <param name="directory">Absolute directory.</param>
     /// <returns>True for descendants; false otherwise.</returns>
-    private static bool IsUnder(FilePath path, DirectoryPath directory)
+    private static bool IsUnder(in FilePath path, in DirectoryPath directory)
     {
         if (directory.IsEmpty)
         {

@@ -20,6 +20,6 @@ internal sealed class MetadataRegistry(Dictionary<string, byte[]> byPath)
     /// <summary>Looks up the merged-body bytes for <paramref name="relativePath"/>.</summary>
     /// <param name="relativePath">Forward-slash-normalized page path.</param>
     /// <returns>Merged YAML body bytes without surrounding <c>---</c>; empty when no inheritance applies.</returns>
-    public ReadOnlySpan<byte> ExtraFor(FilePath relativePath) =>
+    public ReadOnlySpan<byte> ExtraFor(in FilePath relativePath) =>
         byPath.TryGetValue(relativePath.Value, out var bytes) ? bytes : [];
 }

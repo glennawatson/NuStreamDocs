@@ -17,7 +17,7 @@ public readonly record struct ApiCompatString(string? Value)
     /// <summary>Implicitly unwraps to <see cref="string"/>.</summary>
     /// <param name="value">The wrapper.</param>
     /// <returns>The underlying string, or <see cref="string.Empty"/> when null.</returns>
-    public static implicit operator string(ApiCompatString value) => value.Value ?? string.Empty;
+    public static implicit operator string(in ApiCompatString value) => value.Value ?? string.Empty;
 
     /// <summary>Implicitly wraps a <see cref="string"/>.</summary>
     /// <param name="value">External string.</param>

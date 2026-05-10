@@ -43,25 +43,15 @@ internal static class BlogSlugifier
     /// <summary>Maps one byte to its slug equivalent or <c>0</c> when it should be dropped.</summary>
     /// <param name="b">Source byte.</param>
     /// <returns>Slug byte or NUL.</returns>
-    private static byte MapByte(byte b)
-    {
-        if (IsLowerAlphanumeric(b) || b is (byte)'-' or (byte)'_')
-        {
-            return b;
-        }
-
-        if (b is >= (byte)'A' and <= (byte)'Z')
-        {
-            return (byte)(b + AsciiCaseShift);
-        }
-
-        if (b is (byte)' ' or (byte)'/')
-        {
-            return (byte)'-';
-        }
-
-        return (byte)0;
-    }
+    private static byte MapByte(byte b) =>
+        IsLowerAlphanumeric(b) || b is (byte)'-' or (byte)'_'
+            ? b
+            : (byte)(b switch
+            {
+                >= (byte)'A' and <= (byte)'Z' => (byte)(b + AsciiCaseShift),
+                (byte)' ' or (byte)'/' => (byte)'-',
+                _ => 0
+            });
 
     /// <summary>True for ASCII <c>a–z</c> or <c>0–9</c>.</summary>
     /// <param name="b">Byte.</param>

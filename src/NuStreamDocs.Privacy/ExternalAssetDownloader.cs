@@ -271,7 +271,7 @@ internal static class ExternalAssetDownloader
     /// <param name="cachePath">Absolute cache file.</param>
     /// <param name="outputPath">Absolute output file.</param>
     /// <returns>True when the cache hit and the file was published into the output tree.</returns>
-    private static bool TryPublishFromCache(FilePath cachePath, FilePath outputPath)
+    private static bool TryPublishFromCache(in FilePath cachePath, in FilePath outputPath)
     {
         if (!cachePath.Exists())
         {

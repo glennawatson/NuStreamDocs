@@ -16,7 +16,7 @@ public static class DocBuilderMkDocsExtensions
     /// <param name="builder">Target builder.</param>
     /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMkDocsConfig(this DocBuilder builder, FilePath yamlPath)
+    public static DocBuilder UseMkDocsConfig(this DocBuilder builder, in FilePath yamlPath)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);

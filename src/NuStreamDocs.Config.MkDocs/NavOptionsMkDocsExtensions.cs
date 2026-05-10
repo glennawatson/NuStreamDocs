@@ -17,7 +17,7 @@ public static class NavOptionsMkDocsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions FromMkDocsYaml(this NavOptions options, FilePath yamlPath)
+    public static NavOptions FromMkDocsYaml(this in NavOptions options, in FilePath yamlPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
         var bytes = File.ReadAllBytes(yamlPath.Value);
@@ -28,6 +28,6 @@ public static class NavOptionsMkDocsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="utf8Yaml">UTF-8 YAML bytes.</param>
     /// <returns>The updated options.</returns>
-    public static NavOptions FromMkDocsYaml(this NavOptions options, ReadOnlySpan<byte> utf8Yaml) =>
+    public static NavOptions FromMkDocsYaml(this in NavOptions options, ReadOnlySpan<byte> utf8Yaml) =>
         options.WithCuratedEntries(MkDocsNavParser.FromYaml(utf8Yaml));
 }

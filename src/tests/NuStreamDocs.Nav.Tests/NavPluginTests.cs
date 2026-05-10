@@ -56,7 +56,7 @@ public class NavPluginTests
         await Assert.That(builder).IsNotNull();
     }
 
-    /// <summary>A top-level leaf with no descendants triggers <see cref="NavPlugin.ShouldHidePrimarySidebar(NuStreamDocs.Common.FilePath)"/> so the theme drawer can stay collapsed.</summary>
+    /// <summary>A top-level leaf with no descendants triggers so the theme drawer can stay collapsed.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ShouldHidePrimarySidebarTrueForTopLevelLeaf()

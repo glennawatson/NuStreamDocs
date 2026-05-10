@@ -31,7 +31,7 @@ internal sealed class LayoutContext
         {
             ["content"u8.ToArray()] = renderedHtml.ToArray(),
             ["title"u8.ToArray()] = FrontmatterReader.GetScalar(source, "title"u8).ToArray(),
-            ["url"u8.ToArray()] = relativeUrl.ToArray(),
+            ["url"u8.ToArray()] = relativeUrl.ToArray()
         };
         FrontmatterReader.AppendScalars(source, values);
         return new(values);

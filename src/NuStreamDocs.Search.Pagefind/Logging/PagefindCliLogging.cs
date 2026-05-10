@@ -28,7 +28,7 @@ internal static partial class PagefindCliLogging
     /// <param name="binary">Resolved binary path.</param>
     /// <param name="siteRoot">Rendered site directory.</param>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogInvoking(ILogger logger, string binary, DirectoryPath siteRoot)
+    public static void LogInvoking(ILogger logger, string binary, in DirectoryPath siteRoot)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {

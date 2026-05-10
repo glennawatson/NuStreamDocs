@@ -19,7 +19,7 @@ public readonly record struct PathSegment(string Value)
 
     /// <summary>Implicitly unwraps to a plain <see cref="string"/> for BCL interop.</summary>
     /// <param name="segment">Source segment.</param>
-    public static implicit operator string(PathSegment segment) => segment.Value ?? string.Empty;
+    public static implicit operator string(in PathSegment segment) => segment.Value ?? string.Empty;
 
     /// <summary>Implicitly wraps a <see cref="string"/> so callers can pass literals to APIs that take a <see cref="PathSegment"/>.</summary>
     /// <param name="value">Source string; null becomes an empty segment.</param>
@@ -33,7 +33,7 @@ public readonly record struct PathSegment(string Value)
     /// <summary>Friendly named alias for the <see cref="PathSegment"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="segment">Source segment.</param>
     /// <returns>The underlying string.</returns>
-    public static string ToStringValue(PathSegment segment) => segment;
+    public static string ToStringValue(in PathSegment segment) => segment;
 
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;

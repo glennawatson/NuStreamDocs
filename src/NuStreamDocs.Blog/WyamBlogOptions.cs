@@ -15,7 +15,7 @@ public sealed record WyamBlogOptions(PathSegment PostsSubdirectory, byte[] Index
     /// <summary>Initializes a new instance of the <see cref="WyamBlogOptions"/> class with archives enabled.</summary>
     /// <param name="postsSubdirectory">Subdirectory holding posts.</param>
     /// <param name="indexTitle">UTF-8 title bytes.</param>
-    public WyamBlogOptions(PathSegment postsSubdirectory, byte[] indexTitle)
+    public WyamBlogOptions(in PathSegment postsSubdirectory, byte[] indexTitle)
         : this(postsSubdirectory, indexTitle, EmitTagArchives: true)
     {
     }

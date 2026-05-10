@@ -43,7 +43,7 @@ public static class Utf8JsonReaderByteExtensions
     /// <summary>Copies a multi-segment <see cref="ReadOnlySequence{T}"/> into a single right-sized array.</summary>
     /// <param name="sequence">Source sequence.</param>
     /// <returns>The copied bytes.</returns>
-    private static byte[] CopySequence(ReadOnlySequence<byte> sequence)
+    private static byte[] CopySequence(in ReadOnlySequence<byte> sequence)
     {
         var buffer = new byte[sequence.Length];
         sequence.CopyTo(buffer);

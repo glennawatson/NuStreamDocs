@@ -165,7 +165,7 @@ internal static class NavRenderer
     /// <param name="activeIndex">Active node index, or <c>-1</c> when no page is active.</param>
     /// <param name="buffer">Stack-allocated buffer; depths beyond <see cref="ActiveBranchStackBufferSize"/> are silently clipped — real corpora cap out around 8.</param>
     /// <returns>Populated slice; empty when <paramref name="activeIndex"/> is <c>-1</c>.</returns>
-    private static ReadOnlySpan<int> BuildActiveBranchChain(NavTree tree, int activeIndex, Span<int> buffer)
+    private static ReadOnlySpan<int> BuildActiveBranchChain(NavTree tree, int activeIndex, in Span<int> buffer)
     {
         if (activeIndex < 0)
         {
@@ -188,7 +188,7 @@ internal static class NavRenderer
     /// <param name="chain">Stack-built active-branch chain.</param>
     /// <param name="nodeIndex">Candidate index.</param>
     /// <returns>True when the candidate is in the chain.</returns>
-    private static bool IsOnActiveBranch(ReadOnlySpan<int> chain, int nodeIndex)
+    private static bool IsOnActiveBranch(in ReadOnlySpan<int> chain, int nodeIndex)
     {
         for (var i = 0; i < chain.Length; i++)
         {
@@ -603,7 +603,7 @@ internal static class NavRenderer
     /// <param name="nodeIndex">Top-level node index.</param>
     /// <param name="chain">Active-branch chain.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void WriteTabItem(NavTree tree, int nodeIndex, ReadOnlySpan<int> chain, IBufferWriter<byte> writer)
+    private static void WriteTabItem(NavTree tree, int nodeIndex, in ReadOnlySpan<int> chain, IBufferWriter<byte> writer)
     {
         var node = tree.Nodes[nodeIndex];
         var active = IsOnActiveBranch(chain, nodeIndex);

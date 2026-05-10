@@ -33,7 +33,7 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     private static readonly (FilePath Path, byte[] Bytes)[] StaticAssetSet =
     [
         (LunrRuntimePath, LunrAssets.LunrMinJsBytes()),
-        (BindScriptPath, BindScriptBytes),
+        (BindScriptPath, BindScriptBytes)
     ];
 
     /// <summary>Captured option set.</summary>
@@ -56,10 +56,8 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public LunrSearchPlugin(in LunrOptions options, ILogger logger)
-        : base(new LunrEngine(options.Language ?? [], options.ExtraStopwords), logger)
-    {
+        : base(new LunrEngine(options.Language, options.ExtraStopwords), logger) =>
         _options = options;
-    }
 
     /// <summary>Gets the pinned upstream Lunr.js version of the vendored bundle this plugin ships.</summary>
     public static string PinnedRuntimeVersion => LunrAssets.PinnedVersion;

@@ -158,7 +158,7 @@ public class NavRenderBenchmarks
     /// <returns>A task representing the asynchronous setup.</returns>
     private static Task ConfigureAsync(NavPlugin plugin, string inputRoot, string outputRoot)
     {
-        BuildDiscoverContext context = new(inputRoot, outputRoot, [plugin], new SyntheticPageSink());
+        BuildDiscoverContext context = new(inputRoot, outputRoot, [plugin], new());
         return plugin.DiscoverAsync(context, CancellationToken.None).AsTask();
     }
 

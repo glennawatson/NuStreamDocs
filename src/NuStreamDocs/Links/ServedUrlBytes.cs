@@ -41,7 +41,7 @@ public static class ServedUrlBytes
     /// <param name="path">Source-relative path.</param>
     /// <param name="useDirectoryUrls">True for directory URLs.</param>
     /// <returns>UTF-8 URL bytes.</returns>
-    public static byte[] FromPath(FilePath path, bool useDirectoryUrls) =>
+    public static byte[] FromPath(in FilePath path, bool useDirectoryUrls) =>
         FromPath(path, useDirectoryUrls, leadingSlash: false);
 
     /// <summary>Returns served URL bytes for <paramref name="path"/>.</summary>
@@ -49,7 +49,7 @@ public static class ServedUrlBytes
     /// <param name="useDirectoryUrls">True for directory URLs.</param>
     /// <param name="leadingSlash">True to prefix the result with <c>/</c>.</param>
     /// <returns>UTF-8 URL bytes.</returns>
-    public static byte[] FromPath(FilePath path, bool useDirectoryUrls, bool leadingSlash)
+    public static byte[] FromPath(in FilePath path, bool useDirectoryUrls, bool leadingSlash)
     {
         if (path.IsEmpty)
         {

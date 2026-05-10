@@ -166,11 +166,9 @@ public sealed class LinkValidatorPlugin
             return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, client, cancellationToken).ConfigureAwait(false);
         }
 
-        using SocketsHttpHandler handler = new()
-        {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-            PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15)
-        };
+        using SocketsHttpHandler handler = new();
+        handler.PooledConnectionLifetime = TimeSpan.FromMinutes(2);
+        handler.PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15);
         using HttpClient owned = new(handler, disposeHandler: false);
         return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, owned, cancellationToken).ConfigureAwait(false);
     }

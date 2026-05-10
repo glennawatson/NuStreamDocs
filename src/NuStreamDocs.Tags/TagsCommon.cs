@@ -66,7 +66,7 @@ internal static class TagsCommon
     /// <param name="tag">UTF-8 source bytes.</param>
     /// <param name="dst">Destination span.</param>
     /// <returns>Number of bytes written.</returns>
-    private static int SlugifyInto(ReadOnlySpan<byte> tag, Span<byte> dst)
+    private static int SlugifyInto(ReadOnlySpan<byte> tag, in Span<byte> dst)
     {
         var count = 0;
         var pendingHyphen = false;
@@ -107,7 +107,7 @@ internal static class TagsCommon
     /// <param name="count">Current count.</param>
     /// <param name="pendingHyphen">Whether a hyphen is queued.</param>
     /// <returns>Updated count.</returns>
-    private static int FlushHyphen(Span<byte> dst, int count, bool pendingHyphen)
+    private static int FlushHyphen(in Span<byte> dst, int count, bool pendingHyphen)
     {
         if (!pendingHyphen || count is 0)
         {

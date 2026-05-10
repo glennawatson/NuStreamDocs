@@ -16,12 +16,12 @@ public interface INavNeighboursProvider
     /// <summary>Looks up the previous and next pages in the global linear nav order.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The neighbours; <see cref="NavNeighbours.None"/> when the page is not in the nav.</returns>
-    NavNeighbours GetNeighbours(FilePath relativePath);
+    NavNeighbours GetNeighbours(in FilePath relativePath);
 
     /// <summary>Looks up the previous and next pages within the closest section that contains <paramref name="relativePath"/>; never crosses out of that section.</summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>The section-scoped neighbours; <see cref="NavNeighbours.None"/> when the page is not in the nav or sits at a section boundary with no in-section neighbour on a side.</returns>
-    NavNeighbours GetSectionNeighbours(FilePath relativePath);
+    NavNeighbours GetSectionNeighbours(in FilePath relativePath);
 
     /// <summary>
     /// Returns true when the primary sidebar would have nothing useful to render for
@@ -30,5 +30,5 @@ public interface INavNeighboursProvider
     /// </summary>
     /// <param name="relativePath">Source-relative path of the current page.</param>
     /// <returns>True when the sidebar should be hidden for the page.</returns>
-    bool ShouldHidePrimarySidebar(FilePath relativePath) => false;
+    bool ShouldHidePrimarySidebar(in FilePath relativePath) => false;
 }

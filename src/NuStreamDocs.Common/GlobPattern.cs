@@ -18,7 +18,7 @@ public readonly record struct GlobPattern(string Value)
 
     /// <summary>Implicitly unwraps to a plain <see cref="string"/> for BCL interop with <c>Microsoft.Extensions.FileSystemGlobbing.Matcher</c>.</summary>
     /// <param name="pattern">Source pattern.</param>
-    public static implicit operator string(GlobPattern pattern) => pattern.Value ?? string.Empty;
+    public static implicit operator string(in GlobPattern pattern) => pattern.Value ?? string.Empty;
 
     /// <summary>Implicitly wraps a <see cref="string"/> so callers can pass literals to APIs that take a <see cref="GlobPattern"/>.</summary>
     /// <param name="value">Source string; null becomes an empty pattern.</param>
@@ -32,7 +32,7 @@ public readonly record struct GlobPattern(string Value)
     /// <summary>Friendly named alias for the <see cref="GlobPattern"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="pattern">Source pattern.</param>
     /// <returns>The underlying string.</returns>
-    public static string ToStringValue(GlobPattern pattern) => pattern;
+    public static string ToStringValue(in GlobPattern pattern) => pattern;
 
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;

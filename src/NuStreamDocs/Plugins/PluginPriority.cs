@@ -18,25 +18,25 @@ public readonly record struct PluginPriority(PluginBand Band, int Tiebreak = 0) 
     /// <param name="left">Left operand.</param>
     /// <param name="right">Right operand.</param>
     /// <returns>True when <paramref name="left"/> sorts before <paramref name="right"/>.</returns>
-    public static bool operator <(PluginPriority left, PluginPriority right) => left.CompareTo(right) < 0;
+    public static bool operator <(in PluginPriority left, in PluginPriority right) => left.CompareTo(right) < 0;
 
     /// <summary>Returns true when <paramref name="left"/> sorts after <paramref name="right"/>.</summary>
     /// <param name="left">Left operand.</param>
     /// <param name="right">Right operand.</param>
     /// <returns>True when <paramref name="left"/> sorts after <paramref name="right"/>.</returns>
-    public static bool operator >(PluginPriority left, PluginPriority right) => left.CompareTo(right) > 0;
+    public static bool operator >(in PluginPriority left, in PluginPriority right) => left.CompareTo(right) > 0;
 
     /// <summary>Returns true when <paramref name="left"/> sorts at or before <paramref name="right"/>.</summary>
     /// <param name="left">Left operand.</param>
     /// <param name="right">Right operand.</param>
     /// <returns>True when <paramref name="left"/> sorts at or before <paramref name="right"/>.</returns>
-    public static bool operator <=(PluginPriority left, PluginPriority right) => left.CompareTo(right) <= 0;
+    public static bool operator <=(in PluginPriority left, in PluginPriority right) => left.CompareTo(right) <= 0;
 
     /// <summary>Returns true when <paramref name="left"/> sorts at or after <paramref name="right"/>.</summary>
     /// <param name="left">Left operand.</param>
     /// <param name="right">Right operand.</param>
     /// <returns>True when <paramref name="left"/> sorts at or after <paramref name="right"/>.</returns>
-    public static bool operator >=(PluginPriority left, PluginPriority right) => left.CompareTo(right) >= 0;
+    public static bool operator >=(in PluginPriority left, in PluginPriority right) => left.CompareTo(right) >= 0;
 
     /// <inheritdoc/>
     public int CompareTo(PluginPriority other)

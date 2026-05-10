@@ -41,7 +41,7 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="rootDirectory">Repository root containing <c>nuget-packages.json</c>.</param>
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromManifest(DirectoryPath rootDirectory, DirectoryPath apiCachePath) =>
+    public static CSharpApiGeneratorOptions FromManifest(in DirectoryPath rootDirectory, in DirectoryPath apiCachePath) =>
         From(new NuGetManifestInput(rootDirectory, apiCachePath));
 
     /// <summary>Builds an options record for the manifest input shape with a custom output subdirectory.</summary>
@@ -49,21 +49,21 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <param name="outputMarkdownSubdirectory">Output subdirectory under the docs root.</param>
     /// <returns>An options record using <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromManifest(DirectoryPath rootDirectory, DirectoryPath apiCachePath, PathSegment outputMarkdownSubdirectory) =>
+    public static CSharpApiGeneratorOptions FromManifest(in DirectoryPath rootDirectory, in DirectoryPath apiCachePath, in PathSegment outputMarkdownSubdirectory) =>
         new([new NuGetManifestInput(rootDirectory, apiCachePath)], outputMarkdownSubdirectory, CSharpApiGeneratorMode.EmitMarkdown);
 
     /// <summary>Builds an options record for the inline-NuGet-packages shape.</summary>
     /// <param name="packages">Packages to fetch.</param>
     /// <param name="apiCachePath">Destination root for fetched packages and the synthesized manifest.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromPackages(NuGetPackageReference[] packages, DirectoryPath apiCachePath) =>
+    public static CSharpApiGeneratorOptions FromPackages(NuGetPackageReference[] packages, in DirectoryPath apiCachePath) =>
         From(new NuGetPackagesInput(packages, apiCachePath));
 
     /// <summary>Builds an options record for local pre-built assemblies.</summary>
     /// <param name="tfm">TFM the assemblies were built for.</param>
     /// <param name="assemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromAssemblies(ApiCompatString tfm, FilePath[] assemblyPaths) =>
+    public static CSharpApiGeneratorOptions FromAssemblies(in ApiCompatString tfm, FilePath[] assemblyPaths) =>
         From(new LocalAssembliesInput(tfm, assemblyPaths));
 
     /// <summary>Builds an options record around a caller-supplied <see cref="IAssemblySource"/>.</summary>

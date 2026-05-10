@@ -15,7 +15,7 @@ internal static partial class VersionsLoggingHelper
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions discovered in the manifest.</param>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogManifestRead(ILogger logger, DirectoryPath path, int versionCount)
+    public static void LogManifestRead(ILogger logger, in DirectoryPath path, int versionCount)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
         {
@@ -30,7 +30,7 @@ internal static partial class VersionsLoggingHelper
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions written to the manifest.</param>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogManifestWrite(ILogger logger, DirectoryPath path, int versionCount)
+    public static void LogManifestWrite(ILogger logger, in DirectoryPath path, int versionCount)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {

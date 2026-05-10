@@ -18,7 +18,7 @@ internal static class CslJsonLoader
     /// <summary>Loads a CSL-JSON file from disk and returns the parsed entries.</summary>
     /// <param name="path">Path to a <c>.json</c> file containing a CSL-JSON array.</param>
     /// <returns>Parsed entries.</returns>
-    public static IReadOnlyList<CitationEntry> LoadFile(FilePath path)
+    public static IReadOnlyList<CitationEntry> LoadFile(in FilePath path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
         var bytes = path.ReadAllBytes();

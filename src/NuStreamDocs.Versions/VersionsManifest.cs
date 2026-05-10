@@ -21,7 +21,7 @@ public static class VersionsManifest
     /// <summary>Reads the manifest at <paramref name="parentDir"/>/<see cref="FileName"/>.</summary>
     /// <param name="parentDir">Parent site directory containing every version's subdirectory.</param>
     /// <returns>The parsed entries; empty when the file is missing.</returns>
-    public static VersionEntry[] Read(DirectoryPath parentDir)
+    public static VersionEntry[] Read(in DirectoryPath parentDir)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parentDir);
         return ReadCore(parentDir);
@@ -50,7 +50,7 @@ public static class VersionsManifest
     /// <summary>Writes the manifest at <paramref name="parentDir"/>/<see cref="FileName"/>.</summary>
     /// <param name="parentDir">Parent site directory.</param>
     /// <param name="entries">Entries to persist.</param>
-    public static void Write(DirectoryPath parentDir, VersionEntry[] entries)
+    public static void Write(in DirectoryPath parentDir, VersionEntry[] entries)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parentDir.Value);
         ArgumentNullException.ThrowIfNull(entries);

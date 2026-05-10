@@ -104,17 +104,29 @@ internal static class AttrListRewriter
         while (i < html.Length)
         {
             var b = html[i];
-            if (b is (byte)'{')
+            switch (b)
             {
-                insideBrace = true;
-            }
-            else if (b is (byte)'}')
-            {
-                insideBrace = false;
-            }
-            else if (insideBrace && b is (byte)'&' && TryConsumeQuoteEntity(html, ref i, scratch))
-            {
-                continue;
+                case (byte)'{':
+                    {
+                        insideBrace = true;
+                        break;
+                    }
+
+                case (byte)'}':
+                    {
+                        insideBrace = false;
+                        break;
+                    }
+
+                default:
+                    {
+                        if (insideBrace && b is (byte)'&' && TryConsumeQuoteEntity(html, ref i, scratch))
+                        {
+                            continue;
+                        }
+
+                        break;
+                    }
             }
 
             AppendByte(scratch, b);
@@ -175,20 +187,23 @@ internal static class AttrListRewriter
         for (var i = 0; i < html.Length; i++)
         {
             var b = html[i];
-            if (b is (byte)'{')
+            switch (b)
             {
-                depth++;
-                continue;
-            }
+                case (byte)'{':
+                    {
+                        depth++;
+                        continue;
+                    }
 
-            if (b is (byte)'}')
-            {
-                if (depth > 0)
-                {
-                    depth--;
-                }
+                case (byte)'}':
+                    {
+                        if (depth > 0)
+                        {
+                            depth--;
+                        }
 
-                continue;
+                        continue;
+                    }
             }
 
             if (depth > 0 && b is (byte)'&')

@@ -268,7 +268,7 @@ public sealed class Lexer
 
         /// <summary>Initializes a new instance of the <see cref="StateStack"/> struct.</summary>
         /// <param name="initialBuffer">The initial stack buffer, normally backed by <see langword="stackalloc"/>.</param>
-        public StateStack(Span<int> initialBuffer)
+        public StateStack(in Span<int> initialBuffer)
         {
             _items = initialBuffer;
             _rented = null;

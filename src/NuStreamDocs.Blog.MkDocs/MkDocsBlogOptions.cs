@@ -15,7 +15,7 @@ public sealed record MkDocsBlogOptions(PathSegment BlogSubdirectory, byte[] Inde
     /// <summary>Initializes a new instance of the <see cref="MkDocsBlogOptions"/> class with archives enabled.</summary>
     /// <param name="blogSubdirectory">Blog subdirectory.</param>
     /// <param name="indexTitle">UTF-8 title bytes.</param>
-    public MkDocsBlogOptions(PathSegment blogSubdirectory, byte[] indexTitle)
+    public MkDocsBlogOptions(in PathSegment blogSubdirectory, byte[] indexTitle)
         : this(blogSubdirectory, indexTitle, EmitCategoryArchives: true)
     {
     }

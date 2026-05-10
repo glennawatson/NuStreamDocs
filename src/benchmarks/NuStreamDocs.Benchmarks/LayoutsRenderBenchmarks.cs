@@ -66,8 +66,8 @@ public class LayoutsRenderBenchmarks
 
         _templateDir = _root;
         _templateName = "page.html"u8.ToArray();
-        _source = Encoding.UTF8.GetBytes("---\ntemplate: page.html\ntitle: Hello\n---\n");
-        _html = Encoding.UTF8.GetBytes("<p>Body content here, large enough to register on the writer.</p>");
+        _source = [.. "---\ntemplate: page.html\ntitle: Hello\n---\n"u8];
+        _html = [.. "<p>Body content here, large enough to register on the writer.</p>"u8];
         _sink = new(SinkCapacity);
         _warmCache = new();
     }

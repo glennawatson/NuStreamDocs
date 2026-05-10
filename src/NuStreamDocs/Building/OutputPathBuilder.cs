@@ -35,7 +35,7 @@ internal static class OutputPathBuilder
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    public static FilePath ForFlatUrls(DirectoryPath outputRoot, FilePath relativePath)
+    public static FilePath ForFlatUrls(in DirectoryPath outputRoot, in FilePath relativePath)
     {
         var rootStr = outputRoot.Value ?? string.Empty;
         var relStr = relativePath.Value ?? string.Empty;
@@ -55,7 +55,7 @@ internal static class OutputPathBuilder
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    public static FilePath ForDirectoryUrls(DirectoryPath outputRoot, FilePath relativePath)
+    public static FilePath ForDirectoryUrls(in DirectoryPath outputRoot, in FilePath relativePath)
     {
         var rootStr = outputRoot.Value ?? string.Empty;
         var relStr = relativePath.Value ?? string.Empty;

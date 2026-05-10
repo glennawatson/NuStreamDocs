@@ -10,12 +10,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>
-/// Microbenchmarks for <see cref="SyntheticPageSink"/> covering both registration paths
-/// (eager <see cref="SyntheticPageSink.Add(SyntheticPage)"/> for small producers and
-/// <see cref="SyntheticPageSink.RegisterStream(IAsyncEnumerable{SyntheticPage})"/> for
-/// fan-out producers like the C# API generator) plus the
-/// <see cref="SyntheticPageSink.DrainAsync(CancellationToken)"/> iteration cost the
-/// build pipeline pays per build.
+/// Microbenchmarks for <see cref="SyntheticPageSink"/>.
 /// </summary>
 [ShortRunJob]
 [MemoryDiagnoser]
@@ -55,7 +50,7 @@ public class SyntheticPageSinkBenchmarks
         }
     }
 
-    /// <summary>Eagerly adds <c>Pages</c> entries via <see cref="SyntheticPageSink.Add(SyntheticPage)"/>.</summary>
+    /// <summary>Eagerly adds <c>Pages</c> entries.</summary>
     /// <returns>Final count.</returns>
     [Benchmark(Baseline = true)]
     public int EagerAdd()

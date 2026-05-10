@@ -158,11 +158,11 @@ public class PhaseTimerTests
     /// <summary>Adapts a single <see cref="ValueTask"/> instance into a <see cref="Task"/> so it's only consumed once even when fed to <c>Assert.ThrowsAsync</c>'s lambda.</summary>
     /// <param name="valueTask">Value task to adapt.</param>
     /// <returns>The equivalent <see cref="Task"/>.</returns>
-    private static Task RunAsTask(ValueTask valueTask) => valueTask.AsTask();
+    private static Task RunAsTask(in ValueTask valueTask) => valueTask.AsTask();
 
     /// <summary>Adapts a single <see cref="ValueTask{T}"/> instance into a <see cref="Task{T}"/> for the same reason.</summary>
     /// <typeparam name="T">Result type.</typeparam>
     /// <param name="valueTask">Value task to adapt.</param>
     /// <returns>The equivalent <see cref="Task{T}"/>.</returns>
-    private static Task<T> RunAsTask<T>(ValueTask<T> valueTask) => valueTask.AsTask();
+    private static Task<T> RunAsTask<T>(in ValueTask<T> valueTask) => valueTask.AsTask();
 }

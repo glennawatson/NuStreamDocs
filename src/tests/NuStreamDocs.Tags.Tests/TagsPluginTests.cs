@@ -35,7 +35,7 @@ public class TagsPluginTests
         await File.WriteAllTextAsync(Path.Combine(temp.Root, "notag.md"), "no frontmatter");
 
         TagsPlugin plugin = new();
-        await plugin.DiscoverAsync(new(temp.Root, "/out", [], new SyntheticPageSink()), CancellationToken.None);
+        await plugin.DiscoverAsync(new(temp.Root, "/out", [], new()), CancellationToken.None);
 
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
     }

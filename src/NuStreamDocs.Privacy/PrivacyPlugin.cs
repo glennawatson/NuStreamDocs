@@ -197,7 +197,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="pathBytes">Forward-slash relative path bytes.</param>
     /// <returns>Absolute output file path.</returns>
-    private static FilePath ResolveOutputPath(DirectoryPath outputRoot, ReadOnlySpan<byte> pathBytes)
+    private static FilePath ResolveOutputPath(in DirectoryPath outputRoot, ReadOnlySpan<byte> pathBytes)
     {
         Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
         Encoding.UTF8.GetChars(pathBytes, pathChars);
@@ -226,7 +226,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
 
     /// <summary>Writes the audit manifest to <see cref="PrivacyOptions.AuditManifestPath"/> under <paramref name="outputRoot"/> when the option is non-empty.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
-    private void WriteManifestIfRequested(DirectoryPath outputRoot)
+    private void WriteManifestIfRequested(in DirectoryPath outputRoot)
     {
         var pathBytes = _options.AuditManifestPath;
         if (pathBytes is [])
@@ -257,7 +257,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
 
     /// <summary>Writes the CSP-hash manifest when <see cref="PrivacyOptions.GenerateCspManifest"/> is set and a path is configured.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
-    private void WriteCspManifestIfRequested(DirectoryPath outputRoot)
+    private void WriteCspManifestIfRequested(in DirectoryPath outputRoot)
     {
         var pathBytes = _options.CspManifestPath;
         if (!_options.GenerateCspManifest || pathBytes is [])
@@ -281,7 +281,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
     /// <summary>Resolves the absolute cache root, falling back to <c>{outputRoot}/.cache/privacy</c> when the option is empty.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <returns>Absolute cache directory.</returns>
-    private DirectoryPath ResolveCacheRoot(DirectoryPath outputRoot) =>
+    private DirectoryPath ResolveCacheRoot(in DirectoryPath outputRoot) =>
         _options.CacheDirectory is []
             ? (DirectoryPath)Path.Combine(outputRoot, ".cache", "privacy")
             : (DirectoryPath)Encoding.UTF8.GetString(_options.CacheDirectory);

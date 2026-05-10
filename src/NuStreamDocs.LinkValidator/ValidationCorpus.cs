@@ -187,7 +187,7 @@ public sealed class ValidationCorpus
     /// <summary>Walks <paramref name="root"/> and snapshots every non-HTML file as a forward-slashed URL byte array.</summary>
     /// <param name="root">Absolute site output root.</param>
     /// <returns>Set of site-relative asset URLs.</returns>
-    private static HashSet<byte[]> EnumerateAssetUrls(DirectoryPath root)
+    private static HashSet<byte[]> EnumerateAssetUrls(in DirectoryPath root)
     {
         HashSet<byte[]> set = new(ByteArrayComparer.Instance);
         if (!Directory.Exists(root.Value))
@@ -238,7 +238,7 @@ public sealed class ValidationCorpus
     /// <param name="root">Absolute site root.</param>
     /// <param name="absolutePath">Absolute path to the file.</param>
     /// <returns>Forward-slashed site-relative URL as UTF-8 bytes.</returns>
-    private static byte[] ToPageUrlBytes(DirectoryPath root, FilePath absolutePath)
+    private static byte[] ToPageUrlBytes(in DirectoryPath root, in FilePath absolutePath)
     {
         var relative = Path.GetRelativePath(root.Value, absolutePath.Value).Replace('\\', '/');
         return Encoding.UTF8.GetBytes(relative);

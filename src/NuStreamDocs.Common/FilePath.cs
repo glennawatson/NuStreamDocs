@@ -40,11 +40,11 @@ public readonly record struct FilePath(string Value)
 
     /// <summary>Implicitly unwraps to a plain <see cref="string"/> for BCL interop.</summary>
     /// <param name="path">Source file path.</param>
-    public static implicit operator string(FilePath path) => path.Value ?? string.Empty;
+    public static implicit operator string(in FilePath path) => path.Value ?? string.Empty;
 
     /// <summary>Implicitly unwraps to a <see cref="ReadOnlySpan{Char}"/> for span-shaped APIs.</summary>
     /// <param name="path">Source file path.</param>
-    public static implicit operator ReadOnlySpan<char>(FilePath path) => (path.Value ?? string.Empty).AsSpan();
+    public static implicit operator ReadOnlySpan<char>(in FilePath path) => (path.Value ?? string.Empty).AsSpan();
 
     /// <summary>Implicitly wraps a <see cref="string"/> path so callers can pass string literals to APIs that take a <see cref="FilePath"/>.</summary>
     /// <param name="value">Source path string; null becomes an empty <see cref="FilePath"/>.</param>
@@ -58,12 +58,12 @@ public readonly record struct FilePath(string Value)
     /// <summary>Friendly named alias for the <see cref="FilePath"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source file.</param>
     /// <returns>The underlying path string.</returns>
-    public static string ToStringValue(FilePath path) => path;
+    public static string ToStringValue(in FilePath path) => path;
 
     /// <summary>Friendly named alias for the <see cref="FilePath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source file.</param>
     /// <returns>The underlying path as a span.</returns>
-    public static ReadOnlySpan<char> ToReadOnlySpan(FilePath path) => path;
+    public static ReadOnlySpan<char> ToReadOnlySpan(in FilePath path) => path;
 
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;
@@ -75,14 +75,14 @@ public readonly record struct FilePath(string Value)
     /// <summary>Returns true when this path ends with <paramref name="value"/> ordinally.</summary>
     /// <param name="value">Suffix to test for.</param>
     /// <returns>True when the path ends with <paramref name="value"/>.</returns>
-    public bool EndsWith(ReadOnlySpan<char> value) =>
+    public bool EndsWith(in ReadOnlySpan<char> value) =>
         AsSpan().EndsWith(value, StringComparison.Ordinal);
 
     /// <summary>Returns true when this path ends with <paramref name="value"/> using the supplied comparison.</summary>
     /// <param name="value">Suffix to test for.</param>
     /// <param name="comparison">Comparison kind.</param>
     /// <returns>True when the path ends with <paramref name="value"/>.</returns>
-    public bool EndsWith(ReadOnlySpan<char> value, StringComparison comparison) =>
+    public bool EndsWith(in ReadOnlySpan<char> value, StringComparison comparison) =>
         AsSpan().EndsWith(value, comparison);
 
     /// <summary>Returns a copy with every <paramref name="oldChar"/> replaced by <paramref name="newChar"/> — typically used to normalize <c>\</c> to <c>/</c>.</summary>
@@ -127,14 +127,14 @@ public readonly record struct FilePath(string Value)
     /// <summary>Asynchronously writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
     /// <param name="bytes">Source bytes.</param>
     /// <returns>A task that completes when the write finishes.</returns>
-    public Task WriteAllBytesAsync(ReadOnlyMemory<byte> bytes) =>
+    public Task WriteAllBytesAsync(in ReadOnlyMemory<byte> bytes) =>
         File.WriteAllBytesAsync(Value, bytes);
 
     /// <summary>Asynchronously writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
     /// <param name="bytes">Source bytes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the write finishes.</returns>
-    public Task WriteAllBytesAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+    public Task WriteAllBytesAsync(in ReadOnlyMemory<byte> bytes, in CancellationToken cancellationToken) =>
         File.WriteAllBytesAsync(Value, bytes, cancellationToken);
 
     /// <summary>Opens the file for reading.</summary>

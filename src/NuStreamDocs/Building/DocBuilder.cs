@@ -118,7 +118,7 @@ public sealed class DocBuilder
     /// <summary>Sets the input docs directory.</summary>
     /// <param name="path">Path to the docs root; string literals are accepted via the implicit <see cref="DirectoryPath"/> conversion.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder WithInput(DirectoryPath path)
+    public DocBuilder WithInput(in DirectoryPath path)
     {
         if (path.IsEmpty)
         {
@@ -132,7 +132,7 @@ public sealed class DocBuilder
     /// <summary>Sets the output site directory.</summary>
     /// <param name="path">Path to the output root; string literals are accepted via the implicit <see cref="DirectoryPath"/> conversion.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder WithOutput(DirectoryPath path)
+    public DocBuilder WithOutput(in DirectoryPath path)
     {
         if (path.IsEmpty)
         {
@@ -147,7 +147,7 @@ public sealed class DocBuilder
     /// <param name="pattern">Glob pattern, e.g. <c>guide/**/*.md</c>.</param>
     /// <returns>This builder for chaining.</returns>
     /// <remarks>When at least one include is registered, only paths matching an include are processed (and must still survive the configured excludes).</remarks>
-    public DocBuilder Include(GlobPattern pattern)
+    public DocBuilder Include(in GlobPattern pattern)
     {
         if (pattern.IsEmpty)
         {
@@ -179,7 +179,7 @@ public sealed class DocBuilder
     /// <summary>Adds an exclude glob (forward-slashed, relative to the docs root).</summary>
     /// <param name="pattern">Glob pattern, e.g. <c>drafts/**</c>.</param>
     /// <returns>This builder for chaining.</returns>
-    public DocBuilder Exclude(GlobPattern pattern)
+    public DocBuilder Exclude(in GlobPattern pattern)
     {
         if (pattern.IsEmpty)
         {
@@ -363,14 +363,14 @@ public sealed class DocBuilder
     /// <summary>
     /// Renders a single in-memory document, threading every registered post-render plugin in
     /// priority order. Reserved for tests and programmatic rendering — production builds go
-    /// through <see cref="BuildPipeline.RunAsync(DirectoryPath, DirectoryPath, IPlugin[])"/>.
+    /// through the build pipeline.
     /// </summary>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="html">Pre-allocated UTF-8 sink the renderer and plugins write into.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every post-render participant has run.</returns>
-    public Task RenderPageAsync(FilePath relativePath, ReadOnlyMemory<byte> source, ArrayBufferWriter<byte> html, CancellationToken cancellationToken)
+    public Task RenderPageAsync(in FilePath relativePath, in ReadOnlyMemory<byte> source, ArrayBufferWriter<byte> html, in CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(html);
         _ = cancellationToken;
@@ -425,11 +425,11 @@ public sealed class DocBuilder
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
     /// <returns>The rental whose writer holds the final post-render HTML.</returns>
     private static PageBuilderRental ApplyPostRendersExternal(
-        PageBuilderRental input,
+        in PageBuilderRental input,
         List<PageBuilderRental> scratch,
         ReadOnlySpan<byte> source,
         IPagePostRenderPlugin[] plugins,
-        FilePath relativePath,
+        in FilePath relativePath,
         PluginTimingTable pluginTiming)
     {
         var anyRewrites = false;

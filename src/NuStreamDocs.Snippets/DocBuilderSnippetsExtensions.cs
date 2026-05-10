@@ -23,7 +23,7 @@ public static class DocBuilderSnippetsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="baseDirectory">Absolute path under which snippet includes resolve.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSnippets(this DocBuilder builder, DirectoryPath baseDirectory)
+    public static DocBuilder UseSnippets(this DocBuilder builder, in DirectoryPath baseDirectory)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory.Value);

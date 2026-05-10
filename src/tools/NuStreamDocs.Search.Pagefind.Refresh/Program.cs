@@ -60,7 +60,7 @@ public static class Program
         new("linux-arm64", "aarch64-unknown-linux-musl", IsWindows: false),
         new("win-x64", "x86_64-pc-windows-msvc", IsWindows: true),
         new("osx-x64", "x86_64-apple-darwin", IsWindows: false),
-        new("osx-arm64", "aarch64-apple-darwin", IsWindows: false),
+        new("osx-arm64", "aarch64-apple-darwin", IsWindows: false)
     ];
 
     /// <summary>Entry point.</summary>

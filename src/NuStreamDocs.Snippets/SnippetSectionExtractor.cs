@@ -118,7 +118,7 @@ internal static class SnippetSectionExtractor
         {
             [.., (byte)'\r', (byte)'\n'] => line[..^CrLfLength],
             [.., (byte)'\n'] => line[..^1],
-            _ => line,
+            _ => line
         };
 
     /// <summary>Walks back from <paramref name="offset"/> to the start of the line that contains it.</summary>

@@ -21,7 +21,7 @@ internal static class ApiIndexWriter
         "lib"u8.ToArray(),
         "refs"u8.ToArray(),
         "cache"u8.ToArray(),
-        "_global"u8.ToArray(),
+        "_global"u8.ToArray()
     ];
 
     /// <summary>Gets the default page title bytes used when the caller doesn't override it.</summary>

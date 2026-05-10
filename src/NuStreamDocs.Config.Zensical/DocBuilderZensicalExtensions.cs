@@ -15,7 +15,7 @@ public static class DocBuilderZensicalExtensions
     /// <param name="builder">Target builder.</param>
     /// <param name="tomlPath">Absolute or relative path to a zensical.toml file.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseZensicalConfig(this DocBuilder builder, FilePath tomlPath)
+    public static DocBuilder UseZensicalConfig(this DocBuilder builder, in FilePath tomlPath)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(tomlPath.Value);

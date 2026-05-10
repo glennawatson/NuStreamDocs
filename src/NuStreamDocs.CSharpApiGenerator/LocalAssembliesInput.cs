@@ -22,7 +22,7 @@ public sealed record LocalAssembliesInput(
     /// <summary>Initializes a new instance of the <see cref="LocalAssembliesInput"/> class with no fallback search paths.</summary>
     /// <param name="tfm">TFM the assemblies were built for.</param>
     /// <param name="assemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
-    public LocalAssembliesInput(ApiCompatString tfm, FilePath[] assemblyPaths)
+    public LocalAssembliesInput(in ApiCompatString tfm, FilePath[] assemblyPaths)
         : this(tfm, assemblyPaths, [])
     {
     }
