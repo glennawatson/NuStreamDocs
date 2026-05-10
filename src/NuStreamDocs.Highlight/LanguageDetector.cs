@@ -311,33 +311,13 @@ internal static class LanguageDetector
             return false;
         }
 
-        var bestScore = 0;
-        var runnerUpScore = 0;
-        var bestIndex = -1;
-
+        Span<int> scores = stackalloc int[Profiles.Length];
         for (var i = 0; i < Profiles.Length; i++)
         {
-            var profile = Profiles[i];
-            if (!IsCandidate(profile.LanguageId, registry, allowList))
-            {
-                continue;
-            }
-
-            var score = ScoreProfile(scan, in profile);
-            if (score > bestScore)
-            {
-                runnerUpScore = bestScore;
-                bestScore = score;
-                bestIndex = i;
-                continue;
-            }
-
-            if (score > runnerUpScore)
-            {
-                runnerUpScore = score;
-            }
+            scores[i] = ScoreProfile(scan, in Profiles[i]);
         }
 
+        var (bestIndex, bestScore, runnerUpScore) = PickWinner(scores, registry, allowList);
         if (bestIndex < 0 || bestScore < MinScore)
         {
             return false;
@@ -369,6 +349,39 @@ internal static class LanguageDetector
         }
 
         return total;
+    }
+
+    /// <summary>Returns the winning profile and the top two scores, restricted to candidates the registry/allow-list permits.</summary>
+    /// <param name="scores">Per-profile scores indexed parallel to <see cref="Profiles"/>.</param>
+    /// <param name="registry">Active lexer registry.</param>
+    /// <param name="allowList">Optional alias allow-list (empty = no restriction).</param>
+    /// <returns>Winner profile index (or <c>-1</c>), winning score, and runner-up score.</returns>
+    private static (int BestIndex, int BestScore, int RunnerUp) PickWinner(ReadOnlySpan<int> scores, LexerRegistry registry, byte[][] allowList)
+    {
+        var bestIndex = -1;
+        var bestScore = 0;
+        var runnerUp = 0;
+        for (var i = 0; i < Profiles.Length; i++)
+        {
+            if (!IsCandidate(Profiles[i].LanguageId, registry, allowList))
+            {
+                continue;
+            }
+
+            var score = scores[i];
+            if (score > bestScore)
+            {
+                runnerUp = bestScore;
+                bestScore = score;
+                bestIndex = i;
+            }
+            else if (score > runnerUp)
+            {
+                runnerUp = score;
+            }
+        }
+
+        return (bestIndex, bestScore, runnerUp);
     }
 
     /// <summary>True when <paramref name="languageId"/> can be considered: a lexer is registered AND the optional allow-list either is empty or contains the alias.</summary>
