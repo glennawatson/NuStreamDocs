@@ -1166,7 +1166,9 @@ a:hover { text-decoration: underline; }
      Force the drawer back to `display: block` at the mobile breakpoint regardless
      of the attribute; the slide-in transform then takes over as designed. */
   .md-sidebar--primary[hidden] {
-    display: block;
+    display: block !important;
+    visibility: hidden;
+    pointer-events: none;
   }
   .md-sidebar--primary {
     position: fixed;
@@ -1207,6 +1209,8 @@ a:hover { text-decoration: underline; }
   }
   .md-toggle[data-md-toggle="drawer"]:checked ~ .md-container .md-sidebar--primary {
     transform: translate3d(0, 0, 0);
+    visibility: visible;
+    pointer-events: auto;
   }
   .md-toggle[data-md-toggle="drawer"]:checked ~ .md-overlay {
     display: block;
