@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Text;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Blog.MkDocs.Tests;
@@ -25,13 +26,19 @@ public class MkDocsBlogPluginTests
             await File.WriteAllTextAsync(Path.Combine(postsRoot, "2024-01-15-launch.md"), "---\nTitle: Launch\nAuthor: Team\nTags: Release\nPublished: 2024-01-15\n---\nLaunch announcement.");
 
             MkDocsBlogPlugin plugin = new(new("blog", [.. "Blog"u8]));
-            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new SyntheticPageSink());
+            SyntheticPageSink sink = new();
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], sink);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
-            var index = await File.ReadAllTextAsync(Path.Combine(blogRoot, "index.md"));
+            // Source folder must remain untouched.
+            await Assert.That(File.Exists(Path.Combine(blogRoot, "index.md"))).IsFalse();
+            await Assert.That(Directory.Exists(Path.Combine(blogRoot, "category"))).IsFalse();
+
+            var pages = sink.Snapshot();
+            var index = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "blog/index.md").MarkdownBytes);
             await Assert.That(index.Contains("Launch", StringComparison.Ordinal)).IsTrue();
 
-            var archive = await File.ReadAllTextAsync(Path.Combine(blogRoot, "category", "release.md"));
+            var archive = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "blog/category/release.md").MarkdownBytes);
             await Assert.That(archive.Contains("Launch", StringComparison.Ordinal)).IsTrue();
         }
         finally

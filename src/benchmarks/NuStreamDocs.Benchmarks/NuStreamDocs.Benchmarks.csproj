@@ -43,6 +43,9 @@
     <ProjectReference Include="..\..\NuStreamDocs.SphinxInventory\NuStreamDocs.SphinxInventory.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Icons.MaterialDesign\NuStreamDocs.Icons.MaterialDesign.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Blog\NuStreamDocs.Blog.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Blog.Common\NuStreamDocs.Blog.Common.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Tags\NuStreamDocs.Tags.csproj" />
   </ItemGroup>
 
 </Project>

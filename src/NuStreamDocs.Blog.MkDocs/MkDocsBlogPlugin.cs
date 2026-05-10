@@ -10,8 +10,9 @@ namespace NuStreamDocs.Blog.MkDocs;
 
 /// <summary>
 /// mkdocs-material-style blog plugin: reads posts under
-/// <c>{BlogSubdirectory}/posts/</c> and writes an index plus category
-/// archives back into the docs tree before page discovery.
+/// <c>{BlogSubdirectory}/posts/</c> and registers an index plus category
+/// archives as synthetic pages on the build context before page discovery —
+/// nothing lands on disk in the source tree.
 /// </summary>
 public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) : IBuildDiscoverPlugin
 {
@@ -48,6 +49,7 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
                 EmitArchives: _options.EmitCategoryArchives,
                 ArchiveRoot: blogRoot / "category",
                 ArchiveFallbackSlug: [.. "category"u8]),
+            context.SyntheticPages,
             cancellationToken).ConfigureAwait(false);
     }
 

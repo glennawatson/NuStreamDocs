@@ -105,6 +105,48 @@ public readonly record struct DirectoryPath(string Value)
     }
 
     /// <summary>
+    /// Returns <paramref name="absolute"/> rewritten relative to this directory, with
+    /// forward slashes regardless of platform. Useful for plugins that synthesize pages
+    /// and need the input-root-relative <see cref="FilePath"/> the build pipeline expects.
+    /// </summary>
+    /// <param name="absolute">Absolute (or rooted) file path under this directory.</param>
+    /// <returns>The relative file path, or the original when this directory is empty.</returns>
+    public FilePath Relative(FilePath absolute)
+    {
+        if (absolute.IsEmpty)
+        {
+            return absolute;
+        }
+
+        if (IsEmpty)
+        {
+            return absolute;
+        }
+
+        var relative = Path.GetRelativePath(Value, absolute.Value);
+        return new(Path.DirectorySeparatorChar is '/' ? relative : relative.Replace('\\', '/'));
+    }
+
+    /// <summary>Returns <paramref name="absolute"/> rewritten relative to this directory.</summary>
+    /// <param name="absolute">Absolute (or rooted) directory under this directory.</param>
+    /// <returns>The relative directory path, or the original when this directory is empty.</returns>
+    public DirectoryPath Relative(DirectoryPath absolute)
+    {
+        if (absolute.IsEmpty)
+        {
+            return absolute;
+        }
+
+        if (IsEmpty)
+        {
+            return absolute;
+        }
+
+        var relative = Path.GetRelativePath(Value, absolute.Value);
+        return new(Path.DirectorySeparatorChar is '/' ? relative : relative.Replace('\\', '/'));
+    }
+
+    /// <summary>
     /// Determines if the directory exists or not.
     /// </summary>
     /// <returns>True if the directory exists; false otherwise.</returns>

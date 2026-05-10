@@ -9,9 +9,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Blog;
 
 /// <summary>
-/// Plugin that scans a Wyam-style flat blog directory and writes the
-/// generated index plus tag archives back into the docs tree before
-/// page discovery.
+/// Plugin that scans a Wyam-style flat blog directory and registers the
+/// generated index plus tag archives as synthetic pages on the build context
+/// before page discovery — nothing lands on disk in the source tree.
 /// </summary>
 public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IBuildDiscoverPlugin
 {
@@ -48,6 +48,7 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
                 EmitArchives: _options.EmitTagArchives,
                 ArchiveRoot: postsRoot / "tags",
                 ArchiveFallbackSlug: [.. "tag"u8]),
+            context.SyntheticPages,
             cancellationToken).ConfigureAwait(false);
     }
 

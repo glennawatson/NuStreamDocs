@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
@@ -29,9 +30,9 @@ public static class BlogPagesFileEmitter
     public static byte[] Render(BlogPost[] posts)
     {
         ArgumentNullException.ThrowIfNull(posts);
-        var writer = new ArrayBufferWriter<byte>(InitialCapacity);
-        Write(writer, posts);
-        return writer.WrittenSpan.ToArray();
+        using var rental = PageBuilderPool.Rent(InitialCapacity);
+        Write(rental.Writer, posts);
+        return rental.Writer.WrittenSpan.ToArray();
     }
 
     /// <summary>Writes the <c>.pages</c> override into <paramref name="writer"/>.</summary>

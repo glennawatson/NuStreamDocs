@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Text;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Blog.Tests;
@@ -29,14 +30,20 @@ public class WyamBlogPluginTests
                 "---\nTitle: Association\nAuthor: Rodney Littles, II\nTags: Announcement, Release\nPublished: 2021-01-04\n---\nThe announcement.");
 
             WyamBlogPlugin plugin = new(new("Announcements", [.. "Announcements"u8]));
-            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new SyntheticPageSink());
+            SyntheticPageSink sink = new();
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], sink);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
-            var index = await File.ReadAllTextAsync(Path.Combine(postsDir, "index.md"));
+            // Source folder must remain untouched — pages flow through the sink, not disk.
+            await Assert.That(File.Exists(Path.Combine(postsDir, "index.md"))).IsFalse();
+            await Assert.That(Directory.Exists(Path.Combine(postsDir, "tags"))).IsFalse();
+
+            var pages = sink.Snapshot();
+            var index = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "Announcements/index.md").MarkdownBytes);
             await Assert.That(index.Contains("# Announcements", StringComparison.Ordinal)).IsTrue();
             await Assert.That(index.Contains("Association", StringComparison.Ordinal)).IsTrue();
 
-            var releaseArchive = await File.ReadAllTextAsync(Path.Combine(postsDir, "tags", "release.md"));
+            var releaseArchive = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "Announcements/tags/release.md").MarkdownBytes);
             await Assert.That(releaseArchive.Contains("Association", StringComparison.Ordinal)).IsTrue();
             await Assert.That(releaseArchive.Contains("Memory Leaks", StringComparison.Ordinal)).IsFalse();
         }
@@ -61,10 +68,12 @@ public class WyamBlogPluginTests
             await File.WriteAllTextAsync(Path.Combine(postsDir, "2024-01-01-new.md"), "---\nTitle: New\nPublished: 2024-01-01\n---\nNew body.");
 
             WyamBlogPlugin plugin = new(new("blog", [.. "Blog"u8], EmitTagArchives: false));
-            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new SyntheticPageSink());
+            SyntheticPageSink sink = new();
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], sink);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
-            var index = await File.ReadAllTextAsync(Path.Combine(postsDir, "index.md"));
+            await Assert.That(File.Exists(Path.Combine(postsDir, "index.md"))).IsFalse();
+            var index = Encoding.UTF8.GetString(sink.Snapshot().Single(p => p.RelativePath.Value == "blog/index.md").MarkdownBytes);
             var newPos = index.IndexOf("New", StringComparison.Ordinal);
             var oldPos = index.IndexOf("Old", StringComparison.Ordinal);
             await Assert.That(newPos).IsGreaterThan(0);
