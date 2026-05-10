@@ -10,41 +10,6 @@ namespace NuStreamDocs.Sitemap;
 /// <summary>Composes <c>sitemap.xml</c> and <c>robots.txt</c> and writes them to the output root.</summary>
 internal static class SitemapWriter
 {
-    /// <summary>Length of the <c>.md</c> source extension stripped before composing URL paths.</summary>
-    private const int MarkdownExtensionLength = 3;
-
-    /// <summary>Length of the <c>.html</c> replacement extension.</summary>
-    private const int HtmlExtensionLength = 5;
-
-    /// <summary>Maps a source-relative path (e.g. <c>guide/intro.md</c>) to UTF-8 URL bytes (e.g. <c>guide/intro.html</c>).</summary>
-    /// <param name="relativePath">Source path relative to the docs root.</param>
-    /// <returns>UTF-8 URL bytes; an empty array when input is unusable.</returns>
-    public static byte[] RelativePathToUrlPath(FilePath relativePath)
-    {
-        if (relativePath.IsEmpty)
-        {
-            return [];
-        }
-
-        var span = relativePath.Value.AsSpan();
-        var endsWithMd = span.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
-        var keepLength = endsWithMd ? span.Length - MarkdownExtensionLength : span.Length;
-        var totalLength = keepLength + (endsWithMd ? HtmlExtensionLength : 0);
-        var dst = new byte[totalLength];
-        for (var i = 0; i < keepLength; i++)
-        {
-            var c = span[i];
-            dst[i] = c is '\\' ? (byte)'/' : (byte)c;
-        }
-
-        if (endsWithMd)
-        {
-            ".html"u8.CopyTo(dst.AsSpan(keepLength));
-        }
-
-        return dst;
-    }
-
     /// <summary>Emits <c>sitemap.xml</c> under <paramref name="outputRoot"/>.</summary>
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="baseUrl">Site URL (with trailing slash), UTF-8 bytes.</param>

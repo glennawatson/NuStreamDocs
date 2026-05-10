@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Sitemap;
@@ -20,6 +21,9 @@ public sealed class SitemapPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBui
     /// <summary>Site URL bytes with trailing slash; null when not configured.</summary>
     private byte[]? _baseUrlBytes;
 
+    /// <summary>Build-pipeline directory-URL flag captured at configure time.</summary>
+    private bool _useDirectoryUrls;
+
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "sitemap"u8;
 
@@ -36,6 +40,7 @@ public sealed class SitemapPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBui
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _baseUrlBytes = NormalizeBaseUrl(context.SiteUrl);
+        _useDirectoryUrls = context.UseDirectoryUrls;
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }
@@ -43,7 +48,7 @@ public sealed class SitemapPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBui
     /// <inheritdoc/>
     public void Scan(in PageScanContext context)
     {
-        var url = SitemapWriter.RelativePathToUrlPath(context.RelativePath);
+        var url = Utf8MarkdownUrl.FromRelativePath(context.RelativePath, _useDirectoryUrls);
         if (url.Length is 0)
         {
             return;

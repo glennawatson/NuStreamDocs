@@ -10,12 +10,6 @@ namespace NuStreamDocs.Tags;
 /// <summary>Emits the tags landing page and per-tag listing pages.</summary>
 internal static class TagsIndexWriter
 {
-    /// <summary>Maps a source-relative path (e.g. <c>guide/intro.md</c>) to a UTF-8 URL byte array (e.g. <c>guide/intro.html</c>).</summary>
-    /// <param name="relativePath">Source path relative to the docs root.</param>
-    /// <returns>UTF-8 URL bytes; an empty array when <paramref name="relativePath"/> is empty.</returns>
-    public static byte[] RelativePathToUrlPath(FilePath relativePath) =>
-        relativePath.IsEmpty ? [] : TagsCommon.MdRelativePathToHtmlUrlBytes(relativePath);
-
     /// <summary>Emits the all-tags index plus one listing page per distinct tag.</summary>
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="options">Plugin options controlling the output layout.</param>

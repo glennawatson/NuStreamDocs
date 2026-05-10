@@ -47,7 +47,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
 
         var inputRoot = context.InputRoot;
         var tagsDir = inputRoot / _options.OutputSubdirectory;
-        var collected = await CollectAsync(inputRoot, tagsDir, cancellationToken).ConfigureAwait(false);
+        var collected = await CollectAsync(inputRoot, tagsDir, context.UseDirectoryUrls, cancellationToken).ConfigureAwait(false);
         if (collected.Count is 0)
         {
             return;
@@ -74,11 +74,13 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
     /// <summary>Walks <paramref name="inputRoot"/> and groups pages by their <c>tags:</c> frontmatter.</summary>
     /// <param name="inputRoot">Absolute docs root.</param>
     /// <param name="tagsDir">Output directory; files under this directory are skipped to avoid feedback loops.</param>
+    /// <param name="useDirectoryUrls">Build-pipeline directory-URL mode flag, forwarded into per-page URL composition so emitted hrefs match the pages the build will write.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Tag → list of <c>(url, title)</c> pairs, sorted by tag and by URL within each bucket.</returns>
     private static async ValueTask<SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>>> CollectAsync(
         DirectoryPath inputRoot,
         DirectoryPath tagsDir,
+        bool useDirectoryUrls,
         CancellationToken cancellationToken)
     {
         const int InitialCapacity = 4;
@@ -101,7 +103,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             }
 
             var relative = Path.GetRelativePath(inputRoot.Value, path);
-            var url = TagsCommon.MdRelativePathToHtmlUrlBytes(relative);
+            var url = Utf8MarkdownUrl.FromRelativePath(relative, useDirectoryUrls);
             var title = ExtractMarkdownTitle(bytes, fallback: url);
 
             for (var t = 0; t < tags.Length; t++)

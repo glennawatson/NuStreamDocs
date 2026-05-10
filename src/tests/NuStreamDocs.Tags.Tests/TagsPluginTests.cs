@@ -4,6 +4,7 @@
 
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Tags.Tests;
 
@@ -79,19 +80,19 @@ public class TagsPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>
-        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("guide\\intro.md"))).IsEqualTo("guide/intro.html");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide\\intro.md", useDirectoryUrls: false))).IsEqualTo("guide/intro.html");
 
     /// <summary>RelativePathToUrlPath returns empty for empty input.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathEmpty() =>
-        await Assert.That(TagsIndexWriter.RelativePathToUrlPath(string.Empty).Length).IsEqualTo(0);
+        await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, useDirectoryUrls: false).Length).IsEqualTo(0);
 
     /// <summary>RelativePathToUrlPath leaves non-md inputs alone.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathNonMd() =>
-        await Assert.That(Encoding.UTF8.GetString(TagsIndexWriter.RelativePathToUrlPath("assets/logo.png"))).IsEqualTo("assets/logo.png");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("assets/logo.png", useDirectoryUrls: false))).IsEqualTo("assets/logo.png");
 
     /// <summary>UseTags() registers the plugin.</summary>
     /// <returns>Async test.</returns>

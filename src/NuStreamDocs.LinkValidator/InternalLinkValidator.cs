@@ -102,19 +102,23 @@ public static class InternalLinkValidator
         ConcurrentBag<LinkDiagnostic> sink)
     {
         var span = link.AsSpan();
+
+        // Shape pre-check — flag obvious path-construction bugs (e.g. `..//api/...`) with a
+        // dedicated diagnostic before we try to resolve them as missing pages. The resolver
+        // would still surface a "page not found" miss, but the shape diagnostic explains the
+        // root cause (concatenation bug) instead of just the symptom (404).
+        if (TryReportMalformedShape(source, link, span, sink))
+        {
+            return;
+        }
+
         var hash = span.IndexOf(HashByte);
         var target = hash < 0 ? span : span[..hash];
         var fragment = hash < 0 ? default : span[(hash + 1)..];
 
-        // Pure same-page anchor: #id
         if (target.IsEmpty)
         {
-            if (fragment.IsEmpty || ContainsAnchor(source.AnchorIds, fragment))
-            {
-                return;
-            }
-
-            sink.Add(BuildSamePageFragmentDiagnostic(source, link, fragment));
+            ReportSamePageAnchor(source, link, fragment, sink);
             return;
         }
 
@@ -187,6 +191,39 @@ public static class InternalLinkValidator
         return $"Anchor '#{name}' is targeted only by an obsolete HTML4 '<a name=\"{name}\">' element. "
              + $"Replace with the HTML5 heading-attribute syntax '## Heading {{ #{name} }}' "
              + "(or rely on the auto-generated heading id) so the fragment binds to an 'id' attribute.";
+    }
+
+    /// <summary>Resolves a pure same-page anchor (<c>#id</c>) and emits a diagnostic on miss.</summary>
+    /// <param name="source">Source page.</param>
+    /// <param name="link">Raw link bytes (for the diagnostic record).</param>
+    /// <param name="fragment">Fragment bytes (no leading <c>#</c>).</param>
+    /// <param name="sink">Diagnostic accumulator.</param>
+    private static void ReportSamePageAnchor(PageLinks source, byte[] link, ReadOnlySpan<byte> fragment, ConcurrentBag<LinkDiagnostic> sink)
+    {
+        if (fragment.IsEmpty || ContainsAnchor(source.AnchorIds, fragment))
+        {
+            return;
+        }
+
+        sink.Add(BuildSamePageFragmentDiagnostic(source, link, fragment));
+    }
+
+    /// <summary>Reports a malformed-shape diagnostic when <paramref name="span"/> trips <see cref="MalformedLinkDetector.Inspect"/>.</summary>
+    /// <param name="source">Source page.</param>
+    /// <param name="link">Raw link bytes (for the diagnostic record).</param>
+    /// <param name="span">The link bytes as a span.</param>
+    /// <param name="sink">Diagnostic accumulator.</param>
+    /// <returns>True when a diagnostic was emitted; the caller short-circuits.</returns>
+    private static bool TryReportMalformedShape(PageLinks source, byte[] link, ReadOnlySpan<byte> span, ConcurrentBag<LinkDiagnostic> sink)
+    {
+        var shape = MalformedLinkDetector.Inspect(span);
+        if (shape.IsEmpty)
+        {
+            return false;
+        }
+
+        sink.Add(BuildDiagnostic(source.PageUrl, link, shape));
+        return true;
     }
 
     /// <summary>Looks up a fragment span in <paramref name="anchors"/>.</summary>

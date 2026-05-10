@@ -42,6 +42,9 @@ internal static class MarkdownLinkRewriter
     /// <summary>Gets the source-extension suffix (with the leading dot) we replace.</summary>
     private static ReadOnlySpan<byte> MarkdownExtension => ".md"u8;
 
+    /// <summary>Gets the autorefs marker prefix; URLs starting with this are placeholders, not real paths.</summary>
+    private static ReadOnlySpan<byte> AutorefMarker => "@autoref:"u8;
+
     /// <summary>Gets the replacement extension written into the rewritten href.</summary>
     private static ReadOnlySpan<byte> HtmlExtension => ".html"u8;
 
@@ -140,21 +143,22 @@ internal static class MarkdownLinkRewriter
             return;
         }
 
+        // `@autoref:ID` markers are placeholders that the autorefs PostResolve pass substitutes
+        // with the registered absolute URL (e.g. `/api/...`). Prepending `../` here would fuse
+        // with the leading `/` after substitution and produce `..//api/...` — the path-construction
+        // bug `MalformedLinkDetector.Inspect` flags. Pass markers through untouched.
+        if (url.StartsWith(AutorefMarker))
+        {
+            sink.Write(url);
+            return;
+        }
+
         var pathEnd = FindPathEnd(url);
         var path = pathEnd < 0 ? url : url[..pathEnd];
         var tail = pathEnd < 0 ? default : url[pathEnd..];
         if (!path.EndsWith(MarkdownExtension))
         {
-            // Non-markdown relative path (image, css, asset, plain href). Compensate for the extra
-            // directory level that directory-URL non-index pages introduce so file-relative URLs
-            // continue to resolve. Skip when the URL already starts with `../` — that signals the
-            // author wrote it URL-relative-to-rendered-page, matching mkdocs's behaviour.
-            if (prependParent && useDirectoryUrls && !path.StartsWith("../"u8))
-            {
-                sink.Write("../"u8);
-            }
-
-            sink.Write(url);
+            EmitNonMarkdownUrl(url, path, sink, useDirectoryUrls, prependParent);
             return;
         }
 
@@ -173,6 +177,26 @@ internal static class MarkdownLinkRewriter
         sink.Write(stem);
         sink.Write(HtmlExtension);
         sink.Write(tail);
+    }
+
+    /// <summary>
+    /// Writes a non-markdown relative href (image, CSS, asset, plain link), compensating for the
+    /// extra directory level that directory-URL non-index pages introduce. Skips the prepend when
+    /// the author already wrote a <c>../</c> prefix (mkdocs-relative authoring).
+    /// </summary>
+    /// <param name="url">Full attribute value including any tail.</param>
+    /// <param name="path">Path slice (no <c>?</c>/<c>#</c>).</param>
+    /// <param name="sink">Output sink.</param>
+    /// <param name="useDirectoryUrls">Directory-URL mode flag.</param>
+    /// <param name="prependParent">True when the source page is a non-index directory-URL page.</param>
+    private static void EmitNonMarkdownUrl(ReadOnlySpan<byte> url, ReadOnlySpan<byte> path, IBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
+    {
+        if (prependParent && useDirectoryUrls && !path.StartsWith("../"u8))
+        {
+            sink.Write("../"u8);
+        }
+
+        sink.Write(url);
     }
 
     /// <summary>Emits the directory-URL form (<c>foo.md</c> → <c>foo/</c>, <c>index.md</c> → directory root).</summary>

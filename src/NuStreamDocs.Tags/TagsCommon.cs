@@ -22,34 +22,6 @@ internal static class TagsCommon
     /// <summary>Maximum tag length that fits in a stack slug buffer.</summary>
     private const int StackSlugLimit = 256;
 
-    /// <summary>Translates a source-relative markdown path (e.g. <c>guide/intro.md</c>) to UTF-8 HTML URL bytes.</summary>
-    /// <param name="markdownRelativePath">Source-relative path with platform separators.</param>
-    /// <returns>UTF-8 forward-slashed bytes with the <c>.html</c> extension; an empty array when the input is empty.</returns>
-    public static byte[] MdRelativePathToHtmlUrlBytes(ReadOnlySpan<char> markdownRelativePath)
-    {
-        if (markdownRelativePath.IsEmpty)
-        {
-            return [];
-        }
-
-        var endsWithMd = markdownRelativePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
-        var keep = endsWithMd ? markdownRelativePath.Length - MarkdownExtensionLength : markdownRelativePath.Length;
-        var totalLength = keep + (endsWithMd ? HtmlExtensionLength : 0);
-        var dst = new byte[totalLength];
-        for (var i = 0; i < keep; i++)
-        {
-            var c = markdownRelativePath[i];
-            dst[i] = c is '\\' ? (byte)'/' : (byte)c;
-        }
-
-        if (endsWithMd)
-        {
-            ".html"u8.CopyTo(dst.AsSpan(keep));
-        }
-
-        return dst;
-    }
-
     /// <summary>Lowercases <paramref name="tag"/> and replaces non-alphanumeric ASCII runs with single hyphens for use as a filename.</summary>
     /// <param name="tag">UTF-8 tag display bytes.</param>
     /// <returns>UTF-8 filesystem-safe slug bytes; <c>"tag"</c> when the input has no slug-safe bytes.</returns>

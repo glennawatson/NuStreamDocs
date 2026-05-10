@@ -110,6 +110,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
+        ValidateUrlOptions(_options);
         _outputRoot = context.OutputRoot;
         _headExtras = HeadExtraComposer.Compose(context.Plugins);
         _plugins = context.Plugins;
@@ -371,6 +372,41 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         && value[^1] == value[0]
             ? value[1..^1]
             : value;
+
+    /// <summary>
+    /// Validates the URL-shaped theme options at configure time and throws on the first
+    /// malformed value, so an obvious config bug fails the build instead of leaking into every
+    /// rendered page's canonical / repo / edit links.
+    /// </summary>
+    /// <param name="options">Theme options to validate.</param>
+    /// <exception cref="InvalidOperationException">When any URL option fails the shape check.</exception>
+    private static void ValidateUrlOptions(TOptions options)
+    {
+        ThrowIfMalformed(ThemeUrlValidator.Inspect("SiteUrl", options.SiteUrl, requireAbsolute: false));
+        ThrowIfMalformed(ThemeUrlValidator.Inspect("RepoUrl", options.RepoUrl, requireAbsolute: false));
+
+        // EditUri is a path fragment relative to RepoUrl, not an absolute URL on its own —
+        // we only enforce the trailing-query/fragment guard here. Empty is fine (edit links
+        // disabled).
+        if (options.EditUri is not ([.., (byte)'?'] or [.., (byte)'#']))
+        {
+            return;
+        }
+
+        throw new InvalidOperationException("EditUri ends with '?' or '#'; the per-page edit-URL builder appends the source path and the result will be malformed.");
+    }
+
+    /// <summary>Throws when <paramref name="diagnostic"/> carries a non-empty diagnostic message.</summary>
+    /// <param name="diagnostic">Diagnostic returned by <see cref="ThemeUrlValidator.Inspect"/>.</param>
+    private static void ThrowIfMalformed(DiagnosticMessage diagnostic)
+    {
+        if (diagnostic.IsEmpty)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(diagnostic);
+    }
 
     /// <summary>Normalizes the repo/edit roots once per build for per-page edit URL composition.</summary>
     /// <param name="repoUrl">Configured UTF-8 repository URL.</param>

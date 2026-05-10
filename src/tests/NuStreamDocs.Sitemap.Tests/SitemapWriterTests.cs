@@ -3,30 +3,31 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Sitemap.Tests;
 
 /// <summary>Behavior tests for <c>SitemapWriter</c> and <c>NotFoundPlugin</c>.</summary>
 public class SitemapWriterTests
 {
-    /// <summary>Maps <c>foo.md</c> to <c>foo.html</c>.</summary>
+    /// <summary>Maps <c>foo.md</c> to <c>foo.html</c> in flat-URL mode.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>
-        await Assert.That(Encoding.UTF8.GetString(SitemapWriter.RelativePathToUrlPath("guide/intro.md")))
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", useDirectoryUrls: false)))
             .IsEqualTo("guide/intro.html");
 
     /// <summary>Backslashes are normalized to forward slashes.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathNormalizesSeparators() =>
-        await Assert.That(Encoding.UTF8.GetString(SitemapWriter.RelativePathToUrlPath("guide\\intro.md")))
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide\\intro.md", useDirectoryUrls: false)))
             .IsEqualTo("guide/intro.html");
 
     /// <summary>Empty input yields empty output.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task EmptyInputEmptyOutput() => await Assert.That(SitemapWriter.RelativePathToUrlPath(string.Empty).Length).IsEqualTo(0);
+    public async Task EmptyInputEmptyOutput() => await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, useDirectoryUrls: false).Length).IsEqualTo(0);
 
     /// <summary>Writing the sitemap produces the expected XML envelope and per-URL elements.</summary>
     /// <returns>Async test.</returns>
