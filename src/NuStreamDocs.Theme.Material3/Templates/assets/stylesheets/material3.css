@@ -228,12 +228,33 @@ a:hover { text-decoration: underline; }
   object-fit: contain;
 }
 .md-header__title {
+  /* flex: 1 1 auto + min-width: 0 lets the title absorb the space between the logo
+     and the search/options cluster *and* shrink below its natural content width,
+     which is what allows the ellipsis to actually trigger on narrow viewports.
+     Without an explicit flex spec the title sat at content size and pushed the
+     search trigger off the edge / on top of the title text on mobile. */
+  flex: 1 1 auto;
   min-width: 0;
   font: var(--md-sys-typescale-title-medium);
   opacity: 0.85;
 }
+.md-header__ellipsis,
+.md-header__topic {
+  /* The visible text lives in a child <span class="md-ellipsis">, but text-overflow
+     only applies to block-level boxes. Apply the truncation behaviour to these
+     intermediate block divs so the span's inline overflow gets clipped properly;
+     min-width: 0 propagates the shrink-to-zero permission down the chain. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .md-header__spacer {
-  flex: 1 1 auto;
+  /* With the title now a flex:1 1 auto consumer, the spacer is only needed when
+     the title itself is empty — keep flex-grow but drop the auto basis so an
+     active title always wins the available space. */
+  flex: 1 1 0;
+  min-width: 0;
 }
 .md-header__topic + .md-header__topic {
   color: var(--md-sys-color-on-surface-variant);
@@ -1078,6 +1099,20 @@ a:hover { text-decoration: underline; }
     width: 2.5rem;
     padding: 0;
     justify-content: center;
+  }
+  /* Tighten the header gap on mobile so a long page title has more room before
+     the search trigger crowds in — desktop keeps the 16px spacing for legibility. */
+  .md-header__inner {
+    gap: 8px;
+    padding: 12px 8px;
+  }
+  /* Trim the logo wordmark to a square icon footprint on mobile so the title gets
+     the rest of the row. The img height stays at 2.4rem; max-width caps width to
+     match it (square logos render full, wordmark logos clip — the page title +
+     site name is the more useful identifier on a narrow screen). */
+  .md-logo {
+    max-width: 2.4rem;
+    overflow: hidden;
   }
   .md-search__inner {
     position: fixed;

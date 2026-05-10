@@ -43,25 +43,17 @@ public static class PagefindCli
         var binary = ResolveBinaryPath(options.BinaryPath);
         if (binary is null)
         {
-            return HandleMissingBinary(options.StrictBinaryRequired, logger);
+            return HandleMissingBinary(logger);
         }
 
         return await InvokeAsync(binary, siteRoot, options, logger, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Either throws a strict-mode error or logs a soft warning.</summary>
-    /// <param name="strict">When true, throws.</param>
     /// <param name="logger">Diagnostic logger.</param>
     /// <returns>Always false (the soft path).</returns>
-    private static bool HandleMissingBinary(bool strict, ILogger logger)
+    private static bool HandleMissingBinary(ILogger logger)
     {
-        if (strict)
-        {
-            throw new FileNotFoundException(
-                "Pagefind CLI binary not found. Either ship the per-RID native via the NuStreamDocs.Search.Pagefind package, " +
-                "set PagefindOptions.BinaryPath explicitly, or disable PagefindOptions.RunCli.");
-        }
-
         PagefindCliLogging.LogBinaryMissing(logger, RuntimeInformation.RuntimeIdentifier);
         return false;
     }
@@ -98,7 +90,8 @@ public static class PagefindCli
 
         PagefindCliLogging.LogInvoking(logger, binary, siteRoot);
 
-        using var process = new Process { StartInfo = psi };
+        using var process = new Process();
+        process.StartInfo = psi;
         try
         {
             process.Start();
@@ -113,14 +106,21 @@ public static class PagefindCli
         // delivers strings (UTF-16 decode + per-line allocation). Stdout is just drained to a counter
         // because the success log only surfaces the byte count; stderr is pooled into an
         // ArrayBufferWriter and decoded to string only at the error-message boundary.
+        //
+        // Drain both pipes concurrently via Task.WhenAll. Awaiting stderr-then-stdout serially
+        // (the original shape) deadlocks when the child fills its stdout pipe before stderr is
+        // done — classic on Windows, where the default child-process stdio pipe buffer is 4 KB
+        // versus 64 KB on Linux/macOS. Pagefind's --quiet flag (set above) keeps stdout near-empty
+        // in the success case, but warnings / errors still flow on both streams, so the safe shape
+        // is to wait for both pumps in parallel.
         ArrayBufferWriter<byte> stderrSink = new();
-        var stdoutDrain = DrainStdoutAsync(process.StandardOutput.BaseStream, cancellationToken);
-        var stderrDrain = DrainIntoAsync(process.StandardError.BaseStream, stderrSink, cancellationToken);
+        var stdoutDrain = DrainStdoutAsync(process.StandardOutput.BaseStream, cancellationToken).AsTask();
+        var stderrDrain = DrainIntoAsync(process.StandardError.BaseStream, stderrSink, cancellationToken).AsTask();
 
         long stdoutBytes;
         try
         {
-            await stderrDrain.ConfigureAwait(false);
+            await Task.WhenAll(stdoutDrain, stderrDrain).ConfigureAwait(false);
             stdoutBytes = await stdoutDrain.ConfigureAwait(false);
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
         }
