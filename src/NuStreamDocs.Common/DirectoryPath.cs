@@ -105,6 +105,26 @@ public readonly record struct DirectoryPath(string Value)
     }
 
     /// <summary>
+    /// URL-shaped sibling of <see cref="File(string)"/> that always joins with a forward
+    /// slash regardless of the host OS. Use for synthetic-page paths the build pipeline
+    /// treats as URL-relative — the OS-native <c>Path.Combine</c> would produce
+    /// backslash-joined strings on Windows that break the cross-platform path-equality
+    /// assumptions every downstream synthetic-page consumer (sink lookups, render-output
+    /// mapping) makes.
+    /// </summary>
+    /// <param name="fileName"><see cref="UrlPath"/> identifying the file within this directory; URL-shaped (forward-slashed).</param>
+    /// <returns>The composed file path with forward-slash separators.</returns>
+    public FilePath UrlJoin(UrlPath fileName)
+    {
+        if (fileName.IsEmpty)
+        {
+            throw new ArgumentException("File name must be non-empty.", nameof(fileName));
+        }
+
+        return IsEmpty ? new(fileName.Value) : new(Value + "/" + fileName.Value);
+    }
+
+    /// <summary>
     /// Returns <paramref name="absolute"/> rewritten relative to this directory, with
     /// forward slashes regardless of platform. Useful for plugins that synthesize pages
     /// and need the input-root-relative <see cref="FilePath"/> the build pipeline expects.

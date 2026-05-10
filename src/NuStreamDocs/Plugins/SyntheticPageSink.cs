@@ -38,7 +38,7 @@ public sealed class SyntheticPageSink
     /// <summary>Adds a synthetic page with the given relative path and markdown bytes.</summary>
     /// <param name="relativePath">Forward-slashed path relative to the input root.</param>
     /// <param name="markdownBytes">UTF-8 markdown source.</param>
-    public void Add(NuStreamDocs.Common.FilePath relativePath, byte[] markdownBytes) =>
+    public void Add(Common.FilePath relativePath, byte[] markdownBytes) =>
         _pages.Add(new(relativePath, markdownBytes));
 
     /// <summary>Registers an async stream the pipeline will drain after the eager bag is consumed.</summary>

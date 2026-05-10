@@ -82,6 +82,8 @@ public static class BlogContentGenerator
 
         var indexDirectory = options.IndexPath.Directory;
         var indexDirectoryRelativeUtf8 = ComputeRelativeDirectoryUtf8(options.DocsRoot, indexDirectory);
+        var indexSubdir = options.DocsRoot.Relative(indexDirectory);
+        var indexFileName = (UrlPath)options.IndexPath.FileName;
 
         // Pool-backed writer rented once and reused across every page emit. The
         // PageBuilderPool's thread-static caching means the underlying ArrayBufferWriter
@@ -93,10 +95,10 @@ public static class BlogContentGenerator
         using var rental = PageBuilderPool.Rent(InitialPageWriterCapacity);
         var writer = rental.Writer;
         BlogIndexEmitter.WriteIndex(writer, options.IndexTitle, posts, indexDirectoryRelativeUtf8);
-        sink.Add(new(options.DocsRoot.Relative(options.IndexPath), writer.WrittenSpan.ToArray()));
+        sink.Add(new(indexSubdir.UrlJoin(indexFileName), writer.WrittenSpan.ToArray()));
 
         var pagesBytes = BlogPagesFileEmitter.Render(posts);
-        sink.Add(new(options.DocsRoot.Relative(indexDirectory.File(".pages")), pagesBytes));
+        sink.Add(new(indexSubdir.UrlJoin((UrlPath)".pages"), pagesBytes));
 
         if (!options.EmitArchives)
         {
@@ -105,15 +107,16 @@ public static class BlogContentGenerator
         }
 
         var archiveDirectoryRelativeUtf8 = ComputeRelativeDirectoryUtf8(options.DocsRoot, options.ArchiveRoot);
+        var archiveSubdir = options.DocsRoot.Relative(options.ArchiveRoot);
         var archiveCount = 0;
         var fallback = options.ArchiveFallbackSlug;
         foreach (var (tag, postsForTag) in GroupByTag(posts))
         {
             var safeSlugBytes = BlogSlugifier.Slugify(tag, fallback);
-            var archiveFile = options.ArchiveRoot.File(Encoding.UTF8.GetString(safeSlugBytes) + ".md");
+            var slugFileName = (UrlPath)(Encoding.UTF8.GetString(safeSlugBytes) + ".md");
             writer.ResetWrittenCount();
             BlogIndexEmitter.WriteTagArchive(writer, tag, [.. postsForTag], archiveDirectoryRelativeUtf8);
-            sink.Add(new(options.DocsRoot.Relative(archiveFile), writer.WrittenSpan.ToArray()));
+            sink.Add(new(archiveSubdir.UrlJoin(slugFileName), writer.WrittenSpan.ToArray()));
             archiveCount++;
         }
 

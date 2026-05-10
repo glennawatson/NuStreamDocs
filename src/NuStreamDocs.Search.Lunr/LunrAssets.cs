@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 namespace NuStreamDocs.Search.Lunr;
 
 /// <summary>Provides the vendored <c>lunr.min.js</c> bundle from embedded resources.</summary>

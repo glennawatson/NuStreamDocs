@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -77,7 +78,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
             // SourceDocParser emitter as a forward-slashed string. Keep the conversion to
             // UTF-8 bytes to a single Encoding pass at this boundary — everything else
             // downstream stays byte-shaped.
-            var relBytes = System.Text.Encoding.UTF8.GetBytes(relativePath);
+            var relBytes = Encoding.UTF8.GetBytes(relativePath);
             var slashIdx = Array.IndexOf(relBytes, SlashByte);
             if (slashIdx > 0)
             {
@@ -120,23 +121,25 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         return opts;
     }
 
-    /// <summary>Builds the synthetic page's relative path: <c>{subdir}/{emitterRelative}</c>, all bytes.</summary>
+    /// <summary>
+    /// Builds the synthetic page's relative path: <c>{subdir}/{emitterRelative}</c> via the
+    /// canonical <see cref="DirectoryPath.UrlJoin"/> helper so the join always uses forward
+    /// slashes regardless of host OS.
+    /// </summary>
     /// <param name="subdir">Configured output subdirectory (PathSegment, e.g. <c>api</c>).</param>
     /// <param name="emitterRelative">UTF-8 bytes of the per-page relative path the emitter produced.</param>
     /// <returns>Forward-slashed virtual path under <c>InputRoot</c>.</returns>
     private static FilePath BuildVirtualPath(PathSegment subdir, byte[] emitterRelative)
     {
+        // Single UTF-8 → string decode at the BCL boundary; UrlJoin then composes with
+        // explicit '/' separators (no Path.Combine, so Windows / Linux match).
+        var emitterRelativePath = (UrlPath)Encoding.UTF8.GetString(emitterRelative);
         if (subdir.IsEmpty)
         {
-            return (FilePath)System.Text.Encoding.UTF8.GetString(emitterRelative);
+            return (FilePath)emitterRelativePath.Value;
         }
 
-        var prefixLen = System.Text.Encoding.UTF8.GetByteCount(subdir.Value);
-        var combined = new byte[prefixLen + 1 + emitterRelative.Length];
-        System.Text.Encoding.UTF8.GetBytes(subdir.Value, combined.AsSpan(0, prefixLen));
-        combined[prefixLen] = SlashByte;
-        emitterRelative.CopyTo(combined.AsSpan(prefixLen + 1));
-        return (FilePath)System.Text.Encoding.UTF8.GetString(combined);
+        return DirectoryPath.FromString(subdir).UrlJoin(emitterRelativePath);
     }
 
     /// <summary>Drains <paramref name="reader"/>, surfacing any background-task exception once the channel completes.</summary>

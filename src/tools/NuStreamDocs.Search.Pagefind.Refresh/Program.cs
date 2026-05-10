@@ -5,7 +5,6 @@
 using System.Formats.Tar;
 using System.Globalization;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -51,8 +50,8 @@ public static class Program
     private const int SrcRootProbeDepth = 8;
 
     /// <summary>Upstream release-asset URL template; <c>{0}</c> = version, <c>{1}</c> = filename.</summary>
-    private static readonly System.Text.CompositeFormat ReleaseAssetTemplate =
-        System.Text.CompositeFormat.Parse("https://github.com/CloudCannon/pagefind/releases/download/v{0}/{1}");
+    private static readonly CompositeFormat ReleaseAssetTemplate =
+        CompositeFormat.Parse("https://github.com/CloudCannon/pagefind/releases/download/v{0}/{1}");
 
     /// <summary>The five RIDs we ship — broad .NET RIDs paired with the matching Rust target triple.</summary>
     private static readonly RidMapping[] Rids =
@@ -92,11 +91,9 @@ public static class Program
             return 1;
         }
 
-        using HttpClientHandler handler = new()
-        {
-            AutomaticDecompression = System.Net.DecompressionMethods.All,
-            CheckCertificateRevocationList = true,
-        };
+        using HttpClientHandler handler = new();
+        handler.AutomaticDecompression = System.Net.DecompressionMethods.All;
+        handler.CheckCertificateRevocationList = true;
         using HttpClient http = new(handler);
         http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         http.Timeout = TimeSpan.FromMinutes(5);
@@ -201,14 +198,16 @@ public static class Program
         while (reader.GetNextEntry() is { } entry)
         {
             var leaf = Path.GetFileName(entry.Name);
-            if (entry.EntryType == TarEntryType.RegularFile &&
-                string.Equals(leaf, binaryFileName, StringComparison.Ordinal) &&
-                entry.DataStream is not null)
+            if (entry.EntryType != TarEntryType.RegularFile ||
+                !string.Equals(leaf, binaryFileName, StringComparison.Ordinal) ||
+                entry.DataStream is null)
             {
-                using MemoryStream sink = new();
-                entry.DataStream.CopyTo(sink);
-                return sink.ToArray();
+                continue;
             }
+
+            using MemoryStream sink = new();
+            entry.DataStream.CopyTo(sink);
+            return sink.ToArray();
         }
 
         throw new InvalidOperationException($"Tarball contained no entry named '{binaryFileName}'.");

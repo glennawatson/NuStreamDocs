@@ -64,14 +64,14 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         var writer = rental.Writer;
 
         WriteIndexMarkdown(writer, collected);
-        context.SyntheticPages.Add(new(virtualDir.File("index.md"), writer.WrittenSpan.ToArray()));
+        context.SyntheticPages.Add(new(virtualDir.UrlJoin("index.md"), writer.WrittenSpan.ToArray()));
 
         foreach (var pair in collected)
         {
             writer.ResetWrittenCount();
             WriteTagMarkdown(writer, pair.Key, pair.Value);
             var slug = TagsCommon.SlugifyTag(pair.Key);
-            context.SyntheticPages.Add(new(virtualDir.File(TagsCommon.BuildSlugFileName(slug, ".md"u8)), writer.WrittenSpan.ToArray()));
+            context.SyntheticPages.Add(new(virtualDir.UrlJoin(TagsCommon.BuildSlugFileName(slug, ".md"u8)), writer.WrittenSpan.ToArray()));
         }
     }
 

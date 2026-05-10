@@ -42,8 +42,8 @@ internal static class TagsCommon
     /// <summary>Builds a slug filename from the slug and extension.</summary>
     /// <param name="slug">ASCII slug bytes (alphanumeric / hyphen only).</param>
     /// <param name="extensionWithDot">Extension bytes to append, including the leading dot (e.g. <c>".md"u8</c>, <c>".html"u8</c>); ASCII.</param>
-    /// <returns>The slug followed by the extension as a path-typed file name.</returns>
-    public static FilePath BuildSlugFileName(ReadOnlySpan<byte> slug, ReadOnlySpan<byte> extensionWithDot)
+    /// <returns>The slug followed by the extension as a URL-shaped path component (no separators, ASCII-only by construction).</returns>
+    public static UrlPath BuildSlugFileName(ReadOnlySpan<byte> slug, ReadOnlySpan<byte> extensionWithDot)
     {
         var totalLength = slug.Length + extensionWithDot.Length;
         var fileName = string.Create(totalLength, (slug.ToArray(), extensionWithDot.ToArray()), static (dst, src) =>
@@ -59,7 +59,7 @@ internal static class TagsCommon
                 dst[slugBytes.Length + i] = (char)extBytes[i];
             }
         });
-        return FilePath.FromString(fileName);
+        return UrlPath.FromString(fileName);
     }
 
     /// <summary>Writes the slug form of <paramref name="tag"/> into <paramref name="dst"/> and returns the count.</summary>

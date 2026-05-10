@@ -65,7 +65,7 @@ public class ExtraAssetsHeadBenchmarks
         {
             var css = Path.Combine(_tempRoot, "style-" + i + ".css");
             await File.WriteAllBytesAsync(css, cssBytes).ConfigureAwait(false);
-            builder.AddExtraCss((NuStreamDocs.Common.FilePath)css);
+            builder.AddExtraCss((Common.FilePath)css);
         }
 
         for (var i = 0; i < ScriptCount; i++)
@@ -74,11 +74,11 @@ public class ExtraAssetsHeadBenchmarks
             await File.WriteAllBytesAsync(js, jsBytes).ConfigureAwait(false);
             if (i % ModuleStridePeriod == 0)
             {
-                builder.AddExtraJs((NuStreamDocs.Common.FilePath)js);
+                builder.AddExtraJs((Common.FilePath)js);
             }
             else
             {
-                builder.AddExtraJsModule((NuStreamDocs.Common.FilePath)js);
+                builder.AddExtraJsModule((Common.FilePath)js);
             }
         }
 
@@ -124,7 +124,7 @@ public class ExtraAssetsHeadBenchmarks
         DocBuilder builder = new();
         for (var i = 0; i < CssCount; i++)
         {
-            builder.AddExtraCss((NuStreamDocs.Common.FilePath)Path.Combine(_tempRoot, "style-" + i + ".css"));
+            builder.AddExtraCss((Common.FilePath)Path.Combine(_tempRoot, "style-" + i + ".css"));
         }
 
         for (var i = 0; i < ScriptCount; i++)
@@ -132,11 +132,11 @@ public class ExtraAssetsHeadBenchmarks
             var js = Path.Combine(_tempRoot, "script-" + i + ".js");
             if (i % ModuleStridePeriod == 0)
             {
-                builder.AddExtraJs((NuStreamDocs.Common.FilePath)js);
+                builder.AddExtraJs((Common.FilePath)js);
             }
             else
             {
-                builder.AddExtraJsModule((NuStreamDocs.Common.FilePath)js);
+                builder.AddExtraJsModule((Common.FilePath)js);
             }
         }
 

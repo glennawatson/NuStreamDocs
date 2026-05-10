@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -40,8 +39,8 @@ public static class Program
     private const int SrcRootProbeDepth = 8;
 
     /// <summary>Upstream asset URL template; <c>{0}</c> = version.</summary>
-    private static readonly System.Text.CompositeFormat AssetUrlTemplate =
-        System.Text.CompositeFormat.Parse("https://cdn.jsdelivr.net/npm/lunr@{0}/lunr.min.js");
+    private static readonly CompositeFormat AssetUrlTemplate =
+        CompositeFormat.Parse("https://cdn.jsdelivr.net/npm/lunr@{0}/lunr.min.js");
 
     /// <summary>Entry point.</summary>
     /// <param name="args">CLI args.</param>
@@ -63,11 +62,9 @@ public static class Program
         var assetUrl = string.Format(CultureInfo.InvariantCulture, AssetUrlTemplate, version);
         Uri assetUri = new(assetUrl);
 
-        using HttpClientHandler handler = new()
-        {
-            AutomaticDecompression = System.Net.DecompressionMethods.All,
-            CheckCertificateRevocationList = true,
-        };
+        using HttpClientHandler handler = new();
+        handler.AutomaticDecompression = System.Net.DecompressionMethods.All;
+        handler.CheckCertificateRevocationList = true;
         using HttpClient http = new(handler);
         http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         http.Timeout = TimeSpan.FromMinutes(2);
