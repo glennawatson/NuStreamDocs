@@ -841,78 +841,64 @@ options-customizer+logger).
 
 ## Why pick NuStreamDocs
 
-If you have a small docs site, every modern static-site generator works. The
-cost shows up at scale — when you have thousands of pages, an editor that
-runs your docs build on every save, or a CI job that pays for every minute
-of build time. NuStreamDocs is built for that shape. Here's what's
-different:
+For a small site, every modern static-site generator is fast enough. The
+difference shows up when an editor reruns the build on every save, when
+CI pays for every minute, or when the corpus grows past a few hundred
+pages. NuStreamDocs is built for those shapes. Numbers are from
+BenchmarkDotNet on a single workstation (AMD Ryzen 7 5800X, 16 logical
+cores, .NET 10.0.7, Release config — see `src/benchmarks/`).
 
-### Real numbers on a real corpus
+### End-to-end build, real-world corpus (211 pages, 7.6 MB)
 
-Reference workload is the **ReactiveUI website**: 13,800 markdown files,
-72 MB on disk — a corpus that mkdocs-material and Zensical both struggle
-with. Recent BenchmarkDotNet runs on a typical workstation:
+The reference fixture is a snapshot of the ReactiveUI website docs.
+`Baseline` is parse + render + emit; everything else layers a plugin on
+top of the same input.
 
-| Scenario | Time | Allocated |
+| Scenario | Time | Allocated | Per-page |
+|---|--:|--:|--:|
+| Baseline (parse → render → emit) | **11.2 ms** | 770 KB | 53 µs |
+| + markdown extensions | 13.9 ms | 1.96 MB | 66 µs |
+| + syntax highlighter | 23.3 ms | 2.14 MB | 110 µs |
+| + nav (full discovery) | 20.6 ms | 2.24 MB | 98 µs |
+| + bibliography | 11.3 ms | 901 KB | 54 µs |
+| + magic-link / autolinks | 13.7 ms | 956 KB | 65 µs |
+| + every plugin (Full stack) | **87.9 ms** | 13.2 MB | 417 µs |
+
+That's the **whole 211-page corpus, every plugin enabled, in 88 ms** —
+**~2,400 pages / second** with the works on. Without plugins the parse-
+render-emit core handles **~19,000 pages / second** on the same box.
+
+### Per-page synthetic (no I/O, pure pipeline)
+
+| Pages | Baseline | Full stack |
 |---|--:|--:|
-| Baseline (parse + render + write) | **199 ms** | 46 MB |
-| With markdown extensions | 358 ms | 90 MB |
-| With nav generation | 544 ms | 229 MB |
-| Full plugin stack | 1.2 s | 619 MB |
+| 50 | 1.1 ms (22 µs/page) | 3.9 ms (79 µs/page) |
+| 500 | 7.6 ms (15 µs/page) | 28.8 ms (58 µs/page) |
 
-That's the **whole 13,800-page site, full pipeline, in just over a
-second** — not per-page, total. Subsecond rebuilds for a one-file edit
-fall out of incremental caching. For comparison, mkdocs-material on the
-same corpus needs minutes for a cold build.
+The per-page cost goes *down* at 500 pages because JIT tiering kicks in
+and the parallel scheduler amortizes its overhead.
 
-### What we did differently
-
-- **UTF-8 in, UTF-8 out.** Markdown is read as bytes, parsed with
-  byte-span scanners, emitted to `IBufferWriter<byte>` sinks. No
-  per-token `string` allocations. A 10 MB document parses with
-  `O(blocks)` heap allocations, not `O(bytes)`.
-- **Per-page work is pure** and runs in parallel via
-  `Parallel.ForEachAsync`. On a 16-core box you get 16-way speedup
-  on the parse-render-emit phase by default.
-- **Content-hash incremental builds.** Each input file is xxHash3'd
-  into a manifest. An unchanged hash short-circuits parse + emit
-  entirely — typical one-file edits rebuild in milliseconds.
-- **Bounded, time-aware caches.** Parsed AST and search shards live in
-  size-capped + age-capped LRUs keyed by content hash, so a long-running
-  watch session doesn't grow without bound.
-- **Pooled buffers everywhere.** Scanner blocks, HTML escapers, theme
-  templates, icon SVG sinks — all rented from `ArrayPool<T>` or a
-  per-pipeline `PageBuilderPool`. Per-page steady-state allocation on
-  the rxui corpus is ~3 KB / page.
-- **`SearchValues<byte>`** for delimiter scans — `IndexOfAny` runs
-  vectorized on the actual SIMD path your CPU has.
+Per-plugin micro-benchmarks, syntax-highlighter throughput by language,
+zero-allocation render-core measurements, and the full cross-suite
+allocation + CPU profile are in [BENCHMARKS.md](BENCHMARKS.md).
 
 ### Native AOT-ready
 
 The library assemblies build with `IsAotCompatible=true` and the trim
-analyzer enabled. Reflection-using dependencies (BenchmarkDotNet, Verify)
-are quarantined to test + benchmark projects only. Your published binary
-can be a single ~30 MB native executable that starts in milliseconds —
-useful for CI containers and local pre-commit hooks where startup
-overhead matters more than steady-state.
-
-### Stable end-to-end memory profile
-
-The 619 MB you see in the full-stack rxui benchmark is allocated during
-the build, not retained — Gen 2 collections after build finish bring
-working set back to ~80 MB. There's no per-page string interning, no
-hidden global caches, no leaked task captures. Long-running watch
-sessions stay flat.
+analyzer enabled; reflection-using dependencies (BenchmarkDotNet,
+Verify) are quarantined to test + benchmark projects. A published build
+is a single native executable that starts in milliseconds — useful for
+CI containers and pre-commit hooks where steady-state cost matters less
+than startup.
 
 ### Reproducibility
 
 Every plugin in the pipeline is byte-deterministic given the same input.
 Same content + same plugins + same options = same output bytes — useful
-for diffing, caching, and `git`-friendly site directories.
-
-The `BenchmarkDotNet` harness under `src/benchmarks/` is what we run on
-every perf-affecting change. Per-plugin benchmarks plus an end-to-end
-rxui-corpus profile keep regressions visible.
+for diffing, caching, and `git`-friendly site directories. The
+`src/benchmarks/` harness re-runs on every perf-affecting change;
+per-plugin benchmarks plus the end-to-end rxui-corpus profile keep
+regressions visible.
 
 ---
 

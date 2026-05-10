@@ -20,15 +20,9 @@ If you find a file in a broken state and your instinct is "let me just revert it
 
 Same rule applies to `--no-verify`, `--force`, force-push, branch deletion, stash dropping, and any other action that throws away work. **Reversibility is the default; destruction needs explicit permission every single time.**
 
-## Git workflow — when direct-to-`main` is allowed
+## Git workflow — direct-to-`main` is the norm
 
-The default-branch rule in the system prompt says "if on the default branch, branch first." **This repo opts out of that default.** When the user explicitly asks for a commit or a push to `main` (e.g. "commit and push", "push to main", "push these changes"), commit and push directly on `main` — no branching, no PR ceremony. The user drives every commit and push action; once one is explicitly requested, run it without further confirmation.
-
-The destructive-git rules above (no `--force`, no force-push, no branch deletion, no stash drop without ask) still apply on `main`.
-
-## Anonymity in commits, docs, and comments
-
-Do not name the user (or any contributor) in commit messages, code comments, XML doc comments, or docs. Refer to "the user", "the author", or rephrase to avoid the reference entirely. This holds across the repo, including CLAUDE.md and README.md.
+This repo overrides the system prompt's default "if on the default branch, branch first" rule. Direct commits and pushes to `main` are common here — when explicitly asked to commit or push (e.g. "commit and push", "push to main"), do it on `main` with no branching or PR ceremony. The destructive-git rules above (no `--force`, no force-push, no branch deletion, no stash drop without ask) still apply.
 
 ## Repository Orientation
 
