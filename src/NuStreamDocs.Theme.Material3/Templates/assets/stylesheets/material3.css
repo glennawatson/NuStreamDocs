@@ -1124,6 +1124,15 @@ a:hover { text-decoration: underline; }
     cursor: pointer;
     -webkit-tap-highlight-color: rgb(0 0 0 / 12%);
   }
+  /* Pages with `hide: - navigation` in frontmatter render the drawer with the HTML
+     `hidden` attribute so the desktop sidebar disappears. On mobile that's wrong —
+     the hamburger drawer is the *only* navigation surface, and `hidden` sets
+     `display: none` which the slide-in `transform` rule below cannot override.
+     Force the drawer back to `display: block` at the mobile breakpoint regardless
+     of the attribute; the slide-in transform then takes over as designed. */
+  .md-sidebar--primary[hidden] {
+    display: block;
+  }
   .md-sidebar--primary {
     position: fixed;
     top: 0;
