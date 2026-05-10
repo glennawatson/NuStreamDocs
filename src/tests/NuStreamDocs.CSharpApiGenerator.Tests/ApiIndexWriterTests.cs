@@ -2,68 +2,41 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Globalization;
 using System.Text;
-using NuStreamDocs.Common;
 
 namespace NuStreamDocs.CSharpApiGenerator.Tests;
 
-/// <summary>End-to-end tests for the API landing-page <c>index.md</c> emitter.</summary>
+/// <summary>Pins <see cref="ApiIndexWriter.BuildBytes"/> on the rendered shape and the <see cref="ApiIndexWriter.IsInfraDirectory"/> infra-name filter.</summary>
 public class ApiIndexWriterTests
 {
-    /// <summary>A missing API root short-circuits with zero namespaces written.</summary>
+    /// <summary>An empty namespace list short-circuits to a zero-length payload.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task ReturnsZeroWhenApiPathDoesNotExist()
+    public async Task BuildBytesReturnsEmptyForEmptyNamespaceList()
     {
-        var apiPath = (DirectoryPath)Path.Combine(Path.GetTempPath(), "smkd-apidx-missing-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        var written = ApiIndexWriter.Write(apiPath, [], []);
-        await Assert.That(written).IsEqualTo(0);
+        var bytes = ApiIndexWriter.BuildBytes([], [], [], order: null);
+        await Assert.That(bytes.Length).IsEqualTo(0);
     }
 
-    /// <summary>A folder with only infra dirs (lib/refs/cache/_global) yields no index file.</summary>
+    /// <summary>The default title is emitted when no title is supplied, and bullets render in caller-supplied order.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task ReturnsZeroWhenOnlyInfraDirectoriesPresent()
+    public async Task BuildBytesEmitsDefaultTitleAndNamespaceBullets()
     {
-        using TempApiTree fixture = new();
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "lib"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "refs"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "cache"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "_global"));
+        byte[][] namespaces =
+        [
+            "Akavache"u8.ToArray(),
+            "ReactiveUI"u8.ToArray(),
+            "Splat"u8.ToArray(),
+        ];
 
-        var written = ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], []);
-
-        await Assert.That(written).IsEqualTo(0);
-        await Assert.That(File.Exists(Path.Combine(fixture.Root, "index.md"))).IsFalse();
-    }
-
-    /// <summary>Real namespaces produce a sorted bullet list, infra dirs are skipped, and the default title is used when none is supplied.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task EmitsSortedNamespaceListWithDefaultTitle()
-    {
-        using TempApiTree fixture = new();
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "Akavache"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "ReactiveUI"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "Splat"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "lib"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "_global"));
-
-        var written = ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], []);
-        await Assert.That(written).IsEqualTo(3);
-
-        var indexPath = Path.Combine(fixture.Root, "index.md");
-        await Assert.That(File.Exists(indexPath)).IsTrue();
-        var contents = await File.ReadAllTextAsync(indexPath, Encoding.UTF8);
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], order: null));
 
         await Assert.That(contents).StartsWith("# API Reference\n\n");
         await Assert.That(contents).Contains("## Namespaces\n\n");
         await Assert.That(contents).Contains("- [`Akavache`](Akavache/)");
         await Assert.That(contents).Contains("- [`ReactiveUI`](ReactiveUI/)");
         await Assert.That(contents).Contains("- [`Splat`](Splat/)");
-        await Assert.That(contents).DoesNotContain("lib");
-        await Assert.That(contents).DoesNotContain("_global");
 
         var akavacheIdx = contents.IndexOf("Akavache`", StringComparison.Ordinal);
         var reactiveIdx = contents.IndexOf("ReactiveUI`", StringComparison.Ordinal);
@@ -75,79 +48,51 @@ public class ApiIndexWriterTests
     /// <summary>Custom title and intro bytes are emitted between the heading and the namespace list.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HonoursCustomTitleAndIntro()
+    public async Task BuildBytesHonoursCustomTitleAndIntro()
     {
-        using TempApiTree fixture = new();
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo.Bar"));
+        byte[][] namespaces = ["Foo.Bar"u8.ToArray()];
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, "Custom Title"u8, "Custom intro paragraph."u8, order: null));
 
-        var written = ApiIndexWriter.Write(
-            (DirectoryPath)fixture.Root,
-            "Custom Title"u8,
-            "Custom intro paragraph."u8);
-
-        await Assert.That(written).IsEqualTo(1);
-        var contents = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "index.md"), Encoding.UTF8);
         await Assert.That(contents).StartsWith("# Custom Title\n\n");
         await Assert.That(contents).Contains("Custom intro paragraph.\n\n");
         await Assert.That(contents).Contains("- [`Foo.Bar`](Foo.Bar/)");
     }
 
-    /// <summary>An <c>IndexOrder</c> value emits a YAML frontmatter block ahead of the heading.</summary>
+    /// <summary>An <c>Order:</c> value emits a YAML frontmatter block ahead of the heading.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task IndexOrderEmitsFrontmatterBlock()
+    public async Task BuildBytesEmitsOrderFrontmatterBlock()
     {
-        using TempApiTree fixture = new();
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo"));
+        byte[][] namespaces = ["Foo"u8.ToArray()];
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], order: 2));
 
-        var written = ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], [], order: 2);
-        await Assert.That(written).IsEqualTo(1);
-
-        var contents = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "index.md"), Encoding.UTF8);
         await Assert.That(contents).StartsWith("---\nOrder: 2\n---\n\n# API Reference");
     }
 
-    /// <summary>The legacy three-arg overload writes no frontmatter (back-compat).</summary>
+    /// <summary>Calling without an <c>Order:</c> writes no frontmatter.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task LegacyOverloadEmitsNoFrontmatter()
+    public async Task BuildBytesWithoutOrderHasNoFrontmatter()
     {
-        using TempApiTree fixture = new();
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "Foo"));
+        byte[][] namespaces = ["Foo"u8.ToArray()];
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], order: null));
 
-        ApiIndexWriter.Write((DirectoryPath)fixture.Root, [], []);
-        var contents = await File.ReadAllTextAsync(Path.Combine(fixture.Root, "index.md"), Encoding.UTF8);
         await Assert.That(contents).DoesNotContain("Order:");
         await Assert.That(contents).StartsWith("# API Reference");
     }
 
-    /// <summary>Disposable temp directory used as the API root for these tests.</summary>
-    private sealed class TempApiTree : IDisposable
-    {
-        /// <summary>Initializes a new instance of the <see cref="TempApiTree"/> class.</summary>
-        public TempApiTree()
-        {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-apidx-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(Root);
-        }
-
-        /// <summary>Gets the absolute path to the temp directory.</summary>
-        public string Root { get; }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            try
-            {
-                if (Directory.Exists(Root))
-                {
-                    Directory.Delete(Root, recursive: true);
-                }
-            }
-            catch (IOException)
-            {
-                // best-effort cleanup
-            }
-        }
-    }
+    /// <summary><see cref="ApiIndexWriter.IsInfraDirectory"/> matches the well-known infra folder names and rejects everything else.</summary>
+    /// <param name="name">Folder name candidate.</param>
+    /// <param name="expected">Expected predicate result.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("lib", true)]
+    [Arguments("refs", true)]
+    [Arguments("cache", true)]
+    [Arguments("_global", true)]
+    [Arguments("Splat", false)]
+    [Arguments("ReactiveUI", false)]
+    [Arguments("Lib", false)]
+    public async Task IsInfraDirectoryMatchesKnownFolderNames(string name, bool expected) =>
+        await Assert.That(ApiIndexWriter.IsInfraDirectory(Encoding.UTF8.GetBytes(name))).IsEqualTo(expected);
 }
