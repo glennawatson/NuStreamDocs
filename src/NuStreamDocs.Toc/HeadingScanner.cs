@@ -46,9 +46,16 @@ internal static class HeadingScanner
 
         List<Heading> found = new(16);
         var cursor = 0;
+        var anchorDepth = 0;
+        var anchorCursor = 0;
         while (cursor < html.Length
                && Utf8HtmlScanner.TryFindNextHeadingOpen(html, cursor, out var tagStart, out var tagEnd, out var level))
         {
+            // Single linear sweep across the bytes we just skipped so we know whether the
+            // heading sits inside an open <a> without re-scanning the prefix per heading.
+            anchorDepth = AdvanceAnchorDepth(html, anchorCursor, tagStart, anchorDepth);
+            anchorCursor = tagStart;
+
             var closeIdx = FindCloseTag(html, tagEnd, level);
             if (closeIdx < 0)
             {
@@ -56,7 +63,7 @@ internal static class HeadingScanner
                 continue;
             }
 
-            if (IsInsideAnchor(html, tagStart))
+            if (anchorDepth > 0)
             {
                 cursor = closeIdx + CloseTagLength;
                 continue;
@@ -115,42 +122,81 @@ internal static class HeadingScanner
         Markdown.Common.HtmlEntityDecoder.DecodeInto(sink, inner[runStart..]);
     }
 
-    /// <summary>Returns true when the byte at <paramref name="position"/> sits inside an open <c>&lt;a&gt;</c> element.</summary>
+    /// <summary>
+    /// Walks <paramref name="html"/> from <paramref name="from"/> to <paramref name="to"/> applying every
+    /// <c>&lt;a&gt;</c> open and <c>&lt;/a&gt;</c> close to <paramref name="depth"/>.
+    /// </summary>
     /// <param name="html">Full snapshot.</param>
-    /// <param name="position">Heading-tag start offset.</param>
-    /// <returns>True when the most recent <c>&lt;a</c> open tag before <paramref name="position"/> has not yet been closed.</returns>
-    private static bool IsInsideAnchor(ReadOnlySpan<byte> html, int position)
+    /// <param name="from">Inclusive start offset (where the previous walk left off).</param>
+    /// <param name="to">Exclusive end offset (current heading-tag start).</param>
+    /// <param name="depth">Current open-anchor depth before the walk.</param>
+    /// <returns>Updated open-anchor depth after consuming the slice.</returns>
+    private static int AdvanceAnchorDepth(ReadOnlySpan<byte> html, int from, int to, int depth)
     {
-        var lastOpen = LastIndexOfAnchorOpen(html[..position]);
-        if (lastOpen < 0)
+        if (from >= to)
         {
-            return false;
+            return depth;
         }
 
-        var lastClose = html[..position].LastIndexOf("</a>"u8);
-        return lastClose < lastOpen;
+        var slice = html[from..to];
+        var p = 0;
+        while (p < slice.Length)
+        {
+            var rel = slice[p..].IndexOf(OpenAngle);
+            if (rel < 0)
+            {
+                break;
+            }
+
+            var pos = p + rel;
+            depth = ApplyAnchorTagAt(slice, pos, depth);
+            p = pos + 1;
+        }
+
+        return depth;
     }
 
-    /// <summary>Returns the index of the last <c>&lt;a</c> open-tag prefix in <paramref name="span"/>, or <c>-1</c> when none.</summary>
-    /// <param name="span">Span to scan.</param>
-    /// <returns>Index of the <c>&lt;</c> byte, or <c>-1</c>.</returns>
-    private static int LastIndexOfAnchorOpen(ReadOnlySpan<byte> span)
+    /// <summary>Applies a single anchor open/close at <paramref name="pos"/> to <paramref name="depth"/>.</summary>
+    /// <param name="slice">Bytes being scanned.</param>
+    /// <param name="pos">Offset of the candidate <c>&lt;</c> byte.</param>
+    /// <param name="depth">Current open-anchor depth.</param>
+    /// <returns>Updated depth (incremented on <c>&lt;a&gt;</c>/<c>&lt;a …&gt;</c>, decremented on <c>&lt;/a&gt;</c>).</returns>
+    private static int ApplyAnchorTagAt(ReadOnlySpan<byte> slice, int pos, int depth)
     {
-        // Smallest possible <a> opener is "<a>" (3 bytes); the loop indexes the '<' so we start two before the end.
-        const int MinTagSpan = 3;
-        for (var i = span.Length - MinTagSpan; i >= 0; i--)
+        if (IsAnchorClose(slice, pos))
         {
-            const int NameOffset = 1;
-            const int NameEndOffset = 2;
-            if (span[i] is OpenAngle
-                && span[i + NameOffset] is (byte)'a' or (byte)'A'
-                && span[i + NameEndOffset] is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or CloseAngle)
-            {
-                return i;
-            }
+            return depth > 0 ? depth - 1 : 0;
         }
 
-        return -1;
+        return IsAnchorOpen(slice, pos) ? depth + 1 : depth;
+    }
+
+    /// <summary>True when <paramref name="pos"/> in <paramref name="slice"/> begins a <c>&lt;/a&gt;</c> close tag.</summary>
+    /// <param name="slice">Bytes being scanned.</param>
+    /// <param name="pos">Offset of the <c>&lt;</c> byte.</param>
+    /// <returns>True for a close-anchor tag.</returns>
+    private static bool IsAnchorClose(ReadOnlySpan<byte> slice, int pos)
+    {
+        const int SlashOffset = 1;
+        const int NameOffset = 2;
+        const int GtOffset = 3;
+        return pos + GtOffset < slice.Length
+            && slice[pos + SlashOffset] is Slash
+            && slice[pos + NameOffset] is (byte)'a' or (byte)'A'
+            && slice[pos + GtOffset] is CloseAngle;
+    }
+
+    /// <summary>True when <paramref name="pos"/> in <paramref name="slice"/> begins a <c>&lt;a&gt;</c> or <c>&lt;a …</c> open tag.</summary>
+    /// <param name="slice">Bytes being scanned.</param>
+    /// <param name="pos">Offset of the <c>&lt;</c> byte.</param>
+    /// <returns>True for an open-anchor tag.</returns>
+    private static bool IsAnchorOpen(ReadOnlySpan<byte> slice, int pos)
+    {
+        const int NameOffset = 1;
+        const int TerminatorOffset = 2;
+        return pos + TerminatorOffset < slice.Length
+            && slice[pos + NameOffset] is (byte)'a' or (byte)'A'
+            && slice[pos + TerminatorOffset] is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or CloseAngle;
     }
 
     /// <summary>Finds the next <c>&lt;/hN&gt;</c> close tag.</summary>

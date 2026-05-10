@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Common;
@@ -241,6 +242,7 @@ public static class AsciiByteHelpers
     /// already-lowercased); other bytes compare ordinally so identifiers containing <c>_</c>, <c>-</c>,
     /// or digits round-trip correctly.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool EqualsIgnoreAsciiCase(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
     {
         if (a.Length != b.Length)
