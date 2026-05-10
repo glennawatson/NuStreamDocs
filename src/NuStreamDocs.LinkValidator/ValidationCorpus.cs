@@ -77,13 +77,14 @@ public sealed class ValidationCorpus
             async (path, ct) =>
             {
                 var bytes = await File.ReadAllBytesAsync(path.Value, ct).ConfigureAwait(false);
-                if (IsRedirectStub(bytes))
-                {
-                    return;
-                }
-
                 var pageUrlBytes = ToPageUrlBytes(fullRoot, path);
-                pages[pageUrlBytes] = ScanPage(pageUrlBytes, bytes);
+
+                // Redirect stubs (meta-refresh bouncers) are real pages users can land on —
+                // register them so inbound links resolve, but skip their outbound link scan
+                // since the bytes are just the redirect chrome.
+                pages[pageUrlBytes] = IsRedirectStub(bytes)
+                    ? new(pageUrlBytes, [], [], new(ByteArrayComparer.Instance), new(ByteArrayComparer.Instance))
+                    : ScanPage(pageUrlBytes, bytes);
             }).ConfigureAwait(false);
 
         Dictionary<byte[], PageLinks> snapshot = new(pages, ByteArrayComparer.Instance);
@@ -250,7 +251,7 @@ public sealed class ValidationCorpus
             anchorIds.Add(idRanges[i].AsSpan(bytes).ToArray());
         }
 
-        HashSet<byte[]> deprecatedNameAnchors = nameRanges.Length is 0
+        var deprecatedNameAnchors = nameRanges.Length is 0
             ? EmptyCollections.HashSetFor<byte[]>()
             : BuildDeprecatedNameSet(nameRanges, bytes);
 

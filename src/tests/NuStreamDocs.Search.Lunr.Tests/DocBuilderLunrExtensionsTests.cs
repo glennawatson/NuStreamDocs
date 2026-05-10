@@ -33,7 +33,7 @@ public class DocBuilderLunrExtensionsTests
     [Test]
     public async Task OptionsLoggerOverload()
     {
-        LunrOptions options = LunrOptions.Default;
+        var options = LunrOptions.Default;
         var b = new DocBuilder().UseLunrSearch(options, NullLogger.Instance);
         await Assert.That(b).IsNotNull();
     }

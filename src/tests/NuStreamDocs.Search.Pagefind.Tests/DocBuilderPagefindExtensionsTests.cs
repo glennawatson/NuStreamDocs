@@ -33,7 +33,7 @@ public class DocBuilderPagefindExtensionsTests
     [Test]
     public async Task OptionsLoggerOverload()
     {
-        PagefindOptions options = PagefindOptions.Default;
+        var options = PagefindOptions.Default;
         var b = new DocBuilder().UsePagefindSearch(options, NullLogger.Instance);
         await Assert.That(b).IsNotNull();
     }

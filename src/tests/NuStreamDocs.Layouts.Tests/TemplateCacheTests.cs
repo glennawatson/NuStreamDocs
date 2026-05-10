@@ -64,8 +64,8 @@ public class TemplateCacheTests
         TemplateEntry entryA = new(TemplateUnit.From(bytes), new("/tmp/A.html"));
         TemplateEntry entryB = new(TemplateUnit.From(bytes), new("/tmp/B.html"));
 
-        Task taskA = Task.Run(() => cache.Add("home.html"u8.ToArray(), entryA));
-        Task taskB = Task.Run(() => cache.Add("home.html"u8.ToArray(), entryB));
+        var taskA = Task.Run(() => cache.Add("home.html"u8.ToArray(), entryA));
+        var taskB = Task.Run(() => cache.Add("home.html"u8.ToArray(), entryB));
         await Task.WhenAll(taskA, taskB);
 
         await Assert.That(cache.Count).IsEqualTo(1);
