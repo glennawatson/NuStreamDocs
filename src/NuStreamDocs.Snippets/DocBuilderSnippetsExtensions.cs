@@ -15,7 +15,6 @@ public static class DocBuilderSnippetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSnippets(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new SnippetsPlugin());
     }
 
@@ -25,7 +24,6 @@ public static class DocBuilderSnippetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSnippets(this DocBuilder builder, in DirectoryPath baseDirectory)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory.Value);
         return builder.UsePlugin(new SnippetsPlugin(baseDirectory));
     }

@@ -58,8 +58,6 @@ public static class YamlToJson
     /// <param name="json">UTF-8 JSON sink.</param>
     public static void Convert(ReadOnlySpan<byte> yaml, Utf8JsonWriter json)
     {
-        ArgumentNullException.ThrowIfNull(json);
-
         var stack = ArrayPool<ContainerFrame>.Shared.Rent(16);
         var depth = OpenRoot(json, stack);
 
@@ -90,9 +88,6 @@ public static class YamlToJson
     /// <returns>A task that completes when the stream is fully consumed.</returns>
     public static async Task ConvertAsync(Stream utf8Stream, Utf8JsonWriter json, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(utf8Stream);
-        ArgumentNullException.ThrowIfNull(json);
-
         var stack = ArrayPool<ContainerFrame>.Shared.Rent(16);
         var depth = OpenRoot(json, stack);
         using Utf8LineReader reader = new(utf8Stream, leaveOpen: true);

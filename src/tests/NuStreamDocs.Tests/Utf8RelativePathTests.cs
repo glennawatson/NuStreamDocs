@@ -63,13 +63,6 @@ public class Utf8RelativePathTests
     public async Task RootTargetFromDeepFrom() =>
         await Assert.That(Compute("blog/posts", "index.md")).IsEqualTo("../../index.md");
 
-    /// <summary>Sink null-checks.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullSinkThrows() =>
-        await Assert.That(() => Utf8RelativePath.WriteRelative(null!, "a"u8, "b"u8))
-            .Throws<ArgumentNullException>();
-
     /// <summary>Convenience wrapper that runs WriteRelative against UTF-8 string inputs.</summary>
     /// <param name="from">Forward-slashed source-directory text.</param>
     /// <param name="target">Forward-slashed target-path text.</param>

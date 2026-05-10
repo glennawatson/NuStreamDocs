@@ -24,8 +24,6 @@ public sealed class MdiIconLookup
     /// <param name="index">Per-icon <c>name → (offset, length)</c> mapping into <paramref name="blob"/>.</param>
     public MdiIconLookup(byte[] blob, Dictionary<byte[], (int Offset, int Length)> index)
     {
-        ArgumentNullException.ThrowIfNull(blob);
-        ArgumentNullException.ThrowIfNull(index);
         _blob = blob;
         _index = index;
         _altLookup = _index.AsUtf8Lookup();

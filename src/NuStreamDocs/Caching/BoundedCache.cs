@@ -93,8 +93,6 @@ public sealed class BoundedCache<TKey, TValue>
     /// <param name="value">Value to store.</param>
     public void Set(TKey key, TValue value)
     {
-        ArgumentNullException.ThrowIfNull(key);
-
         var now = _timeProvider.GetUtcNow();
         lock (_gate)
         {
@@ -136,8 +134,6 @@ public sealed class BoundedCache<TKey, TValue>
     /// <returns>True when a fresh entry was found.</returns>
     public bool TryGet(TKey key, out TValue value)
     {
-        ArgumentNullException.ThrowIfNull(key);
-
         var now = _timeProvider.GetUtcNow();
         lock (_gate)
         {
@@ -167,7 +163,6 @@ public sealed class BoundedCache<TKey, TValue>
     /// <returns>True when an entry was removed.</returns>
     public bool Remove(TKey key)
     {
-        ArgumentNullException.ThrowIfNull(key);
         lock (_gate)
         {
             if (!_index.TryGetValue(key, out var node))

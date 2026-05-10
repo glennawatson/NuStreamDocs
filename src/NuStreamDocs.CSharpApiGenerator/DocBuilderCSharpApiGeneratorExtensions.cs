@@ -15,8 +15,6 @@ public static class DocBuilderCSharpApiGeneratorExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseCSharpApiGenerator(this DocBuilder builder, CSharpApiGeneratorOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new CSharpApiGeneratorPlugin(options));
     }
 
@@ -27,9 +25,6 @@ public static class DocBuilderCSharpApiGeneratorExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseCSharpApiGenerator(this DocBuilder builder, CSharpApiGeneratorOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new CSharpApiGeneratorPlugin(options, logger));
     }
 
@@ -39,8 +34,6 @@ public static class DocBuilderCSharpApiGeneratorExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseCSharpApiGeneratorDirect(this DocBuilder builder, CSharpApiGeneratorOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         var direct = options with { Mode = CSharpApiGeneratorMode.Direct };
         return builder.UsePlugin(new CSharpApiGeneratorPlugin(direct));
     }

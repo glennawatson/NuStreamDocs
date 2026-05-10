@@ -38,7 +38,6 @@ internal static class CssUrlBytes
     /// <param name="audit">Audit collector.</param>
     public static void AuditInto(ReadOnlySpan<byte> source, UrlAuditContext audit)
     {
-        ArgumentNullException.ThrowIfNull(audit);
         UrlScanLoop.RunAudit(source, TokenStart, audit, TryAuditAt);
     }
 

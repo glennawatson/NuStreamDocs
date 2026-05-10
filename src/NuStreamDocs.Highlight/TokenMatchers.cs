@@ -104,8 +104,6 @@ public static class TokenMatchers
     /// <returns>Length matched, or <c>0</c>.</returns>
     public static int MatchIdentifier(ReadOnlySpan<byte> slice, SearchValues<byte> startSet, SearchValues<byte> continueSet)
     {
-        ArgumentNullException.ThrowIfNull(startSet);
-        ArgumentNullException.ThrowIfNull(continueSet);
         if (slice is [] || !startSet.Contains(slice[0]))
         {
             return 0;
@@ -133,8 +131,6 @@ public static class TokenMatchers
     /// <returns>Length matched on success, <c>0</c> when the body is empty.</returns>
     public static int MatchRunWithSuffix(ReadOnlySpan<byte> slice, SearchValues<byte> bodySet, SearchValues<byte> suffixSet)
     {
-        ArgumentNullException.ThrowIfNull(bodySet);
-        ArgumentNullException.ThrowIfNull(suffixSet);
         var bodyLen = MatchRunOf(slice, bodySet);
         if (bodyLen is 0)
         {
@@ -157,8 +153,6 @@ public static class TokenMatchers
     /// <returns>Length matched on success, <c>0</c> on miss.</returns>
     public static int MatchAsciiHexLiteral(ReadOnlySpan<byte> slice, SearchValues<byte> hexBody, SearchValues<byte> suffixSet)
     {
-        ArgumentNullException.ThrowIfNull(hexBody);
-        ArgumentNullException.ThrowIfNull(suffixSet);
         if (slice.Length < 3 || slice[0] is not (byte)'0' || slice[1] is not ((byte)'x' or (byte)'X'))
         {
             return 0;
@@ -187,7 +181,6 @@ public static class TokenMatchers
     /// <returns>Length matched on success, <c>0</c> on miss.</returns>
     public static int MatchPrefixedRun(ReadOnlySpan<byte> slice, byte prefix, SearchValues<byte> bodySet)
     {
-        ArgumentNullException.ThrowIfNull(bodySet);
         if (slice is [] || slice[0] != prefix)
         {
             return 0;
@@ -378,7 +371,6 @@ public static class TokenMatchers
     /// <returns>Length of the line on match, <c>0</c> on miss.</returns>
     public static int MatchLineUnlessStartsWith(ReadOnlySpan<byte> slice, SearchValues<byte> stopFirstBytes)
     {
-        ArgumentNullException.ThrowIfNull(stopFirstBytes);
         return slice is [] || stopFirstBytes.Contains(slice[0]) ? 0 : LineLength(slice);
     }
 
@@ -388,7 +380,6 @@ public static class TokenMatchers
     /// <returns><c>1</c> on match, <c>0</c> on miss.</returns>
     public static int MatchSingleByteOf(ReadOnlySpan<byte> slice, SearchValues<byte> set)
     {
-        ArgumentNullException.ThrowIfNull(set);
         return slice is [] || !set.Contains(slice[0]) ? 0 : 1;
     }
 
@@ -398,7 +389,6 @@ public static class TokenMatchers
     /// <returns>Length of the matched keyword, or <c>0</c>.</returns>
     public static int MatchKeyword(ReadOnlySpan<byte> slice, ByteKeywordSet keywords)
     {
-        ArgumentNullException.ThrowIfNull(keywords);
         if (slice is [] || !AsciiIdentifierStart.Contains(slice[0]))
         {
             return 0;
@@ -461,7 +451,6 @@ public static class TokenMatchers
     /// <returns>Length matched on success; <c>0</c> when the cursor is on a stop byte or the slice is empty.</returns>
     public static int MatchRunUntilAny(ReadOnlySpan<byte> slice, SearchValues<byte> stopSet)
     {
-        ArgumentNullException.ThrowIfNull(stopSet);
         var stop = slice.IndexOfAny(stopSet);
         return stop switch
         {
@@ -645,7 +634,6 @@ public static class TokenMatchers
     /// <returns>Length of the run, or <c>0</c> when the cursor byte isn't in <paramref name="set"/>.</returns>
     public static int MatchRunOf(ReadOnlySpan<byte> slice, SearchValues<byte> set)
     {
-        ArgumentNullException.ThrowIfNull(set);
         var stop = slice.IndexOfAnyExcept(set);
         return stop switch
         {

@@ -25,8 +25,6 @@ public static class Utf8RelativePath
     /// <remarks>When <paramref name="from"/> equals <paramref name="target"/> a single <c>.</c> is emitted so the link still resolves to the current page.</remarks>
     public static void WriteRelative(IBufferWriter<byte> writer, ReadOnlySpan<byte> from, ReadOnlySpan<byte> target)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         switch (from.IsEmpty)
         {
             case true when target.IsEmpty:

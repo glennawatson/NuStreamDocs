@@ -30,7 +30,6 @@ public sealed record LinkValidatorOptions(
     public void Validate()
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Parallelism);
-        ArgumentNullException.ThrowIfNull(External);
         External.Validate();
     }
 }

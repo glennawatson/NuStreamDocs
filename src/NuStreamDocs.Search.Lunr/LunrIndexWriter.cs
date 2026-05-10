@@ -32,8 +32,6 @@ public static class LunrIndexWriter
     public static void Write(in FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents, byte[][] extraStopwords)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
-        ArgumentNullException.ThrowIfNull(documents);
-        ArgumentNullException.ThrowIfNull(extraStopwords);
 
         path.Directory.Create();
         using var stream = File.Create(path.Value);

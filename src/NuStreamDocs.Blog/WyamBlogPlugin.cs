@@ -19,7 +19,7 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
     private readonly WyamBlogOptions _options = ValidateOptions(options);
 
     /// <summary>Logger for diagnostics.</summary>
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger = logger;
 
     /// <summary>Initializes a new instance of the <see cref="WyamBlogPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
@@ -57,7 +57,6 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
     /// <returns>The validated options.</returns>
     private static WyamBlogOptions ValidateOptions(WyamBlogOptions opts)
     {
-        ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
     }

@@ -37,13 +37,4 @@ public class MagicLinkPluginTests
         DocBuilder builder = new();
         await Assert.That(builder.UseMagicLink()).IsSameReferenceAs(builder);
     }
-
-    /// <summary>UseMagicLink rejects null builders.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMagicLinkRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderMagicLinkExtensions.UseMagicLink(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

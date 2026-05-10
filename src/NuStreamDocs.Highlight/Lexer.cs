@@ -27,7 +27,6 @@ public sealed class Lexer
     /// <exception cref="ArgumentException">Thrown when <paramref name="states"/> does not contain a root state.</exception>
     public Lexer(LexerRule[][] states)
     {
-        ArgumentNullException.ThrowIfNull(states);
         if (states.Length is 0)
         {
             throw new ArgumentException("Lexer state table must contain at least the root state.", nameof(states));
@@ -69,8 +68,6 @@ public sealed class Lexer
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="onToken"/> is <see langword="null"/>.</exception>
     public void Tokenize(ReadOnlySpan<byte> source, TokenSink onToken)
     {
-        ArgumentNullException.ThrowIfNull(onToken);
-
         DelegateTokenSink sink = new(onToken);
         Tokenize(source, ref sink);
     }
@@ -83,8 +80,6 @@ public sealed class Lexer
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="onToken"/> is <see langword="null"/>.</exception>
     public void Tokenize<TState>(ReadOnlySpan<byte> source, TState state, TokenSink<TState> onToken)
     {
-        ArgumentNullException.ThrowIfNull(onToken);
-
         DelegateTokenSink<TState> sink = new(state, onToken);
         Tokenize(source, ref sink);
     }

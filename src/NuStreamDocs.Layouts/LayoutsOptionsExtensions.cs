@@ -15,7 +15,6 @@ public static class LayoutsOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LayoutsOptions WithTemplateDirectory(this LayoutsOptions options, in DirectoryPath templateDirectory)
     {
-        ArgumentNullException.ThrowIfNull(options);
         return options with { TemplateDirectory = templateDirectory };
     }
 
@@ -25,7 +24,6 @@ public static class LayoutsOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LayoutsOptions WithMaxIncludeDepth(this LayoutsOptions options, int maxIncludeDepth)
     {
-        ArgumentNullException.ThrowIfNull(options);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxIncludeDepth, 1);
         return options with { MaxIncludeDepth = maxIncludeDepth };
     }

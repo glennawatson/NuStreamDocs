@@ -17,7 +17,6 @@ public static class DocBuilderZensicalExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseZensicalConfig(this DocBuilder builder, in FilePath tomlPath)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(tomlPath.Value);
 
         var bytes = File.ReadAllBytes(tomlPath);
@@ -30,7 +29,6 @@ public static class DocBuilderZensicalExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseZensicalConfig(this DocBuilder builder, ReadOnlySpan<byte> utf8Toml)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         var config = ConfigReaderJsonPipeline.Read(utf8Toml, TomlToJson.Convert);
         return builder.ApplyMkDocsConfig(in config);
     }

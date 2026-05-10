@@ -73,16 +73,6 @@ public class FrontmatterValueExtractorTests
     public async Task EmptyInlineValueIsDropped() =>
         await Assert.That(Extract("---\nempty:\n---\nbody", "empty")).IsEqualTo(string.Empty);
 
-    /// <summary>The argument-null guard fires on a null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullSinkRejected()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            FrontmatterValueExtractor.AppendKeysTo("---\ntitle: A\n---\n"u8, [[.. "title"u8]], null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Multiple keys yield concatenated values in registration order.</summary>
     /// <returns>Async test.</returns>
     [Test]

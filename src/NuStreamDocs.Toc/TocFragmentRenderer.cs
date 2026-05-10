@@ -61,14 +61,18 @@ internal static class TocFragmentRenderer
         in TocOptions options,
         IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(headings);
-        ArgumentNullException.ThrowIfNull(writer);
-
         var filtered = Filter(headings, options.MinLevel, options.MaxLevel);
         if (filtered.Length is 0)
         {
             return;
         }
+
+        // Pre-grow the writer once based on heading count so the per-heading writes never
+        // trigger an Array.Resize doubling chain. Average emitted bytes per heading ≈ 96
+        // (`<li><a href="#slug">title</a>` plus the wrapper tags + closing).
+        const int AverageBytesPerHeading = 96;
+        const int FixedNavOverhead = 32;
+        _ = writer.GetSpan(FixedNavOverhead + (filtered.Length * AverageBytesPerHeading));
 
         Utf8StringWriter.Write(writer, NavOpen);
 

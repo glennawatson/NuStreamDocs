@@ -39,7 +39,6 @@ public static class Utf8Bom
     /// <returns>The original array, or a fresh BOM-trimmed copy.</returns>
     public static byte[] StripIfPresent(byte[] bytes)
     {
-        ArgumentNullException.ThrowIfNull(bytes);
         var bomLength = LengthOf(bytes);
         return bomLength is 0 ? bytes : bytes.AsSpan(bomLength).ToArray();
     }

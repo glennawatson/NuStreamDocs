@@ -30,13 +30,4 @@ public class NavBuilderTests
         await Assert.That(result[0]).IsEqualTo(buffer[0]);
         await Assert.That(result[1]).IsEqualTo(buffer[1]);
     }
-
-    /// <summary>A null buffer is rejected.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullBufferRejected()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => NavBuilder.ToArray(null!, 0));
-        await Assert.That(ex).IsNotNull();
-    }
 }

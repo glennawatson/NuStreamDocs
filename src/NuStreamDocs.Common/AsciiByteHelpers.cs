@@ -301,8 +301,6 @@ public static class AsciiByteHelpers
     /// <param name="sink">UTF-8 sink.</param>
     public static void EncodeStringInto(string value, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(value);
-        ArgumentNullException.ThrowIfNull(sink);
         if (value.Length is 0)
         {
             return;

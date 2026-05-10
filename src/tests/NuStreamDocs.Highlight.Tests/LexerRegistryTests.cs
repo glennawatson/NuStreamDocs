@@ -112,13 +112,6 @@ public class LexerRegistryTests
         await Assert.That(lexer).IsEqualTo((Lexer)JavaScriptLexer.Instance);
     }
 
-    /// <summary>Null pair array throws <see cref="ArgumentNullException"/>.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task CreateFromStringLexersNullThrows() =>
-        await Assert.That(static () => LexerRegistry.CreateFromStringLexers(null!))
-            .Throws<ArgumentNullException>();
-
     /// <summary>Empty pair array throws <see cref="ArgumentOutOfRangeException"/> — the byte-keyed path expects at least one entry.</summary>
     /// <returns>Async test.</returns>
     [Test]

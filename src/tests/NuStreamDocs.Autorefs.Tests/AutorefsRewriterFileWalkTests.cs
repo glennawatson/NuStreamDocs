@@ -122,17 +122,6 @@ public class AutorefsRewriterFileWalkTests
         await Assert.That(ex).IsNotNull();
     }
 
-    /// <summary>RewriteAll rejects null registry.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task RewriteAllRejectsNullRegistry()
-    {
-        using ScratchDir temp = new();
-        var root = temp.Root;
-        var ex = Assert.Throws<ArgumentNullException>(() => AutorefsRewriter.RewriteAll(root, null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Disposable scratch directory.</summary>
     private sealed class ScratchDir : IDisposable
     {

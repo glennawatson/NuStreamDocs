@@ -38,9 +38,6 @@ internal static class MacrosScanner
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, Lookup lookup, bool escapeHtml, MissingCallback? onMissing, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(lookup);
-        ArgumentNullException.ThrowIfNull(writer);
-
         var cursor = 0;
         while (cursor < source.Length)
         {

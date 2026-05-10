@@ -15,6 +15,9 @@ internal static class LayoutRenderer
     /// <summary>Prefix used when constructing missing-variable diagnostics.</summary>
     private const string PagePrefix = "page.";
 
+    /// <summary>The <c>.html</c> suffix appended when a template name was supplied without one.</summary>
+    private const string HtmlExtension = ".html";
+
     /// <summary>Renders <paramref name="templateName"/> against <paramref name="context"/> and writes the result to <paramref name="writer"/>.</summary>
     /// <param name="templateName">UTF-8 layout file name (e.g. <c>"page.html"u8</c>).</param>
     /// <param name="templateDirectory">Directory layouts are loaded from.</param>
@@ -33,10 +36,6 @@ internal static class LayoutRenderer
         ILogger logger,
         TemplateCache? cache)
     {
-        ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(writer);
-        ArgumentNullException.ThrowIfNull(logger);
-
         if (!TryLoadTemplate(templateName, templateDirectory, cache, out var template, out var resolvedPath))
         {
             LayoutsLoggingHelper.LogMissingTemplate(logger, resolvedPath.Value ?? string.Empty);
@@ -106,7 +105,9 @@ internal static class LayoutRenderer
             return false;
         }
 
-        var altPath = Path.GetFullPath($"{nameString}.html", templateDirectory.Value);
+        // Explicit single-allocation compose via the project's StringCompose helper —
+        // sidesteps interpolation / Concat compiler-lowering uncertainty.
+        var altPath = Path.GetFullPath(StringCompose.Concat(nameString, HtmlExtension), templateDirectory.Value);
         resolvedPath = new(altPath);
         if (!File.Exists(altPath))
         {
@@ -442,7 +443,6 @@ internal static class LayoutRenderer
         /// <param name="child">Child template unit.</param>
         public BlockOverlay(Dictionary<byte[], BlockRange> childBlocks, in TemplateUnit child)
         {
-            ArgumentNullException.ThrowIfNull(childBlocks);
             Children = childBlocks;
             Child = child;
             Parents = new(ByteArrayComparer.Instance);

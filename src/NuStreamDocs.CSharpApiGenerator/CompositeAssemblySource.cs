@@ -13,7 +13,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAssemblySource, IDisposable
 {
     /// <summary>Wrapped sources, walked in this order.</summary>
-    private readonly IAssemblySource[] _sources = sources ?? throw new ArgumentNullException(nameof(sources));
+    private readonly IAssemblySource[] _sources = sources;
 
     /// <inheritdoc/>
     public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);

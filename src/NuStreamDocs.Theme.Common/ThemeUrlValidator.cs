@@ -37,24 +37,23 @@ public static class ThemeUrlValidator
         if (value.IsEmpty)
         {
             return requireAbsolute
-                ? (DiagnosticMessage)$"{optionName} is required but was not set; canonical URLs and Open Graph metadata will be omitted from every page."
+                ? (DiagnosticMessage)StringCompose.Concat(optionName, " is required but was not set; canonical URLs and Open Graph metadata will be omitted from every page.")
                 : DiagnosticMessage.None;
         }
 
         if (!HasHttpScheme(value))
         {
-            // Protocol-relative is technically valid but ambiguous for canonicals, so warn.
-            if (value.StartsWith(ProtocolRelative))
-            {
-                return (DiagnosticMessage)$"{optionName} '{Encoding.UTF8.GetString(value)}' is protocol-relative; canonical URLs need an explicit http(s) scheme.";
-            }
+            var valueText = Encoding.UTF8.GetString(value);
 
-            return (DiagnosticMessage)$"{optionName} '{Encoding.UTF8.GetString(value)}' is not an absolute http(s) URL; the build will emit invalid canonical / repo / edit links.";
+            // Protocol-relative is technically valid but ambiguous for canonicals, so warn.
+            return value.StartsWith(ProtocolRelative)
+                ? (DiagnosticMessage)StringCompose.Concat(optionName, " '", valueText, "' is protocol-relative; canonical URLs need an explicit http(s) scheme.")
+                : (DiagnosticMessage)StringCompose.Concat(optionName, " '", valueText, "' is not an absolute http(s) URL; the build will emit invalid canonical / repo / edit links.");
         }
 
         if (HasFragmentOrQuery(value))
         {
-            return (DiagnosticMessage)$"{optionName} '{Encoding.UTF8.GetString(value)}' contains a '?' or '#' segment; this leaks into every per-page canonical URL.";
+            return (DiagnosticMessage)StringCompose.Concat(optionName, " '", Encoding.UTF8.GetString(value), "' contains a '?' or '#' segment; this leaks into every per-page canonical URL.");
         }
 
         return DiagnosticMessage.None;

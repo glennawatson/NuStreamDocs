@@ -58,33 +58,6 @@ public class LightboxRegistrationTests
     public async Task UseLightboxOptionsRegisters() =>
         await Assert.That(new DocBuilder().UseLightbox(LightboxOptions.Default)).IsTypeOf<DocBuilder>();
 
-    /// <summary>UseLightbox rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseLightboxRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderLightboxExtensions.UseLightbox(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseLightbox(options) rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseLightboxOptionsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderLightboxExtensions.UseLightbox(null!, LightboxOptions.Default));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseLightbox(options) rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseLightboxOptionsRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseLightbox(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
     /// <param name="plugin">Plugin under test.</param>
     /// <param name="html">Input HTML bytes.</param>

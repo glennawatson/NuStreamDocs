@@ -82,15 +82,6 @@ public class SnippetsPluginTests
         await Assert.That(builder.UseSnippets("/some/path")).IsSameReferenceAs(builder);
     }
 
-    /// <summary>UseSnippets rejects a null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseSnippetsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderSnippetsExtensions.UseSnippets(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>UseSnippets(baseDir) rejects a whitespace base directory.</summary>
     /// <returns>Async test.</returns>
     [Test]

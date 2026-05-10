@@ -47,8 +47,6 @@ public sealed class MacrosPlugin : IPagePreRenderPlugin
     /// <param name="logger">Logger.</param>
     public MacrosPlugin(MacrosOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _logger = logger;
         _variableLookup = options.Variables.AsUtf8Lookup();

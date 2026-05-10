@@ -10,14 +10,28 @@ namespace NuStreamDocs.Highlight;
 /// <summary>Drives a <see cref="Lexer"/> over a UTF-8 byte source and writes the classed HTML directly into a UTF-8 sink.</summary>
 public static class HighlightEmitter
 {
+    /// <summary>Output-size multiplier numerator: estimated HTML emit is roughly 5/2 (2.5×) the source length once tokens are span-wrapped.</summary>
+    private const int OutputMultiplierNumerator = 5;
+
+    /// <summary>Output-size multiplier denominator (paired with <see cref="OutputMultiplierNumerator"/>).</summary>
+    private const int OutputMultiplierDenominator = 2;
+
+    /// <summary>Floor for the pre-grow hint — empty / tiny inputs still need a small block to avoid the very first <c>GetSpan</c> resizing from zero.</summary>
+    private const int MinHintBytes = 256;
+
     /// <summary>Tokenizes <paramref name="source"/> through <paramref name="lexer"/> and writes the classed token stream into <paramref name="writer"/>.</summary>
     /// <param name="lexer">Compiled lexer.</param>
     /// <param name="source">UTF-8 source bytes — accepts a <c>byte[]</c>, an array slice, or any other backing.</param>
     /// <param name="writer">UTF-8 sink.</param>
     public static void Emit(Lexer lexer, in ReadOnlyMemory<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(lexer);
-        ArgumentNullException.ThrowIfNull(writer);
+        // Pre-grow the writer once based on source length so the per-token GetSpan calls inside
+        // EmitFromState never trigger an Array.Resize doubling chain. Output is roughly 2.5× the
+        // source for typical highlighted code (span wrappers + entity escapes).
+        var hint = source.Length > 0
+            ? Math.Max(MinHintBytes, source.Length * OutputMultiplierNumerator / OutputMultiplierDenominator)
+            : MinHintBytes;
+        _ = writer.GetSpan(hint);
 
         EmitState state = new(source, writer);
         lexer.Tokenize(source.Span, state, EmitFromState);

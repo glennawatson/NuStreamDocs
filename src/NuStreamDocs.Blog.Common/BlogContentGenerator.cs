@@ -35,9 +35,6 @@ public static class BlogContentGenerator
         SyntheticPageSink sink,
         in CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(sink);
         options.Validate();
         return GenerateCoreAsync(logger, options, sink, cancellationToken);
     }

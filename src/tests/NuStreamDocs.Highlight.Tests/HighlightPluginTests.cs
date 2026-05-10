@@ -107,33 +107,6 @@ public class HighlightPluginTests
     public async Task UseHighlightOptionsRegisters() =>
         await Assert.That(new DocBuilder().UseHighlight(HighlightOptions.Default)).IsTypeOf<DocBuilder>();
 
-    /// <summary>UseHighlight rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseHighlightRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderHighlightExtensions.UseHighlight(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseHighlight(options) rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseHighlightRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseHighlight(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>HighlightPlugin ctor rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task CtorRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => _ = new HighlightPlugin(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>With auto-detect off, an unlabeled <c>&lt;pre&gt;&lt;code&gt;</c> block passes through untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]

@@ -52,8 +52,6 @@ public sealed class AutorefsPlugin
     /// <param name="logger">Logger.</param>
     public AutorefsPlugin(AutorefsRegistry registry, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(logger);
         Registry = registry;
         _logger = logger;
     }

@@ -14,7 +14,6 @@ public static class DocBuilderMaterialIconsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMaterialIcons(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MaterialIconsPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderMaterialIconsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMaterialIcons(this DocBuilder builder, Func<MaterialIconsOptions, MaterialIconsOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(MaterialIconsOptions.Default);
         return builder.UsePlugin(new MaterialIconsPlugin(options));
     }

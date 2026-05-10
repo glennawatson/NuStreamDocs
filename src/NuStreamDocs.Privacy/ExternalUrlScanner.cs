@@ -27,8 +27,6 @@ internal static class ExternalUrlScanner
     /// <param name="auditSet">Concurrent byte-array-keyed set the URLs are added to (the value is unused).</param>
     public static void Audit(ReadOnlySpan<byte> html, HostFilter filter, ConcurrentDictionary<byte[], byte> auditSet)
     {
-        ArgumentNullException.ThrowIfNull(filter);
-        ArgumentNullException.ThrowIfNull(auditSet);
         UrlAuditContext ctx = new(filter, auditSet);
         AssetAttributeBytes.AuditInto(html, ctx);
         SrcsetBytes.AuditInto(html, ctx);
@@ -42,8 +40,6 @@ internal static class ExternalUrlScanner
     /// <returns>True when at least one URL was rewritten; false when the input passed through unchanged.</returns>
     public static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
-
         var changed = false;
         var lastEmit = 0;
         var cursor = 0;
@@ -80,9 +76,6 @@ internal static class ExternalUrlScanner
     /// <returns>The rewritten HTML (or the input bytes verbatim when nothing matched).</returns>
     public static byte[] Rewrite(ReadOnlySpan<byte> html, ExternalAssetRegistry registry, HostFilter filter)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(filter);
-
         UrlRewriteContext ctx = new(filter, registry);
         using var rental = PageBuilderPool.Rent(html.Length);
         var sink = rental.Writer;

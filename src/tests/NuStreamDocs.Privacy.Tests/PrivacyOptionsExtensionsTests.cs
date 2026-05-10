@@ -173,19 +173,6 @@ public class PrivacyOptionsExtensionsTests
         await Assert.That(byBytes.CspManifestPath).IsSameReferenceAs(cspBytes);
     }
 
-    /// <summary>Path-helper byte overloads reject null.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task PathHelperByteOverloadsRejectNull()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => PrivacyOptions.Default.WithAuditManifestPath((byte[])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => PrivacyOptions.Default.WithCacheDirectory((byte[])null!));
-        var ex3 = Assert.Throws<ArgumentNullException>(static () => PrivacyOptions.Default.WithCspManifestPath((byte[])null!));
-        await Assert.That(ex1).IsNotNull();
-        await Assert.That(ex2).IsNotNull();
-        await Assert.That(ex3).IsNotNull();
-    }
-
     /// <summary>Single-entry <see cref="ReadOnlySpan{T}"/> overloads for the host / URL-pattern adders accept <c>"..."u8</c> literals directly.</summary>
     /// <returns>Async test.</returns>
     [Test]

@@ -54,7 +54,6 @@ public sealed class MetadataPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
     public void PreRender(in PagePreRenderContext context)
     {
         var writer = context.Output;
-        ArgumentNullException.ThrowIfNull(writer);
 
         var relativePath = context.RelativePath;
         if (relativePath.IsEmpty)
@@ -78,7 +77,6 @@ public sealed class MetadataPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
     /// <returns>The validated options.</returns>
     private static MetadataOptions ValidateOptions(MetadataOptions opts)
     {
-        ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
     }

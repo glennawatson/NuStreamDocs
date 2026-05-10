@@ -32,7 +32,6 @@ public sealed class MdiIconResolver : IIconResolver
     /// <inheritdoc/>
     public bool TryResolve(ReadOnlySpan<byte> iconName, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (!TryGetPath(iconName, out var path))
         {
             return false;

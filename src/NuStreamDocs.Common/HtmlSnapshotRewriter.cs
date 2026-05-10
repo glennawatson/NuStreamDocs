@@ -27,9 +27,6 @@ public static class HtmlSnapshotRewriter
     /// <param name="callback">Callback that produces the new buffer contents.</param>
     public static void Rewrite<TState>(ArrayBufferWriter<byte> html, TState state, SnapshotRewrite<TState> callback)
     {
-        ArgumentNullException.ThrowIfNull(html);
-        ArgumentNullException.ThrowIfNull(callback);
-
         var written = html.WrittenSpan;
         var length = written.Length;
         if (length is 0)

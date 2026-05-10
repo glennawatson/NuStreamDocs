@@ -90,17 +90,6 @@ public class MaterialThemeOptionsExtensionsTests
         await Assert.That(cdn.ResolveAssetRoot().SequenceEqual("https://cdn.example"u8)).IsTrue();
     }
 
-    /// <summary>Null byte overloads throw.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullByteOverloadsThrow()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => MaterialThemeOptions.Default.WithSiteName((byte[])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => MaterialThemeOptions.Default.WithCdnRoot((byte[])null!));
-        await Assert.That(ex1).IsNotNull();
-        await Assert.That(ex2).IsNotNull();
-    }
-
     /// <summary>The <see cref="ReadOnlySpan{T}"/> overloads accept <c>"..."u8</c> literals directly and copy the bytes into the option's storage.</summary>
     /// <returns>Async test.</returns>
     [Test]

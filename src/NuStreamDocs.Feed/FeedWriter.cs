@@ -29,9 +29,6 @@ public static class FeedWriter
     /// <returns>UTF-8 XML.</returns>
     public static byte[] WriteRss(FeedOptions options, BlogPost[] posts, in DateTimeOffset generatedUtc)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(posts);
-
         ArrayBufferWriter<byte> sink = new(InitialCapacity);
         sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
         sink.Write("<rss version=\"2.0\">\n  <channel>\n"u8);
@@ -59,9 +56,6 @@ public static class FeedWriter
     /// <returns>UTF-8 XML.</returns>
     public static byte[] WriteAtom(FeedOptions options, BlogPost[] posts, in DateTimeOffset generatedUtc)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(posts);
-
         ArrayBufferWriter<byte> sink = new(InitialCapacity);
         sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
         sink.Write("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n"u8);

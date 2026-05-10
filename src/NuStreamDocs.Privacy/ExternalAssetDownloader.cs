@@ -59,13 +59,10 @@ internal static class ExternalAssetDownloader
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(registry);
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentException.ThrowIfNullOrEmpty(cacheRoot.Value);
         ArgumentOutOfRangeException.ThrowIfLessThan(settings.Parallelism, 1);
         ArgumentOutOfRangeException.ThrowIfNegative(settings.MaxRetries);
-        ArgumentNullException.ThrowIfNull(filter);
-        ArgumentNullException.ThrowIfNull(logger);
 
         using SocketsHttpHandler handler = new();
         handler.PooledConnectionLifetime = PooledConnectionLifetime;

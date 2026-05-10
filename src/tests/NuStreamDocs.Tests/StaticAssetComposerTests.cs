@@ -44,12 +44,6 @@ public class StaticAssetComposerTests
         await Assert.That(Directory.GetFiles(dir.Root)).IsEmpty();
     }
 
-    /// <summary>Null plugin array throws.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullPluginsThrows() =>
-        await Assert.That(() => StaticAssetComposer.WriteAll(null!, "/tmp")).Throws<ArgumentNullException>();
-
     /// <summary>Empty outputRoot throws.</summary>
     /// <returns>Async test.</returns>
     [Test]

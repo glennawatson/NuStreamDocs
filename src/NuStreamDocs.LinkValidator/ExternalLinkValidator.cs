@@ -28,9 +28,6 @@ public static class ExternalLinkValidator
         HttpClient httpClient,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(corpus);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(httpClient);
         options.Validate();
 
         var byHost = BucketByHost(corpus);
@@ -150,14 +147,14 @@ public static class ExternalLinkValidator
                     using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token).ConfigureAwait(false);
                     if (!response.IsSuccessStatusCode)
                     {
-                        sink.Add(new(hit.SourcePage, hit.Url, LinkSeverity.Error, $"HTTP {(int)response.StatusCode} {response.ReasonPhrase} for {hit.Url}"));
+                        sink.Add(new(hit.SourcePage, hit.Url, LinkSeverity.Error, BuildHttpErrorMessage((int)response.StatusCode, response.ReasonPhrase, hit.Url)));
                     }
                 },
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            sink.Add(new(hit.SourcePage, hit.Url, LinkSeverity.Error, $"{ex.GetType().Name}: {ex.Message}"));
+            sink.Add(new(hit.SourcePage, hit.Url, LinkSeverity.Error, StringCompose.Concat(ex.GetType().Name, ": ", ex.Message)));
         }
         finally
         {
@@ -170,6 +167,21 @@ public static class ExternalLinkValidator
     /// <returns>The configured pipeline.</returns>
     private static ResiliencePipeline BuildPipeline(ExternalLinkValidatorOptions options) =>
         ExternalLinkPipelineFactory.Create(options);
+
+    /// <summary>Composes the HTTP-error diagnostic message via <see cref="StringCompose"/> (one explicit allocation per leaf concat).</summary>
+    /// <param name="statusCode">HTTP status code.</param>
+    /// <param name="reasonPhrase">HTTP reason phrase (may be null).</param>
+    /// <param name="url">Source link URL.</param>
+    /// <returns>Composed message.</returns>
+    private static string BuildHttpErrorMessage(int statusCode, string? reasonPhrase, UrlPath url)
+    {
+        var reason = reasonPhrase ?? string.Empty;
+        var urlText = url.Value;
+        return StringCompose.ConcatInt(
+            "HTTP ",
+            statusCode,
+            StringCompose.Concat(" ", reason, " for ", urlText));
+    }
 
     /// <summary>One external-URL occurrence: source page plus the parsed URI.</summary>
     /// <param name="SourcePage">Page URL the link came from.</param>

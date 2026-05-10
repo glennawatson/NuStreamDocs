@@ -79,7 +79,6 @@ public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvide
     /// <inheritdoc/>
     protected override void WriteEngineHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         writer.Write(HeadExtraBytes);
     }
 }

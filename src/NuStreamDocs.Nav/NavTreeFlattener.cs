@@ -15,8 +15,6 @@ internal static class NavTreeFlattener
     /// <returns>Flat nav tree; root sits at index <c>0</c>.</returns>
     public static NavTree Flatten(NavNode root)
     {
-        ArgumentNullException.ThrowIfNull(root);
-
         var capacity = EstimateCount(root);
         List<NavTreeNode> nodes = new(capacity);
         Queue<(int OwnIndex, NavNode Node)> queue = new(capacity);

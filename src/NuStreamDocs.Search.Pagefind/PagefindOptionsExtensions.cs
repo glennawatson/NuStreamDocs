@@ -36,7 +36,6 @@ public static class PagefindOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PagefindOptions WithSearchableFrontmatterKeys(this in PagefindOptions options, params byte[][] keys)
     {
-        ArgumentNullException.ThrowIfNull(keys);
         return options with { SearchableFrontmatterKeys = keys };
     }
 
@@ -46,7 +45,6 @@ public static class PagefindOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PagefindOptions AddSearchableFrontmatterKeys(this in PagefindOptions options, params ApiCompatString[] keys)
     {
-        ArgumentNullException.ThrowIfNull(keys);
         return keys.Length is 0
             ? options
             : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array()) };
@@ -58,7 +56,6 @@ public static class PagefindOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PagefindOptions AddSearchableFrontmatterKeys(this in PagefindOptions options, params byte[][] keys)
     {
-        ArgumentNullException.ThrowIfNull(keys);
         return keys.Length is 0
             ? options
             : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys) };
@@ -90,7 +87,6 @@ public static class PagefindOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PagefindOptions WithSectionPriorities(this in PagefindOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { SectionPriorities = value };
     }
 

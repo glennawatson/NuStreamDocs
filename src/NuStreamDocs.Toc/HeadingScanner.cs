@@ -96,7 +96,6 @@ internal static class HeadingScanner
     /// <param name="sink">UTF-8 sink.</param>
     public static void DecodeTextInto(ReadOnlySpan<byte> html, in Heading heading, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
         var inner = html[heading.TextStart..heading.TextEnd];
         if (inner.IsEmpty)
         {

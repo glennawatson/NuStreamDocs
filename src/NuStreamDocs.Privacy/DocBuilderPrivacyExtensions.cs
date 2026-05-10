@@ -15,7 +15,6 @@ public static class DocBuilderPrivacyExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePrivacy(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new PrivacyPlugin());
     }
 
@@ -25,8 +24,6 @@ public static class DocBuilderPrivacyExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePrivacy(this DocBuilder builder, Func<PrivacyOptions, PrivacyOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(PrivacyOptions.Default);
         return builder.UsePlugin(new PrivacyPlugin(options));
     }
@@ -38,9 +35,6 @@ public static class DocBuilderPrivacyExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePrivacy(this DocBuilder builder, Func<PrivacyOptions, PrivacyOptions> configure, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
-        ArgumentNullException.ThrowIfNull(logger);
         var options = configure(PrivacyOptions.Default);
         return builder.UsePlugin(new PrivacyPlugin(options, logger));
     }
@@ -50,7 +44,6 @@ public static class DocBuilderPrivacyExtensions
     /// <returns>Audited URLs wrapped as <see cref="ApiCompatString"/>.</returns>
     public static ApiCompatString[] AuditedUrlsAsStrings(this PrivacyPlugin plugin)
     {
-        ArgumentNullException.ThrowIfNull(plugin);
         var decoded = Utf8Snapshot.Decode(plugin.AuditedUrls);
         var wrapped = new ApiCompatString[decoded.Length];
         for (var i = 0; i < decoded.Length; i++)

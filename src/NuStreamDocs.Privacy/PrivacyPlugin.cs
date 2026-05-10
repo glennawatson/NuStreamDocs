@@ -65,7 +65,6 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
     /// <param name="logger">Logger to receive privacy diagnostics.</param>
     public PrivacyPlugin(in PrivacyOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _filter = new(options.HostsToSkip, options.HostsAllowed, options.UrlIncludePatterns, options.UrlExcludePatterns);
         var dirBytes = options.AssetDirectory is [] ? PrivacyOptions.Default.AssetDirectory : options.AssetDirectory;

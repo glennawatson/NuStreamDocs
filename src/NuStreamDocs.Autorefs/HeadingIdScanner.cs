@@ -15,8 +15,6 @@ public static class HeadingIdScanner
     /// <param name="registry">Registry to publish into.</param>
     public static void ScanAndRegister(ReadOnlySpan<byte> html, byte[] pageUrlBytes, AutorefsRegistry registry)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(pageUrlBytes);
         if (pageUrlBytes.Length is 0)
         {
             throw new ArgumentException("Page URL must be non-empty.", nameof(pageUrlBytes));

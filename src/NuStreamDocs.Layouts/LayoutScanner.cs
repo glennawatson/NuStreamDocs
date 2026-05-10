@@ -17,7 +17,6 @@ internal static class LayoutScanner
     /// <param name="output">Destination list.</param>
     public static void Scan(ReadOnlySpan<byte> template, List<LayoutToken> output)
     {
-        ArgumentNullException.ThrowIfNull(output);
         var cursor = 0;
         var literalStart = 0;
         while (cursor < template.Length)

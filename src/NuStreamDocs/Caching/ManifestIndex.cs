@@ -14,7 +14,6 @@ internal static class ManifestIndex
     /// <returns>The ordinal-keyed lookup.</returns>
     internal static Dictionary<FilePath, ManifestEntry> Build(ManifestEntry[] entries)
     {
-        ArgumentNullException.ThrowIfNull(entries);
         if (entries.Length == 0)
         {
             return EmptyCollections.DictionaryFor<FilePath, ManifestEntry>();

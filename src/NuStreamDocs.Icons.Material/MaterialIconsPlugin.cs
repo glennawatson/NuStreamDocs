@@ -32,7 +32,6 @@ public sealed class MaterialIconsPlugin : IPlugin, IHeadExtraProvider
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         var url = _options.ResolveStylesheetUrl();
         if (url.Length is 0)
         {

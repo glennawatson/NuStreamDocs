@@ -52,8 +52,6 @@ public sealed class LinkValidatorPlugin
     /// <param name="logger">Logger that receives validation diagnostics.</param>
     public LinkValidatorPlugin(LinkValidatorOptions options, Func<HttpClient>? httpClientFactory, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         options.Validate();
         _options = options;
         _httpClientFactory = httpClientFactory;

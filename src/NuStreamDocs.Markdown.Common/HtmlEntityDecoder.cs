@@ -20,8 +20,6 @@ public static class HtmlEntityDecoder
     /// <param name="bytes">UTF-8 input bytes.</param>
     public static void DecodeInto(IBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         var ampersand = bytes.IndexOf((byte)'&');
         switch (ampersand)
         {

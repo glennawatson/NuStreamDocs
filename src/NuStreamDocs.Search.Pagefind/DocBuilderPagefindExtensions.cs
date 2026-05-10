@@ -14,7 +14,6 @@ public static class DocBuilderPagefindExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePagefindSearch(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new PagefindSearchPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderPagefindExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePagefindSearch(this DocBuilder builder, Func<PagefindOptions, PagefindOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(PagefindOptions.Default);
         return builder.UsePlugin(new PagefindSearchPlugin(options));
     }
@@ -37,8 +34,6 @@ public static class DocBuilderPagefindExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePagefindSearch(this DocBuilder builder, in PagefindOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new PagefindSearchPlugin(options, logger));
     }
 }

@@ -45,7 +45,6 @@ internal static class AnchorBytes
     /// <returns>True when at least one anchor was hardened; false when the input passed through unchanged.</returns>
     public static bool RewriteInto(ReadOnlySpan<byte> html, bool addRelNoOpener, bool addTargetBlank, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
         if (!addRelNoOpener && !addTargetBlank)
         {
             return false;

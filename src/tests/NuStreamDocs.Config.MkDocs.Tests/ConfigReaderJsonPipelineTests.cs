@@ -19,13 +19,6 @@ public class ConfigReaderJsonPipelineTests
         await Assert.That(config.SiteName).IsEqualTo("FromHelper");
     }
 
-    /// <summary>Sync helper rejects a null converter.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task SyncReadNullConverterThrows() =>
-        await Assert.That(static () => ConfigReaderJsonPipeline.Read(default, null!))
-            .Throws<ArgumentNullException>();
-
     /// <summary>The async helper invokes the stream converter and parses the JSON.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -34,29 +27,6 @@ public class ConfigReaderJsonPipelineTests
         await using MemoryStream stream = new([.. "ignored"u8]);
         var config = await ConfigReaderJsonPipeline.ReadAsync(stream, WriteSiteNameJsonAsync, CancellationToken.None);
         await Assert.That(config.SiteName).IsEqualTo("AsyncHelper");
-    }
-
-    /// <summary>Async helper rejects a null stream.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task AsyncReadNullStreamThrows() =>
-        await Assert.That(static () =>
-            ConfigReaderJsonPipeline.ReadAsync(null!, WriteSiteNameJsonAsync, CancellationToken.None))
-            .Throws<ArgumentNullException>();
-
-    /// <summary>Async helper rejects a null converter.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task AsyncReadNullConverterThrows()
-    {
-        MemoryStream stream = new();
-        await Assert.That(async () =>
-        {
-            await using (stream)
-            {
-                await ConfigReaderJsonPipeline.ReadAsync(stream, null!, CancellationToken.None);
-            }
-        }).Throws<ArgumentNullException>();
     }
 
     /// <summary>Test span converter that emits a fixed site_name JSON document.</summary>

@@ -22,9 +22,6 @@ public sealed class PathFilter
     /// <param name="excludes">Globs whose matches are dropped; empty means "nothing dropped".</param>
     public PathFilter(GlobPattern[] includes, GlobPattern[] excludes)
     {
-        ArgumentNullException.ThrowIfNull(includes);
-        ArgumentNullException.ThrowIfNull(excludes);
-
         Matcher matcher = new(StringComparison.Ordinal);
         if (includes is [_, ..])
         {

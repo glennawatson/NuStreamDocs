@@ -16,7 +16,6 @@ internal sealed class LayoutContext
     /// <param name="values">UTF-8 name → UTF-8 value map. Keys do not include the <c>page.</c> prefix.</param>
     public LayoutContext(Dictionary<byte[], byte[]> values)
     {
-        ArgumentNullException.ThrowIfNull(values);
         _lookup = values.AsUtf8Lookup();
     }
 

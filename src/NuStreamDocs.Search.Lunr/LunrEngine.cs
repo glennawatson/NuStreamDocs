@@ -20,8 +20,6 @@ public sealed class LunrEngine : ISearchEngine
     /// <param name="extraStopwords">UTF-8 stopwords surfaced to the runtime.</param>
     public LunrEngine(byte[] language, byte[][] extraStopwords)
     {
-        ArgumentNullException.ThrowIfNull(language);
-        ArgumentNullException.ThrowIfNull(extraStopwords);
         _language = language;
         _extraStopwords = extraStopwords;
     }

@@ -43,33 +43,4 @@ public class BlogRegistrationTests
     [Test]
     public async Task UseWyamBlogLoggerRegisters() =>
         await Assert.That(new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]), NullLogger.Instance)).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseWyamBlog rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseWyamBlogRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderBlogExtensions.UseWyamBlog(null!, new("posts", [.. "Blog"u8])));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseWyamBlog rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseWyamBlogRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseWyamBlog(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseWyamBlog(options, logger) rejects null logger.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseWyamBlogRejectsNullLogger()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]), null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

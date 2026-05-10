@@ -37,6 +37,16 @@ internal static class CheckListRewriter
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
+        // Pre-grow the writer so the per-line copies inside the loop don't trigger an
+        // Array.Resize doubling chain. CheckList output is roughly source.Length + a small
+        // expansion (~32 bytes) per task line; pre-sizing to source.Length + a margin covers
+        // the common case in one allocation.
+        const int CheckListGrowthMargin = 256;
+        if (source.Length is not 0)
+        {
+            _ = writer.GetSpan(source.Length + CheckListGrowthMargin);
+        }
+
         var i = 0;
         while (i < source.Length)
         {

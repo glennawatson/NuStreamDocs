@@ -37,13 +37,4 @@ public class KeysPluginTests
         DocBuilder builder = new();
         await Assert.That(builder.UseKeys()).IsSameReferenceAs(builder);
     }
-
-    /// <summary>UseKeys rejects a null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseKeysRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderKeysExtensions.UseKeys(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

@@ -27,31 +27,4 @@ public class TocRegistrationTests
     [Test]
     public async Task UseTocOptionsLoggerRegisters() =>
         await Assert.That(new DocBuilder().UseToc(TocOptions.Default, NullLogger.Instance)).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseToc rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseTocRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderTocExtensions.UseToc(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseToc(options) rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseTocOptionsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderTocExtensions.UseToc(null!, TocOptions.Default));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseToc(options, logger) rejects null logger.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseTocOptionsLoggerRejectsNullLogger()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseToc(TocOptions.Default, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

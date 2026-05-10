@@ -160,22 +160,6 @@ public class ExtraAssetsTests
         await Assert.That(head).Contains("defer");
     }
 
-    /// <summary>AddCss/AddJs reject null sources.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task AddRejectsNull()
-    {
-        ExtraAssetsPlugin plugin = new();
-        await Assert.That(() => plugin.AddCss(null!)).Throws<ArgumentNullException>();
-        await Assert.That(() => plugin.AddJs(null!)).Throws<ArgumentNullException>();
-    }
-
-    /// <summary>WriteHeadExtra rejects a null writer.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteHeadExtraNullWriterThrows() =>
-        await Assert.That(() => new ExtraAssetsPlugin().WriteHeadExtra(null!)).Throws<ArgumentNullException>();
-
     /// <summary>Pulls the singleton <c>ExtraAssetsPlugin</c> back out of the builder via the public extension.</summary>
     /// <param name="builder">Builder.</param>
     /// <returns>The folded plugin instance.</returns>

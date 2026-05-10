@@ -24,6 +24,16 @@ internal static class TabsRewriter
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
+        // Pre-grow the writer so the per-line WriteMultiSegment paths inside the loop don't
+        // trigger an Array.Resize doubling chain. Tabbed-set output expands the source by
+        // roughly 1.6× (radio inputs + label wrappers); pre-sizing covers it in one alloc.
+        const int TabsExpansionNumerator = 8;
+        const int TabsExpansionDenominator = 5;
+        if (source.Length is not 0)
+        {
+            _ = writer.GetSpan(source.Length * TabsExpansionNumerator / TabsExpansionDenominator);
+        }
+
         var i = 0;
         while (i < source.Length)
         {

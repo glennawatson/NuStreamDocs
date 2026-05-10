@@ -33,7 +33,6 @@ public sealed class BibliographyDatabaseBuilder
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder Add(CitationEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(entry);
         _entries.Add(entry);
         return this;
     }
@@ -47,10 +46,6 @@ public sealed class BibliographyDatabaseBuilder
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder AddBook(byte[] id, byte[] title, PersonName author, int year, byte[] publisher)
     {
-        ArgumentNullException.ThrowIfNull(id);
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(author);
-        ArgumentNullException.ThrowIfNull(publisher);
         return Add(new()
         {
             Id = id,
@@ -73,12 +68,6 @@ public sealed class BibliographyDatabaseBuilder
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder AddArticle(byte[] id, byte[] title, PersonName author, int year, byte[] journal, byte[] volume, byte[] page)
     {
-        ArgumentNullException.ThrowIfNull(id);
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(author);
-        ArgumentNullException.ThrowIfNull(journal);
-        ArgumentNullException.ThrowIfNull(volume);
-        ArgumentNullException.ThrowIfNull(page);
         return Add(new()
         {
             Id = id,
@@ -100,9 +89,6 @@ public sealed class BibliographyDatabaseBuilder
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder AddCase(byte[] id, byte[] name, byte[] lawReportSeries, int year)
     {
-        ArgumentNullException.ThrowIfNull(id);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(lawReportSeries);
         return Add(new()
         {
             Id = id,
@@ -121,9 +107,6 @@ public sealed class BibliographyDatabaseBuilder
     /// <returns>This builder for chaining.</returns>
     public BibliographyDatabaseBuilder AddLegislation(byte[] id, byte[] title, byte[] jurisdiction, int year)
     {
-        ArgumentNullException.ThrowIfNull(id);
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(jurisdiction);
         return Add(new()
         {
             Id = id,

@@ -35,7 +35,6 @@ public static class IconShortcodeRewriter
     /// <param name="resolver">Optional inline-SVG resolver; when supplied and a hit is returned, the SVG body is inlined verbatim instead of emitting a span.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, ReadOnlySpan<byte> materialIconClass, IIconResolver? resolver)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         var i = 0;
         while (i < source.Length)
         {

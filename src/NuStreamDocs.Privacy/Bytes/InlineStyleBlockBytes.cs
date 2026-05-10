@@ -26,8 +26,6 @@ internal static class InlineStyleBlockBytes
     /// <returns>True when at least one URL inside an inline-style body was rewritten.</returns>
     public static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
-
         var changed = false;
         var lastEmit = 0;
         var cursor = 0;

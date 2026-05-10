@@ -96,27 +96,6 @@ public class MarkdownExtensionPluginTests
         await Assert.That(builder).IsTypeOf<DocBuilder>();
     }
 
-    /// <summary>Each <c>Use*()</c> rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseEachRejectsNullBuilder()
-    {
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseAdmonitions(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseDetails(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseTabs(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseCheckLists(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseMark(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseCaretTilde(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseCriticMarkup(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseInlineHilite(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseMarkdownInHtml(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseDefinitionLists(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseFootnotes(null!));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseTables(null!));
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderMarkdownExtensions.UseAttrList(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Drives <paramref name="plugin"/> over a tiny fixed source against the supplied <paramref name="sink"/>.</summary>
     /// <param name="plugin">Plugin under test.</param>
     /// <param name="sink">Output writer.</param>

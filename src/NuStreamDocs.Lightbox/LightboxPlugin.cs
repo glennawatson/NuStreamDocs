@@ -23,7 +23,6 @@ public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
     /// <param name="options">Plugin options.</param>
     public LightboxPlugin(LightboxOptions options)
     {
-        ArgumentNullException.ThrowIfNull(options);
         _options = options;
     }
 
@@ -43,8 +42,6 @@ public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         if (_options.StylesheetUrl is [_, ..])
         {
             HeadExtraWriter.WriteUtf8(writer, "<link rel=\"stylesheet\" href=\""u8);

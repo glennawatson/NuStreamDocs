@@ -35,15 +35,6 @@ public class MarkdownExtensionPluginAssetTests
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("admonition");
     }
 
-    /// <summary>AdmonitionPlugin head-extra rejects null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task AdmonitionHeadExtraRejectsNull()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new AdmonitionPlugin().WriteHeadExtra(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>DetailsPlugin ships its stylesheet.</summary>
     /// <returns>Async test.</returns>
     [Test]

@@ -19,13 +19,4 @@ public class SuperFencesRegistrationTests
     [Test]
     public async Task UseSuperFencesRegisters() =>
         await Assert.That(new DocBuilder().UseSuperFences()).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseSuperFences rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseSuperFencesRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderSuperFencesExtensions.UseSuperFences(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

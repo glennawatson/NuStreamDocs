@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
 /// <summary>Reads embedded resources from a caller-supplied <see cref="System.Reflection.Assembly"/>.</summary>
@@ -14,8 +16,7 @@ internal static class EmbeddedResourceReader
     public static byte[] Read(ExtraAssetSource source)
     {
         using var stream = source.Assembly!.GetManifestResourceStream(source.ResourceName!)
-                           ?? throw new InvalidOperationException(
-                               $"Embedded resource '{source.ResourceName}' not found in '{source.Assembly!.GetName().Name}'.");
+                           ?? throw new InvalidOperationException(BuildResourceNotFoundMessage(source));
         var buffer = new byte[stream.Length];
         var read = 0;
         while (read < buffer.Length)
@@ -31,4 +32,15 @@ internal static class EmbeddedResourceReader
 
         return buffer;
     }
+
+    /// <summary>Composes the resource-not-found exception message via the project's <see cref="StringCompose"/> helper (one explicit allocation).</summary>
+    /// <param name="source">Embedded-resource source carrying the missing name + assembly.</param>
+    /// <returns>Composed message.</returns>
+    private static string BuildResourceNotFoundMessage(ExtraAssetSource source) =>
+        StringCompose.Concat(
+            "Embedded resource '",
+            source.ResourceName!,
+            "' not found in '",
+            source.Assembly!.GetName().Name ?? string.Empty,
+            "'.");
 }

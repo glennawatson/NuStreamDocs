@@ -29,8 +29,6 @@ public static class NavEntryFactory
     /// <returns>A leaf <see cref="NavEntry"/>.</returns>
     public static NavEntry Leaf(byte[] title, byte[] path)
     {
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(path);
         return path.Length is 0
             ? throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path))
             : new(title, path, []);
@@ -52,7 +50,6 @@ public static class NavEntryFactory
     public static NavEntry Section(in ApiCompatString title, NavEntry[] children)
     {
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
-        ArgumentNullException.ThrowIfNull(children);
         return children.Length is 0
             ? throw new ArgumentException(EmptyChildrenError, nameof(children))
             : new(EncodeUtf8(title), [], children);
@@ -64,8 +61,6 @@ public static class NavEntryFactory
     /// <returns>A section <see cref="NavEntry"/>.</returns>
     public static NavEntry Section(byte[] title, NavEntry[] children)
     {
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(children);
         if (title.Length is 0)
         {
             throw new ArgumentException("Title bytes must be non-empty for a section.", nameof(title));
@@ -83,7 +78,6 @@ public static class NavEntryFactory
     {
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
         ArgumentException.ThrowIfNullOrEmpty(indexPath.Value);
-        ArgumentNullException.ThrowIfNull(children);
         return children.Length is 0
             ? throw new ArgumentException(EmptyChildrenError, nameof(children))
             : new(EncodeUtf8(title), EncodeUtf8(indexPath), children);
@@ -96,9 +90,6 @@ public static class NavEntryFactory
     /// <returns>A section <see cref="NavEntry"/>.</returns>
     public static NavEntry SectionWithIndex(byte[] title, byte[] indexPath, NavEntry[] children)
     {
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(indexPath);
-        ArgumentNullException.ThrowIfNull(children);
         if (title.Length is 0)
         {
             throw new ArgumentException("Title bytes must be non-empty for a section.", nameof(title));

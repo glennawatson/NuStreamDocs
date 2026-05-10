@@ -29,7 +29,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions WithLanguage(this in LunrOptions options, byte[] language)
     {
-        ArgumentNullException.ThrowIfNull(language);
         return options with { Language = language };
     }
 
@@ -67,7 +66,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions WithSearchableFrontmatterKeys(this in LunrOptions options, params byte[][] keys)
     {
-        ArgumentNullException.ThrowIfNull(keys);
         return options with { SearchableFrontmatterKeys = keys };
     }
 
@@ -77,7 +75,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions AddSearchableFrontmatterKeys(this in LunrOptions options, params ApiCompatString[] keys)
     {
-        ArgumentNullException.ThrowIfNull(keys);
         return keys.Length is 0
             ? options
             : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array()) };
@@ -89,7 +86,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions AddSearchableFrontmatterKeys(this in LunrOptions options, params byte[][] keys)
     {
-        ArgumentNullException.ThrowIfNull(keys);
         return keys.Length is 0
             ? options
             : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys) };
@@ -121,7 +117,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions WithExtraStopwords(this in LunrOptions options, params byte[][] stopwords)
     {
-        ArgumentNullException.ThrowIfNull(stopwords);
         return options with { ExtraStopwords = stopwords };
     }
 
@@ -131,7 +126,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions AddExtraStopwords(this in LunrOptions options, params ApiCompatString[] stopwords)
     {
-        ArgumentNullException.ThrowIfNull(stopwords);
         return stopwords.Length is 0
             ? options
             : options with { ExtraStopwords = ArrayJoiner.Concat(options.ExtraStopwords, stopwords.EncodeUtf8Array()) };
@@ -143,7 +137,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions AddExtraStopwords(this in LunrOptions options, params byte[][] stopwords)
     {
-        ArgumentNullException.ThrowIfNull(stopwords);
         return stopwords.Length is 0
             ? options
             : options with { ExtraStopwords = ArrayJoiner.Concat(options.ExtraStopwords, stopwords) };
@@ -175,7 +168,6 @@ public static class LunrOptionsExtensions
     /// <returns>The updated options.</returns>
     public static LunrOptions WithSectionPriorities(this in LunrOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { SectionPriorities = value };
     }
 

@@ -17,7 +17,6 @@ public sealed class SnippetsPlugin : IPagePreRenderPlugin
     /// <param name="basePaths">Directories to resolve snippet paths against. Order is preserved on lookup.</param>
     public SnippetsPlugin(params DirectoryPath[] basePaths)
     {
-        ArgumentNullException.ThrowIfNull(basePaths);
         _basePaths = basePaths;
     }
 

@@ -50,7 +50,6 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     /// <param name="options">Plugin options.</param>
     public HighlightPlugin(HighlightOptions options)
     {
-        ArgumentNullException.ThrowIfNull(options);
         _registry = LexerRegistry.Build(options.ExtraLexers);
         _options = options;
     }
@@ -85,7 +84,6 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         writer.Write(HeadExtraSnippet);
     }
 

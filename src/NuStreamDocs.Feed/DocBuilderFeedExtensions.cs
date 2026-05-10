@@ -15,8 +15,6 @@ public static class DocBuilderFeedExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseFeed(this DocBuilder builder, FeedOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new FeedPlugin(options));
     }
 
@@ -27,9 +25,6 @@ public static class DocBuilderFeedExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseFeed(this DocBuilder builder, FeedOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new FeedPlugin(options, TimeProvider.System, logger));
     }
 }

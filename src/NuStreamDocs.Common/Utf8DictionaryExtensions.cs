@@ -20,7 +20,6 @@ public static class Utf8DictionaryExtensions
     /// <returns>The alternate-lookup struct; cache it once and reuse for hot-path probing.</returns>
     public static Dictionary<byte[], TValue>.AlternateLookup<ReadOnlySpan<byte>> AsUtf8Lookup<TValue>(this Dictionary<byte[], TValue> dictionary)
     {
-        ArgumentNullException.ThrowIfNull(dictionary);
         return dictionary.GetAlternateLookup<ReadOnlySpan<byte>>();
     }
 
@@ -29,7 +28,6 @@ public static class Utf8DictionaryExtensions
     /// <returns>The alternate-lookup struct.</returns>
     public static HashSet<byte[]>.AlternateLookup<ReadOnlySpan<byte>> AsUtf8Lookup(this HashSet<byte[]> set)
     {
-        ArgumentNullException.ThrowIfNull(set);
         return set.GetAlternateLookup<ReadOnlySpan<byte>>();
     }
 
@@ -39,7 +37,6 @@ public static class Utf8DictionaryExtensions
     /// <returns>The alternate-lookup struct.</returns>
     public static ConcurrentDictionary<byte[], TValue>.AlternateLookup<ReadOnlySpan<byte>> AsUtf8Lookup<TValue>(this ConcurrentDictionary<byte[], TValue> dictionary)
     {
-        ArgumentNullException.ThrowIfNull(dictionary);
         return dictionary.GetAlternateLookup<ReadOnlySpan<byte>>();
     }
 
@@ -51,7 +48,6 @@ public static class Utf8DictionaryExtensions
     /// <returns>True when <paramref name="dictionary"/> contains the key.</returns>
     public static bool TryGetValueByUtf8<TValue>(this Dictionary<byte[], TValue> dictionary, ReadOnlySpan<byte> key, out TValue value)
     {
-        ArgumentNullException.ThrowIfNull(dictionary);
         return dictionary.GetAlternateLookup<ReadOnlySpan<byte>>().TryGetValue(key, out value!);
     }
 
@@ -63,7 +59,6 @@ public static class Utf8DictionaryExtensions
     /// <returns>True when <paramref name="dictionary"/> contains the key.</returns>
     public static bool TryGetValueByUtf8<TValue>(this ConcurrentDictionary<byte[], TValue> dictionary, ReadOnlySpan<byte> key, out TValue value)
     {
-        ArgumentNullException.ThrowIfNull(dictionary);
         return dictionary.GetAlternateLookup<ReadOnlySpan<byte>>().TryGetValue(key, out value!);
     }
 
@@ -74,7 +69,6 @@ public static class Utf8DictionaryExtensions
     /// <returns>True when <paramref name="dictionary"/> contains the key.</returns>
     public static bool ContainsKeyByUtf8<TValue>(this Dictionary<byte[], TValue> dictionary, ReadOnlySpan<byte> key)
     {
-        ArgumentNullException.ThrowIfNull(dictionary);
         return dictionary.GetAlternateLookup<ReadOnlySpan<byte>>().ContainsKey(key);
     }
 
@@ -84,7 +78,6 @@ public static class Utf8DictionaryExtensions
     /// <returns>True when <paramref name="set"/> contains the key.</returns>
     public static bool ContainsByUtf8(this HashSet<byte[]> set, ReadOnlySpan<byte> key)
     {
-        ArgumentNullException.ThrowIfNull(set);
         return set.GetAlternateLookup<ReadOnlySpan<byte>>().Contains(key);
     }
 }

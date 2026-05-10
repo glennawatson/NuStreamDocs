@@ -33,7 +33,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     private readonly CSharpApiGeneratorOptions _options = ValidateOptions(options);
 
     /// <summary>Optional logger handed to the pipeline.</summary>
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger = logger;
 
     /// <summary>Initializes a new instance of the <see cref="CSharpApiGeneratorPlugin"/> class.</summary>
     /// <param name="options">Generator options.</param>
@@ -116,7 +116,6 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     /// <returns>The validated options.</returns>
     private static CSharpApiGeneratorOptions ValidateOptions(CSharpApiGeneratorOptions opts)
     {
-        ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
     }

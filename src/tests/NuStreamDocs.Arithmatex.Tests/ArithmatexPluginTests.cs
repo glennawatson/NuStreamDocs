@@ -37,13 +37,4 @@ public class ArithmatexPluginTests
         DocBuilder builder = new();
         await Assert.That(builder.UseArithmatex()).IsSameReferenceAs(builder);
     }
-
-    /// <summary>UseArithmatex rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseArithmatexRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderArithmatexExtensions.UseArithmatex(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

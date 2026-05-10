@@ -22,8 +22,6 @@ internal static class SnippetsRewriter
     /// <param name="basePaths">Ordered list of directories to resolve include paths against; the first hit wins.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, DirectoryPath[] basePaths)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-        ArgumentNullException.ThrowIfNull(basePaths);
         Expand(source, writer, basePaths, depth: 0);
     }
 

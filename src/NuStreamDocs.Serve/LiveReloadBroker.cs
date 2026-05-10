@@ -29,7 +29,6 @@ internal sealed class LiveReloadBroker
     /// <returns>Task that completes when the client disconnects.</returns>
     public async Task TrackAsync(WebSocket socket, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(socket);
         var id = Guid.NewGuid();
         _clients[id] = socket;
         try

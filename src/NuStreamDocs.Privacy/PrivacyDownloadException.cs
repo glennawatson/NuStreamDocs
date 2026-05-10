@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Privacy;
 
 /// <summary>Thrown when one or more external assets fail to download and <see cref="PrivacyOptions.FailOnError"/> is set.</summary>
@@ -12,7 +14,6 @@ public sealed class PrivacyDownloadException : Exception
     public PrivacyDownloadException(string[] failedUrls)
         : base(BuildMessage(failedUrls))
     {
-        ArgumentNullException.ThrowIfNull(failedUrls);
         FailedUrls = failedUrls;
     }
 
@@ -38,14 +39,17 @@ public sealed class PrivacyDownloadException : Exception
     /// <summary>Gets the URLs that failed to download.</summary>
     public string[] FailedUrls { get; }
 
-    /// <summary>Builds a human-readable summary of the failed downloads.</summary>
+    /// <summary>Builds a human-readable summary of the failed downloads via <see cref="StringCompose"/> (one explicit allocation per branch).</summary>
     /// <param name="failedUrls">URLs that failed.</param>
     /// <returns>The exception message.</returns>
     private static string BuildMessage(string[] failedUrls) =>
         failedUrls.Length switch
         {
             0 => "Privacy plugin: no failed downloads.",
-            1 => $"Privacy plugin: 1 external asset failed to download: {failedUrls[0]}",
-            _ => $"Privacy plugin: {failedUrls.Length} external assets failed to download (first: {failedUrls[0]})"
+            1 => StringCompose.Concat("Privacy plugin: 1 external asset failed to download: ", failedUrls[0]),
+            _ => StringCompose.ConcatInt(
+                "Privacy plugin: ",
+                failedUrls.Length,
+                StringCompose.Concat(" external assets failed to download (first: ", failedUrls[0], ")")),
         };
 }

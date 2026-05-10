@@ -15,7 +15,6 @@ public static class DocBuilderSitemapExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSitemap(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new SitemapPlugin());
     }
 
@@ -24,7 +23,6 @@ public static class DocBuilderSitemapExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseNotFoundPage(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new NotFoundPlugin());
     }
 
@@ -34,8 +32,6 @@ public static class DocBuilderSitemapExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseRedirects(this DocBuilder builder, params (UrlPath From, UrlPath To)[] entries)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(entries);
         return builder.UsePlugin(new RedirectsPlugin(entries));
     }
 
@@ -46,8 +42,6 @@ public static class DocBuilderSitemapExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseRedirects(this DocBuilder builder, in RedirectsOptions options, params (UrlPath From, UrlPath To)[] entries)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(entries);
         return builder.UsePlugin(new RedirectsPlugin(options, entries));
     }
 }

@@ -178,8 +178,6 @@ public static class BlockScanner
     /// <returns>Number of blocks emitted.</returns>
     public static int Scan(ReadOnlySpan<byte> utf8, IBufferWriter<BlockSpan> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         FenceState fence = default;
         HtmlBlockState html = default;
         ListState list = default;

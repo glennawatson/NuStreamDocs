@@ -36,9 +36,6 @@ internal static class UrlScanLoop
     /// <returns>True when at least one rewrite happened.</returns>
     public static bool Run(ReadOnlySpan<byte> html, SearchValues<byte> firstByteSet, IBufferWriter<byte> sink, in UrlRewriteContext ctx, TryRewrite probe)
     {
-        ArgumentNullException.ThrowIfNull(probe);
-        ArgumentNullException.ThrowIfNull(sink);
-
         var changed = false;
         var lastEmit = 0;
         var cursor = 0;
@@ -77,9 +74,6 @@ internal static class UrlScanLoop
     /// <param name="probe">Predicate that owns the per-site work.</param>
     public static void RunAudit(ReadOnlySpan<byte> html, SearchValues<byte> firstByteSet, UrlAuditContext audit, TryAudit probe)
     {
-        ArgumentNullException.ThrowIfNull(probe);
-        ArgumentNullException.ThrowIfNull(audit);
-
         var cursor = 0;
         while (cursor < html.Length)
         {

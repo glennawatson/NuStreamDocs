@@ -38,13 +38,10 @@ public static class BlogIndexEmitter
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the index page's directory relative to the docs root.</param>
     public static void WriteIndex(IBufferWriter<byte> writer, ReadOnlySpan<byte> title, BlogPost[] posts, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (title.IsEmpty)
         {
             throw new ArgumentException("Title bytes must be non-empty.", nameof(title));
         }
-
-        ArgumentNullException.ThrowIfNull(posts);
 
         writer.Write(HideTocFrontmatter);
         writer.Write("# "u8);
@@ -70,14 +67,10 @@ public static class BlogIndexEmitter
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the archive page's directory relative to the docs root (e.g. <c>"articles/tags"u8</c>).</param>
     public static void WriteTagArchive(IBufferWriter<byte> writer, byte[] tag, BlogPost[] posts, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-        ArgumentNullException.ThrowIfNull(tag);
         if (tag.Length is 0)
         {
             throw new ArgumentException("Tag must be non-empty.", nameof(tag));
         }
-
-        ArgumentNullException.ThrowIfNull(posts);
 
         writer.Write(HideTocFrontmatter);
         writer.Write("# Posts tagged \""u8);

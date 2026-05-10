@@ -14,7 +14,6 @@ public static class DocBuilderMathJaxExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMathJax(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MathJaxPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderMathJaxExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMathJax(this DocBuilder builder, Func<MathJaxOptions, MathJaxOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(MathJaxOptions.Default);
         return builder.UsePlugin(new MathJaxPlugin(options));
     }
@@ -36,7 +33,6 @@ public static class DocBuilderMathJaxExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMathJax(this DocBuilder builder, in MathJaxOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MathJaxPlugin(options));
     }
 }

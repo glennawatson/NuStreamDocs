@@ -15,7 +15,6 @@ public static class DocBuilderLayoutsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLayouts(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new LayoutsPlugin());
     }
 
@@ -25,8 +24,6 @@ public static class DocBuilderLayoutsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLayouts(this DocBuilder builder, Func<LayoutsOptions, LayoutsOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(LayoutsOptions.Default);
         return builder.UsePlugin(new LayoutsPlugin(options));
     }
@@ -38,9 +35,6 @@ public static class DocBuilderLayoutsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLayouts(this DocBuilder builder, Func<LayoutsOptions, LayoutsOptions> configure, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
-        ArgumentNullException.ThrowIfNull(logger);
         var options = configure(LayoutsOptions.Default);
         return builder.UsePlugin(new LayoutsPlugin(options, logger));
     }
@@ -52,9 +46,6 @@ public static class DocBuilderLayoutsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLayouts(this DocBuilder builder, LayoutsOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new LayoutsPlugin(options, logger));
     }
 

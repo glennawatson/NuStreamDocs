@@ -14,7 +14,6 @@ public static class DocBuilderHighlightExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseHighlight(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new HighlightPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderHighlightExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseHighlight(this DocBuilder builder, HighlightOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new HighlightPlugin(options));
     }
 }

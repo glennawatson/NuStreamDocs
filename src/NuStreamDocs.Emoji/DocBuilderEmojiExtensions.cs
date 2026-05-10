@@ -14,7 +14,6 @@ public static class DocBuilderEmojiExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseEmoji(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new EmojiPlugin());
     }
 }

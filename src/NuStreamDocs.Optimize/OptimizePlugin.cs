@@ -24,10 +24,10 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
 
     /// <summary>Lookup of compressible extensions.</summary>
     private readonly HashSet<string> _extensionLookup =
-        (options ?? throw new ArgumentNullException(nameof(options))).Extensions.ToStringSet(StringComparer.OrdinalIgnoreCase);
+        options.Extensions.ToStringSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Logger captured at construction.</summary>
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger = logger;
 
     /// <summary>Initializes a new instance of the <see cref="OptimizePlugin"/> class with default options.</summary>
     public OptimizePlugin()
@@ -95,7 +95,6 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <returns>The validated options.</returns>
     private static OptimizeOptions ValidateOptions(OptimizeOptions opts)
     {
-        ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
     }

@@ -16,7 +16,6 @@ internal sealed class ByteArrayKeyComparer : IEqualityComparer<byte[]>, IAlterna
     /// <inheritdoc/>
     public int GetHashCode(byte[] obj)
     {
-        ArgumentNullException.ThrowIfNull(obj);
         return GetHashCode((ReadOnlySpan<byte>)obj);
     }
 

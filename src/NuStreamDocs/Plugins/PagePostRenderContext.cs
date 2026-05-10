@@ -17,7 +17,6 @@ public readonly ref struct PagePostRenderContext
     /// <param name="output">UTF-8 sink the rewritten HTML is written into.</param>
     public PagePostRenderContext(in FilePath relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html, IBufferWriter<byte> output)
     {
-        ArgumentNullException.ThrowIfNull(output);
         RelativePath = relativePath;
         Source = source;
         Html = html;

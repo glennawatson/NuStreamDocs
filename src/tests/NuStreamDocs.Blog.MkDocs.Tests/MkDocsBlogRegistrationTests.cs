@@ -43,23 +43,4 @@ public class MkDocsBlogRegistrationTests
     [Test]
     public async Task UseMkDocsBlogLoggerRegisters() =>
         await Assert.That(new DocBuilder().UseMkDocsBlog(new("blog", [.. "Blog"u8]), NullLogger.Instance)).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseMkDocsBlog rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMkDocsBlogRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderMkDocsBlogExtensions.UseMkDocsBlog(null!, new("blog", [.. "Blog"u8])));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseMkDocsBlog rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMkDocsBlogRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseMkDocsBlog(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

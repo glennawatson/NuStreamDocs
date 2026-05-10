@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Common;
 using NuStreamDocs.CSharpApiGenerator.Logging;
 using NuStreamDocs.Logging;
 using SourceDocParser;
@@ -27,8 +28,6 @@ public static class CSharpApiGenerator
         ILogger? logger,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(sink);
         options.Validate();
 
         var resolvedLogger = logger ?? NullLogger.Instance;
@@ -57,7 +56,6 @@ public static class CSharpApiGenerator
         ILogger? logger,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(options);
         options.Validate();
 
         var resolvedLogger = logger ?? NullLogger.Instance;
@@ -94,14 +92,14 @@ public static class CSharpApiGenerator
         return string.Join(',', parts);
     }
 
-    /// <summary>Renders one input as a short human-readable label.</summary>
+    /// <summary>Renders one input as a short human-readable label via <see cref="StringCompose"/> — every branch is a single explicit allocation.</summary>
     /// <param name="input">Input shape.</param>
     /// <returns>Label.</returns>
     internal static string DescribeInput(CSharpApiGeneratorInput input) => input switch
     {
-        NuGetManifestInput m => $"manifest:{m.RootDirectory}",
-        NuGetPackagesInput p => $"packages:{p.Packages.Length}",
-        LocalAssembliesInput l => $"assemblies:{l.AssemblyPaths.Length}@{l.Tfm}",
+        NuGetManifestInput m => StringCompose.Concat("manifest:", m.RootDirectory.Value),
+        NuGetPackagesInput p => StringCompose.ConcatInt("packages:", p.Packages.Length),
+        LocalAssembliesInput l => StringCompose.ConcatInt("assemblies:", l.AssemblyPaths.Length, StringCompose.Concat("@", l.Tfm.Value ?? string.Empty)),
         CustomInput => "custom-source",
         _ => input.GetType().Name
     };

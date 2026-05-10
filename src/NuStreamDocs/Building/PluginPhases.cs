@@ -41,7 +41,6 @@ internal sealed class PluginPhases
     /// <returns>The per-phase plugin arrays.</returns>
     public static PluginPhases Partition(IPlugin[] plugins)
     {
-        ArgumentNullException.ThrowIfNull(plugins);
         return new()
         {
             Configures = Collect<IBuildConfigurePlugin>(plugins, static p => p.ConfigurePriority),

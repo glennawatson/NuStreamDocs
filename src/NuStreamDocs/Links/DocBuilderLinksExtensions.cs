@@ -14,7 +14,6 @@ public static class DocBuilderLinksExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMarkdownLinks(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MarkdownLinkRewriterPlugin());
     }
 
@@ -24,7 +23,6 @@ public static class DocBuilderLinksExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMarkdownLinks(this DocBuilder builder, bool useDirectoryUrls)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MarkdownLinkRewriterPlugin(useDirectoryUrls));
     }
 }

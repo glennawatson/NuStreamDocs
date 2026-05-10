@@ -41,7 +41,6 @@ internal static class AssetAttributeBytes
     /// <param name="audit">Audit collector.</param>
     public static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit)
     {
-        ArgumentNullException.ThrowIfNull(audit);
         UrlScanLoop.RunAudit(html, AttrStart, audit, TryAuditAt);
     }
 

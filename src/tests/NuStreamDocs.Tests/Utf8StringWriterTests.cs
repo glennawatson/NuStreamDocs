@@ -72,13 +72,6 @@ public class Utf8StringWriterTests
         await Assert.That(sink.WrittenSpan.SequenceEqual("<a href=\"#x\">"u8)).IsTrue();
     }
 
-    /// <summary>Bulk-byte Write null-checks its sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteByteSpanNullSinkThrows() =>
-        await Assert.That(() => Utf8StringWriter.Write(null!, "x"u8))
-            .Throws<ArgumentNullException>();
-
     /// <summary>WriteByte advances by exactly one byte and writes the literal value.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -102,13 +95,6 @@ public class Utf8StringWriterTests
         Utf8StringWriter.WriteByte(sink, (byte)'=');
         await Assert.That(sink.WrittenSpan.SequenceEqual(" id="u8)).IsTrue();
     }
-
-    /// <summary>WriteByte null-checks its sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteByteNullSinkThrows() =>
-        await Assert.That(() => Utf8StringWriter.WriteByte(null!, (byte)'a'))
-            .Throws<ArgumentNullException>();
 
     /// <summary>WriteInt32 emits ASCII digits.</summary>
     /// <param name="value">Integer.</param>

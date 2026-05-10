@@ -22,8 +22,6 @@ public static class HeadExtraComposer
     /// <returns>UTF-8 bytes; empty when no provider was registered.</returns>
     public static byte[] Compose(IPlugin[] plugins)
     {
-        ArgumentNullException.ThrowIfNull(plugins);
-
         ArrayBufferWriter<byte>? output = null;
         ArrayBufferWriter<byte>? scratch = null;
         HashSet<byte[]>? seenPreconnects = null;

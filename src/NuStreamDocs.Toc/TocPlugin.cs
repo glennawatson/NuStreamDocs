@@ -50,7 +50,6 @@ public sealed class TocPlugin : IPagePostRenderPlugin
     /// <param name="logger">Logger.</param>
     public TocPlugin(in TocOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _logger = logger;
         _permalinkSymbolBytes = string.IsNullOrEmpty(options.PermalinkSymbol)

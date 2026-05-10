@@ -79,12 +79,6 @@ public class PagefindSearchPluginTests
         await Assert.That(rendered).Contains("/assets/javascripts/pagefind-bind.js");
     }
 
-    /// <summary>WriteHeadExtra rejects a null writer.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteHeadExtraNullWriterThrows() =>
-        await Assert.That(() => new PagefindSearchPlugin().WriteHeadExtra(null!)).Throws<ArgumentNullException>();
-
     /// <summary>Name returns "search".</summary>
     /// <returns>Async test.</returns>
     [Test]

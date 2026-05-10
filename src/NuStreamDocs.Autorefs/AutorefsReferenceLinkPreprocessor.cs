@@ -42,8 +42,6 @@ public static class AutorefsReferenceLinkPreprocessor
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         var definedLabels = CollectLinkDefinitions(source);
         ScanState state = default;
 

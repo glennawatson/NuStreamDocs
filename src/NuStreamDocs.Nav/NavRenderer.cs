@@ -25,9 +25,6 @@ internal static class NavRenderer
     [SuppressMessage("Roslynator", "RCS1118:Mark local variable as const", Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     public static void RenderFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(tree);
-        ArgumentNullException.ThrowIfNull(writer);
-
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
         NavRenderContext ctx = new(tree, chain, prune: false, writer);
@@ -43,9 +40,6 @@ internal static class NavRenderer
     [SuppressMessage("Roslynator", "RCS1118:Mark local variable as const", Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     public static void RenderSidebarFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(tree);
-        ArgumentNullException.ThrowIfNull(writer);
-
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
         NavRenderContext ctx = new(tree, chain, prune: false, writer);
@@ -60,9 +54,6 @@ internal static class NavRenderer
     [SuppressMessage("Roslynator", "RCS1118:Mark local variable as const", Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     public static void RenderPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(tree);
-        ArgumentNullException.ThrowIfNull(writer);
-
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
         NavRenderContext ctx = new(tree, chain, prune: true, writer);
@@ -78,9 +69,6 @@ internal static class NavRenderer
     [SuppressMessage("Roslynator", "RCS1118:Mark local variable as const", Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     public static void RenderSidebarPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(tree);
-        ArgumentNullException.ThrowIfNull(writer);
-
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
         NavRenderContext ctx = new(tree, chain, prune: true, writer);
@@ -102,9 +90,6 @@ internal static class NavRenderer
     /// <param name="homeTabLabel">UTF-8 label for the Home tab; ignored when <paramref name="includeHomeTab"/> is false.</param>
     public static void RenderTabs(NavTree tree, int activeIndex, IBufferWriter<byte> writer, bool includeHomeTab, ReadOnlySpan<byte> homeTabLabel)
     {
-        ArgumentNullException.ThrowIfNull(tree);
-        ArgumentNullException.ThrowIfNull(writer);
-
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
 
@@ -135,7 +120,6 @@ internal static class NavRenderer
     /// <returns>UTF-8 URL bytes → node index map.</returns>
     public static Dictionary<byte[], int> BuildUrlIndex(NavTree tree)
     {
-        ArgumentNullException.ThrowIfNull(tree);
         Dictionary<byte[], int> index = new(tree.Nodes.Length, ByteArrayComparer.Instance);
         var nodes = tree.Nodes;
         for (var i = 0; i < nodes.Length; i++)

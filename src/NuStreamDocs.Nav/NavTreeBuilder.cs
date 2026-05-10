@@ -61,8 +61,6 @@ internal static class NavTreeBuilder
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
 
-        ArgumentNullException.ThrowIfNull(logger);
-
         if (!inputRoot.Exists())
         {
             NavLoggingHelper.LogNavBuildStart(logger, inputRoot, 0);

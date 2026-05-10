@@ -14,7 +14,6 @@ public static class DocBuilderOptimizeExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseOptimize(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new OptimizePlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderOptimizeExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseOptimize(this DocBuilder builder, OptimizeOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new OptimizePlugin(options));
     }
 
@@ -36,9 +33,6 @@ public static class DocBuilderOptimizeExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseOptimize(this DocBuilder builder, OptimizeOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new OptimizePlugin(options, logger));
     }
 
@@ -47,7 +41,6 @@ public static class DocBuilderOptimizeExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseHtmlMinify(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new HtmlMinifyPlugin());
     }
 
@@ -57,8 +50,6 @@ public static class DocBuilderOptimizeExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseHtmlMinify(this DocBuilder builder, HtmlMinifyOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new HtmlMinifyPlugin(options));
     }
 }

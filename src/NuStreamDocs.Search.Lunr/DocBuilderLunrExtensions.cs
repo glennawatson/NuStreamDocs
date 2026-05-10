@@ -14,7 +14,6 @@ public static class DocBuilderLunrExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLunrSearch(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new LunrSearchPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderLunrExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLunrSearch(this DocBuilder builder, Func<LunrOptions, LunrOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(LunrOptions.Default);
         return builder.UsePlugin(new LunrSearchPlugin(options));
     }
@@ -37,8 +34,6 @@ public static class DocBuilderLunrExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLunrSearch(this DocBuilder builder, in LunrOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new LunrSearchPlugin(options, logger));
     }
 }

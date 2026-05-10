@@ -20,8 +20,6 @@ public sealed class Aglc4Style : ICitationStyle
     /// <inheritdoc/>
     public void WriteInText(CitationEntry entry, int footnoteNumber, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(entry);
-        ArgumentNullException.ThrowIfNull(writer);
         Aglc4Writer.WriteBytes("[^bib-"u8, writer);
         Aglc4Writer.WriteString(entry.Id, writer);
         Aglc4Writer.WriteBytes("]"u8, writer);
@@ -30,8 +28,6 @@ public sealed class Aglc4Style : ICitationStyle
     /// <inheritdoc/>
     public void WriteFootnote(CitationEntry entry, CitationLocator locator, ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(entry);
-        ArgumentNullException.ThrowIfNull(writer);
         WriteCore(entry, writer);
         if (!locator.HasValue)
         {
@@ -45,8 +41,6 @@ public sealed class Aglc4Style : ICitationStyle
     /// <inheritdoc/>
     public void WriteBibliography(CitationEntry entry, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(entry);
-        ArgumentNullException.ThrowIfNull(writer);
         WriteCore(entry, writer);
     }
 

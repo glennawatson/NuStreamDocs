@@ -60,12 +60,6 @@ public class MathJaxPluginTests
         await Assert.That(rendered).Contains(@"processHtmlClass:'foo\'bar'");
     }
 
-    /// <summary><c>WriteHeadExtra</c> rejects a null writer.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteHeadExtraNullWriterThrows() =>
-        await Assert.That(() => new MathJaxPlugin().WriteHeadExtra(null!)).Throws<ArgumentNullException>();
-
     /// <summary><c>UseMathJax()</c> overloads register the plugin.</summary>
     /// <returns>Async test.</returns>
     [Test]

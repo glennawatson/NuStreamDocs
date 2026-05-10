@@ -43,7 +43,6 @@ public sealed record HighlightOptions(
     /// <exception cref="ArgumentOutOfRangeException">When <paramref name="extra"/> is empty.</exception>
     public static HighlightOptions CreateFromStringLexers(params (string LexerName, Lexer Lexer)[] extra)
     {
-        ArgumentNullException.ThrowIfNull(extra);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(extra.Length);
         var values = new LexerNameValue[extra.Length];
 

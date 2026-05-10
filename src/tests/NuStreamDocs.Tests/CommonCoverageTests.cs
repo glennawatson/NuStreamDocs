@@ -26,12 +26,6 @@ public class CommonCoverageTests
         await Assert.That(decoded[2]).IsEqualTo(string.Empty);
     }
 
-    /// <summary><see cref="Utf8Snapshot.Decode(byte[][])"/> rejects null arguments.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task Utf8SnapshotDecodeRejectsNull() =>
-        await Assert.That(static () => Utf8Snapshot.Decode(null!)).Throws<ArgumentNullException>();
-
     /// <summary>Two-arg <see cref="Utf8Concat.Concat(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/> returns an empty array when both inputs are empty.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -77,15 +71,6 @@ public class CommonCoverageTests
         await Assert.That(Encoding.UTF8.GetString(Utf8Concat.ConcatMany(parts))).IsEqualTo("xyyzzz");
     }
 
-    /// <summary><see cref="Utf8Concat.ConcatMany"/> rejects null parts.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task Utf8ConcatManyRejectsNullPart()
-    {
-        byte[][] parts = [[.. "ok"u8], null!];
-        await Assert.That(() => Utf8Concat.ConcatMany(parts)).Throws<ArgumentNullException>();
-    }
-
     /// <summary><see cref="ByteArrayCollectionExtensions.ToStringSet"/> decodes UTF-8 entries into the supplied comparer.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -96,16 +81,6 @@ public class CommonCoverageTests
         var ordinalIgnoreCase = source.ToStringSet(StringComparer.OrdinalIgnoreCase);
         await Assert.That(ordinal.Count).IsEqualTo(3);
         await Assert.That(ordinalIgnoreCase.Count).IsEqualTo(2);
-    }
-
-    /// <summary><see cref="ByteArrayCollectionExtensions.ToStringSet"/> rejects null inputs.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task ByteArrayCollectionToStringSetRejectsNulls()
-    {
-        await Assert.That(() => ((byte[][])null!).ToStringSet(StringComparer.Ordinal)).Throws<ArgumentNullException>();
-        byte[][] emptyForSet = [];
-        await Assert.That(() => emptyForSet.ToStringSet(null!)).Throws<ArgumentNullException>();
     }
 
     /// <summary><see cref="ByteArrayCollectionExtensions.ToStringArray"/> short-circuits on an empty source.</summary>
@@ -128,12 +103,6 @@ public class CommonCoverageTests
         await Assert.That(arr[0]).IsEqualTo("one");
         await Assert.That(arr[1]).IsEqualTo("two");
     }
-
-    /// <summary><see cref="ByteArrayCollectionExtensions.ToStringArray"/> rejects null inputs.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task ByteArrayCollectionToStringArrayRejectsNull() =>
-        await Assert.That(static () => ((byte[][])null!).ToStringArray()).Throws<ArgumentNullException>();
 
     /// <summary><see cref="ByteArrayComparer"/> equality covers null pairs and content equality.</summary>
     /// <returns>Async test.</returns>
@@ -159,7 +128,6 @@ public class CommonCoverageTests
         var c = ByteArrayComparer.Instance;
         byte[] hello = [.. "hello"u8];
         await Assert.That(c.GetHashCode(hello)).IsEqualTo(c.GetHashCode(hello));
-        await Assert.That(() => c.GetHashCode((byte[])null!)).Throws<ArgumentNullException>();
     }
 
     /// <summary>Ordinal compare ranks lexicographically and treats null as less than any value.</summary>
@@ -218,7 +186,6 @@ public class CommonCoverageTests
         IEqualityComparer c = ByteArrayComparer.Instance;
         byte[] abc = [.. "abc"u8];
         await Assert.That(c.GetHashCode(abc)).IsEqualTo(c.GetHashCode(abc));
-        await Assert.That(() => c.GetHashCode(null!)).Throws<ArgumentNullException>();
 
         // Non-byte-array objects fall back to the object's own hash.
         object obj = new();

@@ -71,33 +71,4 @@ public class VersionsRegistrationTests
         await Assert.That(Encoding.UTF8.GetString(entry.Aliases[0])).IsEqualTo("latest");
         await Assert.That(Encoding.UTF8.GetString(entry.Aliases[1])).IsEqualTo("v1");
     }
-
-    /// <summary>UseVersions rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseVersionsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderVersionsExtensions.UseVersions(null!, new("1.0", "X")));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseVersions rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseVersionsRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseVersions(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseVersions(options, logger) rejects null logger.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseVersionsLoggerRejectsNullLogger()
-    {
-        VersionOptions options = new("1.0", "Stable");
-        var ex = Assert.Throws<ArgumentNullException>(() => new DocBuilder().UseVersions(options, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

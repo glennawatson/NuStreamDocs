@@ -17,8 +17,6 @@ public static class DocBuilderBibliographyExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseBibliography(this DocBuilder builder, BibliographyOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new BibliographyPlugin(options));
     }
 
@@ -28,8 +26,6 @@ public static class DocBuilderBibliographyExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseBibliography(this DocBuilder builder, Action<BibliographyDatabaseBuilder> configureDatabase)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configureDatabase);
         BibliographyDatabaseBuilder dbBuilder = new();
         configureDatabase(dbBuilder);
         return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), Aglc4Style.Instance, WarnOnMissing: false));
@@ -42,9 +38,6 @@ public static class DocBuilderBibliographyExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseBibliography(this DocBuilder builder, ICitationStyle style, Action<BibliographyDatabaseBuilder> configureDatabase)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(style);
-        ArgumentNullException.ThrowIfNull(configureDatabase);
         BibliographyDatabaseBuilder dbBuilder = new();
         configureDatabase(dbBuilder);
         return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), style, WarnOnMissing: false));

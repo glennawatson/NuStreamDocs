@@ -15,7 +15,6 @@ public static class DocBuilderMacrosExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMacros(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MacrosPlugin());
     }
 
@@ -25,8 +24,6 @@ public static class DocBuilderMacrosExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMacros(this DocBuilder builder, Func<MacrosOptions, MacrosOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(MacrosOptions.Default);
         return builder.UsePlugin(new MacrosPlugin(options));
     }
@@ -38,9 +35,6 @@ public static class DocBuilderMacrosExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMacros(this DocBuilder builder, Func<MacrosOptions, MacrosOptions> configure, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
-        ArgumentNullException.ThrowIfNull(logger);
         var options = configure(MacrosOptions.Default);
         return builder.UsePlugin(new MacrosPlugin(options, logger));
     }
@@ -52,9 +46,6 @@ public static class DocBuilderMacrosExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMacros(this DocBuilder builder, MacrosOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new MacrosPlugin(options, logger));
     }
 

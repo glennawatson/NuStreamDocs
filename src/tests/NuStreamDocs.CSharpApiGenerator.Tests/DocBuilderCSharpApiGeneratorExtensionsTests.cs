@@ -19,14 +19,4 @@ public class DocBuilderCSharpApiGeneratorExtensionsTests
         var result = builder.UseCSharpApiGenerator(options);
         await Assert.That(ReferenceEquals(builder, result)).IsTrue();
     }
-
-    /// <summary>The extension throws on a null options record.</summary>
-    /// <returns>A task representing the asynchronous test.</returns>
-    [Test]
-    public async Task RejectsNullOptions()
-    {
-        DocBuilder builder = new();
-        await Assert.That(() => builder.UseCSharpApiGenerator(null!))
-            .Throws<ArgumentNullException>();
-    }
 }

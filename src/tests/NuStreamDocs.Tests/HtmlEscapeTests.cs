@@ -69,18 +69,4 @@ public class HtmlEscapeTests
         HtmlEscape.EscapeText(Encoding.UTF8.GetBytes(Source), byteSink);
         await Assert.That(charSink.WrittenSpan.SequenceEqual(byteSink.WrittenSpan)).IsTrue();
     }
-
-    /// <summary>EscapeText null-checks its sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task EscapeTextByteNullSinkThrows() =>
-        await Assert.That(() => HtmlEscape.EscapeText("x"u8, null!))
-            .Throws<ArgumentNullException>();
-
-    /// <summary>EscapeAttribute null-checks its sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task EscapeAttributeNullSinkThrows() =>
-        await Assert.That(() => HtmlEscape.EscapeAttribute("x"u8, null!))
-            .Throws<ArgumentNullException>();
 }

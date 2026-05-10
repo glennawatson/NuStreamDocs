@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using NuStreamDocs.Bibliography.Model;
@@ -292,9 +293,26 @@ internal static class CslJsonLoader
             return [];
         }
 
-        var dst = new byte[maxLength];
-        var written = reader.CopyString(dst);
-        return written == dst.Length ? dst : dst[..written];
+        // Rent a working buffer for the unescape output; allocate the result once at exact size.
+        // Replaces the prior `new byte[maxLength]` + `dst[..written]` pair (two allocations per
+        // escaped string).
+        var pooled = ArrayPool<byte>.Shared.Rent(maxLength);
+        try
+        {
+            var written = reader.CopyString(pooled);
+            if (written is 0)
+            {
+                return [];
+            }
+
+            var result = new byte[written];
+            pooled.AsSpan(0, written).CopyTo(result);
+            return result;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(pooled);
+        }
     }
 
     /// <summary>Reads the <c>author</c> / <c>editor</c> array into a <see cref="PersonName"/> array.</summary>

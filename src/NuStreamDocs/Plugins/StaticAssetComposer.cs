@@ -14,7 +14,6 @@ public static class StaticAssetComposer
     /// <param name="outputRoot">Absolute output root.</param>
     public static void WriteAll(IPlugin[] plugins, in DirectoryPath outputRoot)
     {
-        ArgumentNullException.ThrowIfNull(plugins);
         if (outputRoot.IsEmpty)
         {
             throw new ArgumentException("Output root must be non-empty.", nameof(outputRoot));

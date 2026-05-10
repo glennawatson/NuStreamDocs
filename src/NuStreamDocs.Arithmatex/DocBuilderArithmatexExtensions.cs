@@ -14,7 +14,6 @@ public static class DocBuilderArithmatexExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseArithmatex(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new ArithmatexPlugin());
     }
 }

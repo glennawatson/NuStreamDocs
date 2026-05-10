@@ -140,21 +140,6 @@ public class PhaseTimerTests
         await Assert.That(completeCalls).IsEqualTo(1);
     }
 
-    /// <summary>Null arguments to the async overload throw <see cref="ArgumentNullException"/>.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task RunAsyncRejectsNullArguments()
-    {
-        await Assert.ThrowsAsync<ArgumentNullException>(static () =>
-            RunAsTask(PhaseTimer.RunAsync(null!, static _ => { }, static (_, _) => { }, static () => ValueTask.CompletedTask)));
-        await Assert.ThrowsAsync<ArgumentNullException>(static () =>
-            RunAsTask(PhaseTimer.RunAsync(NullLogger.Instance, null!, static (_, _) => { }, static () => ValueTask.CompletedTask)));
-        await Assert.ThrowsAsync<ArgumentNullException>(static () =>
-            RunAsTask(PhaseTimer.RunAsync(NullLogger.Instance, static _ => { }, null!, static () => ValueTask.CompletedTask)));
-        await Assert.ThrowsAsync<ArgumentNullException>(static () =>
-            RunAsTask(PhaseTimer.RunAsync(NullLogger.Instance, static _ => { }, static (_, _) => { }, (Func<ValueTask>)null!)));
-    }
-
     /// <summary>Adapts a single <see cref="ValueTask"/> instance into a <see cref="Task"/> so it's only consumed once even when fed to <c>Assert.ThrowsAsync</c>'s lambda.</summary>
     /// <param name="valueTask">Value task to adapt.</param>
     /// <returns>The equivalent <see cref="Task"/>.</returns>

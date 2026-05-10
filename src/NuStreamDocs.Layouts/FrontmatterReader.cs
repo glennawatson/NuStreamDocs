@@ -22,7 +22,6 @@ internal static class FrontmatterReader
     /// <param name="values">Sink dictionary keyed by UTF-8 key bytes.</param>
     public static void AppendScalars(ReadOnlySpan<byte> source, Dictionary<byte[], byte[]> values)
     {
-        ArgumentNullException.ThrowIfNull(values);
         if (!YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
         {
             return;

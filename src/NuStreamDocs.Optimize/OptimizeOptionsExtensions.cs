@@ -15,7 +15,6 @@ public static class OptimizeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static OptimizeOptions WithExtensions(this OptimizeOptions options, params string[] extensions)
     {
-        ArgumentNullException.ThrowIfNull(options);
         return options with { Extensions = extensions.EncodeUtf8Array() };
     }
 
@@ -25,8 +24,6 @@ public static class OptimizeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static OptimizeOptions WithExtensions(this OptimizeOptions options, params byte[][] extensions)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(extensions);
         return options with { Extensions = extensions };
     }
 
@@ -36,8 +33,6 @@ public static class OptimizeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static OptimizeOptions AddExtensions(this OptimizeOptions options, params string[] extensions)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(extensions);
         return extensions.Length is 0
             ? options
             : options with { Extensions = ArrayJoiner.Concat(options.Extensions, extensions.EncodeUtf8Array()) };
@@ -49,8 +44,6 @@ public static class OptimizeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static OptimizeOptions AddExtensions(this OptimizeOptions options, params byte[][] extensions)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(extensions);
         return extensions.Length is 0
             ? options
             : options with { Extensions = ArrayJoiner.Concat(options.Extensions, extensions) };
@@ -62,7 +55,6 @@ public static class OptimizeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static OptimizeOptions AddExtensions(this OptimizeOptions options, ReadOnlySpan<byte> extension)
     {
-        ArgumentNullException.ThrowIfNull(options);
         return options with { Extensions = ArrayJoiner.Concat(options.Extensions, [extension.ToArray()]) };
     }
 
@@ -71,7 +63,6 @@ public static class OptimizeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static OptimizeOptions ClearExtensions(this OptimizeOptions options)
     {
-        ArgumentNullException.ThrowIfNull(options);
         return options with { Extensions = [] };
     }
 }

@@ -15,8 +15,6 @@ public static class DocBuilderBlogExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseWyamBlog(this DocBuilder builder, WyamBlogOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new WyamBlogPlugin(options));
     }
 
@@ -27,9 +25,6 @@ public static class DocBuilderBlogExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseWyamBlog(this DocBuilder builder, WyamBlogOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new WyamBlogPlugin(options, logger));
     }
 }

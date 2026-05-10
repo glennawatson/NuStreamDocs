@@ -17,9 +17,6 @@ public static class MacrosOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MacrosOptions WithVariable(this MacrosOptions options, byte[] name, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(value);
         return name.Length is 0
             ? throw new ArgumentException("Name must be non-empty.", nameof(name))
             : WithVariableCore(options, name, value);
@@ -32,9 +29,7 @@ public static class MacrosOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MacrosOptions WithVariable(this MacrosOptions options, in ApiCompatString name, in ApiCompatString value)
     {
-        ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNull(value.Value);
         return WithVariableCore(options, Encoding.UTF8.GetBytes(name), Encoding.UTF8.GetBytes(value));
     }
 
@@ -44,13 +39,9 @@ public static class MacrosOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MacrosOptions WithVariables(this MacrosOptions options, Dictionary<byte[], byte[]> variables)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(variables);
         Dictionary<byte[], byte[]> map = new(variables.Count, ByteArrayComparer.Instance);
         foreach (var pair in variables)
         {
-            ArgumentNullException.ThrowIfNull(pair.Key);
-            ArgumentNullException.ThrowIfNull(pair.Value);
             map[pair.Key] = pair.Value;
         }
 
@@ -63,13 +54,10 @@ public static class MacrosOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MacrosOptions WithVariables(this MacrosOptions options, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(variables);
         Dictionary<byte[], byte[]> map = new(variables.Count, ByteArrayComparer.Instance);
         foreach (var pair in variables)
         {
             ArgumentException.ThrowIfNullOrEmpty(pair.Key.Value);
-            ArgumentNullException.ThrowIfNull(pair.Value.Value);
             map[Encoding.UTF8.GetBytes(pair.Key)] = Encoding.UTF8.GetBytes(pair.Value);
         }
 

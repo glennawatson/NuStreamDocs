@@ -120,6 +120,7 @@
   <Folder Name="/tools/">
     <Project Path="tools/NuStreamDocs.AllocReport/NuStreamDocs.AllocReport.csproj" />
     <Project Path="tools/NuStreamDocs.Search.Pagefind.Refresh/NuStreamDocs.Search.Pagefind.Refresh.csproj" />
+    <Project Path="tools/NuStreamDocs.CpuReport/NuStreamDocs.CpuReport.csproj" />
     <Project Path="tools/NuStreamDocs.Search.Lunr.Refresh/NuStreamDocs.Search.Lunr.Refresh.csproj" />
   </Folder>
 </Solution>

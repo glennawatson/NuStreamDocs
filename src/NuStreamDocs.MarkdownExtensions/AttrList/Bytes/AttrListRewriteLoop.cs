@@ -24,8 +24,6 @@ internal static class AttrListRewriteLoop
     public static bool RewriteInto<TStrategy>(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
         where TStrategy : struct, IAttrListRewriteStrategy<TStrategy>
     {
-        ArgumentNullException.ThrowIfNull(sink);
-
         var changed = false;
         var lastEmit = 0;
         var cursor = 0;

@@ -43,7 +43,6 @@ public sealed class SyntheticPageSink
     /// <param name="stream">A lazy stream of pages; pulled one at a time so the producer can hold peak memory low.</param>
     public void RegisterStream(IAsyncEnumerable<SyntheticPage> stream)
     {
-        ArgumentNullException.ThrowIfNull(stream);
         _streams.Add(stream);
     }
 

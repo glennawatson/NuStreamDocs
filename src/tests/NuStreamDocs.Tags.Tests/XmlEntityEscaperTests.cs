@@ -63,11 +63,4 @@ public class XmlEntityEscaperTests
         XmlEntityEscaper.WriteEscaped(sink, "<a&b>"u8, XmlEntityEscaper.Mode.Xml);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("&lt;a&amp;b&gt;");
     }
-
-    /// <summary>A null writer throws.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullWriterThrows() =>
-        await Assert.That(static () => XmlEntityEscaper.WriteEscaped(null!, default, XmlEntityEscaper.Mode.Xml))
-            .Throws<ArgumentNullException>();
 }

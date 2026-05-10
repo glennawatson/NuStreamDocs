@@ -14,7 +14,6 @@ public static class DocBuilderNavExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseNav(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new NavPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderNavExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseNav(this DocBuilder builder, Func<NavOptions, NavOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(NavOptions.Default);
         return builder.UsePlugin(new NavPlugin(options));
     }
@@ -37,9 +34,6 @@ public static class DocBuilderNavExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseNav(this DocBuilder builder, Func<NavOptions, NavOptions> configure, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
-        ArgumentNullException.ThrowIfNull(logger);
         var options = configure(NavOptions.Default);
         return builder.UsePlugin(new NavPlugin(options, logger));
     }

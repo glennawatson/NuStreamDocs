@@ -43,7 +43,6 @@ public static class DocBuilderServeExtensions
     /// <returns>Async task.</returns>
     public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, in CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(configure);
         return builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), NullLogger.Instance, cancellationToken);
     }
 
@@ -55,7 +54,6 @@ public static class DocBuilderServeExtensions
     /// <returns>Async task.</returns>
     public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, ILogger logger, in CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(configure);
         return builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), logger, cancellationToken);
     }
 
@@ -71,9 +69,6 @@ public static class DocBuilderServeExtensions
         Justification = "Handler unregistered in finally before linkedCts dispose; catch ObjectDisposedException guards SIGINT race.")]
     public static async Task WatchAndServeAsync(this DocBuilder builder, WatchAndServeOptions options, ILogger logger, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(logger);
-
         // Link the supplied token with an internal Ctrl+C handler. Callers that pass CancellationToken.None
         // (e.g. Nuke's Serve target) still need an exit path on console interrupt — without this the
         // `await foreach` over the watcher never observes cancellation and the process hangs.

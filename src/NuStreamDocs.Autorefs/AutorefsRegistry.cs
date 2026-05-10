@@ -48,7 +48,6 @@ public sealed class AutorefsRegistry
             throw new ArgumentException("id must be non-empty.", nameof(id));
         }
 
-        ArgumentNullException.ThrowIfNull(pageRelativeUrlBytes);
         byte[] idBytes = [.. id];
 
         _anchors[idBytes] = new(pageRelativeUrlBytes, ResolveFragment(idBytes, fragment));
@@ -60,7 +59,6 @@ public sealed class AutorefsRegistry
     /// <returns>True when the ID was registered.</returns>
     public bool TryResolveInto(ReadOnlySpan<byte> id, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (!_anchors.TryGetValueByUtf8(id, out var anchor))
         {
             return false;

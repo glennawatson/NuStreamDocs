@@ -101,17 +101,4 @@ public class VersionOptionsExtensionsTests
         await Assert.That(updated.Aliases.Length).IsEqualTo(2);
         await Assert.That(updated.Aliases[1].AsSpan().SequenceEqual("v1"u8)).IsTrue();
     }
-
-    /// <summary>Null arguments throw on every overload.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullArgumentsThrow()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => VersionOptions.Latest("1", "1").WithAliases((byte[][])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => VersionOptions.Latest("1", "1").AddAliases((ApiCompatString[])null!));
-        var ex3 = Assert.Throws<ArgumentNullException>(static () => VersionOptions.Latest("1", "1").AddAliases((byte[][])null!));
-        await Assert.That(ex1).IsNotNull();
-        await Assert.That(ex2).IsNotNull();
-        await Assert.That(ex3).IsNotNull();
-    }
 }

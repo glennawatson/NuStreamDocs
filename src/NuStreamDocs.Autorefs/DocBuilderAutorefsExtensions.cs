@@ -14,7 +14,6 @@ public static class DocBuilderAutorefsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseAutorefs(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new AutorefsPlugin());
     }
 
@@ -24,7 +23,6 @@ public static class DocBuilderAutorefsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseAutorefs(this DocBuilder builder, int initialCapacity)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         ArgumentOutOfRangeException.ThrowIfNegative(initialCapacity);
         return builder.UsePlugin(new AutorefsPlugin(new(initialCapacity)));
     }
@@ -35,8 +33,6 @@ public static class DocBuilderAutorefsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseAutorefs(this DocBuilder builder, AutorefsRegistry registry)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(registry);
         return builder.UsePlugin(new AutorefsPlugin(registry));
     }
 
@@ -47,9 +43,6 @@ public static class DocBuilderAutorefsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseAutorefs(this DocBuilder builder, AutorefsRegistry registry, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new AutorefsPlugin(registry, logger));
     }
 }

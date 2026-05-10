@@ -45,8 +45,6 @@ public sealed class Template
     /// <param name="writer">UTF-8 sink.</param>
     public void Render(TemplateData data, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(data);
-        ArgumentNullException.ThrowIfNull(writer);
         TemplateRenderer.Render(_source, _instructions, data, partials: null, writer);
     }
 
@@ -56,9 +54,6 @@ public sealed class Template
     /// <param name="writer">UTF-8 sink.</param>
     public void Render(TemplateData data, Dictionary<byte[], Template> partials, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(data);
-        ArgumentNullException.ThrowIfNull(partials);
-        ArgumentNullException.ThrowIfNull(writer);
         TemplateRenderer.Render(_source, _instructions, data, partials, writer);
     }
 }

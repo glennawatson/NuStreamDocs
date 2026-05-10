@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Search.Lunr;
 
 /// <summary>Provides the vendored <c>lunr.min.js</c> bundle from embedded resources.</summary>
@@ -28,11 +30,25 @@ internal static class LunrAssets
     {
         var asm = typeof(LunrAssets).Assembly;
         using var stream = asm.GetManifestResourceStream(name)
-            ?? throw new InvalidOperationException(
-                $"Embedded resource '{name}' not found in {asm.GetName().Name}. " +
-                $"Available: {string.Join(", ", asm.GetManifestResourceNames())}");
+            ?? throw new InvalidOperationException(BuildResourceNotFoundMessage(asm, name));
         using MemoryStream sink = new();
         stream.CopyTo(sink);
         return sink.ToArray();
+    }
+
+    /// <summary>Composes the resource-not-found message via the project's <see cref="StringCompose"/> helper (one explicit allocation per fragment).</summary>
+    /// <param name="asm">Assembly being inspected.</param>
+    /// <param name="name">Missing resource identifier.</param>
+    /// <returns>Composed message.</returns>
+    private static string BuildResourceNotFoundMessage(System.Reflection.Assembly asm, string name)
+    {
+        var resourceNames = asm.GetManifestResourceNames();
+        var available = string.Join(", ", resourceNames);
+        return StringCompose.Concat(
+            "Embedded resource '",
+            name,
+            "' not found in ",
+            asm.GetName().Name ?? "<null>",
+            StringCompose.Concat(". Available: ", available));
     }
 }

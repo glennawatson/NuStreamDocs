@@ -39,8 +39,6 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     /// <param name="logger">Logger for diagnostics.</param>
     protected SearchPluginBase(ISearchEngine engine, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(engine);
-        ArgumentNullException.ThrowIfNull(logger);
         _engine = engine;
         _logger = logger;
     }
@@ -142,8 +140,6 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         // Lazy-init the manifest URL when ConfigureAsync didn't run (head-extra-only smoke tests).
         _manifestUrlBytes ??= BuildManifestUrlBytes(OutputSubdirectory, _engine.ManifestFileName);
 

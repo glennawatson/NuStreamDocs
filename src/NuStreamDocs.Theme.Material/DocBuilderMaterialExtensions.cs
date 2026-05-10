@@ -27,7 +27,6 @@ public static class DocBuilderMaterialExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMaterialTheme(this DocBuilder builder, IIconResolver? iconResolver)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder
             .UsePlugin(new IconShortcodePlugin(iconResolver))
             .UsePlugin(new MaterialThemePlugin());
@@ -46,8 +45,6 @@ public static class DocBuilderMaterialExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMaterialTheme(this DocBuilder builder, Func<MaterialThemeOptions, MaterialThemeOptions> configure, IIconResolver? iconResolver)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(MaterialThemeOptions.Default);
         return builder
             .UsePlugin(new IconShortcodePlugin(iconResolver))

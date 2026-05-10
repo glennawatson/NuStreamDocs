@@ -40,8 +40,6 @@ public static class FrontmatterValueExtractor
     /// <param name="sink">UTF-8 sink the matched values are appended into.</param>
     public static void AppendKeysTo(ReadOnlySpan<byte> source, byte[][] keys, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(keys);
-        ArgumentNullException.ThrowIfNull(sink);
         if (keys.Length is 0 || !YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
         {
             return;

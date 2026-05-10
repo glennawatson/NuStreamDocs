@@ -14,7 +14,6 @@ public static class DocBuilderMermaidExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMermaid(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MermaidPlugin());
     }
 }

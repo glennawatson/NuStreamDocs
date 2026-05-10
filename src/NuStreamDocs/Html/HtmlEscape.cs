@@ -34,7 +34,6 @@ public static class HtmlEscape
     /// <param name="writer">UTF-8 sink.</param>
     public static void EscapeText(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (source.IsEmpty)
         {
             return;
@@ -90,7 +89,6 @@ public static class HtmlEscape
     /// <param name="writer">UTF-8 sink.</param>
     public static void EscapeText(in ReadOnlySpan<char> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (source.IsEmpty)
         {
             return;
@@ -126,7 +124,6 @@ public static class HtmlEscape
     /// <remarks><c>&lt;</c> and <c>&gt;</c> are literal inside attribute values; escaping them can corrupt values that carry markup-like content.</remarks>
     public static void EscapeAttribute(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (source.IsEmpty)
         {
             return;

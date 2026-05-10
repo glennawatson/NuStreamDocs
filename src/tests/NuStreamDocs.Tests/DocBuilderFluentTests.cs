@@ -34,15 +34,6 @@ public class DocBuilderFluentTests
     public async Task IncludeDraftsFalse() =>
         await Assert.That(new DocBuilder().IncludeDrafts(false).IncludeDraftsEnabled).IsFalse();
 
-    /// <summary>WithLogger rejects null.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WithLoggerRejectsNull()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().WithLogger(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>WithLogger chains.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -132,15 +123,6 @@ public class DocBuilderFluentTests
         await Assert.That(filter.HasRules).IsTrue();
     }
 
-    /// <summary>UsePlugin(IPlugin) rejects null.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UsePluginRejectsNull()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UsePlugin(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>GetOrAddPlugin returns the same instance on repeat calls.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -150,15 +132,5 @@ public class DocBuilderFluentTests
         var first = builder.GetOrAddPlugin<RecordingPlugin>();
         var second = builder.GetOrAddPlugin<RecordingPlugin>();
         await Assert.That(first).IsSameReferenceAs(second);
-    }
-
-    /// <summary>RenderPageAsync rejects a null html sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task RenderPageRejectsNullHtml()
-    {
-        var ex = await Assert.ThrowsAsync<ArgumentNullException>(static () =>
-            new DocBuilder().RenderPageAsync("p.md", default, null!, CancellationToken.None));
-        await Assert.That(ex).IsNotNull();
     }
 }

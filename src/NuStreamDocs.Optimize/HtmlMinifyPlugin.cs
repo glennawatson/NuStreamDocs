@@ -10,7 +10,7 @@ namespace NuStreamDocs.Optimize;
 public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IPagePostResolvePlugin
 {
     /// <summary>Configured options.</summary>
-    private readonly HtmlMinifyOptions _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly HtmlMinifyOptions _options = options;
 
     /// <summary>Initializes a new instance of the <see cref="HtmlMinifyPlugin"/> class with default options.</summary>
     public HtmlMinifyPlugin()

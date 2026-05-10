@@ -97,7 +97,6 @@ public readonly record struct FilePath(string Value)
     /// <returns>The renamed file path.</returns>
     public FilePath WithExtension(string extension)
     {
-        ArgumentNullException.ThrowIfNull(extension);
         return IsEmpty ? this : new(Path.ChangeExtension(Value, extension));
     }
 

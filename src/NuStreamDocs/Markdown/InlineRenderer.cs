@@ -47,8 +47,6 @@ public static class InlineRenderer
     /// <param name="writer">UTF-8 HTML sink.</param>
     public static void Render(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         var pos = 0;
         var pendingTextStart = 0;
         while (pos < source.Length)

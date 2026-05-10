@@ -25,11 +25,6 @@ public static class PhaseTimer
         Action<ILogger, double> logComplete,
         Func<ValueTask> action)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(logStart);
-        ArgumentNullException.ThrowIfNull(logComplete);
-        ArgumentNullException.ThrowIfNull(action);
-
         logStart(logger);
         var stopwatch = Stopwatch.StartNew();
         try
@@ -57,11 +52,6 @@ public static class PhaseTimer
         Action<ILogger, TResult, double> logComplete,
         Func<ValueTask<TResult>> action)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(logStart);
-        ArgumentNullException.ThrowIfNull(logComplete);
-        ArgumentNullException.ThrowIfNull(action);
-
         logStart(logger);
         var stopwatch = Stopwatch.StartNew();
         var result = await action().ConfigureAwait(false);
@@ -81,11 +71,6 @@ public static class PhaseTimer
         Action<ILogger, double> logComplete,
         Action action)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(logStart);
-        ArgumentNullException.ThrowIfNull(logComplete);
-        ArgumentNullException.ThrowIfNull(action);
-
         logStart(logger);
         var stopwatch = Stopwatch.StartNew();
         try

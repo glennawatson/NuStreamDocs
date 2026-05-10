@@ -301,8 +301,6 @@ internal static class LanguageDetector
     /// <returns>True when a confident match was found.</returns>
     public static bool TryDetect(ReadOnlySpan<byte> escapedBody, LexerRegistry registry, byte[][] allowList, out ReadOnlySpan<byte> languageId)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(allowList);
         languageId = default;
 
         var scan = escapedBody.Length > ScanLimit ? escapedBody[..ScanLimit] : escapedBody;

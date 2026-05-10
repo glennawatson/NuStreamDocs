@@ -24,7 +24,6 @@ internal static class DocsAssetCopier
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot.Value);
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
-        ArgumentNullException.ThrowIfNull(filter);
 
         if (!inputRoot.Exists())
         {

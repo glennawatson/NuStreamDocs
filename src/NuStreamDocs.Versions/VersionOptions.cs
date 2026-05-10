@@ -31,7 +31,6 @@ public sealed record VersionOptions(string Version, string Title, byte[][] Alias
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(Version);
         ArgumentException.ThrowIfNullOrWhiteSpace(Title);
-        ArgumentNullException.ThrowIfNull(Aliases);
     }
 
     /// <summary>Materializes the option set as a <see cref="VersionEntry"/>.</summary>

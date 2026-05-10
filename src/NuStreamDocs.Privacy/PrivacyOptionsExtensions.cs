@@ -40,7 +40,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions WithHostsToSkip(this in PrivacyOptions options, params byte[][] hosts)
     {
-        ArgumentNullException.ThrowIfNull(hosts);
         return options with { HostsToSkip = hosts };
     }
 
@@ -50,7 +49,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddHostsToSkip(this in PrivacyOptions options, params string[] hosts)
     {
-        ArgumentNullException.ThrowIfNull(hosts);
         return hosts.Length is 0
             ? options
             : options.AppendHostsToSkip(hosts.EncodeUtf8Array());
@@ -62,7 +60,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddHostsToSkip(this in PrivacyOptions options, params byte[][] hosts)
     {
-        ArgumentNullException.ThrowIfNull(hosts);
         return hosts.Length is 0
             ? options
             : options.AppendHostsToSkip(hosts);
@@ -94,7 +91,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions WithHostsAllowed(this in PrivacyOptions options, params byte[][] hosts)
     {
-        ArgumentNullException.ThrowIfNull(hosts);
         return options with { HostsAllowed = hosts };
     }
 
@@ -104,7 +100,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddHostsAllowed(this in PrivacyOptions options, params string[] hosts)
     {
-        ArgumentNullException.ThrowIfNull(hosts);
         return hosts.Length is 0
             ? options
             : options.AppendHostsAllowed(hosts.EncodeUtf8Array());
@@ -116,7 +111,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddHostsAllowed(this in PrivacyOptions options, params byte[][] hosts)
     {
-        ArgumentNullException.ThrowIfNull(hosts);
         return hosts.Length is 0
             ? options
             : options.AppendHostsAllowed(hosts);
@@ -148,7 +142,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions WithUrlIncludePatterns(this in PrivacyOptions options, params byte[][] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return options with { UrlIncludePatterns = patterns };
     }
 
@@ -158,7 +151,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddUrlIncludePatterns(this in PrivacyOptions options, params string[] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0
             ? options
             : options.AppendUrlIncludePatterns(patterns.EncodeUtf8Array());
@@ -170,7 +162,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddUrlIncludePatterns(this in PrivacyOptions options, params byte[][] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0
             ? options
             : options.AppendUrlIncludePatterns(patterns);
@@ -202,7 +193,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions WithUrlExcludePatterns(this in PrivacyOptions options, params byte[][] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return options with { UrlExcludePatterns = patterns };
     }
 
@@ -212,7 +202,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddUrlExcludePatterns(this in PrivacyOptions options, params string[] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0
             ? options
             : options.AppendUrlExcludePatterns(patterns.EncodeUtf8Array());
@@ -224,7 +213,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions AddUrlExcludePatterns(this in PrivacyOptions options, params byte[][] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0
             ? options
             : options.AppendUrlExcludePatterns(patterns);
@@ -256,7 +244,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions WithAuditManifestPath(this in PrivacyOptions options, byte[] path)
     {
-        ArgumentNullException.ThrowIfNull(path);
         return options with { AuditManifestPath = path };
     }
 
@@ -280,7 +267,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions WithCacheDirectory(this in PrivacyOptions options, byte[] path)
     {
-        ArgumentNullException.ThrowIfNull(path);
         return options with { CacheDirectory = path };
     }
 
@@ -304,7 +290,6 @@ public static class PrivacyOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PrivacyOptions WithCspManifestPath(this in PrivacyOptions options, byte[] path)
     {
-        ArgumentNullException.ThrowIfNull(path);
         return options with { CspManifestPath = path };
     }
 

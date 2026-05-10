@@ -27,15 +27,6 @@ public class LinkValidatorReporterTests
     public async Task HasFatalAllWarnings() =>
         await Assert.That(LinkValidatorReporter.HasFatal([Warn("a"), Warn("b")])).IsFalse();
 
-    /// <summary>HasFatal rejects null diagnostics.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task HasFatalRejectsNull()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => LinkValidatorReporter.HasFatal(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>AdjustSeverity demotes errors to warnings when strict is false.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -82,16 +73,6 @@ public class LinkValidatorReporterTests
         await Assert.That(merged[0].Severity).IsEqualTo(LinkSeverity.Warning);
         await Assert.That(merged[1].Severity).IsEqualTo(LinkSeverity.Warning);
         await Assert.That(merged[2].Severity).IsEqualTo(LinkSeverity.Error);
-    }
-
-    /// <summary>Merge rejects null arrays.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task MergeRejectsNullArrays()
-    {
-        Assert.Throws<ArgumentNullException>(static () => LinkValidatorReporter.Merge(null!, [], false, false));
-        var ex = Assert.Throws<ArgumentNullException>(static () => LinkValidatorReporter.Merge([], null!, false, false));
-        await Assert.That(ex).IsNotNull();
     }
 
     /// <summary>Builds an error-severity diagnostic for the given page.</summary>

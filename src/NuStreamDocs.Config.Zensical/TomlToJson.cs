@@ -57,8 +57,6 @@ public static class TomlToJson
     /// <param name="json">UTF-8 JSON sink.</param>
     public static void Convert(ReadOnlySpan<byte> toml, Utf8JsonWriter json)
     {
-        ArgumentNullException.ThrowIfNull(json);
-
         json.WriteStartObject();
         var openTables = 0;
 
@@ -83,9 +81,6 @@ public static class TomlToJson
     /// <returns>A task that completes when the stream is fully consumed.</returns>
     public static async Task ConvertAsync(Stream utf8Stream, Utf8JsonWriter json, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(utf8Stream);
-        ArgumentNullException.ThrowIfNull(json);
-
         json.WriteStartObject();
         var openTables = 0;
         using Utf8LineReader reader = new(utf8Stream, leaveOpen: true);

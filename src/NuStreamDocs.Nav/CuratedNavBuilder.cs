@@ -47,8 +47,6 @@ internal static class CuratedNavBuilder
     public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
-        ArgumentNullException.ThrowIfNull(entries);
-        ArgumentNullException.ThrowIfNull(logger);
 
         var children = new NavNode[entries.Length];
         var written = 0;

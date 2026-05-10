@@ -15,8 +15,6 @@ public static class DocBuilderMkDocsBlogExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMkDocsBlog(this DocBuilder builder, MkDocsBlogOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new MkDocsBlogPlugin(options));
     }
 
@@ -27,9 +25,6 @@ public static class DocBuilderMkDocsBlogExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMkDocsBlog(this DocBuilder builder, MkDocsBlogOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new MkDocsBlogPlugin(options, logger));
     }
 }

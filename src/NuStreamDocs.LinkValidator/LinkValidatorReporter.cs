@@ -12,7 +12,6 @@ internal static class LinkValidatorReporter
     /// <returns>Total internal + external link counts.</returns>
     public static (int Internal, int External) CountLinks(ValidationCorpus corpus)
     {
-        ArgumentNullException.ThrowIfNull(corpus);
         var internalLinkCount = 0;
         var externalLinkCount = 0;
         for (var p = 0; p < corpus.Pages.Length; p++)
@@ -36,9 +35,6 @@ internal static class LinkValidatorReporter
         bool strictInternal,
         bool strictExternal)
     {
-        ArgumentNullException.ThrowIfNull(internalDiags);
-        ArgumentNullException.ThrowIfNull(externalDiags);
-
         var merged = new LinkDiagnostic[internalDiags.Length + externalDiags.Length];
         for (var i = 0; i < internalDiags.Length; i++)
         {
@@ -58,7 +54,6 @@ internal static class LinkValidatorReporter
     /// <returns>Broken-count and warning-count.</returns>
     public static (int Broken, int Warnings) Tally(LinkDiagnostic[] diagnostics)
     {
-        ArgumentNullException.ThrowIfNull(diagnostics);
         var broken = 0;
         var warnings = 0;
         for (var i = 0; i < diagnostics.Length; i++)
@@ -81,7 +76,6 @@ internal static class LinkValidatorReporter
     /// <returns>True when fatal.</returns>
     public static bool HasFatal(LinkDiagnostic[] diagnostics)
     {
-        ArgumentNullException.ThrowIfNull(diagnostics);
         for (var i = 0; i < diagnostics.Length; i++)
         {
             if (diagnostics[i].Severity == LinkSeverity.Error)

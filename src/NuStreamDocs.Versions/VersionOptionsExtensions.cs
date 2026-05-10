@@ -15,7 +15,6 @@ public static class VersionOptionsExtensions
     /// <returns>The updated options.</returns>
     public static VersionOptions WithAliases(this VersionOptions options, params ApiCompatString[] aliases)
     {
-        ArgumentNullException.ThrowIfNull(options);
         return options with { Aliases = aliases.EncodeUtf8Array() };
     }
 
@@ -25,8 +24,6 @@ public static class VersionOptionsExtensions
     /// <returns>The updated options.</returns>
     public static VersionOptions WithAliases(this VersionOptions options, params byte[][] aliases)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(aliases);
         return options with { Aliases = aliases };
     }
 
@@ -36,8 +33,6 @@ public static class VersionOptionsExtensions
     /// <returns>The updated options.</returns>
     public static VersionOptions AddAliases(this VersionOptions options, params ApiCompatString[] aliases)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(aliases);
         return aliases.Length is 0
             ? options
             : options with { Aliases = ArrayJoiner.Concat(options.Aliases, aliases.EncodeUtf8Array()) };
@@ -49,8 +44,6 @@ public static class VersionOptionsExtensions
     /// <returns>The updated options.</returns>
     public static VersionOptions AddAliases(this VersionOptions options, params byte[][] aliases)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(aliases);
         return aliases.Length is 0
             ? options
             : options with { Aliases = ArrayJoiner.Concat(options.Aliases, aliases) };
@@ -62,7 +55,6 @@ public static class VersionOptionsExtensions
     /// <returns>The updated options.</returns>
     public static VersionOptions AddAliases(this VersionOptions options, ReadOnlySpan<byte> alias)
     {
-        ArgumentNullException.ThrowIfNull(options);
         return options with { Aliases = ArrayJoiner.Concat(options.Aliases, [alias.ToArray()]) };
     }
 
@@ -71,7 +63,6 @@ public static class VersionOptionsExtensions
     /// <returns>The updated options.</returns>
     public static VersionOptions ClearAliases(this VersionOptions options)
     {
-        ArgumentNullException.ThrowIfNull(options);
         return options with { Aliases = [] };
     }
 }

@@ -92,7 +92,6 @@ internal static class MarkdownLinkRewriter
     /// <param name="writer">UTF-8 sink.</param>
     public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, bool prependParent, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (html.IsEmpty)
         {
             return;

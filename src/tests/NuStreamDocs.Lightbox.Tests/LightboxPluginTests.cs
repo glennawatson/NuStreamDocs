@@ -59,16 +59,4 @@ public class LightboxPluginTests
         await Assert.That(head).Contains("<link rel=\"stylesheet\"");
         await Assert.That(head).DoesNotContain("<script");
     }
-
-    /// <summary>WriteHeadExtra rejects a null writer.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteHeadExtraNullWriterThrows() =>
-        await Assert.That(() => new LightboxPlugin().WriteHeadExtra(null!)).Throws<ArgumentNullException>();
-
-    /// <summary>Constructor rejects a null options instance.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullOptionsThrows() =>
-        await Assert.That(() => new LightboxPlugin(null!)).Throws<ArgumentNullException>();
 }

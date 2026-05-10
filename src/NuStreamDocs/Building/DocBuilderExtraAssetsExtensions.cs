@@ -21,7 +21,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraCss(this DocBuilder builder, in FilePath filePath)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.File(filePath));
         return builder;
     }
@@ -32,7 +31,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraCss(this DocBuilder builder, params ReadOnlySpan<string> filePaths)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         for (var i = 0; i < filePaths.Length; i++)
         {
@@ -49,7 +47,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraCssInline(this DocBuilder builder, in FilePath outputName, byte[] utf8Css)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.Inline(outputName, utf8Css));
         return builder;
     }
@@ -62,7 +59,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraCssEmbedded(this DocBuilder builder, Assembly assembly, in ApiCompatString resourceName, in FilePath outputName)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
         return builder;
     }
@@ -73,7 +69,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraCssLink(this DocBuilder builder, in UrlPath url)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.External(url));
         return builder;
     }
@@ -84,7 +79,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraCssLink(this DocBuilder builder, params ReadOnlySpan<UrlPath> urls)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         for (var i = 0; i < urls.Length; i++)
         {
@@ -100,7 +94,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJs(this DocBuilder builder, in FilePath filePath)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.File(filePath));
         return builder;
     }
@@ -111,7 +104,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJs(this DocBuilder builder, params ReadOnlySpan<string> filePaths)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         for (var i = 0; i < filePaths.Length; i++)
         {
@@ -128,7 +120,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsInline(this DocBuilder builder, in FilePath outputName, byte[] utf8Js)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Inline(outputName, utf8Js));
         return builder;
     }
@@ -141,7 +132,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsEmbedded(this DocBuilder builder, Assembly assembly, in ApiCompatString resourceName, in FilePath outputName)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
         return builder;
     }
@@ -152,7 +142,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsModule(this DocBuilder builder, in FilePath filePath)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.File(filePath).AsModule());
         return builder;
     }
@@ -163,7 +152,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsModule(this DocBuilder builder, params ReadOnlySpan<string> filePaths)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         for (var i = 0; i < filePaths.Length; i++)
         {
@@ -180,7 +168,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsModuleInline(this DocBuilder builder, in FilePath outputName, byte[] utf8Js)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Inline(outputName, utf8Js).AsModule());
         return builder;
     }
@@ -193,7 +180,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsModuleEmbedded(this DocBuilder builder, Assembly assembly, in ApiCompatString resourceName, in FilePath outputName)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName).AsModule());
         return builder;
     }
@@ -204,7 +190,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsModuleLink(this DocBuilder builder, in UrlPath url)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.External(url).AsModule());
         return builder;
     }
@@ -215,7 +200,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsLink(this DocBuilder builder, in UrlPath url)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.External(url));
         return builder;
     }
@@ -226,7 +210,6 @@ public static class DocBuilderExtraAssetsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder AddExtraJsLink(this DocBuilder builder, params ReadOnlySpan<UrlPath> urls)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         var plugin = builder.GetOrAddPlugin<ExtraAssetsPlugin>();
         for (var i = 0; i < urls.Length; i++)
         {

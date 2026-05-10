@@ -37,13 +37,4 @@ public class SmartSymbolsPluginTests
         DocBuilder builder = new();
         await Assert.That(builder.UseSmartSymbols()).IsSameReferenceAs(builder);
     }
-
-    /// <summary>UseSmartSymbols rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseSmartSymbolsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderSmartSymbolsExtensions.UseSmartSymbols(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

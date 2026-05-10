@@ -50,8 +50,6 @@ public static class HtmlEmitter
         in ReadOnlySpan<BlockSpan> blocks,
         IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         var i = 0;
         while (i < blocks.Length)
         {

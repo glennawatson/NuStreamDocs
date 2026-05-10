@@ -110,25 +110,10 @@ public class MacrosOptionsExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary><c>WithVariable(byte[])</c> rejects null/empty names with a descriptive exception.</summary>
+    /// <summary><c>WithVariable(byte[])</c> rejects empty names with a descriptive exception.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task WithVariableBytesRejectsNullOrEmptyName()
-    {
-        await Assert.That(static () => MacrosOptions.Default.WithVariable((byte[])null!, [.. "v"u8]))
-            .Throws<ArgumentNullException>();
+    public async Task WithVariableBytesRejectsEmptyName() =>
         await Assert.That(static () => MacrosOptions.Default.WithVariable([], [.. "v"u8]))
             .Throws<ArgumentException>();
-    }
-
-    /// <summary><c>WithVariables</c> rejects a null map.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WithVariablesRejectsNullMap()
-    {
-        await Assert.That(static () => MacrosOptions.Default.WithVariables((Dictionary<byte[], byte[]>)null!))
-            .Throws<ArgumentNullException>();
-        await Assert.That(static () => MacrosOptions.Default.WithVariables((Dictionary<ApiCompatString, ApiCompatString>)null!))
-            .Throws<ArgumentNullException>();
-    }
 }

@@ -21,7 +21,7 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IBu
     private readonly VersionOptions _options = ValidateOptions(options);
 
     /// <summary>Logger for diagnostics.</summary>
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger = logger;
 
     /// <summary>Initializes a new instance of the <see cref="VersionsPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
@@ -56,7 +56,6 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IBu
     /// <returns>The validated options.</returns>
     private static VersionOptions ValidateOptions(VersionOptions opts)
     {
-        ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
     }

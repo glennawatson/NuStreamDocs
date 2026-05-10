@@ -23,7 +23,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithSiteName(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { SiteName = value };
     }
 
@@ -40,7 +39,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithLogo(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { Logo = value };
     }
 
@@ -57,7 +55,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithFavicon(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { Favicon = value };
     }
 
@@ -81,7 +78,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithSiteUrl(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { SiteUrl = value };
     }
 
@@ -105,7 +101,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithLanguage(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { Language = value };
     }
 
@@ -129,7 +124,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithCopyright(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { Copyright = value };
     }
 
@@ -146,7 +140,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithCopyrightHtml(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { CopyrightHtml = value };
     }
 
@@ -163,7 +156,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithFooterPartial(this in Material3ThemeOptions options, byte[] path)
     {
-        ArgumentNullException.ThrowIfNull(path);
         return options with { FooterPartialPath = path };
     }
 
@@ -182,9 +174,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions AddSocialLink(this in Material3ThemeOptions options, byte[] url, byte[] title, byte[] iconSvg)
     {
-        ArgumentNullException.ThrowIfNull(url);
-        ArgumentNullException.ThrowIfNull(title);
-        ArgumentNullException.ThrowIfNull(iconSvg);
         var existing = options.SocialLinks;
         ThemeSocialLink[] next = [.. existing, new(url, title, iconSvg)];
         return options with { SocialLinks = next };
@@ -203,7 +192,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithRepoUrl(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { RepoUrl = value };
     }
 
@@ -227,7 +215,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithEditUri(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { EditUri = value };
     }
 
@@ -251,7 +238,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithEmbeddedAssetRoot(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { EmbeddedAssetRoot = value };
     }
 
@@ -275,7 +261,6 @@ public static class Material3ThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static Material3ThemeOptions WithCdnRoot(this in Material3ThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { CdnRoot = value };
     }
 

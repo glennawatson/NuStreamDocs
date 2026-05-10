@@ -16,7 +16,6 @@ public static class DocBuilderSmartSymbolsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSmartSymbols(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new SmartSymbolsPlugin());
     }
 }

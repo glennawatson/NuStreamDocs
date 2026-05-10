@@ -32,7 +32,6 @@ public sealed class FontAwesomePlugin : IPlugin, IHeadExtraProvider
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (_options.StylesheetUrl.Length is 0)
         {
             return;

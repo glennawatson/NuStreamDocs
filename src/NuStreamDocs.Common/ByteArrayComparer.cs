@@ -35,7 +35,6 @@ public sealed class ByteArrayComparer
     /// <inheritdoc/>
     public int GetHashCode(byte[] obj)
     {
-        ArgumentNullException.ThrowIfNull(obj);
         return GetSpanHashCode(obj);
     }
 
@@ -72,7 +71,6 @@ public sealed class ByteArrayComparer
     /// <inheritdoc/>
     int IEqualityComparer.GetHashCode(object obj)
     {
-        ArgumentNullException.ThrowIfNull(obj);
         return obj is byte[] bytes ? GetHashCode(bytes) : obj.GetHashCode();
     }
 

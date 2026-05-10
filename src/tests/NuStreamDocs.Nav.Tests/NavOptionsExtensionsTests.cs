@@ -105,19 +105,4 @@ public class NavOptionsExtensionsTests
         await Assert.That(updated.HideEmptySections).IsFalse();
         await Assert.That(updated.Excludes.Length).IsEqualTo(1);
     }
-
-    /// <summary>Null array arguments are rejected.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullArgumentsThrow()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => NavOptions.Default.WithIncludes(null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => NavOptions.Default.AddIncludes(null!));
-        var ex3 = Assert.Throws<ArgumentNullException>(static () => NavOptions.Default.WithExcludes(null!));
-        var ex4 = Assert.Throws<ArgumentNullException>(static () => NavOptions.Default.AddExcludes(null!));
-        await Assert.That(ex1).IsNotNull();
-        await Assert.That(ex2).IsNotNull();
-        await Assert.That(ex3).IsNotNull();
-        await Assert.That(ex4).IsNotNull();
-    }
 }

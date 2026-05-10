@@ -46,7 +46,6 @@ public sealed class CheckListPlugin : IPagePreRenderPlugin, IStaticAssetProvider
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         writer.Write(LinkBytes);
     }
 }

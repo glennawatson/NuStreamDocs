@@ -99,7 +99,15 @@ internal static class AttrListMarker
         int attrListEnd,
         IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
+        // Pre-grow the sink for the merged attribute output so the per-attribute writes
+        // inside this method don't fan out into an Array.Resize doubling chain. Output is
+        // bounded by the existing attrs + the attr-list interior + a small per-pair margin.
+        const int AttrListMergeMargin = 64;
+        var hint = existingAttrsEnd - existingAttrsStart + attrListEnd - attrListStart + AttrListMergeMargin;
+        if (hint > 0)
+        {
+            _ = sink.GetSpan(hint);
+        }
 
         Span<ByteRange> classBuffer = stackalloc ByteRange[MaxClassTokens];
         Span<KvRange> kvBuffer = stackalloc KvRange[MaxKvPairs];

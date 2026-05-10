@@ -24,7 +24,6 @@ public sealed class CrossPageMarkerRegistry
     /// <param name="needle">UTF-8 byte sequence identifying the cross-page marker (e.g. <c>[.. "@autoref:"u8]</c>).</param>
     public void Register(byte[] needle)
     {
-        ArgumentNullException.ThrowIfNull(needle);
         if (needle.Length is 0)
         {
             throw new ArgumentException("Marker needle must be non-empty.", nameof(needle));

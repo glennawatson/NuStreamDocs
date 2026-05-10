@@ -14,7 +14,6 @@ public static class DocBuilderTagsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseTags(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new TagsPlugin());
     }
 
@@ -24,7 +23,6 @@ public static class DocBuilderTagsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseTags(this DocBuilder builder, in TagsOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new TagsPlugin(options));
     }
 }

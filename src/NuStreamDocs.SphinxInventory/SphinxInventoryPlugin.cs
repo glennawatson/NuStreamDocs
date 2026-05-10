@@ -31,8 +31,6 @@ public sealed class SphinxInventoryPlugin : IBuildFinalizePlugin
     /// <param name="options">Plugin options.</param>
     public SphinxInventoryPlugin(AutorefsRegistry registry, SphinxInventoryOptions options)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(options);
         Registry = registry;
         _options = options;
     }

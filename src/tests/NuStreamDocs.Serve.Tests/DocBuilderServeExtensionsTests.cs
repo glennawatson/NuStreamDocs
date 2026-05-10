@@ -81,43 +81,6 @@ public class DocBuilderServeExtensionsTests
         await Assert.That(invocations).IsEqualTo(1);
     }
 
-    /// <summary>The most-specific overload rejects a null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task MostSpecificOverloadRejectsNullBuilder() =>
-        await Assert.That(() => DocBuilderServeExtensions.WatchAndServeAsync(null!, WatchAndServeOptions.Default, NullLogger.Instance, CancellationToken.None))
-            .Throws<ArgumentNullException>();
-
-    /// <summary>The most-specific overload rejects a null logger.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task MostSpecificOverloadRejectsNullLogger()
-    {
-        var builder = NewBuilder();
-        await Assert.That(() => builder.WatchAndServeAsync(WatchAndServeOptions.Default, null!, CancellationToken.None))
-            .Throws<ArgumentNullException>();
-    }
-
-    /// <summary>The configure-only overload rejects a null configure delegate.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task ConfigureOverloadRejectsNullConfigure()
-    {
-        var builder = NewBuilder();
-        await Assert.That(() => builder.WatchAndServeAsync(null!, CancellationToken.None))
-            .Throws<ArgumentNullException>();
-    }
-
-    /// <summary>The configure + logger overload rejects a null configure delegate.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task ConfigureAndLoggerOverloadRejectsNullConfigure()
-    {
-        var builder = NewBuilder();
-        await Assert.That(() => builder.WatchAndServeAsync(null!, NullLogger.Instance, CancellationToken.None))
-            .Throws<ArgumentNullException>();
-    }
-
     /// <summary>
     /// Builds a minimal <see cref="DocBuilder"/> pointed at fresh scratch input/output dirs;
     /// sufficient for the validation paths under test.

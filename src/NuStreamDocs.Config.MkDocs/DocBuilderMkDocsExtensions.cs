@@ -18,7 +18,6 @@ public static class DocBuilderMkDocsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMkDocsConfig(this DocBuilder builder, in FilePath yamlPath)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
 
         var bytes = File.ReadAllBytes(yamlPath);
@@ -31,7 +30,6 @@ public static class DocBuilderMkDocsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMkDocsConfig(this DocBuilder builder, ReadOnlySpan<byte> utf8Yaml)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         var config = ConfigReaderJsonPipeline.Read(utf8Yaml, YamlToJson.Convert);
         return builder.ApplyMkDocsConfig(in config);
     }
@@ -42,7 +40,6 @@ public static class DocBuilderMkDocsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder ApplyMkDocsConfig(this DocBuilder builder, in MkDocsConfig config)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder
             .WithSiteName(config.SiteName)
             .WithSiteUrl(config.SiteUrl)

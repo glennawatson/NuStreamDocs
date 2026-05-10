@@ -47,8 +47,6 @@ internal sealed class TemplateCache
     /// <param name="entry">Entry to associate with the name.</param>
     public void Add(byte[] templateName, TemplateEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(templateName);
-        ArgumentNullException.ThrowIfNull(entry);
         lock (_gate)
         {
             _entries.TryAdd(templateName, entry);

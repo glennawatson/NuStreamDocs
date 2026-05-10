@@ -38,7 +38,6 @@ internal static class SuperFencesDispatcher
         in Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
         IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
         if (html.IsEmpty)
         {
             return false;

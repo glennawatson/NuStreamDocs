@@ -112,17 +112,4 @@ public class OptimizeOptionsExtensionsTests
         await Assert.That(updated.Extensions.Length).IsEqualTo(defaultCount + 1);
         await Assert.That(updated.Extensions[^1].AsSpan().SequenceEqual(".webmanifest"u8)).IsTrue();
     }
-
-    /// <summary>Null arguments throw on every overload.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullArgumentsThrow()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => OptimizeOptions.Default.WithExtensions((byte[][])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => OptimizeOptions.Default.AddExtensions((string[])null!));
-        var ex3 = Assert.Throws<ArgumentNullException>(static () => OptimizeOptions.Default.AddExtensions((byte[][])null!));
-        await Assert.That(ex1).IsNotNull();
-        await Assert.That(ex2).IsNotNull();
-        await Assert.That(ex3).IsNotNull();
-    }
 }

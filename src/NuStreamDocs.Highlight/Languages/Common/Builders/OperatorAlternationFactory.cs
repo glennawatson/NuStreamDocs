@@ -44,7 +44,6 @@ internal static class OperatorAlternationFactory
     /// <returns>First-byte dispatch set.</returns>
     public static SearchValues<byte> FirstBytesOf(byte[][] operators)
     {
-        ArgumentNullException.ThrowIfNull(operators);
         const int AsciiByteCount = 256;
         Span<bool> seen = stackalloc bool[AsciiByteCount];
         for (var i = 0; i < operators.Length; i++)

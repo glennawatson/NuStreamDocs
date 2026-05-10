@@ -53,8 +53,6 @@ public static class LinkReferenceRewriter
     /// <param name="writer">UTF-8 sink; receives the rewritten output.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         if (!MayContainReferences(source))
         {
             Write(writer, source);

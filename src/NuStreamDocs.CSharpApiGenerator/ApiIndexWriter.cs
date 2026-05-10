@@ -35,7 +35,6 @@ internal static class ApiIndexWriter
     /// <returns>The rendered UTF-8 page bytes, or an empty array when <paramref name="namespaces"/> is empty.</returns>
     public static byte[] BuildBytes(byte[][] namespaces, ReadOnlySpan<byte> title, ReadOnlySpan<byte> introduction, int? order)
     {
-        ArgumentNullException.ThrowIfNull(namespaces);
         if (namespaces.Length is 0)
         {
             return [];

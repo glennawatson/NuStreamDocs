@@ -14,7 +14,6 @@ internal sealed class NavTree
     /// <param name="nodes">BFS-ordered nodes; root must be at index 0.</param>
     public NavTree(NavTreeNode[] nodes)
     {
-        ArgumentNullException.ThrowIfNull(nodes);
         if (nodes.Length is 0)
         {
             throw new ArgumentException("NavTree requires at least a root node.", nameof(nodes));

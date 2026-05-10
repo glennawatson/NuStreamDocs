@@ -78,7 +78,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     protected ThemePluginBase(in TOptions options, TTheme theme)
     {
         _options = options;
-        LoadedTheme = theme ?? throw new ArgumentNullException(nameof(theme));
+        LoadedTheme = theme;
     }
 
     /// <inheritdoc/>

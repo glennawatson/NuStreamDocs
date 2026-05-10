@@ -29,14 +29,4 @@ public class DocBuilderBulkExtensionsTests
         DocBuilder builder = new();
         await Assert.That(builder.UsePlugins()).IsSameReferenceAs(builder);
     }
-
-    /// <summary>UsePlugins rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UsePluginsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderBulkExtensions.UsePlugins(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

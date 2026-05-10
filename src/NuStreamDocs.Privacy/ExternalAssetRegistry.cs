@@ -33,7 +33,6 @@ internal sealed class ExternalAssetRegistry
     /// <param name="assetDirectory">Forward-slash relative directory to write under (e.g. <c>assets/external</c>); any trailing <c>/</c> is trimmed.</param>
     public ExternalAssetRegistry(byte[] assetDirectory)
     {
-        ArgumentNullException.ThrowIfNull(assetDirectory);
         var trimmed = assetDirectory.Length;
         while (trimmed > 0 && assetDirectory[trimmed - 1] is (byte)'/')
         {

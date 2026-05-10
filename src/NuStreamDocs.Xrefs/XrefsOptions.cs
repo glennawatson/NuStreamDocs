@@ -26,6 +26,5 @@ public sealed record XrefsOptions(
     public void Validate()
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(OutputFileName);
-        ArgumentNullException.ThrowIfNull(Imports);
     }
 }

@@ -50,33 +50,4 @@ public class FeedRegistrationTests
         FeedOptions opts = new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog");
         await Assert.That(new DocBuilder().UseFeed(opts, NullLogger.Instance)).IsTypeOf<DocBuilder>();
     }
-
-    /// <summary>UseFeed rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseFeedRejectsNullBuilder()
-    {
-        FeedOptions opts = new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog");
-        var ex = Assert.Throws<ArgumentNullException>(() => DocBuilderFeedExtensions.UseFeed(null!, opts));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseFeed rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseFeedRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseFeed(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseFeed(options, logger) rejects null logger.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseFeedLoggerRejectsNullLogger()
-    {
-        FeedOptions opts = new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog");
-        var ex = Assert.Throws<ArgumentNullException>(() => new DocBuilder().UseFeed(opts, null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

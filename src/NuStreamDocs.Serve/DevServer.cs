@@ -61,7 +61,6 @@ internal static class DevServer
     public static async Task<WebApplication> StartAsync(string outputRoot, WatchAndServeOptions options, LiveReloadBroker broker, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot);
-        ArgumentNullException.ThrowIfNull(broker);
 
         Directory.CreateDirectory(outputRoot);
         var app = BuildApplication(outputRoot, options, broker);

@@ -50,10 +50,6 @@ internal static class BibliographyRewriter
     /// <returns>True when at least one citation was rewritten.</returns>
     public static bool Rewrite(ReadOnlySpan<byte> source, BibliographyDatabase database, ICitationStyle style, MissingCitationCallback? missing, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(database);
-        ArgumentNullException.ThrowIfNull(style);
-        ArgumentNullException.ThrowIfNull(writer);
-
         if (source.IsEmpty)
         {
             return false;

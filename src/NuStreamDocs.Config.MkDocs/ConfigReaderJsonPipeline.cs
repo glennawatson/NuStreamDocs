@@ -32,8 +32,6 @@ public static class ConfigReaderJsonPipeline
     /// <returns>The parsed config.</returns>
     public static MkDocsConfig Read(ReadOnlySpan<byte> utf8Source, SpanConverter convert)
     {
-        ArgumentNullException.ThrowIfNull(convert);
-
         var stripped = Utf8Bom.Strip(utf8Source);
         ArrayBufferWriter<byte> jsonBuffer = new();
         using (Utf8JsonWriter jsonWriter = new(jsonBuffer))
@@ -51,9 +49,6 @@ public static class ConfigReaderJsonPipeline
     /// <returns>The parsed config.</returns>
     public static async Task<MkDocsConfig> ReadAsync(Stream utf8Stream, StreamConverter convert, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(utf8Stream);
-        ArgumentNullException.ThrowIfNull(convert);
-
         ArrayBufferWriter<byte> jsonBuffer = new();
         await using (Utf8JsonWriter jsonWriter = new(jsonBuffer))
         {

@@ -83,7 +83,6 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <param name="logger">Logger.</param>
     public NavPlugin(in NavOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _logger = logger;
     }

@@ -19,9 +19,6 @@ public static class CodeAwareRewriter
     /// <param name="tryRewrite">Per-cursor probe.</param>
     public static void Run(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, TryRewriteAt tryRewrite)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-        ArgumentNullException.ThrowIfNull(tryRewrite);
-
         var i = 0;
         while (i < source.Length)
         {

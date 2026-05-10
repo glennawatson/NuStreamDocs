@@ -53,7 +53,6 @@ public static class VersionsManifest
     public static void Write(in DirectoryPath parentDir, VersionEntry[] entries)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parentDir.Value);
-        ArgumentNullException.ThrowIfNull(entries);
         Directory.CreateDirectory(parentDir);
 
         ArrayBufferWriter<byte> sink = new(256);
@@ -66,8 +65,6 @@ public static class VersionsManifest
     /// <param name="sink">Buffer writer.</param>
     public static void WriteToUtf8(VersionEntry[] entries, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(entries);
-        ArgumentNullException.ThrowIfNull(sink);
         using Utf8JsonWriter writer = new(sink, new() { Indented = true });
         writer.WriteStartArray();
         for (var i = 0; i < entries.Length; i++)
@@ -85,7 +82,6 @@ public static class VersionsManifest
     /// <returns>Merged entries; ordering preserved with new entries appended.</returns>
     public static VersionEntry[] Upsert(VersionEntry[] existing, in VersionEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(existing);
         ArgumentException.ThrowIfNullOrWhiteSpace(entry.Version);
 
         List<VersionEntry> merged = new(existing.Length + 1);

@@ -32,8 +32,6 @@ public static class MarkdownRenderer
     /// <param name="writer">UTF-8 sink for the rendered HTML.</param>
     public static void Render(ReadOnlySpan<byte> markdown, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         // Skip past any leading YAML frontmatter so the `---` opener and
         // its key-value lines don't render as a thematic break + paragraphs.
         // Frontmatter is contract-level metadata for the build pipeline; it

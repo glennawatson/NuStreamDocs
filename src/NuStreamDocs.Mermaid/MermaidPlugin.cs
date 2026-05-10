@@ -38,14 +38,12 @@ mermaid.initialize({ startOnLoad: true });
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         writer.Write(HeadFragment);
     }
 
     /// <inheritdoc/>
     void ICustomFenceHandler.Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         writer.Write("<pre class=\"mermaid\">"u8);
         writer.Write(content);
         writer.Write("</pre>"u8);

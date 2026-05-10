@@ -15,8 +15,6 @@ public static class DocBuilderVersionsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseVersions(this DocBuilder builder, VersionOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new VersionsPlugin(options));
     }
 
@@ -27,9 +25,6 @@ public static class DocBuilderVersionsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseVersions(this DocBuilder builder, VersionOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new VersionsPlugin(options, logger));
     }
 }

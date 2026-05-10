@@ -20,7 +20,7 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
     private readonly MkDocsBlogOptions _options = ValidateOptions(options);
 
     /// <summary>Logger for diagnostics.</summary>
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger = logger;
 
     /// <summary>Initializes a new instance of the <see cref="MkDocsBlogPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
@@ -58,7 +58,6 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
     /// <returns>The validated options.</returns>
     private static MkDocsBlogOptions ValidateOptions(MkDocsBlogOptions opts)
     {
-        ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
     }

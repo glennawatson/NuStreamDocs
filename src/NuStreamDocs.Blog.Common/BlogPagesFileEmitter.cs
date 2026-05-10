@@ -29,7 +29,6 @@ public static class BlogPagesFileEmitter
     /// <returns>UTF-8 bytes of the rendered <c>.pages</c> file.</returns>
     public static byte[] Render(BlogPost[] posts)
     {
-        ArgumentNullException.ThrowIfNull(posts);
         using var rental = PageBuilderPool.Rent(InitialCapacity);
         Write(rental.Writer, posts);
         return rental.Writer.WrittenSpan.ToArray();
@@ -40,9 +39,6 @@ public static class BlogPagesFileEmitter
     /// <param name="posts">Posts already ordered newest-first by the scanner.</param>
     public static void Write(IBufferWriter<byte> writer, BlogPost[] posts)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-        ArgumentNullException.ThrowIfNull(posts);
-
         WriteSpan(writer, NavHeader);
         WriteListItem(writer, IndexEntry);
 

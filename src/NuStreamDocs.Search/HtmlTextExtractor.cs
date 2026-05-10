@@ -31,8 +31,6 @@ public static class HtmlTextExtractor
     /// <returns>The first H1 contents as UTF-8 bytes, or empty when none.</returns>
     public static byte[] Extract(ReadOnlySpan<byte> html, IBufferWriter<byte> text)
     {
-        ArgumentNullException.ThrowIfNull(text);
-
         using var titleRental = PageBuilderPool.Rent();
         var titleBuffer = titleRental.Writer;
         ExtractState state = new(InsideTag: false, InsideScript: false, CapturingTitle: false, EmittedSpace: true, TitleAlreadyCaptured: false);

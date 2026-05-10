@@ -28,11 +28,6 @@ internal static class CssUrlRewriter
     /// <returns>The rewritten CSS bytes.</returns>
     public static byte[] Rewrite(byte[] css, Uri cssBaseUri, ExternalAssetRegistry registry, HostFilter filter)
     {
-        ArgumentNullException.ThrowIfNull(css);
-        ArgumentNullException.ThrowIfNull(cssBaseUri);
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(filter);
-
         using var rental = PageBuilderPool.Rent(css.Length);
         var sink = rental.Writer;
         var span = (ReadOnlySpan<byte>)css;

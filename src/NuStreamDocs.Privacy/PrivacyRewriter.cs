@@ -21,10 +21,6 @@ internal static class PrivacyRewriter
     /// <returns>True when bytes were written to <paramref name="sink"/>; false when no pass changed the input.</returns>
     public static bool TryRewriteInto(ReadOnlySpan<byte> html, in PrivacyOptions options, ExternalAssetRegistry registry, HostFilter filter, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(filter);
-        ArgumentNullException.ThrowIfNull(sink);
-
         using var rentalA = PageBuilderPool.Rent(html.Length);
         using var rentalB = PageBuilderPool.Rent(html.Length);
         StageBuffers slots = new(rentalA.Writer, rentalB.Writer);

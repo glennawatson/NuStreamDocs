@@ -25,7 +25,6 @@ public sealed class BibliographyDatabase
     /// <param name="entries">All entries; duplicates by <c>id</c> are rejected.</param>
     public BibliographyDatabase(IReadOnlyList<CitationEntry> entries)
     {
-        ArgumentNullException.ThrowIfNull(entries);
         _ordered = [.. entries];
         Dictionary<byte[], CitationEntry> byteDict = new(entries.Count, ByteArrayComparer.Instance);
         for (var i = 0; i < _ordered.Length; i++)
@@ -38,7 +37,7 @@ public sealed class BibliographyDatabase
 
             if (!byteDict.TryAdd(entry.Id, entry))
             {
-                throw new ArgumentException($"Duplicate citation id: {Encoding.UTF8.GetString(entry.Id)}", nameof(entries));
+                throw new ArgumentException(BuildDuplicateIdMessage(entry.Id), nameof(entries));
             }
         }
 
@@ -60,4 +59,10 @@ public sealed class BibliographyDatabase
     /// <returns>True when the id is in the database.</returns>
     public bool TryGet(ReadOnlySpan<byte> id, [MaybeNullWhen(false)] out CitationEntry entry) =>
         _byIdBytes.TryGetValueByUtf8(id, out entry!);
+
+    /// <summary>Composes the duplicate-citation-id exception message via the project's <see cref="StringCompose"/> helper (one explicit allocation).</summary>
+    /// <param name="idBytes">Offending citation id bytes (UTF-8).</param>
+    /// <returns>Composed message.</returns>
+    private static string BuildDuplicateIdMessage(byte[] idBytes) =>
+        StringCompose.Concat("Duplicate citation id: ", Encoding.UTF8.GetString(idBytes));
 }

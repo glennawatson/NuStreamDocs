@@ -43,8 +43,6 @@ internal static class MixedContentBytes
     /// <returns>True when at least one URL was upgraded.</returns>
     public static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
-
         var changed = false;
         var lastEmit = 0;
         var cursor = 0;

@@ -16,7 +16,6 @@ public static class HeadExtraWriter
     /// <param name="bytes">UTF-8 literal.</param>
     public static void WriteUtf8(IBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         var dst = writer.GetSpan(bytes.Length);
         bytes.CopyTo(dst);
         writer.Advance(bytes.Length);

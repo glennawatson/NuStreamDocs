@@ -61,16 +61,13 @@ public class FeedEmitterTests
         await Assert.That(File.Exists(Path.Combine(temp.Root, "atom.xml"))).IsTrue();
     }
 
-    /// <summary>Null guards fire on each parameter.</summary>
+    /// <summary>An empty output path is rejected.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NullGuards()
+    public async Task EmptyOutputRootRejected()
     {
         var opts = TestOptions(FeedFormats.Both);
-        Assert.Throws<ArgumentNullException>(() => FeedEmitter.WriteEnabledFormats(null!, "/tmp", [], TestTime, NullLogger.Instance));
-        Assert.Throws<ArgumentException>(() => FeedEmitter.WriteEnabledFormats(opts, string.Empty, [], TestTime, NullLogger.Instance));
-        Assert.Throws<ArgumentNullException>(() => FeedEmitter.WriteEnabledFormats(opts, "/tmp", null!, TestTime, NullLogger.Instance));
-        var ex = Assert.Throws<ArgumentNullException>(() => FeedEmitter.WriteEnabledFormats(opts, "/tmp", [], TestTime, null!));
+        var ex = Assert.Throws<ArgumentException>(() => FeedEmitter.WriteEnabledFormats(opts, string.Empty, [], TestTime, NullLogger.Instance));
         await Assert.That(ex).IsNotNull();
     }
 

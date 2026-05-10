@@ -49,8 +49,6 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
     /// <param name="logger">Logger.</param>
     public LayoutsPlugin(LayoutsOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _logger = logger;
     }

@@ -15,7 +15,6 @@ public static class DocBuilderBulkExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UsePlugins(this DocBuilder builder, params ReadOnlySpan<IPlugin> plugins)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         for (var i = 0; i < plugins.Length; i++)
         {
             builder.UsePlugin(plugins[i]);

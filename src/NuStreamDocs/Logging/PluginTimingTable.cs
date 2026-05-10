@@ -38,7 +38,6 @@ public sealed class PluginTimingTable
     /// <remarks>Prefer <see cref="Measure"/>; this overload is for callers that already have the delta in hand.</remarks>
     public void Add(byte[] pluginName, long elapsedTicks)
     {
-        ArgumentNullException.ThrowIfNull(pluginName);
         if (pluginName.Length is 0)
         {
             throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName));
@@ -51,7 +50,6 @@ public sealed class PluginTimingTable
     /// <param name="logger">Target logger.</param>
     public void Emit(ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
         var rows = Snapshot();
         if (rows.Length is 0)
         {

@@ -14,7 +14,6 @@ public static class DocBuilderFontAwesomeExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseFontAwesome(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new FontAwesomePlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderFontAwesomeExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseFontAwesome(this DocBuilder builder, Func<FontAwesomeOptions, FontAwesomeOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
         var options = configure(FontAwesomeOptions.Default);
         return builder.UsePlugin(new FontAwesomePlugin(options));
     }

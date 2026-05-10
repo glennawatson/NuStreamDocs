@@ -77,7 +77,6 @@ public sealed class ExtraAssetSource
     public static ExtraAssetSource Inline(string outputName, byte[] utf8Bytes)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputName);
-        ArgumentNullException.ThrowIfNull(utf8Bytes);
         return new(new()
         {
             Kind = ExtraAssetSourceKind.Inline,
@@ -93,7 +92,6 @@ public sealed class ExtraAssetSource
     /// <returns>The source.</returns>
     public static ExtraAssetSource Embedded(Assembly assembly, string resourceName, string outputName)
     {
-        ArgumentNullException.ThrowIfNull(assembly);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
         ArgumentException.ThrowIfNullOrEmpty(outputName);
         return new(new()

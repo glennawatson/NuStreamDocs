@@ -44,15 +44,6 @@ public class MermaidPluginTests
         await Assert.That(head).Contains("<script");
     }
 
-    /// <summary>WriteHeadExtra rejects null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteHeadExtraRejectsNullSink()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new MermaidPlugin().WriteHeadExtra(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>The custom fence handler emits a <c>pre.mermaid</c> wrapper.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -73,30 +64,11 @@ public class MermaidPluginTests
         await Assert.That(handler.Language.SequenceEqual("mermaid"u8)).IsTrue();
     }
 
-    /// <summary>Custom fence Render rejects null sink.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task CustomFenceRenderRejectsNullSink()
-    {
-        ICustomFenceHandler handler = new MermaidPlugin();
-        var ex = Assert.Throws<ArgumentNullException>(() => handler.Render(default, null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>UseMermaid registers the plugin.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseMermaidRegisters() =>
         await Assert.That(new DocBuilder().UseMermaid()).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseMermaid rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMermaidRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderMermaidExtensions.UseMermaid(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
     /// <param name="plugin">Plugin under test.</param>

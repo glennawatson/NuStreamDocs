@@ -99,7 +99,6 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     /// <inheritdoc/>
     protected override void WriteEngineHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         writer.Write(HeadExtraBytes);
     }
 

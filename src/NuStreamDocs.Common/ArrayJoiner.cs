@@ -14,9 +14,6 @@ public static class ArrayJoiner
     /// <returns>The combined array.</returns>
     public static T[] Concat<T>(T[] head, T[] tail)
     {
-        ArgumentNullException.ThrowIfNull(head);
-        ArgumentNullException.ThrowIfNull(tail);
-
         if (head.Length is 0)
         {
             return tail;

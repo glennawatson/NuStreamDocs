@@ -16,7 +16,6 @@ public static class DocBuilderTocExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseToc(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new TocPlugin());
     }
 
@@ -26,7 +25,6 @@ public static class DocBuilderTocExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseToc(this DocBuilder builder, in TocOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new TocPlugin(options));
     }
 
@@ -37,8 +35,6 @@ public static class DocBuilderTocExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseToc(this DocBuilder builder, in TocOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new TocPlugin(options, logger));
     }
 }

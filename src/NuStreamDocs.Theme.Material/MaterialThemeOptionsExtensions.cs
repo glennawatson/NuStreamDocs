@@ -22,7 +22,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithSiteName(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { SiteName = value };
     }
 
@@ -46,7 +45,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithSiteUrl(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { SiteUrl = value };
     }
 
@@ -70,7 +68,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithLanguage(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { Language = value };
     }
 
@@ -94,7 +91,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithCopyright(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { Copyright = value };
     }
 
@@ -118,7 +114,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithRepoUrl(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { RepoUrl = value };
     }
 
@@ -142,7 +137,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithEditUri(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { EditUri = value };
     }
 
@@ -166,7 +160,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithEmbeddedAssetRoot(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { EmbeddedAssetRoot = value };
     }
 
@@ -190,7 +183,6 @@ public static class MaterialThemeOptionsExtensions
     /// <returns>The updated options.</returns>
     public static MaterialThemeOptions WithCdnRoot(this in MaterialThemeOptions options, byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         return options with { CdnRoot = value };
     }
 

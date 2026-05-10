@@ -30,7 +30,6 @@ public static class ThemeModelLoader
     /// <returns>The compiled template.</returns>
     public static Template LoadPage(PartialLoader readBytes)
     {
-        ArgumentNullException.ThrowIfNull(readBytes);
         return Template.Compile(readBytes("page.mustache"));
     }
 
@@ -39,8 +38,6 @@ public static class ThemeModelLoader
     /// <returns>A UTF-8 byte-keyed registry of compiled partials.</returns>
     public static Dictionary<byte[], Template> LoadStandardPartials(PartialLoader readBytes)
     {
-        ArgumentNullException.ThrowIfNull(readBytes);
-
         Dictionary<byte[], Template> working = new(StandardPartialNames.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < StandardPartialNames.Length; i++)
         {
@@ -57,9 +54,6 @@ public static class ThemeModelLoader
     /// <returns>A plain dictionary keyed by relative output path.</returns>
     public static Dictionary<FilePath, byte[]> LoadStaticAssets(FilePath[] staticAssetPaths, PartialLoader readBytes)
     {
-        ArgumentNullException.ThrowIfNull(staticAssetPaths);
-        ArgumentNullException.ThrowIfNull(readBytes);
-
         Dictionary<FilePath, byte[]> working = new(staticAssetPaths.Length);
         for (var i = 0; i < staticAssetPaths.Length; i++)
         {
@@ -75,8 +69,6 @@ public static class ThemeModelLoader
     /// <returns>Named tuple array for write-out loops.</returns>
     public static (FilePath RelativePath, byte[] Bytes)[] BuildStaticAssetEntries(Dictionary<FilePath, byte[]> staticAssets)
     {
-        ArgumentNullException.ThrowIfNull(staticAssets);
-
         var entries = new (FilePath RelativePath, byte[] Bytes)[staticAssets.Count];
         var index = 0;
         foreach (var entry in staticAssets)

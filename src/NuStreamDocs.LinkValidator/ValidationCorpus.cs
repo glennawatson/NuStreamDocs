@@ -45,7 +45,6 @@ public sealed class ValidationCorpus
     /// <returns>The populated corpus.</returns>
     public static ValidationCorpus FromPages(IDictionary<byte[], PageLinks> pages)
     {
-        ArgumentNullException.ThrowIfNull(pages);
         Dictionary<byte[], PageLinks> snapshot = new(pages, ByteArrayComparer.Instance);
         return new(snapshot, new(ByteArrayComparer.Instance)) { Pages = [.. snapshot.Values] };
     }
@@ -56,7 +55,6 @@ public sealed class ValidationCorpus
     /// <returns>The captured inventory.</returns>
     public static PageLinks Scan(byte[] pageUrl, ReadOnlySpan<byte> html)
     {
-        ArgumentNullException.ThrowIfNull(pageUrl);
         return ScanPage(pageUrl, html);
     }
 
@@ -111,7 +109,6 @@ public sealed class ValidationCorpus
     /// <returns>True when the page is in the corpus.</returns>
     public bool ContainsPage(byte[] pageUrl)
     {
-        ArgumentNullException.ThrowIfNull(pageUrl);
         return _pages.ContainsKey(pageUrl);
     }
 
@@ -121,7 +118,6 @@ public sealed class ValidationCorpus
     /// <returns>True when found.</returns>
     public bool TryGetPage(byte[] pageUrl, out PageLinks page)
     {
-        ArgumentNullException.ThrowIfNull(pageUrl);
         return _pages.TryGetValue(pageUrl, out page!);
     }
 
@@ -255,9 +251,13 @@ public sealed class ValidationCorpus
         var idRanges = LinkExtractor.ExtractIdRanges(bytes);
         var nameRanges = LinkExtractor.ExtractDeprecatedNameAnchorRanges(bytes);
 
+        // Capacity upper bounds: every href can flow into internalLinks, every href + every src
+        // can flow into externalLinks or internalAssets. Pre-sizing avoids List<>.AddWithResize
+        // copies as the buckets fill — these were among the largest allocators in the suite.
+        var maxAttributes = hrefs.Length + srcs.Length;
         List<byte[]> internalLinks = new(hrefs.Length);
-        List<byte[]> externalLinks = new(4);
-        List<byte[]> internalAssets = new(srcs.Length);
+        List<byte[]> externalLinks = new(maxAttributes);
+        List<byte[]> internalAssets = new(maxAttributes);
         BucketHrefs(hrefs, bytes, internalLinks, externalLinks, internalAssets);
         BucketSrcs(srcs, bytes, externalLinks, internalAssets);
 

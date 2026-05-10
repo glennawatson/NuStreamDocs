@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
-using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Lunr.Tests;
 
@@ -96,18 +95,5 @@ public class LunrOptionsExtensionsTests
     {
         var updated = LunrOptions.Default.WithSectionPriorities("guide/:80");
         await Assert.That(Encoding.UTF8.GetString(updated.SectionPriorities)).IsEqualTo("guide/:80");
-    }
-
-    /// <summary>Null arguments throw.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullArgumentsThrow()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => LunrOptions.Default.WithExtraStopwords((byte[][])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => LunrOptions.Default.AddExtraStopwords((ApiCompatString[])null!));
-        var ex3 = Assert.Throws<ArgumentNullException>(static () => LunrOptions.Default.WithSearchableFrontmatterKeys((byte[][])null!));
-        await Assert.That(ex1).IsNotNull();
-        await Assert.That(ex2).IsNotNull();
-        await Assert.That(ex3).IsNotNull();
     }
 }

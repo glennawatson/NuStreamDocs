@@ -44,22 +44,4 @@ public class MetadataRegistrationTests
     [Test]
     public async Task UseMetadataOptionsRegisters() =>
         await Assert.That(new DocBuilder().UseMetadata(MetadataOptions.Default)).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseMetadata rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMetadataRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderMetadataExtensions.UseMetadata(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseMetadata(options) rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMetadataRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseMetadata(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

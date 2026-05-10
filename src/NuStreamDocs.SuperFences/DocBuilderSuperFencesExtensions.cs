@@ -14,7 +14,6 @@ public static class DocBuilderSuperFencesExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSuperFences(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new SuperFencesPlugin());
     }
 }

@@ -24,7 +24,7 @@ public sealed class MagicLinkPlugin : IPagePreRenderPlugin
 
     /// <summary>Initializes a new instance of the <see cref="MagicLinkPlugin"/> class with caller-supplied options.</summary>
     /// <param name="options">Options controlling shortref expansion.</param>
-    public MagicLinkPlugin(MagicLinkOptions options) => _options = options ?? throw new ArgumentNullException(nameof(options));
+    public MagicLinkPlugin(MagicLinkOptions options) => _options = options;
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "magiclink"u8;

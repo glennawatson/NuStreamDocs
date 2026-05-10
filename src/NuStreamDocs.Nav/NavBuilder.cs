@@ -13,7 +13,6 @@ public static class NavBuilder
     /// <returns>A right-sized array; empty when <paramref name="count"/> is 0.</returns>
     public static NavEntry[] ToArray(NavEntry[] buffer, int count)
     {
-        ArgumentNullException.ThrowIfNull(buffer);
         if (count == 0)
         {
             return [];

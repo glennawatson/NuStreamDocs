@@ -16,7 +16,6 @@ public static class Utf8StringWriter
     /// <param name="value">Source text; null/empty is a no-op.</param>
     public static void Write(IBufferWriter<byte> writer, string value)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (string.IsNullOrEmpty(value))
         {
             return;
@@ -33,7 +32,6 @@ public static class Utf8StringWriter
     /// <param name="bytes">Bytes to copy; an empty span is a no-op.</param>
     public static void Write(IBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (bytes.IsEmpty)
         {
             return;
@@ -49,7 +47,6 @@ public static class Utf8StringWriter
     /// <param name="value">Byte to write.</param>
     public static void WriteByte(IBufferWriter<byte> writer, byte value)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         var dst = writer.GetSpan(1);
         dst[0] = value;
         writer.Advance(1);
@@ -60,8 +57,6 @@ public static class Utf8StringWriter
     /// <param name="value">Integer to format.</param>
     public static void WriteInt32(IBufferWriter<byte> writer, int value)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         Span<byte> buffer = stackalloc byte[16];
         if (!value.TryFormat(buffer, out var written, default, CultureInfo.InvariantCulture))
         {

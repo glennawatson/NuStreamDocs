@@ -26,7 +26,6 @@ public static class AssetReferenceValidator
     /// <returns>Diagnostics in arbitrary order.</returns>
     public static async Task<LinkDiagnostic[]> ValidateAsync(ValidationCorpus corpus, int parallelism, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(corpus);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(parallelism);
 
         ConcurrentBag<LinkDiagnostic> diagnostics = [];
@@ -65,7 +64,8 @@ public static class AssetReferenceValidator
             // Per-page dedup: an `<img>` referenced multiple times on the same page should fire
             // exactly one diagnostic, not one per occurrence. Comparison is on the resolved
             // (normalized) target so absolute and relative spellings of the same miss collapse.
-            PageContext context = new(corpus, page, scratch, sink, new(ByteArrayComparer.Instance));
+            // Pre-size the per-page Reported set to the asset count so the dedup HashSet never resizes.
+            PageContext context = new(corpus, page, scratch, sink, new(page.InternalAssets.Length, ByteArrayComparer.Instance));
             for (var i = 0; i < page.InternalAssets.Length; i++)
             {
                 context.ResolveAndReport(page.InternalAssets[i]);
@@ -91,6 +91,9 @@ public static class AssetReferenceValidator
         ConcurrentBag<LinkDiagnostic> Sink,
         HashSet<byte[]> Reported)
     {
+        /// <summary>Initial pooled-buffer capacity for the diagnostic-message byte-pipe; covers the per-page miss without growth.</summary>
+        private const int InitialMessageCapacity = 192;
+
         /// <summary>Hash byte separating an asset URL from any trailing fragment.</summary>
         private const byte HashByte = (byte)'#';
 
@@ -262,21 +265,38 @@ public static class AssetReferenceValidator
             return written > 0 ? written - 1 : 0;
         }
 
-        /// <summary>Builds the missing-asset diagnostic at the string boundary.</summary>
+        /// <summary>Builds the missing-asset diagnostic at the byte → ApiCompatString boundary.</summary>
         /// <param name="sourcePageBytes">Source page URL bytes.</param>
         /// <param name="rawAsset">Original raw asset bytes (for the diagnostic record).</param>
         /// <param name="resolved">Resolved asset path bytes (no fragment / query).</param>
         /// <returns>The diagnostic record.</returns>
         private static LinkDiagnostic BuildDiagnostic(byte[] sourcePageBytes, byte[] rawAsset, ReadOnlySpan<byte> resolved)
         {
-            var sourceText = Encoding.UTF8.GetString(sourcePageBytes);
-            var resolvedText = Encoding.UTF8.GetString(resolved);
-            var rawText = Encoding.UTF8.GetString(rawAsset);
+            using var rental = PageBuilderPool.Rent(InitialMessageCapacity);
+            var writer = rental.Writer;
+            WriteBytes(writer, "Local asset target '"u8);
+            WriteBytes(writer, resolved);
+            WriteBytes(writer, "' is not on disk under the site output."u8);
             return new(
-                sourceText,
-                rawText,
+                Encoding.UTF8.GetString(sourcePageBytes),
+                Encoding.UTF8.GetString(rawAsset),
                 LinkSeverity.Error,
-                $"Local asset target '{resolvedText}' is not on disk under the site output.");
+                Encoding.UTF8.GetString(writer.WrittenSpan));
+        }
+
+        /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>
+        /// <param name="writer">Pooled UTF-8 sink.</param>
+        /// <param name="bytes">Bytes to append.</param>
+        private static void WriteBytes(ArrayBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
+        {
+            if (bytes.IsEmpty)
+            {
+                return;
+            }
+
+            var dst = writer.GetSpan(bytes.Length);
+            bytes.CopyTo(dst);
+            writer.Advance(bytes.Length);
         }
 
         /// <summary>Heap-allocating fallback when the resolved asset path overflows the scratch buffer.</summary>

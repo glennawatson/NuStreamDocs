@@ -64,22 +64,6 @@ public class HtmlSnapshotRewriterTests
         await Assert.That(observed).IsEqualTo(42);
     }
 
-    /// <summary>Null writer throws.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullWriterThrows() =>
-        await Assert.That(() => HtmlSnapshotRewriter.Rewrite(null!, 0, (_, _, _) => { })).Throws<ArgumentNullException>();
-
-    /// <summary>Null callback throws.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullRewriteThrows()
-    {
-        ArrayBufferWriter<byte> writer = new();
-        WriteUtf8(writer, "x");
-        await Assert.That(() => HtmlSnapshotRewriter.Rewrite(writer, 0, null!)).Throws<ArgumentNullException>();
-    }
-
     /// <summary>UTF-8 encodes <paramref name="value"/> directly into <paramref name="writer"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="value">Source text.</param>

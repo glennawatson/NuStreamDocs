@@ -47,7 +47,6 @@ public sealed record OptimizeOptions(
     /// <exception cref="ArgumentOutOfRangeException">When <see cref="Parallelism"/> is non-positive.</exception>
     public void Validate()
     {
-        ArgumentNullException.ThrowIfNull(Extensions);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Parallelism);
         ArgumentOutOfRangeException.ThrowIfNegative(MinimumBytes);
     }

@@ -14,7 +14,6 @@ public static class DocBuilderLinkValidatorExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLinkValidator(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new LinkValidatorPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderLinkValidatorExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLinkValidator(this DocBuilder builder, LinkValidatorOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new LinkValidatorPlugin(options));
     }
 
@@ -36,9 +33,6 @@ public static class DocBuilderLinkValidatorExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLinkValidator(this DocBuilder builder, LinkValidatorOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         return builder.UsePlugin(new LinkValidatorPlugin(options, httpClientFactory: null, logger));
     }
 }

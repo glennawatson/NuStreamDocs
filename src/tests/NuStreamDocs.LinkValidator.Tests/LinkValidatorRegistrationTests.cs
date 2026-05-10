@@ -84,13 +84,4 @@ public class LinkValidatorRegistrationTests
     [Test]
     public async Task UseLinkValidatorLoggerRegisters() =>
         await Assert.That(new DocBuilder().UseLinkValidator(LinkValidatorOptions.Default, NullLogger.Instance)).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseLinkValidator rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseLinkValidatorRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderLinkValidatorExtensions.UseLinkValidator(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

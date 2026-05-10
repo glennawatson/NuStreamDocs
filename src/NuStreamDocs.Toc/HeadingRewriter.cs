@@ -45,14 +45,24 @@ internal static class HeadingRewriter
         ReadOnlySpan<byte> permalinkSymbolBytes,
         IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(headings);
-        ArgumentNullException.ThrowIfNull(writer);
-
         if (headings.Length is 0)
         {
+            // Pre-grow once for the no-headings passthrough so the caller's writer doesn't
+            // double-grow during the single Utf8StringWriter copy.
+            if (snapshot.Length is not 0)
+            {
+                _ = writer.GetSpan(snapshot.Length);
+            }
+
             Utf8StringWriter.Write(writer, snapshot);
             return;
         }
+
+        // Pre-grow for the rewrite path: output is roughly snapshot.Length plus a per-heading
+        // permalink + id-attribute overhead. Bound to one allocation so the inner Utf8StringWriter
+        // calls don't fan out into an Array.Resize doubling chain (the dominant Toc hot stack).
+        const int PerHeadingPermalinkOverhead = 64;
+        _ = writer.GetSpan(snapshot.Length + (headings.Length * PerHeadingPermalinkOverhead));
 
         var cursor = 0;
         for (var i = 0; i < headings.Length; i++)

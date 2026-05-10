@@ -395,12 +395,6 @@ public class NavRendererTests
         await Assert.That(index.Count).IsEqualTo(0);
     }
 
-    /// <summary>BuildUrlIndex throws when tree is null.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task BuildUrlIndexNullTreeThrows() =>
-        await Assert.That(static () => NavRenderer.BuildUrlIndex(null!)).Throws<ArgumentNullException>();
-
     /// <summary>Builds the standard 2-section fixture and runs the plugin's per-page render path.</summary>
     /// <param name="prune">Prune mode flag.</param>
     /// <param name="currentPage">URL of the page being rendered.</param>

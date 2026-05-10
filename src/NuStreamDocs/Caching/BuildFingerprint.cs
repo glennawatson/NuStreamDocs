@@ -19,8 +19,6 @@ internal static class BuildFingerprint
     /// <returns>Raw SHA-256 digest bytes for this build shape.</returns>
     public static byte[] Create(IPlugin[] plugins, in BuildPipelineOptions options)
     {
-        ArgumentNullException.ThrowIfNull(plugins);
-
         ArrayBufferWriter<byte> buffer = new(256 + (plugins.Length * 96));
         Write(buffer, "core="u8);
         AppendTypeFingerprint(buffer, typeof(BuildPipeline));

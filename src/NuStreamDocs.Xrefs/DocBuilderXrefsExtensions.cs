@@ -15,7 +15,6 @@ public static class DocBuilderXrefsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseXrefs(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new XrefsPlugin());
     }
 
@@ -25,8 +24,6 @@ public static class DocBuilderXrefsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseXrefs(this DocBuilder builder, XrefsOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new XrefsPlugin(new(), options));
     }
 
@@ -37,9 +34,6 @@ public static class DocBuilderXrefsExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseXrefs(this DocBuilder builder, AutorefsRegistry registry, XrefsOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new XrefsPlugin(registry, options));
     }
 }

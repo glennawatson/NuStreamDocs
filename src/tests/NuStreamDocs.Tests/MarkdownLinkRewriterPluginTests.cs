@@ -68,24 +68,6 @@ public class MarkdownLinkRewriterPluginTests
     public async Task UseMarkdownLinksWithToggleRegisters() =>
         await Assert.That(new DocBuilder().UseMarkdownLinks(true)).IsTypeOf<DocBuilder>();
 
-    /// <summary>UseMarkdownLinks rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMarkdownLinksRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderLinksExtensions.UseMarkdownLinks(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseMarkdownLinks(bool) rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseMarkdownLinksToggleRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderLinksExtensions.UseMarkdownLinks(null!, true));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Drives one PostRender call against a fresh sink and returns the rewritten bytes.</summary>
     /// <param name="plugin">Plugin under test.</param>
     /// <param name="html">Input HTML bytes.</param>

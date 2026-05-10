@@ -14,7 +14,6 @@ public static class DocBuilderLightboxExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLightbox(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new LightboxPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderLightboxExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseLightbox(this DocBuilder builder, LightboxOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new LightboxPlugin(options));
     }
 }

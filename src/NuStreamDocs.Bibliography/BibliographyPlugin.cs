@@ -43,8 +43,6 @@ public sealed class BibliographyPlugin : IPagePreRenderPlugin
     /// <param name="logger">Logger.</param>
     public BibliographyPlugin(BibliographyOptions options, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
         _options = options;
         _logger = logger;
         _onMissing = options.WarnOnMissing ? WarnMissing : null;

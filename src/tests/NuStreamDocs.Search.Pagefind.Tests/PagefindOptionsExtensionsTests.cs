@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
-using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Pagefind.Tests;
 
@@ -78,16 +77,5 @@ public class PagefindOptionsExtensionsTests
     {
         var updated = PagefindOptions.Default.WithSectionPriorities("guide/:80");
         await Assert.That(Encoding.UTF8.GetString(updated.SectionPriorities)).IsEqualTo("guide/:80");
-    }
-
-    /// <summary>Null arguments throw.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullArgumentsThrow()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => PagefindOptions.Default.WithSearchableFrontmatterKeys((byte[][])null!));
-        var ex2 = Assert.Throws<ArgumentNullException>(static () => PagefindOptions.Default.AddSearchableFrontmatterKeys((ApiCompatString[])null!));
-        await Assert.That(ex1).IsNotNull();
-        await Assert.That(ex2).IsNotNull();
     }
 }

@@ -72,29 +72,11 @@ public class SitemapPluginTests
     public async Task UseSitemapRegisters() =>
         await Assert.That(new DocBuilder().UseSitemap()).IsTypeOf<DocBuilder>();
 
-    /// <summary>UseSitemap rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseSitemapRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderSitemapExtensions.UseSitemap(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>UseNotFoundPage registers the plugin.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseNotFoundPageRegisters() =>
         await Assert.That(new DocBuilder().UseNotFoundPage()).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseNotFoundPage rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseNotFoundPageRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderSitemapExtensions.UseNotFoundPage(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>UseRedirects with entries registers the plugin.</summary>
     /// <returns>Async test.</returns>
@@ -108,26 +90,6 @@ public class SitemapPluginTests
     public async Task UseRedirectsWithOptions() =>
         await Assert.That(new DocBuilder().UseRedirects(RedirectsOptions.Default, ("old.html", "/new.html")))
             .IsTypeOf<DocBuilder>();
-
-    /// <summary>UseRedirects rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseRedirectsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderSitemapExtensions.UseRedirects(null!, ("a.html", "/b.html")));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseRedirects(options) rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseRedirectsOptionsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderSitemapExtensions.UseRedirects(null!, RedirectsOptions.Default));
-        await Assert.That(ex).IsNotNull();
-    }
 
     /// <summary>Drives one Scan call against the plugin for the supplied relative path.</summary>
     /// <param name="plugin">Plugin under test.</param>

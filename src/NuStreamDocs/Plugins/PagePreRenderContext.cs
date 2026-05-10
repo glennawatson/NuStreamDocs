@@ -20,7 +20,6 @@ public readonly ref struct PagePreRenderContext
     /// <param name="output">UTF-8 sink the rewritten markdown is written into.</param>
     public PagePreRenderContext(in FilePath relativePath, ReadOnlySpan<byte> source, IBufferWriter<byte> output)
     {
-        ArgumentNullException.ThrowIfNull(output);
         RelativePath = relativePath;
         Source = source;
         Output = output;

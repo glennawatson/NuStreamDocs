@@ -20,6 +20,16 @@ If you find a file in a broken state and your instinct is "let me just revert it
 
 Same rule applies to `--no-verify`, `--force`, force-push, branch deletion, stash dropping, and any other action that throws away work. **Reversibility is the default; destruction needs explicit permission every single time.**
 
+## Git workflow — when direct-to-`main` is allowed
+
+The default-branch rule in the system prompt says "if on the default branch, branch first." **This repo opts out of that default.** When the user explicitly asks for a commit or a push to `main` (e.g. "commit and push", "push to main", "push these changes"), commit and push directly on `main` — no branching, no PR ceremony. The user drives every commit and push action; once one is explicitly requested, run it without further confirmation.
+
+The destructive-git rules above (no `--force`, no force-push, no branch deletion, no stash drop without ask) still apply on `main`.
+
+## Anonymity in commits, docs, and comments
+
+Do not name the user (or any contributor) in commit messages, code comments, XML doc comments, or docs. Refer to "the user", "the author", or rephrase to avoid the reference entirely. This holds across the repo, including CLAUDE.md and README.md.
+
 ## Repository Orientation
 
 - **Primary working directory for build/test:** `./src`
@@ -98,17 +108,27 @@ cat /tmp/sourcedocparser_coverage/Summary.txt
 
 ### Benchmarks
 
-`src/benchmarks/SourceDocParser.Benchmarks/` is a BenchmarkDotNet harness covering `MetadataExtractor.RunAsync` end-to-end against the slim debug NuGet fixture (3 owner-discovered packages, 19 TFM groups). The global setup runs one full fetch to warm the local NuGet cache, so per-iteration timings measure the walk + merge + emit pipeline without the network leg.
+`src/benchmarks/NuStreamDocs.Benchmarks/` is a BenchmarkDotNet harness covering every plugin and helper end-to-end. Run from `src/`:
 
 ```bash
 cd src
 
-# Run every benchmark in the assembly
-dotnet run --project benchmarks/SourceDocParser.Benchmarks/SourceDocParser.Benchmarks.csproj --configuration Release
+# Full sweep — every benchmark in the assembly. ~25-30 min on developer hardware
+# for a ShortRunJob × ~270 benchmark variants pass. Use this when validating a
+# cross-cutting change; per-class enumeration hits shell-glob issues.
+dotnet run --project benchmarks/NuStreamDocs.Benchmarks --configuration Release -- --filter "*"
 
-# Filter to a single benchmark via the BenchmarkDotNet switcher
-dotnet run --project benchmarks/SourceDocParser.Benchmarks/SourceDocParser.Benchmarks.csproj --configuration Release -- --filter '*RunAsync*'
+# Filter to a single benchmark / class via the BenchmarkDotNet switcher
+dotnet run --project benchmarks/NuStreamDocs.Benchmarks --configuration Release -- --filter "*Toc*"
 ```
+
+**Profiler workflow — separate the two questions.** A profiler attached to BDN inflates absolute timings (per-method-call overhead). Use the right pass for the right question:
+
+- **Hot-path discovery — profiler on.** Add `[EventPipeProfiler(EventPipeProfile.CpuSampling)]` on the benchmark class (or `EventPipeProfile.GcVerbose` for allocation profiling), run, then feed the resulting `.nettrace` files into the project's report tools:
+  - `tools/NuStreamDocs.AllocReport/` (`smkd-allocreport`) — top types + call stacks by sampled bytes (consumes `GcVerbose` traces).
+  - `tools/NuStreamDocs.CpuReport/` (`smkd-cpureport`) — top methods (self + inclusive) and call stacks by CPU sample count (consumes `CpuSampling` traces).
+- **Keep-or-revert decision — profiler off.** Once a candidate optimization is implemented, **always re-run without the profiler attribute** before deciding whether to keep the change. CpuSampling overhead can make a winning experiment look like it regressed by 2-3×.
+- The `--profiler EP` CLI flag enables the profiler with a default that does **not** emit per-method samples — use the `[EventPipeProfiler(...)]` attribute for that. The CLI flag is fine for one-off runs where you only need the bundled diagnoser plumbing.
 
 ### Zensical render-smoke
 
@@ -119,7 +139,7 @@ This repository currently uses TUnit/MTP-focused project tests under `src/tests/
 - `.editorconfig` at the repo root drives formatting + IDExxxx severities.
 - StyleCop, Roslynator, and Blazor.Common analyzers are active in every project (configured in `src/Directory.Build.props`).
 - `EnforceCodeStyleInBuild=true` so editorconfig severities for IDExxxx rules fire at compile time.
-- File header copyright text comes from `stylecop.json` (`"companyName": "Glenn Watson and Contributors"`); SA1636 enforces every `.cs` file matches.
+- File header copyright text comes from `stylecop.json`'s `companyName`; SA1636 enforces every `.cs` file matches.
 - Public APIs require XML documentation (`<GenerateDocumentationFile>true</GenerateDocumentationFile>`); SA1600 / SA1611 / SA1615 catch missing element / parameter / return docs.
 - Logging is source-generated `[LoggerMessage]` partial methods on `ILogger` parameters — no `logger.LogInformation("...")` direct calls (CA1848). Expensive argument expressions go behind `LogInvokerHelper.Invoke(...)` to gate evaluation on `IsEnabled`.
 - Public concrete classes that have an interface counterpart (`MetadataExtractor`/`IMetadataExtractor`, `NuGetFetcher`/`INuGetFetcher`, `SourceLinkValidator`/`ISourceLinkValidator`) keep their private helpers + `[LoggerMessage]` partials `static`; only the public entry point is instance.
@@ -169,7 +189,13 @@ These rules apply to **production code** (everything under `src/` that isn't a t
 - **UTF-8 string literals (`"..."u8`)** in JSON / byte-level parsing paths to skip the UTF-16 → UTF-8 round-trip. Default for `Utf8JsonReader` / `Utf8JsonWriter` property names and any byte-sequence comparisons.
 - **Pre-size `StringBuilder` / `Dictionary` / `HashSet`** with a capacity hint that reflects the expected size. The integration tests catch cases where this matters.
 - **Avoid `ImmutableArray<T>` / `ImmutableList<T>` on hot paths.** The wrapping struct adds an indirection on every read, the builder churns intermediate arrays, and Sonar/Roslynator hits don't outweigh a plain `T[]` exposed via a property the renderer treats as immutable by convention. Reach for an immutable collection only when the API is genuinely public and consumers must not mutate. Hide construction behind an `internal static` helper (e.g. `NavBuilder.ToArray`) so the pooling/sizing detail isn't duplicated at every call site.
-- **`string.Create(length, state, span => ...)`** for short, hot-path string assembly when concatenation would otherwise build a tree of intermediates.
+- **`string.Create(length, state, static (span, state) => ...)`** for any string assembly that crosses an API boundary — even when the alternative is a single `$"prefix:{x}"` interpolation that the compiler would lower to `string.Concat`. Don't trust compiler lowering: explicit-allocation control survives runtime / SDK upgrades and sidesteps RCS1267 (which prefers interpolation) cleanly. Use a `static` lambda + tuple state to avoid closure capture; format ints into the destination span via `int.TryFormat` with a precomputed digit count rather than allocating an intermediate string for the digits.
+- **`NuStreamDocs.Common.StringCompose` is the first stop** when you need a runtime-composed string. It ships:
+  - `Concat(string, string)` through `Concat(a, b, c, d, e)` — up to 5 string fragments
+  - `ConcatInt(prefix, value)` and `ConcatInt(prefix, value, suffix)` — formats the int directly into the destination span
+  - `DecimalDigitCount(int)` — pure arithmetic, exposed for callers that want explicit length math
+
+  Every helper allocates **exactly one string** via `string.Create` with a static lambda + tuple state. Reach for an inline `string.Create` only when the shape doesn't fit the existing helpers (interleaved bytes + chars, or > 5 fragments).
 
 ### Collection expressions & syntax
 

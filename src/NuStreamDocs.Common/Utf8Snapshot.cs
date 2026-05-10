@@ -14,7 +14,6 @@ public static class Utf8Snapshot
     /// <returns>Right-sized decoded string array.</returns>
     public static string[] Decode(byte[][] bytes)
     {
-        ArgumentNullException.ThrowIfNull(bytes);
         var result = new string[bytes.Length];
         for (var i = 0; i < bytes.Length; i++)
         {

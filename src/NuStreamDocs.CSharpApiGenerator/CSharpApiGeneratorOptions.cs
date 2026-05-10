@@ -77,7 +77,6 @@ public sealed record CSharpApiGeneratorOptions(
     /// <exception cref="ArgumentNullException">When <see cref="Inputs"/> or any of its required reference fields are null.</exception>
     public void Validate()
     {
-        ArgumentNullException.ThrowIfNull(Inputs);
         if (OutputMarkdownSubdirectory.IsEmpty)
         {
             throw new ArgumentException("OutputMarkdownSubdirectory must be non-empty.", nameof(OutputMarkdownSubdirectory));
@@ -109,30 +108,23 @@ public sealed record CSharpApiGeneratorOptions(
 
             case NuGetPackagesInput p:
                 {
-                    ArgumentNullException.ThrowIfNull(p.Packages);
                     ArgumentException.ThrowIfNullOrWhiteSpace(p.ApiCachePath);
-                    ArgumentNullException.ThrowIfNull(p.TfmPreference);
                     return;
                 }
 
             case LocalAssembliesInput l:
                 {
                     ArgumentException.ThrowIfNullOrWhiteSpace(l.Tfm);
-                    ArgumentNullException.ThrowIfNull(l.AssemblyPaths);
-                    ArgumentNullException.ThrowIfNull(l.FallbackSearchPaths);
                     return;
                 }
 
-            case CustomInput c:
+            case CustomInput:
                 {
-                    ArgumentNullException.ThrowIfNull(c.Source);
                     return;
                 }
 
-            case null:
-                throw new ArgumentNullException(nameof(input));
             default:
-                throw new ArgumentException($"Unknown input shape: {input.GetType().FullName}", nameof(input));
+                throw new ArgumentException(StringCompose.Concat("Unknown input shape: ", input.GetType().FullName ?? "<null>"), nameof(input));
         }
     }
 }

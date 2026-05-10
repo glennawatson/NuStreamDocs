@@ -95,20 +95,6 @@ public class FeedPluginTests
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsTrue();
     }
 
-    /// <summary>Null TimeProvider rejected by the explicit-clock ctor.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullTimeProviderThrows() =>
-        await Assert.That(() => new FeedPlugin(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"), null!))
-            .Throws<ArgumentNullException>();
-
-    /// <summary>Null logger rejected by the three-arg ctor.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullLoggerThrows() =>
-        await Assert.That(() => new FeedPlugin(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"), TimeProvider.System, null!))
-            .Throws<ArgumentNullException>();
-
     /// <summary>Three-arg ctor accepts an explicit logger.</summary>
     /// <returns>Async test.</returns>
     [Test]

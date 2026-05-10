@@ -19,8 +19,6 @@ public static class LogInvokerHelper
     /// <param name="action">Action to run with the logger and state when enabled.</param>
     public static void Invoke<T1>(ILogger logger, LogLevel level, T1 arg1, Action<ILogger, T1> action)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(action);
         if (!logger.IsEnabled(level))
         {
             return;
@@ -39,8 +37,6 @@ public static class LogInvokerHelper
     /// <param name="action">Action to run with the logger and state when enabled.</param>
     public static void Invoke<T1, T2>(ILogger logger, LogLevel level, T1 arg1, T2 arg2, Action<ILogger, T1, T2> action)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(action);
         if (!logger.IsEnabled(level))
         {
             return;
@@ -70,9 +66,6 @@ public static class LogInvokerHelper
         Func<T3, TProjected> projector,
         Action<ILogger, T1, T2, TProjected> action)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(projector);
-        ArgumentNullException.ThrowIfNull(action);
         if (!logger.IsEnabled(level))
         {
             return;

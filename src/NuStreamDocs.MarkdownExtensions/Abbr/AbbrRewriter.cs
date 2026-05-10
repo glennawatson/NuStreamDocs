@@ -23,8 +23,6 @@ internal static class AbbrRewriter
     /// <param name="writer">UTF-8 sink.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         Dictionary<string, byte[]> definitions = new(StringComparer.Ordinal);
         var stripped = CollectAndStripDefinitions(source, definitions);
         if (definitions.Count is 0)

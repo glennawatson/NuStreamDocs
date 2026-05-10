@@ -21,10 +21,10 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     private readonly FeedOptions _options = ValidateOptions(options);
 
     /// <summary>Wall-clock provider.</summary>
-    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+    private readonly TimeProvider _timeProvider = timeProvider;
 
     /// <summary>Logger.</summary>
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger _logger = logger;
 
     /// <summary>Input root captured from the configure phase.</summary>
     private DirectoryPath _inputRoot;
@@ -90,7 +90,6 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     /// <returns>The validated options.</returns>
     private static FeedOptions ValidateOptions(FeedOptions opts)
     {
-        ArgumentNullException.ThrowIfNull(opts);
         opts.Validate();
         return opts;
     }

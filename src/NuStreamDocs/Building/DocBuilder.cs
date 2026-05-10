@@ -110,7 +110,6 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder WithLogger(ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
         return this;
     }
@@ -224,7 +223,6 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder UsePlugin(IPlugin plugin)
     {
-        ArgumentNullException.ThrowIfNull(plugin);
         _plugins.Add(plugin);
         return this;
     }
@@ -286,7 +284,6 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder WithSiteName(byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         _siteName = value;
         return this;
     }
@@ -314,7 +311,6 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder WithSiteUrl(byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         _siteUrl = value;
         return this;
     }
@@ -346,7 +342,6 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder WithSiteAuthor(byte[] value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         _siteAuthor = value;
         return this;
     }
@@ -372,7 +367,6 @@ public sealed class DocBuilder
     /// <returns>A task that completes when every post-render participant has run.</returns>
     public Task RenderPageAsync(in FilePath relativePath, in ReadOnlyMemory<byte> source, ArrayBufferWriter<byte> html, in CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(html);
         _ = cancellationToken;
         MarkdownRenderer.Render(source.Span, html);
 

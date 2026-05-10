@@ -11,9 +11,6 @@ namespace NuStreamDocs.Plugins.ExtraAssets;
 /// <summary>Plugin that ships caller-supplied stylesheet and script assets, emitting matching <c>&lt;link&gt;</c> / <c>&lt;script&gt;</c> tags into every page's <c>&lt;head&gt;</c>.</summary>
 public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>Forward-slash directory the resolved assets are written under.</summary>
-    private const string AssetDirectory = "assets/extra";
-
     /// <summary>CSS sources accumulated through the builder API.</summary>
     private readonly List<ExtraAssetSource> _cssSources = [];
 
@@ -38,11 +35,13 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => [.. _cssAssets, .. _jsAssets];
 
+    /// <summary>Gets the UTF-8 leading-slash + asset directory + trailing slash for site-relative URL byte emit.</summary>
+    private static ReadOnlySpan<byte> AssetDirectoryUrlPrefixUtf8 => "/assets/extra/"u8;
+
     /// <summary>Appends a CSS source. Called by the builder API; folds onto the existing instance when one is already registered.</summary>
     /// <param name="source">Source to add.</param>
     public void AddCss(ExtraAssetSource source)
     {
-        ArgumentNullException.ThrowIfNull(source);
         _cssSources.Add(source);
     }
 
@@ -50,7 +49,6 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <param name="source">Source to add.</param>
     public void AddJs(ExtraAssetSource source)
     {
-        ArgumentNullException.ThrowIfNull(source);
         _jsSources.Add(source);
     }
 
@@ -69,7 +67,6 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (_headFragment.Length is 0)
         {
             return;
@@ -92,7 +89,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
             }
 
             var bytes = ReadBytes(src);
-            assets.Add((new($"{AssetDirectory}/{src.OutputName}"), bytes));
+            assets.Add((new(ComposeAssetPath(src.OutputName!)), bytes));
         }
     }
 
@@ -117,11 +114,8 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <param name="writer">UTF-8 sink.</param>
     private static void WriteCssLink(ExtraAssetSource source, IBufferWriter<byte> writer)
     {
-        var href = source.Kind is ExtraAssetSourceKind.Url
-            ? source.Url!
-            : $"/{AssetDirectory}/{source.OutputName}";
         writer.Write("<link rel=\"stylesheet\" href=\""u8);
-        writer.Write(Encoding.UTF8.GetBytes(href));
+        WriteAssetHref(source, writer);
         writer.Write("\">"u8);
     }
 
@@ -130,17 +124,34 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <param name="writer">UTF-8 sink.</param>
     private static void WriteJsScript(ExtraAssetSource source, IBufferWriter<byte> writer)
     {
-        var src = source.Kind is ExtraAssetSourceKind.Url
-            ? source.Url!
-            : $"/{AssetDirectory}/{source.OutputName}";
         writer.Write("<script src=\""u8);
-        writer.Write(Encoding.UTF8.GetBytes(src));
+        WriteAssetHref(source, writer);
 
         // ES modules are deferred by spec, so emit `type="module"` instead of `defer`.
         // Standard scripts get `defer` so they execute after the document is parsed but
         // before DOMContentLoaded — the safest default for asset registration order.
         writer.Write(source.IsModule ? "\" type=\"module\"></script>"u8 : "\" defer></script>"u8);
     }
+
+    /// <summary>Writes the site-relative or absolute URL for <paramref name="source"/> as UTF-8 bytes — no intermediate string.</summary>
+    /// <param name="source">Asset source.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void WriteAssetHref(ExtraAssetSource source, IBufferWriter<byte> writer)
+    {
+        if (source.Kind is ExtraAssetSourceKind.Url)
+        {
+            writer.Write(Encoding.UTF8.GetBytes(source.Url!));
+            return;
+        }
+
+        writer.Write(AssetDirectoryUrlPrefixUtf8);
+        writer.Write(Encoding.UTF8.GetBytes(source.OutputName!));
+    }
+
+    /// <summary>Composes the asset's site-relative file path (<c>assets/extra/&lt;outputName&gt;</c>) via the project's <see cref="StringCompose"/> helper.</summary>
+    /// <param name="outputName">Caller-supplied output filename (already validated non-null upstream).</param>
+    /// <returns>Composed path string suitable for <see cref="FilePath"/>.</returns>
+    private static string ComposeAssetPath(string outputName) => StringCompose.Concat("assets/extra/", outputName);
 
     /// <summary>Composes the head fragment: one <c>&lt;link&gt;</c> per CSS source, one <c>&lt;script&gt;</c> per JS source.</summary>
     /// <returns>UTF-8 head fragment bytes.</returns>

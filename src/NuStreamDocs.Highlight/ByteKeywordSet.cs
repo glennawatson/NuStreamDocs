@@ -43,7 +43,6 @@ public sealed class ByteKeywordSet
     /// <returns>Built set.</returns>
     public static ByteKeywordSet Create(params byte[][] keywords)
     {
-        ArgumentNullException.ThrowIfNull(keywords);
         return Build(keywords, ignoreCase: false);
     }
 
@@ -52,7 +51,6 @@ public sealed class ByteKeywordSet
     /// <returns>Built set.</returns>
     public static ByteKeywordSet CreateIgnoreCase(params byte[][] lowercaseKeywords)
     {
-        ArgumentNullException.ThrowIfNull(lowercaseKeywords);
         return Build(lowercaseKeywords, ignoreCase: true);
     }
 

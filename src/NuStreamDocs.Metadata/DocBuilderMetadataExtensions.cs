@@ -14,7 +14,6 @@ public static class DocBuilderMetadataExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMetadata(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MetadataPlugin());
     }
 
@@ -24,8 +23,6 @@ public static class DocBuilderMetadataExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMetadata(this DocBuilder builder, MetadataOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new MetadataPlugin(options));
     }
 }

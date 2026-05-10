@@ -215,12 +215,6 @@ public class RedirectsPluginTests
         await Assert.That(stub).Contains("&gt;");
     }
 
-    /// <summary>Constructor rejects a null entries array.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullEntriesThrows() =>
-        await Assert.That(() => new RedirectsPlugin(null!)).Throws<ArgumentNullException>();
-
     /// <summary>Disposable scratch directory.</summary>
     private sealed class RedirectsTempDir : IDisposable
     {

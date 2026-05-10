@@ -129,12 +129,6 @@ public class LunrSearchPluginTests
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("search_index.json");
     }
 
-    /// <summary>WriteHeadExtra rejects a null writer.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task WriteHeadExtraNullWriterThrows() =>
-        await Assert.That(() => new LunrSearchPlugin().WriteHeadExtra(null!)).Throws<ArgumentNullException>();
-
     /// <summary>Name returns "search".</summary>
     /// <returns>Async test.</returns>
     [Test]

@@ -23,9 +23,6 @@ internal static class CspHashCollector
     /// <param name="scripts">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;script&gt;</c> blocks.</param>
     public static void Collect(ReadOnlySpan<byte> html, ConcurrentDictionary<byte[], byte> styles, ConcurrentDictionary<byte[], byte> scripts)
     {
-        ArgumentNullException.ThrowIfNull(styles);
-        ArgumentNullException.ThrowIfNull(scripts);
-
         ScanBlocks(html, "<style"u8, "</style>"u8, styles);
         ScanBlocks(html, "<script"u8, "</script>"u8, scripts);
     }

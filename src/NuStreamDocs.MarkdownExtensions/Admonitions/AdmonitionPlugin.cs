@@ -53,7 +53,6 @@ public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvide
     /// <inheritdoc/>
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         writer.Write(LinkBytes);
     }
 }

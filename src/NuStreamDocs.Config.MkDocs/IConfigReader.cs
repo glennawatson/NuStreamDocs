@@ -37,8 +37,6 @@ public interface IConfigReader
     /// <returns>The parsed config.</returns>
     async Task<MkDocsConfig> ReadAsync(Stream utf8Stream, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(utf8Stream);
-
         var sizeHint = TryGetSizeHint(utf8Stream);
         var pool = ArrayPool<byte>.Shared;
         var buffer = pool.Rent(sizeHint);

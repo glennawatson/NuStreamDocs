@@ -18,7 +18,6 @@ public static class AutorefsRewriter
     public static int RewriteAll(in DirectoryPath outputRoot, AutorefsRegistry registry)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
-        ArgumentNullException.ThrowIfNull(registry);
 
         if (!outputRoot.Exists() || registry.Count is 0)
         {
@@ -43,8 +42,6 @@ public static class AutorefsRewriter
     public static (int Resolved, int Missing) RewriteAll(in DirectoryPath outputRoot, AutorefsRegistry registry, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(logger);
 
         if (!outputRoot.Exists() || registry.Count is 0)
         {
@@ -75,7 +72,6 @@ public static class AutorefsRewriter
     public static bool RewriteOne(in FilePath path, AutorefsRegistry registry)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
-        ArgumentNullException.ThrowIfNull(registry);
 
         // BCL boundary — File.ReadAllBytes / WriteAllBytes take string only.
         var source = File.ReadAllBytes(path.Value);
@@ -102,9 +98,6 @@ public static class AutorefsRewriter
     /// <returns>True when at least one marker was substituted.</returns>
     public static bool RewriteSpan(ReadOnlySpan<byte> source, AutorefsRegistry registry, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(sink);
-
         RewriteTotals totals = default;
         return RewriteSpanCore(source, registry, sink, logger: null, sourcePage: null, ref totals);
     }
@@ -123,10 +116,6 @@ public static class AutorefsRewriter
         ILogger logger,
         in FilePath sourcePage)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(sink);
-        ArgumentNullException.ThrowIfNull(logger);
-
         RewriteTotals totals = default;
         _ = RewriteSpanCore(source, registry, sink, logger, sourcePage, ref totals);
         return totals;

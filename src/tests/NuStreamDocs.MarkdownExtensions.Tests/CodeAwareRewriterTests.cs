@@ -11,26 +11,6 @@ namespace NuStreamDocs.MarkdownExtensions.Tests;
 /// <summary>Unit tests for the shared CodeAwareRewriter scan loop.</summary>
 public class CodeAwareRewriterTests
 {
-    /// <summary>Null writer is rejected.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullWriterRejected()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(() =>
-            CodeAwareRewriter.Run("hi"u8, writer: null!, NoopProbe));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>Null probe is rejected.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullProbeRejected()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(() =>
-            CodeAwareRewriter.Run("hi"u8, new ArrayBufferWriter<byte>(), tryRewrite: null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Empty source produces empty output.</summary>
     /// <returns>Async test.</returns>
     [Test]

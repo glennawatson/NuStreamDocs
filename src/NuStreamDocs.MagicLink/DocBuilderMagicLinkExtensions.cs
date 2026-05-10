@@ -16,7 +16,6 @@ public static class DocBuilderMagicLinkExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMagicLink(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MagicLinkPlugin());
     }
 
@@ -26,8 +25,6 @@ public static class DocBuilderMagicLinkExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMagicLink(this DocBuilder builder, MagicLinkOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new MagicLinkPlugin(options));
     }
 }

@@ -109,16 +109,6 @@ public class SphinxInventoryWriterTests
         await Assert.That(builder.UseSphinxInventory(registry, options)).IsSameReferenceAs(builder);
     }
 
-    /// <summary>UseSphinxInventory rejects a null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseSphinxInventoryRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderSphinxInventoryExtensions.UseSphinxInventory(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Reads the four header lines as UTF-8 text and returns the offset of the first compressed byte.</summary>
     /// <param name="bytes">File bytes.</param>
     /// <param name="bodyOffset">Output: the offset of the first byte after the four header lines.</param>

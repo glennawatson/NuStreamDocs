@@ -46,7 +46,6 @@ public sealed class LexerRegistry
     /// <exception cref="ArgumentOutOfRangeException">When <paramref name="extra"/> is empty.</exception>
     public static LexerRegistry CreateFromStringLexers(params (string LanguageId, Lexer Lexer)[] extra)
     {
-        ArgumentNullException.ThrowIfNull(extra);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(extra.Length);
         var values = new LexerNameValue[extra.Length];
         for (var i = 0; i < values.Length; i++)
@@ -64,7 +63,6 @@ public sealed class LexerRegistry
     /// <returns>A frozen registry.</returns>
     public static LexerRegistry Build(params LexerNameValue[] extra)
     {
-        ArgumentNullException.ThrowIfNull(extra);
         var map = BuildBuiltInAliasMap();
         ApplyExtras(map, extra);
         var (aliases, lexers) = BucketByLength(map, nameof(extra));
@@ -338,9 +336,7 @@ public sealed class LexerRegistry
             var len = kvp.Key.Length;
             if (len >= MaxAliasLength)
             {
-                throw new ArgumentOutOfRangeException(
-                    extraParameterName,
-                    $"Lexer alias '{Encoding.UTF8.GetString(kvp.Key)}' exceeds the {MaxAliasLength}-byte cap.");
+                throw new ArgumentOutOfRangeException(extraParameterName, BuildAliasTooLongMessage(kvp.Key, MaxAliasLength));
             }
 
             counts[len]++;
@@ -369,4 +365,14 @@ public sealed class LexerRegistry
 
         return (aliases, lexers);
     }
+
+    /// <summary>Composes the alias-too-long exception message via the project's <see cref="StringCompose"/> helper (one explicit allocation per leaf concat).</summary>
+    /// <param name="aliasBytes">The offending alias bytes (UTF-8).</param>
+    /// <param name="cap">The byte-length cap that was exceeded.</param>
+    /// <returns>Composed message.</returns>
+    private static string BuildAliasTooLongMessage(byte[] aliasBytes, int cap) =>
+        StringCompose.ConcatInt(
+            StringCompose.Concat("Lexer alias '", Encoding.UTF8.GetString(aliasBytes), "' exceeds the "),
+            cap,
+            "-byte cap.");
 }

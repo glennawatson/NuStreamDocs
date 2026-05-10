@@ -136,7 +136,6 @@ public class BuildPipelineTests
     {
         await Assert.That(() => BuildPipeline.RunAsync(string.Empty, "/out", [])).Throws<ArgumentException>();
         await Assert.That(() => BuildPipeline.RunAsync("/in", string.Empty, [])).Throws<ArgumentException>();
-        await Assert.That(() => BuildPipeline.RunAsync("/in", "/out", null!)).Throws<ArgumentNullException>();
     }
 
     /// <summary>Test pre-render plugin that replaces every <c>A</c> with <c>B</c>.</summary>

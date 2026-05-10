@@ -36,7 +36,6 @@ internal static class AttrListRewriter
     /// <param name="sink">UTF-8 sink the rewritten HTML is encoded into.</param>
     public static void RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
         if (html.IsEmpty)
         {
             return;

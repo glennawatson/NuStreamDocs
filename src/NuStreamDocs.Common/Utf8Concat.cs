@@ -79,7 +79,6 @@ public static class Utf8Concat
         var total = 0;
         for (var i = 0; i < parts.Length; i++)
         {
-            ArgumentNullException.ThrowIfNull(parts[i]);
             total += parts[i].Length;
         }
 

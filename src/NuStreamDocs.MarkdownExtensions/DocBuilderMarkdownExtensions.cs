@@ -35,7 +35,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseAdmonitions(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new AdmonitionPlugin());
     }
 
@@ -44,7 +43,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseDetails(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new DetailsPlugin());
     }
 
@@ -53,7 +51,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseTabs(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new TabsPlugin());
     }
 
@@ -62,7 +59,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseCheckLists(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new CheckListPlugin());
     }
 
@@ -71,7 +67,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMark(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MarkPlugin());
     }
 
@@ -80,7 +75,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseCaretTilde(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new CaretTildePlugin());
     }
 
@@ -89,7 +83,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseCriticMarkup(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new CriticMarkupPlugin());
     }
 
@@ -98,7 +91,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseInlineHilite(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new InlineHilitePlugin());
     }
 
@@ -107,7 +99,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseMarkdownInHtml(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new MdInHtmlPlugin());
     }
 
@@ -116,7 +107,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseDefinitionLists(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new DefListPlugin());
     }
 
@@ -125,7 +115,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseFootnotes(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new FootnotesPlugin());
     }
 
@@ -134,7 +123,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseTables(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new TablesPlugin());
     }
 
@@ -143,7 +131,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseAttrList(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new AttrListPlugin());
     }
 
@@ -152,7 +139,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseAbbreviations(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new AbbrPlugin());
     }
 
@@ -162,8 +148,6 @@ public static class DocBuilderMarkdownExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSnippets(this DocBuilder builder, params DirectoryPath[] basePaths)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(basePaths);
         return builder.UsePlugin(new SnippetsPlugin(basePaths));
     }
 

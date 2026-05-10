@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text.Json;
+using NuStreamDocs.Common;
 using SourceDocParser;
 using SourceDocParser.NuGet.Infrastructure;
 
@@ -48,7 +49,7 @@ internal static class AssemblySourceFactory
         NuGetPackagesInput p => CreateFromPackages(p, logger),
         LocalAssembliesInput l => new LocalAssemblySource(l.Tfm, l.AssemblyPaths, l.FallbackSearchPaths),
         CustomInput c => c.Source,
-        _ => throw new ArgumentException($"Unknown input shape: {input.GetType().FullName}", nameof(input))
+        _ => throw new ArgumentException(StringCompose.Concat("Unknown input shape: ", input.GetType().FullName ?? "<null>"), nameof(input))
     };
 
     /// <summary>Synthesizes a transient manifest for the inline package list and returns a <see cref="NuGetAssemblySource"/> over it.</summary>

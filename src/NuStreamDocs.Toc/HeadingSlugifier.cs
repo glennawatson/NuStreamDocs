@@ -42,7 +42,6 @@ internal static class HeadingSlugifier
     /// <returns>A tuple of <c>(headings with slug populated, collisionCount)</c>.</returns>
     public static (Heading[] Slugged, int Collisions) AssignSlugs(ReadOnlySpan<byte> html, Heading[] headings)
     {
-        ArgumentNullException.ThrowIfNull(headings);
         if (headings.Length is 0)
         {
             return ([], 0);

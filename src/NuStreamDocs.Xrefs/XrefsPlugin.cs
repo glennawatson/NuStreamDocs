@@ -35,8 +35,6 @@ public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
     /// <param name="options">Plugin options.</param>
     public XrefsPlugin(AutorefsRegistry registry, XrefsOptions options)
     {
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(options);
         options.Validate();
         Registry = registry;
         _options = options;

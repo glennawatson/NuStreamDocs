@@ -47,10 +47,7 @@ internal static class FeedEmitter
         in DateTimeOffset generatedAt,
         ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrEmpty(outputDir);
-        ArgumentNullException.ThrowIfNull(posts);
-        ArgumentNullException.ThrowIfNull(logger);
 
         var written = FeedFormats.None;
         if (WriteIfRequested(options, outputDir, posts, generatedAt, logger, RssRequest))

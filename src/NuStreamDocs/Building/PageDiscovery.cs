@@ -39,7 +39,6 @@ public static class PageDiscovery
         in CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
-        ArgumentNullException.ThrowIfNull(filter);
         return EnumerateCoreAsync(inputRoot, filter, cancellationToken);
     }
 

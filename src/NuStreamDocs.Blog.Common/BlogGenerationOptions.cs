@@ -46,7 +46,7 @@ public record BlogGenerationOptions(
             return;
         }
 
-        throw new ArgumentException($"{paramName} bytes must be non-empty.", paramName);
+        throw new ArgumentException(BuildEmptyMessage(paramName, " bytes must be non-empty."), paramName);
     }
 
     /// <summary>Throws when <paramref name="value"/> is empty.</summary>
@@ -59,7 +59,7 @@ public record BlogGenerationOptions(
             return;
         }
 
-        throw new ArgumentException($"{paramName} must be non-empty.", paramName);
+        throw new ArgumentException(BuildEmptyMessage(paramName, " must be non-empty."), paramName);
     }
 
     /// <summary>Throws when <paramref name="value"/> is empty.</summary>
@@ -72,6 +72,12 @@ public record BlogGenerationOptions(
             return;
         }
 
-        throw new ArgumentException($"{paramName} must be non-empty.", paramName);
+        throw new ArgumentException(BuildEmptyMessage(paramName, " must be non-empty."), paramName);
     }
+
+    /// <summary>Composes <paramref name="paramName"/> + <paramref name="suffix"/> via the project's <see cref="StringCompose"/> helper (one explicit allocation).</summary>
+    /// <param name="paramName">Parameter name (always a non-null string from <c>nameof</c> or caller literal).</param>
+    /// <param name="suffix">Constant suffix.</param>
+    /// <returns>Composed message.</returns>
+    private static string BuildEmptyMessage(string paramName, string suffix) => StringCompose.Concat(paramName, suffix);
 }

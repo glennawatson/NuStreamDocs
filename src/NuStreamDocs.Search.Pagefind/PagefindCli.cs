@@ -33,7 +33,6 @@ public static class PagefindCli
     public static async Task<bool> RunAsync(DirectoryPath siteRoot, PagefindOptions options, ILogger logger, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(siteRoot.Value);
-        ArgumentNullException.ThrowIfNull(logger);
 
         if (!options.RunCli)
         {
@@ -137,7 +136,10 @@ public static class PagefindCli
             if (options.StrictBinaryRequired)
             {
                 throw new InvalidOperationException(
-                    $"Pagefind exited with code {process.ExitCode}. stderr: {stderrText}");
+                    StringCompose.ConcatInt(
+                        "Pagefind exited with code ",
+                        process.ExitCode,
+                        StringCompose.Concat(". stderr: ", stderrText)));
             }
 
             return false;

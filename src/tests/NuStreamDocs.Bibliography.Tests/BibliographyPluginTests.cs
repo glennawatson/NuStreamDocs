@@ -85,14 +85,4 @@ public class BibliographyPluginTests
             b.AddBook([.. "g"u8], [.. "T"u8], PersonName.Of("X", "Y"), 2000, [.. "P"u8]));
         await Assert.That(result).IsSameReferenceAs(builder);
     }
-
-    /// <summary>UseBibliography rejects a null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseBibliographyRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () =>
-            DocBuilderBibliographyExtensions.UseBibliography(null!, BibliographyOptions.Default));
-        await Assert.That(ex).IsNotNull();
-    }
 }

@@ -59,40 +59,4 @@ public class OptimizeRegistrationTests
         new HtmlMinifyPlugin().Rewrite(in ctx);
         await Assert.That(Encoding.UTF8.GetString(output.WrittenSpan)).DoesNotContain("   spaces   ");
     }
-
-    /// <summary>UseOptimize rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseOptimizeRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderOptimizeExtensions.UseOptimize(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseOptimize(options) rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseOptimizeRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseOptimize(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseHtmlMinify rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseHtmlMinifyRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderOptimizeExtensions.UseHtmlMinify(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseHtmlMinify(options) rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseHtmlMinifyRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseHtmlMinify(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

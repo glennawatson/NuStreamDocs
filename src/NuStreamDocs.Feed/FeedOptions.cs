@@ -43,9 +43,6 @@ public sealed record FeedOptions(
     /// <exception cref="ArgumentException">When a required field is null or empty.</exception>
     public void Validate()
     {
-        ArgumentNullException.ThrowIfNull(SiteUrl);
-        ArgumentNullException.ThrowIfNull(Title);
-        ArgumentNullException.ThrowIfNull(Description);
         if (SiteUrl.Length is 0)
         {
             throw new ArgumentException("SiteUrl must not be empty.", nameof(SiteUrl));

@@ -61,7 +61,6 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <param name="entries">Static tuples of <c>(fromPath, toUrl)</c> merged with config-file and alias entries at finalize.</param>
     public RedirectsPlugin(in RedirectsOptions options, (UrlPath From, UrlPath To)[] entries)
     {
-        ArgumentNullException.ThrowIfNull(entries);
         _options = options;
         _aliasKeyBytes = Utf8Encoder.Encode(options.AliasFrontmatterKey);
         _seed = new(entries.Length, ByteArrayComparer.Instance);

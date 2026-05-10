@@ -28,8 +28,6 @@ public static class XmlEntityEscaper
     /// <param name="mode">Which entity set to apply.</param>
     public static void WriteEscaped(IBufferWriter<byte> writer, ReadOnlySpan<byte> bytes, Mode mode)
     {
-        ArgumentNullException.ThrowIfNull(writer);
-
         var runStart = 0;
         for (var i = 0; i < bytes.Length; i++)
         {

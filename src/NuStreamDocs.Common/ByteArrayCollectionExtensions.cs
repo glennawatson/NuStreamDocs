@@ -15,9 +15,6 @@ public static class ByteArrayCollectionExtensions
     /// <returns>A right-sized set populated with one decoded string per entry.</returns>
     public static HashSet<string> ToStringSet(this byte[][] source, IEqualityComparer<string> comparer)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(comparer);
-
         HashSet<string> set = new(source.Length, comparer);
         for (var i = 0; i < source.Length; i++)
         {
@@ -32,8 +29,6 @@ public static class ByteArrayCollectionExtensions
     /// <returns>One decoded string per entry.</returns>
     public static string[] ToStringArray(this byte[][] source)
     {
-        ArgumentNullException.ThrowIfNull(source);
-
         if (source.Length is 0)
         {
             return [];

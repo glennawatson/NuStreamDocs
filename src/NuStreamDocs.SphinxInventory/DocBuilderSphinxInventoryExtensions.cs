@@ -15,7 +15,6 @@ public static class DocBuilderSphinxInventoryExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSphinxInventory(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new SphinxInventoryPlugin());
     }
 
@@ -25,8 +24,6 @@ public static class DocBuilderSphinxInventoryExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSphinxInventory(this DocBuilder builder, AutorefsRegistry registry)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(registry);
         return builder.UsePlugin(new SphinxInventoryPlugin(registry));
     }
 
@@ -37,9 +34,6 @@ public static class DocBuilderSphinxInventoryExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseSphinxInventory(this DocBuilder builder, AutorefsRegistry registry, SphinxInventoryOptions options)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(registry);
-        ArgumentNullException.ThrowIfNull(options);
         return builder.UsePlugin(new SphinxInventoryPlugin(registry, options));
     }
 }

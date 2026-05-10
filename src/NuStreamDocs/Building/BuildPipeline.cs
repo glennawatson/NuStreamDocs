@@ -77,7 +77,6 @@ public static class BuildPipeline
             throw new ArgumentException("Output root must be non-empty.", nameof(outputRoot));
         }
 
-        ArgumentNullException.ThrowIfNull(plugins);
         var filter = options.Filter ?? PathFilter.Empty;
         var useDirectoryUrls = options.UseDirectoryUrls;
         var includeDrafts = options.IncludeDrafts;

@@ -117,24 +117,6 @@ public class TagsPluginTests
     public async Task UseTagsWithOptionsRegisters() =>
         await Assert.That(new DocBuilder().UseTags(TagsOptions.Default)).IsTypeOf<DocBuilder>();
 
-    /// <summary>UseTags rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseTagsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderTagsExtensions.UseTags(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseTags(options) rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseTagsOptionsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderTagsExtensions.UseTags(null!, TagsOptions.Default));
-        await Assert.That(ex).IsNotNull();
-    }
-
     /// <summary>Disposable scratch directory.</summary>
     private sealed class TagsTempDir : IDisposable
     {

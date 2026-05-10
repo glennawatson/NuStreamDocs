@@ -16,7 +16,6 @@ public static class DocBuilderKeysExtensions
     /// <returns>The builder for chaining.</returns>
     public static DocBuilder UseKeys(this DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
         return builder.UsePlugin(new KeysPlugin());
     }
 }

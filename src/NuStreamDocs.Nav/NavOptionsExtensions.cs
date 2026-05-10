@@ -15,7 +15,6 @@ public static class NavOptionsExtensions
     /// <returns>The updated options.</returns>
     public static NavOptions WithIncludes(this in NavOptions options, params GlobPattern[] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return options with { Includes = patterns };
     }
 
@@ -25,7 +24,6 @@ public static class NavOptionsExtensions
     /// <returns>The updated options.</returns>
     public static NavOptions AddIncludes(this in NavOptions options, params GlobPattern[] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0
             ? options
             : options with { Includes = ArrayJoiner.Concat(options.Includes, patterns) };
@@ -43,7 +41,6 @@ public static class NavOptionsExtensions
     /// <returns>The updated options.</returns>
     public static NavOptions WithExcludes(this in NavOptions options, params GlobPattern[] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return options with { Excludes = patterns };
     }
 
@@ -53,7 +50,6 @@ public static class NavOptionsExtensions
     /// <returns>The updated options.</returns>
     public static NavOptions AddExcludes(this in NavOptions options, params GlobPattern[] patterns)
     {
-        ArgumentNullException.ThrowIfNull(patterns);
         return patterns.Length is 0
             ? options
             : options with { Excludes = ArrayJoiner.Concat(options.Excludes, patterns) };
@@ -71,7 +67,6 @@ public static class NavOptionsExtensions
     /// <returns>The updated options.</returns>
     public static NavOptions WithCuratedEntries(this in NavOptions options, NavEntry[] entries)
     {
-        ArgumentNullException.ThrowIfNull(entries);
         return options with { CuratedEntries = entries };
     }
 

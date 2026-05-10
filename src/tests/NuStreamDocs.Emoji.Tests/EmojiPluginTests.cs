@@ -39,13 +39,4 @@ public class EmojiPluginTests
         var returned = builder.UseEmoji();
         await Assert.That(returned).IsSameReferenceAs(builder);
     }
-
-    /// <summary>UseEmoji guards against a null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseEmojiRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderEmojiExtensions.UseEmoji(null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

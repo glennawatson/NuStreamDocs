@@ -226,8 +226,7 @@ dotnet_diagnostic.CA1058.severity = error # Types should not extend certain base
 dotnet_diagnostic.CA1059.severity = error # Members should not expose certain concrete types
 dotnet_diagnostic.CA1060.severity = error # Move P/Invokes to NativeMethods class
 dotnet_diagnostic.CA1061.severity = error # Do not hide base class methods
-dotnet_diagnostic.CA1062.severity = error # Validate arguments of public methods
-dotnet_code_quality.CA1062.null_check_validation_methods = ThrowIfNull|ThrowIfNullOrEmpty|ThrowIfNullOrWhiteSpace|ThrowIfNullWithMessage
+dotnet_diagnostic.CA1062.severity = none # Validate arguments of public methods - Nullable=enable + we own every consumer, so the compiler already guarantees non-null params
 dotnet_diagnostic.CA1063.severity = error # Implement IDisposable correctly
 dotnet_diagnostic.CA1064.severity = error # Exceptions should be public
 dotnet_diagnostic.CA1065.severity = error # Do not raise exceptions in unexpected locations

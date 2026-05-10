@@ -75,7 +75,6 @@ public static class PageBuilderPool
     /// <param name="writer">The writer to park, already reset by the rental.</param>
     internal static void Return(ArrayBufferWriter<byte> writer)
     {
-        ArgumentNullException.ThrowIfNull(writer);
         if (writer.Capacity > MaxCachedCapacity)
         {
             return;

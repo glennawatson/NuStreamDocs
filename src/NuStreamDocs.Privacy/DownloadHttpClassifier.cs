@@ -40,8 +40,6 @@ internal static class DownloadHttpClassifier
     /// <returns>True when the body should run through <c>CssUrlRewriter</c>.</returns>
     public static bool LooksLikeCss(Uri uri, HttpResponseMessage response)
     {
-        ArgumentNullException.ThrowIfNull(uri);
-        ArgumentNullException.ThrowIfNull(response);
         var contentType = response.Content.Headers.ContentType?.MediaType;
         if (string.Equals(contentType, "text/css", StringComparison.OrdinalIgnoreCase))
         {

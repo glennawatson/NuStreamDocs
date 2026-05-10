@@ -87,20 +87,4 @@ public class DocBuilderExtraAssetsExtensionsTests
         await Assert.That(builder.AddExtraJsLink("https://x.test/a.js")).IsSameReferenceAs(builder);
         await Assert.That(builder.AddExtraJsLink("https://x.test/a.js", "https://x.test/b.js")).IsSameReferenceAs(builder);
     }
-
-    /// <summary>Each AddExtra entry rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task NullBuilderGuards()
-    {
-        var ex1 = Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCss(null!, (Common.FilePath)"x.css"));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCssInline(null!, "x.css", []));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCssEmbedded(null!, typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "r", "x.css"));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraCssLink(null!, "x"));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJs(null!, (Common.FilePath)"x.js"));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJsInline(null!, "x.js", []));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJsEmbedded(null!, typeof(DocBuilderExtraAssetsExtensionsTests).Assembly, "r", "x.js"));
-        Assert.Throws<ArgumentNullException>(static () => DocBuilderExtraAssetsExtensions.AddExtraJsLink(null!, "x"));
-        await Assert.That(ex1).IsNotNull();
-    }
 }

@@ -23,7 +23,6 @@ public static class EmbeddedAssetLoader
     /// <returns>The asset bytes.</returns>
     public static byte[] ReadBytes(Assembly owningAssembly, in ApiCompatString resourcePrefix, in FilePath relativePath)
     {
-        ArgumentNullException.ThrowIfNull(owningAssembly);
         ArgumentException.ThrowIfNullOrEmpty(resourcePrefix.Value);
         ArgumentException.ThrowIfNullOrEmpty(relativePath.Value);
 

@@ -51,7 +51,6 @@ public sealed class Utf8LineReader : IDisposable
     /// <param name="leaveOpen">When false, dispose the stream on <see cref="Dispose"/>.</param>
     public Utf8LineReader(Stream stream, bool leaveOpen)
     {
-        ArgumentNullException.ThrowIfNull(stream);
         _stream = stream;
         _ownsStream = !leaveOpen;
         _buffer = ArrayPool<byte>.Shared.Rent(InitialCapacity(stream));

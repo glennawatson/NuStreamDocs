@@ -16,7 +16,6 @@ public static class ImageWrapper
     /// <returns>The number of images that were wrapped.</returns>
     public static int Rewrite(ReadOnlySpan<byte> source, ReadOnlySpan<byte> selector, IBufferWriter<byte> sink)
     {
-        ArgumentNullException.ThrowIfNull(sink);
         if (selector.IsEmpty)
         {
             throw new ArgumentException("Selector must be non-empty.", nameof(selector));

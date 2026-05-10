@@ -51,22 +51,4 @@ public class XrefsRegistrationTests
     [Test]
     public async Task UseXrefsWithRegistryRegisters() =>
         await Assert.That(new DocBuilder().UseXrefs(new(), XrefsOptions.Default)).IsTypeOf<DocBuilder>();
-
-    /// <summary>UseXrefs rejects null builder.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseXrefsRejectsNullBuilder()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => DocBuilderXrefsExtensions.UseXrefs(null!));
-        await Assert.That(ex).IsNotNull();
-    }
-
-    /// <summary>UseXrefs(options) rejects null options.</summary>
-    /// <returns>Async test.</returns>
-    [Test]
-    public async Task UseXrefsOptionsRejectsNullOptions()
-    {
-        var ex = Assert.Throws<ArgumentNullException>(static () => new DocBuilder().UseXrefs((XrefsOptions)null!));
-        await Assert.That(ex).IsNotNull();
-    }
 }

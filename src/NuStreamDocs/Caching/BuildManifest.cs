@@ -50,7 +50,6 @@ public sealed class BuildManifest
     /// <returns>A manifest with no tracked entries.</returns>
     public static BuildManifest Empty(byte[] buildFingerprint)
     {
-        ArgumentNullException.ThrowIfNull(buildFingerprint);
         return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
     }
 
@@ -114,7 +113,6 @@ public sealed class BuildManifest
         CancellationToken cancellationToken,
         ILogger? logger)
     {
-        ArgumentNullException.ThrowIfNull(buildFingerprint);
         var manifest = await LoadAsync(outputRoot, cancellationToken, logger).ConfigureAwait(false);
         return manifest._buildFingerprint.AsSpan().SequenceEqual(buildFingerprint)
             ? manifest
@@ -132,7 +130,6 @@ public sealed class BuildManifest
     /// <param name="updated">Right-sized array of entries to store.</param>
     public void Replace(ManifestEntry[] updated)
     {
-        ArgumentNullException.ThrowIfNull(updated);
         _entries = ManifestIndex.Build(updated);
     }
 
@@ -140,7 +137,6 @@ public sealed class BuildManifest
     /// <param name="updated">Concurrent queue of fresh entries; ownership transfers to the manifest.</param>
     public void Replace(ConcurrentQueue<ManifestEntry> updated)
     {
-        ArgumentNullException.ThrowIfNull(updated);
         ManifestEntry[] snapshot = [.. updated];
         _entries = ManifestIndex.Build(snapshot);
     }
