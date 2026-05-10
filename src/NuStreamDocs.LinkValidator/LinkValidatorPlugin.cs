@@ -145,11 +145,13 @@ public sealed class LinkValidatorPlugin
         LinkValidatorLoggingHelper.LogValidationCorpus(_logger, corpus.Pages.Length, internalLinkCount, externalLinkCount);
 
         var internalDiags = await InternalLinkValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        var assetDiags = await AssetReferenceValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken).ConfigureAwait(false);
         var externalDiags = _options.StrictExternal
             ? await RunExternalAsync(corpus, cancellationToken).ConfigureAwait(false)
             : [];
 
-        return LinkValidatorReporter.Merge(internalDiags, externalDiags, _options.StrictInternal, _options.StrictExternal);
+        LinkDiagnostic[] combinedInternal = [.. internalDiags, .. assetDiags];
+        return LinkValidatorReporter.Merge(combinedInternal, externalDiags, _options.StrictInternal, _options.StrictExternal);
     }
 
     /// <summary>Runs the external HTTP checker.</summary>

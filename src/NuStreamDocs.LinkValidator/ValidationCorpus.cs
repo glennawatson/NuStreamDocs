@@ -25,9 +25,17 @@ public sealed class ValidationCorpus
     /// <summary>Pages keyed by site-relative URL bytes (forward-slashed UTF-8).</summary>
     private readonly Dictionary<byte[], PageLinks> _pages;
 
+    /// <summary>Static-asset paths on disk (non-HTML files) keyed by site-relative URL bytes.</summary>
+    private readonly HashSet<byte[]> _assets;
+
     /// <summary>Initializes a new instance of the <see cref="ValidationCorpus"/> class.</summary>
     /// <param name="pages">Pages keyed by URL bytes.</param>
-    private ValidationCorpus(Dictionary<byte[], PageLinks> pages) => _pages = pages;
+    /// <param name="assets">Static-asset URL set.</param>
+    private ValidationCorpus(Dictionary<byte[], PageLinks> pages, HashSet<byte[]> assets)
+    {
+        _pages = pages;
+        _assets = assets;
+    }
 
     /// <summary>Gets every page in the corpus.</summary>
     public PageLinks[] Pages { get; private init; } = [];
@@ -39,7 +47,7 @@ public sealed class ValidationCorpus
     {
         ArgumentNullException.ThrowIfNull(pages);
         Dictionary<byte[], PageLinks> snapshot = new(pages, ByteArrayComparer.Instance);
-        return new(snapshot) { Pages = [.. snapshot.Values] };
+        return new(snapshot, new(ByteArrayComparer.Instance)) { Pages = [.. snapshot.Values] };
     }
 
     /// <summary>Scans one page's HTML into a <see cref="PageLinks"/>.</summary>
@@ -83,13 +91,20 @@ public sealed class ValidationCorpus
                 // register them so inbound links resolve, but skip their outbound link scan
                 // since the bytes are just the redirect chrome.
                 pages[pageUrlBytes] = IsRedirectStub(bytes)
-                    ? new(pageUrlBytes, [], [], new(ByteArrayComparer.Instance), new(ByteArrayComparer.Instance))
+                    ? new(pageUrlBytes, [], [], [], new(ByteArrayComparer.Instance), new(ByteArrayComparer.Instance))
                     : ScanPage(pageUrlBytes, bytes);
             }).ConfigureAwait(false);
 
         Dictionary<byte[], PageLinks> snapshot = new(pages, ByteArrayComparer.Instance);
-        return new(snapshot) { Pages = [.. snapshot.Values] };
+        var assets = EnumerateAssetUrls(fullRoot);
+        return new(snapshot, assets) { Pages = [.. snapshot.Values] };
     }
+
+    /// <summary>True when an asset file exists at <paramref name="assetUrl"/>.</summary>
+    /// <param name="assetUrl">Site-relative asset URL bytes (forward-slashed UTF-8, no leading slash).</param>
+    /// <returns>True for known disk assets.</returns>
+    public bool ContainsAsset(ReadOnlySpan<byte> assetUrl) =>
+        _assets.GetAlternateLookup<ReadOnlySpan<byte>>().Contains(assetUrl);
 
     /// <summary>Tests whether a page exists at <paramref name="pageUrl"/>.</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>
@@ -169,6 +184,39 @@ public sealed class ValidationCorpus
         return false;
     }
 
+    /// <summary>Walks <paramref name="root"/> and snapshots every non-HTML file as a forward-slashed URL byte array.</summary>
+    /// <param name="root">Absolute site output root.</param>
+    /// <returns>Set of site-relative asset URLs.</returns>
+    private static HashSet<byte[]> EnumerateAssetUrls(DirectoryPath root)
+    {
+        HashSet<byte[]> set = new(ByteArrayComparer.Instance);
+        if (!Directory.Exists(root.Value))
+        {
+            return set;
+        }
+
+        foreach (var path in Directory.EnumerateFiles(root.Value, "*", SearchOption.AllDirectories))
+        {
+            if (path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            // Pre-compressed siblings (.gz / .br) are emitted alongside the canonical asset
+            // and don't need their own entries — author hrefs never point at them.
+            if (path.EndsWith(".gz", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".br", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var rel = Path.GetRelativePath(root.Value, path).Replace('\\', '/');
+            set.Add(Encoding.UTF8.GetBytes(rel));
+        }
+
+        return set;
+    }
+
     /// <summary>Yields every <c>.html</c> file under <paramref name="root"/>.</summary>
     /// <param name="root">Absolute site root.</param>
     /// <returns>Absolute paths.</returns>
@@ -209,46 +257,14 @@ public sealed class ValidationCorpus
 
         List<byte[]> internalLinks = new(hrefs.Length);
         List<byte[]> externalLinks = new(4);
-        for (var i = 0; i < hrefs.Length; i++)
-        {
-            var slice = hrefs[i].AsSpan(bytes);
-            if (IsNonValidatableScheme(slice))
-            {
-                continue;
-            }
-
-            if (IsExternal(slice))
-            {
-                externalLinks.Add(slice.ToArray());
-                continue;
-            }
-
-            if (IsAssetExtension(slice))
-            {
-                continue;
-            }
-
-            internalLinks.Add(slice.ToArray());
-        }
-
-        for (var i = 0; i < srcs.Length; i++)
-        {
-            var slice = srcs[i].AsSpan(bytes);
-            if (IsNonValidatableScheme(slice))
-            {
-                continue;
-            }
-
-            if (IsExternal(slice))
-            {
-                externalLinks.Add(slice.ToArray());
-            }
-        }
+        List<byte[]> internalAssets = new(srcs.Length);
+        BucketHrefs(hrefs, bytes, internalLinks, externalLinks, internalAssets);
+        BucketSrcs(srcs, bytes, externalLinks, internalAssets);
 
         HashSet<byte[]> anchorIds = new(idRanges.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < idRanges.Length; i++)
         {
-            anchorIds.Add(idRanges[i].AsSpan(bytes).ToArray());
+            anchorIds.Add([.. idRanges[i].AsSpan(bytes)]);
         }
 
         var deprecatedNameAnchors = nameRanges.Length is 0
@@ -259,8 +275,81 @@ public sealed class ValidationCorpus
             pageUrl,
             [.. internalLinks],
             [.. externalLinks],
+            [.. internalAssets],
             anchorIds,
             deprecatedNameAnchors);
+    }
+
+    /// <summary>Buckets <c>href</c> ranges into internal-link / external / internal-asset lists.</summary>
+    /// <param name="hrefs">Range list returned by <see cref="LinkExtractor.ExtractHrefRanges"/>.</param>
+    /// <param name="bytes">Page HTML bytes the ranges index into.</param>
+    /// <param name="internalLinks">Sink for relative page hrefs.</param>
+    /// <param name="externalLinks">Sink for absolute http(s) hrefs.</param>
+    /// <param name="internalAssets">Sink for asset-shaped local hrefs (e.g. <c>report.pdf</c>, <c>extra.css</c>).</param>
+    private static void BucketHrefs(
+        ByteRange[] hrefs,
+        ReadOnlySpan<byte> bytes,
+        List<byte[]> internalLinks,
+        List<byte[]> externalLinks,
+        List<byte[]> internalAssets)
+    {
+        for (var i = 0; i < hrefs.Length; i++)
+        {
+            var slice = hrefs[i].AsSpan(bytes);
+            if (IsNonValidatableScheme(slice))
+            {
+                continue;
+            }
+
+            if (IsExternal(slice))
+            {
+                externalLinks.Add([.. slice]);
+                continue;
+            }
+
+            // Asset-shaped local hrefs (e.g. `<a href="report.pdf">`, `<link href="extra.css">`)
+            // get bucketed for the asset validator instead of the page validator. They'd never
+            // resolve in the page corpus so previously they were silently dropped — now we
+            // confirm the file is actually on disk.
+            if (IsAssetExtension(slice))
+            {
+                internalAssets.Add([.. slice]);
+                continue;
+            }
+
+            internalLinks.Add([.. slice]);
+        }
+    }
+
+    /// <summary>Buckets <c>src</c> ranges into external / internal-asset lists.</summary>
+    /// <param name="srcs">Range list returned by <see cref="LinkExtractor.ExtractSrcRanges"/>.</param>
+    /// <param name="bytes">Page HTML bytes the ranges index into.</param>
+    /// <param name="externalLinks">Sink for absolute http(s) and protocol-relative srcs.</param>
+    /// <param name="internalAssets">Sink for relative srcs pointing at on-disk files.</param>
+    private static void BucketSrcs(
+        ByteRange[] srcs,
+        ReadOnlySpan<byte> bytes,
+        List<byte[]> externalLinks,
+        List<byte[]> internalAssets)
+    {
+        for (var i = 0; i < srcs.Length; i++)
+        {
+            var slice = srcs[i].AsSpan(bytes);
+            if (IsNonValidatableScheme(slice))
+            {
+                continue;
+            }
+
+            // Protocol-relative srcs (`//host/path`) inherit the page's scheme and resolve
+            // externally; same bucket as absolute http(s).
+            if (IsExternal(slice) || IsProtocolRelative(slice))
+            {
+                externalLinks.Add([.. slice]);
+                continue;
+            }
+
+            internalAssets.Add([.. slice]);
+        }
     }
 
     /// <summary>Materializes the obsolete <c>&lt;a name=&quot;&quot;&gt;</c> anchor values into a byte-array-keyed set.</summary>
@@ -272,7 +361,7 @@ public sealed class ValidationCorpus
         HashSet<byte[]> set = new(ranges.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < ranges.Length; i++)
         {
-            set.Add(ranges[i].AsSpan(bytes).ToArray());
+            set.Add([.. ranges[i].AsSpan(bytes)]);
         }
 
         return set;
@@ -290,6 +379,12 @@ public sealed class ValidationCorpus
     private static bool IsExternal(ReadOnlySpan<byte> url) =>
         AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "http://"u8)
         || AsciiByteHelpers.StartsWithIgnoreAsciiCase(url, 0, "https://"u8);
+
+    /// <summary>True for protocol-relative URLs (<c>//host/path</c>) — these inherit the page's scheme and resolve externally.</summary>
+    /// <param name="url">URL bytes.</param>
+    /// <returns>True when the value starts with <c>//</c>.</returns>
+    private static bool IsProtocolRelative(ReadOnlySpan<byte> url) =>
+        url is [(byte)'/', (byte)'/', ..];
 
     /// <summary>True for schemes the validator can neither resolve internally nor probe over HTTP.</summary>
     /// <param name="url">URL bytes.</param>
