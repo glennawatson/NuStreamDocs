@@ -16,10 +16,18 @@ public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvide
     private static readonly FilePath BindScriptPath = new("assets/javascripts/pagefind-bind.js");
 
     /// <summary>UTF-8 head-extra snippet referencing the Pagefind WASM loader and the glue script.</summary>
+    /// <remarks>
+    /// Both tags carry <c>data-cfasync="false"</c> so Cloudflare Rocket Loader skips them.
+    /// Rocket Loader rewrites <c>type="text/javascript"</c> to a tokenised marker and re-executes
+    /// the script through its own runtime, which breaks the dynamic <c>import("/pagefind/pagefind.js")</c>
+    /// the bind script issues (the loader runs scripts without the module resolution context an
+    /// ES <c>import()</c> needs, so the search panel silently fails). Opting out keeps the scripts on
+    /// the native loader and is a no-op when Rocket Loader is disabled.
+    /// </remarks>
     private static readonly byte[] HeadExtraBytes =
         [.. """
-<script type="module">import("/pagefind/pagefind.js").catch(()=>{});</script>
-<script src="/assets/javascripts/pagefind-bind.js" defer></script>
+<script type="module" data-cfasync="false">import("/pagefind/pagefind.js").catch(()=>{});</script>
+<script src="/assets/javascripts/pagefind-bind.js" defer data-cfasync="false"></script>
 """u8];
 
     /// <summary>Cached bind-script bytes.</summary>
