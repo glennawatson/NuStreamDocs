@@ -28,6 +28,7 @@ namespace NuStreamDocs.Search.Pagefind;
 /// When true, missing binary or non-zero exit code throws instead of logging a warning. Use in CI publishes that
 /// must produce real shards.
 /// </param>
+/// <param name="ExcludePathPrefixes">UTF-8 site-relative prefixes (e.g. <c>"api/"</c>) whose pages are skipped by the indexer.</param>
 public readonly record struct PagefindOptions(
     PathSegment OutputSubdirectory,
     int MinTokenLength,
@@ -35,7 +36,8 @@ public readonly record struct PagefindOptions(
     byte[] SectionPriorities,
     bool RunCli,
     FilePath BinaryPath,
-    bool StrictBinaryRequired)
+    bool StrictBinaryRequired,
+    byte[][] ExcludePathPrefixes)
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static PagefindOptions Default { get; } = new(
@@ -45,5 +47,6 @@ public readonly record struct PagefindOptions(
         SectionPriorities: [],
         RunCli: true,
         BinaryPath: default,
-        StrictBinaryRequired: false);
+        StrictBinaryRequired: false,
+        ExcludePathPrefixes: []);
 }

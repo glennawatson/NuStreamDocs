@@ -117,4 +117,49 @@ public static class PagefindOptionsExtensions
     /// <returns>The updated options.</returns>
     public static PagefindOptions WithStrictBinaryRequired(this in PagefindOptions options, bool strict) =>
         options with { StrictBinaryRequired = strict };
+
+    /// <summary>Replaces the exclude-path-prefix list.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="prefixes">Site-relative forward-slash prefixes (e.g. <c>"api/"</c>).</param>
+    /// <returns>The updated options.</returns>
+    public static PagefindOptions WithExcludePathPrefixes(this in PagefindOptions options, params ApiCompatString[] prefixes) =>
+        options with { ExcludePathPrefixes = prefixes.EncodeUtf8Array() };
+
+    /// <summary>Replaces the exclude-path-prefix list with the supplied UTF-8 bytes.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="prefixes">Prefix bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static PagefindOptions WithExcludePathPrefixes(this in PagefindOptions options, params byte[][] prefixes) =>
+        options with { ExcludePathPrefixes = prefixes };
+
+    /// <summary>Appends to the exclude-path-prefix list.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="prefixes">Additional prefixes.</param>
+    /// <returns>The updated options.</returns>
+    public static PagefindOptions AddExcludePathPrefixes(this in PagefindOptions options, params ApiCompatString[] prefixes) =>
+        prefixes.Length is 0
+            ? options
+            : options with { ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, prefixes.EncodeUtf8Array()) };
+
+    /// <summary>Appends UTF-8 prefixes to the exclude-path-prefix list.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="prefixes">Additional prefix bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static PagefindOptions AddExcludePathPrefixes(this in PagefindOptions options, params byte[][] prefixes) =>
+        prefixes.Length is 0
+            ? options
+            : options with { ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, prefixes) };
+
+    /// <summary>Appends a single UTF-8 prefix to the exclude-path-prefix list.</summary>
+    /// <param name="options">Source options.</param>
+    /// <param name="prefix">UTF-8 prefix bytes.</param>
+    /// <returns>The updated options.</returns>
+    public static PagefindOptions AddExcludePathPrefixes(this in PagefindOptions options, ReadOnlySpan<byte> prefix) =>
+        options with { ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, [prefix.ToArray()]) };
+
+    /// <summary>Empties the exclude-path-prefix list.</summary>
+    /// <param name="options">Source options.</param>
+    /// <returns>The updated options.</returns>
+    public static PagefindOptions ClearExcludePathPrefixes(this in PagefindOptions options) =>
+        options with { ExcludePathPrefixes = [] };
 }
