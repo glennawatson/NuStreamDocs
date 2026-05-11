@@ -67,7 +67,7 @@ public class WyamBlogPluginTests
             await File.WriteAllTextAsync(Path.Combine(postsDir, "2020-01-01-old.md"), "---\nTitle: Old\nPublished: 2020-01-01\n---\nOld body.");
             await File.WriteAllTextAsync(Path.Combine(postsDir, "2024-01-01-new.md"), "---\nTitle: New\nPublished: 2024-01-01\n---\nNew body.");
 
-            WyamBlogPlugin plugin = new(new("blog", [.. "Blog"u8], EmitTagArchives: false));
+            WyamBlogPlugin plugin = new(new("blog", [.. "Blog"u8], emitTagArchives: false));
             SyntheticPageSink sink = new();
             BuildDiscoverContext ctx = new(docsRoot, "/out", [], sink);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
@@ -78,6 +78,33 @@ public class WyamBlogPluginTests
             var oldPos = index.IndexOf("Old", StringComparison.Ordinal);
             await Assert.That(newPos).IsGreaterThan(0);
             await Assert.That(newPos).IsLessThan(oldPos);
+        }
+        finally
+        {
+            Directory.Delete(docsRoot, recursive: true);
+        }
+    }
+
+    /// <summary><c>DiscoverAsync</c> publishes the blog index's nav metadata (path, title, order) so the nav plugin can title/order the section.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PublishesBlogIndexNavEntry()
+    {
+        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blognav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        Directory.CreateDirectory(Path.Combine(docsRoot, "Announcements"));
+
+        try
+        {
+            WyamBlogPlugin plugin = new(new("Announcements", [.. "Announcements"u8], false, 4));
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new());
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
+
+            await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(1);
+            var entry = plugin.SyntheticNavEntries[0];
+            await Assert.That(entry.RelativePath.Value).IsEqualTo("Announcements/index.md");
+            await Assert.That(Encoding.UTF8.GetString(entry.Title!)).IsEqualTo("Announcements");
+            await Assert.That(entry.Order).IsEqualTo(4);
+            await Assert.That(entry.Hidden).IsFalse();
         }
         finally
         {

@@ -3,8 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
+using NuStreamDocs.Plugins;
 using SourceDocParser;
 using SourceDocParser.Model;
 
@@ -44,6 +47,70 @@ public class CSharpApiGeneratorPluginCoverageTests
         await Assert.That(b1).IsNotNull();
         await Assert.That(b2).IsNotNull();
         await Assert.That(b3).IsNotNull();
+    }
+
+    /// <summary>Before <c>DiscoverAsync</c> the plugin reports no synthetic nav entries.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task NoSyntheticNavEntriesBeforeDiscover()
+    {
+        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()));
+        await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(0);
+    }
+
+    /// <summary><c>DiscoverAsync</c> publishes the <c>api/index.md</c> nav entry carrying the configured title and order.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DiscoverPublishesIndexNavEntry()
+    {
+        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with
+        {
+            IndexTitle = [.. "ReactiveUI API"u8],
+            IndexOrder = 3,
+        });
+        BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
+
+        await plugin.DiscoverAsync(ctx, CancellationToken.None);
+
+        await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(1);
+        var entry = plugin.SyntheticNavEntries[0];
+        await Assert.That(entry.RelativePath.Value).IsEqualTo("api/index.md");
+        await Assert.That(Encoding.UTF8.GetString(entry.Title!)).IsEqualTo("ReactiveUI API");
+        await Assert.That(entry.Order).IsEqualTo(3);
+        await Assert.That(entry.Hidden).IsFalse();
+    }
+
+    /// <summary>When the index page is disabled, no nav entry is published.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task NoNavEntryWhenIndexPageDisabled()
+    {
+        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with { EmitIndexPage = false });
+        BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
+
+        await plugin.DiscoverAsync(ctx, CancellationToken.None);
+
+        await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(0);
+    }
+
+    /// <summary>Direct mode never reaches the nav-entry publication, so the list stays empty.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DirectModeHasNoNavEntries()
+    {
+        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with { Mode = CSharpApiGeneratorMode.Direct });
+        BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
+
+        try
+        {
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
+        }
+        catch (InvalidOperationException)
+        {
+            // EmptySource yields no TFM groups; Direct mode surfaces that synchronously. Irrelevant to the nav-entry check.
+        }
+
+        await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(0);
     }
 
     /// <summary>Stub IAssemblySource that yields no groups.</summary>

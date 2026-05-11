@@ -46,4 +46,31 @@ public class MkDocsBlogPluginTests
             Directory.Delete(docsRoot, recursive: true);
         }
     }
+
+    /// <summary><c>DiscoverAsync</c> publishes the blog index's nav metadata (path, title, order) so the nav plugin can title/order the section.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PublishesBlogIndexNavEntry()
+    {
+        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-mkblognav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        Directory.CreateDirectory(Path.Combine(docsRoot, "blog", "posts"));
+
+        try
+        {
+            MkDocsBlogPlugin plugin = new(new("blog", [.. "News"u8], false, 5));
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new());
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
+
+            await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(1);
+            var entry = plugin.SyntheticNavEntries[0];
+            await Assert.That(entry.RelativePath.Value).IsEqualTo("blog/index.md");
+            await Assert.That(Encoding.UTF8.GetString(entry.Title!)).IsEqualTo("News");
+            await Assert.That(entry.Order).IsEqualTo(5);
+            await Assert.That(entry.Hidden).IsFalse();
+        }
+        finally
+        {
+            Directory.Delete(docsRoot, recursive: true);
+        }
+    }
 }

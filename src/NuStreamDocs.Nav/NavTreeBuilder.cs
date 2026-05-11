@@ -13,6 +13,7 @@ using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 using NuStreamDocs.Markdown;
 using NuStreamDocs.Nav.Logging;
+using NuStreamDocs.Plugins;
 using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Nav;
@@ -56,16 +57,28 @@ internal static class NavTreeBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger that receives start/complete events.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
+    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls, ILogger logger) =>
+        Build(inputRoot, in options, useDirectoryUrls, [], logger);
+
+    /// <summary>Builds the nav tree, grafting in <paramref name="syntheticEntries"/> for pages that never touch disk.</summary>
+    /// <param name="inputRoot">Absolute path to the docs root.</param>
+    /// <param name="options">Plugin options.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    /// <param name="syntheticEntries">Nav metadata contributed by discovery plugins for synthetic pages; empty when none.</param>
+    /// <param name="logger">Logger that receives start/complete events.</param>
+    /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
     [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "Logging is not a performance bottleneck.")]
-    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls, ILogger logger)
+    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls, IReadOnlyList<SyntheticNavEntry> syntheticEntries, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
 
         if (!inputRoot.Exists())
         {
             NavLoggingHelper.LogNavBuildStart(logger, inputRoot, 0);
+            var emptyRoot = SyntheticNavGrafter.Graft(new([], default, isSection: true, [], useDirectoryUrls), syntheticEntries, useDirectoryUrls);
             NavLoggingHelper.LogNavBuildComplete(logger, 0, 0, 0);
-            return new([], default, isSection: true, [], useDirectoryUrls);
+            emptyRoot.AttachParents();
+            return emptyRoot;
         }
 
         var candidateCount = CountMarkdownFiles(inputRoot);
@@ -75,11 +88,14 @@ internal static class NavTreeBuilder
         var root = BuildSection(inputRoot, inputRoot, matcher, in options, useDirectoryUrls, logger) ??
                    new([], default, isSection: true, [], useDirectoryUrls);
 
+        // Graft in synthetic pages (generated API reference, etc.) the disk walk can't see.
+        root = SyntheticNavGrafter.Graft(root, syntheticEntries, useDirectoryUrls);
+
         var (sections, leaves) = TallyTree(root);
         var pruned = candidateCount - leaves;
         if (pruned < 0)
         {
-            // index promotion can produce extra leaves; clamp the displayed pruned count.
+            // index promotion and grafted synthetic pages can produce extra leaves; clamp the displayed pruned count.
             pruned = 0;
         }
 

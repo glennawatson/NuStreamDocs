@@ -4,6 +4,7 @@
 
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Blog.Common;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Blog;
@@ -13,13 +14,16 @@ namespace NuStreamDocs.Blog;
 /// generated index plus tag archives as synthetic pages on the build context
 /// before page discovery — nothing lands on disk in the source tree.
 /// </summary>
-public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IBuildDiscoverPlugin
+public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Configured options.</summary>
     private readonly WyamBlogOptions _options = ValidateOptions(options);
 
     /// <summary>Logger for diagnostics.</summary>
     private readonly ILogger _logger = logger;
+
+    /// <summary>Backing store for <see cref="SyntheticNavEntries"/>; populated synchronously in <see cref="DiscoverAsync"/>.</summary>
+    private SyntheticNavEntry[] _navEntries = [];
 
     /// <summary>Initializes a new instance of the <see cref="WyamBlogPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
@@ -35,8 +39,16 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
     public PluginPriority DiscoverPriority => new(PluginBand.Earliest);
 
     /// <inheritdoc/>
+    public IReadOnlyList<SyntheticNavEntry> SyntheticNavEntries => _navEntries;
+
+    /// <inheritdoc/>
     public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
+        // Publish the blog index's nav metadata up front (title/order come from the options, no
+        // generation needed) so the nav plugin can title/order the blog section even though it
+        // can't see synthetic pages.
+        _navEntries = [new SyntheticNavEntry(DirectoryPath.FromString(_options.PostsSubdirectory).UrlJoin((UrlPath)"index.md"), _options.IndexTitle, _options.NavOrder, Hidden: false)];
+
         var postsRoot = context.InputRoot / _options.PostsSubdirectory;
         await BlogContentGenerator.GenerateAsync(
             _logger,

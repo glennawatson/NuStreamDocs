@@ -24,7 +24,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// thousands of API pages. In <see cref="CSharpApiGeneratorMode.Direct"/> mode it stashes
 /// the merged catalog on <see cref="LastExtraction"/> without invoking an emitter.
 /// </remarks>
-public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IBuildDiscoverPlugin
+public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Forward-slash byte separating path segments in synthetic relative paths.</summary>
     private const byte SlashByte = (byte)'/';
@@ -35,6 +35,9 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     /// <summary>Optional logger handed to the pipeline.</summary>
     private readonly ILogger _logger = logger;
 
+    /// <summary>Backing store for <see cref="SyntheticNavEntries"/>; populated synchronously in <see cref="DiscoverAsync"/>.</summary>
+    private SyntheticNavEntry[] _navEntries = [];
+
     /// <summary>Initializes a new instance of the <see cref="CSharpApiGeneratorPlugin"/> class.</summary>
     /// <param name="options">Generator options.</param>
     public CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options)
@@ -44,6 +47,9 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
 
     /// <summary>Gets the most recent direct-extract result, or <c>null</c> when the plugin ran in <see cref="CSharpApiGeneratorMode.EmitMarkdown"/> or has not yet run.</summary>
     public DirectExtractionResult? LastExtraction { get; private set; }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<SyntheticNavEntry> SyntheticNavEntries => _navEntries;
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "csharp-apigenerator"u8;
@@ -64,6 +70,18 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         // The build pipeline pulls one page at a time so peak memory tracks the in-flight
         // page rather than the full catalog.
         var subdir = _options.OutputMarkdownSubdirectory;
+
+        // Publish the landing page's nav metadata synchronously — its title/order come
+        // straight from the options, no generation needed — so the nav plugin (runs later
+        // in the discover phase, can't see synthetic pages) can graft an "API" section
+        // without us holding any generated page bodies for it. The "API Reference" fallback
+        // mirrors ApiIndexWriter's default heading.
+        if (_options.EmitIndexPage)
+        {
+            var indexTitle = _options.IndexTitle is { Length: > 0 } configured ? configured : "API Reference"u8.ToArray();
+            _navEntries = [new SyntheticNavEntry(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexTitle, _options.IndexOrder, Hidden: false)];
+        }
+
         var channel = Channel.CreateUnbounded<SyntheticPage>(new()
         {
             SingleReader = true,

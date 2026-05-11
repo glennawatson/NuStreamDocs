@@ -124,9 +124,10 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         }
 
         _useDirectoryUrls = useDirectoryUrls;
+        var syntheticEntries = CollectSyntheticNavEntries(context.Plugins);
         _root = _options.CuratedEntries.Length > 0
             ? CuratedNavBuilder.Build(context.InputRoot, _options.CuratedEntries, useDirectoryUrls, _logger)
-            : NavTreeBuilder.Build(context.InputRoot, in _options, useDirectoryUrls, _logger);
+            : NavTreeBuilder.Build(context.InputRoot, in _options, useDirectoryUrls, syntheticEntries, _logger);
         _tree = NavTreeFlattener.Flatten(_root);
         _urlIndex = NavRenderer.BuildUrlIndex(_tree);
         _orderedLeaves = null;
@@ -271,6 +272,34 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Gets the typed nav root; for use from the plugin's own assembly + tests.</summary>
     /// <returns>The nav root, or null when <see cref="DiscoverAsync"/> has not yet run.</returns>
     internal NavNode? GetRoot() => _root;
+
+    /// <summary>Gathers the nav metadata contributed by any registered <see cref="ISyntheticNavProvider"/>.</summary>
+    /// <param name="plugins">Every registered plugin.</param>
+    /// <returns>The single provider's list when exactly one contributed (no copy), a combined list when several did, or an empty list when none.</returns>
+    private static IReadOnlyList<SyntheticNavEntry> CollectSyntheticNavEntries(IPlugin[] plugins)
+    {
+        IReadOnlyList<SyntheticNavEntry>? single = null;
+        List<SyntheticNavEntry>? combined = null;
+        for (var i = 0; i < plugins.Length; i++)
+        {
+            if (plugins[i] is not ISyntheticNavProvider provider || provider.SyntheticNavEntries.Count == 0)
+            {
+                continue;
+            }
+
+            if (single is null && combined is null)
+            {
+                single = provider.SyntheticNavEntries;
+            }
+            else
+            {
+                combined ??= [.. single!];
+                combined.AddRange(provider.SyntheticNavEntries);
+            }
+        }
+
+        return combined ?? single ?? [];
+    }
 
     /// <summary>True when <paramref name="candidateIndex"/> sits in the root's direct-child range.</summary>
     /// <param name="nodes">Flat tree node array.</param>
