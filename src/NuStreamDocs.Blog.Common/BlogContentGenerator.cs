@@ -28,8 +28,8 @@ public static class BlogContentGenerator
     /// <param name="options">Generation options.</param>
     /// <param name="sink">Destination synthetic-page sink the rendered pages are added to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task that completes once every page has been registered with the sink.</returns>
-    public static ValueTask GenerateAsync(
+    /// <returns>One path-only nav entry per post, ascending Order (0 = newest); empty when there are no posts. The blog index page's own nav entry is the caller's responsibility.</returns>
+    public static ValueTask<SyntheticNavEntry[]> GenerateAsync(
         ILogger logger,
         in BlogGenerationOptions options,
         SyntheticPageSink sink,
@@ -44,12 +44,8 @@ public static class BlogContentGenerator
     /// <param name="options">Generation options.</param>
     /// <param name="sink">Destination synthetic-page sink.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>
-    /// A task that completes once registration is done; the await is currently synchronous
-    /// but the API stays async-shaped to allow future I/O-bound enrichments without
-    /// breaking callers.
-    /// </returns>
-    private static async ValueTask GenerateCoreAsync(
+    /// <returns>Per-post nav entries (publish-date-descending); empty when there are no posts.</returns>
+    private static async ValueTask<SyntheticNavEntry[]> GenerateCoreAsync(
         ILogger logger,
         BlogGenerationOptions options,
         SyntheticPageSink sink,
@@ -74,7 +70,18 @@ public static class BlogContentGenerator
 
         if (posts.Length is 0)
         {
-            return;
+            return [];
+        }
+
+        // The scanner returns posts newest-first; carry that into the nav by handing each post an
+        // ascending Order (0 = newest). The nav builder grafts these onto the matching disk page
+        // nodes, replacing the default filename sort, so a date-prefixed blog section reads
+        // newest-first by default. Path-only — no title — so each disk page keeps its own
+        // frontmatter title.
+        var navEntries = new SyntheticNavEntry[posts.Length];
+        for (var i = 0; i < posts.Length; i++)
+        {
+            navEntries[i] = new SyntheticNavEntry(posts[i].RelativePath, Title: null, Order: i, Hidden: false);
         }
 
         var indexDirectory = options.IndexPath.Directory;
@@ -94,13 +101,10 @@ public static class BlogContentGenerator
         BlogIndexEmitter.WriteIndex(writer, options.IndexTitle, posts, indexDirectoryRelativeUtf8);
         sink.Add(new(indexSubdir.UrlJoin(indexFileName), writer.WrittenSpan.ToArray()));
 
-        var pagesBytes = BlogPagesFileEmitter.Render(posts);
-        sink.Add(new(indexSubdir.UrlJoin((UrlPath)".pages"), pagesBytes));
-
         if (!options.EmitArchives)
         {
             BlogLoggingHelper.LogIndexGenerated(logger, options.IndexPath.Value, 0);
-            return;
+            return navEntries;
         }
 
         var archiveDirectoryRelativeUtf8 = ComputeRelativeDirectoryUtf8(options.DocsRoot, options.ArchiveRoot);
@@ -118,6 +122,7 @@ public static class BlogContentGenerator
         }
 
         BlogLoggingHelper.LogIndexGenerated(logger, options.IndexPath.Value, archiveCount);
+        return navEntries;
     }
 
     /// <summary>Computes the relative directory path from <paramref name="docsRoot"/> to <paramref name="absoluteDirectory"/>, if any.</summary>

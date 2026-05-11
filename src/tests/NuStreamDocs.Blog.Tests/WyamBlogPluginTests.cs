@@ -111,4 +111,42 @@ public class WyamBlogPluginTests
             Directory.Delete(docsRoot, recursive: true);
         }
     }
+
+    /// <summary>The index entry is followed by one path-only entry per post, ascending Order with 0 = newest, so the nav lists posts newest-first.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PublishesPostNavEntriesNewestFirst()
+    {
+        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blogpostnav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var postsDir = Path.Combine(docsRoot, "Announcements");
+        Directory.CreateDirectory(postsDir);
+
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(postsDir, "2013-02-27-old.md"), "---\nTitle: Old\nPublished: 2013-02-27\n---\nbody");
+            await File.WriteAllTextAsync(Path.Combine(postsDir, "2020-06-15-mid.md"), "---\nTitle: Mid\nPublished: 2020-06-15\n---\nbody");
+            await File.WriteAllTextAsync(Path.Combine(postsDir, "2026-05-07-new.md"), "---\nTitle: New\nPublished: 2026-05-07\n---\nbody");
+
+            WyamBlogPlugin plugin = new(new("Announcements", [.. "Announcements"u8], emitTagArchives: false));
+            BuildDiscoverContext ctx = new(docsRoot, "/out", [], new());
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
+
+            var entries = plugin.SyntheticNavEntries;
+            await Assert.That(entries.Count).IsEqualTo(4);
+            await Assert.That(entries[0].RelativePath.Value).IsEqualTo("Announcements/index.md");
+
+            // Posts follow, newest first, with ascending Order and no title (the disk page keeps its own).
+            await Assert.That(entries[1].RelativePath.Value).IsEqualTo("Announcements/2026-05-07-new.md");
+            await Assert.That(entries[1].Order).IsEqualTo(0);
+            await Assert.That(entries[1].Title).IsNull();
+            await Assert.That(entries[2].RelativePath.Value).IsEqualTo("Announcements/2020-06-15-mid.md");
+            await Assert.That(entries[2].Order).IsEqualTo(1);
+            await Assert.That(entries[3].RelativePath.Value).IsEqualTo("Announcements/2013-02-27-old.md");
+            await Assert.That(entries[3].Order).IsEqualTo(2);
+        }
+        finally
+        {
+            Directory.Delete(docsRoot, recursive: true);
+        }
+    }
 }

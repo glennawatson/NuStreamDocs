@@ -44,13 +44,14 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
     /// <inheritdoc/>
     public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
-        // Publish the blog index's nav metadata up front (title/order come from the options, no
-        // generation needed) so the nav plugin can title/order the blog section even though it
-        // can't see synthetic pages.
-        _navEntries = [new SyntheticNavEntry(DirectoryPath.FromString(_options.PostsSubdirectory).UrlJoin((UrlPath)"index.md"), _options.IndexTitle, _options.NavOrder, Hidden: false)];
+        // Publish the blog index's nav metadata up front (title/order come from the options) so the
+        // section is anchored even if generation fails; the per-post entries (publish-date order)
+        // come back from the generator and are merged onto the disk page nodes by the nav grafter.
+        var indexEntry = new SyntheticNavEntry(DirectoryPath.FromString(_options.PostsSubdirectory).UrlJoin((UrlPath)"index.md"), _options.IndexTitle, _options.NavOrder, Hidden: false);
+        _navEntries = [indexEntry];
 
         var postsRoot = context.InputRoot / _options.PostsSubdirectory;
-        await BlogContentGenerator.GenerateAsync(
+        var postEntries = await BlogContentGenerator.GenerateAsync(
             _logger,
             new(
                 PostsRoot: postsRoot,
@@ -62,6 +63,8 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
                 ArchiveFallbackSlug: [.. "tag"u8]),
             context.SyntheticPages,
             cancellationToken).ConfigureAwait(false);
+
+        _navEntries = [indexEntry, .. postEntries];
     }
 
     /// <summary>Validates and returns <paramref name="opts"/>.</summary>

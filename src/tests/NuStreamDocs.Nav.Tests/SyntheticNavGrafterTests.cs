@@ -74,6 +74,40 @@ public class SyntheticNavGrafterTests
         await Assert.That(articles.Children[0].RelativePath.Value).IsEqualTo("articles/2025-01-01-post.md");
     }
 
+    /// <summary>A synthetic page entry transfers its Order onto the matching disk page, keeping the disk page's own title; the section re-sorts by the new Order.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task SyntheticPageEntryTransfersOrderOntoDiskPage()
+    {
+        // Disk: an `articles` section with no index page, two date-prefixed posts (filename order = oldest first).
+        var oldPost = new NavNode("Old Post", (FilePath)"articles/2013-02-27-old.md", isSection: false, [], useDirectoryUrls: true);
+        var newPost = new NavNode("New Post", (FilePath)"articles/2026-05-07-new.md", isSection: false, [], useDirectoryUrls: true);
+        var diskArticles = new NavNode("articles", (FilePath)"articles", isSection: true, [oldPost, newPost], default, useDirectoryUrls: true);
+        var root = Root(diskArticles);
+
+        // Synthetic: the blog index entry plus per-post entries carrying ascending Order (0 = newest).
+        SyntheticNavEntry[] entries =
+        [
+            new((FilePath)"articles/index.md", [.. "Articles"u8], 3, Hidden: false),
+            new((FilePath)"articles/2026-05-07-new.md", Title: null, Order: 0, Hidden: false),
+            new((FilePath)"articles/2013-02-27-old.md", Title: null, Order: 1, Hidden: false),
+        ];
+
+        var result = SyntheticNavGrafter.Graft(root, entries, useDirectoryUrls: true);
+        var articles = FindChild(result, "articles")!;
+
+        await Assert.That(articles.IndexPath.Value).IsEqualTo("articles/index.md");
+        await Assert.That(articles.Children.Length).IsEqualTo(2);
+
+        // Newest first (Order 0 then 1), and each post keeps its disk-frontmatter title.
+        await Assert.That(articles.Children[0].RelativePath.Value).IsEqualTo("articles/2026-05-07-new.md");
+        await Assert.That(articles.Children[0].Order).IsEqualTo(0);
+        await Assert.That(Encoding.UTF8.GetString(articles.Children[0].Title)).IsEqualTo("New Post");
+        await Assert.That(articles.Children[1].RelativePath.Value).IsEqualTo("articles/2013-02-27-old.md");
+        await Assert.That(articles.Children[1].Order).IsEqualTo(1);
+        await Assert.That(Encoding.UTF8.GetString(articles.Children[1].Title)).IsEqualTo("Old Post");
+    }
+
     /// <summary>A hidden index entry produces no section.</summary>
     /// <returns>Async test.</returns>
     [Test]

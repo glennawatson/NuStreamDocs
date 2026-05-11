@@ -136,7 +136,7 @@ internal static class SyntheticNavGrafter
         var children = MergeSectionChildren(diskSection, synthetic, useDirectoryUrls);
         ResolveMergedMetadata(diskSection, synthetic, out var title, out var indexPath, out var order);
 
-        if (children.Length == diskSection.Children.Length
+        if (ChildrenUnchanged(children, diskSection.Children)
             && ReferenceEquals(title, diskSection.Title)
             && indexPath.Value == diskSection.IndexPath.Value
             && order == diskSection.Order)
@@ -150,7 +150,7 @@ internal static class SyntheticNavGrafter
         };
     }
 
-    /// <summary>Combines a disk section's children with any synthetic sub-sections/pages it doesn't already have.</summary>
+    /// <summary>Combines a disk section's children with the synthetic section: new sub-pages/sections are added; a synthetic page matching a disk page transfers its Order/title onto it.</summary>
     /// <param name="diskSection">The disk section node.</param>
     /// <param name="synthetic">The matching synthetic working section.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
@@ -168,7 +168,12 @@ internal static class SyntheticNavGrafter
 
         foreach (var page in synthetic.Pages)
         {
-            if (!HasChildNamed(diskSection.Children, StemOf(page.RelativePath), isSection: false))
+            var existing = IndexOfPageNamed(children, StemOf(page.RelativePath));
+            if (existing >= 0)
+            {
+                children[existing] = ApplySyntheticPageMetadata(children[existing], page, useDirectoryUrls);
+            }
+            else
             {
                 children.Add(ToPageNode(page, useDirectoryUrls));
             }
@@ -177,6 +182,65 @@ internal static class SyntheticNavGrafter
         var childArray = children.ToArray();
         Array.Sort(childArray, NavNodeFileNameComparer.Instance);
         return childArray;
+    }
+
+    /// <summary>True when <paramref name="a"/> and <paramref name="b"/> hold the same node instances in the same order.</summary>
+    /// <param name="a">First array.</param>
+    /// <param name="b">Second array.</param>
+    /// <returns>True when unchanged.</returns>
+    private static bool ChildrenUnchanged(NavNode[] a, NavNode[] b)
+    {
+        if (a.Length != b.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < a.Length; i++)
+        {
+            if (!ReferenceEquals(a[i], b[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>Index of the page-typed child named <paramref name="name"/> in <paramref name="children"/>, or -1.</summary>
+    /// <param name="children">Child list.</param>
+    /// <param name="name">Page file stem.</param>
+    /// <returns>The index, or -1.</returns>
+    private static int IndexOfPageNamed(List<NavNode> children, string name)
+    {
+        for (var i = 0; i < children.Count; i++)
+        {
+            if (!children[i].IsSection && NameOf(children[i]).Equals(name, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>Returns <paramref name="diskPage"/> with the synthetic entry's <c>Order</c> (and title, when the entry carries one) applied, or the same instance when nothing changed.</summary>
+    /// <param name="diskPage">The disk page node.</param>
+    /// <param name="synthetic">The matching synthetic page entry.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    /// <returns>The page node with synthetic metadata applied.</returns>
+    private static NavNode ApplySyntheticPageMetadata(NavNode diskPage, in PageEntry synthetic, bool useDirectoryUrls)
+    {
+        var title = synthetic.Title is { Length: > 0 } syntheticTitle ? syntheticTitle : diskPage.Title;
+        var order = synthetic.Order ?? diskPage.Order;
+        if (ReferenceEquals(title, diskPage.Title) && order == diskPage.Order)
+        {
+            return diskPage;
+        }
+
+        return new NavNode(title, diskPage.RelativePath, isSection: false, diskPage.Children, diskPage.IndexPath, useDirectoryUrls)
+        {
+            Order = order
+        };
     }
 
     /// <summary>Picks the title/index/order for a merged section: a disk index page wins; otherwise the synthetic index fills the gaps.</summary>
