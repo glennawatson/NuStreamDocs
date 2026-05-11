@@ -65,7 +65,12 @@ public class PrivacyPluginLifecycleTests
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(fixture.Output)
-                .UsePrivacy()
+
+                // A loopback fetch never takes seconds — but a heavily-contended CI agent can stall one
+                // past the default 10s timeout, which then retries and double-hits the server. Pin a
+                // generous timeout so the hit count is deterministic; the de-dup (one registry entry)
+                // is still what makes this exactly 1.
+                .UsePrivacy(static opts => opts with { DownloadTimeout = TimeSpan.FromSeconds(60) })
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/shared.png")).IsEqualTo(1);
@@ -182,10 +187,13 @@ public class PrivacyPluginLifecycleTests
             var url = $"{server.BaseUrl}cached.png";
             await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![]({url})\n");
 
+            // Generous timeout: a contended CI agent can stall a loopback fetch past the default 10s
+            // timeout, which then retries and double-hits the server. Pinning it keeps the hit count
+            // deterministic so the cache-vs-network assertions below stay meaningful.
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(fixture.Output)
-                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir))
+                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
@@ -195,7 +203,7 @@ public class PrivacyPluginLifecycleTests
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(freshOutput)
-                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir))
+                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
