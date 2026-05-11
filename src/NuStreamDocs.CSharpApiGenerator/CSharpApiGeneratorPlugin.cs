@@ -18,11 +18,13 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// Plugin that runs the C# reference generator before page discovery.
 /// </summary>
 /// <remarks>
-/// In <see cref="CSharpApiGeneratorMode.EmitMarkdown"/> mode the plugin streams generated
-/// pages straight into the build pipeline as <see cref="SyntheticPage"/>s — no intermediate
-/// <c>.md</c> files land on disk, so the source tree stays clean even on packages that emit
-/// thousands of API pages. In <see cref="CSharpApiGeneratorMode.Direct"/> mode it stashes
-/// the merged catalog on <see cref="LastExtraction"/> without invoking an emitter.
+/// In <see cref="CSharpApiGeneratorMode.EmitMarkdown"/> mode the plugin generates the pages, hands
+/// each one to the build pipeline as a <see cref="SyntheticPage"/>, and records a lightweight
+/// <see cref="SyntheticNavEntry"/> (relative path only) per page so the nav plugin can mirror the
+/// generated tree. Generation runs to completion inside <see cref="DiscoverAsync"/> — the nav plugin
+/// runs later in the same phase and needs the full page list — so the page bodies are buffered until
+/// render drains them; no intermediate <c>.md</c> files land on disk. In <see cref="CSharpApiGeneratorMode.Direct"/>
+/// mode it stashes the merged catalog on <see cref="LastExtraction"/> without invoking an emitter.
 /// </remarks>
 public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
@@ -58,36 +60,38 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     public PluginPriority DiscoverPriority => new(PluginBand.Earliest);
 
     /// <inheritdoc/>
-    public ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
+    public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
         if (_options.Mode is CSharpApiGeneratorMode.Direct)
         {
-            return new(RunDirectAsync(cancellationToken));
+            await RunDirectAsync(cancellationToken).ConfigureAwait(false);
+            return;
         }
 
-        // EmitMarkdown mode: build a Channel-backed sink, kick off the SourceDocParser
-        // run in the background, and register the channel reader as a SyntheticPage stream.
-        // The build pipeline pulls one page at a time so peak memory tracks the in-flight
-        // page rather than the full catalog.
+        // EmitMarkdown mode: generation runs to completion here (not on a background task) because
+        // the nav plugin runs later in this same phase and needs the full page list. The page bodies
+        // pile up in the unbounded channel until render drains them — the trade we accept for a
+        // complete nav tree without spilling intermediate .md files onto disk. We retain only the
+        // lightweight per-page nav metadata (the relative path); titles fall back to the path stem.
         var subdir = _options.OutputMarkdownSubdirectory;
-
-        // Publish the landing page's nav metadata synchronously — its title/order come
-        // straight from the options, no generation needed — so the nav plugin (runs later
-        // in the discover phase, can't see synthetic pages) can graft an "API" section
-        // without us holding any generated page bodies for it. The "API Reference" fallback
-        // mirrors ApiIndexWriter's default heading.
-        if (_options.EmitIndexPage)
-        {
-            var indexTitle = _options.IndexTitle is { Length: > 0 } configured ? configured : "API Reference"u8.ToArray();
-            _navEntries = [new SyntheticNavEntry(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexTitle, _options.IndexOrder, Hidden: false)];
-        }
-
         var channel = Channel.CreateUnbounded<SyntheticPage>(new()
         {
             SingleReader = true,
             SingleWriter = false,
             AllowSynchronousContinuations = false
         });
+
+        // Pre-seed the landing-page nav entry so a totally-empty generation (or a generation that
+        // throws) still leaves the "API" section pointed somewhere sensible. The "API Reference"
+        // fallback mirrors ApiIndexWriter's default heading.
+        var navEntries = new ConcurrentBag<SyntheticNavEntry>();
+        if (_options.EmitIndexPage)
+        {
+            var indexTitle = _options.IndexTitle is { Length: > 0 } configured ? configured : "API Reference"u8.ToArray();
+            navEntries.Add(new SyntheticNavEntry(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexTitle, _options.IndexOrder, Hidden: false));
+        }
+
+        _navEntries = [.. navEntries];
 
         ConcurrentDictionary<byte[], byte> namespaces = new(ByteArrayComparer.Instance);
         var sink = new CallbackPageSink((relativePath, bytes) =>
@@ -107,26 +111,27 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
                 }
             }
 
-            channel.Writer.TryWrite(new(BuildVirtualPath(subdir, relBytes), bytes));
+            var virtualPath = BuildVirtualPath(subdir, relBytes);
+            channel.Writer.TryWrite(new(virtualPath, bytes));
+
+            // Path-only entry: the grafter derives section titles from directory names and page
+            // titles from file stems — clean for the vast majority of API pages — so we don't
+            // retain a title byte[] per page.
+            navEntries.Add(new SyntheticNavEntry(virtualPath, Title: null, Order: null, Hidden: false));
         });
 
-        var generation = Task.Run(
-            async () =>
-            {
-                try
-                {
-                    await CSharpApiGenerator.GenerateAsync(_options, sink, _logger, cancellationToken).ConfigureAwait(false);
-                    EmitIndexPageIfRequested(channel.Writer, subdir, namespaces);
-                }
-                finally
-                {
-                    channel.Writer.Complete();
-                }
-            },
-            cancellationToken);
+        try
+        {
+            await CSharpApiGenerator.GenerateAsync(_options, sink, _logger, cancellationToken).ConfigureAwait(false);
+            EmitIndexPageIfRequested(channel.Writer, subdir, namespaces);
+        }
+        finally
+        {
+            channel.Writer.Complete();
+            _navEntries = [.. navEntries];
+        }
 
-        context.SyntheticPages.RegisterStream(StreamFromChannelAsync(channel.Reader, generation, cancellationToken));
-        return ValueTask.CompletedTask;
+        context.SyntheticPages.RegisterStream(StreamFromChannelAsync(channel.Reader, cancellationToken));
     }
 
     /// <summary>Validates and returns <paramref name="opts"/>.</summary>
@@ -159,22 +164,18 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         return DirectoryPath.FromString(subdir).UrlJoin(emitterRelativePath);
     }
 
-    /// <summary>Drains <paramref name="reader"/>, surfacing any background-task exception once the channel completes.</summary>
-    /// <param name="reader">Channel reader the sink writes pages into.</param>
-    /// <param name="generation">Background extraction task; awaited after the channel closes so its exception (if any) reaches the pipeline.</param>
+    /// <summary>Drains <paramref name="reader"/>; the channel is already fully written and completed by the time render enumerates this.</summary>
+    /// <param name="reader">Channel reader the sink wrote pages into during <see cref="DiscoverAsync"/>.</param>
     /// <param name="cancellationToken">Cancellation token observed between pages.</param>
     /// <returns>The async stream of synthetic pages handed to the pipeline.</returns>
     private static async IAsyncEnumerable<SyntheticPage> StreamFromChannelAsync(
         ChannelReader<SyntheticPage> reader,
-        Task generation,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         await foreach (var page in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
             yield return page;
         }
-
-        await generation.ConfigureAwait(false);
     }
 
     /// <summary>Runs <see cref="CSharpApiGenerator.ExtractAsync"/> and stashes the result on <see cref="LastExtraction"/>.</summary>

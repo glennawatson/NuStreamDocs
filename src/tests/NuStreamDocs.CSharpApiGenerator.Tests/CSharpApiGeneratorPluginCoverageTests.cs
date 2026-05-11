@@ -58,7 +58,7 @@ public class CSharpApiGeneratorPluginCoverageTests
         await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(0);
     }
 
-    /// <summary><c>DiscoverAsync</c> publishes the <c>api/index.md</c> nav entry carrying the configured title and order.</summary>
+    /// <summary><c>DiscoverAsync</c> pre-seeds the <c>api/index.md</c> nav entry carrying the configured title and order, even when generation produces no pages.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DiscoverPublishesIndexNavEntry()
@@ -70,7 +70,14 @@ public class CSharpApiGeneratorPluginCoverageTests
         });
         BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
 
-        await plugin.DiscoverAsync(ctx, CancellationToken.None);
+        try
+        {
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
+        }
+        catch (InvalidOperationException)
+        {
+            // EmptySource yields no TFM groups; the index entry is pre-seeded before generation, so it's still there.
+        }
 
         await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(1);
         var entry = plugin.SyntheticNavEntries[0];
@@ -88,7 +95,14 @@ public class CSharpApiGeneratorPluginCoverageTests
         CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with { EmitIndexPage = false });
         BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
 
-        await plugin.DiscoverAsync(ctx, CancellationToken.None);
+        try
+        {
+            await plugin.DiscoverAsync(ctx, CancellationToken.None);
+        }
+        catch (InvalidOperationException)
+        {
+            // EmptySource yields no TFM groups; the check below is about the disabled-index behaviour, not generation.
+        }
 
         await Assert.That(plugin.SyntheticNavEntries.Count).IsEqualTo(0);
     }
