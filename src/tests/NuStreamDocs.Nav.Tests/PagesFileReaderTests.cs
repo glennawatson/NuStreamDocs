@@ -107,6 +107,25 @@ public class PagesFileReaderTests
         await Assert.That(JoinEntries(parsed.OrderedEntries)).IsEqualTo("intro.md|subsection");
     }
 
+    /// <summary><c>order: desc</c> (or <c>descending</c>) sets <c>ReverseOrder</c>.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task OrderDescSetsReverseOrder()
+    {
+        await Assert.That(Parse("order: desc\n").ReverseOrder).IsTrue();
+        await Assert.That(Parse("order: descending\n").ReverseOrder).IsTrue();
+    }
+
+    /// <summary><c>order: asc</c>, an unknown value, or no <c>order:</c> key leaves <c>ReverseOrder</c> false.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task NonDescOrderLeavesReverseOrderFalse()
+    {
+        await Assert.That(Parse("order: asc\n").ReverseOrder).IsFalse();
+        await Assert.That(Parse("order: whatever\n").ReverseOrder).IsFalse();
+        await Assert.That(Parse("title: Section\n").ReverseOrder).IsFalse();
+    }
+
     /// <summary>Helper to drive the parser over UTF-8 bytes.</summary>
     /// <param name="text">Source text.</param>
     /// <returns>Parsed <c>PagesFile</c>.</returns>

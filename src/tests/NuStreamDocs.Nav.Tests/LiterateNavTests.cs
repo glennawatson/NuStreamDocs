@@ -92,4 +92,46 @@ public class LiterateNavTests
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         await Assert.That(Array.Exists(root.Children, static c => c.IsSection && System.Text.Encoding.UTF8.GetString(c.Title) == "secret")).IsFalse();
     }
+
+    /// <summary><c>order: desc</c> reverses a section's default (filename) child ordering — newest-first for a date-prefixed section.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task OrderDescReversesChildren()
+    {
+        using var fixture = TempDocsTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "2013-01-01-old.md"), "# old");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "2020-06-15-mid.md"), "# mid");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "2026-05-07-new.md"), "# new");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, ".pages"), "order: desc\n");
+
+        var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
+        var names = new string[root.Children.Length];
+        for (var i = 0; i < root.Children.Length; i++)
+        {
+            names[i] = Path.GetFileNameWithoutExtension(root.Children[i].RelativePath);
+        }
+
+        await Assert.That(string.Join('|', names)).IsEqualTo("2026-05-07-new|2020-06-15-mid|2013-01-01-old");
+    }
+
+    /// <summary>An explicit <c>nav:</c> list still wins over <c>order: desc</c>.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task NavListBeatsOrderDesc()
+    {
+        using var fixture = TempDocsTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "a.md"), "# a");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "b.md"), "# b");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "c.md"), "# c");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, ".pages"), "order: desc\nnav:\n  - b.md\n  - a.md\n");
+
+        var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
+        var names = new string[root.Children.Length];
+        for (var i = 0; i < root.Children.Length; i++)
+        {
+            names[i] = Path.GetFileNameWithoutExtension(root.Children[i].RelativePath);
+        }
+
+        await Assert.That(string.Join('|', names)).IsEqualTo("b|a|c");
+    }
 }

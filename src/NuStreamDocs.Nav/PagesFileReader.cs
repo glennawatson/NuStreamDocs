@@ -22,6 +22,7 @@ internal static class PagesFileReader
     {
         byte[] title = [];
         var hide = false;
+        var reverseOrder = false;
         PagesEntry[] nav = [];
 
         var cursor = 0;
@@ -42,6 +43,10 @@ internal static class PagesFileReader
                 {
                     hide = ReadBool(trimmed["hide:"u8.Length..]);
                 }
+                else if (trimmed.StartsWith("order:"u8))
+                {
+                    reverseOrder = IsDescending(trimmed["order:"u8.Length..]);
+                }
                 else if (trimmed.StartsWith("nav:"u8))
                 {
                     nav = ReadBlockList(source, lineEnd);
@@ -51,7 +56,16 @@ internal static class PagesFileReader
             cursor = lineEnd;
         }
 
-        return new(title, nav, hide);
+        return new(title, nav, hide, reverseOrder);
+    }
+
+    /// <summary>Reads a <c>.pages</c> <c>order:</c> value; true for <c>desc</c>/<c>descending</c> (anything else, including <c>asc</c>, keeps the default order).</summary>
+    /// <param name="span">Bytes after the <c>order:</c> key.</param>
+    /// <returns>True to reverse the section's default ordering.</returns>
+    private static bool IsDescending(ReadOnlySpan<byte> span)
+    {
+        var trimmed = YamlByteScanner.TrimWhitespace(span);
+        return trimmed.SequenceEqual("desc"u8) || trimmed.SequenceEqual("descending"u8);
     }
 
     /// <summary>Reads a YAML block list starting at <paramref name="cursor"/> until indentation drops or a non-list line is hit.</summary>

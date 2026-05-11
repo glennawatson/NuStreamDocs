@@ -327,6 +327,13 @@ internal static class NavTreeBuilder
             {
                 children = ApplyOrdering(children, pagesOverride.OrderedEntries, useDirectoryUrls);
             }
+            else if (pagesOverride.ReverseOrder)
+            {
+                // `.pages` `order: desc` — flip the default ordering (e.g. a date-prefixed
+                // blog section that should list newest first). MergeChildren returns a fresh
+                // array, so reversing in place is safe.
+                Array.Reverse(children);
+            }
 
             var sectionTitle = ResolveSectionTitle(root, directory, indexPath, pagesOverride);
             var sectionRelative = directory == root
