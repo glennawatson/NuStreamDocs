@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Redirects</PackageId>
+    <Description>Emits host deploy-config at build time: a Netlify/Cloudflare-Pages `_redirects` file and a meta-refresh HTML page for every declared redirect (so renamed or moved pages don't 404 on any static host), plus a `_headers` file (with sensible immutable-caching defaults for the content-hashed asset directories, and any rules you add). Redirects come from `UseRedirects(...)` config and from a `redirect_from` key in page frontmatter.</Description>
+    <RootNamespace>NuStreamDocs.Redirects</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Redirects.Tests" />
+  </ItemGroup>
+
+</Project>

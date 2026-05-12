@@ -305,6 +305,7 @@ Each is a separate assembly so you only pull what you use:
 | [`NuStreamDocs.Privacy`][Priv] | [![ver][PrivV]][Priv] | `.UsePrivacy()` | Localizes external assets under `assets/external/` and rewrites HTML to point at the local copies. Byte-level UTF-8 throughout. |
 | [`NuStreamDocs.Fonts`][Fonts] | [![ver][FontsV]][Fonts] | `.UseFonts(...)` | Self-hosts declared fonts (Google Fonts, Fontsource, or local files): downloads the woff2 at build time, generates `@font-face` + `<link rel="preload">`, and emits a system-font fallback with `size-adjust` / `ascent-override` so the swap to the webfont causes zero layout shift. No third-party requests at runtime. Theme presets: `Material3Fonts.Default`, `MaterialFonts.Default`. |
 | [`NuStreamDocs.Transitions`][Trans] | [![ver][TransV]][Trans] | `.UseTransitions(...)` | Client-side routing + view transitions: ships a tiny vanilla-JS router that intercepts same-origin links, swaps the content region in place (animated via the browser's View Transitions API), keeps the sidebar / search / scroll position, and pre-fetches links on hover so navigation feels instant. No JS framework; degrades to plain full-page navigation when JS or the View Transitions API is unavailable. |
+| [`NuStreamDocs.Redirects`][Redir] | [![ver][RedirV]][Redir] | `.UseRedirects(...)` | Emits deploy-host config at build time: a Netlify/Cloudflare-Pages `_redirects` file and a meta-refresh HTML page for every declared redirect (so renamed/moved pages don't 404 on any static host), plus a `_headers` file with immutable-caching defaults for the content-hashed asset dirs. Redirects come from `UseRedirects(...)` config and a `redirect_from` key in page frontmatter. |
 | [`NuStreamDocs.Optimize`][Opt] | [![ver][OptV]][Opt] | `.UseOptimize()`, `.UseHtmlMinify()` | Pre-compresses emitted output as `.gz` / `.br` siblings (truly-async .NET 10 stream APIs). HTML minify pass. |
 
 ### C# API reference
@@ -431,6 +432,8 @@ Each is a separate assembly so you only pull what you use:
 [FontsV]: https://img.shields.io/nuget/v/NuStreamDocs.Fonts.svg?label=
 [Trans]: https://www.nuget.org/packages/NuStreamDocs.Transitions/
 [TransV]: https://img.shields.io/nuget/v/NuStreamDocs.Transitions.svg?label=
+[Redir]: https://www.nuget.org/packages/NuStreamDocs.Redirects/
+[RedirV]: https://img.shields.io/nuget/v/NuStreamDocs.Redirects.svg?label=
 [Opt]: https://www.nuget.org/packages/NuStreamDocs.Optimize/
 [OptV]: https://img.shields.io/nuget/v/NuStreamDocs.Optimize.svg?label=
 [Api]: https://www.nuget.org/packages/NuStreamDocs.CSharpApiGenerator/
