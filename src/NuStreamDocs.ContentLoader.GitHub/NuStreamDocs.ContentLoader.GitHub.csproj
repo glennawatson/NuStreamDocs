@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.ContentLoader.GitHub</PackageId>
+    <Description>NuStreamDocs content loaders for GitHub: pull the Markdown files under a path in a repo (any branch / tag / commit), or turn a repo's releases into changelog pages. Uses the GitHub REST API directly — no Octokit dependency.</Description>
+    <RootNamespace>NuStreamDocs.ContentLoader.GitHub</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs.ContentLoader\NuStreamDocs.ContentLoader.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.GitHub.Tests" />
+  </ItemGroup>
+
+</Project>

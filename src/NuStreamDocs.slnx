@@ -52,6 +52,9 @@
   <Project Path="NuStreamDocs.Csp/NuStreamDocs.Csp.csproj" />
   <Project Path="NuStreamDocs.Audit/NuStreamDocs.Audit.csproj" />
   <Project Path="NuStreamDocs.ContentLoader/NuStreamDocs.ContentLoader.csproj" />
+  <Project Path="NuStreamDocs.ContentLoader.Feed/NuStreamDocs.ContentLoader.Feed.csproj" />
+  <Project Path="NuStreamDocs.ContentLoader.GitHub/NuStreamDocs.ContentLoader.GitHub.csproj" />
+  <Project Path="NuStreamDocs.ContentLoader.OpenApi/NuStreamDocs.ContentLoader.OpenApi.csproj" />
   <Project Path="NuStreamDocs.SphinxInventory/NuStreamDocs.SphinxInventory.csproj" />
   <Project Path="NuStreamDocs.Icons.MaterialDesign/NuStreamDocs.Icons.MaterialDesign.csproj" />
   <Project Path="NuStreamDocs.Arithmatex/NuStreamDocs.Arithmatex.csproj" />
@@ -108,6 +111,9 @@
     <Project Path="tests/NuStreamDocs.Csp.Tests/NuStreamDocs.Csp.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Audit.Tests/NuStreamDocs.Audit.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.ContentLoader.Tests/NuStreamDocs.ContentLoader.Tests.csproj" />
+    <Project Path="tests/NuStreamDocs.ContentLoader.Feed.Tests/NuStreamDocs.ContentLoader.Feed.Tests.csproj" />
+    <Project Path="tests/NuStreamDocs.ContentLoader.GitHub.Tests/NuStreamDocs.ContentLoader.GitHub.Tests.csproj" />
+    <Project Path="tests/NuStreamDocs.ContentLoader.OpenApi.Tests/NuStreamDocs.ContentLoader.OpenApi.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Arithmatex.Tests/NuStreamDocs.Arithmatex.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Arithmatex.MathJax.Tests/NuStreamDocs.Arithmatex.MathJax.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Bibliography.Tests/NuStreamDocs.Bibliography.Tests.csproj" />

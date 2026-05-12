@@ -288,6 +288,15 @@ Each is a separate assembly so you only pull what you use:
 | [`NuStreamDocs.Blog.MkDocs`][BlogMk] | [![ver][BlogMkV]][BlogMk] | `.UseMkDocsBlog()` | mkdocs-material flavored: posts under `blog/posts/` with categories/date/authors frontmatter. |
 | [`NuStreamDocs.Feed`][Feed] | [![ver][FeedV]][Feed] | `.UseFeed()` | RSS 2.0 / Atom feed generation off the same blog scanner. |
 
+### Content sources (pull pages from outside the input folder)
+
+| Package | NuGet | Builder | What |
+|---|---|---|---|
+| [`NuStreamDocs.ContentLoader`][CL] | [![ver][CLV]][CL] | `.UseContentLoaders(...)` | Lets pages come from somewhere other than local Markdown. An `IContentLoader` emits in-memory synthetic pages that flow through the normal render pipeline. Built-ins: `FileContentLoader` (a local JSON/YAML collection → one page per object, field-mapped: route template, body key, frontmatter); `HttpContentLoader` (a JSON HTTP endpoint, GET or POST-with-body for GraphQL); `RawDocumentContentLoader` (a fixed list of raw remote Markdown URLs, body used verbatim — works for GitHub/GitLab/Gitea/CDN raw links). |
+| [`NuStreamDocs.ContentLoader.Feed`][CLFeed] | [![ver][CLFeedV]][CLFeed] | `new FeedContentLoader(...)` | Pulls an external RSS/Atom feed and turns each item into a page (title/date/source/external_url frontmatter, item content as the body) — the consume-side counterpart to `NuStreamDocs.Feed`. |
+| [`NuStreamDocs.ContentLoader.GitHub`][CLGH] | [![ver][CLGHV]][CLGH] | `new GitHubContentLoader(...)`, `new GitHubReleasesContentLoader(...)` | Pull the Markdown under a path in a GitHub repo at any branch / tag / commit (conceptual docs living next to the product code), or turn a repo's releases into changelog pages. Uses the GitHub REST API directly — no Octokit; optional token for private repos / rate limits. |
+| [`NuStreamDocs.ContentLoader.OpenApi`][CLOAS] | [![ver][CLOASV]][CLOAS] | `new OpenApiContentLoader(...)` | Turns an OpenAPI 3.x spec (JSON or YAML, local file or URL) into reference pages — one page per tag, each operation rendered with its parameters table, request body, and responses. |
+
 ### Media
 
 | Package | NuGet | Builder | What |
@@ -440,6 +449,14 @@ Each is a separate assembly so you only pull what you use:
 [RedirV]: https://img.shields.io/nuget/v/NuStreamDocs.Redirects.svg?label=
 [Audit]: https://www.nuget.org/packages/NuStreamDocs.Audit/
 [AuditV]: https://img.shields.io/nuget/v/NuStreamDocs.Audit.svg?label=
+[CL]: https://www.nuget.org/packages/NuStreamDocs.ContentLoader/
+[CLV]: https://img.shields.io/nuget/v/NuStreamDocs.ContentLoader.svg?label=
+[CLFeed]: https://www.nuget.org/packages/NuStreamDocs.ContentLoader.Feed/
+[CLFeedV]: https://img.shields.io/nuget/v/NuStreamDocs.ContentLoader.Feed.svg?label=
+[CLGH]: https://www.nuget.org/packages/NuStreamDocs.ContentLoader.GitHub/
+[CLGHV]: https://img.shields.io/nuget/v/NuStreamDocs.ContentLoader.GitHub.svg?label=
+[CLOAS]: https://www.nuget.org/packages/NuStreamDocs.ContentLoader.OpenApi/
+[CLOASV]: https://img.shields.io/nuget/v/NuStreamDocs.ContentLoader.OpenApi.svg?label=
 [Opt]: https://www.nuget.org/packages/NuStreamDocs.Optimize/
 [OptV]: https://img.shields.io/nuget/v/NuStreamDocs.Optimize.svg?label=
 [Api]: https://www.nuget.org/packages/NuStreamDocs.CSharpApiGenerator/
