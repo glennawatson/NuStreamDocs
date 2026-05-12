@@ -19,6 +19,7 @@
     <InternalsVisibleTo Include="NuStreamDocs.Search.Tests" />
     <InternalsVisibleTo Include="NuStreamDocs.Search.Pagefind.Tests" />
     <InternalsVisibleTo Include="NuStreamDocs.Search.Lunr.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Sqlite.Tests" />
   </ItemGroup>
 
 </Project>

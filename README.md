@@ -226,6 +226,7 @@ links to the package on NuGet — the badge tracks the current published version
 | [`NuStreamDocs.Search`][Search] | [![ver][SearchV]][Search] | (base; pair with one of the engines below) | Shared `SearchPluginBase`, head-extra wiring, section-priority meta. |
 | [`NuStreamDocs.Search.Pagefind`][Pagefind] | [![ver][PagefindV]][Pagefind] | `.UsePagefindSearch()` | Pagefind WASM index with snippets. Ships per-RID native binary; runs the CLI at finalize. |
 | [`NuStreamDocs.Search.Lunr`][Lunr] | [![ver][LunrV]][Lunr] | `.UseLunrSearch()` | Lunr-compatible JSON index. Pure-JS runtime, no native binary. |
+| [`NuStreamDocs.Search.Sqlite`][SqliteSearch] | [![ver][SqliteSearchV]][SqliteSearch] | `.UseSqliteSearch()` | One `search.db` (SQLite/FTS5), queried client-side via `sql.js-httpvfs` over HTTP range requests. Pick this over Pagefind when the site is large enough that Pagefind's per-page fragment files would blow a static host's file-count limit (e.g. a multi-thousand-page API reference on Cloudflare Pages). |
 | [`NuStreamDocs.MarkdownExtensions`][MdExt] | [![ver][MdExtV]][MdExt] | `.UseCommonMarkdownExtensions()` | Admonitions, content tabs, collapsible details, check-lists, mark spans, footnotes, definition lists, **abbreviations** (`*[…]: definition`), tables, attr-list, mark, caret/tilde, critic-markup, inline-hilite, markdown-in-html. |
 
 ### Authoring helpers
@@ -360,6 +361,8 @@ Each is a separate assembly so you only pull what you use:
 [PagefindV]: https://img.shields.io/nuget/v/NuStreamDocs.Search.Pagefind.svg?label=
 [Lunr]: https://www.nuget.org/packages/NuStreamDocs.Search.Lunr/
 [LunrV]: https://img.shields.io/nuget/v/NuStreamDocs.Search.Lunr.svg?label=
+[SqliteSearch]: https://www.nuget.org/packages/NuStreamDocs.Search.Sqlite/
+[SqliteSearchV]: https://img.shields.io/nuget/v/NuStreamDocs.Search.Sqlite.svg?label=
 [MdExt]: https://www.nuget.org/packages/NuStreamDocs.MarkdownExtensions/
 [MdExtV]: https://img.shields.io/nuget/v/NuStreamDocs.MarkdownExtensions.svg?label=
 [Macros]: https://www.nuget.org/packages/NuStreamDocs.Macros/

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NuStreamDocs.Search.Sqlite\NuStreamDocs.Search.Sqlite.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The read-back assertions open the generated search.db directly with the raw P/Invoke layer. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+  </ItemGroup>
+
+</Project>

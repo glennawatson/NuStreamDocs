@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Search.Sqlite</PackageId>
+    <Description>SQLite/FTS5 search-index generation for NuStreamDocs. Emits a single search.db queried in the browser via sqlite-wasm-http over HTTP range requests — indexes an entire large site (API reference included) without the per-page fragment files Pagefind produces. Ships a small per-RID native (SourceGear.sqlite3 via SQLitePCLRaw.bundle_e_sqlite3); no external CLI.</Description>
+    <RootNamespace>NuStreamDocs.Search.Sqlite</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.core" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+  </ItemGroup>
+
+  <!-- Vendored sqlite-wasm-http runtime (ESM entry + sqlite3.wasm). Embedded in
+       the dll so the plugin can write it through IStaticAssetProvider without a
+       loose file dependency. Populated in Task 2. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Sqlite.Tests" />
+  </ItemGroup>
+
+</Project>
