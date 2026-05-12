@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using NuStreamDocs.Building;
+using NuStreamDocs.Fonts;
 using NuStreamDocs.Theme.Common;
 using NuStreamDocs.Theme.Material3.IconShortcode;
 
@@ -29,6 +30,7 @@ public static class DocBuilderMaterial3Extensions
     {
         return builder
             .UsePlugin(new IconShortcodePlugin(iconResolver))
+            .UsePlugin(new FontsPlugin(Material3Fonts.Default))
             .UsePlugin(new Material3ThemePlugin());
     }
 
@@ -48,6 +50,7 @@ public static class DocBuilderMaterial3Extensions
         var options = configure(Material3ThemeOptions.Default);
         return builder
             .UsePlugin(new IconShortcodePlugin(iconResolver))
+            .UsePlugin(new FontsPlugin(Material3Fonts.Default))
             .UsePlugin(new Material3ThemePlugin(options));
     }
 }

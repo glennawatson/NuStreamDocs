@@ -11,6 +11,7 @@
     <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
     <ProjectReference Include="..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
     <ProjectReference Include="..\NuStreamDocs.Templating\NuStreamDocs.Templating.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Fonts\NuStreamDocs.Fonts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

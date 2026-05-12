@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Fonts</PackageId>
+    <Description>Self-hosted web fonts for NuStreamDocs. Resolves a declarative font config at build time (Google Fonts, Fontsource, or local files), copies the woff2 into the site, generates the @font-face CSS and rel=preload links, and emits a system-font fallback with size-adjust / ascent-override metrics so the swap to the webfont causes zero layout shift. No third-party requests at runtime; no external CLI.</Description>
+    <RootNamespace>NuStreamDocs.Fonts</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <!-- Packed font-metrics table (Resources\font-metrics.bin) embedded in the dll. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Fonts.Tests" />
+  </ItemGroup>
+
+</Project>

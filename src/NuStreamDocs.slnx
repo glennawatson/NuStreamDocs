@@ -33,6 +33,7 @@
   <Project Path="NuStreamDocs.Search.Pagefind/NuStreamDocs.Search.Pagefind.csproj" />
   <Project Path="NuStreamDocs.Search.Lunr/NuStreamDocs.Search.Lunr.csproj" />
   <Project Path="NuStreamDocs.Search.Sqlite/NuStreamDocs.Search.Sqlite.csproj" />
+  <Project Path="NuStreamDocs.Fonts/NuStreamDocs.Fonts.csproj" />
   <Project Path="NuStreamDocs.Autorefs/NuStreamDocs.Autorefs.csproj" />
   <Project Path="NuStreamDocs.CSharpApiGenerator/NuStreamDocs.CSharpApiGenerator.csproj" />
   <Project Path="NuStreamDocs.Versions/NuStreamDocs.Versions.csproj" />
@@ -84,6 +85,7 @@
     <Project Path="tests/NuStreamDocs.Search.Pagefind.Tests/NuStreamDocs.Search.Pagefind.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Search.Lunr.Tests/NuStreamDocs.Search.Lunr.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Search.Sqlite.Tests/NuStreamDocs.Search.Sqlite.Tests.csproj" />
+    <Project Path="tests/NuStreamDocs.Fonts.Tests/NuStreamDocs.Fonts.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Autorefs.Tests/NuStreamDocs.Autorefs.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.CSharpApiGenerator.Tests/NuStreamDocs.CSharpApiGenerator.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Versions.Tests/NuStreamDocs.Versions.Tests.csproj" />
