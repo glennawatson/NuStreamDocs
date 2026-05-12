@@ -287,13 +287,13 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
                 continue;
             }
 
-            if (single is null && combined is null)
+            if (single is null)
             {
                 single = provider.SyntheticNavEntries;
             }
             else
             {
-                combined ??= [.. single!];
+                combined ??= [.. single];
                 combined.AddRange(provider.SyntheticNavEntries);
             }
         }
