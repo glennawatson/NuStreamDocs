@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Transitions</PackageId>
+    <Description>Client-side routing and view transitions for NuStreamDocs sites. Ships a tiny vanilla-JS router that intercepts same-origin link navigation, swaps the page's content region in place (animated via the browser's View Transitions API where available), preserves the sidebar / search box / scroll position, and pre-fetches links on hover so navigation feels instant. No JS framework, no external dependency; degrades to plain full-page navigation when JavaScript or the View Transitions API is unavailable.</Description>
+    <RootNamespace>NuStreamDocs.Transitions</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Transitions.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -62,6 +62,7 @@
   <Project Path="NuStreamDocs.SuperFences/NuStreamDocs.SuperFences.csproj" />
   <Project Path="NuStreamDocs.Tags/NuStreamDocs.Tags.csproj" />
   <Project Path="NuStreamDocs.Toc/NuStreamDocs.Toc.csproj" />
+  <Project Path="NuStreamDocs.Transitions/NuStreamDocs.Transitions.csproj" />
   <Project Path="NuStreamDocs.Xrefs/NuStreamDocs.Xrefs.csproj" />
   <Folder Name="/Solution Items/Workflows/">
     <File Path="..\.github\workflows\ci.yml" />
@@ -116,6 +117,7 @@
     <Project Path="tests/NuStreamDocs.SuperFences.Tests/NuStreamDocs.SuperFences.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Tags.Tests/NuStreamDocs.Tags.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Toc.Tests/NuStreamDocs.Toc.Tests.csproj" />
+    <Project Path="tests/NuStreamDocs.Transitions.Tests/NuStreamDocs.Transitions.Tests.csproj" />
     <Project Path="tests/NuStreamDocs.Xrefs.Tests/NuStreamDocs.Xrefs.Tests.csproj" />
   </Folder>
   <Folder Name="/benchmarks/">
