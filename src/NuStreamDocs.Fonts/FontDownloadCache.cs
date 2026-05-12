@@ -41,9 +41,10 @@ public sealed class FontDownloadCache
     public async Task<byte[]> GetAsync(ApiCompatString url, CancellationToken cancellationToken)
     {
         var path = CacheFilePath(url);
-        if (File.Exists(path))
+        var cached = await TryReadCachedAsync(path, cancellationToken).ConfigureAwait(false);
+        if (cached is not null)
         {
-            return await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+            return cached;
         }
 
         if (_offline)
@@ -63,8 +64,7 @@ public sealed class FontDownloadCache
             throw new FontDownloadException(StringCompose.Concat("Failed to download font resource: ", url), ex);
         }
 
-        Directory.CreateDirectory(_cacheDirectory.Value);
-        await File.WriteAllBytesAsync(path, bytes, cancellationToken).ConfigureAwait(false);
+        await PersistAsync(path, bytes, cancellationToken).ConfigureAwait(false);
         return bytes;
     }
 
@@ -73,6 +73,45 @@ public sealed class FontDownloadCache
     /// <returns>The absolute cache file path.</returns>
     internal string CacheFilePath(ApiCompatString url) =>
         Path.Combine(_cacheDirectory.Value, HashFileName(url.Value ?? string.Empty));
+
+    /// <summary>Reads a cached entry, tolerating a concurrent writer (returns null so the caller re-fetches).</summary>
+    /// <param name="path">Cache file path.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The cached bytes, or null on a miss or a transient read failure.</returns>
+    private static async Task<byte[]?> TryReadCachedAsync(string path, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            return await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+        }
+        catch (IOException)
+        {
+            // Another build is mid-write to this content-addressed entry — fall back to re-fetching.
+            return null;
+        }
+    }
+
+    /// <summary>Deletes <paramref name="path"/> if it exists, ignoring I/O errors.</summary>
+    /// <param name="path">File to delete.</param>
+    private static void DeleteQuietly(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (IOException)
+        {
+            // Best-effort cleanup of a temporary file.
+        }
+    }
 
     /// <summary>Builds an HTTP client with a desktop User-Agent.</summary>
     /// <returns>The configured client.</returns>
@@ -92,5 +131,32 @@ public sealed class FontDownloadCache
     {
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(url));
         return StringCompose.Concat(Convert.ToHexStringLower(hash.AsSpan(0, FilenameHashBytes)), ".bin");
+    }
+
+    /// <summary>Writes <paramref name="bytes"/> to the cache atomically (temp file then rename), tolerating a concurrent writer of the same content.</summary>
+    /// <param name="path">Cache file path.</param>
+    /// <param name="bytes">Resource bytes.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes when the entry is persisted (or the attempt was abandoned).</returns>
+    private async Task PersistAsync(string path, byte[] bytes, CancellationToken cancellationToken)
+    {
+        if (File.Exists(path))
+        {
+            // A concurrent build already populated this content-addressed entry.
+            return;
+        }
+
+        Directory.CreateDirectory(_cacheDirectory.Value);
+        var temp = StringCompose.Concat(path, ".", Guid.NewGuid().ToString("N"));
+        try
+        {
+            await File.WriteAllBytesAsync(temp, bytes, cancellationToken).ConfigureAwait(false);
+            File.Move(temp, path, overwrite: true);
+        }
+        catch (IOException)
+        {
+            // Lost a race with another build writing the same bytes; the cache entry is still valid.
+            DeleteQuietly(temp);
+        }
     }
 }
