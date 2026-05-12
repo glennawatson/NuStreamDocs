@@ -2,10 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Config.MkDocs;
 using NuStreamDocs.ContentLoader;
 using NuStreamDocs.ContentLoader.Feed;
 using NuStreamDocs.ContentLoader.GitHub;
@@ -44,6 +47,10 @@ public class ContentLoaderBenchmarks
     private static readonly ContentMapping Mapping =
         ContentMapping.ForRoute("posts/{slug}.md"u8).WithBodyKey("body"u8);
 
+    /// <summary>Mapping used for the YAML-collection benchmark (array under a key, no body).</summary>
+    private static readonly ContentMapping YamlMapping =
+        ContentMapping.ForRoute("posts/{slug}.md"u8).WithCollectionPointer("posts"u8);
+
     /// <summary>GitHub repo reference used to build raw-content URLs in the tree benchmark.</summary>
     private static readonly GitHubRepoRef Repo = new([.. "acme"u8], [.. "widgets"u8], [.. "main"u8]);
 
@@ -52,6 +59,9 @@ public class ContentLoaderBenchmarks
 
     /// <summary>JSON array of <see cref="Records"/> objects.</summary>
     private byte[] _json = [];
+
+    /// <summary>YAML document with a <c>posts:</c> list of <see cref="Records"/> entries.</summary>
+    private byte[] _yaml = [];
 
     /// <summary>RSS 2.0 feed with <see cref="Records"/> items.</summary>
     private byte[] _rss = [];
@@ -74,6 +84,7 @@ public class ContentLoaderBenchmarks
     public void Setup()
     {
         _json = Encoding.UTF8.GetBytes(BuildJsonArray(Records));
+        _yaml = Encoding.UTF8.GetBytes(BuildYaml(Records));
         _rss = Encoding.UTF8.GetBytes(BuildRss(Records));
         _atom = Encoding.UTF8.GetBytes(BuildAtom(Records));
         _tree = Encoding.UTF8.GetBytes(BuildTree(Records));
@@ -84,6 +95,20 @@ public class ContentLoaderBenchmarks
     /// <returns>The number of pages produced.</returns>
     [Benchmark]
     public int JsonMap() => JsonContentMapper.Map(_json, Mapping, LoaderName, NullLogger.Instance).Length;
+
+    /// <summary>The local-file YAML path: convert YAML to JSON, then map (the work <c>FileContentLoader</c> does minus the disk read).</summary>
+    /// <returns>The number of pages produced.</returns>
+    [Benchmark]
+    public int YamlMap()
+    {
+        ArrayBufferWriter<byte> json = new(_yaml.Length);
+        using (Utf8JsonWriter writer = new(json))
+        {
+            YamlToJson.Convert(_yaml, writer);
+        }
+
+        return JsonContentMapper.Map(json.WrittenSpan.ToArray(), YamlMapping, LoaderName, NullLogger.Instance).Length;
+    }
 
     /// <summary>Parses the RSS feed into items.</summary>
     /// <returns>The number of items parsed.</returns>
@@ -131,6 +156,24 @@ public class ContentLoaderBenchmarks
         }
 
         sb.Append(']');
+        return sb.ToString();
+    }
+
+    /// <summary>Builds a mapping-rooted YAML document with a <c>posts:</c> list of <paramref name="count"/> entries.</summary>
+    /// <param name="count">Record count.</param>
+    /// <returns>YAML text.</returns>
+    private static string BuildYaml(int count)
+    {
+        StringBuilder sb = new(count * ApproxBytesPerRecord);
+        sb.Append("posts:\n");
+        for (var i = 0; i < count; i++)
+        {
+            sb.Append("  - slug: post-").Append(N(i)).Append('\n')
+                .Append("    title: Post ").Append(N(i)).Append('\n')
+                .Append("    date: 2026-05-01\n")
+                .Append("    draft: false\n");
+        }
+
         return sb.ToString();
     }
 
