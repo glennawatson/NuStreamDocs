@@ -303,6 +303,7 @@ Each is a separate assembly so you only pull what you use:
 | Package | NuGet | Builder | What |
 |---|---|---|---|
 | [`NuStreamDocs.Privacy`][Priv] | [![ver][PrivV]][Priv] | `.UsePrivacy()` | Localizes external assets under `assets/external/` and rewrites HTML to point at the local copies. Byte-level UTF-8 throughout. |
+| [`NuStreamDocs.Csp`][Csp] | [![ver][CspV]][Csp] | `.UseCsp(...)` | Per-page `Content-Security-Policy`: hashes each page's inline scripts (and, optionally, styles) and injects a `<meta http-equiv="Content-Security-Policy">` with a `'self'`-based directive set tuned for self-hosted static sites (`object-src 'none'`, `img-src 'self' data:`, hashed `script-src`, …). Report-only mode, `report-uri`, and per-directive source allow-listing supported. Pairs with `UsePrivacy()` (runs after it). |
 | [`NuStreamDocs.Fonts`][Fonts] | [![ver][FontsV]][Fonts] | `.UseFonts(...)` | Self-hosts declared fonts (Google Fonts, Fontsource, or local files): downloads the woff2 at build time, generates `@font-face` + `<link rel="preload">`, and emits a system-font fallback with `size-adjust` / `ascent-override` so the swap to the webfont causes zero layout shift. No third-party requests at runtime. Theme presets: `Material3Fonts.Default`, `MaterialFonts.Default`. |
 | [`NuStreamDocs.Transitions`][Trans] | [![ver][TransV]][Trans] | `.UseTransitions(...)` | Client-side routing + view transitions: ships a tiny vanilla-JS router that intercepts same-origin links, swaps the content region in place (animated via the browser's View Transitions API), keeps the sidebar / search / scroll position, and pre-fetches links on hover so navigation feels instant. No JS framework; degrades to plain full-page navigation when JS or the View Transitions API is unavailable. |
 | [`NuStreamDocs.Redirects`][Redir] | [![ver][RedirV]][Redir] | `.UseRedirects(...)` | Emits deploy-host config at build time: a Netlify/Cloudflare-Pages `_redirects` file and a meta-refresh HTML page for every declared redirect (so renamed/moved pages don't 404 on any static host), plus a `_headers` file with immutable-caching defaults for the content-hashed asset dirs. Redirects come from `UseRedirects(...)` config and a `redirect_from` key in page frontmatter. |
@@ -428,6 +429,8 @@ Each is a separate assembly so you only pull what you use:
 [IcFAV]: https://img.shields.io/nuget/v/NuStreamDocs.Icons.FontAwesome.svg?label=
 [Priv]: https://www.nuget.org/packages/NuStreamDocs.Privacy/
 [PrivV]: https://img.shields.io/nuget/v/NuStreamDocs.Privacy.svg?label=
+[Csp]: https://www.nuget.org/packages/NuStreamDocs.Csp/
+[CspV]: https://img.shields.io/nuget/v/NuStreamDocs.Csp.svg?label=
 [Fonts]: https://www.nuget.org/packages/NuStreamDocs.Fonts/
 [FontsV]: https://img.shields.io/nuget/v/NuStreamDocs.Fonts.svg?label=
 [Trans]: https://www.nuget.org/packages/NuStreamDocs.Transitions/

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.Csp</PackageId>
+    <Description>Generates a per-page Content-Security-Policy. At the end of rendering, each page's inline scripts (and, optionally, styles) are SHA-256 hashed and a Content-Security-Policy meta tag is injected into the head, with a `'self'`-based directive set tuned for self-hosted static sites. Pairs with NuStreamDocs.Privacy (run after it so localized assets need no extra origins). No JavaScript, no build-phase work; host-agnostic.</Description>
+    <RootNamespace>NuStreamDocs.Csp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Csp.Tests" />
+  </ItemGroup>
+
+</Project>
