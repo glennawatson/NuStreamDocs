@@ -15,6 +15,12 @@ public sealed class FontDownloadCache
     /// <summary>Number of hash bytes used in a cache filename (16 bytes → 32 hex chars).</summary>
     private const int FilenameHashBytes = 16;
 
+    /// <summary>
+    /// Name of the environment variable that overrides the default cache root — lets parallel builds
+    /// (or concurrent test processes) keep separate cache directories instead of contending on one.
+    /// </summary>
+    private const string CacheDirectoryEnvironmentVariable = "NUSTREAMDOCS_FONTS_CACHE";
+
     /// <summary>Shared HTTP client; a desktop User-Agent makes the Google <c>css2</c> API return woff2.</summary>
     private static readonly HttpClient Client = CreateClient();
 
@@ -25,11 +31,11 @@ public sealed class FontDownloadCache
     private readonly bool _offline;
 
     /// <summary>Initializes a new instance of the <see cref="FontDownloadCache"/> class.</summary>
-    /// <param name="cacheDirectory">Cache root; when empty, a directory under the temp path is used.</param>
+    /// <param name="cacheDirectory">Cache root; when empty, the <c>NUSTREAMDOCS_FONTS_CACHE</c> environment variable is used, falling back to a directory under the temp path.</param>
     /// <param name="offline">When true, a cache miss throws instead of downloading.</param>
     public FontDownloadCache(in DirectoryPath cacheDirectory, bool offline)
     {
-        _cacheDirectory = cacheDirectory.IsEmpty ? Path.Combine(Path.GetTempPath(), "nustreamdocs-fonts-cache") : cacheDirectory;
+        _cacheDirectory = cacheDirectory.IsEmpty ? ResolveDefaultDirectory() : cacheDirectory;
         _offline = offline;
     }
 
@@ -140,6 +146,16 @@ public sealed class FontDownloadCache
     {
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(url));
         return StringCompose.Concat(Convert.ToHexStringLower(hash.AsSpan(0, FilenameHashBytes)), ".bin");
+    }
+
+    /// <summary>Resolves the default cache root — the <c>NUSTREAMDOCS_FONTS_CACHE</c> environment variable when set, otherwise a directory under the temp path.</summary>
+    /// <returns>The default cache root.</returns>
+    private static DirectoryPath ResolveDefaultDirectory()
+    {
+        var configured = Environment.GetEnvironmentVariable(CacheDirectoryEnvironmentVariable);
+        return string.IsNullOrEmpty(configured)
+            ? new DirectoryPath(Path.Combine(Path.GetTempPath(), "nustreamdocs-fonts-cache"))
+            : new DirectoryPath(configured);
     }
 
     /// <summary>
