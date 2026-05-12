@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>NuStreamDocs.ContentLoader</PackageId>
+    <Description>Pull NuStreamDocs pages from sources other than local Markdown files. Built-in loaders: a structured-data file (JSON / YAML array to one page per row), an HTTP/GraphQL JSON endpoint, and a list of raw remote Markdown URLs. Loaded pages flow through the normal render pipeline as in-memory synthetic pages.</Description>
+    <RootNamespace>NuStreamDocs.ContentLoader</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Config.MkDocs\NuStreamDocs.Config.MkDocs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.Feed" />
+    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.GitHub" />
+    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.OpenApi" />
+  </ItemGroup>
+
+</Project>
