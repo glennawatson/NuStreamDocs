@@ -94,6 +94,11 @@ public sealed class FontDownloadCache
             // Another build is mid-write to this content-addressed entry — fall back to re-fetching.
             return null;
         }
+        catch (UnauthorizedAccessException)
+        {
+            // Same, surfaced as an access denial on Windows when the entry is being replaced.
+            return null;
+        }
     }
 
     /// <summary>Deletes <paramref name="path"/> if it exists, ignoring I/O errors.</summary>
@@ -108,6 +113,10 @@ public sealed class FontDownloadCache
             }
         }
         catch (IOException)
+        {
+            // Best-effort cleanup of a temporary file.
+        }
+        catch (UnauthorizedAccessException)
         {
             // Best-effort cleanup of a temporary file.
         }
@@ -133,7 +142,11 @@ public sealed class FontDownloadCache
         return StringCompose.Concat(Convert.ToHexStringLower(hash.AsSpan(0, FilenameHashBytes)), ".bin");
     }
 
-    /// <summary>Writes <paramref name="bytes"/> to the cache atomically (temp file then rename), tolerating a concurrent writer of the same content.</summary>
+    /// <summary>
+    /// Writes <paramref name="bytes"/> to the cache via a unique temp file then a rename. The entry
+    /// is content-addressed, so an existing target already holds identical bytes — we never overwrite
+    /// it; a rename onto an existing (or open) target simply fails and is treated as "lost the race".
+    /// </summary>
     /// <param name="path">Cache file path.</param>
     /// <param name="bytes">Resource bytes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -151,11 +164,16 @@ public sealed class FontDownloadCache
         try
         {
             await File.WriteAllBytesAsync(temp, bytes, cancellationToken).ConfigureAwait(false);
-            File.Move(temp, path, overwrite: true);
+            File.Move(temp, path);
         }
         catch (IOException)
         {
             // Lost a race with another build writing the same bytes; the cache entry is still valid.
+            DeleteQuietly(temp);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Windows surfaces the same race as an access denial when the target is open; same handling.
             DeleteQuietly(temp);
         }
     }
