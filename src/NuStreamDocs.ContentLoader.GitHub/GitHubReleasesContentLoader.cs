@@ -94,7 +94,7 @@ public sealed class GitHubReleasesContentLoader : IContentLoader
         GitHubRepoRef repoRef = new(_owner, _repo, [.. "HEAD"u8]);
         var mapping = new ContentMapping(RouteTemplate(_routePrefix), [.. "body"u8], [], ReleaseFrontmatterKeys);
         var inner = new HttpContentLoader(
-            (UrlPath)GitHubUrls.ReleasesApiUrl(in repoRef),
+            GitHubUrls.ReleasesApiUrl(in repoRef),
             [],
             GitHubUrls.Headers(_token),
             mapping,

@@ -125,7 +125,7 @@ public sealed class GitHubContentLoader : IContentLoader
     private async Task<byte[]> GetAsync(HttpClient client, (byte[] Name, byte[] Value)[] headers, CancellationToken cancellationToken)
     {
         var url = GitHubUrls.TreeApiUrl(in _repo);
-        Uri endpoint = new(url, UriKind.Absolute);
+        Uri endpoint = new(url.Value, UriKind.Absolute);
         using HttpRequestMessage request = new(HttpMethod.Get, endpoint);
         for (var i = 0; i < headers.Length; i++)
         {

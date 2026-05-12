@@ -87,13 +87,13 @@ public class JsonContentMapperTests
         await Assert.That(pages).IsEmpty();
     }
 
-    /// <summary>Malformed JSON throws a <see cref="ContentLoaderException"/>.</summary>
+    /// <summary>Malformed JSON in the collection array throws a <see cref="ContentLoaderException"/>.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task MalformedJsonThrows()
     {
         var mapping = ContentMapping.ForRoute("p/{slug}.md"u8);
-        var json = Encoding.UTF8.GetBytes("{not json");
+        var json = Encoding.UTF8.GetBytes("[ this is not json");
         await Assert.That(() => _ = JsonContentMapper.Map(json, mapping, "test"u8, NullLogger.Instance)).Throws<ContentLoaderException>();
     }
 

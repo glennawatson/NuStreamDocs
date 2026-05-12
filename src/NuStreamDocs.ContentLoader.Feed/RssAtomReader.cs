@@ -5,11 +5,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 
 namespace NuStreamDocs.ContentLoader.Feed;
 
-/// <summary>Parses an RSS 2.0 / RSS 1.0 / Atom feed document into <see cref="FeedItem"/> entries.</summary>
+/// <summary>
+/// Streams an RSS 2.0 / RSS 1.0 / Atom feed into <see cref="FeedItem"/> entries with a forward-only
+/// <see cref="XmlReader"/> — one item is materialised at a time, never the whole document model.
+/// </summary>
 internal static class RssAtomReader
 {
     /// <summary>Reads <paramref name="xml"/> and returns its items in document order.</summary>
@@ -18,53 +20,43 @@ internal static class RssAtomReader
     /// <exception cref="ContentLoaderException">When the document is not valid XML.</exception>
     public static FeedItem[] Read(byte[] xml)
     {
-        var document = LoadHardened(xml);
-        if (document.Root is not { } root)
-        {
-            return [];
-        }
+        ArgumentNullException.ThrowIfNull(xml);
 
-        var entryName = string.Equals(root.Name.LocalName, "feed", StringComparison.Ordinal) ? "entry" : "item";
-        List<FeedItem> items = [];
-
-        // foreach over XElement.Descendants() — IEnumerable<XElement>, no indexed alternative.
-        foreach (var element in root.Descendants())
-        {
-            if (string.Equals(element.Name.LocalName, entryName, StringComparison.Ordinal))
-            {
-                items.Add(BuildItem(element));
-            }
-        }
-
-        return [.. items];
-    }
-
-    /// <summary>Loads <paramref name="xml"/> with a DTD-disabled, resolver-free reader.</summary>
-    /// <param name="xml">UTF-8 XML bytes.</param>
-    /// <returns>The parsed document.</returns>
-    private static XDocument LoadHardened(byte[] xml)
-    {
         XmlReaderSettings settings = new()
         {
             DtdProcessing = DtdProcessing.Ignore,
             XmlResolver = null,
-            MaxCharactersFromEntities = 0
+            MaxCharactersFromEntities = 0,
+            CloseInput = false
         };
 
+        List<FeedItem> items = [];
         using MemoryStream stream = new(xml, writable: false);
-        using var reader = XmlReader.Create(stream, settings);
+        using XmlReader reader = XmlReader.Create(stream, settings);
         try
         {
-            return XDocument.Load(reader);
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.LocalName is "item" or "entry")
+                {
+                    items.Add(ReadEntry(reader));
+                }
+            }
         }
         catch (XmlException ex)
         {
             throw new ContentLoaderException("Feed source is not valid XML.", ex);
         }
+        catch (InvalidOperationException ex)
+        {
+            throw new ContentLoaderException("Feed source has content the reader cannot extract.", ex);
+        }
+
+        return [.. items];
     }
 
-    /// <summary>Extracts one item / entry element into a <see cref="FeedItem"/>.</summary>
-    /// <param name="element">An <c>&lt;item&gt;</c> or <c>&lt;entry&gt;</c> element.</param>
+    /// <summary>Reads one <c>&lt;item&gt;</c> / <c>&lt;entry&gt;</c> element, leaving the reader on its end tag.</summary>
+    /// <param name="reader">Reader positioned on the entry's start tag.</param>
     /// <returns>The extracted item.</returns>
     [SuppressMessage(
         "Sonar Code Smell",
@@ -74,91 +66,141 @@ internal static class RssAtomReader
         "Sonar Code Smell",
         "S3776:Cognitive Complexity of methods should not be too high",
         Justification = "Dispatch over the RSS/Atom child-element vocabulary; the branching tracks element names, not nested logic.")]
-    private static FeedItem BuildItem(XElement element)
+    private static FeedItem ReadEntry(XmlReader reader)
     {
-        XElement? title = null;
-        XElement? link = null;
-        XElement? date = null;
-        XElement? identifier = null;
-        XElement? content = null;
-        XElement? summary = null;
-
-        // foreach over XElement.Elements() — IEnumerable<XElement>, no indexed alternative.
-        foreach (var child in element.Elements())
+        if (reader.IsEmptyElement)
         {
-            var local = child.Name.LocalName;
-            if (local is "title")
+            return new([], [], [], [], []);
+        }
+
+        var entryDepth = reader.Depth;
+        string title = string.Empty;
+        string link = string.Empty;
+        string linkRel = string.Empty;
+        string date = string.Empty;
+        string identifier = string.Empty;
+        string content = string.Empty;
+        string summary = string.Empty;
+
+        reader.Read();
+        while (!(reader.NodeType == XmlNodeType.EndElement && reader.Depth == entryDepth))
+        {
+            if (reader.NodeType != XmlNodeType.Element || reader.Depth != entryDepth + 1)
             {
-                title ??= child;
+                reader.Read();
+                continue;
             }
-            else if (local is "link")
+
+            var name = reader.LocalName;
+            if (name is "title")
             {
-                link = PreferAlternateLink(link, child);
+                title = First(title, ReadElementText(reader));
             }
-            else if (local is "pubDate" or "updated" or "published")
+            else if (name is "link")
             {
-                date ??= child;
+                (link, linkRel) = ResolveLink(reader, link, linkRel);
             }
-            else if (local is "guid" or "id")
+            else if (name is "pubDate" or "updated" or "published")
             {
-                identifier ??= child;
+                date = First(date, ReadElementText(reader));
             }
-            else if (local is "encoded" or "content")
+            else if (name is "guid" or "id")
             {
-                content ??= child;
+                identifier = First(identifier, ReadElementText(reader));
             }
-            else if (local is "summary" or "description")
+            else if (name is "encoded" or "content")
             {
-                summary ??= child;
+                content = First(content, ReadContentText(reader));
+            }
+            else if (name is "summary" or "description")
+            {
+                summary = First(summary, ReadContentText(reader));
+            }
+            else
+            {
+                reader.Skip();
             }
         }
 
-        return new(
-            Bytes(title?.Value),
-            Bytes(LinkValue(link)),
-            Bytes(date?.Value),
-            Bytes(identifier?.Value),
-            Bytes((content ?? summary)?.Value));
+        var body = content.Length > 0 ? content : summary;
+        return new(Utf8(title), Utf8(link), Utf8(date), Utf8(identifier), Utf8(body));
     }
 
-    /// <summary>Chooses the better of two <c>&lt;link&gt;</c> elements — an Atom <c>rel="alternate"</c> link beats <c>rel="self"</c>.</summary>
-    /// <param name="current">The link kept so far, or null.</param>
-    /// <param name="candidate">A newly seen link element.</param>
-    /// <returns>The link to keep.</returns>
-    private static XElement PreferAlternateLink(XElement? current, XElement candidate)
+    /// <summary>Returns <paramref name="current"/> if it already holds text, otherwise <paramref name="candidate"/>.</summary>
+    /// <param name="current">Value seen so far.</param>
+    /// <param name="candidate">Newly read value.</param>
+    /// <returns>The value to keep.</returns>
+    private static string First(string current, string candidate) =>
+        current.Length > 0 ? current : candidate;
+
+    /// <summary>Reads the text content of a simple element, leaving the reader past its end tag.</summary>
+    /// <param name="reader">Reader positioned on the element start.</param>
+    /// <returns>The trimmed text.</returns>
+    private static string ReadElementText(XmlReader reader)
     {
-        if (current is null)
+        if (reader.IsEmptyElement)
         {
-            return candidate;
+            reader.Skip();
+            return string.Empty;
         }
 
-        var currentRel = current.Attribute("rel")?.Value;
-        var candidateRel = candidate.Attribute("rel")?.Value;
-        if (string.Equals(currentRel, "self", StringComparison.OrdinalIgnoreCase) && !string.Equals(candidateRel, "self", StringComparison.OrdinalIgnoreCase))
-        {
-            return candidate;
-        }
-
-        return current;
+        return reader.ReadElementContentAsString().Trim();
     }
 
-    /// <summary>Returns the canonical URL of a feed link element — the Atom <c>href</c> attribute, or the RSS element text.</summary>
-    /// <param name="link">The <c>&lt;link&gt;</c> element, or null.</param>
-    /// <returns>The URL, or null when absent.</returns>
-    private static string? LinkValue(XElement? link)
+    /// <summary>Reads an item-body element, preferring the inner markup for an Atom <c>type="xhtml"</c> body.</summary>
+    /// <param name="reader">Reader positioned on a <c>&lt;content&gt;</c> / <c>&lt;encoded&gt;</c> / <c>&lt;summary&gt;</c> / <c>&lt;description&gt;</c> element.</param>
+    /// <returns>The trimmed body (decoded HTML for escaped content, inner markup for XHTML content).</returns>
+    private static string ReadContentText(XmlReader reader)
     {
-        if (link is null)
+        if (reader.IsEmptyElement)
         {
-            return null;
+            reader.Skip();
+            return string.Empty;
         }
 
-        var href = link.Attribute("href")?.Value;
-        return string.IsNullOrEmpty(href) ? link.Value : href;
+        var isXhtml = string.Equals(reader.GetAttribute("type"), "xhtml", StringComparison.OrdinalIgnoreCase);
+        return (isXhtml ? reader.ReadInnerXml() : reader.ReadElementContentAsString()).Trim();
     }
 
-    /// <summary>Encodes trimmed text to UTF-8, or returns an empty array for null.</summary>
-    /// <param name="text">Source text, or null.</param>
+    /// <summary>Picks the better link — a <c>&lt;link href&gt;</c> wins over an RSS text link of the same priority, and a non-<c>self</c> Atom link wins over a <c>self</c> one.</summary>
+    /// <param name="reader">Reader positioned on a <c>&lt;link&gt;</c> element.</param>
+    /// <param name="currentLink">Link kept so far (empty when none).</param>
+    /// <param name="currentRel">The <c>rel</c> of the link kept so far.</param>
+    /// <returns>The link and its <c>rel</c> to keep.</returns>
+    private static (string Link, string Rel) ResolveLink(XmlReader reader, string currentLink, string currentRel)
+    {
+        var rel = reader.GetAttribute("rel") ?? string.Empty;
+        var href = reader.GetAttribute("href");
+        var candidate = string.IsNullOrEmpty(href) ? ReadElementText(reader) : ConsumeAndReturn(reader, href.Trim());
+
+        if (candidate.Length == 0)
+        {
+            return (currentLink, currentRel);
+        }
+
+        if (currentLink.Length == 0)
+        {
+            return (candidate, rel);
+        }
+
+        var replace = string.Equals(currentRel, "self", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(rel, "self", StringComparison.OrdinalIgnoreCase);
+        return replace ? (candidate, rel) : (currentLink, currentRel);
+    }
+
+    /// <summary>Advances the reader past the current element and returns <paramref name="value"/>.</summary>
+    /// <param name="reader">Reader positioned on an element start.</param>
+    /// <param name="value">Value to return.</param>
+    /// <returns><paramref name="value"/>.</returns>
+    private static string ConsumeAndReturn(XmlReader reader, string value)
+    {
+        reader.Skip();
+        return value;
+    }
+
+    /// <summary>Encodes text to UTF-8, returning an empty array for an empty string.</summary>
+    /// <param name="text">Source text.</param>
     /// <returns>UTF-8 bytes.</returns>
-    private static byte[] Bytes(string? text) =>
-        string.IsNullOrEmpty(text) ? [] : Encoding.UTF8.GetBytes(text.Trim());
+    private static byte[] Utf8(string text) =>
+        text.Length == 0 ? [] : Encoding.UTF8.GetBytes(text);
 }
