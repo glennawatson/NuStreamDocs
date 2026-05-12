@@ -13,6 +13,12 @@ namespace NuStreamDocs.ContentLoader;
 /// <summary>Turns a JSON document (or JSON converted from YAML) into <see cref="SyntheticPage"/> entries according to a <see cref="ContentMapping"/>.</summary>
 internal static class JsonContentMapper
 {
+    /// <summary>Headroom added to the route-writer capacity hint for substituted placeholder values.</summary>
+    private const int RouteHeadroom = 16;
+
+    /// <summary>Initial capacity for the reused Markdown writer; pages are typically a few hundred bytes.</summary>
+    private const int InitialMarkdownCapacity = 256;
+
     /// <summary>Maps <paramref name="json"/> through <paramref name="mapping"/>.</summary>
     /// <param name="json">UTF-8 JSON bytes.</param>
     /// <param name="mapping">Field mapping.</param>
@@ -38,6 +44,11 @@ internal static class JsonContentMapper
 
         List<SyntheticPage> pages = new(array.GetArrayLength());
 
+        // Two writers reused across every entry — the per-entry byte arrays are extracted with
+        // ToArray(), so reusing the growing internal buffers avoids one allocation per page.
+        ArrayBufferWriter<byte> routeWriter = new(mapping.RouteTemplate.Length + RouteHeadroom);
+        ArrayBufferWriter<byte> markdownWriter = new(InitialMarkdownCapacity);
+
         // foreach over JsonElement.ArrayEnumerator — a struct enumerator with no indexed alternative.
         foreach (var element in array.EnumerateArray())
         {
@@ -46,7 +57,7 @@ internal static class JsonContentMapper
                 continue;
             }
 
-            if (TryBuildPage(element, mapping, out var page))
+            if (TryBuildPage(element, mapping, routeWriter, markdownWriter, out var page))
             {
                 pages.Add(page);
             }
@@ -100,32 +111,35 @@ internal static class JsonContentMapper
         return current.ValueKind == JsonValueKind.Array;
     }
 
-    /// <summary>Builds one page from an object element.</summary>
+    /// <summary>Builds one page from an object element using the reused writers.</summary>
     /// <param name="element">A JSON object.</param>
     /// <param name="mapping">Field mapping.</param>
+    /// <param name="routeWriter">Reused buffer for the route bytes; reset on entry.</param>
+    /// <param name="markdownWriter">Reused buffer for the Markdown bytes; reset on entry.</param>
     /// <param name="page">On success, the built page.</param>
     /// <returns><see langword="true"/> when the route template resolved.</returns>
-    private static bool TryBuildPage(JsonElement element, ContentMapping mapping, out SyntheticPage page)
+    private static bool TryBuildPage(JsonElement element, ContentMapping mapping, ArrayBufferWriter<byte> routeWriter, ArrayBufferWriter<byte> markdownWriter, out SyntheticPage page)
     {
-        if (!TryRenderRoute(mapping.RouteTemplate, element, out var route))
+        routeWriter.ResetWrittenCount();
+        if (!TryRenderRoute(mapping.RouteTemplate, element, routeWriter))
         {
             page = default;
             return false;
         }
 
-        var markdown = BuildMarkdown(element, mapping);
-        page = new(new Common.FilePath(Encoding.UTF8.GetString(route)), markdown);
+        markdownWriter.ResetWrittenCount();
+        BuildMarkdown(element, mapping, markdownWriter);
+        page = new(new Common.FilePath(Encoding.UTF8.GetString(routeWriter.WrittenSpan)), markdownWriter.WrittenSpan.ToArray());
         return true;
     }
 
     /// <summary>Substitutes <c>{field}</c> placeholders in <paramref name="template"/> from <paramref name="element"/>'s scalar fields.</summary>
     /// <param name="template">Route template bytes.</param>
     /// <param name="element">Source object.</param>
-    /// <param name="route">On success, the rendered route bytes.</param>
+    /// <param name="writer">Destination for the rendered route bytes (already reset by the caller).</param>
     /// <returns><see langword="true"/> when every placeholder resolved to a scalar.</returns>
-    private static bool TryRenderRoute(byte[] template, JsonElement element, out byte[] route)
+    private static bool TryRenderRoute(byte[] template, JsonElement element, ArrayBufferWriter<byte> writer)
     {
-        ArrayBufferWriter<byte> writer = new(template.Length + 16);
         var i = 0;
         while (i < template.Length)
         {
@@ -140,20 +154,17 @@ internal static class JsonContentMapper
             var close = Array.IndexOf(template, (byte)'}', open + 1);
             if (close < 0)
             {
-                route = [];
                 return false;
             }
 
             if (!element.TryGetProperty(template.AsSpan(open + 1, close - open - 1), out var value) || !WriteScalar(value, writer))
             {
-                route = [];
                 return false;
             }
 
             i = close + 1;
         }
 
-        route = writer.WrittenSpan.ToArray();
         return true;
     }
 
@@ -184,13 +195,12 @@ internal static class JsonContentMapper
         }
     }
 
-    /// <summary>Builds the Markdown bytes (frontmatter + body) for one object element.</summary>
+    /// <summary>Writes the Markdown bytes (frontmatter + body) for one object element into <paramref name="writer"/> (already reset by the caller).</summary>
     /// <param name="element">Source object.</param>
     /// <param name="mapping">Field mapping.</param>
-    /// <returns>UTF-8 Markdown source.</returns>
-    private static byte[] BuildMarkdown(JsonElement element, ContentMapping mapping)
+    /// <param name="writer">Destination buffer.</param>
+    private static void BuildMarkdown(JsonElement element, ContentMapping mapping, ArrayBufferWriter<byte> writer)
     {
-        ArrayBufferWriter<byte> writer = new(256);
         writer.Write("---\n"u8);
 
         // foreach over JsonElement.ObjectEnumerator — a struct enumerator with no indexed alternative.
@@ -209,7 +219,6 @@ internal static class JsonContentMapper
 
         writer.Write("---\n\n"u8);
         AppendBody(element, mapping, writer);
-        return writer.WrittenSpan.ToArray();
     }
 
     /// <summary>True when a property should be emitted into frontmatter.</summary>

@@ -31,6 +31,12 @@ internal static class ImageAudit
             return;
         }
 
+        // Quick pre-check: a page with no <img> needs no tag scan at all.
+        if (html.IndexOf("<img"u8) < 0)
+        {
+            return;
+        }
+
         HtmlTagCursor cursor = new(html);
         while (cursor.MoveNext())
         {
@@ -39,16 +45,29 @@ internal static class ImageAudit
                 continue;
             }
 
-            if (checkAlt && !cursor.HasAttribute("alt"u8))
-            {
-                sink.Add(new(page, AuditRule.ImageMissingAlt, MissingAltMessage));
-            }
-
-            if (checkDimensions && !HasIntrinsicSize(cursor.Attributes))
-            {
-                sink.Add(new(page, AuditRule.ImageMissingDimensions, MissingDimensionsMessage));
-            }
+            CheckImage(cursor.Attributes, page, checkAlt, checkDimensions, sink);
         }
+    }
+
+    /// <summary>Emits the alt / dimension findings for one <c>&lt;img&gt;</c>.</summary>
+    /// <param name="attributes">Attribute text from the tag.</param>
+    /// <param name="page">Page URL.</param>
+    /// <param name="checkAlt">Whether the missing-alt lint is enabled.</param>
+    /// <param name="checkDimensions">Whether the missing-dimensions lint is enabled.</param>
+    /// <param name="sink">Receives findings.</param>
+    private static void CheckImage(ReadOnlySpan<byte> attributes, UrlPath page, bool checkAlt, bool checkDimensions, List<AuditDiagnostic> sink)
+    {
+        if (checkAlt && !HtmlAttr.Has(attributes, "alt"u8))
+        {
+            sink.Add(new(page, AuditRule.ImageMissingAlt, MissingAltMessage));
+        }
+
+        if (!checkDimensions || HasIntrinsicSize(attributes))
+        {
+            return;
+        }
+
+        sink.Add(new(page, AuditRule.ImageMissingDimensions, MissingDimensionsMessage));
     }
 
     /// <summary>True when the image declares both <c>width</c> and <c>height</c>, or an inline <c>aspect-ratio</c> style.</summary>

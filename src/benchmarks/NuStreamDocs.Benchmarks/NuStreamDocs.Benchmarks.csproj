@@ -46,6 +46,11 @@
     <ProjectReference Include="..\..\NuStreamDocs.Blog\NuStreamDocs.Blog.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Blog.Common\NuStreamDocs.Blog.Common.csproj" />
     <ProjectReference Include="..\..\NuStreamDocs.Tags\NuStreamDocs.Tags.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Audit\NuStreamDocs.Audit.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.ContentLoader\NuStreamDocs.ContentLoader.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.ContentLoader.Feed\NuStreamDocs.ContentLoader.Feed.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.ContentLoader.GitHub\NuStreamDocs.ContentLoader.GitHub.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.ContentLoader.OpenApi\NuStreamDocs.ContentLoader.OpenApi.csproj" />
   </ItemGroup>
 
 </Project>

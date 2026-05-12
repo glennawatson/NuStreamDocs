@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.OpenApi.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks" />
   </ItemGroup>
 
 </Project>

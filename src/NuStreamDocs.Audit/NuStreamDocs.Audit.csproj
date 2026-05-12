@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="NuStreamDocs.Audit.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks" />
   </ItemGroup>
 
 </Project>

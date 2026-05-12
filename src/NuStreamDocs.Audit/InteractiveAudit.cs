@@ -44,7 +44,8 @@ internal static class InteractiveAudit
             return;
         }
 
-        var labelTargets = options.IsRuleEnabled(AuditRule.UnlabeledFormControl) ? CollectLabelTargets(html) : null;
+        var checkControls = options.IsRuleEnabled(AuditRule.UnlabeledFormControl) && HasFormControl(html);
+        var labelTargets = checkControls ? CollectLabelTargets(html) : null;
         var labelDepth = 0;
 
         HtmlTagCursor cursor = new(html);
@@ -76,6 +77,12 @@ internal static class InteractiveAudit
         || options.IsRuleEnabled(AuditRule.EmptyButton)
         || options.IsRuleEnabled(AuditRule.PositiveTabIndex)
         || options.IsRuleEnabled(AuditRule.UnlabeledFormControl);
+
+    /// <summary>True when the page contains a form control — a quick pre-check that avoids the two-pass label scan on the (common) form-free page.</summary>
+    /// <param name="html">UTF-8 page HTML.</param>
+    /// <returns><see langword="true"/> when an <c>&lt;input&gt;</c>, <c>&lt;select&gt;</c>, or <c>&lt;textarea&gt;</c> appears.</returns>
+    private static bool HasFormControl(ReadOnlySpan<byte> html) =>
+        html.IndexOf("<input"u8) >= 0 || html.IndexOf("<select"u8) >= 0 || html.IndexOf("<textarea"u8) >= 0;
 
     /// <summary>Flags a positive <c>tabindex</c> on the current element.</summary>
     /// <param name="cursor">Cursor on the current tag.</param>
