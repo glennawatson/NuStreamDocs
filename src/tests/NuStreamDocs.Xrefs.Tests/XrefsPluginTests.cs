@@ -16,8 +16,8 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         AutorefsRegistry registry = new();
-        registry.Register("Foo.Bar"u8, [.. "api/Foo.Bar.html"u8], fragment: default);
-        registry.Register("Foo.Baz"u8, [.. "api/Foo.Baz.html"u8], fragment: default);
+        registry.Register("Foo.Bar"u8, [.. "api/Foo.Bar.html"u8], default);
+        registry.Register("Foo.Baz"u8, [.. "api/Foo.Baz.html"u8], default);
         XrefsPlugin plugin = new(registry, XrefsOptions.Default);
 
         await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
@@ -34,20 +34,18 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var importPath = Path.Combine(temp.Root, "external.json");
-        XrefMapWriter.Write(importPath, baseUrl: [], [([.. "System.String"u8], [.. "api/System.String.html"u8])]);
+        XrefMapWriter.Write(importPath, [], [([.. "System.String"u8], [.. "api/System.String.html"u8])]);
 
         AutorefsRegistry registry = new();
-        var options = XrefsOptions.Default with
-        {
-            Imports = [new(importPath, "https://docs.microsoft.com/dotnet/")]
-        };
+        var options = XrefsOptions.Default with { Imports = [new(importPath, "https://docs.microsoft.com/dotnet/")] };
         XrefsPlugin plugin = new(registry, options);
 
         await plugin.ConfigureAsync(new("/in", temp.Root, [], new()), CancellationToken.None);
 
         var resolved = registry.TryResolve("System.String"u8, out var url);
         await Assert.That(resolved).IsTrue();
-        await Assert.That(url.AsSpan().SequenceEqual("https://docs.microsoft.com/dotnet/api/System.String.html"u8)).IsTrue();
+        await Assert.That(url.AsSpan().SequenceEqual("https://docs.microsoft.com/dotnet/api/System.String.html"u8))
+            .IsTrue();
     }
 
     /// <summary>An imported file's <c>baseUrl</c> is honored when no override is supplied.</summary>
@@ -57,13 +55,10 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         var importPath = Path.Combine(temp.Root, "external.json");
-        XrefMapWriter.Write(importPath, baseUrl: [.. "https://example.com/docs/"u8], [([.. "Foo"u8], [.. "api/Foo.html"u8])]);
+        XrefMapWriter.Write(importPath, [.. "https://example.com/docs/"u8], [([.. "Foo"u8], [.. "api/Foo.html"u8])]);
 
         AutorefsRegistry registry = new();
-        var options = XrefsOptions.Default with
-        {
-            Imports = [new(importPath)]
-        };
+        var options = XrefsOptions.Default with { Imports = [new(importPath)] };
         XrefsPlugin plugin = new(registry, options);
 
         await plugin.ConfigureAsync(new("/in", temp.Root, [], new()), CancellationToken.None);
@@ -79,7 +74,7 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         AutorefsRegistry registry = new();
-        registry.Register("Foo"u8, [.. "f.html"u8], fragment: default);
+        registry.Register("Foo"u8, [.. "f.html"u8], default);
         var options = XrefsOptions.Default with { EmitMap = false };
         XrefsPlugin plugin = new(registry, options);
 
@@ -95,10 +90,7 @@ public class XrefsPluginTests
     {
         using var temp = TempDir.Create();
         AutorefsRegistry registry = new();
-        var options = XrefsOptions.Default with
-        {
-            Imports = [new(Path.Combine(temp.Root, "does-not-exist.json"))]
-        };
+        var options = XrefsOptions.Default with { Imports = [new(Path.Combine(temp.Root, "does-not-exist.json"))] };
         XrefsPlugin plugin = new(registry, options);
 
         await plugin.ConfigureAsync(new("/in", temp.Root, [], new()), CancellationToken.None);

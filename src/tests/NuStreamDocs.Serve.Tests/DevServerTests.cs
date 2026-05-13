@@ -5,6 +5,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
+using Microsoft.AspNetCore.Builder;
 
 namespace NuStreamDocs.Serve.Tests;
 
@@ -65,7 +66,7 @@ public class DevServerTests
     [Test]
     public async Task LiveReloadDisabledSkipsScriptInjection()
     {
-        using var fixture = await DevServerFixture.StartAsync(SeedHelloBody, liveReload: false);
+        using var fixture = await DevServerFixture.StartAsync(SeedHelloBody, false);
 
         using var response = await fixture.Client.GetAsync(new Uri("/index.html", UriKind.Relative));
         var body = await response.Content.ReadAsStringAsync();
@@ -131,7 +132,9 @@ public class DevServerTests
     private static void SeedHomeAndNotFound(string dir)
     {
         File.WriteAllText(Path.Combine(dir, "index.html"), "<!doctype html><title>Home</title>");
-        File.WriteAllText(Path.Combine(dir, "404.html"), "<!doctype html><title>Missing</title><h1>Page not found</h1>");
+        File.WriteAllText(
+            Path.Combine(dir, "404.html"),
+            "<!doctype html><title>Missing</title><h1>Page not found</h1>");
     }
 
     /// <summary>Seeds the temp root with a single <c>index.html</c>.</summary>
@@ -156,7 +159,7 @@ public class DevServerTests
         /// <param name="root">Temp directory used as the static root.</param>
         /// <param name="app">Started <see cref="Microsoft.AspNetCore.Builder.WebApplication"/>.</param>
         /// <param name="client">HTTP client wired to the chosen port.</param>
-        private DevServerFixture(string root, Microsoft.AspNetCore.Builder.WebApplication app, HttpClient client)
+        private DevServerFixture(string root, WebApplication app, HttpClient client)
         {
             Root = root;
             App = app;
@@ -167,7 +170,7 @@ public class DevServerTests
         public string Root { get; }
 
         /// <summary>Gets the underlying web application.</summary>
-        public Microsoft.AspNetCore.Builder.WebApplication App { get; }
+        public WebApplication App { get; }
 
         /// <summary>Gets the HTTP client wired to the dev server's base address.</summary>
         public HttpClient Client { get; }
@@ -178,17 +181,14 @@ public class DevServerTests
         /// <returns>The fixture.</returns>
         public static async Task<DevServerFixture> StartAsync(Action<string> seed, bool liveReload = true)
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-devserver-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            var root = Path.Combine(
+                Path.GetTempPath(),
+                "smkd-devserver-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(root);
             seed(root);
 
             var port = ReserveLoopbackPort();
-            WatchAndServeOptions options = new()
-            {
-                Host = "127.0.0.1",
-                Port = port,
-                LiveReload = liveReload
-            };
+            WatchAndServeOptions options = new() { Host = "127.0.0.1", Port = port, LiveReload = liveReload };
 
             var app = await DevServer.StartAsync(root, options, new(), CancellationToken.None).ConfigureAwait(false);
             HttpClient client = new() { BaseAddress = new($"http://127.0.0.1:{port}/", UriKind.Absolute) };
@@ -222,7 +222,7 @@ public class DevServerTests
             {
                 if (Directory.Exists(Root))
                 {
-                    Directory.Delete(Root, recursive: true);
+                    Directory.Delete(Root, true);
                 }
             }
             catch (IOException)

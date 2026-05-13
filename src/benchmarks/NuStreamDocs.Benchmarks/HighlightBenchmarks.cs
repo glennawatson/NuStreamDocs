@@ -68,19 +68,40 @@ public class HighlightBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _csharp = Repeat("public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n"u8, Repetitions);
-        _typescript = Repeat("export interface Bar { readonly id: number; readonly name: string; } const x: Bar = { id: 1, name: \"a\" };\n"u8, Repetitions);
-        _html = Repeat("<div class=\"x\"><a href=\"https://x.test\">link</a><img src=\"/y.png\" alt=\"y\"></div>\n"u8, Repetitions);
+        _csharp = Repeat(
+            "public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n"u8,
+            Repetitions);
+        _typescript =
+            Repeat(
+                "export interface Bar { readonly id: number; readonly name: string; } const x: Bar = { id: 1, name: \"a\" };\n"u8,
+                Repetitions);
+        _html = Repeat(
+            "<div class=\"x\"><a href=\"https://x.test\">link</a><img src=\"/y.png\" alt=\"y\"></div>\n"u8,
+            Repetitions);
         _xml = Repeat("<note id=\"a\"><title>Hello</title><body><![CDATA[x < y]]></body></note>\n"u8, Repetitions);
         _razor = Repeat("<p>@Model.Name</p>\n@{ var x = 42; if (x > 0) { <span>@x</span> } }\n"u8, Repetitions);
         _json = Repeat("{\"id\":1,\"name\":\"a\",\"items\":[1,2,3,true,null,{\"nested\":\"yes\"}]}\n"u8, Repetitions);
-        _yaml = Repeat("name: example\nitems:\n  - id: 1\n    label: \"first\"\n  - id: 2\n    label: \"second\"\n"u8, Repetitions);
+        _yaml = Repeat(
+            "name: example\nitems:\n  - id: 1\n    label: \"first\"\n  - id: 2\n    label: \"second\"\n"u8,
+            Repetitions);
         _bash = Repeat("#!/usr/bin/env bash\nset -euo pipefail\nfor f in *.txt; do echo \"$f\"; done\n"u8, Repetitions);
-        _python = Repeat("def hello(name: str) -> None:\n    \"\"\"Greet someone.\"\"\"\n    print(f\"Hello, {name}!\")\n\nif __name__ == \"__main__\":\n    hello(\"world\")\n"u8, Repetitions);
-        _fsharp = Repeat("open System\nlet add x y = x + y\nlet result = [1; 2; 3] |> List.map (fun n -> n * n) |> List.sum\nprintfn \"%d\" result\n"u8, Repetitions);
-        _javascript = Repeat("const items = [1, 2, 3];\nfunction sum(xs) { return xs.reduce((a, b) => a + b, 0); }\nconsole.log(sum(items));\n"u8, Repetitions);
-        _powershell = Repeat("Get-ChildItem -Path . -Recurse | Where-Object { $_.Length -gt 1024 } | ForEach-Object { Write-Host $_.FullName }\n"u8, Repetitions);
-        _diff = Repeat("--- a/file.txt\n+++ b/file.txt\n@@ -1,3 +1,3 @@\n removed line context\n-old line\n+new line\n still context\n"u8, Repetitions);
+        _python = Repeat(
+            "def hello(name: str) -> None:\n    \"\"\"Greet someone.\"\"\"\n    print(f\"Hello, {name}!\")\n\nif __name__ == \"__main__\":\n    hello(\"world\")\n"u8,
+            Repetitions);
+        _fsharp = Repeat(
+            "open System\nlet add x y = x + y\nlet result = [1; 2; 3] |> List.map (fun n -> n * n) |> List.sum\nprintfn \"%d\" result\n"u8,
+            Repetitions);
+        _javascript =
+            Repeat(
+                "const items = [1, 2, 3];\nfunction sum(xs) { return xs.reduce((a, b) => a + b, 0); }\nconsole.log(sum(items));\n"u8,
+                Repetitions);
+        _powershell =
+            Repeat(
+                "Get-ChildItem -Path . -Recurse | Where-Object { $_.Length -gt 1024 } | ForEach-Object { Write-Host $_.FullName }\n"u8,
+                Repetitions);
+        _diff = Repeat(
+            "--- a/file.txt\n+++ b/file.txt\n@@ -1,3 +1,3 @@\n removed line context\n-old line\n+new line\n still context\n"u8,
+            Repetitions);
     }
 
     /// <summary>Benchmark: C# lexer.</summary>

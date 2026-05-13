@@ -5,7 +5,8 @@
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Equality comparer for <c>byte[]</c> keys with <see cref="ReadOnlySpan{T}"/> alternate lookups.</summary>
-internal sealed class ByteArrayKeyComparer : IEqualityComparer<byte[]>, IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>
+internal sealed class ByteArrayKeyComparer : IEqualityComparer<byte[]>,
+    IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>
 {
     /// <summary>Gets the singleton instance.</summary>
     public static ByteArrayKeyComparer Instance { get; } = new();
@@ -14,13 +15,11 @@ internal sealed class ByteArrayKeyComparer : IEqualityComparer<byte[]>, IAlterna
     public bool Equals(byte[]? x, byte[]? y) => x is null ? y is null : y is not null && x.AsSpan().SequenceEqual(y);
 
     /// <inheritdoc/>
-    public int GetHashCode(byte[] obj)
-    {
-        return GetHashCode((ReadOnlySpan<byte>)obj);
-    }
+    public int GetHashCode(byte[] obj) => GetHashCode((ReadOnlySpan<byte>)obj);
 
     /// <inheritdoc/>
-    public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) => other is not null && alternate.SequenceEqual(other);
+    public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) =>
+        other is not null && alternate.SequenceEqual(other);
 
     /// <inheritdoc/>
     public int GetHashCode(ReadOnlySpan<byte> alternate)

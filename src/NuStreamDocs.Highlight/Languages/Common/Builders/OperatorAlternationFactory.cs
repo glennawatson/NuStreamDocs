@@ -19,7 +19,9 @@ internal static class OperatorAlternationFactory
     /// <param name="spaceSeparatedFirst">First whitespace-delimited UTF-8 operator chunk.</param>
     /// <param name="spaceSeparatedSecond">Second whitespace-delimited UTF-8 operator chunk.</param>
     /// <returns>Operator byte arrays sorted by descending length.</returns>
-    public static byte[][] SplitLongestFirst(ReadOnlySpan<byte> spaceSeparatedFirst, ReadOnlySpan<byte> spaceSeparatedSecond)
+    public static byte[][] SplitLongestFirst(
+        ReadOnlySpan<byte> spaceSeparatedFirst,
+        ReadOnlySpan<byte> spaceSeparatedSecond)
     {
         var first = WhitespaceSplitter.Split(spaceSeparatedFirst);
         var second = WhitespaceSplitter.Split(spaceSeparatedSecond);

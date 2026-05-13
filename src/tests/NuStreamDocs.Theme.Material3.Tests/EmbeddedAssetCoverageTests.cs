@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Theme.Material3.Tests;
 
 /// <summary>Coverage for Material3 EmbeddedAsset.ToResourceName.</summary>
@@ -34,7 +36,7 @@ public class EmbeddedAssetCoverageTests
     [Test]
     public async Task BundledStylesheetIncludesClipboardRules()
     {
-        var css = System.Text.Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes("assets/stylesheets/material3.css"));
+        var css = Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes("assets/stylesheets/material3.css"));
         await Assert.That(css).Contains(".md-clipboard");
         await Assert.That(css).Contains("--md-clipboard-icon");
         await Assert.That(css).Contains(".md-clipboard--copied");
@@ -48,7 +50,7 @@ public class EmbeddedAssetCoverageTests
     [Test]
     public async Task BundledJavascriptIncludesClipboardHandler()
     {
-        var js = System.Text.Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes("assets/javascripts/material3.js"));
+        var js = Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes("assets/javascripts/material3.js"));
         await Assert.That(js).Contains(".md-clipboard");
         await Assert.That(js).Contains("navigator.clipboard");
         await Assert.That(js).Contains("md-clipboard--copied");

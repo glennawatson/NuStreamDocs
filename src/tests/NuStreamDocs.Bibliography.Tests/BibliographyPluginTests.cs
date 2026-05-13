@@ -39,7 +39,7 @@ public class BibliographyPluginTests
         var db = new BibliographyDatabaseBuilder()
             .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
             .Build();
-        BibliographyOptions options = new(db, Aglc4Style.Instance, WarnOnMissing: false);
+        BibliographyOptions options = new(db, Aglc4Style.Instance, false);
         BibliographyPlugin plugin = new(options);
         ArrayBufferWriter<byte> sink = new(256);
         PagePreRenderContext ctx = new("p.md", "see [@mabo]\n"u8, sink);
@@ -56,7 +56,7 @@ public class BibliographyPluginTests
     [Test]
     public async Task MissingKeyDoesNotProduceFootnote()
     {
-        BibliographyOptions options = new(BibliographyDatabase.Empty, Aglc4Style.Instance, WarnOnMissing: true);
+        BibliographyOptions options = new(BibliographyDatabase.Empty, Aglc4Style.Instance, true);
         ArrayBufferWriter<byte> sink = new(64);
         PagePreRenderContext ctx = new("p.md", "[@nope]\n"u8, sink);
         new BibliographyPlugin(options).PreRender(in ctx);

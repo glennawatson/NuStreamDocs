@@ -93,7 +93,11 @@ public class PagefindSearchPluginTests
     /// <param name="relativePath">Source-relative markdown path.</param>
     /// <param name="source">Markdown bytes (frontmatter + body).</param>
     /// <param name="html">Rendered HTML bytes.</param>
-    private static void ScanPage(PagefindSearchPlugin plugin, string relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html)
+    private static void ScanPage(
+        PagefindSearchPlugin plugin,
+        string relativePath,
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> html)
     {
         PageScanContext ctx = new(relativePath, source, html);
         plugin.Scan(in ctx);

@@ -12,10 +12,7 @@ public static class DocBuilderLunrExtensions
     /// <summary>Registers <see cref="LunrSearchPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLunrSearch(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new LunrSearchPlugin());
-    }
+    public static DocBuilder UseLunrSearch(this DocBuilder builder) => builder.UsePlugin(new LunrSearchPlugin());
 
     /// <summary>Registers <see cref="LunrSearchPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
@@ -32,8 +29,6 @@ public static class DocBuilderLunrExtensions
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLunrSearch(this DocBuilder builder, in LunrOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new LunrSearchPlugin(options, logger));
-    }
+    public static DocBuilder UseLunrSearch(this DocBuilder builder, in LunrOptions options, ILogger logger) =>
+        builder.UsePlugin(new LunrSearchPlugin(options, logger));
 }

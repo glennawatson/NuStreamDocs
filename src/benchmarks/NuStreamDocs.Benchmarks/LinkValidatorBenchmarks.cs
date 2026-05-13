@@ -66,7 +66,8 @@ public class LinkValidatorBenchmarks
     [Benchmark]
     public async Task<int> ValidateCorpus()
     {
-        var diags = await InternalLinkValidator.ValidateAsync(_corpus, Parallelism, CancellationToken.None).ConfigureAwait(false);
+        var diags = await InternalLinkValidator.ValidateAsync(_corpus, Parallelism, CancellationToken.None)
+            .ConfigureAwait(false);
         return diags.Length;
     }
 
@@ -80,9 +81,10 @@ public class LinkValidatorBenchmarks
         for (var i = 0; i < links; i++)
         {
             sb.Append("<h2 id=\"section-").Append(i).Append("\">Section ").Append(i).Append("</h2>")
-              .Append("<p>See <a href=\"page-").Append(i % CorpusPages).Append(".html#section-").Append(i).Append("\">link ").Append(i).Append("</a> ")
-              .Append("and <a href=\"../sibling/page-").Append(i).Append(".html\">sibling</a> ")
-              .Append("and <a href=\"https://example.com/external-").Append(i).Append("\">ext</a>.</p>");
+                .Append("<p>See <a href=\"page-").Append(i % CorpusPages).Append(".html#section-").Append(i)
+                .Append("\">link ").Append(i).Append("</a> ")
+                .Append("and <a href=\"../sibling/page-").Append(i).Append(".html\">sibling</a> ")
+                .Append("and <a href=\"https://example.com/external-").Append(i).Append("\">ext</a>.</p>");
         }
 
         sb.Append("</article>");

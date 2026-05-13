@@ -85,17 +85,34 @@ internal static class CssFamilyRules
         const int MaxRuleSlots = 16;
         var rules = new List<LexerRule>(MaxRuleSlots)
         {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst }
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            },
+            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SlashFirst
+            }
         };
 
         if (config.IncludeLineComment)
         {
-            rules.Add(new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst });
+            rules.Add(new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SlashFirst
+            });
         }
 
-        rules.Add(new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst });
-        rules.Add(new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst });
+        rules.Add(new(
+                TokenMatchers.MatchDoubleQuotedWithBackslashEscape,
+                TokenClass.StringDouble,
+                LexerRule.NoStateChange)
+        { FirstBytes = DoubleQuoteFirst });
+        rules.Add(new(
+            static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
+            TokenClass.StringSingle,
+            LexerRule.NoStateChange)
+        { FirstBytes = SingleQuoteFirst });
 
         // Hex colour literal #abc / #abcdef must precede the ID-selector rule.
         rules.Add(new(MatchHexColor, TokenClass.NumberHex, LexerRule.NoStateChange) { FirstBytes = HashFirst });
@@ -111,30 +128,54 @@ internal static class CssFamilyRules
         // SCSS variable $var.
         if (config.VariableSigil is (byte)'$')
         {
-            rules.Add(new(MatchDollarVariable, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("$"u8) });
+            rules.Add(new(MatchDollarVariable, TokenClass.Name, LexerRule.NoStateChange)
+            {
+                FirstBytes = SearchValues.Create("$"u8)
+            });
         }
 
         // Parent reference & — SCSS / Less only.
         if (config.IncludeParentSelector)
         {
-            rules.Add(new(MatchParentSelector, TokenClass.NameClass, LexerRule.NoStateChange) { FirstBytes = AmpFirst });
+            rules.Add(new(
+                    MatchParentSelector,
+                    TokenClass.NameClass,
+                    LexerRule.NoStateChange)
+            { FirstBytes = AmpFirst });
         }
 
         // !important annotation.
         rules.Add(new(MatchImportant, TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = BangFirst });
 
         // Dimensioned float (1.5em, 100%, 12.5px).
-        rules.Add(new(MatchFloatWithUnit, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
+        rules.Add(new(MatchFloatWithUnit, TokenClass.NumberFloat, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiDigits
+        });
 
         // Dimensioned integer (12px, 100%).
-        rules.Add(new(MatchIntegerWithUnit, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
+        rules.Add(new(MatchIntegerWithUnit, TokenClass.NumberInteger, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiDigits
+        });
 
         // Identifier (property name, value keyword, element selector). Continue set includes dash so
         // CSS properties like `font-size` and values like `box-sizing` classify as one token.
-        rules.Add(new(MatchCssIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart });
+        rules.Add(new(MatchCssIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiIdentifierStart
+        });
 
-        rules.Add(new(static slice => TokenMatchers.MatchSingleByteOf(slice, OperatorFirst), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst });
-        rules.Add(new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet });
+        rules.Add(new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, OperatorFirst),
+                TokenClass.Operator,
+                LexerRule.NoStateChange)
+        { FirstBytes = OperatorFirst });
+        rules.Add(new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet),
+                TokenClass.Punctuation,
+                LexerRule.NoStateChange)
+        { FirstBytes = PunctuationSet });
 
         return [.. rules];
     }

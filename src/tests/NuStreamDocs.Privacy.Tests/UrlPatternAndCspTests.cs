@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Privacy.Tests;
@@ -30,10 +31,10 @@ public class UrlPatternAndCspTests
     public async Task IncludePatternBroadensAllowSet()
     {
         HostFilter filter = new(
-            hostsToSkip: null,
-            hostsAllowed: PrivacyTestHelpers.Utf8("allowed.example"),
-            includePatterns: PrivacyTestHelpers.Utf8("https://other.example/css*"),
-            excludePatterns: null);
+            null,
+            PrivacyTestHelpers.Utf8("allowed.example"),
+            PrivacyTestHelpers.Utf8("https://other.example/css*"),
+            null);
         await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png"u8)).IsTrue();
         await Assert.That(filter.ShouldLocalize("https://other.example/css/main.css"u8)).IsTrue();
         await Assert.That(filter.ShouldLocalize("https://other.example/recaptcha/x"u8)).IsFalse();
@@ -45,10 +46,10 @@ public class UrlPatternAndCspTests
     public async Task ExcludePatternBlocksAllowedHost()
     {
         HostFilter filter = new(
-            hostsToSkip: null,
-            hostsAllowed: null,
-            includePatterns: null,
-            excludePatterns: PrivacyTestHelpers.Utf8("https://*.googleapis.com/recaptcha/*"));
+            null,
+            null,
+            null,
+            PrivacyTestHelpers.Utf8("https://*.googleapis.com/recaptcha/*"));
         await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/css"u8)).IsTrue();
         await Assert.That(filter.ShouldLocalize("https://fonts.googleapis.com/recaptcha/x"u8)).IsFalse();
     }
@@ -58,8 +59,8 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task CspHashCollectorEmitsStableSha256()
     {
-        ConcurrentDictionary<byte[], byte> styles = new(Common.ByteArrayComparer.Instance);
-        ConcurrentDictionary<byte[], byte> scripts = new(Common.ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> styles = new(ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> scripts = new(ByteArrayComparer.Instance);
         const string Html = "<style>body{color:red}</style><script>alert(1)</script>";
         CspHashCollector.Collect(Encoding.UTF8.GetBytes(Html), styles, scripts);
 
@@ -77,8 +78,8 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task CspHashCollectorSkipsEmptyBodies()
     {
-        ConcurrentDictionary<byte[], byte> styles = new(Common.ByteArrayComparer.Instance);
-        ConcurrentDictionary<byte[], byte> scripts = new(Common.ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> styles = new(ByteArrayComparer.Instance);
+        ConcurrentDictionary<byte[], byte> scripts = new(ByteArrayComparer.Instance);
         CspHashCollector.Collect([.. "<script src=\"/x.js\"></script>"u8], styles, scripts);
         await Assert.That(scripts).IsEmpty();
     }
@@ -88,7 +89,9 @@ public class UrlPatternAndCspTests
     [Test]
     public async Task PrivacyPluginEmitsCspManifest()
     {
-        var outputRoot = Path.Combine(Path.GetTempPath(), "smkd-csp-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var outputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-csp-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(outputRoot);
         try
         {
@@ -110,7 +113,7 @@ public class UrlPatternAndCspTests
         {
             try
             {
-                Directory.Delete(outputRoot, recursive: true);
+                Directory.Delete(outputRoot, true);
             }
             catch (IOException)
             {

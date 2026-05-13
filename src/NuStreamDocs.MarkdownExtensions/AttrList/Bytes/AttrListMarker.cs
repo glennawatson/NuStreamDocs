@@ -59,7 +59,12 @@ internal static class AttrListMarker
     /// <param name="contentEnd">Offset of the closing <c>}</c> on success.</param>
     /// <param name="markerEnd">Offset just past the closing <c>}</c> on success.</param>
     /// <returns>True when a well-formed marker was found.</returns>
-    public static bool TryMatchMarker(ReadOnlySpan<byte> source, int p, out int contentStart, out int contentEnd, out int markerEnd)
+    public static bool TryMatchMarker(
+        ReadOnlySpan<byte> source,
+        int p,
+        out int contentStart,
+        out int contentEnd,
+        out int markerEnd)
     {
         contentStart = NoOffset;
         contentEnd = NoOffset;
@@ -146,7 +151,11 @@ internal static class AttrListMarker
     /// <param name="attrListStart">Body start.</param>
     /// <param name="attrListEnd">Body end.</param>
     /// <param name="buffers">Mutable parse-state buffers.</param>
-    private static void ParseAttrList(ReadOnlySpan<byte> source, int attrListStart, int attrListEnd, ref AttrListBuffers buffers)
+    private static void ParseAttrList(
+        ReadOnlySpan<byte> source,
+        int attrListStart,
+        int attrListEnd,
+        ref AttrListBuffers buffers)
     {
         var i = attrListStart;
         while (i < attrListEnd)
@@ -259,7 +268,12 @@ internal static class AttrListMarker
     /// <param name="quote">Quote byte (single or double).</param>
     /// <param name="valueRange">Value range (excluding the quotes).</param>
     /// <returns>Cursor just past the closing quote (or at end if unterminated).</returns>
-    private static int ReadQuotedValue(ReadOnlySpan<byte> source, int offset, int end, byte quote, out ByteRange valueRange)
+    private static int ReadQuotedValue(
+        ReadOnlySpan<byte> source,
+        int offset,
+        int end,
+        byte quote,
+        out ByteRange valueRange)
     {
         var start = offset;
         while (offset < end && source[offset] != quote)
@@ -421,7 +435,11 @@ internal static class AttrListMarker
     /// <param name="nameRange">Name range.</param>
     /// <param name="valueRange">Value range; sentinel start emits a bare attribute name.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    private static void EmitVerbatimAttr(ReadOnlySpan<byte> source, in ByteRange nameRange, in ByteRange valueRange, IBufferWriter<byte> sink)
+    private static void EmitVerbatimAttr(
+        ReadOnlySpan<byte> source,
+        in ByteRange nameRange,
+        in ByteRange valueRange,
+        IBufferWriter<byte> sink)
     {
         Utf8StringWriter.WriteByte(sink, (byte)' ');
         WriteRange(sink, source, nameRange);
@@ -451,7 +469,11 @@ internal static class AttrListMarker
     /// <param name="existingValue">Existing class value range (zero-length when no existing class attribute).</param>
     /// <param name="classRanges">New class ranges to append.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    private static void EmitClassAttr(ReadOnlySpan<byte> source, in ByteRange existingValue, in ReadOnlySpan<ByteRange> classRanges, IBufferWriter<byte> sink)
+    private static void EmitClassAttr(
+        ReadOnlySpan<byte> source,
+        in ByteRange existingValue,
+        in ReadOnlySpan<ByteRange> classRanges,
+        IBufferWriter<byte> sink)
     {
         Utf8StringWriter.Write(sink, " class=\""u8);
         var wrote = false;

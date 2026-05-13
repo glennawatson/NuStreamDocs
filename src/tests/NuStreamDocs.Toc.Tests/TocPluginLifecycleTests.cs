@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Toc.Tests;
 
 /// <summary>Lifecycle method coverage for TocPlugin.</summary>
@@ -14,6 +16,6 @@ public class TocPluginLifecycleTests
     {
         TocPlugin plugin = new();
         await Assert.That(plugin.Name.SequenceEqual("toc"u8)).IsTrue();
-        await Assert.That(System.Text.Encoding.UTF8.GetString(TocPlugin.TocMarker)).IsEqualTo("<!--@@toc@@-->");
+        await Assert.That(Encoding.UTF8.GetString(TocPlugin.TocMarker)).IsEqualTo("<!--@@toc@@-->");
     }
 }

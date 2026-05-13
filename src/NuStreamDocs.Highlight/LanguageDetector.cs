@@ -299,7 +299,11 @@ internal static class LanguageDetector
     /// <param name="allowList">Optional language-alias allow-list (lowercase UTF-8); empty means no restriction.</param>
     /// <param name="languageId">On success, the lowercased alias bytes (do not mutate — tied to a static buffer).</param>
     /// <returns>True when a confident match was found.</returns>
-    public static bool TryDetect(ReadOnlySpan<byte> escapedBody, LexerRegistry registry, byte[][] allowList, out ReadOnlySpan<byte> languageId)
+    public static bool TryDetect(
+        ReadOnlySpan<byte> escapedBody,
+        LexerRegistry registry,
+        byte[][] allowList,
+        out ReadOnlySpan<byte> languageId)
     {
         languageId = default;
 
@@ -354,7 +358,10 @@ internal static class LanguageDetector
     /// <param name="registry">Active lexer registry.</param>
     /// <param name="allowList">Optional alias allow-list (empty = no restriction).</param>
     /// <returns>Winner profile index (or <c>-1</c>), winning score, and runner-up score.</returns>
-    private static (int BestIndex, int BestScore, int RunnerUp) PickWinner(ReadOnlySpan<int> scores, LexerRegistry registry, byte[][] allowList)
+    private static (int BestIndex, int BestScore, int RunnerUp) PickWinner(
+        ReadOnlySpan<int> scores,
+        LexerRegistry registry,
+        byte[][] allowList)
     {
         var bestIndex = -1;
         var bestScore = 0;

@@ -43,17 +43,13 @@ public sealed class Template
     /// <summary>Renders this template against <paramref name="data"/> with no partial map.</summary>
     /// <param name="data">Root data scope.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public void Render(TemplateData data, IBufferWriter<byte> writer)
-    {
-        TemplateRenderer.Render(_source, _instructions, data, partials: null, writer);
-    }
+    public void Render(TemplateData data, IBufferWriter<byte> writer) =>
+        TemplateRenderer.Render(_source, _instructions, data, null, writer);
 
     /// <summary>Renders this template against <paramref name="data"/> resolving partials through <paramref name="partials"/>.</summary>
     /// <param name="data">Root data scope.</param>
     /// <param name="partials">UTF-8-byte-keyed map of partial-name to compiled <see cref="Template"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public void Render(TemplateData data, Dictionary<byte[], Template> partials, IBufferWriter<byte> writer)
-    {
+    public void Render(TemplateData data, Dictionary<byte[], Template> partials, IBufferWriter<byte> writer) =>
         TemplateRenderer.Render(_source, _instructions, data, partials, writer);
-    }
 }

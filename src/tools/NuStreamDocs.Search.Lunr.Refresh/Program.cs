@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -63,7 +64,7 @@ public static class Program
         Uri assetUri = new(assetUrl);
 
         using HttpClientHandler handler = new();
-        handler.AutomaticDecompression = System.Net.DecompressionMethods.All;
+        handler.AutomaticDecompression = DecompressionMethods.All;
         handler.CheckCertificateRevocationList = true;
         using HttpClient http = new(handler);
         http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
@@ -90,7 +91,8 @@ public static class Program
             return 1;
         }
 
-        await stdout.WriteLineAsync("\nDone. Remember to bump LunrAssets.PinnedVersion if the version changed.").ConfigureAwait(false);
+        await stdout.WriteLineAsync("\nDone. Remember to bump LunrAssets.PinnedVersion if the version changed.")
+            .ConfigureAwait(false);
         return 0;
     }
 

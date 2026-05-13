@@ -401,7 +401,8 @@ internal static class PowerShellRules
     private static readonly SearchValues<byte> Punctuation = SearchValues.Create("(){}[],.;:"u8);
 
     /// <summary>First-byte set for verbs — letters that begin one of the approved-verb words.</summary>
-    private static readonly SearchValues<byte> VerbFirst = SearchValues.Create("AaBbCcDdEeFfGgHhIiJjLlMmNnOoPpRrSsTtUuWw"u8);
+    private static readonly SearchValues<byte> VerbFirst =
+        SearchValues.Create("AaBbCcDdEeFfGgHhIiJjLlMmNnOoPpRrSsTtUuWw"u8);
 
     /// <summary>First-byte set for any identifier (incl. aliases).</summary>
     private static readonly SearchValues<byte> AliasFirst = TokenMatchers.AsciiIdentifierStart;
@@ -410,19 +411,34 @@ internal static class PowerShellRules
     /// <returns>Ordered rule list.</returns>
     public static LexerRule[] Build() =>
     [
-        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
+        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+        {
+            FirstBytes = WhitespaceFirst
+        },
 
         new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = AngleOpenFirst },
 
-        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = CommentFirst },
+        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+        {
+            FirstBytes = CommentFirst
+        },
 
-        new(TokenMatchers.MatchSingleQuotedDoubledEscape, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
+        new(TokenMatchers.MatchSingleQuotedDoubledEscape, TokenClass.StringSingle, LexerRule.NoStateChange)
+        {
+            FirstBytes = LanguageCommon.SingleQuoteFirst
+        },
 
-        new(MatchDoubleQuotedWithBacktickEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
+        new(MatchDoubleQuotedWithBacktickEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
+        {
+            FirstBytes = LanguageCommon.DoubleQuoteFirst
+        },
 
         new(MatchVariable, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = VariableFirst },
 
-        new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
+        new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiDigits
+        },
 
         new(MatchTypeReference, TokenClass.NameClass, LexerRule.NoStateChange) { FirstBytes = BracketOpenFirst },
 
@@ -430,15 +446,30 @@ internal static class PowerShellRules
 
         new(MatchVerbNoun, TokenClass.NameBuiltin, LexerRule.NoStateChange) { FirstBytes = VerbFirst },
 
-        new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
+        new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiIdentifierStart
+        },
 
-        new(static slice => TokenMatchers.MatchKeyword(slice, Aliases), TokenClass.NameBuiltin, LexerRule.NoStateChange) { FirstBytes = AliasFirst },
+        new(static slice => TokenMatchers.MatchKeyword(slice, Aliases), TokenClass.NameBuiltin, LexerRule.NoStateChange)
+        {
+            FirstBytes = AliasFirst
+        },
 
-        new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
+        new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiIdentifierStart
+        },
 
-        new(static slice => TokenMatchers.MatchLongestLiteral(slice, Operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
+        new(
+            static slice => TokenMatchers.MatchLongestLiteral(slice, Operators),
+            TokenClass.Operator,
+            LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
 
-        new(static slice => TokenMatchers.MatchSingleByteOf(slice, Punctuation), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = Punctuation }
+        new(
+            static slice => TokenMatchers.MatchSingleByteOf(slice, Punctuation),
+            TokenClass.Punctuation,
+            LexerRule.NoStateChange) { FirstBytes = Punctuation }
     ];
 
     /// <summary>PowerShell block comment <c>&lt;# ... #&gt;</c>.</summary>

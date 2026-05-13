@@ -82,10 +82,7 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     public void PostRender(in PagePostRenderContext context) => Highlight(context.Html, context.Output);
 
     /// <inheritdoc/>
-    public void WriteHeadExtra(IBufferWriter<byte> writer)
-    {
-        writer.Write(HeadExtraSnippet);
-    }
+    public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(HeadExtraSnippet);
 
     /// <summary>Decodes HTML-escaped UTF-8 bytes into a fresh byte array; copies verbatim when no entities are present.</summary>
     /// <param name="bytes">Source bytes.</param>
@@ -215,7 +212,10 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     /// <param name="languageBytes">Detected language alias bytes.</param>
     /// <param name="body">Original (HTML-escaped) body bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private void EmitDetectedBlock(ReadOnlySpan<byte> languageBytes, ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
+    private void EmitDetectedBlock(
+        ReadOnlySpan<byte> languageBytes,
+        ReadOnlySpan<byte> body,
+        IBufferWriter<byte> writer)
     {
         EmitOpeningWrapper(default, writer);
         Write(writer, "<pre><code class=\"language-"u8);
@@ -282,7 +282,14 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     /// <param name="dataInfo">Decoded fence-info bytes (may be empty).</param>
     /// <param name="languageBytes">Language alias bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private void EmitWrappedBlock(ReadOnlySpan<byte> source, int preStart, int bodyStart, int bodyEnd, ReadOnlySpan<byte> dataInfo, ReadOnlySpan<byte> languageBytes, IBufferWriter<byte> writer)
+    private void EmitWrappedBlock(
+        ReadOnlySpan<byte> source,
+        int preStart,
+        int bodyStart,
+        int bodyEnd,
+        ReadOnlySpan<byte> dataInfo,
+        ReadOnlySpan<byte> languageBytes,
+        IBufferWriter<byte> writer)
     {
         EmitOpeningWrapper(dataInfo, writer);
 
@@ -352,7 +359,9 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
             return;
         }
 
-        Write(writer, "<button class=\"md-clipboard md-icon\" type=\"button\" aria-label=\"Copy to clipboard\"></button>"u8);
+        Write(
+            writer,
+            "<button class=\"md-clipboard md-icon\" type=\"button\" aria-label=\"Copy to clipboard\"></button>"u8);
     }
 
     /// <summary>Highlights <paramref name="body"/> when a lexer is registered for <paramref name="languageBytes"/>; otherwise emits it verbatim.</summary>

@@ -2,9 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Linq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
-using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.ContentLoader.Tests;
@@ -23,15 +22,16 @@ public class ContentLoaderPluginTests
     [Test]
     public async Task DiscoverFeedsSink()
     {
-        FakeLoader one = new([new(new FilePath("a/x.md"), [.. "x"u8]), new(new FilePath("a/y.md"), [.. "y"u8])]);
-        FakeLoader two = new([new(new FilePath("b/z.md"), [.. "z"u8])]);
+        FakeLoader one = new([new(new("a/x.md"), [.. "x"u8]), new(new("a/y.md"), [.. "y"u8])]);
+        FakeLoader two = new([new(new("b/z.md"), [.. "z"u8])]);
         var plugin = new ContentLoaderPlugin([one, two]);
 
         SyntheticPageSink sink = new();
         BuildDiscoverContext context = new(default, default, [], sink);
         await plugin.DiscoverAsync(context, CancellationToken.None);
 
-        var paths = sink.Snapshot().Select(p => p.RelativePath.Value).OrderBy(static p => p, StringComparer.Ordinal).ToArray();
+        var paths = sink.Snapshot().Select(p => p.RelativePath.Value).OrderBy(static p => p, StringComparer.Ordinal)
+            .ToArray();
         await Assert.That(string.Join(",", paths)).IsEqualTo("a/x.md,a/y.md,b/z.md");
     }
 
@@ -43,7 +43,7 @@ public class ContentLoaderPluginTests
         FakeLoader loader = new([]);
         await Assert.That(new DocBuilder().UseContentLoader(loader)).IsNotNull();
         await Assert.That(new DocBuilder().UseContentLoaders(loader)).IsNotNull();
-        await Assert.That(new DocBuilder().UseContentLoaders(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, loader)).IsNotNull();
+        await Assert.That(new DocBuilder().UseContentLoaders(NullLogger.Instance, loader)).IsNotNull();
     }
 
     /// <summary>A test loader that returns a fixed page set.</summary>

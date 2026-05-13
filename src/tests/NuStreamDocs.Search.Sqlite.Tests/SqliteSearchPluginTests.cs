@@ -140,17 +140,19 @@ public class SqliteSearchPluginTests
     /// <summary>The pinned runtime version is exposed.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PinnedRuntimeVersionExposed()
-    {
+    public async Task PinnedRuntimeVersionExposed() =>
         await Assert.That(SqliteSearchPlugin.PinnedRuntimeVersion).IsNotEmpty();
-    }
 
     /// <summary>Drives one Scan call against the plugin.</summary>
     /// <param name="plugin">Plugin under test.</param>
     /// <param name="relativePath">Source-relative markdown path.</param>
     /// <param name="source">Markdown bytes (frontmatter + body).</param>
     /// <param name="html">Rendered HTML bytes.</param>
-    private static void ScanPage(SqliteSearchPlugin plugin, string relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html)
+    private static void ScanPage(
+        SqliteSearchPlugin plugin,
+        string relativePath,
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> html)
     {
         PageScanContext ctx = new(relativePath, source, html);
         plugin.Scan(in ctx);
@@ -208,7 +210,9 @@ public class SqliteSearchPluginTests
         /// <returns>A new fixture; caller must dispose.</returns>
         public static TempBuildFixture Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-sqlite-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            var root = Path.Combine(
+                Path.GetTempPath(),
+                "smkd-sqlite-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(root);
             return new(root);
         }
@@ -220,7 +224,7 @@ public class SqliteSearchPluginTests
             {
                 if (Directory.Exists(Root))
                 {
-                    Directory.Delete(Root, recursive: true);
+                    Directory.Delete(Root, true);
                 }
             }
             catch (IOException)

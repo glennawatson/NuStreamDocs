@@ -32,9 +32,9 @@ public static class KotlinLexer
                 "?: ..= .. -> :: == != <= >= && || ++ -- += -= *= /= %= ?. !! + - * / % ! = < > ?"u8),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
-        integerSuffix: SearchValues.Create("Llu"u8),
-        floatSuffix: SearchValues.Create("fF"u8),
-        includeDocComment: false,
-        includeCharacterLiteral: true,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
+        SearchValues.Create("Llu"u8),
+        SearchValues.Create("fF"u8),
+        false,
+        true,
+        CFamilyRules.CreateTripleDoubleQuotedRawStringRule());
 }

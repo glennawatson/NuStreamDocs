@@ -27,7 +27,8 @@ public class UrlBytesTests
     public async Task AssetAttrCaseInsensitive(string html)
     {
         var (registry, filter) = MakeAllAccept();
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(html), registry, filter));
         await Assert.That(output).Contains("\"/local/", StringComparison.Ordinal);
     }
 
@@ -38,7 +39,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "<x datasrc=\"https://cdn.test/a.png\">";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -49,7 +51,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "前 <img src=\"https://cdn.test/a.png\"> 後 🚀";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).StartsWith("前 ");
         await Assert.That(output).EndsWith(" 後 🚀");
         await Assert.That(output).Contains("/local/");
@@ -62,7 +65,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "<img src='https://cdn.test/a.png'>";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).Contains("'/local/");
     }
 
@@ -73,7 +77,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "<img src = \"https://cdn.test/a.png\">";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).Contains("/local/");
     }
 
@@ -84,7 +89,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "<img src=\"https://cdn.test/a.png\"><img src=\"https://cdn.test/b.png\">";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         var first = output.IndexOf("/local/", StringComparison.Ordinal);
         var second = output.IndexOf("/local/", first + 1, StringComparison.Ordinal);
         await Assert.That(first).IsGreaterThanOrEqualTo(0);
@@ -97,9 +103,10 @@ public class UrlBytesTests
     public async Task FilterRejectionPassesThrough()
     {
         ExternalAssetRegistry registry = new([.. "assets/external"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("other.test"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("other.test"));
         const string Html = "<img src=\"https://cdn.test/a.png\">";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -110,7 +117,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "前 <img SRCSET=\"https://cdn.test/a.png 1x, https://cdn.test/b.png 2x\"> 後";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).Contains("前 ");
         await Assert.That(output).Contains(" 後");
         await Assert.That(output).Contains("/local/");
@@ -124,9 +132,10 @@ public class UrlBytesTests
     public async Task SrcsetNoLocalizeUnchanged()
     {
         ExternalAssetRegistry registry = new([.. "assets/external"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("other.test"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("other.test"));
         const string Html = "<img srcset=\"https://cdn.test/a.png 1x\">";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -137,9 +146,10 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "<p>before url(https://cdn.test/before.png)</p>"
-            + "<style>.x { background: url(https://cdn.test/a.png); }</style>"
-            + "<p>after url(https://cdn.test/after.png)</p>";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+                            + "<style>.x { background: url(https://cdn.test/a.png); }</style>"
+                            + "<p>after url(https://cdn.test/after.png)</p>";
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
 
         // Inside <style>: rewritten.
         await Assert.That(output).Contains("url(/local/");
@@ -156,7 +166,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "<style type=\"text/css\">.x { background: url(https://cdn.test/a.png); }</style>";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).Contains("url(/local/");
     }
 
@@ -172,7 +183,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         var html = $"<style>.x{{background:{bodyForm};}}</style>";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(html), registry, filter));
         await Assert.That(output).Contains("/local/");
     }
 
@@ -183,7 +195,8 @@ public class UrlBytesTests
     {
         var (registry, filter) = MakeAllAccept();
         const string Html = "<style>.x { background: blurb(https://cdn.test/a.png); }</style>";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -192,11 +205,11 @@ public class UrlBytesTests
     [Test]
     public async Task AuditCollectsFromAllThreeSurfaces()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("cdn.test"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("cdn.test"));
         ConcurrentDictionary<byte[], byte> auditSet = new(ByteArrayComparer.Instance);
         const string Html = "<img src=\"https://cdn.test/a.png\">"
-            + "<img srcset=\"https://cdn.test/b.png 2x\">"
-            + "<style>.x { background: url(https://cdn.test/c.png); }</style>";
+                            + "<img srcset=\"https://cdn.test/b.png 2x\">"
+                            + "<style>.x { background: url(https://cdn.test/c.png); }</style>";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Html), filter, auditSet);
         await Assert.That(auditSet.ContainsKey([.. "https://cdn.test/a.png"u8])).IsTrue();
         await Assert.That(auditSet.ContainsKey([.. "https://cdn.test/b.png"u8])).IsTrue();
@@ -208,7 +221,7 @@ public class UrlBytesTests
     [Test]
     public async Task AuditRespectsFilter()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("only.test"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("only.test"));
         ConcurrentDictionary<byte[], byte> auditSet = new(ByteArrayComparer.Instance);
         const string Html = "<img src=\"https://cdn.test/a.png\">";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Html), filter, auditSet);
@@ -220,7 +233,7 @@ public class UrlBytesTests
     private static (ExternalAssetRegistry Registry, HostFilter Filter) MakeAllAccept()
     {
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         return (registry, filter);
     }
 }

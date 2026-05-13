@@ -27,14 +27,14 @@ public sealed class LinkValidatorPlugin
 
     /// <summary>Initializes a new instance of the <see cref="LinkValidatorPlugin"/> class with default options.</summary>
     public LinkValidatorPlugin()
-        : this(LinkValidatorOptions.Default, httpClientFactory: null, NullLogger.Instance)
+        : this(LinkValidatorOptions.Default, null, NullLogger.Instance)
     {
     }
 
     /// <summary>Initializes a new instance of the <see cref="LinkValidatorPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
     public LinkValidatorPlugin(LinkValidatorOptions options)
-        : this(options, httpClientFactory: null, NullLogger.Instance)
+        : this(options, null, NullLogger.Instance)
     {
     }
 
@@ -90,7 +90,8 @@ public sealed class LinkValidatorPlugin
         // raw markers, so a Scan-time corpus would report every cross-page reference as
         // a broken link. Walking disk after PostResolve + write produces the canonical
         // post-everything HTML and matches what a browser sees.
-        var corpus = await ValidationCorpus.BuildAsync(context.OutputRoot, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        var corpus = await ValidationCorpus.BuildAsync(context.OutputRoot, _options.Parallelism, cancellationToken)
+            .ConfigureAwait(false);
         LastDiagnostics = await ValidateAsync(corpus, cancellationToken).ConfigureAwait(false);
         ReportThroughLogger(_logger, LastDiagnostics);
 
@@ -110,7 +111,8 @@ public sealed class LinkValidatorPlugin
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
 
-        var corpus = await ValidationCorpus.BuildAsync(outputRoot, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        var corpus = await ValidationCorpus.BuildAsync(outputRoot, _options.Parallelism, cancellationToken)
+            .ConfigureAwait(false);
         return await ValidateAsync(corpus, cancellationToken).ConfigureAwait(false);
     }
 
@@ -140,16 +142,26 @@ public sealed class LinkValidatorPlugin
     private async Task<LinkDiagnostic[]> ValidateAsync(ValidationCorpus corpus, CancellationToken cancellationToken)
     {
         var (internalLinkCount, externalLinkCount) = LinkValidatorReporter.CountLinks(corpus);
-        LinkValidatorLoggingHelper.LogValidationCorpus(_logger, corpus.Pages.Length, internalLinkCount, externalLinkCount);
+        LinkValidatorLoggingHelper.LogValidationCorpus(
+            _logger,
+            corpus.Pages.Length,
+            internalLinkCount,
+            externalLinkCount);
 
-        var internalDiags = await InternalLinkValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken).ConfigureAwait(false);
-        var assetDiags = await AssetReferenceValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken).ConfigureAwait(false);
+        var internalDiags = await InternalLinkValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken)
+            .ConfigureAwait(false);
+        var assetDiags = await AssetReferenceValidator.ValidateAsync(corpus, _options.Parallelism, cancellationToken)
+            .ConfigureAwait(false);
         var externalDiags = _options.StrictExternal
             ? await RunExternalAsync(corpus, cancellationToken).ConfigureAwait(false)
             : [];
 
         LinkDiagnostic[] combinedInternal = [.. internalDiags, .. assetDiags];
-        return LinkValidatorReporter.Merge(combinedInternal, externalDiags, _options.StrictInternal, _options.StrictExternal);
+        return LinkValidatorReporter.Merge(
+            combinedInternal,
+            externalDiags,
+            _options.StrictInternal,
+            _options.StrictExternal);
     }
 
     /// <summary>Runs the external HTTP checker.</summary>
@@ -161,13 +173,15 @@ public sealed class LinkValidatorPlugin
         if (_httpClientFactory is not null)
         {
             var client = _httpClientFactory();
-            return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, client, cancellationToken).ConfigureAwait(false);
+            return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, client, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         using SocketsHttpHandler handler = new();
         handler.PooledConnectionLifetime = TimeSpan.FromMinutes(2);
         handler.PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15);
-        using HttpClient owned = new(handler, disposeHandler: false);
-        return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, owned, cancellationToken).ConfigureAwait(false);
+        using HttpClient owned = new(handler, false);
+        return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, owned, cancellationToken)
+            .ConfigureAwait(false);
     }
 }

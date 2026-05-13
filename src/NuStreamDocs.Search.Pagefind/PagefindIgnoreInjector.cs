@@ -29,7 +29,11 @@ public static class PagefindIgnoreInjector
     /// <param name="logger">Diagnostic logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Number of files modified.</returns>
-    public static async Task<int> InjectAsync(DirectoryPath siteRoot, byte[][] excludePrefixes, ILogger logger, CancellationToken cancellationToken)
+    public static async Task<int> InjectAsync(
+        DirectoryPath siteRoot,
+        byte[][] excludePrefixes,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(siteRoot.Value);
 

@@ -12,7 +12,7 @@ public class HostFilterByteTests
     [Test]
     public async Task RejectsNonHttpScheme()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         await Assert.That(filter.ShouldLocalize("ftp://example.com/x"u8)).IsFalse();
         await Assert.That(filter.ShouldLocalize("data:image/png;base64,abc"u8)).IsFalse();
         await Assert.That(filter.ShouldLocalize("/relative/path"u8)).IsFalse();
@@ -23,7 +23,7 @@ public class HostFilterByteTests
     [Test]
     public async Task RejectsHostlessUrl()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         await Assert.That(filter.ShouldLocalize("https://"u8)).IsFalse();
         await Assert.That(filter.ShouldLocalize(default)).IsFalse();
     }
@@ -33,7 +33,7 @@ public class HostFilterByteTests
     [Test]
     public async Task SkipListRejects()
     {
-        HostFilter filter = new(hostsToSkip: PrivacyTestHelpers.Utf8("analytics.example"), hostsAllowed: null);
+        HostFilter filter = new(PrivacyTestHelpers.Utf8("analytics.example"), null);
         await Assert.That(filter.ShouldLocalize("https://analytics.example/track"u8)).IsFalse();
         await Assert.That(filter.ShouldLocalize("https://other.example/x"u8)).IsTrue();
     }
@@ -43,7 +43,7 @@ public class HostFilterByteTests
     [Test]
     public async Task SkipListIgnoresCase()
     {
-        HostFilter filter = new(hostsToSkip: PrivacyTestHelpers.Utf8("Analytics.Example"), hostsAllowed: null);
+        HostFilter filter = new(PrivacyTestHelpers.Utf8("Analytics.Example"), null);
         await Assert.That(filter.ShouldLocalize("https://ANALYTICS.example/x"u8)).IsFalse();
     }
 
@@ -52,7 +52,7 @@ public class HostFilterByteTests
     [Test]
     public async Task AllowListRestricts()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("only.example"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("only.example"));
         await Assert.That(filter.ShouldLocalize("https://only.example/x"u8)).IsTrue();
         await Assert.That(filter.ShouldLocalize("https://other.example/x"u8)).IsFalse();
     }
@@ -63,10 +63,10 @@ public class HostFilterByteTests
     public async Task PatternFollowupHandlesExclude()
     {
         HostFilter filter = new(
-            hostsToSkip: null,
-            hostsAllowed: null,
-            includePatterns: null,
-            excludePatterns: PrivacyTestHelpers.Utf8("*tracking*"));
+            null,
+            null,
+            null,
+            PrivacyTestHelpers.Utf8("*tracking*"));
         await Assert.That(filter.ShouldLocalize("https://x.example/tracking/pixel"u8)).IsFalse();
         await Assert.That(filter.ShouldLocalize("https://x.example/normal"u8)).IsTrue();
     }
@@ -76,7 +76,7 @@ public class HostFilterByteTests
     [Test]
     public async Task StripsUserinfoBeforeHostMatch()
     {
-        HostFilter filter = new(hostsToSkip: PrivacyTestHelpers.Utf8("example.com"), hostsAllowed: null);
+        HostFilter filter = new(PrivacyTestHelpers.Utf8("example.com"), null);
         await Assert.That(filter.ShouldLocalize("https://user:pass@example.com/x"u8)).IsFalse();
     }
 
@@ -85,7 +85,7 @@ public class HostFilterByteTests
     [Test]
     public async Task IgnoresPortInHostMatch()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("example.com"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("example.com"));
         await Assert.That(filter.ShouldLocalize("https://example.com:8443/x"u8)).IsTrue();
     }
 }

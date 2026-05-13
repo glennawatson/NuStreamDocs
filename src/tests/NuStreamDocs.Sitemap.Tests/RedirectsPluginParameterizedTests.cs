@@ -57,7 +57,9 @@ public class RedirectsPluginParameterizedTests
     {
         await Assert.That(new RedirectsPlugin().Name.SequenceEqual("redirects"u8)).IsTrue();
         await Assert.That(new RedirectsPlugin(("a.html", "/b.html")).Name.SequenceEqual("redirects"u8)).IsTrue();
-        await Assert.That(new RedirectsPlugin(RedirectsOptions.Default, [("a.html", "/b.html")]).Name.SequenceEqual("redirects"u8)).IsTrue();
+        await Assert
+            .That(new RedirectsPlugin(RedirectsOptions.Default, [("a.html", "/b.html")]).Name.SequenceEqual(
+                "redirects"u8)).IsTrue();
     }
 
     /// <summary>Disposable scratch directory.</summary>
@@ -78,7 +80,7 @@ public class RedirectsPluginParameterizedTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

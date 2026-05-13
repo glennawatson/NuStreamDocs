@@ -33,7 +33,7 @@ public static class HtmlTextExtractor
     {
         using var titleRental = PageBuilderPool.Rent();
         var titleBuffer = titleRental.Writer;
-        ExtractState state = new(InsideTag: false, InsideScript: false, CapturingTitle: false, EmittedSpace: true, TitleAlreadyCaptured: false);
+        ExtractState state = new(false, false, false, true, false);
 
         for (var i = 0; i < html.Length; i++)
         {
@@ -72,7 +72,12 @@ public static class HtmlTextExtractor
     /// <param name="text">Text sink.</param>
     /// <param name="title">Title sink.</param>
     /// <param name="next">Updated state.</param>
-    private static void EmitTextByte(byte b, in ExtractState state, IBufferWriter<byte> text, IBufferWriter<byte> title, out ExtractState next)
+    private static void EmitTextByte(
+        byte b,
+        in ExtractState state,
+        IBufferWriter<byte> text,
+        IBufferWriter<byte> title,
+        out ExtractState next)
     {
         if (AsciiByteHelpers.IsAsciiWhitespace(b))
         {
@@ -130,11 +135,7 @@ public static class HtmlTextExtractor
         }
 
         var startCapture = !isClose && !state.CapturingTitle && !state.TitleAlreadyCaptured;
-        return state with
-        {
-            InsideTag = true,
-            CapturingTitle = state.CapturingTitle || startCapture
-        };
+        return state with { InsideTag = true, CapturingTitle = state.CapturingTitle || startCapture };
     }
 
     /// <summary>No-op while inside a tag.</summary>
@@ -143,7 +144,11 @@ public static class HtmlTextExtractor
     /// <param name="state">Current state.</param>
     /// <param name="title">Title sink.</param>
     /// <returns>Unchanged state.</returns>
-    private static ExtractState AdvancePastTag(ReadOnlySpan<byte> html, int i, in ExtractState state, ArrayBufferWriter<byte> title)
+    private static ExtractState AdvancePastTag(
+        ReadOnlySpan<byte> html,
+        int i,
+        in ExtractState state,
+        ArrayBufferWriter<byte> title)
     {
         _ = html;
         _ = i;
@@ -223,5 +228,10 @@ public static class HtmlTextExtractor
     /// <param name="CapturingTitle">Currently inside the first <c>&lt;h1&gt;</c>.</param>
     /// <param name="EmittedSpace">Last text byte was whitespace.</param>
     /// <param name="TitleAlreadyCaptured">First H1 has already been captured.</param>
-    private readonly record struct ExtractState(bool InsideTag, bool InsideScript, bool CapturingTitle, bool EmittedSpace, bool TitleAlreadyCaptured);
+    private readonly record struct ExtractState(
+        bool InsideTag,
+        bool InsideScript,
+        bool CapturingTitle,
+        bool EmittedSpace,
+        bool TitleAlreadyCaptured);
 }

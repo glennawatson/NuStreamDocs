@@ -15,11 +15,11 @@ public class JsonContentMapperTests
     [Test]
     public async Task RootArrayMapsToPages()
     {
-        const string json = "[{\"slug\":\"alpha\",\"title\":\"Alpha\",\"body\":\"# Alpha\\n\\nHello.\"}," +
-            "{\"slug\":\"beta\",\"title\":\"Beta\",\"body\":\"# Beta\"}]";
+        const string Json = "[{\"slug\":\"alpha\",\"title\":\"Alpha\",\"body\":\"# Alpha\\n\\nHello.\"}," +
+                            "{\"slug\":\"beta\",\"title\":\"Beta\",\"body\":\"# Beta\"}]";
         var mapping = ContentMapping.ForRoute("posts/{slug}.md"u8).WithBodyKey("body"u8);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
 
         await Assert.That(pages.Length).IsEqualTo(2);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("posts/alpha.md");
@@ -36,10 +36,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task CollectionPointerNavigates()
     {
-        const string json = "{\"data\":{\"items\":[{\"id\":\"x\",\"title\":\"X\"}]}}";
+        const string Json = "{\"data\":{\"items\":[{\"id\":\"x\",\"title\":\"X\"}]}}";
         var mapping = ContentMapping.ForRoute("k/{id}.md"u8).WithCollectionPointer("data.items"u8);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
 
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("k/x.md");
@@ -50,10 +50,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task FrontmatterWhitelist()
     {
-        const string json = "[{\"slug\":\"a\",\"title\":\"A\",\"secret\":\"hidden\"}]";
+        const string Json = "[{\"slug\":\"a\",\"title\":\"A\",\"secret\":\"hidden\"}]";
         var mapping = ContentMapping.ForRoute("p/{slug}.md"u8).WithFrontmatterKeys([[.. "title"u8]]);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
         var md = Encoding.UTF8.GetString(pages[0].MarkdownBytes);
 
         await Assert.That(md).Contains("title: \"A\"");
@@ -66,10 +66,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task EntryWithoutRouteFieldIsSkipped()
     {
-        const string json = "[{\"slug\":\"good\",\"title\":\"G\"},{\"title\":\"no-slug\"}]";
+        const string Json = "[{\"slug\":\"good\",\"title\":\"G\"},{\"title\":\"no-slug\"}]";
         var mapping = ContentMapping.ForRoute("p/{slug}.md"u8);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
 
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("p/good.md");
@@ -80,10 +80,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task BadCollectionPointerYieldsNothing()
     {
-        const string json = "{\"data\":{\"items\":\"not-an-array\"}}";
+        const string Json = "{\"data\":{\"items\":\"not-an-array\"}}";
         var mapping = ContentMapping.ForRoute("k/{id}.md"u8).WithCollectionPointer("data.items"u8);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
         await Assert.That(pages).IsEmpty();
     }
 
@@ -94,7 +94,8 @@ public class JsonContentMapperTests
     {
         var mapping = ContentMapping.ForRoute("p/{slug}.md"u8);
         var json = Encoding.UTF8.GetBytes("[ this is not json");
-        await Assert.That(() => _ = JsonContentMapper.Map(json, mapping, "test"u8, NullLogger.Instance)).Throws<ContentLoaderException>();
+        await Assert.That(() => _ = JsonContentMapper.Map(json, mapping, "test"u8, NullLogger.Instance))
+            .Throws<ContentLoaderException>();
     }
 
     /// <summary>An empty route template is rejected when the mapping is validated.</summary>

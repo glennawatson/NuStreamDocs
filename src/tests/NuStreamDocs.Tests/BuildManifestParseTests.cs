@@ -42,10 +42,10 @@ public class BuildManifestParseTests
         // The "build" fingerprint and per-entry "hash" fields are both base64-encoded byte arrays.
         // "YWJj" decodes to "abc"; "AQIDBAUGBwg=" decodes to {1,2,3,4,5,6,7,8}.
         const string Json = "{\"schema\":2,\"build\":\"YWJj\",\"entries\":[" +
-            "{\"path\":\"good.md\",\"hash\":\"AQIDBAUGBwg=\",\"len\":1}," +
-            "{\"path\":\"missing-hash.md\",\"len\":2}," +
-            "\"not an object\"," +
-            "{\"path\":\"second-good.md\",\"hash\":\"CQoLDA0ODxA=\",\"len\":3}]}";
+                            "{\"path\":\"good.md\",\"hash\":\"AQIDBAUGBwg=\",\"len\":1}," +
+                            "{\"path\":\"missing-hash.md\",\"len\":2}," +
+                            "\"not an object\"," +
+                            "{\"path\":\"second-good.md\",\"hash\":\"CQoLDA0ODxA=\",\"len\":3}]}";
         await File.WriteAllTextAsync(path, Json);
         var manifest = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
         await Assert.That(manifest.Count).IsEqualTo(2);
@@ -71,7 +71,7 @@ public class BuildManifestParseTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

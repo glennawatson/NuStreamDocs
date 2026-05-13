@@ -13,4 +13,12 @@ namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 /// <param name="SuffixStart">Offset where the suffix text begins.</param>
 /// <param name="CloseStart">Offset of <c>&lt;</c> in the closing tag.</param>
 /// <param name="NameLen">Tag-name length.</param>
-internal readonly record struct BlockMatch(int NameEnd, int OpenGt, int PrefixEnd, int ContentStart, int ContentEnd, int SuffixStart, int CloseStart, int NameLen);
+internal readonly record struct BlockMatch(
+    int NameEnd,
+    int OpenGt,
+    int PrefixEnd,
+    int ContentStart,
+    int ContentEnd,
+    int SuffixStart,
+    int CloseStart,
+    int NameLen);

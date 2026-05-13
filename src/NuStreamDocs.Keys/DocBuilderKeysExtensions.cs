@@ -14,8 +14,5 @@ public static class DocBuilderKeysExtensions
     /// <summary>Registers <see cref="KeysPlugin"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseKeys(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new KeysPlugin());
-    }
+    public static DocBuilder UseKeys(this DocBuilder builder) => builder.UsePlugin(new KeysPlugin());
 }

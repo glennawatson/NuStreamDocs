@@ -16,7 +16,9 @@ public class WyamBlogPluginTests
     [Test]
     public async Task EmitsIndexAndTagArchives()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-blog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var postsDir = Path.Combine(docsRoot, "Announcements");
         Directory.CreateDirectory(postsDir);
 
@@ -39,17 +41,20 @@ public class WyamBlogPluginTests
             await Assert.That(Directory.Exists(Path.Combine(postsDir, "tags"))).IsFalse();
 
             var pages = sink.Snapshot();
-            var index = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "Announcements/index.md").MarkdownBytes);
+            var index = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "Announcements/index.md")
+                .MarkdownBytes);
             await Assert.That(index.Contains("# Announcements", StringComparison.Ordinal)).IsTrue();
             await Assert.That(index.Contains("Association", StringComparison.Ordinal)).IsTrue();
 
-            var releaseArchive = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "Announcements/tags/release.md").MarkdownBytes);
+            var releaseArchive =
+                Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "Announcements/tags/release.md")
+                    .MarkdownBytes);
             await Assert.That(releaseArchive.Contains("Association", StringComparison.Ordinal)).IsTrue();
             await Assert.That(releaseArchive.Contains("Memory Leaks", StringComparison.Ordinal)).IsFalse();
         }
         finally
         {
-            Directory.Delete(docsRoot, recursive: true);
+            Directory.Delete(docsRoot, true);
         }
     }
 
@@ -58,22 +63,29 @@ public class WyamBlogPluginTests
     [Test]
     public async Task IndexOrdersNewestFirst()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-blog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var postsDir = Path.Combine(docsRoot, "blog");
         Directory.CreateDirectory(postsDir);
 
         try
         {
-            await File.WriteAllTextAsync(Path.Combine(postsDir, "2020-01-01-old.md"), "---\nTitle: Old\nPublished: 2020-01-01\n---\nOld body.");
-            await File.WriteAllTextAsync(Path.Combine(postsDir, "2024-01-01-new.md"), "---\nTitle: New\nPublished: 2024-01-01\n---\nNew body.");
+            await File.WriteAllTextAsync(
+                Path.Combine(postsDir, "2020-01-01-old.md"),
+                "---\nTitle: Old\nPublished: 2020-01-01\n---\nOld body.");
+            await File.WriteAllTextAsync(
+                Path.Combine(postsDir, "2024-01-01-new.md"),
+                "---\nTitle: New\nPublished: 2024-01-01\n---\nNew body.");
 
-            WyamBlogPlugin plugin = new(new("blog", [.. "Blog"u8], emitTagArchives: false));
+            WyamBlogPlugin plugin = new(new("blog", [.. "Blog"u8], false));
             SyntheticPageSink sink = new();
             BuildDiscoverContext ctx = new(docsRoot, "/out", [], sink);
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
             await Assert.That(File.Exists(Path.Combine(postsDir, "index.md"))).IsFalse();
-            var index = Encoding.UTF8.GetString(sink.Snapshot().Single(p => p.RelativePath.Value == "blog/index.md").MarkdownBytes);
+            var index = Encoding.UTF8.GetString(sink.Snapshot().Single(p => p.RelativePath.Value == "blog/index.md")
+                .MarkdownBytes);
             var newPos = index.IndexOf("New", StringComparison.Ordinal);
             var oldPos = index.IndexOf("Old", StringComparison.Ordinal);
             await Assert.That(newPos).IsGreaterThan(0);
@@ -81,7 +93,7 @@ public class WyamBlogPluginTests
         }
         finally
         {
-            Directory.Delete(docsRoot, recursive: true);
+            Directory.Delete(docsRoot, true);
         }
     }
 
@@ -90,7 +102,9 @@ public class WyamBlogPluginTests
     [Test]
     public async Task PublishesBlogIndexNavEntry()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blognav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-blognav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(Path.Combine(docsRoot, "Announcements"));
 
         try
@@ -108,7 +122,7 @@ public class WyamBlogPluginTests
         }
         finally
         {
-            Directory.Delete(docsRoot, recursive: true);
+            Directory.Delete(docsRoot, true);
         }
     }
 
@@ -117,17 +131,25 @@ public class WyamBlogPluginTests
     [Test]
     public async Task PublishesPostNavEntriesNewestFirst()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-blogpostnav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-blogpostnav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var postsDir = Path.Combine(docsRoot, "Announcements");
         Directory.CreateDirectory(postsDir);
 
         try
         {
-            await File.WriteAllTextAsync(Path.Combine(postsDir, "2013-02-27-old.md"), "---\nTitle: Old\nPublished: 2013-02-27\n---\nbody");
-            await File.WriteAllTextAsync(Path.Combine(postsDir, "2020-06-15-mid.md"), "---\nTitle: Mid\nPublished: 2020-06-15\n---\nbody");
-            await File.WriteAllTextAsync(Path.Combine(postsDir, "2026-05-07-new.md"), "---\nTitle: New\nPublished: 2026-05-07\n---\nbody");
+            await File.WriteAllTextAsync(
+                Path.Combine(postsDir, "2013-02-27-old.md"),
+                "---\nTitle: Old\nPublished: 2013-02-27\n---\nbody");
+            await File.WriteAllTextAsync(
+                Path.Combine(postsDir, "2020-06-15-mid.md"),
+                "---\nTitle: Mid\nPublished: 2020-06-15\n---\nbody");
+            await File.WriteAllTextAsync(
+                Path.Combine(postsDir, "2026-05-07-new.md"),
+                "---\nTitle: New\nPublished: 2026-05-07\n---\nbody");
 
-            WyamBlogPlugin plugin = new(new("Announcements", [.. "Announcements"u8], emitTagArchives: false));
+            WyamBlogPlugin plugin = new(new("Announcements", [.. "Announcements"u8], false));
             BuildDiscoverContext ctx = new(docsRoot, "/out", [], new());
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
@@ -146,7 +168,7 @@ public class WyamBlogPluginTests
         }
         finally
         {
-            Directory.Delete(docsRoot, recursive: true);
+            Directory.Delete(docsRoot, true);
         }
     }
 }

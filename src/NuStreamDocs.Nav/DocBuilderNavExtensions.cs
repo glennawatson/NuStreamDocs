@@ -12,10 +12,7 @@ public static class DocBuilderNavExtensions
     /// <summary>Registers <see cref="NavPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseNav(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new NavPlugin());
-    }
+    public static DocBuilder UseNav(this DocBuilder builder) => builder.UsePlugin(new NavPlugin());
 
     /// <summary>Registers <see cref="NavPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>

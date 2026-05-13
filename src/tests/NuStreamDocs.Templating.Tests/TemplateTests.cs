@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Templating.Tests;
 
@@ -90,10 +91,7 @@ public class TemplateTests
     public async Task PartialIsIncludedAndRendered()
     {
         var partial = Template.Compile("{{name}}!"u8);
-        Dictionary<string, Template> partials = new(StringComparer.Ordinal)
-        {
-            ["greeting"] = partial
-        };
+        Dictionary<string, Template> partials = new(StringComparer.Ordinal) { ["greeting"] = partial };
         var data = Build([("name", "world")], []);
         var html = RenderWithPartials("hi {{> greeting}}"u8, data, partials);
         await Assert.That(html).IsEqualTo("hi world!");
@@ -149,7 +147,7 @@ public class TemplateTests
     {
         var template = Template.Compile(source);
         ArrayBufferWriter<byte> writer = new();
-        Dictionary<byte[], Template> bytePartials = new(partials.Count, Common.ByteArrayComparer.Instance);
+        Dictionary<byte[], Template> bytePartials = new(partials.Count, ByteArrayComparer.Instance);
         foreach (var pair in partials)
         {
             bytePartials[Encoding.UTF8.GetBytes(pair.Key)] = pair.Value;
@@ -179,13 +177,13 @@ public class TemplateTests
         (string Key, string Value)[] scalars,
         (string Key, TemplateData[] Items)[] sections)
     {
-        Dictionary<byte[], ReadOnlyMemory<byte>> s = new(scalars.Length, Common.ByteArrayComparer.Instance);
+        Dictionary<byte[], ReadOnlyMemory<byte>> s = new(scalars.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < scalars.Length; i++)
         {
             s[Encoding.UTF8.GetBytes(scalars[i].Key)] = Encoding.UTF8.GetBytes(scalars[i].Value);
         }
 
-        Dictionary<byte[], TemplateData[]> t = new(sections.Length, Common.ByteArrayComparer.Instance);
+        Dictionary<byte[], TemplateData[]> t = new(sections.Length, ByteArrayComparer.Instance);
         for (var i = 0; i < sections.Length; i++)
         {
             t[Encoding.UTF8.GetBytes(sections[i].Key)] = sections[i].Items;

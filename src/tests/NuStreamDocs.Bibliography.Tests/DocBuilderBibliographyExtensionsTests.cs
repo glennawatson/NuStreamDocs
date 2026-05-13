@@ -29,7 +29,9 @@ public class DocBuilderBibliographyExtensionsTests
     {
         DocBuilder builder = new();
         var style = Substitute.For<ICitationStyle>();
-        var result = builder.UseBibliography(style, static db => db.Add(new() { Id = [.. "key"u8], Type = EntryType.Book, Title = [.. "title"u8] }));
+        var result = builder.UseBibliography(
+            style,
+            static db => db.Add(new() { Id = [.. "key"u8], Type = EntryType.Book, Title = [.. "title"u8] }));
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 }

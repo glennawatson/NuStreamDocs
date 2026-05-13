@@ -135,11 +135,7 @@ public class RxuiCorpusBenchmarks
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
-            .UseMagicLink(new()
-            {
-                DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
-                ExpandUserMentions = true
-            })
+            .UseMagicLink(new() { DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(), ExpandUserMentions = true })
             .BuildAsync()
             .GetAwaiter()
             .GetResult();
@@ -155,11 +151,7 @@ public class RxuiCorpusBenchmarks
             .WithOutput(_outputRoot)
             .UseCommonMarkdownExtensions()
             .UseHighlight()
-            .UseMagicLink(new()
-            {
-                DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(),
-                ExpandUserMentions = true
-            })
+            .UseMagicLink(new() { DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(), ExpandUserMentions = true })
             .UseNav()
             .UseAutorefs(registry)
             .UseLunrSearch()
@@ -275,7 +267,7 @@ public class RxuiCorpusBenchmarks
         {
             if (Directory.Exists(path))
             {
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
         catch (IOException)

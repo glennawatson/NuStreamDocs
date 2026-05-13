@@ -85,7 +85,9 @@ internal static class OutputPathBuilder
     /// <summary>Writes the flat-URL output path bytes into <paramref name="span"/>.</summary>
     /// <param name="span">Pre-sized destination span.</param>
     /// <param name="state">Tuple of (outputRoot, relativePath, keepLength, endsWithMd, separator).</param>
-    private static void WriteOutputPath(in Span<char> span, (string Root, string Rel, int Keep, bool Swap, char Sep) state)
+    private static void WriteOutputPath(
+        in Span<char> span,
+        (string Root, string Rel, int Keep, bool Swap, char Sep) state)
     {
         state.Root.AsSpan().CopyTo(span);
         span[state.Root.Length] = state.Sep;
@@ -102,7 +104,9 @@ internal static class OutputPathBuilder
     /// <summary>Writes a directory-URL output path (<c>outputRoot/sep/stem/sep/index.html</c>) into <paramref name="span"/>.</summary>
     /// <param name="span">Pre-sized destination span.</param>
     /// <param name="state">Tuple of (outputRoot, relativePath, stemLength, separator).</param>
-    private static void WriteDirectoryUrlPath(in Span<char> span, (string Root, string Rel, int StemLen, char Sep) state)
+    private static void WriteDirectoryUrlPath(
+        in Span<char> span,
+        (string Root, string Rel, int StemLen, char Sep) state)
     {
         state.Root.AsSpan().CopyTo(span);
         span[state.Root.Length] = state.Sep;

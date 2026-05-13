@@ -14,7 +14,7 @@ public class ApiIndexWriterTests
     [Test]
     public async Task BuildBytesReturnsEmptyForEmptyNamespaceList()
     {
-        var bytes = ApiIndexWriter.BuildBytes([], [], [], order: null);
+        var bytes = ApiIndexWriter.BuildBytes([], [], [], null);
         await Assert.That(bytes.Length).IsEqualTo(0);
     }
 
@@ -30,7 +30,7 @@ public class ApiIndexWriterTests
             "Splat"u8.ToArray()
         ];
 
-        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], order: null));
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], null));
 
         await Assert.That(contents).StartsWith("# API Reference\n\n");
         await Assert.That(contents).Contains("## Namespaces\n\n");
@@ -51,7 +51,13 @@ public class ApiIndexWriterTests
     public async Task BuildBytesHonoursCustomTitleAndIntro()
     {
         byte[][] namespaces = ["Foo.Bar"u8.ToArray()];
-        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, "Custom Title"u8, "Custom intro paragraph."u8, order: null));
+        var contents =
+            Encoding.UTF8.GetString(
+                ApiIndexWriter.BuildBytes(
+                    namespaces,
+                    "Custom Title"u8,
+                    "Custom intro paragraph."u8,
+                    null));
 
         await Assert.That(contents).StartsWith("# Custom Title\n\n");
         await Assert.That(contents).Contains("Custom intro paragraph.\n\n");
@@ -64,7 +70,7 @@ public class ApiIndexWriterTests
     public async Task BuildBytesEmitsOrderFrontmatterBlock()
     {
         byte[][] namespaces = ["Foo"u8.ToArray()];
-        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], order: 2));
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], 2));
 
         await Assert.That(contents).StartsWith("---\nOrder: 2\n---\n\n# API Reference");
     }
@@ -75,7 +81,7 @@ public class ApiIndexWriterTests
     public async Task BuildBytesWithoutOrderHasNoFrontmatter()
     {
         byte[][] namespaces = ["Foo"u8.ToArray()];
-        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], order: null));
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], null));
 
         await Assert.That(contents).DoesNotContain("Order:");
         await Assert.That(contents).StartsWith("# API Reference");

@@ -21,6 +21,9 @@ public sealed record OptimizeOptions(
     int MinimumBytes,
     int Parallelism)
 {
+    /// <summary>Default <see cref="MinimumBytes"/> — sources below 1&#160;KiB rarely repay the per-file compression overhead.</summary>
+    private const int DefaultMinimumBytes = 1024;
+
     /// <summary>Gets the default extension set — text-like assets worth precompressing.</summary>
     public static byte[][] DefaultExtensions { get; } =
     [
@@ -39,8 +42,8 @@ public sealed record OptimizeOptions(
         CompressionLevel.Optimal,
         CompressionLevel.Optimal,
         DefaultExtensions,
-        MinimumBytes: 1024,
-        Parallelism: Math.Max(1, Environment.ProcessorCount));
+        DefaultMinimumBytes,
+        Math.Max(1, Environment.ProcessorCount));
 
     /// <summary>Throws when any required field is invalid.</summary>
     /// <exception cref="ArgumentException">When <see cref="Extensions"/> is null/empty.</exception>

@@ -2,7 +2,10 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
+using System.Text;
 
 namespace NuStreamDocs.Theme.Common;
 
@@ -124,15 +127,24 @@ internal static class ThemeShellBytes
     public static readonly byte[] Generator = BuildGeneratorBytes();
 
     /// <summary>UTF-8 ISO 8601 build timestamp.</summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6354", Justification = "Build timestamp is intentionally wall-clock; not unit-tested for content.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6585", Justification = "ISO 8601 round-trip format is the wire format consumers expect.")]
-    public static readonly byte[] BuildDate = System.Text.Encoding.UTF8.GetBytes(
-        DateTimeOffset.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+    [SuppressMessage(
+        "SonarAnalyzer",
+        "S6354",
+        Justification = "Build timestamp is intentionally wall-clock; not unit-tested for content.")]
+    [SuppressMessage(
+        "SonarAnalyzer",
+        "S6585",
+        Justification = "ISO 8601 round-trip format is the wire format consumers expect.")]
+    public static readonly byte[] BuildDate = Encoding.UTF8.GetBytes(
+        DateTimeOffset.UtcNow.ToString("o", CultureInfo.InvariantCulture));
 
     /// <summary>UTF-8 four-digit current year.</summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarAnalyzer", "S6354", Justification = "Wall-clock by design — copyright stamping uses UTC year.")]
-    public static readonly byte[] CurrentYear = System.Text.Encoding.UTF8.GetBytes(
-        DateTimeOffset.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    [SuppressMessage(
+        "SonarAnalyzer",
+        "S6354",
+        Justification = "Wall-clock by design — copyright stamping uses UTC year.")]
+    public static readonly byte[] CurrentYear = Encoding.UTF8.GetBytes(
+        DateTimeOffset.UtcNow.Year.ToString(CultureInfo.InvariantCulture));
 
     /// <summary>Builds the <c>nustreamdocs-{version}</c> generator value.</summary>
     /// <returns>UTF-8 bytes of the generator string.</returns>

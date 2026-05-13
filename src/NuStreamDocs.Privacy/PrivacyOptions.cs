@@ -43,6 +43,15 @@ public readonly record struct PrivacyOptions(
     bool GenerateCspManifest,
     byte[] CspManifestPath)
 {
+    /// <summary>Default <see cref="DownloadParallelism"/> — concurrent HTTP downloads when the caller doesn't override it.</summary>
+    private const int DefaultDownloadParallelism = 4;
+
+    /// <summary>Default <see cref="MaxRetries"/> — retry attempts per asset on transient HTTP failures.</summary>
+    private const int DefaultMaxRetries = 3;
+
+    /// <summary>Default <see cref="DownloadTimeout"/> in seconds.</summary>
+    private const int DefaultDownloadTimeoutSeconds = 10;
+
     /// <summary>Default <see cref="HostsToSkip"/> entries — well-known hosts that should remain external (source-control providers, social networks, video embeds).</summary>
     private static readonly byte[][] WellKnownHostsToSkip =
     [
@@ -61,22 +70,22 @@ public readonly record struct PrivacyOptions(
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static PrivacyOptions Default { get; } = new(
-        Enabled: true,
-        AssetDirectory: [.. "assets/external"u8],
-        DownloadParallelism: 4,
-        DownloadTimeout: TimeSpan.FromSeconds(10),
-        HostsToSkip: WellKnownHostsToSkip,
-        HostsAllowed: [],
-        AuditOnly: false,
-        AuditManifestPath: [.. "privacy-audit.json"u8],
-        AddRelNoOpener: true,
-        AddTargetBlank: false,
-        UpgradeMixedContent: true,
-        FailOnError: false,
-        CacheDirectory: [],
-        MaxRetries: 3,
-        UrlIncludePatterns: [],
-        UrlExcludePatterns: [],
-        GenerateCspManifest: false,
-        CspManifestPath: [.. "csp-hashes.json"u8]);
+        true,
+        [.. "assets/external"u8],
+        DefaultDownloadParallelism,
+        TimeSpan.FromSeconds(DefaultDownloadTimeoutSeconds),
+        WellKnownHostsToSkip,
+        [],
+        false,
+        [.. "privacy-audit.json"u8],
+        true,
+        false,
+        true,
+        false,
+        [],
+        DefaultMaxRetries,
+        [],
+        [],
+        false,
+        [.. "csp-hashes.json"u8]);
 }

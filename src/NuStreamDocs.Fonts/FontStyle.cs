@@ -11,5 +11,5 @@ public enum FontStyle
     Normal,
 
     /// <summary>Italic (or oblique).</summary>
-    Italic,
+    Italic
 }

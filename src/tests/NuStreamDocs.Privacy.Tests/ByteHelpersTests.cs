@@ -28,7 +28,8 @@ public class ByteHelpersTests
     [Arguments((byte)'.', false)]
     [Arguments((byte)'{', false)]
     [Arguments((byte)0x80, false)]
-    public async Task IsAsciiIdentifierByteRecognizesIdentifierBytes(byte b, bool expected) => await Assert.That(AsciiByteHelpers.IsAsciiIdentifierByte(b)).IsEqualTo(expected);
+    public async Task IsAsciiIdentifierByteRecognizesIdentifierBytes(byte b, bool expected) =>
+        await Assert.That(AsciiByteHelpers.IsAsciiIdentifierByte(b)).IsEqualTo(expected);
 
     /// <summary>ASCII whitespace covers SP / HT / CR / LF only.</summary>
     /// <param name="b">Input byte.</param>
@@ -43,12 +44,14 @@ public class ByteHelpersTests
     [Arguments((byte)'\f', false)]
     [Arguments((byte)0xA0, false)]
     [Arguments((byte)'a', false)]
-    public async Task IsAsciiWhitespaceMatchesAsciiOnly(byte b, bool expected) => await Assert.That(AsciiByteHelpers.IsAsciiWhitespace(b)).IsEqualTo(expected);
+    public async Task IsAsciiWhitespaceMatchesAsciiOnly(byte b, bool expected) =>
+        await Assert.That(AsciiByteHelpers.IsAsciiWhitespace(b)).IsEqualTo(expected);
 
     /// <summary>Word boundary at offset 0 is always true; otherwise depends on the prior byte.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task IsWordBoundaryAtZeroIsAlwaysTrue() => await Assert.That(AsciiByteHelpers.IsWordBoundary("xyz"u8, 0)).IsTrue();
+    public async Task IsWordBoundaryAtZeroIsAlwaysTrue() =>
+        await Assert.That(AsciiByteHelpers.IsWordBoundary("xyz"u8, 0)).IsTrue();
 
     /// <summary>Word boundary depends on whether the prior byte is an identifier byte.</summary>
     /// <param name="text">Buffer.</param>
@@ -97,7 +100,8 @@ public class ByteHelpersTests
     /// <summary>The case-fold trick must not coerce non-letters into letters: '@' | 0x20 == '`' which is not 'a'.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task CaseFoldDoesNotMatchNonLetterCollisions() => await Assert.That(AsciiByteHelpers.StartsWithIgnoreAsciiCase("@a"u8, 0, "ab"u8)).IsFalse();
+    public async Task CaseFoldDoesNotMatchNonLetterCollisions() =>
+        await Assert.That(AsciiByteHelpers.StartsWithIgnoreAsciiCase("@a"u8, 0, "ab"u8)).IsFalse();
 
     /// <summary>Equals treats unequal lengths as not equal.</summary>
     /// <returns>Async test.</returns>

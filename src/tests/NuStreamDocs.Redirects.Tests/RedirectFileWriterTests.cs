@@ -17,8 +17,8 @@ public class RedirectFileWriterTests
     {
         RedirectRule[] rules =
         [
-            new([.. "/zeta/"u8], [.. "/new-zeta/"u8], Permanent: true),
-            new([.. "/alpha/"u8], [.. "https://other.test/"u8], Permanent: false),
+            new([.. "/zeta/"u8], [.. "/new-zeta/"u8], true),
+            new([.. "/alpha/"u8], [.. "https://other.test/"u8], false)
         ];
         ArrayBufferWriter<byte> sink = new();
         RedirectFileWriter.WriteRedirectsFile(rules, sink);
@@ -47,7 +47,7 @@ public class RedirectFileWriterTests
     {
         var rules = new List<HeaderRule>(HeadersFileWriter.DefaultRules())
         {
-            new([.. "/api/*"u8], [[.. "X-Robots-Tag: noindex"u8]]),
+            new([.. "/api/*"u8], [[.. "X-Robots-Tag: noindex"u8]])
         };
         ArrayBufferWriter<byte> sink = new();
         HeadersFileWriter.WriteHeadersFile(rules, sink);
@@ -57,7 +57,8 @@ public class RedirectFileWriterTests
         await Assert.That(text).Contains("/api/*\n  X-Robots-Tag: noindex\n\n");
 
         // /assets/fonts/* must come after /assets/* so it wins for font files.
-        await Assert.That(text.IndexOf("/assets/fonts/*", StringComparison.Ordinal)).IsGreaterThan(text.IndexOf("/assets/*\n", StringComparison.Ordinal));
+        await Assert.That(text.IndexOf("/assets/fonts/*", StringComparison.Ordinal))
+            .IsGreaterThan(text.IndexOf("/assets/*\n", StringComparison.Ordinal));
     }
 
     /// <summary>An empty rule list produces no <c>_headers</c> output.</summary>

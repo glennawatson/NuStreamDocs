@@ -18,7 +18,13 @@ internal sealed class NavNode
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     /// <param name="indexPath">Source-relative path of the section's promoted index page (e.g. <c>guide/index.md</c>); empty when the section has no index landing page.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
-    public NavNode(byte[] title, in FilePath relativePath, bool isSection, NavNode[] children, in FilePath indexPath, bool useDirectoryUrls)
+    public NavNode(
+        byte[] title,
+        in FilePath relativePath,
+        bool isSection,
+        NavNode[] children,
+        in FilePath indexPath,
+        bool useDirectoryUrls)
     {
         Title = title;
         RelativePath = relativePath;
@@ -36,8 +42,20 @@ internal sealed class NavNode
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     /// <param name="indexPath">Source-relative path of the section's promoted index page (e.g. <c>guide/index.md</c>); empty when the section has no index landing page.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
-    public NavNode(string title, in FilePath relativePath, bool isSection, NavNode[] children, in FilePath indexPath, bool useDirectoryUrls)
-        : this(string.IsNullOrEmpty(title) ? [] : Encoding.UTF8.GetBytes(title), relativePath, isSection, children, indexPath, useDirectoryUrls)
+    public NavNode(
+        string title,
+        in FilePath relativePath,
+        bool isSection,
+        NavNode[] children,
+        in FilePath indexPath,
+        bool useDirectoryUrls)
+        : this(
+            string.IsNullOrEmpty(title) ? [] : Encoding.UTF8.GetBytes(title),
+            relativePath,
+            isSection,
+            children,
+            indexPath,
+            useDirectoryUrls)
     {
     }
 
@@ -48,7 +66,7 @@ internal sealed class NavNode
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     /// <param name="indexPath">Source-relative path of the section's promoted index page (e.g. <c>guide/index.md</c>); empty when the section has no index landing page.</param>
     public NavNode(string title, in FilePath relativePath, bool isSection, NavNode[] children, in FilePath indexPath)
-        : this(title, relativePath, isSection, children, indexPath, useDirectoryUrls: false)
+        : this(title, relativePath, isSection, children, indexPath, false)
     {
     }
 
@@ -69,7 +87,7 @@ internal sealed class NavNode
     /// <param name="isSection">True when this node is a section rather than a page.</param>
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     public NavNode(string title, in FilePath relativePath, bool isSection, NavNode[] children)
-        : this(title, relativePath, isSection, children, default, useDirectoryUrls: false)
+        : this(title, relativePath, isSection, children, default, false)
     {
     }
 
@@ -90,7 +108,7 @@ internal sealed class NavNode
     /// <param name="isSection">True when this node is a section rather than a page.</param>
     /// <param name="children">Pre-sized child array; empty for leaf pages.</param>
     public NavNode(byte[] title, in FilePath relativePath, bool isSection, NavNode[] children)
-        : this(title, relativePath, isSection, children, useDirectoryUrls: false)
+        : this(title, relativePath, isSection, children, false)
     {
     }
 

@@ -17,7 +17,13 @@ internal static class UrlScanLoop
     /// <param name="lastEmit">Source offset up to which bytes have been emitted; updated by the predicate when it writes.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when a rewrite happened.</returns>
-    public delegate bool TryRewrite(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo);
+    public delegate bool TryRewrite(
+        ReadOnlySpan<byte> html,
+        int p,
+        in UrlRewriteContext ctx,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo);
 
     /// <summary>Predicate that attempts to record a URL at <paramref name="p"/>; returns true when an audit record was made.</summary>
     /// <param name="html">UTF-8 source.</param>
@@ -34,7 +40,12 @@ internal static class UrlScanLoop
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="probe">Predicate that owns the per-site work.</param>
     /// <returns>True when at least one rewrite happened.</returns>
-    public static bool Run(ReadOnlySpan<byte> html, SearchValues<byte> firstByteSet, IBufferWriter<byte> sink, in UrlRewriteContext ctx, TryRewrite probe)
+    public static bool Run(
+        ReadOnlySpan<byte> html,
+        SearchValues<byte> firstByteSet,
+        IBufferWriter<byte> sink,
+        in UrlRewriteContext ctx,
+        TryRewrite probe)
     {
         var changed = false;
         var lastEmit = 0;
@@ -72,7 +83,11 @@ internal static class UrlScanLoop
     /// <param name="firstByteSet">Search-values set that filters the byte loop down to candidate offsets.</param>
     /// <param name="audit">Audit context.</param>
     /// <param name="probe">Predicate that owns the per-site work.</param>
-    public static void RunAudit(ReadOnlySpan<byte> html, SearchValues<byte> firstByteSet, UrlAuditContext audit, TryAudit probe)
+    public static void RunAudit(
+        ReadOnlySpan<byte> html,
+        SearchValues<byte> firstByteSet,
+        UrlAuditContext audit,
+        TryAudit probe)
     {
         var cursor = 0;
         while (cursor < html.Length)

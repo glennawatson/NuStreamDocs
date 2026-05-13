@@ -23,13 +23,18 @@ public readonly record struct LunrOptions(
     SearchCompression Compression,
     byte[] SectionPriorities)
 {
+    /// <summary>
+    /// The default minimum token length.
+    /// </summary>
+    private const int DefaultTokenLength = 3;
+
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static LunrOptions Default { get; } = new(
-        OutputSubdirectory: "search",
-        Language: [.. "en"u8],
-        MinTokenLength: 3,
-        SearchableFrontmatterKeys: [],
-        ExtraStopwords: [],
-        Compression: SearchCompression.Default,
-        SectionPriorities: []);
+        "search",
+        [.. "en"u8],
+        DefaultTokenLength,
+        [],
+        [],
+        SearchCompression.Default,
+        []);
 }

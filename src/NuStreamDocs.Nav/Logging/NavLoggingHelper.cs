@@ -44,7 +44,8 @@ internal static partial class NavLoggingHelper
     [LoggerMessage(
         EventId = 4004,
         Level = LogLevel.Warning,
-        Message = "Nav orphan check: {OrphanCount} page(s) exist in the input directory but are not included in the nav configuration")]
+        Message =
+            "Nav orphan check: {OrphanCount} page(s) exist in the input directory but are not included in the nav configuration")]
     public static partial void LogOrphanPagesHeader(ILogger logger, int orphanCount);
 
     /// <summary>Logs one orphan page; one entry per file so log filters can pick out specific paths.</summary>

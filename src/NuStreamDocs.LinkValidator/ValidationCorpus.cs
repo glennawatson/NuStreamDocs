@@ -53,17 +53,17 @@ public sealed class ValidationCorpus
     /// <param name="pageUrl">Page URL bytes.</param>
     /// <param name="html">UTF-8 HTML bytes.</param>
     /// <returns>The captured inventory.</returns>
-    public static PageLinks Scan(byte[] pageUrl, ReadOnlySpan<byte> html)
-    {
-        return ScanPage(pageUrl, html);
-    }
+    public static PageLinks Scan(byte[] pageUrl, ReadOnlySpan<byte> html) => ScanPage(pageUrl, html);
 
     /// <summary>Walks <paramref name="outputRoot"/> in parallel and builds an immutable corpus.</summary>
     /// <param name="outputRoot">Absolute site output root.</param>
     /// <param name="parallelism">Maximum parallel readers.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The populated corpus.</returns>
-    public static async Task<ValidationCorpus> BuildAsync(DirectoryPath outputRoot, int parallelism, CancellationToken cancellationToken)
+    public static async Task<ValidationCorpus> BuildAsync(
+        DirectoryPath outputRoot,
+        int parallelism,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(parallelism);
@@ -107,19 +107,13 @@ public sealed class ValidationCorpus
     /// <summary>Tests whether a page exists at <paramref name="pageUrl"/>.</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>
     /// <returns>True when the page is in the corpus.</returns>
-    public bool ContainsPage(byte[] pageUrl)
-    {
-        return _pages.ContainsKey(pageUrl);
-    }
+    public bool ContainsPage(byte[] pageUrl) => _pages.ContainsKey(pageUrl);
 
     /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>.</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>
     /// <param name="page">Resolved page on success.</param>
     /// <returns>True when found.</returns>
-    public bool TryGetPage(byte[] pageUrl, out PageLinks page)
-    {
-        return _pages.TryGetValue(pageUrl, out page!);
-    }
+    public bool TryGetPage(byte[] pageUrl, out PageLinks page) => _pages.TryGetValue(pageUrl, out page!);
 
     /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>, accepting directory-URL variants (<c>foo/</c>, <c>foo</c>, empty path).</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>

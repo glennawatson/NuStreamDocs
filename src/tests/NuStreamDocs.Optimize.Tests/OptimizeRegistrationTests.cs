@@ -29,7 +29,8 @@ public class OptimizeRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseOptimizeLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseOptimize(OptimizeOptions.Default, NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseOptimize(OptimizeOptions.Default, NullLogger.Instance))
+            .IsTypeOf<DocBuilder>();
 
     /// <summary>UseHtmlMinify() registers.</summary>
     /// <returns>Async test.</returns>

@@ -8,15 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Redirects.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Redirects.Tests"/>
   </ItemGroup>
 
 </Project>

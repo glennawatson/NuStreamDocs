@@ -35,7 +35,8 @@ internal static partial class CSharpApiGeneratorLoggingHelper
         EventId = 6003,
         Level = LogLevel.Information,
         Message = "ApiGenerator complete: {TotalTypes} type(s), {TotalPages} page(s) in {ElapsedSeconds:F3}s")]
-    public static partial void LogGeneratorComplete(ILogger logger, int totalTypes, int totalPages, double elapsedSeconds);
+    public static partial void LogGeneratorComplete(ILogger logger, int totalTypes, int totalPages,
+        double elapsedSeconds);
 
     /// <summary>Logs a source-link miss at debug level.</summary>
     /// <param name="logger">Target logger.</param>
@@ -64,6 +65,8 @@ internal static partial class CSharpApiGeneratorLoggingHelper
     [LoggerMessage(
         EventId = 6006,
         Level = LogLevel.Information,
-        Message = "CSharpApiGenerator direct-extract complete: {TypeCount} type(s), {SourceLinkCount} source link(s) in {ElapsedSeconds:F3}s")]
-    public static partial void LogDirectExtractComplete(ILogger logger, int typeCount, int sourceLinkCount, double elapsedSeconds);
+        Message =
+            "CSharpApiGenerator direct-extract complete: {TypeCount} type(s), {SourceLinkCount} source link(s) in {ElapsedSeconds:F3}s")]
+    public static partial void LogDirectExtractComplete(ILogger logger, int typeCount, int sourceLinkCount,
+        double elapsedSeconds);
 }

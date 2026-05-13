@@ -76,8 +76,18 @@ public static class ErlangLexer
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
         WhitespaceFirst = WhitespaceFirst,
-        LineComment = new(static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'%'), TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = PercentFirst },
-        PreCommentRule = new(MatchDashAttribute, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = DashFirst, RequiresLineStart = true },
+        LineComment =
+            new(
+                    static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'%'),
+                    TokenClass.CommentSingle,
+                    LexerRule.NoStateChange)
+            { FirstBytes = PercentFirst },
+        PreCommentRule =
+            new(MatchDashAttribute, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
+            {
+                FirstBytes = DashFirst,
+                RequiresLineStart = true
+            },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         IncludeFloatLiteral = true,

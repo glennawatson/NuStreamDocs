@@ -8,18 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Templating\NuStreamDocs.Templating.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Fonts\NuStreamDocs.Fonts.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Templating\NuStreamDocs.Templating.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Fonts\NuStreamDocs.Fonts.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Templates\**\*" />
+    <EmbeddedResource Include="Templates\**\*"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Theme.Material3.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Theme.Material3.Tests"/>
   </ItemGroup>
 
 </Project>

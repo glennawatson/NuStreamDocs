@@ -55,7 +55,12 @@ internal static class ImageAudit
     /// <param name="checkAlt">Whether the missing-alt lint is enabled.</param>
     /// <param name="checkDimensions">Whether the missing-dimensions lint is enabled.</param>
     /// <param name="sink">Receives findings.</param>
-    private static void CheckImage(ReadOnlySpan<byte> attributes, UrlPath page, bool checkAlt, bool checkDimensions, List<AuditDiagnostic> sink)
+    private static void CheckImage(
+        ReadOnlySpan<byte> attributes,
+        UrlPath page,
+        bool checkAlt,
+        bool checkDimensions,
+        List<AuditDiagnostic> sink)
     {
         if (checkAlt && !HtmlAttr.Has(attributes, "alt"u8))
         {

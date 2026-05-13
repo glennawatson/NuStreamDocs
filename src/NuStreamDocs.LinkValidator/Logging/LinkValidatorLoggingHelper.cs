@@ -18,16 +18,21 @@ internal static partial class LinkValidatorLoggingHelper
     /// <param name="pageCount">Pages discovered.</param>
     /// <param name="internalLinkCount">Internal links found.</param>
     /// <param name="externalLinkCount">External links found.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Validation corpus: {PageCount} page(s), {InternalLinkCount} internal link(s), {ExternalLinkCount} external link(s)")]
-    public static partial void LogValidationCorpus(ILogger logger, int pageCount, int internalLinkCount, int externalLinkCount);
+    [LoggerMessage(Level = LogLevel.Information,
+        Message =
+            "Validation corpus: {PageCount} page(s), {InternalLinkCount} internal link(s), {ExternalLinkCount} external link(s)")]
+    public static partial void LogValidationCorpus(ILogger logger, int pageCount, int internalLinkCount,
+        int externalLinkCount);
 
     /// <summary>Logs the end-of-run summary.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="brokenCount">Diagnostics raised at error severity.</param>
     /// <param name="warningCount">Diagnostics raised at warning severity.</param>
     /// <param name="elapsedSeconds">Total elapsed time in seconds (two decimal places).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Link validation complete: {BrokenCount} broken, {WarningCount} warning(s) in {ElapsedSeconds:F3}s")]
-    public static partial void LogValidationComplete(ILogger logger, int brokenCount, int warningCount, double elapsedSeconds);
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Link validation complete: {BrokenCount} broken, {WarningCount} warning(s) in {ElapsedSeconds:F3}s")]
+    public static partial void LogValidationComplete(ILogger logger, int brokenCount, int warningCount,
+        double elapsedSeconds);
 
     /// <summary>Logs a broken link at error severity (strict mode on).</summary>
     /// <param name="logger">Target logger.</param>
@@ -47,6 +52,7 @@ internal static partial class LinkValidatorLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="host">Host whose rate limit was reached.</param>
     /// <param name="queueDepth">Number of requests queued behind the limiter.</param>
-    [LoggerMessage(Level = LogLevel.Debug, Message = "External rate limit hit for host {Host}; {QueueDepth} request(s) queued")]
+    [LoggerMessage(Level = LogLevel.Debug,
+        Message = "External rate limit hit for host {Host}; {QueueDepth} request(s) queued")]
     public static partial void LogRateLimitHit(ILogger logger, string host, int queueDepth);
 }

@@ -47,7 +47,7 @@ public class MarkdownLinkRewriterPluginTests
     [Test]
     public async Task ExplicitDirectoryUrlsOverridesConfig()
     {
-        MarkdownLinkRewriterPlugin plugin = new(useDirectoryUrls: true);
+        MarkdownLinkRewriterPlugin plugin = new(true);
         BuildConfigureContext configCtx = new("/in", "/out", [], new()) { UseDirectoryUrls = false };
         await plugin.ConfigureAsync(configCtx, CancellationToken.None);
 

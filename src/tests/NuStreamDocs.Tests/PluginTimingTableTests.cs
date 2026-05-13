@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using NuStreamDocs.Logging;
 
@@ -101,8 +103,8 @@ public class PluginTimingTableTests
     public async Task EmitWritesHeaderAndOneRowPerPlugin()
     {
         PluginTimingTable table = new();
-        table.Add([.. "plugin-a"u8], System.Diagnostics.Stopwatch.Frequency); // ~1s
-        table.Add([.. "plugin-b"u8], System.Diagnostics.Stopwatch.Frequency / 2); // ~0.5s
+        table.Add([.. "plugin-a"u8], Stopwatch.Frequency); // ~1s
+        table.Add([.. "plugin-b"u8], Stopwatch.Frequency / 2); // ~0.5s
 
         RecordingLogger logger = new();
         table.Emit(logger);
@@ -119,7 +121,7 @@ public class PluginTimingTableTests
     public async Task SubSignificantEntriesUseDebugLevel()
     {
         PluginTimingTable table = new();
-        table.Add([.. "plugin-a"u8], System.Diagnostics.Stopwatch.Frequency); // ~1s
+        table.Add([.. "plugin-a"u8], Stopwatch.Frequency); // ~1s
         table.Add([.. "plugin-fast"u8], 1); // ~0s
 
         RecordingLogger logger = new();
@@ -136,7 +138,7 @@ public class PluginTimingTableTests
     /// <returns>The snapshot rows.</returns>
     private static (byte[] Name, double Seconds)[] SnapshotViaReflection(PluginTimingTable table) =>
         (table.GetType()
-            .GetMethod("Snapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .GetMethod("Snapshot", BindingFlags.NonPublic | BindingFlags.Instance)!
             .Invoke(table, null) as (byte[] Name, double Seconds)[])!;
 
     /// <summary>Records every log entry for assertion.</summary>
@@ -153,7 +155,12 @@ public class PluginTimingTableTests
         public bool IsEnabled(LogLevel logLevel) => true;
 
         /// <inheritdoc/>
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
         {
             ArgumentNullException.ThrowIfNull(formatter);
             Records.Add((logLevel, formatter(state, exception)));

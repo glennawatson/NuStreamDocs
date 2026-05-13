@@ -28,7 +28,7 @@ internal sealed class HostFilter
     /// <param name="hostsToSkip">UTF-8 skip list (may be null/empty).</param>
     /// <param name="hostsAllowed">UTF-8 allow list (empty means "everything not on the skip list").</param>
     public HostFilter(byte[][]? hostsToSkip, byte[][]? hostsAllowed)
-        : this(hostsToSkip, hostsAllowed, includePatterns: null, excludePatterns: null)
+        : this(hostsToSkip, hostsAllowed, null, null)
     {
     }
 
@@ -71,7 +71,7 @@ internal sealed class HostFilter
         }
 
         return (_includePatterns.HasPatterns && _includePatterns.IsMatch(urlBytes))
-            || !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);
+               || !_hasAllowedHosts || HostMatches(_hostsAllowedBytes, host);
     }
 
     /// <summary>Returns a fresh ASCII-lowercased copy of <paramref name="hosts"/>; <c>[]</c> when the input is null/empty.</summary>

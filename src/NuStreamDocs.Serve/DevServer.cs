@@ -58,7 +58,11 @@ internal static class DevServer
     /// <param name="broker">LiveReload connection registry.</param>
     /// <param name="cancellationToken">Cancellation token; cancellation triggers a graceful shutdown.</param>
     /// <returns>Started <see cref="WebApplication"/>.</returns>
-    public static async Task<WebApplication> StartAsync(string outputRoot, WatchAndServeOptions options, LiveReloadBroker broker, CancellationToken cancellationToken)
+    public static async Task<WebApplication> StartAsync(
+        string outputRoot,
+        WatchAndServeOptions options,
+        LiveReloadBroker broker,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot);
 
@@ -83,7 +87,10 @@ internal static class DevServer
     /// <param name="options">Watch + serve options.</param>
     /// <param name="broker">LiveReload registry.</param>
     /// <returns>Configured <see cref="WebApplication"/>.</returns>
-    private static WebApplication BuildApplication(string outputRoot, WatchAndServeOptions options, LiveReloadBroker broker)
+    private static WebApplication BuildApplication(
+        string outputRoot,
+        WatchAndServeOptions options,
+        LiveReloadBroker broker)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.ConfigureKestrel((_, kestrel) =>

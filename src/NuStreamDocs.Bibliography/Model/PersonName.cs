@@ -29,18 +29,18 @@ public sealed record PersonName(
     /// <returns>The name record.</returns>
     public static PersonName Of(string given, string family) =>
         new(
-            Family: Utf8Encoder.Encode(family),
-            Given: Utf8Encoder.Encode(given),
-            Suffix: [],
-            Literal: []);
+            Utf8Encoder.Encode(family),
+            Utf8Encoder.Encode(given),
+            [],
+            []);
 
     /// <summary>Convenience for institutional authors (the whole string lives in <see cref="Literal"/>).</summary>
     /// <param name="literal">The institution name.</param>
     /// <returns>The name record.</returns>
     public static PersonName Institutional(string literal) =>
         new(
-            Family: [],
-            Given: [],
-            Suffix: [],
-            Literal: Utf8Encoder.Encode(literal));
+            [],
+            [],
+            [],
+            Utf8Encoder.Encode(literal));
 }

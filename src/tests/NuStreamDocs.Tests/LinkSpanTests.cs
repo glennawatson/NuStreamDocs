@@ -49,8 +49,10 @@ public class LinkSpanTests
     {
         var bytes = Encoding.UTF8.GetBytes(source);
         await Assert.That(LinkSpan.TryReadShape(bytes, 0, out var shape)).IsTrue();
-        await Assert.That(Encoding.UTF8.GetString(bytes.AsSpan(shape.LabelStart, shape.LabelEnd - shape.LabelStart))).IsEqualTo(expectedLabel);
-        await Assert.That(Encoding.UTF8.GetString(bytes.AsSpan(shape.HrefStart, shape.HrefEnd - shape.HrefStart))).IsEqualTo(expectedHref);
+        await Assert.That(Encoding.UTF8.GetString(bytes.AsSpan(shape.LabelStart, shape.LabelEnd - shape.LabelStart)))
+            .IsEqualTo(expectedLabel);
+        await Assert.That(Encoding.UTF8.GetString(bytes.AsSpan(shape.HrefStart, shape.HrefEnd - shape.HrefStart)))
+            .IsEqualTo(expectedHref);
     }
 
     /// <summary>FindMatching counts nested open/close pairs and returns -1 when unbalanced.</summary>

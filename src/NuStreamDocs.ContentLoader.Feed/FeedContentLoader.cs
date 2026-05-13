@@ -34,7 +34,7 @@ public sealed class FeedContentLoader : IContentLoader
     /// <param name="feedUrl">The feed URL.</param>
     /// <param name="routePrefix">Subdirectory the synthesized pages are placed under.</param>
     public FeedContentLoader(UrlPath feedUrl, PathSegment routePrefix)
-        : this(feedUrl, routePrefix, httpClientFactory: null, NullLogger.Instance)
+        : this(feedUrl, routePrefix, null, NullLogger.Instance)
     {
     }
 
@@ -43,7 +43,7 @@ public sealed class FeedContentLoader : IContentLoader
     /// <param name="routePrefix">Subdirectory the synthesized pages are placed under.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public FeedContentLoader(UrlPath feedUrl, PathSegment routePrefix, ILogger logger)
-        : this(feedUrl, routePrefix, httpClientFactory: null, logger)
+        : this(feedUrl, routePrefix, null, logger)
     {
     }
 
@@ -52,7 +52,11 @@ public sealed class FeedContentLoader : IContentLoader
     /// <param name="routePrefix">Subdirectory the synthesized pages are placed under.</param>
     /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public FeedContentLoader(UrlPath feedUrl, PathSegment routePrefix, Func<HttpClient>? httpClientFactory, ILogger logger)
+    public FeedContentLoader(
+        UrlPath feedUrl,
+        PathSegment routePrefix,
+        Func<HttpClient>? httpClientFactory,
+        ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(feedUrl.Value);
         ArgumentException.ThrowIfNullOrEmpty(routePrefix.Value);
@@ -104,7 +108,9 @@ public sealed class FeedContentLoader : IContentLoader
         catch (HttpRequestException ex)
         {
             ContentLoaderLoggingHelper.LogFetchFailed(_logger, "feed", _feedUrl.Value, ex.Message);
-            throw new ContentLoaderException(StringCompose.Concat("Failed to fetch feed ", _feedUrl.Value, ": ", ex.Message), ex);
+            throw new ContentLoaderException(
+                StringCompose.Concat("Failed to fetch feed ", _feedUrl.Value, ": ", ex.Message),
+                ex);
         }
     }
 
@@ -121,7 +127,7 @@ public sealed class FeedContentLoader : IContentLoader
             var item = items[i];
             var slugSource = item.Title is [_, ..] ? item.Title : item.Identifier;
             var route = UniqueRoute(Slug.FromBytes(slugSource), usedRoutes);
-            pages[i] = new(new FilePath(Encoding.UTF8.GetString(route)), FeedMarkdown.Build(item, feedUrlBytes));
+            pages[i] = new(new(Encoding.UTF8.GetString(route)), FeedMarkdown.Build(item, feedUrlBytes));
         }
 
         return pages;

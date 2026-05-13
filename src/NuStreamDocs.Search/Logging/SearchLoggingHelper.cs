@@ -16,8 +16,15 @@ internal static partial class SearchLoggingHelper
     /// <param name="documentCount">Documents harvested from the rendered pages.</param>
     /// <param name="formatName">Engine format name (UTF-8) — surfaced in the log message so multi-engine sites can tell builds apart.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
-    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogIndexBuildStart(ILogger logger, int documentCount, ReadOnlySpan<byte> formatName, in DirectoryPath outputDir)
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
+    public static void LogIndexBuildStart(
+        ILogger logger,
+        int documentCount,
+        ReadOnlySpan<byte> formatName,
+        in DirectoryPath outputDir)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {
@@ -32,8 +39,15 @@ internal static partial class SearchLoggingHelper
     /// <param name="recordCount">Records written to the index.</param>
     /// <param name="totalContentBytes">Total UTF-8 byte length of the indexed text.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
-    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogIndexBuildComplete(ILogger logger, int recordCount, long totalContentBytes, in DirectoryPath outputDir)
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
+    public static void LogIndexBuildComplete(
+        ILogger logger,
+        int recordCount,
+        long totalContentBytes,
+        in DirectoryPath outputDir)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {
@@ -47,7 +61,10 @@ internal static partial class SearchLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="slug">UTF-8 site-relative URL bytes for the document.</param>
     /// <param name="contentLength">UTF-8 byte length of the indexed text.</param>
-    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: GetString call is gated on logger.IsEnabled above.")]
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "False positive: GetString call is gated on logger.IsEnabled above.")]
     public static void LogDocumentIndexed(ILogger logger, ReadOnlySpan<byte> slug, int contentLength)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -63,16 +80,21 @@ internal static partial class SearchLoggingHelper
     /// <param name="documentCount">Documents harvested from the rendered pages.</param>
     /// <param name="formatName">Engine format name (already UTF-8 decoded).</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Building {FormatName} search index from {DocumentCount} document(s); output {OutputDir}")]
-    private static partial void LogIndexBuildStartCore(ILogger logger, int documentCount, string formatName, string outputDir);
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Building {FormatName} search index from {DocumentCount} document(s); output {OutputDir}")]
+    private static partial void LogIndexBuildStartCore(ILogger logger, int documentCount, string formatName,
+        string outputDir);
 
     /// <summary>Source-generated emitter for <see cref="LogIndexBuildComplete"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="recordCount">Records written to the index.</param>
     /// <param name="totalContentBytes">Total UTF-8 byte length of the indexed text.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Search index complete: {RecordCount} record(s), {TotalContentBytes} byte(s) of content written to {OutputDir}")]
-    private static partial void LogIndexBuildCompleteCore(ILogger logger, int recordCount, long totalContentBytes, string outputDir);
+    [LoggerMessage(Level = LogLevel.Information,
+        Message =
+            "Search index complete: {RecordCount} record(s), {TotalContentBytes} byte(s) of content written to {OutputDir}")]
+    private static partial void LogIndexBuildCompleteCore(ILogger logger, int recordCount, long totalContentBytes,
+        string outputDir);
 
     /// <summary>Source-generated emitter for <see cref="LogDocumentIndexed"/>.</summary>
     /// <param name="logger">Target logger.</param>

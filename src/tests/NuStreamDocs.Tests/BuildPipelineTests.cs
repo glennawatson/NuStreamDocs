@@ -61,7 +61,12 @@ public class BuildPipelineTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "live.md"), "# Live");
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "draft.md"), "---\ndraft: true\n---\n# Draft");
 
-        var processed = await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], BuildPipelineOptions.Default, CancellationToken.None);
+        var processed = await BuildPipeline.RunAsync(
+            fixture.Input,
+            fixture.Output,
+            [],
+            BuildPipelineOptions.Default,
+            CancellationToken.None);
         await Assert.That(processed).IsEqualTo(1);
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "live.html"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "draft.html"))).IsFalse();
@@ -76,7 +81,8 @@ public class BuildPipelineTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "draft.md"), "---\ndraft: true\n---\n# Draft");
 
         var options = BuildPipelineOptions.Default with { IncludeDrafts = true };
-        var processed = await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, CancellationToken.None);
+        var processed =
+            await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, CancellationToken.None);
         await Assert.That(processed).IsEqualTo(1);
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "draft.html"))).IsTrue();
     }

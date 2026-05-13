@@ -66,22 +66,22 @@ public class MagicLinkBenchmarks
     /// <summary>URL autolinking only, shortref expansion disabled.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark(Baseline = true)]
-    public int UrlsOnly() => Run(_urlsFixture, defaultRepo: [], expandMentions: false);
+    public int UrlsOnly() => Run(_urlsFixture, [], false);
 
     /// <summary>Issue-ref expansion against a configured repo.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public int IssueRefsExpanded() => Run(_issueRefsFixture, defaultRepo: DefaultRepo, expandMentions: false);
+    public int IssueRefsExpanded() => Run(_issueRefsFixture, DefaultRepo, false);
 
     /// <summary>Mention expansion only.</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public int MentionsExpanded() => Run(_mentionsFixture, defaultRepo: [], expandMentions: true);
+    public int MentionsExpanded() => Run(_mentionsFixture, [], true);
 
     /// <summary>Combined URL autolinking + issue-ref + mention expansion (rxui release-notes shape).</summary>
     /// <returns>Bytes written.</returns>
     [Benchmark]
-    public int CombinedRxuiShape() => Run(_combinedFixture, defaultRepo: DefaultRepo, expandMentions: true);
+    public int CombinedRxuiShape() => Run(_combinedFixture, DefaultRepo, true);
 
     /// <summary>Repeats <paramref name="line"/> <paramref name="times"/> times into a single byte array.</summary>
     /// <param name="line">Source line bytes.</param>

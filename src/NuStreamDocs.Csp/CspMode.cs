@@ -11,5 +11,5 @@ public enum CspMode
     Enforce,
 
     /// <summary>Emit <c>&lt;meta http-equiv="Content-Security-Policy-Report-Only"&gt;</c> — violations are reported but not blocked (useful while rolling a policy out).</summary>
-    ReportOnly,
+    ReportOnly
 }

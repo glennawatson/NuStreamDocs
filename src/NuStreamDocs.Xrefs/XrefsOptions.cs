@@ -18,13 +18,10 @@ public sealed record XrefsOptions(
     bool EmitMap)
 {
     /// <summary>Gets the default option set — emit <c>xrefmap.json</c>, no base URL, no imports.</summary>
-    public static XrefsOptions Default { get; } = new("xrefmap.json", [], [], EmitMap: true);
+    public static XrefsOptions Default { get; } = new("xrefmap.json", [], [], true);
 
     /// <summary>Throws when any required field is invalid.</summary>
     /// <exception cref="ArgumentException">When <see cref="OutputFileName"/> is null/empty/whitespace.</exception>
     /// <exception cref="ArgumentNullException">When <see cref="Imports"/> is null.</exception>
-    public void Validate()
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(OutputFileName);
-    }
+    public void Validate() => ArgumentException.ThrowIfNullOrWhiteSpace(OutputFileName);
 }

@@ -14,5 +14,5 @@ public enum GenericFontFamily
     Serif,
 
     /// <summary><c>monospace</c>; reference font Courier New.</summary>
-    Monospace,
+    Monospace
 }

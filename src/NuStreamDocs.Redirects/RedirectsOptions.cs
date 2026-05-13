@@ -15,7 +15,10 @@ namespace NuStreamDocs.Redirects;
 /// <param name="ReadFrontmatterRedirects">When true, pick up <c>redirect_from</c> entries from page frontmatter.</param>
 /// <param name="DefaultCacheHeaders">When true, prepend default <c>_headers</c> rules: a one-week cache for <c>/assets/*</c> and an immutable cache for <c>/assets/fonts/*</c>.</param>
 /// <param name="FrontmatterKey">UTF-8 frontmatter key read for redirect sources.</param>
-[SuppressMessage("Major Code Smell", "S107", Justification = "A flat options record; each field is an independent knob.")]
+[SuppressMessage(
+    "Major Code Smell",
+    "S107",
+    Justification = "A flat options record; each field is an independent knob.")]
 public readonly record struct RedirectsOptions(
     RedirectRule[] Redirects,
     HeaderRule[] Headers,
@@ -28,12 +31,12 @@ public readonly record struct RedirectsOptions(
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static RedirectsOptions Default { get; } = new(
-        Redirects: [],
-        Headers: [],
-        EmitRedirectsFile: true,
-        EmitHeadersFile: true,
-        EmitMetaRefreshPages: true,
-        ReadFrontmatterRedirects: true,
-        DefaultCacheHeaders: true,
-        FrontmatterKey: [.. "redirect_from"u8]);
+        [],
+        [],
+        true,
+        true,
+        true,
+        true,
+        true,
+        [.. "redirect_from"u8]);
 }

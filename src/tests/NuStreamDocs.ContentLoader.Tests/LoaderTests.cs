@@ -2,8 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Net.Http;
+using System.Net;
 using System.Text;
+using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.ContentLoader.Tests;
@@ -21,9 +22,10 @@ public class LoaderTests
         {
             var path = Path.Combine(dir.FullName, "data.json");
             await File.WriteAllTextAsync(path, "[{\"slug\":\"a\",\"title\":\"A\",\"body\":\"Hi A\"}]");
-            var loader = new FileContentLoader(new FilePath(path), ContentMapping.ForRoute("p/{slug}.md"u8).WithBodyKey("body"u8));
+            var loader =
+                new FileContentLoader(new(path), ContentMapping.ForRoute("p/{slug}.md"u8).WithBodyKey("body"u8));
 
-            var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+            var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
             await Assert.That(pages.Length).IsEqualTo(1);
             await Assert.That(pages[0].RelativePath.Value).IsEqualTo("p/a.md");
@@ -31,7 +33,7 @@ public class LoaderTests
         }
         finally
         {
-            dir.Delete(recursive: true);
+            dir.Delete(true);
         }
     }
 
@@ -45,16 +47,18 @@ public class LoaderTests
         {
             var path = Path.Combine(dir.FullName, "data.yaml");
             await File.WriteAllTextAsync(path, "posts:\n  - slug: b\n    title: B\n");
-            var loader = new FileContentLoader(new FilePath(path), ContentMapping.ForRoute("p/{slug}.md"u8).WithCollectionPointer("posts"u8));
+            var loader = new FileContentLoader(
+                new(path),
+                ContentMapping.ForRoute("p/{slug}.md"u8).WithCollectionPointer("posts"u8));
 
-            var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+            var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
             await Assert.That(pages.Length).IsEqualTo(1);
             await Assert.That(pages[0].RelativePath.Value).IsEqualTo("p/b.md");
         }
         finally
         {
-            dir.Delete(recursive: true);
+            dir.Delete(true);
         }
     }
 
@@ -63,8 +67,12 @@ public class LoaderTests
     [Test]
     public async Task FileLoaderThrowsWhenMissing()
     {
-        var loader = new FileContentLoader(new FilePath(Path.Combine(Path.GetTempPath(), "nstd-missing-" + Guid.NewGuid().ToString("N") + ".json")), ContentMapping.ForRoute("p/{slug}.md"u8));
-        await Assert.That(async () => _ = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None)).Throws<ContentLoaderException>();
+        var loader =
+            new FileContentLoader(
+                new(Path.Combine(Path.GetTempPath(), "nstd-missing-" + Guid.NewGuid().ToString("N") + ".json")),
+                ContentMapping.ForRoute("p/{slug}.md"u8));
+        await Assert.That(async () => _ = await loader.LoadAsync(new(default), CancellationToken.None))
+            .Throws<ContentLoaderException>();
     }
 
     /// <summary>The HTTP loader GETs a JSON endpoint and maps the response.</summary>
@@ -72,16 +80,16 @@ public class LoaderTests
     [Test]
     public async Task HttpLoaderMapsGetResponse()
     {
-        const string json = "{\"results\":[{\"id\":\"one\",\"title\":\"One\",\"body\":\"Body one\"}]}";
+        const string Json = "{\"results\":[{\"id\":\"one\",\"title\":\"One\",\"body\":\"Body one\"}]}";
         var loader = new HttpContentLoader(
             (UrlPath)"https://api.example.test/things",
             [],
             [],
             ContentMapping.ForRoute("api/{id}.md"u8).WithBodyKey("body"u8).WithCollectionPointer("results"u8),
-            () => StubHttpHandler.ClientReturning(json),
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+            () => StubHttpHandler.ClientReturning(Json),
+            NullLogger.Instance);
 
-        var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+        var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("api/one.md");
@@ -93,16 +101,16 @@ public class LoaderTests
     [Test]
     public async Task HttpLoaderPostsWhenBodyGiven()
     {
-        StubHttpHandler handler = new(_ => (System.Net.HttpStatusCode.OK, "{\"data\":{\"nodes\":[{\"id\":\"q\"}]}}"));
+        StubHttpHandler handler = new(_ => (HttpStatusCode.OK, "{\"data\":{\"nodes\":[{\"id\":\"q\"}]}}"));
         var loader = new HttpContentLoader(
             (UrlPath)"https://gql.example.test/graphql",
             [.. "{\"query\":\"{ nodes { id } }\"}"u8],
             [],
             ContentMapping.ForRoute("g/{id}.md"u8).WithCollectionPointer("data.nodes"u8),
-            () => new HttpClient(handler),
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+            () => new(handler),
+            NullLogger.Instance);
 
-        var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+        var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(handler.Requests[0].Method).IsEqualTo(HttpMethod.Post);
@@ -118,10 +126,11 @@ public class LoaderTests
             [],
             [],
             ContentMapping.ForRoute("api/{id}.md"u8),
-            () => new HttpClient(new StubHttpHandler(_ => (System.Net.HttpStatusCode.InternalServerError, "boom"))),
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+            () => new(new StubHttpHandler(_ => (HttpStatusCode.InternalServerError, "boom"))),
+            NullLogger.Instance);
 
-        await Assert.That(async () => _ = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None)).Throws<ContentLoaderException>();
+        await Assert.That(async () => _ = await loader.LoadAsync(new(default), CancellationToken.None))
+            .Throws<ContentLoaderException>();
     }
 
     /// <summary>The raw-document loader passes each fetched body through verbatim at its route.</summary>
@@ -129,17 +138,17 @@ public class LoaderTests
     [Test]
     public async Task RawDocumentLoaderPassesThrough()
     {
-        const string markdown = "---\ntitle: Remote\n---\n\n# Remote page\n";
+        const string Markdown = "---\ntitle: Remote\n---\n\n# Remote page\n";
         var loader = new RawDocumentContentLoader(
-            [new((UrlPath)"https://raw.example.test/guide.md", new FilePath("guide/remote.md"))],
+            [new((UrlPath)"https://raw.example.test/guide.md", new("guide/remote.md"))],
             [],
-            () => StubHttpHandler.ClientReturning(markdown),
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+            () => StubHttpHandler.ClientReturning(Markdown),
+            NullLogger.Instance);
 
-        var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+        var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("guide/remote.md");
-        await Assert.That(Encoding.UTF8.GetString(pages[0].MarkdownBytes)).IsEqualTo(markdown);
+        await Assert.That(Encoding.UTF8.GetString(pages[0].MarkdownBytes)).IsEqualTo(Markdown);
     }
 }

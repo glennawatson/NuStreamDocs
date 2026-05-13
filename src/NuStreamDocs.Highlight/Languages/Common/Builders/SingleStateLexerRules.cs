@@ -29,7 +29,10 @@ internal static class SingleStateLexerRules
             new(
                 TokenMatchers.MatchAsciiWhitespace,
                 TokenClass.Whitespace,
-                LexerRule.NoStateChange) { FirstBytes = config.WhitespaceFirst ?? TokenMatchers.AsciiWhitespaceWithNewlines }
+                LexerRule.NoStateChange)
+            {
+                FirstBytes = config.WhitespaceFirst ?? TokenMatchers.AsciiWhitespaceWithNewlines
+            }
         };
 
         AppendIfPresent(rules, config.PreCommentRule);
@@ -43,7 +46,8 @@ internal static class SingleStateLexerRules
             rules.Add(new(
                 TokenMatchers.MatchDoubleQuotedWithBackslashEscape,
                 TokenClass.StringDouble,
-                LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst });
+                LexerRule.NoStateChange)
+            { FirstBytes = LanguageCommon.DoubleQuoteFirst });
         }
 
         if (config.IncludeSingleQuotedString)
@@ -51,49 +55,30 @@ internal static class SingleStateLexerRules
             rules.Add(new(
                 static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
                 TokenClass.StringSingle,
-                LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst });
+                LexerRule.NoStateChange)
+            { FirstBytes = LanguageCommon.SingleQuoteFirst });
         }
 
         AppendAll(rules, config.PostStringRules);
-
-        var numberFirst = config.NumberFirst ?? TokenMatchers.AsciiDigits;
-        if (config.IncludeSignedFloatLiteral)
-        {
-            rules.Add(new(
-                TokenMatchers.MatchSignedAsciiFloat,
-                TokenClass.NumberFloat,
-                LexerRule.NoStateChange) { FirstBytes = numberFirst });
-        }
-        else if (config.IncludeFloatLiteral)
-        {
-            rules.Add(new(
-                TokenMatchers.MatchUnsignedAsciiFloat,
-                TokenClass.NumberFloat,
-                LexerRule.NoStateChange) { FirstBytes = numberFirst });
-        }
-
-        if (config.IncludeSignedIntegerLiteral)
-        {
-            rules.Add(new(
-                TokenMatchers.MatchSignedAsciiInteger,
-                TokenClass.NumberInteger,
-                LexerRule.NoStateChange) { FirstBytes = numberFirst });
-        }
-        else if (config.IncludeIntegerLiteral)
-        {
-            rules.Add(new(
-                TokenMatchers.MatchAsciiDigits,
-                TokenClass.NumberInteger,
-                LexerRule.NoStateChange) { FirstBytes = numberFirst });
-        }
+        AppendNumberRules(rules, config);
 
         var lineStart = config.KeywordsRequireLineStart;
-        AppendKeywordRule(rules, config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant, lineStart);
+        AppendKeywordRule(
+            rules,
+            config.KeywordConstants,
+            config.KeywordConstantFirst,
+            TokenClass.KeywordConstant,
+            lineStart);
         AppendKeywordRule(rules, config.KeywordTypes, config.KeywordTypeFirst, TokenClass.KeywordType, lineStart);
-        AppendKeywordRule(rules, config.KeywordDeclarations, config.KeywordDeclarationFirst, TokenClass.KeywordDeclaration, lineStart);
+        AppendKeywordRule(
+            rules,
+            config.KeywordDeclarations,
+            config.KeywordDeclarationFirst,
+            TokenClass.KeywordDeclaration,
+            lineStart);
         AppendKeywordRule(rules, config.Keywords, config.KeywordFirst, TokenClass.Keyword, lineStart);
         AppendAll(rules, config.ExtraRules);
-        AppendKeywordRule(rules, config.BuiltinKeywords, config.BuiltinKeywordFirst, TokenClass.NameBuiltin, requiresLineStart: false);
+        AppendKeywordRule(rules, config.BuiltinKeywords, config.BuiltinKeywordFirst, TokenClass.NameBuiltin, false);
 
         if (!config.SuppressIdentifierRule)
         {
@@ -104,6 +89,47 @@ internal static class SingleStateLexerRules
         AppendPunctuationRule(rules, config.Punctuation);
 
         return [.. rules];
+    }
+
+    /// <summary>Appends the float / integer literal rules per <paramref name="config"/>.</summary>
+    /// <param name="rules">Target rule list.</param>
+    /// <param name="config">Per-language configuration.</param>
+    private static void AppendNumberRules(List<LexerRule> rules, in SingleStateLexerConfig config)
+    {
+        var numberFirst = config.NumberFirst ?? TokenMatchers.AsciiDigits;
+        if (config.IncludeSignedFloatLiteral)
+        {
+            rules.Add(new(
+                TokenMatchers.MatchSignedAsciiFloat,
+                TokenClass.NumberFloat,
+                LexerRule.NoStateChange)
+            { FirstBytes = numberFirst });
+        }
+        else if (config.IncludeFloatLiteral)
+        {
+            rules.Add(new(
+                TokenMatchers.MatchUnsignedAsciiFloat,
+                TokenClass.NumberFloat,
+                LexerRule.NoStateChange)
+            { FirstBytes = numberFirst });
+        }
+
+        if (config.IncludeSignedIntegerLiteral)
+        {
+            rules.Add(new(
+                TokenMatchers.MatchSignedAsciiInteger,
+                TokenClass.NumberInteger,
+                LexerRule.NoStateChange)
+            { FirstBytes = numberFirst });
+        }
+        else if (config.IncludeIntegerLiteral)
+        {
+            rules.Add(new(
+                TokenMatchers.MatchAsciiDigits,
+                TokenClass.NumberInteger,
+                LexerRule.NoStateChange)
+            { FirstBytes = numberFirst });
+        }
     }
 
     /// <summary>Appends <paramref name="rule"/> to <paramref name="rules"/> when non-null.</summary>
@@ -141,7 +167,12 @@ internal static class SingleStateLexerRules
     /// <param name="firstBytes">First-byte dispatch set.</param>
     /// <param name="tokenClass">Classification.</param>
     /// <param name="requiresLineStart">When true, only fires at start-of-line positions.</param>
-    private static void AppendKeywordRule(List<LexerRule> rules, ByteKeywordSet? keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass, bool requiresLineStart)
+    private static void AppendKeywordRule(
+        List<LexerRule> rules,
+        ByteKeywordSet? keywords,
+        SearchValues<byte>? firstBytes,
+        TokenClass tokenClass,
+        bool requiresLineStart)
     {
         if (keywords is null)
         {
@@ -152,7 +183,11 @@ internal static class SingleStateLexerRules
         rules.Add(new(
             slice => TokenMatchers.MatchKeyword(slice, captured),
             tokenClass,
-            LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet, RequiresLineStart = requiresLineStart });
+            LexerRule.NoStateChange)
+        {
+            FirstBytes = firstBytes ?? captured.FirstByteSet,
+            RequiresLineStart = requiresLineStart
+        });
     }
 
     /// <summary>Appends the identifier rule to <paramref name="rules"/> — uses <paramref name="continueSet"/> when supplied, else the ASCII default.</summary>
@@ -165,14 +200,16 @@ internal static class SingleStateLexerRules
             rules.Add(new(
                 slice => TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, cont),
                 TokenClass.Name,
-                LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart });
+                LexerRule.NoStateChange)
+            { FirstBytes = TokenMatchers.AsciiIdentifierStart });
             return;
         }
 
         rules.Add(new(
             TokenMatchers.MatchAsciiIdentifier,
             TokenClass.Name,
-            LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart });
+            LexerRule.NoStateChange)
+        { FirstBytes = TokenMatchers.AsciiIdentifierStart });
     }
 
     /// <summary>Appends the operator-alternation rule to <paramref name="rules"/> when both <paramref name="operators"/> and <paramref name="firstBytes"/> are supplied.</summary>
@@ -191,7 +228,8 @@ internal static class SingleStateLexerRules
         rules.Add(new(
             slice => TokenMatchers.MatchLongestLiteral(slice, captured),
             TokenClass.Operator,
-            LexerRule.NoStateChange) { FirstBytes = dispatch });
+            LexerRule.NoStateChange)
+        { FirstBytes = dispatch });
     }
 
     /// <summary>Appends the single-byte structural-punctuation rule to <paramref name="rules"/> when <paramref name="punctuation"/> is supplied.</summary>
@@ -208,6 +246,7 @@ internal static class SingleStateLexerRules
         rules.Add(new(
             slice => TokenMatchers.MatchSingleByteOf(slice, captured),
             TokenClass.Punctuation,
-            LexerRule.NoStateChange) { FirstBytes = captured });
+            LexerRule.NoStateChange)
+        { FirstBytes = captured });
     }
 }

@@ -21,7 +21,8 @@ public static class DocBuilderContentLoaderExtensions
     /// <param name="logger">Logger that receives loader diagnostics.</param>
     /// <param name="loaders">The loaders to run.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseContentLoaders(this DocBuilder builder, ILogger logger, params IContentLoader[] loaders) =>
+    public static DocBuilder
+        UseContentLoaders(this DocBuilder builder, ILogger logger, params IContentLoader[] loaders) =>
         builder.UsePlugin(new ContentLoaderPlugin(loaders, logger));
 
     /// <summary>Registers a single content loader.</summary>

@@ -18,17 +18,9 @@ public class RouterScriptTests
         await Assert.That(js.Length).IsGreaterThan(2000);
         foreach (var marker in new[]
                  {
-                     "startViewTransition",
-                     "popstate",
-                     "prefers-reduced-motion",
-                     "DOMParser",
-                     "AbortController",
-                     "nstd:page-load",
-                     "nstd:before-swap",
-                     "nstd:router",
-                     "location.assign",
-                     "IntersectionObserver",
-                     "scrollRestoration",
+                     "startViewTransition", "popstate", "prefers-reduced-motion", "DOMParser", "AbortController",
+                     "nstd:page-load", "nstd:before-swap", "nstd:router", "location.assign", "IntersectionObserver",
+                     "scrollRestoration"
                  })
         {
             await Assert.That(js).Contains(marker);

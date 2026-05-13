@@ -3,797 +3,973 @@
 /* ----- Visually-hidden infrastructure: skip-link + toggle checkboxes. ----- */
 /* Toggle inputs drive layout via `:checked` sibling selectors; the skip link is keyboard-only. */
 .md-toggle {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
 }
+
 .md-skip {
-  position: absolute;
-  top: -3rem;
-  left: 1rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: var(--md-sys-shape-corner-md, 8px);
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  text-decoration: none;
-  z-index: 100;
-  transition: top 0.15s ease;
+    position: absolute;
+    top: -3rem;
+    left: 1rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--md-sys-shape-corner-md, 8px);
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    text-decoration: none;
+    z-index: 100;
+    transition: top 0.15s ease;
 }
+
 .md-skip:focus {
-  top: 0.5rem;
+    top: 0.5rem;
 }
 
 /* `:where(...)` keeps specificity at 0 so per-element rules still override. */
 :where(a, button, label, input, [tabindex], summary):focus-visible {
-  outline: 2px solid var(--md-sys-color-primary);
-  outline-offset: 2px;
-  border-radius: 2px;
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
 }
 
 /* ----- Light scheme: sys.color tokens ----- */
 :root,
 [data-md-color-scheme="default"] {
-  --md-sys-color-primary: #6750a4;
-  --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-primary-container: #eaddff;
-  --md-sys-color-on-primary-container: #21005d;
-  --md-sys-color-secondary: #625b71;
-  --md-sys-color-on-secondary: #ffffff;
-  --md-sys-color-secondary-container: #e8def8;
-  --md-sys-color-on-secondary-container: #1d192b;
-  --md-sys-color-tertiary: #7d5260;
-  --md-sys-color-on-tertiary: #ffffff;
-  --md-sys-color-surface: #fffbfe;
-  --md-sys-color-surface-dim: #ded8e1;
-  --md-sys-color-surface-bright: #fffbfe;
-  --md-sys-color-surface-container-lowest: #ffffff;
-  --md-sys-color-surface-container-low: #f7f2fa;
-  --md-sys-color-surface-container: #f3edf7;
-  --md-sys-color-surface-container-high: #ece6f0;
-  --md-sys-color-surface-container-highest: #e6e0e9;
-  --md-sys-color-on-surface: #1c1b1f;
-  --md-sys-color-on-surface-variant: #49454f;
-  --md-sys-color-outline: #79747e;
-  --md-sys-color-outline-variant: #cac4d0;
-  --md-sys-color-error: #b3261e;
-  --md-sys-color-on-error: #ffffff;
-  --md-sys-color-error-container: #f9dedc;
+    --md-sys-color-primary: #6750a4;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #eaddff;
+    --md-sys-color-on-primary-container: #21005d;
+    --md-sys-color-secondary: #625b71;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #e8def8;
+    --md-sys-color-on-secondary-container: #1d192b;
+    --md-sys-color-tertiary: #7d5260;
+    --md-sys-color-on-tertiary: #ffffff;
+    --md-sys-color-surface: #fffbfe;
+    --md-sys-color-surface-dim: #ded8e1;
+    --md-sys-color-surface-bright: #fffbfe;
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-surface-container-low: #f7f2fa;
+    --md-sys-color-surface-container: #f3edf7;
+    --md-sys-color-surface-container-high: #ece6f0;
+    --md-sys-color-surface-container-highest: #e6e0e9;
+    --md-sys-color-on-surface: #1c1b1f;
+    --md-sys-color-on-surface-variant: #49454f;
+    --md-sys-color-outline: #79747e;
+    --md-sys-color-outline-variant: #cac4d0;
+    --md-sys-color-error: #b3261e;
+    --md-sys-color-on-error: #ffffff;
+    --md-sys-color-error-container: #f9dedc;
 }
 
 /* ----- Dark scheme: same roles, dark values. ----- */
 [data-md-color-scheme="slate"] {
-  color-scheme: dark;
-  --md-sys-color-primary: #d0bcff;
-  --md-sys-color-on-primary: #381e72;
-  --md-sys-color-primary-container: #4f378b;
-  --md-sys-color-on-primary-container: #eaddff;
-  --md-sys-color-secondary: #ccc2dc;
-  --md-sys-color-on-secondary: #332d41;
-  --md-sys-color-secondary-container: #4a4458;
-  --md-sys-color-on-secondary-container: #e8def8;
-  --md-sys-color-tertiary: #efb8c8;
-  --md-sys-color-on-tertiary: #492532;
-  --md-sys-color-surface: #1c1b1f;
-  --md-sys-color-surface-dim: #1c1b1f;
-  --md-sys-color-surface-bright: #3b383e;
-  --md-sys-color-surface-container-lowest: #161518;
-  --md-sys-color-surface-container-low: #1d1b20;
-  --md-sys-color-surface-container: #211f24;
-  --md-sys-color-surface-container-high: #2b2930;
-  --md-sys-color-surface-container-highest: #36343b;
-  --md-sys-color-on-surface: #e6e1e5;
-  --md-sys-color-on-surface-variant: #cac4d0;
-  --md-sys-color-outline: #938f99;
-  --md-sys-color-outline-variant: #49454f;
-  --md-sys-color-error: #f2b8b5;
-  --md-sys-color-on-error: #601410;
-  --md-sys-color-error-container: #8c1d18;
+    color-scheme: dark;
+    --md-sys-color-primary: #d0bcff;
+    --md-sys-color-on-primary: #381e72;
+    --md-sys-color-primary-container: #4f378b;
+    --md-sys-color-on-primary-container: #eaddff;
+    --md-sys-color-secondary: #ccc2dc;
+    --md-sys-color-on-secondary: #332d41;
+    --md-sys-color-secondary-container: #4a4458;
+    --md-sys-color-on-secondary-container: #e8def8;
+    --md-sys-color-tertiary: #efb8c8;
+    --md-sys-color-on-tertiary: #492532;
+    --md-sys-color-surface: #1c1b1f;
+    --md-sys-color-surface-dim: #1c1b1f;
+    --md-sys-color-surface-bright: #3b383e;
+    --md-sys-color-surface-container-lowest: #161518;
+    --md-sys-color-surface-container-low: #1d1b20;
+    --md-sys-color-surface-container: #211f24;
+    --md-sys-color-surface-container-high: #2b2930;
+    --md-sys-color-surface-container-highest: #36343b;
+    --md-sys-color-on-surface: #e6e1e5;
+    --md-sys-color-on-surface-variant: #cac4d0;
+    --md-sys-color-outline: #938f99;
+    --md-sys-color-outline-variant: #49454f;
+    --md-sys-color-error: #f2b8b5;
+    --md-sys-color-on-error: #601410;
+    --md-sys-color-error-container: #8c1d18;
 }
 
 /* ----- Shape, typography, elevation tokens. ----- */
 :root {
-  --md-sys-shape-corner-none: 0;
-  --md-sys-shape-corner-xs: 4px;
-  --md-sys-shape-corner-sm: 8px;
-  --md-sys-shape-corner-md: 12px;
-  --md-sys-shape-corner-lg: 16px;
-  --md-sys-shape-corner-xl: 28px;
+    --md-sys-shape-corner-none: 0;
+    --md-sys-shape-corner-xs: 4px;
+    --md-sys-shape-corner-sm: 8px;
+    --md-sys-shape-corner-md: 12px;
+    --md-sys-shape-corner-lg: 16px;
+    --md-sys-shape-corner-xl: 28px;
 
-  --md-sys-typescale-display-large: 600 57px/64px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-headline-medium: 600 28px/36px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-title-large: 600 22px/28px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-title-medium: 500 16px/24px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-body-large: 400 16px/24px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-body-medium: 400 14px/20px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-label-large: 500 14px/20px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-title-small: 600 14px/20px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-body-small: 400 12px/16px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
-  --md-sys-typescale-label-small: 500 11px/16px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-display-large: 600 57px/64px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-headline-medium: 600 28px/36px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-title-large: 600 22px/28px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-title-medium: 500 16px/24px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-body-large: 400 16px/24px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-body-medium: 400 14px/20px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-label-large: 500 14px/20px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-title-small: 600 14px/20px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-body-small: 400 12px/16px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
+    --md-sys-typescale-label-small: 500 11px/16px var(--md-text-font, "Source Sans 3", system-ui, sans-serif);
 
-  --md-sys-elevation-level-0: 0 0 0 0 transparent;
-  --md-sys-elevation-level-1: 0 1px 2px 0 rgb(0 0 0 / 30%), 0 1px 3px 1px rgb(0 0 0 / 15%);
-  --md-sys-elevation-level-2: 0 1px 2px 0 rgb(0 0 0 / 30%), 0 2px 6px 2px rgb(0 0 0 / 15%);
-  --md-sys-elevation-level-3: 0 1px 3px 0 rgb(0 0 0 / 30%), 0 4px 8px 3px rgb(0 0 0 / 15%);
+    --md-sys-elevation-level-0: 0 0 0 0 transparent;
+    --md-sys-elevation-level-1: 0 1px 2px 0 rgb(0 0 0 / 30%), 0 1px 3px 1px rgb(0 0 0 / 15%);
+    --md-sys-elevation-level-2: 0 1px 2px 0 rgb(0 0 0 / 30%), 0 2px 6px 2px rgb(0 0 0 / 15%);
+    --md-sys-elevation-level-3: 0 1px 3px 0 rgb(0 0 0 / 30%), 0 4px 8px 3px rgb(0 0 0 / 15%);
 
-  --md-clipboard-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z"/></svg>');
+    --md-clipboard-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z"/></svg>');
 }
 
 /* ----- Reset + base. ----- */
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
-html { color-scheme: light dark; }
+html {
+    color-scheme: light dark;
+}
 
 body {
-  margin: 0;
-  font: var(--md-sys-typescale-body-large);
-  color: var(--md-sys-color-on-surface);
-  background: var(--md-sys-color-surface);
+    margin: 0;
+    font: var(--md-sys-typescale-body-large);
+    color: var(--md-sys-color-on-surface);
+    background: var(--md-sys-color-surface);
 }
 
 a {
-  color: var(--md-sys-color-primary);
-  text-decoration: none;
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
 }
-a:hover { text-decoration: underline; }
+
+a:hover {
+    text-decoration: underline;
+}
 
 /* ----- Layout shell. ----- */
-.md-container { min-height: 100vh; display: flex; flex-direction: column; }
-.md-main { flex: 1; padding: 24px 0; }
+.md-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.md-main {
+    flex: 1;
+    padding: 24px 0;
+}
+
 .md-grid {
-  /* 92rem cap keeps line length under ~60rem (~960px) on 4K after the 30rem of sidebars. */
-  max-width: 92rem;
-  margin: 0 auto;
-  padding: 0 16px;
-  width: 100%;
+    /* 92rem cap keeps line length under ~60rem (~960px) on 4K after the 30rem of sidebars. */
+    max-width: 92rem;
+    margin: 0 auto;
+    padding: 0 16px;
+    width: 100%;
 }
+
 .md-main__inner {
-  display: grid;
-  grid-template-columns: 16rem minmax(0, 1fr) 14rem;
-  gap: 24px;
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr) 14rem;
+    gap: 24px;
 }
+
 /* Anchor to col 2 so a hidden primary sidebar doesn't reflow the article into the 16rem rail. */
 .md-main__inner > .md-content {
-  grid-column: 2;
-  /* Without min-width:0 the grid track auto-stretches to the widest descendant
-     (e.g. a long table) — which then overflows into the secondary sidebar. */
-  min-width: 0;
+    grid-column: 2;
+    /* Without min-width:0 the grid track auto-stretches to the widest descendant
+       (e.g. a long table) — which then overflows into the secondary sidebar. */
+    min-width: 0;
 }
+
 /* Both sidebars hidden → collapse to a single centred track. */
 .md-main__inner:has(> .md-sidebar--primary[hidden]):has(> .md-sidebar--secondary[hidden]) {
-  grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
 }
+
 .md-main__inner:has(> .md-sidebar--primary[hidden]):has(> .md-sidebar--secondary[hidden]) > .md-content {
-  grid-column: 1;
+    grid-column: 1;
 }
 
 /* ----- Header. ----- */
 .md-header {
-  background: var(--md-sys-color-surface-container);
-  color: var(--md-sys-color-on-surface);
-  box-shadow: var(--md-sys-elevation-level-1);
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  position: sticky; top: 0; z-index: 10;
+    background: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+    box-shadow: var(--md-sys-elevation-level-1);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
+
 .md-header__inner {
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
+
 .md-header__button,
 .md-header__option {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: inherit;
-  cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    cursor: pointer;
 }
+
 .md-header__button:hover,
 .md-header__option:hover,
 .md-source:hover {
-  background: var(--md-sys-color-surface-container-high);
-  text-decoration: none;
+    background: var(--md-sys-color-surface-container-high);
+    text-decoration: none;
 }
+
 .md-header__option svg {
-  width: 1.25rem;
-  height: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
 }
+
 .md-logo {
-  display: inline-flex;
-  align-items: center;
-  width: auto;
-  max-width: 14rem;
-  font: var(--md-sys-typescale-title-large);
-  color: inherit;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    max-width: 14rem;
+    font: var(--md-sys-typescale-title-large);
+    color: inherit;
 }
+
 .md-logo img,
 .md-logo svg {
-  display: block;
-  width: auto;
-  height: 2.4rem;
-  max-width: 100%;
-  object-fit: contain;
+    display: block;
+    width: auto;
+    height: 2.4rem;
+    max-width: 100%;
+    object-fit: contain;
 }
+
 .md-header__title {
-  /* flex: 1 1 auto + min-width: 0 lets the title absorb the space between the logo
-     and the search/options cluster *and* shrink below its natural content width,
-     which is what allows the ellipsis to actually trigger on narrow viewports.
-     Without an explicit flex spec the title sat at content size and pushed the
-     search trigger off the edge / on top of the title text on mobile. */
-  flex: 1 1 auto;
-  min-width: 0;
-  font: var(--md-sys-typescale-title-medium);
-  opacity: 0.85;
+    /* flex: 1 1 auto + min-width: 0 lets the title absorb the space between the logo
+       and the search/options cluster *and* shrink below its natural content width,
+       which is what allows the ellipsis to actually trigger on narrow viewports.
+       Without an explicit flex spec the title sat at content size and pushed the
+       search trigger off the edge / on top of the title text on mobile. */
+    flex: 1 1 auto;
+    min-width: 0;
+    font: var(--md-sys-typescale-title-medium);
+    opacity: 0.85;
 }
+
 .md-header__ellipsis,
 .md-header__topic {
-  /* The visible text lives in a child <span class="md-ellipsis">, but text-overflow
-     only applies to block-level boxes. Apply the truncation behaviour to these
-     intermediate block divs so the span's inline overflow gets clipped properly;
-     min-width: 0 propagates the shrink-to-zero permission down the chain. */
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    /* The visible text lives in a child <span class="md-ellipsis">, but text-overflow
+       only applies to block-level boxes. Apply the truncation behaviour to these
+       intermediate block divs so the span's inline overflow gets clipped properly;
+       min-width: 0 propagates the shrink-to-zero permission down the chain. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
 .md-header__spacer {
-  /* With the title now a flex:1 1 auto consumer, the spacer is only needed when
-     the title itself is empty — keep flex-grow but drop the auto basis so an
-     active title always wins the available space. */
-  flex: 1 1 0;
-  min-width: 0;
+    /* With the title now a flex:1 1 auto consumer, the spacer is only needed when
+       the title itself is empty — keep flex-grow but drop the auto basis so an
+       active title always wins the available space. */
+    flex: 1 1 0;
+    min-width: 0;
 }
+
 .md-header__topic + .md-header__topic {
-  color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
 }
+
 .md-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    display: block;
 }
+
 .md-source__icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  display: block;
-  flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    display: block;
+    flex: none;
 }
-.md-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.md-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 /* ----- Top tabs. ----- */
 .md-tabs {
-  background: var(--md-sys-color-surface);
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
+
 .md-tabs__inner {
-  display: block;
+    display: block;
 }
+
 .md-tabs__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  overflow-x: auto;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    overflow-x: auto;
 }
+
 .md-tabs__item {
-  margin: 0;
-  flex: none;
+    margin: 0;
+    flex: none;
 }
+
 .md-tabs__link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 3rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 2px solid transparent;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-label-large);
-  white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid transparent;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-label-large);
+    white-space: nowrap;
 }
+
 .md-tabs__link:hover {
-  color: var(--md-sys-color-on-surface);
-  text-decoration: none;
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
 }
+
 .md-tabs__item--active > .md-tabs__link {
-  border-bottom-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-primary);
+    border-bottom-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
 }
 
 /* ----- Sidebar nav. ----- */
 .md-sidebar {
-  font: var(--md-sys-typescale-body-medium);
-  /* Pin width to the grid track so long unbreakable tokens wrap inside the rail
-     instead of pushing the column over its allotted 16rem. */
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
+    font: var(--md-sys-typescale-body-medium);
+    /* Pin width to the grid track so long unbreakable tokens wrap inside the rail
+       instead of pushing the column over its allotted 16rem. */
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
+
 .md-sidebar__scrollwrap,
 .md-sidebar__inner {
-  min-width: 0;
-  max-width: 100%;
+    min-width: 0;
+    max-width: 100%;
 }
+
 /* Right rail (TOC): viewport-pinned, sticky. */
 .md-sidebar--secondary .md-sidebar__inner {
-  position: sticky;
-  top: 80px;
-  max-height: calc(100vh - 96px);
-  overflow-y: auto;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
 }
+
 /* Left rail (primary nav): extends with the page; no viewport cap so deep trees stay reachable.
    Long dot-separated identifiers wrap inside the column via `overflow-wrap: anywhere` (defined
    below) — `break-word` won't break tokens lacking whitespace. */
-.md-nav__list { list-style: none; padding: 0; margin: 0; }
-.md-nav__item { margin: 0; }
-.md-nav__link {
-  display: block;
-  padding: 8px 12px;
-  border-radius: var(--md-sys-shape-corner-md);
-  color: var(--md-sys-color-on-surface-variant);
+.md-nav__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
+
+.md-nav__item {
+    margin: 0;
+}
+
+.md-nav__link {
+    display: block;
+    padding: 8px 12px;
+    border-radius: var(--md-sys-shape-corner-md);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
 .md-sidebar--primary .md-nav__link,
 .md-sidebar--primary .md-nav__link .md-ellipsis {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  overflow-wrap: anywhere;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
 }
+
 .md-nav__link:hover {
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface);
-  text-decoration: none;
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
 }
+
 .md-nav__link--active {
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-  font-weight: 600;
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    font-weight: 600;
 }
+
 .md-nav__title {
-  display: block;
-  padding: 0.75rem 0.75rem 0.5rem;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-label-large);
+    display: block;
+    padding: 0.75rem 0.75rem 0.5rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-label-large);
 }
 
 /* Section-toggle checkboxes drive expand/collapse via `:checked`; visually hidden. */
 .md-sidebar--primary .md-nav__toggle {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  border: 0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
 }
 
 /* Per-section title hidden on desktop (top-level link labels the section); revealed in the mobile drawer. */
-.md-sidebar--primary .md-nav__title { display: none; }
+.md-sidebar--primary .md-nav__title {
+    display: none;
+}
 
 .md-sidebar--primary .md-nav__item--nested > .md-nav__container {
-  display: flex;
-  align-items: center;
-  padding: 0;
-  background: none;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    background: none;
 }
+
 .md-sidebar--primary .md-nav__item--nested > .md-nav__container:hover {
-  background: none;
+    background: none;
 }
+
 .md-sidebar--primary .md-nav__item--nested > .md-nav__container > .md-nav__link {
-  flex: 1;
-  min-width: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .md-sidebar--primary .md-nav__item--nested > .md-nav__container > label.md-nav__link {
-  flex: 0 0 auto;
-  cursor: pointer;
-  padding: 8px 8px;
-  border-radius: var(--md-sys-shape-corner-md);
-  background: none;
+    flex: 0 0 auto;
+    cursor: pointer;
+    padding: 8px 8px;
+    border-radius: var(--md-sys-shape-corner-md);
+    background: none;
 }
+
 .md-sidebar--primary .md-nav__item--nested > .md-nav__container > label.md-nav__link:hover {
-  background: var(--md-sys-color-surface-container-high);
+    background: var(--md-sys-color-surface-container-high);
 }
 
 /* Chevron glyph — masked SVG so we don't need an icon font. Rotates 90° when checkbox is `:checked`. */
 .md-sidebar--primary .md-nav__icon {
-  display: inline-block;
-  width: 1.25rem;
-  height: 1.25rem;
-  background: currentColor;
-  /* Right-pointing chevron mask. */
-  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.5 7l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center / contain;
-  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.5 7l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center / contain;
-  transition: transform 0.15s ease;
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: currentColor;
+    /* Right-pointing chevron mask. */
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.5 7l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center / contain;
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.5 7l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center / contain;
+    transition: transform 0.15s ease;
 }
+
 .md-sidebar--primary .md-nav__item--nested > input.md-nav__toggle:checked ~ .md-nav__container .md-nav__icon,
 .md-sidebar--primary .md-nav__item--nested > input.md-nav__toggle:checked + .md-nav__container .md-nav__icon {
-  transform: rotate(90deg);
+    transform: rotate(90deg);
 }
 
 /* Show / hide the nested nav based on the toggle checkbox. */
-.md-sidebar--primary .md-nav__item--nested > .md-nav { display: none; }
-.md-sidebar--primary .md-nav__item--nested > input.md-nav__toggle:checked ~ .md-nav { display: block; }
+.md-sidebar--primary .md-nav__item--nested > .md-nav {
+    display: none;
+}
+
+.md-sidebar--primary .md-nav__item--nested > input.md-nav__toggle:checked ~ .md-nav {
+    display: block;
+}
 
 /* Indent each nested level so the tree shape reads at a glance. */
-.md-sidebar--primary .md-nav .md-nav { padding-left: 0.5rem; }
+.md-sidebar--primary .md-nav .md-nav {
+    padding-left: 0.5rem;
+}
+
 .md-sidebar--primary .md-nav .md-nav .md-nav__list {
-  border-left: 1px solid var(--md-sys-color-outline-variant);
-  padding-left: 0.5rem;
+    border-left: 1px solid var(--md-sys-color-outline-variant);
+    padding-left: 0.5rem;
 }
+
 .md-sidebar--secondary .md-nav--secondary {
-  padding: 0.25rem 0 0;
+    padding: 0.25rem 0 0;
 }
+
 .md-sidebar--secondary .md-nav__list {
-  display: grid;
-  gap: 0.125rem;
+    display: grid;
+    gap: 0.125rem;
 }
+
 .md-sidebar--secondary .md-nav__link {
-  padding: 0.375rem 0;
-  border-radius: 0;
-  background: none;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-body-medium);
-  line-height: 1.35;
+    padding: 0.375rem 0;
+    border-radius: 0;
+    background: none;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-medium);
+    line-height: 1.35;
 }
+
 .md-sidebar--secondary .md-nav__link:hover {
-  background: none;
-  color: var(--md-sys-color-on-surface);
+    background: none;
+    color: var(--md-sys-color-on-surface);
 }
+
 .md-sidebar--secondary .md-nav__link--active {
-  background: none;
-  color: var(--md-sys-color-primary);
+    background: none;
+    color: var(--md-sys-color-primary);
 }
+
 .md-sidebar--secondary .md-nav__list .md-nav__list {
-  margin-left: 0.75rem;
-  padding-left: 0.75rem;
-  border-left: 1px solid var(--md-sys-color-outline-variant);
+    margin-left: 0.75rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--md-sys-color-outline-variant);
 }
 
 /* ----- Content typography. ----- */
-.md-content__inner { min-width: 0; }
-.md-typeset h1 { font: var(--md-sys-typescale-display-large); margin: 0 0 24px; letter-spacing: -0.02em; }
-.md-typeset h2 { font: var(--md-sys-typescale-headline-medium); margin: 32px 0 12px; }
-.md-typeset h3 { font: var(--md-sys-typescale-title-large); margin: 24px 0 8px; }
-.md-typeset h4 { font: var(--md-sys-typescale-title-medium); margin: 20px 0 8px; }
-.md-typeset p { margin: 0 0 16px; }
-.md-typeset ul, .md-typeset ol { margin: 0 0 16px 24px; padding: 0; }
-.md-typeset li { margin: 4px 0; }
+.md-content__inner {
+    min-width: 0;
+}
+
+.md-typeset h1 {
+    font: var(--md-sys-typescale-display-large);
+    margin: 0 0 24px;
+    letter-spacing: -0.02em;
+}
+
+.md-typeset h2 {
+    font: var(--md-sys-typescale-headline-medium);
+    margin: 32px 0 12px;
+}
+
+.md-typeset h3 {
+    font: var(--md-sys-typescale-title-large);
+    margin: 24px 0 8px;
+}
+
+.md-typeset h4 {
+    font: var(--md-sys-typescale-title-medium);
+    margin: 20px 0 8px;
+}
+
+.md-typeset p {
+    margin: 0 0 16px;
+}
+
+.md-typeset ul, .md-typeset ol {
+    margin: 0 0 16px 24px;
+    padding: 0;
+}
+
+.md-typeset li {
+    margin: 4px 0;
+}
+
 .md-typeset hr {
-  border: 0;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-  margin: 1rem 0;
+    border: 0;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    margin: 1rem 0;
 }
 
 .md-typeset code {
-  font-family: var(--md-code-font, "JetBrains Mono", ui-monospace, monospace);
-  font-size: 0.875em;
-  padding: 2px 6px;
-  border-radius: var(--md-sys-shape-corner-xs);
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface);
+    font-family: var(--md-code-font, "JetBrains Mono", ui-monospace, monospace);
+    font-size: 0.875em;
+    padding: 2px 6px;
+    border-radius: var(--md-sys-shape-corner-xs);
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
 }
+
 .md-typeset pre {
-  background: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-sys-shape-corner-md);
-  padding: 16px;
-  margin: 0 0 16px;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-md);
+    padding: 16px;
+    margin: 0 0 16px;
 }
+
 /* Wrap long single-line code inside the column rather than scrolling. `pre-wrap` preserves
    intentional indentation; `overflow-wrap: anywhere` breaks inside long unbreakable identifiers
    that `break-word` (whitespace-only) won't touch. */
 .md-typeset pre code {
-  padding: 0;
-  background: transparent;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+    padding: 0;
+    background: transparent;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .md-typeset blockquote {
-  margin: 0 0 16px;
-  padding: 12px 16px;
-  border-left: 4px solid var(--md-sys-color-primary);
-  background: var(--md-sys-color-surface-container-low);
-  border-radius: var(--md-sys-shape-corner-sm);
-  color: var(--md-sys-color-on-surface-variant);
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border-left: 4px solid var(--md-sys-color-primary);
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--md-sys-shape-corner-sm);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .md-typeset table {
-  /* `separate` + zero spacing keeps cells flush while letting the outer border-radius clip the
-     corner cells — `collapse` flattens corner curvature. */
-  border-collapse: separate;
-  border-spacing: 0;
-  /* Fill the content track so tables line up flush with admonitions, code blocks, and other
-     block-level elements rendered against the same column. Real `display: table` (not `block`)
-     keeps the rounded outer border hugging the cells; the cell-level `overflow-wrap` below keeps
-     long tokens from pushing a column past the cap. */
-  display: table;
-  width: 100%;
-  margin: 0 0 16px;
-  border-radius: var(--md-sys-shape-corner-md);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  overflow: hidden;
-  table-layout: auto;
+    /* `separate` + zero spacing keeps cells flush while letting the outer border-radius clip the
+       corner cells — `collapse` flattens corner curvature. */
+    border-collapse: separate;
+    border-spacing: 0;
+    /* Fill the content track so tables line up flush with admonitions, code blocks, and other
+       block-level elements rendered against the same column. Real `display: table` (not `block`)
+       keeps the rounded outer border hugging the cells; the cell-level `overflow-wrap` below keeps
+       long tokens from pushing a column past the cap. */
+    display: table;
+    width: 100%;
+    margin: 0 0 16px;
+    border-radius: var(--md-sys-shape-corner-md);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    overflow: hidden;
+    table-layout: auto;
 }
+
 .md-typeset th, .md-typeset td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  /* Break long unbreakable tokens (URLs, login IDs) inside cells so they don't push column width
-     beyond the content track. */
-  overflow-wrap: anywhere;
-  word-break: break-word;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    /* Break long unbreakable tokens (URLs, login IDs) inside cells so they don't push column width
+       beyond the content track. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
+
 .md-typeset th {
-  background: var(--md-sys-color-surface-container);
-  font-weight: 600;
+    background: var(--md-sys-color-surface-container);
+    font-weight: 600;
 }
-.md-typeset tr:last-child td { border-bottom: none; }
+
+.md-typeset tr:last-child td {
+    border-bottom: none;
+}
+
 /* Round the four outer corners — `overflow: hidden` on the table clips backgrounds into the radius. */
-.md-typeset thead tr:first-child th:first-child { border-top-left-radius: var(--md-sys-shape-corner-md); }
-.md-typeset thead tr:first-child th:last-child { border-top-right-radius: var(--md-sys-shape-corner-md); }
+.md-typeset thead tr:first-child th:first-child {
+    border-top-left-radius: var(--md-sys-shape-corner-md);
+}
+
+.md-typeset thead tr:first-child th:last-child {
+    border-top-right-radius: var(--md-sys-shape-corner-md);
+}
+
 .md-typeset table > tbody:first-child tr:first-child td:first-child,
-.md-typeset table > tr:first-child td:first-child { border-top-left-radius: var(--md-sys-shape-corner-md); }
+.md-typeset table > tr:first-child td:first-child {
+    border-top-left-radius: var(--md-sys-shape-corner-md);
+}
+
 .md-typeset table > tbody:first-child tr:first-child td:last-child,
-.md-typeset table > tr:first-child td:last-child { border-top-right-radius: var(--md-sys-shape-corner-md); }
-.md-typeset tbody tr:last-child td:first-child { border-bottom-left-radius: var(--md-sys-shape-corner-md); }
-.md-typeset tbody tr:last-child td:last-child { border-bottom-right-radius: var(--md-sys-shape-corner-md); }
+.md-typeset table > tr:first-child td:last-child {
+    border-top-right-radius: var(--md-sys-shape-corner-md);
+}
+
+.md-typeset tbody tr:last-child td:first-child {
+    border-bottom-left-radius: var(--md-sys-shape-corner-md);
+}
+
+.md-typeset tbody tr:last-child td:last-child {
+    border-bottom-right-radius: var(--md-sys-shape-corner-md);
+}
 
 /* ----- Admonitions (mkdocs-material parity). ----- */
 .md-typeset .admonition {
-  margin: 0 0 16px;
-  padding: 12px 16px;
-  border-radius: var(--md-sys-shape-corner-md);
-  background: var(--md-sys-color-surface-container);
-  border-left: 4px solid var(--md-sys-color-primary);
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border-radius: var(--md-sys-shape-corner-md);
+    background: var(--md-sys-color-surface-container);
+    border-left: 4px solid var(--md-sys-color-primary);
 }
-.md-typeset .admonition.warning { border-left-color: var(--md-sys-color-error); background: var(--md-sys-color-error-container); }
-.md-typeset .admonition-title { font: var(--md-sys-typescale-title-medium); margin: 0 0 4px; }
+
+.md-typeset .admonition.warning {
+    border-left-color: var(--md-sys-color-error);
+    background: var(--md-sys-color-error-container);
+}
+
+.md-typeset .admonition-title {
+    font: var(--md-sys-typescale-title-medium);
+    margin: 0 0 4px;
+}
 
 /* ----- Buttons. ----- */
 .md-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 1.1rem;
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: 999px;
-  color: var(--md-sys-color-primary);
-  background: transparent;
-  font: var(--md-sys-typescale-label-large);
-  text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.1rem;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 999px;
+    color: var(--md-sys-color-primary);
+    background: transparent;
+    font: var(--md-sys-typescale-label-large);
+    text-decoration: none;
 }
+
 .md-button:hover {
-  text-decoration: none;
-  background: var(--md-sys-color-surface-container-high);
+    text-decoration: none;
+    background: var(--md-sys-color-surface-container-high);
 }
+
 .md-button--primary {
-  background: var(--md-sys-color-primary);
-  border-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
 }
+
 .md-button--primary:hover {
-  background: var(--md-sys-color-primary-container);
-  border-color: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
+    background: var(--md-sys-color-primary-container);
+    border-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
 }
 
 /* ----- Search + source. ----- */
 .md-search {
-  position: relative;
-  flex: none;
+    position: relative;
+    flex: none;
 }
+
 .md-search__inner {
-  display: none;
-  position: fixed;
-  top: 4.25rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(36rem, calc(100vw - 2rem));
-  max-width: calc(100vw - 2rem);
-  max-height: calc(100vh - 5.25rem);
-  box-sizing: border-box;
-  overflow: hidden auto;
-  padding: 0.875rem;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-sys-shape-corner-lg);
-  background: var(--md-sys-color-surface-container);
-  box-shadow: var(--md-sys-elevation-level-2);
-  z-index: 20;
+    display: none;
+    position: fixed;
+    top: 4.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(36rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 5.25rem);
+    box-sizing: border-box;
+    overflow: hidden auto;
+    padding: 0.875rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-lg);
+    background: var(--md-sys-color-surface-container);
+    box-shadow: var(--md-sys-elevation-level-2);
+    z-index: 20;
 }
+
 .md-search__overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 32%);
-  z-index: 19;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 32%);
+    z-index: 19;
 }
+
 .md-search__trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0 0.875rem;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 999px;
-  color: var(--md-sys-color-on-surface-variant);
-  background: var(--md-sys-color-surface-container-low);
-  font: var(--md-sys-typescale-label-large);
-  cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 999px;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-low);
+    font: var(--md-sys-typescale-label-large);
+    cursor: pointer;
 }
+
 .md-search__trigger:hover {
-  color: var(--md-sys-color-on-surface);
-  text-decoration: none;
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
 }
+
 .md-search__field {
-  /* Plain <input> styled to match the MD3 surface. Replaced the previous
-     <md-outlined-text-field> web component because its shadow-DOM layout
-     measured wrong inside the popup (zero-width inner <input>, outline
-     geometry computing 4× the host width). The plain element fills the
-     grid cell, takes keystrokes immediately, and ships no JS. */
-  inline-size: 100%;
-  min-inline-size: 0;
-  max-inline-size: 100%;
-  box-sizing: border-box;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 999px;
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface);
-  font: var(--md-sys-typescale-body-large);
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    /* Plain <input> styled to match the MD3 surface. Replaced the previous
+       <md-outlined-text-field> web component because its shadow-DOM layout
+       measured wrong inside the popup (zero-width inner <input>, outline
+       geometry computing 4× the host width). The plain element fills the
+       grid cell, takes keystrokes immediately, and ships no JS. */
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 999px;
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-body-large);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+
 .md-search__field:hover {
-  border-color: var(--md-sys-color-on-surface);
+    border-color: var(--md-sys-color-on-surface);
 }
+
 .md-search__field:focus {
-  border-color: var(--md-sys-color-primary);
-  box-shadow: 0 0 0 1px var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 1px var(--md-sys-color-primary);
 }
+
 .md-search__field::placeholder {
-  color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
 }
+
 .md-search__form {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.5rem;
-  inline-size: 100%;
-  box-sizing: border-box;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    inline-size: 100%;
+    box-sizing: border-box;
 }
+
 .md-search__icon {
-  /* Plain <button>: sits in the second grid column. */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: pointer;
+    /* Plain <button>: sits in the second grid column. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
 }
+
 .md-search__icon:hover {
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface);
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
 }
+
 .md-search__icon svg {
-  width: 1.125rem;
-  height: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
 }
+
 .md-search__results {
-  margin-top: 0.875rem;
+    margin-top: 0.875rem;
 }
+
 .md-search__status {
-  margin: 0 0 0.5rem;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-body-medium);
+    margin: 0 0 0.5rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-medium);
 }
+
 .md-search__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
 }
+
 .md-search__item {
-  margin: 0;
+    margin: 0;
 }
+
 .md-search__link {
-  display: block;
-  padding: 0.75rem 0.875rem;
-  border-radius: var(--md-sys-shape-corner-md);
-  color: inherit;
-  background: var(--md-sys-color-surface);
+    display: block;
+    padding: 0.75rem 0.875rem;
+    border-radius: var(--md-sys-shape-corner-md);
+    color: inherit;
+    background: var(--md-sys-color-surface);
 }
+
 .md-search__link:hover {
-  text-decoration: none;
-  background: var(--md-sys-color-surface-container-high);
+    text-decoration: none;
+    background: var(--md-sys-color-surface-container-high);
 }
+
 .md-search__title {
-  display: block;
-  font: var(--md-sys-typescale-title-medium);
-  color: var(--md-sys-color-on-surface);
+    display: block;
+    font: var(--md-sys-typescale-title-medium);
+    color: var(--md-sys-color-on-surface);
 }
+
 .md-search__path {
-  display: block;
-  margin-top: 0.125rem;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-body-medium);
+    display: block;
+    margin-top: 0.125rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-medium);
 }
+
 /* Body-text context snippet under the result. `-webkit-line-clamp` caps the
    block at two lines on browsers that support it and falls back to the
    `max-height` cap elsewhere — keeps the result-list height predictable. */
 .md-search__excerpt {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  max-height: 3em;
-  margin-top: 0.375rem;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-body-small);
-  line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    max-height: 3em;
+    margin-top: 0.375rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    line-height: 1.5;
 }
+
 .md-search__highlight {
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
-  border-radius: 0.125rem;
-  padding: 0 0.125rem;
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-radius: 0.125rem;
+    padding: 0 0.125rem;
 }
+
 /* Sub-result rows — Pagefind groups multiple section hits per page; the bind
    glue inlines up to two underneath the page link, indented with a left rule
    so the visual hierarchy reads as "this hit belongs to the page above". */
 .md-search__link--sub {
-  margin-left: 0.5rem;
-  padding-left: 0.625rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-left: 2px solid var(--md-sys-color-outline-variant);
-  border-radius: 0;
+    margin-left: 0.5rem;
+    padding-left: 0.625rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-left: 2px solid var(--md-sys-color-outline-variant);
+    border-radius: 0;
 }
+
 .md-search__link--sub:hover {
-  background: var(--md-sys-color-surface-container-high);
+    background: var(--md-sys-color-surface-container-high);
 }
+
 .md-search__subtitle {
-  display: block;
-  font: var(--md-sys-typescale-title-small);
-  color: var(--md-sys-color-on-surface);
+    display: block;
+    font: var(--md-sys-typescale-title-small);
+    color: var(--md-sys-color-on-surface);
 }
+
 /* "+ N more on this page" disclosure — links to the page itself; styled like
    a quiet caption so it doesn't compete with the actual hit rows. */
 .md-search__more {
-  display: block;
-  margin-top: 0.25rem;
-  margin-left: 0.875rem;
-  padding: 0.25rem 0.5rem;
-  font: var(--md-sys-typescale-label-small);
-  color: var(--md-sys-color-on-surface-variant);
+    display: block;
+    margin-top: 0.25rem;
+    margin-left: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    font: var(--md-sys-typescale-label-small);
+    color: var(--md-sys-color-on-surface-variant);
 }
+
 .md-search__more:hover {
-  color: var(--md-sys-color-primary);
-  text-decoration: none;
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
 }
+
 /* Repo badge — outlined card with the repo path on top and the stars/forks
    counts on a tinted second row, mirroring zensical's "card with shoulder"
    shape so the GitHub stats read as their own panel rather than a hover-only
@@ -801,89 +977,100 @@ a:hover { text-decoration: underline; }
    foreground — sites that paint the header dark would render the GitHub
    icon white-on-white inside the light card surface). */
 .md-source {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-sys-shape-corner-md);
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-md);
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
+
 .md-source__icon {
-  color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
 }
+
 .md-source:hover {
-  background: var(--md-sys-color-surface-container-high);
-  border-color: var(--md-sys-color-on-surface);
-  text-decoration: none;
+    background: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-on-surface);
+    text-decoration: none;
 }
+
 .md-source__content {
-  display: grid;
-  gap: 0.1rem;
-  line-height: 1.2;
+    display: grid;
+    gap: 0.1rem;
+    line-height: 1.2;
 }
+
 .md-source__repository {
-  font: var(--md-sys-typescale-label-large);
-  color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-label-large);
+    color: var(--md-sys-color-on-surface);
 }
+
 .md-source__facts {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-body-medium);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-medium);
 }
+
 .md-source__fact {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 999px;
-  background: var(--md-sys-color-surface-container-high);
-  font: var(--md-sys-typescale-label-large);
-  color: var(--md-sys-color-on-surface);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--md-sys-color-surface-container-high);
+    font: var(--md-sys-typescale-label-large);
+    color: var(--md-sys-color-on-surface);
 }
 
 #__search:checked ~ .md-container .md-search__inner,
 #__search:checked ~ .md-container .md-search__overlay {
-  display: block;
+    display: block;
 }
 
 /* ----- Primary nav live filter. ----- */
 .md-nav__filter {
-  padding: 0.5rem 0.75rem 0.75rem;
+    padding: 0.5rem 0.75rem 0.75rem;
 }
+
 .md-nav__filter-input {
-  width: 100%;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 999px;
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface);
-  font: var(--md-sys-typescale-body-medium);
-  outline: none;
-  transition: border-color 0.15s ease;
+    width: 100%;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 999px;
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-body-medium);
+    outline: none;
+    transition: border-color 0.15s ease;
 }
+
 .md-nav__filter-input:focus {
-  border-color: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
 }
+
 .md-nav__item--filter-hidden {
-  display: none !important;
+    display: none !important;
 }
+
 .md-nav__link--filter-match {
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
 }
 
 /* ----- Heading permalinks: reveal on heading hover/focus only. ----- */
 .md-typeset .headerlink {
-  margin-left: 0.5rem;
-  color: var(--md-sys-color-primary);
-  opacity: 0;
-  transition: opacity 0.15s ease;
+    margin-left: 0.5rem;
+    color: var(--md-sys-color-primary);
+    opacity: 0;
+    transition: opacity 0.15s ease;
 }
+
 .md-typeset h1:hover .headerlink,
 .md-typeset h2:hover .headerlink,
 .md-typeset h3:hover .headerlink,
@@ -891,97 +1078,109 @@ a:hover { text-decoration: underline; }
 .md-typeset h5:hover .headerlink,
 .md-typeset h6:hover .headerlink,
 .md-typeset .headerlink:focus {
-  opacity: 1;
+    opacity: 1;
 }
 
 /* ----- Footer. ----- */
 .md-footer {
-  background: var(--md-sys-color-surface-container);
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-body-medium);
+    background: var(--md-sys-color-surface-container);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-medium);
 }
+
 .md-footer__inner {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
+
 .md-footer__link {
-  flex: 1 1 0;
-  padding: 1rem 1.25rem;
-  border-radius: var(--md-sys-shape-corner-lg);
-  background: var(--md-sys-color-surface-container-high);
-  color: inherit;
+    flex: 1 1 0;
+    padding: 1rem 1.25rem;
+    border-radius: var(--md-sys-shape-corner-lg);
+    background: var(--md-sys-color-surface-container-high);
+    color: inherit;
 }
+
 .md-footer__link:hover {
-  text-decoration: none;
-  background: var(--md-sys-color-surface-container-highest);
+    text-decoration: none;
+    background: var(--md-sys-color-surface-container-highest);
 }
+
 .md-footer__link--next {
-  text-align: right;
+    text-align: right;
 }
+
 .md-footer__direction {
-  display: block;
-  color: var(--md-sys-color-on-surface-variant);
-  font: var(--md-sys-typescale-body-medium);
+    display: block;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-medium);
 }
+
 .md-footer__title {
-  display: block;
-  margin-top: 0.2rem;
-  color: var(--md-sys-color-on-surface);
-  font: var(--md-sys-typescale-title-medium);
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-title-medium);
 }
+
 .md-footer-meta__inner {
-  padding: 16px;
+    padding: 16px;
 }
 
 /* ----- Footer social links. ----- */
 .md-social {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.9rem;
-  margin: 0.4rem 0 0;
-  padding: 0.6rem 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin: 0.4rem 0 0;
+    padding: 0.6rem 0;
 }
+
 .md-social__link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  color: var(--md-sys-color-on-surface-variant);
-  transition: color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    color: var(--md-sys-color-on-surface-variant);
+    transition: color 0.15s ease;
 }
+
 .md-social__link:hover {
-  color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
 }
+
 .md-social__link svg {
-  fill: currentcolor;
-  max-height: 1rem;
-  max-width: 1rem;
+    fill: currentcolor;
+    max-height: 1rem;
+    max-width: 1rem;
 }
 
 /* ----- Cards + homepage hero compatibility. ----- */
 .md-typeset .grid.cards > :is(ul, ol) {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-  gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: 1rem;
 }
+
 .md-typeset .grid.cards > :is(ul, ol) > li {
-  margin: 0;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-sys-shape-corner-lg);
-  background: var(--md-sys-color-surface-container-low);
-  box-shadow: var(--md-sys-elevation-level-0);
+    margin: 0;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-lg);
+    background: var(--md-sys-color-surface-container-low);
+    box-shadow: var(--md-sys-elevation-level-0);
 }
+
 .md-typeset .grid.cards p {
-  margin: 0.35rem 0;
+    margin: 0.35rem 0;
 }
 
 /* Inline icons emitted by the :material-...: shortcode arrive as bare
@@ -989,77 +1188,88 @@ a:hover { text-decoration: underline; }
    sizing the browser falls back to 300x150 — make them inherit the text
    colour and match em-relative icon sizes used by mkdocs-material. */
 .md-typeset svg[viewBox] {
-  fill: currentcolor;
-  vertical-align: text-top;
-  width: 1.125em;
-  height: 1.125em;
+    fill: currentcolor;
+    vertical-align: text-top;
+    width: 1.125em;
+    height: 1.125em;
 }
-.md-typeset svg.lg { width: 1.5em; height: 1.5em; }
-.md-typeset svg.xl { width: 2.25em; height: 2.25em; }
+
+.md-typeset svg.lg {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.md-typeset svg.xl {
+    width: 2.25em;
+    height: 2.25em;
+}
+
 .md-typeset svg.middle,
-.md-typeset svg.lg.middle { vertical-align: middle; }
+.md-typeset svg.lg.middle {
+    vertical-align: middle;
+}
 
 .rxui-landing {
-  margin: 0 -1.5rem 1.5rem;
-  padding: 1.75rem 1.5rem;
-  border-radius: var(--md-sys-shape-corner-lg);
-  box-shadow: var(--md-sys-elevation-level-2);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  align-items: center;
+    margin: 0 -1.5rem 1.5rem;
+    padding: 1.75rem 1.5rem;
+    border-radius: var(--md-sys-shape-corner-lg);
+    box-shadow: var(--md-sys-elevation-level-2);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: center;
 }
 
 @media screen and (min-width: 80em) {
-  .rxui-landing {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
-    padding: 2.25rem 2rem;
-    gap: 2.25rem;
-  }
+    .rxui-landing {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+        padding: 2.25rem 2rem;
+        gap: 2.25rem;
+    }
 }
 
 .rxui-hero h1 {
-  font-size: 2.1rem;
-  font-weight: 600;
-  line-height: 1.15;
-  margin: 0 0 0.4rem;
+    font-size: 2.1rem;
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0 0 0.4rem;
 }
 
 .rxui-hero p.tagline {
-  font-size: 1rem;
-  line-height: 1.45;
-  margin: 0 0 1rem;
-  max-width: 32rem;
+    font-size: 1rem;
+    line-height: 1.45;
+    margin: 0 0 1rem;
+    max-width: 32rem;
 }
 
 .rxui-hero .md-button {
-  margin: 0.25rem 0.5rem 0.25rem 0;
+    margin: 0.25rem 0.5rem 0.25rem 0;
 }
 
 .rxui-sample {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .rxui-sample .tabbed-set {
-  margin: 0;
-  max-width: 100%;
+    margin: 0;
+    max-width: 100%;
 }
 
 .rxui-sample .highlight {
-  max-width: 100%;
+    max-width: 100%;
 }
 
 .rxui-sample .highlight pre {
-  overflow-x: auto;
-  max-width: 100%;
+    overflow-x: auto;
+    max-width: 100%;
 }
 
 .rxui-sample .highlight pre > code {
-  font-size: 0.78rem;
-  line-height: 1.45;
-  white-space: pre;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    white-space: pre;
 }
 
 /* ----- Drawer toggle: hidden by default; the narrow-viewport block below
@@ -1067,158 +1277,178 @@ a:hover { text-decoration: underline; }
    `__drawer` checkbox in the page chrome. The hamburger is a
    <button data-md-component="hamburger"> next to the logo. ----- */
 [data-md-component="hamburger"] {
-  display: none;
+    display: none;
 }
+
 /* Click on the inner SVG should register on the label, not the SVG — iOS Safari
    sometimes drops the label `for` association when the tap lands on a child element. */
-[data-md-component="hamburger"] svg { pointer-events: none; }
+[data-md-component="hamburger"] svg {
+    pointer-events: none;
+}
+
 .md-overlay {
-  display: none;
+    display: none;
 }
 
 /* ----- Responsive. ----- */
 @media (max-width: 1100px) {
-  .md-main__inner {
-    grid-template-columns: 16rem minmax(0, 1fr);
-  }
+    .md-main__inner {
+        grid-template-columns: 16rem minmax(0, 1fr);
+    }
 
-  .md-sidebar--secondary {
-    display: none;
-  }
+    .md-sidebar--secondary {
+        display: none;
+    }
 }
 
 @media (max-width: 800px) {
-  .md-main__inner { grid-template-columns: 1fr; }
-  .md-header__source {
-    display: none;
-  }
-  .md-search__trigger span {
-    display: none;
-  }
-  .md-search__trigger {
-    width: 2.5rem;
-    padding: 0;
-    justify-content: center;
-  }
-  /* Tighten the header gap on mobile so a long page title has more room before
-     the search trigger crowds in — desktop keeps the 16px spacing for legibility. */
-  .md-header__inner {
-    gap: 8px;
-    padding: 12px 8px;
-  }
-  /* Trim the logo wordmark to a square icon footprint on mobile so the title gets
-     the rest of the row. The img height stays at 2.4rem; max-width caps width to
-     match it (square logos render full, wordmark logos clip — the page title +
-     site name is the more useful identifier on a narrow screen). */
-  .md-logo {
-    max-width: 2.4rem;
-    overflow: hidden;
-  }
-  .md-search__inner {
-    position: fixed;
-    top: 4.5rem;
-    left: 1rem;
-    right: 1rem;
-    width: auto;
-    /* The desktop rule centres via translateX(-50%); reset for the
-       edge-anchored mobile layout otherwise the popup shifts left
-       by half its width and runs off the viewport. */
-    transform: none;
-  }
-  .md-tabs__link {
-    min-height: 2.5rem;
-    padding: 0.625rem 0.75rem;
-  }
-  .rxui-landing {
-    margin-left: 0;
-    margin-right: 0;
-  }
+    .md-main__inner {
+        grid-template-columns: 1fr;
+    }
 
-  /* Tighten the C#/F# code sample on mobile so the highlight box fits the
-     viewport instead of forcing horizontal page scroll. */
-  .rxui-sample .highlight pre > code {
-    font-size: 0.72rem;
-  }
+    .md-header__source {
+        display: none;
+    }
 
-  /* Hide the top-tabs strip on mobile — the drawer replaces it as the primary
-     navigation surface (matching mkdocs-material's mobile layout). */
-  .md-tabs {
-    display: none;
-  }
+    .md-search__trigger span {
+        display: none;
+    }
 
-  /* Show the hamburger and turn the primary sidebar into a slide-in drawer.
-     The `__drawer` checkbox flips when the user taps the hamburger; that
-     state pulls the sidebar on-screen and shows the dim overlay. Tapping
-     the overlay (or the X-equivalent) toggles the checkbox back off. */
-  [data-md-component="hamburger"] {
-    display: inline-flex;
-    /* Bump click target up to the iOS HIG 44 px floor (the desktop rule
-       sets 2.5 rem = 40 px). Slightly larger surface, same icon size. */
-    width: 2.75rem;
-    height: 2.75rem;
-    cursor: pointer;
-    -webkit-tap-highlight-color: rgb(0 0 0 / 12%);
-  }
-  /* Pages with `hide: - navigation` in frontmatter render the drawer with the HTML
-     `hidden` attribute so the desktop sidebar disappears. On mobile that's wrong —
-     the hamburger drawer is the *only* navigation surface, and `hidden` sets
-     `display: none` which the slide-in `transform` rule below cannot override.
-     Force the drawer back to `display: block` at the mobile breakpoint regardless
-     of the attribute; the slide-in transform then takes over as designed. */
-  .md-sidebar--primary[hidden] {
-    display: block !important;
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .md-sidebar--primary {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 16rem;
-    max-width: 85vw;
-    /* Anchor to viewport units rather than 100% so the drawer fills the screen
-       even when ancestors have collapsed heights — pre-iOS 16 in particular
-       reports body/html as 0-height when nothing is laid out, leaving an
-       invisibly-tall fixed:0 element. */
-    height: 100vh;
-    background: var(--md-sys-color-surface);
-    box-shadow: var(--md-sys-elevation-level-2);
-    /* translate3d engages the GPU compositor on iOS Safari so the slide-in
-       doesn't stall behind a paint-on-main-thread that occasionally drops
-       the touch event. The 0,0,0 trailing axis is a no-op visually but
-       opts the element into the compositor layer. */
-    transform: translate3d(-100%, 0, 0);
-    transition: transform 0.2s ease;
-    z-index: 20;
-    will-change: transform;
-  }
-  /* Drawer is fixed-height — propagate height through the scrollwrap so the inner
-     column actually has a bound and overflow-y: auto engages. Without `height: 100%`
-     on the wrapper, `max-height: 100%` on the inner resolves to `auto` and touch
-     scroll has nothing to grab. `overscroll-behavior: contain` keeps drawer scroll
-     from chaining to the body. `-webkit-overflow-scrolling: touch` is the iOS
-     momentum-scroll opt-in. */
-  .md-sidebar--primary .md-sidebar__scrollwrap {
-    height: 100%;
-  }
-  .md-sidebar--primary .md-sidebar__inner {
-    height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-  .md-toggle[data-md-toggle="drawer"]:checked ~ .md-container .md-sidebar--primary {
-    transform: translate3d(0, 0, 0);
-    visibility: visible;
-    pointer-events: auto;
-  }
-  .md-toggle[data-md-toggle="drawer"]:checked ~ .md-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 15;
-  }
+    .md-search__trigger {
+        width: 2.5rem;
+        padding: 0;
+        justify-content: center;
+    }
+
+    /* Tighten the header gap on mobile so a long page title has more room before
+       the search trigger crowds in — desktop keeps the 16px spacing for legibility. */
+    .md-header__inner {
+        gap: 8px;
+        padding: 12px 8px;
+    }
+
+    /* Trim the logo wordmark to a square icon footprint on mobile so the title gets
+       the rest of the row. The img height stays at 2.4rem; max-width caps width to
+       match it (square logos render full, wordmark logos clip — the page title +
+       site name is the more useful identifier on a narrow screen). */
+    .md-logo {
+        max-width: 2.4rem;
+        overflow: hidden;
+    }
+
+    .md-search__inner {
+        position: fixed;
+        top: 4.5rem;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        /* The desktop rule centres via translateX(-50%); reset for the
+           edge-anchored mobile layout otherwise the popup shifts left
+           by half its width and runs off the viewport. */
+        transform: none;
+    }
+
+    .md-tabs__link {
+        min-height: 2.5rem;
+        padding: 0.625rem 0.75rem;
+    }
+
+    .rxui-landing {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Tighten the C#/F# code sample on mobile so the highlight box fits the
+       viewport instead of forcing horizontal page scroll. */
+    .rxui-sample .highlight pre > code {
+        font-size: 0.72rem;
+    }
+
+    /* Hide the top-tabs strip on mobile — the drawer replaces it as the primary
+       navigation surface (matching mkdocs-material's mobile layout). */
+    .md-tabs {
+        display: none;
+    }
+
+    /* Show the hamburger and turn the primary sidebar into a slide-in drawer.
+       The `__drawer` checkbox flips when the user taps the hamburger; that
+       state pulls the sidebar on-screen and shows the dim overlay. Tapping
+       the overlay (or the X-equivalent) toggles the checkbox back off. */
+    [data-md-component="hamburger"] {
+        display: inline-flex;
+        /* Bump click target up to the iOS HIG 44 px floor (the desktop rule
+           sets 2.5 rem = 40 px). Slightly larger surface, same icon size. */
+        width: 2.75rem;
+        height: 2.75rem;
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgb(0 0 0 / 12%);
+    }
+
+    /* Pages with `hide: - navigation` in frontmatter render the drawer with the HTML
+       `hidden` attribute so the desktop sidebar disappears. On mobile that's wrong —
+       the hamburger drawer is the *only* navigation surface, and `hidden` sets
+       `display: none` which the slide-in `transform` rule below cannot override.
+       Force the drawer back to `display: block` at the mobile breakpoint regardless
+       of the attribute; the slide-in transform then takes over as designed. */
+    .md-sidebar--primary[hidden] {
+        display: block !important;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .md-sidebar--primary {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 16rem;
+        max-width: 85vw;
+        /* Anchor to viewport units rather than 100% so the drawer fills the screen
+           even when ancestors have collapsed heights — pre-iOS 16 in particular
+           reports body/html as 0-height when nothing is laid out, leaving an
+           invisibly-tall fixed:0 element. */
+        height: 100vh;
+        background: var(--md-sys-color-surface);
+        box-shadow: var(--md-sys-elevation-level-2);
+        /* translate3d engages the GPU compositor on iOS Safari so the slide-in
+           doesn't stall behind a paint-on-main-thread that occasionally drops
+           the touch event. The 0,0,0 trailing axis is a no-op visually but
+           opts the element into the compositor layer. */
+        transform: translate3d(-100%, 0, 0);
+        transition: transform 0.2s ease;
+        z-index: 20;
+        will-change: transform;
+    }
+
+    /* Drawer is fixed-height — propagate height through the scrollwrap so the inner
+       column actually has a bound and overflow-y: auto engages. Without `height: 100%`
+       on the wrapper, `max-height: 100%` on the inner resolves to `auto` and touch
+       scroll has nothing to grab. `overscroll-behavior: contain` keeps drawer scroll
+       from chaining to the body. `-webkit-overflow-scrolling: touch` is the iOS
+       momentum-scroll opt-in. */
+    .md-sidebar--primary .md-sidebar__scrollwrap {
+        height: 100%;
+    }
+
+    .md-sidebar--primary .md-sidebar__inner {
+        height: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .md-toggle[data-md-toggle="drawer"]:checked ~ .md-container .md-sidebar--primary {
+        transform: translate3d(0, 0, 0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .md-toggle[data-md-toggle="drawer"]:checked ~ .md-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 15;
+    }
 }
 
 /* ----- Code-block clipboard button: hover-fade copy affordance. ----- */
@@ -1227,135 +1457,146 @@ a:hover { text-decoration: underline; }
    positions it, fades it on hover, paints the SVG via mask so it tracks
    currentColor, and shows a transient "Copied" hint after a successful copy. */
 .highlight {
-  position: relative;
+    position: relative;
 }
 
 .md-clipboard {
-  position: absolute;
-  top: 0.5em;
-  right: 0.5em;
-  width: 1.5em;
-  height: 1.5em;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.25s, color 0.25s;
-  color: var(--md-sys-color-on-surface-variant);
-  -webkit-tap-highlight-color: transparent;
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    width: 1.5em;
+    height: 1.5em;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.25s, color 0.25s;
+    color: var(--md-sys-color-on-surface-variant);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .md-clipboard::before {
-  content: "";
-  display: block;
-  width: 100%;
-  height: 100%;
-  background-color: currentColor;
-  -webkit-mask: var(--md-clipboard-icon) center / contain no-repeat;
-          mask: var(--md-clipboard-icon) center / contain no-repeat;
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: currentColor;
+    -webkit-mask: var(--md-clipboard-icon) center / contain no-repeat;
+    mask: var(--md-clipboard-icon) center / contain no-repeat;
 }
 
 .highlight:hover .md-clipboard,
 .md-clipboard:focus-visible {
-  opacity: 0.7;
+    opacity: 0.7;
 }
 
 .md-clipboard:hover,
 .md-clipboard:focus-visible {
-  color: var(--md-sys-color-primary);
-  opacity: 1;
+    color: var(--md-sys-color-primary);
+    opacity: 1;
 }
 
 .md-clipboard--copied {
-  color: var(--md-sys-color-primary);
-  opacity: 1;
+    color: var(--md-sys-color-primary);
+    opacity: 1;
 }
 
 .md-clipboard--copied::after {
-  content: "Copied";
-  position: absolute;
-  top: 50%;
-  right: calc(100% + 0.5em);
-  transform: translateY(-50%);
-  padding: 0.15em 0.5em;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  border-radius: var(--md-sys-shape-corner-xs, 4px);
-  font-size: 0.75rem;
-  white-space: nowrap;
-  pointer-events: none;
+    content: "Copied";
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 0.5em);
+    transform: translateY(-50%);
+    padding: 0.15em 0.5em;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border-radius: var(--md-sys-shape-corner-xs, 4px);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
 }
 
 /* ----- Blog post cards (md-post): index + tag-archive listings. ----- */
 .md-post {
-  display: block;
-  margin: 1.25rem 0;
-  padding: 1.25rem 1.5rem;
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface);
-  border-radius: var(--md-sys-shape-corner-md, 12px);
-  box-shadow: var(--md-sys-elevation-level-1);
+    display: block;
+    margin: 1.25rem 0;
+    padding: 1.25rem 1.5rem;
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    border-radius: var(--md-sys-shape-corner-md, 12px);
+    box-shadow: var(--md-sys-elevation-level-1);
 }
+
 .md-post__header {
-  margin: 0 0 0.5rem;
+    margin: 0 0 0.5rem;
 }
+
 .md-post__title {
-  font: var(--md-sys-typescale-title-large);
-  margin: 0 0 0.25rem;
+    font: var(--md-sys-typescale-title-large);
+    margin: 0 0 0.25rem;
 }
+
 .md-post__title a {
-  color: var(--md-sys-color-primary);
-  text-decoration: none;
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
 }
+
 .md-post__title a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
+
 .md-post__lead {
-  font: var(--md-sys-typescale-title-medium);
-  color: var(--md-sys-color-on-surface-variant);
-  margin: 0;
+    font: var(--md-sys-typescale-title-medium);
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 0;
 }
+
 .md-post__meta {
-  font: var(--md-sys-typescale-label-large);
-  color: var(--md-sys-color-on-surface-variant);
-  opacity: 0.8;
-  margin: 0 0 0.5rem;
+    font: var(--md-sys-typescale-label-large);
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.8;
+    margin: 0 0 0.5rem;
 }
+
 .md-post__author {
-  margin-left: 0.25rem;
+    margin-left: 0.25rem;
 }
+
 .md-post__description {
-  font: var(--md-sys-typescale-body-large);
-  margin: 0.5rem 0;
+    font: var(--md-sys-typescale-body-large);
+    margin: 0.5rem 0;
 }
+
 .md-post__excerpt {
-  font: var(--md-sys-typescale-body-medium);
-  margin: 0.5rem 0;
+    font: var(--md-sys-typescale-body-medium);
+    margin: 0.5rem 0;
 }
+
 .md-post__tags {
-  margin-top: 0.75rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
 }
+
 .md-tag {
-  display: inline-block;
-  padding: 0.15rem 0.6rem;
-  font: var(--md-sys-typescale-label-large);
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-  border-radius: 999px;
-  white-space: nowrap;
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    font: var(--md-sys-typescale-label-large);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-radius: 999px;
+    white-space: nowrap;
 }
 
 /* Honor the user's reduced-motion preference: collapse animations,
    transitions, and smooth scrolling so vestibular triggers don't fire. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

@@ -88,7 +88,10 @@ public static class MarkdownH1Scanner
     /// <param name="previousLine">The non-empty line preceding <paramref name="trimmedLeading"/>; empty when the previous line was blank.</param>
     /// <param name="heading">Heading text bytes; empty unless the method returns true.</param>
     /// <returns>True when an H1 was matched.</returns>
-    private static bool TryMatchHeading(ReadOnlySpan<byte> trimmedLeading, ReadOnlySpan<byte> previousLine, out ReadOnlySpan<byte> heading)
+    private static bool TryMatchHeading(
+        ReadOnlySpan<byte> trimmedLeading,
+        ReadOnlySpan<byte> previousLine,
+        out ReadOnlySpan<byte> heading)
     {
         if (IsAtxH1(trimmedLeading, out var atxText))
         {

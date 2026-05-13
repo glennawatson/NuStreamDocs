@@ -13,10 +13,7 @@ public static class DocBuilderSnippetsExtensions
     /// <summary>Registers <see cref="SnippetsPlugin"/> using the build's docs root as the snippet base.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSnippets(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new SnippetsPlugin());
-    }
+    public static DocBuilder UseSnippets(this DocBuilder builder) => builder.UsePlugin(new SnippetsPlugin());
 
     /// <summary>Registers <see cref="SnippetsPlugin"/> with a caller-supplied base directory for snippet resolution.</summary>
     /// <param name="builder">The builder.</param>

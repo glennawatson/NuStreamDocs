@@ -15,7 +15,9 @@ public class SuperFencesPluginLifecycleTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NoOpBeforeConfigure() =>
-        await Assert.That(new SuperFencesPlugin().NeedsRewrite("<pre><code class=\"language-mermaid\">x</code></pre>"u8)).IsFalse();
+        await Assert
+            .That(new SuperFencesPlugin().NeedsRewrite("<pre><code class=\"language-mermaid\">x</code></pre>"u8))
+            .IsFalse();
 
     /// <summary>ConfigureAsync discovers ICustomFenceHandler plugins and dispatches matching blocks.</summary>
     /// <returns>Async test.</returns>

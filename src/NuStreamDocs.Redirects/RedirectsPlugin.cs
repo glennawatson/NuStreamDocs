@@ -18,7 +18,8 @@ namespace NuStreamDocs.Redirects;
 public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin
 {
     /// <summary>Byte separators that delimit entries inside a <c>redirect_from</c> frontmatter value (whitespace, commas, flow-list brackets, quotes).</summary>
-    private static readonly byte[] FrontmatterSeparators = [(byte)' ', (byte)'\t', (byte)'\r', (byte)'\n', (byte)',', (byte)'[', (byte)']', (byte)'"', (byte)'\''];
+    private static readonly byte[] FrontmatterSeparators =
+        [(byte)' ', (byte)'\t', (byte)'\r', (byte)'\n', (byte)',', (byte)'[', (byte)']', (byte)'"', (byte)'\''];
 
     /// <summary>Plugin options.</summary>
     private readonly RedirectsOptions _options;
@@ -91,7 +92,7 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
         }
 
         var pagePath = _useDirectoryUrls ? context.RelativePath : context.RelativePath.WithExtension(".html");
-        var target = ServedUrlBytes.FromPath(pagePath, _useDirectoryUrls, leadingSlash: true);
+        var target = ServedUrlBytes.FromPath(pagePath, _useDirectoryUrls, true);
         var start = 0;
         for (var i = 0; i <= raw.Length; i++)
         {
@@ -103,7 +104,7 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
 
             if (i > start)
             {
-                _scanned.Add(new(raw[start..i].ToArray(), target, Permanent: true));
+                _scanned.Add(new(raw[start..i].ToArray(), target, true));
             }
 
             start = i + 1;
@@ -123,7 +124,11 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
 
         if (_options.EmitRedirectsFile && redirects is [_, ..])
         {
-            await WriteFileAsync(context.OutputRoot, "_redirects", w => RedirectFileWriter.WriteRedirectsFile(redirects, w), cancellationToken).ConfigureAwait(false);
+            await WriteFileAsync(
+                context.OutputRoot,
+                "_redirects",
+                w => RedirectFileWriter.WriteRedirectsFile(redirects, w),
+                cancellationToken).ConfigureAwait(false);
         }
 
         if (_options.EmitMetaRefreshPages)
@@ -133,7 +138,11 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
 
         if (_options.EmitHeadersFile && headerRules is [_, ..])
         {
-            await WriteFileAsync(context.OutputRoot, "_headers", w => HeadersFileWriter.WriteHeadersFile(headerRules, w), cancellationToken).ConfigureAwait(false);
+            await WriteFileAsync(
+                context.OutputRoot,
+                "_headers",
+                w => HeadersFileWriter.WriteHeadersFile(headerRules, w),
+                cancellationToken).ConfigureAwait(false);
         }
 
         RedirectsLogging.LogWritten(_logger, redirects.Count, headerRules.Count);
@@ -145,11 +154,18 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
     /// <param name="write">Callback that writes the file content into the supplied buffer.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the file has been written.</returns>
-    private static async Task WriteFileAsync(DirectoryPath outputRoot, string fileName, Action<ArrayBufferWriter<byte>> write, CancellationToken cancellationToken)
+    private static async Task WriteFileAsync(
+        DirectoryPath outputRoot,
+        string fileName,
+        Action<ArrayBufferWriter<byte>> write,
+        CancellationToken cancellationToken)
     {
         ArrayBufferWriter<byte> sink = new();
         write(sink);
-        await File.WriteAllBytesAsync(Path.Combine(outputRoot.Value, fileName), sink.WrittenSpan.ToArray(), cancellationToken).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(
+            Path.Combine(outputRoot.Value, fileName),
+            sink.WrittenSpan.ToArray(),
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Merges the configured redirects with the ones scanned from frontmatter; configured entries win on a duplicate source.</summary>
@@ -197,14 +213,19 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
     /// <param name="redirects">The merged redirects.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when all pages have been written.</returns>
-    private async Task WriteMetaRefreshPagesAsync(DirectoryPath outputRoot, List<RedirectRule> redirects, CancellationToken cancellationToken)
+    private async Task WriteMetaRefreshPagesAsync(
+        DirectoryPath outputRoot,
+        List<RedirectRule> redirects,
+        CancellationToken cancellationToken)
     {
         for (var i = 0; i < redirects.Count; i++)
         {
             var rule = redirects[i];
             if (rule.From is not [_, ..] || rule.To is not [_, ..])
             {
-                RedirectsLogging.LogIgnoredRedirect(_logger, rule.From is [_, ..] ? Encoding.UTF8.GetString(rule.From) : "<empty>");
+                RedirectsLogging.LogIgnoredRedirect(
+                    _logger,
+                    rule.From is [_, ..] ? Encoding.UTF8.GetString(rule.From) : "<empty>");
                 continue;
             }
 
@@ -225,7 +246,8 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
 
             ArrayBufferWriter<byte> sink = new();
             RedirectFileWriter.WriteMetaRefreshHtml(rule.To, sink);
-            await File.WriteAllBytesAsync(targetFile, sink.WrittenSpan.ToArray(), cancellationToken).ConfigureAwait(false);
+            await File.WriteAllBytesAsync(targetFile, sink.WrittenSpan.ToArray(), cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
@@ -240,7 +262,8 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
             return "index.html";
         }
 
-        if (rel.EndsWith(".html", StringComparison.OrdinalIgnoreCase) || rel.EndsWith(".htm", StringComparison.OrdinalIgnoreCase))
+        if (rel.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
+            rel.EndsWith(".htm", StringComparison.OrdinalIgnoreCase))
         {
             return rel;
         }

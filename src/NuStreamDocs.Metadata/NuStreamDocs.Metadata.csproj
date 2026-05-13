@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Metadata.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Metadata.Tests"/>
   </ItemGroup>
 
 </Project>

@@ -27,7 +27,10 @@ public sealed class MaterialTheme : IThemePackage
     /// <param name="page">Compiled top-level page template.</param>
     /// <param name="partials">Compiled partial templates.</param>
     /// <param name="staticAssets">Static-asset bundle keyed by relative path.</param>
-    private MaterialTheme(Template page, Dictionary<byte[], Template> partials, Dictionary<FilePath, byte[]> staticAssets)
+    private MaterialTheme(
+        Template page,
+        Dictionary<byte[], Template> partials,
+        Dictionary<FilePath, byte[]> staticAssets)
     {
         Page = page;
         Partials = partials;

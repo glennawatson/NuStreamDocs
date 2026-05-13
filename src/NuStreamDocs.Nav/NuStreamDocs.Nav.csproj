@@ -8,17 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Nav.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Nav.Tests"/>
   </ItemGroup>
 
 </Project>

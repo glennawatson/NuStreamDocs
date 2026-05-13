@@ -8,16 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs.ContentLoader\NuStreamDocs.ContentLoader.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.ContentLoader\NuStreamDocs.ContentLoader.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.Feed.Tests" />
-    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks" />
+    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.Feed.Tests"/>
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks"/>
   </ItemGroup>
 
 </Project>

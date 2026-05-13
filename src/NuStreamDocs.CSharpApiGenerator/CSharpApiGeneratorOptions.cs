@@ -41,7 +41,8 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="rootDirectory">Repository root containing <c>nuget-packages.json</c>.</param>
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromManifest(in DirectoryPath rootDirectory, in DirectoryPath apiCachePath) =>
+    public static CSharpApiGeneratorOptions
+        FromManifest(in DirectoryPath rootDirectory, in DirectoryPath apiCachePath) =>
         From(new NuGetManifestInput(rootDirectory, apiCachePath));
 
     /// <summary>Builds an options record for the manifest input shape with a custom output subdirectory.</summary>
@@ -49,14 +50,22 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <param name="outputMarkdownSubdirectory">Output subdirectory under the docs root.</param>
     /// <returns>An options record using <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromManifest(in DirectoryPath rootDirectory, in DirectoryPath apiCachePath, in PathSegment outputMarkdownSubdirectory) =>
-        new([new NuGetManifestInput(rootDirectory, apiCachePath)], outputMarkdownSubdirectory, CSharpApiGeneratorMode.EmitMarkdown);
+    public static CSharpApiGeneratorOptions FromManifest(
+        in DirectoryPath rootDirectory,
+        in DirectoryPath apiCachePath,
+        in PathSegment outputMarkdownSubdirectory) =>
+        new(
+            [new NuGetManifestInput(rootDirectory, apiCachePath)],
+            outputMarkdownSubdirectory,
+            CSharpApiGeneratorMode.EmitMarkdown);
 
     /// <summary>Builds an options record for the inline-NuGet-packages shape.</summary>
     /// <param name="packages">Packages to fetch.</param>
     /// <param name="apiCachePath">Destination root for fetched packages and the synthesized manifest.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
-    public static CSharpApiGeneratorOptions FromPackages(NuGetPackageReference[] packages, in DirectoryPath apiCachePath) =>
+    public static CSharpApiGeneratorOptions FromPackages(
+        NuGetPackageReference[] packages,
+        in DirectoryPath apiCachePath) =>
         From(new NuGetPackagesInput(packages, apiCachePath));
 
     /// <summary>Builds an options record for local pre-built assemblies.</summary>
@@ -79,7 +88,9 @@ public sealed record CSharpApiGeneratorOptions(
     {
         if (OutputMarkdownSubdirectory.IsEmpty)
         {
-            throw new ArgumentException("OutputMarkdownSubdirectory must be non-empty.", nameof(OutputMarkdownSubdirectory));
+            throw new ArgumentException(
+                "OutputMarkdownSubdirectory must be non-empty.",
+                nameof(OutputMarkdownSubdirectory));
         }
 
         if (Inputs.Length is 0)
@@ -124,7 +135,9 @@ public sealed record CSharpApiGeneratorOptions(
                 }
 
             default:
-                throw new ArgumentException(StringCompose.Concat("Unknown input shape: ", input.GetType().FullName ?? "<null>"), nameof(input));
+                throw new ArgumentException(
+                    StringCompose.Concat("Unknown input shape: ", input.GetType().FullName ?? "<null>"),
+                    nameof(input));
         }
     }
 }

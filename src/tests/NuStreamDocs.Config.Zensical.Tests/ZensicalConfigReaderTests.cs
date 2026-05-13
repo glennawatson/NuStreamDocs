@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using NuStreamDocs.Building;
 using NuStreamDocs.Config.MkDocs;
 
@@ -64,7 +65,7 @@ public class ZensicalConfigReaderTests
         var toml = "site_name = \"From-Toml\"\nsite_url = \"https://x.test/\"\n[theme]\nname = \"material\"\n"u8;
         var builder = new DocBuilder().UseZensicalConfig(toml);
 
-        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteName())).IsEqualTo("From-Toml");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteUrl())).IsEqualTo("https://x.test/");
+        await Assert.That(Encoding.UTF8.GetString(builder.SiteName())).IsEqualTo("From-Toml");
+        await Assert.That(Encoding.UTF8.GetString(builder.SiteUrl())).IsEqualTo("https://x.test/");
     }
 }

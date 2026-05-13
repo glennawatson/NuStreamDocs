@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Net;
+using System.Text;
 using NuStreamDocs.Highlight.Languages.CFamily;
 
 namespace NuStreamDocs.Highlight.Tests;
@@ -27,7 +29,9 @@ public class CFamilyLexerTests
     public async Task RustClassifiesRawStrings()
     {
         var html = RustLexer.Instance.Render("let s = r#\"hello \"world\"\"#;"u8);
-        await Assert.That(html.Contains("<span class=\"s2\">r#&quot;hello &quot;world&quot;&quot;#</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"s2\">r#&quot;hello &quot;world&quot;&quot;#</span>",
+            StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Go classifies <c>package</c>/<c>func</c> as declarations and <c>:=</c> as a multi-byte operator.</summary>
@@ -81,7 +85,8 @@ public class CFamilyLexerTests
     public async Task CppClassifiesRawString()
     {
         var html = CppLexer.Instance.Render("auto s = R\"d(hello)d\";"u8);
-        await Assert.That(html.Contains("<span class=\"s2\">R&quot;d(hello)d&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">R&quot;d(hello)d&quot;</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Java classifies <c>public</c>/<c>class</c>/<c>static</c>/<c>void</c> with their respective short-form CSS classes.</summary>
@@ -102,7 +107,9 @@ public class CFamilyLexerTests
     public async Task JavaClassifiesTextBlock()
     {
         var html = JavaLexer.Instance.Render("var s = \"\"\"\nhello\n\"\"\";"u8);
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;&quot;&quot;\nhello\n&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"s2\">&quot;&quot;&quot;\nhello\n&quot;&quot;&quot;</span>",
+            StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Kotlin classifies <c>fun</c>/<c>val</c>/<c>data</c> as declarations and <c>?:</c> as a multi-byte operator.</summary>
@@ -124,9 +131,9 @@ public class CFamilyLexerTests
     public async Task DetectorResolvesRust()
     {
         const string Source = "fn main() { let mut v: Vec<i32> = Vec::new(); v.push(1); println!(\"{:?}\", v); }";
-        var escaped = System.Text.Encoding.UTF8.GetBytes(System.Net.WebUtility.HtmlEncode(Source));
+        var escaped = Encoding.UTF8.GetBytes(WebUtility.HtmlEncode(Source));
         var resolved = LanguageDetector.TryDetect(escaped, LexerRegistry.Default, [], out var languageId);
-        var languageString = System.Text.Encoding.UTF8.GetString(languageId);
+        var languageString = Encoding.UTF8.GetString(languageId);
         await Assert.That(resolved).IsTrue();
         await Assert.That(languageString).IsEqualTo("rust");
     }
@@ -137,9 +144,9 @@ public class CFamilyLexerTests
     public async Task DetectorResolvesGo()
     {
         const string Source = "package main\nimport (\n  \"fmt\"\n)\nfunc main() {\n  x := 42\n  fmt.Println(x)\n}";
-        var escaped = System.Text.Encoding.UTF8.GetBytes(System.Net.WebUtility.HtmlEncode(Source));
+        var escaped = Encoding.UTF8.GetBytes(WebUtility.HtmlEncode(Source));
         var resolved = LanguageDetector.TryDetect(escaped, LexerRegistry.Default, [], out var languageId);
-        var languageString = System.Text.Encoding.UTF8.GetString(languageId);
+        var languageString = Encoding.UTF8.GetString(languageId);
         await Assert.That(resolved).IsTrue();
         await Assert.That(languageString).IsEqualTo("go");
     }
@@ -149,10 +156,11 @@ public class CFamilyLexerTests
     [Test]
     public async Task DetectorResolvesJava()
     {
-        const string Source = "import java.util.*;\npublic class App {\n  public static void main(String[] args) {\n    System.out.println(\"hi\");\n  }\n}";
-        var escaped = System.Text.Encoding.UTF8.GetBytes(System.Net.WebUtility.HtmlEncode(Source));
+        const string Source =
+            "import java.util.*;\npublic class App {\n  public static void main(String[] args) {\n    System.out.println(\"hi\");\n  }\n}";
+        var escaped = Encoding.UTF8.GetBytes(WebUtility.HtmlEncode(Source));
         var resolved = LanguageDetector.TryDetect(escaped, LexerRegistry.Default, [], out var languageId);
-        var languageString = System.Text.Encoding.UTF8.GetString(languageId);
+        var languageString = Encoding.UTF8.GetString(languageId);
         await Assert.That(resolved).IsTrue();
         await Assert.That(languageString).IsEqualTo("java");
     }

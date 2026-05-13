@@ -42,8 +42,14 @@ public static class MatlabLexer
     /// <summary>Gets the singleton MATLAB / Octave lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        PreCommentRule = new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = PercentFirst },
-        LineComment = new(static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'%'), TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = PercentFirst },
+        PreCommentRule =
+            new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = PercentFirst },
+        LineComment =
+            new(
+                    static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'%'),
+                    TokenClass.CommentSingle,
+                    LexerRule.NoStateChange)
+            { FirstBytes = PercentFirst },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         IncludeFloatLiteral = true,

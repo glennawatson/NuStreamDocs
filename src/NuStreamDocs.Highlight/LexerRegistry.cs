@@ -139,7 +139,6 @@ public sealed class LexerRegistry
             [[.. "patch"u8]] = DiffLexer.Instance,
             [[.. "csv"u8]] = CsvLexer.Instance,
             [[.. "tsv"u8]] = CsvLexer.Instance,
-
             [[.. "python"u8]] = PythonLexer.Instance,
             [[.. "py"u8]] = PythonLexer.Instance,
 
@@ -336,7 +335,9 @@ public sealed class LexerRegistry
             var len = kvp.Key.Length;
             if (len >= MaxAliasLength)
             {
-                throw new ArgumentOutOfRangeException(extraParameterName, BuildAliasTooLongMessage(kvp.Key, MaxAliasLength));
+                throw new ArgumentOutOfRangeException(
+                    extraParameterName,
+                    BuildAliasTooLongMessage(kvp.Key, MaxAliasLength));
             }
 
             counts[len]++;

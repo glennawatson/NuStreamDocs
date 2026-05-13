@@ -10,5 +10,5 @@ namespace NuStreamDocs.Optimize;
 public sealed record HtmlMinifyOptions(bool StripComments, bool CollapseWhitespace)
 {
     /// <summary>Gets the default option set — strip comments and collapse whitespace.</summary>
-    public static HtmlMinifyOptions Default { get; } = new(StripComments: true, CollapseWhitespace: true);
+    public static HtmlMinifyOptions Default { get; } = new(true, true);
 }

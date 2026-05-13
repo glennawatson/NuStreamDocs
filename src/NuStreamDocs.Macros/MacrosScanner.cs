@@ -36,7 +36,12 @@ internal static class MacrosScanner
     /// <param name="escapeHtml">When true, resolved values are HTML-escaped before being written.</param>
     /// <param name="onMissing">Optional callback invoked for unknown names; <c>null</c> to silently leave them in place.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, Lookup lookup, bool escapeHtml, MissingCallback? onMissing, IBufferWriter<byte> writer)
+    public static void Rewrite(
+        ReadOnlySpan<byte> source,
+        Lookup lookup,
+        bool escapeHtml,
+        MissingCallback? onMissing,
+        IBufferWriter<byte> writer)
     {
         var cursor = 0;
         while (cursor < source.Length)
@@ -53,7 +58,13 @@ internal static class MacrosScanner
     /// <param name="onMissing">Missing-name callback.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Offset to resume from.</returns>
-    private static int ProcessOne(ReadOnlySpan<byte> source, int cursor, Lookup lookup, bool escapeHtml, MissingCallback? onMissing, IBufferWriter<byte> writer) =>
+    private static int ProcessOne(
+        ReadOnlySpan<byte> source,
+        int cursor,
+        Lookup lookup,
+        bool escapeHtml,
+        MissingCallback? onMissing,
+        IBufferWriter<byte> writer) =>
         TryConsumeCodeRegion(source, cursor, writer, out var afterCode)
             ? afterCode
             : TryExpandMacro(source, cursor, lookup, escapeHtml, onMissing, writer);
@@ -64,7 +75,11 @@ internal static class MacrosScanner
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="afterCode">Offset just past the code region on success.</param>
     /// <returns>True when a code region was consumed.</returns>
-    private static bool TryConsumeCodeRegion(ReadOnlySpan<byte> source, int cursor, IBufferWriter<byte> writer, out int afterCode)
+    private static bool TryConsumeCodeRegion(
+        ReadOnlySpan<byte> source,
+        int cursor,
+        IBufferWriter<byte> writer,
+        out int afterCode)
     {
         afterCode = cursor;
         if (MarkdownCodeScanner.AtLineStart(source, cursor)
@@ -99,7 +114,13 @@ internal static class MacrosScanner
     /// <param name="onMissing">Missing-name callback.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Offset to resume from.</returns>
-    private static int TryExpandMacro(ReadOnlySpan<byte> source, int cursor, Lookup lookup, bool escapeHtml, MissingCallback? onMissing, IBufferWriter<byte> writer)
+    private static int TryExpandMacro(
+        ReadOnlySpan<byte> source,
+        int cursor,
+        Lookup lookup,
+        bool escapeHtml,
+        MissingCallback? onMissing,
+        IBufferWriter<byte> writer)
     {
         if (cursor + Open.Length > source.Length || !source[cursor..].StartsWith(Open))
         {

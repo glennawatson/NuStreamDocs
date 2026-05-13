@@ -28,7 +28,8 @@ public class XmlAndTypeScriptTests
     public async Task HtmlCommentClassifies()
     {
         var html = HtmlLexer.Instance.Render("<!-- comment -->\n"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">&lt;!-- comment --&gt;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"cm\">&lt;!-- comment --&gt;</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>TypeScript classifies <c>const</c>, identifiers, template strings, and arrow operators.</summary>

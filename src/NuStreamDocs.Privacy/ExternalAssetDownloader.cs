@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -68,12 +69,13 @@ internal static class ExternalAssetDownloader
         handler.PooledConnectionLifetime = PooledConnectionLifetime;
         handler.PooledConnectionIdleTimeout = PooledConnectionIdleTimeout;
         handler.EnableMultipleHttp2Connections = true;
-        using HttpClient client = new(handler, disposeHandler: false);
+        using HttpClient client = new(handler, false);
         client.Timeout = settings.Timeout;
         client.DefaultRequestVersion = HttpVersion.Version20;
         client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
         await using var perHostLimiter = BuildPerHostLimiter();
-        DownloadEnvironment environment = new(client, BuildPipeline(settings.MaxRetries, perHostLimiter), registry, filter);
+        DownloadEnvironment environment =
+            new(client, BuildPipeline(settings.MaxRetries, perHostLimiter), registry, filter);
 
         ConcurrentBag<string> failures = [];
         HashSet<byte[]> processed = new(ByteArrayComparer.Instance);
@@ -96,7 +98,9 @@ internal static class ExternalAssetDownloader
     /// <param name="registry">URL registry; mutated as nested CSS URLs are discovered.</param>
     /// <param name="processed">Cross-iteration dedupe set keyed on UTF-8 URL bytes; updated in place.</param>
     /// <returns>Pending entries to download in this pass.</returns>
-    private static (UrlPath Url, FilePath LocalPath)[] SnapshotPending(ExternalAssetRegistry registry, HashSet<byte[]> processed)
+    private static (UrlPath Url, FilePath LocalPath)[] SnapshotPending(
+        ExternalAssetRegistry registry,
+        HashSet<byte[]> processed)
     {
         var snapshot = registry.EntriesSnapshot();
         List<(UrlPath Url, FilePath LocalPath)> pendingBuffer = new(snapshot.Length);
@@ -105,7 +109,8 @@ internal static class ExternalAssetDownloader
             // Skip the UTF-8 decode for entries we've already processed in an earlier pass — only decode when we're actually queuing the URL.
             if (processed.Add(snapshot[i].Url))
             {
-                pendingBuffer.Add((new(Encoding.UTF8.GetString(snapshot[i].Url)), new(Encoding.UTF8.GetString(snapshot[i].LocalPath))));
+                pendingBuffer.Add((new(Encoding.UTF8.GetString(snapshot[i].Url)),
+                    new(Encoding.UTF8.GetString(snapshot[i].LocalPath))));
             }
         }
 
@@ -125,42 +130,42 @@ internal static class ExternalAssetDownloader
         CancellationToken cancellationToken)
     {
         PrivacyLoggingHelper.LogIterationStart(ctx.Logger, iterationNumber, pending.Length, ctx.Settings.Parallelism);
-        var iterationStopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var iterationStopwatch = Stopwatch.StartNew();
         var iterationFailureBaseline = ctx.Failures.Count;
         var completed = 0;
         var lastProgressTick = Environment.TickCount64;
 
         await Parallel.ForEachAsync(
-            pending,
-            new ParallelOptions
-            {
-                MaxDegreeOfParallelism = ctx.Settings.Parallelism,
-                CancellationToken = cancellationToken
-            },
-            async (entry, ct) =>
-            {
-                var localPath = entry.LocalPath.Value.Replace('/', Path.DirectorySeparatorChar);
-                DownloadTarget target = new(
-                    entry.Url,
-                    Path.Combine(ctx.OutputRoot.Value, localPath),
-                    Path.Combine(ctx.CacheRoot.Value, localPath));
-                if (!await DownloadOneAsync(ctx.Environment, target, ctx.Logger, ct).ConfigureAwait(false))
+                pending,
+                new ParallelOptions
                 {
-                    ctx.Failures.Add(entry.Url.Value);
-                    PrivacyLoggingHelper.LogDownloadFailure(ctx.Logger, entry.Url.Value, target.OutputPath.Value);
-                }
-
-                var done = Interlocked.Increment(ref completed);
-
-                // Beacon every ~5 seconds: a single CAS guards the log so concurrent completions emit at most once per window.
-                var now = Environment.TickCount64;
-                var prev = Volatile.Read(ref lastProgressTick);
-                if (now - prev >= ProgressBeaconMillis &&
-                    Interlocked.CompareExchange(ref lastProgressTick, now, prev) == prev)
+                    MaxDegreeOfParallelism = ctx.Settings.Parallelism,
+                    CancellationToken = cancellationToken
+                },
+                async (entry, ct) =>
                 {
-                    PrivacyLoggingHelper.LogIterationProgress(ctx.Logger, iterationNumber, done, pending.Length);
-                }
-            })
+                    var localPath = entry.LocalPath.Value.Replace('/', Path.DirectorySeparatorChar);
+                    DownloadTarget target = new(
+                        entry.Url,
+                        Path.Combine(ctx.OutputRoot.Value, localPath),
+                        Path.Combine(ctx.CacheRoot.Value, localPath));
+                    if (!await DownloadOneAsync(ctx.Environment, target, ctx.Logger, ct).ConfigureAwait(false))
+                    {
+                        ctx.Failures.Add(entry.Url.Value);
+                        PrivacyLoggingHelper.LogDownloadFailure(ctx.Logger, entry.Url.Value, target.OutputPath.Value);
+                    }
+
+                    var done = Interlocked.Increment(ref completed);
+
+                    // Beacon every ~5 seconds: a single CAS guards the log so concurrent completions emit at most once per window.
+                    var now = Environment.TickCount64;
+                    var prev = Volatile.Read(ref lastProgressTick);
+                    if (now - prev >= ProgressBeaconMillis &&
+                        Interlocked.CompareExchange(ref lastProgressTick, now, prev) == prev)
+                    {
+                        PrivacyLoggingHelper.LogIterationProgress(ctx.Logger, iterationNumber, done, pending.Length);
+                    }
+                })
             .ConfigureAwait(false);
 
         iterationStopwatch.Stop();
@@ -178,22 +183,22 @@ internal static class ExternalAssetDownloader
         PartitionedRateLimiter.Create<ResilienceContext, string>(static ctx =>
         {
             var host = ctx.Properties.GetValue(HostPropertyKey, string.Empty);
-            return RateLimitPartition.GetConcurrencyLimiter(host, static _ => new()
-            {
-                PermitLimit = MaxConcurrencyPerHost,
-                QueueLimit = int.MaxValue
-            });
+            return RateLimitPartition.GetConcurrencyLimiter(
+                host,
+                static _ => new() { PermitLimit = MaxConcurrencyPerHost, QueueLimit = int.MaxValue });
         });
 
     /// <summary>Builds a Polly resilience pipeline with per-host concurrency limiting and exponential-backoff retry on transient HTTP errors.</summary>
     /// <param name="maxRetries">Maximum retry attempts.</param>
     /// <param name="perHostLimiter">Host-partitioned concurrency limiter shared across the batch.</param>
     /// <returns>A configured <see cref="ResiliencePipeline{TResult}"/> over <see cref="HttpResponseMessage"/>.</returns>
-    private static ResiliencePipeline<HttpResponseMessage> BuildPipeline(int maxRetries, PartitionedRateLimiter<ResilienceContext> perHostLimiter) =>
+    private static ResiliencePipeline<HttpResponseMessage> BuildPipeline(
+        int maxRetries,
+        PartitionedRateLimiter<ResilienceContext> perHostLimiter) =>
         new ResiliencePipelineBuilder<HttpResponseMessage>()
             .AddRateLimiter(new RateLimiterStrategyOptions
             {
-                RateLimiter = args => perHostLimiter.AcquireAsync(args.Context, permitCount: 1, args.Context.CancellationToken)
+                RateLimiter = args => perHostLimiter.AcquireAsync(args.Context, 1, args.Context.CancellationToken)
             })
             .AddRetry(new()
             {
@@ -210,7 +215,11 @@ internal static class ExternalAssetDownloader
     /// <param name="logger">Logger for cache-hit / download-success diagnostics.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True when the file landed in the output root (cache hit or fresh fetch); false on any failure.</returns>
-    private static async Task<bool> DownloadOneAsync(DownloadEnvironment environment, DownloadTarget target, ILogger logger, CancellationToken cancellationToken)
+    private static async Task<bool> DownloadOneAsync(
+        DownloadEnvironment environment,
+        DownloadTarget target,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         if (TryPublishFromCache(target.CachePath, target.OutputPath))
         {
@@ -228,11 +237,11 @@ internal static class ExternalAssetDownloader
         try
         {
             using var response = await environment.Pipeline.ExecuteAsync(
-                static async (ctx, state) => await state.Client
-                    .GetAsync(state.Uri, HttpCompletionOption.ResponseHeadersRead, ctx.CancellationToken)
-                    .ConfigureAwait(false),
-                context,
-                new GetCallState(environment.Client, uri))
+                    static async (ctx, state) => await state.Client
+                        .GetAsync(state.Uri, HttpCompletionOption.ResponseHeadersRead, ctx.CancellationToken)
+                        .ConfigureAwait(false),
+                    context,
+                    new GetCallState(environment.Client, uri))
                 .ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -246,7 +255,8 @@ internal static class ExternalAssetDownloader
                 bytes = CssUrlRewriter.Rewrite(bytes, uri, environment.Registry, environment.Filter);
             }
 
-            await WriteCacheAndOutputAsync(target.CachePath, target.OutputPath, bytes, cancellationToken).ConfigureAwait(false);
+            await WriteCacheAndOutputAsync(target.CachePath, target.OutputPath, bytes, cancellationToken)
+                .ConfigureAwait(false);
             PrivacyLoggingHelper.LogDownloadSuccess(logger, target.Url.Value, target.OutputPath.Value);
             return true;
         }
@@ -276,7 +286,7 @@ internal static class ExternalAssetDownloader
         }
 
         outputPath.Directory.Create();
-        File.Copy(cachePath.Value, outputPath.Value, overwrite: true);
+        File.Copy(cachePath.Value, outputPath.Value, true);
         return true;
     }
 
@@ -286,12 +296,16 @@ internal static class ExternalAssetDownloader
     /// <param name="bytes">Bytes to write.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the cache write + output copy finish.</returns>
-    private static async Task WriteCacheAndOutputAsync(FilePath cachePath, FilePath outputPath, byte[] bytes, CancellationToken cancellationToken)
+    private static async Task WriteCacheAndOutputAsync(
+        FilePath cachePath,
+        FilePath outputPath,
+        byte[] bytes,
+        CancellationToken cancellationToken)
     {
         cachePath.Directory.Create();
         await File.WriteAllBytesAsync(cachePath.Value, bytes, cancellationToken).ConfigureAwait(false);
         outputPath.Directory.Create();
-        File.Copy(cachePath.Value, outputPath.Value, overwrite: true);
+        File.Copy(cachePath.Value, outputPath.Value, true);
     }
 
     /// <summary>Per-batch download tuning settings collapsed into one parameter.</summary>

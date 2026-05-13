@@ -61,7 +61,11 @@ public static class CppLexer
     /// <returns>Lexer.</returns>
     private static Lexer Build()
     {
-        var rawString = new LexerRule(MatchRawOrPrefixedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = RawStringFirst };
+        var rawString =
+            new LexerRule(MatchRawOrPrefixedString, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = RawStringFirst
+            };
 
         CFamilyConfig config = new()
         {

@@ -14,8 +14,5 @@ public static class DocBuilderSmartSymbolsExtensions
     /// <summary>Registers <see cref="SmartSymbolsPlugin"/> on <paramref name="builder"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSmartSymbols(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new SmartSymbolsPlugin());
-    }
+    public static DocBuilder UseSmartSymbols(this DocBuilder builder) => builder.UsePlugin(new SmartSymbolsPlugin());
 }

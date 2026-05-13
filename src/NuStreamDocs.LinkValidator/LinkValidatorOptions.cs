@@ -20,10 +20,10 @@ public sealed record LinkValidatorOptions(
 
     /// <summary>Gets the default option set: warnings only, default parallelism, default external settings.</summary>
     public static LinkValidatorOptions Default { get; } = new(
-        StrictInternal: false,
-        StrictExternal: false,
-        Parallelism: DefaultParallelism,
-        External: ExternalLinkValidatorOptions.Default);
+        false,
+        false,
+        DefaultParallelism,
+        ExternalLinkValidatorOptions.Default);
 
     /// <summary>Throws when any field is invalid.</summary>
     /// <exception cref="ArgumentOutOfRangeException">When <see cref="Parallelism"/> is non-positive.</exception>

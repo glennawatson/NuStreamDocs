@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Theme.Material3.Tests;
@@ -170,7 +171,7 @@ public class Material3DefaultsTests
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
-        var year = DateTimeOffset.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var year = DateTimeOffset.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
         await Assert.That(html).Contains($"(c) {year} Acme — and friends");
         await Assert.That(html).DoesNotContain("{year}");
     }

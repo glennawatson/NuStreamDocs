@@ -18,9 +18,9 @@ public sealed record AuditOptions(
 
     /// <summary>Gets the default option set: warnings only, default parallelism, every lint enabled.</summary>
     public static AuditOptions Default { get; } = new(
-        Strict: false,
-        Parallelism: DefaultParallelism,
-        DisabledRules: []);
+        false,
+        DefaultParallelism,
+        []);
 
     /// <summary>Tests whether <paramref name="rule"/> is enabled under these options.</summary>
     /// <param name="rule">The lint to check.</param>
@@ -40,8 +40,5 @@ public sealed record AuditOptions(
 
     /// <summary>Throws when any field is invalid.</summary>
     /// <exception cref="ArgumentOutOfRangeException">When <see cref="Parallelism"/> is non-positive.</exception>
-    public void Validate()
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Parallelism);
-    }
+    public void Validate() => ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Parallelism);
 }

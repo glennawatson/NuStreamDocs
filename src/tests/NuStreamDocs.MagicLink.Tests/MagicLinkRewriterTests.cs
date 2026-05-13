@@ -127,7 +127,7 @@ public class MagicLinkRewriterTests
     {
         var bytes = Encoding.UTF8.GetBytes(input);
         ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
-        MagicLinkRewriter.Rewrite(bytes, sink, defaultRepo: default, expandMentions: true);
+        MagicLinkRewriter.Rewrite(bytes, sink, default, true);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }
 }

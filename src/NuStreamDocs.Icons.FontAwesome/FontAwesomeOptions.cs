@@ -25,7 +25,7 @@ public readonly record struct FontAwesomeOptions(
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static FontAwesomeOptions Default { get; } = new(
-        StylesheetUrl: DefaultStylesheetUrl,
-        Crossorigin: DefaultCrossorigin,
-        ReferrerPolicy: DefaultReferrerPolicy);
+        DefaultStylesheetUrl,
+        DefaultCrossorigin,
+        DefaultReferrerPolicy);
 }

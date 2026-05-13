@@ -39,9 +39,8 @@ internal sealed class PluginPhases
     /// <summary>Partitions a flat plugin list into per-phase sorted arrays.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>The per-phase plugin arrays.</returns>
-    public static PluginPhases Partition(IPlugin[] plugins)
-    {
-        return new()
+    public static PluginPhases Partition(IPlugin[] plugins) =>
+        new()
         {
             Configures = Collect<IBuildConfigurePlugin>(plugins, static p => p.ConfigurePriority),
             Discovers = Collect<IBuildDiscoverPlugin>(plugins, static p => p.DiscoverPriority),
@@ -52,7 +51,6 @@ internal sealed class PluginPhases
             PostResolves = Collect<IPagePostResolvePlugin>(plugins, static p => p.PostResolvePriority),
             Finalizes = Collect<IBuildFinalizePlugin>(plugins, static p => p.FinalizePriority)
         };
-    }
 
     /// <summary>Selects every <typeparamref name="T"/>-implementing plugin and sorts by the supplied priority projection.</summary>
     /// <typeparam name="T">Phase-specific interface.</typeparam>

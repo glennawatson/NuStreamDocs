@@ -46,7 +46,8 @@ public class CSharpAccessorStateTests
     [Test]
     public async Task NestedBlockInsideAccessor_does_not_pop_state_too_early()
     {
-        var html = CSharpLexer.Instance.Render("public int X { set { Action a = () => { Console.WriteLine(1); }; field = value; } }"u8);
+        var html = CSharpLexer.Instance.Render(
+            "public int X { set { Action a = () => { Console.WriteLine(1); }; field = value; } }"u8);
 
         // Both `field` and `value` after the lambda's closing `}` must still be classified as keywords.
         await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsTrue();

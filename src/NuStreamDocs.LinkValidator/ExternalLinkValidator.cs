@@ -144,17 +144,27 @@ public static class ExternalLinkValidator
 
                     using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                     timeoutCts.CancelAfter(TimeSpan.FromSeconds(options.RequestTimeoutSeconds));
-                    using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token).ConfigureAwait(false);
+                    using var response = await httpClient
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token)
+                        .ConfigureAwait(false);
                     if (!response.IsSuccessStatusCode)
                     {
-                        sink.Add(new(hit.SourcePage, hit.Url, LinkSeverity.Error, BuildHttpErrorMessage((int)response.StatusCode, response.ReasonPhrase, hit.Url)));
+                        sink.Add(new(
+                            hit.SourcePage,
+                            hit.Url,
+                            LinkSeverity.Error,
+                            BuildHttpErrorMessage((int)response.StatusCode, response.ReasonPhrase, hit.Url)));
                     }
                 },
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            sink.Add(new(hit.SourcePage, hit.Url, LinkSeverity.Error, StringCompose.Concat(ex.GetType().Name, ": ", ex.Message)));
+            sink.Add(new(
+                hit.SourcePage,
+                hit.Url,
+                LinkSeverity.Error,
+                StringCompose.Concat(ex.GetType().Name, ": ", ex.Message)));
         }
         finally
         {

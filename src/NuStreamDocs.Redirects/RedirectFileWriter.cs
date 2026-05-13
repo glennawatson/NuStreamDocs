@@ -37,7 +37,8 @@ public static class RedirectFileWriter
     /// <param name="writer">Destination.</param>
     public static void WriteMetaRefreshHtml(ReadOnlySpan<byte> to, IBufferWriter<byte> writer)
     {
-        writer.Write("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"robots\" content=\"noindex\">\n<meta http-equiv=\"refresh\" content=\"0; url="u8);
+        writer.Write(
+            "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"robots\" content=\"noindex\">\n<meta http-equiv=\"refresh\" content=\"0; url="u8);
         writer.Write(to);
         writer.Write("\">\n<link rel=\"canonical\" href=\""u8);
         writer.Write(to);

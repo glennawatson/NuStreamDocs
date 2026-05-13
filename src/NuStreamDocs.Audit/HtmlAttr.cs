@@ -44,7 +44,11 @@ internal static class HtmlAttr
     /// <param name="name">On return, the attribute name bytes (empty when only whitespace / separators were skipped).</param>
     /// <param name="value">On return, the unquoted attribute value bytes (empty for a bare attribute).</param>
     /// <returns>The offset of the next attribute, or <see cref="ReadOnlySpan{T}.Length"/> at the end.</returns>
-    private static int ParseAttribute(ReadOnlySpan<byte> attributes, int start, out ReadOnlySpan<byte> name, out ReadOnlySpan<byte> value)
+    private static int ParseAttribute(
+        ReadOnlySpan<byte> attributes,
+        int start,
+        out ReadOnlySpan<byte> name,
+        out ReadOnlySpan<byte> value)
     {
         name = default;
         value = default;
@@ -57,8 +61,8 @@ internal static class HtmlAttr
 
         var nameStart = i;
         while (i < attributes.Length
-            && !AsciiByteHelpers.IsAsciiWhitespace(attributes[i])
-            && attributes[i] is not ((byte)'=' or (byte)'/'))
+               && !AsciiByteHelpers.IsAsciiWhitespace(attributes[i])
+               && attributes[i] is not ((byte)'=' or (byte)'/'))
         {
             i++;
         }

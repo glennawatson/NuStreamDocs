@@ -12,35 +12,6 @@ using System.Diagnostics.CodeAnalysis;
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Generated MDI icon catalogue — bucket-by-length switch over the upstream <c>Templarian/MaterialDesign-SVG</c> set.</summary>
-[SuppressMessage(
-    "Sonar Code Smell",
-    "S1541:Methods should not be too complex",
-    Justification = "Generated bucket dispatch.")]
-[SuppressMessage(
-    "Sonar Code Smell",
-    "S138:Methods should not have too many lines",
-    Justification = "Generated catalogue.")]
-[SuppressMessage(
-    "Sonar Code Smell",
-    "S1067:Expressions should not be too complex",
-    Justification = "Generated catalogue.")]
-[SuppressMessage(
-    "Sonar Code Smell",
-    "S103:Lines should not be too long",
-    Justification = "Generated catalogue — SVG path data is sometimes long.")]
-[SuppressMessage(
-    "Style",
-    "IDE0010:Add missing cases",
-    Justification = "Default arm covers unmatched lengths.")]
-[SuppressMessage(
-    "StyleCop",
-    "SA1503:Braces should not be omitted",
-    Justification = "Generated single-line if statements.")]
-[SuppressMessage(
-    "StyleCop",
-    "SA1107:Code should not contain multiple statements on one line",
-    Justification = "Generated single-line if statements.")]
-
 internal static class MdiIconData
 {
     /// <summary>Number of icons in the generated catalogue.</summary>
@@ -53,7 +24,8 @@ internal static class MdiIconData
     public static bool TryGet(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg)
     {
         switch (name.Length)
-        {            case 2: return TryGetLen2(name, out svg);
+        {           
+            case 2: return TryGetLen2(name, out svg);
             case 3: return TryGetLen3(name, out svg);
             case 4: return TryGetLen4(name, out svg);
             case 5: return TryGetLen5(name, out svg);

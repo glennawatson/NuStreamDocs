@@ -48,7 +48,8 @@ internal static class TemplateFamilyRules
             rules.Add(new(
                 slice => TokenMatchers.MatchDelimited(slice, commentOpen, commentClose),
                 TokenClass.CommentMulti,
-                LexerRule.NoStateChange) { FirstBytes = commentFirst });
+                LexerRule.NoStateChange)
+            { FirstBytes = commentFirst });
         }
 
         // Statement / expression blocks. Order matters when one opener is a strict prefix
@@ -59,11 +60,13 @@ internal static class TemplateFamilyRules
         var stmtRule = new LexerRule(
             slice => TokenMatchers.MatchDelimited(slice, stmtOpen, stmtClose),
             TokenClass.Keyword,
-            LexerRule.NoStateChange) { FirstBytes = stmtFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = stmtFirst };
         var exprRule = new LexerRule(
             slice => TokenMatchers.MatchDelimited(slice, exprOpen, exprClose),
             TokenClass.Name,
-            LexerRule.NoStateChange) { FirstBytes = exprFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = exprFirst };
         if (exprOpen.Length > stmtOpen.Length)
         {
             rules.Add(exprRule);
@@ -79,7 +82,8 @@ internal static class TemplateFamilyRules
         rules.Add(new(
             TokenMatchers.MatchAsciiWhitespace,
             TokenClass.Whitespace,
-            LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst });
+            LexerRule.NoStateChange)
+        { FirstBytes = WhitespaceFirst });
 
         return [.. rules];
     }

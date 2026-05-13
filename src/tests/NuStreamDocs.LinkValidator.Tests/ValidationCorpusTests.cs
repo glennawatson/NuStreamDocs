@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.LinkValidator.Tests;
 
@@ -18,14 +19,14 @@ public class ValidationCorpusTests
         try
         {
             const string Html = "<a href=\"https://example.com\">ext1</a>" +
-                "<a href=\"http://x.test\">ext2</a>" +
-                "<a href=\"about.html\">internal</a>" +
-                "<a href=\"image.png\">asset</a>" +
-                "<a href=\"style.css\">asset2</a>" +
-                "<img src=\"https://cdn.test/x.jpg\" />";
+                                "<a href=\"http://x.test\">ext2</a>" +
+                                "<a href=\"about.html\">internal</a>" +
+                                "<a href=\"image.png\">asset</a>" +
+                                "<a href=\"style.css\">asset2</a>" +
+                                "<img src=\"https://cdn.test/x.jpg\" />";
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), Html);
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, 2, CancellationToken.None);
             await Assert.That(corpus.TryGetPage([.. "index.html"u8], out var page)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "about.html"u8)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "https://example.com"u8)).IsFalse();
@@ -36,7 +37,7 @@ public class ValidationCorpusTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -49,11 +50,11 @@ public class ValidationCorpusTests
         try
         {
             const string Html = "<a href=\"image.png?v=1\">asset</a>" +
-                "<a href=\"style.css#section\">asset</a>" +
-                "<a href=\"page.html?q=1\">page</a>";
+                                "<a href=\"style.css#section\">asset</a>" +
+                                "<a href=\"page.html?q=1\">page</a>";
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), Html);
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 2, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, 2, CancellationToken.None);
             await Assert.That(corpus.TryGetPage([.. "index.html"u8], out var page)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "image.png?v=1"u8)).IsFalse();
             await Assert.That(ContainsBytes(page.InternalLinks, "style.css#section"u8)).IsFalse();
@@ -61,7 +62,7 @@ public class ValidationCorpusTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -72,7 +73,7 @@ public class ValidationCorpusTests
     {
         var corpus = await ValidationCorpus.BuildAsync(
             "/does-not-exist-" + Guid.NewGuid().ToString("N"),
-            parallelism: 1,
+            1,
             CancellationToken.None);
         await Assert.That(corpus.Pages.Length).IsEqualTo(0);
     }
@@ -86,7 +87,7 @@ public class ValidationCorpusTests
         try
         {
             await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), "<h1 id=\"a\">Hi</h1>");
-            var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 1, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, 1, CancellationToken.None);
             await Assert.That(corpus.ContainsPage([.. "index.html"u8])).IsTrue();
             await Assert.That(corpus.ContainsPage([.. "index.html"u8])).IsTrue();
             await Assert.That(corpus.ContainsPage([.. "missing.html"u8])).IsFalse();
@@ -94,7 +95,7 @@ public class ValidationCorpusTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -173,7 +174,7 @@ public class ValidationCorpusTests
     /// <returns>The populated corpus.</returns>
     private static ValidationCorpus BuildCorpus(byte[] url)
     {
-        var pages = new Dictionary<byte[], PageLinks>(Common.ByteArrayComparer.Instance)
+        var pages = new Dictionary<byte[], PageLinks>(ByteArrayComparer.Instance)
         {
             [url] = ValidationCorpus.Scan(url, "<p>x</p>"u8)
         };
@@ -184,7 +185,9 @@ public class ValidationCorpusTests
     /// <returns>Absolute path.</returns>
     private static string TempDir()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smd-vc-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var dir = Path.Combine(
+            Path.GetTempPath(),
+            "smd-vc-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(dir);
         return dir;
     }

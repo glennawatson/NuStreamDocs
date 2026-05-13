@@ -21,13 +21,16 @@ public readonly record struct TransitionsOptions(
     byte[] IgnoreSelector,
     bool Enabled)
 {
+    /// <summary>Default <see cref="PrefetchDelayMs"/> — hover debounce before a pre-fetch fires.</summary>
+    private const int DefaultPrefetchDelayMs = 80;
+
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static TransitionsOptions Default { get; } = new(
-        ContentSelector: [.. "[data-md-component='content']"u8],
-        NavSelector: [],
-        Animation: TransitionAnimation.Fade,
-        Prefetch: PrefetchStrategy.Hover,
-        PrefetchDelayMs: 80,
-        IgnoreSelector: [.. "[download],[target='_blank'],[data-no-router],[rel~='external']"u8],
-        Enabled: true);
+        [.. "[data-md-component='content']"u8],
+        [],
+        TransitionAnimation.Fade,
+        PrefetchStrategy.Hover,
+        DefaultPrefetchDelayMs,
+        [.. "[download],[target='_blank'],[data-no-router],[rel~='external']"u8],
+        true);
 }

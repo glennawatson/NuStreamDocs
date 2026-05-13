@@ -12,7 +12,7 @@ namespace NuStreamDocs.Privacy.Tests;
 public class InlineStyleAndAuditTests
 {
     /// <summary>Filter that accepts every host.</summary>
-    private static readonly HostFilter AllHosts = new(hostsToSkip: null, hostsAllowed: null);
+    private static readonly HostFilter AllHosts = new(null, null);
 
     /// <summary>A <c>url(...)</c> token inside an inline <c>&lt;style&gt;</c> block is registered and rewritten to a local path.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
@@ -21,7 +21,8 @@ public class InlineStyleAndAuditTests
     {
         ExternalAssetRegistry registry = new([.. "assets/external"u8]);
         const string Source = "<style>body { background: url(https://example.com/bg.png) }</style>";
-        var output = Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Source), registry, AllHosts));
+        var output =
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Source), registry, AllHosts));
         await Assert.That(output).Contains("url(/assets/external/");
         await Assert.That(output).DoesNotContain("https://example.com/bg.png");
     }
@@ -32,7 +33,8 @@ public class InlineStyleAndAuditTests
     public async Task AuditModeCollectsWithoutRewriting()
     {
         ConcurrentDictionary<byte[], byte> audit = new(ByteArrayComparer.Instance);
-        const string Source = "<img src=\"https://example.com/x.png\"><style>a { background: url(https://example.com/y.png) }</style>";
+        const string Source =
+            "<img src=\"https://example.com/x.png\"><style>a { background: url(https://example.com/y.png) }</style>";
         ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Source), AllHosts, audit);
         await Assert.That(audit.ContainsKey([.. "https://example.com/x.png"u8])).IsTrue();
         await Assert.That(audit.ContainsKey([.. "https://example.com/y.png"u8])).IsTrue();
@@ -43,7 +45,7 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task EmptyAllowListLocalizesEverything()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         await Assert.That(filter.ShouldLocalize("https://anything.example/x.png"u8)).IsTrue();
     }
 
@@ -52,7 +54,7 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task AllowListExcludesUnlistedHosts()
     {
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("allowed.example"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("allowed.example"));
         await Assert.That(filter.ShouldLocalize("https://allowed.example/x.png"u8)).IsTrue();
         await Assert.That(filter.ShouldLocalize("https://other.example/x.png"u8)).IsFalse();
     }
@@ -62,7 +64,7 @@ public class InlineStyleAndAuditTests
     [Test]
     public async Task SkipListWinsOverAllowList()
     {
-        HostFilter filter = new(hostsToSkip: PrivacyTestHelpers.Utf8("x.example"), hostsAllowed: PrivacyTestHelpers.Utf8("x.example"));
+        HostFilter filter = new(PrivacyTestHelpers.Utf8("x.example"), PrivacyTestHelpers.Utf8("x.example"));
         await Assert.That(filter.ShouldLocalize("https://x.example/anything"u8)).IsFalse();
     }
 }

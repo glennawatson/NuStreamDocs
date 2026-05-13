@@ -39,14 +39,19 @@ public readonly record struct PagefindOptions(
     bool StrictBinaryRequired,
     byte[][] ExcludePathPrefixes)
 {
+    /// <summary>
+    /// The default minimum token length.
+    /// </summary>
+    private const int DefaultTokenLength = 3;
+
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static PagefindOptions Default { get; } = new(
-        OutputSubdirectory: "search",
-        MinTokenLength: 3,
-        SearchableFrontmatterKeys: [],
-        SectionPriorities: [],
-        RunCli: true,
-        BinaryPath: default,
-        StrictBinaryRequired: false,
-        ExcludePathPrefixes: []);
+        "search",
+        DefaultTokenLength,
+        [],
+        [],
+        true,
+        default,
+        false,
+        []);
 }

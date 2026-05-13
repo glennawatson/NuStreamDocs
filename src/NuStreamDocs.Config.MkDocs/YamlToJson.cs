@@ -74,7 +74,7 @@ public static class YamlToJson
         finally
         {
             CloseRemaining(json, stack, depth);
-            ArrayPool<ContainerFrame>.Shared.Return(stack, clearArray: true);
+            ArrayPool<ContainerFrame>.Shared.Return(stack, true);
         }
     }
 
@@ -90,7 +90,7 @@ public static class YamlToJson
     {
         var stack = ArrayPool<ContainerFrame>.Shared.Rent(16);
         var depth = OpenRoot(json, stack);
-        using Utf8LineReader reader = new(utf8Stream, leaveOpen: true);
+        using Utf8LineReader reader = new(utf8Stream, true);
 
         try
         {
@@ -104,7 +104,7 @@ public static class YamlToJson
         finally
         {
             CloseRemaining(json, stack, depth);
-            ArrayPool<ContainerFrame>.Shared.Return(stack, clearArray: true);
+            ArrayPool<ContainerFrame>.Shared.Return(stack, true);
         }
     }
 
@@ -115,7 +115,7 @@ public static class YamlToJson
     private static int OpenRoot(Utf8JsonWriter json, ContainerFrame[] stack)
     {
         json.WriteStartObject();
-        stack[0] = new(Indent: -1, Kind: ContainerKind.Mapping);
+        stack[0] = new(-1, ContainerKind.Mapping);
         return 1;
     }
 
@@ -215,7 +215,7 @@ public static class YamlToJson
 
         // Inline `- key: value` opens a one-key mapping for this item.
         json.WriteStartObject();
-        stack[depth++] = new(Indent: indent + InlineSequenceMappingIndent, Kind: ContainerKind.Mapping);
+        stack[depth++] = new(indent + InlineSequenceMappingIndent, ContainerKind.Mapping);
         WriteMappingEntry(json, rest, colon, stack, ref depth, indent + InlineSequenceMappingIndent);
     }
 
@@ -238,14 +238,14 @@ public static class YamlToJson
             case ContainerKind.Pending:
                 {
                     json.WriteStartArray();
-                    stack[depth - 1] = new(Indent: indent, Kind: ContainerKind.Sequence);
+                    stack[depth - 1] = new(indent, ContainerKind.Sequence);
                     return;
                 }
 
             default:
                 {
                     json.WriteStartArray();
-                    stack[depth++] = new(Indent: indent, Kind: ContainerKind.Sequence);
+                    stack[depth++] = new(indent, ContainerKind.Sequence);
                     break;
                 }
         }
@@ -275,7 +275,7 @@ public static class YamlToJson
         if (stack[depth - 1].Kind == ContainerKind.Pending)
         {
             json.WriteStartObject();
-            stack[depth - 1] = new(Indent: indent, Kind: ContainerKind.Mapping);
+            stack[depth - 1] = new(indent, ContainerKind.Mapping);
         }
 
         WriteMappingEntry(json, body, colon, stack, ref depth, indent);
@@ -305,7 +305,7 @@ public static class YamlToJson
         {
             // Empty value — defer container creation until the next line
             // tells us whether this is a mapping or a sequence.
-            stack[depth++] = new(Indent: indent, Kind: ContainerKind.Pending);
+            stack[depth++] = new(indent, ContainerKind.Pending);
             return;
         }
 
@@ -332,25 +332,25 @@ public static class YamlToJson
         switch (frame.Kind)
         {
             case ContainerKind.Mapping:
-            {
-                json.WriteEndObject();
-                break;
-            }
+                {
+                    json.WriteEndObject();
+                    break;
+                }
 
             case ContainerKind.Sequence:
-            {
-                json.WriteEndArray();
-                break;
-            }
+                {
+                    json.WriteEndArray();
+                    break;
+                }
 
             case ContainerKind.Pending:
-            {
-                // No child line opened the container — emit an empty
-                // object so the property still has a value.
-                json.WriteStartObject();
-                json.WriteEndObject();
-                break;
-            }
+                {
+                    // No child line opened the container — emit an empty
+                    // object so the property still has a value.
+                    json.WriteStartObject();
+                    json.WriteEndObject();
+                    break;
+                }
         }
     }
 
@@ -473,21 +473,21 @@ public static class YamlToJson
             switch (line[i])
             {
                 case DQuote when !inSingle:
-                {
-                    inDouble = !inDouble;
-                    break;
-                }
+                    {
+                        inDouble = !inDouble;
+                        break;
+                    }
 
                 case SQuote when !inDouble:
-                {
-                    inSingle = !inSingle;
-                    break;
-                }
+                    {
+                        inSingle = !inSingle;
+                        break;
+                    }
 
                 case Colon when !inDouble && !inSingle:
-                {
-                    return i;
-                }
+                    {
+                        return i;
+                    }
             }
         }
 

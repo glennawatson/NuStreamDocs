@@ -12,17 +12,12 @@ public static class DocBuilderHighlightExtensions
     /// <summary>Registers the highlighter with default options (built-in lexers only).</summary>
     /// <param name="builder">Doc builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseHighlight(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new HighlightPlugin());
-    }
+    public static DocBuilder UseHighlight(this DocBuilder builder) => builder.UsePlugin(new HighlightPlugin());
 
     /// <summary>Registers the highlighter with the supplied options.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseHighlight(this DocBuilder builder, HighlightOptions options)
-    {
-        return builder.UsePlugin(new HighlightPlugin(options));
-    }
+    public static DocBuilder UseHighlight(this DocBuilder builder, HighlightOptions options) =>
+        builder.UsePlugin(new HighlightPlugin(options));
 }

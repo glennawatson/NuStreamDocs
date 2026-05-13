@@ -17,22 +17,22 @@ public class MdInHtmlGridCardsTests
     public async Task GridCardsContainerEmitsList()
     {
         const string Source = """
-            <div class="grid cards" markdown>
+                              <div class="grid cards" markdown>
 
-            -   item one
+                              -   item one
 
-                ---
+                                  ---
 
-                first body
+                                  first body
 
-            -   item two
+                              -   item two
 
-                ---
+                                  ---
 
-                second body
+                                  second body
 
-            </div>
-            """;
+                              </div>
+                              """;
         var rewritten = Rewrite(Source);
         var html = Render(rewritten);
 

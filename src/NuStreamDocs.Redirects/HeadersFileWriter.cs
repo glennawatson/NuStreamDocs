@@ -17,7 +17,7 @@ public static class HeadersFileWriter
     public static HeaderRule[] DefaultRules() =>
     [
         new([.. "/assets/*"u8], [[.. "Cache-Control: public, max-age=604800"u8]]),
-        new([.. "/assets/fonts/*"u8], [[.. "Cache-Control: public, max-age=31536000, immutable"u8]]),
+        new([.. "/assets/fonts/*"u8], [[.. "Cache-Control: public, max-age=31536000, immutable"u8]])
     ];
 
     /// <summary>Writes the <c>_headers</c> file content for <paramref name="rules"/> (each block: pattern line, then two-space-indented header lines, then a blank line).</summary>

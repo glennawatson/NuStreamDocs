@@ -49,7 +49,8 @@ public class ThemeWrapBenchmarks
         StringBuilder sb = new(BodyBytes);
         while (sb.Length < BodyBytes)
         {
-            sb.Append("<p>This is a paragraph that fills the synthetic page body. <a href=\"x\">link</a> &amp; more.</p>\n");
+            sb.Append(
+                "<p>This is a paragraph that fills the synthetic page body. <a href=\"x\">link</a> &amp; more.</p>\n");
         }
 
         _bodyTemplate = Encoding.UTF8.GetBytes(sb.ToString());

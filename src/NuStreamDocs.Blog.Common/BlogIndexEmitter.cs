@@ -36,7 +36,11 @@ public static class BlogIndexEmitter
     /// <param name="title">UTF-8 page heading bytes, e.g. <c>"Blog"u8</c> or <c>"Announcements"u8</c>.</param>
     /// <param name="posts">Posts to list. Caller controls ordering.</param>
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the index page's directory relative to the docs root.</param>
-    public static void WriteIndex(IBufferWriter<byte> writer, ReadOnlySpan<byte> title, BlogPost[] posts, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
+    public static void WriteIndex(
+        IBufferWriter<byte> writer,
+        ReadOnlySpan<byte> title,
+        BlogPost[] posts,
+        ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
         if (title.IsEmpty)
         {
@@ -65,7 +69,11 @@ public static class BlogIndexEmitter
     /// <param name="tag">The tag.</param>
     /// <param name="posts">Posts that carry the tag.</param>
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the archive page's directory relative to the docs root (e.g. <c>"articles/tags"u8</c>).</param>
-    public static void WriteTagArchive(IBufferWriter<byte> writer, byte[] tag, BlogPost[] posts, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
+    public static void WriteTagArchive(
+        IBufferWriter<byte> writer,
+        byte[] tag,
+        BlogPost[] posts,
+        ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
         if (tag.Length is 0)
         {
@@ -95,7 +103,10 @@ public static class BlogIndexEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="post">Post.</param>
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the index / archive page's directory relative to the docs root.</param>
-    private static void AppendPostCard(IBufferWriter<byte> writer, BlogPost post, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
+    private static void AppendPostCard(
+        IBufferWriter<byte> writer,
+        BlogPost post,
+        ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
         writer.Write("<article class=\"md-post\">\n"u8);
         AppendCardHeader(writer, post, pageDirectoryRelativeUtf8);
@@ -110,7 +121,10 @@ public static class BlogIndexEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="post">Post.</param>
     /// <param name="pageDirectoryRelativeUtf8">Page-relative directory bytes used for link rewriting.</param>
-    private static void AppendCardHeader(IBufferWriter<byte> writer, BlogPost post, ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
+    private static void AppendCardHeader(
+        IBufferWriter<byte> writer,
+        BlogPost post,
+        ReadOnlySpan<byte> pageDirectoryRelativeUtf8)
     {
         writer.Write("  <header class=\"md-post__header\">\n"u8);
         writer.Write("    <h3 class=\"md-post__title\"><a href=\""u8);

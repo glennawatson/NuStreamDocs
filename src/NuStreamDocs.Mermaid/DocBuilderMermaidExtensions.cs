@@ -12,8 +12,5 @@ public static class DocBuilderMermaidExtensions
     /// <summary>Registers <see cref="MermaidPlugin"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMermaid(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new MermaidPlugin());
-    }
+    public static DocBuilder UseMermaid(this DocBuilder builder) => builder.UsePlugin(new MermaidPlugin());
 }

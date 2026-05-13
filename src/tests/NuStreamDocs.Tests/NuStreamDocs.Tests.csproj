@@ -6,15 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs\NuStreamDocs.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing"/>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResources\sample.txt" LogicalName="NuStreamDocs.Tests.sample.txt" />
+    <EmbeddedResource Include="EmbeddedResources\sample.txt" LogicalName="NuStreamDocs.Tests.sample.txt"/>
   </ItemGroup>
 
 </Project>

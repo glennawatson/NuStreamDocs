@@ -66,7 +66,8 @@ public static class TypeScriptLexer
         var templateString = new LexerRule(
             static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'`'),
             TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = BacktickFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = BacktickFirst };
 
         CFamilyConfig config = new()
         {

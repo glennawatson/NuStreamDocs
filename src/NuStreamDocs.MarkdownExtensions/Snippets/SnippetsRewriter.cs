@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.Snippets;
@@ -20,24 +21,27 @@ internal static class SnippetsRewriter
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="basePaths">Ordered list of directories to resolve include paths against; the first hit wins.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, DirectoryPath[] basePaths)
-    {
-        Expand(source, writer, basePaths, depth: 0);
-    }
+    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, DirectoryPath[] basePaths) =>
+        Expand(source, writer, basePaths, 0);
 
     /// <summary>Expands <paramref name="source"/> recursively, capped at <see cref="MaxIncludeDepth"/>.</summary>
     /// <param name="source">UTF-8 input.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="basePaths">Resolution roots.</param>
     /// <param name="depth">Current recursion depth.</param>
-    private static void Expand(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, DirectoryPath[] basePaths, int depth)
+    private static void Expand(
+        ReadOnlySpan<byte> source,
+        IBufferWriter<byte> writer,
+        DirectoryPath[] basePaths,
+        int depth)
     {
         var cursor = 0;
         while (cursor < source.Length)
         {
             var lineEnd = Utf8LineSpan.FindLineEnd(source, cursor);
             var lineBody = source[cursor..lineEnd];
-            if (TryParseInclude(lineBody, out var path) && depth < MaxIncludeDepth && TryReadSnippet(path, basePaths, out var included))
+            if (TryParseInclude(lineBody, out var path) && depth < MaxIncludeDepth &&
+                TryReadSnippet(path, basePaths, out var included))
             {
                 Expand(included, writer, basePaths, depth + 1);
                 cursor = Utf8LineSpan.AdvancePastLineTerminator(source, lineEnd);
@@ -79,10 +83,13 @@ internal static class SnippetsRewriter
     /// <param name="basePaths">Resolution roots.</param>
     /// <param name="contents">File bytes on success.</param>
     /// <returns>True when one of the base directories yielded a readable file.</returns>
-    private static bool TryReadSnippet(ReadOnlySpan<byte> path, DirectoryPath[] basePaths, out ReadOnlySpan<byte> contents)
+    private static bool TryReadSnippet(
+        ReadOnlySpan<byte> path,
+        DirectoryPath[] basePaths,
+        out ReadOnlySpan<byte> contents)
     {
         contents = default;
-        var pathString = System.Text.Encoding.UTF8.GetString(path);
+        var pathString = Encoding.UTF8.GetString(path);
         for (var i = 0; i < basePaths.Length; i++)
         {
             var candidate = Path.GetFullPath(pathString, basePaths[i].Value);

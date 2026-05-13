@@ -17,7 +17,8 @@ public class Phase2BatchFourLexerTests
     [Test]
     public async Task CrystalClassifiesDeclarationsAndComments()
     {
-        var html = CrystalLexer.Instance.Render("# top comment\nclass Foo\n  def greet(name : String) : String\n    \"hi #{name}\"\n  end\nend"u8);
+        var html = CrystalLexer.Instance.Render(
+            "# top comment\nclass Foo\n  def greet(name : String) : String\n    \"hi #{name}\"\n  end\nend"u8);
         await Assert.That(html.Contains("<span class=\"c1\"># top comment</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">class</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">def</span>", StringComparison.Ordinal)).IsTrue();
@@ -30,7 +31,8 @@ public class Phase2BatchFourLexerTests
     [Test]
     public async Task VClassifiesFnAndModifiers()
     {
-        var html = VLexer.Instance.Render("module main\npub fn greet(mut name string) string {\n  return \"hi \" + name\n}"u8);
+        var html = VLexer.Instance.Render(
+            "module main\npub fn greet(mut name string) string {\n  return \"hi \" + name\n}"u8);
         await Assert.That(html.Contains("<span class=\"kd\">module</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">pub</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">fn</span>", StringComparison.Ordinal)).IsTrue();
@@ -43,7 +45,8 @@ public class Phase2BatchFourLexerTests
     [Test]
     public async Task ErlangClassifiesModuleAttributesAndComments()
     {
-        var html = ErlangLexer.Instance.Render("-module(my_mod).\n-export([greet/1]).\n% the greeter\ngreet(Name) -> io:format(\"hi ~p~n\", [Name])."u8);
+        var html = ErlangLexer.Instance.Render(
+            "-module(my_mod).\n-export([greet/1]).\n% the greeter\ngreet(Name) -> io:format(\"hi ~p~n\", [Name])."u8);
         await Assert.That(html.Contains("<span class=\"kd\">-module</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">-export</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"c1\">% the greeter</span>", StringComparison.Ordinal)).IsTrue();

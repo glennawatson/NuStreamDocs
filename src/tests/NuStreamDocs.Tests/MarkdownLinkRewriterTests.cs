@@ -92,8 +92,10 @@ public class MarkdownLinkRewriterTests
     [Test]
     public async Task MultipleLinksRewriteIndependently()
     {
-        const string Source = "<a href=\"a.md\">a</a> mid <a href=\"https://x.test\">b</a> end <a href=\"c.md#x\">c</a>";
-        const string Expected = "<a href=\"a.html\">a</a> mid <a href=\"https://x.test\">b</a> end <a href=\"c.html#x\">c</a>";
+        const string Source =
+            "<a href=\"a.md\">a</a> mid <a href=\"https://x.test\">b</a> end <a href=\"c.md#x\">c</a>";
+        const string Expected =
+            "<a href=\"a.html\">a</a> mid <a href=\"https://x.test\">b</a> end <a href=\"c.html#x\">c</a>";
         await Assert.That(Rewrite(Source)).IsEqualTo(Expected);
     }
 

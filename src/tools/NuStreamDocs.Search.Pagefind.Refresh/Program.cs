@@ -5,6 +5,7 @@
 using System.Formats.Tar;
 using System.Globalization;
 using System.IO.Compression;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -56,11 +57,11 @@ public static class Program
     /// <summary>The five RIDs we ship — broad .NET RIDs paired with the matching Rust target triple.</summary>
     private static readonly RidMapping[] Rids =
     [
-        new("linux-x64", "x86_64-unknown-linux-musl", IsWindows: false),
-        new("linux-arm64", "aarch64-unknown-linux-musl", IsWindows: false),
-        new("win-x64", "x86_64-pc-windows-msvc", IsWindows: true),
-        new("osx-x64", "x86_64-apple-darwin", IsWindows: false),
-        new("osx-arm64", "aarch64-apple-darwin", IsWindows: false)
+        new("linux-x64", "x86_64-unknown-linux-musl", false),
+        new("linux-arm64", "aarch64-unknown-linux-musl", false),
+        new("win-x64", "x86_64-pc-windows-msvc", true),
+        new("osx-x64", "x86_64-apple-darwin", false),
+        new("osx-arm64", "aarch64-apple-darwin", false)
     ];
 
     /// <summary>Entry point.</summary>
@@ -92,7 +93,7 @@ public static class Program
         }
 
         using HttpClientHandler handler = new();
-        handler.AutomaticDecompression = System.Net.DecompressionMethods.All;
+        handler.AutomaticDecompression = DecompressionMethods.All;
         handler.CheckCertificateRevocationList = true;
         using HttpClient http = new(handler);
         http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
@@ -116,11 +117,13 @@ public static class Program
 
         if (failures > 0)
         {
-            await Console.Error.WriteLineAsync($"\n{failures} of {selected.Count} RID(s) failed.").ConfigureAwait(false);
+            await Console.Error.WriteLineAsync($"\n{failures} of {selected.Count} RID(s) failed.")
+                .ConfigureAwait(false);
             return 1;
         }
 
-        await stdout.WriteLineAsync("\nDone. Remember to bump PagefindCli.PinnedVersion if the version changed.").ConfigureAwait(false);
+        await stdout.WriteLineAsync("\nDone. Remember to bump PagefindCli.PinnedVersion if the version changed.")
+            .ConfigureAwait(false);
         return 0;
     }
 
@@ -132,7 +135,13 @@ public static class Program
     /// <param name="verify">When true, fetch the upstream <c>.sha256</c> sidecar and verify the tarball.</param>
     /// <param name="stdout">Standard-output writer for progress lines.</param>
     /// <returns>A task that completes when the binary lands on disk.</returns>
-    private static async Task RefreshOneAsync(HttpClient http, string version, RidMapping rid, string outputBase, bool verify, TextWriter stdout)
+    private static async Task RefreshOneAsync(
+        HttpClient http,
+        string version,
+        RidMapping rid,
+        string outputBase,
+        bool verify,
+        TextWriter stdout)
     {
         var assetName = $"pagefind-v{version}-{rid.Rust}.tar.gz";
         var assetUrl = string.Format(CultureInfo.InvariantCulture, ReleaseAssetTemplate, version, assetName);
@@ -171,9 +180,10 @@ public static class Program
             // the +x bit anyway, so this is best-effort and silent on failure.
             try
             {
-                const UnixFileMode ExecutableMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                                                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                                                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
+                const UnixFileMode ExecutableMode =
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
                 File.SetUnixFileMode(targetPath, ExecutableMode);
             }
             catch (PlatformNotSupportedException)
@@ -192,7 +202,7 @@ public static class Program
     /// <exception cref="InvalidOperationException">If no entry with the requested name exists in the tarball.</exception>
     private static byte[] ExtractBinaryBytes(byte[] tarballBytes, string binaryFileName)
     {
-        using MemoryStream gz = new(tarballBytes, writable: false);
+        using MemoryStream gz = new(tarballBytes, false);
         using GZipStream raw = new(gz, CompressionMode.Decompress);
         using TarReader reader = new(raw);
         while (reader.GetNextEntry() is { } entry)
@@ -244,7 +254,10 @@ public static class Program
             return all;
         }
 
-        var wanted = new HashSet<string>(filter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
+        var wanted =
+            new HashSet<string>(
+                filter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                StringComparer.OrdinalIgnoreCase);
         List<RidMapping> selected = new(wanted.Count);
         for (var i = 0; i < Rids.Length; i++)
         {

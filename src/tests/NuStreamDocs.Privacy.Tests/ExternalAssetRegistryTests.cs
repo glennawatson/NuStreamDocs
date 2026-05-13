@@ -90,7 +90,8 @@ public class ExternalAssetRegistryTests
         ExternalAssetRegistry registry = new(AssetDir);
         var local = Encoding.UTF8.GetString(registry.GetOrAdd(Encoding.UTF8.GetBytes(url)));
         await Assert.That(local).StartsWith(AssetDirPrefix);
-        await Assert.That(local.Contains('.', StringComparison.Ordinal) && local.LastIndexOf('.') > AssetDirPrefix.Length - 1).IsFalse();
+        await Assert.That(local.Contains('.', StringComparison.Ordinal) &&
+                          local.LastIndexOf('.') > AssetDirPrefix.Length - 1).IsFalse();
     }
 
     /// <summary>The same URL maps to the same local path on subsequent calls.</summary>

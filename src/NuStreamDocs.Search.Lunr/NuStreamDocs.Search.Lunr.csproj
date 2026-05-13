@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Search\NuStreamDocs.Search.csproj"/>
   </ItemGroup>
 
   <!-- Vendored Lunr.js runtime — refreshed by `dotnet run` against
@@ -17,15 +17,15 @@
        the plugin can write it through IStaticAssetProvider without a
        loose file dependency. -->
   <ItemGroup>
-    <EmbeddedResource Include="Assets\lunr.min.js" />
+    <EmbeddedResource Include="Assets\lunr.min.js"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Search.Lunr.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Lunr.Tests"/>
   </ItemGroup>
 
 </Project>

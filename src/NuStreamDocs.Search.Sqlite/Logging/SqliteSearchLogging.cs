@@ -11,6 +11,7 @@ internal static partial class SqliteSearchLogging
     /// <param name="logger">Diagnostic logger.</param>
     /// <param name="path">Absolute path to <c>search.db</c>.</param>
     /// <param name="bytes">File size in bytes.</param>
-    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "SQLite search index written: {path} ({bytes} bytes)")]
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information,
+        Message = "SQLite search index written: {path} ({bytes} bytes)")]
     public static partial void LogDatabaseWritten(ILogger logger, string path, long bytes);
 }

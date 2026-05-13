@@ -28,10 +28,7 @@ public static class ThemeModelLoader
     /// <summary>Compiles the shared top-level page template.</summary>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
     /// <returns>The compiled template.</returns>
-    public static Template LoadPage(PartialLoader readBytes)
-    {
-        return Template.Compile(readBytes("page.mustache"));
-    }
+    public static Template LoadPage(PartialLoader readBytes) => Template.Compile(readBytes("page.mustache"));
 
     /// <summary>Compiles the standard <c>partials/*.mustache</c> set into a byte-keyed registry.</summary>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
@@ -67,7 +64,8 @@ public static class ThemeModelLoader
     /// <summary>Builds an indexable static-asset snapshot from <paramref name="staticAssets"/>.</summary>
     /// <param name="staticAssets">Plain lookup keyed by relative path.</param>
     /// <returns>Named tuple array for write-out loops.</returns>
-    public static (FilePath RelativePath, byte[] Bytes)[] BuildStaticAssetEntries(Dictionary<FilePath, byte[]> staticAssets)
+    public static (FilePath RelativePath, byte[] Bytes)[] BuildStaticAssetEntries(
+        Dictionary<FilePath, byte[]> staticAssets)
     {
         var entries = new (FilePath RelativePath, byte[] Bytes)[staticAssets.Count];
         var index = 0;

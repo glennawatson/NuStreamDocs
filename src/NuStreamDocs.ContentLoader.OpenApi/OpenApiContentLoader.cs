@@ -39,7 +39,7 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <param name="specFile">Spec file path (absolute, or relative to the input root).</param>
     /// <param name="routePrefix">Local subdirectory the pages are placed under.</param>
     public OpenApiContentLoader(FilePath specFile, PathSegment routePrefix)
-        : this(specFile, default, routePrefix, httpClientFactory: null, NullLogger.Instance)
+        : this(specFile, default, routePrefix, null, NullLogger.Instance)
     {
     }
 
@@ -47,7 +47,7 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <param name="specUrl">Spec URL.</param>
     /// <param name="routePrefix">Local subdirectory the pages are placed under.</param>
     public OpenApiContentLoader(UrlPath specUrl, PathSegment routePrefix)
-        : this(default, specUrl, routePrefix, httpClientFactory: null, NullLogger.Instance)
+        : this(default, specUrl, routePrefix, null, NullLogger.Instance)
     {
     }
 
@@ -56,7 +56,11 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <param name="routePrefix">Local subdirectory the pages are placed under.</param>
     /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public OpenApiContentLoader(UrlPath specUrl, PathSegment routePrefix, Func<HttpClient>? httpClientFactory, ILogger logger)
+    public OpenApiContentLoader(
+        UrlPath specUrl,
+        PathSegment routePrefix,
+        Func<HttpClient>? httpClientFactory,
+        ILogger logger)
         : this(default, specUrl, routePrefix, httpClientFactory, logger)
     {
     }
@@ -67,7 +71,12 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <param name="routePrefix">Local subdirectory the pages are placed under.</param>
     /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    private OpenApiContentLoader(FilePath specFile, UrlPath specUrl, PathSegment routePrefix, Func<HttpClient>? httpClientFactory, ILogger logger)
+    private OpenApiContentLoader(
+        FilePath specFile,
+        UrlPath specUrl,
+        PathSegment routePrefix,
+        Func<HttpClient>? httpClientFactory,
+        ILogger logger)
     {
         if (string.IsNullOrEmpty(specFile.Value) == string.IsNullOrEmpty(specUrl.Value))
         {
@@ -132,7 +141,9 @@ public sealed class OpenApiContentLoader : IContentLoader
             return FetchAsync(cancellationToken);
         }
 
-        var path = Path.IsPathRooted(_specFile.Value) || inputRoot.IsEmpty ? _specFile : inputRoot.File(_specFile.Value);
+        var path = Path.IsPathRooted(_specFile.Value) || inputRoot.IsEmpty
+            ? _specFile
+            : inputRoot.File(_specFile.Value);
         if (!File.Exists(path.Value))
         {
             throw new ContentLoaderException(StringCompose.Concat("OpenAPI spec file not found: ", path.Value));
@@ -172,7 +183,9 @@ public sealed class OpenApiContentLoader : IContentLoader
         catch (HttpRequestException ex)
         {
             ContentLoaderLoggingHelper.LogFetchFailed(_logger, "openapi", _specUrl.Value, ex.Message);
-            throw new ContentLoaderException(StringCompose.Concat("Failed to fetch OpenAPI spec ", _specUrl.Value, ": ", ex.Message), ex);
+            throw new ContentLoaderException(
+                StringCompose.Concat("Failed to fetch OpenAPI spec ", _specUrl.Value, ": ", ex.Message),
+                ex);
         }
     }
 }

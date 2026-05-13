@@ -10,15 +10,16 @@
  * track so tables line up with admonitions and code blocks rendered against the same column,
  * and break long unbreakable tokens inside cells. */
 .md-typeset table:not([class]) {
-  /* Keep `display: table` so the rounded outer border hugs the cells exactly; `display: block`
-     forks the outer block's width from the inner anonymous table and the shell appears wider
-     than the rows. Cell-level `overflow-wrap` below handles long-token overflow. */
-  display: table;
-  width: 100%;
-  overflow: hidden;
+    /* Keep `display: table` so the rounded outer border hugs the cells exactly; `display: block`
+       forks the outer block's width from the inner anonymous table and the shell appears wider
+       than the rows. Cell-level `overflow-wrap` below handles long-token overflow. */
+    display: table;
+    width: 100%;
+    overflow: hidden;
 }
+
 .md-typeset table:not([class]) th,
 .md-typeset table:not([class]) td {
-  overflow-wrap: anywhere;
-  word-break: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }

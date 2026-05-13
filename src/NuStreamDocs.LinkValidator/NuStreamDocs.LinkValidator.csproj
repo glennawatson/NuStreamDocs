@@ -8,17 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <PackageReference Include="Polly" />
-    <PackageReference Include="Polly.RateLimiting" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <PackageReference Include="Polly"/>
+    <PackageReference Include="Polly.RateLimiting"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.LinkValidator.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.LinkValidator.Tests"/>
   </ItemGroup>
 
 </Project>

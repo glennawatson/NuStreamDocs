@@ -26,7 +26,8 @@ public static class NixLexer
         "let in rec inherit"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
@@ -55,11 +56,24 @@ public static class NixLexer
     /// <summary>Gets the singleton Nix lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-        BlockComment = new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst },
-        SpecialString = new(MatchIndentedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
+        LineComment =
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            },
+        BlockComment =
+            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SlashFirst
+            },
+        SpecialString =
+            new(MatchIndentedString, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SingleQuoteFirst
+            },
         IncludeDoubleQuotedString = true,
-        PostStringRules = [new(MatchPathLiteral, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = PathFirst }],
+        PostStringRules =
+            [new(MatchPathLiteral, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = PathFirst }],
         IncludeFloatLiteral = true,
         IncludeIntegerLiteral = true,
         KeywordConstants = KeywordConstants,

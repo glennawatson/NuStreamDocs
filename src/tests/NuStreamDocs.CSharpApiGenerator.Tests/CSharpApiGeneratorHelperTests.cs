@@ -19,10 +19,14 @@ public class CSharpApiGeneratorHelperTests
     [Test]
     public async Task DescribeInputShapes()
     {
-        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetManifestInput("/repo", "/cache"))).IsEqualTo("manifest:/repo");
-        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetPackagesInput([new("Foo", "1.0")], "/cache"))).IsEqualTo("packages:1");
-        await Assert.That(CSharpApiGenerator.DescribeInput(new LocalAssembliesInput("net10.0", ["/a.dll", "/b.dll"]))).IsEqualTo("assemblies:2@net10.0");
-        await Assert.That(CSharpApiGenerator.DescribeInput(new CustomInput(new EmptySource()))).IsEqualTo("custom-source");
+        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetManifestInput("/repo", "/cache")))
+            .IsEqualTo("manifest:/repo");
+        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetPackagesInput([new("Foo", "1.0")], "/cache")))
+            .IsEqualTo("packages:1");
+        await Assert.That(CSharpApiGenerator.DescribeInput(new LocalAssembliesInput("net10.0", ["/a.dll", "/b.dll"])))
+            .IsEqualTo("assemblies:2@net10.0");
+        await Assert.That(CSharpApiGenerator.DescribeInput(new CustomInput(new EmptySource())))
+            .IsEqualTo("custom-source");
     }
 
     /// <summary>DescribeInputs returns the single label when only one input.</summary>
@@ -91,7 +95,7 @@ public class CSharpApiGeneratorHelperTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -102,7 +106,8 @@ public class CSharpApiGeneratorHelperTests
         public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             await Task.CompletedTask.ConfigureAwait(false);
             yield break;

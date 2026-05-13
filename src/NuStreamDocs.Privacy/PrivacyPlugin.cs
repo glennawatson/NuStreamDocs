@@ -66,7 +66,11 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
     public PrivacyPlugin(in PrivacyOptions options, ILogger logger)
     {
         _options = options;
-        _filter = new(options.HostsToSkip, options.HostsAllowed, options.UrlIncludePatterns, options.UrlExcludePatterns);
+        _filter = new(
+            options.HostsToSkip,
+            options.HostsAllowed,
+            options.UrlIncludePatterns,
+            options.UrlExcludePatterns);
         var dirBytes = options.AssetDirectory is [] ? PrivacyOptions.Default.AssetDirectory : options.AssetDirectory;
         _registry = new(dirBytes);
         _logger = logger;
@@ -172,7 +176,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
 
         WriteManifestIfRequested(root);
         WriteCspManifestIfRequested(root);
-        PrivacyLoggingHelper.LogFinalizeSummary(_logger, registeredCount - failures.Length, failures.Length, cachedCount: 0);
+        PrivacyLoggingHelper.LogFinalizeSummary(_logger, registeredCount - failures.Length, failures.Length, 0);
         ThrowIfRequested(failures);
     }
 

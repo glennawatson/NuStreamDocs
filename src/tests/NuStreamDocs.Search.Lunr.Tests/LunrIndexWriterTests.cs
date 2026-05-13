@@ -37,7 +37,11 @@ public class LunrIndexWriterTests
     {
         using TempDir dir = new();
         var path = Path.Combine(dir.Root, "lunr.json");
-        LunrIndexWriter.Write(path, "en"u8, [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])], [[.. "foo"u8], [.. "bar"u8]]);
+        LunrIndexWriter.Write(
+            path,
+            "en"u8,
+            [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])],
+            [[.. "foo"u8], [.. "bar"u8]]);
         var json = await File.ReadAllTextAsync(path);
         await Assert.That(json).Contains("\"extra_stopwords\"");
         await Assert.That(json).Contains("\"foo\"");
@@ -81,7 +85,7 @@ public class LunrIndexWriterTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

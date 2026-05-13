@@ -29,9 +29,11 @@ public class Phase0FamilyLexerTests
     [Test]
     public async Task ScssClassifiesVariableAndParentSelector()
     {
-        var html = ScssLexer.Instance.Render("$primary: #ff0;\n// inline comment\n.btn {\n  &:hover { color: $primary; }\n}\n"u8);
+        var html = ScssLexer.Instance.Render(
+            "$primary: #ff0;\n// inline comment\n.btn {\n  &:hover { color: $primary; }\n}\n"u8);
         await Assert.That(html.Contains("<span class=\"n\">$primary</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"c1\">// inline comment</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"c1\">// inline comment</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"nc\">&amp;</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -42,7 +44,8 @@ public class Phase0FamilyLexerTests
     {
         var html = LessLexer.Instance.Render("@brand: red;\n// less comment\n.btn { color: @brand; }\n"u8);
         await Assert.That(html.Contains("<span class=\"k\">@brand</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"c1\">// less comment</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"c1\">// less comment</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>OCaml classifies nested block comments and ML keywords.</summary>
@@ -50,8 +53,11 @@ public class Phase0FamilyLexerTests
     [Test]
     public async Task OcamlClassifiesNestedCommentsAndKeywords()
     {
-        var html = OcamlLexer.Instance.Render("(* outer (* inner *) outer *)\nlet x : int = 1\nmatch x with\n| 0 -> false\n| _ -> true"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">(* outer (* inner *) outer *)</span>", StringComparison.Ordinal)).IsTrue();
+        var html = OcamlLexer.Instance.Render(
+            "(* outer (* inner *) outer *)\nlet x : int = 1\nmatch x with\n| 0 -> false\n| _ -> true"u8);
+        await Assert
+            .That(html.Contains("<span class=\"cm\">(* outer (* inner *) outer *)</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">let</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">int</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">match</span>", StringComparison.Ordinal)).IsTrue();
@@ -63,9 +69,13 @@ public class Phase0FamilyLexerTests
     [Test]
     public async Task HaskellClassifiesBothCommentForms()
     {
-        var html = HaskellLexer.Instance.Render("-- line comment\n{- outer {- inner -} outer -}\nmodule Foo where\nmain :: IO ()\n"u8);
-        await Assert.That(html.Contains("<span class=\"c1\">-- line comment</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"cm\">{- outer {- inner -} outer -}</span>", StringComparison.Ordinal)).IsTrue();
+        var html = HaskellLexer.Instance.Render(
+            "-- line comment\n{- outer {- inner -} outer -}\nmodule Foo where\nmain :: IO ()\n"u8);
+        await Assert.That(html.Contains("<span class=\"c1\">-- line comment</span>", StringComparison.Ordinal))
+            .IsTrue();
+        await Assert
+            .That(html.Contains("<span class=\"cm\">{- outer {- inner -} outer -}</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">module</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">IO</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">where</span>", StringComparison.Ordinal)).IsTrue();
@@ -89,7 +99,8 @@ public class Phase0FamilyLexerTests
     public async Task ClojureClassifiesSemicolonComment()
     {
         var html = ClojureLexer.Instance.Render("; this is a comment\n(def x 1)"u8);
-        await Assert.That(html.Contains("<span class=\"c1\">; this is a comment</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"c1\">; this is a comment</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Scheme classifies <c>define</c> and quote prefixes; doesn't recognize Clojure's <c>[]</c> data brackets.</summary>
@@ -100,7 +111,7 @@ public class Phase0FamilyLexerTests
         var html = SchemeLexer.Instance.Render("(define (square x) (* x x))\n'(1 2 3)\n`(a ,b)"u8);
         await Assert.That(html.Contains("<span class=\"kd\">define</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"o\">&#39;</span>", StringComparison.Ordinal)
-            || html.Contains("<span class=\"o\">'</span>", StringComparison.Ordinal)).IsTrue();
+                          || html.Contains("<span class=\"o\">'</span>", StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Registry resolves the new family aliases to their lexers.</summary>

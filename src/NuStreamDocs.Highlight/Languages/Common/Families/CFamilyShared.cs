@@ -99,7 +99,8 @@ internal static class CFamilyShared
     public static ReadOnlySpan<byte> TrueFalseNilLiteral => "true false nil"u8;
 
     /// <summary>Gets the canonical C primitive-type set (<c>char short int long float double void signed unsigned</c>) as a space-separated literal.</summary>
-    public static ReadOnlySpan<byte> CPrimitiveTypesLiteral => "char short int long float double void signed unsigned"u8;
+    public static ReadOnlySpan<byte> CPrimitiveTypesLiteral =>
+        "char short int long float double void signed unsigned"u8;
 
     /// <summary>
     /// Gets the standard C99/C11 sized-integer typedef set (<c>size_t</c>, <c>ssize_t</c>, <c>ptrdiff_t</c>,

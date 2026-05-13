@@ -64,12 +64,14 @@ public static class SfntTableReader
             return null;
         }
 
-        if (!TryFindTable(sfnt, numTables, HeadTag, out var headStart, out var headLen) || headLen < HeadUnitsPerEmOffset + Uint16Size)
+        if (!TryFindTable(sfnt, numTables, HeadTag, out var headStart, out var headLen) ||
+            headLen < HeadUnitsPerEmOffset + Uint16Size)
         {
             return null;
         }
 
-        if (!TryFindTable(sfnt, numTables, HheaTag, out var hheaStart, out var hheaLen) || hheaLen < HheaLineGapOffset + Uint16Size)
+        if (!TryFindTable(sfnt, numTables, HheaTag, out var hheaStart, out var hheaLen) ||
+            hheaLen < HheaLineGapOffset + Uint16Size)
         {
             return null;
         }
@@ -93,7 +95,8 @@ public static class SfntTableReader
     /// <returns>The x-height and cap-height, or <c>(0, 0)</c>.</returns>
     private static (int XHeight, int CapHeight) ReadOs2Heights(ReadOnlySpan<byte> sfnt, int numTables)
     {
-        if (!TryFindTable(sfnt, numTables, Os2Tag, out var os2Start, out var os2Len) || os2Len < Os2CapHeightOffset + Uint16Size)
+        if (!TryFindTable(sfnt, numTables, Os2Tag, out var os2Start, out var os2Len) ||
+            os2Len < Os2CapHeightOffset + Uint16Size)
         {
             return (0, 0);
         }

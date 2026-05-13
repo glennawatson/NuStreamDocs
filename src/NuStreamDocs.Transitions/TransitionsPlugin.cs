@@ -117,7 +117,7 @@ public sealed class TransitionsPlugin : IPlugin, IHeadExtraProvider, IStaticAsse
     {
         PrefetchStrategy.Viewport => "viewport"u8,
         PrefetchStrategy.Off => "off"u8,
-        _ => "hover"u8,
+        _ => "hover"u8
     };
 
     /// <summary>Maps a <see cref="TransitionAnimation"/> to its config token.</summary>
@@ -126,6 +126,6 @@ public sealed class TransitionsPlugin : IPlugin, IHeadExtraProvider, IStaticAsse
     private static ReadOnlySpan<byte> AnimationToken(TransitionAnimation animation) => animation switch
     {
         TransitionAnimation.None => "none"u8,
-        _ => "fade"u8,
+        _ => "fade"u8
     };
 }

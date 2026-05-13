@@ -16,7 +16,8 @@ public class VersionsManifestTests
     [Test]
     public async Task RoundTripUtf8PreservesEntries()
     {
-        VersionEntry[] input = [
+        VersionEntry[] input =
+        [
             new("0.1.0", "0.1 (legacy)", []),
             new("0.4.2", "0.4 (latest)", [[.. "latest"u8], [.. "stable"u8]])
         ];
@@ -36,7 +37,8 @@ public class VersionsManifestTests
     [Test]
     public async Task UpsertReplacesMatchingVersion()
     {
-        VersionEntry[] existing = [
+        VersionEntry[] existing =
+        [
             new("0.1.0", "0.1", []),
             new("0.4.2", "0.4 (old)", [])
         ];
@@ -65,7 +67,9 @@ public class VersionsManifestTests
     [Test]
     public async Task ReadFromMissingFileYieldsEmpty()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smd-versions-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var dir = Path.Combine(
+            Path.GetTempPath(),
+            "smd-versions-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         try
         {
             Directory.CreateDirectory(dir);
@@ -74,7 +78,7 @@ public class VersionsManifestTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 

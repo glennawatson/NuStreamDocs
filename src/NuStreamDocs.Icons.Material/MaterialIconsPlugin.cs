@@ -44,7 +44,9 @@ public sealed class MaterialIconsPlugin : IPlugin, IHeadExtraProvider
         if (_options.Preconnect && url.AsSpan().IndexOf("fonts.googleapis.com"u8) >= 0)
         {
             HeadExtraWriter.WriteUtf8(writer, "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n"u8);
-            HeadExtraWriter.WriteUtf8(writer, "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n"u8);
+            HeadExtraWriter.WriteUtf8(
+                writer,
+                "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n"u8);
         }
 
         HeadExtraWriter.WriteUtf8(writer, "<link rel=\"stylesheet\" href=\""u8);

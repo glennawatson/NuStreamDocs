@@ -25,6 +25,7 @@ internal static partial class AuditLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="pageCount">Pages audited.</param>
     /// <param name="findingCount">Findings raised.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Audit complete: {FindingCount} finding(s) across {PageCount} page(s)")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Audit complete: {FindingCount} finding(s) across {PageCount} page(s)")]
     public static partial void LogAuditComplete(ILogger logger, int pageCount, int findingCount);
 }

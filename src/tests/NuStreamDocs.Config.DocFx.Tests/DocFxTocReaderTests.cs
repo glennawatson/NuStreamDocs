@@ -108,7 +108,8 @@ public class DocFxTocReaderTests
     public async Task InlineItemsListBuildsSection()
     {
         using var fixture = TempTocTree.Create();
-        const string Yaml = "- name: Group\n  items:\n  - name: One\n    href: one.md\n  - name: Two\n    href: two.md\n";
+        const string Yaml =
+            "- name: Group\n  items:\n  - name: One\n    href: one.md\n  - name: Two\n    href: two.md\n";
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "toc.yml"), Yaml);
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "one.md"), "# One");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "two.md"), "# Two");

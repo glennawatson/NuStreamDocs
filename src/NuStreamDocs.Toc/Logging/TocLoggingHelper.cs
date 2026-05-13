@@ -25,6 +25,8 @@ internal static partial class TocLoggingHelper
     [LoggerMessage(
         EventId = 8002,
         Level = LogLevel.Debug,
-        Message = "Toc complete for {RelativePath}: {HeadingCount} heading(s), {SlugCollisions} collision(s), {ElapsedMs} ms")]
-    public static partial void LogTocComplete(ILogger logger, string relativePath, int headingCount, int slugCollisions, long elapsedMs);
+        Message =
+            "Toc complete for {RelativePath}: {HeadingCount} heading(s), {SlugCollisions} collision(s), {ElapsedMs} ms")]
+    public static partial void LogTocComplete(ILogger logger, string relativePath, int headingCount, int slugCollisions,
+        long elapsedMs);
 }

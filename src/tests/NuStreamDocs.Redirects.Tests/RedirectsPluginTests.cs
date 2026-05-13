@@ -16,7 +16,9 @@ public class RedirectsPluginTests
     {
         using TempDir dir = new();
         var plugin = new RedirectsPlugin(RedirectsOptions.Default.Add("/old/section/"u8, "/new/section/"u8));
-        await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()) { UseDirectoryUrls = true }, CancellationToken.None);
+        await plugin.ConfigureAsync(
+            new(dir.Root, dir.Root, [], new()) { UseDirectoryUrls = true },
+            CancellationToken.None);
         ScanPage(plugin, "guide/intro.md", "---\nredirect_from: /legacy-intro/\n---\nbody"u8);
         ScanPage(plugin, "ref/api.md", "---\nredirect_from:\n  - /old-api/\n  - /older-api/\n---\nbody"u8);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
@@ -45,11 +47,15 @@ public class RedirectsPluginTests
         await File.WriteAllTextAsync(Path.Combine(dir.Root, "existing", "index.html"), "<html>real page</html>");
 
         var plugin = new RedirectsPlugin(RedirectsOptions.Default.Add("/existing/"u8, "/new/"u8));
-        await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()) { UseDirectoryUrls = true }, CancellationToken.None);
+        await plugin.ConfigureAsync(
+            new(dir.Root, dir.Root, [], new()) { UseDirectoryUrls = true },
+            CancellationToken.None);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
 
-        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, "existing", "index.html"))).IsEqualTo("<html>real page</html>");
-        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, "_redirects"))).Contains("/existing/  /new/  301");
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, "existing", "index.html")))
+            .IsEqualTo("<html>real page</html>");
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, "_redirects")))
+            .Contains("/existing/  /new/  301");
     }
 
     /// <summary>With everything disabled, no files are written.</summary>

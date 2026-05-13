@@ -13,10 +13,7 @@ public static class DocBuilderLayoutsExtensions
     /// <summary>Registers <see cref="LayoutsPlugin"/> with the default option set.</summary>
     /// <param name="builder">Builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new LayoutsPlugin());
-    }
+    public static DocBuilder UseLayouts(this DocBuilder builder) => builder.UsePlugin(new LayoutsPlugin());
 
     /// <summary>Registers <see cref="LayoutsPlugin"/> with options-customization.</summary>
     /// <param name="builder">Builder.</param>
@@ -33,7 +30,10 @@ public static class DocBuilderLayoutsExtensions
     /// <param name="configure">Options customization.</param>
     /// <param name="logger">Logger that receives diagnostic warnings.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder, Func<LayoutsOptions, LayoutsOptions> configure, ILogger logger)
+    public static DocBuilder UseLayouts(
+        this DocBuilder builder,
+        Func<LayoutsOptions, LayoutsOptions> configure,
+        ILogger logger)
     {
         var options = configure(LayoutsOptions.Default);
         return builder.UsePlugin(new LayoutsPlugin(options, logger));
@@ -44,14 +44,13 @@ public static class DocBuilderLayoutsExtensions
     /// <param name="options">Resolved options.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder, LayoutsOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new LayoutsPlugin(options, logger));
-    }
+    public static DocBuilder UseLayouts(this DocBuilder builder, LayoutsOptions options, ILogger logger) =>
+        builder.UsePlugin(new LayoutsPlugin(options, logger));
 
     /// <summary>Registers <see cref="LayoutsPlugin"/> with pre-built options and no logger.</summary>
     /// <param name="builder">Builder.</param>
     /// <param name="options">Resolved options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder, LayoutsOptions options) => builder.UseLayouts(options, NullLogger.Instance);
+    public static DocBuilder UseLayouts(this DocBuilder builder, LayoutsOptions options) =>
+        builder.UseLayouts(options, NullLogger.Instance);
 }

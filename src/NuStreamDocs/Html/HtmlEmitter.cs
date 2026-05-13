@@ -95,33 +95,33 @@ public static class HtmlEmitter
         switch (block.Kind)
         {
             case BlockKind.AtxHeading:
-            {
-                EmitHeading(source, block, writer);
-                return index + 1;
-            }
+                {
+                    EmitHeading(source, block, writer);
+                    return index + 1;
+                }
 
             case BlockKind.Paragraph:
-            {
-                return EmitParagraphRun(source, blocks, index, writer);
-            }
+                {
+                    return EmitParagraphRun(source, blocks, index, writer);
+                }
 
             case BlockKind.FencedCode:
-            {
-                return EmitFencedCode(source, blocks, index, writer) + 1;
-            }
+                {
+                    return EmitFencedCode(source, blocks, index, writer) + 1;
+                }
 
             case BlockKind.FencedCodeContent:
-            {
-                // Reached only when fences are unbalanced (no opener seen yet); treat as paragraph
-                // so the content still surfaces in the output.
-                EmitParagraph(source, block, writer);
-                return index + 1;
-            }
+                {
+                    // Reached only when fences are unbalanced (no opener seen yet); treat as paragraph
+                    // so the content still surfaces in the output.
+                    EmitParagraph(source, block, writer);
+                    return index + 1;
+                }
 
             default:
-            {
-                return EmitDispatch(source, blocks, index, writer) + 1;
-            }
+                {
+                    return EmitDispatch(source, blocks, index, writer) + 1;
+                }
         }
     }
 
@@ -290,45 +290,49 @@ public static class HtmlEmitter
     /// <param name="i">Current block index.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Index of the last block this call consumed.</returns>
-    private static int EmitDispatch(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int i, IBufferWriter<byte> writer)
+    private static int EmitDispatch(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int i,
+        IBufferWriter<byte> writer)
     {
         var block = blocks[i];
         switch (block.Kind)
         {
             case BlockKind.HtmlBlock:
             case BlockKind.HtmlBlockContent:
-            {
-                EmitHtmlBlockLine(source, block, writer);
-                return i;
-            }
+                {
+                    EmitHtmlBlockLine(source, block, writer);
+                    return i;
+                }
 
             case BlockKind.ThematicBreak:
-            {
-                Write("<hr />\n"u8, writer);
-                return i;
-            }
+                {
+                    Write("<hr />\n"u8, writer);
+                    return i;
+                }
 
             case BlockKind.ListItem:
-            {
-                return EmitList(source, blocks, i, writer);
-            }
+                {
+                    return EmitList(source, blocks, i, writer);
+                }
 
             case BlockKind.IndentedCode:
-            {
-                return EmitIndentedCode(source, blocks, i, writer);
-            }
+                {
+                    return EmitIndentedCode(source, blocks, i, writer);
+                }
 
             case BlockKind.Blank:
             case BlockKind.None:
-            {
-                return i;
-            }
+                {
+                    return i;
+                }
 
             default:
-            {
-                EmitParagraph(source, block, writer);
-                return i;
-            }
+                {
+                    EmitParagraph(source, block, writer);
+                    return i;
+                }
         }
     }
 
@@ -342,7 +346,11 @@ public static class HtmlEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Index of the last block consumed by this run.</returns>
     /// <remarks>Internal blank lines do not terminate the block — they're part of the code body. The run ends at the first non-blank, non-indented-code line.</remarks>
-    private static int EmitIndentedCode(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int openerIndex, IBufferWriter<byte> writer)
+    private static int EmitIndentedCode(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int openerIndex,
+        IBufferWriter<byte> writer)
     {
         Write("<pre><code>"u8, writer);
 
@@ -423,7 +431,11 @@ public static class HtmlEmitter
     /// <c>&lt;p&gt;</c>); a body line that is a thematic-break shape emits <c>&lt;hr/&gt;</c>. Nested
     /// lists are not yet handled.
     /// </remarks>
-    private static int EmitList(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int start, IBufferWriter<byte> writer)
+    private static int EmitList(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int start,
+        IBufferWriter<byte> writer)
     {
         Write("<ul>\n"u8, writer);
         var i = start;
@@ -473,7 +485,12 @@ public static class HtmlEmitter
     /// <param name="opener">Index of the <see cref="BlockKind.ListItem"/> block.</param>
     /// <param name="end">Exclusive end index — first block that does NOT belong to this item.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitListItem(ReadOnlySpan<byte> source, in ReadOnlySpan<BlockSpan> blocks, int opener, int end, IBufferWriter<byte> writer)
+    private static void EmitListItem(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int opener,
+        int end,
+        IBufferWriter<byte> writer)
     {
         var openerLine = source.Slice(blocks[opener].Start, blocks[opener].Length);
         var openerInline = AsciiByteHelpers.TrimTrailingNewline(StripBulletMarker(openerLine));
@@ -552,7 +569,13 @@ public static class HtmlEmitter
     {
         Write("\n<p>"u8, writer);
         InlineRenderer.Render(openerInline, writer);
-        EmitTightContinuations(source, blocks, opener + 1, FindFirstBlank(blocks, opener + 1, end), contentIndent, writer);
+        EmitTightContinuations(
+            source,
+            blocks,
+            opener + 1,
+            FindFirstBlank(blocks, opener + 1, end),
+            contentIndent,
+            writer);
         Write("</p>\n"u8, writer);
 
         var i = FindFirstBlank(blocks, opener + 1, end);
@@ -627,7 +650,8 @@ public static class HtmlEmitter
                 continue;
             }
 
-            var line = AsciiByteHelpers.TrimTrailingNewline(StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
+            var line = AsciiByteHelpers.TrimTrailingNewline(
+                StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
             if (!first)
             {
                 Write("\n"u8, writer);
@@ -662,7 +686,8 @@ public static class HtmlEmitter
                 continue;
             }
 
-            var line = AsciiByteHelpers.TrimTrailingNewline(StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
+            var line = AsciiByteHelpers.TrimTrailingNewline(
+                StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent));
             Write("\n"u8, writer);
             InlineRenderer.Render(line, writer);
         }

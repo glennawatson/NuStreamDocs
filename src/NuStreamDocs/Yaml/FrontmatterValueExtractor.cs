@@ -17,7 +17,12 @@ public static class FrontmatterValueExtractor
     /// <returns>True when the entry is present in the block-list.</returns>
     public static bool ListContains(ReadOnlySpan<byte> source, ReadOnlySpan<byte> listKey, ReadOnlySpan<byte> entry)
     {
-        if (listKey.IsEmpty || entry.IsEmpty || !TryGetFrontmatterAndKeyLine(source, listKey, out var frontmatter, out var lineEnd, out var afterColon))
+        if (listKey.IsEmpty || entry.IsEmpty || !TryGetFrontmatterAndKeyLine(
+            source,
+            listKey,
+            out var frontmatter,
+            out var lineEnd,
+            out var afterColon))
         {
             return false;
         }
@@ -125,7 +130,10 @@ public static class FrontmatterValueExtractor
     /// <param name="frontmatter">Frontmatter bytes.</param>
     /// <param name="keyBytes">UTF-8 key bytes.</param>
     /// <param name="sink">Output sink.</param>
-    private static void AppendValueIfPresent(ReadOnlySpan<byte> frontmatter, ReadOnlySpan<byte> keyBytes, IBufferWriter<byte> sink)
+    private static void AppendValueIfPresent(
+        ReadOnlySpan<byte> frontmatter,
+        ReadOnlySpan<byte> keyBytes,
+        IBufferWriter<byte> sink)
     {
         if (!TryFindTopLevelKey(frontmatter, keyBytes, out var lineEnd, out var afterColon))
         {

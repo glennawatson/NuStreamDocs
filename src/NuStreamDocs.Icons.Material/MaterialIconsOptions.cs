@@ -15,9 +15,9 @@ public readonly record struct MaterialIconsOptions(
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static MaterialIconsOptions Default { get; } = new(
-        Style: MaterialIconStyle.SymbolsOutlined,
-        StylesheetUrlOverride: [],
-        Preconnect: true);
+        MaterialIconStyle.SymbolsOutlined,
+        [],
+        true);
 
     /// <summary>Resolves the stylesheet URL bytes according to <see cref="Style"/> (or the override).</summary>
     /// <returns>UTF-8 stylesheet URL bytes ready for direct emission into a <c>&lt;link href&gt;</c>.</returns>
@@ -27,9 +27,12 @@ public readonly record struct MaterialIconsOptions(
             : Style switch
             {
                 MaterialIconStyle.Classic => [.. "https://fonts.googleapis.com/icon?family=Material+Icons"u8],
-                MaterialIconStyle.SymbolsOutlined => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"u8],
-                MaterialIconStyle.SymbolsRounded => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"u8],
-                MaterialIconStyle.SymbolsSharp => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp"u8],
+                MaterialIconStyle.SymbolsOutlined =>
+                    [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"u8],
+                MaterialIconStyle.SymbolsRounded =>
+                    [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"u8],
+                MaterialIconStyle.SymbolsSharp =>
+                    [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp"u8],
                 _ => [.. "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"u8]
             };
 }

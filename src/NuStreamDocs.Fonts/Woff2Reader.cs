@@ -118,7 +118,10 @@ public static class Woff2Reader
         try
         {
             var block = rented.AsSpan(0, blockSize);
-            return BrotliDecoder.TryDecompress(woff2.Slice(directoryEnd, (int)totalCompressedSize), block, out var written) && written >= blockSize
+            return BrotliDecoder.TryDecompress(
+                woff2.Slice(directoryEnd, (int)totalCompressedSize),
+                block,
+                out var written) && written >= blockSize
                 ? ReconstructAndRead(block, tables)
                 : null;
         }
@@ -134,7 +137,11 @@ public static class Woff2Reader
     /// <param name="directoryEnd">On success, the byte offset just past the directory.</param>
     /// <param name="blockSize">On success, the total size of the decompressed block.</param>
     /// <returns><see langword="true"/> on success.</returns>
-    private static bool TryReadDirectory(ReadOnlySpan<byte> woff2, Woff2Table[] tables, out int directoryEnd, out int blockSize)
+    private static bool TryReadDirectory(
+        ReadOnlySpan<byte> woff2,
+        Woff2Table[] tables,
+        out int directoryEnd,
+        out int blockSize)
     {
         var pos = HeaderSize;
         var offset = 0;
@@ -161,7 +168,11 @@ public static class Woff2Reader
     /// <param name="blockOffset">This table's offset within the decompressed block.</param>
     /// <param name="table">On success, the parsed entry.</param>
     /// <returns><see langword="true"/> on success.</returns>
-    private static bool TryReadDirectoryEntry(ReadOnlySpan<byte> woff2, ref int pos, int blockOffset, out Woff2Table table)
+    private static bool TryReadDirectoryEntry(
+        ReadOnlySpan<byte> woff2,
+        ref int pos,
+        int blockOffset,
+        out Woff2Table table)
     {
         table = default;
         if (pos >= woff2.Length)
@@ -182,7 +193,9 @@ public static class Woff2Reader
             return false;
         }
 
-        var transformed = knownIndex is GlyfIndex or LocaIndex ? transformVersion != GlyfLocaNullTransform : transformVersion != 0;
+        var transformed = knownIndex is GlyfIndex or LocaIndex
+            ? transformVersion != GlyfLocaNullTransform
+            : transformVersion != 0;
         var onDiskLength = originalLength;
         if (transformed && !TryReadUIntBase128(woff2, ref pos, out onDiskLength))
         {
@@ -223,7 +236,14 @@ public static class Woff2Reader
     /// <param name="slices">Destination slice list.</param>
     /// <param name="found">Running count of recorded slices.</param>
     /// <param name="present">Set to <see langword="true"/> when the slice was added.</param>
-    private static void AddSlice(ReadOnlySpan<byte> block, Woff2Table[] tables, int knownIndex, uint tag, Span<(uint Tag, int Offset, int Length)> slices, ref int found, ref bool present)
+    private static void AddSlice(
+        ReadOnlySpan<byte> block,
+        Woff2Table[] tables,
+        int knownIndex,
+        uint tag,
+        Span<(uint Tag, int Offset, int Length)> slices,
+        ref int found,
+        ref bool present)
     {
         for (var i = 0; i < tables.Length; i++)
         {
@@ -309,5 +329,10 @@ public static class Woff2Reader
     /// <param name="OriginalLength">The table's uncompressed/untransformed length.</param>
     /// <param name="OnDiskLength">The table's length within the decompressed block (transformed length when transformed).</param>
     /// <param name="Transformed">Whether the table is stored in a transformed form.</param>
-    private readonly record struct Woff2Table(int KnownIndex, int Offset, int OriginalLength, int OnDiskLength, bool Transformed);
+    private readonly record struct Woff2Table(
+        int KnownIndex,
+        int Offset,
+        int OriginalLength,
+        int OnDiskLength,
+        bool Transformed);
 }

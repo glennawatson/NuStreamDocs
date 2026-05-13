@@ -47,10 +47,14 @@ public class BibliographyBenchmarks
 
         var db = new BibliographyDatabaseBuilder()
             .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
-            .AddBook([.. "gummow"u8], [.. "Change and Continuity"u8], PersonName.Of("William", "Gummow"), 2018, [.. "Federation Press"u8])
-            .AddLegislation([.. "hca"u8], [.. "High Court of Australia Act 1979"u8], [.. "Cth"u8], 1979)
+            .AddBook(
+            [.. "gummow"u8],
+            [.. "Change and Continuity"u8],
+            PersonName.Of("William", "Gummow"),
+            2018,
+            [.. "Federation Press"u8]).AddLegislation([.. "hca"u8], [.. "High Court of Australia Act 1979"u8], [.. "Cth"u8], 1979)
             .Build();
-        _plugin = new(new(db, Aglc4Style.Instance, WarnOnMissing: false));
+        _plugin = new(new(db, Aglc4Style.Instance, false));
     }
 
     /// <summary>Marker-heavy fixture, renting from <see cref="PageBuilderPool"/> to mirror production.</summary>

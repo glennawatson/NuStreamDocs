@@ -30,7 +30,8 @@ public static class VLexer
         "fn struct interface enum type module import pub mut const static __global"u8);
 
     /// <summary>Constant keywords — shared <c>true</c> / <c>false</c> / <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral);
 
     /// <summary>Operator alternation — shared C-style core plus V's range / arrow forms, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(

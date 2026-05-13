@@ -96,7 +96,10 @@ internal static class LanguageCommon
     /// <summary>Builds a <c>#</c>-line-comment rule.</summary>
     /// <returns>Configured rule.</returns>
     public static LexerRule CreateHashLineCommentRule() =>
-        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst };
+        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+        {
+            FirstBytes = HashFirst
+        };
 
     /// <summary>Builds a paired block-comment rule with the supplied opener / closer (e.g. <c>#[ ... ]#</c> or <c>#= ... =#</c>).</summary>
     /// <param name="open">Opening delimiter bytes.</param>
@@ -104,7 +107,11 @@ internal static class LanguageCommon
     /// <param name="firstBytes">First-byte dispatch set.</param>
     /// <returns>Configured rule.</returns>
     public static LexerRule CreatePairedBlockCommentRule(byte[] open, byte[] close, SearchValues<byte> firstBytes) =>
-        new(slice => TokenMatchers.MatchPairedBlockComment(slice, open, close), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = firstBytes };
+        new(
+                slice => TokenMatchers.MatchPairedBlockComment(slice, open, close),
+                TokenClass.CommentMulti,
+                LexerRule.NoStateChange)
+        { FirstBytes = firstBytes };
 
     /// <summary><c>///</c> XML doc-comment to end of line — must precede the regular <c>//</c> line-comment matcher.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>

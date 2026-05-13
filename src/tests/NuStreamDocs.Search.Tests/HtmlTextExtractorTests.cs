@@ -36,7 +36,8 @@ public class HtmlTextExtractorTests
     [Test]
     public async Task DropsScriptAndStyle()
     {
-        var (text, _) = Extract("<p>visible</p><script>var hidden=1;</script><style>.x{color:red}</style><p>also visible</p>"u8);
+        var (text, _) =
+            Extract("<p>visible</p><script>var hidden=1;</script><style>.x{color:red}</style><p>also visible</p>"u8);
         await Assert.That(text).Contains("visible");
         await Assert.That(text).DoesNotContain("hidden");
         await Assert.That(text).DoesNotContain("color:red");

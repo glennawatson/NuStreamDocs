@@ -158,7 +158,7 @@ public class CommonHelperBenchmarks
         writer.Write(_snapshotInput);
         HtmlSnapshotRewriter.Rewrite(
             writer,
-            state: 0,
+            0,
             static (snapshot, dst, _) => dst.Write(snapshot));
         return writer.WrittenCount;
     }

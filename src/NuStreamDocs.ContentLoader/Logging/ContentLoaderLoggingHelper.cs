@@ -18,14 +18,18 @@ internal static partial class ContentLoaderLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="loader">Loader name.</param>
     /// <param name="pointer">The dotted collection pointer.</param>
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Content loader '{Loader}': collection pointer '{Pointer}' did not resolve to a JSON array; no pages produced")]
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message =
+            "Content loader '{Loader}': collection pointer '{Pointer}' did not resolve to a JSON array; no pages produced")]
     public static partial void LogCollectionPointerMissed(ILogger logger, string loader, string pointer);
 
     /// <summary>Logs that an entry was skipped because a route-template field was missing or non-scalar.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="loader">Loader name.</param>
     /// <param name="template">The route template.</param>
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Content loader '{Loader}': skipped an entry — route template '{Template}' references a missing or non-scalar field")]
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message =
+            "Content loader '{Loader}': skipped an entry — route template '{Template}' references a missing or non-scalar field")]
     public static partial void LogSkippedEntry(ILogger logger, string loader, string template);
 
     /// <summary>Logs a fetch failure.</summary>

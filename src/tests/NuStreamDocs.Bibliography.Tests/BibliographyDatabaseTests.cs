@@ -15,11 +15,21 @@ public class BibliographyDatabaseTests
     public async Task FluentBuilderPopulatesEntries()
     {
         var db = new BibliographyDatabaseBuilder()
-            .AddBook([.. "g"u8], [.. "Change and Continuity"u8], PersonName.Of("William", "Gummow"), 2018, [.. "Federation Press"u8])
-            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
+            .AddBook(
+            [.. "g"u8],
+            [.. "Change and Continuity"u8],
+            PersonName.Of("William", "Gummow"),
+            2018,
+            [.. "Federation Press"u8]).AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
             .AddLegislation([.. "hca"u8], [.. "High Court of Australia Act"u8], [.. "Cth"u8], 1979)
-            .AddArticle([.. "smith"u8], [.. "On Federalism"u8], PersonName.Of("Anne", "Smith"), 2020, [.. "Australian Law Journal"u8], [.. "94"u8], [.. "200"u8])
-            .Build();
+            .AddArticle(
+            [.. "smith"u8],
+            [.. "On Federalism"u8],
+            PersonName.Of("Anne", "Smith"),
+            2020,
+            [.. "Australian Law Journal"u8],
+            [.. "94"u8],
+            [.. "200"u8]).Build();
 
         await Assert.That(db.Count).IsEqualTo(4);
         await Assert.That(db.TryGet("g"u8, out var book)).IsTrue();

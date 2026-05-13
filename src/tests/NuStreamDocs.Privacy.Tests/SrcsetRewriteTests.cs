@@ -10,7 +10,7 @@ namespace NuStreamDocs.Privacy.Tests;
 public class SrcsetRewriteTests
 {
     /// <summary>Filter that allows every host.</summary>
-    private static readonly HostFilter EmptyHosts = new(hostsToSkip: null, hostsAllowed: null);
+    private static readonly HostFilter EmptyHosts = new(null, null);
 
     /// <summary>A single-URL srcset gets rewritten to the local path.</summary>
     /// <returns>A task representing the asynchronous test.</returns>

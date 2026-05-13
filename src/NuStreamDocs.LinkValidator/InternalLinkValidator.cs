@@ -20,7 +20,10 @@ public static class InternalLinkValidator
     /// <param name="parallelism">Maximum parallel page checks.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Diagnostics in arbitrary order.</returns>
-    public static Task<LinkDiagnostic[]> ValidateAsync(ValidationCorpus corpus, int parallelism, CancellationToken cancellationToken) =>
+    public static Task<LinkDiagnostic[]> ValidateAsync(
+        ValidationCorpus corpus,
+        int parallelism,
+        CancellationToken cancellationToken) =>
         LinkValidationRun.ForEachPageAsync(corpus, parallelism, ValidatePage, cancellationToken);
 
     /// <summary>Validates one page's internal references against the corpus.</summary>
@@ -154,7 +157,10 @@ public static class InternalLinkValidator
         /// <param name="linkBytes">Raw link bytes.</param>
         /// <param name="messageBytes">Composed message bytes; encoded once into the diagnostic record.</param>
         /// <returns>The diagnostic.</returns>
-        private static LinkDiagnostic BuildDiagnostic(byte[] sourcePageBytes, byte[] linkBytes, ReadOnlySpan<byte> messageBytes) =>
+        private static LinkDiagnostic BuildDiagnostic(
+            byte[] sourcePageBytes,
+            byte[] linkBytes,
+            ReadOnlySpan<byte> messageBytes) =>
             new(
                 Encoding.UTF8.GetString(sourcePageBytes),
                 Encoding.UTF8.GetString(linkBytes),
@@ -166,7 +172,10 @@ public static class InternalLinkValidator
         /// <param name="linkBytes">Raw link bytes.</param>
         /// <param name="message">Pre-built message wrapper.</param>
         /// <returns>The diagnostic.</returns>
-        private static LinkDiagnostic BuildDiagnostic(byte[] sourcePageBytes, byte[] linkBytes, DiagnosticMessage message) =>
+        private static LinkDiagnostic BuildDiagnostic(
+            byte[] sourcePageBytes,
+            byte[] linkBytes,
+            DiagnosticMessage message) =>
             new(
                 Encoding.UTF8.GetString(sourcePageBytes),
                 Encoding.UTF8.GetString(linkBytes),
@@ -179,7 +188,11 @@ public static class InternalLinkValidator
         /// <param name="destination">Caller-owned scratch span; receives the canonical site-relative bytes.</param>
         /// <param name="combinedScratch">Caller-owned scratch buffer for the intermediate <c>sourceDir + '/' + target</c> blob.</param>
         /// <returns>Bytes written into <paramref name="destination"/>, or <c>-1</c> when either scratch is too small (caller falls back to a heap-allocating overflow path).</returns>
-        private static int TryResolveTarget(ReadOnlySpan<byte> sourcePage, ReadOnlySpan<byte> target, in Span<byte> destination, byte[] combinedScratch)
+        private static int TryResolveTarget(
+            ReadOnlySpan<byte> sourcePage,
+            ReadOnlySpan<byte> target,
+            in Span<byte> destination,
+            byte[] combinedScratch)
         {
             if (target is [SlashByte, ..])
             {
@@ -397,7 +410,11 @@ public static class InternalLinkValidator
         /// <param name="link">Raw link bytes (for the diagnostic record).</param>
         /// <param name="resolved">Resolved target bytes.</param>
         /// <param name="fragment">Fragment bytes (no leading <c>#</c>).</param>
-        private void ReportCrossPageFragment(PageLinks destination, byte[] link, ReadOnlySpan<byte> resolved, ReadOnlySpan<byte> fragment)
+        private void ReportCrossPageFragment(
+            PageLinks destination,
+            byte[] link,
+            ReadOnlySpan<byte> resolved,
+            ReadOnlySpan<byte> fragment)
         {
             if (ContainsAnchor(destination.DeprecatedNameAnchors, fragment))
             {
@@ -524,7 +541,8 @@ public static class InternalLinkValidator
             writer.Write(fragment);
             writer.Write("\">' element. Replace with the HTML5 heading-attribute syntax '## Heading { #"u8);
             writer.Write(fragment);
-            writer.Write(" }' (or rely on the auto-generated heading id) so the fragment binds to an 'id' attribute."u8);
+            writer.Write(
+                " }' (or rely on the auto-generated heading id) so the fragment binds to an 'id' attribute."u8);
             Sink.Add(BuildDiagnostic(Source.PageUrl, link, writer.WrittenSpan));
         }
 

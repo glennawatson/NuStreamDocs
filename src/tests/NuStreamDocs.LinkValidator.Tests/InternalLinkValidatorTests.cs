@@ -24,14 +24,14 @@ public class InternalLinkValidatorTests
                 Path.Combine(dir, "about.html"),
                 "<h1 id=\"about\">About</h1><a href=\"index.html#top\">Home</a>");
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 4, CancellationToken.None);
-            var diags = await InternalLinkValidator.ValidateAsync(corpus, parallelism: 4, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
 
             await Assert.That(diags.Length).IsEqualTo(0);
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -56,7 +56,7 @@ public class InternalLinkValidatorTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -80,7 +80,7 @@ public class InternalLinkValidatorTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -107,7 +107,7 @@ public class InternalLinkValidatorTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -134,7 +134,7 @@ public class InternalLinkValidatorTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -161,7 +161,7 @@ public class InternalLinkValidatorTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -169,7 +169,9 @@ public class InternalLinkValidatorTests
     /// <returns>Absolute path.</returns>
     private static string TempDir()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smd-linkval-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var dir = Path.Combine(
+            Path.GetTempPath(),
+            "smd-linkval-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(dir);
         return dir;
     }

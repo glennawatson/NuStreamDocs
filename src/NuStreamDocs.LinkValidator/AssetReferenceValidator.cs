@@ -24,7 +24,10 @@ public static class AssetReferenceValidator
     /// <param name="parallelism">Maximum parallel page checks.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Diagnostics in arbitrary order.</returns>
-    public static Task<LinkDiagnostic[]> ValidateAsync(ValidationCorpus corpus, int parallelism, CancellationToken cancellationToken) =>
+    public static Task<LinkDiagnostic[]> ValidateAsync(
+        ValidationCorpus corpus,
+        int parallelism,
+        CancellationToken cancellationToken) =>
         LinkValidationRun.ForEachPageAsync(corpus, parallelism, ValidatePage, cancellationToken);
 
     /// <summary>Walks one page's asset references and reports any miss.</summary>
@@ -45,7 +48,12 @@ public static class AssetReferenceValidator
             // exactly one diagnostic, not one per occurrence. Comparison is on the resolved
             // (normalized) target so absolute and relative spellings of the same miss collapse.
             // Pre-size the per-page Reported set to the asset count so the dedup HashSet never resizes.
-            PageContext context = new(corpus, page, scratch, sink, new(page.InternalAssets.Length, ByteArrayComparer.Instance));
+            PageContext context = new(
+                corpus,
+                page,
+                scratch,
+                sink,
+                new(page.InternalAssets.Length, ByteArrayComparer.Instance));
             for (var i = 0; i < page.InternalAssets.Length; i++)
             {
                 context.ResolveAndReport(page.InternalAssets[i]);
@@ -250,7 +258,10 @@ public static class AssetReferenceValidator
         /// <param name="rawAsset">Original raw asset bytes (for the diagnostic record).</param>
         /// <param name="resolved">Resolved asset path bytes (no fragment / query).</param>
         /// <returns>The diagnostic record.</returns>
-        private static LinkDiagnostic BuildDiagnostic(byte[] sourcePageBytes, byte[] rawAsset, ReadOnlySpan<byte> resolved)
+        private static LinkDiagnostic BuildDiagnostic(
+            byte[] sourcePageBytes,
+            byte[] rawAsset,
+            ReadOnlySpan<byte> resolved)
         {
             using var rental = PageBuilderPool.Rent(InitialMessageCapacity);
             var writer = rental.Writer;

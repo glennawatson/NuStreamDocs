@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using SQLitePCL;
 
 namespace NuStreamDocs.Search.Sqlite.Tests;
@@ -16,7 +17,10 @@ public class SqliteIndexWriterTests
     {
         using TempDir dir = new();
         var db = Path.Combine(dir.Root, "search.db");
-        SqliteIndexWriter.Write(db, [Doc("/a.html", "Alpha", "the quick brown fox"), Doc("/b.html", "Beta", "lazy dog sleeps")], indexFullBody: true);
+        SqliteIndexWriter.Write(
+            db,
+            [Doc("/a.html", "Alpha", "the quick brown fox"), Doc("/b.html", "Beta", "lazy dog sleeps")],
+            true);
         var hits = QueryUrlsRanked(db, "quick");
         await Assert.That(hits).Contains("/a.html");
         await Assert.That(hits).DoesNotContain("/b.html");
@@ -31,8 +35,11 @@ public class SqliteIndexWriterTests
         var db = Path.Combine(dir.Root, "search.db");
         SqliteIndexWriter.Write(
             db,
-            [Doc("/title.html", "widget guide", "nothing relevant here"), Doc("/body.html", "Other", "a page about the widget internals")],
-            indexFullBody: true);
+            [
+                Doc("/title.html", "widget guide", "nothing relevant here"),
+                Doc("/body.html", "Other", "a page about the widget internals")
+            ],
+            true);
         var ranked = QueryUrlsRanked(db, "widget");
         await Assert.That(ranked[0]).IsEqualTo("/title.html");
     }
@@ -44,7 +51,7 @@ public class SqliteIndexWriterTests
     {
         using TempDir dir = new();
         var db = Path.Combine(dir.Root, "search.db");
-        SqliteIndexWriter.Write(db, [Doc("/a.html", "A", "configuration matters")], indexFullBody: true);
+        SqliteIndexWriter.Write(db, [Doc("/a.html", "A", "configuration matters")], true);
         await Assert.That(QueryUrlsRanked(db, "con*")).Contains("/a.html");
     }
 
@@ -56,7 +63,7 @@ public class SqliteIndexWriterTests
         using TempDir dir = new();
         var db = Path.Combine(dir.Root, "search.db");
         var longBody = new string('x', SqliteOptions.ExcerptByteLimit + 50) + " uniquetokenatend";
-        SqliteIndexWriter.Write(db, [Doc("/a.html", "A", longBody)], indexFullBody: false);
+        SqliteIndexWriter.Write(db, [Doc("/a.html", "A", longBody)], false);
 
         // The trailing token sits past ExcerptByteLimit, so it must not be searchable.
         await Assert.That(QueryUrlsRanked(db, "uniquetokenatend")).IsEmpty();
@@ -70,8 +77,8 @@ public class SqliteIndexWriterTests
     {
         using TempDir dir = new();
         var db = Path.Combine(dir.Root, "search.db");
-        SqliteIndexWriter.Write(db, [Doc("/old.html", "Old", "stale content")], indexFullBody: true);
-        SqliteIndexWriter.Write(db, [Doc("/new.html", "New", "fresh content")], indexFullBody: true);
+        SqliteIndexWriter.Write(db, [Doc("/old.html", "Old", "stale content")], true);
+        SqliteIndexWriter.Write(db, [Doc("/new.html", "New", "fresh content")], true);
         var hits = QueryUrlsRanked(db, "content");
         await Assert.That(hits).Contains("/new.html");
         await Assert.That(hits).DoesNotContain("/old.html");
@@ -85,9 +92,10 @@ public class SqliteIndexWriterTests
         using TempDir dir = new();
         var a = Path.Combine(dir.Root, "a.db");
         var b = Path.Combine(dir.Root, "b.db");
-        SearchDocument[] corpus = [Doc("/one.html", "One", "first page body"), Doc("/two.html", "Two", "second page body")];
-        SqliteIndexWriter.Write(a, corpus, indexFullBody: true);
-        SqliteIndexWriter.Write(b, corpus, indexFullBody: true);
+        SearchDocument[] corpus =
+            [Doc("/one.html", "One", "first page body"), Doc("/two.html", "Two", "second page body")];
+        SqliteIndexWriter.Write(a, corpus, true);
+        SqliteIndexWriter.Write(b, corpus, true);
         var bytesA = await File.ReadAllBytesAsync(a);
         var bytesB = await File.ReadAllBytesAsync(b);
         await Assert.That(bytesA.SequenceEqual(bytesB)).IsTrue();
@@ -99,7 +107,7 @@ public class SqliteIndexWriterTests
     /// <param name="body">Body text.</param>
     /// <returns>The document.</returns>
     private static SearchDocument Doc(string url, string title, string body) =>
-        new(System.Text.Encoding.UTF8.GetBytes(url), System.Text.Encoding.UTF8.GetBytes(title), System.Text.Encoding.UTF8.GetBytes(body));
+        new(Encoding.UTF8.GetBytes(url), Encoding.UTF8.GetBytes(title), Encoding.UTF8.GetBytes(body));
 
     /// <summary>Opens the database read-only and returns the URLs matching <paramref name="ftsQuery"/>, ranked by bm25.</summary>
     /// <param name="dbPath">Absolute path to the database.</param>
@@ -116,7 +124,10 @@ public class SqliteIndexWriterTests
 
         try
         {
-            raw.sqlite3_prepare_v2(db, "SELECT url FROM pages WHERE pages MATCH ? ORDER BY bm25(pages, 10.0, 1.0)", out var stmt);
+            raw.sqlite3_prepare_v2(
+                db,
+                "SELECT url FROM pages WHERE pages MATCH ? ORDER BY bm25(pages, 10.0, 1.0)",
+                out var stmt);
             try
             {
                 raw.sqlite3_bind_text(stmt, 1, ftsQuery);
@@ -158,7 +169,7 @@ public class SqliteIndexWriterTests
                     return -1;
                 }
 
-                return System.Text.Encoding.UTF8.GetByteCount(raw.sqlite3_column_text(stmt, 0).utf8_to_string());
+                return Encoding.UTF8.GetByteCount(raw.sqlite3_column_text(stmt, 0).utf8_to_string());
             }
             finally
             {

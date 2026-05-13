@@ -31,7 +31,7 @@ internal static class SyntheticNavGrafter
             return root;
         }
 
-        SectionBuilder synthetic = new(name: string.Empty, relativePath: string.Empty);
+        SectionBuilder synthetic = new(string.Empty, string.Empty);
         var placedAny = false;
         for (var i = 0; i < entries.Count; i++)
         {
@@ -52,7 +52,7 @@ internal static class SyntheticNavGrafter
         // Any grafted/merged section may carry an Order; re-sort the full set the same way
         // NavTreeBuilder.MergeChildren does once a child has an explicit order.
         Array.Sort(merged, NavNodeFileNameComparer.Instance);
-        return new NavNode(root.Title, root.RelativePath, root.IsSection, merged, root.IndexPath, useDirectoryUrls);
+        return new(root.Title, root.RelativePath, root.IsSection, merged, root.IndexPath, useDirectoryUrls);
     }
 
     /// <summary>Folds the synthetic working tree's top-level entries into a copy of <paramref name="root"/>'s children.</summary>
@@ -61,7 +61,11 @@ internal static class SyntheticNavGrafter
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="changed">Set true when at least one child was added or replaced.</param>
     /// <returns>The merged children array (a fresh array even when unchanged).</returns>
-    private static NavNode[] BuildMergedChildren(NavNode root, SectionBuilder synthetic, bool useDirectoryUrls, out bool changed)
+    private static NavNode[] BuildMergedChildren(
+        NavNode root,
+        SectionBuilder synthetic,
+        bool useDirectoryUrls,
+        out bool changed)
     {
         List<NavNode> result = [.. root.Children];
         changed = false;
@@ -89,7 +93,11 @@ internal static class SyntheticNavGrafter
     /// <param name="section">The synthetic working section.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>True when the list changed.</returns>
-    private static bool AddOrMergeSection(List<NavNode> result, NavNode root, SectionBuilder section, bool useDirectoryUrls)
+    private static bool AddOrMergeSection(
+        List<NavNode> result,
+        NavNode root,
+        SectionBuilder section,
+        bool useDirectoryUrls)
     {
         if (section.Hidden)
         {
@@ -131,7 +139,10 @@ internal static class SyntheticNavGrafter
     /// <param name="synthetic">The matching synthetic working section.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>The merged section node, or <paramref name="diskSection"/> when the merge is a no-op.</returns>
-    private static NavNode MergeIntoExistingSection(NavNode diskSection, SectionBuilder synthetic, bool useDirectoryUrls)
+    private static NavNode MergeIntoExistingSection(
+        NavNode diskSection,
+        SectionBuilder synthetic,
+        bool useDirectoryUrls)
     {
         var children = MergeSectionChildren(diskSection, synthetic, useDirectoryUrls);
         ResolveMergedMetadata(diskSection, synthetic, out var title, out var indexPath, out var order);
@@ -144,10 +155,7 @@ internal static class SyntheticNavGrafter
             return diskSection;
         }
 
-        return new NavNode(title, diskSection.RelativePath, isSection: true, children, indexPath, useDirectoryUrls)
-        {
-            Order = order
-        };
+        return new(title, diskSection.RelativePath, true, children, indexPath, useDirectoryUrls) { Order = order };
     }
 
     /// <summary>Combines a disk section's children with the synthetic section: new sub-pages/sections are added; a synthetic page matching a disk page transfers its Order/title onto it.</summary>
@@ -160,7 +168,7 @@ internal static class SyntheticNavGrafter
         List<NavNode> children = [.. diskSection.Children];
         foreach (var sub in synthetic.Sections.Values)
         {
-            if (!HasChildNamed(diskSection.Children, sub.Name, isSection: true) && ToNavNode(sub, useDirectoryUrls) is { } node)
+            if (!HasChildNamed(diskSection.Children, sub.Name, true) && ToNavNode(sub, useDirectoryUrls) is { } node)
             {
                 children.Add(node);
             }
@@ -237,7 +245,7 @@ internal static class SyntheticNavGrafter
             return diskPage;
         }
 
-        return new NavNode(title, diskPage.RelativePath, isSection: false, diskPage.Children, diskPage.IndexPath, useDirectoryUrls)
+        return new(title, diskPage.RelativePath, false, diskPage.Children, diskPage.IndexPath, useDirectoryUrls)
         {
             Order = order
         };
@@ -249,7 +257,12 @@ internal static class SyntheticNavGrafter
     /// <param name="title">Resolved UTF-8 title.</param>
     /// <param name="indexPath">Resolved promoted-index path.</param>
     /// <param name="order">Resolved sort order.</param>
-    private static void ResolveMergedMetadata(NavNode diskSection, SectionBuilder synthetic, out byte[] title, out FilePath indexPath, out int order)
+    private static void ResolveMergedMetadata(
+        NavNode diskSection,
+        SectionBuilder synthetic,
+        out byte[] title,
+        out FilePath indexPath,
+        out int order)
     {
         title = diskSection.Title;
         indexPath = diskSection.IndexPath;
@@ -267,7 +280,7 @@ internal static class SyntheticNavGrafter
 
         if (!string.IsNullOrEmpty(synthetic.IndexRelativePath))
         {
-            indexPath = new FilePath(synthetic.IndexRelativePath);
+            indexPath = new(synthetic.IndexRelativePath);
         }
 
         if (order != int.MaxValue || synthetic.Order is not { } syntheticOrder)
@@ -304,7 +317,8 @@ internal static class SyntheticNavGrafter
     {
         for (var i = 0; i < children.Length; i++)
         {
-            if (children[i].IsSection == isSection && NameOf(children[i]).Equals(name, StringComparison.OrdinalIgnoreCase))
+            if (children[i].IsSection == isSection &&
+                NameOf(children[i]).Equals(name, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -338,7 +352,7 @@ internal static class SyntheticNavGrafter
             accumulated = accumulated.Length == 0 ? segments[i] : accumulated + "/" + segments[i];
             if (!section.Sections.TryGetValue(segments[i], out var child))
             {
-                child = new SectionBuilder(segments[i], accumulated);
+                child = new(segments[i], accumulated);
                 section.Sections[segments[i]] = child;
             }
 
@@ -399,16 +413,14 @@ internal static class SyntheticNavGrafter
         Array.Sort(childArray, NavNodeFileNameComparer.Instance);
 
         var title = section.Title is { Length: > 0 } t ? t : Encoding.UTF8.GetBytes(section.Name);
-        return new NavNode(
+        return new(
             title,
-            new FilePath(section.RelativePath),
-            isSection: true,
+            new(section.RelativePath),
+            true,
             childArray,
             string.IsNullOrEmpty(section.IndexRelativePath) ? default : new FilePath(section.IndexRelativePath),
             useDirectoryUrls)
-        {
-            Order = section.Order ?? int.MaxValue
-        };
+        { Order = section.Order ?? int.MaxValue };
     }
 
     /// <summary>Converts a working page to a leaf <see cref="NavNode"/>.</summary>
@@ -418,10 +430,7 @@ internal static class SyntheticNavGrafter
     private static NavNode ToPageNode(in PageEntry page, bool useDirectoryUrls)
     {
         var title = page.Title is { Length: > 0 } t ? t : Encoding.UTF8.GetBytes(StemOf(page.RelativePath));
-        return new NavNode(title, new FilePath(page.RelativePath), isSection: false, [], useDirectoryUrls)
-        {
-            Order = page.Order ?? int.MaxValue
-        };
+        return new(title, new(page.RelativePath), false, [], useDirectoryUrls) { Order = page.Order ?? int.MaxValue };
     }
 
     /// <summary>True when <paramref name="root"/> already has a top-level child whose name (section dir or page stem) matches <paramref name="name"/>.</summary>

@@ -13,14 +13,14 @@ public class NavOptionsMkDocsExtensionsTests
 {
     /// <summary>Sample mkdocs.yml shape exercising flat entries plus a nested section.</summary>
     private const string SampleYaml = """
-        site_name: Demo
-        nav:
-          - Home: index.md
-          - Guide:
-              - Intro: guide/intro.md
-              - Setup: guide/setup.md
-          - Reference: reference.md
-        """;
+                                      site_name: Demo
+                                      nav:
+                                        - Home: index.md
+                                        - Guide:
+                                            - Intro: guide/intro.md
+                                            - Setup: guide/setup.md
+                                        - Reference: reference.md
+                                      """;
 
     /// <summary>The byte-overload populates the curated list with the parsed nav tree.</summary>
     /// <returns>Async test.</returns>
@@ -38,7 +38,8 @@ public class NavOptionsMkDocsExtensionsTests
         await Assert.That(result.CuratedEntries[1].IsSection).IsTrue();
         await Assert.That(result.CuratedEntries[1].Children.Length).IsEqualTo(2);
         await Assert.That(Encoding.UTF8.GetString(result.CuratedEntries[1].Children[0].Title)).IsEqualTo("Intro");
-        await Assert.That(Encoding.UTF8.GetString(result.CuratedEntries[1].Children[0].Path)).IsEqualTo("guide/intro.md");
+        await Assert.That(Encoding.UTF8.GetString(result.CuratedEntries[1].Children[0].Path))
+            .IsEqualTo("guide/intro.md");
     }
 
     /// <summary>The path overload reads the file and delegates to the byte-shaped overload.</summary>
@@ -80,7 +81,9 @@ public class NavOptionsMkDocsExtensionsTests
     {
         /// <summary>Initializes a new instance of the <see cref="ScratchFile"/> class.</summary>
         public ScratchFile() =>
-            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "smd-mkdocs-nav-" + Guid.NewGuid().ToString("N") + ".yml");
+            Path = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "smd-mkdocs-nav-" + Guid.NewGuid().ToString("N") + ".yml");
 
         /// <summary>Gets the absolute file path the test writes into.</summary>
         public string Path { get; }

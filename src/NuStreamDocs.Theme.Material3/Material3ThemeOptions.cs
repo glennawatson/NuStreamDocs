@@ -51,24 +51,24 @@ public readonly record struct Material3ThemeOptions(
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static Material3ThemeOptions Default { get; } = new(
-        AssetSource: Material3AssetSource.Embedded,
-        EmbeddedAssetRoot: DefaultEmbeddedAssetRoot,
-        CdnRoot: [],
-        SiteName: [],
-        Logo: [],
-        SiteUrl: [],
-        Language: [.. "en"u8],
-        Copyright: [],
-        CopyrightHtml: [],
-        SocialLinks: [],
-        FooterPartialPath: [],
-        RepoUrl: [],
-        EditUri: [],
-        Favicon: [],
-        EnableScrollToTop: true,
-        EnableTocFollow: true,
-        EnableNavigationFooter: true,
-        SectionScopedFooter: false);
+        Material3AssetSource.Embedded,
+        DefaultEmbeddedAssetRoot,
+        [],
+        [],
+        [],
+        [],
+        [.. "en"u8],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        true,
+        true,
+        true,
+        false);
 
     /// <inheritdoc/>
     public bool WriteEmbeddedAssets => AssetSource == Material3AssetSource.Embedded;

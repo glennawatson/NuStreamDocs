@@ -57,7 +57,7 @@ internal static class MarkdownLinkRewriter
     /// <summary>Rewrites every relative <c>.md</c> href in <paramref name="html"/> to <c>.html</c> (flat URL form).</summary>
     /// <param name="html">Rendered HTML.</param>
     /// <returns>The rewritten bytes (or a copy of the original when nothing matched).</returns>
-    public static byte[] Rewrite(ReadOnlySpan<byte> html) => Rewrite(html, useDirectoryUrls: false);
+    public static byte[] Rewrite(ReadOnlySpan<byte> html) => Rewrite(html, false);
 
     /// <summary>Rewrites every relative <c>.md</c> href in <paramref name="html"/>, picking the URL shape via <paramref name="useDirectoryUrls"/>.</summary>
     /// <param name="html">Rendered HTML.</param>
@@ -80,7 +80,7 @@ internal static class MarkdownLinkRewriter
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c> (and <c>index.md</c> → empty); when false, <c>foo.md</c> → <c>foo.html</c>.</param>
     /// <param name="writer">UTF-8 sink.</param>
     public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, IBufferWriter<byte> writer) =>
-        RewriteInto(html, useDirectoryUrls, prependParent: false, writer);
+        RewriteInto(html, useDirectoryUrls, false, writer);
 
     /// <summary>
     /// Streams the rewrite of <paramref name="html"/> into <paramref name="writer"/>, optionally prepending
@@ -90,7 +90,11 @@ internal static class MarkdownLinkRewriter
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c>.</param>
     /// <param name="prependParent">Prepend <c>../</c> for non-index pages emitted under directory URLs.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, bool prependParent, IBufferWriter<byte> writer)
+    public static void RewriteInto(
+        ReadOnlySpan<byte> html,
+        bool useDirectoryUrls,
+        bool prependParent,
+        IBufferWriter<byte> writer)
     {
         if (html.IsEmpty)
         {
@@ -134,7 +138,11 @@ internal static class MarkdownLinkRewriter
     /// <param name="sink">Output sink.</param>
     /// <param name="useDirectoryUrls">Selects the directory-URL output shape.</param>
     /// <param name="prependParent">When true, prepend <c>../</c> for relative paths so file-relative URLs resolve correctly under directory URLs.</param>
-    private static void EmitUrl(ReadOnlySpan<byte> url, IBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
+    private static void EmitUrl(
+        ReadOnlySpan<byte> url,
+        IBufferWriter<byte> sink,
+        bool useDirectoryUrls,
+        bool prependParent)
     {
         if (!IsRelative(url))
         {
@@ -188,7 +196,12 @@ internal static class MarkdownLinkRewriter
     /// <param name="sink">Output sink.</param>
     /// <param name="useDirectoryUrls">Directory-URL mode flag.</param>
     /// <param name="prependParent">True when the source page is a non-index directory-URL page.</param>
-    private static void EmitNonMarkdownUrl(ReadOnlySpan<byte> url, ReadOnlySpan<byte> path, IBufferWriter<byte> sink, bool useDirectoryUrls, bool prependParent)
+    private static void EmitNonMarkdownUrl(
+        ReadOnlySpan<byte> url,
+        ReadOnlySpan<byte> path,
+        IBufferWriter<byte> sink,
+        bool useDirectoryUrls,
+        bool prependParent)
     {
         if (prependParent && useDirectoryUrls && !path.StartsWith("../"u8))
         {
@@ -236,7 +249,9 @@ internal static class MarkdownLinkRewriter
 
         for (var i = 0; i < needle.Length; i++)
         {
-            var actual = fileName[i] is >= (byte)'A' and <= (byte)'Z' ? (byte)(fileName[i] + AsciiUpperToLowerOffset) : fileName[i];
+            var actual = fileName[i] is >= (byte)'A' and <= (byte)'Z'
+                ? (byte)(fileName[i] + AsciiUpperToLowerOffset)
+                : fileName[i];
             if (actual != needle[i])
             {
                 return false;

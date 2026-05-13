@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Nav.Tests;
 
 /// <summary>End-to-end tests for literate-nav (<c>.pages</c>) overrides applied during <c>NavTreeBuilder.Build(string, in NavOptions)</c>.</summary>
@@ -44,7 +46,7 @@ public class LiterateNavTests
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         var section = Array.Find(root.Children, static c => c.IsSection)!;
-        await Assert.That(System.Text.Encoding.UTF8.GetString(section.Title)).IsEqualTo("User Guide");
+        await Assert.That(Encoding.UTF8.GetString(section.Title)).IsEqualTo("User Guide");
     }
 
     /// <summary>Awesome-pages <c>- Title: path</c> entries both reorder children and override the matched section's display title.</summary>
@@ -65,16 +67,18 @@ public class LiterateNavTests
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
 
         var section = Array.Find(root.Children, static c => c.IsSection)!;
-        await Assert.That(System.Text.Encoding.UTF8.GetString(section.Title)).IsEqualTo("Client Usage");
+        await Assert.That(Encoding.UTF8.GetString(section.Title)).IsEqualTo("Client Usage");
 
         // The matched section comes first because the .pages ordering puts client before alpha.md.
         var clientIdx = Array.IndexOf(root.Children, section);
-        var alphaIdx = Array.FindIndex(root.Children, static c => !c.IsSection && Path.GetFileNameWithoutExtension(c.RelativePath) == "alpha");
+        var alphaIdx = Array.FindIndex(
+            root.Children,
+            static c => !c.IsSection && Path.GetFileNameWithoutExtension(c.RelativePath) == "alpha");
         await Assert.That(clientIdx < alphaIdx).IsTrue();
 
         // Bare entries (no Title:) keep their natural display title.
         var alpha = root.Children[alphaIdx];
-        await Assert.That(System.Text.Encoding.UTF8.GetString(alpha.Title)).IsEqualTo("Alpha");
+        await Assert.That(Encoding.UTF8.GetString(alpha.Title)).IsEqualTo("Alpha");
     }
 
     /// <summary><c>hide: true</c> drops the section from its parent's children.</summary>
@@ -90,7 +94,9 @@ public class LiterateNavTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# home");
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
-        await Assert.That(Array.Exists(root.Children, static c => c.IsSection && System.Text.Encoding.UTF8.GetString(c.Title) == "secret")).IsFalse();
+        await Assert
+            .That(Array.Exists(root.Children, static c => c.IsSection && Encoding.UTF8.GetString(c.Title) == "secret"))
+            .IsFalse();
     }
 
     /// <summary><c>order: desc</c> reverses a section's default (filename) child ordering — newest-first for a date-prefixed section.</summary>

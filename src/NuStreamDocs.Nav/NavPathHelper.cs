@@ -90,14 +90,14 @@ internal static class NavPathHelper
         return length <= 0
             ? string.Empty
             : string.Create(length, (path, sliceStart), static (span, state) =>
-        {
-            var source = state.path.AsSpan(state.sliceStart);
-            for (var i = 0; i < span.Length; i++)
             {
-                var c = source[i];
-                span[i] = c is '\\' ? '/' : c;
-            }
-        });
+                var source = state.path.AsSpan(state.sliceStart);
+                for (var i = 0; i < span.Length; i++)
+                {
+                    var c = source[i];
+                    span[i] = c is '\\' ? '/' : c;
+                }
+            });
     }
 
     /// <summary>True when <paramref name="c"/> is either ASCII path separator.</summary>

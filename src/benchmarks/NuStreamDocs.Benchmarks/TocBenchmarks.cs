@@ -72,7 +72,8 @@ public class TocBenchmarks
     [Benchmark]
     public int AssignSlugsWithEntities()
     {
-        var html = "<h2>ENR -&gt; ENR</h2><h2>A &amp; B</h2><h2>X &lt; Y</h2><h2>R&#38;D</h2><h2>&quot;Quoted&quot;</h2>"u8;
+        var html =
+            "<h2>ENR -&gt; ENR</h2><h2>A &amp; B</h2><h2>X &lt; Y</h2><h2>R&#38;D</h2><h2>&quot;Quoted&quot;</h2>"u8;
         var scanned = HeadingScanner.Scan(html);
         return HeadingSlugifier.AssignSlugs(html.ToArray(), scanned).Slugged.Length;
     }

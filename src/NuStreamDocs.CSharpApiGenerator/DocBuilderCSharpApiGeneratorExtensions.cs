@@ -13,20 +13,18 @@ public static class DocBuilderCSharpApiGeneratorExtensions
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Generator options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseCSharpApiGenerator(this DocBuilder builder, CSharpApiGeneratorOptions options)
-    {
-        return builder.UsePlugin(new CSharpApiGeneratorPlugin(options));
-    }
+    public static DocBuilder UseCSharpApiGenerator(this DocBuilder builder, CSharpApiGeneratorOptions options) =>
+        builder.UsePlugin(new CSharpApiGeneratorPlugin(options));
 
     /// <summary>Registers <see cref="CSharpApiGeneratorPlugin"/> with options and a logger.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Generator options.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseCSharpApiGenerator(this DocBuilder builder, CSharpApiGeneratorOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new CSharpApiGeneratorPlugin(options, logger));
-    }
+    public static DocBuilder UseCSharpApiGenerator(
+        this DocBuilder builder,
+        CSharpApiGeneratorOptions options,
+        ILogger logger) => builder.UsePlugin(new CSharpApiGeneratorPlugin(options, logger));
 
     /// <summary>Registers <see cref="CSharpApiGeneratorPlugin"/> in <see cref="CSharpApiGeneratorMode.Direct"/> regardless of the supplied options' mode.</summary>
     /// <param name="builder">Doc builder.</param>

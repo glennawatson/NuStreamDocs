@@ -18,14 +18,16 @@ public sealed class TabsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHe
 
     /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
-        [.. """
-.tabbed-set{display:flex;flex-flow:row wrap;position:relative;margin:1em 0;border-radius:.2em}
-.tabbed-set>input{position:absolute;opacity:0;pointer-events:none}
-.tabbed-set>label{order:1;display:block;padding:.6em 1em;cursor:pointer;font-weight:700;border-bottom:2px solid transparent;color:rgba(0,0,0,.6)}
-.tabbed-set>input:checked+label{border-bottom-color:#448aff;color:#448aff}
-.tabbed-set>.tabbed-content{order:99;flex-basis:100%;display:none;padding:.6em 1em;border-top:1px solid rgba(0,0,0,.07)}
-.tabbed-set>input:checked+label+.tabbed-content{display:block}
-"""u8];
+    [
+        .. """
+           .tabbed-set{display:flex;flex-flow:row wrap;position:relative;margin:1em 0;border-radius:.2em}
+           .tabbed-set>input{position:absolute;opacity:0;pointer-events:none}
+           .tabbed-set>label{order:1;display:block;padding:.6em 1em;cursor:pointer;font-weight:700;border-bottom:2px solid transparent;color:rgba(0,0,0,.6)}
+           .tabbed-set>input:checked+label{border-bottom-color:#448aff;color:#448aff}
+           .tabbed-set>.tabbed-content{order:99;flex-basis:100%;display:none;padding:.6em 1em;border-top:1px solid rgba(0,0,0,.07)}
+           .tabbed-set>input:checked+label+.tabbed-content{display:block}
+           """u8
+    ];
 
     /// <summary>Relative path for the css asset.</summary>
     private static readonly FilePath AssetFilePath = new("assets/extensions/tabs.css");
@@ -48,8 +50,5 @@ public sealed class TabsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHe
         TabsRewriter.Rewrite(context.Source, context.Output);
 
     /// <inheritdoc/>
-    public void WriteHeadExtra(IBufferWriter<byte> writer)
-    {
-        writer.Write(LinkBytes);
-    }
+    public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(LinkBytes);
 }

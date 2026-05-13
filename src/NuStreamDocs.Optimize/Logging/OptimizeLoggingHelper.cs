@@ -19,7 +19,8 @@ internal static partial class OptimizeLoggingHelper
     /// <param name="path">Absolute path of the source file.</param>
     /// <param name="originalBytes">Source-file size in bytes.</param>
     /// <param name="compressedBytes">Compressed sibling size in bytes.</param>
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Optimize processed {Path}: {OriginalBytes} -> {CompressedBytes} bytes")]
+    [LoggerMessage(Level = LogLevel.Debug,
+        Message = "Optimize processed {Path}: {OriginalBytes} -> {CompressedBytes} bytes")]
     public static partial void LogFileProcessed(ILogger logger, string path, long originalBytes, long compressedBytes);
 
     /// <summary>Logs a skipped file with a reason.</summary>
@@ -33,6 +34,7 @@ internal static partial class OptimizeLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="filesProcessed">Files compressed.</param>
     /// <param name="bytesSaved">Total bytes saved (sum of original minus compressed across formats).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Optimize complete: {FilesProcessed} file(s) processed, {BytesSaved} byte(s) saved")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Optimize complete: {FilesProcessed} file(s) processed, {BytesSaved} byte(s) saved")]
     public static partial void LogOptimizeComplete(ILogger logger, int filesProcessed, long bytesSaved);
 }

@@ -12,12 +12,14 @@ public sealed class MermaidPlugin : IPagePostRenderPlugin, IHeadExtraProvider, I
 {
     /// <summary>Head fragment that loads the mermaid runtime and starts auto-discovery.</summary>
     private static readonly byte[] HeadFragment =
-        [.. """
-<script type="module">
-import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-mermaid.initialize({ startOnLoad: true });
-</script>
-"""u8];
+    [
+        .. """
+           <script type="module">
+           import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+           mermaid.initialize({ startOnLoad: true });
+           </script>
+           """u8
+    ];
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "mermaid"u8;
@@ -36,10 +38,7 @@ mermaid.initialize({ startOnLoad: true });
         MermaidRetagger.Retag(context.Html, context.Output);
 
     /// <inheritdoc/>
-    public void WriteHeadExtra(IBufferWriter<byte> writer)
-    {
-        writer.Write(HeadFragment);
-    }
+    public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(HeadFragment);
 
     /// <inheritdoc/>
     void ICustomFenceHandler.Render(ReadOnlySpan<byte> content, IBufferWriter<byte> writer)

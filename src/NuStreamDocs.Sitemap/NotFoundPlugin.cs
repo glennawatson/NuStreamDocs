@@ -15,30 +15,32 @@ public sealed class NotFoundPlugin : IBuildFinalizePlugin
 {
     /// <summary>UTF-8 bytes of the default 404 document.</summary>
     private static readonly byte[] DefaultDocument =
-        [.. """
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>404 — Page not found</title>
-<meta name="robots" content="noindex">
-<style>
-  body { font: 16px/1.5 system-ui, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fff; color: #222; }
-  main { text-align: center; padding: 2rem; }
-  h1 { font-size: 4rem; margin: 0 0 0.5rem; }
-  p { margin: 0.25rem 0; }
-  a { color: #0366d6; }
-</style>
-</head>
-<body>
-<main>
-  <h1>404</h1>
-  <p>The page you were looking for could not be found.</p>
-  <p><a href="/">Return to the homepage</a></p>
-</main>
-</body>
-</html>
-"""u8];
+    [
+        .. """
+           <!doctype html>
+           <html lang="en">
+           <head>
+           <meta charset="utf-8">
+           <title>404 — Page not found</title>
+           <meta name="robots" content="noindex">
+           <style>
+             body { font: 16px/1.5 system-ui, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fff; color: #222; }
+             main { text-align: center; padding: 2rem; }
+             h1 { font-size: 4rem; margin: 0 0 0.5rem; }
+             p { margin: 0.25rem 0; }
+             a { color: #0366d6; }
+           </style>
+           </head>
+           <body>
+           <main>
+             <h1>404</h1>
+             <p>The page you were looking for could not be found.</p>
+             <p><a href="/">Return to the homepage</a></p>
+           </main>
+           </body>
+           </html>
+           """u8
+    ];
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "404"u8;

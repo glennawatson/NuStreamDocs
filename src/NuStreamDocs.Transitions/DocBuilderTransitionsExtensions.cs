@@ -12,16 +12,15 @@ public static class DocBuilderTransitionsExtensions
     /// <summary>Registers <see cref="TransitionsPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTransitions(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new TransitionsPlugin());
-    }
+    public static DocBuilder UseTransitions(this DocBuilder builder) => builder.UsePlugin(new TransitionsPlugin());
 
     /// <summary>Registers <see cref="TransitionsPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="TransitionsOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTransitions(this DocBuilder builder, Func<TransitionsOptions, TransitionsOptions> configure)
+    public static DocBuilder UseTransitions(
+        this DocBuilder builder,
+        Func<TransitionsOptions, TransitionsOptions> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         return builder.UsePlugin(new TransitionsPlugin(configure(TransitionsOptions.Default)));
@@ -31,8 +30,6 @@ public static class DocBuilderTransitionsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTransitions(this DocBuilder builder, in TransitionsOptions options)
-    {
-        return builder.UsePlugin(new TransitionsPlugin(options));
-    }
+    public static DocBuilder UseTransitions(this DocBuilder builder, in TransitionsOptions options) =>
+        builder.UsePlugin(new TransitionsPlugin(options));
 }

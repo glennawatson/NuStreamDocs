@@ -7,15 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Serve\NuStreamDocs.Serve.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Serve\NuStreamDocs.Serve.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
 </Project>

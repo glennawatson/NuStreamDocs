@@ -21,7 +21,8 @@ public class DocsAssetCopierTests
         await fixture.WriteAsync("javascripts/extra.js", "console.log('hi');");
         await fixture.WriteAsync("guide/intro.md", "# Intro\nbody");
 
-        var copied = DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
+        var copied =
+            DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
 
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "images", "logo.png"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "images", "diagram.svg"))).IsTrue();
@@ -90,7 +91,7 @@ public class DocsAssetCopierTests
         {
             if (Directory.Exists(output))
             {
-                Directory.Delete(output, recursive: true);
+                Directory.Delete(output, true);
             }
         }
     }
@@ -144,7 +145,7 @@ public class DocsAssetCopierTests
             {
                 if (Directory.Exists(Root))
                 {
-                    Directory.Delete(Root, recursive: true);
+                    Directory.Delete(Root, true);
                 }
             }
             catch (IOException)

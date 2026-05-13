@@ -94,9 +94,15 @@ public static class CMakeLexer
     /// <summary>Gets the singleton CMake lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        PreCommentRule = new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-        SpecialString = new(MatchDollarExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst },
+        PreCommentRule =
+            new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        LineComment =
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            },
+        SpecialString =
+            new(MatchDollarExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst },
         IncludeDoubleQuotedString = true,
         IncludeFloatLiteral = true,
         IncludeIntegerLiteral = true,

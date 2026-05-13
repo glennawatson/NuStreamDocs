@@ -58,6 +58,6 @@ internal static class ScriptAudit
         }
 
         return HtmlAttr.TryGet(attributes, "type"u8, out var type)
-            && AsciiByteHelpers.EqualsIgnoreAsciiCase(AsciiByteHelpers.TrimAsciiWhitespace(type), "module"u8);
+               && AsciiByteHelpers.EqualsIgnoreAsciiCase(AsciiByteHelpers.TrimAsciiWhitespace(type), "module"u8);
     }
 }

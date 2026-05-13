@@ -18,7 +18,13 @@ internal static class StubFont
     /// <param name="xHeight">x-height (stored as OS/2 v2 <c>sxHeight</c>).</param>
     /// <param name="capHeight">Cap height (stored as OS/2 v2 <c>sCapHeight</c>).</param>
     /// <returns>The sfnt bytes.</returns>
-    public static byte[] BuildSfnt(ushort unitsPerEm, short ascender, short descender, short lineGap, short xHeight, short capHeight)
+    public static byte[] BuildSfnt(
+        ushort unitsPerEm,
+        short ascender,
+        short descender,
+        short lineGap,
+        short xHeight,
+        short capHeight)
     {
         var headBody = new byte[54];
         BinaryPrimitives.WriteUInt16BigEndian(headBody.AsSpan(18), unitsPerEm);
@@ -69,7 +75,13 @@ internal static class StubFont
     /// <param name="xHeight">x-height.</param>
     /// <param name="capHeight">Cap height.</param>
     /// <returns>The woff2 bytes.</returns>
-    public static byte[] BuildWoff2(ushort unitsPerEm, short ascender, short descender, short lineGap, short xHeight, short capHeight)
+    public static byte[] BuildWoff2(
+        ushort unitsPerEm,
+        short ascender,
+        short descender,
+        short lineGap,
+        short xHeight,
+        short capHeight)
     {
         var headBody = new byte[54];
         BinaryPrimitives.WriteUInt16BigEndian(headBody.AsSpan(18), unitsPerEm);
@@ -116,9 +128,9 @@ internal static class StubFont
         }
 
         var dirBytes = dir.ToArray();
-        const int headerSize = 48;
+        const int HeaderSize = 48;
         var totalSfntSize = 12 + (bodies.Length * 16) + blockSize;
-        var woff2 = new byte[headerSize + dirBytes.Length + compressedLen];
+        var woff2 = new byte[HeaderSize + dirBytes.Length + compressedLen];
         var h = woff2.AsSpan();
         BinaryPrimitives.WriteUInt32BigEndian(h[0..], 0x774F4632);
         BinaryPrimitives.WriteUInt32BigEndian(h[4..], 0x00010000);
@@ -127,8 +139,8 @@ internal static class StubFont
         BinaryPrimitives.WriteUInt16BigEndian(h[14..], 0);
         BinaryPrimitives.WriteUInt32BigEndian(h[16..], (uint)totalSfntSize);
         BinaryPrimitives.WriteUInt32BigEndian(h[20..], (uint)compressedLen);
-        dirBytes.CopyTo(h[headerSize..]);
-        compressed.AsSpan(0, compressedLen).CopyTo(h[(headerSize + dirBytes.Length)..]);
+        dirBytes.CopyTo(h[HeaderSize..]);
+        compressed.AsSpan(0, compressedLen).CopyTo(h[(HeaderSize + dirBytes.Length)..]);
         return woff2;
     }
 

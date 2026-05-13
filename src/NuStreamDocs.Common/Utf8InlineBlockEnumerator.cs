@@ -29,7 +29,10 @@ public ref struct Utf8InlineBlockEnumerator
     /// <param name="html">Page HTML.</param>
     /// <param name="openTagPrefix">Opening-tag prefix (e.g. <c>"&lt;script"u8</c>).</param>
     /// <param name="closeTag">Closing tag (e.g. <c>"&lt;/script&gt;"u8</c>).</param>
-    public Utf8InlineBlockEnumerator(ReadOnlySpan<byte> html, ReadOnlySpan<byte> openTagPrefix, ReadOnlySpan<byte> closeTag)
+    public Utf8InlineBlockEnumerator(
+        ReadOnlySpan<byte> html,
+        ReadOnlySpan<byte> openTagPrefix,
+        ReadOnlySpan<byte> closeTag)
     {
         _html = html;
         _open = openTagPrefix;

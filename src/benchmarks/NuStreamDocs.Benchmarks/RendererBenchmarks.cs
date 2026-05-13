@@ -41,7 +41,7 @@ public class RendererBenchmarks
         for (var i = 0; i < Paragraphs; i++)
         {
             sb.Append("# Heading ").Append(i).Append('\n')
-              .Append("This is a paragraph with some text & a < b.\n\n");
+                .Append("This is a paragraph with some text & a < b.\n\n");
         }
 
         _source = Encoding.UTF8.GetBytes(sb.ToString());

@@ -24,7 +24,14 @@ internal static class AdmonitionRewriter
         while (i < source.Length)
         {
             if (MarkdownCodeScanner.AtLineStart(source, i)
-                && TryParseOpener(source, i, out var typeStart, out var typeLen, out var titleStart, out var titleLen, out var headerEnd))
+                && TryParseOpener(
+                    source,
+                    i,
+                    out var typeStart,
+                    out var typeLen,
+                    out var titleStart,
+                    out var titleLen,
+                    out var headerEnd))
             {
                 var bodyEnd = IndentedBlockScanner.ConsumeBody(source, headerEnd);
                 EmitAdmonition(
@@ -67,14 +74,14 @@ internal static class AdmonitionRewriter
         headerEnd = 0;
 
         return offset + Opener.Length <= source.Length && source[offset..].StartsWith(Opener)
-            && OpenerLineParser.TryParseTypeAndTitle(
-            source,
-            offset + Opener.Length,
-            out typeStart,
-            out typeLen,
-            out titleStart,
-            out titleLen,
-            out headerEnd);
+                                                       && OpenerLineParser.TryParseTypeAndTitle(
+                                                           source,
+                                                           offset + Opener.Length,
+                                                           out typeStart,
+                                                           out typeLen,
+                                                           out titleStart,
+                                                           out titleLen,
+                                                           out headerEnd);
     }
 
     /// <summary>Emits one admonition <c>&lt;div&gt;</c> block.</summary>
@@ -82,7 +89,11 @@ internal static class AdmonitionRewriter
     /// <param name="title">UTF-8 title bytes; empty span when no title was specified.</param>
     /// <param name="body">UTF-8 body bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitAdmonition(ReadOnlySpan<byte> type, ReadOnlySpan<byte> title, ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
+    private static void EmitAdmonition(
+        ReadOnlySpan<byte> type,
+        ReadOnlySpan<byte> title,
+        ReadOnlySpan<byte> body,
+        IBufferWriter<byte> writer)
     {
         writer.Write("\n<div class=\"admonition "u8);
         writer.Write(type);

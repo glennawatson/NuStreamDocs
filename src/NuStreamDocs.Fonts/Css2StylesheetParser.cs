@@ -55,7 +55,13 @@ public static class Css2StylesheetParser
             if (url is { Length: > 0 })
             {
                 ApiCompatString woff2Url = Encoding.UTF8.GetString(url);
-                faces.Add(new(ParseWeight(block), ParseStyle(block), ParseUnicodeRange(block).ToArray(), LabelBefore(css, faceStart).ToArray(), woff2Url));
+                faces.Add(
+                    new(
+                        ParseWeight(block),
+                        ParseStyle(block),
+                        ParseUnicodeRange(block).ToArray(),
+                        LabelBefore(css, faceStart).ToArray(),
+                        woff2Url));
             }
 
             pos = blockStart + closeRel + 1;
@@ -70,7 +76,7 @@ public static class Css2StylesheetParser
     /// <returns>The offset of the <c>@</c>, or -1.</returns>
     private static int IndexOfFontFace(ReadOnlySpan<byte> css, int from)
     {
-        ReadOnlySpan<byte> token = "@font-face"u8;
+        var token = "@font-face"u8;
         for (var i = from; i + token.Length <= css.Length; i++)
         {
             if (css[i] == (byte)'@' && AsciiByteHelpers.StartsWithIgnoreAsciiCase(css, i, token))
@@ -105,7 +111,9 @@ public static class Css2StylesheetParser
         }
 
         var openIdx = head[..closeIdx].LastIndexOf("/*"u8);
-        return openIdx < 0 ? [] : AsciiByteHelpers.TrimAsciiWhitespace(head[(openIdx + CommentDelimiterLength)..closeIdx]);
+        return openIdx < 0
+            ? []
+            : AsciiByteHelpers.TrimAsciiWhitespace(head[(openIdx + CommentDelimiterLength)..closeIdx]);
     }
 
     /// <summary>Reads the numeric <c>font-weight</c> from an <c>@font-face</c> block; the first integer when a range is given.</summary>
@@ -203,5 +211,10 @@ public static class Css2StylesheetParser
     /// <param name="UnicodeRange">UTF-8 <c>unicode-range</c> value (empty when absent).</param>
     /// <param name="SubsetName">UTF-8 subset name from the preceding <c>/* ... */</c> comment (e.g. <c>latin</c>); empty when the stylesheet doesn't label blocks.</param>
     /// <param name="Woff2Url">URL of the woff2 file referenced by <c>src</c>.</param>
-    public readonly record struct Css2FontFace(int Weight, FontStyle Style, byte[] UnicodeRange, byte[] SubsetName, ApiCompatString Woff2Url);
+    public readonly record struct Css2FontFace(
+        int Weight,
+        FontStyle Style,
+        byte[] UnicodeRange,
+        byte[] SubsetName,
+        ApiCompatString Woff2Url);
 }

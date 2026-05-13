@@ -55,7 +55,8 @@ internal static class HtmlInjectionMiddleware
         if (idx < 0)
         {
             // Fall back to appending at end-of-stream when no </body> is found.
-            await TryAdjustContentLengthAsync(ctx, originalBody, buffer.Length + DevServer.ReloadScriptMarker.Length).ConfigureAwait(false);
+            await TryAdjustContentLengthAsync(ctx, originalBody, buffer.Length + DevServer.ReloadScriptMarker.Length)
+                .ConfigureAwait(false);
             await buffer.CopyToAsync(originalBody).ConfigureAwait(false);
             await originalBody.WriteAsync(DevServer.ReloadScriptMemory).ConfigureAwait(false);
             return;
@@ -86,7 +87,7 @@ internal static class HtmlInjectionMiddleware
 
         var path = ctx.Request.Path.Value;
         return !string.IsNullOrEmpty(path)
-            && (path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) || path.EndsWith('/'));
+               && (path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) || path.EndsWith('/'));
     }
 
     /// <summary>Finds the offset of <c>&lt;/body&gt;</c> in <paramref name="span"/>, or <c>-1</c> when absent.</summary>

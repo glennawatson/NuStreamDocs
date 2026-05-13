@@ -16,7 +16,9 @@ public class VersionsPluginTests
     [Test]
     public async Task OnFinalizeWritesManifest()
     {
-        var siteRoot = Path.Combine(Path.GetTempPath(), "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var siteRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var versionRoot = Path.Combine(siteRoot, "0.4.2");
         Directory.CreateDirectory(versionRoot);
 
@@ -33,7 +35,7 @@ public class VersionsPluginTests
         }
         finally
         {
-            Directory.Delete(siteRoot, recursive: true);
+            Directory.Delete(siteRoot, true);
         }
     }
 
@@ -42,7 +44,9 @@ public class VersionsPluginTests
     [Test]
     public async Task SecondBuildUpdatesEntry()
     {
-        var siteRoot = Path.Combine(Path.GetTempPath(), "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var siteRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var versionRoot = Path.Combine(siteRoot, "0.4.2");
         Directory.CreateDirectory(versionRoot);
 
@@ -62,7 +66,7 @@ public class VersionsPluginTests
         }
         finally
         {
-            Directory.Delete(siteRoot, recursive: true);
+            Directory.Delete(siteRoot, true);
         }
     }
 }

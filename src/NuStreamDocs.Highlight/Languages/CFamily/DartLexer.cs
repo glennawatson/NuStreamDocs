@@ -27,12 +27,15 @@ public static class DartLexer
             KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
                 "var final const late static abstract external factory covariant operator get set class interface mixin enum typedef extends implements with on sealed base"u8),
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
-            Operators = OperatorAlternationFactory.SplitLongestFirst("??= ?? ?. ... .."u8, CFamilyShared.StandardOperatorsLiteral),
+            Operators =
+                OperatorAlternationFactory.SplitLongestFirst(
+                    "??= ?? ?. ... .."u8,
+                    CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
-        integerSuffix: CFamilyRules.NoSuffix,
-        floatSuffix: CFamilyRules.NoSuffix,
-        includeDocComment: true,
-        includeCharacterLiteral: false,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
+        CFamilyRules.NoSuffix,
+        CFamilyRules.NoSuffix,
+        true,
+        false,
+        CFamilyRules.CreateTripleDoubleQuotedRawStringRule());
 }

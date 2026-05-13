@@ -151,7 +151,8 @@ public class ContentLoaderBenchmarks
 
             sb.Append("{\"slug\":\"post-").Append(N(i))
                 .Append("\",\"title\":\"Post ").Append(N(i))
-                .Append("\",\"date\":\"2026-05-01\",\"tags\":[\"a\",\"b\"],\"draft\":false,\"body\":\"# Post ").Append(N(i))
+                .Append("\",\"date\":\"2026-05-01\",\"tags\":[\"a\",\"b\"],\"draft\":false,\"body\":\"# Post ")
+                .Append(N(i))
                 .Append("\\n\\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\"}");
         }
 
@@ -208,7 +209,8 @@ public class ContentLoaderBenchmarks
             sb.Append("<entry><title>Entry ").Append(N(i))
                 .Append("</title><link rel=\"alternate\" href=\"https://a.test/").Append(N(i))
                 .Append("\"/><updated>2026-05-04T12:00:00Z</updated><id>urn:uuid:").Append(N(i))
-                .Append("</id><content type=\"html\">&lt;p&gt;Body ").Append(N(i)).Append("&lt;/p&gt;</content></entry>");
+                .Append("</id><content type=\"html\">&lt;p&gt;Body ").Append(N(i))
+                .Append("&lt;/p&gt;</content></entry>");
         }
 
         sb.Append("</feed>");
@@ -256,7 +258,8 @@ public class ContentLoaderBenchmarks
             sb.Append("\"/resource").Append(N(i)).Append("/{id}\":{\"").Append(HttpMethods[i % MethodCount])
                 .Append("\":{\"tags\":[\"tag").Append(i % GroupCount)
                 .Append("\"],\"summary\":\"Operation ").Append(N(i))
-                .Append("\",\"parameters\":[{\"name\":\"id\",\"in\":\"path\",\"required\":true,\"schema\":{\"type\":\"string\"},\"description\":\"The id\"}],")
+                .Append(
+                    "\",\"parameters\":[{\"name\":\"id\",\"in\":\"path\",\"required\":true,\"schema\":{\"type\":\"string\"},\"description\":\"The id\"}],")
                 .Append("\"requestBody\":{\"content\":{\"application/json\":{}}},")
                 .Append("\"responses\":{\"200\":{\"description\":\"OK\"},\"404\":{\"description\":\"Missing\"}}}}");
         }

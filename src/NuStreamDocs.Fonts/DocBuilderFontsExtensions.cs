@@ -13,10 +13,8 @@ public static class DocBuilderFontsExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options (the declared faces).</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFonts(this DocBuilder builder, in FontsOptions options)
-    {
-        return builder.UsePlugin(new FontsPlugin(options));
-    }
+    public static DocBuilder UseFonts(this DocBuilder builder, in FontsOptions options) =>
+        builder.UsePlugin(new FontsPlugin(options));
 
     /// <summary>Registers <see cref="FontsPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
@@ -33,8 +31,6 @@ public static class DocBuilderFontsExtensions
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFonts(this DocBuilder builder, in FontsOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new FontsPlugin(options, logger));
-    }
+    public static DocBuilder UseFonts(this DocBuilder builder, in FontsOptions options, ILogger logger) =>
+        builder.UsePlugin(new FontsPlugin(options, logger));
 }

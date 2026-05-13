@@ -47,7 +47,10 @@ public static class ConfigReaderJsonPipeline
     /// <param name="convert">Format-specific stream-to-JSON converter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The parsed config.</returns>
-    public static async Task<MkDocsConfig> ReadAsync(Stream utf8Stream, StreamConverter convert, CancellationToken cancellationToken)
+    public static async Task<MkDocsConfig> ReadAsync(
+        Stream utf8Stream,
+        StreamConverter convert,
+        CancellationToken cancellationToken)
     {
         ArrayBufferWriter<byte> jsonBuffer = new();
         await using (Utf8JsonWriter jsonWriter = new(jsonBuffer))

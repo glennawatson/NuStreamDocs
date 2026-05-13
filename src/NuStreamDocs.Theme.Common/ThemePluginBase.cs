@@ -3,11 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using System.Text.Encodings.Web;
 using NuStreamDocs.Common;
 using NuStreamDocs.Links;
+using NuStreamDocs.Markdown;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.Templating;
+using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Theme.Common;
 
@@ -148,36 +151,46 @@ public abstract class ThemePluginBase<TTheme, TOptions>
                 {
                     [ThemeShellBytes.LanguageKey] = _options.Language,
                     [ThemeShellBytes.SiteNameKey] = _options.SiteName,
-                    [ThemeShellBytes.LogoKey] = ResolvePageRelativeUrl(_options.Logo, context.RelativePath, _useDirectoryUrls),
+                    [ThemeShellBytes.LogoKey] =
+                        ResolvePageRelativeUrl(_options.Logo, context.RelativePath, _useDirectoryUrls),
                     [ThemeShellBytes.SiteUrlKey] = _options.SiteUrl,
                     [ThemeShellBytes.CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath),
                     [ThemeShellBytes.SiteRootKey] = ThemeShellBytes.SiteRoot,
                     [ThemeShellBytes.PageTitleKey] = Utf8Encoder.Encode(pageTitle),
                     [ThemeShellBytes.BodyKey] = new(bodyBuffer, 0, bodyLength),
-                    [ThemeShellBytes.AssetRootKey] = new([..ResolvePageRelativeAssetRoot(_assetRoot, context.RelativePath, _useDirectoryUrls)]),
+                    [ThemeShellBytes.AssetRootKey] =
+                        new([.. ResolvePageRelativeAssetRoot(_assetRoot, context.RelativePath, _useDirectoryUrls)]),
                     [ThemeShellBytes.CopyrightKey] = _resolvedCopyright,
                     [ThemeShellBytes.CopyrightHtmlKey] = _options.CopyrightHtml,
                     [ThemeShellBytes.FooterPartialKey] = _footerPartialBytes,
-                    [ThemeShellBytes.SocialPresentKey] = _options.SocialLinks is [_, ..] ? ThemeShellBytes.Truthy : null,
+                    [ThemeShellBytes.SocialPresentKey] =
+                        _options.SocialLinks is [_, ..] ? ThemeShellBytes.Truthy : null,
                     [ThemeShellBytes.RepoUrlKey] = _options.RepoUrl,
                     [ThemeShellBytes.RepoLabelKey] = _repoLabel,
                     [ThemeShellBytes.EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
                     [ThemeShellBytes.ScrollToTopKey] = _options.EnableScrollToTop ? ThemeShellBytes.Truthy : null,
                     [ThemeShellBytes.TocFollowKey] = _options.EnableTocFollow ? ThemeShellBytes.Truthy : null,
-                    [ThemeShellBytes.PrevUrlKey] = ServedUrlBytes.FromPath(neighbours.PreviousPath, _useDirectoryUrls, leadingSlash: true),
+                    [ThemeShellBytes.PrevUrlKey] =
+                        ServedUrlBytes.FromPath(neighbours.PreviousPath, _useDirectoryUrls, true),
                     [ThemeShellBytes.PrevTitleKey] = neighbours.PreviousTitle,
-                    [ThemeShellBytes.NextUrlKey] = ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, leadingSlash: true),
+                    [ThemeShellBytes.NextUrlKey] =
+                        ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, true),
                     [ThemeShellBytes.NextTitleKey] = neighbours.NextTitle,
-                    [ThemeShellBytes.HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
+                    [ThemeShellBytes.HeadExtrasKey] =
+                        RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
                     [ThemeShellBytes.DescriptionKey] = ResolveDescription(context.Source),
-                    [ThemeShellBytes.HideNavigationKey] = ShouldHideNavigation(context.Source, context.RelativePath) ? ThemeShellBytes.Truthy : null,
-                    [ThemeShellBytes.HideTocKey] = Yaml.FrontmatterValueExtractor.ListContains(context.Source, "hide"u8, "toc"u8) ? ThemeShellBytes.Truthy : null,
+                    [ThemeShellBytes.HideNavigationKey] =
+                        ShouldHideNavigation(context.Source, context.RelativePath) ? ThemeShellBytes.Truthy : null,
+                    [ThemeShellBytes.HideTocKey] =
+                        FrontmatterValueExtractor.ListContains(context.Source, "hide"u8, "toc"u8)
+                            ? ThemeShellBytes.Truthy
+                            : null,
                     [ThemeShellBytes.GeneratorKey] = ThemeShellBytes.Generator,
                     [ThemeShellBytes.BuildDateKey] = ThemeShellBytes.BuildDate,
                     [ThemeShellBytes.FaviconKey] = _resolvedFavicon,
                     [ThemeShellBytes.AuthorKey] = ResolveAuthor(context.Source, _siteAuthor)
                 },
-                sections: socialSection);
+                socialSection);
 
             LoadedTheme.Page.Render(data, LoadedTheme.Partials, context.Output);
         }
@@ -242,7 +255,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             var probe = Path.Combine(inputRoot.Value, candidates[i]);
             if (File.Exists(probe))
             {
-                return Utf8Concat.Concat("/"u8, System.Text.Encoding.UTF8.GetBytes(candidates[i].Replace('\\', '/')));
+                return Utf8Concat.Concat("/"u8, Encoding.UTF8.GetBytes(candidates[i].Replace('\\', '/')));
             }
         }
 
@@ -260,10 +273,10 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return [];
         }
 
-        var pathString = System.Text.Encoding.UTF8.GetString(path);
+        var pathString = Encoding.UTF8.GetString(path);
         var projectRoot = string.IsNullOrEmpty(inputRoot.Value)
             ? string.Empty
-            : (Path.GetDirectoryName(inputRoot.Value.TrimEnd(Path.DirectorySeparatorChar, '/')) ?? string.Empty);
+            : Path.GetDirectoryName(inputRoot.Value.TrimEnd(Path.DirectorySeparatorChar, '/')) ?? string.Empty;
         var absolute = Path.IsPathRooted(pathString)
             ? pathString
             : Path.GetFullPath(pathString, projectRoot);
@@ -291,13 +304,10 @@ public abstract class ThemePluginBase<TTheme, TOptions>
                     [ThemeShellBytes.SocialTitleKey] = link.Title,
                     [ThemeShellBytes.SocialIconKey] = link.IconSvg
                 },
-                sections: null);
+                null);
         }
 
-        return new(1, ByteArrayComparer.Instance)
-        {
-            [ThemeShellBytes.SocialKey] = items
-        };
+        return new(1, ByteArrayComparer.Instance) { [ThemeShellBytes.SocialKey] = items };
     }
 
     /// <summary>Returns the first <see cref="INavNeighboursProvider"/> in <paramref name="plugins"/>, or null when none is registered.</summary>
@@ -321,7 +331,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <returns>UTF-8 description bytes, ready for direct emit; empty when no description.</returns>
     private static byte[] ResolveDescription(ReadOnlySpan<byte> source)
     {
-        var raw = Yaml.FrontmatterValueExtractor.GetScalar(source, "description"u8);
+        var raw = FrontmatterValueExtractor.GetScalar(source, "description"u8);
         return raw.IsEmpty ? [] : [.. StripYamlQuotes(raw)];
     }
 
@@ -331,7 +341,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <returns>UTF-8 author bytes; empty when neither front-matter nor site_author is set.</returns>
     private static byte[] ResolveAuthor(ReadOnlySpan<byte> source, byte[] siteAuthor)
     {
-        var raw = Yaml.FrontmatterValueExtractor.GetScalar(source, "author"u8);
+        var raw = FrontmatterValueExtractor.GetScalar(source, "author"u8);
         return !raw.IsEmpty ? [.. StripYamlQuotes(raw)] : siteAuthor;
     }
 
@@ -341,17 +351,17 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <returns>HTML-encoded title text.</returns>
     private static string ResolvePageTitle(ReadOnlySpan<byte> source, in FilePath relativePath)
     {
-        var fromFrontMatter = Yaml.FrontmatterValueExtractor.GetScalar(source, "title"u8);
+        var fromFrontMatter = FrontmatterValueExtractor.GetScalar(source, "title"u8);
         if (!fromFrontMatter.IsEmpty)
         {
             var unquoted = StripYamlQuotes(fromFrontMatter);
-            return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(unquoted));
+            return HtmlEncoder.Default.Encode(Encoding.UTF8.GetString(unquoted));
         }
 
-        var firstHeading = Markdown.MarkdownH1Scanner.FindFirst(source);
+        var firstHeading = MarkdownH1Scanner.FindFirst(source);
         if (!firstHeading.IsEmpty)
         {
-            return HtmlEncoder.Default.Encode(System.Text.Encoding.UTF8.GetString(firstHeading));
+            return HtmlEncoder.Default.Encode(Encoding.UTF8.GetString(firstHeading));
         }
 
         var stem = Path.GetFileNameWithoutExtension(relativePath);
@@ -382,8 +392,8 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <exception cref="InvalidOperationException">When any URL option fails the shape check.</exception>
     private static void ValidateUrlOptions(TOptions options)
     {
-        ThrowIfMalformed(ThemeUrlValidator.Inspect("SiteUrl", options.SiteUrl, requireAbsolute: false));
-        ThrowIfMalformed(ThemeUrlValidator.Inspect("RepoUrl", options.RepoUrl, requireAbsolute: false));
+        ThrowIfMalformed(ThemeUrlValidator.Inspect("SiteUrl", options.SiteUrl, false));
+        ThrowIfMalformed(ThemeUrlValidator.Inspect("RepoUrl", options.RepoUrl, false));
 
         // EditUri is a path fragment relative to RepoUrl, not an absolute URL on its own —
         // we only enforce the trailing-query/fragment guard here. Empty is fine (edit links
@@ -393,7 +403,8 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return;
         }
 
-        throw new InvalidOperationException("EditUri ends with '?' or '#'; the per-page edit-URL builder appends the source path and the result will be malformed.");
+        throw new InvalidOperationException(
+            "EditUri ends with '?' or '#'; the per-page edit-URL builder appends the source path and the result will be malformed.");
     }
 
     /// <summary>Throws when <paramref name="diagnostic"/> carries a non-empty diagnostic message.</summary>
@@ -594,7 +605,10 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <param name="useDirectoryUrls">True when non-index pages serve at directory URLs (one extra <c>../</c> hop).</param>
     /// <returns>Page-relative asset-root bytes, or the original bytes when the input is an absolute URL.</returns>
-    private static ReadOnlySpan<byte> ResolvePageRelativeAssetRoot(ReadOnlySpan<byte> assetRoot, in FilePath relativePath, bool useDirectoryUrls)
+    private static ReadOnlySpan<byte> ResolvePageRelativeAssetRoot(
+        ReadOnlySpan<byte> assetRoot,
+        in FilePath relativePath,
+        bool useDirectoryUrls)
     {
         if (IsAbsoluteUrl(assetRoot))
         {
@@ -814,7 +828,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="inputRoot">Absolute docs root.</param>
     /// <param name="readThemeAsset">Per-theme embedded-resource reader.</param>
     /// <returns>Async task.</returns>
-    private static ValueTask EnsureDefault404SourceAsync(in DirectoryPath inputRoot, Func<FilePath, byte[]?> readThemeAsset)
+    private static ValueTask EnsureDefault404SourceAsync(
+        in DirectoryPath inputRoot,
+        Func<FilePath, byte[]?> readThemeAsset)
     {
         if (inputRoot.IsEmpty || !Directory.Exists(inputRoot.Value))
         {
@@ -858,7 +874,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True when the sidebar should be hidden.</returns>
     private bool ShouldHideNavigation(ReadOnlySpan<byte> source, in FilePath relativePath) =>
-        Yaml.FrontmatterValueExtractor.ListContains(source, "hide"u8, "navigation"u8)
+        FrontmatterValueExtractor.ListContains(source, "hide"u8, "navigation"u8)
         || (_neighbours?.ShouldHidePrimarySidebar(relativePath) ?? false);
 
     /// <summary>Resolves prev/next neighbours according to the configured footer settings.</summary>

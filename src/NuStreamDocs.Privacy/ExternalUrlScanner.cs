@@ -90,7 +90,13 @@ internal static class ExternalUrlScanner
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when a URL was rewritten.</returns>
-    private static bool TryDispatchAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo) =>
+    private static bool TryDispatchAt(
+        ReadOnlySpan<byte> html,
+        int p,
+        in UrlRewriteContext ctx,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo) =>
         html[p] switch
         {
             (byte)'<' => InlineStyleBlockBytes.TryRewriteBlock(html, p, ctx, sink, ref lastEmit, out advanceTo),

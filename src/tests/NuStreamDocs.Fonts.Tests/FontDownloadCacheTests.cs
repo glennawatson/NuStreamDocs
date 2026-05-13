@@ -13,7 +13,7 @@ public class FontDownloadCacheTests
     public async Task ReturnsCachedBytes()
     {
         using TempDir dir = new();
-        var cache = new FontDownloadCache(dir.Root, offline: true);
+        var cache = new FontDownloadCache(dir.Root, true);
         byte[] payload = [1, 2, 3, 4, 5];
         await File.WriteAllBytesAsync(cache.CacheFilePath("https://example.test/font.woff2"), payload);
         var got = await cache.GetAsync("https://example.test/font.woff2", CancellationToken.None);
@@ -26,7 +26,7 @@ public class FontDownloadCacheTests
     public async Task OfflineMissThrows()
     {
         using TempDir dir = new();
-        var cache = new FontDownloadCache(dir.Root, offline: true);
+        var cache = new FontDownloadCache(dir.Root, true);
         var threw = false;
         try
         {

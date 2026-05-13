@@ -43,7 +43,11 @@ internal static class AnchorBytes
     /// <param name="addTargetBlank">When true, append <c>target="_blank"</c> when no <c>target</c> attribute is already present.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
     /// <returns>True when at least one anchor was hardened; false when the input passed through unchanged.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, bool addRelNoOpener, bool addTargetBlank, IBufferWriter<byte> sink)
+    public static bool RewriteInto(
+        ReadOnlySpan<byte> html,
+        bool addRelNoOpener,
+        bool addTargetBlank,
+        IBufferWriter<byte> sink)
     {
         if (!addRelNoOpener && !addTargetBlank)
         {
@@ -134,8 +138,8 @@ internal static class AnchorBytes
     {
         var href = AnchorAttributeFinder.Find(attrs, HrefName);
         return href.Found
-            && (AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpsPrefix)
-            || AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpPrefix));
+               && (AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpsPrefix)
+                   || AsciiByteHelpers.StartsWithIgnoreAsciiCase(attrs, href.ValueStart, HttpPrefix));
     }
 
     /// <summary>Emits <paramref name="attrs"/> into <paramref name="sink"/> with the configured hardening applied.</summary>
@@ -143,7 +147,11 @@ internal static class AnchorBytes
     /// <param name="addRel">Whether to merge <c>rel</c> tokens.</param>
     /// <param name="addTargetBlank">Whether to append <c>target="_blank"</c> when missing.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    private static void EmitHardenedAttrs(ReadOnlySpan<byte> attrs, bool addRel, bool addTargetBlank, IBufferWriter<byte> sink)
+    private static void EmitHardenedAttrs(
+        ReadOnlySpan<byte> attrs,
+        bool addRel,
+        bool addTargetBlank,
+        IBufferWriter<byte> sink)
     {
         var rel = addRel ? AnchorAttributeFinder.Find(attrs, RelName) : NamedAttribute.None;
         EmitWithRelMerge(attrs, addRel, rel, sink);
@@ -167,7 +175,11 @@ internal static class AnchorBytes
     /// <param name="addRel">Whether rel-merge is requested.</param>
     /// <param name="rel">The located rel attribute (or <see cref="NamedAttribute.None"/>).</param>
     /// <param name="sink">UTF-8 sink.</param>
-    private static void EmitWithRelMerge(ReadOnlySpan<byte> attrs, bool addRel, in NamedAttribute rel, IBufferWriter<byte> sink)
+    private static void EmitWithRelMerge(
+        ReadOnlySpan<byte> attrs,
+        bool addRel,
+        in NamedAttribute rel,
+        IBufferWriter<byte> sink)
     {
         if (!addRel)
         {

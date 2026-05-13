@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Config.MkDocs.Tests;
@@ -63,7 +64,7 @@ public class MkDocsConfigReaderTests
         var yaml = "site_name: From-Yaml\nsite_url: https://x.test/\ntheme: material\n"u8;
         var builder = new DocBuilder().UseMkDocsConfig(yaml);
 
-        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteName())).IsEqualTo("From-Yaml");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(builder.SiteUrl())).IsEqualTo("https://x.test/");
+        await Assert.That(Encoding.UTF8.GetString(builder.SiteName())).IsEqualTo("From-Yaml");
+        await Assert.That(Encoding.UTF8.GetString(builder.SiteUrl())).IsEqualTo("https://x.test/");
     }
 }

@@ -14,17 +14,20 @@ public class CriticMarkupRewriterTests
     /// <summary><c>{++text++}</c> renders as <c>&lt;ins&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task InsertSpanWraps() => await Assert.That(Rewrite("a {++inserted++} b")).IsEqualTo("a <ins>inserted</ins> b");
+    public async Task InsertSpanWraps() =>
+        await Assert.That(Rewrite("a {++inserted++} b")).IsEqualTo("a <ins>inserted</ins> b");
 
     /// <summary><c>{--text--}</c> renders as <c>&lt;del&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task DeleteSpanWraps() => await Assert.That(Rewrite("a {--gone--} b")).IsEqualTo("a <del>gone</del> b");
+    public async Task DeleteSpanWraps() =>
+        await Assert.That(Rewrite("a {--gone--} b")).IsEqualTo("a <del>gone</del> b");
 
     /// <summary><c>{==text==}</c> renders as <c>&lt;mark&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task HighlightSpanWraps() => await Assert.That(Rewrite("a {==hi==} b")).IsEqualTo("a <mark>hi</mark> b");
+    public async Task HighlightSpanWraps() =>
+        await Assert.That(Rewrite("a {==hi==} b")).IsEqualTo("a <mark>hi</mark> b");
 
     /// <summary><c>{&gt;&gt;text&lt;&lt;}</c> renders as a critic-comment span.</summary>
     /// <returns>Async test.</returns>
@@ -43,7 +46,8 @@ public class CriticMarkupRewriterTests
     /// <summary><c>{~~text~~}</c> with no arrow renders as a plain <c>&lt;del&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task SubstituteWithoutArrowFallsBackToDelete() => await Assert.That(Rewrite("a {~~just~~} b")).IsEqualTo("a <del>just</del> b");
+    public async Task SubstituteWithoutArrowFallsBackToDelete() =>
+        await Assert.That(Rewrite("a {~~just~~} b")).IsEqualTo("a <del>just</del> b");
 
     /// <summary>Multiple span types coexist on a line.</summary>
     /// <returns>Async test.</returns>

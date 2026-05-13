@@ -66,7 +66,10 @@ internal static class AbbrRewriter
     /// <param name="token">Captured token bytes (between <c>[</c> and <c>]</c>) on success.</param>
     /// <param name="title">Captured title bytes (everything after <c>:</c> with leading whitespace trimmed) on success.</param>
     /// <returns>True when the line is a definition.</returns>
-    private static bool TryParseDefinition(ReadOnlySpan<byte> line, out ReadOnlySpan<byte> token, out ReadOnlySpan<byte> title)
+    private static bool TryParseDefinition(
+        ReadOnlySpan<byte> line,
+        out ReadOnlySpan<byte> token,
+        out ReadOnlySpan<byte> title)
     {
         token = default;
         title = default;
@@ -92,7 +95,10 @@ internal static class AbbrRewriter
     /// <param name="source">UTF-8 source bytes (definitions already stripped).</param>
     /// <param name="definitions">Token → title lookup.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void WrapAbbreviations(ReadOnlySpan<byte> source, Dictionary<string, byte[]> definitions, IBufferWriter<byte> writer)
+    private static void WrapAbbreviations(
+        ReadOnlySpan<byte> source,
+        Dictionary<string, byte[]> definitions,
+        IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < source.Length)
@@ -122,7 +128,11 @@ internal static class AbbrRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="afterSkip">Cursor position past the consumed span on success.</param>
     /// <returns>True when bytes were consumed verbatim.</returns>
-    private static bool TrySkipCodeOrLink(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int afterSkip)
+    private static bool TrySkipCodeOrLink(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int afterSkip)
     {
         afterSkip = offset;
         var b = source[offset];
@@ -165,7 +175,12 @@ internal static class AbbrRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="afterToken">Cursor position past the consumed token on success.</param>
     /// <returns>True when a token was emitted.</returns>
-    private static bool TryEmitAbbrToken(ReadOnlySpan<byte> source, int offset, Dictionary<string, byte[]> definitions, IBufferWriter<byte> writer, out int afterToken)
+    private static bool TryEmitAbbrToken(
+        ReadOnlySpan<byte> source,
+        int offset,
+        Dictionary<string, byte[]> definitions,
+        IBufferWriter<byte> writer,
+        out int afterToken)
     {
         afterToken = offset;
         if (!TryMatchToken(source, offset, definitions, out var tokenLength, out var title)
@@ -246,7 +261,12 @@ internal static class AbbrRewriter
     /// <param name="tokenLength">Matched token length on success.</param>
     /// <param name="title">Title bytes for the matched token on success.</param>
     /// <returns>True when a defined token starts at <paramref name="offset"/>.</returns>
-    private static bool TryMatchToken(ReadOnlySpan<byte> source, int offset, Dictionary<string, byte[]> definitions, out int tokenLength, out ReadOnlySpan<byte> title)
+    private static bool TryMatchToken(
+        ReadOnlySpan<byte> source,
+        int offset,
+        Dictionary<string, byte[]> definitions,
+        out int tokenLength,
+        out ReadOnlySpan<byte> title)
     {
         tokenLength = 0;
         title = default;

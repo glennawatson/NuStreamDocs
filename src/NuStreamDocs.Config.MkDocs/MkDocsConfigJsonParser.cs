@@ -22,14 +22,14 @@ public static class MkDocsConfigJsonParser
     /// <returns>The parsed config.</returns>
     public static MkDocsConfig FromJson(ReadOnlySpan<byte> utf8Json)
     {
-        Utf8JsonReader reader = new(utf8Json, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(utf8Json, true, default);
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
 
         var siteName = root.TryGetProperty("site_name"u8, out var n) ? n.GetString() ?? string.Empty : string.Empty;
         var siteUrl = root.TryGetProperty("site_url"u8, out var u) ? u.GetString() : null;
         var themeName = ReadThemeName(root);
-        var useDirectoryUrls = !root.TryGetProperty("use_directory_urls"u8, out var d) || ReadBool(d, defaultValue: true);
+        var useDirectoryUrls = !root.TryGetProperty("use_directory_urls"u8, out var d) || ReadBool(d, true);
         var siteAuthor = root.TryGetProperty("site_author"u8, out var a) ? a.GetString() : null;
 
         return new(siteName, siteUrl, themeName, useDirectoryUrls, siteAuthor);
@@ -55,7 +55,8 @@ public static class MkDocsConfigJsonParser
             : theme.ValueKind switch
             {
                 JsonValueKind.String => theme.GetString() ?? DefaultThemeName,
-                JsonValueKind.Object when theme.TryGetProperty("name"u8, out var name) => name.GetString() ?? DefaultThemeName,
+                JsonValueKind.Object when theme.TryGetProperty("name"u8, out var name) => name.GetString() ??
+                    DefaultThemeName,
                 _ => DefaultThemeName
             };
 }

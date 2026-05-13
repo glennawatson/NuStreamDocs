@@ -27,7 +27,8 @@ public class TokenMatchersTests
     private static readonly SearchValues<byte> MarkupTextStop = SearchValues.Create("<&"u8);
 
     /// <summary>JSON's three keyword constants.</summary>
-    private static readonly ByteKeywordSet JsonKeywords = ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
+    private static readonly ByteKeywordSet JsonKeywords =
+        ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
 
     /// <summary>Case-insensitive YAML literal constants.</summary>
     private static readonly ByteKeywordSet YamlKeywords = ByteKeywordSet.CreateIgnoreCase(
@@ -209,7 +210,8 @@ public class TokenMatchersTests
     [Arguments("{unterminated", '{', '}', 0)]
     [Arguments("no opener", '{', '}', 0)]
     public async Task MatchBracketedBlockConsumesPairedDelimiters(string input, char open, char close, int expected) =>
-        await Assert.That(TokenMatchers.MatchBracketedBlock(UTF8.GetBytes(input), (byte)open, (byte)close)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchBracketedBlock(UTF8.GetBytes(input), (byte)open, (byte)close))
+            .IsEqualTo(expected);
 
     /// <summary>Newline matcher recognizes CRLF, lone CR, and lone LF.</summary>
     /// <param name="input">Input string.</param>
@@ -234,7 +236,8 @@ public class TokenMatchersTests
     [Arguments("<!-- unterminated", 0)]
     [Arguments("not a comment", 0)]
     public async Task MatchDelimitedHtmlComment(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchDelimited(UTF8.GetBytes(input), HtmlCommentOpen, HtmlCommentClose)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchDelimited(UTF8.GetBytes(input), HtmlCommentOpen, HtmlCommentClose))
+            .IsEqualTo(expected);
 
     /// <summary>Run-until-any consumes everything up to (but not including) the first character in the stop set.</summary>
     /// <param name="input">Input string.</param>
@@ -259,7 +262,8 @@ public class TokenMatchersTests
     [Arguments("0x", 0)]
     [Arguments("123", 0)]
     public async Task MatchAsciiHexLiteralWithCsharpSuffixes(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchAsciiHexLiteral(UTF8.GetBytes(input), HexBody, IntegerSuffix)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchAsciiHexLiteral(UTF8.GetBytes(input), HexBody, IntegerSuffix))
+            .IsEqualTo(expected);
 
     /// <summary>Run-with-suffix matches body + optional trailing chars.</summary>
     /// <param name="input">Input string.</param>
@@ -271,7 +275,8 @@ public class TokenMatchersTests
     [Arguments("100", 3)]
     [Arguments("abc", 0)]
     public async Task MatchRunWithSuffixCsharpIntegerShape(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchRunWithSuffix(UTF8.GetBytes(input), IntegerBody, IntegerSuffix)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchRunWithSuffix(UTF8.GetBytes(input), IntegerBody, IntegerSuffix))
+            .IsEqualTo(expected);
 
     /// <summary>Prefixed-run matches a single prefix character + a non-empty body.</summary>
     /// <param name="input">Input string.</param>
@@ -284,7 +289,8 @@ public class TokenMatchersTests
     [Arguments("&!", 0)]
     [Arguments("noprefix", 0)]
     public async Task MatchPrefixedRunAnchorShape(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchPrefixedRun(UTF8.GetBytes(input), (byte)'&', AnchorBody)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchPrefixedRun(UTF8.GetBytes(input), (byte)'&', AnchorBody))
+            .IsEqualTo(expected);
 
     /// <summary>Keyword matcher accepts an exact match against a member of the keyword set with a non-identifier-continue boundary.</summary>
     /// <param name="input">Input string.</param>
@@ -349,7 +355,8 @@ public class TokenMatchersTests
     [Arguments("\"\"only-two-quotes\"\"", 3, 0)]
     [Arguments("not raw", 3, 0)]
     public async Task MatchRawQuotedStringHandlesVariableQuoteCount(string input, int minQuotes, int expected) =>
-        await Assert.That(TokenMatchers.MatchRawQuotedString(UTF8.GetBytes(input), (byte)'"', minQuotes)).IsEqualTo(expected);
+        await Assert.That(TokenMatchers.MatchRawQuotedString(UTF8.GetBytes(input), (byte)'"', minQuotes))
+            .IsEqualTo(expected);
 
     /// <summary>Multi-line raw strings consume newlines without breaking the match.</summary>
     /// <returns>Async task.</returns>
@@ -357,7 +364,8 @@ public class TokenMatchersTests
     public async Task MatchRawQuotedStringSpansNewlines()
     {
         const string Source = "\"\"\"\n  multi\n  line\n  \"\"\"";
-        await Assert.That(TokenMatchers.MatchRawQuotedString(UTF8.GetBytes(Source), (byte)'"', 3)).IsEqualTo(Source.Length);
+        await Assert.That(TokenMatchers.MatchRawQuotedString(UTF8.GetBytes(Source), (byte)'"', 3))
+            .IsEqualTo(Source.Length);
     }
 
     /// <summary>Doubled-quote-escape variant for double quotes (<c>"a""b"</c> Pascal/SQL style).</summary>

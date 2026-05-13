@@ -36,10 +36,8 @@ internal static class CssUrlBytes
     /// <summary>Walks <paramref name="source"/> in audit mode, recording every URL the host filter accepts.</summary>
     /// <param name="source">UTF-8 source span.</param>
     /// <param name="audit">Audit collector.</param>
-    public static void AuditInto(ReadOnlySpan<byte> source, UrlAuditContext audit)
-    {
+    public static void AuditInto(ReadOnlySpan<byte> source, UrlAuditContext audit) =>
         UrlScanLoop.RunAudit(source, TokenStart, audit, TryAuditAt);
-    }
 
     /// <summary>Tries to rewrite a <c>url(...)</c> token at <paramref name="p"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -49,7 +47,13 @@ internal static class CssUrlBytes
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when the token was rewritten.</returns>
-    private static bool TryRewriteAt(ReadOnlySpan<byte> source, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    private static bool TryRewriteAt(
+        ReadOnlySpan<byte> source,
+        int p,
+        in UrlRewriteContext ctx,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!TryMatchToken(source, p, out var tokenEnd, out var urlStart, out var urlEnd, out var quote))
         {
@@ -104,7 +108,13 @@ internal static class CssUrlBytes
     /// <param name="urlEnd">Offset just past the URL on success.</param>
     /// <param name="quote">Quote byte (or 0 for unquoted forms).</param>
     /// <returns>True on a successful match.</returns>
-    private static bool TryMatchToken(ReadOnlySpan<byte> source, int p, out int tokenEnd, out int urlStart, out int urlEnd, out byte quote)
+    private static bool TryMatchToken(
+        ReadOnlySpan<byte> source,
+        int p,
+        out int tokenEnd,
+        out int urlStart,
+        out int urlEnd,
+        out byte quote)
     {
         tokenEnd = -1;
         urlStart = -1;
@@ -142,7 +152,12 @@ internal static class CssUrlBytes
     /// <param name="urlEnd">Offset just past the URL on success.</param>
     /// <param name="tokenEnd">Offset just past the closing <c>)</c> on success.</param>
     /// <returns>True when the URL is well-formed and the token closes properly.</returns>
-    private static bool TryScanUrlAndClose(ReadOnlySpan<byte> source, int urlStart, byte quote, out int urlEnd, out int tokenEnd)
+    private static bool TryScanUrlAndClose(
+        ReadOnlySpan<byte> source,
+        int urlStart,
+        byte quote,
+        out int urlEnd,
+        out int tokenEnd)
     {
         urlEnd = -1;
         tokenEnd = -1;

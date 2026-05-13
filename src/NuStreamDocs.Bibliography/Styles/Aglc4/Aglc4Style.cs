@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography.Styles.Aglc4;
@@ -26,7 +25,11 @@ public sealed class Aglc4Style : ICitationStyle
     }
 
     /// <inheritdoc/>
-    public void WriteFootnote(CitationEntry entry, CitationLocator locator, ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    public void WriteFootnote(
+        CitationEntry entry,
+        CitationLocator locator,
+        ReadOnlySpan<byte> source,
+        IBufferWriter<byte> writer)
     {
         WriteCore(entry, writer);
         if (!locator.HasValue)
@@ -39,10 +42,7 @@ public sealed class Aglc4Style : ICitationStyle
     }
 
     /// <inheritdoc/>
-    public void WriteBibliography(CitationEntry entry, IBufferWriter<byte> writer)
-    {
-        WriteCore(entry, writer);
-    }
+    public void WriteBibliography(CitationEntry entry, IBufferWriter<byte> writer) => WriteCore(entry, writer);
 
     /// <summary>Writes the bare citation (no locator) per AGLC4 rules for the entry's type.</summary>
     /// <param name="entry">Resolved entry.</param>
@@ -81,19 +81,28 @@ public sealed class Aglc4Style : ICitationStyle
     /// <summary>Selects the right print-style formatter for the entry type, or <c>null</c> when none applies.</summary>
     /// <param name="type">Entry type.</param>
     /// <returns>Formatter delegate or null.</returns>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Single switch expression dispatching by entry type.")]
-    private static Action<CitationEntry, IBufferWriter<byte>>? SelectPrintFormatter(EntryType type) => type switch
+    private static Action<CitationEntry, IBufferWriter<byte>>? SelectPrintFormatter(EntryType type)
     {
-        EntryType.Book or EntryType.Chapter => Aglc4Books.Write,
-        EntryType.ArticleJournal or EntryType.ArticleMagazine or EntryType.ArticleNewspaper or EntryType.Article => Aglc4Articles.Write,
-        EntryType.Report => Aglc4Reports.Write,
-        EntryType.Thesis => Aglc4Thesis.Write,
-        EntryType.Webpage => Aglc4Webpages.Write,
-        _ => null
-    };
+        if (IsArticleType(type))
+        {
+            return Aglc4Articles.Write;
+        }
+
+        return type switch
+        {
+            EntryType.Book or EntryType.Chapter => Aglc4Books.Write,
+            EntryType.Report => Aglc4Reports.Write,
+            EntryType.Thesis => Aglc4Thesis.Write,
+            EntryType.Webpage => Aglc4Webpages.Write,
+            _ => null
+        };
+    }
+
+    /// <summary>True for the AGLC4 article entry types (journal / magazine / newspaper / generic article).</summary>
+    /// <param name="type">Entry type.</param>
+    /// <returns>True when <paramref name="type"/> is an article kind.</returns>
+    private static bool IsArticleType(EntryType type) =>
+        type is EntryType.ArticleJournal or EntryType.ArticleMagazine or EntryType.ArticleNewspaper or EntryType.Article;
 
     /// <summary>Dispatches the legal entry types (case / legislation / treaty).</summary>
     /// <param name="entry">Resolved entry.</param>

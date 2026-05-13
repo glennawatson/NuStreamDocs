@@ -123,7 +123,7 @@ public static class InlineRenderer
             OpenBracket => LinkSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Bang => ImageSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Lt => AutoLink.TryHandle(source, ref pos, ref pendingTextStart, writer)
-                || RawHtml.TryHandle(source, ref pos, ref pendingTextStart, writer),
+                  || RawHtml.TryHandle(source, ref pos, ref pendingTextStart, writer),
             _ => false
         };
 }

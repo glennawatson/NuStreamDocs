@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.SmartSymbols\NuStreamDocs.SmartSymbols.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.SmartSymbols\NuStreamDocs.SmartSymbols.csproj"/>
   </ItemGroup>
 
 </Project>

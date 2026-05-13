@@ -27,10 +27,8 @@ internal static class SrcsetBytes
     /// <summary>Walks <paramref name="html"/> in audit mode, recording every srcset entry's URL.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="audit">Audit collector.</param>
-    public static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit)
-    {
+    public static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit) =>
         UrlScanLoop.RunAudit(html, AttrStart, audit, TryAuditAt);
-    }
 
     /// <summary>Tries to rewrite a srcset attribute starting at <paramref name="p"/>.</summary>
     /// <param name="html">UTF-8 source.</param>
@@ -40,7 +38,13 @@ internal static class SrcsetBytes
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when the srcset was rewritten with at least one localized URL.</returns>
-    internal static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    internal static bool TryRewriteAt(
+        ReadOnlySpan<byte> html,
+        int p,
+        in UrlRewriteContext ctx,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!TryMatchHeader(html, p, out var valueStart, out var valueEnd))
         {
@@ -101,7 +105,10 @@ internal static class SrcsetBytes
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink.</param>
     /// <returns>True when at least one entry was localized.</returns>
-    private static bool WriteRewrittenValue(ReadOnlySpan<byte> value, in UrlRewriteContext ctx, ArrayBufferWriter<byte> sink)
+    private static bool WriteRewrittenValue(
+        ReadOnlySpan<byte> value,
+        in UrlRewriteContext ctx,
+        ArrayBufferWriter<byte> sink)
     {
         var anyChanged = false;
         var entryStart = 0;

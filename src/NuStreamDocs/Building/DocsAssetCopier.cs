@@ -46,7 +46,7 @@ internal static class DocsAssetCopier
 
             // Kernel-level copy (CopyFile / copy_file_range) — same primitive the privacy
             // downloader uses for cache → output materialization.
-            File.Copy(sourcePath, destPath, overwrite: true);
+            File.Copy(sourcePath, destPath, true);
             copied++;
         }
 
@@ -75,7 +75,7 @@ internal static class DocsAssetCopier
 
         var extension = Path.GetExtension(sourcePath.AsSpan());
         return !extension.Equals(MarkdownExtension, StringComparison.OrdinalIgnoreCase)
-            && (!filter.HasRules || filter.Matches(relative.Replace(Path.DirectorySeparatorChar, '/')));
+               && (!filter.HasRules || filter.Matches(relative.Replace(Path.DirectorySeparatorChar, '/')));
     }
 
     /// <summary>True when any segment of <paramref name="relative"/> begins with <c>.</c> — skips dotfiles and dot-prefixed directories like <c>.git</c> / <c>.cache</c>.</summary>

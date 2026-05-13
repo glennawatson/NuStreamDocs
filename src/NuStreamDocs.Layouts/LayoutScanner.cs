@@ -131,7 +131,14 @@ internal static class LayoutScanner
     /// <param name="bodyStart">Inclusive raw-body start in <paramref name="template"/>.</param>
     /// <param name="bodyEnd">Exclusive raw-body end in <paramref name="template"/>.</param>
     /// <returns>The classified token.</returns>
-    private static LayoutToken ClassifyTag(ReadOnlySpan<byte> template, int trimStart, int trimEnd, int open, int end, int bodyStart, int bodyEnd)
+    private static LayoutToken ClassifyTag(
+        ReadOnlySpan<byte> template,
+        int trimStart,
+        int trimEnd,
+        int open,
+        int end,
+        int bodyStart,
+        int bodyEnd)
     {
         var body = template[trimStart..trimEnd];
         if (body.SequenceEqual("endblock"u8))
@@ -178,7 +185,7 @@ internal static class LayoutScanner
         targetStart = 0;
         targetEnd = 0;
         return TryStripKeyword(body, keyword, out var consumed)
-            && TryUnquoteRange(template, trimStart + consumed, trimEnd, out targetStart, out targetEnd);
+               && TryUnquoteRange(template, trimStart + consumed, trimEnd, out targetStart, out targetEnd);
     }
 
     /// <summary>Tries to extract the bare identifier of a <c>{% block name %}</c> tag.</summary>
@@ -238,7 +245,12 @@ internal static class LayoutScanner
     /// <param name="innerStart">Inclusive inner start on success.</param>
     /// <param name="innerEnd">Exclusive inner end on success.</param>
     /// <returns>True when the trimmed range is wrapped in matching quotes and the inner is non-empty.</returns>
-    private static bool TryUnquoteRange(ReadOnlySpan<byte> template, int start, int end, out int innerStart, out int innerEnd)
+    private static bool TryUnquoteRange(
+        ReadOnlySpan<byte> template,
+        int start,
+        int end,
+        out int innerStart,
+        out int innerEnd)
     {
         innerStart = 0;
         innerEnd = 0;
@@ -329,9 +341,9 @@ internal static class LayoutScanner
     /// <returns>True for legal identifier bytes.</returns>
     private static bool IsIdentifierByte(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'.'
-          or (byte)'_'
-          or (byte)'-';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'.'
+            or (byte)'_'
+            or (byte)'-';
 }

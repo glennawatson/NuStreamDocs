@@ -31,7 +31,7 @@ public static class ShortcodeScanner
     /// <returns>True for letters, digits, <c>_</c>, <c>+</c>, <c>-</c>, <c>.</c>.</returns>
     public static bool IsBodyByte(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'_' or (byte)'+' or (byte)'-' or (byte)'.';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'_' or (byte)'+' or (byte)'-' or (byte)'.';
 }

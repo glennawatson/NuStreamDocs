@@ -32,7 +32,11 @@ internal static class SnippetSectionExtractor
     /// <param name="bodyStart">Byte offset where the section body begins (immediately after the open marker line).</param>
     /// <param name="bodyLength">Byte length of the section body (excluding the end marker line).</param>
     /// <returns>True when the section was found.</returns>
-    public static bool TryFind(ReadOnlySpan<byte> source, ReadOnlySpan<byte> section, out int bodyStart, out int bodyLength)
+    public static bool TryFind(
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> section,
+        out int bodyStart,
+        out int bodyLength)
     {
         bodyStart = 0;
         bodyLength = 0;

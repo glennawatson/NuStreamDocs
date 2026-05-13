@@ -25,10 +25,12 @@ public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvide
     /// the native loader and is a no-op when Rocket Loader is disabled.
     /// </remarks>
     private static readonly byte[] HeadExtraBytes =
-        [.. """
-<script type="module" data-cfasync="false">import("/pagefind/pagefind.js").catch(()=>{});</script>
-<script src="/assets/javascripts/pagefind-bind.js" defer data-cfasync="false"></script>
-"""u8];
+    [
+        .. """
+           <script type="module" data-cfasync="false">import("/pagefind/pagefind.js").catch(()=>{});</script>
+           <script src="/assets/javascripts/pagefind-bind.js" defer data-cfasync="false"></script>
+           """u8
+    ];
 
     /// <summary>Cached bind-script bytes.</summary>
     private static readonly byte[] BindScriptBytes = PagefindBindScript.Bytes.ToArray();
@@ -85,13 +87,11 @@ public sealed class PagefindSearchPlugin : SearchPluginBase, IStaticAssetProvide
     {
         // Mark excluded pages first so the CLI skips them during indexing — keeps the fragment
         // count bounded on sites with very large auto-generated trees.
-        await PagefindIgnoreInjector.InjectAsync(siteRoot, _options.ExcludePathPrefixes, _logger, cancellationToken).ConfigureAwait(false);
+        await PagefindIgnoreInjector.InjectAsync(siteRoot, _options.ExcludePathPrefixes, _logger, cancellationToken)
+            .ConfigureAwait(false);
         await PagefindCli.RunAsync(siteRoot, _options, _logger, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
-    protected override void WriteEngineHeadExtra(IBufferWriter<byte> writer)
-    {
-        writer.Write(HeadExtraBytes);
-    }
+    protected override void WriteEngineHeadExtra(IBufferWriter<byte> writer) => writer.Write(HeadExtraBytes);
 }

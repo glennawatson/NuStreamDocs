@@ -12,16 +12,16 @@ public static class DocBuilderPagefindExtensions
     /// <summary>Registers <see cref="PagefindSearchPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UsePagefindSearch(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new PagefindSearchPlugin());
-    }
+    public static DocBuilder UsePagefindSearch(this DocBuilder builder) =>
+        builder.UsePlugin(new PagefindSearchPlugin());
 
     /// <summary>Registers <see cref="PagefindSearchPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="PagefindOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UsePagefindSearch(this DocBuilder builder, Func<PagefindOptions, PagefindOptions> configure)
+    public static DocBuilder UsePagefindSearch(
+        this DocBuilder builder,
+        Func<PagefindOptions, PagefindOptions> configure)
     {
         var options = configure(PagefindOptions.Default);
         return builder.UsePlugin(new PagefindSearchPlugin(options));
@@ -32,8 +32,6 @@ public static class DocBuilderPagefindExtensions
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UsePagefindSearch(this DocBuilder builder, in PagefindOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new PagefindSearchPlugin(options, logger));
-    }
+    public static DocBuilder UsePagefindSearch(this DocBuilder builder, in PagefindOptions options, ILogger logger) =>
+        builder.UsePlugin(new PagefindSearchPlugin(options, logger));
 }

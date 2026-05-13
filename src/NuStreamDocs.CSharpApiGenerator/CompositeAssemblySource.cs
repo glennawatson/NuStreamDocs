@@ -19,7 +19,8 @@ internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAsse
     public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
     /// <inheritdoc/>
-    public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         for (var i = 0; i < _sources.Length; i++)
         {

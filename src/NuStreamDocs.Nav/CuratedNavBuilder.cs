@@ -20,7 +20,7 @@ internal static class CuratedNavBuilder
     /// <param name="entries">Top-level curated entries.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
     public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries) =>
-        Build(inputRoot, entries, useDirectoryUrls: false, NullLogger.Instance);
+        Build(inputRoot, entries, false, NullLogger.Instance);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with an explicit served URL shape.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
@@ -36,7 +36,7 @@ internal static class CuratedNavBuilder
     /// <param name="logger">Logger.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
     public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, ILogger logger)
-        => Build(inputRoot, entries, useDirectoryUrls: false, logger);
+        => Build(inputRoot, entries, false, logger);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with a logger for orphan / missing-file diagnostics.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
@@ -66,7 +66,7 @@ internal static class CuratedNavBuilder
             children = trimmed;
         }
 
-        NavNode root = new([], default, isSection: true, children, useDirectoryUrls);
+        NavNode root = new([], default, true, children, useDirectoryUrls);
         root.AttachParents();
         return root;
     }
@@ -77,7 +77,11 @@ internal static class CuratedNavBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The built node or null.</returns>
-    private static NavNode? BuildEntry(in DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
+    private static NavNode? BuildEntry(
+        in DirectoryPath inputRoot,
+        in NavEntry entry,
+        bool useDirectoryUrls,
+        ILogger logger)
     {
         if (entry.IsSection)
         {
@@ -102,7 +106,7 @@ internal static class CuratedNavBuilder
     {
         FilePath path = Encoding.UTF8.GetString(entry.Path);
         var title = ResolveTitle(inputRoot, entry, path);
-        return new(title, path, isSection: false, [], useDirectoryUrls);
+        return new(title, path, false, [], useDirectoryUrls);
     }
 
     /// <summary>Builds a section node and its children.</summary>
@@ -111,7 +115,11 @@ internal static class CuratedNavBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Section node.</returns>
-    private static NavNode BuildSectionEntry(in DirectoryPath inputRoot, in NavEntry entry, bool useDirectoryUrls, ILogger logger)
+    private static NavNode BuildSectionEntry(
+        in DirectoryPath inputRoot,
+        in NavEntry entry,
+        bool useDirectoryUrls,
+        ILogger logger)
     {
         var children = new NavNode[entry.Children.Length];
         var written = 0;
@@ -133,7 +141,7 @@ internal static class CuratedNavBuilder
 
         byte[] title = entry.Title.Length is 0 ? [] : [.. entry.Title];
         FilePath indexPath = entry.Path.Length is 0 ? null : Encoding.UTF8.GetString(entry.Path);
-        return new(title, indexPath, isSection: true, children, indexPath, useDirectoryUrls);
+        return new(title, indexPath, true, children, indexPath, useDirectoryUrls);
     }
 
     /// <summary>Resolves a leaf entry's display title — explicit, then front-matter <c>title:</c>, then file stem.</summary>
@@ -154,7 +162,8 @@ internal static class CuratedNavBuilder
             return Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
         }
 
-        return FrontmatterTitleReader.ReadBytes(inputRoot.File(path.Value)) ?? Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
+        return FrontmatterTitleReader.ReadBytes(inputRoot.File(path.Value)) ??
+               Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
     }
 
     /// <summary>Returns true when the UTF-8 path begins with <c>http://</c> or <c>https://</c>.</summary>

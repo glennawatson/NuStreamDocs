@@ -107,7 +107,12 @@ public sealed class TocPlugin : IPagePostRenderPlugin
         }
 
         sw.Stop();
-        TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, slugged.Length, collisions, sw.ElapsedMilliseconds);
+        TocLoggingHelper.LogTocComplete(
+            _logger,
+            context.RelativePath.Value,
+            slugged.Length,
+            collisions,
+            sw.ElapsedMilliseconds);
     }
 
     /// <summary>Locates the TOC marker in the heading-rewritten body and either splices the fragment in or copies the body verbatim.</summary>
@@ -115,7 +120,11 @@ public sealed class TocPlugin : IPagePostRenderPlugin
     /// <param name="sourceSnapshot">Original pre-rewrite HTML snapshot used for heading-text slices.</param>
     /// <param name="headings">Slugged headings.</param>
     /// <param name="output">Final output sink.</param>
-    private void SubstituteMarker(ReadOnlySpan<byte> rewritten, ReadOnlySpan<byte> sourceSnapshot, Heading[] headings, IBufferWriter<byte> output)
+    private void SubstituteMarker(
+        ReadOnlySpan<byte> rewritten,
+        ReadOnlySpan<byte> sourceSnapshot,
+        Heading[] headings,
+        IBufferWriter<byte> output)
     {
         var markerIndex = rewritten.IndexOf(TocMarker.AsSpan());
         if (markerIndex < 0)

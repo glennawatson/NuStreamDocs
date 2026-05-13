@@ -94,10 +94,10 @@ public class PrivacyUrlScanBenchmarks
         }
 
         _html = Encoding.UTF8.GetBytes(sb.ToString());
-        _acceptAll = new(hostsToSkip: null, hostsAllowed: null);
+        _acceptAll = new(null, null);
         _rejectAll = new(
-            hostsToSkip: [[.. "cdn.example"u8], [.."fonts.googleapis.com"u8]],
-            hostsAllowed: null);
+            [[.. "cdn.example"u8], [.. "fonts.googleapis.com"u8]],
+            null);
         _registry = new([.. "assets/external"u8]);
     }
 

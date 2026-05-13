@@ -30,7 +30,7 @@ internal sealed class TempTocTree : IDisposable
         {
             if (Directory.Exists(Root))
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
         }
         catch (IOException)

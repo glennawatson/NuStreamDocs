@@ -27,12 +27,10 @@ public static class NavEntryFactory
     /// <param name="title">UTF-8 title bytes; empty to derive from the file at render time.</param>
     /// <param name="path">UTF-8 source-relative path bytes or absolute URL.</param>
     /// <returns>A leaf <see cref="NavEntry"/>.</returns>
-    public static NavEntry Leaf(byte[] title, byte[] path)
-    {
-        return path.Length is 0
+    public static NavEntry Leaf(byte[] title, byte[] path) =>
+        path.Length is 0
             ? throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path))
             : new(title, path, []);
-    }
 
     /// <summary>Builds a leaf entry from byte spans; allocates two arrays.</summary>
     /// <param name="title">UTF-8 title bytes; empty span to derive at render time.</param>
@@ -66,7 +64,9 @@ public static class NavEntryFactory
             throw new ArgumentException("Title bytes must be non-empty for a section.", nameof(title));
         }
 
-        return children.Length is 0 ? throw new ArgumentException(EmptyChildrenError, nameof(children)) : new(title, [], children);
+        return children.Length is 0
+            ? throw new ArgumentException(EmptyChildrenError, nameof(children))
+            : new(title, [], children);
     }
 
     /// <summary>Builds a section that names a landing page (e.g. <c>guide/index.md</c>) from string inputs.</summary>
@@ -97,10 +97,14 @@ public static class NavEntryFactory
 
         if (indexPath.Length is 0)
         {
-            throw new ArgumentException("Index-path bytes must be non-empty for a section with a landing page.", nameof(indexPath));
+            throw new ArgumentException(
+                "Index-path bytes must be non-empty for a section with a landing page.",
+                nameof(indexPath));
         }
 
-        return children.Length is 0 ? throw new ArgumentException(EmptyChildrenError, nameof(children)) : new(title, indexPath, children);
+        return children.Length is 0
+            ? throw new ArgumentException(EmptyChildrenError, nameof(children))
+            : new(title, indexPath, children);
     }
 
     /// <summary>UTF-8-encodes <paramref name="value"/>; returns an empty array for an empty input.</summary>

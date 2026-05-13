@@ -14,7 +14,10 @@ internal static partial class VersionsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions discovered in the manifest.</param>
-    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     public static void LogManifestRead(ILogger logger, in DirectoryPath path, int versionCount)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -29,7 +32,10 @@ internal static partial class VersionsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions written to the manifest.</param>
-    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     public static void LogManifestWrite(ILogger logger, in DirectoryPath path, int versionCount)
     {
         if (!logger.IsEnabled(LogLevel.Information))
@@ -51,6 +57,7 @@ internal static partial class VersionsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions written to the manifest.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Wrote versions manifest to {Path}: {VersionCount} version(s)")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Wrote versions manifest to {Path}: {VersionCount} version(s)")]
     private static partial void LogManifestWriteCore(ILogger logger, string path, int versionCount);
 }

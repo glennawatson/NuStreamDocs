@@ -17,35 +17,35 @@ public class MagicLinkShortrefTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task BareIssueRefExpandsToMarkdownLink() =>
-        await Assert.That(Rewrite("see #377", expandMentions: false))
+        await Assert.That(Rewrite("see #377", false))
             .IsEqualTo("see [#377](https://github.com/reactiveui/ReactiveUI/issues/377)");
 
     /// <summary>Issue refs inside parentheses expand without consuming the trailing <c>)</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task IssueRefInsideParenthesesPreservesParen() =>
-        await Assert.That(Rewrite("(PR #382)", expandMentions: false))
+        await Assert.That(Rewrite("(PR #382)", false))
             .IsEqualTo("(PR [#382](https://github.com/reactiveui/ReactiveUI/issues/382))");
 
     /// <summary>An <c>@user</c> mention at a word boundary expands to a profile-page Markdown link.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UserMentionExpandsToProfileLink() =>
-        await Assert.That(Rewrite("thanks @oliverw!", expandMentions: true))
+        await Assert.That(Rewrite("thanks @oliverw!", true))
             .IsEqualTo("thanks [@oliverw](https://github.com/oliverw)!");
 
     /// <summary>An <c>@</c> immediately following a word character is left untouched (avoids email rewrites).</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task AtSignInEmailIsNotRewritten() =>
-        await Assert.That(Rewrite("contact foo@bar.com today", expandMentions: true))
+        await Assert.That(Rewrite("contact foo@bar.com today", true))
             .IsEqualTo("contact foo@bar.com today");
 
     /// <summary>A <c>#</c> immediately following a word character (e.g. <c>foo#1</c>) is left untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task HashAttachedToWordIsNotRewritten() =>
-        await Assert.That(Rewrite("note xx#377 here", expandMentions: false))
+        await Assert.That(Rewrite("note xx#377 here", false))
             .IsEqualTo("note xx#377 here");
 
     /// <summary>Shortrefs inside fenced code blocks are preserved verbatim.</summary>
@@ -54,28 +54,28 @@ public class MagicLinkShortrefTests
     public async Task ShortrefsInFencedCodeArePreserved()
     {
         const string Source = "```\nsee #1 and @bot\n```\n";
-        await Assert.That(Rewrite(Source, expandMentions: true)).IsEqualTo(Source);
+        await Assert.That(Rewrite(Source, true)).IsEqualTo(Source);
     }
 
     /// <summary>Shortrefs inside inline code are preserved verbatim.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ShortrefsInInlineCodeArePreserved() =>
-        await Assert.That(Rewrite("see `#1` ref", expandMentions: false))
+        await Assert.That(Rewrite("see `#1` ref", false))
             .IsEqualTo("see `#1` ref");
 
     /// <summary>Shortrefs inside an existing Markdown link's bracket span are left alone.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ShortrefsInExistingLinkPreserved() =>
-        await Assert.That(Rewrite("[issue #1](other)", expandMentions: false))
+        await Assert.That(Rewrite("[issue #1](other)", false))
             .IsEqualTo("[issue #1](other)");
 
     /// <summary>A bare <c>#</c> followed by a non-digit byte is left as text.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task HashWithoutDigitsIsLiteral() =>
-        await Assert.That(Rewrite("section # heading", expandMentions: false))
+        await Assert.That(Rewrite("section # heading", false))
             .IsEqualTo("section # heading");
 
     /// <summary>When <c>defaultRepo</c> is empty, <c>#NNN</c> is left untouched.</summary>

@@ -13,7 +13,8 @@ public class LinkValidatorRegistrationTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new LinkValidatorPlugin().Name.SequenceEqual("link-validator"u8)).IsTrue();
+    public async Task NameIsStable() =>
+        await Assert.That(new LinkValidatorPlugin().Name.SequenceEqual("link-validator"u8)).IsTrue();
 
     /// <summary>Default LinkValidatorOptions has expected defaults.</summary>
     /// <returns>Async test.</returns>
@@ -83,5 +84,6 @@ public class LinkValidatorRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseLinkValidatorLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseLinkValidator(LinkValidatorOptions.Default, NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseLinkValidator(LinkValidatorOptions.Default, NullLogger.Instance))
+            .IsTypeOf<DocBuilder>();
 }

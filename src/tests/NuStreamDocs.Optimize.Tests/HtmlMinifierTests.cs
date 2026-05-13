@@ -13,12 +13,14 @@ public class HtmlMinifierTests
     /// <summary>Inter-tag whitespace runs collapse to a single space (or vanish entirely between tags).</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task CollapsesWhitespaceBetweenTags() => await Assert.That(Minify("<p>  hello   world  </p>")).IsEqualTo("<p>hello world</p>");
+    public async Task CollapsesWhitespaceBetweenTags() =>
+        await Assert.That(Minify("<p>  hello   world  </p>")).IsEqualTo("<p>hello world</p>");
 
     /// <summary>HTML comments are stripped by default.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task StripsComments() => await Assert.That(Minify("<p>a<!-- ignore me -->b</p>")).IsEqualTo("<p>ab</p>");
+    public async Task StripsComments() =>
+        await Assert.That(Minify("<p>a<!-- ignore me -->b</p>")).IsEqualTo("<p>ab</p>");
 
     /// <summary>Whitespace inside <c>&lt;pre&gt;</c> is preserved verbatim.</summary>
     /// <returns>Async test.</returns>
@@ -41,12 +43,14 @@ public class HtmlMinifierTests
     /// <summary>Tag attributes survive the rewrite intact.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PreservesTagAttributes() => await Assert.That(Minify("<a href=\"x\"  class=\"y\" >link</a>")).IsEqualTo("<a href=\"x\"  class=\"y\" >link</a>");
+    public async Task PreservesTagAttributes() => await Assert.That(Minify("<a href=\"x\"  class=\"y\" >link</a>"))
+        .IsEqualTo("<a href=\"x\"  class=\"y\" >link</a>");
 
     /// <summary>Whitespace between block-level tags collapses to nothing (no leading space after a tag).</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task DropsWhitespaceBetweenBlockTags() => await Assert.That(Minify("<p>a</p>\n\n  <p>b</p>")).IsEqualTo("<p>a</p><p>b</p>");
+    public async Task DropsWhitespaceBetweenBlockTags() =>
+        await Assert.That(Minify("<p>a</p>\n\n  <p>b</p>")).IsEqualTo("<p>a</p><p>b</p>");
 
     /// <summary>Empty input produces empty output.</summary>
     /// <returns>Async test.</returns>
@@ -58,7 +62,7 @@ public class HtmlMinifierTests
     [Test]
     public async Task RespectsCollapseDisabledOption()
     {
-        HtmlMinifyOptions options = new(StripComments: true, CollapseWhitespace: false);
+        HtmlMinifyOptions options = new(true, false);
         await Assert.That(Minify("<p>  a   b  </p>", options)).IsEqualTo("<p>  a   b  </p>");
     }
 
@@ -67,7 +71,7 @@ public class HtmlMinifierTests
     [Test]
     public async Task RespectsKeepCommentsOption()
     {
-        HtmlMinifyOptions options = new(StripComments: false, CollapseWhitespace: true);
+        HtmlMinifyOptions options = new(false, true);
         await Assert.That(Minify("<p>a<!-- keep -->b</p>", options)).IsEqualTo("<p>a<!-- keep -->b</p>");
     }
 

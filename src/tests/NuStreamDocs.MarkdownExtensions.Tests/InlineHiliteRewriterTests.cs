@@ -28,7 +28,8 @@ public class InlineHiliteRewriterTests
     /// <summary>Plain inline code without the shebang passes through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task PlainInlineCodePassesThrough() => await Assert.That(Rewrite("a `plain` span")).IsEqualTo("a `plain` span");
+    public async Task PlainInlineCodePassesThrough() =>
+        await Assert.That(Rewrite("a `plain` span")).IsEqualTo("a `plain` span");
 
     /// <summary>Multi-backtick spans (<c>``…``</c>) are matched by run width.</summary>
     /// <returns>Async test.</returns>
@@ -40,7 +41,8 @@ public class InlineHiliteRewriterTests
     /// <summary>Shebang with no trailing space (no code body) passes through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task ShebangWithoutCodePassesThrough() => await Assert.That(Rewrite("`#!python`")).IsEqualTo("`#!python`");
+    public async Task ShebangWithoutCodePassesThrough() =>
+        await Assert.That(Rewrite("`#!python`")).IsEqualTo("`#!python`");
 
     /// <summary>Fenced code blocks pass through verbatim.</summary>
     /// <returns>Async test.</returns>
@@ -49,7 +51,8 @@ public class InlineHiliteRewriterTests
     {
         const string Source = "Outside `#!js x()`.\n```\n`#!python y()`\n```\nAfter `#!js z()`.";
         await Assert.That(Rewrite(Source))
-            .IsEqualTo("Outside <code class=\"highlight language-js\">x()</code>.\n```\n`#!python y()`\n```\nAfter <code class=\"highlight language-js\">z()</code>.");
+            .IsEqualTo(
+                "Outside <code class=\"highlight language-js\">x()</code>.\n```\n`#!python y()`\n```\nAfter <code class=\"highlight language-js\">z()</code>.");
     }
 
     /// <summary>Plain text round-trips byte-for-byte.</summary>

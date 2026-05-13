@@ -9,7 +9,10 @@ using System.Text.Json;
 namespace NuStreamDocs.Common;
 
 /// <summary>UTF-8 byte snapshot helpers for <see cref="Utf8JsonReader"/>.</summary>
-[SuppressMessage("Design", "CA1045:Do not pass types by reference", Justification = "Utf8JsonReader is a ref struct; mutating its position requires a ref parameter.")]
+[SuppressMessage(
+    "Design",
+    "CA1045:Do not pass types by reference",
+    Justification = "Utf8JsonReader is a ref struct; mutating its position requires a ref parameter.")]
 public static class Utf8JsonReaderByteExtensions
 {
     /// <summary>Returns the current string token's UTF-8 bytes as a fresh array.</summary>

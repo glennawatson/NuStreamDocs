@@ -62,16 +62,16 @@ public class BlockScannerParameterizedTests
             switch (blocks[i].Kind)
             {
                 case BlockKind.FencedCode:
-                {
-                    fences++;
-                    break;
-                }
+                    {
+                        fences++;
+                        break;
+                    }
 
                 case BlockKind.FencedCodeContent:
-                {
-                    content++;
-                    break;
-                }
+                    {
+                        content++;
+                        break;
+                    }
             }
         }
 

@@ -37,12 +37,18 @@ public static class CSharpApiGenerator
         return await PhaseTimer.RunAsync(
             resolvedLogger,
             l => LogGeneratorStartIfEnabled(l, options),
-            static (l, result, secs) => CSharpApiGeneratorLoggingHelper.LogGeneratorComplete(l, result.CanonicalTypes, result.PagesEmitted, secs),
+            static (l, result, secs) =>
+                CSharpApiGeneratorLoggingHelper.LogGeneratorComplete(
+                    l,
+                    result.CanonicalTypes,
+                    result.PagesEmitted,
+                    secs),
             async () =>
             {
                 ZensicalDocumentationEmitter emitter = new();
                 MetadataExtractor extractor = new();
-                return await extractor.RunAsync(source, sink, emitter, resolvedLogger, cancellationToken).ConfigureAwait(false);
+                return await extractor.RunAsync(source, sink, emitter, resolvedLogger, cancellationToken)
+                    .ConfigureAwait(false);
             }).ConfigureAwait(false);
     }
 
@@ -65,7 +71,12 @@ public static class CSharpApiGenerator
         return await PhaseTimer.RunAsync(
             resolvedLogger,
             l => LogDirectExtractStartIfEnabled(l, options),
-            static (l, result, secs) => CSharpApiGeneratorLoggingHelper.LogDirectExtractComplete(l, result.CanonicalTypes.Length, result.SourceLinks.Length, secs),
+            static (l, result, secs) =>
+                CSharpApiGeneratorLoggingHelper.LogDirectExtractComplete(
+                    l,
+                    result.CanonicalTypes.Length,
+                    result.SourceLinks.Length,
+                    secs),
             async () =>
             {
                 MetadataExtractor extractor = new();
@@ -99,7 +110,10 @@ public static class CSharpApiGenerator
     {
         NuGetManifestInput m => StringCompose.Concat("manifest:", m.RootDirectory.Value),
         NuGetPackagesInput p => StringCompose.ConcatInt("packages:", p.Packages.Length),
-        LocalAssembliesInput l => StringCompose.ConcatInt("assemblies:", l.AssemblyPaths.Length, StringCompose.Concat("@", l.Tfm.Value ?? string.Empty)),
+        LocalAssembliesInput l => StringCompose.ConcatInt(
+            "assemblies:",
+            l.AssemblyPaths.Length,
+            StringCompose.Concat("@", l.Tfm.Value ?? string.Empty)),
         CustomInput => "custom-source",
         _ => input.GetType().Name
     };

@@ -22,7 +22,8 @@ public class EmojiRewriterTests
     [Test]
     public async Task MultipleShortcodesOnOneLine() =>
         await Assert.That(Rewrite(":tada: ship :fire: it :100:"))
-            .IsEqualTo("<span class=\"twemoji\">🎉</span> ship <span class=\"twemoji\">🔥</span> it <span class=\"twemoji\">💯</span>");
+            .IsEqualTo(
+                "<span class=\"twemoji\">🎉</span> ship <span class=\"twemoji\">🔥</span> it <span class=\"twemoji\">💯</span>");
 
     /// <summary>Shortcodes that contain digits or punctuation in the body resolve.</summary>
     /// <returns>Async test.</returns>
@@ -41,7 +42,8 @@ public class EmojiRewriterTests
     /// <summary>A bare colon does not trigger a match.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task BareColonDoesNotMatch() => await Assert.That(Rewrite("ratio 3:1 here")).IsEqualTo("ratio 3:1 here");
+    public async Task BareColonDoesNotMatch() =>
+        await Assert.That(Rewrite("ratio 3:1 here")).IsEqualTo("ratio 3:1 here");
 
     /// <summary>Fenced code blocks pass through verbatim.</summary>
     /// <returns>Async test.</returns>
@@ -78,7 +80,8 @@ public class EmojiRewriterTests
     /// <summary>Unclosed shortcode at end of line passes through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task UnclosedShortcodePassesThrough() => await Assert.That(Rewrite("trailing :fire never closes")).IsEqualTo("trailing :fire never closes");
+    public async Task UnclosedShortcodePassesThrough() => await Assert.That(Rewrite("trailing :fire never closes"))
+        .IsEqualTo("trailing :fire never closes");
 
     /// <summary>Identifiers using each permitted body byte (digits, underscore, hyphen, plus, dot, mixed-case letters) all parse without breaking the colon scanner.</summary>
     /// <param name="input">Source containing the candidate shortcode.</param>

@@ -13,35 +13,27 @@ public static class DocBuilderSitemapExtensions
     /// <summary>Registers <see cref="SitemapPlugin"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSitemap(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new SitemapPlugin());
-    }
+    public static DocBuilder UseSitemap(this DocBuilder builder) => builder.UsePlugin(new SitemapPlugin());
 
     /// <summary>Registers <see cref="NotFoundPlugin"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseNotFoundPage(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new NotFoundPlugin());
-    }
+    public static DocBuilder UseNotFoundPage(this DocBuilder builder) => builder.UsePlugin(new NotFoundPlugin());
 
     /// <summary>Registers <see cref="RedirectsPlugin"/> with the given <paramref name="entries"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="entries">Tuples of <c>(fromPath, toUrl)</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseRedirects(this DocBuilder builder, params (UrlPath From, UrlPath To)[] entries)
-    {
-        return builder.UsePlugin(new RedirectsPlugin(entries));
-    }
+    public static DocBuilder UseRedirects(this DocBuilder builder, params (UrlPath From, UrlPath To)[] entries) =>
+        builder.UsePlugin(new RedirectsPlugin(entries));
 
     /// <summary>Registers <see cref="RedirectsPlugin"/> with explicit options and static entries.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options controlling config-file lookup and frontmatter alias scanning.</param>
     /// <param name="entries">Static tuples of <c>(fromPath, toUrl)</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseRedirects(this DocBuilder builder, in RedirectsOptions options, params (UrlPath From, UrlPath To)[] entries)
-    {
-        return builder.UsePlugin(new RedirectsPlugin(options, entries));
-    }
+    public static DocBuilder UseRedirects(
+        this DocBuilder builder,
+        in RedirectsOptions options,
+        params (UrlPath From, UrlPath To)[] entries) => builder.UsePlugin(new RedirectsPlugin(options, entries));
 }

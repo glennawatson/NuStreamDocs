@@ -56,7 +56,8 @@ public static class VbNetLexer
         var lineComment = new LexerRule(
             static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'\''),
             TokenClass.CommentSingle,
-            LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = SingleQuoteFirst };
 
         CFamilyConfig config = new()
         {

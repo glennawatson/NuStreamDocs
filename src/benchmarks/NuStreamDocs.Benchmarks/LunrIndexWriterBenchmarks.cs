@@ -53,7 +53,9 @@ public class LunrIndexWriterBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _tempRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-lunr-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _tempRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-lunr-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(_tempRoot);
         _smallCorpus = BuildCorpus(SmallDocCount);
         _midCorpus = BuildCorpus(MidDocCount);
@@ -67,7 +69,7 @@ public class LunrIndexWriterBenchmarks
         {
             if (Directory.Exists(_tempRoot))
             {
-                Directory.Delete(_tempRoot, recursive: true);
+                Directory.Delete(_tempRoot, true);
             }
         }
         catch (IOException)

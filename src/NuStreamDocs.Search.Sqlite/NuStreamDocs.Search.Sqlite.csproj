@@ -8,28 +8,28 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Search\NuStreamDocs.Search.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Search\NuStreamDocs.Search.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.core" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+    <PackageReference Include="SQLitePCLRaw.core"/>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3"/>
   </ItemGroup>
 
   <!-- Vendored sqlite-wasm-http runtime (ESM entry + sqlite3.wasm). Embedded in
        the dll so the plugin can write it through IStaticAssetProvider without a
        loose file dependency. Populated in Task 2. -->
   <ItemGroup>
-    <EmbeddedResource Include="Assets\**" />
+    <EmbeddedResource Include="Assets\**"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Search.Sqlite.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Search.Sqlite.Tests"/>
   </ItemGroup>
 
 </Project>

@@ -21,7 +21,8 @@ internal static class InlineHiliteRewriter
         var i = 0;
         while (i < source.Length)
         {
-            if (MarkdownCodeScanner.AtLineStart(source, i) && MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
+            if (MarkdownCodeScanner.AtLineStart(source, i) &&
+                MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
             {
                 writer.Write(source[i..fenceEnd]);
                 i = fenceEnd;
@@ -55,7 +56,11 @@ internal static class InlineHiliteRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True when a shebang span was rewritten.</returns>
-    private static bool TryRewriteShebangCode(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteShebangCode(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var run = CountBackticks(source, offset);
@@ -121,9 +126,9 @@ internal static class InlineHiliteRewriter
     /// <returns>True for letters, digits, <c>-</c>, <c>+</c>, <c>.</c>, <c>_</c>.</returns>
     private static bool IsLanguageByte(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'-' or (byte)'+' or (byte)'.' or (byte)'_';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'-' or (byte)'+' or (byte)'.' or (byte)'_';
 
     /// <summary>Finds a backtick run of exactly <paramref name="width"/> bytes starting at or after <paramref name="from"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -157,7 +162,10 @@ internal static class InlineHiliteRewriter
     /// <param name="language">UTF-8 language token.</param>
     /// <param name="code">UTF-8 code body.</param>
     /// <param name="writer">Sink.</param>
-    private static void EmitInlineHighlight(ReadOnlySpan<byte> language, ReadOnlySpan<byte> code, IBufferWriter<byte> writer)
+    private static void EmitInlineHighlight(
+        ReadOnlySpan<byte> language,
+        ReadOnlySpan<byte> code,
+        IBufferWriter<byte> writer)
     {
         writer.Write("<code class=\"highlight language-"u8);
         writer.Write(language);

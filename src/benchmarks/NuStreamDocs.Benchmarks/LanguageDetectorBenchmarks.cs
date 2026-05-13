@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Highlight;
 using NuStreamDocs.Plugins;
@@ -148,9 +149,9 @@ public class LanguageDetectorBenchmarks
             DetectBodyRepeat);
 
         _pageNoCode = [.. "<p>plain prose</p><p>more prose</p>"u8];
-        _pageLabeledOnly = WrapInPreCode(_bodyCSharp, language: "csharp");
-        _pageUnlabeledCSharp = WrapInPreCode(_bodyCSharp, language: null);
-        _pageUnlabeledAmbiguous = WrapInPreCode(_bodyAmbiguous, language: null);
+        _pageLabeledOnly = WrapInPreCode(_bodyCSharp, "csharp");
+        _pageUnlabeledCSharp = WrapInPreCode(_bodyCSharp, null);
+        _pageUnlabeledAmbiguous = WrapInPreCode(_bodyAmbiguous, null);
 
         _pluginAutoDetectOff = new(HighlightOptions.Default);
         _pluginAutoDetectOn = new(HighlightOptions.Default with { AutoDetectLanguage = true });
@@ -343,7 +344,7 @@ public class LanguageDetectorBenchmarks
     {
         var prefix = language is null
             ? [.. "<p>intro</p>\n<pre><code>"u8]
-            : System.Text.Encoding.UTF8.GetBytes($"<p>intro</p>\n<pre><code class=\"language-{language}\">");
+            : Encoding.UTF8.GetBytes($"<p>intro</p>\n<pre><code class=\"language-{language}\">");
         byte[] suffix = [.. "</code></pre>\n<p>outro</p>"u8];
         var output = new byte[prefix.Length + body.Length + suffix.Length];
         prefix.CopyTo(output, 0);

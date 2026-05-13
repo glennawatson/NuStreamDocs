@@ -187,7 +187,9 @@ public class ExtraAssetsTests
         /// <returns>A new fixture; caller must dispose.</returns>
         public static TempDir Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-extras-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            var root = Path.Combine(
+                Path.GetTempPath(),
+                "smkd-extras-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(root);
             return new(root);
         }
@@ -199,7 +201,7 @@ public class ExtraAssetsTests
             {
                 if (Directory.Exists(Root))
                 {
-                    Directory.Delete(Root, recursive: true);
+                    Directory.Delete(Root, true);
                 }
             }
             catch (IOException)

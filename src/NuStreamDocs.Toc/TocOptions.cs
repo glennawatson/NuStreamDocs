@@ -15,10 +15,16 @@ public readonly record struct TocOptions(
     string PermalinkSymbol,
     bool MarkerSubstitute)
 {
+    /// <summary>Default <see cref="MinLevel"/> — skip the page <c>h1</c> title in the rendered fragment.</summary>
+    private const int DefaultMinLevel = 2;
+
+    /// <summary>Default <see cref="MaxLevel"/> — the deepest HTML heading level.</summary>
+    private const int DefaultMaxLevel = 6;
+
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static TocOptions Default { get; } = new(
-        MinLevel: 2,
-        MaxLevel: 6,
-        PermalinkSymbol: "¶",
-        MarkerSubstitute: true);
+        DefaultMinLevel,
+        DefaultMaxLevel,
+        "¶",
+        true);
 }

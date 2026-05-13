@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using NuStreamDocs.Common;
@@ -39,7 +40,7 @@ public sealed class LocalFontProvider : IFontProvider
             matcher.AddInclude(face.LocalSrc[i].Value);
         }
 
-        var matches = matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(inputRoot.Value)));
+        var matches = matcher.Execute(new DirectoryInfoWrapper(new(inputRoot.Value)));
         var defaultWeight = face.Weights is [var first, ..] ? first : 400;
         var defaultStyle = face.Styles is [var firstStyle, ..] ? firstStyle : FontStyle.Normal;
         List<FontResource> resources = [];
@@ -53,13 +54,27 @@ public sealed class LocalFontProvider : IFontProvider
             }
 
             var bytes = await File.ReadAllBytesAsync(fullPath, cancellationToken).ConfigureAwait(false);
-            var style = file.Path.Contains("italic", StringComparison.OrdinalIgnoreCase) ? FontStyle.Italic : defaultStyle;
-            resources.Add(new((byte[])face.FamilyBytes.Clone(), defaultWeight, style, [], bytes, (ApiCompatString)fullPath));
+            var style = file.Path.Contains("italic", StringComparison.OrdinalIgnoreCase)
+                ? FontStyle.Italic
+                : defaultStyle;
+            resources.Add(
+                new(
+                    (byte[])face.FamilyBytes.Clone(),
+                    defaultWeight,
+                    style,
+                    [],
+                    bytes,
+                    (ApiCompatString)fullPath));
         }
 
         if (resources is [])
         {
-            throw new FontDownloadException(StringCompose.Concat("No local font files matched for family ", System.Text.Encoding.UTF8.GetString(face.FamilyBytes), " under ", inputRoot.Value));
+            throw new FontDownloadException(
+                StringCompose.Concat(
+                    "No local font files matched for family ",
+                    Encoding.UTF8.GetString(face.FamilyBytes),
+                    " under ",
+                    inputRoot.Value));
         }
 
         return [.. resources];

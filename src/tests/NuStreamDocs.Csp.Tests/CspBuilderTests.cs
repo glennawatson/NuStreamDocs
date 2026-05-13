@@ -32,7 +32,11 @@ public class CspBuilderTests
     [Test]
     public async Task ScriptHashesInScriptSrc()
     {
-        var csp = Encoding.UTF8.GetString(CspBuilder.Build([[.. "'sha256-ABC'"u8], [.. "'sha256-DEF'"u8]], [], CspOptions.Default));
+        var csp = Encoding.UTF8.GetString(
+            CspBuilder.Build(
+                [[.. "'sha256-ABC'"u8], [.. "'sha256-DEF'"u8]],
+                [],
+                CspOptions.Default));
         await Assert.That(csp).Contains("script-src 'self' 'sha256-ABC' 'sha256-DEF'");
     }
 

@@ -13,18 +13,14 @@ public static class DocBuilderBlogExtensions
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseWyamBlog(this DocBuilder builder, WyamBlogOptions options)
-    {
-        return builder.UsePlugin(new WyamBlogPlugin(options));
-    }
+    public static DocBuilder UseWyamBlog(this DocBuilder builder, WyamBlogOptions options) =>
+        builder.UsePlugin(new WyamBlogPlugin(options));
 
     /// <summary>Registers <see cref="WyamBlogPlugin"/> with options and a logger.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseWyamBlog(this DocBuilder builder, WyamBlogOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new WyamBlogPlugin(options, logger));
-    }
+    public static DocBuilder UseWyamBlog(this DocBuilder builder, WyamBlogOptions options, ILogger logger) =>
+        builder.UsePlugin(new WyamBlogPlugin(options, logger));
 }

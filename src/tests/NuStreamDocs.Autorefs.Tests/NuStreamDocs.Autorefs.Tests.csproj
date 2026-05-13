@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Autorefs\NuStreamDocs.Autorefs.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Autorefs\NuStreamDocs.Autorefs.csproj"/>
   </ItemGroup>
 
 </Project>

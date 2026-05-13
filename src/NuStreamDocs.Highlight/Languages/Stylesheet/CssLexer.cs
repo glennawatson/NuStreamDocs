@@ -20,12 +20,7 @@ public static class CssLexer
     /// <returns>Lexer.</returns>
     private static Lexer Build()
     {
-        CssFamilyConfig config = new()
-        {
-            IncludeLineComment = false,
-            VariableSigil = 0,
-            IncludeParentSelector = false
-        };
+        CssFamilyConfig config = new() { IncludeLineComment = false, VariableSigil = 0, IncludeParentSelector = false };
 
         return CssFamilyRules.CreateLexer(config);
     }

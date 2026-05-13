@@ -32,10 +32,7 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
     public ReadOnlySpan<byte> Name => "mathjax"u8;
 
     /// <inheritdoc/>
-    public void WriteHeadExtra(IBufferWriter<byte> writer)
-    {
-        writer.Write(_headExtraBytes);
-    }
+    public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(_headExtraBytes);
 
     /// <summary>Builds the inline-config + async-loader head fragment for the given options.</summary>
     /// <param name="options">Plugin options.</param>
@@ -43,8 +40,14 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
     private static byte[] ComposeHead(in MathJaxOptions options)
     {
         var loader = options.LoaderUrl.IsEmpty ? MathJaxOptions.Default.LoaderUrl.Value : options.LoaderUrl.Value;
-        var processClass = (options.ProcessHtmlClass.IsEmpty ? MathJaxOptions.Default.ProcessHtmlClass.Value : options.ProcessHtmlClass.Value) ?? string.Empty;
-        var ignoreClass = (options.IgnoreHtmlClass.IsEmpty ? MathJaxOptions.Default.IgnoreHtmlClass.Value : options.IgnoreHtmlClass.Value) ?? string.Empty;
+        var processClass =
+            (options.ProcessHtmlClass.IsEmpty
+                ? MathJaxOptions.Default.ProcessHtmlClass.Value
+                : options.ProcessHtmlClass.Value) ?? string.Empty;
+        var ignoreClass =
+            (options.IgnoreHtmlClass.IsEmpty
+                ? MathJaxOptions.Default.IgnoreHtmlClass.Value
+                : options.IgnoreHtmlClass.Value) ?? string.Empty;
 
         // MathJax 3 reads `window.MathJax` at startup, so we set it before loading the bundle.
         // Inline math delimiters mirror Arithmatex's output: `\(…\)` for inline, `\[…\]` for

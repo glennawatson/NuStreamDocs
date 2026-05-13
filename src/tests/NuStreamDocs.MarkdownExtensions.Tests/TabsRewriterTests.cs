@@ -102,23 +102,25 @@ public class TabsRewriterTests
     public async Task GroupsOpenersWithIndentedFencedCodeBetween()
     {
         const string Input = """
-            === "C#"
+                             === "C#"
 
-                ```csharp
-                var x = 1;
-                ```
+                                 ```csharp
+                                 var x = 1;
+                                 ```
 
-            === "F#"
+                             === "F#"
 
-                ```fsharp
-                let x = 1
-                ```
-            """;
+                                 ```fsharp
+                                 let x = 1
+                                 ```
+                             """;
         var output = Rewrite(Input);
 
         // Single tabbed-set wraps both labels.
         var setOpenIdx = output.IndexOf("<div class=\"tabbed-set\">", StringComparison.Ordinal);
-        var nextSetIdx = setOpenIdx >= 0 ? output.IndexOf("<div class=\"tabbed-set\">", setOpenIdx + 1, StringComparison.Ordinal) : -1;
+        var nextSetIdx = setOpenIdx >= 0
+            ? output.IndexOf("<div class=\"tabbed-set\">", setOpenIdx + 1, StringComparison.Ordinal)
+            : -1;
         await Assert.That(setOpenIdx).IsGreaterThanOrEqualTo(0);
         await Assert.That(nextSetIdx).IsEqualTo(-1);
         await Assert.That(output).Contains(">C#</label>");

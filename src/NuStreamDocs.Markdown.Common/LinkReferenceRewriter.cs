@@ -73,7 +73,10 @@ public static class LinkReferenceRewriter
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="definitions">Pre-built case-folded label → definition map.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void RewriteCore(ReadOnlySpan<byte> source, Dictionary<string, Definition> definitions, IBufferWriter<byte> writer)
+    private static void RewriteCore(
+        ReadOnlySpan<byte> source,
+        Dictionary<string, Definition> definitions,
+        IBufferWriter<byte> writer)
     {
         var pos = 0;
         while (pos < source.Length)
@@ -88,7 +91,11 @@ public static class LinkReferenceRewriter
     /// <param name="definitions">Pre-built definition map.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Updated cursor.</returns>
-    private static int ProcessOne(ReadOnlySpan<byte> source, int pos, Dictionary<string, Definition> definitions, IBufferWriter<byte> writer)
+    private static int ProcessOne(
+        ReadOnlySpan<byte> source,
+        int pos,
+        Dictionary<string, Definition> definitions,
+        IBufferWriter<byte> writer)
     {
         if (TryConsumeCodeRegion(source, pos, writer, out var afterCode))
         {
@@ -115,7 +122,11 @@ public static class LinkReferenceRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="afterCode">Cursor just past the consumed region on success.</param>
     /// <returns>True when a code region was consumed.</returns>
-    private static bool TryConsumeCodeRegion(ReadOnlySpan<byte> source, int pos, IBufferWriter<byte> writer, out int afterCode)
+    private static bool TryConsumeCodeRegion(
+        ReadOnlySpan<byte> source,
+        int pos,
+        IBufferWriter<byte> writer,
+        out int afterCode)
     {
         afterCode = pos;
         if (MarkdownCodeScanner.AtLineStart(source, pos)
@@ -186,7 +197,12 @@ public static class LinkReferenceRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="consumed">Bytes consumed from <paramref name="pos"/> on success.</param>
     /// <returns>True when a reference was rewritten.</returns>
-    private static bool TryRewriteReference(ReadOnlySpan<byte> source, int pos, Dictionary<string, Definition> definitions, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteReference(
+        ReadOnlySpan<byte> source,
+        int pos,
+        Dictionary<string, Definition> definitions,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var firstClose = FindMatchingBracket(source, pos);
@@ -260,7 +276,10 @@ public static class LinkReferenceRewriter
     /// <param name="label">Raw label bytes.</param>
     /// <param name="def">Resolved definition on hit.</param>
     /// <returns>True when the label is in the map.</returns>
-    private static bool TryResolve(Dictionary<string, Definition> definitions, ReadOnlySpan<byte> label, out Definition def)
+    private static bool TryResolve(
+        Dictionary<string, Definition> definitions,
+        ReadOnlySpan<byte> label,
+        out Definition def)
     {
         def = default;
         var trimmed = AsciiByteHelpers.TrimAsciiWhitespace(label);
@@ -307,7 +326,11 @@ public static class LinkReferenceRewriter
     /// <param name="lineEnd">Exclusive line end.</param>
     /// <param name="parsed">Parsed definition on success.</param>
     /// <returns>True when the line is a well-formed definition.</returns>
-    private static bool TryParseDefinitionLine(ReadOnlySpan<byte> source, int lineStart, int lineEnd, out ParsedDefinition parsed)
+    private static bool TryParseDefinitionLine(
+        ReadOnlySpan<byte> source,
+        int lineStart,
+        int lineEnd,
+        out ParsedDefinition parsed)
     {
         parsed = default;
         if (!TryParseDefinitionLabel(source, lineStart, lineEnd, out var label, out var afterColon))
@@ -331,11 +354,16 @@ public static class LinkReferenceRewriter
     /// <param name="label">Trimmed label bytes on success.</param>
     /// <param name="afterColon">Cursor position just after the colon (and any trailing inline whitespace) on success.</param>
     /// <returns>True when the prefix is well-formed and a non-empty label was found.</returns>
-    private static bool TryParseDefinitionLabel(ReadOnlySpan<byte> source, int lineStart, int lineEnd, out ReadOnlySpan<byte> label, out int afterColon)
+    private static bool TryParseDefinitionLabel(
+        ReadOnlySpan<byte> source,
+        int lineStart,
+        int lineEnd,
+        out ReadOnlySpan<byte> label,
+        out int afterColon)
     {
         label = default;
         afterColon = 0;
-        var p = SkipIndent(source, lineStart, lineEnd, maxIndent: 3);
+        var p = SkipIndent(source, lineStart, lineEnd, 3);
         if (p >= lineEnd || source[p] is not (byte)'[')
         {
             return false;
@@ -370,7 +398,12 @@ public static class LinkReferenceRewriter
     /// <param name="hrefBytes">Resolved href bytes (without surrounding angle brackets) on success.</param>
     /// <param name="afterHref">Cursor just past the URL (and its closing <c>&gt;</c> when present) on success.</param>
     /// <returns>True when a non-empty URL was parsed.</returns>
-    private static bool TryParseDefinitionHref(ReadOnlySpan<byte> source, int start, int lineEnd, out ReadOnlySpan<byte> hrefBytes, out int afterHref)
+    private static bool TryParseDefinitionHref(
+        ReadOnlySpan<byte> source,
+        int start,
+        int lineEnd,
+        out ReadOnlySpan<byte> hrefBytes,
+        out int afterHref)
     {
         var hrefEnd = ScanHref(source, start, lineEnd, out var hrefSawAngle);
         if (hrefEnd <= start)
@@ -408,7 +441,11 @@ public static class LinkReferenceRewriter
     /// <param name="lineEnd">End of the line.</param>
     /// <param name="sawAngleBrackets">True when the closing <c>&gt;</c> was matched.</param>
     /// <returns>Exclusive end of the URL (past the closing <c>&gt;</c>) on success; <paramref name="start"/> on failure.</returns>
-    private static int ScanAngleBracketedHref(ReadOnlySpan<byte> source, int start, int lineEnd, out bool sawAngleBrackets)
+    private static int ScanAngleBracketedHref(
+        ReadOnlySpan<byte> source,
+        int start,
+        int lineEnd,
+        out bool sawAngleBrackets)
     {
         for (var i = start + 1; i < lineEnd; i++)
         {

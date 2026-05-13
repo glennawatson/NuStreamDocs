@@ -31,7 +31,11 @@ internal static class CriticMarkupRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True when a span was emitted.</returns>
-    private static bool TryRewriteSpan(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteSpan(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (source[offset] is not (byte)'{' || offset + MarkerLength >= source.Length)

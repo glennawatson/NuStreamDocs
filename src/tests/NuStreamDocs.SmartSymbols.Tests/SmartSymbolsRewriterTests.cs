@@ -57,7 +57,8 @@ public class SmartSymbolsRewriterTests
     /// <summary>Fractions inside larger numerics are left alone.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task FractionsLeaveLargerNumbersAlone() => await Assert.That(Rewrite("file 21/40 in series")).IsEqualTo("file 21/40 in series");
+    public async Task FractionsLeaveLargerNumbersAlone() =>
+        await Assert.That(Rewrite("file 21/40 in series")).IsEqualTo("file 21/40 in series");
 
     /// <summary>Fenced code blocks pass through verbatim.</summary>
     /// <returns>Async test.</returns>

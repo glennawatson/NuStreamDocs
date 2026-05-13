@@ -17,7 +17,7 @@ public class HtmlEmitterExtractInfoStringTests
     public async Task BacktickWithLanguage()
     {
         byte[] bytes = [.. "```csharp"u8];
-        await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo("csharp");
     }
 
     /// <summary>A <c>~~~js</c> opener also yields the language.</summary>
@@ -26,7 +26,7 @@ public class HtmlEmitterExtractInfoStringTests
     public async Task TildeWithLanguage()
     {
         byte[] bytes = [.. "~~~js"u8];
-        await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("js");
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo("js");
     }
 
     /// <summary>An empty opener yields an empty info string.</summary>
@@ -35,7 +35,7 @@ public class HtmlEmitterExtractInfoStringTests
     public async Task NoLanguageYieldsEmpty()
     {
         byte[] bytes = [.. "```"u8];
-        await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo(string.Empty);
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo(string.Empty);
     }
 
     /// <summary>Whitespace around the language is trimmed.</summary>
@@ -44,7 +44,7 @@ public class HtmlEmitterExtractInfoStringTests
     public async Task LeadingWhitespaceTrimmed()
     {
         byte[] bytes = [.. "```   csharp"u8];
-        await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo("csharp");
     }
 
     /// <summary>Extra metadata after a space is dropped — only the language survives.</summary>
@@ -53,7 +53,7 @@ public class HtmlEmitterExtractInfoStringTests
     public async Task ExtraMetadataDropped()
     {
         byte[] bytes = [.. "```csharp title=\"hello.cs\""u8];
-        await Assert.That(Decode(bytes, openerLength: bytes.Length)).IsEqualTo("csharp");
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo("csharp");
     }
 
     /// <summary>Wraps the helper with the small bytes/openerLength dance ExtractInfoString needs.</summary>

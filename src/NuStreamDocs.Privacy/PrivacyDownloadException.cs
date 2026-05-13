@@ -12,10 +12,8 @@ public sealed class PrivacyDownloadException : Exception
     /// <summary>Initializes a new instance of the <see cref="PrivacyDownloadException"/> class.</summary>
     /// <param name="failedUrls">The URLs that failed to download.</param>
     public PrivacyDownloadException(string[] failedUrls)
-        : base(BuildMessage(failedUrls))
-    {
+        : base(BuildMessage(failedUrls)) =>
         FailedUrls = failedUrls;
-    }
 
     /// <summary>Initializes a new instance of the <see cref="PrivacyDownloadException"/> class with a custom message.</summary>
     /// <param name="message">Exception message.</param>
@@ -50,6 +48,6 @@ public sealed class PrivacyDownloadException : Exception
             _ => StringCompose.ConcatInt(
                 "Privacy plugin: ",
                 failedUrls.Length,
-                StringCompose.Concat(" external assets failed to download (first: ", failedUrls[0], ")")),
+                StringCompose.Concat(" external assets failed to download (first: ", failedUrls[0], ")"))
         };
 }

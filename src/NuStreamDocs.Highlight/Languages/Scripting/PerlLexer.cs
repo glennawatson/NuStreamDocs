@@ -99,15 +99,33 @@ public static class PerlLexer
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
         WhitespaceFirst = WhitespaceFirst,
-        PreCommentRule = new(MatchPodBlock, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualsFirst, RequiresLineStart = true },
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        PreCommentRule =
+            new(MatchPodBlock, TokenClass.CommentMulti, LexerRule.NoStateChange)
+            {
+                FirstBytes = EqualsFirst,
+                RequiresLineStart = true
+            },
+        LineComment =
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         PostStringRules =
         [
-            new(MatchHeredocIntroducer, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = AngleAngleFirst },
-            new(MatchQuoteOperator, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = QuoteOperatorFirst },
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'`'), TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = BacktickFirst },
+            new(MatchHeredocIntroducer, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = AngleAngleFirst
+            },
+            new(MatchQuoteOperator, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = QuoteOperatorFirst
+            },
+            new(
+                static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'`'),
+                TokenClass.StringDouble,
+                LexerRule.NoStateChange) { FirstBytes = BacktickFirst },
             new(MatchSigilVariable, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SigilFirst },
             new(MatchHexLiteral, TokenClass.NumberHex, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.HexFirst }
         ],

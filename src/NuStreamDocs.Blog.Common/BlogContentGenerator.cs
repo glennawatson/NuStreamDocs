@@ -81,7 +81,7 @@ public static class BlogContentGenerator
         var navEntries = new SyntheticNavEntry[posts.Length];
         for (var i = 0; i < posts.Length; i++)
         {
-            navEntries[i] = new SyntheticNavEntry(posts[i].RelativePath, Title: null, Order: i, Hidden: false);
+            navEntries[i] = new(posts[i].RelativePath, null, i, false);
         }
 
         var indexDirectory = options.IndexPath.Directory;

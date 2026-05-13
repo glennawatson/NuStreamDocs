@@ -56,7 +56,8 @@ public static class GoLexer
         var backtickRaw = new LexerRule(
             static slice => TokenMatchers.MatchBracketedBlock(slice, (byte)'`', (byte)'`'),
             TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = BacktickFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = BacktickFirst };
 
         CFamilyConfig config = new()
         {

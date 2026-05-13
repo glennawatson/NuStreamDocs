@@ -12,10 +12,7 @@ public static class DocBuilderRedirectsExtensions
     /// <summary>Registers <see cref="RedirectsPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseRedirects(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new RedirectsPlugin());
-    }
+    public static DocBuilder UseRedirects(this DocBuilder builder) => builder.UsePlugin(new RedirectsPlugin());
 
     /// <summary>Registers <see cref="RedirectsPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
@@ -32,8 +29,6 @@ public static class DocBuilderRedirectsExtensions
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseRedirects(this DocBuilder builder, in RedirectsOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new RedirectsPlugin(options, logger));
-    }
+    public static DocBuilder UseRedirects(this DocBuilder builder, in RedirectsOptions options, ILogger logger) =>
+        builder.UsePlugin(new RedirectsPlugin(options, logger));
 }

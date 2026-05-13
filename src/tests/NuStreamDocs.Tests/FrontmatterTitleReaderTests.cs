@@ -69,7 +69,9 @@ public class FrontmatterTitleReaderTests
     [Test]
     public async Task ReturnsNullForMissingPath()
     {
-        var missing = Path.Combine(Path.GetTempPath(), "smkd-nofile-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var missing = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-nofile-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         await Assert.That(ReadString(missing)).IsNull();
         await Assert.That(FrontmatterTitleReader.ReadBytes((FilePath)missing)).IsNull();
     }
@@ -93,7 +95,7 @@ public class FrontmatterTitleReaderTests
     private sealed class TempFile : IDisposable
     {
         /// <summary>UTF-8 encoder that does NOT prepend a byte-order mark — matches how mkdocs-style frontmatter is authored.</summary>
-        private static readonly UTF8Encoding NoBom = new(encoderShouldEmitUTF8Identifier: false);
+        private static readonly UTF8Encoding NoBom = new(false);
 
         /// <summary>Initializes a new instance of the <see cref="TempFile"/> class.</summary>
         /// <param name="path">Absolute path to the file.</param>

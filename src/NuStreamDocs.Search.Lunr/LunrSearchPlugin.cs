@@ -21,10 +21,12 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
 
     /// <summary>UTF-8 head-extra snippet referencing the Lunr runtime and the deferred glue script.</summary>
     private static readonly byte[] HeadExtraBytes =
-        [.. """
-<script src="/assets/javascripts/lunr.min.js" defer></script>
-<script src="/assets/javascripts/lunr-bind.js" defer></script>
-"""u8];
+    [
+        .. """
+           <script src="/assets/javascripts/lunr.min.js" defer></script>
+           <script src="/assets/javascripts/lunr-bind.js" defer></script>
+           """u8
+    ];
 
     /// <summary>Cached bind-script bytes.</summary>
     private static readonly byte[] BindScriptBytes = LunrBindScript.Bytes.ToArray();
@@ -97,10 +99,7 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     }
 
     /// <inheritdoc/>
-    protected override void WriteEngineHeadExtra(IBufferWriter<byte> writer)
-    {
-        writer.Write(HeadExtraBytes);
-    }
+    protected override void WriteEngineHeadExtra(IBufferWriter<byte> writer) => writer.Write(HeadExtraBytes);
 
     /// <summary>Writes <paramref name="raw"/> through <see cref="GZipStream"/> at the smallest compression level.</summary>
     /// <param name="path">Absolute output path.</param>
@@ -110,7 +109,7 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     private static async Task WriteGzipAsync(string path, byte[] raw, CancellationToken cancellationToken)
     {
         await using var output = File.Create(path);
-        await using GZipStream gzip = new(output, CompressionLevel.SmallestSize, leaveOpen: false);
+        await using GZipStream gzip = new(output, CompressionLevel.SmallestSize, false);
         await gzip.WriteAsync(raw, cancellationToken).ConfigureAwait(false);
     }
 
@@ -122,7 +121,7 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     private static async Task WriteBrotliAsync(string path, byte[] raw, CancellationToken cancellationToken)
     {
         await using var output = File.Create(path);
-        await using BrotliStream brotli = new(output, CompressionLevel.SmallestSize, leaveOpen: false);
+        await using BrotliStream brotli = new(output, CompressionLevel.SmallestSize, false);
         await brotli.WriteAsync(raw, cancellationToken).ConfigureAwait(false);
     }
 }

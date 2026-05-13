@@ -94,7 +94,8 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
         Accumulator acc = new();
         for (var i = 0; i < _options.Faces.Length; i++)
         {
-            await ProcessFaceAsync(_options.Faces[i], cache, context.InputRoot, seenBlocks, acc, cancellationToken).ConfigureAwait(false);
+            await ProcessFaceAsync(_options.Faces[i], cache, context.InputRoot, seenBlocks, acc, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         ArrayBufferWriter<byte> cssSink = new();
@@ -119,7 +120,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     {
         FontProviderKind.Fontsource => FontsourceProvider.Instance,
         FontProviderKind.Local => LocalFontProvider.Instance,
-        _ => GoogleFontProvider.Instance,
+        _ => GoogleFontProvider.Instance
     };
 
     /// <summary>Content-addresses <paramref name="bytes"/> into a short hex filename stem.</summary>
@@ -155,10 +156,16 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <param name="seenBlocks">Unicode-block bitset, or <see langword="null"/>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The resolved resources.</returns>
-    private static ValueTask<FontResource[]> ResolveForFaceAsync(FontFace face, FontDownloadCache cache, DirectoryPath inputRoot, bool[]? seenBlocks, CancellationToken cancellationToken)
+    private static ValueTask<FontResource[]> ResolveForFaceAsync(
+        FontFace face,
+        FontDownloadCache cache,
+        DirectoryPath inputRoot,
+        bool[]? seenBlocks,
+        CancellationToken cancellationToken)
     {
         var usage = IsAutoSubsets(face.Subsets) && face.Provider == FontProviderKind.Google ? seenBlocks : null;
-        return ProviderFor(face.Provider).ResolveAsync(face, RequestSubsetsFor(face), cache, inputRoot, usage, cancellationToken);
+        return ProviderFor(face.Provider)
+            .ResolveAsync(face, RequestSubsetsFor(face), cache, inputRoot, usage, cancellationToken);
     }
 
     /// <summary>Returns the subset list to request from the provider for <paramref name="face"/> (mapping <c>auto</c> to "all" for Google, or to the safe default for other providers).</summary>
@@ -177,7 +184,8 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <summary>Returns whether <paramref name="subsets"/> is the single <c>auto</c> token.</summary>
     /// <param name="subsets">A face's subset list.</param>
     /// <returns><see langword="true"/> when it is <c>["auto"]</c>.</returns>
-    private static bool IsAutoSubsets(byte[][] subsets) => subsets is [var only] && only.AsSpan().SequenceEqual(AutoSubsetToken);
+    private static bool IsAutoSubsets(byte[][] subsets) =>
+        subsets is [var only] && only.AsSpan().SequenceEqual(AutoSubsetToken);
 
     /// <summary>Scans the markdown source files under <paramref name="inputRoot"/> for which Unicode blocks they touch.</summary>
     /// <param name="inputRoot">Build input directory.</param>
@@ -192,7 +200,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
 
         var matcher = new Matcher();
         matcher.AddInclude(MarkdownGlob);
-        foreach (var file in matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(inputRoot.Value))).Files)
+        foreach (var file in matcher.Execute(new DirectoryInfoWrapper(new(inputRoot.Value))).Files)
         {
             var path = Path.Combine(inputRoot.Value, file.Path);
             if (File.Exists(path))
@@ -243,10 +251,17 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <param name="acc">Accumulating build state.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the face has been processed.</returns>
-    private async Task ProcessFaceAsync(FontFace face, FontDownloadCache cache, DirectoryPath inputRoot, bool[]? seenBlocks, Accumulator acc, CancellationToken cancellationToken)
+    private async Task ProcessFaceAsync(
+        FontFace face,
+        FontDownloadCache cache,
+        DirectoryPath inputRoot,
+        bool[]? seenBlocks,
+        Accumulator acc,
+        CancellationToken cancellationToken)
     {
         var familyName = Encoding.UTF8.GetString(face.FamilyBytes);
-        var resources = await ResolveForFaceAsync(face, cache, inputRoot, seenBlocks, cancellationToken).ConfigureAwait(false);
+        var resources = await ResolveForFaceAsync(face, cache, inputRoot, seenBlocks, cancellationToken)
+            .ConfigureAwait(false);
         if (_logger.IsEnabled(LogLevel.Information))
         {
             FontsLogging.LogFontResolved(_logger, familyName, resources.Length);
@@ -254,7 +269,15 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
 
         var resourceCss = BuildResourceCss(face, resources, acc);
         var metrics = ReadMetrics(familyName, resources);
-        acc.FaceCss.Add(new(face.Id, face.FamilyBytes, face.Display, face.Fallback, face.ThemeVariables, metrics, resourceCss));
+        acc.FaceCss.Add(
+            new(
+                face.Id,
+                face.FamilyBytes,
+                face.Display,
+                face.Fallback,
+                face.ThemeVariables,
+                metrics,
+                resourceCss));
     }
 
     /// <summary>Writes each resource's woff2 to the asset list, records the preload target, and returns the CSS rows.</summary>
@@ -269,7 +292,8 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
         for (var i = 0; i < resources.Length; i++)
         {
             var r = resources[i];
-            var relativePath = StringCompose.Concat(_options.OutputSubdirectory.Value, "/", HashName(r.Woff2Bytes), ".woff2");
+            var relativePath =
+                StringCompose.Concat(_options.OutputSubdirectory.Value, "/", HashName(r.Woff2Bytes), ".woff2");
             var pathBytes = Encoding.UTF8.GetBytes(relativePath);
             acc.Assets.Add(((FilePath)relativePath, r.Woff2Bytes));
             rows[i] = new(r.Weight, r.Style, r.UnicodeRange, pathBytes);

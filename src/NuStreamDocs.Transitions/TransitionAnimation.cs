@@ -11,5 +11,5 @@ public enum TransitionAnimation
     Fade,
 
     /// <summary>No animation — the swap is instant even where the View Transitions API is available.</summary>
-    None,
+    None
 }

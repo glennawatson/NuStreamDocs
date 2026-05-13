@@ -86,7 +86,8 @@ public class SnippetSectionTests
     private sealed class SnippetFixture : IDisposable
     {
         /// <summary>Throwaway directory for snippet files.</summary>
-        private readonly string _root = Path.Combine(Path.GetTempPath(), "smkd-snippet-section-" + Guid.NewGuid().ToString("N"));
+        private readonly string _root =
+            Path.Combine(Path.GetTempPath(), "smkd-snippet-section-" + Guid.NewGuid().ToString("N"));
 
         /// <summary>Initializes a new instance of the <see cref="SnippetFixture"/> class.</summary>
         public SnippetFixture() => Directory.CreateDirectory(_root);
@@ -120,7 +121,7 @@ public class SnippetSectionTests
                 return;
             }
 
-            Directory.Delete(_root, recursive: true);
+            Directory.Delete(_root, true);
         }
     }
 }

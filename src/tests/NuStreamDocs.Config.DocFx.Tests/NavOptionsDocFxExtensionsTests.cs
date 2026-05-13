@@ -17,13 +17,13 @@ public class NavOptionsDocFxExtensionsTests
     {
         using var fixture = TempTocTree.Create();
         const string Toc = """
-            - name: Home
-              href: index.md
-            - name: Guide
-              href: guide/intro.md
-            - name: Reference
-              href: reference.md
-            """;
+                           - name: Home
+                             href: index.md
+                           - name: Guide
+                             href: guide/intro.md
+                           - name: Reference
+                             href: reference.md
+                           """;
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "toc.yml"), Toc);
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
         Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));

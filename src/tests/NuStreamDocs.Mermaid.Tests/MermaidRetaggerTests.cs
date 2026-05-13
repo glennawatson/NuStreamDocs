@@ -42,7 +42,8 @@ public class MermaidRetaggerTests
     [Test]
     public async Task RetagHandlesMultipleBlocks()
     {
-        const string Source = "<pre><code class=\"language-mermaid\">a</code></pre>x<pre><code class=\"language-mermaid\">b</code></pre>";
+        const string Source =
+            "<pre><code class=\"language-mermaid\">a</code></pre>x<pre><code class=\"language-mermaid\">b</code></pre>";
         await Assert.That(Retag(Source)).IsEqualTo("<pre class=\"mermaid\">a</pre>x<pre class=\"mermaid\">b</pre>");
     }
 

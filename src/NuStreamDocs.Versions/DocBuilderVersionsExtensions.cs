@@ -13,18 +13,14 @@ public static class DocBuilderVersionsExtensions
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseVersions(this DocBuilder builder, VersionOptions options)
-    {
-        return builder.UsePlugin(new VersionsPlugin(options));
-    }
+    public static DocBuilder UseVersions(this DocBuilder builder, VersionOptions options) =>
+        builder.UsePlugin(new VersionsPlugin(options));
 
     /// <summary>Registers <see cref="VersionsPlugin"/> with options and a logger.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseVersions(this DocBuilder builder, VersionOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new VersionsPlugin(options, logger));
-    }
+    public static DocBuilder UseVersions(this DocBuilder builder, VersionOptions options, ILogger logger) =>
+        builder.UsePlugin(new VersionsPlugin(options, logger));
 }

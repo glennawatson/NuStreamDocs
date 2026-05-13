@@ -17,7 +17,7 @@ internal static class XrefMapReader
         List<(byte[] Uid, byte[] Href)> entries = new(64);
         byte[] baseUrl = [];
 
-        Utf8JsonReader reader = new(bytes, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(bytes, true, default);
         if (!reader.Read() || reader.TokenType is not JsonTokenType.StartObject)
         {
             return new(baseUrl, []);

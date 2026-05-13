@@ -21,6 +21,7 @@ internal static partial class FeedLoggingHelper
     /// <param name="format">Feed format that was written.</param>
     /// <param name="entryCount">Number of entries written.</param>
     /// <param name="byteCount">Bytes written to disk.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "{Format} feed complete: {EntryCount} entry/entries, {ByteCount} byte(s)")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "{Format} feed complete: {EntryCount} entry/entries, {ByteCount} byte(s)")]
     public static partial void LogFeedWriteComplete(ILogger logger, string format, int entryCount, int byteCount);
 }

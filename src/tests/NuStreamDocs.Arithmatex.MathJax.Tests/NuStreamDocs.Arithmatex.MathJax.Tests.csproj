@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Arithmatex.MathJax\NuStreamDocs.Arithmatex.MathJax.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Arithmatex.MathJax\NuStreamDocs.Arithmatex.MathJax.csproj"/>
   </ItemGroup>
 
 </Project>

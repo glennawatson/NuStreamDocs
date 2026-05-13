@@ -12,8 +12,5 @@ public static class DocBuilderArithmatexExtensions
     /// <summary>Registers <see cref="ArithmatexPlugin"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseArithmatex(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new ArithmatexPlugin());
-    }
+    public static DocBuilder UseArithmatex(this DocBuilder builder) => builder.UsePlugin(new ArithmatexPlugin());
 }

@@ -12,10 +12,7 @@ public static class DocBuilderAutorefsExtensions
     /// <summary>Registers the autorefs plugin with a fresh registry.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseAutorefs(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new AutorefsPlugin());
-    }
+    public static DocBuilder UseAutorefs(this DocBuilder builder) => builder.UsePlugin(new AutorefsPlugin());
 
     /// <summary>Registers the autorefs plugin with a fresh registry sized for <paramref name="initialCapacity"/> entries.</summary>
     /// <param name="builder">Doc builder.</param>
@@ -31,18 +28,14 @@ public static class DocBuilderAutorefsExtensions
     /// <param name="builder">Doc builder.</param>
     /// <param name="registry">Shared registry; other plugins may already hold a reference and publish into it.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseAutorefs(this DocBuilder builder, AutorefsRegistry registry)
-    {
-        return builder.UsePlugin(new AutorefsPlugin(registry));
-    }
+    public static DocBuilder UseAutorefs(this DocBuilder builder, AutorefsRegistry registry) =>
+        builder.UsePlugin(new AutorefsPlugin(registry));
 
     /// <summary>Registers the autorefs plugin against a shared registry with a logger.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="registry">Shared registry.</param>
     /// <param name="logger">Logger forwarded to the plugin.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseAutorefs(this DocBuilder builder, AutorefsRegistry registry, ILogger logger)
-    {
-        return builder.UsePlugin(new AutorefsPlugin(registry, logger));
-    }
+    public static DocBuilder UseAutorefs(this DocBuilder builder, AutorefsRegistry registry, ILogger logger) =>
+        builder.UsePlugin(new AutorefsPlugin(registry, logger));
 }

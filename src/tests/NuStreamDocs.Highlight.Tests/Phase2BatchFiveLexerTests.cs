@@ -26,7 +26,8 @@ public class Phase2BatchFiveLexerTests
     [Test]
     public async Task MakefileClassifiesDirectives()
     {
-        var html = MakefileLexer.Instance.Render("ifeq ($(OS),Linux)\ninclude config.mk\nelse\ninclude other.mk\nendif\n"u8);
+        var html = MakefileLexer.Instance.Render(
+            "ifeq ($(OS),Linux)\ninclude config.mk\nelse\ninclude other.mk\nendif\n"u8);
         await Assert.That(html.Contains("<span class=\"k\">ifeq</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">else</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">endif</span>", StringComparison.Ordinal)).IsTrue();
@@ -47,8 +48,10 @@ public class Phase2BatchFiveLexerTests
     [Test]
     public async Task CMakeClassifiesCommandsAndVariables()
     {
-        var html = CMakeLexer.Instance.Render("cmake_minimum_required(VERSION 3.20)\nproject(Hello)\nadd_executable(hello main.cpp)\nset(CMAKE_CXX_STANDARD 20)\n"u8);
-        await Assert.That(html.Contains("<span class=\"kd\">cmake_minimum_required</span>", StringComparison.Ordinal)).IsTrue();
+        var html = CMakeLexer.Instance.Render(
+            "cmake_minimum_required(VERSION 3.20)\nproject(Hello)\nadd_executable(hello main.cpp)\nset(CMAKE_CXX_STANDARD 20)\n"u8);
+        await Assert.That(html.Contains("<span class=\"kd\">cmake_minimum_required</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">project</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">add_executable</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">set</span>", StringComparison.Ordinal)).IsTrue();
@@ -59,8 +62,10 @@ public class Phase2BatchFiveLexerTests
     [Test]
     public async Task CMakeClassifiesExpansions()
     {
-        var html = CMakeLexer.Instance.Render("set(SRC ${PROJECT_SOURCE_DIR}/main.cpp)\ntarget_compile_options(t PRIVATE $<IF:$<CONFIG:Debug>,-g,-O2>)\n"u8);
-        await Assert.That(html.Contains("<span class=\"n\">${PROJECT_SOURCE_DIR}</span>", StringComparison.Ordinal)).IsTrue();
+        var html = CMakeLexer.Instance.Render(
+            "set(SRC ${PROJECT_SOURCE_DIR}/main.cpp)\ntarget_compile_options(t PRIVATE $<IF:$<CONFIG:Debug>,-g,-O2>)\n"u8);
+        await Assert.That(html.Contains("<span class=\"n\">${PROJECT_SOURCE_DIR}</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>CMake classifies <c>#</c> line comments and <c>#[[ ... ]]</c> block comments.</summary>
@@ -103,7 +108,8 @@ public class Phase2BatchFiveLexerTests
     {
         var html = NixLexer.Instance.Render("# line comment\n/* block\ncomment */\nlet x = 1; in x"u8);
         await Assert.That(html.Contains("<span class=\"c1\"># line comment</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"cm\">/* block\ncomment */</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"cm\">/* block\ncomment */</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Nix classifies path literals as <c>n</c> name tokens.</summary>

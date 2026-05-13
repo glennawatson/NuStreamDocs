@@ -50,7 +50,10 @@ public class FontAwesomePluginTests
     /// <summary>Helper: invoke <c>IHeadExtraProvider.WriteHeadExtra</c> and decode the bytes.</summary>
     /// <param name="provider">Provider under test.</param>
     /// <returns>The rendered head-extras HTML string.</returns>
-    [SuppressMessage("Performance", "CA1859", Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
+    [SuppressMessage(
+        "Performance",
+        "CA1859",
+        Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
     private static string WriteHeadExtras(IHeadExtraProvider provider)
     {
         ArrayBufferWriter<byte> writer = new();

@@ -57,7 +57,7 @@ internal static class AttrListTagMatcher
 
         var first = (byte)(source[p] | AsciiCaseBit);
         return DispatchPairedAtoK(source, p, first, out nameLen)
-            || DispatchPairedMtoT(source, p, first, out nameLen);
+               || DispatchPairedMtoT(source, p, first, out nameLen);
     }
 
     /// <summary>Tries to match a void-inline tag.</summary>

@@ -21,7 +21,10 @@ namespace NuStreamDocs.Csp;
 /// <param name="Enabled">Master switch; when false the plugin contributes nothing.</param>
 /// <param name="ExtraSources">Extra <c>(directive, source)</c> pairs appended to that directive's source list (a new directive is added when it isn't one this plugin builds).</param>
 /// <param name="ExtraDirectives">Raw directive strings appended verbatim (the escape hatch).</param>
-[SuppressMessage("Major Code Smell", "S107", Justification = "A flat options record; each field is an independent CSP knob.")]
+[SuppressMessage(
+    "Major Code Smell",
+    "S107",
+    Justification = "A flat options record; each field is an independent CSP knob.")]
 public readonly record struct CspOptions(
     byte[] DefaultSrc,
     byte[] BaseUri,
@@ -37,15 +40,15 @@ public readonly record struct CspOptions(
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static CspOptions Default { get; } = new(
-        DefaultSrc: [.. "'self'"u8],
-        BaseUri: [.. "'self'"u8],
-        FrameAncestors: [.. "'self'"u8],
-        HashInlineScripts: true,
-        HashInlineStyles: false,
-        UpgradeInsecureRequests: false,
-        ReportUri: [],
-        Mode: CspMode.Enforce,
-        Enabled: true,
-        ExtraSources: [],
-        ExtraDirectives: []);
+        [.. "'self'"u8],
+        [.. "'self'"u8],
+        [.. "'self'"u8],
+        true,
+        false,
+        false,
+        [],
+        CspMode.Enforce,
+        true,
+        [],
+        []);
 }

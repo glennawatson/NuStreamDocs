@@ -18,7 +18,7 @@ public class WatchLoopTests
         try
         {
             using CancellationTokenSource cts = new(TimeSpan.FromSeconds(10));
-            using WatchLoop watcher = new(dir, ignoreRoot: null, debounceMs: 200, ignoredSegments: null, NullLogger.Instance);
+            using WatchLoop watcher = new(dir, null, 200, null, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
             await Task.Delay(50, cts.Token);
@@ -49,7 +49,7 @@ public class WatchLoopTests
         try
         {
             using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(800));
-            using WatchLoop watcher = new(dir, ignored, debounceMs: 200, ignoredSegments: null, NullLogger.Instance);
+            using WatchLoop watcher = new(dir, ignored, 200, null, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
             await Task.Delay(50, CancellationToken.None);
@@ -77,7 +77,7 @@ public class WatchLoopTests
         try
         {
             using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(800));
-            using WatchLoop watcher = new(dir, ignoreRoot: null, debounceMs: 200, ignoredSegments: ["bin"], NullLogger.Instance);
+            using WatchLoop watcher = new(dir, null, 200, ["bin"], NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
             await Task.Delay(50, CancellationToken.None);
@@ -109,7 +109,7 @@ public class WatchLoopTests
     {
         try
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
         catch (IOException)
         {

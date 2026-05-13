@@ -14,5 +14,5 @@ public enum PrefetchStrategy
     Hover,
 
     /// <summary>Pre-fetch every same-origin link as it scrolls into view.</summary>
-    Viewport,
+    Viewport
 }

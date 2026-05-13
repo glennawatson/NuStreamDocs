@@ -26,26 +26,29 @@ public static class DocBuilderMaterialExtensions
     /// font-ligature fallback.
     /// </param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterialTheme(this DocBuilder builder, IIconResolver? iconResolver)
-    {
-        return builder
+    public static DocBuilder UseMaterialTheme(this DocBuilder builder, IIconResolver? iconResolver) =>
+        builder
             .UsePlugin(new IconShortcodePlugin(iconResolver))
             .UsePlugin(new FontsPlugin(MaterialFonts.Default))
             .UsePlugin(new MaterialThemePlugin());
-    }
 
     /// <summary>Registers <see cref="MaterialThemePlugin"/> with caller-tweaked options + the Material icon-shortcode preprocessor.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="MaterialThemeOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterialTheme(this DocBuilder builder, Func<MaterialThemeOptions, MaterialThemeOptions> configure) => builder.UseMaterialTheme(configure, iconResolver: null);
+    public static DocBuilder UseMaterialTheme(
+        this DocBuilder builder,
+        Func<MaterialThemeOptions, MaterialThemeOptions> configure) => builder.UseMaterialTheme(configure, null);
 
     /// <summary>Registers <see cref="MaterialThemePlugin"/> with caller-tweaked options + the Material icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="MaterialThemeOptions.Default"/> and returns the customized set.</param>
     /// <param name="iconResolver">Optional inline-icon resolver consulted for <c>:material-foo:</c> shortcodes before the font-ligature fallback.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterialTheme(this DocBuilder builder, Func<MaterialThemeOptions, MaterialThemeOptions> configure, IIconResolver? iconResolver)
+    public static DocBuilder UseMaterialTheme(
+        this DocBuilder builder,
+        Func<MaterialThemeOptions, MaterialThemeOptions> configure,
+        IIconResolver? iconResolver)
     {
         var options = configure(MaterialThemeOptions.Default);
         return builder

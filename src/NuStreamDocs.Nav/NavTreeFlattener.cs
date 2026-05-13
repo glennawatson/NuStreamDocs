@@ -19,7 +19,7 @@ internal static class NavTreeFlattener
         List<NavTreeNode> nodes = new(capacity);
         Queue<(int OwnIndex, NavNode Node)> queue = new(capacity);
 
-        nodes.Add(BuildSlot(root, parentIndex: -1));
+        nodes.Add(BuildSlot(root, -1));
         queue.Enqueue((0, root));
 
         while (queue.TryDequeue(out var entry))
@@ -34,7 +34,7 @@ internal static class NavTreeFlattener
             for (var i = 0; i < children.Length; i++)
             {
                 var childIdx = nodes.Count;
-                nodes.Add(BuildSlot(children[i], parentIndex: entry.OwnIndex));
+                nodes.Add(BuildSlot(children[i], entry.OwnIndex));
                 queue.Enqueue((childIdx, children[i]));
             }
 
@@ -77,14 +77,14 @@ internal static class NavTreeFlattener
     /// <returns>Populated slot with no child-range yet.</returns>
     private static NavTreeNode BuildSlot(NavNode node, int parentIndex) =>
         new(
-            Title: node.Title,
-            RelativePath: node.RelativePath,
-            RelativeUrlBytes: node.RelativeUrlBytes,
-            IndexUrlBytes: node.IndexUrlBytes,
-            ParentIndex: parentIndex,
-            FirstChildIndex: -1,
-            ChildCount: 0,
-            IsSection: node.IsSection);
+            node.Title,
+            node.RelativePath,
+            node.RelativeUrlBytes,
+            node.IndexUrlBytes,
+            parentIndex,
+            -1,
+            0,
+            node.IsSection);
 
     /// <summary>Counts the build-time tree's total node count for a one-shot list capacity.</summary>
     /// <param name="root">Build-time root node.</param>

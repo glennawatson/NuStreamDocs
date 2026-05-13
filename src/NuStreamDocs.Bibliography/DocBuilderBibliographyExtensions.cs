@@ -15,20 +15,20 @@ public static class DocBuilderBibliographyExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseBibliography(this DocBuilder builder, BibliographyOptions options)
-    {
-        return builder.UsePlugin(new BibliographyPlugin(options));
-    }
+    public static DocBuilder UseBibliography(this DocBuilder builder, BibliographyOptions options) =>
+        builder.UsePlugin(new BibliographyPlugin(options));
 
     /// <summary>Registers <see cref="BibliographyPlugin"/> with a fluent <see cref="BibliographyDatabaseBuilder"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configureDatabase">Database build callback.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseBibliography(this DocBuilder builder, Action<BibliographyDatabaseBuilder> configureDatabase)
+    public static DocBuilder UseBibliography(
+        this DocBuilder builder,
+        Action<BibliographyDatabaseBuilder> configureDatabase)
     {
         BibliographyDatabaseBuilder dbBuilder = new();
         configureDatabase(dbBuilder);
-        return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), Aglc4Style.Instance, WarnOnMissing: false));
+        return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), Aglc4Style.Instance, false));
     }
 
     /// <summary>Registers <see cref="BibliographyPlugin"/> with a fluent database and an explicit style.</summary>
@@ -36,10 +36,13 @@ public static class DocBuilderBibliographyExtensions
     /// <param name="style">Citation style.</param>
     /// <param name="configureDatabase">Database build callback.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseBibliography(this DocBuilder builder, ICitationStyle style, Action<BibliographyDatabaseBuilder> configureDatabase)
+    public static DocBuilder UseBibliography(
+        this DocBuilder builder,
+        ICitationStyle style,
+        Action<BibliographyDatabaseBuilder> configureDatabase)
     {
         BibliographyDatabaseBuilder dbBuilder = new();
         configureDatabase(dbBuilder);
-        return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), style, WarnOnMissing: false));
+        return builder.UseBibliography(new BibliographyOptions(dbBuilder.Build(), style, false));
     }
 }

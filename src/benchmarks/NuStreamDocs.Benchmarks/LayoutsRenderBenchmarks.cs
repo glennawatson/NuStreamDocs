@@ -27,10 +27,10 @@ public class LayoutsRenderBenchmarks
 
     /// <summary>Page-template body used by every benchmark fixture.</summary>
     private const string PageTemplate = "<!doctype html>"
-        + "<html><head><title>{{ page.title }}</title></head>"
-        + "<body>{% include \"header.html\" %}"
-        + "{% block body %}<main>{{ page.content }}</main>{% endblock %}"
-        + "</body></html>";
+                                        + "<html><head><title>{{ page.title }}</title></head>"
+                                        + "<body>{% include \"header.html\" %}"
+                                        + "{% block body %}<main>{{ page.content }}</main>{% endblock %}"
+                                        + "</body></html>";
 
     /// <summary>Header-include body.</summary>
     private const string HeaderTemplate = "<header>Site</header>";
@@ -81,7 +81,7 @@ public class LayoutsRenderBenchmarks
             return;
         }
 
-        Directory.Delete(_root, recursive: true);
+        Directory.Delete(_root, true);
     }
 
     /// <summary>Pre-populates <see cref="_warmCache"/> by performing one full render against it before every warm-cache benchmark iteration.</summary>
@@ -96,7 +96,8 @@ public class LayoutsRenderBenchmarks
     }
 
     /// <summary>Resets the sink before benchmarks that don't use the warm-cache iteration setup.</summary>
-    [IterationSetup(Targets = [nameof(Render_Cold_NoCache), nameof(Render_Cold_WithCache), nameof(Render_200Pages_NoCache)])]
+    [IterationSetup(Targets =
+        [nameof(Render_Cold_NoCache), nameof(Render_Cold_WithCache), nameof(Render_200Pages_NoCache)])]
     public void ColdSetup() => _sink = new(SinkCapacity);
 
     /// <summary>Single render with no cache (every call re-reads + re-parses templates from disk).</summary>
@@ -105,7 +106,7 @@ public class LayoutsRenderBenchmarks
     public int Render_Cold_NoCache()
     {
         var ctx = BuildLayoutContext();
-        LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, cache: null);
+        LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, null);
         return _sink.WrittenCount;
     }
 
@@ -138,7 +139,7 @@ public class LayoutsRenderBenchmarks
         var ctx = BuildLayoutContext();
         for (var i = 0; i < PageRepetitions; i++)
         {
-            LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, cache: null);
+            LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, null);
         }
 
         return _sink.WrittenCount;

@@ -17,7 +17,10 @@ public static class FontsOptionsExtensions
     /// <param name="family">UTF-8 CSS family name (e.g. <c>"Source Sans 3"u8</c>).</param>
     /// <param name="weights">Numeric weights to fetch; empty fetches weight 400.</param>
     /// <returns>The updated options.</returns>
-    public static FontsOptions AddGoogleFont(this in FontsOptions options, ReadOnlySpan<byte> family, params int[] weights) =>
+    public static FontsOptions AddGoogleFont(
+        this in FontsOptions options,
+        ReadOnlySpan<byte> family,
+        params int[] weights) =>
         AddFace(options, MakeFace(family.ToArray(), FontProviderKind.Google, NormalizeWeights(weights), []));
 
     /// <summary>Adds a Fontsource family (weight 400 unless given otherwise), default subsets, <c>font-display: swap</c>, sans-serif fallback.</summary>
@@ -25,7 +28,10 @@ public static class FontsOptionsExtensions
     /// <param name="family">UTF-8 CSS family name.</param>
     /// <param name="weights">Numeric weights to fetch; empty fetches weight 400.</param>
     /// <returns>The updated options.</returns>
-    public static FontsOptions AddFontsourceFont(this in FontsOptions options, ReadOnlySpan<byte> family, params int[] weights) =>
+    public static FontsOptions AddFontsourceFont(
+        this in FontsOptions options,
+        ReadOnlySpan<byte> family,
+        params int[] weights) =>
         AddFace(options, MakeFace(family.ToArray(), FontProviderKind.Fontsource, NormalizeWeights(weights), []));
 
     /// <summary>Adds a family backed by local font files matched by <paramref name="src"/> (weight 400, <c>font-display: swap</c>, sans-serif fallback).</summary>
@@ -33,7 +39,10 @@ public static class FontsOptionsExtensions
     /// <param name="family">UTF-8 CSS family name.</param>
     /// <param name="src">Glob patterns (relative to the input root) for the font files.</param>
     /// <returns>The updated options.</returns>
-    public static FontsOptions AddLocalFont(this in FontsOptions options, ReadOnlySpan<byte> family, params GlobPattern[] src) =>
+    public static FontsOptions AddLocalFont(
+        this in FontsOptions options,
+        ReadOnlySpan<byte> family,
+        params GlobPattern[] src) =>
         AddFace(options, MakeFace(family.ToArray(), FontProviderKind.Local, [DefaultWeight], src));
 
     /// <summary>Adds a fully specified face; use this for italic faces, non-preloaded faces, serif/monospace fallbacks, or custom theme variables.</summary>

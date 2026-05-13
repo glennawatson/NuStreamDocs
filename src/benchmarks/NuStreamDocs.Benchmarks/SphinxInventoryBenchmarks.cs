@@ -50,7 +50,7 @@ public class SphinxInventoryBenchmarks
             var idx = i.ToString(CultureInfo.InvariantCulture);
             var idBytes = Encoding.UTF8.GetBytes("Symbol_" + idx);
             var urlBytes = Encoding.UTF8.GetBytes("api/Symbol_" + idx + ".html");
-            registry.Register(idBytes, urlBytes, fragment: default);
+            registry.Register(idBytes, urlBytes, default);
         }
 
         _plugin = new(registry);
@@ -77,7 +77,7 @@ public class SphinxInventoryBenchmarks
 
         try
         {
-            Directory.Delete(_outputDir, recursive: true);
+            Directory.Delete(_outputDir, true);
         }
         catch (IOException)
         {

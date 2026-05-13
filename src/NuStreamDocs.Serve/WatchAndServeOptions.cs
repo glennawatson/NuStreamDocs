@@ -27,13 +27,19 @@ public readonly record struct WatchAndServeOptions(
     bool WatchOutput,
     string[] IgnoredPathSegments)
 {
+    /// <summary>Default <see cref="Port"/> for the dev server.</summary>
+    private const int DefaultPort = 8000;
+
+    /// <summary>Default <see cref="DebounceMs"/> — coalesces the save bursts editors and formatters produce before rebuilding.</summary>
+    private const int DefaultDebounceMs = 250;
+
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static WatchAndServeOptions Default { get; } = new(
-        Host: "127.0.0.1",
-        Port: 8000,
-        DebounceMs: 250,
-        LiveReload: true,
-        OpenBrowser: false,
-        WatchOutput: true,
-        IgnoredPathSegments: ["bin", "obj", ".git", "_intermediate", ".api-cache", "node_modules", ".vs", ".idea"]);
+        "127.0.0.1",
+        DefaultPort,
+        DefaultDebounceMs,
+        true,
+        false,
+        true,
+        ["bin", "obj", ".git", "_intermediate", ".api-cache", "node_modules", ".vs", ".idea"]);
 }

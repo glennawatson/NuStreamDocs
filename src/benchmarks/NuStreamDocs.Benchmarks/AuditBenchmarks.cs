@@ -67,8 +67,12 @@ public class AuditBenchmarks
         }
 
         StringBuilder page = new(body.Length + 256);
-        page.Append(Flawed ? "<!DOCTYPE html><html><head><title></title>" : "<!DOCTYPE html><html lang=\"en\"><head><title>Bench</title>")
-            .Append(Flawed ? "<script src=\"/blocking.js\"></script>" : "<meta name=\"viewport\" content=\"width=device-width\">")
+        page.Append(Flawed
+                ? "<!DOCTYPE html><html><head><title></title>"
+                : "<!DOCTYPE html><html lang=\"en\"><head><title>Bench</title>")
+            .Append(Flawed
+                ? "<script src=\"/blocking.js\"></script>"
+                : "<meta name=\"viewport\" content=\"width=device-width\">")
             .Append("</head><body><h1>Heading</h1>")
             .Append(body)
             .Append("</body></html>");

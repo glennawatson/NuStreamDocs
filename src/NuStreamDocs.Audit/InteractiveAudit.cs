@@ -89,7 +89,11 @@ internal static class InteractiveAudit
     /// <param name="page">Page URL.</param>
     /// <param name="options">Audit options.</param>
     /// <param name="sink">Receives findings.</param>
-    private static void CheckTabIndex(HtmlTagCursor cursor, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
+    private static void CheckTabIndex(
+        HtmlTagCursor cursor,
+        UrlPath page,
+        AuditOptions options,
+        List<AuditDiagnostic> sink)
     {
         if (!options.IsRuleEnabled(AuditRule.PositiveTabIndex) || !HasPositiveTabIndex(cursor.Attributes))
         {
@@ -105,7 +109,12 @@ internal static class InteractiveAudit
     /// <param name="page">Page URL.</param>
     /// <param name="options">Audit options.</param>
     /// <param name="sink">Receives findings.</param>
-    private static void CheckEmptyLink(ReadOnlySpan<byte> html, HtmlTagCursor cursor, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
+    private static void CheckEmptyLink(
+        ReadOnlySpan<byte> html,
+        HtmlTagCursor cursor,
+        UrlPath page,
+        AuditOptions options,
+        List<AuditDiagnostic> sink)
     {
         if (!options.IsRuleEnabled(AuditRule.EmptyLink) || !AsciiByteHelpers.EqualsIgnoreAsciiCase(cursor.Name, "a"u8))
         {
@@ -126,9 +135,15 @@ internal static class InteractiveAudit
     /// <param name="page">Page URL.</param>
     /// <param name="options">Audit options.</param>
     /// <param name="sink">Receives findings.</param>
-    private static void CheckEmptyButton(ReadOnlySpan<byte> html, HtmlTagCursor cursor, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
+    private static void CheckEmptyButton(
+        ReadOnlySpan<byte> html,
+        HtmlTagCursor cursor,
+        UrlPath page,
+        AuditOptions options,
+        List<AuditDiagnostic> sink)
     {
-        if (!options.IsRuleEnabled(AuditRule.EmptyButton) || !AsciiByteHelpers.EqualsIgnoreAsciiCase(cursor.Name, "button"u8))
+        if (!options.IsRuleEnabled(AuditRule.EmptyButton) ||
+            !AsciiByteHelpers.EqualsIgnoreAsciiCase(cursor.Name, "button"u8))
         {
             return;
         }
@@ -148,7 +163,13 @@ internal static class InteractiveAudit
     /// <param name="page">Page URL.</param>
     /// <param name="options">Audit options.</param>
     /// <param name="sink">Receives findings.</param>
-    private static void CheckFormControl(HtmlTagCursor cursor, int labelDepth, HashSet<byte[]>? labelTargets, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
+    private static void CheckFormControl(
+        HtmlTagCursor cursor,
+        int labelDepth,
+        HashSet<byte[]>? labelTargets,
+        UrlPath page,
+        AuditOptions options,
+        List<AuditDiagnostic> sink)
     {
         if (labelTargets is null || labelDepth != 0 || !options.IsRuleEnabled(AuditRule.UnlabeledFormControl))
         {
@@ -192,7 +213,11 @@ internal static class InteractiveAudit
     /// <param name="contentStart">Offset of the first byte after the element's start tag.</param>
     /// <param name="tagName">The element's tag name.</param>
     /// <returns><see langword="true"/> when the element is effectively empty.</returns>
-    private static bool IsEmpty(ReadOnlySpan<byte> html, ReadOnlySpan<byte> attributes, int contentStart, ReadOnlySpan<byte> tagName)
+    private static bool IsEmpty(
+        ReadOnlySpan<byte> html,
+        ReadOnlySpan<byte> attributes,
+        int contentStart,
+        ReadOnlySpan<byte> tagName)
     {
         if (AuditText.HasAccessibleNameAttribute(attributes))
         {
@@ -275,6 +300,7 @@ internal static class InteractiveAudit
         }
 
         var trimmed = AsciiByteHelpers.TrimAsciiWhitespace(value);
-        return Utf8Parser.TryParse(trimmed, out int parsed, out var consumed) && consumed == trimmed.Length && parsed > 0;
+        return Utf8Parser.TryParse(trimmed, out int parsed, out var consumed) && consumed == trimmed.Length &&
+               parsed > 0;
     }
 }

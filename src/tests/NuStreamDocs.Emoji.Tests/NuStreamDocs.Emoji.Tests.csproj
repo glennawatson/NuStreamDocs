@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Emoji\NuStreamDocs.Emoji.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Emoji\NuStreamDocs.Emoji.csproj"/>
   </ItemGroup>
 
 </Project>

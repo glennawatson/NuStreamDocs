@@ -62,5 +62,5 @@ public class MarkdownLinkRewriterDirectoryUrlsTests
     /// <param name="input">HTML.</param>
     /// <returns>Rewritten HTML.</returns>
     private static string Rewrite(string input) =>
-        Encoding.UTF8.GetString(MarkdownLinkRewriter.Rewrite(Encoding.UTF8.GetBytes(input), useDirectoryUrls: true));
+        Encoding.UTF8.GetString(MarkdownLinkRewriter.Rewrite(Encoding.UTF8.GetBytes(input), true));
 }

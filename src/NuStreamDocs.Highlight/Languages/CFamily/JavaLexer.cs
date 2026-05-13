@@ -26,7 +26,8 @@ public static class JavaLexer
             KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
                 "class interface enum record extends implements permits sealed abstract final static public private protected transient volatile native strictfp"u8),
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
-            Operators = OperatorAlternationFactory.SplitLongestFirst(">>>= >>> ::"u8, CFamilyShared.StandardOperatorsLiteral),
+            Operators =
+                OperatorAlternationFactory.SplitLongestFirst(">>>= >>> ::"u8, CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         });
 }

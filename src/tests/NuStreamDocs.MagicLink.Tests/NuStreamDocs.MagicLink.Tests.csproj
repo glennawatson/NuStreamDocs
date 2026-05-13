@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.MagicLink\NuStreamDocs.MagicLink.csproj" />
-    <ProjectReference Include="..\..\NuStreamDocs.SmartSymbols\NuStreamDocs.SmartSymbols.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.MagicLink\NuStreamDocs.MagicLink.csproj"/>
+    <ProjectReference Include="..\..\NuStreamDocs.SmartSymbols\NuStreamDocs.SmartSymbols.csproj"/>
   </ItemGroup>
 
 </Project>

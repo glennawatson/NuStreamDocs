@@ -66,7 +66,13 @@ internal static class HtmlMinifier
     /// <param name="pendingSpace">Whether a single collapsed space is pending emission.</param>
     /// <param name="afterTag">Whether the previous emission ended with a tag.</param>
     /// <returns>New cursor offset.</returns>
-    private static int HandleText(ReadOnlySpan<byte> source, int cursor, IBufferWriter<byte> writer, in HtmlMinifyOptions options, ref bool pendingSpace, ref bool afterTag)
+    private static int HandleText(
+        ReadOnlySpan<byte> source,
+        int cursor,
+        IBufferWriter<byte> writer,
+        in HtmlMinifyOptions options,
+        ref bool pendingSpace,
+        ref bool afterTag)
     {
         var b = source[cursor];
         if (options.CollapseWhitespace && Whitespace.Contains(b))
@@ -97,7 +103,12 @@ internal static class HtmlMinifier
     /// <param name="options">Options.</param>
     /// <param name="pendingSpace">Whether a collapsed space was pending; cleared on tag emission.</param>
     /// <returns>Cursor positioned just past the handled construct.</returns>
-    private static int HandleAngleBracket(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, in HtmlMinifyOptions options, ref bool pendingSpace)
+    private static int HandleAngleBracket(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        in HtmlMinifyOptions options,
+        ref bool pendingSpace)
     {
         if (options.StripComments && StartsWith(source, offset, "<!--"u8))
         {
@@ -158,7 +169,8 @@ internal static class HtmlMinifier
     /// <summary>Returns true when <paramref name="b"/> can terminate a tag name (whitespace, <c>/</c>, or <c>&gt;</c>).</summary>
     /// <param name="b">Source byte.</param>
     /// <returns>True when the byte is a tag-name terminator.</returns>
-    private static bool IsTagBoundary(byte b) => b is (byte)'>' or (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or (byte)'/';
+    private static bool IsTagBoundary(byte b) =>
+        b is (byte)'>' or (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or (byte)'/';
 
     /// <summary>Copies a preserve-tag block (open tag through matching close tag) verbatim into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -166,7 +178,11 @@ internal static class HtmlMinifier
     /// <param name="nameLength">Length of the preserve-tag name.</param>
     /// <param name="writer">Destination.</param>
     /// <returns>Cursor positioned just past the closing tag, or source-end on truncation.</returns>
-    private static int CopyPreserveBlock(ReadOnlySpan<byte> source, int offset, int nameLength, IBufferWriter<byte> writer)
+    private static int CopyPreserveBlock(
+        ReadOnlySpan<byte> source,
+        int offset,
+        int nameLength,
+        IBufferWriter<byte> writer)
     {
         var name = PreserveTags[PreserveTagIndex(nameLength)];
         var closeAt = FindCloseTag(source, offset + 1 + nameLength, name);
@@ -228,7 +244,7 @@ internal static class HtmlMinifier
         }
 
         return AsciiByteHelpers.EqualsIgnoreAsciiCase(source.Slice(nameStart, name.Length), name)
-            && (end == source.Length || IsTagBoundary(source[end]));
+               && (end == source.Length || IsTagBoundary(source[end]));
     }
 
     /// <summary>Returns the index in <see cref="PreserveTags"/> matching a known length.</summary>

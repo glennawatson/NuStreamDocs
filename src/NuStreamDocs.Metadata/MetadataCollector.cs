@@ -61,7 +61,12 @@ internal static class MetadataCollector
     /// <param name="directoryStack">Directory-metadata files keyed by absolute directory.</param>
     /// <param name="sidecarSuffix">Per-page sidecar suffix.</param>
     /// <param name="byPath">Accumulator keyed by forward-slash relative path.</param>
-    private static void Walk(string root, string directory, Dictionary<string, byte[]> directoryStack, string sidecarSuffix, Dictionary<string, byte[]> byPath)
+    private static void Walk(
+        string root,
+        string directory,
+        Dictionary<string, byte[]> directoryStack,
+        string sidecarSuffix,
+        Dictionary<string, byte[]> byPath)
     {
         var inheritedChain = CollectInheritedChain(root, directory, directoryStack);
         var files = Directory.GetFiles(directory, "*" + MarkdownExtension, SearchOption.TopDirectoryOnly);
@@ -93,7 +98,10 @@ internal static class MetadataCollector
     /// <param name="directory">Directory whose chain to assemble.</param>
     /// <param name="directoryStack">All directory-metadata files.</param>
     /// <returns>Bytes per ancestor in inheritance order; closer ancestors win.</returns>
-    private static byte[][] CollectInheritedChain(string root, string directory, Dictionary<string, byte[]> directoryStack)
+    private static byte[][] CollectInheritedChain(
+        string root,
+        string directory,
+        Dictionary<string, byte[]> directoryStack)
     {
         List<byte[]> chain = new(8);
         var cursor = directory;

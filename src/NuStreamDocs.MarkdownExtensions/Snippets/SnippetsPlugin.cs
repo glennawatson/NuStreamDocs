@@ -15,10 +15,7 @@ public sealed class SnippetsPlugin : IPagePreRenderPlugin
 
     /// <summary>Initializes a new instance of the <see cref="SnippetsPlugin"/> class with the given resolution roots.</summary>
     /// <param name="basePaths">Directories to resolve snippet paths against. Order is preserved on lookup.</param>
-    public SnippetsPlugin(params DirectoryPath[] basePaths)
-    {
-        _basePaths = basePaths;
-    }
+    public SnippetsPlugin(params DirectoryPath[] basePaths) => _basePaths = basePaths;
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "snippets"u8;

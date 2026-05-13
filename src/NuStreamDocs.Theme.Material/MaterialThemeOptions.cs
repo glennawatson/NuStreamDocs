@@ -48,20 +48,20 @@ public readonly record struct MaterialThemeOptions(
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static MaterialThemeOptions Default { get; } = new(
-        AssetSource: MaterialAssetSource.Embedded,
-        EmbeddedAssetRoot: DefaultEmbeddedAssetRoot,
-        CdnRoot: DefaultCdnRoot,
-        SiteName: [],
-        SiteUrl: [],
-        Language: [.. "en"u8],
-        Copyright: [],
-        RepoUrl: [],
-        EditUri: [],
-        Favicon: [],
-        EnableScrollToTop: true,
-        EnableTocFollow: true,
-        EnableNavigationFooter: true,
-        SectionScopedFooter: false);
+        MaterialAssetSource.Embedded,
+        DefaultEmbeddedAssetRoot,
+        DefaultCdnRoot,
+        [],
+        [],
+        [.. "en"u8],
+        [],
+        [],
+        [],
+        [],
+        true,
+        true,
+        true,
+        false);
 
     /// <inheritdoc/>
     public bool WriteEmbeddedAssets => AssetSource == MaterialAssetSource.Embedded;

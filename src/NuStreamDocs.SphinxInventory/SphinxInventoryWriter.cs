@@ -22,7 +22,8 @@ internal static class SphinxInventoryWriter
     private static ReadOnlySpan<byte> HeaderVersionPrefix => "# Version: "u8;
 
     /// <summary>Gets header line 4 — fixed string Sphinx tooling looks for verbatim.</summary>
-    private static ReadOnlySpan<byte> HeaderCompressNote => "# The remainder of this file is compressed using zlib.\n"u8;
+    private static ReadOnlySpan<byte> HeaderCompressNote =>
+        "# The remainder of this file is compressed using zlib.\n"u8;
 
     /// <summary>Gets the per-entry middle field — <c>std:label</c> domain/role with priority <c>-1</c>.</summary>
     private static ReadOnlySpan<byte> EntryMiddle => " std:label -1 "u8;
@@ -83,7 +84,7 @@ internal static class SphinxInventoryWriter
     /// <param name="entries">Snapshot entries.</param>
     private static void WriteCompressedBody(Stream stream, (byte[] Id, byte[] Url)[] entries)
     {
-        using ZLibStream zlib = new(stream, CompressionLevel.Optimal, leaveOpen: true);
+        using ZLibStream zlib = new(stream, CompressionLevel.Optimal, true);
         ArrayBufferWriter<byte> sink = new(1024);
         for (var i = 0; i < entries.Length; i++)
         {

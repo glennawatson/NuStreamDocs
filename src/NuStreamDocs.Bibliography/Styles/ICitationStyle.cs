@@ -27,7 +27,11 @@ public interface ICitationStyle
     /// <param name="locator">Pinpoint locator; may be <see cref="CitationLocator.None"/>.</param>
     /// <param name="source">Original markdown source span the locator's offsets point into.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    void WriteFootnote(CitationEntry entry, CitationLocator locator, ReadOnlySpan<byte> source, IBufferWriter<byte> writer);
+    void WriteFootnote(
+        CitationEntry entry,
+        CitationLocator locator,
+        ReadOnlySpan<byte> source,
+        IBufferWriter<byte> writer);
 
     /// <summary>Writes one bibliography list entry. Markdown is allowed.</summary>
     /// <param name="entry">Resolved entry.</param>

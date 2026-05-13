@@ -46,7 +46,7 @@ public sealed class GitHubReleasesContentLoader : IContentLoader
     /// <param name="repo">Repository name.</param>
     /// <param name="routePrefix">Subdirectory the changelog pages are placed under.</param>
     public GitHubReleasesContentLoader(byte[] owner, byte[] repo, PathSegment routePrefix)
-        : this(owner, repo, routePrefix, [], httpClientFactory: null, NullLogger.Instance)
+        : this(owner, repo, routePrefix, [], null, NullLogger.Instance)
     {
     }
 
@@ -57,7 +57,7 @@ public sealed class GitHubReleasesContentLoader : IContentLoader
     /// <param name="token">Personal access token; empty for unauthenticated requests.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public GitHubReleasesContentLoader(byte[] owner, byte[] repo, PathSegment routePrefix, byte[] token, ILogger logger)
-        : this(owner, repo, routePrefix, token, httpClientFactory: null, logger)
+        : this(owner, repo, routePrefix, token, null, logger)
     {
     }
 
@@ -68,7 +68,13 @@ public sealed class GitHubReleasesContentLoader : IContentLoader
     /// <param name="token">Personal access token; empty for unauthenticated requests.</param>
     /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public GitHubReleasesContentLoader(byte[] owner, byte[] repo, PathSegment routePrefix, byte[] token, Func<HttpClient>? httpClientFactory, ILogger logger)
+    public GitHubReleasesContentLoader(
+        byte[] owner,
+        byte[] repo,
+        PathSegment routePrefix,
+        byte[] token,
+        Func<HttpClient>? httpClientFactory,
+        ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(token);
         if (owner is not [_, ..] || repo is not [_, ..])

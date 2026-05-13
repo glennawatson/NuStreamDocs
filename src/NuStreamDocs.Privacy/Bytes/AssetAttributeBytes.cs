@@ -39,10 +39,8 @@ internal static class AssetAttributeBytes
     /// <summary>Walks <paramref name="html"/> in audit mode, recording matched URLs in <paramref name="audit"/> without modifying the page.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="audit">Audit collector.</param>
-    public static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit)
-    {
+    public static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit) =>
         UrlScanLoop.RunAudit(html, AttrStart, audit, TryAuditAt);
-    }
 
     /// <summary>Attempts to rewrite an asset-attribute URL at <paramref name="p"/>; emits prefix + rewritten URL into <paramref name="sink"/> when localized.</summary>
     /// <param name="html">UTF-8 source.</param>
@@ -52,7 +50,13 @@ internal static class AssetAttributeBytes
     /// <param name="lastEmit">Offset up to which the source has been emitted.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when a URL was rewritten.</returns>
-    internal static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    internal static bool TryRewriteAt(
+        ReadOnlySpan<byte> html,
+        int p,
+        in UrlRewriteContext ctx,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!TryMatchHeader(html, p, out var urlStart, out var urlEnd, out var quote))
         {
@@ -133,11 +137,11 @@ internal static class AssetAttributeBytes
 
         var tagBytes = slice[(openIdx + 1)..];
         return ContainsAttributeIgnoreCase(tagBytes, "rel=\"canonical\""u8)
-            || ContainsAttributeIgnoreCase(tagBytes, "rel='canonical'"u8)
-            || ContainsAttributeIgnoreCase(tagBytes, "property=\"og:url\""u8)
-            || ContainsAttributeIgnoreCase(tagBytes, "property='og:url'"u8)
-            || ContainsAttributeIgnoreCase(tagBytes, "name=\"twitter:url\""u8)
-            || ContainsAttributeIgnoreCase(tagBytes, "name='twitter:url'"u8);
+               || ContainsAttributeIgnoreCase(tagBytes, "rel='canonical'"u8)
+               || ContainsAttributeIgnoreCase(tagBytes, "property=\"og:url\""u8)
+               || ContainsAttributeIgnoreCase(tagBytes, "property='og:url'"u8)
+               || ContainsAttributeIgnoreCase(tagBytes, "name=\"twitter:url\""u8)
+               || ContainsAttributeIgnoreCase(tagBytes, "name='twitter:url'"u8);
     }
 
     /// <summary>Case-insensitive contains-check for <paramref name="needle"/> over <paramref name="haystack"/> — small N, simple loop.</summary>

@@ -16,14 +16,18 @@ public class MkDocsBlogPluginTests
     [Test]
     public async Task UsesPostsAndCategoryDirectories()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-mkblog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-mkblog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var blogRoot = Path.Combine(docsRoot, "blog");
         var postsRoot = Path.Combine(blogRoot, "posts");
         Directory.CreateDirectory(postsRoot);
 
         try
         {
-            await File.WriteAllTextAsync(Path.Combine(postsRoot, "2024-01-15-launch.md"), "---\nTitle: Launch\nAuthor: Team\nTags: Release\nPublished: 2024-01-15\n---\nLaunch announcement.");
+            await File.WriteAllTextAsync(
+                Path.Combine(postsRoot, "2024-01-15-launch.md"),
+                "---\nTitle: Launch\nAuthor: Team\nTags: Release\nPublished: 2024-01-15\n---\nLaunch announcement.");
 
             MkDocsBlogPlugin plugin = new(new("blog", [.. "Blog"u8]));
             SyntheticPageSink sink = new();
@@ -35,15 +39,17 @@ public class MkDocsBlogPluginTests
             await Assert.That(Directory.Exists(Path.Combine(blogRoot, "category"))).IsFalse();
 
             var pages = sink.Snapshot();
-            var index = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "blog/index.md").MarkdownBytes);
+            var index = Encoding.UTF8.GetString(
+                pages.Single(p => p.RelativePath.Value == "blog/index.md").MarkdownBytes);
             await Assert.That(index.Contains("Launch", StringComparison.Ordinal)).IsTrue();
 
-            var archive = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "blog/category/release.md").MarkdownBytes);
+            var archive = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "blog/category/release.md")
+                .MarkdownBytes);
             await Assert.That(archive.Contains("Launch", StringComparison.Ordinal)).IsTrue();
         }
         finally
         {
-            Directory.Delete(docsRoot, recursive: true);
+            Directory.Delete(docsRoot, true);
         }
     }
 
@@ -52,7 +58,9 @@ public class MkDocsBlogPluginTests
     [Test]
     public async Task PublishesBlogIndexNavEntry()
     {
-        var docsRoot = Path.Combine(Path.GetTempPath(), "smd-mkblognav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smd-mkblognav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(Path.Combine(docsRoot, "blog", "posts"));
 
         try
@@ -70,7 +78,7 @@ public class MkDocsBlogPluginTests
         }
         finally
         {
-            Directory.Delete(docsRoot, recursive: true);
+            Directory.Delete(docsRoot, true);
         }
     }
 }

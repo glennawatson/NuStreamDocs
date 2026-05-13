@@ -12,7 +12,8 @@ public class SuperFencesRegistrationTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new SuperFencesPlugin().Name.SequenceEqual("superfences"u8)).IsTrue();
+    public async Task NameIsStable() =>
+        await Assert.That(new SuperFencesPlugin().Name.SequenceEqual("superfences"u8)).IsTrue();
 
     /// <summary>UseSuperFences() registers.</summary>
     /// <returns>Async test.</returns>

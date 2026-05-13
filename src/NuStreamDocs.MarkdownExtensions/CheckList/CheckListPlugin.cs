@@ -18,10 +18,12 @@ public sealed class CheckListPlugin : IPagePreRenderPlugin, IStaticAssetProvider
 
     /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
-        [.. """
-.task-list-item{list-style:none;margin-left:-1.4em}
-.task-list-item input[type=checkbox]{margin-right:.4em;vertical-align:middle}
-"""u8];
+    [
+        .. """
+           .task-list-item{list-style:none;margin-left:-1.4em}
+           .task-list-item input[type=checkbox]{margin-right:.4em;vertical-align:middle}
+           """u8
+    ];
 
     /// <summary>Relative path for the css asset.</summary>
     private static readonly FilePath AssetFilePath = new("assets/extensions/checklist.css");
@@ -44,8 +46,5 @@ public sealed class CheckListPlugin : IPagePreRenderPlugin, IStaticAssetProvider
         CheckListRewriter.Rewrite(context.Source, context.Output);
 
     /// <inheritdoc/>
-    public void WriteHeadExtra(IBufferWriter<byte> writer)
-    {
-        writer.Write(LinkBytes);
-    }
+    public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(LinkBytes);
 }

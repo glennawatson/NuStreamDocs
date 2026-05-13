@@ -70,7 +70,9 @@ public class AutorefsRegistryBenchmarks
         {
             var idx = i.ToString(CultureInfo.InvariantCulture);
             _idBytes[i] = Encoding.UTF8.GetBytes("section-" + idx);
-            _pageUrlBytes[i] = Encoding.UTF8.GetBytes("guide/page-" + (i / HeadingsPerPage).ToString(CultureInfo.InvariantCulture) + ".html");
+            _pageUrlBytes[i] =
+                Encoding.UTF8.GetBytes("guide/page-" + (i / HeadingsPerPage).ToString(CultureInfo.InvariantCulture) +
+                                       ".html");
         }
 
         _resolveSink = new(ResolveSinkCapacity);
@@ -108,7 +110,7 @@ public class AutorefsRegistryBenchmarks
     {
         for (var i = 0; i < _idBytes.Length; i++)
         {
-            _registry.Register(_idBytes[i], _pageUrlBytes[i], fragment: default);
+            _registry.Register(_idBytes[i], _pageUrlBytes[i], default);
         }
 
         return _registry.Count;

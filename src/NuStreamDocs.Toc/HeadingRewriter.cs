@@ -23,7 +23,8 @@ internal static class HeadingRewriter
     private static ReadOnlySpan<byte> PermalinkPrefix => "<a class=\"headerlink\" href=\"#"u8;
 
     /// <summary>Gets the bytes that terminate the permalink anchor open tag.</summary>
-    private static ReadOnlySpan<byte> PermalinkMid => "\" title=\"Permanent link\" aria-label=\"Permalink to this section\">"u8;
+    private static ReadOnlySpan<byte> PermalinkMid =>
+        "\" title=\"Permanent link\" aria-label=\"Permalink to this section\">"u8;
 
     /// <summary>Gets the permalink anchor close tag.</summary>
     private static ReadOnlySpan<byte> PermalinkSuffix => "</a>"u8;

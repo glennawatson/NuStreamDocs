@@ -11,13 +11,15 @@ public class HeadingSlugifierTests
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task BasicAsciiSlug() =>
-        await Assert.That(HeadingSlugifier.SlugifyToBytes("Hello World"u8).AsSpan().SequenceEqual("hello-world"u8)).IsTrue();
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("Hello World"u8).AsSpan().SequenceEqual("hello-world"u8))
+            .IsTrue();
 
     /// <summary>Punctuation collapses and trims.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task TrimsLeadingAndTrailingPunctuation() =>
-        await Assert.That(HeadingSlugifier.SlugifyToBytes("  ~!Foo --- Bar?? "u8).AsSpan().SequenceEqual("foo-bar"u8)).IsTrue();
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("  ~!Foo --- Bar?? "u8).AsSpan().SequenceEqual("foo-bar"u8))
+            .IsTrue();
 
     /// <summary>Empty / pure-punctuation input gets fallback.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
@@ -58,7 +60,8 @@ public class HeadingSlugifierTests
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task SlugifyToBytesAscii() =>
-        await Assert.That(HeadingSlugifier.SlugifyToBytes("Hello World"u8).AsSpan().SequenceEqual("hello-world"u8)).IsTrue();
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("Hello World"u8).AsSpan().SequenceEqual("hello-world"u8))
+            .IsTrue();
 
     /// <summary>SlugifyToBytes returns the fallback when input strips to nothing.</summary>
     /// <returns>A task representing the asynchronous test.</returns>

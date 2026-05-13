@@ -13,7 +13,8 @@ public static class PagefindOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="subdirectory">Site-relative directory (e.g. <c>"search"</c>).</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions WithOutputSubdirectory(this in PagefindOptions options, in PathSegment subdirectory) =>
+    public static PagefindOptions
+        WithOutputSubdirectory(this in PagefindOptions options, in PathSegment subdirectory) =>
         options with { OutputSubdirectory = subdirectory };
 
     /// <summary>Replaces the minimum-token-length filter.</summary>
@@ -27,46 +28,53 @@ public static class PagefindOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="keys">Frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions WithSearchableFrontmatterKeys(this in PagefindOptions options, params ApiCompatString[] keys) =>
+    public static PagefindOptions WithSearchableFrontmatterKeys(
+        this in PagefindOptions options,
+        params ApiCompatString[] keys) =>
         options with { SearchableFrontmatterKeys = keys.EncodeUtf8Array() };
 
     /// <summary>Replaces the searchable-frontmatter-key list with the supplied UTF-8 key bytes.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Frontmatter key bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions WithSearchableFrontmatterKeys(this in PagefindOptions options, params byte[][] keys)
-    {
-        return options with { SearchableFrontmatterKeys = keys };
-    }
+    public static PagefindOptions
+        WithSearchableFrontmatterKeys(this in PagefindOptions options, params byte[][] keys) =>
+        options with { SearchableFrontmatterKeys = keys };
 
     /// <summary>Appends <paramref name="keys"/> to the existing searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Additional frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions AddSearchableFrontmatterKeys(this in PagefindOptions options, params ApiCompatString[] keys)
-    {
-        return keys.Length is 0
+    public static PagefindOptions AddSearchableFrontmatterKeys(
+        this in PagefindOptions options,
+        params ApiCompatString[] keys) =>
+        keys.Length is 0
             ? options
-            : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array()) };
-    }
+            : options with
+            {
+                SearchableFrontmatterKeys =
+                ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array())
+            };
 
     /// <summary>Appends UTF-8 <paramref name="keys"/> to the existing searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Additional frontmatter key bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions AddSearchableFrontmatterKeys(this in PagefindOptions options, params byte[][] keys)
-    {
-        return keys.Length is 0
+    public static PagefindOptions AddSearchableFrontmatterKeys(this in PagefindOptions options, params byte[][] keys) =>
+        keys.Length is 0
             ? options
             : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys) };
-    }
 
     /// <summary>Appends a single UTF-8 frontmatter key (e.g. a <c>"..."u8</c> literal) to the existing list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="key">UTF-8 frontmatter-key bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions AddSearchableFrontmatterKeys(this in PagefindOptions options, ReadOnlySpan<byte> key) =>
-        options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, [key.ToArray()]) };
+    public static PagefindOptions
+        AddSearchableFrontmatterKeys(this in PagefindOptions options, ReadOnlySpan<byte> key) =>
+        options with
+        {
+            SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, [key.ToArray()])
+        };
 
     /// <summary>Empties the searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
@@ -85,10 +93,8 @@ public static class PagefindOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">UTF-8 section-priority bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions WithSectionPriorities(this in PagefindOptions options, byte[] value)
-    {
-        return options with { SectionPriorities = value };
-    }
+    public static PagefindOptions WithSectionPriorities(this in PagefindOptions options, byte[] value) =>
+        options with { SectionPriorities = value };
 
     /// <summary>Replaces the section-priority string with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
     /// <param name="options">Source options.</param>
@@ -122,7 +128,9 @@ public static class PagefindOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="prefixes">Site-relative forward-slash prefixes (e.g. <c>"api/"</c>).</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions WithExcludePathPrefixes(this in PagefindOptions options, params ApiCompatString[] prefixes) =>
+    public static PagefindOptions WithExcludePathPrefixes(
+        this in PagefindOptions options,
+        params ApiCompatString[] prefixes) =>
         options with { ExcludePathPrefixes = prefixes.EncodeUtf8Array() };
 
     /// <summary>Replaces the exclude-path-prefix list with the supplied UTF-8 bytes.</summary>
@@ -136,10 +144,15 @@ public static class PagefindOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="prefixes">Additional prefixes.</param>
     /// <returns>The updated options.</returns>
-    public static PagefindOptions AddExcludePathPrefixes(this in PagefindOptions options, params ApiCompatString[] prefixes) =>
+    public static PagefindOptions AddExcludePathPrefixes(
+        this in PagefindOptions options,
+        params ApiCompatString[] prefixes) =>
         prefixes.Length is 0
             ? options
-            : options with { ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, prefixes.EncodeUtf8Array()) };
+            : options with
+            {
+                ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, prefixes.EncodeUtf8Array())
+            };
 
     /// <summary>Appends UTF-8 prefixes to the exclude-path-prefix list.</summary>
     /// <param name="options">Source options.</param>

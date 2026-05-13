@@ -27,10 +27,8 @@ public static class LunrOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="language">UTF-8 language-code bytes.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions WithLanguage(this in LunrOptions options, byte[] language)
-    {
-        return options with { Language = language };
-    }
+    public static LunrOptions WithLanguage(this in LunrOptions options, byte[] language) =>
+        options with { Language = language };
 
     /// <summary>Replaces the Lunr stop-word + stemmer language code with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
     /// <param name="options">Source options.</param>
@@ -57,46 +55,49 @@ public static class LunrOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="keys">Frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions WithSearchableFrontmatterKeys(this in LunrOptions options, params ApiCompatString[] keys) =>
+    public static LunrOptions
+        WithSearchableFrontmatterKeys(this in LunrOptions options, params ApiCompatString[] keys) =>
         options with { SearchableFrontmatterKeys = keys.EncodeUtf8Array() };
 
     /// <summary>Replaces the searchable-frontmatter-key list with the supplied UTF-8 key bytes.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Frontmatter key bytes.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions WithSearchableFrontmatterKeys(this in LunrOptions options, params byte[][] keys)
-    {
-        return options with { SearchableFrontmatterKeys = keys };
-    }
+    public static LunrOptions WithSearchableFrontmatterKeys(this in LunrOptions options, params byte[][] keys) =>
+        options with { SearchableFrontmatterKeys = keys };
 
     /// <summary>Appends <paramref name="keys"/> to the existing searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Additional frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions AddSearchableFrontmatterKeys(this in LunrOptions options, params ApiCompatString[] keys)
-    {
-        return keys.Length is 0
+    public static LunrOptions
+        AddSearchableFrontmatterKeys(this in LunrOptions options, params ApiCompatString[] keys) =>
+        keys.Length is 0
             ? options
-            : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array()) };
-    }
+            : options with
+            {
+                SearchableFrontmatterKeys =
+                ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array())
+            };
 
     /// <summary>Appends UTF-8 <paramref name="keys"/> to the existing searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Additional frontmatter key bytes.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions AddSearchableFrontmatterKeys(this in LunrOptions options, params byte[][] keys)
-    {
-        return keys.Length is 0
+    public static LunrOptions AddSearchableFrontmatterKeys(this in LunrOptions options, params byte[][] keys) =>
+        keys.Length is 0
             ? options
             : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys) };
-    }
 
     /// <summary>Appends a single UTF-8 frontmatter key (e.g. a <c>"..."u8</c> literal) to the existing list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="key">UTF-8 frontmatter-key bytes.</param>
     /// <returns>The updated options.</returns>
     public static LunrOptions AddSearchableFrontmatterKeys(this in LunrOptions options, ReadOnlySpan<byte> key) =>
-        options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, [key.ToArray()]) };
+        options with
+        {
+            SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, [key.ToArray()])
+        };
 
     /// <summary>Empties the searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
@@ -115,32 +116,26 @@ public static class LunrOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="stopwords">Stopword bytes.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions WithExtraStopwords(this in LunrOptions options, params byte[][] stopwords)
-    {
-        return options with { ExtraStopwords = stopwords };
-    }
+    public static LunrOptions WithExtraStopwords(this in LunrOptions options, params byte[][] stopwords) =>
+        options with { ExtraStopwords = stopwords };
 
     /// <summary>Appends <paramref name="stopwords"/> to the existing extra-stopword list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="stopwords">Additional stopword strings.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions AddExtraStopwords(this in LunrOptions options, params ApiCompatString[] stopwords)
-    {
-        return stopwords.Length is 0
+    public static LunrOptions AddExtraStopwords(this in LunrOptions options, params ApiCompatString[] stopwords) =>
+        stopwords.Length is 0
             ? options
             : options with { ExtraStopwords = ArrayJoiner.Concat(options.ExtraStopwords, stopwords.EncodeUtf8Array()) };
-    }
 
     /// <summary>Appends UTF-8 <paramref name="stopwords"/> to the existing extra-stopword list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="stopwords">Additional stopword bytes.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions AddExtraStopwords(this in LunrOptions options, params byte[][] stopwords)
-    {
-        return stopwords.Length is 0
+    public static LunrOptions AddExtraStopwords(this in LunrOptions options, params byte[][] stopwords) =>
+        stopwords.Length is 0
             ? options
             : options with { ExtraStopwords = ArrayJoiner.Concat(options.ExtraStopwords, stopwords) };
-    }
 
     /// <summary>Appends a single UTF-8 stopword (e.g. a <c>"..."u8</c> literal) to the existing list.</summary>
     /// <param name="options">Source options.</param>
@@ -166,10 +161,8 @@ public static class LunrOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">UTF-8 section-priority bytes.</param>
     /// <returns>The updated options.</returns>
-    public static LunrOptions WithSectionPriorities(this in LunrOptions options, byte[] value)
-    {
-        return options with { SectionPriorities = value };
-    }
+    public static LunrOptions WithSectionPriorities(this in LunrOptions options, byte[] value) =>
+        options with { SectionPriorities = value };
 
     /// <summary>Replaces the section-priority string with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
     /// <param name="options">Source options.</param>

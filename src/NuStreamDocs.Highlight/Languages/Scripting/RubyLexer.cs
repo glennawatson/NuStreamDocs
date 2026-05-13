@@ -71,8 +71,17 @@ public static class RubyLexer
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
         WhitespaceFirst = WhitespaceFirst,
-        PreCommentRule = new(MatchEqualBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualFirst, RequiresLineStart = true },
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        PreCommentRule =
+            new(MatchEqualBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
+            {
+                FirstBytes = EqualFirst,
+                RequiresLineStart = true
+            },
+        LineComment =
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         PostStringRules =

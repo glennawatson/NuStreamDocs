@@ -12,7 +12,7 @@ public class LinkValidatorPluginCtorTests
     [Test]
     public async Task TwoArgCtor()
     {
-        LinkValidatorPlugin plugin = new(LinkValidatorOptions.Default, httpClientFactory: static () => new());
+        LinkValidatorPlugin plugin = new(LinkValidatorOptions.Default, static () => new());
         await Assert.That(plugin.Name.SequenceEqual("link-validator"u8)).IsTrue();
     }
 
@@ -25,12 +25,12 @@ public class LinkValidatorPluginCtorTests
         Directory.CreateDirectory(dir);
         try
         {
-            var corpus = await ValidationCorpus.BuildAsync(dir, parallelism: 1, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, 1, CancellationToken.None);
             await Assert.That(corpus.ContainsPage([.. "/missing.html"u8])).IsFalse();
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 }

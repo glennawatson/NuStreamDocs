@@ -41,7 +41,9 @@ public class UnicodeRangeMatcherTests
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0400-045F"u8, withCyrillic)).IsTrue();
 
         var withLatinExt = UnicodeRangeMatcher.NewSeenBlocks();
-        UnicodeRangeMatcher.MarkSeen(Encoding.UTF8.GetBytes("café"), withLatinExt); // é = U+00E9 → block 0, but ē U+0113 would be block 1; here only block 0.
+        UnicodeRangeMatcher.MarkSeen(
+            Encoding.UTF8.GetBytes("café"),
+            withLatinExt); // é = U+00E9 → block 0, but ē U+0113 would be block 1; here only block 0.
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, withLatinExt)).IsFalse();
         UnicodeRangeMatcher.MarkSeen(Encoding.UTF8.GetBytes("Tōkyō"), withLatinExt); // ō = U+014D → block 1.
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, withLatinExt)).IsTrue();

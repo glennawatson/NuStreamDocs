@@ -45,7 +45,8 @@ public class SuperFencesDispatcherTests
     [Test]
     public async Task MultipleHandlersDispatchIndependently()
     {
-        const string Source = "<pre><code class=\"language-mermaid\">A</code></pre> mid <pre><code class=\"language-math\">x</code></pre>";
+        const string Source =
+            "<pre><code class=\"language-mermaid\">A</code></pre> mid <pre><code class=\"language-math\">x</code></pre>";
         const string Expected = "<div class=\"mermaid\">A</div> mid <div class=\"math\">x</div>";
         ICustomFenceHandler[] handlers = [new MermaidStubHandler(), new MathStubHandler()];
         await Assert.That(Dispatch(Source, handlers)).IsEqualTo(Expected);
@@ -64,7 +65,8 @@ public class SuperFencesDispatcherTests
     /// <summary>Empty input yields empty output.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task EmptyInputEmptyOutput() => await Assert.That(Dispatch(string.Empty, new MermaidStubHandler())).IsEqualTo(string.Empty);
+    public async Task EmptyInputEmptyOutput() =>
+        await Assert.That(Dispatch(string.Empty, new MermaidStubHandler())).IsEqualTo(string.Empty);
 
     /// <summary>Drives bytes through the dispatcher with a single handler.</summary>
     /// <param name="input">HTML input.</param>

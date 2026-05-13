@@ -32,7 +32,8 @@ public static class HclLexer
         "resource data variable output locals module provider terraform backend required_providers required_version dynamic lifecycle depends_on"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
 
     /// <summary>First-byte set for operators.</summary>
     private static readonly SearchValues<byte> OperatorFirst = SearchValues.Create("=!<>&|+-*/%?:"u8);

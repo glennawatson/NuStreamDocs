@@ -24,7 +24,10 @@ internal static partial class AutorefsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="urlBytes">The url bytes.</param>
     /// <param name="id">UTF-8 reference ID bytes.</param>
-    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: registry lookup is gated on logger.IsEnabled.")]
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "False positive: registry lookup is gated on logger.IsEnabled.")]
     public static void LogReferenceResolved(ILogger? logger, ReadOnlySpan<byte> urlBytes, ReadOnlySpan<byte> id)
     {
         if (logger is null)

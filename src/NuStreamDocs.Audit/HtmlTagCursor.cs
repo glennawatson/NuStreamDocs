@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Audit;
@@ -74,14 +73,6 @@ internal ref struct HtmlTagCursor
 
     /// <summary>Advances to the next tag.</summary>
     /// <returns><see langword="true"/> when a tag was found; <see langword="false"/> at end of input.</returns>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Hand-rolled HTML5 tokenizer step; the branching tracks markup shapes (comments, end tags, self-closing, rawtext), not nested logic.")]
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S3776:Cognitive Complexity of methods should not be too high",
-        Justification = "Hand-rolled HTML5 tokenizer step; the branching tracks markup shapes (comments, end tags, self-closing, rawtext), not nested logic.")]
     public bool MoveNext()
     {
         Reset();
@@ -165,23 +156,28 @@ internal ref struct HtmlTagCursor
         return true;
     }
 
-    /// <summary>Reads the tag whose name begins at <paramref name="nameStart"/> and updates the token state.</summary>
-    /// <param name="lt">Offset of the tag's opening <c>&lt;</c>.</param>
-    /// <param name="nameStart">Offset of the first byte of the tag name.</param>
-    /// <param name="isEnd">Whether the tag is an end tag.</param>
-    /// <returns><see langword="true"/> when a tag was produced; <see langword="false"/> on an unterminated tag.</returns>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Tokenizer step; the branching tracks tag shapes (end / self-closing / rawtext), not nested logic.")]
-    private bool ReadTag(int lt, int nameStart, bool isEnd)
+    /// <summary>Returns the offset just past the run of tag-name bytes starting at <paramref name="start"/>.</summary>
+    /// <param name="start">Offset of the first byte of the tag name.</param>
+    /// <returns>Offset of the first non-name byte (or the end of input).</returns>
+    private readonly int ScanNameEnd(int start)
     {
-        var cursor = nameStart;
+        var cursor = start;
         while (cursor < _html.Length && IsNameChar(_html[cursor]))
         {
             cursor++;
         }
 
+        return cursor;
+    }
+
+    /// <summary>Reads the tag whose name begins at <paramref name="nameStart"/> and updates the token state.</summary>
+    /// <param name="lt">Offset of the tag's opening <c>&lt;</c>.</param>
+    /// <param name="nameStart">Offset of the first byte of the tag name.</param>
+    /// <param name="isEnd">Whether the tag is an end tag.</param>
+    /// <returns><see langword="true"/> when a tag was produced; <see langword="false"/> on an unterminated tag.</returns>
+    private bool ReadTag(int lt, int nameStart, bool isEnd)
+    {
+        var cursor = ScanNameEnd(nameStart);
         var name = _html[nameStart..cursor];
         var gt = FindTagEnd(cursor);
         if (gt < 0)

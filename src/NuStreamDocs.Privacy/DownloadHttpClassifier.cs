@@ -31,7 +31,7 @@ internal static class DownloadHttpClassifier
 
         var code = (int)response.StatusCode;
         return response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests
-            || code >= ServerErrorStatusFloor;
+               || code >= ServerErrorStatusFloor;
     }
 
     /// <summary>Returns true when the response looks like a CSS file (extension or Content-Type).</summary>

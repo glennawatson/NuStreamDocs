@@ -17,7 +17,7 @@ public class SyntheticNavGrafterTests
     public async Task EmptyEntriesReturnsSameRoot()
     {
         var root = Root(Section("documentation", "documentation/index.md"));
-        var result = SyntheticNavGrafter.Graft(root, [], useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, [], true);
         await Assert.That(result).IsSameReferenceAs(root);
     }
 
@@ -27,9 +27,9 @@ public class SyntheticNavGrafterTests
     public async Task IndexEntryGraftsSection()
     {
         var root = Root(Section("documentation", "documentation/index.md"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API Reference"u8], 2, Hidden: false);
+        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API Reference"u8], 2, false);
 
-        var result = SyntheticNavGrafter.Graft(root, [entry], useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
         var api = FindChild(result, "api");
         await Assert.That(api).IsNotNull();
@@ -45,9 +45,9 @@ public class SyntheticNavGrafterTests
     public async Task CompleteDiskSectionWins()
     {
         var root = Root(Section("api", "api/index.md", "Hand-written API"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "Generated API"u8], 2, Hidden: false);
+        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "Generated API"u8], 2, false);
 
-        var result = SyntheticNavGrafter.Graft(root, [entry], useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
         await Assert.That(result).IsSameReferenceAs(root);
         await Assert.That(Encoding.UTF8.GetString(FindChild(result, "api")!.Title)).IsEqualTo("Hand-written API");
@@ -59,12 +59,12 @@ public class SyntheticNavGrafterTests
     public async Task IncompleteDiskSectionMergesSyntheticIndex()
     {
         // Mirrors the blog case: docs/articles/ has post .md files but no index.md on disk.
-        var posts = new NavNode("2025-01-01-post", (FilePath)"articles/2025-01-01-post.md", isSection: false, [], useDirectoryUrls: true);
-        var diskArticles = new NavNode("articles", (FilePath)"articles", isSection: true, [posts], default, useDirectoryUrls: true);
+        var posts = new NavNode("2025-01-01-post", (FilePath)"articles/2025-01-01-post.md", false, [], true);
+        var diskArticles = new NavNode("articles", (FilePath)"articles", true, [posts], default, true);
         var root = Root(diskArticles);
-        SyntheticNavEntry entry = new((FilePath)"articles/index.md", [.. "Release Notes"u8], 3, Hidden: false);
+        SyntheticNavEntry entry = new((FilePath)"articles/index.md", [.. "Release Notes"u8], 3, false);
 
-        var result = SyntheticNavGrafter.Graft(root, [entry], useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, [entry], true);
         var articles = FindChild(result, "articles")!;
 
         await Assert.That(articles.IndexPath.Value).IsEqualTo("articles/index.md");
@@ -80,20 +80,20 @@ public class SyntheticNavGrafterTests
     public async Task SyntheticPageEntryTransfersOrderOntoDiskPage()
     {
         // Disk: an `articles` section with no index page, two date-prefixed posts (filename order = oldest first).
-        var oldPost = new NavNode("Old Post", (FilePath)"articles/2013-02-27-old.md", isSection: false, [], useDirectoryUrls: true);
-        var newPost = new NavNode("New Post", (FilePath)"articles/2026-05-07-new.md", isSection: false, [], useDirectoryUrls: true);
-        var diskArticles = new NavNode("articles", (FilePath)"articles", isSection: true, [oldPost, newPost], default, useDirectoryUrls: true);
+        var oldPost = new NavNode("Old Post", (FilePath)"articles/2013-02-27-old.md", false, [], true);
+        var newPost = new NavNode("New Post", (FilePath)"articles/2026-05-07-new.md", false, [], true);
+        var diskArticles = new NavNode("articles", (FilePath)"articles", true, [oldPost, newPost], default, true);
         var root = Root(diskArticles);
 
         // Synthetic: the blog index entry plus per-post entries carrying ascending Order (0 = newest).
         SyntheticNavEntry[] entries =
         [
-            new((FilePath)"articles/index.md", [.. "Articles"u8], 3, Hidden: false),
-            new((FilePath)"articles/2026-05-07-new.md", Title: null, Order: 0, Hidden: false),
-            new((FilePath)"articles/2013-02-27-old.md", Title: null, Order: 1, Hidden: false),
+            new((FilePath)"articles/index.md", [.. "Articles"u8], 3, false),
+            new((FilePath)"articles/2026-05-07-new.md", null, 0, false),
+            new((FilePath)"articles/2013-02-27-old.md", null, 1, false)
         ];
 
-        var result = SyntheticNavGrafter.Graft(root, entries, useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, entries, true);
         var articles = FindChild(result, "articles")!;
 
         await Assert.That(articles.IndexPath.Value).IsEqualTo("articles/index.md");
@@ -114,9 +114,9 @@ public class SyntheticNavGrafterTests
     public async Task HiddenEntryProducesNoSection()
     {
         var root = Root(Section("documentation", "documentation/index.md"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API"u8], null, Hidden: true);
+        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API"u8], null, true);
 
-        var result = SyntheticNavGrafter.Graft(root, [entry], useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
         await Assert.That(result).IsSameReferenceAs(root);
     }
@@ -129,12 +129,12 @@ public class SyntheticNavGrafterTests
         var root = Root();
         SyntheticNavEntry[] entries =
         [
-            new((FilePath)"api/index.md", [.. "API Reference"u8], 2, Hidden: false),
-            new((FilePath)"api/ReactiveUI/index.md", [.. "ReactiveUI"u8], null, Hidden: false),
-            new((FilePath)"api/ReactiveUI/ReactiveCommand.md", [.. "ReactiveCommand"u8], null, Hidden: false),
+            new((FilePath)"api/index.md", [.. "API Reference"u8], 2, false),
+            new((FilePath)"api/ReactiveUI/index.md", [.. "ReactiveUI"u8], null, false),
+            new((FilePath)"api/ReactiveUI/ReactiveCommand.md", [.. "ReactiveCommand"u8], null, false)
         ];
 
-        var result = SyntheticNavGrafter.Graft(root, entries, useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, entries, true);
 
         var api = FindChild(result, "api")!;
         await Assert.That(api.Children.Length).IsEqualTo(1);
@@ -155,9 +155,9 @@ public class SyntheticNavGrafterTests
         var root = Root(
             Section("documentation", "documentation/index.md"),
             Section("vs", "vs/index.md"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API Reference"u8], 1, Hidden: false);
+        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API Reference"u8], 1, false);
 
-        var result = SyntheticNavGrafter.Graft(root, [entry], useDirectoryUrls: true);
+        var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
         // Order 1 < int.MaxValue, so api comes first; the unordered disk sections keep alpha order after it.
         await Assert.That(result.Children.Length).IsEqualTo(3);
@@ -170,7 +170,7 @@ public class SyntheticNavGrafterTests
     /// <param name="children">Child nodes.</param>
     /// <returns>The root node.</returns>
     private static NavNode Root(params NavNode[] children) =>
-        new([], default, isSection: true, children, default, useDirectoryUrls: true);
+        new([], default, true, children, default, true);
 
     /// <summary>Builds a section node.</summary>
     /// <param name="name">Directory name (also the relative path).</param>
@@ -178,7 +178,7 @@ public class SyntheticNavGrafterTests
     /// <param name="title">Display title; defaults to <paramref name="name"/>.</param>
     /// <returns>The section node.</returns>
     private static NavNode Section(string name, string indexRel, string? title = null) =>
-        new(title ?? name, (FilePath)name, isSection: true, [], (FilePath)indexRel, useDirectoryUrls: true);
+        new(title ?? name, (FilePath)name, true, [], (FilePath)indexRel, true);
 
     /// <summary>Returns the top-level child whose section directory name matches <paramref name="name"/>, or null.</summary>
     /// <param name="root">Root node.</param>

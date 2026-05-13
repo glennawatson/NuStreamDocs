@@ -21,6 +21,6 @@ public sealed record LayoutsOptions(
 
     /// <summary>Gets the default option set — empty template directory, default depth cap.</summary>
     public static LayoutsOptions Default { get; } = new(
-        TemplateDirectory: default,
-        MaxIncludeDepth: DefaultDepth);
+        default,
+        DefaultDepth);
 }

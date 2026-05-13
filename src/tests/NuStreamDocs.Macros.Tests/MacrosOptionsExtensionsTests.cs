@@ -86,11 +86,7 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariablesStringEncodesAllEntries()
     {
-        Dictionary<ApiCompatString, ApiCompatString> seed = new()
-        {
-            ["a"] = "1",
-            ["b"] = "2"
-        };
+        Dictionary<ApiCompatString, ApiCompatString> seed = new() { ["a"] = "1", ["b"] = "2" };
         var options = MacrosOptions.Default.WithVariables(seed);
         var lookup = options.Variables.GetAlternateLookup<ReadOnlySpan<byte>>();
         await Assert.That(lookup.TryGetValue("a"u8, out var a)).IsTrue();

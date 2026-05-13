@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Fonts.Tests;
 
 /// <summary>Coverage for <c>FontsOptionsExtensions</c>.</summary>
@@ -15,8 +17,8 @@ public class FontsOptionsExtensionsTests
         var o = FontsOptions.Default.AddGoogleFont("Source Sans 3"u8, 400, 700);
         await Assert.That(o.Faces.Length).IsEqualTo(1);
         var f = o.Faces[0];
-        await Assert.That(System.Text.Encoding.UTF8.GetString(f.FamilyBytes)).IsEqualTo("Source Sans 3");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(f.Id)).IsEqualTo("source-sans-3");
+        await Assert.That(Encoding.UTF8.GetString(f.FamilyBytes)).IsEqualTo("Source Sans 3");
+        await Assert.That(Encoding.UTF8.GetString(f.Id)).IsEqualTo("source-sans-3");
         await Assert.That(f.Provider).IsEqualTo(FontProviderKind.Google);
         await Assert.That(f.Weights.SequenceEqual([400, 700])).IsTrue();
         await Assert.That(f.Styles.SequenceEqual([FontStyle.Normal])).IsTrue();
@@ -58,7 +60,7 @@ public class FontsOptionsExtensionsTests
         await Assert.That(f.Preload).IsFalse();
         await Assert.That(f.Fallback).IsEqualTo(GenericFontFamily.Monospace);
         await Assert.That(f.Subsets.Length).IsEqualTo(1);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(f.ThemeVariables[0])).IsEqualTo("--md-code-font");
+        await Assert.That(Encoding.UTF8.GetString(f.ThemeVariables[0])).IsEqualTo("--md-code-font");
     }
 
     /// <summary><c>AddLocalFont</c> records the glob patterns and marks the provider local.</summary>

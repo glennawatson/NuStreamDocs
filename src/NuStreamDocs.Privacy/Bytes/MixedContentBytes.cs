@@ -81,7 +81,12 @@ internal static class MixedContentBytes
     /// <param name="lastEmit">Offset up to which the source has been emitted.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when an attribute was rewritten.</returns>
-    private static bool TryRewriteAt(ReadOnlySpan<byte> html, int p, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    private static bool TryRewriteAt(
+        ReadOnlySpan<byte> html,
+        int p,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!TryMatchAttributeHeader(html, p, out var afterQuote))
         {
@@ -194,6 +199,7 @@ internal static class MixedContentBytes
             return true;
         }
 
-        return host.StartsWith(Ipv4Loopback) || host.SequenceEqual(Ipv6LoopbackBare) || host.SequenceEqual(Ipv6LoopbackBracketed);
+        return host.StartsWith(Ipv4Loopback) || host.SequenceEqual(Ipv6LoopbackBare) ||
+               host.SequenceEqual(Ipv6LoopbackBracketed);
     }
 }

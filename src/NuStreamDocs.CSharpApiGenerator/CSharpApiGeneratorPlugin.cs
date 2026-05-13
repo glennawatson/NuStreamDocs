@@ -26,7 +26,8 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// render drains them; no intermediate <c>.md</c> files land on disk. In <see cref="CSharpApiGeneratorMode.Direct"/>
 /// mode it stashes the merged catalog on <see cref="LastExtraction"/> without invoking an emitter.
 /// </remarks>
-public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
+public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger)
+    : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Forward-slash byte separating path segments in synthetic relative paths.</summary>
     private const byte SlashByte = (byte)'/';
@@ -87,8 +88,11 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         var navEntries = new ConcurrentBag<SyntheticNavEntry>();
         if (_options.EmitIndexPage)
         {
-            var indexTitle = _options.IndexTitle is { Length: > 0 } configured ? configured : "API Reference"u8.ToArray();
-            navEntries.Add(new SyntheticNavEntry(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexTitle, _options.IndexOrder, Hidden: false));
+            var indexTitle = _options.IndexTitle is { Length: > 0 } configured
+                ? configured
+                : "API Reference"u8.ToArray();
+            navEntries.Add(
+                new(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexTitle, _options.IndexOrder, false));
         }
 
         _navEntries = [.. navEntries];
@@ -117,7 +121,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
             // Path-only entry: the grafter derives section titles from directory names and page
             // titles from file stems — clean for the vast majority of API pages — so we don't
             // retain a title byte[] per page.
-            navEntries.Add(new SyntheticNavEntry(virtualPath, Title: null, Order: null, Hidden: false));
+            navEntries.Add(new(virtualPath, null, null, false));
         });
 
         try
@@ -182,7 +186,8 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Task that completes once the catalog has been merged.</returns>
     private async Task RunDirectAsync(CancellationToken cancellationToken) =>
-        LastExtraction = await CSharpApiGenerator.ExtractAsync(_options, _logger, cancellationToken).ConfigureAwait(false);
+        LastExtraction = await CSharpApiGenerator.ExtractAsync(_options, _logger, cancellationToken)
+            .ConfigureAwait(false);
 
     /// <summary>Builds and pushes the optional <c>{subdir}/index.md</c> landing page after the per-type pages have streamed.</summary>
     /// <param name="writer">Channel writer the index page is enqueued on.</param>

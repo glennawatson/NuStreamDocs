@@ -57,7 +57,11 @@ public static class RustLexer
     /// <returns>Lexer.</returns>
     private static Lexer Build()
     {
-        var specialString = new LexerRule(MatchRustSpecialString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = SpecialStringFirst };
+        var specialString =
+            new LexerRule(MatchRustSpecialString, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = SpecialStringFirst
+            };
 
         CFamilyConfig config = new()
         {

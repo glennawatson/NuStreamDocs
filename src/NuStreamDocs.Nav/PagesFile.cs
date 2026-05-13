@@ -12,5 +12,5 @@ namespace NuStreamDocs.Nav;
 internal readonly record struct PagesFile(byte[] Title, PagesEntry[] OrderedEntries, bool Hide, bool ReverseOrder)
 {
     /// <summary>Gets the empty (no-override) instance.</summary>
-    public static PagesFile Empty { get; } = new([], [], Hide: false, ReverseOrder: false);
+    public static PagesFile Empty { get; } = new([], [], false, false);
 }

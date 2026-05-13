@@ -27,7 +27,8 @@ public class FeedWriterTests
         await Assert.That(titles.Count).IsEqualTo(2);
         await Assert.That(xml.Contains("Launch", StringComparison.Ordinal)).IsTrue();
         await Assert.That(xml.Contains("Update", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(xml.Contains("https://example.com/blog/2024-06-01-launch.html", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(xml.Contains("https://example.com/blog/2024-06-01-launch.html", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>The Atom document carries the configured feed metadata and entry count.</summary>
@@ -68,7 +69,8 @@ public class FeedWriterTests
 
     /// <summary>Builds two posts for the writer to consume.</summary>
     /// <returns>Posts list.</returns>
-    private static BlogPost[] BuildPosts() => [
+    private static BlogPost[] BuildPosts() =>
+    [
         new(
             "blog/2024-06-01-launch.md",
             [.. "blog/2024-06-01-launch.html"u8],

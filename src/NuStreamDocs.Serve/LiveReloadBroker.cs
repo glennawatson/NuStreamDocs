@@ -112,7 +112,8 @@ internal sealed class LiveReloadBroker
 
         try
         {
-            await socket.SendAsync(ReloadPayload, WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None).ConfigureAwait(false);
+            await socket.SendAsync(ReloadPayload, WebSocketMessageType.Text, true, CancellationToken.None)
+                .ConfigureAwait(false);
             return true;
         }
         catch (WebSocketException)

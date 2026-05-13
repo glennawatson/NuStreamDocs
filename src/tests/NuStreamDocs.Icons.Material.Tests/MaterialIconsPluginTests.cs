@@ -37,9 +37,15 @@ public class MaterialIconsPluginTests
     [Test]
     public async Task SymbolsVariantsEmitMatchingUrls()
     {
-        await Assert.That(WriteHeadExtras(new MaterialIconsPlugin(MaterialIconsOptions.Default with { Style = MaterialIconStyle.SymbolsRounded })))
+        await Assert.That(WriteHeadExtras(new MaterialIconsPlugin(MaterialIconsOptions.Default with
+        {
+            Style = MaterialIconStyle.SymbolsRounded
+        })))
             .Contains("Material+Symbols+Rounded");
-        await Assert.That(WriteHeadExtras(new MaterialIconsPlugin(MaterialIconsOptions.Default with { Style = MaterialIconStyle.SymbolsSharp })))
+        await Assert.That(WriteHeadExtras(new MaterialIconsPlugin(MaterialIconsOptions.Default with
+        {
+            Style = MaterialIconStyle.SymbolsSharp
+        })))
             .Contains("Material+Symbols+Sharp");
     }
 
@@ -58,7 +64,10 @@ public class MaterialIconsPluginTests
     [Test]
     public async Task OverrideUrlWins()
     {
-        MaterialIconsPlugin plugin = new(MaterialIconsOptions.Default with { StylesheetUrlOverride = [.. "https://example.test/icons.css"u8] });
+        MaterialIconsPlugin plugin = new(MaterialIconsOptions.Default with
+        {
+            StylesheetUrlOverride = [.. "https://example.test/icons.css"u8]
+        });
         var html = WriteHeadExtras(plugin);
         await Assert.That(html).Contains("https://example.test/icons.css");
         await Assert.That(html).DoesNotContain("googleapis");
@@ -67,7 +76,10 @@ public class MaterialIconsPluginTests
     /// <summary>Helper: invoke <c>IHeadExtraProvider.WriteHeadExtra</c> and decode.</summary>
     /// <param name="provider">Provider under test.</param>
     /// <returns>The rendered head-extras HTML.</returns>
-    [SuppressMessage("Performance", "CA1859", Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
+    [SuppressMessage(
+        "Performance",
+        "CA1859",
+        Justification = "Test deliberately exercises the IHeadExtraProvider contract.")]
     private static string WriteHeadExtras(IHeadExtraProvider provider)
     {
         ArrayBufferWriter<byte> writer = new();

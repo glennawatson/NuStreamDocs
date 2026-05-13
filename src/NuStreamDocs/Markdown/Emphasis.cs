@@ -123,7 +123,12 @@ internal static class Emphasis
     /// <param name="closeStart">Start of close run.</param>
     /// <param name="openLength">1 = em, 2 = strong, 3 = strong+em.</param>
     /// <param name="writer">the UTF-8 sink.</param>
-    private static void EmitWrapped(ReadOnlySpan<byte> source, int contentStart, int closeStart, int openLength, IBufferWriter<byte> writer)
+    private static void EmitWrapped(
+        ReadOnlySpan<byte> source,
+        int contentStart,
+        int closeStart,
+        int openLength,
+        IBufferWriter<byte> writer)
     {
         Utf8StringWriter.Write(writer, OpenTag(openLength));
         InlineRenderer.Render(source[contentStart..closeStart], writer);

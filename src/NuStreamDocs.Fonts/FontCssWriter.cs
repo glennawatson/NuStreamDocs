@@ -113,7 +113,7 @@ public static class FontCssWriter
         FontDisplay.Swap => "swap"u8,
         FontDisplay.Fallback => "fallback"u8,
         FontDisplay.Optional => "optional"u8,
-        _ => "auto"u8,
+        _ => "auto"u8
     };
 
     /// <summary>One resolved font file to emit as an <c>@font-face</c> rule.</summary>
@@ -131,5 +131,12 @@ public static class FontCssWriter
     /// <param name="ThemeVariables">UTF-8 names of CSS custom properties to alias to <c>--nstd-font-&lt;id&gt;</c>.</param>
     /// <param name="Metrics">Webfont metrics for the CLS fallback face, or <see langword="null"/> to skip it.</param>
     /// <param name="Resources">The resolved files.</param>
-    public readonly record struct FaceCss(byte[] Id, byte[] FamilyBytes, FontDisplay Display, GenericFontFamily Fallback, byte[][] ThemeVariables, FontMetrics? Metrics, ResourceCss[] Resources);
+    public readonly record struct FaceCss(
+        byte[] Id,
+        byte[] FamilyBytes,
+        FontDisplay Display,
+        GenericFontFamily Fallback,
+        byte[][] ThemeVariables,
+        FontMetrics? Metrics,
+        ResourceCss[] Resources);
 }

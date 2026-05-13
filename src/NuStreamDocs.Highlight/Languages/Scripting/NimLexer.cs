@@ -19,7 +19,8 @@ public static class NimLexer
     /// <summary>Gets the singleton Nim lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        PreCommentRule = LanguageCommon.CreatePairedBlockCommentRule([.. "#["u8], [.. "]#"u8], LanguageCommon.HashFirst),
+        PreCommentRule =
+            LanguageCommon.CreatePairedBlockCommentRule([.. "#["u8], [.. "]#"u8], LanguageCommon.HashFirst),
         LineComment = LanguageCommon.CreateHashLineCommentRule(),
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,

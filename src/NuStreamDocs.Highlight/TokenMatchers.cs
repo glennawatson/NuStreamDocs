@@ -102,7 +102,10 @@ public static class TokenMatchers
     /// <param name="startSet">Allowed first bytes.</param>
     /// <param name="continueSet">Allowed continuation bytes.</param>
     /// <returns>Length matched, or <c>0</c>.</returns>
-    public static int MatchIdentifier(ReadOnlySpan<byte> slice, SearchValues<byte> startSet, SearchValues<byte> continueSet)
+    public static int MatchIdentifier(
+        ReadOnlySpan<byte> slice,
+        SearchValues<byte> startSet,
+        SearchValues<byte> continueSet)
     {
         if (slice is [] || !startSet.Contains(slice[0]))
         {
@@ -122,14 +125,18 @@ public static class TokenMatchers
     /// <summary>Matches an unsigned ASCII float — at least one digit, a dot, at least one digit, optional <c>e/E</c> exponent. Equivalent to <c>\G\d+\.\d+(?:[eE][+-]?\d+)?</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or <c>0</c>.</returns>
-    public static int MatchUnsignedAsciiFloat(ReadOnlySpan<byte> slice) => slice is [] || !AsciiDigits.Contains(slice[0]) ? 0 : MatchSignedAsciiFloat(slice);
+    public static int MatchUnsignedAsciiFloat(ReadOnlySpan<byte> slice) =>
+        slice is [] || !AsciiDigits.Contains(slice[0]) ? 0 : MatchSignedAsciiFloat(slice);
 
     /// <summary>Matches a body run of <paramref name="bodySet"/> followed by zero or more bytes from <paramref name="suffixSet"/>. Equivalent to <c>\G[bodySet]+[suffixSet]*</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="bodySet">Required body bytes; at least one must be present.</param>
     /// <param name="suffixSet">Optional trailing bytes consumed greedily.</param>
     /// <returns>Length matched on success, <c>0</c> when the body is empty.</returns>
-    public static int MatchRunWithSuffix(ReadOnlySpan<byte> slice, SearchValues<byte> bodySet, SearchValues<byte> suffixSet)
+    public static int MatchRunWithSuffix(
+        ReadOnlySpan<byte> slice,
+        SearchValues<byte> bodySet,
+        SearchValues<byte> suffixSet)
     {
         var bodyLen = MatchRunOf(slice, bodySet);
         if (bodyLen is 0)
@@ -151,7 +158,10 @@ public static class TokenMatchers
     /// <param name="hexBody">Set of allowed hex-body bytes (typically hex digits + <c>_</c>).</param>
     /// <param name="suffixSet">Optional trailing bytes consumed greedily.</param>
     /// <returns>Length matched on success, <c>0</c> on miss.</returns>
-    public static int MatchAsciiHexLiteral(ReadOnlySpan<byte> slice, SearchValues<byte> hexBody, SearchValues<byte> suffixSet)
+    public static int MatchAsciiHexLiteral(
+        ReadOnlySpan<byte> slice,
+        SearchValues<byte> hexBody,
+        SearchValues<byte> suffixSet)
     {
         if (slice.Length < 3 || slice[0] is not (byte)'0' || slice[1] is not ((byte)'x' or (byte)'X'))
         {
@@ -369,19 +379,15 @@ public static class TokenMatchers
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="stopFirstBytes">Bytes that disqualify a line.</param>
     /// <returns>Length of the line on match, <c>0</c> on miss.</returns>
-    public static int MatchLineUnlessStartsWith(ReadOnlySpan<byte> slice, SearchValues<byte> stopFirstBytes)
-    {
-        return slice is [] || stopFirstBytes.Contains(slice[0]) ? 0 : LineLength(slice);
-    }
+    public static int MatchLineUnlessStartsWith(ReadOnlySpan<byte> slice, SearchValues<byte> stopFirstBytes) =>
+        slice is [] || stopFirstBytes.Contains(slice[0]) ? 0 : LineLength(slice);
 
     /// <summary>Matches a single byte that's a member of <paramref name="set"/>. Equivalent to <c>\G[set]</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="set">Allowed bytes.</param>
     /// <returns><c>1</c> on match, <c>0</c> on miss.</returns>
-    public static int MatchSingleByteOf(ReadOnlySpan<byte> slice, SearchValues<byte> set)
-    {
-        return slice is [] || !set.Contains(slice[0]) ? 0 : 1;
-    }
+    public static int MatchSingleByteOf(ReadOnlySpan<byte> slice, SearchValues<byte> set) =>
+        slice is [] || !set.Contains(slice[0]) ? 0 : 1;
 
     /// <summary>Matches one of the keywords in <paramref name="keywords"/> followed by a non-identifier-continue byte (or end-of-slice). Equivalent to <c>\G(?:k0|k1|...)\b</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
@@ -495,7 +501,10 @@ public static class TokenMatchers
     /// <param name="open">Two-byte opener (e.g. <c>"#="u8</c> for Julia, <c>"%{"u8</c> for MATLAB, <c>"#["u8</c> for Nim).</param>
     /// <param name="close">Two-byte closer (e.g. <c>"=#"u8</c>, <c>"%}"u8</c>, <c>"]#"u8</c>).</param>
     /// <returns>Length matched (including both delimiters), or zero on miss / unterminated input.</returns>
-    public static int MatchPairedBlockComment(ReadOnlySpan<byte> slice, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close)
+    public static int MatchPairedBlockComment(
+        ReadOnlySpan<byte> slice,
+        ReadOnlySpan<byte> open,
+        ReadOnlySpan<byte> close)
     {
         const int TwoByteDelimiterLength = 2;
         if (open.Length != TwoByteDelimiterLength || close.Length != TwoByteDelimiterLength)

@@ -29,7 +29,7 @@ public readonly record struct MathJaxOptions(
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static MathJaxOptions Default { get; } = new(
-        LoaderUrl: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
-        ProcessHtmlClass: "arithmatex",
-        IgnoreHtmlClass: ".*|");
+        "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
+        "arithmatex",
+        ".*|");
 }

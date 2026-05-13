@@ -19,7 +19,8 @@ public class BlogSlugifierTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UppercaseFolded() =>
-        await Assert.That(BlogSlugifier.Slugify("HelloWorld"u8, "fb"u8).AsSpan().SequenceEqual("helloworld"u8)).IsTrue();
+        await Assert.That(BlogSlugifier.Slugify("HelloWorld"u8, "fb"u8).AsSpan().SequenceEqual("helloworld"u8))
+            .IsTrue();
 
     /// <summary>Hyphen and underscore are preserved.</summary>
     /// <returns>Async test.</returns>
@@ -31,7 +32,8 @@ public class BlogSlugifierTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task SpacesAndSlashesBecomeHyphens() =>
-        await Assert.That(BlogSlugifier.Slugify("foo bar/baz"u8, "fb"u8).AsSpan().SequenceEqual("foo-bar-baz"u8)).IsTrue();
+        await Assert.That(BlogSlugifier.Slugify("foo bar/baz"u8, "fb"u8).AsSpan().SequenceEqual("foo-bar-baz"u8))
+            .IsTrue();
 
     /// <summary>Unrecognized characters are dropped.</summary>
     /// <returns>Async test.</returns>

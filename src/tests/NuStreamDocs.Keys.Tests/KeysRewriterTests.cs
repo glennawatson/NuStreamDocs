@@ -15,7 +15,8 @@ public class KeysRewriterTests
     [Test]
     public async Task ThreeKeyShortcutRendersKeysSpan()
     {
-        const string Expected = "<span class=\"keys\"><kbd class=\"key-ctrl\">Ctrl</kbd><span>+</span><kbd class=\"key-alt\">Alt</kbd><span>+</span><kbd class=\"key-delete\">Delete</kbd></span>";
+        const string Expected =
+            "<span class=\"keys\"><kbd class=\"key-ctrl\">Ctrl</kbd><span>+</span><kbd class=\"key-alt\">Alt</kbd><span>+</span><kbd class=\"key-delete\">Delete</kbd></span>";
         await Assert.That(Rewrite("press ++ctrl+alt+del++ to reset"))
             .IsEqualTo($"press {Expected} to reset");
     }
@@ -58,7 +59,8 @@ public class KeysRewriterTests
     public async Task FencedCodePassesThrough()
     {
         const string Source = "Try ++ctrl+x++.\n```\n++ctrl+x++\n```\nAfter ++enter++.";
-        const string CtrlX = "<span class=\"keys\"><kbd class=\"key-ctrl\">Ctrl</kbd><span>+</span><kbd class=\"key-x\">x</kbd></span>";
+        const string CtrlX =
+            "<span class=\"keys\"><kbd class=\"key-ctrl\">Ctrl</kbd><span>+</span><kbd class=\"key-x\">x</kbd></span>";
         const string Enter = "<span class=\"keys\"><kbd class=\"key-enter\">Enter</kbd></span>";
         await Assert.That(Rewrite(Source))
             .IsEqualTo($"Try {CtrlX}.\n```\n++ctrl+x++\n```\nAfter {Enter}.");
@@ -74,7 +76,8 @@ public class KeysRewriterTests
     /// <summary>Open marker followed by whitespace is not a shortcut.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task WhitespaceAfterOpenIsNotAShortcut() => await Assert.That(Rewrite("a++ b ++c")).IsEqualTo("a++ b ++c");
+    public async Task WhitespaceAfterOpenIsNotAShortcut() =>
+        await Assert.That(Rewrite("a++ b ++c")).IsEqualTo("a++ b ++c");
 
     /// <summary>Plain text round-trips.</summary>
     /// <returns>Async test.</returns>

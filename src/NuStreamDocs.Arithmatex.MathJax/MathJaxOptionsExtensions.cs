@@ -20,13 +20,16 @@ public static class MathJaxOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="processHtmlClass">Regex of HTML class values MathJax should typeset.</param>
     /// <returns>The updated options.</returns>
-    public static MathJaxOptions WithProcessHtmlClass(this in MathJaxOptions options, in ApiCompatString processHtmlClass) =>
+    public static MathJaxOptions WithProcessHtmlClass(
+        this in MathJaxOptions options,
+        in ApiCompatString processHtmlClass) =>
         options with { ProcessHtmlClass = processHtmlClass };
 
     /// <summary>Replaces the <c>ignoreHtmlClass</c> regex.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="ignoreHtmlClass">Regex of HTML class values MathJax should skip.</param>
     /// <returns>The updated options.</returns>
-    public static MathJaxOptions WithIgnoreHtmlClass(this in MathJaxOptions options, in ApiCompatString ignoreHtmlClass) =>
+    public static MathJaxOptions
+        WithIgnoreHtmlClass(this in MathJaxOptions options, in ApiCompatString ignoreHtmlClass) =>
         options with { IgnoreHtmlClass = ignoreHtmlClass };
 }

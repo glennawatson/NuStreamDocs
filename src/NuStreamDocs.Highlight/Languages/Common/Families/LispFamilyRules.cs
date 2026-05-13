@@ -70,16 +70,27 @@ internal static class LispFamilyRules
         const int MaxRuleSlots = 14;
         var rules = new List<LexerRule>(MaxRuleSlots)
         {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            },
 
             // ; line comment to end-of-line.
-            new(static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)';'), TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = SemicolonFirst },
+            new(
+                static slice => TokenMatchers.MatchLineCommentToEol(
+                    slice,
+                    (byte)';'),
+                TokenClass.CommentSingle,
+                LexerRule.NoStateChange) { FirstBytes = SemicolonFirst },
 
             // #|...|# block comment, #\char character literal, #;datum-comment marker — all dispatched off the leading '#'.
             new(MatchHashDispatch, TokenClass.Text, LexerRule.NoStateChange) { FirstBytes = HashFirst },
 
             // "..." string with backslash escapes.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = DoubleQuoteFirst
+            },
 
             // ' / ` / , quote prefix.
             new(MatchQuotePrefix, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = QuoteFirst }
@@ -87,16 +98,28 @@ internal static class LispFamilyRules
 
         if (config.IncludeColonKeyword)
         {
-            rules.Add(new(MatchColonKeyword, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = ColonFirst });
+            rules.Add(new(MatchColonKeyword, TokenClass.NameAttribute, LexerRule.NoStateChange)
+            {
+                FirstBytes = ColonFirst
+            });
         }
 
         // Numeric literal — float first.
-        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
-        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
+        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiDigits
+        });
+        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiDigits
+        });
 
         // Keyword tables (case-sensitive). Constants first so `t` / `nil` win over the symbol rule.
         rules.Add(BuildKeywordRule(config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant));
-        rules.Add(BuildKeywordRule(config.KeywordDeclarations, config.KeywordDeclarationFirst, TokenClass.KeywordDeclaration));
+        rules.Add(BuildKeywordRule(
+            config.KeywordDeclarations,
+            config.KeywordDeclarationFirst,
+            TokenClass.KeywordDeclaration));
         rules.Add(BuildKeywordRule(config.Keywords, config.KeywordFirst, TokenClass.Keyword));
 
         // Bare symbol — letters, digits, and the broad Lisp punctuation alphabet.
@@ -104,7 +127,11 @@ internal static class LispFamilyRules
 
         // Brackets / parens.
         var punctuation = config.IncludeDataBrackets ? ClojurePunctuation : ParenPunctuation;
-        rules.Add(new(slice => TokenMatchers.MatchSingleByteOf(slice, punctuation), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = punctuation });
+        rules.Add(new(
+                slice => TokenMatchers.MatchSingleByteOf(slice, punctuation),
+                TokenClass.Punctuation,
+                LexerRule.NoStateChange)
+        { FirstBytes = punctuation });
 
         return [.. rules];
     }
@@ -114,10 +141,16 @@ internal static class LispFamilyRules
     /// <param name="firstBytes">Optional first-byte dispatch set.</param>
     /// <param name="tokenClass">Classification.</param>
     /// <returns>Rule matching any member of <paramref name="keywords"/>.</returns>
-    private static LexerRule BuildKeywordRule(ByteKeywordSet keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass)
+    private static LexerRule BuildKeywordRule(
+        ByteKeywordSet keywords,
+        SearchValues<byte>? firstBytes,
+        TokenClass tokenClass)
     {
         var captured = keywords;
-        return new(slice => MatchSymbolKeyword(slice, captured), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet };
+        return new(slice => MatchSymbolKeyword(slice, captured), tokenClass, LexerRule.NoStateChange)
+        {
+            FirstBytes = firstBytes ?? captured.FirstByteSet
+        };
     }
 
     /// <summary>

@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Net;
+using System.Text;
 using NuStreamDocs.Highlight.Languages.Build;
 using NuStreamDocs.Highlight.Languages.CFamily;
 using NuStreamDocs.Highlight.Languages.Data;
@@ -18,7 +20,8 @@ public class Tier1ExtraLexerTests
     [Test]
     public async Task SwiftClassifiesKeywordsAndTypes()
     {
-        var html = SwiftLexer.Instance.Render("func greet(name: String) -> String { let prefix: String = \"hi\"; return prefix + name; }"u8);
+        var html = SwiftLexer.Instance.Render(
+            "func greet(name: String) -> String { let prefix: String = \"hi\"; return prefix + name; }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">func</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">let</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">String</span>", StringComparison.Ordinal)).IsTrue();
@@ -31,7 +34,9 @@ public class Tier1ExtraLexerTests
     public async Task SwiftClassifiesMultilineString()
     {
         var html = SwiftLexer.Instance.Render("let msg = \"\"\"\nhi\n\"\"\""u8);
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;&quot;&quot;\nhi\n&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"s2\">&quot;&quot;&quot;\nhi\n&quot;&quot;&quot;</span>",
+            StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>SQL classifies <c>SELECT</c> / <c>FROM</c> / <c>WHERE</c> case-insensitively.</summary>
@@ -98,7 +103,8 @@ public class Tier1ExtraLexerTests
     public async Task RubyClassifiesEqualBlockComment()
     {
         var html = RubyLexer.Instance.Render("=begin\nhello\n=end\nx = 1"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">=begin\nhello\n=end</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"cm\">=begin\nhello\n=end</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Markdown classifies ATX heading prefixes and fence markers.</summary>
@@ -128,10 +134,11 @@ public class Tier1ExtraLexerTests
     [Test]
     public async Task DetectorResolvesSwift()
     {
-        const string Source = "import SwiftUI\nstruct ContentView: View {\n  var body: some View { Text(\"Hello\") }\n}";
-        var escaped = System.Text.Encoding.UTF8.GetBytes(System.Net.WebUtility.HtmlEncode(Source));
+        const string Source =
+            "import SwiftUI\nstruct ContentView: View {\n  var body: some View { Text(\"Hello\") }\n}";
+        var escaped = Encoding.UTF8.GetBytes(WebUtility.HtmlEncode(Source));
         var resolved = LanguageDetector.TryDetect(escaped, LexerRegistry.Default, [], out var languageId);
-        var languageString = System.Text.Encoding.UTF8.GetString(languageId);
+        var languageString = Encoding.UTF8.GetString(languageId);
         await Assert.That(resolved).IsTrue();
         await Assert.That(languageString).IsEqualTo("swift");
     }
@@ -142,9 +149,9 @@ public class Tier1ExtraLexerTests
     public async Task DetectorResolvesSql()
     {
         const string Source = "SELECT name, count FROM users WHERE active = 1 GROUP BY name ORDER BY count DESC;";
-        var escaped = System.Text.Encoding.UTF8.GetBytes(System.Net.WebUtility.HtmlEncode(Source));
+        var escaped = Encoding.UTF8.GetBytes(WebUtility.HtmlEncode(Source));
         var resolved = LanguageDetector.TryDetect(escaped, LexerRegistry.Default, [], out var languageId);
-        var languageString = System.Text.Encoding.UTF8.GetString(languageId);
+        var languageString = Encoding.UTF8.GetString(languageId);
         await Assert.That(resolved).IsTrue();
         await Assert.That(languageString).IsEqualTo("sql");
     }
@@ -155,9 +162,9 @@ public class Tier1ExtraLexerTests
     public async Task DetectorResolvesDockerfile()
     {
         const string Source = "FROM debian:12\nWORKDIR /app\nCOPY . .\nRUN apt-get update\nCMD [\"bash\"]";
-        var escaped = System.Text.Encoding.UTF8.GetBytes(System.Net.WebUtility.HtmlEncode(Source));
+        var escaped = Encoding.UTF8.GetBytes(WebUtility.HtmlEncode(Source));
         var resolved = LanguageDetector.TryDetect(escaped, LexerRegistry.Default, [], out var languageId);
-        var languageString = System.Text.Encoding.UTF8.GetString(languageId);
+        var languageString = Encoding.UTF8.GetString(languageId);
         await Assert.That(resolved).IsTrue();
         await Assert.That(languageString).IsEqualTo("dockerfile");
     }
@@ -168,9 +175,9 @@ public class Tier1ExtraLexerTests
     public async Task DetectorResolvesPhp()
     {
         const string Source = "<?php\nnamespace App;\nfunction greet($name) { echo $name; }\n?>";
-        var escaped = System.Text.Encoding.UTF8.GetBytes(System.Net.WebUtility.HtmlEncode(Source));
+        var escaped = Encoding.UTF8.GetBytes(WebUtility.HtmlEncode(Source));
         var resolved = LanguageDetector.TryDetect(escaped, LexerRegistry.Default, [], out var languageId);
-        var languageString = System.Text.Encoding.UTF8.GetString(languageId);
+        var languageString = Encoding.UTF8.GetString(languageId);
         await Assert.That(resolved).IsTrue();
         await Assert.That(languageString).IsEqualTo("php");
     }

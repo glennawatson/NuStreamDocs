@@ -28,7 +28,7 @@ public class TocFragmentRendererTests
         byte[] html = [.. "<h1>x</h1>"u8];
         var headings = HeadingScanner.Scan(html);
         ArrayBufferWriter<byte> sink = new();
-        TocFragmentRenderer.Render(html, headings, new(MinLevel: 2, MaxLevel: 6, PermalinkSymbol: "#", MarkerSubstitute: false), sink);
+        TocFragmentRenderer.Render(html, headings, new(2, 6, "#", false), sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
 
@@ -80,12 +80,15 @@ public class TocFragmentRendererTests
     [Test]
     public async Task MixedDepthClosesAndReopensCleanly()
     {
-        byte[] html = [.. ("<h2 id=\"s1\">S1</h2>"
-                       + "<h3 id=\"a\">A</h3>"
-                       + "<h4 id=\"a1\">A1</h4>"
-                       + "<h3 id=\"b\">B</h3>"
-                       + "<h2 id=\"s2\">S2</h2>")
-            .Select(c => (byte)c)];
+        byte[] html =
+        [
+            .. ("<h2 id=\"s1\">S1</h2>"
+                + "<h3 id=\"a\">A</h3>"
+                + "<h4 id=\"a1\">A1</h4>"
+                + "<h3 id=\"b\">B</h3>"
+                + "<h2 id=\"s2\">S2</h2>")
+            .Select(c => (byte)c)
+        ];
         var headings = HeadingScanner.Scan(html);
         Heading[] slugged = [.. headings.Select(h => h with { Slug = h.ExistingIdBytes(html).ToArray() })];
         ArrayBufferWriter<byte> sink = new();

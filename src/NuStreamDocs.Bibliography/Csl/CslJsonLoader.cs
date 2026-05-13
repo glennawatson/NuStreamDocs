@@ -16,6 +16,51 @@ namespace NuStreamDocs.Bibliography.Csl;
 /// </summary>
 internal static class CslJsonLoader
 {
+    /// <summary>String-valued CSL properties paired with the per-entry field they populate.</summary>
+    private static readonly (byte[] Name, StringFieldSetter Set)[] StringProperties =
+    [
+        ([.. "id"u8], static (ref EntryFields f, byte[] v) => f.Id = v),
+        ([.. "title"u8], static (ref EntryFields f, byte[] v) => f.Title = v),
+        ([.. "title-short"u8], static (ref EntryFields f, byte[] v) => f.ShortTitle = v),
+        ([.. "container-title"u8], static (ref EntryFields f, byte[] v) => f.ContainerTitle = v),
+        ([.. "publisher"u8], static (ref EntryFields f, byte[] v) => f.Publisher = v),
+        ([.. "publisher-place"u8], static (ref EntryFields f, byte[] v) => f.PublisherPlace = v),
+        ([.. "volume"u8], static (ref EntryFields f, byte[] v) => f.Volume = v),
+        ([.. "issue"u8], static (ref EntryFields f, byte[] v) => f.Issue = v),
+        ([.. "page"u8], static (ref EntryFields f, byte[] v) => f.Page = v),
+        ([.. "URL"u8], static (ref EntryFields f, byte[] v) => f.Url = v),
+        ([.. "DOI"u8], static (ref EntryFields f, byte[] v) => f.Doi = v),
+        ([.. "note"u8], static (ref EntryFields f, byte[] v) => f.Note = v),
+        ([.. "authority"u8], static (ref EntryFields f, byte[] v) => f.Court = v),
+        ([.. "jurisdiction"u8], static (ref EntryFields f, byte[] v) => f.Jurisdiction = v),
+        ([.. "references"u8], static (ref EntryFields f, byte[] v) => f.LawReportSeries = v),
+        ([.. "number"u8], static (ref EntryFields f, byte[] v) => f.MediumNeutralCitation = v)
+    ];
+
+    /// <summary>CSL <c>type</c> values (kebab- / snake-case) mapped to <see cref="EntryType"/>.</summary>
+    private static readonly Dictionary<byte[], EntryType> EntryTypesByName = new(ByteArrayComparer.Instance)
+    {
+        [[.. "book"u8]] = EntryType.Book,
+        [[.. "chapter"u8]] = EntryType.Chapter,
+        [[.. "article-journal"u8]] = EntryType.ArticleJournal,
+        [[.. "article-magazine"u8]] = EntryType.ArticleMagazine,
+        [[.. "article-newspaper"u8]] = EntryType.ArticleNewspaper,
+        [[.. "article"u8]] = EntryType.Article,
+        [[.. "legal_case"u8]] = EntryType.LegalCase,
+        [[.. "legislation"u8]] = EntryType.Legislation,
+        [[.. "treaty"u8]] = EntryType.Treaty,
+        [[.. "report"u8]] = EntryType.Report,
+        [[.. "paper-conference"u8]] = EntryType.PaperConference,
+        [[.. "thesis"u8]] = EntryType.Thesis,
+        [[.. "webpage"u8]] = EntryType.Webpage,
+        [[.. "manuscript"u8]] = EntryType.Manuscript
+    };
+
+    /// <summary>Assigns a UTF-8 value to one string-valued field of a per-entry field bag.</summary>
+    /// <param name="fields">Mutable per-entry field bag.</param>
+    /// <param name="value">UTF-8 value bytes.</param>
+    private delegate void StringFieldSetter(ref EntryFields fields, byte[] value);
+
     /// <summary>Loads a CSL-JSON file from disk and returns the parsed entries.</summary>
     /// <param name="path">Path to a <c>.json</c> file containing a CSL-JSON array.</param>
     /// <returns>Parsed entries.</returns>
@@ -31,7 +76,7 @@ internal static class CslJsonLoader
     /// <returns>Parsed entries.</returns>
     public static IReadOnlyList<CitationEntry> Parse(in ReadOnlyMemory<byte> json)
     {
-        Utf8JsonReader reader = new(json.Span, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(json.Span, true, default);
         if (!reader.Read() || reader.TokenType is not JsonTokenType.StartArray)
         {
             return [];
@@ -138,41 +183,20 @@ internal static class CslJsonLoader
     /// <summary>Dispatches one CSL property-name token to its field reader.</summary>
     /// <param name="reader">Reader positioned on the property-name token.</param>
     /// <param name="fields">Mutable per-entry field bag.</param>
-    [SuppressMessage(
-        "Major Code Smell",
-        "S138:Methods should not have too many lines",
-        Justification = "Property-name dispatch — one branch per known CSL field, no nested logic.")]
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Property-name dispatch — cyclomatic complexity tracks the number of CSL fields, not branching logic.")]
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S3776:Cognitive Complexity of methods should not be too high",
-        Justification = "Property-name dispatch — one branch per known CSL field, no nested logic.")]
     private static void ReadOneProperty(ref Utf8JsonReader reader, ref EntryFields fields)
     {
-        if (reader.ValueTextEquals("id"u8))
+        for (var i = 0; i < StringProperties.Length; i++)
         {
-            fields.Id = ReadStringBytes(ref reader);
-            return;
+            if (reader.ValueTextEquals(StringProperties[i].Name))
+            {
+                StringProperties[i].Set(ref fields, ReadStringBytes(ref reader));
+                return;
+            }
         }
 
         if (reader.ValueTextEquals("type"u8))
         {
             fields.Type = ParseType(ReadStringBytes(ref reader));
-            return;
-        }
-
-        if (reader.ValueTextEquals("title"u8))
-        {
-            fields.Title = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("title-short"u8))
-        {
-            fields.ShortTitle = ReadStringBytes(ref reader);
             return;
         }
 
@@ -191,84 +215,6 @@ internal static class CslJsonLoader
         if (reader.ValueTextEquals("issued"u8))
         {
             fields.Year = ReadIssuedYear(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("container-title"u8))
-        {
-            fields.ContainerTitle = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("publisher"u8))
-        {
-            fields.Publisher = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("publisher-place"u8))
-        {
-            fields.PublisherPlace = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("volume"u8))
-        {
-            fields.Volume = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("issue"u8))
-        {
-            fields.Issue = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("page"u8))
-        {
-            fields.Page = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("URL"u8))
-        {
-            fields.Url = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("DOI"u8))
-        {
-            fields.Doi = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("note"u8))
-        {
-            fields.Note = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("authority"u8))
-        {
-            fields.Court = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("jurisdiction"u8))
-        {
-            fields.Jurisdiction = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("references"u8))
-        {
-            fields.LawReportSeries = ReadStringBytes(ref reader);
-            return;
-        }
-
-        if (reader.ValueTextEquals("number"u8))
-        {
-            fields.MediumNeutralCitation = ReadStringBytes(ref reader);
             return;
         }
 
@@ -468,85 +414,10 @@ internal static class CslJsonLoader
     /// <summary>Maps the CSL <c>type</c> bytes to our <see cref="EntryType"/> enum.</summary>
     /// <param name="type">CSL type bytes (kebab-case).</param>
     /// <returns>The mapped <see cref="EntryType"/>; <see cref="EntryType.Other"/> when unknown.</returns>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Linear sequence-of-equals checks against UTF-8 literals; intentionally explicit per type.")]
-    private static EntryType ParseType(byte[] type)
-    {
-        var span = (ReadOnlySpan<byte>)type;
-        if (span.SequenceEqual("book"u8))
-        {
-            return EntryType.Book;
-        }
-
-        if (span.SequenceEqual("chapter"u8))
-        {
-            return EntryType.Chapter;
-        }
-
-        if (span.SequenceEqual("article-journal"u8))
-        {
-            return EntryType.ArticleJournal;
-        }
-
-        if (span.SequenceEqual("article-magazine"u8))
-        {
-            return EntryType.ArticleMagazine;
-        }
-
-        if (span.SequenceEqual("article-newspaper"u8))
-        {
-            return EntryType.ArticleNewspaper;
-        }
-
-        if (span.SequenceEqual("article"u8))
-        {
-            return EntryType.Article;
-        }
-
-        if (span.SequenceEqual("legal_case"u8))
-        {
-            return EntryType.LegalCase;
-        }
-
-        if (span.SequenceEqual("legislation"u8))
-        {
-            return EntryType.Legislation;
-        }
-
-        if (span.SequenceEqual("treaty"u8))
-        {
-            return EntryType.Treaty;
-        }
-
-        if (span.SequenceEqual("report"u8))
-        {
-            return EntryType.Report;
-        }
-
-        if (span.SequenceEqual("paper-conference"u8))
-        {
-            return EntryType.PaperConference;
-        }
-
-        if (span.SequenceEqual("thesis"u8))
-        {
-            return EntryType.Thesis;
-        }
-
-        if (span.SequenceEqual("webpage"u8))
-        {
-            return EntryType.Webpage;
-        }
-
-        if (span.SequenceEqual("manuscript"u8))
-        {
-            return EntryType.Manuscript;
-        }
-
-        return EntryType.Other;
-    }
+    private static EntryType ParseType(byte[] type) =>
+        EntryTypesByName.GetAlternateLookup<ReadOnlySpan<byte>>().TryGetValue(type, out var entryType)
+            ? entryType
+            : EntryType.Other;
 
     /// <summary>Mutable per-entry field bag.</summary>
     [SuppressMessage(

@@ -36,7 +36,9 @@ public class HtmlTokenizerBenchmarks
 
     /// <summary>A representative <c>&lt;img&gt;</c> attribute run, for the attribute-lookup benchmarks.</summary>
     private static readonly byte[] ImgAttributes =
-        [.. "src=\"a.png\" alt=\"An image\" width=\"640\" height=\"480\" loading=\"lazy\" class=\"hero\" decoding=\"async\""u8];
+    [
+        .. "src=\"a.png\" alt=\"An image\" width=\"640\" height=\"480\" loading=\"lazy\" class=\"hero\" decoding=\"async\""u8
+    ];
 
     /// <summary>Pre-built page bytes for the current params.</summary>
     private byte[] _html = [];

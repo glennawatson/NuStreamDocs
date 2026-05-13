@@ -46,8 +46,12 @@ public class TagsPluginTests
     public async Task EndToEndEmitsIndexAndPerTagPages()
     {
         using TagsTempDir temp = new();
-        await File.WriteAllTextAsync(Path.Combine(temp.Root, "first.md"), "---\ntags:\n  - alpha\n  - beta\n---\n# First\n\nbody");
-        await File.WriteAllTextAsync(Path.Combine(temp.Root, "second.md"), "---\ntags:\n  - alpha\n---\n# Second\n\nbody");
+        await File.WriteAllTextAsync(
+            Path.Combine(temp.Root, "first.md"),
+            "---\ntags:\n  - alpha\n  - beta\n---\n# First\n\nbody");
+        await File.WriteAllTextAsync(
+            Path.Combine(temp.Root, "second.md"),
+            "---\ntags:\n  - alpha\n---\n# Second\n\nbody");
 
         TagsPlugin plugin = new();
         SyntheticPageSink sink = new();
@@ -92,19 +96,21 @@ public class TagsPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide\\intro.md", useDirectoryUrls: false))).IsEqualTo("guide/intro.html");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide\\intro.md", false)))
+            .IsEqualTo("guide/intro.html");
 
     /// <summary>RelativePathToUrlPath returns empty for empty input.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathEmpty() =>
-        await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, useDirectoryUrls: false).Length).IsEqualTo(0);
+        await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, false).Length).IsEqualTo(0);
 
     /// <summary>RelativePathToUrlPath leaves non-md inputs alone.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathNonMd() =>
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("assets/logo.png", useDirectoryUrls: false))).IsEqualTo("assets/logo.png");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("assets/logo.png", false)))
+            .IsEqualTo("assets/logo.png");
 
     /// <summary>UseTags() registers the plugin.</summary>
     /// <returns>Async test.</returns>
@@ -135,7 +141,7 @@ public class TagsPluginTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

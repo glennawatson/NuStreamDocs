@@ -44,7 +44,11 @@ public static class RLexer
     /// <summary>Gets the singleton R lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("#"u8) },
+        LineComment =
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = SearchValues.Create("#"u8)
+            },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         IncludeFloatLiteral = true,

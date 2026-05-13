@@ -68,7 +68,9 @@ public class BlogContentGeneratorBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _docsRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-blog-docs-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-blog-docs-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         var postsRoot = Path.Combine(_docsRoot, "articles");
         var archiveRoot = Path.Combine(postsRoot, "tags");
         Directory.CreateDirectory(postsRoot);
@@ -81,13 +83,13 @@ public class BlogContentGeneratorBenchmarks
         }
 
         _options = new(
-            PostsRoot: (DirectoryPath)postsRoot,
-            DocsRoot: (DirectoryPath)_docsRoot,
-            IndexPath: ((DirectoryPath)postsRoot).File("index.md"),
-            IndexTitle: "Articles"u8.ToArray(),
-            EmitArchives: true,
-            ArchiveRoot: (DirectoryPath)archiveRoot,
-            ArchiveFallbackSlug: "tag"u8.ToArray());
+            (DirectoryPath)postsRoot,
+            (DirectoryPath)_docsRoot,
+            ((DirectoryPath)postsRoot).File("index.md"),
+            "Articles"u8.ToArray(),
+            true,
+            (DirectoryPath)archiveRoot,
+            "tag"u8.ToArray());
     }
 
     /// <summary>Cleans the corpus once at the end.</summary>
@@ -110,7 +112,10 @@ public class BlogContentGeneratorBenchmarks
     /// <summary>Builds a deterministic per-post filename of the form <c>YYYY-MM-DD-post-N.md</c>.</summary>
     /// <param name="index">Zero-based post index.</param>
     /// <returns>Slug + extension.</returns>
-    [SuppressMessage("Major Code Smell", "S6585:Do not hardcode the format specifier", Justification = "ISO-8601 date is the canonical Wyam blog frontmatter shape; matching it deliberately.")]
+    [SuppressMessage(
+        "Major Code Smell",
+        "S6585:Do not hardcode the format specifier",
+        Justification = "ISO-8601 date is the canonical Wyam blog frontmatter shape; matching it deliberately.")]
     private static string BuildPostFileName(int index) =>
         string.Concat(
             PostEpoch.AddDays(index).ToString(IsoDate, CultureInfo.InvariantCulture),
@@ -122,16 +127,21 @@ public class BlogContentGeneratorBenchmarks
     /// <param name="index">Post index.</param>
     /// <param name="tag">Tag the post belongs to.</param>
     /// <returns>Markdown source.</returns>
-    [SuppressMessage("Major Code Smell", "S6585:Do not hardcode the format specifier", Justification = "ISO-8601 date is the canonical Wyam blog frontmatter shape; matching it deliberately.")]
+    [SuppressMessage(
+        "Major Code Smell",
+        "S6585:Do not hardcode the format specifier",
+        Justification = "ISO-8601 date is the canonical Wyam blog frontmatter shape; matching it deliberately.")]
     private static string BuildPostBody(int index, string tag) =>
         new StringBuilder(1024)
             .Append("---\n")
             .Append("Title: Post ").Append(index.ToString(CultureInfo.InvariantCulture)).Append('\n')
             .Append("Tags: ").Append(tag).Append('\n')
             .Append("Author: Bench Author\n")
-            .Append("Published: ").Append(PostEpoch.AddDays(index).ToString(IsoDate, CultureInfo.InvariantCulture)).Append('\n')
+            .Append("Published: ").Append(PostEpoch.AddDays(index).ToString(IsoDate, CultureInfo.InvariantCulture))
+            .Append('\n')
             .Append("---\n\n")
-            .Append("First paragraph for post ").Append(index.ToString(CultureInfo.InvariantCulture)).Append(" used as the index excerpt.\n\n")
+            .Append("First paragraph for post ").Append(index.ToString(CultureInfo.InvariantCulture))
+            .Append(" used as the index excerpt.\n\n")
             .Append("Second paragraph with a `code` reference and a [link](https://example.com).\n\n")
             .Append("Third paragraph with more prose to flesh out the body.\n")
             .ToString();
@@ -144,7 +154,7 @@ public class BlogContentGeneratorBenchmarks
         {
             if (Directory.Exists(path))
             {
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
         catch (IOException)

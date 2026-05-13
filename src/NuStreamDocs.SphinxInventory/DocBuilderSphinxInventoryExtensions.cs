@@ -13,27 +13,23 @@ public static class DocBuilderSphinxInventoryExtensions
     /// <summary>Registers <see cref="SphinxInventoryPlugin"/> with default options and a fresh registry.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSphinxInventory(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new SphinxInventoryPlugin());
-    }
+    public static DocBuilder UseSphinxInventory(this DocBuilder builder) =>
+        builder.UsePlugin(new SphinxInventoryPlugin());
 
     /// <summary>Registers <see cref="SphinxInventoryPlugin"/> with the supplied registry and default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="registry">Shared autorefs registry.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSphinxInventory(this DocBuilder builder, AutorefsRegistry registry)
-    {
-        return builder.UsePlugin(new SphinxInventoryPlugin(registry));
-    }
+    public static DocBuilder UseSphinxInventory(this DocBuilder builder, AutorefsRegistry registry) =>
+        builder.UsePlugin(new SphinxInventoryPlugin(registry));
 
     /// <summary>Registers <see cref="SphinxInventoryPlugin"/> with the supplied registry and options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="registry">Shared autorefs registry.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSphinxInventory(this DocBuilder builder, AutorefsRegistry registry, SphinxInventoryOptions options)
-    {
-        return builder.UsePlugin(new SphinxInventoryPlugin(registry, options));
-    }
+    public static DocBuilder UseSphinxInventory(
+        this DocBuilder builder,
+        AutorefsRegistry registry,
+        SphinxInventoryOptions options) => builder.UsePlugin(new SphinxInventoryPlugin(registry, options));
 }

@@ -21,10 +21,7 @@ public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
 
     /// <summary>Initializes a new instance of the <see cref="LightboxPlugin"/> class.</summary>
     /// <param name="options">Plugin options.</param>
-    public LightboxPlugin(LightboxOptions options)
-    {
-        _options = options;
-    }
+    public LightboxPlugin(LightboxOptions options) => _options = options;
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "lightbox"u8;
@@ -57,7 +54,9 @@ public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
         HeadExtraWriter.WriteUtf8(writer, "<script defer src=\""u8);
         HeadExtraWriter.WriteUtf8(writer, _options.ScriptUrl);
         HeadExtraWriter.WriteUtf8(writer, "\"></script>\n"u8);
-        HeadExtraWriter.WriteUtf8(writer, "<script>document.addEventListener('DOMContentLoaded',function(){if(window.GLightbox){GLightbox({selector:'."u8);
+        HeadExtraWriter.WriteUtf8(
+            writer,
+            "<script>document.addEventListener('DOMContentLoaded',function(){if(window.GLightbox){GLightbox({selector:'."u8);
         HeadExtraWriter.WriteUtf8(writer, _options.Selector);
         HeadExtraWriter.WriteUtf8(writer, "'});}});</script>\n"u8);
     }

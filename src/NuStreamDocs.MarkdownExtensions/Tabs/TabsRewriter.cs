@@ -88,7 +88,7 @@ internal static class TabsRewriter
             // line rather than the opener bytes. Skip blanks before re-probing.
             var probe = SkipBlankLines(source, cursor);
             more = MarkdownCodeScanner.AtLineStart(source, probe)
-                && TryParseOpener(source, probe, out titleStart, out titleLen, out headerEnd);
+                   && TryParseOpener(source, probe, out titleStart, out titleLen, out headerEnd);
             if (more)
             {
                 cursor = probe;
@@ -149,7 +149,12 @@ internal static class TabsRewriter
     /// <param name="title">UTF-8 title bytes.</param>
     /// <param name="body">UTF-8 body bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitTab(int setId, int tabIndex, ReadOnlySpan<byte> title, ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
+    private static void EmitTab(
+        int setId,
+        int tabIndex,
+        ReadOnlySpan<byte> title,
+        ReadOnlySpan<byte> body,
+        IBufferWriter<byte> writer)
     {
         writer.Write("<input type=\"radio\" name=\"__tabbed_"u8);
         WriteInt(setId, writer);

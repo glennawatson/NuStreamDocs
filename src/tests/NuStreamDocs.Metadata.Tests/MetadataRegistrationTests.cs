@@ -12,7 +12,8 @@ public class MetadataRegistrationTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new MetadataPlugin().Name.SequenceEqual("metadata"u8)).IsTrue();
+    public async Task NameIsStable() =>
+        await Assert.That(new MetadataPlugin().Name.SequenceEqual("metadata"u8)).IsTrue();
 
     /// <summary>Default options exposes the expected file names.</summary>
     /// <returns>Async test.</returns>
@@ -29,7 +30,8 @@ public class MetadataRegistrationTests
     public async Task ValidateThrowsOnEmpty()
     {
         Assert.Throws<ArgumentException>(static () => new MetadataOptions(string.Empty, ".meta.yml").Validate());
-        var ex = Assert.Throws<ArgumentException>(static () => new MetadataOptions("_meta.yml", string.Empty).Validate());
+        var ex =
+            Assert.Throws<ArgumentException>(static () => new MetadataOptions("_meta.yml", string.Empty).Validate());
         await Assert.That(ex).IsNotNull();
     }
 

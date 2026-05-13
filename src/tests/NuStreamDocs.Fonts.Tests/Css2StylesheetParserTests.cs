@@ -11,25 +11,25 @@ public class Css2StylesheetParserTests
 {
     /// <summary>A captured two-block Google <c>css2</c> response.</summary>
     private const string GoogleCss = """
-        /* latin */
-        @font-face {
-          font-family: 'Source Sans 3';
-          font-style: normal;
-          font-weight: 400;
-          font-display: swap;
-          src: url(https://fonts.gstatic.com/s/sourcesans3/v18/abc.woff2) format('woff2');
-          unicode-range: U+0000-00FF, U+0131, U+0152-0153;
-        }
-        /* latin-ext */
-        @font-face {
-          font-family: 'Source Sans 3';
-          font-style: italic;
-          font-weight: 700;
-          font-display: swap;
-          src: url(https://fonts.gstatic.com/s/sourcesans3/v18/xyz.woff2) format('woff2');
-          unicode-range: U+0100-024F;
-        }
-        """;
+                                     /* latin */
+                                     @font-face {
+                                       font-family: 'Source Sans 3';
+                                       font-style: normal;
+                                       font-weight: 400;
+                                       font-display: swap;
+                                       src: url(https://fonts.gstatic.com/s/sourcesans3/v18/abc.woff2) format('woff2');
+                                       unicode-range: U+0000-00FF, U+0131, U+0152-0153;
+                                     }
+                                     /* latin-ext */
+                                     @font-face {
+                                       font-family: 'Source Sans 3';
+                                       font-style: italic;
+                                       font-weight: 700;
+                                       font-display: swap;
+                                       src: url(https://fonts.gstatic.com/s/sourcesans3/v18/xyz.woff2) format('woff2');
+                                       unicode-range: U+0100-024F;
+                                     }
+                                     """;
 
     /// <summary>Both <c>@font-face</c> blocks are parsed with their weight, style, range, and url.</summary>
     /// <returns>Async test.</returns>
@@ -56,16 +56,16 @@ public class Css2StylesheetParserTests
     [Test]
     public async Task ParsesRelativeUrl()
     {
-        const string css = """
-            @font-face {
-              font-family: 'JetBrains Mono';
-              font-style: normal;
-              font-weight: 400;
-              src: url(./files/jetbrains-mono-latin-400-normal.woff2) format('woff2');
-              unicode-range: U+0000-00FF;
-            }
-            """;
-        var faces = Css2StylesheetParser.Parse(Encoding.UTF8.GetBytes(css));
+        const string Css = """
+                           @font-face {
+                             font-family: 'JetBrains Mono';
+                             font-style: normal;
+                             font-weight: 400;
+                             src: url(./files/jetbrains-mono-latin-400-normal.woff2) format('woff2');
+                             unicode-range: U+0000-00FF;
+                           }
+                           """;
+        var faces = Css2StylesheetParser.Parse(Encoding.UTF8.GetBytes(Css));
         await Assert.That(faces.Length).IsEqualTo(1);
         await Assert.That((string)faces[0].Woff2Url).IsEqualTo("./files/jetbrains-mono-latin-400-normal.woff2");
         await Assert.That(faces[0].SubsetName.Length).IsEqualTo(0);

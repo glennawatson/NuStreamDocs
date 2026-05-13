@@ -35,16 +35,16 @@ public readonly record struct NavOptions(
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static NavOptions Default { get; } = new(
-        Includes: [],
-        Excludes: [],
-        HideEmptySections: true,
-        SortBy: NavSortBy.FileName,
-        Prune: false,
-        Indexes: true,
-        WarnOnOrphanPages: true,
-        Tabs: false,
-        CuratedEntries: [],
-        UseDirectoryUrls: null,
-        HomeTab: true,
-        HomeTabLabel: [.. "Home"u8]);
+        [],
+        [],
+        true,
+        NavSortBy.FileName,
+        false,
+        true,
+        true,
+        false,
+        [],
+        null,
+        true,
+        [.. "Home"u8]);
 }

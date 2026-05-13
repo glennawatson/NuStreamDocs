@@ -12,7 +12,7 @@ public class Woff2ReaderTests
     [Test]
     public async Task ReadsStubWoff2MetricsMatchingSfnt()
     {
-        var woff2 = StubFont.BuildWoff2(unitsPerEm: 2048, ascender: 1900, descender: -500, lineGap: 0, xHeight: 1082, capHeight: 1462);
+        var woff2 = StubFont.BuildWoff2(2048, 1900, -500, 0, 1082, 1462);
         var fromWoff2 = Woff2Reader.TryRead(woff2);
         var fromSfnt = SfntTableReader.TryRead(StubFont.BuildSfnt(2048, 1900, -500, 0, 1082, 1462));
         await Assert.That(fromWoff2.HasValue).IsTrue();

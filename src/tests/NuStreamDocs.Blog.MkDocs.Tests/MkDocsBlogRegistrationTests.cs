@@ -14,7 +14,8 @@ public class MkDocsBlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new MkDocsBlogPlugin(new("blog", [.. "Blog"u8])).Name.SequenceEqual("mkdocs-blog"u8)).IsTrue();
+        await Assert.That(new MkDocsBlogPlugin(new("blog", [.. "Blog"u8])).Name.SequenceEqual("mkdocs-blog"u8))
+            .IsTrue();
 
     /// <summary>2-arg ctor enables EmitCategoryArchives.</summary>
     /// <returns>Async test.</returns>
@@ -42,5 +43,6 @@ public class MkDocsBlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseMkDocsBlogLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseMkDocsBlog(new("blog", [.. "Blog"u8]), NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseMkDocsBlog(new("blog", [.. "Blog"u8]), NullLogger.Instance))
+            .IsTypeOf<DocBuilder>();
 }

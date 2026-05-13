@@ -61,7 +61,8 @@ public sealed class Utf8LineReader : IDisposable
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple — <c>HasLine</c> is true when a line was read; <c>Line</c> holds the line bytes (no terminator).</returns>
-    public async ValueTask<(bool HasLine, ReadOnlyMemory<byte> Line)> TryReadLineAsync(CancellationToken cancellationToken)
+    public async ValueTask<(bool HasLine, ReadOnlyMemory<byte> Line)> TryReadLineAsync(
+        CancellationToken cancellationToken)
     {
         // Loop is bounded: each iteration either returns, or calls
         // FillAsync which is guaranteed to either grow the buffer or
@@ -102,7 +103,7 @@ public sealed class Utf8LineReader : IDisposable
     {
         if (_buffer is { Length: > 0 })
         {
-            ArrayPool<byte>.Shared.Return(_buffer, clearArray: true);
+            ArrayPool<byte>.Shared.Return(_buffer, true);
             _buffer = [];
         }
 
@@ -151,7 +152,7 @@ public sealed class Utf8LineReader : IDisposable
         {
             var bigger = ArrayPool<byte>.Shared.Rent(_buffer.Length * 2);
             Buffer.BlockCopy(_buffer, 0, bigger, 0, _end);
-            ArrayPool<byte>.Shared.Return(_buffer, clearArray: true);
+            ArrayPool<byte>.Shared.Return(_buffer, true);
             _buffer = bigger;
         }
 

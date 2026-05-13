@@ -12,17 +12,12 @@ public static class DocBuilderMetadataExtensions
     /// <summary>Registers <see cref="MetadataPlugin"/> with default options.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMetadata(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new MetadataPlugin());
-    }
+    public static DocBuilder UseMetadata(this DocBuilder builder) => builder.UsePlugin(new MetadataPlugin());
 
     /// <summary>Registers <see cref="MetadataPlugin"/> with the supplied options.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMetadata(this DocBuilder builder, MetadataOptions options)
-    {
-        return builder.UsePlugin(new MetadataPlugin(options));
-    }
+    public static DocBuilder UseMetadata(this DocBuilder builder, MetadataOptions options) =>
+        builder.UsePlugin(new MetadataPlugin(options));
 }

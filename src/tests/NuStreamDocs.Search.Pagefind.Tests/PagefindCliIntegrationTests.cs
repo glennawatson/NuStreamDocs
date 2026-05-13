@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 
@@ -77,7 +78,11 @@ public class PagefindCliIntegrationTests
     {
         using TempDir dir = new();
         DirectoryPath siteRoot = new(dir.Root);
-        var ran = await PagefindCli.RunAsync(siteRoot, PagefindOptions.Default with { RunCli = false }, NullLogger.Instance, CancellationToken.None);
+        var ran = await PagefindCli.RunAsync(
+            siteRoot,
+            PagefindOptions.Default with { RunCli = false },
+            NullLogger.Instance,
+            CancellationToken.None);
         await Assert.That(ran).IsFalse();
         await Assert.That(Directory.Exists(Path.Combine(dir.Root, "pagefind"))).IsFalse();
     }
@@ -86,7 +91,7 @@ public class PagefindCliIntegrationTests
     /// <returns>Whether <see cref="PagefindCli.RunAsync"/> would have a native to invoke.</returns>
     private static bool IsBinaryAvailable()
     {
-        var rid = System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier;
+        var rid = RuntimeInformation.RuntimeIdentifier;
         var fileName = OperatingSystem.IsWindows() ? "pagefind.exe" : "pagefind";
         var probe = Path.Combine(AppContext.BaseDirectory, "runtimes", rid, "native", fileName);
         return File.Exists(probe);
@@ -98,7 +103,9 @@ public class PagefindCliIntegrationTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-pf-cli-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            Root = Path.Combine(
+                Path.GetTempPath(),
+                "smkd-pf-cli-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(Root);
         }
 
@@ -110,7 +117,7 @@ public class PagefindCliIntegrationTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

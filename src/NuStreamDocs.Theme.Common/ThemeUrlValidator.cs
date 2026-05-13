@@ -37,8 +37,9 @@ public static class ThemeUrlValidator
         if (value.IsEmpty)
         {
             return requireAbsolute
-                ? (DiagnosticMessage)StringCompose.Concat(optionName, " is required but was not set; canonical URLs and Open Graph metadata will be omitted from every page.")
-                : DiagnosticMessage.None;
+                ? (DiagnosticMessage)StringCompose.Concat(
+                    optionName,
+                    " is required but was not set; canonical URLs and Open Graph metadata will be omitted from every page.") : DiagnosticMessage.None;
         }
 
         if (!HasHttpScheme(value))
@@ -47,13 +48,24 @@ public static class ThemeUrlValidator
 
             // Protocol-relative is technically valid but ambiguous for canonicals, so warn.
             return value.StartsWith(ProtocolRelative)
-                ? (DiagnosticMessage)StringCompose.Concat(optionName, " '", valueText, "' is protocol-relative; canonical URLs need an explicit http(s) scheme.")
-                : (DiagnosticMessage)StringCompose.Concat(optionName, " '", valueText, "' is not an absolute http(s) URL; the build will emit invalid canonical / repo / edit links.");
+                ? (DiagnosticMessage)StringCompose.Concat(
+                    optionName,
+                    " '",
+                    valueText,
+                    "' is protocol-relative; canonical URLs need an explicit http(s) scheme.") : (DiagnosticMessage)StringCompose.Concat(
+                    optionName,
+                    " '",
+                    valueText,
+                    "' is not an absolute http(s) URL; the build will emit invalid canonical / repo / edit links.");
         }
 
         if (HasFragmentOrQuery(value))
         {
-            return (DiagnosticMessage)StringCompose.Concat(optionName, " '", Encoding.UTF8.GetString(value), "' contains a '?' or '#' segment; this leaks into every per-page canonical URL.");
+            return (DiagnosticMessage)StringCompose.Concat(
+                optionName,
+                " '",
+                Encoding.UTF8.GetString(value),
+                "' contains a '?' or '#' segment; this leaks into every per-page canonical URL.");
         }
 
         return DiagnosticMessage.None;

@@ -50,7 +50,8 @@ public class ArithmatexRewriterTests
     {
         const string Source = "Inline $a$.\n```\n$a$ and $$b$$\n```\nAfter $c$.";
         await Assert.That(Rewrite(Source))
-            .IsEqualTo("Inline <span class=\"arithmatex\">\\(a\\)</span>.\n```\n$a$ and $$b$$\n```\nAfter <span class=\"arithmatex\">\\(c\\)</span>.");
+            .IsEqualTo(
+                "Inline <span class=\"arithmatex\">\\(a\\)</span>.\n```\n$a$ and $$b$$\n```\nAfter <span class=\"arithmatex\">\\(c\\)</span>.");
     }
 
     /// <summary>Math inside inline-code spans passes through verbatim.</summary>
@@ -77,7 +78,8 @@ public class ArithmatexRewriterTests
     /// <summary>Unclosed inline math passes through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task UnclosedInlineMathPassesThrough() => await Assert.That(Rewrite("trailing $x with no close")).IsEqualTo("trailing $x with no close");
+    public async Task UnclosedInlineMathPassesThrough() =>
+        await Assert.That(Rewrite("trailing $x with no close")).IsEqualTo("trailing $x with no close");
 
     /// <summary>Rewrites <paramref name="input"/> via <c>ArithmatexRewriter</c>.</summary>
     /// <param name="input">Markdown source.</param>

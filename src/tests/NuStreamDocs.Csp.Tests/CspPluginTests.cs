@@ -13,7 +13,8 @@ namespace NuStreamDocs.Csp.Tests;
 public class CspPluginTests
 {
     /// <summary>A representative rendered page with a head and an inline body script.</summary>
-    private const string Page = "<html><head><title>t</title></head><body><script>alert(1)</script><p>hi</p></body></html>";
+    private const string Page =
+        "<html><head><title>t</title></head><body><script>alert(1)</script><p>hi</p></body></html>";
 
     /// <summary>The plugin splices a <c>&lt;meta http-equiv="Content-Security-Policy"&gt;</c> before <c>&lt;/head&gt;</c>, with the page's inline script hashed in.</summary>
     /// <returns>Async test.</returns>
@@ -25,7 +26,9 @@ public class CspPluginTests
         await Assert.That(plugin.NeedsRewrite(Encoding.UTF8.GetBytes(Page))).IsTrue();
 
         var output = Run(plugin, Page);
-        var metaIdx = output.IndexOf("<meta http-equiv=\"Content-Security-Policy\" content=\"", StringComparison.Ordinal);
+        var metaIdx = output.IndexOf(
+            "<meta http-equiv=\"Content-Security-Policy\" content=\"",
+            StringComparison.Ordinal);
         await Assert.That(metaIdx).IsGreaterThan(0);
         await Assert.That(metaIdx).IsLessThan(output.IndexOf("</head>", StringComparison.Ordinal));
         var hash = "'sha256-" + Convert.ToBase64String(SHA256.HashData("alert(1)"u8)) + "'";
@@ -39,7 +42,7 @@ public class CspPluginTests
     [Test]
     public async Task ReportOnlyMode()
     {
-        var output = Run(new CspPlugin(CspOptions.Default.WithReportOnly()), Page);
+        var output = Run(new(CspOptions.Default.WithReportOnly()), Page);
         await Assert.That(output).Contains("<meta http-equiv=\"Content-Security-Policy-Report-Only\" content=\"");
     }
 
@@ -49,9 +52,10 @@ public class CspPluginTests
     public async Task PassthroughCases()
     {
         await Assert.That(new CspPlugin().NeedsRewrite("<p>no head here</p>"u8)).IsFalse();
-        await Assert.That(Run(new CspPlugin(), "<body><p>no head here</p></body>")).IsEqualTo("<body><p>no head here</p></body>");
-        await Assert.That(new CspPlugin(CspOptions.Default.Disable()).NeedsRewrite(Encoding.UTF8.GetBytes(Page))).IsFalse();
-        await Assert.That(Run(new CspPlugin(CspOptions.Default.Disable()), Page)).IsEqualTo(Page);
+        await Assert.That(Run(new(), "<body><p>no head here</p></body>")).IsEqualTo("<body><p>no head here</p></body>");
+        await Assert.That(new CspPlugin(CspOptions.Default.Disable()).NeedsRewrite(Encoding.UTF8.GetBytes(Page)))
+            .IsFalse();
+        await Assert.That(Run(new(CspOptions.Default.Disable()), Page)).IsEqualTo(Page);
     }
 
     /// <summary>Runs the post-render rewrite and returns the output as a string.</summary>

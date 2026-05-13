@@ -60,7 +60,8 @@ public static class SqlLexer
         var sqlString = new LexerRule(
             TokenMatchers.MatchSingleQuotedDoubledEscape,
             TokenClass.StringSingle,
-            LexerRule.NoStateChange) { FirstBytes = SqlStringFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = SqlStringFirst };
 
         CFamilyConfig config = new()
         {
@@ -88,7 +89,8 @@ public static class SqlLexer
         var lineComment = new LexerRule(
             static slice => TokenMatchers.MatchLineCommentToEol(slice, (byte)'-', (byte)'-'),
             TokenClass.CommentSingle,
-            LexerRule.NoStateChange) { FirstBytes = DashFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = DashFirst };
 
         var allRules = new LexerRule[coreRules.Length + 1];
         allRules[0] = lineComment;

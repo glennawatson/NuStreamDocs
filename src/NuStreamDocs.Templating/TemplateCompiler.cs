@@ -73,7 +73,7 @@ internal static class TemplateCompiler
         finally
         {
             ArrayPool<int>.Shared.Return(openStack);
-            pool.Return(buffer, clearArray: true);
+            pool.Return(buffer, true);
         }
     }
 
@@ -105,7 +105,7 @@ internal static class TemplateCompiler
     /// <param name="start">Literal start offset.</param>
     /// <param name="length">Literal byte length.</param>
     private static void AppendLiteral(TemplateInstruction[] buffer, ref int count, int start, int length) =>
-        buffer[count++] = new(TemplateOp.Literal, start, length, JumpTarget: -1);
+        buffer[count++] = new(TemplateOp.Literal, start, length, -1);
 
     /// <summary>Emits the instruction(s) for one tag and returns the cursor past it.</summary>
     /// <param name="source">Source bytes.</param>
@@ -169,7 +169,7 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelimiterLength + 1;
         var closeIndex = FindCloseDelimiter(source, nameStart, TripleCloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.RawVariable, nameStart2, nameLength, JumpTarget: -1);
+        buffer[count++] = new(TemplateOp.RawVariable, nameStart2, nameLength, -1);
         return closeIndex + TripleCloseDelim.Length;
     }
 
@@ -188,7 +188,7 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelim.Length;
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.EscapedVariable, nameStart2, nameLength, JumpTarget: -1);
+        buffer[count++] = new(TemplateOp.EscapedVariable, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -207,7 +207,7 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelim.Length + 1;
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.RawVariable, nameStart2, nameLength, JumpTarget: -1);
+        buffer[count++] = new(TemplateOp.RawVariable, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -226,7 +226,7 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelim.Length + 1;
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.Partial, nameStart2, nameLength, JumpTarget: -1);
+        buffer[count++] = new(TemplateOp.Partial, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -264,7 +264,7 @@ internal static class TemplateCompiler
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
         var op = sigil == (byte)'#' ? TemplateOp.SectionOpen : TemplateOp.InvertedSectionOpen;
         openStack[openCount++] = count;
-        buffer[count++] = new(op, nameStart2, nameLength, JumpTarget: -1);
+        buffer[count++] = new(op, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -301,7 +301,7 @@ internal static class TemplateCompiler
             throw new TemplateSyntaxException("Mismatched section close.", openIndex);
         }
 
-        buffer[count] = new(TemplateOp.SectionClose, nameStart2, nameLength, JumpTarget: openInstruction);
+        buffer[count] = new(TemplateOp.SectionClose, nameStart2, nameLength, openInstruction);
         var openExisting = buffer[openInstruction];
         buffer[openInstruction] = openExisting with { JumpTarget = count };
         count++;

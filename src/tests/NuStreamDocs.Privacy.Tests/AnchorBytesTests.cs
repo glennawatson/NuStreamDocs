@@ -21,7 +21,7 @@ public class AnchorBytesTests
     [Test]
     public async Task ExternalAnchorGainsRelAndTarget()
     {
-        var output = Rewrite("<a href=\"https://example.com\">x</a>", addRel: true, addTarget: true);
+        var output = Rewrite("<a href=\"https://example.com\">x</a>", true, true);
         await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
         await Assert.That(output).Contains("target=\"_blank\"");
     }
@@ -32,7 +32,7 @@ public class AnchorBytesTests
     public async Task InternalAnchorUntouched()
     {
         const string Html = "<a href=\"/about\">x</a>";
-        await Assert.That(Rewrite(Html, addRel: true, addTarget: true)).IsEqualTo(Html);
+        await Assert.That(Rewrite(Html, true, true)).IsEqualTo(Html);
     }
 
     /// <summary>Anchor without a href is left untouched (no external URL to harden against).</summary>
@@ -41,7 +41,7 @@ public class AnchorBytesTests
     public async Task AnchorWithoutHrefUntouched()
     {
         const string Html = "<a name=\"toc\">x</a>";
-        await Assert.That(Rewrite(Html, addRel: true, addTarget: true)).IsEqualTo(Html);
+        await Assert.That(Rewrite(Html, true, true)).IsEqualTo(Html);
     }
 
     /// <summary>Tag-name word boundary — <c>&lt;article&gt;</c> is not <c>&lt;a&gt;</c>.</summary>
@@ -50,7 +50,7 @@ public class AnchorBytesTests
     public async Task ArticleTagIsNotAnchor()
     {
         const string Html = "<article href=\"https://example.com\">x</article>";
-        await Assert.That(Rewrite(Html, addRel: true, addTarget: true)).IsEqualTo(Html);
+        await Assert.That(Rewrite(Html, true, true)).IsEqualTo(Html);
     }
 
     /// <summary>Mixed-case tag name <c>&lt;A&gt;</c> is recognized case-insensitively (HTML is case-insensitive on tag names).</summary>
@@ -62,7 +62,7 @@ public class AnchorBytesTests
     [Arguments("<A HrEf=\"https://example.com\">x</A>")]
     public async Task CaseInsensitiveTagAndAttrNames(string html)
     {
-        var output = Rewrite(html, addRel: true, addTarget: false);
+        var output = Rewrite(html, true, false);
         await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
     }
 
@@ -71,7 +71,7 @@ public class AnchorBytesTests
     [Test]
     public async Task RelTokensAppendedToExisting()
     {
-        var output = Rewrite("<a href=\"https://example.com\" rel=\"author\">x</a>", addRel: true, addTarget: false);
+        var output = Rewrite("<a href=\"https://example.com\" rel=\"author\">x</a>", true, false);
         await Assert.That(output).Contains("rel=\"author noopener noreferrer\"");
     }
 
@@ -80,7 +80,7 @@ public class AnchorBytesTests
     [Test]
     public async Task RelTokenDedupCaseInsensitive()
     {
-        var output = Rewrite("<a href=\"https://example.com\" rel=\"NOOPENER author\">x</a>", addRel: true, addTarget: false);
+        var output = Rewrite("<a href=\"https://example.com\" rel=\"NOOPENER author\">x</a>", true, false);
 
         // 'noopener' is already present (case-insensitive), only 'noreferrer' is appended.
         await Assert.That(output).Contains("rel=\"NOOPENER author noreferrer\"");
@@ -96,7 +96,7 @@ public class AnchorBytesTests
     [Test]
     public async Task ExistingTargetIsPreserved()
     {
-        var output = Rewrite("<a href=\"https://example.com\" target=\"_self\">x</a>", addRel: false, addTarget: true);
+        var output = Rewrite("<a href=\"https://example.com\" target=\"_self\">x</a>", false, true);
         await Assert.That(output).Contains("target=\"_self\"");
         await Assert.That(output.Contains("target=\"_blank\"", StringComparison.Ordinal)).IsFalse();
     }
@@ -106,7 +106,7 @@ public class AnchorBytesTests
     [Test]
     public async Task SingleQuotedHrefSupported()
     {
-        var output = Rewrite("<a href='https://example.com'>x</a>", addRel: true, addTarget: false);
+        var output = Rewrite("<a href='https://example.com'>x</a>", true, false);
         await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
     }
 
@@ -115,7 +115,7 @@ public class AnchorBytesTests
     [Test]
     public async Task WhitespaceAroundEqualsTolerated()
     {
-        var output = Rewrite("<a href = \"https://example.com\">x</a>", addRel: true, addTarget: false);
+        var output = Rewrite("<a href = \"https://example.com\">x</a>", true, false);
         await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
     }
 
@@ -124,7 +124,7 @@ public class AnchorBytesTests
     [Test]
     public async Task UnicodeLinkTextPreserved()
     {
-        var output = Rewrite("これは <a href=\"https://example.com\">テスト 🚀</a> です", addRel: true, addTarget: true);
+        var output = Rewrite("これは <a href=\"https://example.com\">テスト 🚀</a> です", true, true);
         await Assert.That(output).Contains("これは ");
         await Assert.That(output).Contains("テスト 🚀");
         await Assert.That(output).Contains(" です");
@@ -138,7 +138,7 @@ public class AnchorBytesTests
     {
         ArrayBufferWriter<byte> sink = new();
         byte[] bytes = [.. "<a href=\"https://example.com\">x</a>"u8];
-        var changed = AnchorBytes.RewriteInto(bytes, addRelNoOpener: false, addTargetBlank: false, sink);
+        var changed = AnchorBytes.RewriteInto(bytes, false, false, sink);
         await Assert.That(changed).IsFalse();
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -150,8 +150,8 @@ public class AnchorBytesTests
     {
         var output = Rewrite(
             "<a href=\"https://a.test\">a</a><a href=\"https://b.test\">b</a>",
-            addRel: true,
-            addTarget: false);
+            true,
+            false);
         var occurrences = 0;
         var idx = 0;
         while ((idx = output.IndexOf("rel=\"noopener noreferrer\"", idx, StringComparison.Ordinal)) >= 0)
@@ -170,8 +170,8 @@ public class AnchorBytesTests
     {
         var output = Rewrite(
             "<a href=\"/about\">i</a><a href=\"https://example.com\">e</a>",
-            addRel: true,
-            addTarget: false);
+            true,
+            false);
         await Assert.That(output).Contains("href=\"/about\">i</a>");
         await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
 
@@ -187,7 +187,7 @@ public class AnchorBytesTests
     public async Task UnterminatedAnchorPassesThrough()
     {
         const string Html = "<a href=\"https://example.com\"";
-        await Assert.That(Rewrite(Html, addRel: true, addTarget: true)).IsEqualTo(Html);
+        await Assert.That(Rewrite(Html, true, true)).IsEqualTo(Html);
     }
 
     /// <summary>Truncated href value (no closing quote) means the attribute parser fails — anchor passes through.</summary>
@@ -198,7 +198,7 @@ public class AnchorBytesTests
         const string Html = "<a href=\"https://example.com>x</a>";
 
         // We can't validate href, so the scan won't recognize this as external.
-        var output = Rewrite(Html, addRel: true, addTarget: true);
+        var output = Rewrite(Html, true, true);
         await Assert.That(output.Contains("rel=\"noopener noreferrer\"", StringComparison.Ordinal)).IsFalse();
     }
 
@@ -207,7 +207,7 @@ public class AnchorBytesTests
     [Test]
     public async Task HttpSchemeIsExternal()
     {
-        var output = Rewrite("<a href=\"http://example.com\">x</a>", addRel: true, addTarget: false);
+        var output = Rewrite("<a href=\"http://example.com\">x</a>", true, false);
         await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
     }
 
@@ -219,7 +219,8 @@ public class AnchorBytesTests
     [Arguments("<a href=\"javascript:void(0)\">x</a>")]
     [Arguments("<a href=\"#section\">x</a>")]
     [Arguments("<a href=\"./relative\">x</a>")]
-    public async Task NonHttpSchemesUntouched(string html) => await Assert.That(Rewrite(html, addRel: true, addTarget: true)).IsEqualTo(html);
+    public async Task NonHttpSchemesUntouched(string html) =>
+        await Assert.That(Rewrite(html, true, true)).IsEqualTo(html);
 
     /// <summary>Helper that runs the byte rewrite and decodes the result.</summary>
     /// <param name="html">Input HTML.</param>

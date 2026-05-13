@@ -79,7 +79,12 @@ public static class BlogPostScanner
         }
 
         var datePart = fileName.AsSpan(0, DateLength);
-        if (!DateOnly.TryParseExact(datePart, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fileDate))
+        if (!DateOnly.TryParseExact(
+            datePart,
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var fileDate))
         {
             return null;
         }

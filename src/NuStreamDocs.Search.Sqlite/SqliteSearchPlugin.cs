@@ -27,10 +27,12 @@ public sealed class SqliteSearchPlugin : SearchPluginBase, IStaticAssetProvider
 
     /// <summary>UTF-8 head-extra snippet referencing the runtime loader and the deferred glue script.</summary>
     private static readonly byte[] HeadExtraBytes =
-        [.. """
-<script src="/assets/javascripts/sql.js-httpvfs.js" defer></script>
-<script src="/assets/javascripts/sqlite-bind.js" defer></script>
-"""u8];
+    [
+        .. """
+           <script src="/assets/javascripts/sql.js-httpvfs.js" defer></script>
+           <script src="/assets/javascripts/sqlite-bind.js" defer></script>
+           """u8
+    ];
 
     /// <summary>Cached bind-script bytes.</summary>
     private static readonly byte[] BindScriptBytes = SqliteBindScript.Bytes.ToArray();

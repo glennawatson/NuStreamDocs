@@ -12,7 +12,7 @@ public class SfntTableReaderTests
     [Test]
     public async Task ReadsStubSfntMetrics()
     {
-        var sfnt = StubFont.BuildSfnt(unitsPerEm: 1000, ascender: 950, descender: -250, lineGap: 0, xHeight: 500, capHeight: 700);
+        var sfnt = StubFont.BuildSfnt(1000, 950, -250, 0, 500, 700);
         var m = SfntTableReader.TryRead(sfnt);
         await Assert.That(m.HasValue).IsTrue();
         await Assert.That(m!.Value.UnitsPerEm).IsEqualTo(1000);

@@ -198,7 +198,9 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
 
             var colon = line.IndexOf((byte)':');
             var inline = YamlByteScanner.TrimWhitespace(line[(colon + 1)..]);
-            return inline is [(byte)'[', .., (byte)']'] ? ParseInlineList(inline[1..^1]) : ParseBlockList(source, lineEnd);
+            return inline is [(byte)'[', .., (byte)']']
+                ? ParseInlineList(inline[1..^1])
+                : ParseBlockList(source, lineEnd);
         }
 
         return [];
@@ -377,7 +379,11 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <param name="toUrlBytes">Destination URL as UTF-8 bytes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the stub has been written.</returns>
-    private static async Task WriteStubAsync(DirectoryPath outputRoot, byte[] fromPathBytes, byte[] toUrlBytes, CancellationToken cancellationToken)
+    private static async Task WriteStubAsync(
+        DirectoryPath outputRoot,
+        byte[] fromPathBytes,
+        byte[] toUrlBytes,
+        CancellationToken cancellationToken)
     {
         var fromPath = Encoding.UTF8.GetString(fromPathBytes);
         var absolute = Path.GetFullPath(Path.Combine(outputRoot.Value, fromPath));
@@ -397,7 +403,8 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     private static void BuildStub(ReadOnlySpan<byte> urlBytes, ArrayBufferWriter<byte> sink)
     {
         var normalized = NormalizeRedirectTarget(urlBytes);
-        sink.Write("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Redirecting…</title>\n<meta http-equiv=\"refresh\" content=\"0; url="u8);
+        sink.Write(
+            "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Redirecting…</title>\n<meta http-equiv=\"refresh\" content=\"0; url="u8);
         XmlEntityEscaper.WriteEscaped(sink, normalized, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("\">\n<link rel=\"canonical\" href=\""u8);
         XmlEntityEscaper.WriteEscaped(sink, normalized, XmlEntityEscaper.Mode.HtmlAttribute);
@@ -414,7 +421,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     private static ReadOnlySpan<byte> NormalizeRedirectTarget(ReadOnlySpan<byte> urlBytes)
     {
         if (urlBytes.IsEmpty || urlBytes[0] is (byte)'/'
-            || urlBytes.StartsWith("http://"u8) || urlBytes.StartsWith("https://"u8))
+                             || urlBytes.StartsWith("http://"u8) || urlBytes.StartsWith("https://"u8))
         {
             return urlBytes;
         }

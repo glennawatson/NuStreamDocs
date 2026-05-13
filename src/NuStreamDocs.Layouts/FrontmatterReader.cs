@@ -92,9 +92,9 @@ internal static class FrontmatterReader
     /// <returns>True for letters, digits, dot, underscore, or hyphen.</returns>
     private static bool IsKeyByte(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'.'
-          or (byte)'_'
-          or (byte)'-';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'.'
+            or (byte)'_'
+            or (byte)'-';
 }

@@ -17,7 +17,12 @@ internal static class AttrListElementRewriter
     /// <param name="lastEmit">Source offset emitted up to (updated on success).</param>
     /// <param name="advanceTo">Next scan cursor.</param>
     /// <returns>True when a rewrite succeeded.</returns>
-    public static bool TryRewriteInlinePaired(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    public static bool TryRewriteInlinePaired(
+        ReadOnlySpan<byte> html,
+        int lt,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!AttrListTagMatcher.TryMatchInlinePairedTag(html, lt + 1, out var nameLen))
         {
@@ -42,7 +47,12 @@ internal static class AttrListElementRewriter
         }
 
         var afterClose = closeStart + nameLen + AttrListTagScanner.CloseTagOverhead;
-        if (!AttrListMarker.TryMatchMarker(html, afterClose, out var contentStart, out var contentEnd, out var markerEnd))
+        if (!AttrListMarker.TryMatchMarker(
+            html,
+            afterClose,
+            out var contentStart,
+            out var contentEnd,
+            out var markerEnd))
         {
             advanceTo = afterClose;
             return false;
@@ -63,7 +73,12 @@ internal static class AttrListElementRewriter
     /// <param name="lastEmit">Source offset emitted up to (updated on success).</param>
     /// <param name="advanceTo">Next scan cursor.</param>
     /// <returns>True when a rewrite succeeded.</returns>
-    public static bool TryRewriteBlock(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    public static bool TryRewriteBlock(
+        ReadOnlySpan<byte> html,
+        int lt,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!AttrListTagMatcher.TryMatchBlockTag(html, lt + 1, out var nameLen))
         {
@@ -88,13 +103,24 @@ internal static class AttrListElementRewriter
             return false;
         }
 
-        if (!TryFindMarkerInside(html, innerStart, closeStart, out var prefixEnd, out var contentStart, out var contentEnd, out var suffixStart))
+        if (!TryFindMarkerInside(
+            html,
+            innerStart,
+            closeStart,
+            out var prefixEnd,
+            out var contentStart,
+            out var contentEnd,
+            out var suffixStart))
         {
             advanceTo = closeStart + nameLen + AttrListTagScanner.CloseTagOverhead;
             return false;
         }
 
-        EmitRewrittenBlock(html, sink, ref lastEmit, new(nameEnd, openGt, prefixEnd, contentStart, contentEnd, suffixStart, closeStart, nameLen));
+        EmitRewrittenBlock(
+            html,
+            sink,
+            ref lastEmit,
+            new(nameEnd, openGt, prefixEnd, contentStart, contentEnd, suffixStart, closeStart, nameLen));
         advanceTo = closeStart + nameLen + AttrListTagScanner.CloseTagOverhead;
         return true;
     }
@@ -106,7 +132,12 @@ internal static class AttrListElementRewriter
     /// <param name="lastEmit">Source offset emitted up to (updated on success).</param>
     /// <param name="advanceTo">Next scan cursor.</param>
     /// <returns>True when a rewrite succeeded.</returns>
-    public static bool TryRewriteInlineVoid(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    public static bool TryRewriteInlineVoid(
+        ReadOnlySpan<byte> html,
+        int lt,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!AttrListTagMatcher.TryMatchInlineVoidTag(html, lt + 1, out var nameLen))
         {
@@ -142,7 +173,11 @@ internal static class AttrListElementRewriter
     /// <param name="sink">UTF-8 sink.</param>
     /// <param name="lastEmit">Source offset emitted up to (updated).</param>
     /// <param name="match">Match positions for the block rewrite.</param>
-    private static void EmitRewrittenBlock(ReadOnlySpan<byte> html, IBufferWriter<byte> sink, ref int lastEmit, in BlockMatch match)
+    private static void EmitRewrittenBlock(
+        ReadOnlySpan<byte> html,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        in BlockMatch match)
     {
         sink.Write(html[lastEmit..match.NameEnd]);
         AttrListMarker.EmitMerged(html, match.NameEnd, match.OpenGt, match.ContentStart, match.ContentEnd, sink);
@@ -185,7 +220,14 @@ internal static class AttrListElementRewriter
     /// <param name="contentEnd">Marker-content end on success.</param>
     /// <param name="suffixStart">Suffix start on success.</param>
     /// <returns>True when a legal inline marker was found inside the block body.</returns>
-    private static bool TryFindMarkerInside(ReadOnlySpan<byte> html, int innerStart, int closeStart, out int prefixEnd, out int contentStart, out int contentEnd, out int suffixStart)
+    private static bool TryFindMarkerInside(
+        ReadOnlySpan<byte> html,
+        int innerStart,
+        int closeStart,
+        out int prefixEnd,
+        out int contentStart,
+        out int contentEnd,
+        out int suffixStart)
     {
         prefixEnd = -1;
         contentStart = -1;

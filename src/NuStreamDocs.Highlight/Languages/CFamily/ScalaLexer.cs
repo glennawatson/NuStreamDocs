@@ -26,7 +26,8 @@ public static class ScalaLexer
             KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
                 "val var def type class object trait enum abstract final sealed open implicit lazy override private protected public inline transparent opaque extension"u8),
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
-            Operators = OperatorAlternationFactory.SplitLongestFirst("<- => ::"u8, CFamilyShared.StandardOperatorsLiteral),
+            Operators =
+                OperatorAlternationFactory.SplitLongestFirst("<- => ::"u8, CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         });
 }

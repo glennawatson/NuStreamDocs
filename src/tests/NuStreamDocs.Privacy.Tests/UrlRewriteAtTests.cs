@@ -18,7 +18,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
 
@@ -40,7 +40,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "hello world"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
@@ -61,7 +61,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "<img srcset=\"https://cdn.test/a.png 2x\">"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
@@ -83,7 +83,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
@@ -104,7 +104,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "<style>.x { background: url(https://cdn.test/a.png); }</style>"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
@@ -125,7 +125,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "<div>plain</div>"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
@@ -144,12 +144,12 @@ public class UrlRewriteAtTests
     public async Task CombinedWalkerHandlesAllThreeShapes()
     {
         const string Html = "<img src=\"https://cdn.test/a.png\">"
-            + "<img srcset=\"https://cdn.test/b.png 2x\">"
-            + "<style>.x { background: url(https://cdn.test/c.png); }</style>"
-            + "<a href=\"https://cdn.test/page\">link</a>";
+                            + "<img srcset=\"https://cdn.test/b.png 2x\">"
+                            + "<style>.x { background: url(https://cdn.test/c.png); }</style>"
+                            + "<a href=\"https://cdn.test/page\">link</a>";
         byte[] bytes = [.. Encoding.UTF8.GetBytes(Html)];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(bytes.Length);
 
@@ -170,7 +170,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "<p>plain text with no urls</p>"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: null);
+        HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
 
@@ -187,7 +187,7 @@ public class UrlRewriteAtTests
     {
         byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
         ExternalAssetRegistry registry = new([.. "local"u8]);
-        HostFilter filter = new(hostsToSkip: null, hostsAllowed: PrivacyTestHelpers.Utf8("only.test"));
+        HostFilter filter = new(null, PrivacyTestHelpers.Utf8("only.test"));
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
 

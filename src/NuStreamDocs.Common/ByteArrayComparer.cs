@@ -13,10 +13,10 @@ namespace NuStreamDocs.Common;
 /// </summary>
 public sealed class ByteArrayComparer
     : IEqualityComparer<byte[]>,
-      IEqualityComparer,
-      IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>,
-      IComparer<byte[]>,
-      IComparer
+        IEqualityComparer,
+        IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>,
+        IComparer<byte[]>,
+        IComparer
 {
     /// <summary>Initializes a new instance of the <see cref="ByteArrayComparer"/> class.</summary>
     private ByteArrayComparer()
@@ -33,10 +33,7 @@ public sealed class ByteArrayComparer
             : y is not null && x.AsSpan().SequenceEqual(y);
 
     /// <inheritdoc/>
-    public int GetHashCode(byte[] obj)
-    {
-        return GetSpanHashCode(obj);
-    }
+    public int GetHashCode(byte[] obj) => GetSpanHashCode(obj);
 
     /// <inheritdoc/>
     public int Compare(byte[]? x, byte[]? y) =>
@@ -69,10 +66,7 @@ public sealed class ByteArrayComparer
         };
 
     /// <inheritdoc/>
-    int IEqualityComparer.GetHashCode(object obj)
-    {
-        return obj is byte[] bytes ? GetHashCode(bytes) : obj.GetHashCode();
-    }
+    int IEqualityComparer.GetHashCode(object obj) => obj is byte[] bytes ? GetHashCode(bytes) : obj.GetHashCode();
 
     /// <inheritdoc/>
     public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) =>

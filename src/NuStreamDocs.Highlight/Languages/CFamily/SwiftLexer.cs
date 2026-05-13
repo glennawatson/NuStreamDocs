@@ -33,7 +33,8 @@ public static class SwiftLexer
         "mutating nonmutating override required convenience dynamic indirect operator precedencegroup"u8);
 
     /// <summary>Constant keywords — Swift uses <c>nil</c> in place of the shared <c>null</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNilLiteral);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNilLiteral);
 
     /// <summary>Operator alternation — shared C-style core plus Swift's range / nil-coalesce / optional-chain forms, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
@@ -54,7 +55,8 @@ public static class SwiftLexer
         var multiLineString = new LexerRule(
             static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', MultiLineStringMinQuotes),
             TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = LanguageCommon.DoubleQuoteFirst };
 
         CFamilyConfig config = new()
         {

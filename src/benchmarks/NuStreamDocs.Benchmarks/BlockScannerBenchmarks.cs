@@ -49,10 +49,10 @@ public class BlockScannerBenchmarks
         for (var i = 0; i < Paragraphs; i++)
         {
             sb.Append("# Heading ").Append(i).Append('\n')
-              .Append("Paragraph with `inline code`, a [link](https://x/").Append(i).Append(") and a > quote.\n\n")
-              .Append("- list item ").Append(i).Append('\n')
-              .Append("- list item B\n\n")
-              .Append("```\nfenced\n```\n\n");
+                .Append("Paragraph with `inline code`, a [link](https://x/").Append(i).Append(") and a > quote.\n\n")
+                .Append("- list item ").Append(i).Append('\n')
+                .Append("- list item B\n\n")
+                .Append("```\nfenced\n```\n\n");
         }
 
         _source = Encoding.UTF8.GetBytes(sb.ToString());
@@ -89,9 +89,9 @@ public class BlockScannerBenchmarks
         for (var i = 0; i < Paragraphs; i++)
         {
             sb.Append("<!-- single-line note ").Append(i).Append(" -->\n")
-              .Append("## Heading ").Append(i).Append('\n')
-              .Append("<!--- triple-dash form ").Append(i).Append(" --->\n")
-              .Append("Body paragraph ").Append(i).Append(".\n\n");
+                .Append("## Heading ").Append(i).Append('\n')
+                .Append("<!--- triple-dash form ").Append(i).Append(" --->\n")
+                .Append("Body paragraph ").Append(i).Append(".\n\n");
         }
 
         _commentSource = Encoding.UTF8.GetBytes(sb.ToString());

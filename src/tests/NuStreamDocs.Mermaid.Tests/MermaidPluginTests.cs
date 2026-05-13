@@ -52,7 +52,8 @@ public class MermaidPluginTests
         ArrayBufferWriter<byte> sink = new(64);
         ICustomFenceHandler handler = new MermaidPlugin();
         handler.Render("graph TD\nA-->B"u8, sink);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("<pre class=\"mermaid\">graph TD\nA-->B</pre>");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))
+            .IsEqualTo("<pre class=\"mermaid\">graph TD\nA-->B</pre>");
     }
 
     /// <summary>The custom fence handler reports the language.</summary>

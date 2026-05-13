@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace NuStreamDocs.Search.Sqlite.Tests;
 
 /// <summary>Coverage for <c>SqliteOptionsExtensions</c>.</summary>
@@ -78,6 +80,6 @@ public class SqliteOptionsExtensionsTests
     public async Task WithSectionPrioritiesString()
     {
         var o = SqliteOptions.Default.WithSectionPriorities("guide/:80");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(o.SectionPriorities)).IsEqualTo("guide/:80");
+        await Assert.That(Encoding.UTF8.GetString(o.SectionPriorities)).IsEqualTo("guide/:80");
     }
 }

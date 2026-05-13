@@ -33,7 +33,8 @@ public sealed class GoogleFontProvider : IFontProvider
         _ = inputRoot;
         ArgumentNullException.ThrowIfNull(cache);
 
-        var keepAll = requestedSubsets is [] || (requestedSubsets is [var only] && only.AsSpan().SequenceEqual(AllSubsets));
+        var keepAll = requestedSubsets is [] ||
+                      (requestedSubsets is [var only] && only.AsSpan().SequenceEqual(AllSubsets));
         var cssBytes = await cache.GetAsync(BuildStylesheetUrl(face), cancellationToken).ConfigureAwait(false);
         var parsed = Css2StylesheetParser.Parse(cssBytes);
         List<FontResource> resources = [];
@@ -45,14 +46,22 @@ public sealed class GoogleFontProvider : IFontProvider
                 continue;
             }
 
-            if (subsetUsage is not null && entry.UnicodeRange is [_, ..] && !UnicodeRangeMatcher.Overlaps(entry.UnicodeRange, subsetUsage))
+            if (subsetUsage is not null && entry.UnicodeRange is [_, ..] &&
+                !UnicodeRangeMatcher.Overlaps(entry.UnicodeRange, subsetUsage))
             {
                 // auto mode: this subset covers nothing the site uses — don't even download it.
                 continue;
             }
 
             var woff2 = await cache.GetAsync(entry.Woff2Url, cancellationToken).ConfigureAwait(false);
-            resources.Add(new((byte[])face.FamilyBytes.Clone(), entry.Weight, entry.Style, entry.UnicodeRange, woff2, entry.Woff2Url));
+            resources.Add(
+                new(
+                    (byte[])face.FamilyBytes.Clone(),
+                    entry.Weight,
+                    entry.Style,
+                    entry.UnicodeRange,
+                    woff2,
+                    entry.Woff2Url));
         }
 
         return [.. resources];
@@ -130,6 +139,6 @@ public sealed class GoogleFontProvider : IFontProvider
         FontDisplay.Swap => "swap",
         FontDisplay.Fallback => "fallback",
         FontDisplay.Optional => "optional",
-        _ => "auto",
+        _ => "auto"
     };
 }

@@ -12,27 +12,20 @@ public static class DocBuilderLinkValidatorExtensions
     /// <summary>Registers <see cref="LinkValidatorPlugin"/> with default options.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLinkValidator(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new LinkValidatorPlugin());
-    }
+    public static DocBuilder UseLinkValidator(this DocBuilder builder) => builder.UsePlugin(new LinkValidatorPlugin());
 
     /// <summary>Registers <see cref="LinkValidatorPlugin"/> with the supplied options.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLinkValidator(this DocBuilder builder, LinkValidatorOptions options)
-    {
-        return builder.UsePlugin(new LinkValidatorPlugin(options));
-    }
+    public static DocBuilder UseLinkValidator(this DocBuilder builder, LinkValidatorOptions options) =>
+        builder.UsePlugin(new LinkValidatorPlugin(options));
 
     /// <summary>Registers <see cref="LinkValidatorPlugin"/> with the supplied options and logger.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger to receive validation diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLinkValidator(this DocBuilder builder, LinkValidatorOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new LinkValidatorPlugin(options, httpClientFactory: null, logger));
-    }
+    public static DocBuilder UseLinkValidator(this DocBuilder builder, LinkValidatorOptions options, ILogger logger) =>
+        builder.UsePlugin(new LinkValidatorPlugin(options, null, logger));
 }

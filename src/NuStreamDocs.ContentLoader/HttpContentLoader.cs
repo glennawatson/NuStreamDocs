@@ -39,7 +39,7 @@ public sealed class HttpContentLoader : IContentLoader
     /// <param name="url">Endpoint URL.</param>
     /// <param name="mapping">Field mapping.</param>
     public HttpContentLoader(UrlPath url, ContentMapping mapping)
-        : this(url, [], [], mapping, httpClientFactory: null, NullLogger.Instance)
+        : this(url, [], [], mapping, null, NullLogger.Instance)
     {
     }
 
@@ -49,8 +49,13 @@ public sealed class HttpContentLoader : IContentLoader
     /// <param name="headers">Extra request headers (UTF-8 name/value byte pairs).</param>
     /// <param name="mapping">Field mapping.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public HttpContentLoader(UrlPath url, byte[] requestBody, (byte[] Name, byte[] Value)[] headers, ContentMapping mapping, ILogger logger)
-        : this(url, requestBody, headers, mapping, httpClientFactory: null, logger)
+    public HttpContentLoader(
+        UrlPath url,
+        byte[] requestBody,
+        (byte[] Name, byte[] Value)[] headers,
+        ContentMapping mapping,
+        ILogger logger)
+        : this(url, requestBody, headers, mapping, null, logger)
     {
     }
 
@@ -61,7 +66,13 @@ public sealed class HttpContentLoader : IContentLoader
     /// <param name="mapping">Field mapping.</param>
     /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public HttpContentLoader(UrlPath url, byte[] requestBody, (byte[] Name, byte[] Value)[] headers, ContentMapping mapping, Func<HttpClient>? httpClientFactory, ILogger logger)
+    public HttpContentLoader(
+        UrlPath url,
+        byte[] requestBody,
+        (byte[] Name, byte[] Value)[] headers,
+        ContentMapping mapping,
+        Func<HttpClient>? httpClientFactory,
+        ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(url.Value);
         ArgumentNullException.ThrowIfNull(requestBody);
@@ -106,7 +117,7 @@ public sealed class HttpContentLoader : IContentLoader
         if (_requestBody is [_, ..])
         {
             request.Content = new ByteArrayContent(_requestBody);
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            request.Content.Headers.ContentType = new("application/json");
         }
 
         ApplyHeaders(request.Headers);
@@ -120,7 +131,9 @@ public sealed class HttpContentLoader : IContentLoader
         catch (HttpRequestException ex)
         {
             ContentLoaderLoggingHelper.LogFetchFailed(_logger, "http", _url.Value, ex.Message);
-            throw new ContentLoaderException(StringCompose.Concat("HTTP request to ", _url.Value, " failed: ", ex.Message), ex);
+            throw new ContentLoaderException(
+                StringCompose.Concat("HTTP request to ", _url.Value, " failed: ", ex.Message),
+                ex);
         }
     }
 
@@ -130,7 +143,9 @@ public sealed class HttpContentLoader : IContentLoader
     {
         for (var i = 0; i < _headers.Length; i++)
         {
-            headers.TryAddWithoutValidation(Encoding.UTF8.GetString(_headers[i].Name), Encoding.UTF8.GetString(_headers[i].Value));
+            headers.TryAddWithoutValidation(
+                Encoding.UTF8.GetString(_headers[i].Name),
+                Encoding.UTF8.GetString(_headers[i].Value));
         }
     }
 }

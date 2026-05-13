@@ -12,10 +12,7 @@ public static class DocBuilderSqliteExtensions
     /// <summary>Registers <see cref="SqliteSearchPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSqliteSearch(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new SqliteSearchPlugin());
-    }
+    public static DocBuilder UseSqliteSearch(this DocBuilder builder) => builder.UsePlugin(new SqliteSearchPlugin());
 
     /// <summary>Registers <see cref="SqliteSearchPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
@@ -32,8 +29,6 @@ public static class DocBuilderSqliteExtensions
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSqliteSearch(this DocBuilder builder, in SqliteOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new SqliteSearchPlugin(options, logger));
-    }
+    public static DocBuilder UseSqliteSearch(this DocBuilder builder, in SqliteOptions options, ILogger logger) =>
+        builder.UsePlugin(new SqliteSearchPlugin(options, logger));
 }

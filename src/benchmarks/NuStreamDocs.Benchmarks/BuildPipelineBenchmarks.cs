@@ -52,8 +52,12 @@ public class BuildPipelineBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _inputRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        _outputRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _inputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _outputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(_inputRoot);
 
         // Spread pages across nested sections so nav rendering exercises depth.
@@ -178,7 +182,8 @@ public class BuildPipelineBenchmarks
     private static string Page(int index) =>
         new StringBuilder(1024)
             .Append("# Page ").Append(index).Append('\n').Append('\n')
-            .Append("Some intro text with **bold** and `code` and a [link](https://example.com/").Append(index).Append(").\n\n")
+            .Append("Some intro text with **bold** and `code` and a [link](https://example.com/").Append(index)
+            .Append(").\n\n")
             .Append("## Code\n\n```csharp\npublic int Add(int a, int b) => a + b;\n```\n\n")
             .Append("!!! note \"Heads up\"\n    body line one\n    body line two\n\n")
             .Append("- [x] done item\n- [ ] todo item\n- regular item\n\n")
@@ -195,7 +200,7 @@ public class BuildPipelineBenchmarks
         {
             if (Directory.Exists(path))
             {
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
         catch (IOException)

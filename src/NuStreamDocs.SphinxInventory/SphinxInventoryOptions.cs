@@ -15,7 +15,7 @@ public sealed record SphinxInventoryOptions(
 {
     /// <summary>Gets the default option set — project <c>NuStreamDocs</c>, no version, written as <c>objects.inv</c>.</summary>
     public static SphinxInventoryOptions Default { get; } = new(
-        ProjectName: "NuStreamDocs",
-        Version: string.Empty,
-        OutputFileName: "objects.inv");
+        "NuStreamDocs",
+        string.Empty,
+        "objects.inv");
 }

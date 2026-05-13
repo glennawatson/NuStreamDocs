@@ -12,10 +12,7 @@ public static class DocBuilderMathJaxExtensions
     /// <summary>Registers <see cref="MathJaxPlugin"/> with default options (CDN-loaded).</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMathJax(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new MathJaxPlugin());
-    }
+    public static DocBuilder UseMathJax(this DocBuilder builder) => builder.UsePlugin(new MathJaxPlugin());
 
     /// <summary>Registers <see cref="MathJaxPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
@@ -31,8 +28,6 @@ public static class DocBuilderMathJaxExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMathJax(this DocBuilder builder, in MathJaxOptions options)
-    {
-        return builder.UsePlugin(new MathJaxPlugin(options));
-    }
+    public static DocBuilder UseMathJax(this DocBuilder builder, in MathJaxOptions options) =>
+        builder.UsePlugin(new MathJaxPlugin(options));
 }

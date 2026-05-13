@@ -16,8 +16,10 @@ public class FontsourceProviderTests
     {
         var normal = (string)FontsourceProvider.BuildStylesheetUrl("jetbrains-mono", "latin", 400, FontStyle.Normal);
         var italic = (string)FontsourceProvider.BuildStylesheetUrl("jetbrains-mono", "latin", 700, FontStyle.Italic);
-        await Assert.That(normal).IsEqualTo("https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/latin-400.css");
-        await Assert.That(italic).IsEqualTo("https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/latin-700-italic.css");
+        await Assert.That(normal)
+            .IsEqualTo("https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/latin-400.css");
+        await Assert.That(italic)
+            .IsEqualTo("https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/latin-700-italic.css");
     }
 
     /// <summary>Resolving fetches the stylesheet then the relative woff2 (resolved against the stylesheet URL) from the cache.</summary>
@@ -26,8 +28,8 @@ public class FontsourceProviderTests
     public async Task ResolvesRelativeWoff2()
     {
         using TempDir dir = new();
-        var cache = new FontDownloadCache(dir.Root, offline: true);
-        var face = FontsOptions.Default.AddFace(new FontFace(
+        var cache = new FontDownloadCache(dir.Root, true);
+        var face = FontsOptions.Default.AddFace(new(
             [.. "jetbrains-mono"u8],
             [.. "JetBrains Mono"u8],
             FontProviderKind.Fontsource,
@@ -40,25 +42,32 @@ public class FontsourceProviderTests
             [],
             [])).Faces[0];
 
-        const string css = """
-            @font-face {
-              font-family: 'JetBrains Mono';
-              font-style: normal;
-              font-weight: 400;
-              src: url(./files/jetbrains-mono-latin-400-normal.woff2) format('woff2');
-              unicode-range: U+0000-00FF;
-            }
-            """;
+        const string Css = """
+                           @font-face {
+                             font-family: 'JetBrains Mono';
+                             font-style: normal;
+                             font-weight: 400;
+                             src: url(./files/jetbrains-mono-latin-400-normal.woff2) format('woff2');
+                             unicode-range: U+0000-00FF;
+                           }
+                           """;
         var cssUrl = FontsourceProvider.BuildStylesheetUrl("jetbrains-mono", "latin", 400, FontStyle.Normal);
-        await File.WriteAllBytesAsync(cache.CacheFilePath(cssUrl), Encoding.UTF8.GetBytes(css));
-        const string woff2Url = "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/files/jetbrains-mono-latin-400-normal.woff2";
+        await File.WriteAllBytesAsync(cache.CacheFilePath(cssUrl), Encoding.UTF8.GetBytes(Css));
+        const string Woff2Url =
+            "https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/files/jetbrains-mono-latin-400-normal.woff2";
         byte[] woff2Bytes = [9, 8, 7];
-        await File.WriteAllBytesAsync(cache.CacheFilePath(woff2Url), woff2Bytes);
+        await File.WriteAllBytesAsync(cache.CacheFilePath(Woff2Url), woff2Bytes);
 
-        var resources = await FontsourceProvider.Instance.ResolveAsync(face, [[.. "latin"u8]], cache, default, subsetUsage: null, CancellationToken.None);
+        var resources = await FontsourceProvider.Instance.ResolveAsync(
+            face,
+            [[.. "latin"u8]],
+            cache,
+            default,
+            null,
+            CancellationToken.None);
         await Assert.That(resources.Length).IsEqualTo(1);
         await Assert.That(resources[0].Weight).IsEqualTo(400);
         await Assert.That(resources[0].Woff2Bytes.SequenceEqual(woff2Bytes)).IsTrue();
-        await Assert.That((string)resources[0].SourceUrl).IsEqualTo(woff2Url);
+        await Assert.That((string)resources[0].SourceUrl).IsEqualTo(Woff2Url);
     }
 }

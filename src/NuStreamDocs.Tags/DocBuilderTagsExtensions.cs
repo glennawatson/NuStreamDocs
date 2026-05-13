@@ -12,17 +12,12 @@ public static class DocBuilderTagsExtensions
     /// <summary>Registers <see cref="TagsPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTags(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new TagsPlugin());
-    }
+    public static DocBuilder UseTags(this DocBuilder builder) => builder.UsePlugin(new TagsPlugin());
 
     /// <summary>Registers <see cref="TagsPlugin"/> with caller-supplied options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="options">Tags-plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTags(this DocBuilder builder, in TagsOptions options)
-    {
-        return builder.UsePlugin(new TagsPlugin(options));
-    }
+    public static DocBuilder UseTags(this DocBuilder builder, in TagsOptions options) =>
+        builder.UsePlugin(new TagsPlugin(options));
 }

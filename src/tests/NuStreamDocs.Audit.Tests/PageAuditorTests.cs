@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Linq;
 using System.Text;
 
 namespace NuStreamDocs.Audit.Tests;
@@ -19,10 +18,10 @@ public class PageAuditorTests
     [Test]
     public async Task CleanPageHasNoFindings()
     {
-        const string html = "<!DOCTYPE html><html lang=\"en\">"
-            + "<head><title>Hi</title><meta name=\"viewport\" content=\"x\"><script src=\"/app.js\" defer></script></head>"
-            + "<body><h1>Title</h1><h2>Sub</h2><img src=\"a.png\" alt=\"A\" width=\"10\" height=\"10\"><a href=\"/x\">link text</a></body></html>";
-        await Assert.That(RulesFor(html)).IsEmpty();
+        const string Html = "<!DOCTYPE html><html lang=\"en\">"
+                            + "<head><title>Hi</title><meta name=\"viewport\" content=\"x\"><script src=\"/app.js\" defer></script></head>"
+                            + "<body><h1>Title</h1><h2>Sub</h2><img src=\"a.png\" alt=\"A\" width=\"10\" height=\"10\"><a href=\"/x\">link text</a></body></html>";
+        await Assert.That(RulesFor(Html)).IsEmpty();
     }
 
     /// <summary>An image without alt or dimensions raises both image lints.</summary>
@@ -71,8 +70,10 @@ public class PageAuditorTests
     [Test]
     public async Task EmptyAndLabeledLinks()
     {
-        await Assert.That(RulesFor(Wrap("<a href=\"/x\"><i class=\"icon-home\"></i></a>"))).Contains(AuditRule.EmptyLink);
-        await Assert.That(RulesFor(Wrap("<a href=\"/x\" aria-label=\"Home\"><i class=\"icon-home\"></i></a>"))).DoesNotContain(AuditRule.EmptyLink);
+        await Assert.That(RulesFor(Wrap("<a href=\"/x\"><i class=\"icon-home\"></i></a>")))
+            .Contains(AuditRule.EmptyLink);
+        await Assert.That(RulesFor(Wrap("<a href=\"/x\" aria-label=\"Home\"><i class=\"icon-home\"></i></a>")))
+            .DoesNotContain(AuditRule.EmptyLink);
     }
 
     /// <summary>An empty button is flagged; one with text is not.</summary>
@@ -99,9 +100,12 @@ public class PageAuditorTests
     public async Task FormControlLabels()
     {
         await Assert.That(RulesFor(Wrap("<input type=\"text\" id=\"q\">"))).Contains(AuditRule.UnlabeledFormControl);
-        await Assert.That(RulesFor(Wrap("<label for=\"q\">Query</label><input type=\"text\" id=\"q\">"))).DoesNotContain(AuditRule.UnlabeledFormControl);
-        await Assert.That(RulesFor(Wrap("<label>Query <input type=\"text\"></label>"))).DoesNotContain(AuditRule.UnlabeledFormControl);
-        await Assert.That(RulesFor(Wrap("<input type=\"hidden\" name=\"q\">"))).DoesNotContain(AuditRule.UnlabeledFormControl);
+        await Assert.That(RulesFor(Wrap("<label for=\"q\">Query</label><input type=\"text\" id=\"q\">")))
+            .DoesNotContain(AuditRule.UnlabeledFormControl);
+        await Assert.That(RulesFor(Wrap("<label>Query <input type=\"text\"></label>")))
+            .DoesNotContain(AuditRule.UnlabeledFormControl);
+        await Assert.That(RulesFor(Wrap("<input type=\"hidden\" name=\"q\">")))
+            .DoesNotContain(AuditRule.UnlabeledFormControl);
     }
 
     /// <summary>A render-blocking head script is flagged; async/defer/module are not.</summary>
@@ -109,13 +113,16 @@ public class PageAuditorTests
     [Test]
     public async Task RenderBlockingScript()
     {
-        const string blocking = "<html lang=\"en\"><head><title>t</title><meta name=\"viewport\" content=\"x\"><script src=\"/a.js\"></script></head><body><h1>h</h1></body></html>";
-        await Assert.That(RulesFor(blocking)).Contains(AuditRule.RenderBlockingScript);
+        const string Blocking =
+            "<html lang=\"en\"><head><title>t</title><meta name=\"viewport\" content=\"x\"><script src=\"/a.js\"></script></head><body><h1>h</h1></body></html>";
+        await Assert.That(RulesFor(Blocking)).Contains(AuditRule.RenderBlockingScript);
 
-        const string module = "<html lang=\"en\"><head><title>t</title><meta name=\"viewport\" content=\"x\"><script src=\"/a.js\" type=\"module\"></script></head><body><h1>h</h1></body></html>";
-        await Assert.That(RulesFor(module)).DoesNotContain(AuditRule.RenderBlockingScript);
+        const string Module =
+            "<html lang=\"en\"><head><title>t</title><meta name=\"viewport\" content=\"x\"><script src=\"/a.js\" type=\"module\"></script></head><body><h1>h</h1></body></html>";
+        await Assert.That(RulesFor(Module)).DoesNotContain(AuditRule.RenderBlockingScript);
 
-        await Assert.That(RulesFor(Wrap("<script src=\"/a.js\"></script>"))).DoesNotContain(AuditRule.RenderBlockingScript);
+        await Assert.That(RulesFor(Wrap("<script src=\"/a.js\"></script>")))
+            .DoesNotContain(AuditRule.RenderBlockingScript);
     }
 
     /// <summary>A meta-refresh redirect stub produces no findings.</summary>
@@ -123,7 +130,8 @@ public class PageAuditorTests
     [Test]
     public async Task RedirectStubIsSkipped()
     {
-        var rules = RulesFor("<html><head><meta http-equiv=\"refresh\" content=\"0; url=/new/\"></head><body></body></html>");
+        var rules = RulesFor(
+            "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/new/\"></head><body></body></html>");
         await Assert.That(rules).IsEmpty();
     }
 
@@ -133,7 +141,10 @@ public class PageAuditorTests
     public async Task DisabledRuleIsSkipped()
     {
         var options = AuditOptions.Default.Disable(AuditRule.ImageMissingAlt);
-        var diagnostics = PageAuditor.Audit("page.html", Encoding.UTF8.GetBytes(Wrap("<img src=\"a.png\" width=\"1\" height=\"1\">")), options);
+        var diagnostics = PageAuditor.Audit(
+            "page.html",
+            Encoding.UTF8.GetBytes(Wrap("<img src=\"a.png\" width=\"1\" height=\"1\">")),
+            options);
         await Assert.That(diagnostics.Select(d => d.Rule)).DoesNotContain(AuditRule.ImageMissingAlt);
     }
 

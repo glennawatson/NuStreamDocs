@@ -26,9 +26,13 @@ public static class ElmLexer
         LineCommentPrefix = [.. "--"u8],
         Tables = new()
         {
-            Keywords = ByteKeywordSet.CreateFromSpaceSeparated(MlFamilyShared.CommonKeywordsLiteral, "exposing"u8),
-            KeywordTypes = ByteKeywordSet.CreateFromSpaceSeparated("Bool Char Float Int String List Maybe Result Cmd Sub Html Dict Set"u8),
-            KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated("module import type alias port effect"u8),
+            Keywords =
+                ByteKeywordSet.CreateFromSpaceSeparated(MlFamilyShared.CommonKeywordsLiteral, "exposing"u8),
+            KeywordTypes =
+                ByteKeywordSet.CreateFromSpaceSeparated(
+                    "Bool Char Float Int String List Maybe Result Cmd Sub Html Dict Set"u8),
+            KeywordDeclarations =
+                ByteKeywordSet.CreateFromSpaceSeparated("module import type alias port effect"u8),
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("True False Nothing Just Ok Err"u8),
             Operators = OperatorTable
         }

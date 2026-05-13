@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 using NuStreamDocs.Plugins;
@@ -210,7 +211,10 @@ public sealed class DocBuilder
     /// <summary>Registers a plugin via its parameterless constructor.</summary>
     /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/>.</typeparam>
     /// <returns>This builder for chaining.</returns>
-    [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
+    [SuppressMessage(
+        "Major Code Smell",
+        "S4018:Generic methods should provide type parameters",
+        Justification = S4018Justification)]
     public DocBuilder UsePlugin<TPlugin>()
         where TPlugin : IPlugin, new()
     {
@@ -230,7 +234,10 @@ public sealed class DocBuilder
     /// <summary>Returns the existing plugin instance of <typeparamref name="TPlugin"/> if one is registered, otherwise constructs, registers, and returns a fresh one.</summary>
     /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/> with a parameterless constructor.</typeparam>
     /// <returns>The single registered instance of <typeparamref name="TPlugin"/>.</returns>
-    [SuppressMessage("Major Code Smell", "S4018:Generic methods should provide type parameters", Justification = S4018Justification)]
+    [SuppressMessage(
+        "Major Code Smell",
+        "S4018:Generic methods should provide type parameters",
+        Justification = S4018Justification)]
     public TPlugin GetOrAddPlugin<TPlugin>()
         where TPlugin : class, IPlugin, new()
     {
@@ -275,7 +282,7 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder WithSiteName(string? value)
     {
-        _siteName = string.IsNullOrEmpty(value) ? [] : System.Text.Encoding.UTF8.GetBytes(value);
+        _siteName = string.IsNullOrEmpty(value) ? [] : Encoding.UTF8.GetBytes(value);
         return this;
     }
 
@@ -302,7 +309,7 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder WithSiteUrl(string? value)
     {
-        _siteUrl = string.IsNullOrEmpty(value) ? [] : System.Text.Encoding.UTF8.GetBytes(value);
+        _siteUrl = string.IsNullOrEmpty(value) ? [] : Encoding.UTF8.GetBytes(value);
         return this;
     }
 
@@ -333,7 +340,7 @@ public sealed class DocBuilder
     /// <returns>This builder for chaining.</returns>
     public DocBuilder WithSiteAuthor(string? value)
     {
-        _siteAuthor = string.IsNullOrEmpty(value) ? [] : System.Text.Encoding.UTF8.GetBytes(value);
+        _siteAuthor = string.IsNullOrEmpty(value) ? [] : Encoding.UTF8.GetBytes(value);
         return this;
     }
 
@@ -365,7 +372,11 @@ public sealed class DocBuilder
     /// <param name="html">Pre-allocated UTF-8 sink the renderer and plugins write into.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every post-render participant has run.</returns>
-    public Task RenderPageAsync(in FilePath relativePath, in ReadOnlyMemory<byte> source, ArrayBufferWriter<byte> html, in CancellationToken cancellationToken)
+    public Task RenderPageAsync(
+        in FilePath relativePath,
+        in ReadOnlyMemory<byte> source,
+        ArrayBufferWriter<byte> html,
+        in CancellationToken cancellationToken)
     {
         _ = cancellationToken;
         MarkdownRenderer.Render(source.Span, html);
@@ -382,7 +393,13 @@ public sealed class DocBuilder
         try
         {
             input.Writer.Write(html.WrittenSpan);
-            var final = ApplyPostRendersExternal(input, scratch, source.Span, phases.PostRenders, relativePath, pluginTiming);
+            var final = ApplyPostRendersExternal(
+                input,
+                scratch,
+                source.Span,
+                phases.PostRenders,
+                relativePath,
+                pluginTiming);
             html.ResetWrittenCount();
             html.Write(final.Writer.WrittenSpan);
             if (!final.Equals(input))

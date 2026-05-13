@@ -39,40 +39,76 @@ internal static class ShellFamilyRules
 
         return
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines
+            },
 
             // # line comment to end-of-line.
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = CommentFirst },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = CommentFirst
+            },
 
             // '...' single-quoted (no escapes).
-            new(TokenMatchers.MatchSingleQuotedNoEscape, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst },
+            new(TokenMatchers.MatchSingleQuotedNoEscape, TokenClass.StringSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SingleQuoteFirst
+            },
 
             // "..." double-quoted with backslash escapes.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.DoubleQuoteFirst
+            },
 
             // [0-9]+ integer literal.
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
+            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiDigits
+            },
 
             // ${name} braced variable — must precede the simple-variable rule.
-            new(slice => MatchBracedVariable(slice, sigil), TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = sigilFirst },
+            new(slice => MatchBracedVariable(slice, sigil), TokenClass.Name, LexerRule.NoStateChange)
+            {
+                FirstBytes = sigilFirst
+            },
 
             // $name or $1 / $@ / $? simple variable.
-            new(slice => MatchSimpleVariable(slice, sigil, specialBytes), TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = sigilFirst },
+            new(slice => MatchSimpleVariable(slice, sigil, specialBytes), TokenClass.Name, LexerRule.NoStateChange)
+            {
+                FirstBytes = sigilFirst
+            },
 
             // Shell keyword (if, then, else, ...).
-            new(slice => TokenMatchers.MatchKeyword(slice, keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
+            new(slice => TokenMatchers.MatchKeyword(slice, keywords), TokenClass.Keyword, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiIdentifierStart
+            },
 
             // Shell builtin (echo, printf, cd, ...).
-            new(slice => TokenMatchers.MatchKeyword(slice, builtins), TokenClass.NameBuiltin, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
+            new(slice => TokenMatchers.MatchKeyword(slice, builtins), TokenClass.NameBuiltin, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiIdentifierStart
+            },
 
             // [A-Za-z_][A-Za-z0-9_]* identifier.
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
+            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiIdentifierStart
+            },
 
             // Operator alternation, longest-first.
-            new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = opFirst },
+            new(
+                slice => TokenMatchers.MatchLongestLiteral(slice, operators),
+                TokenClass.Operator,
+                LexerRule.NoStateChange) { FirstBytes = opFirst },
 
             // Single-byte structural punctuation.
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationFirst), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationFirst }
+            new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationFirst),
+                TokenClass.Punctuation,
+                LexerRule.NoStateChange) { FirstBytes = PunctuationFirst }
         ];
     }
 

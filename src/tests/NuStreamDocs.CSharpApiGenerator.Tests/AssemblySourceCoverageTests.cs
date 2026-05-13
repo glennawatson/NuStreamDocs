@@ -62,7 +62,7 @@ public class AssemblySourceCoverageTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -94,7 +94,8 @@ public class AssemblySourceCoverageTests
         public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             await Task.CompletedTask.ConfigureAwait(false);
             yield break;

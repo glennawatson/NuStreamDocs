@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
-using System.Net.Http;
 using System.Text;
 
 namespace NuStreamDocs.ContentLoader.Tests;
@@ -16,7 +15,8 @@ internal sealed class StubHttpHandler : HttpMessageHandler
 
     /// <summary>Initializes a new instance of the <see cref="StubHttpHandler"/> class.</summary>
     /// <param name="respond">Maps a request to a status code and response body.</param>
-    public StubHttpHandler(Func<HttpRequestMessage, (HttpStatusCode Status, string Body)> respond) => _respond = respond;
+    public StubHttpHandler(Func<HttpRequestMessage, (HttpStatusCode Status, string Body)> respond) =>
+        _respond = respond;
 
     /// <summary>Gets the requests this handler has seen.</summary>
     public List<HttpRequestMessage> Requests { get; } = [];
@@ -27,7 +27,9 @@ internal sealed class StubHttpHandler : HttpMessageHandler
     public static HttpClient ClientReturning(string body) => new(new StubHttpHandler(_ => (HttpStatusCode.OK, body)));
 
     /// <inheritdoc/>
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
     {
         Requests.Add(request);
         var (status, body) = _respond(request);

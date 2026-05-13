@@ -62,19 +62,34 @@ public static class RstLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            },
 
             // ".. directive:: …" or ".." comment — line-anchored.
-            new(MatchDirectiveOrComment, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = DotFirst, RequiresLineStart = true },
+            new(MatchDirectiveOrComment, TokenClass.CommentPreproc, LexerRule.NoStateChange)
+            {
+                FirstBytes = DotFirst, RequiresLineStart = true
+            },
 
             // Heading underline — line-anchored.
-            new(MatchHeadingUnderline, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = UnderlineFirst, RequiresLineStart = true },
+            new(MatchHeadingUnderline, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
+            {
+                FirstBytes = UnderlineFirst, RequiresLineStart = true
+            },
 
             // List bullet — line-anchored.
-            new(MatchBulletMarker, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = BulletFirst, RequiresLineStart = true },
+            new(MatchBulletMarker, TokenClass.Operator, LexerRule.NoStateChange)
+            {
+                FirstBytes = BulletFirst, RequiresLineStart = true
+            },
 
             // Field list — :field: at line start.
-            new(MatchFieldName, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = ColonFirst, RequiresLineStart = true },
+            new(MatchFieldName, TokenClass.NameAttribute, LexerRule.NoStateChange)
+            {
+                FirstBytes = ColonFirst, RequiresLineStart = true
+            },
 
             // ``inline literal`` — must precede the single-backtick interpreted-text rule.
             new(MatchInlineLiteral, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = BacktickFirst },

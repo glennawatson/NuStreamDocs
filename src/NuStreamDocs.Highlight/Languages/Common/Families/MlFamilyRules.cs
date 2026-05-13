@@ -45,46 +45,87 @@ internal static class MlFamilyRules
         const int MaxRuleSlots = 16;
         var rules = new List<LexerRule>(MaxRuleSlots)
         {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst }
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            }
         };
 
         var blockOpen = config.BlockCommentOpen;
         var blockClose = config.BlockCommentClose;
         var blockOpenFirst = SearchValues.Create(blockOpen.AsSpan(0, 1));
-        rules.Add(new(slice => MatchNestedBlockComment(slice, blockOpen, blockClose), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = blockOpenFirst });
+        rules.Add(new(
+                slice => MatchNestedBlockComment(slice, blockOpen, blockClose),
+                TokenClass.CommentMulti,
+                LexerRule.NoStateChange)
+        { FirstBytes = blockOpenFirst });
 
         if (config.LineCommentPrefix is { } linePrefix)
         {
             var lineFirst = SearchValues.Create(linePrefix.AsSpan(0, 1));
-            rules.Add(new(slice => MatchLineComment(slice, linePrefix), TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = lineFirst });
+            rules.Add(new(
+                    slice => MatchLineComment(slice, linePrefix),
+                    TokenClass.CommentSingle,
+                    LexerRule.NoStateChange)
+            { FirstBytes = lineFirst });
         }
 
         // 'a / 'b type variable — single quote followed by an identifier with no closing quote.
-        rules.Add(new(MatchTypeVariableOrCharLiteral, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst });
+        rules.Add(new(MatchTypeVariableOrCharLiteral, TokenClass.NameAttribute, LexerRule.NoStateChange)
+        {
+            FirstBytes = SingleQuoteFirst
+        });
 
         // "..." double-quoted string with backslash escapes.
-        rules.Add(new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst });
+        rules.Add(new(
+                TokenMatchers.MatchDoubleQuotedWithBackslashEscape,
+                TokenClass.StringDouble,
+                LexerRule.NoStateChange)
+        { FirstBytes = DoubleQuoteFirst });
 
         // 1.0 float / 1 integer.
-        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
-        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
+        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiDigits
+        });
+        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiDigits
+        });
 
         // Keyword tables (case-sensitive). First-byte dispatch falls back to the keyword set's
         // auto-derived FirstByteSet when the per-language override is null.
-        rules.Add(BuildKeywordRule(config.Tables.KeywordConstants, config.Tables.KeywordConstantFirst, TokenClass.KeywordConstant));
+        rules.Add(BuildKeywordRule(
+            config.Tables.KeywordConstants,
+            config.Tables.KeywordConstantFirst,
+            TokenClass.KeywordConstant));
         rules.Add(BuildKeywordRule(config.Tables.KeywordTypes, config.Tables.KeywordTypeFirst, TokenClass.KeywordType));
-        rules.Add(BuildKeywordRule(config.Tables.KeywordDeclarations, config.Tables.KeywordDeclarationFirst, TokenClass.KeywordDeclaration));
+        rules.Add(BuildKeywordRule(
+            config.Tables.KeywordDeclarations,
+            config.Tables.KeywordDeclarationFirst,
+            TokenClass.KeywordDeclaration));
         rules.Add(BuildKeywordRule(config.Tables.Keywords, config.Tables.KeywordFirst, TokenClass.Keyword));
 
         // Identifier — letters / digits / underscore / trailing apostrophe (ML convention).
-        rules.Add(new(MatchMlIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart });
+        rules.Add(new(MatchMlIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiIdentifierStart
+        });
 
         // Operator alternation.
         var operators = config.Tables.Operators;
         var operatorFirst = config.Tables.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
-        rules.Add(new(slice => TokenMatchers.MatchLongestLiteral(slice, operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = operatorFirst });
+        rules.Add(new(
+                slice => TokenMatchers.MatchLongestLiteral(slice, operators),
+                TokenClass.Operator,
+                LexerRule.NoStateChange)
+        { FirstBytes = operatorFirst });
 
-        rules.Add(new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet });
+        rules.Add(new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet),
+                TokenClass.Punctuation,
+                LexerRule.NoStateChange)
+        { FirstBytes = PunctuationSet });
 
         return [.. rules];
     }
@@ -94,10 +135,16 @@ internal static class MlFamilyRules
     /// <param name="firstBytes">Optional first-byte dispatch set.</param>
     /// <param name="tokenClass">Classification.</param>
     /// <returns>Rule matching any member of <paramref name="keywords"/>.</returns>
-    private static LexerRule BuildKeywordRule(ByteKeywordSet keywords, SearchValues<byte>? firstBytes, TokenClass tokenClass)
+    private static LexerRule BuildKeywordRule(
+        ByteKeywordSet keywords,
+        SearchValues<byte>? firstBytes,
+        TokenClass tokenClass)
     {
         var captured = keywords;
-        return new(slice => TokenMatchers.MatchKeyword(slice, captured), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet };
+        return new(slice => TokenMatchers.MatchKeyword(slice, captured), tokenClass, LexerRule.NoStateChange)
+        {
+            FirstBytes = firstBytes ?? captured.FirstByteSet
+        };
     }
 
     /// <summary>Matches a depth-tracking block comment with the configured open / close delimiters.</summary>
@@ -105,7 +152,10 @@ internal static class MlFamilyRules
     /// <param name="open">Two-byte opener (e.g. <c>(*</c>).</param>
     /// <param name="close">Two-byte closer (e.g. <c>*)</c>).</param>
     /// <returns>Length matched on success, or zero on miss / unterminated input.</returns>
-    private static int MatchNestedBlockComment(ReadOnlySpan<byte> slice, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close)
+    private static int MatchNestedBlockComment(
+        ReadOnlySpan<byte> slice,
+        ReadOnlySpan<byte> open,
+        ReadOnlySpan<byte> close)
     {
         if (!slice.StartsWith(open))
         {

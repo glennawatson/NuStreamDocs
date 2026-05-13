@@ -71,7 +71,7 @@ public class PostRenderBenchmarks
     private ExternalAssetRegistry _registry = new([.. "local"u8]);
 
     /// <summary>Shared host filter — accepts every host so every URL exercises the rewrite path.</summary>
-    private HostFilter _filter = new(hostsToSkip: null, hostsAllowed: null);
+    private HostFilter _filter = new(null, null);
 
     /// <summary>Generates the per-plugin input fixtures.</summary>
     [GlobalSetup]
@@ -85,12 +85,19 @@ public class PostRenderBenchmarks
             + "<style>body{background:url(https://cdn.example/bg.png)}</style>"
             + "<a href=\"https://docs.example/page\">link</a>");
         _mixedContentHtml = Repeat("<a href=\"http://example.com/page\">x</a><img src=\"http://cdn.example/a.png\">");
-        _externalAnchorHtml = Repeat("<a href=\"https://example.com/page\">x</a><a href=\"https://docs.example\" rel=\"author\">y</a>");
-        _assetAttrHtml = Repeat("<img src=\"https://cdn.example/a.png\"><link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">");
-        _srcsetHtml = Repeat("<img srcset=\"https://cdn.example/a.png 1x, https://cdn.example/b.png 2x, https://cdn.example/c.png 3x\">");
-        _inlineStyleHtml = Repeat("<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>");
+        _externalAnchorHtml =
+            Repeat("<a href=\"https://example.com/page\">x</a><a href=\"https://docs.example\" rel=\"author\">y</a>");
+        _assetAttrHtml =
+            Repeat(
+                "<img src=\"https://cdn.example/a.png\"><link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">");
+        _srcsetHtml =
+            Repeat(
+                "<img srcset=\"https://cdn.example/a.png 1x, https://cdn.example/b.png 2x, https://cdn.example/c.png 3x\">");
+        _inlineStyleHtml =
+            Repeat(
+                "<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>");
         _registry = new([.. "local"u8]);
-        _filter = new(hostsToSkip: null, hostsAllowed: null);
+        _filter = new(null, null);
 
         const string ExistingAttrs = " class=\"existing\" data-x=\"1\"";
         const string AttrListBody = " #intro .lead .extra target=\"_blank\" ";
@@ -162,7 +169,7 @@ public class PostRenderBenchmarks
     public int AnchorBytesDirect()
     {
         ArrayBufferWriter<byte> sink = new(_externalAnchorHtml.Length * 2);
-        AnchorBytes.RewriteInto(_externalAnchorHtml, addRelNoOpener: true, addTargetBlank: true, sink);
+        AnchorBytes.RewriteInto(_externalAnchorHtml, true, true, sink);
         return sink.WrittenCount;
     }
 

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using SQLitePCL;
 
 namespace NuStreamDocs.Search.Sqlite.Tests;
@@ -14,9 +15,9 @@ public class SqliteEngineTests
     [Test]
     public async Task MetadataLiterals()
     {
-        var e = new SqliteEngine([], indexFullBody: true);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(e.FormatName)).IsEqualTo("sqlite");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(e.ManifestFileName)).IsEqualTo("/search.db");
+        var e = new SqliteEngine([], true);
+        await Assert.That(Encoding.UTF8.GetString(e.FormatName)).IsEqualTo("sqlite");
+        await Assert.That(Encoding.UTF8.GetString(e.ManifestFileName)).IsEqualTo("/search.db");
     }
 
     /// <summary>Excluded-prefix pages are dropped from the written database.</summary>
@@ -25,7 +26,7 @@ public class SqliteEngineTests
     public async Task ExcludePrefixDropsPages()
     {
         using TempDir dir = new();
-        var e = new SqliteEngine([[.. "api/"u8]], indexFullBody: true);
+        var e = new SqliteEngine([[.. "api/"u8]], true);
         var manifest = e.Write(dir.Root, [Doc("/guide/intro.html"), Doc("/api/Foo.html"), Doc("/api/Bar.html")]);
         await Assert.That(File.Exists(manifest.Value)).IsTrue();
 
@@ -48,5 +49,5 @@ public class SqliteEngineTests
     /// <param name="url">Root-relative URL.</param>
     /// <returns>The document.</returns>
     private static SearchDocument Doc(string url) =>
-        new(System.Text.Encoding.UTF8.GetBytes(url), System.Text.Encoding.UTF8.GetBytes("T"), System.Text.Encoding.UTF8.GetBytes("indexed body text"));
+        new(Encoding.UTF8.GetBytes(url), Encoding.UTF8.GetBytes("T"), Encoding.UTF8.GetBytes("indexed body text"));
 }

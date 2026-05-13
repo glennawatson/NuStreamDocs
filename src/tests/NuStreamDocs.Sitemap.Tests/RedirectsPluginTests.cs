@@ -34,7 +34,9 @@ public class RedirectsPluginTests
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
         Directory.CreateDirectory(Path.Combine(input.Root, "guide"));
-        await File.WriteAllTextAsync(Path.Combine(input.Root, "guide", "intro.md"), "---\naliases:\n  - old/page\n  - really/old\n---\nbody");
+        await File.WriteAllTextAsync(
+            Path.Combine(input.Root, "guide", "intro.md"),
+            "---\naliases:\n  - old/page\n  - really/old\n---\nbody");
 
         RedirectsPlugin plugin = new();
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
@@ -51,7 +53,9 @@ public class RedirectsPluginTests
     {
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
-        await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "---\naliases: [\"old.html\", \"prev.html\"]\n---\nbody");
+        await File.WriteAllTextAsync(
+            Path.Combine(input.Root, "page.md"),
+            "---\naliases: [\"old.html\", \"prev.html\"]\n---\nbody");
 
         RedirectsPlugin plugin = new();
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
@@ -186,7 +190,9 @@ public class RedirectsPluginTests
     {
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
-        await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "---\naliases: [bare, already.html, with-ext.HTML]\n---\nbody");
+        await File.WriteAllTextAsync(
+            Path.Combine(input.Root, "page.md"),
+            "---\naliases: [bare, already.html, with-ext.HTML]\n---\nbody");
 
         RedirectsPlugin plugin = new();
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
@@ -233,7 +239,7 @@ public class RedirectsPluginTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

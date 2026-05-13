@@ -40,7 +40,7 @@ public sealed class GitHubContentLoader : IContentLoader
     /// <param name="sourcePath">Repository subdirectory to include.</param>
     /// <param name="routePrefix">Local subdirectory the files are mounted under.</param>
     public GitHubContentLoader(GitHubRepoRef repo, PathSegment sourcePath, PathSegment routePrefix)
-        : this(repo, sourcePath, routePrefix, [], httpClientFactory: null, NullLogger.Instance)
+        : this(repo, sourcePath, routePrefix, [], null, NullLogger.Instance)
     {
     }
 
@@ -50,8 +50,13 @@ public sealed class GitHubContentLoader : IContentLoader
     /// <param name="routePrefix">Local subdirectory the files are mounted under.</param>
     /// <param name="token">Personal access token; empty for unauthenticated requests.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public GitHubContentLoader(GitHubRepoRef repo, PathSegment sourcePath, PathSegment routePrefix, byte[] token, ILogger logger)
-        : this(repo, sourcePath, routePrefix, token, httpClientFactory: null, logger)
+    public GitHubContentLoader(
+        GitHubRepoRef repo,
+        PathSegment sourcePath,
+        PathSegment routePrefix,
+        byte[] token,
+        ILogger logger)
+        : this(repo, sourcePath, routePrefix, token, null, logger)
     {
     }
 
@@ -62,12 +67,20 @@ public sealed class GitHubContentLoader : IContentLoader
     /// <param name="token">Personal access token; empty for unauthenticated requests.</param>
     /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public GitHubContentLoader(GitHubRepoRef repo, PathSegment sourcePath, PathSegment routePrefix, byte[] token, Func<HttpClient>? httpClientFactory, ILogger logger)
+    public GitHubContentLoader(
+        GitHubRepoRef repo,
+        PathSegment sourcePath,
+        PathSegment routePrefix,
+        byte[] token,
+        Func<HttpClient>? httpClientFactory,
+        ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(token);
         if (repo.Owner is not [_, ..] || repo.Repo is not [_, ..] || repo.Reference is not [_, ..])
         {
-            throw new ArgumentException("A GitHub repo reference requires a non-empty owner, repository name, and reference.", nameof(repo));
+            throw new ArgumentException(
+                "A GitHub repo reference requires a non-empty owner, repository name, and reference.",
+                nameof(repo));
         }
 
         _repo = repo;
@@ -106,7 +119,9 @@ public sealed class GitHubContentLoader : IContentLoader
     /// <param name="headers">Request headers.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>UTF-8 JSON bytes.</returns>
-    private async Task<byte[]> FetchTreeAsync((byte[] Name, byte[] Value)[] headers, CancellationToken cancellationToken)
+    private async Task<byte[]> FetchTreeAsync(
+        (byte[] Name, byte[] Value)[] headers,
+        CancellationToken cancellationToken)
     {
         if (_httpClientFactory is not null)
         {
@@ -122,14 +137,19 @@ public sealed class GitHubContentLoader : IContentLoader
     /// <param name="headers">Request headers.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>UTF-8 response body.</returns>
-    private async Task<byte[]> GetAsync(HttpClient client, (byte[] Name, byte[] Value)[] headers, CancellationToken cancellationToken)
+    private async Task<byte[]> GetAsync(
+        HttpClient client,
+        (byte[] Name, byte[] Value)[] headers,
+        CancellationToken cancellationToken)
     {
         var url = GitHubUrls.TreeApiUrl(in _repo);
         Uri endpoint = new(url.Value, UriKind.Absolute);
         using HttpRequestMessage request = new(HttpMethod.Get, endpoint);
         for (var i = 0; i < headers.Length; i++)
         {
-            request.Headers.TryAddWithoutValidation(Encoding.UTF8.GetString(headers[i].Name), Encoding.UTF8.GetString(headers[i].Value));
+            request.Headers.TryAddWithoutValidation(
+                Encoding.UTF8.GetString(headers[i].Name),
+                Encoding.UTF8.GetString(headers[i].Value));
         }
 
         try
@@ -141,7 +161,9 @@ public sealed class GitHubContentLoader : IContentLoader
         catch (HttpRequestException ex)
         {
             ContentLoaderLoggingHelper.LogFetchFailed(_logger, "github", url, ex.Message);
-            throw new ContentLoaderException(StringCompose.Concat("GitHub tree request to ", url, " failed: ", ex.Message), ex);
+            throw new ContentLoaderException(
+                StringCompose.Concat("GitHub tree request to ", url, " failed: ", ex.Message),
+                ex);
         }
     }
 }

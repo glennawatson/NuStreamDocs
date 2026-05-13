@@ -34,7 +34,7 @@ public class BoundedCacheTests
     public async Task TryGetEvictsAgedEntry()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), equalityComparer: null, timeProvider: time);
+        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), null, time);
         cache.Set("k", 42);
 
         time.Advance(TimeSpan.FromSeconds(6));
@@ -48,7 +48,7 @@ public class BoundedCacheTests
     public async Task TryGetReturnsFreshEntry()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), equalityComparer: null, timeProvider: time);
+        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), null, time);
         cache.Set("k", 7);
         time.Advance(TimeSpan.FromSeconds(2));
 
@@ -62,7 +62,7 @@ public class BoundedCacheTests
     public async Task CompactRemovesAgedEntries()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), equalityComparer: null, timeProvider: time);
+        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), null, time);
         cache.Set("a", 1);
         cache.Set("b", 2);
         time.Advance(TimeSpan.FromSeconds(3));
@@ -82,12 +82,12 @@ public class BoundedCacheTests
     public async Task SetRefreshesExistingEntry()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(2, TimeSpan.FromSeconds(5), equalityComparer: null, timeProvider: time);
+        BoundedCache<string, int> cache = new(2, TimeSpan.FromSeconds(5), null, time);
         cache.Set("a", 1);
         cache.Set("b", 2);
         time.Advance(TimeSpan.FromSeconds(4));
         cache.Set("a", 11); // refresh a; b should now be LRU
-        cache.Set("c", 3);  // pushes b out
+        cache.Set("c", 3); // pushes b out
 
         await Assert.That(cache.TryGet("b", out _)).IsFalse();
         await Assert.That(cache.TryGet("a", out var a)).IsTrue();
@@ -152,7 +152,7 @@ public class BoundedCacheTests
     public async Task CompactWithFreshEntriesNoOp()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromMinutes(10), equalityComparer: null, timeProvider: time);
+        BoundedCache<string, int> cache = new(8, TimeSpan.FromMinutes(10), null, time);
         cache.Set("k", 1);
         await Assert.That(cache.Compact(time.GetUtcNow())).IsEqualTo(0);
         await Assert.That(cache.Count).IsEqualTo(1);
@@ -176,7 +176,7 @@ public class BoundedCacheTests
     [Test]
     public async Task CustomComparerUsedForLookup()
     {
-        BoundedCache<string, int> cache = new(4, TimeSpan.FromMinutes(1), StringComparer.OrdinalIgnoreCase, timeProvider: null);
+        BoundedCache<string, int> cache = new(4, TimeSpan.FromMinutes(1), StringComparer.OrdinalIgnoreCase, null);
         cache.Set("Key", 7);
         await Assert.That(cache.TryGet("KEY", out var v)).IsTrue();
         await Assert.That(v).IsEqualTo(7);

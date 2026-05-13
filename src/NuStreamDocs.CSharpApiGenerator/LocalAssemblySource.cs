@@ -22,7 +22,8 @@ internal sealed record LocalAssemblySource(
     public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
     /// <inheritdoc/>
-    public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

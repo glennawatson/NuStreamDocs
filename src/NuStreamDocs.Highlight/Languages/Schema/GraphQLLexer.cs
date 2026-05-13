@@ -30,7 +30,8 @@ public static class GraphQLLexer
         "type scalar enum interface union input"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated("true false null"u8);
 
     /// <summary>First-byte set for the <c>$variable</c> / <c>@directive</c> sigils.</summary>
     private static readonly SearchValues<byte> SigilFirst = SearchValues.Create("$@"u8);

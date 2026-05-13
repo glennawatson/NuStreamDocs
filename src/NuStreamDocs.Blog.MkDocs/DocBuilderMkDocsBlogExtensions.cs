@@ -13,18 +13,14 @@ public static class DocBuilderMkDocsBlogExtensions
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMkDocsBlog(this DocBuilder builder, MkDocsBlogOptions options)
-    {
-        return builder.UsePlugin(new MkDocsBlogPlugin(options));
-    }
+    public static DocBuilder UseMkDocsBlog(this DocBuilder builder, MkDocsBlogOptions options) =>
+        builder.UsePlugin(new MkDocsBlogPlugin(options));
 
     /// <summary>Registers <see cref="MkDocsBlogPlugin"/> with options and a logger.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMkDocsBlog(this DocBuilder builder, MkDocsBlogOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new MkDocsBlogPlugin(options, logger));
-    }
+    public static DocBuilder UseMkDocsBlog(this DocBuilder builder, MkDocsBlogOptions options, ILogger logger) =>
+        builder.UsePlugin(new MkDocsBlogPlugin(options, logger));
 }

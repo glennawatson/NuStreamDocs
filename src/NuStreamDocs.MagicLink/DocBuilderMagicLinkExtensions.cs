@@ -14,17 +14,12 @@ public static class DocBuilderMagicLinkExtensions
     /// <summary>Registers <see cref="MagicLinkPlugin"/> with default (URL-only) settings.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMagicLink(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new MagicLinkPlugin());
-    }
+    public static DocBuilder UseMagicLink(this DocBuilder builder) => builder.UsePlugin(new MagicLinkPlugin());
 
     /// <summary>Registers <see cref="MagicLinkPlugin"/> with the supplied options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="options">Options controlling GitHub-shortref expansion.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMagicLink(this DocBuilder builder, MagicLinkOptions options)
-    {
-        return builder.UsePlugin(new MagicLinkPlugin(options));
-    }
+    public static DocBuilder UseMagicLink(this DocBuilder builder, MagicLinkOptions options) =>
+        builder.UsePlugin(new MagicLinkPlugin(options));
 }

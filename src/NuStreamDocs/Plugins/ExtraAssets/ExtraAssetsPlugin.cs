@@ -40,17 +40,11 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
 
     /// <summary>Appends a CSS source. Called by the builder API; folds onto the existing instance when one is already registered.</summary>
     /// <param name="source">Source to add.</param>
-    public void AddCss(ExtraAssetSource source)
-    {
-        _cssSources.Add(source);
-    }
+    public void AddCss(ExtraAssetSource source) => _cssSources.Add(source);
 
     /// <summary>Appends a JS source. Called by the builder API; folds onto the existing instance when one is already registered.</summary>
     /// <param name="source">Source to add.</param>
-    public void AddJs(ExtraAssetSource source)
-    {
-        _jsSources.Add(source);
-    }
+    public void AddJs(ExtraAssetSource source) => _jsSources.Add(source);
 
     /// <inheritdoc/>
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)

@@ -43,7 +43,11 @@ public sealed class PluginTimingTable
             throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName));
         }
 
-        _ticks.AddOrUpdate(pluginName, static (_, ticks) => ticks, static (_, prev, ticks) => prev + ticks, elapsedTicks);
+        _ticks.AddOrUpdate(
+            pluginName,
+            static (_, ticks) => ticks,
+            static (_, prev, ticks) => prev + ticks,
+            elapsedTicks);
     }
 
     /// <summary>Writes the per-plugin total time to <paramref name="logger"/> sorted descending; sub-significant entries drop to Debug.</summary>
@@ -102,6 +106,7 @@ public sealed class PluginTimingTable
             ByteArrayComparer.Instance.Equals(PluginName, other.PluginName);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => HashCode.Combine(_start, Table, ByteArrayComparer.Instance.GetHashCode(PluginName));
+        public override int GetHashCode() =>
+            HashCode.Combine(_start, Table, ByteArrayComparer.Instance.GetHashCode(PluginName));
     }
 }

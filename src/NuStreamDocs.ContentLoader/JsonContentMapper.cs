@@ -5,7 +5,6 @@
 using System.Buffers;
 using System.Text;
 using System.Text.Json;
-using NuStreamDocs.Common;
 using NuStreamDocs.ContentLoader.Logging;
 using NuStreamDocs.Plugins;
 
@@ -26,14 +25,18 @@ internal static class JsonContentMapper
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The produced pages, in document order.</returns>
     /// <exception cref="ContentLoaderException">When the JSON is malformed or the route template is unbalanced.</exception>
-    public static SyntheticPage[] Map(byte[] json, ContentMapping mapping, ReadOnlySpan<byte> loaderName, ILogger logger)
+    public static SyntheticPage[] Map(
+        byte[] json,
+        ContentMapping mapping,
+        ReadOnlySpan<byte> loaderName,
+        ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(json);
         ArgumentNullException.ThrowIfNull(mapping);
         mapping.Validate();
 
         var template = RouteTemplate.Parse(mapping.RouteTemplate)
-            ?? throw new ContentLoaderException("Route template has an unclosed '{' placeholder.");
+                       ?? throw new ContentLoaderException("Route template has an unclosed '{' placeholder.");
         var name = Encoding.UTF8.GetString(loaderName);
         var routeTemplateText = Encoding.UTF8.GetString(mapping.RouteTemplate);
 
@@ -43,7 +46,10 @@ internal static class JsonContentMapper
             Utf8JsonReader reader = new(json);
             if (!AdvanceToCollection(ref reader, mapping.CollectionPointer))
             {
-                ContentLoaderLoggingHelper.LogCollectionPointerMissed(logger, name, Encoding.UTF8.GetString(mapping.CollectionPointer));
+                ContentLoaderLoggingHelper.LogCollectionPointerMissed(
+                    logger,
+                    name,
+                    Encoding.UTF8.GetString(mapping.CollectionPointer));
                 return [];
             }
 
@@ -156,7 +162,12 @@ internal static class JsonContentMapper
     /// <param name="buffers">Reused output buffers.</param>
     /// <param name="page">On success, the built page.</param>
     /// <returns><see langword="true"/> when every route placeholder resolved to a scalar.</returns>
-    private static bool TryBuildPage(ReadOnlySpan<byte> entrySpan, RouteTemplate template, ContentMapping mapping, RenderBuffers buffers, out SyntheticPage page)
+    private static bool TryBuildPage(
+        ReadOnlySpan<byte> entrySpan,
+        RouteTemplate template,
+        ContentMapping mapping,
+        RenderBuffers buffers,
+        out SyntheticPage page)
     {
         page = default;
         buffers.Reset();
@@ -173,7 +184,7 @@ internal static class JsonContentMapper
         markdown.Write("---\n\n"u8);
         markdown.Write(buffers.Body.WrittenSpan);
         EnsureTrailingNewline(markdown);
-        page = new(new FilePath(Encoding.UTF8.GetString(buffers.Route.WrittenSpan)), markdown.WrittenSpan.ToArray());
+        page = new(new(Encoding.UTF8.GetString(buffers.Route.WrittenSpan)), markdown.WrittenSpan.ToArray());
         return true;
     }
 
@@ -182,7 +193,11 @@ internal static class JsonContentMapper
     /// <param name="template">Parsed route template.</param>
     /// <param name="mapping">Field mapping.</param>
     /// <param name="buffers">Reused output buffers.</param>
-    private static void ScanEntry(ReadOnlySpan<byte> entrySpan, RouteTemplate template, ContentMapping mapping, RenderBuffers buffers)
+    private static void ScanEntry(
+        ReadOnlySpan<byte> entrySpan,
+        RouteTemplate template,
+        ContentMapping mapping,
+        RenderBuffers buffers)
     {
         Utf8JsonReader reader = new(entrySpan);
         if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
@@ -280,7 +295,7 @@ internal static class JsonContentMapper
     private static void CaptureScalarSlot(scoped ref Utf8JsonReader reader, int slot, RenderBuffers buffers)
     {
         var isScalar = reader.TokenType is JsonTokenType.Number or JsonTokenType.True or JsonTokenType.False
-            || (reader.TokenType == JsonTokenType.String && !reader.ValueIsEscaped);
+                       || (reader.TokenType == JsonTokenType.String && !reader.ValueIsEscaped);
         if (!isScalar)
         {
             return;
@@ -351,13 +366,13 @@ internal static class JsonContentMapper
                 var open = Array.IndexOf(template, (byte)'{', i);
                 if (open < 0)
                 {
-                    parts.Add(new(IsPlaceholder: false, template[i..], Slot: -1));
+                    parts.Add(new(false, template[i..], -1));
                     break;
                 }
 
                 if (open > i)
                 {
-                    parts.Add(new(IsPlaceholder: false, template[i..open], Slot: -1));
+                    parts.Add(new(false, template[i..open], -1));
                 }
 
                 var close = Array.IndexOf(template, (byte)'}', open + 1);
@@ -367,7 +382,7 @@ internal static class JsonContentMapper
                 }
 
                 var fieldName = template[(open + 1)..close];
-                parts.Add(new(IsPlaceholder: true, fieldName, SlotFor(fieldNames, fieldName)));
+                parts.Add(new(true, fieldName, SlotFor(fieldNames, fieldName)));
                 i = close + 1;
             }
 

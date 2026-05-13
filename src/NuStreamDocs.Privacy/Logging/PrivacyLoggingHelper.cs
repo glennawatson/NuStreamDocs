@@ -11,7 +11,8 @@ internal static partial class PrivacyLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="assetCount">Distinct external assets discovered.</param>
     /// <param name="outputRoot">Site output root.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy localization starting: {AssetCount} external asset(s) for {OutputRoot}")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Privacy localization starting: {AssetCount} external asset(s) for {OutputRoot}")]
     public static partial void LogLocalizationStart(ILogger logger, int assetCount, string outputRoot);
 
     /// <summary>Logs a successful per-asset download.</summary>
@@ -40,14 +41,16 @@ internal static partial class PrivacyLoggingHelper
     /// <param name="localizedCount">Assets successfully written to the output root.</param>
     /// <param name="failedCount">Assets that exhausted retries.</param>
     /// <param name="cachedCount">Assets satisfied from the on-disk cache.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy finalize: {LocalizedCount} localized, {FailedCount} failed, {CachedCount} cached")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Privacy finalize: {LocalizedCount} localized, {FailedCount} failed, {CachedCount} cached")]
     public static partial void LogFinalizeSummary(ILogger logger, int localizedCount, int failedCount, int cachedCount);
 
     /// <summary>Logs an audit-mode manifest write.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="manifestPath">Path the audit manifest was written to.</param>
     /// <param name="urlCount">Number of URLs recorded.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy audit manifest written to {ManifestPath} with {UrlCount} URL(s)")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Privacy audit manifest written to {ManifestPath} with {UrlCount} URL(s)")]
     public static partial void LogAuditWrite(ILogger logger, string manifestPath, int urlCount);
 
     /// <summary>Logs the start of one download iteration with the pending count.</summary>
@@ -55,7 +58,8 @@ internal static partial class PrivacyLoggingHelper
     /// <param name="iteration">1-based iteration number.</param>
     /// <param name="pendingCount">URLs queued for this iteration.</param>
     /// <param name="parallelism">Effective parallel-download cap.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy iteration {Iteration}: {PendingCount} URL(s) queued (parallelism={Parallelism})")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Privacy iteration {Iteration}: {PendingCount} URL(s) queued (parallelism={Parallelism})")]
     public static partial void LogIterationStart(ILogger logger, int iteration, int pendingCount, int parallelism);
 
     /// <summary>Logs the completion of one download iteration with the elapsed time and the per-iteration success/failure split.</summary>
@@ -64,14 +68,18 @@ internal static partial class PrivacyLoggingHelper
     /// <param name="processedCount">URLs processed.</param>
     /// <param name="failedCount">URLs that exhausted retries.</param>
     /// <param name="elapsedSeconds">Iteration duration in seconds (millisecond resolution).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy iteration {Iteration} complete: {ProcessedCount} processed, {FailedCount} failed in {ElapsedSeconds:F3}s")]
-    public static partial void LogIterationComplete(ILogger logger, int iteration, int processedCount, int failedCount, double elapsedSeconds);
+    [LoggerMessage(Level = LogLevel.Information,
+        Message =
+            "Privacy iteration {Iteration} complete: {ProcessedCount} processed, {FailedCount} failed in {ElapsedSeconds:F3}s")]
+    public static partial void LogIterationComplete(ILogger logger, int iteration, int processedCount, int failedCount,
+        double elapsedSeconds);
 
     /// <summary>Logs in-flight progress mid-iteration so a slow batch shows steady output instead of stalling silently.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="iteration">1-based iteration number.</param>
     /// <param name="completedCount">URLs that finished (success or failure) so far.</param>
     /// <param name="totalCount">Total URLs in this iteration.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Privacy iteration {Iteration} progress: {CompletedCount}/{TotalCount}")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Privacy iteration {Iteration} progress: {CompletedCount}/{TotalCount}")]
     public static partial void LogIterationProgress(ILogger logger, int iteration, int completedCount, int totalCount);
 }

@@ -27,46 +27,51 @@ public static class SqliteOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="keys">Frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions WithSearchableFrontmatterKeys(this in SqliteOptions options, params ApiCompatString[] keys) =>
+    public static SqliteOptions WithSearchableFrontmatterKeys(
+        this in SqliteOptions options,
+        params ApiCompatString[] keys) =>
         options with { SearchableFrontmatterKeys = keys.EncodeUtf8Array() };
 
     /// <summary>Replaces the searchable-frontmatter-key list with the supplied UTF-8 key bytes.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Frontmatter key bytes.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions WithSearchableFrontmatterKeys(this in SqliteOptions options, params byte[][] keys)
-    {
-        return options with { SearchableFrontmatterKeys = keys };
-    }
+    public static SqliteOptions WithSearchableFrontmatterKeys(this in SqliteOptions options, params byte[][] keys) =>
+        options with { SearchableFrontmatterKeys = keys };
 
     /// <summary>Appends <paramref name="keys"/> to the existing searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Additional frontmatter key strings.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions AddSearchableFrontmatterKeys(this in SqliteOptions options, params ApiCompatString[] keys)
-    {
-        return keys.Length is 0
+    public static SqliteOptions AddSearchableFrontmatterKeys(
+        this in SqliteOptions options,
+        params ApiCompatString[] keys) =>
+        keys.Length is 0
             ? options
-            : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array()) };
-    }
+            : options with
+            {
+                SearchableFrontmatterKeys =
+                ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys.EncodeUtf8Array())
+            };
 
     /// <summary>Appends UTF-8 <paramref name="keys"/> to the existing searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="keys">Additional frontmatter key bytes.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions AddSearchableFrontmatterKeys(this in SqliteOptions options, params byte[][] keys)
-    {
-        return keys.Length is 0
+    public static SqliteOptions AddSearchableFrontmatterKeys(this in SqliteOptions options, params byte[][] keys) =>
+        keys.Length is 0
             ? options
             : options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, keys) };
-    }
 
     /// <summary>Appends a single UTF-8 frontmatter key (e.g. a <c>"..."u8</c> literal) to the existing list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="key">UTF-8 frontmatter-key bytes.</param>
     /// <returns>The updated options.</returns>
     public static SqliteOptions AddSearchableFrontmatterKeys(this in SqliteOptions options, ReadOnlySpan<byte> key) =>
-        options with { SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, [key.ToArray()]) };
+        options with
+        {
+            SearchableFrontmatterKeys = ArrayJoiner.Concat(options.SearchableFrontmatterKeys, [key.ToArray()])
+        };
 
     /// <summary>Empties the searchable-frontmatter-key list.</summary>
     /// <param name="options">Source options.</param>
@@ -78,39 +83,39 @@ public static class SqliteOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="prefixes">Root-relative URL prefix strings (e.g. <c>"api/"</c>).</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions WithExcludePathPrefixes(this in SqliteOptions options, params ApiCompatString[] prefixes) =>
+    public static SqliteOptions WithExcludePathPrefixes(
+        this in SqliteOptions options,
+        params ApiCompatString[] prefixes) =>
         options with { ExcludePathPrefixes = prefixes.EncodeUtf8Array() };
 
     /// <summary>Replaces the excluded-prefix list with the supplied UTF-8 prefix bytes.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="prefixes">UTF-8 prefix bytes.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions WithExcludePathPrefixes(this in SqliteOptions options, params byte[][] prefixes)
-    {
-        return options with { ExcludePathPrefixes = prefixes };
-    }
+    public static SqliteOptions WithExcludePathPrefixes(this in SqliteOptions options, params byte[][] prefixes) =>
+        options with { ExcludePathPrefixes = prefixes };
 
     /// <summary>Appends <paramref name="prefixes"/> to the existing excluded-prefix list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="prefixes">Additional prefix strings.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions AddExcludePathPrefixes(this in SqliteOptions options, params ApiCompatString[] prefixes)
-    {
-        return prefixes.Length is 0
+    public static SqliteOptions
+        AddExcludePathPrefixes(this in SqliteOptions options, params ApiCompatString[] prefixes) =>
+        prefixes.Length is 0
             ? options
-            : options with { ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, prefixes.EncodeUtf8Array()) };
-    }
+            : options with
+            {
+                ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, prefixes.EncodeUtf8Array())
+            };
 
     /// <summary>Appends UTF-8 <paramref name="prefixes"/> to the existing excluded-prefix list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="prefixes">Additional prefix bytes.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions AddExcludePathPrefixes(this in SqliteOptions options, params byte[][] prefixes)
-    {
-        return prefixes.Length is 0
+    public static SqliteOptions AddExcludePathPrefixes(this in SqliteOptions options, params byte[][] prefixes) =>
+        prefixes.Length is 0
             ? options
             : options with { ExcludePathPrefixes = ArrayJoiner.Concat(options.ExcludePathPrefixes, prefixes) };
-    }
 
     /// <summary>Appends a single UTF-8 prefix (e.g. a <c>"..."u8</c> literal) to the existing list.</summary>
     /// <param name="options">Source options.</param>
@@ -143,10 +148,8 @@ public static class SqliteOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="value">UTF-8 section-priority bytes.</param>
     /// <returns>The updated options.</returns>
-    public static SqliteOptions WithSectionPriorities(this in SqliteOptions options, byte[] value)
-    {
-        return options with { SectionPriorities = value };
-    }
+    public static SqliteOptions WithSectionPriorities(this in SqliteOptions options, byte[] value) =>
+        options with { SectionPriorities = value };
 
     /// <summary>Replaces the section-priority string with the supplied UTF-8 span (e.g. a <c>"..."u8</c> literal).</summary>
     /// <param name="options">Source options.</param>

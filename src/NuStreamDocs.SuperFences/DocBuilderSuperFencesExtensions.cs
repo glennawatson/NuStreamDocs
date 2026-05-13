@@ -12,8 +12,5 @@ public static class DocBuilderSuperFencesExtensions
     /// <summary>Registers <see cref="SuperFencesPlugin"/> — the custom-fence dispatcher — onto <paramref name="builder"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseSuperFences(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new SuperFencesPlugin());
-    }
+    public static DocBuilder UseSuperFences(this DocBuilder builder) => builder.UsePlugin(new SuperFencesPlugin());
 }

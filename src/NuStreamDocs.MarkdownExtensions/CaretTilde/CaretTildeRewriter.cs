@@ -28,7 +28,11 @@ internal static class CaretTildeRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True when a substitution was emitted.</returns>
-    private static bool TryRewriteMarker(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteMarker(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var marker = source[offset];

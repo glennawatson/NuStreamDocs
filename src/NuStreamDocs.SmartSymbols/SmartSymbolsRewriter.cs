@@ -83,7 +83,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Number of input bytes the match covered.</param>
     /// <returns>True when a substitution fired.</returns>
-    private static bool TrySubstitute(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TrySubstitute(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var first = NormalizeFirstByte(source[offset]);
@@ -114,7 +118,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryPlusOrEquals(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed) =>
+    private static bool TryPlusOrEquals(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed) =>
         source[offset] is (byte)'+'
             ? TryPlusMinus(source, offset, writer, out consumed)
             : TryEqualsForm(source, offset, writer, out consumed);
@@ -125,7 +133,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryDashOrLt(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed) =>
+    private static bool TryDashOrLt(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed) =>
         source[offset] is (byte)'-'
             ? TryArrowFromDash(source, offset, writer, out consumed)
             : TryArrowFromLt(source, offset, writer, out consumed);
@@ -136,7 +148,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryNumericFraction(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed) =>
+    private static bool TryNumericFraction(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed) =>
         source[offset] is (byte)'1'
             ? TryFractionStartingOne(source, offset, writer, out consumed)
             : TryThreeQuarters(source, offset, writer, out consumed);
@@ -147,7 +163,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryParenSymbol(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryParenSymbol(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var letter = TryParenLetter(source, offset);
@@ -199,7 +219,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryPlusMinus(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryPlusMinus(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (offset + SuffixSecondByteOffset >= source.Length
@@ -220,7 +244,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryEqualsForm(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryEqualsForm(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (offset + SuffixSecondByteOffset >= source.Length)
@@ -251,7 +279,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryArrowFromDash(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryArrowFromDash(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (offset + SuffixSecondByteOffset >= source.Length
@@ -272,7 +304,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryArrowFromLt(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryArrowFromLt(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (offset + SuffixSecondByteOffset >= source.Length)
@@ -332,7 +368,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryFractionStartingOne(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryFractionStartingOne(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var glyph = source[offset..] switch
@@ -358,7 +398,11 @@ internal static class SmartSymbolsRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryThreeQuarters(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryThreeQuarters(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (!AsciiWordBoundary.TryMatchBounded(source, offset, "3/4"u8))

@@ -18,7 +18,7 @@ public class FontCssWriterTests
         FontCssWriter.ResourceCss[] resources =
         [
             new(400, FontStyle.Normal, [.. "U+0000-00FF"u8], [.. "assets/fonts/aaaa.woff2"u8]),
-            new(700, FontStyle.Italic, [], [.. "assets/fonts/bbbb.woff2"u8]),
+            new(700, FontStyle.Italic, [], [.. "assets/fonts/bbbb.woff2"u8])
         ];
         FontCssWriter.FaceCss[] faces =
         [
@@ -29,18 +29,22 @@ public class FontCssWriterTests
                 GenericFontFamily.SansSerif,
                 [[.. "--md-text-font"u8]],
                 new FontMetrics(1000, 950, -250, 0, 500, 700),
-                resources),
+                resources)
         ];
 
         ArrayBufferWriter<byte> sink = new();
         FontCssWriter.Write(faces, sink);
         var css = Encoding.UTF8.GetString(sink.WrittenSpan);
 
-        await Assert.That(css).Contains("@font-face{font-family:\"Source Sans 3\";font-style:normal;font-weight:400;unicode-range:U+0000-00FF;");
+        await Assert.That(css)
+            .Contains(
+                "@font-face{font-family:\"Source Sans 3\";font-style:normal;font-weight:400;unicode-range:U+0000-00FF;");
         await Assert.That(css).Contains("font-display:swap;src:url(\"/assets/fonts/aaaa.woff2\") format(\"woff2\");}");
-        await Assert.That(css).Contains("font-style:italic;font-weight:700;font-display:swap;src:url(\"/assets/fonts/bbbb.woff2\")");
+        await Assert.That(css)
+            .Contains("font-style:italic;font-weight:700;font-display:swap;src:url(\"/assets/fonts/bbbb.woff2\")");
         await Assert.That(css).Contains("font-family:\"Source Sans 3 fallback\"");
-        await Assert.That(css).Contains("--nstd-font-source-sans-3:\"Source Sans 3\",\"Source Sans 3 fallback\",sans-serif;");
+        await Assert.That(css)
+            .Contains("--nstd-font-source-sans-3:\"Source Sans 3\",\"Source Sans 3 fallback\",sans-serif;");
         await Assert.That(css).Contains("--md-text-font:var(--nstd-font-source-sans-3);");
     }
 
@@ -58,7 +62,7 @@ public class FontCssWriterTests
                 GenericFontFamily.SansSerif,
                 [],
                 null,
-                [new(400, FontStyle.Normal, [], [.. "assets/fonts/cccc.woff2"u8])]),
+                [new(400, FontStyle.Normal, [], [.. "assets/fonts/cccc.woff2"u8])])
         ];
         ArrayBufferWriter<byte> sink = new();
         FontCssWriter.Write(faces, sink);

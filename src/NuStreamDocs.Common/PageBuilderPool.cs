@@ -68,14 +68,14 @@ public static class PageBuilderPool
 
         // Cross-thread path: drain the shared queue when an async continuation landed
         // a writer on a different thread than the one now Renting.
-        if (SharedPool.TryDequeue(out var shared))
+        if (!SharedPool.TryDequeue(out var shared))
         {
-            Interlocked.Decrement(ref _sharedPoolCount);
-            shared.ResetWrittenCount();
-            return new(shared);
+            return new(new(hintCapacity));
         }
 
-        return new(new(hintCapacity));
+        Interlocked.Decrement(ref _sharedPoolCount);
+        shared.ResetWrittenCount();
+        return new(shared);
     }
 
     /// <summary>Returns <paramref name="writer"/> to the pool.</summary>

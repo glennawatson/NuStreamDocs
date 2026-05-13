@@ -49,7 +49,8 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
 
         var inputRoot = context.InputRoot;
         var tagsDir = inputRoot / _options.OutputSubdirectory;
-        var collected = await CollectAsync(inputRoot, tagsDir, context.UseDirectoryUrls, cancellationToken).ConfigureAwait(false);
+        var collected = await CollectAsync(inputRoot, tagsDir, context.UseDirectoryUrls, cancellationToken)
+            .ConfigureAwait(false);
         if (collected.Count is 0)
         {
             return;
@@ -71,7 +72,9 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             writer.ResetWrittenCount();
             WriteTagMarkdown(writer, pair.Key, pair.Value);
             var slug = TagsCommon.SlugifyTag(pair.Key);
-            context.SyntheticPages.Add(new(virtualDir.UrlJoin(TagsCommon.BuildSlugFileName(slug, ".md"u8)), writer.WrittenSpan.ToArray()));
+            context.SyntheticPages.Add(new(
+                virtualDir.UrlJoin(TagsCommon.BuildSlugFileName(slug, ".md"u8)),
+                writer.WrittenSpan.ToArray()));
         }
     }
 
@@ -108,7 +111,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
 
             var relative = (FilePath)Path.GetRelativePath(inputRoot.Value, path.Value);
             var url = Utf8MarkdownUrl.FromRelativePath(relative, useDirectoryUrls);
-            var title = ExtractMarkdownTitle(bytes, fallback: url);
+            var title = ExtractMarkdownTitle(bytes, url);
 
             for (var t = 0; t < tags.Length; t++)
             {
@@ -190,7 +193,9 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
     /// <summary>Writes the all-tags landing markdown into <paramref name="writer"/>.</summary>
     /// <param name="writer">Target sink.</param>
     /// <param name="grouped">Tag → page list, sorted.</param>
-    private static void WriteIndexMarkdown(IBufferWriter<byte> writer, SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> grouped)
+    private static void WriteIndexMarkdown(
+        IBufferWriter<byte> writer,
+        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> grouped)
     {
         writer.Write("# Tags\n\n"u8);
         foreach (var pair in grouped)

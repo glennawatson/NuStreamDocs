@@ -99,7 +99,8 @@ public class AttrListRewriterTests
     public async Task SpaceFormLiftsClass()
     {
         var output = Rewrite("<p><a href=\"/get-started/\">Get started</a>{ .md-button .md-button--primary }</p>");
-        await Assert.That(output).Contains("<a href=\"/get-started/\" class=\"md-button md-button--primary\">Get started</a>");
+        await Assert.That(output)
+            .Contains("<a href=\"/get-started/\" class=\"md-button md-button--primary\">Get started</a>");
         await Assert.That(output).DoesNotContain("{ .md-button");
     }
 
@@ -160,8 +161,12 @@ public class AttrListRewriterTests
     [Test]
     public async Task HashShorthandLiftsBlockIdWithParens()
     {
-        var output = Rewrite("<p><a href=\"\"></a>{#M:Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.WithEncryptedSqliteProvider(Akavache.IAkavacheBuilder)}</p>");
-        await Assert.That(output).Contains("id=\"M:Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.WithEncryptedSqliteProvider(Akavache.IAkavacheBuilder)\"");
+        var output =
+            Rewrite(
+                "<p><a href=\"\"></a>{#M:Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.WithEncryptedSqliteProvider(Akavache.IAkavacheBuilder)}</p>");
+        await Assert.That(output)
+            .Contains(
+                "id=\"M:Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.WithEncryptedSqliteProvider(Akavache.IAkavacheBuilder)\"");
         await Assert.That(output).DoesNotContain("{#M:");
     }
 
@@ -221,7 +226,8 @@ public class AttrListRewriterTests
     [Test]
     public async Task QuotedKvLiftsThroughAltWithEscapedHtml()
     {
-        const string Source = "<p><img src=\"x.png\" alt=\"&lt;abbr title=&quot;Foo&quot;&gt;F&lt;/abbr&gt; structure\">{ width=\"700\" }</p>";
+        const string Source =
+            "<p><img src=\"x.png\" alt=\"&lt;abbr title=&quot;Foo&quot;&gt;F&lt;/abbr&gt; structure\">{ width=\"700\" }</p>";
         var output = Rewrite(Source);
         await Assert.That(output).Contains("width=\"700\"");
         await Assert.That(output).DoesNotContain("width=\"&quot;");

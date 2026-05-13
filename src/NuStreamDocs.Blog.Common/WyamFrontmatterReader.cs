@@ -73,7 +73,15 @@ public static class WyamFrontmatterReader
 
         return bodyStart < 0
             ? new([], [], [], [], default, [], false, 0)
-            : new(state.Title, state.Lead, state.Description, state.Author, state.Published, [.. state.Tags], state.IsBlog, bodyStart);
+            : new(
+                state.Title,
+                state.Lead,
+                state.Description,
+                state.Author,
+                state.Published,
+                [.. state.Tags],
+                state.IsBlog,
+                bodyStart);
     }
 
     /// <summary>Applies one frontmatter line to the running parse state.</summary>
@@ -162,7 +170,12 @@ public static class WyamFrontmatterReader
     {
         Span<char> chars = stackalloc char[value.Length];
         var written = Encoding.UTF8.GetChars(value, chars);
-        return DateOnly.TryParseExact(chars[..written], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed);
+        return DateOnly.TryParseExact(
+            chars[..written],
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out parsed);
     }
 
     /// <summary>Returns true when <paramref name="markdown"/> starts with a frontmatter fence.</summary>

@@ -56,7 +56,8 @@ public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPl
     }
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> html) => _handlers is not null && _handlers.Count is not 0 && SuperFencesDispatcher.NeedsDispatch(html);
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => _handlers is not null && _handlers.Count is not 0 &&
+                                                         SuperFencesDispatcher.NeedsDispatch(html);
 
     /// <inheritdoc/>
     public void PostRender(in PagePostRenderContext context)

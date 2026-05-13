@@ -33,7 +33,7 @@ public static class VersionsManifest
     public static VersionEntry[] ReadFromUtf8(ReadOnlySpan<byte> bytes)
     {
         List<VersionEntry> entries = new(8);
-        Utf8JsonReader reader = new(bytes, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(bytes, true, default);
         if (!reader.Read() || reader.TokenType != JsonTokenType.StartArray)
         {
             return [];

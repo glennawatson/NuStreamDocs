@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Templating;
 
 namespace NuStreamDocs.Theme.Material.Tests;
@@ -32,7 +33,7 @@ public class MaterialThemeTests
     {
         var theme = MaterialTheme.Load();
         TemplateData data = new(
-            new(NuStreamDocs.Common.ByteArrayComparer.Instance)
+            new(ByteArrayComparer.Instance)
             {
                 [[.. "language"u8]] = (byte[])[.. "en"u8],
                 [[.. "site_name"u8]] = (byte[])[.. "Test Site"u8],
@@ -42,7 +43,7 @@ public class MaterialThemeTests
                 [[.. "asset_root"u8]] = (byte[])[.. "/assets"u8],
                 [[.. "copyright"u8]] = (byte[])[.. ""u8]
             },
-            sections: null);
+            null);
 
         ArrayBufferWriter<byte> writer = new();
         theme.Page.Render(data, theme.Partials, writer);

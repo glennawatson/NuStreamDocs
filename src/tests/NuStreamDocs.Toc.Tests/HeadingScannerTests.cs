@@ -72,7 +72,10 @@ public class HeadingScannerTests
     [Test]
     public async Task SkipsHeadingsInsideAnchor()
     {
-        byte[] html = [.. "<div class=\"card\"><a href=\"page/\"><h3>Card Title</h3><p>body</p></a></div><h2>Real Section</h2>"u8];
+        byte[] html =
+        [
+            .. "<div class=\"card\"><a href=\"page/\"><h3>Card Title</h3><p>body</p></a></div><h2>Real Section</h2>"u8
+        ];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
         await Assert.That(headings[0].Level).IsEqualTo(2);

@@ -40,7 +40,8 @@ public static class DockerfileLexer
         [.. "shell"u8]);
 
     /// <summary>First-byte dispatch set for the verb rule.</summary>
-    private static readonly SearchValues<byte> InstructionFirst = SearchValues.Create("ABCDEFHLMORSUVWabcdefhlmorsuvw"u8);
+    private static readonly SearchValues<byte> InstructionFirst =
+        SearchValues.Create("ABCDEFHLMORSUVWabcdefhlmorsuvw"u8);
 
     /// <summary>First-byte set for whitespace runs.</summary>
     private static readonly SearchValues<byte> WhitespaceFirst = SearchValues.Create(" \t\r\n"u8);
@@ -66,14 +67,38 @@ public static class DockerfileLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-            new(MatchInstructionAtLineStart, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = InstructionFirst, RequiresLineStart = true },
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst },
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst },
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            },
+            new(MatchInstructionAtLineStart, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
+            {
+                FirstBytes = InstructionFirst, RequiresLineStart = true
+            },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = DoubleQuoteFirst
+            },
+            new(
+                static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
+                TokenClass.StringSingle,
+                LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst },
+            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiIdentifierStart
+            },
+            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiDigits
+            },
+            new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet),
+                TokenClass.Punctuation,
+                LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
         ];
 
         return new(LanguageRuleBuilder.BuildSingleState(rules));

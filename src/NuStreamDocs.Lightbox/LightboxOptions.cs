@@ -12,14 +12,16 @@ namespace NuStreamDocs.Lightbox;
 public sealed record LightboxOptions(byte[] StylesheetUrl, byte[] ScriptUrl, bool WrapImages, byte[] Selector)
 {
     /// <summary>Gets the default glightbox jsDelivr CSS pin.</summary>
-    public static byte[] DefaultStylesheetUrl { get; } = [.. "https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/css/glightbox.min.css"u8];
+    public static byte[] DefaultStylesheetUrl { get; } =
+        [.. "https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/css/glightbox.min.css"u8];
 
     /// <summary>Gets the default glightbox jsDelivr JS pin.</summary>
-    public static byte[] DefaultScriptUrl { get; } = [.. "https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/js/glightbox.min.js"u8];
+    public static byte[] DefaultScriptUrl { get; } =
+        [.. "https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/js/glightbox.min.js"u8];
 
     /// <summary>Gets the default selector applied to lightbox-wrapped anchors.</summary>
     public static byte[] DefaultSelector { get; } = [.. "glightbox"u8];
 
     /// <summary>Gets the default options: CDN URLs, image-wrapping enabled, default selector.</summary>
-    public static LightboxOptions Default => new(DefaultStylesheetUrl, DefaultScriptUrl, WrapImages: true, DefaultSelector);
+    public static LightboxOptions Default => new(DefaultStylesheetUrl, DefaultScriptUrl, true, DefaultSelector);
 }

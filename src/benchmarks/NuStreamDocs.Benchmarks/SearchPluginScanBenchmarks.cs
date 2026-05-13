@@ -64,7 +64,8 @@ public class SearchPluginScanBenchmarks
 
         _longHtml = Encoding.UTF8.GetBytes(html.ToString());
 
-        _frontmatterSource = "---\ntags: [foo, bar]\nauthor: Glenn\nsummary: A short summary line\n---\nbody"u8.ToArray();
+        _frontmatterSource =
+            "---\ntags: [foo, bar]\nauthor: Glenn\nsummary: A short summary line\n---\nbody"u8.ToArray();
 
         _pagefindPlain = new();
         _pagefindWithFrontmatter = new(PagefindOptions.Default with

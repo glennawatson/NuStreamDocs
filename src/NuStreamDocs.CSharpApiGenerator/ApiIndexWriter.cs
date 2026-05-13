@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Buffers.Text;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
@@ -33,7 +34,11 @@ internal static class ApiIndexWriter
     /// <param name="introduction">Optional UTF-8 intro paragraph rendered between the title and the namespace list.</param>
     /// <param name="order">Optional <c>Order:</c> integer; emitted as a YAML frontmatter block at the top of the page when set.</param>
     /// <returns>The rendered UTF-8 page bytes, or an empty array when <paramref name="namespaces"/> is empty.</returns>
-    public static byte[] BuildBytes(byte[][] namespaces, ReadOnlySpan<byte> title, ReadOnlySpan<byte> introduction, int? order)
+    public static byte[] BuildBytes(
+        byte[][] namespaces,
+        ReadOnlySpan<byte> title,
+        ReadOnlySpan<byte> introduction,
+        int? order)
     {
         if (namespaces.Length is 0)
         {
@@ -75,7 +80,7 @@ internal static class ApiIndexWriter
     {
         WriteSpan(sink, "---\nOrder: "u8);
         Span<byte> digits = stackalloc byte[MaxInt32DecimalDigits];
-        if (!System.Buffers.Text.Utf8Formatter.TryFormat(order, digits, out var written))
+        if (!Utf8Formatter.TryFormat(order, digits, out var written))
         {
             // Defensive: stack span is sized for the widest int32 representation.
             throw new InvalidOperationException("Failed to format Order frontmatter value.");

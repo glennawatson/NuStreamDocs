@@ -20,5 +20,5 @@ public enum FontDisplay
     Fallback,
 
     /// <summary>Tiny block period, no swap period (<c>optional</c>) — the font is used only if it's already cached.</summary>
-    Optional,
+    Optional
 }

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.CSharpApiGenerator\NuStreamDocs.CSharpApiGenerator.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.CSharpApiGenerator\NuStreamDocs.CSharpApiGenerator.csproj"/>
   </ItemGroup>
 
 </Project>

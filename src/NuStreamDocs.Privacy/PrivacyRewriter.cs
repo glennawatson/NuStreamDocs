@@ -19,7 +19,12 @@ internal static class PrivacyRewriter
     /// <param name="filter">Host filter.</param>
     /// <param name="sink">Destination buffer; only written to when at least one pass changed the input.</param>
     /// <returns>True when bytes were written to <paramref name="sink"/>; false when no pass changed the input.</returns>
-    public static bool TryRewriteInto(ReadOnlySpan<byte> html, in PrivacyOptions options, ExternalAssetRegistry registry, HostFilter filter, IBufferWriter<byte> sink)
+    public static bool TryRewriteInto(
+        ReadOnlySpan<byte> html,
+        in PrivacyOptions options,
+        ExternalAssetRegistry registry,
+        HostFilter filter,
+        IBufferWriter<byte> sink)
     {
         using var rentalA = PageBuilderPool.Rent(html.Length);
         using var rentalB = PageBuilderPool.Rent(html.Length);
@@ -55,7 +60,11 @@ internal static class PrivacyRewriter
     /// <param name="current">Current pipeline output; updated when this stage rewrites.</param>
     /// <param name="slots">Two-buffer rotation slots.</param>
     /// <param name="changed">Tracks whether any stage has rewritten so far.</param>
-    private static void TryRunMixedContent(ReadOnlySpan<byte> originalHtml, ref ReadOnlyMemory<byte> current, ref StageBuffers slots, ref bool changed)
+    private static void TryRunMixedContent(
+        ReadOnlySpan<byte> originalHtml,
+        ref ReadOnlyMemory<byte> current,
+        ref StageBuffers slots,
+        ref bool changed)
     {
         slots.Spare.ResetWrittenCount();
         var source = changed ? current.Span : originalHtml;
@@ -75,7 +84,12 @@ internal static class PrivacyRewriter
     /// <param name="current">Current pipeline output; updated when this stage rewrites.</param>
     /// <param name="slots">Two-buffer rotation slots.</param>
     /// <param name="changed">Tracks whether any stage has rewritten so far.</param>
-    private static void TryRunAnchor(ReadOnlySpan<byte> originalHtml, in PrivacyOptions options, ref ReadOnlyMemory<byte> current, ref StageBuffers slots, ref bool changed)
+    private static void TryRunAnchor(
+        ReadOnlySpan<byte> originalHtml,
+        in PrivacyOptions options,
+        ref ReadOnlyMemory<byte> current,
+        ref StageBuffers slots,
+        ref bool changed)
     {
         slots.Spare.ResetWrittenCount();
         var source = changed ? current.Span : originalHtml;
@@ -95,7 +109,12 @@ internal static class PrivacyRewriter
     /// <param name="current">Current pipeline output; updated when this stage rewrites.</param>
     /// <param name="slots">Two-buffer rotation slots.</param>
     /// <param name="changed">Tracks whether any stage has rewritten so far.</param>
-    private static void TryRunUrlPass(ReadOnlySpan<byte> originalHtml, in UrlRewriteContext ctx, ref ReadOnlyMemory<byte> current, ref StageBuffers slots, ref bool changed)
+    private static void TryRunUrlPass(
+        ReadOnlySpan<byte> originalHtml,
+        in UrlRewriteContext ctx,
+        ref ReadOnlyMemory<byte> current,
+        ref StageBuffers slots,
+        ref bool changed)
     {
         slots.Spare.ResetWrittenCount();
         var source = changed ? current.Span : originalHtml;

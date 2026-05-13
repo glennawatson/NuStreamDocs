@@ -39,7 +39,10 @@ public static class AutorefsRewriter
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="logger">Logger that receives per-reference debug/warning events.</param>
     /// <returns>Counts of resolved and missing references across the site.</returns>
-    public static (int Resolved, int Missing) RewriteAll(in DirectoryPath outputRoot, AutorefsRegistry registry, ILogger logger)
+    public static (int Resolved, int Missing) RewriteAll(
+        in DirectoryPath outputRoot,
+        AutorefsRegistry registry,
+        ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
 
@@ -99,7 +102,7 @@ public static class AutorefsRewriter
     public static bool RewriteSpan(ReadOnlySpan<byte> source, AutorefsRegistry registry, IBufferWriter<byte> sink)
     {
         RewriteTotals totals = default;
-        return RewriteSpanCore(source, registry, sink, logger: null, sourcePage: null, ref totals);
+        return RewriteSpanCore(source, registry, sink, null, null, ref totals);
     }
 
     /// <summary>Streams a rewrite of <paramref name="source"/> into <paramref name="sink"/>, emitting per-reference log events.</summary>
@@ -126,7 +129,11 @@ public static class AutorefsRewriter
     /// <param name="registry">Registry to resolve against.</param>
     /// <param name="logger">Logger for per-reference events.</param>
     /// <param name="totals">Resolved + missing counters threaded across files.</param>
-    private static void RewriteOneLogged(in FilePath path, AutorefsRegistry registry, ILogger logger, ref RewriteTotals totals)
+    private static void RewriteOneLogged(
+        in FilePath path,
+        AutorefsRegistry registry,
+        ILogger logger,
+        ref RewriteTotals totals)
     {
         var source = File.ReadAllBytes(path.Value);
         if (source.AsSpan().IndexOf(AutorefScanner.Marker) < 0)
@@ -207,7 +214,7 @@ public static class AutorefsRewriter
                 return true;
             }
 
-            if (!registry.TryResolve(idSpan,  out var urlBytes))
+            if (!registry.TryResolve(idSpan, out var urlBytes))
             {
                 return true;
             }

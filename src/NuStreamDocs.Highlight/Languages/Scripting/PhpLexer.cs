@@ -209,8 +209,14 @@ public static class PhpLexer
         LexerRule[] frontRules =
         [
             new(MatchPhpTag, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = AngleFirst },
-            new(static slice => TokenMatchers.MatchPrefixedRun(slice, (byte)'$', TokenMatchers.AsciiIdentifierContinue), TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst }
+            new(
+                static slice => TokenMatchers.MatchPrefixedRun(slice, (byte)'$', TokenMatchers.AsciiIdentifierContinue),
+                TokenClass.Name,
+                LexerRule.NoStateChange) { FirstBytes = DollarFirst },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            }
         ];
 
         var allRules = new LexerRule[frontRules.Length + coreRules.Length];

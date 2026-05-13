@@ -35,8 +35,8 @@ public class DocBuilderNavExtensionsCoverageTests
     {
         var cmp = NavNodeTitleComparer.Instance;
         await Assert.That(cmp.Compare(null, null)).IsEqualTo(0);
-        NavNode a = new("Apple", "/a", isSection: false, []);
-        NavNode b = new("Banana", "/b", isSection: false, []);
+        NavNode a = new("Apple", "/a", false, []);
+        NavNode b = new("Banana", "/b", false, []);
         await Assert.That(cmp.Compare(a, null)).IsGreaterThan(0);
         await Assert.That(cmp.Compare(null, a)).IsLessThan(0);
         await Assert.That(cmp.Compare(a, b)).IsLessThan(0);

@@ -32,7 +32,7 @@ public class FontsPluginTests
     {
         using TempDir dir = new();
         Directory.CreateDirectory(Path.Combine(dir.Root, "fonts"));
-        var woff2 = StubFont.BuildWoff2(unitsPerEm: 2048, ascender: 1900, descender: -500, lineGap: 0, xHeight: 1082, capHeight: 1462);
+        var woff2 = StubFont.BuildWoff2(2048, 1900, -500, 0, 1082, 1462);
         await File.WriteAllBytesAsync(Path.Combine(dir.Root, "fonts", "MyFont-Regular.woff2"), woff2);
 
         var face = new FontFace(
@@ -60,7 +60,8 @@ public class FontsPluginTests
             {
                 cssBytes = assets[i].Bytes;
             }
-            else if (assets[i].Path.Value.StartsWith("assets/fonts/", StringComparison.Ordinal) && assets[i].Path.Value.EndsWith(".woff2", StringComparison.Ordinal))
+            else if (assets[i].Path.Value.StartsWith("assets/fonts/", StringComparison.Ordinal) &&
+                     assets[i].Path.Value.EndsWith(".woff2", StringComparison.Ordinal))
             {
                 hasWoff2 = true;
                 await Assert.That(assets[i].Bytes.SequenceEqual(woff2)).IsTrue();

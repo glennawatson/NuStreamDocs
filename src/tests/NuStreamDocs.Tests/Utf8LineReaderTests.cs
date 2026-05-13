@@ -45,7 +45,7 @@ public class Utf8LineReaderTests
     public async Task DisposeOwnedStreamDisposesIt()
     {
         MemoryStream stream = new([.. "a\n"u8]);
-        using (new Utf8LineReader(stream, leaveOpen: false))
+        using (new Utf8LineReader(stream, false))
         {
             // ctor only
         }
@@ -59,7 +59,7 @@ public class Utf8LineReaderTests
     public async Task LeaveOpenKeepsStreamAlive()
     {
         MemoryStream stream = new([.. "a\n"u8]);
-        using (new Utf8LineReader(stream, leaveOpen: true))
+        using (new Utf8LineReader(stream, true))
         {
             // ctor only
         }
@@ -73,7 +73,7 @@ public class Utf8LineReaderTests
     private static async Task<string[]> ReadAll(string source)
     {
         await using MemoryStream stream = new(Encoding.UTF8.GetBytes(source));
-        using Utf8LineReader reader = new(stream, leaveOpen: true);
+        using Utf8LineReader reader = new(stream, true);
         List<string> lines = [];
         while (true)
         {

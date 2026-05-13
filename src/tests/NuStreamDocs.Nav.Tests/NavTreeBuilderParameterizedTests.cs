@@ -2,6 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+using NuStreamDocs.Common;
+
 namespace NuStreamDocs.Nav.Tests;
 
 /// <summary>Parameterized inputs for NavTreeBuilder covering every combination of sort, prune, indexes, and hide-empty toggles.</summary>
@@ -70,7 +73,7 @@ public class NavTreeBuilderParameterizedTests
         using ScratchTree temp = new();
         await temp.WriteAsync("a.md", "# A\n");
         await temp.WriteAsync("b.md", "# B\n");
-        var includeGlobs = new Common.GlobPattern[patterns.Length];
+        var includeGlobs = new GlobPattern[patterns.Length];
         for (var i = 0; i < patterns.Length; i++)
         {
             includeGlobs[i] = patterns[i];
@@ -90,7 +93,7 @@ public class NavTreeBuilderParameterizedTests
         await temp.WriteAsync("license.md", "---\ntitle: Licenses & Credits\n---\n# License\n");
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Licenses & Credits");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Licenses & Credits");
     }
 
     /// <summary>Auto-discovered pages fall back to the first H1 before the file stem.</summary>
@@ -102,7 +105,7 @@ public class NavTreeBuilderParameterizedTests
         await temp.WriteAsync("getting-started.md", "# Getting Started with ReactiveUI\n");
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Getting Started with ReactiveUI");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Getting Started with ReactiveUI");
     }
 
     /// <summary>Section titles humanize the directory token when no override is present.</summary>
@@ -115,7 +118,7 @@ public class NavTreeBuilderParameterizedTests
         await temp.WriteAsync("getting-started/install.md", "# Install\n");
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Getting Started");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Getting Started");
     }
 
     /// <summary>Directory-URL mode stores section and page hrefs in served form.</summary>
@@ -127,9 +130,10 @@ public class NavTreeBuilderParameterizedTests
         await temp.WriteAsync("guide/index.md", "# Guide\n");
         await temp.WriteAsync("guide/intro.md", "# Intro\n");
 
-        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default, useDirectoryUrls: true);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].IndexUrlBytes)).IsEqualTo("guide/");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Children[0].RelativeUrlBytes)).IsEqualTo("guide/intro/");
+        var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default, true);
+        await Assert.That(Encoding.UTF8.GetString(root.Children[0].IndexUrlBytes)).IsEqualTo("guide/");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[0].Children[0].RelativeUrlBytes))
+            .IsEqualTo("guide/intro/");
     }
 
     /// <summary>
@@ -151,7 +155,7 @@ public class NavTreeBuilderParameterizedTests
         var options = NavOptions.Default with { Indexes = true };
         var root = NavTreeBuilder.Build(temp.Root, options);
 
-        var sectionTitle = System.Text.Encoding.UTF8.GetString(root.Children[0].Title);
+        var sectionTitle = Encoding.UTF8.GetString(root.Children[0].Title);
         await Assert.That(sectionTitle).IsEqualTo("Akavache Settings");
     }
 
@@ -167,7 +171,7 @@ public class NavTreeBuilderParameterizedTests
         var options = NavOptions.Default with { Indexes = true };
         var root = NavTreeBuilder.Build(temp.Root, options);
 
-        var sectionTitle = System.Text.Encoding.UTF8.GetString(root.Children[0].Title);
+        var sectionTitle = Encoding.UTF8.GetString(root.Children[0].Title);
         await Assert.That(sectionTitle).IsEqualTo("Getting Started");
     }
 
@@ -186,7 +190,7 @@ public class NavTreeBuilderParameterizedTests
         var options = NavOptions.Default with { Indexes = true };
         var root = NavTreeBuilder.Build(temp.Root, options);
 
-        var sectionTitle = System.Text.Encoding.UTF8.GetString(root.Children[0].Title);
+        var sectionTitle = Encoding.UTF8.GetString(root.Children[0].Title);
         await Assert.That(sectionTitle).IsEqualTo("Override Title");
     }
 
@@ -203,7 +207,9 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
 
-        var pathOrder = string.Join(",", root.Children.Select(static c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var pathOrder = string.Join(
+            ",",
+            root.Children.Select(static c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
         await Assert.That(pathOrder).IsEqualTo("bravo-early,alpha-late,charlie-no-order,delta-no-order");
     }
 
@@ -222,7 +228,9 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var sectionOrder = string.Join(",", root.Children.Where(static c => c.IsSection).Select(static c => Path.GetFileName(c.RelativePath.Value)));
+        var sectionOrder = string.Join(
+            ",",
+            root.Children.Where(static c => c.IsSection).Select(static c => Path.GetFileName(c.RelativePath.Value)));
         await Assert.That(sectionOrder).IsEqualTo("bravo,alpha,charlie");
     }
 
@@ -248,7 +256,12 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var ordered = string.Join(",", root.Children.Select(static c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var ordered = string.Join(
+            ",",
+            root.Children.Select(static c =>
+                c.IsSection
+                    ? Path.GetFileName(c.RelativePath.Value)
+                    : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
         await Assert.That(ordered).IsEqualTo("docs,api,contribute,Slack,vs,Book,Announcements,articles,license");
     }
 
@@ -267,7 +280,12 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var ordered = string.Join(",", root.Children.Select(static c => c.IsSection ? Path.GetFileName(c.RelativePath.Value) : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var ordered = string.Join(
+            ",",
+            root.Children.Select(static c =>
+                c.IsSection
+                    ? Path.GetFileName(c.RelativePath.Value)
+                    : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
 
         // Pages alpha-sorted first, then sections alpha-sorted — the existing default.
         await Assert.That(ordered).IsEqualTo("alpha,zulu,api,guide");
@@ -285,7 +303,9 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
 
-        var pathOrder = string.Join(",", root.Children.Select(c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var pathOrder = string.Join(
+            ",",
+            root.Children.Select(c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
         await Assert.That(pathOrder).IsEqualTo("alpha,mike,zulu");
     }
 
@@ -318,7 +338,7 @@ public class NavTreeBuilderParameterizedTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

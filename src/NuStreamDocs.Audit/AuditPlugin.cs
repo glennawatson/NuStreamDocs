@@ -135,7 +135,9 @@ public sealed class AuditPlugin
     /// <param name="outputRoot">Site output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The findings and the number of pages audited.</returns>
-    private async Task<(AuditDiagnostic[] Diagnostics, int PageCount)> RunCoreAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
+    private async Task<(AuditDiagnostic[] Diagnostics, int PageCount)> RunCoreAsync(
+        DirectoryPath outputRoot,
+        CancellationToken cancellationToken)
     {
         DirectoryPath fullRoot = new(Path.GetFullPath(outputRoot.Value));
         if (!Directory.Exists(fullRoot.Value))

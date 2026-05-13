@@ -92,14 +92,26 @@ public static class RazorLexer
     private static readonly SearchValues<byte> CloseBraceFirst = SearchValues.Create("}"u8);
 
     /// <summary>Gets the singleton lexer instance.</summary>
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1114", Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115", Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1114",
+        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1115",
+        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
     public static Lexer Instance { get; } = Build();
 
     /// <summary>Builds the Razor lexer with all five states populated.</summary>
     /// <returns>Configured lexer.</returns>
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1114", Justification = "Rule lists read top-to-bottom with comments.")]
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115", Justification = "Rule lists read top-to-bottom with comments.")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1114",
+        Justification = "Rule lists read top-to-bottom with comments.")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1115",
+        Justification = "Rule lists read top-to-bottom with comments.")]
     private static Lexer Build()
     {
         LexerRule[][] states =
@@ -108,25 +120,46 @@ public static class RazorLexer
                 TagStateId,
 
                 // Markup literal-text run — anything up to the next < / & / @.
-                new(static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop), TokenClass.Text, LexerRule.NoStateChange),
+                new(
+                    static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop),
+                    TokenClass.Text,
+                    LexerRule.NoStateChange),
 
                 // @* … *@ Razor block comment.
-                new(static slice => TokenMatchers.MatchDelimited(slice, "@*"u8, "*@"u8), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
+                new(
+                    static slice => TokenMatchers.MatchDelimited(slice, "@*"u8, "*@"u8),
+                    TokenClass.CommentMulti,
+                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
 
                 // @@ escaped at-sign — emits as plain text.
-                new(static slice => slice is [(byte)'@', (byte)'@', ..] ? TwoCharRazorSigilLength : 0, TokenClass.Text, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
+                new(
+                    static slice => slice is [(byte)'@', (byte)'@', ..] ? TwoCharRazorSigilLength : 0,
+                    TokenClass.Text,
+                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst },
 
                 // @code / @functions / @page / etc. — block directive that pushes the C# state.
-                new(static slice => MatchAtKeyword(slice, BlockDirectives), TokenClass.KeywordDeclaration, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
+                new(
+                    static slice => MatchAtKeyword(slice, BlockDirectives),
+                    TokenClass.KeywordDeclaration,
+                    CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
 
                 // @if / @for / @while / etc. — control directive that pushes the C# state.
-                new(static slice => MatchAtKeyword(slice, ControlDirectives), TokenClass.Keyword, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
+                new(static slice => MatchAtKeyword(slice, ControlDirectives), TokenClass.Keyword, CSharpStateId)
+                {
+                    FirstBytes = LanguageCommon.AtFirst
+                },
 
                 // @{ — brace-block opener that pushes the C# state.
-                new(static slice => slice is [(byte)'@', (byte)'{', ..] ? TwoCharRazorSigilLength : 0, TokenClass.Punctuation, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
+                new(
+                    static slice => slice is [(byte)'@', (byte)'{', ..] ? TwoCharRazorSigilLength : 0,
+                    TokenClass.Punctuation,
+                    CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
 
                 // @identifier(.identifier)* — inline expression, stays in markup mode.
-                new(MatchInlineExpression, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst }),
+                new(MatchInlineExpression, TokenClass.Name, LexerRule.NoStateChange)
+                {
+                    FirstBytes = LanguageCommon.AtFirst
+                }),
             MarkupTagRules.Build(),
             BuildCsharpStateRules(),
             CSharpRules.BuildBlockAccessorRules(CSharpBlockAccessorStateId),
@@ -141,7 +174,11 @@ public static class RazorLexer
     {
         var shared = CSharpRules.Build(CSharpBlockAccessorStateId, CSharpArrowAccessorStateId);
         var combined = new LexerRule[shared.Length + 1];
-        combined[0] = new(static slice => slice is [(byte)'}', ..] ? 1 : 0, TokenClass.Punctuation, LexerRule.PopState) { FirstBytes = CloseBraceFirst };
+        combined[0] =
+            new(static slice => slice is [(byte)'}', ..] ? 1 : 0, TokenClass.Punctuation, LexerRule.PopState)
+            {
+                FirstBytes = CloseBraceFirst
+            };
         Array.Copy(shared, 0, combined, 1, shared.Length);
         return combined;
     }

@@ -15,7 +15,9 @@ public class CSharpModernFeaturesTests
     public async Task RawStringLiteral_is_classified_as_string()
     {
         var html = CSharpLexer.Instance.Render("var x = \"\"\"hello\"\"\";"u8);
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;&quot;&quot;hello&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"s2\">&quot;&quot;&quot;hello&quot;&quot;&quot;</span>",
+            StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Multi-line raw strings span newlines without breaking the string token.</summary>
@@ -36,7 +38,8 @@ public class CSharpModernFeaturesTests
     public async Task Utf8StringLiteral_includes_suffix()
     {
         var html = CSharpLexer.Instance.Render("var bytes = \"hello\"u8;"u8);
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;hello&quot;u8</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;hello&quot;u8</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Interpolated string <c>$"..."</c> is classified as a string-double token.</summary>
@@ -45,7 +48,9 @@ public class CSharpModernFeaturesTests
     public async Task InterpolatedString_is_classified_as_string()
     {
         var html = CSharpLexer.Instance.Render("var s = $\"hello {name}\";"u8);
-        await Assert.That(html.Contains("<span class=\"s2\">$&quot;hello {name}&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert
+            .That(html.Contains("<span class=\"s2\">$&quot;hello {name}&quot;</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Raw interpolated string <c>$"""..."""</c> is classified as a string-double token.</summary>
@@ -54,7 +59,8 @@ public class CSharpModernFeaturesTests
     public async Task RawInterpolatedString_is_classified_as_string()
     {
         var html = CSharpLexer.Instance.Render("var s = $\"\"\"line: {value}\"\"\";"u8);
-        await Assert.That(html.Contains("$&quot;&quot;&quot;line: {value}&quot;&quot;&quot;", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("$&quot;&quot;&quot;line: {value}&quot;&quot;&quot;", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Double-dollar raw interpolated <c>$$"""..."""</c> is recognized.</summary>
@@ -63,7 +69,8 @@ public class CSharpModernFeaturesTests
     public async Task DoubleDollarRawInterpolatedString_is_classified_as_string()
     {
         var html = CSharpLexer.Instance.Render("var s = $$\"\"\"open: {{x}}\"\"\";"u8);
-        await Assert.That(html.Contains("$$&quot;&quot;&quot;open: {{x}}&quot;&quot;&quot;", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("$$&quot;&quot;&quot;open: {{x}}&quot;&quot;&quot;", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary><c>scoped</c> is highlighted as a declaration-keyword (parameter / local modifier).</summary>

@@ -39,7 +39,11 @@ public static class FallbackFaceBuilder
     /// <param name="web">The webfont's metrics.</param>
     /// <param name="generic">The generic fallback family.</param>
     /// <param name="writer">Destination.</param>
-    public static void Write(ReadOnlySpan<byte> familyBytes, in FontMetrics web, GenericFontFamily generic, IBufferWriter<byte> writer)
+    public static void Write(
+        ReadOnlySpan<byte> familyBytes,
+        in FontMetrics web,
+        GenericFontFamily generic,
+        IBufferWriter<byte> writer)
     {
         var o = ComputeOverrides(web, generic);
         writer.Write("@font-face{font-family:\""u8);
@@ -79,5 +83,9 @@ public static class FallbackFaceBuilder
     /// <param name="AscentOverride">The <c>ascent-override</c> fraction.</param>
     /// <param name="DescentOverride">The <c>descent-override</c> fraction.</param>
     /// <param name="LineGapOverride">The <c>line-gap-override</c> fraction.</param>
-    public readonly record struct Overrides(double SizeAdjust, double AscentOverride, double DescentOverride, double LineGapOverride);
+    public readonly record struct Overrides(
+        double SizeAdjust,
+        double AscentOverride,
+        double DescentOverride,
+        double LineGapOverride);
 }

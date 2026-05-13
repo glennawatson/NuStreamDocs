@@ -30,7 +30,7 @@ public class RedirectsOptionsExtensionsTests
     [Test]
     public async Task AddAccumulates()
     {
-        var o = RedirectsOptions.Default.Add("/old/"u8, "/new/"u8).Add("/gone/"u8, "https://elsewhere.test/"u8, permanent: false);
+        var o = RedirectsOptions.Default.Add("/old/"u8, "/new/"u8).Add("/gone/"u8, "https://elsewhere.test/"u8, false);
         await Assert.That(o.Redirects.Length).IsEqualTo(2);
         await Assert.That(Encoding.UTF8.GetString(o.Redirects[0].From)).IsEqualTo("/old/");
         await Assert.That(Encoding.UTF8.GetString(o.Redirects[0].To)).IsEqualTo("/new/");

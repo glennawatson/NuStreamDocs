@@ -29,23 +29,20 @@ public static class StringCompose
     /// <param name="a">First fragment.</param>
     /// <param name="b">Second fragment.</param>
     /// <returns>Composed string.</returns>
-    public static string Concat(string a, string b)
-    {
-        return string.Create(a.Length + b.Length, (a, b), static (span, p) =>
+    public static string Concat(string a, string b) =>
+        string.Create(a.Length + b.Length, (a, b), static (span, p) =>
         {
             p.a.AsSpan().CopyTo(span);
             p.b.AsSpan().CopyTo(span[p.a.Length..]);
         });
-    }
 
     /// <summary>Allocates one string equal to <paramref name="a"/> + <paramref name="b"/> + <paramref name="c"/>.</summary>
     /// <param name="a">First fragment.</param>
     /// <param name="b">Second fragment.</param>
     /// <param name="c">Third fragment.</param>
     /// <returns>Composed string.</returns>
-    public static string Concat(string a, string b, string c)
-    {
-        return string.Create(a.Length + b.Length + c.Length, (a, b, c), static (span, p) =>
+    public static string Concat(string a, string b, string c) =>
+        string.Create(a.Length + b.Length + c.Length, (a, b, c), static (span, p) =>
         {
             p.a.AsSpan().CopyTo(span);
             var i = p.a.Length;
@@ -53,7 +50,6 @@ public static class StringCompose
             i += p.b.Length;
             p.c.AsSpan().CopyTo(span[i..]);
         });
-    }
 
     /// <summary>Allocates one string equal to <paramref name="a"/> + <paramref name="b"/> + <paramref name="c"/> + <paramref name="d"/>.</summary>
     /// <param name="a">First fragment.</param>
@@ -61,9 +57,8 @@ public static class StringCompose
     /// <param name="c">Third fragment.</param>
     /// <param name="d">Fourth fragment.</param>
     /// <returns>Composed string.</returns>
-    public static string Concat(string a, string b, string c, string d)
-    {
-        return string.Create(a.Length + b.Length + c.Length + d.Length, (a, b, c, d), static (span, p) =>
+    public static string Concat(string a, string b, string c, string d) =>
+        string.Create(a.Length + b.Length + c.Length + d.Length, (a, b, c, d), static (span, p) =>
         {
             p.a.AsSpan().CopyTo(span);
             var i = p.a.Length;
@@ -73,7 +68,6 @@ public static class StringCompose
             i += p.c.Length;
             p.d.AsSpan().CopyTo(span[i..]);
         });
-    }
 
     /// <summary>Allocates one string equal to <paramref name="a"/> + <paramref name="b"/> + <paramref name="c"/> + <paramref name="d"/> + <paramref name="e"/>.</summary>
     /// <param name="a">First fragment.</param>
@@ -82,9 +76,8 @@ public static class StringCompose
     /// <param name="d">Fourth fragment.</param>
     /// <param name="e">Fifth fragment.</param>
     /// <returns>Composed string.</returns>
-    public static string Concat(string a, string b, string c, string d, string e)
-    {
-        return string.Create(a.Length + b.Length + c.Length + d.Length + e.Length, (a, b, c, d, e), static (span, p) =>
+    public static string Concat(string a, string b, string c, string d, string e) =>
+        string.Create(a.Length + b.Length + c.Length + d.Length + e.Length, (a, b, c, d, e), static (span, p) =>
         {
             p.a.AsSpan().CopyTo(span);
             var i = p.a.Length;
@@ -96,20 +89,17 @@ public static class StringCompose
             i += p.d.Length;
             p.e.AsSpan().CopyTo(span[i..]);
         });
-    }
 
     /// <summary>Allocates one string equal to <paramref name="prefix"/> + decimal-formatted <paramref name="value"/>.</summary>
     /// <param name="prefix">Constant prefix.</param>
     /// <param name="value">Integer value to render.</param>
     /// <returns>Composed string.</returns>
-    public static string ConcatInt(string prefix, int value)
-    {
-        return string.Create(prefix.Length + DecimalDigitCount(value), (prefix, value), static (span, p) =>
+    public static string ConcatInt(string prefix, int value) =>
+        string.Create(prefix.Length + DecimalDigitCount(value), (prefix, value), static (span, p) =>
         {
             p.prefix.AsSpan().CopyTo(span);
             p.value.TryFormat(span[p.prefix.Length..], out _, default, CultureInfo.InvariantCulture);
         });
-    }
 
     /// <summary>Allocates one string equal to <paramref name="prefix"/> + decimal-formatted <paramref name="value"/> + <paramref name="suffix"/>.</summary>
     /// <param name="prefix">Constant prefix.</param>

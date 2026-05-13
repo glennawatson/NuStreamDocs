@@ -20,7 +20,7 @@ public sealed record BibliographyOptions(
 {
     /// <summary>Gets the default options: empty database, AGLC4 style, warnings disabled.</summary>
     public static BibliographyOptions Default { get; } = new(
-        Database: BibliographyDatabase.Empty,
-        Style: Aglc4Style.Instance,
-        WarnOnMissing: false);
+        BibliographyDatabase.Empty,
+        Aglc4Style.Instance,
+        false);
 }

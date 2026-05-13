@@ -13,4 +13,5 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// </summary>
 /// <param name="RootDirectory">Repository root containing <c>nuget-packages.json</c>.</param>
 /// <param name="ApiCachePath">Destination root for fetched packages.</param>
-public sealed record NuGetManifestInput(DirectoryPath RootDirectory, DirectoryPath ApiCachePath) : CSharpApiGeneratorInput;
+public sealed record NuGetManifestInput(DirectoryPath RootDirectory, DirectoryPath ApiCachePath)
+    : CSharpApiGeneratorInput;

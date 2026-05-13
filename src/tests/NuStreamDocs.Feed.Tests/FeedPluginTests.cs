@@ -100,7 +100,10 @@ public class FeedPluginTests
     [Test]
     public async Task ThreeArgCtorAcceptsLogger()
     {
-        FeedPlugin plugin = new(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"), TimeProvider.System, NullLogger.Instance);
+        FeedPlugin plugin = new(
+            new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"),
+            TimeProvider.System,
+            NullLogger.Instance);
         await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
     }
 
@@ -122,7 +125,7 @@ public class FeedPluginTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

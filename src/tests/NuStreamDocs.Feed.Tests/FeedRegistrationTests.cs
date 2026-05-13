@@ -25,11 +25,16 @@ public class FeedRegistrationTests
     [Test]
     public async Task ValidateThrowsOnMissingFields()
     {
-        Assert.Throws<ArgumentException>(static () => new FeedOptions([], [.. "T"u8], [.. "D"u8], "p", "o", FeedFormats.Both, 1).Validate());
-        Assert.Throws<ArgumentException>(static () => new FeedOptions([.. "u"u8], [], [.. "D"u8], "p", "o", FeedFormats.Both, 1).Validate());
-        Assert.Throws<ArgumentException>(static () => new FeedOptions([.. "u"u8], [.. "T"u8], [], "p", "o", FeedFormats.Both, 1).Validate());
-        Assert.Throws<ArgumentException>(static () => new FeedOptions([.. "u"u8], [.. "T"u8], [.. "D"u8], string.Empty, "o", FeedFormats.Both, 1).Validate());
-        var ex = Assert.Throws<ArgumentException>(static () => new FeedOptions([.. "u"u8], [.. "T"u8], [.. "D"u8], "p", string.Empty, FeedFormats.Both, 1).Validate());
+        Assert.Throws<ArgumentException>(static () =>
+            new FeedOptions([], [.. "T"u8], [.. "D"u8], "p", "o", FeedFormats.Both, 1).Validate());
+        Assert.Throws<ArgumentException>(static () =>
+            new FeedOptions([.. "u"u8], [], [.. "D"u8], "p", "o", FeedFormats.Both, 1).Validate());
+        Assert.Throws<ArgumentException>(static () =>
+            new FeedOptions([.. "u"u8], [.. "T"u8], [], "p", "o", FeedFormats.Both, 1).Validate());
+        Assert.Throws<ArgumentException>(static () =>
+            new FeedOptions([.. "u"u8], [.. "T"u8], [.. "D"u8], string.Empty, "o", FeedFormats.Both, 1).Validate());
+        var ex = Assert.Throws<ArgumentException>(static () =>
+            new FeedOptions([.. "u"u8], [.. "T"u8], [.. "D"u8], "p", string.Empty, FeedFormats.Both, 1).Validate());
         await Assert.That(ex).IsNotNull();
     }
 

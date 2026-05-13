@@ -11,7 +11,9 @@ public static class TransitionsOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="selector">UTF-8 CSS selector for the article body region.</param>
     /// <returns>The updated options.</returns>
-    public static TransitionsOptions WithContentSelector(this in TransitionsOptions options, ReadOnlySpan<byte> selector) =>
+    public static TransitionsOptions WithContentSelector(
+        this in TransitionsOptions options,
+        ReadOnlySpan<byte> selector) =>
         options with { ContentSelector = selector.ToArray() };
 
     /// <summary>Replaces the additional swapped nav-region selector (empty leaves the chrome untouched).</summary>
@@ -52,7 +54,8 @@ public static class TransitionsOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="selector">UTF-8 CSS selector matched against candidate links.</param>
     /// <returns>The updated options.</returns>
-    public static TransitionsOptions WithIgnoreSelector(this in TransitionsOptions options, ReadOnlySpan<byte> selector) =>
+    public static TransitionsOptions
+        WithIgnoreSelector(this in TransitionsOptions options, ReadOnlySpan<byte> selector) =>
         options with { IgnoreSelector = selector.ToArray() };
 
     /// <summary>Disables the plugin (it then contributes nothing).</summary>

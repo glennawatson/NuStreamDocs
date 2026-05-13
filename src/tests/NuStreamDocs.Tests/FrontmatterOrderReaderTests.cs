@@ -62,7 +62,9 @@ public class FrontmatterOrderReaderTests
     [Test]
     public async Task ReturnsFalseForMissingFile()
     {
-        var missing = Path.Combine(Path.GetTempPath(), "smkd-nofile-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var missing = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-nofile-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         await Assert.That(FrontmatterOrderReader.TryRead((FilePath)missing, out _)).IsFalse();
     }
 
@@ -76,7 +78,7 @@ public class FrontmatterOrderReaderTests
     private sealed class TempFile : IDisposable
     {
         /// <summary>UTF-8 encoder that does NOT prepend a byte-order mark.</summary>
-        private static readonly UTF8Encoding NoBom = new(encoderShouldEmitUTF8Identifier: false);
+        private static readonly UTF8Encoding NoBom = new(false);
 
         /// <summary>Initializes a new instance of the <see cref="TempFile"/> class.</summary>
         /// <param name="path">Absolute path to the file.</param>

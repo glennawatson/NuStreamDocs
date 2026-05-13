@@ -77,12 +77,7 @@ public sealed class ExtraAssetSource
     public static ExtraAssetSource Inline(string outputName, byte[] utf8Bytes)
     {
         ArgumentException.ThrowIfNullOrEmpty(outputName);
-        return new(new()
-        {
-            Kind = ExtraAssetSourceKind.Inline,
-            InlineBytes = utf8Bytes,
-            OutputName = outputName
-        });
+        return new(new() { Kind = ExtraAssetSourceKind.Inline, InlineBytes = utf8Bytes, OutputName = outputName });
     }
 
     /// <summary>Creates an embedded-resource source.</summary>
@@ -109,11 +104,7 @@ public sealed class ExtraAssetSource
     public static ExtraAssetSource External(string url)
     {
         ArgumentException.ThrowIfNullOrEmpty(url);
-        return new(new()
-        {
-            Kind = ExtraAssetSourceKind.Url,
-            Url = url
-        });
+        return new(new() { Kind = ExtraAssetSourceKind.Url, Url = url });
     }
 
     /// <summary>Returns a copy of this source flagged as an ES module so the head-extra emitter renders <c>type="module"</c>.</summary>

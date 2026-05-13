@@ -66,7 +66,7 @@ public class CSharpApiGeneratorPluginCoverageTests
         CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with
         {
             IndexTitle = [.. "ReactiveUI API"u8],
-            IndexOrder = 3,
+            IndexOrder = 3
         });
         BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
 
@@ -92,7 +92,10 @@ public class CSharpApiGeneratorPluginCoverageTests
     [Test]
     public async Task NoNavEntryWhenIndexPageDisabled()
     {
-        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with { EmitIndexPage = false });
+        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with
+        {
+            EmitIndexPage = false
+        });
         BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
 
         try
@@ -112,7 +115,10 @@ public class CSharpApiGeneratorPluginCoverageTests
     [Test]
     public async Task DirectModeHasNoNavEntries()
     {
-        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with { Mode = CSharpApiGeneratorMode.Direct });
+        CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with
+        {
+            Mode = CSharpApiGeneratorMode.Direct
+        });
         BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
 
         try
@@ -134,7 +140,8 @@ public class CSharpApiGeneratorPluginCoverageTests
         public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<AssemblyGroup> DiscoverAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             await Task.CompletedTask.ConfigureAwait(false);
             yield break;

@@ -33,7 +33,7 @@ internal static class TemplateRenderer
         var scopeBuffer = ArrayPool<TemplateData>.Shared.Rent(EstimateDepth(instructions.Length));
         var frameBuffer = ArrayPool<IterationFrame>.Shared.Rent(EstimateDepth(instructions.Length));
         scopeBuffer[0] = root;
-        RenderState state = new(scopeBuffer, ScopeDepth: 1, frameBuffer, FrameDepth: 0);
+        RenderState state = new(scopeBuffer, 1, frameBuffer, 0);
         try
         {
             var ip = 0;
@@ -44,8 +44,8 @@ internal static class TemplateRenderer
         }
         finally
         {
-            ArrayPool<TemplateData>.Shared.Return(scopeBuffer, clearArray: true);
-            ArrayPool<IterationFrame>.Shared.Return(frameBuffer, clearArray: true);
+            ArrayPool<TemplateData>.Shared.Return(scopeBuffer, true);
+            ArrayPool<IterationFrame>.Shared.Return(frameBuffer, true);
         }
     }
 
@@ -91,7 +91,11 @@ internal static class TemplateRenderer
     /// <param name="ip">Current instruction pointer.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Next instruction pointer.</returns>
-    private static int EmitLiteral(ReadOnlySpan<byte> source, in TemplateInstruction instr, int ip, IBufferWriter<byte> writer)
+    private static int EmitLiteral(
+        ReadOnlySpan<byte> source,
+        in TemplateInstruction instr,
+        int ip,
+        IBufferWriter<byte> writer)
     {
         Write(source.Slice(instr.Start, instr.Length), writer);
         return ip + 1;
@@ -165,7 +169,7 @@ internal static class TemplateRenderer
 
         if (items.Length > 0)
         {
-            state.Frames[state.FrameDepth] = new(items, Index: 0, OpenIp: ip);
+            state.Frames[state.FrameDepth] = new(items, 0, ip);
             state.Scopes[state.ScopeDepth] = items[0];
             state = state with { FrameDepth = state.FrameDepth + 1, ScopeDepth = state.ScopeDepth + 1 };
             return ip + 1;
@@ -176,7 +180,7 @@ internal static class TemplateRenderer
             return instr.JumpTarget + 1;
         }
 
-        state.Frames[state.FrameDepth] = new([], Index: 0, OpenIp: ip);
+        state.Frames[state.FrameDepth] = new([], 0, ip);
         state.Scopes[state.ScopeDepth] = current;
         state = state with { FrameDepth = state.FrameDepth + 1, ScopeDepth = state.ScopeDepth + 1 };
         return ip + 1;

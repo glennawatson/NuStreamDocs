@@ -12,17 +12,20 @@ public class TagsFrontmatterReaderTests
     /// <summary>Inline list shape (<c>tags: [a, b]</c>) is parsed.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task InlineListIsParsed() => await Assert.That(Join(Read("---\ntags: [foo, bar]\n---\nbody"))).IsEqualTo("foo|bar");
+    public async Task InlineListIsParsed() =>
+        await Assert.That(Join(Read("---\ntags: [foo, bar]\n---\nbody"))).IsEqualTo("foo|bar");
 
     /// <summary>Block list shape (<c>tags:\n  - a\n  - b</c>) is parsed.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task BlockListIsParsed() => await Assert.That(Join(Read("---\ntags:\n  - foo\n  - bar\n  - baz\n---\nbody"))).IsEqualTo("foo|bar|baz");
+    public async Task BlockListIsParsed() => await Assert
+        .That(Join(Read("---\ntags:\n  - foo\n  - bar\n  - baz\n---\nbody"))).IsEqualTo("foo|bar|baz");
 
     /// <summary>Quoted tokens have their quotes stripped.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task QuotedTokensAreUnquoted() => await Assert.That(Join(Read("---\ntags: [\"hello world\", 'goodbye']\n---"))).IsEqualTo("hello world|goodbye");
+    public async Task QuotedTokensAreUnquoted() => await Assert
+        .That(Join(Read("---\ntags: [\"hello world\", 'goodbye']\n---"))).IsEqualTo("hello world|goodbye");
 
     /// <summary>Single scalar value parses as a one-element list.</summary>
     /// <returns>Async test.</returns>
@@ -32,7 +35,8 @@ public class TagsFrontmatterReaderTests
     /// <summary>Other frontmatter keys (e.g. <c>title:</c>) are ignored.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task OtherKeysAreIgnored() => await Assert.That(Join(Read("---\ntitle: Hello\nauthor: Alice\ntags: [a]\n---"))).IsEqualTo("a");
+    public async Task OtherKeysAreIgnored() =>
+        await Assert.That(Join(Read("---\ntitle: Hello\nauthor: Alice\ntags: [a]\n---"))).IsEqualTo("a");
 
     /// <summary>No frontmatter → empty array.</summary>
     /// <returns>Async test.</returns>

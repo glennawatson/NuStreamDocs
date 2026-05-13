@@ -37,7 +37,7 @@ public static class DocFxTocReader
     {
         ArgumentException.ThrowIfNullOrEmpty(rootDirectory);
         var rootToc = Path.Combine(rootDirectory, TocFileName);
-        return !File.Exists(rootToc) ? [] : ReadOneFile(rootDirectory, rootToc, currentDirectory: rootDirectory);
+        return !File.Exists(rootToc) ? [] : ReadOneFile(rootDirectory, rootToc, rootDirectory);
     }
 
     /// <summary>Reads <paramref name="tocFilePath"/> and resolves any nested toc references relative to <paramref name="currentDirectory"/>.</summary>
@@ -59,7 +59,7 @@ public static class DocFxTocReader
     private static NavEntry[] ParseEntries(string rootDirectory, string currentDirectory, ReadOnlySpan<byte> utf8)
     {
         TocLineParser lines = new(Utf8Bom.Strip(utf8));
-        return ParseSequenceAt(rootDirectory, currentDirectory, ref lines, baseIndent: -1);
+        return ParseSequenceAt(rootDirectory, currentDirectory, ref lines, -1);
     }
 
     /// <summary>Parses a YAML block-sequence whose items live at indent &gt; <paramref name="baseIndent"/>.</summary>
@@ -68,7 +68,11 @@ public static class DocFxTocReader
     /// <param name="lines">Forward line cursor into the toc bytes.</param>
     /// <param name="baseIndent">Indent floor; sequence ends when an item is at or below this column.</param>
     /// <returns>Decoded entries at this depth.</returns>
-    private static NavEntry[] ParseSequenceAt(string rootDirectory, string currentDirectory, ref TocLineParser lines, int baseIndent)
+    private static NavEntry[] ParseSequenceAt(
+        string rootDirectory,
+        string currentDirectory,
+        ref TocLineParser lines,
+        int baseIndent)
     {
         var rented = ArrayPool<NavEntry>.Shared.Rent(8);
         var count = 0;
@@ -81,7 +85,7 @@ public static class DocFxTocReader
                 {
                     var grown = ArrayPool<NavEntry>.Shared.Rent(rented.Length * 2);
                     Array.Copy(rented, grown, count);
-                    ArrayPool<NavEntry>.Shared.Return(rented, clearArray: true);
+                    ArrayPool<NavEntry>.Shared.Return(rented, true);
                     rented = grown;
                 }
 
@@ -99,7 +103,7 @@ public static class DocFxTocReader
         }
         finally
         {
-            ArrayPool<NavEntry>.Shared.Return(rented, clearArray: true);
+            ArrayPool<NavEntry>.Shared.Return(rented, true);
         }
     }
 
@@ -145,22 +149,22 @@ public static class DocFxTocReader
         switch (line.KeyKind)
         {
             case TocKey.Name:
-            {
-                fields.Name = line.Value.ToArray();
-                break;
-            }
+                {
+                    fields.Name = line.Value.ToArray();
+                    break;
+                }
 
             case TocKey.Href:
-            {
-                fields.Href = line.Value.ToArray();
-                break;
-            }
+                {
+                    fields.Href = line.Value.ToArray();
+                    break;
+                }
 
             case TocKey.Homepage:
-            {
-                fields.Homepage = line.Value.ToArray();
-                break;
-            }
+                {
+                    fields.Homepage = line.Value.ToArray();
+                    break;
+                }
         }
     }
 
@@ -180,7 +184,9 @@ public static class DocFxTocReader
         }
 
         var href = fields.Href ?? [];
-        return href.Length is 0 ? new(name, [], []) : MaterializeHref(rootDirectory, currentDirectory, name, href, fields.Homepage ?? []);
+        return href.Length is 0
+            ? new(name, [], [])
+            : MaterializeHref(rootDirectory, currentDirectory, name, href, fields.Homepage ?? []);
     }
 
     /// <summary>Routes an item with a populated <c>href</c> to the right resolver.</summary>
@@ -190,7 +196,12 @@ public static class DocFxTocReader
     /// <param name="href">Href bytes.</param>
     /// <param name="homepage">Homepage bytes (may be empty).</param>
     /// <returns>The decoded entry.</returns>
-    private static NavEntry MaterializeHref(string rootDirectory, string currentDirectory, byte[] name, byte[] href, byte[] homepage)
+    private static NavEntry MaterializeHref(
+        string rootDirectory,
+        string currentDirectory,
+        byte[] name,
+        byte[] href,
+        byte[] homepage)
     {
         if (IsAbsoluteUrl(href))
         {
@@ -218,7 +229,11 @@ public static class DocFxTocReader
     /// <param name="title">Section title (UTF-8).</param>
     /// <param name="hrefString">Decoded href value.</param>
     /// <returns>Decoded section entry.</returns>
-    private static NavEntry ResolveSubToc(string rootDirectory, string currentDirectory, byte[] title, string hrefString)
+    private static NavEntry ResolveSubToc(
+        string rootDirectory,
+        string currentDirectory,
+        byte[] title,
+        string hrefString)
     {
         var subTocPath = Path.GetFullPath(Path.Combine(currentDirectory, hrefString));
         if (!File.Exists(subTocPath))
@@ -238,7 +253,12 @@ public static class DocFxTocReader
     /// <param name="hrefString">Decoded href value (trailing-slash directory ref).</param>
     /// <param name="homepage">Decoded homepage bytes (may be empty).</param>
     /// <returns>Section entry.</returns>
-    private static NavEntry ResolveDirectoryRef(string rootDirectory, string currentDirectory, byte[] title, string hrefString, byte[] homepage)
+    private static NavEntry ResolveDirectoryRef(
+        string rootDirectory,
+        string currentDirectory,
+        byte[] title,
+        string hrefString,
+        byte[] homepage)
     {
         var subDir = Path.GetFullPath(Path.Combine(currentDirectory, hrefString));
         var subToc = Path.Combine(subDir, TocFileName);

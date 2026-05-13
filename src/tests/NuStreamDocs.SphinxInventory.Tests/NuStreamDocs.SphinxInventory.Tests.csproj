@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.SphinxInventory\NuStreamDocs.SphinxInventory.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.SphinxInventory\NuStreamDocs.SphinxInventory.csproj"/>
   </ItemGroup>
 
 </Project>

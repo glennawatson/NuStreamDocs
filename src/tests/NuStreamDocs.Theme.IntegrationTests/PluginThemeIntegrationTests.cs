@@ -35,12 +35,12 @@ public class PluginThemeIntegrationTests
     public async Task HighlightFenceProducesTokenSpans(ThemeKind theme)
     {
         const string Source = """
-            # Hi
+                              # Hi
 
-            ```csharp
-            public class Foo { }
-            ```
-            """;
+                              ```csharp
+                              public class Foo { }
+                              ```
+                              """;
 
         var html = await BuildPageAsync(theme, Source, static b => b.UseHighlight());
         await Assert.That(html).Contains("class=\"highlight\"");
@@ -60,11 +60,11 @@ public class PluginThemeIntegrationTests
     public async Task AdmonitionRendersWithStandardClasses(ThemeKind theme)
     {
         const string Source = """
-            # Hi
+                              # Hi
 
-            !!! note
-                A note body.
-            """;
+                              !!! note
+                                  A note body.
+                              """;
 
         var html = await BuildPageAsync(theme, Source, static b => b.UseAdmonitions());
         await Assert.That(html).Contains("class=\"admonition note\"");
@@ -80,14 +80,14 @@ public class PluginThemeIntegrationTests
     public async Task TabsRenderTabbedSet(ThemeKind theme)
     {
         const string Source = """
-            # Hi
+                              # Hi
 
-            === "First"
-                first body
+                              === "First"
+                                  first body
 
-            === "Second"
-                second body
-            """;
+                              === "Second"
+                                  second body
+                              """;
 
         var html = await BuildPageAsync(theme, Source, static b => b.UseTabs());
         await Assert.That(html).Contains("tabbed-set");
@@ -104,12 +104,12 @@ public class PluginThemeIntegrationTests
     public async Task BulletListRenders(ThemeKind theme)
     {
         const string Source = """
-            # Hi
+                              # Hi
 
-            - first
-            - second
-            - third
-            """;
+                              - first
+                              - second
+                              - third
+                              """;
 
         var html = await BuildPageAsync(theme, Source, static _ => { });
         await Assert.That(html).Contains("<ul");
@@ -126,14 +126,14 @@ public class PluginThemeIntegrationTests
     public async Task ThematicBreakRendersHr(ThemeKind theme)
     {
         const string Source = """
-            # Hi
+                              # Hi
 
-            before
+                              before
 
-            ---
+                              ---
 
-            after
-            """;
+                              after
+                              """;
 
         var html = await BuildPageAsync(theme, Source, static _ => { });
         await Assert.That(html).Contains("<hr />");
@@ -152,7 +152,6 @@ public class PluginThemeIntegrationTests
             theme,
             Source,
             static b => b.UseNav(static opts => opts with { Tabs = true }),
-            extraPages:
             [
                 ("first.md", "# First"),
                 ("second.md", "# Second")
@@ -183,10 +182,10 @@ public class PluginThemeIntegrationTests
     public async Task EmojiShortcodeExpands(ThemeKind theme)
     {
         const string Source = """
-            # Hi
+                              # Hi
 
-            Hello :smile: world
-            """;
+                              Hello :smile: world
+                              """;
 
         var html = await BuildPageAsync(theme, Source, b => b.UseEmoji());
 
@@ -221,14 +220,14 @@ public class PluginThemeIntegrationTests
     public async Task TocRendersSingleSecondaryNav(ThemeKind theme)
     {
         const string Source = """
-            # Hi
+                              # Hi
 
-            ## Alpha
+                              ## Alpha
 
-            body
+                              body
 
-            ### Beta
-            """;
+                              ### Beta
+                              """;
 
         var html = await BuildPageAsync(theme, Source, b => b.UseToc());
         await Assert.That(CountOccurrences(html, "class=\"md-nav md-nav--secondary\"")).IsEqualTo(1);
@@ -269,21 +268,21 @@ public class PluginThemeIntegrationTests
         switch (theme)
         {
             case ThemeKind.Material:
-            {
-                builder.UseMaterialTheme();
-                break;
-            }
+                {
+                    builder.UseMaterialTheme();
+                    break;
+                }
 
             case ThemeKind.Material3:
-            {
-                builder.UseMaterial3Theme();
-                break;
-            }
+                {
+                    builder.UseMaterial3Theme();
+                    break;
+                }
 
             default:
-            {
-                throw new ArgumentOutOfRangeException(nameof(theme));
-            }
+                {
+                    throw new ArgumentOutOfRangeException(nameof(theme));
+                }
         }
 
         configure(builder);

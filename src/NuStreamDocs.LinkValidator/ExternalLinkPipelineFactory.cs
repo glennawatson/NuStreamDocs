@@ -25,7 +25,7 @@ internal static class ExternalLinkPipelineFactory
                     SegmentsPerWindow = Math.Max(1, options.WindowSeconds),
                     QueueLimit = int.MaxValue,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst
-                }).AcquireAsync(permitCount: 1, args.Context.CancellationToken)
+                }).AcquireAsync(1, args.Context.CancellationToken)
             })
             .AddRetry(new()
             {

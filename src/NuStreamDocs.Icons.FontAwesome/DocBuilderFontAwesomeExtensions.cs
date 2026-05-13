@@ -12,16 +12,15 @@ public static class DocBuilderFontAwesomeExtensions
     /// <summary>Registers <see cref="FontAwesomePlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFontAwesome(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new FontAwesomePlugin());
-    }
+    public static DocBuilder UseFontAwesome(this DocBuilder builder) => builder.UsePlugin(new FontAwesomePlugin());
 
     /// <summary>Registers <see cref="FontAwesomePlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="FontAwesomeOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFontAwesome(this DocBuilder builder, Func<FontAwesomeOptions, FontAwesomeOptions> configure)
+    public static DocBuilder UseFontAwesome(
+        this DocBuilder builder,
+        Func<FontAwesomeOptions, FontAwesomeOptions> configure)
     {
         var options = configure(FontAwesomeOptions.Default);
         return builder.UsePlugin(new FontAwesomePlugin(options));

@@ -21,11 +21,14 @@ internal static class Compressor
     /// <param name="level">Compression level.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous write.</returns>
-    public static async Task WriteGzipAsync(FilePath sourcePath, CompressionLevel level, CancellationToken cancellationToken)
+    public static async Task WriteGzipAsync(
+        FilePath sourcePath,
+        CompressionLevel level,
+        CancellationToken cancellationToken)
     {
         await using var src = File.OpenRead(sourcePath.Value);
         await using var dst = File.Create(sourcePath.Value + GzipSuffix);
-        await using GZipStream gz = new(dst, level, leaveOpen: true);
+        await using GZipStream gz = new(dst, level, true);
         await src.CopyToAsync(gz, cancellationToken).ConfigureAwait(false);
     }
 
@@ -34,11 +37,14 @@ internal static class Compressor
     /// <param name="level">Compression level.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous write.</returns>
-    public static async Task WriteBrotliAsync(FilePath sourcePath, CompressionLevel level, CancellationToken cancellationToken)
+    public static async Task WriteBrotliAsync(
+        FilePath sourcePath,
+        CompressionLevel level,
+        CancellationToken cancellationToken)
     {
         await using var src = File.OpenRead(sourcePath.Value);
         await using var dst = File.Create(sourcePath.Value + BrotliSuffix);
-        await using BrotliStream br = new(dst, level, leaveOpen: true);
+        await using BrotliStream br = new(dst, level, true);
         await src.CopyToAsync(br, cancellationToken).ConfigureAwait(false);
     }
 }

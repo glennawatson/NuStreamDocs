@@ -20,7 +20,8 @@ public class IniFamilyLexerTests
         await Assert.That(html.Contains("<span class=\"nc\">[section]</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"na\">key</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"o\">=</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;hello&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;hello&quot;</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>TOML classifies double-bracket array-of-tables headers and boolean constants.</summary>
@@ -33,7 +34,8 @@ public class IniFamilyLexerTests
         await Assert.That(html.Contains("<span class=\"na\">port</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">8080</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;prod&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;prod&quot;</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>TOML <c>#</c> comments classify but <c>;</c> does not (TOML doesn't recognize semicolon comments).</summary>
@@ -43,7 +45,8 @@ public class IniFamilyLexerTests
     {
         var html = TomlLexer.Instance.Render("# hash comment\n; not a comment\n"u8);
         await Assert.That(html.Contains("<span class=\"c1\"># hash comment</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"c1\">; not a comment</span>", StringComparison.Ordinal)).IsFalse();
+        await Assert.That(html.Contains("<span class=\"c1\">; not a comment</span>", StringComparison.Ordinal))
+            .IsFalse();
     }
 
     /// <summary>Properties classifies <c>!</c> and <c>#</c> comments, accepts both <c>=</c> and <c>:</c> separators.</summary>

@@ -14,7 +14,8 @@ namespace NuStreamDocs.Blog;
 /// generated index plus tag archives as synthetic pages on the build context
 /// before page discovery — nothing lands on disk in the source tree.
 /// </summary>
-public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
+public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger)
+    : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Configured options.</summary>
     private readonly WyamBlogOptions _options = ValidateOptions(options);
@@ -47,20 +48,25 @@ public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IB
         // Publish the blog index's nav metadata up front (title/order come from the options) so the
         // section is anchored even if generation fails; the per-post entries (publish-date order)
         // come back from the generator and are merged onto the disk page nodes by the nav grafter.
-        var indexEntry = new SyntheticNavEntry(DirectoryPath.FromString(_options.PostsSubdirectory).UrlJoin((UrlPath)"index.md"), _options.IndexTitle, _options.NavOrder, Hidden: false);
+        var indexEntry =
+            new SyntheticNavEntry(
+                DirectoryPath.FromString(_options.PostsSubdirectory).UrlJoin((UrlPath)"index.md"),
+                _options.IndexTitle,
+                _options.NavOrder,
+                false);
         _navEntries = [indexEntry];
 
         var postsRoot = context.InputRoot / _options.PostsSubdirectory;
         var postEntries = await BlogContentGenerator.GenerateAsync(
             _logger,
             new(
-                PostsRoot: postsRoot,
-                DocsRoot: context.InputRoot,
-                IndexPath: postsRoot.File("index.md"),
-                IndexTitle: _options.IndexTitle,
-                EmitArchives: _options.EmitTagArchives,
-                ArchiveRoot: postsRoot / "tags",
-                ArchiveFallbackSlug: [.. "tag"u8]),
+                postsRoot,
+                context.InputRoot,
+                postsRoot.File("index.md"),
+                _options.IndexTitle,
+                _options.EmitTagArchives,
+                postsRoot / "tags",
+                [.. "tag"u8]),
             context.SyntheticPages,
             cancellationToken).ConfigureAwait(false);
 

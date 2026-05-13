@@ -26,7 +26,11 @@ internal static class ArithmatexRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True when a math span was emitted.</returns>
-    private static bool TryRewriteMath(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteMath(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         if (source[offset] is not (byte)'$')
         {
@@ -45,7 +49,11 @@ internal static class ArithmatexRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryRewriteBlockMath(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteBlockMath(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var contentStart = offset + BlockMarkerLength;
@@ -74,7 +82,11 @@ internal static class ArithmatexRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True on match.</returns>
-    private static bool TryRewriteInlineMath(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteInlineMath(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         var contentStart = offset + 1;

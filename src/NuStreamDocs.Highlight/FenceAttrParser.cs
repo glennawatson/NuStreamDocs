@@ -75,7 +75,12 @@ internal static class FenceAttrParser
     /// <param name="value">Captured value on success.</param>
     /// <param name="consumed">Offset to resume scanning from.</param>
     /// <returns>True on a successful key match.</returns>
-    private static bool TryReadAttribute(ReadOnlySpan<byte> info, int start, ReadOnlySpan<byte> key, out ReadOnlySpan<byte> value, out int consumed)
+    private static bool TryReadAttribute(
+        ReadOnlySpan<byte> info,
+        int start,
+        ReadOnlySpan<byte> key,
+        out ReadOnlySpan<byte> value,
+        out int consumed)
     {
         value = default;
         consumed = start;
@@ -84,7 +89,8 @@ internal static class FenceAttrParser
             return false;
         }
 
-        if (start + key.Length >= info.Length || !info[start..].StartsWith(key) || info[start + key.Length] is not (byte)'=')
+        if (start + key.Length >= info.Length || !info[start..].StartsWith(key) ||
+            info[start + key.Length] is not (byte)'=')
         {
             return false;
         }
@@ -108,7 +114,12 @@ internal static class FenceAttrParser
     /// <param name="value">Value span.</param>
     /// <param name="consumed">Offset just past the closing quote.</param>
     /// <returns>True when the quote was matched.</returns>
-    private static bool TryReadQuoted(ReadOnlySpan<byte> info, int quoteOffset, byte quote, out ReadOnlySpan<byte> value, out int consumed)
+    private static bool TryReadQuoted(
+        ReadOnlySpan<byte> info,
+        int quoteOffset,
+        byte quote,
+        out ReadOnlySpan<byte> value,
+        out int consumed)
     {
         value = default;
         consumed = quoteOffset + 1;

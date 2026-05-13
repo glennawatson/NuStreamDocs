@@ -15,7 +15,11 @@ public readonly ref struct PagePostRenderContext
     /// <param name="source">Original UTF-8 markdown bytes (for plugins that key behavior on source content).</param>
     /// <param name="html">UTF-8 HTML bytes produced by the renderer or the previous post-render plugin.</param>
     /// <param name="output">UTF-8 sink the rewritten HTML is written into.</param>
-    public PagePostRenderContext(in FilePath relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html, IBufferWriter<byte> output)
+    public PagePostRenderContext(
+        in FilePath relativePath,
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> html,
+        IBufferWriter<byte> output)
     {
         RelativePath = relativePath;
         Source = source;

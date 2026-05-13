@@ -19,8 +19,8 @@ public readonly record struct FontsOptions(
 {
     /// <summary>Gets the option set with all defaults populated (no faces — themes fall back to a system-font stack).</summary>
     public static FontsOptions Default { get; } = new(
-        Faces: [],
-        CacheDirectory: default,
-        Offline: false,
-        OutputSubdirectory: "assets/fonts");
+        [],
+        default,
+        false,
+        "assets/fonts");
 }

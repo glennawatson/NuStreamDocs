@@ -48,7 +48,12 @@ internal static class BibliographyRewriter
     /// <param name="missing">Optional callback fired for unresolved keys.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when at least one citation was rewritten.</returns>
-    public static bool Rewrite(ReadOnlySpan<byte> source, BibliographyDatabase database, ICitationStyle style, MissingCitationCallback? missing, IBufferWriter<byte> writer)
+    public static bool Rewrite(
+        ReadOnlySpan<byte> source,
+        BibliographyDatabase database,
+        ICitationStyle style,
+        MissingCitationCallback? missing,
+        IBufferWriter<byte> writer)
     {
         if (source.IsEmpty)
         {
@@ -98,17 +103,17 @@ internal static class BibliographyRewriter
             switch (rel)
             {
                 case < 0:
-                {
-                    Write(body, source[cursor..]);
-                    return;
-                }
+                    {
+                        Write(body, source[cursor..]);
+                        return;
+                    }
 
                 case > 0:
-                {
-                    Write(body, source.Slice(cursor, rel));
-                    cursor += rel;
-                    break;
-                }
+                    {
+                        Write(body, source.Slice(cursor, rel));
+                        cursor += rel;
+                        break;
+                    }
             }
 
             if (TryEmitMarker(source, cursor, body, ref state, out var afterMarker))
@@ -160,7 +165,12 @@ internal static class BibliographyRewriter
     /// <param name="state">Resolve state (mutated when cites resolve).</param>
     /// <param name="afterMarker">Offset just past <c>]</c> on success.</param>
     /// <returns>True when a well-formed marker was emitted.</returns>
-    private static bool TryEmitMarker(ReadOnlySpan<byte> source, int bracketStart, IBufferWriter<byte> body, ref ResolveState state, out int afterMarker)
+    private static bool TryEmitMarker(
+        ReadOnlySpan<byte> source,
+        int bracketStart,
+        IBufferWriter<byte> body,
+        ref ResolveState state,
+        out int afterMarker)
     {
         afterMarker = bracketStart;
         if (bracketStart + MarkerOpenLength >= source.Length || source[bracketStart + 1] is not (byte)'@')
@@ -238,7 +248,13 @@ internal static class BibliographyRewriter
     /// <param name="resolvedAny">Set to true when a cite resolves.</param>
     /// <param name="separated">True when a trailing <c>;</c> was consumed (more cites may follow).</param>
     /// <returns>True on a clean parse; false to abort the whole marker.</returns>
-    private static bool TryConsumeOneCite(in CiteScanContext scan, ref int p, ref ResolveState state, ref bool first, ref bool resolvedAny, out bool separated)
+    private static bool TryConsumeOneCite(
+        in CiteScanContext scan,
+        ref int p,
+        ref ResolveState state,
+        ref bool first,
+        ref bool resolvedAny,
+        out bool separated)
     {
         separated = false;
         var inner = scan.Inner;
@@ -249,7 +265,14 @@ internal static class BibliographyRewriter
         }
 
         p++;
-        if (!TryReadCite(inner, scan.InnerSourceOffset, p, out var keyStart, out var keyEnd, out var locator, out var afterCite))
+        if (!TryReadCite(
+            inner,
+            scan.InnerSourceOffset,
+            p,
+            out var keyStart,
+            out var keyEnd,
+            out var locator,
+            out var afterCite))
         {
             return false;
         }
@@ -287,7 +310,14 @@ internal static class BibliographyRewriter
     /// <param name="locator">Parsed locator with source-absolute offsets when present.</param>
     /// <param name="afterCite">Offset just past the cite (key or key+locator).</param>
     /// <returns>True on a clean parse.</returns>
-    private static bool TryReadCite(ReadOnlySpan<byte> inner, int innerSourceOffset, int offset, out int keyStart, out int keyEnd, out CitationLocator locator, out int afterCite)
+    private static bool TryReadCite(
+        ReadOnlySpan<byte> inner,
+        int innerSourceOffset,
+        int offset,
+        out int keyStart,
+        out int keyEnd,
+        out CitationLocator locator,
+        out int afterCite)
     {
         keyStart = offset;
         keyEnd = offset;
@@ -329,7 +359,12 @@ internal static class BibliographyRewriter
     /// <param name="num">Assigned footnote number on success.</param>
     /// <param name="entry">Resolved entry on success.</param>
     /// <returns>True when the key resolved.</returns>
-    private static bool TryAssignCite(ref ResolveState state, ReadOnlySpan<byte> keySpan, in CitationLocator locator, out int num, [MaybeNullWhen(false)] out CitationEntry entry)
+    private static bool TryAssignCite(
+        ref ResolveState state,
+        ReadOnlySpan<byte> keySpan,
+        in CitationLocator locator,
+        out int num,
+        [MaybeNullWhen(false)] out CitationEntry entry)
     {
         if (!state.Database.TryGet(keySpan, out var resolved) || resolved is null)
         {
@@ -448,7 +483,11 @@ internal static class BibliographyRewriter
     /// <param name="source">Original markdown source span; passed to <see cref="ICitationStyle.WriteFootnote"/> so the style can slice the locator value bytes directly.</param>
     /// <param name="style">Citation style.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitFootnoteDefinitions(ResolveState state, ReadOnlySpan<byte> source, ICitationStyle style, IBufferWriter<byte> writer)
+    private static void EmitFootnoteDefinitions(
+        ResolveState state,
+        ReadOnlySpan<byte> source,
+        ICitationStyle style,
+        IBufferWriter<byte> writer)
     {
         if (state.AssignedCount is 0)
         {
@@ -558,7 +597,10 @@ internal static class BibliographyRewriter
         /// <param name="style">Citation style.</param>
         /// <param name="missing">Missing-key callback.</param>
         /// <returns>Fresh state.</returns>
-        public static ResolveState Create(BibliographyDatabase database, ICitationStyle style, MissingCitationCallback? missing)
+        public static ResolveState Create(
+            BibliographyDatabase database,
+            ICitationStyle style,
+            MissingCitationCallback? missing)
         {
             ResolveState state = default;
             state.Database = database;
@@ -577,13 +619,13 @@ internal static class BibliographyRewriter
         {
             if (EntryByNum is not null)
             {
-                ArrayPool<CitationEntry>.Shared.Return(EntryByNum, clearArray: true);
+                ArrayPool<CitationEntry>.Shared.Return(EntryByNum, true);
                 EntryByNum = null!;
             }
 
             if (LocatorByNum is not null)
             {
-                ArrayPool<CitationLocator>.Shared.Return(LocatorByNum, clearArray: true);
+                ArrayPool<CitationLocator>.Shared.Return(LocatorByNum, true);
                 LocatorByNum = null!;
             }
 
@@ -592,7 +634,7 @@ internal static class BibliographyRewriter
                 return;
             }
 
-            ArrayPool<CitationEntry>.Shared.Return(Unique, clearArray: true);
+            ArrayPool<CitationEntry>.Shared.Return(Unique, true);
             Unique = null!;
         }
 
@@ -654,7 +696,7 @@ internal static class BibliographyRewriter
         {
             var grown = ArrayPool<T>.Shared.Rent(minimumLength);
             Array.Copy(rented, grown, liveCount);
-            ArrayPool<T>.Shared.Return(rented, clearArray: true);
+            ArrayPool<T>.Shared.Return(rented, true);
             return grown;
         }
     }

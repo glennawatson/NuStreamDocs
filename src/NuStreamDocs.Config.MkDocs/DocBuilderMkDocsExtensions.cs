@@ -38,12 +38,10 @@ public static class DocBuilderMkDocsExtensions
     /// <param name="builder">Target builder.</param>
     /// <param name="config">Parsed mkdocs config.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder ApplyMkDocsConfig(this DocBuilder builder, in MkDocsConfig config)
-    {
-        return builder
+    public static DocBuilder ApplyMkDocsConfig(this DocBuilder builder, in MkDocsConfig config) =>
+        builder
             .WithSiteName(config.SiteName)
             .WithSiteUrl(config.SiteUrl)
             .WithSiteAuthor(config.SiteAuthor)
             .UseDirectoryUrls(config.UseDirectoryUrls);
-    }
 }

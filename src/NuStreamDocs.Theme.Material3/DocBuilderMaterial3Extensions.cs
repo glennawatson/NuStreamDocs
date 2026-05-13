@@ -15,7 +15,8 @@ public static class DocBuilderMaterial3Extensions
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with default options + the Material3 icon-shortcode preprocessor.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterial3Theme(this DocBuilder builder) => builder.UseMaterial3Theme(iconResolver: null);
+    public static DocBuilder UseMaterial3Theme(this DocBuilder builder) =>
+        builder.UseMaterial3Theme(iconResolver: null);
 
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with default options + the Material3 icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
     /// <param name="builder">The builder.</param>
@@ -26,26 +27,29 @@ public static class DocBuilderMaterial3Extensions
     /// font-ligature fallback.
     /// </param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterial3Theme(this DocBuilder builder, IIconResolver? iconResolver)
-    {
-        return builder
+    public static DocBuilder UseMaterial3Theme(this DocBuilder builder, IIconResolver? iconResolver) =>
+        builder
             .UsePlugin(new IconShortcodePlugin(iconResolver))
             .UsePlugin(new FontsPlugin(Material3Fonts.Default))
             .UsePlugin(new Material3ThemePlugin());
-    }
 
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with caller-tweaked options + the Material3 icon-shortcode preprocessor.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="Material3ThemeOptions.Default"/> and returns the customized set.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterial3Theme(this DocBuilder builder, Func<Material3ThemeOptions, Material3ThemeOptions> configure) => builder.UseMaterial3Theme(configure, iconResolver: null);
+    public static DocBuilder UseMaterial3Theme(
+        this DocBuilder builder,
+        Func<Material3ThemeOptions, Material3ThemeOptions> configure) => builder.UseMaterial3Theme(configure, null);
 
     /// <summary>Registers <see cref="Material3ThemePlugin"/> with caller-tweaked options + the Material3 icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="configure">Function that receives <see cref="Material3ThemeOptions.Default"/> and returns the customized set.</param>
     /// <param name="iconResolver">Optional inline-icon resolver consulted for <c>:material-foo:</c> shortcodes before the font-ligature fallback.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterial3Theme(this DocBuilder builder, Func<Material3ThemeOptions, Material3ThemeOptions> configure, IIconResolver? iconResolver)
+    public static DocBuilder UseMaterial3Theme(
+        this DocBuilder builder,
+        Func<Material3ThemeOptions, Material3ThemeOptions> configure,
+        IIconResolver? iconResolver)
     {
         var options = configure(Material3ThemeOptions.Default);
         return builder

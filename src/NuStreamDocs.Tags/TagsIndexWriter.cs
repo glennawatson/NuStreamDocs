@@ -68,9 +68,12 @@ internal static class TagsIndexWriter
     /// <summary>Writes the all-tags landing page bytes into <paramref name="writer"/>.</summary>
     /// <param name="writer">Target sink.</param>
     /// <param name="grouped">Tag → page list, sorted.</param>
-    private static void WriteIndexPage(IBufferWriter<byte> writer, SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> grouped)
+    private static void WriteIndexPage(
+        IBufferWriter<byte> writer,
+        SortedDictionary<byte[], List<(byte[] Url, byte[] Title)>> grouped)
     {
-        writer.Write("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Tags</title>\n</head>\n<body>\n"u8);
+        writer.Write(
+            "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Tags</title>\n</head>\n<body>\n"u8);
         writer.Write("<main class=\"tags-index\">\n<h1>Tags</h1>\n<ul>\n"u8);
         foreach (var pair in grouped)
         {

@@ -11,11 +11,7 @@ namespace NuStreamDocs.Search.Lunr;
 public static class LunrIndexWriter
 {
     /// <summary>JSON writer options reused across emits.</summary>
-    private static readonly JsonWriterOptions WriterOptions = new()
-    {
-        Indented = false,
-        SkipValidation = true
-    };
+    private static readonly JsonWriterOptions WriterOptions = new() { Indented = false, SkipValidation = true };
 
     /// <summary>Writes <paramref name="documents"/> as Lunr-compatible JSON to <paramref name="path"/>.</summary>
     /// <param name="path">Absolute output path.</param>
@@ -29,7 +25,11 @@ public static class LunrIndexWriter
     /// <param name="language">UTF-8 language code emitted in the <c>config</c> block; empty falls back to <c>en</c>.</param>
     /// <param name="documents">Document corpus.</param>
     /// <param name="extraStopwords">UTF-8 stopwords advertised in the <c>config</c> block.</param>
-    public static void Write(in FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents, byte[][] extraStopwords)
+    public static void Write(
+        in FilePath path,
+        ReadOnlySpan<byte> language,
+        SearchDocument[] documents,
+        byte[][] extraStopwords)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
 

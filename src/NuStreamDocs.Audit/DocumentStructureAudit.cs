@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Audit;
@@ -60,7 +59,13 @@ internal static class DocumentStructureAudit
     /// <param name="rule">The lint.</param>
     /// <param name="message">Diagnostic message.</param>
     /// <param name="fired">Whether the condition holds for this page.</param>
-    private static void AddIf(List<AuditDiagnostic> sink, UrlPath page, AuditOptions options, AuditRule rule, ApiCompatString message, bool fired)
+    private static void AddIf(
+        List<AuditDiagnostic> sink,
+        UrlPath page,
+        AuditOptions options,
+        AuditRule rule,
+        ApiCompatString message,
+        bool fired)
     {
         if (!fired || !options.IsRuleEnabled(rule))
         {
@@ -73,66 +78,77 @@ internal static class DocumentStructureAudit
     /// <summary>Walks the page once and derives the document-structure conditions the lints test.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <returns>Tuple of (missing lang, missing title, missing viewport, missing h1, multiple h1, heading skip).</returns>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Single pass dispatching on element name; the branching tracks the element vocabulary, not nested logic.")]
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S3776:Cognitive Complexity of methods should not be too high",
-        Justification = "Single pass dispatching on element name; the branching tracks the element vocabulary, not nested logic.")]
-    private static (bool MissingLang, bool MissingTitle, bool MissingViewport, bool MissingH1, bool MultipleH1, bool HeadingSkip) ScanDocument(ReadOnlySpan<byte> html)
+    private static (bool MissingLang, bool MissingTitle, bool MissingViewport, bool MissingH1, bool MultipleH1, bool
+        HeadingSkip) ScanDocument(ReadOnlySpan<byte> html)
     {
-        var sawHtml = false;
-        var htmlHasLang = false;
-        var sawHead = false;
-        var titleHasText = false;
-        var sawViewport = false;
-        var h1Count = 0;
-        var anyHeading = false;
-        var headingSkip = false;
-        var lastLevel = 0;
-
+        DocScanState state = default;
         HtmlTagCursor cursor = new(html);
         while (cursor.MoveNext())
         {
-            if (cursor.IsEndTag)
+            if (!cursor.IsEndTag)
             {
-                continue;
-            }
-
-            var name = cursor.Name;
-            if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "html"u8))
-            {
-                sawHtml = true;
-                htmlHasLang = AuditText.HasNonEmptyAttribute(cursor.Attributes, "lang"u8);
-            }
-            else if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "head"u8))
-            {
-                sawHead = true;
-            }
-            else if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "title"u8))
-            {
-                titleHasText |= AuditText.HasText(cursor.RawText);
-            }
-            else if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "meta"u8))
-            {
-                sawViewport |= IsViewportMeta(cursor);
-            }
-            else
-            {
-                var level = HeadingLevel(name);
-                if (level != 0)
-                {
-                    anyHeading = true;
-                    h1Count += level == 1 ? 1 : 0;
-                    headingSkip |= lastLevel != 0 && level > lastLevel + 1;
-                    lastLevel = level;
-                }
+                ApplyTag(ref state, cursor);
             }
         }
 
-        return (sawHtml && !htmlHasLang, sawHead && !titleHasText, sawHead && !sawViewport, anyHeading && h1Count == 0, h1Count > 1, headingSkip);
+        return (
+            state.SawHtml && !state.HtmlHasLang,
+            state.SawHead && !state.TitleHasText,
+            state.SawHead && !state.SawViewport,
+            state.AnyHeading && state.H1Count == 0,
+            state.H1Count > 1,
+            state.HeadingSkip);
+    }
+
+    /// <summary>Folds one start tag into the running scan state.</summary>
+    /// <param name="state">Running scan state.</param>
+    /// <param name="cursor">Cursor positioned on the start tag.</param>
+    private static void ApplyTag(ref DocScanState state, HtmlTagCursor cursor)
+    {
+        var name = cursor.Name;
+        if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "html"u8))
+        {
+            state.SawHtml = true;
+            state.HtmlHasLang = AuditText.HasNonEmptyAttribute(cursor.Attributes, "lang"u8);
+            return;
+        }
+
+        if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "head"u8))
+        {
+            state.SawHead = true;
+            return;
+        }
+
+        if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "title"u8))
+        {
+            state.TitleHasText |= AuditText.HasText(cursor.RawText);
+            return;
+        }
+
+        if (AsciiByteHelpers.EqualsIgnoreAsciiCase(name, "meta"u8))
+        {
+            state.SawViewport |= IsViewportMeta(cursor);
+            return;
+        }
+
+        ApplyHeading(ref state, name);
+    }
+
+    /// <summary>Folds an <c>h1</c>-<c>h6</c> tag into the heading-outline portion of the scan state.</summary>
+    /// <param name="state">Running scan state.</param>
+    /// <param name="name">Tag name bytes.</param>
+    private static void ApplyHeading(ref DocScanState state, ReadOnlySpan<byte> name)
+    {
+        var level = HeadingLevel(name);
+        if (level == 0)
+        {
+            return;
+        }
+
+        state.AnyHeading = true;
+        state.H1Count += level == 1 ? 1 : 0;
+        state.HeadingSkip |= state.LastLevel != 0 && level > state.LastLevel + 1;
+        state.LastLevel = level;
     }
 
     /// <summary>True when a <c>&lt;meta&gt;</c> tag declares <c>name="viewport"</c>.</summary>
@@ -147,7 +163,8 @@ internal static class DocumentStructureAudit
     /// <returns>The heading level, or 0.</returns>
     private static int HeadingLevel(ReadOnlySpan<byte> name)
     {
-        if (name.Length != 2 || AsciiByteHelpers.ToAsciiLowerByte(name[0]) != (byte)'h' || !AsciiByteHelpers.IsAsciiDigit(name[1]))
+        if (name.Length != 2 || AsciiByteHelpers.ToAsciiLowerByte(name[0]) != (byte)'h' ||
+            !AsciiByteHelpers.IsAsciiDigit(name[1]))
         {
             return 0;
         }
@@ -155,4 +172,25 @@ internal static class DocumentStructureAudit
         var digit = name[1] - (byte)'0';
         return digit is >= 1 and <= MaxHeadingLevel ? digit : 0;
     }
+
+    /// <summary>Mutable accumulator threaded through the single document scan.</summary>
+    /// <param name="SawHtml">Whether an <c>&lt;html&gt;</c> tag was seen.</param>
+    /// <param name="HtmlHasLang">Whether the <c>&lt;html&gt;</c> tag carried a non-empty <c>lang</c> attribute.</param>
+    /// <param name="SawHead">Whether a <c>&lt;head&gt;</c> tag was seen.</param>
+    /// <param name="TitleHasText">Whether a <c>&lt;title&gt;</c> with non-whitespace text was seen.</param>
+    /// <param name="SawViewport">Whether a responsive-viewport <c>&lt;meta&gt;</c> was seen.</param>
+    /// <param name="H1Count">Count of <c>&lt;h1&gt;</c> tags seen.</param>
+    /// <param name="AnyHeading">Whether any heading tag was seen.</param>
+    /// <param name="HeadingSkip">Whether the heading outline skipped a level.</param>
+    /// <param name="LastLevel">Level of the most recently seen heading (0 before the first).</param>
+    private record struct DocScanState(
+        bool SawHtml,
+        bool HtmlHasLang,
+        bool SawHead,
+        bool TitleHasText,
+        bool SawViewport,
+        int H1Count,
+        bool AnyHeading,
+        bool HeadingSkip,
+        int LastLevel);
 }

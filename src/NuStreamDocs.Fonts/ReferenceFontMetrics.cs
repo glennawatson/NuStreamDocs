@@ -18,13 +18,18 @@ internal static class ReferenceFontMetrics
     private static readonly FontMetrics CourierNew = new(2048, 1705, -615, 0, 866, 1170);
 
     /// <summary>UTF-8 <c>src</c> value listing local sans-serif system fonts.</summary>
-    private static readonly byte[] SansSrc = [.. "local(\"Arial\"), local(\"Helvetica Neue\"), local(\"Helvetica\"), local(\"Liberation Sans\"), local(\"Arimo\")"u8];
+    private static readonly byte[] SansSrc =
+    [
+        .. "local(\"Arial\"), local(\"Helvetica Neue\"), local(\"Helvetica\"), local(\"Liberation Sans\"), local(\"Arimo\")"u8
+    ];
 
     /// <summary>UTF-8 <c>src</c> value listing local serif system fonts.</summary>
-    private static readonly byte[] SerifSrc = [.. "local(\"Times New Roman\"), local(\"Times\"), local(\"Liberation Serif\"), local(\"Tinos\")"u8];
+    private static readonly byte[] SerifSrc =
+        [.. "local(\"Times New Roman\"), local(\"Times\"), local(\"Liberation Serif\"), local(\"Tinos\")"u8];
 
     /// <summary>UTF-8 <c>src</c> value listing local monospace system fonts.</summary>
-    private static readonly byte[] MonoSrc = [.. "local(\"Courier New\"), local(\"Courier\"), local(\"Liberation Mono\"), local(\"Cousine\")"u8];
+    private static readonly byte[] MonoSrc =
+        [.. "local(\"Courier New\"), local(\"Courier\"), local(\"Liberation Mono\"), local(\"Cousine\")"u8];
 
     /// <summary>Returns the reference-font metrics for the given generic family.</summary>
     /// <param name="generic">Generic font family.</param>
@@ -33,7 +38,7 @@ internal static class ReferenceFontMetrics
     {
         GenericFontFamily.Serif => TimesNewRoman,
         GenericFontFamily.Monospace => CourierNew,
-        _ => Arial,
+        _ => Arial
     };
 
     /// <summary>Returns the UTF-8 <c>src: local(...)</c> stack for the given generic family.</summary>
@@ -43,7 +48,7 @@ internal static class ReferenceFontMetrics
     {
         GenericFontFamily.Serif => SerifSrc,
         GenericFontFamily.Monospace => MonoSrc,
-        _ => SansSrc,
+        _ => SansSrc
     };
 
     /// <summary>Returns the UTF-8 generic-family keyword (<c>sans-serif</c> / <c>serif</c> / <c>monospace</c>).</summary>
@@ -53,6 +58,6 @@ internal static class ReferenceFontMetrics
     {
         GenericFontFamily.Serif => "serif"u8,
         GenericFontFamily.Monospace => "monospace"u8,
-        _ => "sans-serif"u8,
+        _ => "sans-serif"u8
     };
 }

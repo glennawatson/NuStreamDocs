@@ -83,7 +83,10 @@ internal static class FrontmatterSplicer
     /// <param name="existingFrontmatter">Page's own frontmatter bytes (including opening <c>---</c>).</param>
     /// <param name="extra">Inherited-keys body.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void AppendFreshKeys(ReadOnlySpan<byte> existingFrontmatter, ReadOnlySpan<byte> extra, IBufferWriter<byte> writer)
+    private static void AppendFreshKeys(
+        ReadOnlySpan<byte> existingFrontmatter,
+        ReadOnlySpan<byte> extra,
+        IBufferWriter<byte> writer)
     {
         var existingKeys = CollectKeys(existingFrontmatter);
         try

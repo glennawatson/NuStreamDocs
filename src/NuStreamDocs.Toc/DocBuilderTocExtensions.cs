@@ -14,27 +14,20 @@ public static class DocBuilderTocExtensions
     /// <summary>Registers <see cref="TocPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseToc(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new TocPlugin());
-    }
+    public static DocBuilder UseToc(this DocBuilder builder) => builder.UsePlugin(new TocPlugin());
 
     /// <summary>Registers <see cref="TocPlugin"/> with caller-supplied options.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseToc(this DocBuilder builder, in TocOptions options)
-    {
-        return builder.UsePlugin(new TocPlugin(options));
-    }
+    public static DocBuilder UseToc(this DocBuilder builder, in TocOptions options) =>
+        builder.UsePlugin(new TocPlugin(options));
 
     /// <summary>Registers <see cref="TocPlugin"/> with caller-supplied options and a logger.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger forwarded to the plugin.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseToc(this DocBuilder builder, in TocOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new TocPlugin(options, logger));
-    }
+    public static DocBuilder UseToc(this DocBuilder builder, in TocOptions options, ILogger logger) =>
+        builder.UsePlugin(new TocPlugin(options, logger));
 }

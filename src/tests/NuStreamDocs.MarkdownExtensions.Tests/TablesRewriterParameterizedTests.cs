@@ -25,7 +25,8 @@ public class TablesRewriterParameterizedTests
         ArgumentNullException.ThrowIfNull(expectedAlign);
         var output = Rewrite($"| h |\n{separator}\n| v |\n");
         await Assert.That(output).Contains("<table>");
-        await Assert.That(expectedAlign.Length is 0 || output.Contains(expectedAlign, StringComparison.Ordinal)).IsTrue();
+        await Assert.That(expectedAlign.Length is 0 || output.Contains(expectedAlign, StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Tables with varying column counts emit the matching number of cells in the header.</summary>

@@ -35,7 +35,10 @@ internal static class FootnotesRewriter
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="defs">Definition list populated in encounter order.</param>
     /// <param name="writer">UTF-8 sink for the body output.</param>
-    private static void CollectAndStripDefs(ReadOnlySpan<byte> source, List<Definition> defs, IBufferWriter<byte> writer)
+    private static void CollectAndStripDefs(
+        ReadOnlySpan<byte> source,
+        List<Definition> defs,
+        IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < source.Length)
@@ -71,7 +74,11 @@ internal static class FootnotesRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="afterCode">Cursor position past the consumed span on success.</param>
     /// <returns>True when a code span was consumed.</returns>
-    private static bool TrySkipCodeSpan(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int afterCode)
+    private static bool TrySkipCodeSpan(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int afterCode)
     {
         if (MarkdownCodeScanner.AtLineStart(source, offset)
             && MarkdownCodeScanner.TryConsumeFence(source, offset, out var fenceEnd))
@@ -99,11 +106,22 @@ internal static class FootnotesRewriter
     /// <param name="defs">Definition accumulator (mutated on success).</param>
     /// <param name="afterDef">Cursor position past the consumed block on success.</param>
     /// <returns>True when a definition was consumed.</returns>
-    private static bool TryConsumeDefinition(ReadOnlySpan<byte> source, int offset, List<Definition> defs, out int afterDef)
+    private static bool TryConsumeDefinition(
+        ReadOnlySpan<byte> source,
+        int offset,
+        List<Definition> defs,
+        out int afterDef)
     {
         afterDef = offset;
         if (!MarkdownCodeScanner.AtLineStart(source, offset)
-            || !TryParseDefinition(source, offset, out var idStart, out var idLen, out var bodyStart, out var bodyEnd, out var blockEnd))
+            || !TryParseDefinition(
+                source,
+                offset,
+                out var idStart,
+                out var idLen,
+                out var bodyStart,
+                out var bodyEnd,
+                out var blockEnd))
         {
             return false;
         }
@@ -122,7 +140,12 @@ internal static class FootnotesRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="afterRef">Cursor position past the consumed reference on success.</param>
     /// <returns>True when a reference was emitted.</returns>
-    private static bool TryEmitInlineReference(ReadOnlySpan<byte> source, int offset, List<Definition> defs, IBufferWriter<byte> writer, out int afterRef)
+    private static bool TryEmitInlineReference(
+        ReadOnlySpan<byte> source,
+        int offset,
+        List<Definition> defs,
+        IBufferWriter<byte> writer,
+        out int afterRef)
     {
         afterRef = offset;
         if (source[offset] != (byte)'['
@@ -190,12 +213,18 @@ internal static class FootnotesRewriter
     /// <param name="idLen">Length of the id token on success.</param>
     /// <param name="afterId">Offset of the byte just past the id (typically <c>]</c>).</param>
     /// <returns>True when an id was consumed.</returns>
-    private static bool TryParseId(ReadOnlySpan<byte> source, int offset, out int idStart, out int idLen, out int afterId)
+    private static bool TryParseId(
+        ReadOnlySpan<byte> source,
+        int offset,
+        out int idStart,
+        out int idLen,
+        out int afterId)
     {
         idStart = 0;
         idLen = 0;
         afterId = 0;
-        if (offset + ReferencePrefixLength >= source.Length || source[offset] != (byte)'[' || source[offset + 1] != (byte)'^')
+        if (offset + ReferencePrefixLength >= source.Length || source[offset] != (byte)'[' ||
+            source[offset + 1] != (byte)'^')
         {
             return false;
         }
@@ -219,7 +248,12 @@ internal static class FootnotesRewriter
     /// <param name="idLen">Length of the id token on success.</param>
     /// <param name="refEnd">Exclusive end of the reference token on success.</param>
     /// <returns>True when an inline reference was found.</returns>
-    private static bool TryParseInlineRef(ReadOnlySpan<byte> source, int offset, out int idStart, out int idLen, out int refEnd)
+    private static bool TryParseInlineRef(
+        ReadOnlySpan<byte> source,
+        int offset,
+        out int idStart,
+        out int idLen,
+        out int refEnd)
     {
         idLen = 0;
         refEnd = 0;

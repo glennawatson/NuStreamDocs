@@ -330,7 +330,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
             return 0UL;
         }
 
-        List<(string Path, long Ticks, long Length)> entries = new(capacity: 256);
+        List<(string Path, long Ticks, long Length)> entries = new(256);
         AppendStats(inputRoot, "*.md", entries);
         AppendStats(inputRoot, ".pages", entries);
         entries.Sort(static (a, b) => string.CompareOrdinal(a.Path, b.Path));
@@ -352,7 +352,10 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <param name="root">Absolute docs root.</param>
     /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
     /// <param name="entries">Accumulator.</param>
-    private static void AppendStats(in DirectoryPath root, string searchPattern, List<(string Path, long Ticks, long Length)> entries)
+    private static void AppendStats(
+        in DirectoryPath root,
+        string searchPattern,
+        List<(string Path, long Ticks, long Length)> entries)
     {
         var files = Directory.GetFiles(root, searchPattern, SearchOption.AllDirectories);
         for (var i = 0; i < files.Length; i++)
@@ -365,7 +368,8 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Builds the linearized leaves, path index, and section spans for <paramref name="root"/> in one pass.</summary>
     /// <param name="root">Nav tree root.</param>
     /// <returns>The three index pieces.</returns>
-    private static (NavNode[] Leaves, Dictionary<byte[], int> Index, (int Start, int End)[] Spans) BuildIndex(NavNode root)
+    private static (NavNode[] Leaves, Dictionary<byte[], int> Index, (int Start, int End)[] Spans)
+        BuildIndex(NavNode root)
     {
         List<NavNode> leaves = [];
         List<(int Start, int End)> spans = [];
@@ -411,7 +415,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
 
         if (!string.IsNullOrEmpty(node.IndexPath))
         {
-            leaves.Add(new(node.Title, node.IndexPath, isSection: false, []));
+            leaves.Add(new(node.Title, node.IndexPath, false, []));
             spans.Add((enclosingStart, UnsetSpanEnd));
         }
 

@@ -41,39 +41,38 @@ public sealed class ByteKeywordSet
     /// <summary>Builds a case-sensitive set from the supplied UTF-8 keywords. Pass <c>[.. "name"u8]</c> or <c>[.. "name"u8]</c> per entry.</summary>
     /// <param name="keywords">Keyword bytes; each entry must be non-empty.</param>
     /// <returns>Built set.</returns>
-    public static ByteKeywordSet Create(params byte[][] keywords)
-    {
-        return Build(keywords, ignoreCase: false);
-    }
+    public static ByteKeywordSet Create(params byte[][] keywords) => Build(keywords, false);
 
     /// <summary>Builds a case-insensitive set; entries must already be lowercase ASCII.</summary>
     /// <param name="lowercaseKeywords">Lowercase UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
-    public static ByteKeywordSet CreateIgnoreCase(params byte[][] lowercaseKeywords)
-    {
-        return Build(lowercaseKeywords, ignoreCase: true);
-    }
+    public static ByteKeywordSet CreateIgnoreCase(params byte[][] lowercaseKeywords) => Build(lowercaseKeywords, true);
 
     /// <summary>Builds a case-sensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab.</summary>
     /// <param name="spaceSeparated">Whitespace-delimited UTF-8 keyword bytes (e.g. <c>"if else for"u8</c>).</param>
     /// <returns>Built set.</returns>
     public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparated) =>
-        Build(SplitSpaceSeparated(spaceSeparated), ignoreCase: false);
+        Build(SplitSpaceSeparated(spaceSeparated), false);
 
     /// <summary>Builds a case-sensitive set from two space-delimited UTF-8 chunks (the second is appended after a synthetic separator).</summary>
     /// <param name="spaceSeparatedFirst">First chunk of whitespace-delimited UTF-8 keyword bytes.</param>
     /// <param name="spaceSeparatedSecond">Second chunk of whitespace-delimited UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
-    public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparatedFirst, ReadOnlySpan<byte> spaceSeparatedSecond) =>
-        Build(SplitTwoChunks(spaceSeparatedFirst, spaceSeparatedSecond), ignoreCase: false);
+    public static ByteKeywordSet CreateFromSpaceSeparated(
+        ReadOnlySpan<byte> spaceSeparatedFirst,
+        ReadOnlySpan<byte> spaceSeparatedSecond) =>
+        Build(SplitTwoChunks(spaceSeparatedFirst, spaceSeparatedSecond), false);
 
     /// <summary>Builds a case-sensitive set from three space-delimited UTF-8 chunks (each is appended after a synthetic separator).</summary>
     /// <param name="spaceSeparatedFirst">First chunk.</param>
     /// <param name="spaceSeparatedSecond">Second chunk.</param>
     /// <param name="spaceSeparatedThird">Third chunk.</param>
     /// <returns>Built set.</returns>
-    public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparatedFirst, ReadOnlySpan<byte> spaceSeparatedSecond, ReadOnlySpan<byte> spaceSeparatedThird) =>
-        Build(SplitThreeChunks(spaceSeparatedFirst, spaceSeparatedSecond, spaceSeparatedThird), ignoreCase: false);
+    public static ByteKeywordSet CreateFromSpaceSeparated(
+        ReadOnlySpan<byte> spaceSeparatedFirst,
+        ReadOnlySpan<byte> spaceSeparatedSecond,
+        ReadOnlySpan<byte> spaceSeparatedThird) =>
+        Build(SplitThreeChunks(spaceSeparatedFirst, spaceSeparatedSecond, spaceSeparatedThird), false);
 
     /// <summary>Builds a case-sensitive set from four space-delimited UTF-8 chunks.</summary>
     /// <param name="spaceSeparatedFirst">First chunk.</param>
@@ -86,20 +85,24 @@ public sealed class ByteKeywordSet
         ReadOnlySpan<byte> spaceSeparatedSecond,
         ReadOnlySpan<byte> spaceSeparatedThird,
         ReadOnlySpan<byte> spaceSeparatedFourth) =>
-        Build(SplitFourChunks(spaceSeparatedFirst, spaceSeparatedSecond, spaceSeparatedThird, spaceSeparatedFourth), ignoreCase: false);
+        Build(
+            SplitFourChunks(spaceSeparatedFirst, spaceSeparatedSecond, spaceSeparatedThird, spaceSeparatedFourth),
+            false);
 
     /// <summary>Builds a case-insensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab; entries must already be lowercase ASCII.</summary>
     /// <param name="spaceSeparatedLowercase">Whitespace-delimited lowercase UTF-8 keyword bytes (e.g. <c>"select from where"u8</c>).</param>
     /// <returns>Built set.</returns>
     public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(ReadOnlySpan<byte> spaceSeparatedLowercase) =>
-        Build(SplitSpaceSeparated(spaceSeparatedLowercase), ignoreCase: true);
+        Build(SplitSpaceSeparated(spaceSeparatedLowercase), true);
 
     /// <summary>Builds a case-insensitive set from two space-delimited UTF-8 chunks (entries must already be lowercase ASCII).</summary>
     /// <param name="spaceSeparatedLowercaseFirst">First chunk of whitespace-delimited lowercase UTF-8 keyword bytes.</param>
     /// <param name="spaceSeparatedLowercaseSecond">Second chunk of whitespace-delimited lowercase UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
-    public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(ReadOnlySpan<byte> spaceSeparatedLowercaseFirst, ReadOnlySpan<byte> spaceSeparatedLowercaseSecond) =>
-        Build(SplitTwoChunks(spaceSeparatedLowercaseFirst, spaceSeparatedLowercaseSecond), ignoreCase: true);
+    public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(
+        ReadOnlySpan<byte> spaceSeparatedLowercaseFirst,
+        ReadOnlySpan<byte> spaceSeparatedLowercaseSecond) =>
+        Build(SplitTwoChunks(spaceSeparatedLowercaseFirst, spaceSeparatedLowercaseSecond), true);
 
     /// <summary>Builds a case-insensitive set from three space-delimited UTF-8 chunks (entries must already be lowercase ASCII).</summary>
     /// <param name="spaceSeparatedLowercaseFirst">First chunk.</param>
@@ -110,7 +113,9 @@ public sealed class ByteKeywordSet
         ReadOnlySpan<byte> spaceSeparatedLowercaseFirst,
         ReadOnlySpan<byte> spaceSeparatedLowercaseSecond,
         ReadOnlySpan<byte> spaceSeparatedLowercaseThird) =>
-        Build(SplitThreeChunks(spaceSeparatedLowercaseFirst, spaceSeparatedLowercaseSecond, spaceSeparatedLowercaseThird), ignoreCase: true);
+        Build(
+            SplitThreeChunks(spaceSeparatedLowercaseFirst, spaceSeparatedLowercaseSecond, spaceSeparatedLowercaseThird),
+            true);
 
     /// <summary>Returns true when <paramref name="word"/> matches one of the registered keywords.</summary>
     /// <param name="word">Candidate word (UTF-8 bytes).</param>
@@ -169,7 +174,10 @@ public sealed class ByteKeywordSet
     /// <param name="second">Second source bytes.</param>
     /// <param name="third">Third source bytes.</param>
     /// <returns>Per-token byte arrays from all three chunks.</returns>
-    private static byte[][] SplitThreeChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, ReadOnlySpan<byte> third)
+    private static byte[][] SplitThreeChunks(
+        ReadOnlySpan<byte> first,
+        ReadOnlySpan<byte> second,
+        ReadOnlySpan<byte> third)
     {
         var firstTokens = WhitespaceSplitter.Split(first);
         var secondTokens = WhitespaceSplitter.Split(second);
@@ -196,7 +204,11 @@ public sealed class ByteKeywordSet
     /// <param name="third">Third source bytes.</param>
     /// <param name="fourth">Fourth source bytes.</param>
     /// <returns>Per-token byte arrays from all four chunks.</returns>
-    private static byte[][] SplitFourChunks(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, ReadOnlySpan<byte> third, ReadOnlySpan<byte> fourth)
+    private static byte[][] SplitFourChunks(
+        ReadOnlySpan<byte> first,
+        ReadOnlySpan<byte> second,
+        ReadOnlySpan<byte> third,
+        ReadOnlySpan<byte> fourth)
     {
         var firstTokens = WhitespaceSplitter.Split(first);
         var secondTokens = WhitespaceSplitter.Split(second);

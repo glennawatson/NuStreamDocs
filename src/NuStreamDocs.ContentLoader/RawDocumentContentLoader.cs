@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -33,7 +32,7 @@ public sealed class RawDocumentContentLoader : IContentLoader
     /// <summary>Initializes a new instance of the <see cref="RawDocumentContentLoader"/> class.</summary>
     /// <param name="entries">The documents to fetch.</param>
     public RawDocumentContentLoader(RawDocumentEntry[] entries)
-        : this(entries, [], httpClientFactory: null, NullLogger.Instance)
+        : this(entries, [], null, NullLogger.Instance)
     {
     }
 
@@ -42,7 +41,7 @@ public sealed class RawDocumentContentLoader : IContentLoader
     /// <param name="headers">Extra request headers (UTF-8 name/value byte pairs).</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public RawDocumentContentLoader(RawDocumentEntry[] entries, (byte[] Name, byte[] Value)[] headers, ILogger logger)
-        : this(entries, headers, httpClientFactory: null, logger)
+        : this(entries, headers, null, logger)
     {
     }
 
@@ -51,7 +50,11 @@ public sealed class RawDocumentContentLoader : IContentLoader
     /// <param name="headers">Extra request headers (UTF-8 name/value byte pairs).</param>
     /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
     /// <param name="logger">Logger for diagnostics.</param>
-    public RawDocumentContentLoader(RawDocumentEntry[] entries, (byte[] Name, byte[] Value)[] headers, Func<HttpClient>? httpClientFactory, ILogger logger)
+    public RawDocumentContentLoader(
+        RawDocumentEntry[] entries,
+        (byte[] Name, byte[] Value)[] headers,
+        Func<HttpClient>? httpClientFactory,
+        ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(entries);
         ArgumentNullException.ThrowIfNull(headers);
@@ -110,7 +113,9 @@ public sealed class RawDocumentContentLoader : IContentLoader
         using HttpRequestMessage request = new(HttpMethod.Get, endpoint);
         for (var i = 0; i < _headers.Length; i++)
         {
-            request.Headers.TryAddWithoutValidation(Encoding.UTF8.GetString(_headers[i].Name), Encoding.UTF8.GetString(_headers[i].Value));
+            request.Headers.TryAddWithoutValidation(
+                Encoding.UTF8.GetString(_headers[i].Name),
+                Encoding.UTF8.GetString(_headers[i].Value));
         }
 
         try
@@ -122,7 +127,9 @@ public sealed class RawDocumentContentLoader : IContentLoader
         catch (HttpRequestException ex)
         {
             ContentLoaderLoggingHelper.LogFetchFailed(_logger, "raw-document", url.Value, ex.Message);
-            throw new ContentLoaderException(StringCompose.Concat("HTTP request to ", url.Value, " failed: ", ex.Message), ex);
+            throw new ContentLoaderException(
+                StringCompose.Concat("HTTP request to ", url.Value, " failed: ", ex.Message),
+                ex);
         }
     }
 }

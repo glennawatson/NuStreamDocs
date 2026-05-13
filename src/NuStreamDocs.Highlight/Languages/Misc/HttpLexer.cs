@@ -58,31 +58,53 @@ public static class HttpLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            },
 
             // GET /path HTTP/1.1 — the whole request line classifies as one keyword token.
-            new(MatchRequestLine, TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = MethodFirst, RequiresLineStart = true },
+            new(MatchRequestLine, TokenClass.Keyword, LexerRule.NoStateChange)
+            {
+                FirstBytes = MethodFirst, RequiresLineStart = true
+            },
 
             // HTTP/1.1 200 OK — the whole status line classifies as one keyword token.
-            new(MatchStatusLine, TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("H"u8), RequiresLineStart = true },
+            new(MatchStatusLine, TokenClass.Keyword, LexerRule.NoStateChange)
+            {
+                FirstBytes = SearchValues.Create("H"u8), RequiresLineStart = true
+            },
 
             // Header-Name: value — emit the name as Name.Attribute, value falls through.
-            new(MatchHeaderName, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, RequiresLineStart = true },
+            new(MatchHeaderName, TokenClass.NameAttribute, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiIdentifierStart, RequiresLineStart = true
+            },
 
             // "..." string with backslash escapes (rare in HTTP but appears in JSON-shape bodies).
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.DoubleQuoteFirst
+            },
 
             // Numbers (status codes, content-length values, etc.).
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
+            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiDigits
+            },
 
             // Bare identifier (header-value tokens, URL segments).
             new(
-                static slice => TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, HeaderNameContinue),
+                static slice =>
+                    TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, HeaderNameContinue),
                 TokenClass.Name,
                 LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
 
             // Single-byte structural punctuation.
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
+            new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet),
+                TokenClass.Punctuation,
+                LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
         ];
 
         return new(LanguageRuleBuilder.BuildSingleState(rules));

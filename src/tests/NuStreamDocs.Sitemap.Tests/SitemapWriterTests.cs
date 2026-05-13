@@ -14,20 +14,21 @@ public class SitemapWriterTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", useDirectoryUrls: false)))
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", false)))
             .IsEqualTo("guide/intro.html");
 
     /// <summary>Backslashes are normalized to forward slashes.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathNormalizesSeparators() =>
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide\\intro.md", useDirectoryUrls: false)))
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide\\intro.md", false)))
             .IsEqualTo("guide/intro.html");
 
     /// <summary>Empty input yields empty output.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task EmptyInputEmptyOutput() => await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, useDirectoryUrls: false).Length).IsEqualTo(0);
+    public async Task EmptyInputEmptyOutput() =>
+        await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, false).Length).IsEqualTo(0);
 
     /// <summary>Writing the sitemap produces the expected XML envelope and per-URL elements.</summary>
     /// <returns>Async test.</returns>
@@ -127,7 +128,7 @@ public class SitemapWriterTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

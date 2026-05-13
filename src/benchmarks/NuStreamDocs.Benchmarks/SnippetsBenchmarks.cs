@@ -48,10 +48,12 @@ public class SnippetsBenchmarks
             Path.GetTempPath(),
             "smkd-snip-bench-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(_baseDir);
-        await File.WriteAllTextAsync(Path.Combine(_baseDir, "whole.md"), "Hello from the whole-file snippet.\n").ConfigureAwait(false);
+        await File.WriteAllTextAsync(Path.Combine(_baseDir, "whole.md"), "Hello from the whole-file snippet.\n")
+            .ConfigureAwait(false);
         await File.WriteAllTextAsync(
-            Path.Combine(_baseDir, "sectioned.md"),
-            "Header.\n<!-- @section example -->\nSection body that gets spliced.\n<!-- @endsection -->\nFooter.\n").ConfigureAwait(false);
+                Path.Combine(_baseDir, "sectioned.md"),
+                "Header.\n<!-- @section example -->\nSection body that gets spliced.\n<!-- @endsection -->\nFooter.\n")
+            .ConfigureAwait(false);
 
         _wholeFileSource = BuildRepeated("--8<-- \"whole.md\"\n");
         _sectionSource = BuildRepeated("--8<-- \"sectioned.md#example\"\n");
@@ -76,7 +78,7 @@ public class SnippetsBenchmarks
 
         try
         {
-            Directory.Delete(_baseDir, recursive: true);
+            Directory.Delete(_baseDir, true);
         }
         catch (IOException)
         {

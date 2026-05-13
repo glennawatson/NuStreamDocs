@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using NuStreamDocs.Common;
@@ -55,13 +54,19 @@ public sealed class FontDownloadCache
 
         if (_offline)
         {
-            throw new FontDownloadException(StringCompose.Concat("Font resource not in the cache and offline mode is enabled: ", url, " — run once online to populate the cache."));
+            throw new FontDownloadException(
+                StringCompose.Concat(
+                    "Font resource not in the cache and offline mode is enabled: ",
+                    url,
+                    " — run once online to populate the cache."));
         }
 
         byte[] bytes;
         try
         {
-            using var response = await Client.GetAsync(new Uri(url.Value ?? string.Empty, UriKind.Absolute), cancellationToken).ConfigureAwait(false);
+            using var response = await Client
+                .GetAsync(new Uri(url.Value ?? string.Empty, UriKind.Absolute), cancellationToken)
+                .ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -154,7 +159,7 @@ public sealed class FontDownloadCache
     {
         var configured = Environment.GetEnvironmentVariable(CacheDirectoryEnvironmentVariable);
         return string.IsNullOrEmpty(configured)
-            ? new DirectoryPath(Path.Combine(Path.GetTempPath(), "nustreamdocs-fonts-cache"))
+            ? new(Path.Combine(Path.GetTempPath(), "nustreamdocs-fonts-cache"))
             : new DirectoryPath(configured);
     }
 

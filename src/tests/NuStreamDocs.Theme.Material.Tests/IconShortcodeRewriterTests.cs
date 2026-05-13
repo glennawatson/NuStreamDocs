@@ -38,12 +38,14 @@ public class IconShortcodeRewriterTests
     /// <summary>Unknown styles fall through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task UnknownFontAwesomeStyleFallsThrough() => await Assert.That(Rewrite(":fontawesome-magic-bell:")).IsEqualTo(":fontawesome-magic-bell:");
+    public async Task UnknownFontAwesomeStyleFallsThrough() =>
+        await Assert.That(Rewrite(":fontawesome-magic-bell:")).IsEqualTo(":fontawesome-magic-bell:");
 
     /// <summary>Plain emoji-style shortcodes (no <c>material-</c> / <c>fontawesome-</c> prefix) pass through.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task UnrelatedShortcodesPassThrough() => await Assert.That(Rewrite("plain :smile: text")).IsEqualTo("plain :smile: text");
+    public async Task UnrelatedShortcodesPassThrough() =>
+        await Assert.That(Rewrite("plain :smile: text")).IsEqualTo("plain :smile: text");
 
     /// <summary>Fenced and inline code spans pass through verbatim.</summary>
     /// <returns>Async test.</returns>

@@ -95,10 +95,7 @@ public readonly record struct FilePath(string Value)
     /// <summary>Returns a copy with the extension swapped to <paramref name="extension"/>.</summary>
     /// <param name="extension">New extension; should include the leading dot.</param>
     /// <returns>The renamed file path.</returns>
-    public FilePath WithExtension(string extension)
-    {
-        return IsEmpty ? this : new(Path.ChangeExtension(Value, extension));
-    }
+    public FilePath WithExtension(string extension) => IsEmpty ? this : new(Path.ChangeExtension(Value, extension));
 
     /// <summary>Determines whether this file currently exists on disk.</summary>
     /// <returns>True when the file exists; otherwise false.</returns>

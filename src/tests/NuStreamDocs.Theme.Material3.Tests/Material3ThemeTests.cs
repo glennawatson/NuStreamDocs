@@ -112,7 +112,14 @@ public class Material3ThemeTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("MD3 Site"))
             .BuildAsync();
 
-        var pagePath = Path.Combine(fixture.Site, "api", "Akavache.Settings", "Akavache", "Settings", "AkavacheBuilderAsyncExtensions", "index.html");
+        var pagePath = Path.Combine(
+            fixture.Site,
+            "api",
+            "Akavache.Settings",
+            "Akavache",
+            "Settings",
+            "AkavacheBuilderAsyncExtensions",
+            "index.html");
         var html = await File.ReadAllTextAsync(pagePath);
 
         // Source path has 4 slashes; with directory URLs the served page sits at depth 5,
@@ -143,7 +150,13 @@ public class Material3ThemeTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("MD3 Site"))
             .BuildAsync();
 
-        var pagePath = Path.Combine(fixture.Site, "api", "Akavache.Settings", "Akavache", "Settings", "AkavacheBuilderAsyncExtensions.html");
+        var pagePath = Path.Combine(
+            fixture.Site,
+            "api",
+            "Akavache.Settings",
+            "Akavache",
+            "Settings",
+            "AkavacheBuilderAsyncExtensions.html");
         var html = await File.ReadAllTextAsync(pagePath);
 
         // Source path has 4 slashes; without directory URLs the served page sits at depth 4,

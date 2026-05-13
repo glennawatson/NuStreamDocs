@@ -9,7 +9,8 @@ namespace NuStreamDocs.Plugins;
 /// </summary>
 /// <param name="Band">Coarse ordering band; the dominant sort key.</param>
 /// <param name="Tiebreak">Secondary sort key used to disambiguate two plugins that share a band; lower runs first.</param>
-public readonly record struct PluginPriority(PluginBand Band, int Tiebreak = 0) : IComparable<PluginPriority>, IComparable
+public readonly record struct PluginPriority(PluginBand Band, int Tiebreak = 0)
+    : IComparable<PluginPriority>, IComparable
 {
     /// <summary>Gets the default <see cref="PluginBand.Normal"/> priority with no tiebreak.</summary>
     public static PluginPriority Normal => new(PluginBand.Normal);

@@ -27,7 +27,10 @@ internal static partial class PagefindCliLogging
     /// <param name="logger">Target logger.</param>
     /// <param name="binary">Resolved binary path.</param>
     /// <param name="siteRoot">Rendered site directory.</param>
-    [SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
+    [SuppressMessage(
+        "Performance",
+        "CA1873:Avoid potentially expensive logging",
+        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     public static void LogInvoking(ILogger logger, string binary, in DirectoryPath siteRoot)
     {
         if (!logger.IsEnabled(LogLevel.Information))
@@ -83,7 +86,8 @@ internal static partial class PagefindCliLogging
     /// <summary>Source-generated emitter for <see cref="LogBinaryMissing"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="rid">Host runtime identifier.</param>
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Pagefind CLI binary not found for RID {Rid}; search shards will not be generated.")]
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message = "Pagefind CLI binary not found for RID {Rid}; search shards will not be generated.")]
     private static partial void LogBinaryMissingCore(ILogger logger, string rid);
 
     /// <summary>Source-generated emitter for <see cref="LogInvoking"/>.</summary>
@@ -111,6 +115,7 @@ internal static partial class PagefindCliLogging
     /// <param name="logger">Target logger.</param>
     /// <param name="stdoutBytes">Captured stdout byte length.</param>
     /// <param name="stderrBytes">Captured stderr byte length.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Pagefind succeeded ({StdoutBytes} byte(s) stdout, {StderrBytes} byte(s) stderr)")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Pagefind succeeded ({StdoutBytes} byte(s) stdout, {StderrBytes} byte(s) stderr)")]
     private static partial void LogSucceededCore(ILogger logger, int stdoutBytes, int stderrBytes);
 }

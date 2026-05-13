@@ -61,9 +61,15 @@ public class PipelineSyntheticPagesBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _emptyInputRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-synth-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        _diskInputRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-disk-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        _outputRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-synth-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _emptyInputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-synth-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _diskInputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-disk-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _outputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-synth-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(_emptyInputRoot);
         Directory.CreateDirectory(_diskInputRoot);
 
@@ -71,7 +77,9 @@ public class PipelineSyntheticPagesBenchmarks
         for (var i = 0; i < Pages; i++)
         {
             _syntheticPaths[i] = (FilePath)("api/Type" + i.ToString(CultureInfo.InvariantCulture) + ".md");
-            File.WriteAllBytes(Path.Combine(_diskInputRoot, "page-" + i.ToString(CultureInfo.InvariantCulture) + ".md"), PagePayload);
+            File.WriteAllBytes(
+                Path.Combine(_diskInputRoot, "page-" + i.ToString(CultureInfo.InvariantCulture) + ".md"),
+                PagePayload);
         }
     }
 
@@ -135,7 +143,7 @@ public class PipelineSyntheticPagesBenchmarks
         {
             if (Directory.Exists(path))
             {
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
         catch (IOException)

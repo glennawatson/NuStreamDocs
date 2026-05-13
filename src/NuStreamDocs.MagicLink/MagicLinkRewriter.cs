@@ -28,7 +28,11 @@ internal static class MagicLinkRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="defaultRepo"><c>org/repo</c> bytes used to expand bare <c>#NNN</c> issue refs; empty disables that pass.</param>
     /// <param name="expandMentions">When true, <c>@user</c> mentions at word boundaries become <c>[@user](https://github.com/user)</c> Markdown links.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, ReadOnlySpan<byte> defaultRepo, bool expandMentions)
+    public static void Rewrite(
+        ReadOnlySpan<byte> source,
+        IBufferWriter<byte> writer,
+        ReadOnlySpan<byte> defaultRepo,
+        bool expandMentions)
     {
         var i = 0;
         while (i < source.Length)
@@ -76,7 +80,8 @@ internal static class MagicLinkRewriter
                         continue;
                     }
 
-                case (byte)'#' when defaultRepo.Length > 0 && TryRewriteIssueRef(source, i, defaultRepo, writer, out var issueConsumed):
+                case (byte)'#' when defaultRepo.Length > 0 &&
+                                    TryRewriteIssueRef(source, i, defaultRepo, writer, out var issueConsumed):
                     {
                         i += issueConsumed;
                         continue;
@@ -102,7 +107,11 @@ internal static class MagicLinkRewriter
     /// <param name="writer">Sink for the rewritten span.</param>
     /// <param name="consumed">Number of input bytes covered.</param>
     /// <returns>True when a mention was rewritten.</returns>
-    private static bool TryRewriteUserMention(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteUserMention(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (!AsciiWordBoundary.IsBefore(source, offset))
@@ -158,7 +167,12 @@ internal static class MagicLinkRewriter
     /// <param name="writer">Sink for the rewritten span.</param>
     /// <param name="consumed">Number of input bytes covered.</param>
     /// <returns>True when an issue ref was rewritten.</returns>
-    private static bool TryRewriteIssueRef(ReadOnlySpan<byte> source, int offset, ReadOnlySpan<byte> defaultRepo, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteIssueRef(
+        ReadOnlySpan<byte> source,
+        int offset,
+        ReadOnlySpan<byte> defaultRepo,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (!AsciiWordBoundary.IsBefore(source, offset))
@@ -226,9 +240,9 @@ internal static class MagicLinkRewriter
     /// <returns>True for username constituents.</returns>
     private static bool IsUserNameByte(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'-';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'-';
 
     /// <summary>Tries to wrap a bare URL starting at <paramref name="offset"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -236,7 +250,11 @@ internal static class MagicLinkRewriter
     /// <param name="writer">Sink for the autolink-wrapped URL.</param>
     /// <param name="consumed">Number of input bytes the match covered.</param>
     /// <returns>True when a URL was rewritten.</returns>
-    private static bool TryRewriteUrl(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteUrl(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (!AsciiWordBoundary.IsBefore(source, offset))
@@ -315,9 +333,9 @@ internal static class MagicLinkRewriter
     /// <returns>True for a host/userinfo opener.</returns>
     private static bool IsUrlBodyStart(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'-' or (byte)'_' or (byte)'+' or (byte)'%';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'-' or (byte)'_' or (byte)'+' or (byte)'%';
 
     /// <summary>Scans forward over URL body bytes, returning the exclusive end.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -339,9 +357,9 @@ internal static class MagicLinkRewriter
     /// <returns>True when the byte is part of a URL.</returns>
     private static bool IsUrlBodyByte(byte b) =>
         b is >= (byte)'!' and <= (byte)'~'
-        and not (byte)'<' and not (byte)'>'
-        and not (byte)'"' and not (byte)'\\'
-        and not (byte)'`' and not (byte)' ';
+            and not (byte)'<' and not (byte)'>'
+            and not (byte)'"' and not (byte)'\\'
+            and not (byte)'`' and not (byte)' ';
 
     /// <summary>Trims trailing punctuation likely to be sentence terminators rather than URL parts.</summary>
     /// <param name="source">UTF-8 source.</param>

@@ -16,7 +16,9 @@ public readonly record struct DirectoryPath(string Value)
     public bool IsEmpty => string.IsNullOrEmpty(Value);
 
     /// <summary>Gets the file-system-style name (last segment).</summary>
-    public string Name => string.IsNullOrEmpty(Value) ? string.Empty : Path.GetFileName(Value.AsSpan().TrimEnd('/').TrimEnd('\\').ToString());
+    public string Name => string.IsNullOrEmpty(Value)
+        ? string.Empty
+        : Path.GetFileName(Value.AsSpan().TrimEnd('/').TrimEnd('\\').ToString());
 
     /// <summary>Gets the parent directory path.</summary>
     /// <remarks>Returns an empty <see cref="DirectoryPath"/> when the path has no parent (root or already empty).</remarks>
@@ -192,7 +194,8 @@ public readonly record struct DirectoryPath(string Value)
     /// <summary>Enumerates files at the top level matching <paramref name="searchPattern"/>.</summary>
     /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
     /// <returns>Matching file paths.</returns>
-    public IEnumerable<FilePath> EnumerateFiles(string searchPattern) => EnumerateFiles(searchPattern, SearchOption.TopDirectoryOnly);
+    public IEnumerable<FilePath> EnumerateFiles(string searchPattern) =>
+        EnumerateFiles(searchPattern, SearchOption.TopDirectoryOnly);
 
     /// <summary>Enumerates files inside this directory matching <paramref name="searchPattern"/>.</summary>
     /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
@@ -213,12 +216,14 @@ public readonly record struct DirectoryPath(string Value)
 
     /// <summary>Enumerates direct subdirectories.</summary>
     /// <returns>Matching directory paths.</returns>
-    public IEnumerable<DirectoryPath> EnumerateDirectories() => EnumerateDirectories("*", SearchOption.TopDirectoryOnly);
+    public IEnumerable<DirectoryPath> EnumerateDirectories() =>
+        EnumerateDirectories("*", SearchOption.TopDirectoryOnly);
 
     /// <summary>Enumerates direct subdirectories matching <paramref name="searchPattern"/>.</summary>
     /// <param name="searchPattern">Glob pattern.</param>
     /// <returns>Matching directory paths.</returns>
-    public IEnumerable<DirectoryPath> EnumerateDirectories(string searchPattern) => EnumerateDirectories(searchPattern, SearchOption.TopDirectoryOnly);
+    public IEnumerable<DirectoryPath> EnumerateDirectories(string searchPattern) =>
+        EnumerateDirectories(searchPattern, SearchOption.TopDirectoryOnly);
 
     /// <summary>Enumerates subdirectories matching <paramref name="searchPattern"/>.</summary>
     /// <param name="searchPattern">Glob pattern.</param>

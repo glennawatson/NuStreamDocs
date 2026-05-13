@@ -23,24 +23,37 @@ public class HighlightHelperBenchmarks
     /// <summary>Representative C# keyword list used to populate the case-sensitive set fixture.</summary>
     private static readonly byte[][] CSharpKeywords =
     [
-        [.. "abstract"u8], [.. "as"u8], [.. "base"u8], [.. "bool"u8], [.. "break"u8], [.. "byte"u8], [.. "case"u8], [.. "catch"u8], [.. "char"u8],
-        [.. "checked"u8], [.. "class"u8], [.. "const"u8], [.. "continue"u8], [.. "decimal"u8], [.. "default"u8], [.. "delegate"u8],
-        [.. "do"u8], [.. "double"u8], [.. "else"u8], [.. "enum"u8], [.. "event"u8], [.. "explicit"u8], [.. "extern"u8], [.. "false"u8],
-        [.. "finally"u8], [.. "fixed"u8], [.. "float"u8], [.. "for"u8], [.. "foreach"u8], [.. "goto"u8], [.. "if"u8], [.. "implicit"u8],
-        [.. "in"u8], [.. "int"u8], [.. "interface"u8], [.. "internal"u8], [.. "is"u8], [.. "lock"u8], [.. "long"u8], [.. "namespace"u8],
-        [.. "new"u8], [.. "null"u8], [.. "object"u8], [.. "operator"u8], [.. "out"u8], [.. "override"u8], [.. "params"u8], [.. "private"u8],
-        [.. "protected"u8], [.. "public"u8], [.. "readonly"u8], [.. "ref"u8], [.. "return"u8], [.. "sbyte"u8], [.. "sealed"u8],
-        [.. "short"u8], [.. "sizeof"u8], [.. "stackalloc"u8], [.. "static"u8], [.. "string"u8], [.. "struct"u8], [.. "switch"u8],
-        [.. "this"u8], [.. "throw"u8], [.. "true"u8], [.. "try"u8], [.. "typeof"u8], [.. "uint"u8], [.. "ulong"u8], [.. "unchecked"u8],
-        [.. "unsafe"u8], [.. "ushort"u8], [.. "using"u8], [.. "virtual"u8], [.. "void"u8], [.. "volatile"u8], [.. "while"u8]
+        [.. "abstract"u8], [.. "as"u8], [.. "base"u8], [.. "bool"u8], [.. "break"u8], [.. "byte"u8], [.. "case"u8],
+        [.. "catch"u8], [.. "char"u8],
+        [.. "checked"u8], [.. "class"u8], [.. "const"u8], [.. "continue"u8], [.. "decimal"u8], [.. "default"u8],
+        [.. "delegate"u8],
+        [.. "do"u8], [.. "double"u8], [.. "else"u8], [.. "enum"u8], [.. "event"u8], [.. "explicit"u8], [.. "extern"u8],
+        [.. "false"u8],
+        [.. "finally"u8], [.. "fixed"u8], [.. "float"u8], [.. "for"u8], [.. "foreach"u8], [.. "goto"u8], [.. "if"u8],
+        [.. "implicit"u8],
+        [.. "in"u8], [.. "int"u8], [.. "interface"u8], [.. "internal"u8], [.. "is"u8], [.. "lock"u8], [.. "long"u8],
+        [.. "namespace"u8],
+        [.. "new"u8], [.. "null"u8], [.. "object"u8], [.. "operator"u8], [.. "out"u8], [.. "override"u8],
+        [.. "params"u8], [.. "private"u8],
+        [.. "protected"u8], [.. "public"u8], [.. "readonly"u8], [.. "ref"u8], [.. "return"u8], [.. "sbyte"u8],
+        [.. "sealed"u8],
+        [.. "short"u8], [.. "sizeof"u8], [.. "stackalloc"u8], [.. "static"u8], [.. "string"u8], [.. "struct"u8],
+        [.. "switch"u8],
+        [.. "this"u8], [.. "throw"u8], [.. "true"u8], [.. "try"u8], [.. "typeof"u8], [.. "uint"u8], [.. "ulong"u8],
+        [.. "unchecked"u8],
+        [.. "unsafe"u8], [.. "ushort"u8], [.. "using"u8], [.. "virtual"u8], [.. "void"u8], [.. "volatile"u8],
+        [.. "while"u8]
     ];
 
     /// <summary>Representative SQL keyword list used to populate the case-insensitive set fixture.</summary>
     private static readonly byte[][] SqlKeywordsLowercase =
     [
-        [.. "select"u8], [.. "from"u8], [.. "where"u8], [.. "join"u8], [.. "inner"u8], [.. "outer"u8], [.. "left"u8], [.. "right"u8],
-        [.. "group"u8], [.. "by"u8], [.. "order"u8], [.. "having"u8], [.. "insert"u8], [.. "update"u8], [.. "delete"u8], [.. "into"u8],
-        [.. "values"u8], [.. "set"u8], [.. "as"u8], [.. "and"u8], [.. "or"u8], [.. "not"u8], [.. "null"u8], [.. "is"u8], [.. "in"u8], [.. "between"u8],
+        [.. "select"u8], [.. "from"u8], [.. "where"u8], [.. "join"u8], [.. "inner"u8], [.. "outer"u8], [.. "left"u8],
+        [.. "right"u8],
+        [.. "group"u8], [.. "by"u8], [.. "order"u8], [.. "having"u8], [.. "insert"u8], [.. "update"u8], [.. "delete"u8],
+        [.. "into"u8],
+        [.. "values"u8], [.. "set"u8], [.. "as"u8], [.. "and"u8], [.. "or"u8], [.. "not"u8], [.. "null"u8], [.. "is"u8],
+        [.. "in"u8], [.. "between"u8],
         [.. "like"u8], [.. "exists"u8], [.. "case"u8], [.. "when"u8], [.. "then"u8], [.. "else"u8], [.. "end"u8]
     ];
 
@@ -223,7 +236,10 @@ public class HighlightHelperBenchmarks
     /// <returns>Hex literal byte length.</returns>
     [Benchmark]
     public int TokenMatch_HexLiteral() =>
-        TokenMatchers.MatchAsciiHexLiteral(_hexFixture, TokenMatchers.AsciiHexDigits, TokenMatchers.AsciiIdentifierContinue);
+        TokenMatchers.MatchAsciiHexLiteral(
+            _hexFixture,
+            TokenMatchers.AsciiHexDigits,
+            TokenMatchers.AsciiIdentifierContinue);
 
     /// <summary>TokenMatchers unsigned float.</summary>
     /// <returns>Float byte length.</returns>

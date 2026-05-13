@@ -87,8 +87,8 @@ internal static class DefListRewriter
     /// <returns>True when the line is a definition.</returns>
     private static bool IsDefinitionLine(ReadOnlySpan<byte> source, int offset) =>
         offset + 1 < source.Length
-            && source[offset] == (byte)':'
-            && source[offset + 1] == (byte)' ';
+        && source[offset] == (byte)':'
+        && source[offset + 1] == (byte)' ';
 
     /// <summary>Emits the <c>&lt;dl&gt;</c> block for one parsed group.</summary>
     /// <param name="group">UTF-8 bytes of the group (term + definitions interleaved).</param>
@@ -104,13 +104,19 @@ internal static class DefListRewriter
             if (IsDefinitionLine(group, i))
             {
                 writer.Write("<dd>"u8);
-                XmlEntityEscaper.WriteEscaped(writer, TrimNewline(group[(i + DefinitionPrefixLength)..lineEnd]), XmlEntityEscaper.Mode.HtmlAttribute);
+                XmlEntityEscaper.WriteEscaped(
+                    writer,
+                    TrimNewline(group[(i + DefinitionPrefixLength)..lineEnd]),
+                    XmlEntityEscaper.Mode.HtmlAttribute);
                 writer.Write("</dd>\n"u8);
             }
             else
             {
                 writer.Write("<dt>"u8);
-                XmlEntityEscaper.WriteEscaped(writer, TrimNewline(group[i..lineEnd]), XmlEntityEscaper.Mode.HtmlAttribute);
+                XmlEntityEscaper.WriteEscaped(
+                    writer,
+                    TrimNewline(group[i..lineEnd]),
+                    XmlEntityEscaper.Mode.HtmlAttribute);
                 writer.Write("</dt>\n"u8);
             }
 

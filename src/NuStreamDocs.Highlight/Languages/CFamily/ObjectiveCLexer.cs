@@ -80,7 +80,8 @@ public static class ObjectiveCLexer
         var atDirectiveRule = new LexerRule(
             MatchAtDirective,
             TokenClass.KeywordDeclaration,
-            LexerRule.NoStateChange) { FirstBytes = AtDirectiveFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = AtDirectiveFirst };
 
         var allRules = new LexerRule[coreRules.Length + 1];
         allRules[0] = atDirectiveRule;

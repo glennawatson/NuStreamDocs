@@ -29,12 +29,12 @@ public sealed record HighlightOptions(
 {
     /// <summary>Gets the default option set — built-in lexers, wrapper div + title bar on, copy button off, auto-detect off.</summary>
     public static HighlightOptions Default { get; } = new(
-        ExtraLexers: [],
-        WrapInHighlightDiv: true,
-        EmitTitleBar: true,
-        CopyButton: false,
-        AutoDetectLanguage: false,
-        DetectionLanguages: []);
+        [],
+        true,
+        true,
+        false,
+        false,
+        []);
 
     /// <summary>Creates a new <see cref="HighlightOptions"/> instance from string-shaped <c>(name, lexer)</c> pairs.</summary>
     /// <param name="extra">Pairs of UTF-16 lexer name and lexer instance.</param>

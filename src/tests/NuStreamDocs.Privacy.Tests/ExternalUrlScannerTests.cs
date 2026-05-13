@@ -10,7 +10,7 @@ namespace NuStreamDocs.Privacy.Tests;
 public class ExternalUrlScannerTests
 {
     /// <summary>Filter that allows every host (no skip, no allow-list).</summary>
-    private static readonly HostFilter EmptyHosts = new(hostsToSkip: null, hostsAllowed: null);
+    private static readonly HostFilter EmptyHosts = new(null, null);
 
     /// <summary>An <c>img src</c> with an absolute URL gets rewritten to the registry's local path.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
@@ -49,7 +49,7 @@ public class ExternalUrlScannerTests
     public async Task SkipsHostsOnSkipList()
     {
         ExternalAssetRegistry registry = new([.. "assets/external"u8]);
-        HostFilter skip = new(hostsToSkip: PrivacyTestHelpers.Utf8("trusted.cdn.example"), hostsAllowed: null);
+        HostFilter skip = new(PrivacyTestHelpers.Utf8("trusted.cdn.example"), null);
         var output = Rewrite("<img src=\"https://trusted.cdn.example/x.png\">", registry, skip);
         await Assert.That(output).IsEqualTo("<img src=\"https://trusted.cdn.example/x.png\">");
     }
@@ -68,7 +68,8 @@ public class ExternalUrlScannerTests
     /// <summary>The pre-filter declines HTML that has no <c>http</c> substring.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task PreFilterRejectsHtmlWithNoUrls() => await Assert.That(ExternalUrlScanner.MayHaveExternalUrls("<p>no urls here</p>"u8)).IsFalse();
+    public async Task PreFilterRejectsHtmlWithNoUrls() =>
+        await Assert.That(ExternalUrlScanner.MayHaveExternalUrls("<p>no urls here</p>"u8)).IsFalse();
 
     /// <summary>A <c>&lt;link rel="canonical"&gt;</c> URL is left untouched — canonical URLs point AT the canonical site by design.</summary>
     /// <returns>Async test.</returns>
@@ -87,7 +88,10 @@ public class ExternalUrlScannerTests
     public async Task RewritesAlternateLinkHreflangVariant()
     {
         ExternalAssetRegistry registry = new([.. "assets/external"u8]);
-        var output = Rewrite("<link rel=\"alternate\" hreflang=\"de\" href=\"https://example.com/de/\">", registry, EmptyHosts);
+        var output = Rewrite(
+            "<link rel=\"alternate\" hreflang=\"de\" href=\"https://example.com/de/\">",
+            registry,
+            EmptyHosts);
         await Assert.That(output).Contains("href=\"/assets/external/");
     }
 

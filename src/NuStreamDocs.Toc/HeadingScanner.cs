@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using NuStreamDocs.Common;
+using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Toc;
 
@@ -74,15 +75,15 @@ internal static class HeadingScanner
             var idAbsStart = idLen is 0 ? -1 : tagStart + idLocal;
 
             found.Add(new(
-                Level: level,
-                OpenTagStart: tagStart,
-                OpenTagEnd: tagEnd,
-                CloseTagStart: closeIdx,
-                TextStart: tagEnd,
-                TextEnd: closeIdx,
-                ExistingIdStart: idAbsStart,
-                ExistingIdLength: idLen,
-                Slug: []));
+                level,
+                tagStart,
+                tagEnd,
+                closeIdx,
+                tagEnd,
+                closeIdx,
+                idAbsStart,
+                idLen,
+                []));
 
             cursor = closeIdx + CloseTagLength;
         }
@@ -106,7 +107,7 @@ internal static class HeadingScanner
         var openRel = inner.IndexOf(OpenAngle);
         while (openRel >= 0)
         {
-            Markdown.Common.HtmlEntityDecoder.DecodeInto(sink, inner.Slice(runStart, openRel - runStart));
+            HtmlEntityDecoder.DecodeInto(sink, inner.Slice(runStart, openRel - runStart));
             var closeRel = inner[openRel..].IndexOf(CloseAngle);
             if (closeRel < 0)
             {
@@ -118,7 +119,7 @@ internal static class HeadingScanner
             openRel = nextRel < 0 ? -1 : runStart + nextRel;
         }
 
-        Markdown.Common.HtmlEntityDecoder.DecodeInto(sink, inner[runStart..]);
+        HtmlEntityDecoder.DecodeInto(sink, inner[runStart..]);
     }
 
     /// <summary>
@@ -180,9 +181,9 @@ internal static class HeadingScanner
         const int NameOffset = 2;
         const int GtOffset = 3;
         return pos + GtOffset < slice.Length
-            && slice[pos + SlashOffset] is Slash
-            && slice[pos + NameOffset] is (byte)'a' or (byte)'A'
-            && slice[pos + GtOffset] is CloseAngle;
+               && slice[pos + SlashOffset] is Slash
+               && slice[pos + NameOffset] is (byte)'a' or (byte)'A'
+               && slice[pos + GtOffset] is CloseAngle;
     }
 
     /// <summary>True when <paramref name="pos"/> in <paramref name="slice"/> begins a <c>&lt;a&gt;</c> or <c>&lt;a …</c> open tag.</summary>
@@ -194,8 +195,8 @@ internal static class HeadingScanner
         const int NameOffset = 1;
         const int TerminatorOffset = 2;
         return pos + TerminatorOffset < slice.Length
-            && slice[pos + NameOffset] is (byte)'a' or (byte)'A'
-            && slice[pos + TerminatorOffset] is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or CloseAngle;
+               && slice[pos + NameOffset] is (byte)'a' or (byte)'A'
+               && slice[pos + TerminatorOffset] is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r' or CloseAngle;
     }
 
     /// <summary>Finds the next <c>&lt;/hN&gt;</c> close tag.</summary>

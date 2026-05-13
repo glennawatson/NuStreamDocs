@@ -15,7 +15,10 @@ public class CssUrlRewriterTests
     public async Task RewritesAbsoluteUrl()
     {
         ExternalAssetRegistry registry = new([.. "assets/external"u8]);
-        var output = Rewrite("@font-face { src: url(https://fonts.example/x.woff2) }", "https://example.com/fonts.css", registry);
+        var output = Rewrite(
+            "@font-face { src: url(https://fonts.example/x.woff2) }",
+            "https://example.com/fonts.css",
+            registry);
         await Assert.That(output).Contains("url(/assets/external/");
         await Assert.That(output).DoesNotContain("https://fonts.example/x.woff2");
     }
@@ -60,5 +63,6 @@ public class CssUrlRewriterTests
     /// <param name="registry">URL registry.</param>
     /// <returns>Rewritten CSS.</returns>
     private static string Rewrite(string css, string baseUrl, ExternalAssetRegistry registry) =>
-        Encoding.UTF8.GetString(CssUrlRewriter.Rewrite(Encoding.UTF8.GetBytes(css), new(baseUrl), registry, new(hostsToSkip: null, hostsAllowed: null)));
+        Encoding.UTF8.GetString(
+            CssUrlRewriter.Rewrite(Encoding.UTF8.GetBytes(css), new(baseUrl), registry, new(null, null)));
 }

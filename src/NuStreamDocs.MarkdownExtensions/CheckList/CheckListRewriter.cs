@@ -51,7 +51,13 @@ internal static class CheckListRewriter
         while (i < source.Length)
         {
             if (MarkdownCodeScanner.AtLineStart(source, i)
-                && TryParseTaskMarker(source, i, out var afterIndent, out var bulletEnd, out var marker, out var afterMarker))
+                && TryParseTaskMarker(
+                    source,
+                    i,
+                    out var afterIndent,
+                    out var bulletEnd,
+                    out var marker,
+                    out var afterMarker))
             {
                 writer.Write(source[i..afterIndent]);
                 writer.Write(source[afterIndent..bulletEnd]);
@@ -155,6 +161,6 @@ internal static class CheckListRewriter
 
         marker = source[offset + MarkerCharOffset];
         return marker is (byte)' ' or (byte)'x' or (byte)'X'
-            && source[offset + CloseBracketOffset] == (byte)']' && source[offset + TrailingSpaceOffset] == (byte)' ';
+               && source[offset + CloseBracketOffset] == (byte)']' && source[offset + TrailingSpaceOffset] == (byte)' ';
     }
 }

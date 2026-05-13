@@ -15,7 +15,10 @@ public class EmbeddedResourceReaderTests
     [Test]
     public async Task ReadsKnownResource()
     {
-        var source = ExtraAssetSource.Embedded(typeof(EmbeddedResourceReaderTests).Assembly, "NuStreamDocs.Tests.sample.txt", "sample.txt");
+        var source = ExtraAssetSource.Embedded(
+            typeof(EmbeddedResourceReaderTests).Assembly,
+            "NuStreamDocs.Tests.sample.txt",
+            "sample.txt");
         var bytes = EmbeddedResourceReader.Read(source);
         await Assert.That(Encoding.UTF8.GetString(bytes)).IsEqualTo("hello-from-embedded");
     }
@@ -25,7 +28,10 @@ public class EmbeddedResourceReaderTests
     [Test]
     public async Task MissingResourceThrows()
     {
-        var source = ExtraAssetSource.Embedded(typeof(EmbeddedResourceReaderTests).Assembly, "NuStreamDocs.Tests.does-not-exist.txt", "missing.txt");
+        var source = ExtraAssetSource.Embedded(
+            typeof(EmbeddedResourceReaderTests).Assembly,
+            "NuStreamDocs.Tests.does-not-exist.txt",
+            "missing.txt");
         await Assert.That(() => EmbeddedResourceReader.Read(source)).Throws<InvalidOperationException>();
     }
 
@@ -34,7 +40,10 @@ public class EmbeddedResourceReaderTests
     [Test]
     public async Task RepeatedReadsAreStable()
     {
-        var source = ExtraAssetSource.Embedded(typeof(EmbeddedResourceReaderTests).Assembly, "NuStreamDocs.Tests.sample.txt", "sample.txt");
+        var source = ExtraAssetSource.Embedded(
+            typeof(EmbeddedResourceReaderTests).Assembly,
+            "NuStreamDocs.Tests.sample.txt",
+            "sample.txt");
         var first = EmbeddedResourceReader.Read(source);
         var second = EmbeddedResourceReader.Read(source);
         await Assert.That(first.AsSpan().SequenceEqual(second)).IsTrue();

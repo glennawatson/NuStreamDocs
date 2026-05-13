@@ -8,12 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Config.DocFx.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Config.DocFx.Tests"/>
   </ItemGroup>
 
 </Project>

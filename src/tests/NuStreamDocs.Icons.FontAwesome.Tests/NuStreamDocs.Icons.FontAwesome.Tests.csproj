@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Icons.FontAwesome\NuStreamDocs.Icons.FontAwesome.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Icons.FontAwesome\NuStreamDocs.Icons.FontAwesome.csproj"/>
   </ItemGroup>
 
 </Project>

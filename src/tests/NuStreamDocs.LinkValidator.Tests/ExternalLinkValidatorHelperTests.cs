@@ -16,7 +16,7 @@ public class ExternalLinkValidatorHelperTests
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "page.html"),
             "<a href=\"https://a.test/x\">a</a><a href=\"https://A.test/y\">a2</a><a href=\"https://b.test/z\">b</a>");
-        var corpus = await ValidationCorpus.BuildAsync(temp.Root, parallelism: 1, CancellationToken.None);
+        var corpus = await ValidationCorpus.BuildAsync(temp.Root, 1, CancellationToken.None);
         var bucketed = ExternalLinkValidator.BucketByHost(corpus);
         await Assert.That(bucketed.ContainsKey("a.test")).IsTrue();
         await Assert.That(bucketed.ContainsKey("b.test")).IsTrue();
@@ -31,7 +31,7 @@ public class ExternalLinkValidatorHelperTests
     public async Task BucketByHostEmpty()
     {
         using ScratchDir temp = new();
-        var corpus = await ValidationCorpus.BuildAsync(temp.Root, parallelism: 1, CancellationToken.None);
+        var corpus = await ValidationCorpus.BuildAsync(temp.Root, 1, CancellationToken.None);
         await Assert.That(ExternalLinkValidator.BucketByHost(corpus).Count).IsEqualTo(0);
     }
 
@@ -62,7 +62,7 @@ public class ExternalLinkValidatorHelperTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

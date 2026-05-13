@@ -207,9 +207,15 @@ internal static class PythonRules
     /// <returns>Ordered rule list.</returns>
     private static LexerRule[] BuildRules() =>
     [
-        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines },
+        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines
+        },
 
-        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
+        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+        {
+            FirstBytes = HashFirst
+        },
 
         new(MatchPrefixedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = StringFirst },
 
@@ -218,22 +224,52 @@ internal static class PythonRules
             TokenClass.NumberHex,
             LexerRule.NoStateChange) { FirstBytes = LanguageCommon.HexFirst },
 
-        new(static slice => LanguageCommon.MatchFloatWithOptionalSuffix(slice, ComplexSuffix), TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DigitFirst },
+        new(
+            static slice =>
+                LanguageCommon.MatchFloatWithOptionalSuffix(
+                    slice,
+                    ComplexSuffix),
+            TokenClass.NumberFloat,
+            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DigitFirst },
 
         new(
             static slice => TokenMatchers.MatchRunWithSuffix(slice, LanguageCommon.IntegerFirst, ComplexSuffix),
             TokenClass.NumberInteger,
             LexerRule.NoStateChange) { FirstBytes = LanguageCommon.IntegerFirst },
 
-        new(static slice => TokenMatchers.MatchKeyword(slice, WordOperators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = WordOperatorFirst },
+        new(
+            static slice =>
+                TokenMatchers.MatchKeyword(
+                    slice,
+                    WordOperators),
+            TokenClass.Operator,
+            LexerRule.NoStateChange) { FirstBytes = WordOperatorFirst },
 
-        new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
+        new(
+            static slice =>
+                TokenMatchers.MatchKeyword(
+                    slice,
+                    KeywordConstants),
+            TokenClass.KeywordConstant,
+            LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
 
-        new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
+        new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange)
+        {
+            FirstBytes = KeywordFirst
+        },
 
-        new(static slice => TokenMatchers.MatchKeyword(slice, Builtins), TokenClass.NameBuiltin, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
+        new(
+            static slice =>
+                TokenMatchers.MatchKeyword(
+                    slice,
+                    Builtins),
+            TokenClass.NameBuiltin,
+            LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
 
-        new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
+        new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiIdentifierStart
+        },
 
         new(
             static slice => TokenMatchers.MatchLongestLiteral(slice, Operators),

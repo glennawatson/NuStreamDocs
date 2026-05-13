@@ -23,7 +23,12 @@ internal static class BlockAttrListBytes
     private readonly record struct Strategy : IAttrListRewriteStrategy<Strategy>
     {
         /// <inheritdoc/>
-        public static bool TryRewriteAt(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo) =>
+        public static bool TryRewriteAt(
+            ReadOnlySpan<byte> html,
+            int lt,
+            IBufferWriter<byte> sink,
+            ref int lastEmit,
+            out int advanceTo) =>
             AttrListElementRewriter.TryRewriteBlock(html, lt, sink, ref lastEmit, out advanceTo);
     }
 }

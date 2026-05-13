@@ -70,7 +70,9 @@ internal static class Program
             return ExitCodeTraceFileNotFound;
         }
 
-        var topN = args.Length >= 2 && int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0
+        var topN = args.Length >= 2 &&
+                   int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) &&
+                   parsed > 0
             ? parsed
             : DefaultTopN;
 
@@ -211,7 +213,8 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine($"- Total CPU sample events: **{stats.TotalSamples:N0}**");
         Console.WriteLine($"- Approx wall-time captured: **{FormatDuration(stats.TotalSamples)}**");
-        Console.WriteLine("- CPU sampling fires once per millisecond per running managed thread; absolute durations are an estimate, *relative* ranking between methods is accurate.");
+        Console.WriteLine(
+            "- CPU sampling fires once per millisecond per running managed thread; absolute durations are an estimate, *relative* ranking between methods is accurate.");
         Console.WriteLine();
     }
 
@@ -247,7 +250,8 @@ internal static class Program
         foreach (var (stack, stat) in stats.ByStack.OrderByDescending(static kvp => kvp.Value.Samples).Take(topN))
         {
             var pct = stats.TotalSamples == 0 ? 0d : stat.Samples * PercentMultiplier / stats.TotalSamples;
-            Console.WriteLine($"| `{Escape(stat.LeafMethod ?? "<n/a>")}` | {stat.Samples:N0} | {pct:F1}% | {Escape(stack)} |");
+            Console.WriteLine(
+                $"| `{Escape(stat.LeafMethod ?? "<n/a>")}` | {stat.Samples:N0} | {pct:F1}% | {Escape(stack)} |");
         }
     }
 

@@ -17,7 +17,8 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="inputRoot">Absolute input docs root.</param>
     /// <param name="outputRoot">Absolute output site root.</param>
     /// <param name="pluginCount">Number of registered plugins.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Build starting: input={InputRoot} output={OutputRoot} plugins={PluginCount}")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Build starting: input={InputRoot} output={OutputRoot} plugins={PluginCount}")]
     public static partial void LogBuildStart(ILogger logger, string inputRoot, string outputRoot, int pluginCount);
 
     /// <summary>Logs the build end-of-run summary.</summary>
@@ -25,7 +26,9 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="pageCount">Total pages processed.</param>
     /// <param name="cacheHits">Pages reused from the previous-build manifest.</param>
     /// <param name="elapsedSeconds">Wall-clock duration in seconds (three decimal places).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Build complete: {PageCount} page(s) processed, {CacheHits} cache hit(s), elapsed={ElapsedSeconds:F3}s")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message =
+            "Build complete: {PageCount} page(s) processed, {CacheHits} cache hit(s), elapsed={ElapsedSeconds:F3}s")]
     public static partial void LogBuildComplete(ILogger logger, int pageCount, int cacheHits, double elapsedSeconds);
 
     /// <summary>Logs entry into the configure phase before any plugin's <c>OnConfigureAsync</c> fires.</summary>
@@ -63,7 +66,8 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="pageCount">Pages processed in this phase.</param>
     /// <param name="elapsedSeconds">Phase duration in seconds (three decimal places).</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Render complete: {PageCount} page(s) in {ElapsedSeconds:F3}s")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Render complete: {PageCount} page(s) in {ElapsedSeconds:F3}s")]
     public static partial void LogRenderComplete(ILogger logger, int pageCount, double elapsedSeconds);
 
     /// <summary>Logs the docs static-asset copy step result.</summary>

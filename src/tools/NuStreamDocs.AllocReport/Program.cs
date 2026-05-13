@@ -63,7 +63,10 @@ internal static class Program
             return ExitCodeTraceFileNotFound;
         }
 
-        var topN = args.Length > 1 && int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? n : DefaultTopN;
+        var topN = args.Length > 1 &&
+                   int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n)
+            ? n
+            : DefaultTopN;
 
         var stats = AggregateAllocations(tracePath);
         if (stats.TotalSamples == 0)
@@ -144,7 +147,8 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine($"- Total sampled allocation bytes: **{FormatBytes(stats.TotalBytes)}**");
         Console.WriteLine($"- Total sample events: **{stats.TotalSamples:N0}**");
-        Console.WriteLine("- GCAllocationTick samples one allocation per ~100 KB allocated; absolute bytes are an estimate, *relative* ranking is accurate.");
+        Console.WriteLine(
+            "- GCAllocationTick samples one allocation per ~100 KB allocated; absolute bytes are an estimate, *relative* ranking is accurate.");
         Console.WriteLine();
     }
 
@@ -178,7 +182,8 @@ internal static class Program
         foreach (var (stack, stat) in stats.ByStack.OrderByDescending(static kvp => kvp.Value.Bytes).Take(topN))
         {
             var pct = stats.TotalBytes == 0 ? 0d : stat.Bytes * PercentMultiplier / stats.TotalBytes;
-            Console.WriteLine($"| `{Escape(stat.TopType ?? "<n/a>")}` | {FormatBytes(stat.Bytes)} | {pct:F1}% | {stat.Samples:N0} | {Escape(stack)} |");
+            Console.WriteLine(
+                $"| `{Escape(stat.TopType ?? "<n/a>")}` | {FormatBytes(stat.Bytes)} | {pct:F1}% | {stat.Samples:N0} | {Escape(stack)} |");
         }
     }
 

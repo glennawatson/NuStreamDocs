@@ -2,6 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
+using NuStreamDocs.Building;
+
 namespace NuStreamDocs.Nav.Tests;
 
 /// <summary>End-to-end tests for the curated-nav builder integration with <c>NavPlugin</c>.</summary>
@@ -25,7 +28,7 @@ public class CuratedNavBuilderTests
         var options = NavOptions.Default.WithCuratedEntries(entries);
         NavPlugin plugin = new(options);
 
-        await new Building.DocBuilder()
+        await new DocBuilder()
             .WithInput(fixture.Root)
             .WithOutput(fixture.Output)
             .UsePlugin(plugin)
@@ -33,8 +36,8 @@ public class CuratedNavBuilderTests
 
         var root = (NavNode)plugin.Root!;
         await Assert.That(root.Children.Length).IsEqualTo(2);
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Home");
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[1].Title)).IsEqualTo("Guide");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Home");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[1].Title)).IsEqualTo("Guide");
     }
 
     /// <summary>An empty curated list falls back to the auto-discovery walker.</summary>
@@ -48,7 +51,7 @@ public class CuratedNavBuilderTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "extra.md"), "# Extra");
 
         NavPlugin plugin = new(NavOptions.Default);
-        await new Building.DocBuilder()
+        await new DocBuilder()
             .WithInput(fixture.Root)
             .WithOutput(fixture.Output)
             .UsePlugin(plugin)
@@ -71,8 +74,8 @@ public class CuratedNavBuilderTests
         var root = CuratedNavBuilder.Build(
             fixture.Root,
             [NavEntryFactory.Leaf("Guide", "guide.md")],
-            useDirectoryUrls: true);
+            true);
 
-        await Assert.That(System.Text.Encoding.UTF8.GetString(root.Children[0].RelativeUrlBytes)).IsEqualTo("guide/");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[0].RelativeUrlBytes)).IsEqualTo("guide/");
     }
 }

@@ -87,7 +87,14 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
 
         var url = ToUrlBytes(context.RelativePath);
         var layoutContext = LayoutContext.FromPage(context.Source, context.Html, url);
-        if (LayoutRenderer.Render(template, _options.TemplateDirectory, layoutContext, _options.MaxIncludeDepth, context.Output, _logger, _cache))
+        if (LayoutRenderer.Render(
+            template,
+            _options.TemplateDirectory,
+            layoutContext,
+            _options.MaxIncludeDepth,
+            context.Output,
+            _logger,
+            _cache))
         {
             return;
         }

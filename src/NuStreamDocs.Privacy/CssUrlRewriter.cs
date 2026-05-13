@@ -103,7 +103,12 @@ internal static class CssUrlRewriter
     /// <param name="rawUrl">Span over the URL value (no quotes, no surrounding whitespace).</param>
     /// <param name="afterToken">Index just past the closing <c>)</c> on success.</param>
     /// <returns>True when a complete token was matched.</returns>
-    private static bool TryReadUrlToken(ReadOnlySpan<byte> css, int start, out byte quote, out ReadOnlySpan<byte> rawUrl, out int afterToken)
+    private static bool TryReadUrlToken(
+        ReadOnlySpan<byte> css,
+        int start,
+        out byte quote,
+        out ReadOnlySpan<byte> rawUrl,
+        out int afterToken)
     {
         quote = 0;
         rawUrl = default;
@@ -141,8 +146,8 @@ internal static class CssUrlRewriter
     /// <returns>True when the four-byte prefix matches.</returns>
     private static bool HasUrlPrefix(ReadOnlySpan<byte> css, int start) =>
         start + UrlPrefixLength <= css.Length
-            && css[start..(start + UrlPrefixLength)] is
-                [(byte)'u' or (byte)'U', (byte)'r' or (byte)'R', (byte)'l' or (byte)'L', (byte)'('];
+        && css[start..(start + UrlPrefixLength)] is
+            [(byte)'u' or (byte)'U', (byte)'r' or (byte)'R', (byte)'l' or (byte)'L', (byte)'('];
 
     /// <summary>Advances past any CSS whitespace bytes from <paramref name="from"/>.</summary>
     /// <param name="css">CSS bytes.</param>
@@ -166,7 +171,12 @@ internal static class CssUrlRewriter
     /// <param name="rawUrl">Span over the URL bytes.</param>
     /// <param name="afterValue">Position immediately after the body (and after the closing quote when present).</param>
     /// <returns>True when a body was read.</returns>
-    private static bool TryReadValue(ReadOnlySpan<byte> css, int start, out byte quote, out ReadOnlySpan<byte> rawUrl, out int afterValue)
+    private static bool TryReadValue(
+        ReadOnlySpan<byte> css,
+        int start,
+        out byte quote,
+        out ReadOnlySpan<byte> rawUrl,
+        out int afterValue)
     {
         quote = 0;
         rawUrl = default;

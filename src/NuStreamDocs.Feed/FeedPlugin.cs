@@ -15,7 +15,8 @@ namespace NuStreamDocs.Feed;
 /// <c>{OutputRoot}/{OutputSubdirectory}/feed.xml</c> (RSS) and
 /// <c>atom.xml</c> (Atom).
 /// </summary>
-public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger) : IBuildConfigurePlugin, IBuildFinalizePlugin
+public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger)
+    : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly FeedOptions _options = ValidateOptions(options);

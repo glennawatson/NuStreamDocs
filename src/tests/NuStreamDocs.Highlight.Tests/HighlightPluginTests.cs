@@ -15,7 +15,8 @@ public class HighlightPluginTests
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new HighlightPlugin().Name.SequenceEqual("highlight"u8)).IsTrue();
+    public async Task NameIsStable() =>
+        await Assert.That(new HighlightPlugin().Name.SequenceEqual("highlight"u8)).IsTrue();
 
     /// <summary>Default options has no extra lexers.</summary>
     /// <returns>Async test.</returns>
@@ -44,7 +45,8 @@ public class HighlightPluginTests
     public async Task UnknownLanguageBodyUnchanged()
     {
         var output = RunPostRender(new(), "<pre><code class=\"language-zzz\">just text</code></pre>"u8);
-        await Assert.That(Encoding.UTF8.GetString(output)).IsEqualTo("<div class=\"highlight\"><pre><code class=\"language-zzz\">just text</code></pre></div>");
+        await Assert.That(Encoding.UTF8.GetString(output))
+            .IsEqualTo("<div class=\"highlight\"><pre><code class=\"language-zzz\">just text</code></pre></div>");
     }
 
     /// <summary>With <c>WrapInHighlightDiv = false</c>, the output preserves the original shape.</summary>
@@ -63,7 +65,9 @@ public class HighlightPluginTests
     [Test]
     public async Task TitleAttributeRendersFilenameSpan()
     {
-        var output = RunPostRender(new(), "<pre><code class=\"language-zzz\" data-info=\"title=&quot;example.py&quot;\">x</code></pre>"u8);
+        var output = RunPostRender(
+            new(),
+            "<pre><code class=\"language-zzz\" data-info=\"title=&quot;example.py&quot;\">x</code></pre>"u8);
         await Assert.That(Encoding.UTF8.GetString(output)).Contains("<span class=\"filename\">example.py</span>");
     }
 
@@ -82,13 +86,10 @@ public class HighlightPluginTests
     [Test]
     public async Task CopyButtonEmitsForAutoDetectedBlocks()
     {
-        HighlightPlugin plugin = new(HighlightOptions.Default with
-        {
-            AutoDetectLanguage = true,
-            CopyButton = true
-        });
+        HighlightPlugin plugin = new(HighlightOptions.Default with { AutoDetectLanguage = true, CopyButton = true });
 
-        const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
+        const string Html =
+            "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
         var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
         var rendered = Encoding.UTF8.GetString(output);
         await Assert.That(rendered).Contains("class=\"language-csharp\"");
@@ -123,7 +124,8 @@ public class HighlightPluginTests
     public async Task AutoDetectClassifiesObviousCSharp()
     {
         HighlightPlugin plugin = new(HighlightOptions.Default with { AutoDetectLanguage = true });
-        const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
+        const string Html =
+            "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
         var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
         var rendered = Encoding.UTF8.GetString(output);
         await Assert.That(rendered).Contains("class=\"language-csharp\"");
@@ -153,7 +155,8 @@ public class HighlightPluginTests
         });
 
         // Strong C# signal — but C# isn't on the allow-list, so the detector must skip it.
-        const string Html = "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
+        const string Html =
+            "<pre><code>using System;\nnamespace Demo { public class Foo { private int _x; } }</code></pre>";
         var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
         await Assert.That(Encoding.UTF8.GetString(output)).IsEqualTo(Html);
     }
@@ -198,24 +201,24 @@ public class HighlightPluginTests
 
         // Body extracted verbatim from the rendered compelling-example/index.html (HTML-escaped, as the renderer emits).
         const string Html = """
-            <pre><code>// AppViewModel is where we will describe the interaction of our application.
-            // We can describe the entire application in one class since it&#39;s very small now.
-            // Most ViewModels will derive off ReactiveObject, while most Model classes will
-            // most derive off INotifyPropertyChanged
-            public class AppViewModel : ReactiveObject
-            {
-                // In ReactiveUI, this is the syntax to declare a read-write property
-                // that will notify Observers, as well as WPF, that a property has
-                // changed. If we declared this as a normal property, we couldn&#39;t tell
-                // when it has changed!
-                private string _searchTerm;
-                public string SearchTerm
-                {
-                    get =&gt; _searchTerm;
-                    set =&gt; this.RaiseAndSetIfChanged(ref _searchTerm, value);
-                }
-            }</code></pre>
-            """;
+                            <pre><code>// AppViewModel is where we will describe the interaction of our application.
+                            // We can describe the entire application in one class since it&#39;s very small now.
+                            // Most ViewModels will derive off ReactiveObject, while most Model classes will
+                            // most derive off INotifyPropertyChanged
+                            public class AppViewModel : ReactiveObject
+                            {
+                                // In ReactiveUI, this is the syntax to declare a read-write property
+                                // that will notify Observers, as well as WPF, that a property has
+                                // changed. If we declared this as a normal property, we couldn&#39;t tell
+                                // when it has changed!
+                                private string _searchTerm;
+                                public string SearchTerm
+                                {
+                                    get =&gt; _searchTerm;
+                                    set =&gt; this.RaiseAndSetIfChanged(ref _searchTerm, value);
+                                }
+                            }</code></pre>
+                            """;
 
         var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
         var rendered = Encoding.UTF8.GetString(output);
@@ -268,14 +271,14 @@ public class HighlightPluginTests
         });
 
         const string Html = """
-            <pre><code>&lt;reactiveui:ReactiveWindow
-                x:Class=&quot;ReactiveDemo.MainWindow&quot;
-                xmlns=&quot;http://schemas.microsoft.com/winfx/2006/xaml/presentation&quot;
-                xmlns:x=&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;
-                xmlns:reactiveui=&quot;http://reactiveui.net&quot;
-                Title=&quot;ReactiveDemo&quot;&gt;
-            &lt;/reactiveui:ReactiveWindow&gt;</code></pre>
-            """;
+                            <pre><code>&lt;reactiveui:ReactiveWindow
+                                x:Class=&quot;ReactiveDemo.MainWindow&quot;
+                                xmlns=&quot;http://schemas.microsoft.com/winfx/2006/xaml/presentation&quot;
+                                xmlns:x=&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;
+                                xmlns:reactiveui=&quot;http://reactiveui.net&quot;
+                                Title=&quot;ReactiveDemo&quot;&gt;
+                            &lt;/reactiveui:ReactiveWindow&gt;</code></pre>
+                            """;
 
         var output = RunPostRender(plugin, Encoding.UTF8.GetBytes(Html));
         await Assert.That(Encoding.UTF8.GetString(output)).Contains("class=\"language-xml\"");

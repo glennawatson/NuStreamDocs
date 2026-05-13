@@ -26,7 +26,8 @@ public static class ElixirLexer
         "defmodule defprotocol defimpl defstruct def defp defmacro defmacrop defguard defguardp defcallback defdelegate defexception defoverridable"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false nil"u8);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated("true false nil"u8);
 
     /// <summary>Operator alternation.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
@@ -53,12 +54,19 @@ public static class ElixirLexer
     /// <summary>Gets the singleton Elixir lexer.</summary>
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
-        PreCommentRule = new(MatchModuleAttribute, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = AtFirst },
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-        SpecialString = new(MatchSigil, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = TildeFirst },
+        PreCommentRule =
+            new(MatchModuleAttribute, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = AtFirst },
+        LineComment =
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            },
+        SpecialString =
+            new(MatchSigil, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = TildeFirst },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
-        PostStringRules = [new(MatchAtom, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = ColonFirst }],
+        PostStringRules =
+            [new(MatchAtom, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = ColonFirst }],
         IncludeFloatLiteral = true,
         IncludeIntegerLiteral = true,
         KeywordConstants = KeywordConstants,

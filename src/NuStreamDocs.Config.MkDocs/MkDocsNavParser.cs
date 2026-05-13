@@ -20,10 +20,12 @@ public static class MkDocsNavParser
     /// <returns>Curated entries; empty when no <c>nav:</c> block was present.</returns>
     public static NavEntry[] FromJson(ReadOnlySpan<byte> utf8Json)
     {
-        Utf8JsonReader reader = new(utf8Json, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(utf8Json, true, default);
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
-        return !root.TryGetProperty("nav"u8, out var nav) || nav.ValueKind != JsonValueKind.Array ? [] : ReadNavArray(nav);
+        return !root.TryGetProperty("nav"u8, out var nav) || nav.ValueKind != JsonValueKind.Array
+            ? []
+            : ReadNavArray(nav);
     }
 
     /// <summary>Reads the YAML bytes of an mkdocs.yml file and returns its curated nav tree.</summary>
@@ -64,7 +66,7 @@ public static class MkDocsNavParser
         }
         finally
         {
-            ArrayPool<NavEntry>.Shared.Return(buffer, clearArray: true);
+            ArrayPool<NavEntry>.Shared.Return(buffer, true);
         }
     }
 
@@ -109,22 +111,22 @@ public static class MkDocsNavParser
         switch (prop.Value.ValueKind)
         {
             case JsonValueKind.String:
-            {
-                entry = new(titleBytes, EncodeUtf8(prop.Value.GetString() ?? string.Empty), []);
-                return true;
-            }
+                {
+                    entry = new(titleBytes, EncodeUtf8(prop.Value.GetString() ?? string.Empty), []);
+                    return true;
+                }
 
             case JsonValueKind.Array:
-            {
-                entry = new(titleBytes, [], ReadNavArray(prop.Value));
-                return true;
-            }
+                {
+                    entry = new(titleBytes, [], ReadNavArray(prop.Value));
+                    return true;
+                }
 
             default:
-            {
-                entry = default;
-                return false;
-            }
+                {
+                    entry = default;
+                    return false;
+                }
         }
     }
 

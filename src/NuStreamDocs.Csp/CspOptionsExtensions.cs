@@ -14,8 +14,14 @@ public static class CspOptionsExtensions
     /// <param name="directive">UTF-8 directive name (e.g. <c>script-src</c>).</param>
     /// <param name="source">UTF-8 source expression (an origin, a scheme, or a keyword).</param>
     /// <returns>The updated options.</returns>
-    public static CspOptions AllowSource(this in CspOptions options, ReadOnlySpan<byte> directive, ReadOnlySpan<byte> source) =>
-        options with { ExtraSources = ArrayJoiner.Concat(options.ExtraSources, [(directive.ToArray(), source.ToArray())]) };
+    public static CspOptions AllowSource(
+        this in CspOptions options,
+        ReadOnlySpan<byte> directive,
+        ReadOnlySpan<byte> source) =>
+        options with
+        {
+            ExtraSources = ArrayJoiner.Concat(options.ExtraSources, [(directive.ToArray(), source.ToArray())])
+        };
 
     /// <summary>Replaces the <c>default-src</c> value.</summary>
     /// <param name="options">Source options.</param>

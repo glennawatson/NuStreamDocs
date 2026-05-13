@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Arithmatex.MathJax.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Arithmatex.MathJax.Tests"/>
   </ItemGroup>
 
 </Project>

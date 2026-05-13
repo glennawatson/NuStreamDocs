@@ -107,7 +107,7 @@ public class BlogPostScannerExcerptTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

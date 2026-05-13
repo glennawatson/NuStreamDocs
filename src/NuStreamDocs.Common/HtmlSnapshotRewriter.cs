@@ -6,7 +6,10 @@ using System.Buffers;
 
 namespace NuStreamDocs.Common;
 
-/// <summary>Snapshot-then-callback helper for plugins that need to read the current rendered HTML while writing a transformed copy back into the same <see cref="ArrayBufferWriter{T}"/>.</summary>
+/// <summary>
+/// Snapshot-then-callback helper for plugins that need to read the current rendered HTML
+/// while writing a transformed copy back into the same <see cref="ArrayBufferWriter{T}"/>.
+/// </summary>
 public static class HtmlSnapshotRewriter
 {
     /// <summary>Callback invoked with the read-only snapshot and the (now-empty) writer.</summary>
@@ -14,7 +17,10 @@ public static class HtmlSnapshotRewriter
     /// <param name="snapshot">Snapshot of the bytes that were in <paramref name="writer"/>.</param>
     /// <param name="writer">Reset target buffer for the callback output.</param>
     /// <param name="state">User state.</param>
-    public delegate void SnapshotRewrite<in TState>(ReadOnlySpan<byte> snapshot, ArrayBufferWriter<byte> writer, TState state);
+    public delegate void SnapshotRewrite<in TState>(
+        ReadOnlySpan<byte> snapshot,
+        ArrayBufferWriter<byte> writer,
+        TState state);
 
     /// <summary>
     /// Snapshots the current contents of <paramref name="html"/>, resets the writer,

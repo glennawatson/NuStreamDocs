@@ -42,5 +42,6 @@ public class BlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseWyamBlogLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]), NullLogger.Instance)).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]), NullLogger.Instance))
+            .IsTypeOf<DocBuilder>();
 }

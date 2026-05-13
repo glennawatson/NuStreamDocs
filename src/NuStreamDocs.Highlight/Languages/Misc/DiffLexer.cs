@@ -51,9 +51,18 @@ public static class DiffLexer
     ];
 
     /// <summary>Gets the singleton lexer instance.</summary>
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1114", Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115", Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out", Justification = "Not commented out code")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1114",
+        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1115",
+        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
+    [SuppressMessage(
+        "Major Code Smell",
+        "S125:Sections of code should not be commented out",
+        Justification = "Not commented out code")]
     public static Lexer Instance { get; } = new(
         LanguageRuleBuilder.BuildSingleState([
 
@@ -63,58 +72,36 @@ public static class DiffLexer
                     slice,
                     FileHeaderPrefixes),
                 TokenClass.DiffFileHeader,
-                LexerRule.NoStateChange)
-            {
-                FirstBytes = FileHeaderFirst,
-                RequiresLineStart = true
-            },
+                LexerRule.NoStateChange) { FirstBytes = FileHeaderFirst, RequiresLineStart = true },
 
             // Hunk header: @@ ... line.
             new(
                 static slice => TokenMatchers.MatchPrefixedLine(slice, (byte)'@', (byte)'@'),
                 TokenClass.DiffHunkHeader,
-                LexerRule.NoStateChange)
-            {
-                FirstBytes = HunkFirst,
-                RequiresLineStart = true
-            },
+                LexerRule.NoStateChange) { FirstBytes = HunkFirst, RequiresLineStart = true },
 
             // Added line: + ... line.
             new(
                 static slice => TokenMatchers.MatchPrefixedLine(slice, (byte)'+'),
                 TokenClass.DiffAddedLine,
-                LexerRule.NoStateChange)
-            {
-                FirstBytes = AddedFirst,
-                RequiresLineStart = true
-            },
+                LexerRule.NoStateChange) { FirstBytes = AddedFirst, RequiresLineStart = true },
 
             // Removed line: - ... line.
             new(
                 static slice => TokenMatchers.MatchPrefixedLine(slice, (byte)'-'),
                 TokenClass.DiffRemovedLine,
-                LexerRule.NoStateChange)
-            {
-                FirstBytes = RemovedFirst,
-                RequiresLineStart = true
-            },
+                LexerRule.NoStateChange) { FirstBytes = RemovedFirst, RequiresLineStart = true },
 
             // Context line: anything not starting with +, -, @ or a line terminator.
             new(
                 static slice => TokenMatchers.MatchLineUnlessStartsWith(slice, ContextStopFirst),
                 TokenClass.Text,
-                LexerRule.NoStateChange)
-            {
-                RequiresLineStart = true
-            },
+                LexerRule.NoStateChange) { RequiresLineStart = true },
 
             // Line terminator (\r\n, \r, \n).
             new(
                 TokenMatchers.MatchNewline,
                 TokenClass.Whitespace,
-                LexerRule.NoStateChange)
-            {
-                FirstBytes = NewlineFirst
-            }
+                LexerRule.NoStateChange) { FirstBytes = NewlineFirst }
         ]));
 }

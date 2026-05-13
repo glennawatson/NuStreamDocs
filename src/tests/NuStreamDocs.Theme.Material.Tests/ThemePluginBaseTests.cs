@@ -23,9 +23,9 @@ public class ThemePluginBaseTests
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseMaterialTheme(static opts => opts
-                .WithSiteName("Hi")
-                .WithRepoUrl("https://github.com/owner/repo")
-                .WithEditUri("edit/main/docs") with
+                    .WithSiteName("Hi")
+                    .WithRepoUrl("https://github.com/owner/repo")
+                    .WithEditUri("edit/main/docs") with
             {
                 EnableScrollToTop = true,
                 EnableTocFollow = true,
@@ -157,10 +157,7 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
-            {
-                AssetSource = MaterialAssetSource.Cdn
-            })
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { AssetSource = MaterialAssetSource.Cdn })
             .BuildAsync();
 
         var cssPath = Path.Combine(fixture.Site, "assets", "stylesheets", "material.min.css");
@@ -178,8 +175,12 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UsePlugin(new StubNeighbours(globalUrl: "/prev-page", sectionUrl: "/section-page"))
-            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true, SectionScopedFooter = false })
+            .UsePlugin(new StubNeighbours("/prev-page", "/section-page"))
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
+            {
+                EnableNavigationFooter = true,
+                SectionScopedFooter = false
+            })
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -197,8 +198,12 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UsePlugin(new StubNeighbours(globalUrl: "/global", sectionUrl: "/section-only"))
-            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true, SectionScopedFooter = true })
+            .UsePlugin(new StubNeighbours("/global", "/section-only"))
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
+            {
+                EnableNavigationFooter = true,
+                SectionScopedFooter = true
+            })
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
@@ -218,8 +223,12 @@ public class ThemePluginBaseTests
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseDirectoryUrls()
-            .UsePlugin(new StubNeighbours(globalUrl: "/prev-page", sectionUrl: "/section-page"))
-            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true, SectionScopedFooter = false })
+            .UsePlugin(new StubNeighbours("/prev-page", "/section-page"))
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
+            {
+                EnableNavigationFooter = true,
+                SectionScopedFooter = false
+            })
             .BuildAsync();
 
         var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro", "index.html"));
@@ -238,7 +247,7 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UsePlugin(new StubNeighbours(globalUrl: "/should-not-appear", sectionUrl: "/should-not-appear"))
+            .UsePlugin(new StubNeighbours("/should-not-appear", "/should-not-appear"))
             .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = false })
             .BuildAsync();
 

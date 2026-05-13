@@ -24,7 +24,8 @@ public sealed class MdiIconResolver : IIconResolver
     public MdiIconResolver(MdiIconLookup? customLookup) => _customLookup = customLookup;
 
     /// <summary>Gets the shared SVG opening bytes.</summary>
-    private static ReadOnlySpan<byte> SvgPrefix => "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\""u8;
+    private static ReadOnlySpan<byte> SvgPrefix =>
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\""u8;
 
     /// <summary>Gets the shared SVG closing bytes.</summary>
     private static ReadOnlySpan<byte> SvgSuffix => "\"/></svg>"u8;

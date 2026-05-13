@@ -77,14 +77,14 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
         var processed = 0;
         long bytesSaved = 0;
         await Parallel.ForEachAsync(
-            eligible,
-            parallelOptions,
-            async (path, ct) =>
-            {
-                var saved = await CompressOneAsync(path, ct).ConfigureAwait(false);
-                Interlocked.Increment(ref processed);
-                Interlocked.Add(ref bytesSaved, saved);
-            })
+                eligible,
+                parallelOptions,
+                async (path, ct) =>
+                {
+                    var saved = await CompressOneAsync(path, ct).ConfigureAwait(false);
+                    Interlocked.Increment(ref processed);
+                    Interlocked.Add(ref bytesSaved, saved);
+                })
             .ConfigureAwait(false);
 
         OptimizeLoggingHelper.LogOptimizeComplete(_logger, processed, bytesSaved);
@@ -104,11 +104,12 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <returns>Eligible absolute paths.</returns>
     private FilePath[] EnumerateEligible(in DirectoryPath root)
     {
-        List<FilePath> buffer = new(capacity: 256);
+        List<FilePath> buffer = new(256);
         foreach (var info in new DirectoryInfo(root.Value).EnumerateFiles("*", SearchOption.AllDirectories))
         {
             var path = info.FullName;
-            if (path.EndsWith(GzipSuffix, StringComparison.OrdinalIgnoreCase) || path.EndsWith(BrotliSuffix, StringComparison.OrdinalIgnoreCase))
+            if (path.EndsWith(GzipSuffix, StringComparison.OrdinalIgnoreCase) ||
+                path.EndsWith(BrotliSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -145,12 +146,24 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
 
         if ((_options.Formats & OptimizeFormats.Gzip) == OptimizeFormats.Gzip)
         {
-            saved += await CompressIfStaleAsync(path, GzipSuffix, originalBytes, sourceTimeUtc, _options.GzipLevel, cancellationToken).ConfigureAwait(false);
+            saved += await CompressIfStaleAsync(
+                path,
+                GzipSuffix,
+                originalBytes,
+                sourceTimeUtc,
+                _options.GzipLevel,
+                cancellationToken).ConfigureAwait(false);
         }
 
         if ((_options.Formats & OptimizeFormats.Brotli) == OptimizeFormats.Brotli)
         {
-            saved += await CompressIfStaleAsync(path, BrotliSuffix, originalBytes, sourceTimeUtc, _options.BrotliLevel, cancellationToken).ConfigureAwait(false);
+            saved += await CompressIfStaleAsync(
+                path,
+                BrotliSuffix,
+                originalBytes,
+                sourceTimeUtc,
+                _options.BrotliLevel,
+                cancellationToken).ConfigureAwait(false);
         }
 
         return saved;

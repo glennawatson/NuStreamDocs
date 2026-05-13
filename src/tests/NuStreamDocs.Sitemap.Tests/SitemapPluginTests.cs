@@ -17,7 +17,7 @@ public class SitemapPluginTests
     {
         using SitemapTempDir temp = new();
         SitemapPlugin plugin = new();
-        BuildConfigureContext ctx = new("/in", temp.Root, [], new()) { SiteUrl = [.."https://docs.test"u8] };
+        BuildConfigureContext ctx = new("/in", temp.Root, [], new()) { SiteUrl = [.. "https://docs.test"u8] };
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
 
         ScanPage(plugin, "guide/intro.md");
@@ -118,7 +118,7 @@ public class SitemapPluginTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

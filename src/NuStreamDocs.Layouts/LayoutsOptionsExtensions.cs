@@ -13,10 +13,9 @@ public static class LayoutsOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="templateDirectory">Directory layouts are loaded from.</param>
     /// <returns>The updated options.</returns>
-    public static LayoutsOptions WithTemplateDirectory(this LayoutsOptions options, in DirectoryPath templateDirectory)
-    {
-        return options with { TemplateDirectory = templateDirectory };
-    }
+    public static LayoutsOptions
+        WithTemplateDirectory(this LayoutsOptions options, in DirectoryPath templateDirectory) =>
+        options with { TemplateDirectory = templateDirectory };
 
     /// <summary>Returns a copy of <paramref name="options"/> with <see cref="LayoutsOptions.MaxIncludeDepth"/> set.</summary>
     /// <param name="options">Source options.</param>

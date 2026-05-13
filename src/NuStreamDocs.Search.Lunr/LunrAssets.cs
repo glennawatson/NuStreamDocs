@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reflection;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Lunr;
@@ -30,7 +31,7 @@ internal static class LunrAssets
     {
         var asm = typeof(LunrAssets).Assembly;
         using var stream = asm.GetManifestResourceStream(name)
-            ?? throw new InvalidOperationException(BuildResourceNotFoundMessage(asm, name));
+                           ?? throw new InvalidOperationException(BuildResourceNotFoundMessage(asm, name));
         using MemoryStream sink = new();
         stream.CopyTo(sink);
         return sink.ToArray();
@@ -40,7 +41,7 @@ internal static class LunrAssets
     /// <param name="asm">Assembly being inspected.</param>
     /// <param name="name">Missing resource identifier.</param>
     /// <returns>Composed message.</returns>
-    private static string BuildResourceNotFoundMessage(System.Reflection.Assembly asm, string name)
+    private static string BuildResourceNotFoundMessage(Assembly asm, string name)
     {
         var resourceNames = asm.GetManifestResourceNames();
         var available = string.Join(", ", resourceNames);

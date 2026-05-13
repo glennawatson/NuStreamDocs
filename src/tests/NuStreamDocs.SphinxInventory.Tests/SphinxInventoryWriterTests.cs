@@ -66,7 +66,7 @@ public class SphinxInventoryWriterTests
     {
         using InventoryFixture fixture = new();
         AutorefsRegistry registry = new();
-        registry.Register("Foo"u8, [.. "api/Foo.html"u8], fragment: default);
+        registry.Register("Foo"u8, [.. "api/Foo.html"u8], default);
         SphinxInventoryPlugin plugin = new(registry, new("X", string.Empty, "objects.inv"));
         BuildFinalizeContext context = new(fixture.Directory, []);
         await plugin.FinalizeAsync(context, CancellationToken.None);
@@ -155,7 +155,9 @@ public class SphinxInventoryWriterTests
         /// <summary>Initializes a new instance of the <see cref="InventoryFixture"/> class.</summary>
         public InventoryFixture()
         {
-            Directory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "smkd-inv-" + Guid.NewGuid().ToString("N"));
+            Directory = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "smkd-inv-" + Guid.NewGuid().ToString("N"));
             System.IO.Directory.CreateDirectory(Directory);
             Path = System.IO.Path.Combine(Directory, "objects.inv");
         }
@@ -174,7 +176,7 @@ public class SphinxInventoryWriterTests
                 return;
             }
 
-            System.IO.Directory.Delete(Directory, recursive: true);
+            System.IO.Directory.Delete(Directory, true);
         }
     }
 }

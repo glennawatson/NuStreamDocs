@@ -265,7 +265,8 @@ public static class HtmlEscape
         }
 
         var i = 2;
-        while (i < cursor.Length && (AsciiByteHelpers.IsAsciiLetter(cursor[i]) || AsciiByteHelpers.IsAsciiDigit(cursor[i])))
+        while (i < cursor.Length &&
+               (AsciiByteHelpers.IsAsciiLetter(cursor[i]) || AsciiByteHelpers.IsAsciiDigit(cursor[i])))
         {
             i++;
         }

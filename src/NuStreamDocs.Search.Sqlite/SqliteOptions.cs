@@ -24,15 +24,20 @@ public readonly record struct SqliteOptions(
     bool IndexFullBody,
     byte[] SectionPriorities)
 {
+    /// <summary>
+    /// The default minimum token length.
+    /// </summary>
+    private const int DefaultTokenLength = 3;
+
     /// <summary>Gets the maximum stored body length, in UTF-8 bytes, when <see cref="IndexFullBody"/> is false.</summary>
     public static int ExcerptByteLimit { get; } = 300;
 
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static SqliteOptions Default { get; } = new(
-        OutputSubdirectory: "search",
-        MinTokenLength: 3,
-        SearchableFrontmatterKeys: [],
-        ExcludePathPrefixes: [],
-        IndexFullBody: true,
-        SectionPriorities: []);
+        "search",
+        DefaultTokenLength,
+        [],
+        [],
+        true,
+        []);
 }

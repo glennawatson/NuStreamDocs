@@ -15,19 +15,20 @@ public static class MacrosOptionsExtensions
     /// <param name="name">UTF-8 variable name bytes.</param>
     /// <param name="value">UTF-8 variable value bytes.</param>
     /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariable(this MacrosOptions options, byte[] name, byte[] value)
-    {
-        return name.Length is 0
+    public static MacrosOptions WithVariable(this MacrosOptions options, byte[] name, byte[] value) =>
+        name.Length is 0
             ? throw new ArgumentException("Name must be non-empty.", nameof(name))
             : WithVariableCore(options, name, value);
-    }
 
     /// <summary>String adapter for <see cref="WithVariable(MacrosOptions, byte[], byte[])"/>.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="name">Variable name.</param>
     /// <param name="value">Variable value.</param>
     /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariable(this MacrosOptions options, in ApiCompatString name, in ApiCompatString value)
+    public static MacrosOptions WithVariable(
+        this MacrosOptions options,
+        in ApiCompatString name,
+        in ApiCompatString value)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         return WithVariableCore(options, Encoding.UTF8.GetBytes(name), Encoding.UTF8.GetBytes(value));
@@ -52,7 +53,9 @@ public static class MacrosOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="variables">String → string variable map; both name and value are encoded once to UTF-8.</param>
     /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariables(this MacrosOptions options, Dictionary<ApiCompatString, ApiCompatString> variables)
+    public static MacrosOptions WithVariables(
+        this MacrosOptions options,
+        Dictionary<ApiCompatString, ApiCompatString> variables)
     {
         Dictionary<byte[], byte[]> map = new(variables.Count, ByteArrayComparer.Instance);
         foreach (var pair in variables)

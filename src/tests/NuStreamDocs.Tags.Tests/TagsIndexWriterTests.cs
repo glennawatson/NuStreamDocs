@@ -25,14 +25,20 @@ public class TagsIndexWriterTests
     [Test]
     public async Task RelativePathToUrlPathBranches()
     {
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", useDirectoryUrls: false))).IsEqualTo("guide/intro.html");
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.MD", useDirectoryUrls: false))).IsEqualTo("guide/intro.html");
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", useDirectoryUrls: true))).IsEqualTo("guide/intro/");
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/index.md", useDirectoryUrls: true))).IsEqualTo("guide/");
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("index.md", useDirectoryUrls: true))).IsEqualTo("./");
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.txt", useDirectoryUrls: false))).IsEqualTo("guide/intro.txt");
-        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("a\\b.md", useDirectoryUrls: false))).IsEqualTo("a/b.html");
-        await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, useDirectoryUrls: false).Length).IsEqualTo(0);
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", false)))
+            .IsEqualTo("guide/intro.html");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.MD", false)))
+            .IsEqualTo("guide/intro.html");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", true)))
+            .IsEqualTo("guide/intro/");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/index.md", true)))
+            .IsEqualTo("guide/");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("index.md", true))).IsEqualTo("./");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.txt", false)))
+            .IsEqualTo("guide/intro.txt");
+        await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("a\\b.md", false)))
+            .IsEqualTo("a/b.html");
+        await Assert.That(Utf8MarkdownUrl.FromRelativePath(string.Empty, false).Length).IsEqualTo(0);
     }
 
     /// <summary>Write produces an index page and per-tag pages with HTML-escaped content.</summary>
@@ -95,7 +101,7 @@ public class TagsIndexWriterTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

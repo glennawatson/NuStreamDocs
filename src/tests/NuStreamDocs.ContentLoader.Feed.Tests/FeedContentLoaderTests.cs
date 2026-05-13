@@ -3,11 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
-using NuStreamDocs.ContentLoader;
 
 namespace NuStreamDocs.ContentLoader.Feed.Tests;
 
@@ -57,7 +55,8 @@ public class FeedContentLoaderTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task InvalidXmlThrows() =>
-        await Assert.That(() => _ = RssAtomReader.Read(Encoding.UTF8.GetBytes("<not xml"))).Throws<ContentLoaderException>();
+        await Assert.That(() => _ = RssAtomReader.Read(Encoding.UTF8.GetBytes("<not xml")))
+            .Throws<ContentLoaderException>();
 
     /// <summary>The loader fetches the feed and produces one page per item with frontmatter and body.</summary>
     /// <returns>Async test.</returns>
@@ -67,10 +66,10 @@ public class FeedContentLoaderTests
         var loader = new FeedContentLoader(
             (UrlPath)"https://blog.test/feed.xml",
             (PathSegment)"blog/external",
-            () => new HttpClient(new StubHandler(Rss)),
+            () => new(new StubHandler(Rss)),
             NullLogger.Instance);
 
-        var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+        var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
         await Assert.That(pages.Length).IsEqualTo(2);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("blog/external/first-post.md");
@@ -85,12 +84,16 @@ public class FeedContentLoaderTests
     [Test]
     public async Task DuplicateSlugsAreDisambiguated()
     {
-        const string dupes = "<rss version=\"2.0\"><channel>" +
-            "<item><title>Same Title</title><description>a</description></item>" +
-            "<item><title>Same Title</title><description>b</description></item></channel></rss>";
-        var loader = new FeedContentLoader((UrlPath)"https://x.test/f", (PathSegment)"p", () => new HttpClient(new StubHandler(dupes)), NullLogger.Instance);
+        const string Dupes = "<rss version=\"2.0\"><channel>" +
+                             "<item><title>Same Title</title><description>a</description></item>" +
+                             "<item><title>Same Title</title><description>b</description></item></channel></rss>";
+        var loader = new FeedContentLoader(
+            (UrlPath)"https://x.test/f",
+            (PathSegment)"p",
+            () => new(new StubHandler(Dupes)),
+            NullLogger.Instance);
 
-        var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+        var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("p/same-title.md");
         await Assert.That(pages[1].RelativePath.Value).IsEqualTo("p/same-title-2.md");
@@ -100,11 +103,14 @@ public class FeedContentLoaderTests
     private sealed class StubHandler(string body) : HttpMessageHandler
     {
         /// <inheritdoc/>
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
         {
             _ = request;
             _ = cancellationToken;
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8) });
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8) });
         }
     }
 }

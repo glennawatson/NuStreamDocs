@@ -12,17 +12,12 @@ public static class DocBuilderLightboxExtensions
     /// <summary>Registers the lightbox plugin with default options.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLightbox(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new LightboxPlugin());
-    }
+    public static DocBuilder UseLightbox(this DocBuilder builder) => builder.UsePlugin(new LightboxPlugin());
 
     /// <summary>Registers the lightbox plugin with the supplied options.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLightbox(this DocBuilder builder, LightboxOptions options)
-    {
-        return builder.UsePlugin(new LightboxPlugin(options));
-    }
+    public static DocBuilder UseLightbox(this DocBuilder builder, LightboxOptions options) =>
+        builder.UsePlugin(new LightboxPlugin(options));
 }

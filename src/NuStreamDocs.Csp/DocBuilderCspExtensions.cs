@@ -12,10 +12,7 @@ public static class DocBuilderCspExtensions
     /// <summary>Registers <see cref="CspPlugin"/> with default options.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseCsp(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new CspPlugin());
-    }
+    public static DocBuilder UseCsp(this DocBuilder builder) => builder.UsePlugin(new CspPlugin());
 
     /// <summary>Registers <see cref="CspPlugin"/> with caller-tweaked options.</summary>
     /// <param name="builder">The builder.</param>
@@ -31,8 +28,6 @@ public static class DocBuilderCspExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseCsp(this DocBuilder builder, in CspOptions options)
-    {
-        return builder.UsePlugin(new CspPlugin(options));
-    }
+    public static DocBuilder UseCsp(this DocBuilder builder, in CspOptions options) =>
+        builder.UsePlugin(new CspPlugin(options));
 }

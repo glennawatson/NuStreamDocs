@@ -20,7 +20,10 @@ internal static class CspHashCollector
     /// <param name="html">Page HTML.</param>
     /// <param name="styles">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;style&gt;</c> blocks.</param>
     /// <param name="scripts">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;script&gt;</c> blocks.</param>
-    public static void Collect(ReadOnlySpan<byte> html, ConcurrentDictionary<byte[], byte> styles, ConcurrentDictionary<byte[], byte> scripts)
+    public static void Collect(
+        ReadOnlySpan<byte> html,
+        ConcurrentDictionary<byte[], byte> styles,
+        ConcurrentDictionary<byte[], byte> scripts)
     {
         ScanInto(html, "<style"u8, "</style>"u8, styles);
         ScanInto(html, "<script"u8, "</script>"u8, scripts);
@@ -31,7 +34,11 @@ internal static class CspHashCollector
     /// <param name="open">Opening-tag prefix (e.g. <c>&lt;style</c>).</param>
     /// <param name="close">Closing tag (e.g. <c>&lt;/style&gt;</c>).</param>
     /// <param name="sink">Output set.</param>
-    private static void ScanInto(ReadOnlySpan<byte> html, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close, ConcurrentDictionary<byte[], byte> sink)
+    private static void ScanInto(
+        ReadOnlySpan<byte> html,
+        ReadOnlySpan<byte> open,
+        ReadOnlySpan<byte> close,
+        ConcurrentDictionary<byte[], byte> sink)
     {
         var blocks = new Utf8InlineBlockEnumerator(html, open, close);
         while (blocks.MoveNext())

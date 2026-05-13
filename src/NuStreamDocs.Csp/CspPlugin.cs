@@ -67,7 +67,9 @@ public sealed class CspPlugin : IPagePostRenderPlugin
         var csp = CspBuilder.Build(scriptHashes, styleHashes, _options);
         context.Output.Write(html[..headClose]);
         context.Output.Write("<meta http-equiv=\""u8);
-        context.Output.Write(_options.Mode == CspMode.ReportOnly ? "Content-Security-Policy-Report-Only"u8 : "Content-Security-Policy"u8);
+        context.Output.Write(_options.Mode == CspMode.ReportOnly
+            ? "Content-Security-Policy-Report-Only"u8
+            : "Content-Security-Policy"u8);
         context.Output.Write("\" content=\""u8);
         WriteAttributeEscaped(context.Output, csp);
         context.Output.Write("\">\n"u8);

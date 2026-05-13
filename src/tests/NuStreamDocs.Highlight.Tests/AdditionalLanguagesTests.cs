@@ -32,8 +32,10 @@ public class AdditionalLanguagesTests
     public async Task JsonClassifiesKeysAndValues()
     {
         var html = JsonLexer.Instance.Render("{ \"name\": \"Alice\", \"count\": 42, \"on\": true }"u8);
-        await Assert.That(html.Contains("<span class=\"na\">&quot;name&quot;</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;Alice&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"na\">&quot;name&quot;</span>", StringComparison.Ordinal))
+            .IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;Alice&quot;</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">42</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -56,8 +58,11 @@ public class AdditionalLanguagesTests
         var html = CsvLexer.Instance.Render("name,score\n\"Alice, A\",\"She said \"\"hi\"\"\"\nBob,42\n"u8);
         await Assert.That(html.Contains("<span class=\"n\">name</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"p\">,</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;Alice, A&quot;</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;She said &quot;&quot;hi&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">&quot;Alice, A&quot;</span>", StringComparison.Ordinal))
+            .IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"s2\">&quot;She said &quot;&quot;hi&quot;&quot;&quot;</span>",
+            StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"n\">Bob</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"n\">42</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -143,7 +148,8 @@ public class AdditionalLanguagesTests
     [Test]
     public async Task PythonClassifiesKeywordsConstantsAndBuiltins()
     {
-        var html = PythonLexer.Instance.Render("def greet(name: str) -> None:\n    print(f\"Hello, {name}\")\n    return None\n"u8);
+        var html = PythonLexer.Instance.Render(
+            "def greet(name: str) -> None:\n    print(f\"Hello, {name}\")\n    return None\n"u8);
         await Assert.That(html.Contains("<span class=\"k\">def</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"nb\">print</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"nb\">str</span>", StringComparison.Ordinal)).IsTrue();
@@ -156,7 +162,9 @@ public class AdditionalLanguagesTests
     public async Task PythonClassifiesTripleQuotedString()
     {
         var html = PythonLexer.Instance.Render("\"\"\"hello\nworld\"\"\""u8);
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;&quot;&quot;hello\nworld&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"s2\">&quot;&quot;&quot;hello\nworld&quot;&quot;&quot;</span>",
+            StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>PowerShell classifies <c>if</c>/<c>foreach</c> case-insensitively, <c>$variable</c> as a name, and <c>Get-ChildItem</c> verb-noun cmdlets as <c>nb</c>.</summary>
@@ -177,7 +185,8 @@ public class AdditionalLanguagesTests
     public async Task PowerShellClassifiesCommentStyles()
     {
         var html = PowerShellLexer.Instance.Render("<# block #>\n# line\n$x = 1\n"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">&lt;# block #&gt;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"cm\">&lt;# block #&gt;</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"c1\"># line</span>", StringComparison.Ordinal)).IsTrue();
     }
 

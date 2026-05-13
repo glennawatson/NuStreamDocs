@@ -119,10 +119,12 @@ internal static class CSharpRules
         [.. "unmanaged"u8]);
 
     /// <summary>Accessor opener keyword set — <c>get</c>, <c>set</c>, <c>init</c>. Triggers the property-accessor state when followed by <c>{</c> or <c>=&gt;</c>.</summary>
-    private static readonly ByteKeywordSet AccessorOpeners = ByteKeywordSet.Create([.. "get"u8], [.. "set"u8], [.. "init"u8]);
+    private static readonly ByteKeywordSet AccessorOpeners =
+        ByteKeywordSet.Create([.. "get"u8], [.. "set"u8], [.. "init"u8]);
 
     /// <summary>Keywords recognized only inside a property accessor body — <c>field</c> (C# 13 backing-field) and <c>value</c> (setter-parameter).</summary>
-    private static readonly ByteKeywordSet AccessorContextualKeywords = ByteKeywordSet.Create([.. "field"u8], [.. "value"u8]);
+    private static readonly ByteKeywordSet AccessorContextualKeywords =
+        ByteKeywordSet.Create([.. "field"u8], [.. "value"u8]);
 
     /// <summary>First-byte set for the accessor contextual keywords (<c>field</c> / <c>value</c>).</summary>
     private static readonly SearchValues<byte> AccessorContextualFirst = SearchValues.Create("fv"u8);
@@ -150,7 +152,8 @@ internal static class CSharpRules
         [.. "dynamic"u8]);
 
     /// <summary>Boolean / null literal set.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.Create([.. "true"u8], [.. "false"u8], [.. "null"u8]);
 
     /// <summary>Operator alternation, sorted longest-first so a multi-char operator (<c>==</c>, <c>=&gt;</c>) wins before its single-char prefix.</summary>
     private static readonly byte[][] Operators =
@@ -214,7 +217,7 @@ internal static class CSharpRules
     /// <param name="arrowAccessorStateId">State id of the arrow-accessor state to push on a <c>get/set/init =&gt;</c> match.</param>
     /// <returns>Ordered rule list.</returns>
     public static LexerRule[] Build(int blockAccessorStateId, int arrowAccessorStateId) =>
-        BuildRules(includeAccessorContextualKeywords: false, includeAccessorEntry: true, blockAccessorStateId, arrowAccessorStateId);
+        BuildRules(false, true, blockAccessorStateId, arrowAccessorStateId);
 
     /// <summary>Builds the rule list for the block-body accessor state — same as root plus <c>field</c>/<c>value</c> keyword recognition, with <c>{</c> nesting and <c>}</c> popping.</summary>
     /// <param name="blockAccessorStateId">State id of the block-accessor state (used by the inner <c>{</c> push).</param>
@@ -222,20 +225,22 @@ internal static class CSharpRules
     public static LexerRule[] BuildBlockAccessorRules(int blockAccessorStateId)
     {
         const int TransitionRuleCount = 2;
-        var rules = BuildRules(includeAccessorContextualKeywords: true, includeAccessorEntry: false, blockAccessorStateId: -1, arrowAccessorStateId: -1);
+        var rules = BuildRules(true, false, -1, -1);
         var withTransitions = new LexerRule[rules.Length + TransitionRuleCount];
 
         // Push another block-accessor frame on every '{' so nested blocks are tracked.
         withTransitions[0] = new(
             static slice => slice is [(byte)'{', ..] ? 1 : 0,
             TokenClass.Punctuation,
-            blockAccessorStateId) { FirstBytes = OpenBraceFirst };
+            blockAccessorStateId)
+        { FirstBytes = OpenBraceFirst };
 
         // Pop on '}'.
         withTransitions[1] = new(
             static slice => slice is [(byte)'}', ..] ? 1 : 0,
             TokenClass.Punctuation,
-            LexerRule.PopState) { FirstBytes = CloseBraceFirst };
+            LexerRule.PopState)
+        { FirstBytes = CloseBraceFirst };
 
         Array.Copy(rules, 0, withTransitions, TransitionRuleCount, rules.Length);
         return withTransitions;
@@ -245,14 +250,15 @@ internal static class CSharpRules
     /// <returns>Rule list.</returns>
     public static LexerRule[] BuildArrowAccessorRules()
     {
-        var rules = BuildRules(includeAccessorContextualKeywords: true, includeAccessorEntry: false, blockAccessorStateId: -1, arrowAccessorStateId: -1);
+        var rules = BuildRules(true, false, -1, -1);
         var withTransitions = new LexerRule[rules.Length + 1];
 
         // Pop on ';' (arrow body terminator).
         withTransitions[0] = new(
             static slice => slice is [(byte)';', ..] ? 1 : 0,
             TokenClass.Punctuation,
-            LexerRule.PopState) { FirstBytes = SemicolonFirst };
+            LexerRule.PopState)
+        { FirstBytes = SemicolonFirst };
 
         Array.Copy(rules, 0, withTransitions, 1, rules.Length);
         return withTransitions;
@@ -264,7 +270,11 @@ internal static class CSharpRules
     /// <param name="blockAccessorStateId">State id to push when an accessor opens with <c>{</c>.</param>
     /// <param name="arrowAccessorStateId">State id to push when an accessor opens with <c>=&gt;</c>.</param>
     /// <returns>An array of lexer rules for token classification in C# syntax highlighting.</returns>
-    private static LexerRule[] BuildRules(bool includeAccessorContextualKeywords, bool includeAccessorEntry, int blockAccessorStateId, int arrowAccessorStateId)
+    private static LexerRule[] BuildRules(
+        bool includeAccessorContextualKeywords,
+        bool includeAccessorEntry,
+        int blockAccessorStateId,
+        int arrowAccessorStateId)
     {
         const int FixedRuleCount = 20;
         var optionalEntries = (includeAccessorEntry ? 2 : 0) + (includeAccessorContextualKeywords ? 1 : 0);
@@ -272,82 +282,193 @@ internal static class CSharpRules
         var i = 0;
 
         // [ \t]+ — non-newline whitespace runs.
-        rules[i++] = new(TokenMatchers.MatchAsciiInlineWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst };
+        rules[i++] =
+            new(TokenMatchers.MatchAsciiInlineWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            };
 
         // /// xml-doc-comment to end-of-line — must precede the line-comment rule.
-        rules[i++] = new(LanguageCommon.XmlDocCommentToEol, TokenClass.CommentSpecial, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
+        rules[i++] =
+            new(LanguageCommon.XmlDocCommentToEol, TokenClass.CommentSpecial, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SlashFirst
+            };
 
         // // line comment to end-of-line.
-        rules[i++] = new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
+        rules[i++] =
+            new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SlashFirst
+            };
 
         // /* block comment */ — non-greedy.
-        rules[i++] = new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst };
+        rules[i++] =
+            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SlashFirst
+            };
 
         // # preprocessor directive — line-anchored, optional leading [ \t].
-        rules[i++] = new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = PreprocessorFirst, RequiresLineStart = true };
+        rules[i++] =
+            new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange)
+            {
+                FirstBytes = PreprocessorFirst,
+                RequiresLineStart = true
+            };
 
+        AppendStringRules(rules, ref i);
+        AppendNumberRules(rules, ref i);
+        AppendKeywordRules(rules, ref i, includeAccessorContextualKeywords, includeAccessorEntry, blockAccessorStateId, arrowAccessorStateId);
+
+        // [A-Za-z_][A-Za-z0-9_]* identifier — falls through after every keyword set above misses.
+        rules[i++] =
+            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiIdentifierStart
+            };
+
+        // Operator alternation (longest-first).
+        rules[i++] =
+            new(
+                    static slice => TokenMatchers.MatchLongestLiteral(slice, Operators),
+                    TokenClass.Operator,
+                    LexerRule.NoStateChange)
+            { FirstBytes = OperatorFirst };
+
+        // Single-byte C-curly punctuation: ( ) { } [ ] ; , . :
+        rules[i] = new(
+            static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.CCurlyPunctuationFirst),
+            TokenClass.Punctuation,
+            LexerRule.NoStateChange)
+        { FirstBytes = LanguageCommon.CCurlyPunctuationFirst };
+
+        return rules;
+    }
+
+    /// <summary>Appends the C# string / char-literal rules to <paramref name="rules"/>, advancing <paramref name="i"/>.</summary>
+    /// <param name="rules">Pre-sized rule array.</param>
+    /// <param name="i">Write cursor; advanced past the appended entries.</param>
+    private static void AppendStringRules(LexerRule[] rules, ref int i)
+    {
         // @"..." verbatim string with "" as the embedded-quote escape.
-        rules[i++] = new(LanguageCommon.MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst };
+        rules[i++] =
+            new(LanguageCommon.MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.AtFirst
+            };
 
         // $"..." / $$"..." / $"""...""" / $$"""...""" interpolated string (C# 6+ / 11+).
-        rules[i++] = new(MatchInterpolatedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DollarFirst };
+        rules[i++] =
+            new(MatchInterpolatedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DollarFirst };
 
         // """...""" raw string (C# 11+) — must precede the regular string rule.
         rules[i++] = new(
             static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', RawStringMinQuotes),
             TokenClass.StringDouble,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = LanguageCommon.DoubleQuoteFirst };
 
         // "..." regular double-quoted string with optional u8 UTF-8 suffix (C# 11+).
-        rules[i++] = new(MatchRegularOrUtf8String, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst };
+        rules[i++] =
+            new(MatchRegularOrUtf8String, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.DoubleQuoteFirst
+            };
 
         // 'x' or '\x' single-character literal.
-        rules[i++] = new(LanguageCommon.CharLiteral, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst };
+        rules[i++] =
+            new(LanguageCommon.CharLiteral, TokenClass.StringSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.SingleQuoteFirst
+            };
+    }
 
+    /// <summary>Appends the C# hex / float / integer literal rules to <paramref name="rules"/>, advancing <paramref name="i"/>.</summary>
+    /// <param name="rules">Pre-sized rule array.</param>
+    /// <param name="i">Write cursor; advanced past the appended entries.</param>
+    private static void AppendNumberRules(LexerRule[] rules, ref int i)
+    {
         // 0x[hex_]+[uUlL]* hex integer literal — must precede the integer rule.
         rules[i++] = new(
             static slice => TokenMatchers.MatchAsciiHexLiteral(slice, HexBody, IntegerSuffix),
             TokenClass.NumberHex,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.HexFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = LanguageCommon.HexFirst };
 
         // [0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fFdDmM]? float literal — must precede the integer rule.
-        rules[i++] = new(static slice => LanguageCommon.MatchFloatWithOptionalSuffix(slice, FloatSuffix), TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DigitFirst };
+        rules[i++] =
+            new(
+                    static slice => LanguageCommon.MatchFloatWithOptionalSuffix(slice, FloatSuffix),
+                    TokenClass.NumberFloat,
+                    LexerRule.NoStateChange)
+            { FirstBytes = LanguageCommon.DigitFirst };
 
         // [0-9_]+[uUlL]* integer literal.
         rules[i++] = new(
             static slice => TokenMatchers.MatchRunWithSuffix(slice, LanguageCommon.IntegerFirst, IntegerSuffix),
             TokenClass.NumberInteger,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.IntegerFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = LanguageCommon.IntegerFirst };
+    }
 
+    /// <summary>Appends the C# keyword-set rules (constants, types, accessor entry, declarations, contextual, general) to <paramref name="rules"/>, advancing <paramref name="i"/>.</summary>
+    /// <param name="rules">Pre-sized rule array.</param>
+    /// <param name="i">Write cursor; advanced past the appended entries.</param>
+    /// <param name="includeAccessorContextualKeywords">Whether the <c>field</c> / <c>value</c> contextual keywords are recognized.</param>
+    /// <param name="includeAccessorEntry">Whether the accessor-opener rules (push accessor state) are emitted.</param>
+    /// <param name="blockAccessorStateId">State id pushed when an accessor opens with <c>{</c>.</param>
+    /// <param name="arrowAccessorStateId">State id pushed when an accessor opens with <c>=&gt;</c>.</param>
+    private static void AppendKeywordRules(
+        LexerRule[] rules,
+        ref int i,
+        bool includeAccessorContextualKeywords,
+        bool includeAccessorEntry,
+        int blockAccessorStateId,
+        int arrowAccessorStateId)
+    {
         // true / false / null literal.
-        rules[i++] = new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst };
+        rules[i++] =
+            new(
+                    static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants),
+                    TokenClass.KeywordConstant,
+                    LexerRule.NoStateChange)
+            { FirstBytes = KeywordConstantFirst };
 
         // Built-in type keyword (bool, int, string, dynamic, ...).
-        rules[i++] = new(static slice => TokenMatchers.MatchKeyword(slice, TypeKeywords), TokenClass.KeywordType, LexerRule.NoStateChange) { FirstBytes = KeywordTypeFirst };
+        rules[i++] =
+            new(
+                    static slice => TokenMatchers.MatchKeyword(slice, TypeKeywords),
+                    TokenClass.KeywordType,
+                    LexerRule.NoStateChange)
+            { FirstBytes = KeywordTypeFirst };
 
         // get / set / init followed by '{' — emit keyword, push block-accessor state. Must precede the declaration-keyword rule.
         if (includeAccessorEntry)
         {
             var blockId = blockAccessorStateId;
             rules[i++] = new(
-                static slice => MatchAccessorOpener(slice, requireBrace: true),
+                static slice => MatchAccessorOpener(slice, true),
                 TokenClass.KeywordDeclaration,
-                blockId) { FirstBytes = AccessorOpenerFirst };
+                blockId)
+            { FirstBytes = AccessorOpenerFirst };
 
             var arrowId = arrowAccessorStateId;
 
             // get / set / init followed by '=>' — emit keyword, push arrow-accessor state.
             rules[i++] = new(
-                static slice => MatchAccessorOpener(slice, requireBrace: false),
+                static slice => MatchAccessorOpener(slice, false),
                 TokenClass.KeywordDeclaration,
-                arrowId) { FirstBytes = AccessorOpenerFirst };
+                arrowId)
+            { FirstBytes = AccessorOpenerFirst };
         }
 
         // Declaration keyword (class, struct, public, init, scoped, extension, union, ...).
         rules[i++] = new(
             static slice => TokenMatchers.MatchKeyword(slice, DeclarationKeywords),
             TokenClass.KeywordDeclaration,
-            LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = KeywordDeclarationFirst };
 
         // field / value — only recognized inside an accessor body.
         if (includeAccessorContextualKeywords)
@@ -355,25 +476,17 @@ internal static class CSharpRules
             rules[i++] = new(
                 static slice => TokenMatchers.MatchKeyword(slice, AccessorContextualKeywords),
                 TokenClass.Keyword,
-                LexerRule.NoStateChange) { FirstBytes = AccessorContextualFirst };
+                LexerRule.NoStateChange)
+            { FirstBytes = AccessorContextualFirst };
         }
 
         // General keyword (if, for, await, with, allows, notnull, unmanaged, ...).
-        rules[i++] = new(static slice => TokenMatchers.MatchKeyword(slice, GeneralKeywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst };
-
-        // [A-Za-z_][A-Za-z0-9_]* identifier — falls through after every keyword set above misses.
-        rules[i++] = new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart };
-
-        // Operator alternation (longest-first).
-        rules[i++] = new(static slice => TokenMatchers.MatchLongestLiteral(slice, Operators), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst };
-
-        // Single-byte C-curly punctuation: ( ) { } [ ] ; , . :
-        rules[i] = new(
-            static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.CCurlyPunctuationFirst),
-            TokenClass.Punctuation,
-            LexerRule.NoStateChange) { FirstBytes = LanguageCommon.CCurlyPunctuationFirst };
-
-        return rules;
+        rules[i++] =
+            new(
+                    static slice => TokenMatchers.MatchKeyword(slice, GeneralKeywords),
+                    TokenClass.Keyword,
+                    LexerRule.NoStateChange)
+            { FirstBytes = KeywordFirst };
     }
 
     /// <summary>

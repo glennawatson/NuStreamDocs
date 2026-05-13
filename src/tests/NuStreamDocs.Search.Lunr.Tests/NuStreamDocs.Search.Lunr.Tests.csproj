@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Search.Lunr\NuStreamDocs.Search.Lunr.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Search.Lunr\NuStreamDocs.Search.Lunr.csproj"/>
   </ItemGroup>
 
 </Project>

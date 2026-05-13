@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Config.MkDocs\NuStreamDocs.Config.MkDocs.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Config.MkDocs\NuStreamDocs.Config.MkDocs.csproj"/>
   </ItemGroup>
 
 </Project>

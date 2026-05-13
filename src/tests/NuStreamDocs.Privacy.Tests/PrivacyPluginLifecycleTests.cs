@@ -193,7 +193,8 @@ public class PrivacyPluginLifecycleTests
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(fixture.Output)
-                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
+                .UsePrivacy(opts =>
+                    opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
@@ -203,7 +204,8 @@ public class PrivacyPluginLifecycleTests
             await new DocBuilder()
                 .WithInput(fixture.Root)
                 .WithOutput(freshOutput)
-                .UsePrivacy(opts => opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
+                .UsePrivacy(opts =>
+                    opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
                 .BuildAsync();
 
             await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
@@ -221,7 +223,7 @@ public class PrivacyPluginLifecycleTests
         LoopbackHttpServer server = new();
         await using (server.ConfigureAwait(false))
         {
-            server.AddFlakyRoute("/flaky.png", "image/png", [.. "ok"u8], failuresBeforeSuccess: 1);
+            server.AddFlakyRoute("/flaky.png", "image/png", [.. "ok"u8], 1);
             server.Start();
 
             var url = $"{server.BaseUrl}flaky.png";
@@ -283,7 +285,9 @@ public class PrivacyPluginLifecycleTests
         /// <returns>A new fixture; caller must dispose.</returns>
         public static TempSite Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-priv-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            var root = Path.Combine(
+                Path.GetTempPath(),
+                "smkd-priv-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(root);
             return new(root);
         }
@@ -295,7 +299,7 @@ public class PrivacyPluginLifecycleTests
             {
                 if (Directory.Exists(Root))
                 {
-                    Directory.Delete(Root, recursive: true);
+                    Directory.Delete(Root, true);
                 }
             }
             catch (IOException)
@@ -312,7 +316,8 @@ public class PrivacyPluginLifecycleTests
         private readonly Dictionary<string, (string ContentType, byte[] Bytes)> _routes = new(StringComparer.Ordinal);
 
         /// <summary>Flaky routes that fail a fixed number of times before succeeding.</summary>
-        private readonly Dictionary<string, (string ContentType, byte[] Bytes, int FailuresRemaining)> _flakyRoutes = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, (string ContentType, byte[] Bytes, int FailuresRemaining)> _flakyRoutes =
+            new(StringComparer.Ordinal);
 
         /// <summary>Per-route hit counter.</summary>
         private readonly Dictionary<string, int> _hits = new(StringComparer.Ordinal);

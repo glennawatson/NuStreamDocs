@@ -34,7 +34,8 @@ public class MixedContentBytesTests
     [Arguments("<a HrEf=\"http://example.com\">x", "<a HrEf=\"https://example.com\">x")]
     [Arguments("<img SRC=\"http://example.com/a.png\">", "<img SRC=\"https://example.com/a.png\">")]
     [Arguments("<img Src=\"http://example.com/a.png\">", "<img Src=\"https://example.com/a.png\">")]
-    public async Task AttributeNameCaseInsensitive(string html, string expected) => await Assert.That(Rewrite(html)).IsEqualTo(expected);
+    public async Task AttributeNameCaseInsensitive(string html, string expected) =>
+        await Assert.That(Rewrite(html)).IsEqualTo(expected);
 
     /// <summary>The <c>http://</c> scheme itself is matched only in lowercase — uppercase is left untouched (browsers normalize it; we don't).</summary>
     /// <returns>Async test.</returns>
@@ -165,7 +166,8 @@ public class MixedContentBytesTests
     [Arguments("<a href=")]
     [Arguments("<a href=\"")]
     [Arguments("<a hr")]
-    public async Task TruncatedInputBeforeSchemePassesThrough(string html) => await Assert.That(Rewrite(html)).IsEqualTo(html);
+    public async Task TruncatedInputBeforeSchemePassesThrough(string html) =>
+        await Assert.That(Rewrite(html)).IsEqualTo(html);
 
     /// <summary>Truncated input that already contains <c>http://</c> with an empty host doesn't throw — the scanner upgrades it to <c>https://</c>.</summary>
     /// <returns>Async test.</returns>

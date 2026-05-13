@@ -67,7 +67,9 @@ public static class UnicodeRangeMatcher
         while (pos < unicodeRange.Length)
         {
             var commaRel = unicodeRange[pos..].IndexOf((byte)',');
-            var entry = AsciiByteHelpers.TrimAsciiWhitespace(commaRel < 0 ? unicodeRange[pos..] : unicodeRange.Slice(pos, commaRel));
+            var entry = AsciiByteHelpers.TrimAsciiWhitespace(commaRel < 0
+                ? unicodeRange[pos..]
+                : unicodeRange.Slice(pos, commaRel));
             if (TryParseEntry(entry, out var lo, out var hi) && AnyBlockSeen(lo, hi, seenBlocks))
             {
                 return true;
@@ -118,7 +120,7 @@ public static class UnicodeRangeMatcher
     {
         lo = 0;
         hi = 0;
-        if (entry.Length < 3 || (entry[0] is not ((byte)'U' or (byte)'u')) || entry[1] != (byte)'+')
+        if (entry.Length < 3 || entry[0] is not ((byte)'U' or (byte)'u') || entry[1] != (byte)'+')
         {
             return false;
         }
@@ -178,6 +180,6 @@ public static class UnicodeRangeMatcher
         >= (byte)'0' and <= (byte)'9' => c - (byte)'0',
         >= (byte)'a' and <= (byte)'f' => c - (byte)'a' + HexLetterOffset,
         >= (byte)'A' and <= (byte)'F' => c - (byte)'A' + HexLetterOffset,
-        _ => -1,
+        _ => -1
     };
 }

@@ -21,7 +21,9 @@ public class ImageWrapperTests
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(wrapped).IsEqualTo(1);
-        await Assert.That(result).IsEqualTo("<p><a href=\"/img/foo.png\" class=\"glightbox\"><img src=\"/img/foo.png\" alt=\"foo\"></a></p>");
+        await Assert.That(result)
+            .IsEqualTo(
+                "<p><a href=\"/img/foo.png\" class=\"glightbox\"><img src=\"/img/foo.png\" alt=\"foo\"></a></p>");
     }
 
     /// <summary>Images that are already inside an anchor are left alone.</summary>

@@ -45,7 +45,9 @@ public interface IConfigReader
             var written = 0;
             while (true)
             {
-                var read = await utf8Stream.ReadAsync(buffer.AsMemory(written, buffer.Length - written), cancellationToken).ConfigureAwait(false);
+                var read = await utf8Stream
+                    .ReadAsync(buffer.AsMemory(written, buffer.Length - written), cancellationToken)
+                    .ConfigureAwait(false);
                 if (read == 0)
                 {
                     break;
@@ -59,7 +61,7 @@ public interface IConfigReader
 
                 var bigger = pool.Rent(buffer.Length * 2);
                 buffer.AsSpan(0, written).CopyTo(bigger);
-                pool.Return(buffer, clearArray: true);
+                pool.Return(buffer, true);
                 buffer = bigger;
             }
 
@@ -67,7 +69,7 @@ public interface IConfigReader
         }
         finally
         {
-            pool.Return(buffer, clearArray: true);
+            pool.Return(buffer, true);
         }
     }
 

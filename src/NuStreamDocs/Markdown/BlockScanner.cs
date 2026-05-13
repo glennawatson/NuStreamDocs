@@ -232,7 +232,13 @@ public static class BlockScanner
     /// <param name="prevKind">Classification of the previous line; used to enforce the CommonMark rule that an indented code block cannot interrupt a paragraph.</param>
     /// <param name="level">Heading level / fence length / list indent populated on return.</param>
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
-    private static BlockKind ClassifyLine(ReadOnlySpan<byte> line, ref FenceState fence, ref HtmlBlockState html, ref ListState list, BlockKind prevKind, out int level)
+    private static BlockKind ClassifyLine(
+        ReadOnlySpan<byte> line,
+        ref FenceState fence,
+        ref HtmlBlockState html,
+        ref ListState list,
+        BlockKind prevKind,
+        out int level)
     {
         level = 0;
 
@@ -307,7 +313,11 @@ public static class BlockScanner
     /// <param name="html">Open html-block state to populate when this line opens an HTML block.</param>
     /// <param name="level">Heading level / fence length / list indent populated on return.</param>
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
-    private static BlockKind ClassifyContentLine(ReadOnlySpan<byte> body, ref FenceState fence, ref HtmlBlockState html, out int level)
+    private static BlockKind ClassifyContentLine(
+        ReadOnlySpan<byte> body,
+        ref FenceState fence,
+        ref HtmlBlockState html,
+        out int level)
     {
         level = 0;
         if (body.IsEmpty)
@@ -714,7 +724,8 @@ public static class BlockScanner
         }
 
         var end = offset;
-        while (end < body.Length && (AsciiByteHelpers.IsAsciiLetter(body[end]) || AsciiByteHelpers.IsAsciiDigit(body[end]) || body[end] is (byte)'-'))
+        while (end < body.Length && (AsciiByteHelpers.IsAsciiLetter(body[end]) ||
+                                     AsciiByteHelpers.IsAsciiDigit(body[end]) || body[end] is (byte)'-'))
         {
             end++;
         }

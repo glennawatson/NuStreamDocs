@@ -73,13 +73,13 @@ internal static class DetailsRewriter
         }
 
         if (!OpenerLineParser.TryParseTypeAndTitle(
-            source,
-            offset + marker.Length,
-            out var typeStart,
-            out var typeLen,
-            out var titleStart,
-            out var titleLen,
-            out var headerEnd))
+                source,
+                offset + marker.Length,
+                out var typeStart,
+                out var typeLen,
+                out var titleStart,
+                out var titleLen,
+                out var headerEnd))
         {
             return false;
         }
@@ -94,7 +94,12 @@ internal static class DetailsRewriter
     /// <param name="title">UTF-8 title bytes; empty when absent.</param>
     /// <param name="body">UTF-8 body bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitDetails(bool openByDefault, ReadOnlySpan<byte> type, ReadOnlySpan<byte> title, ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
+    private static void EmitDetails(
+        bool openByDefault,
+        ReadOnlySpan<byte> type,
+        ReadOnlySpan<byte> title,
+        ReadOnlySpan<byte> body,
+        IBufferWriter<byte> writer)
     {
         writer.Write("\n<details class=\""u8);
         writer.Write(type);

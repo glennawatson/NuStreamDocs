@@ -17,7 +17,8 @@ public class RstHttpGlslLexerTests
     public async Task RstClassifiesDirectives()
     {
         var html = RstLexer.Instance.Render(".. code-block:: python\n\n   print('hi')\n"u8);
-        await Assert.That(html.Contains("<span class=\"cp\">.. code-block:: python</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"cp\">.. code-block:: python</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>RST classifies inline literals (<c>``code``</c>) and emphasis runs.</summary>
@@ -66,7 +67,8 @@ public class RstHttpGlslLexerTests
     public async Task HttpClassifiesRequestLine()
     {
         var html = HttpLexer.Instance.Render("GET /api/users HTTP/1.1\nHost: example.com\n"u8);
-        await Assert.That(html.Contains("<span class=\"k\">GET /api/users HTTP/1.1</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"k\">GET /api/users HTTP/1.1</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"na\">Host</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -85,7 +87,8 @@ public class RstHttpGlslLexerTests
     [Test]
     public async Task GlslClassifiesShaderTypes()
     {
-        var html = GlslLexer.Instance.Render("#version 330 core\nuniform sampler2D tex;\nin vec3 normal;\nout vec4 fragColor;\nvoid main() { fragColor = texture(tex, vec2(0.0, 0.0)); }"u8);
+        var html = GlslLexer.Instance.Render(
+            "#version 330 core\nuniform sampler2D tex;\nin vec3 normal;\nout vec4 fragColor;\nvoid main() { fragColor = texture(tex, vec2(0.0, 0.0)); }"u8);
         await Assert.That(html.Contains("<span class=\"cp\">", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">uniform</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">sampler2D</span>", StringComparison.Ordinal)).IsTrue();
@@ -108,7 +111,8 @@ public class RstHttpGlslLexerTests
     [Test]
     public async Task HlslClassifiesShaderTypes()
     {
-        var html = HlslLexer.Instance.Render("cbuffer Constants : register(b0) { float4x4 World; float4 Tint; }\nTexture2D<float4> tex : register(t0);"u8);
+        var html = HlslLexer.Instance.Render(
+            "cbuffer Constants : register(b0) { float4x4 World; float4 Tint; }\nTexture2D<float4> tex : register(t0);"u8);
         await Assert.That(html.Contains("<span class=\"kd\">cbuffer</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">float4x4</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">float4</span>", StringComparison.Ordinal)).IsTrue();

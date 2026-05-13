@@ -70,8 +70,12 @@ public class NavRenderBenchmarks
     [GlobalSetup]
     public async Task Setup()
     {
-        _inputRoot = Path.Combine(Path.GetTempPath(), "smkd-nav-bench-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        _outputRoot = Path.Combine(Path.GetTempPath(), "smkd-nav-bench-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _inputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-nav-bench-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _outputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-nav-bench-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(_inputRoot);
         Directory.CreateDirectory(_outputRoot);
 
@@ -126,14 +130,14 @@ public class NavRenderBenchmarks
             {
                 File.WriteAllText(
                     Path.Combine(sectionDir, "page-" + page.ToString("D2", CultureInfo.InvariantCulture) + ".md"),
-                    Page(sectionName, page, nested: false));
+                    Page(sectionName, page, false));
             }
 
             for (var page = 0; page < NestedLeafPages; page++)
             {
                 File.WriteAllText(
                     Path.Combine(nestedDir, "page-" + page.ToString("D2", CultureInfo.InvariantCulture) + ".md"),
-                    Page(sectionName, page, nested: true));
+                    Page(sectionName, page, true));
             }
         }
     }
@@ -170,7 +174,7 @@ public class NavRenderBenchmarks
         {
             if (Directory.Exists(path))
             {
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
         catch (IOException)

@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Icons.MaterialDesign\NuStreamDocs.Icons.MaterialDesign.csproj" />
-    <ProjectReference Include="..\..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Icons.MaterialDesign\NuStreamDocs.Icons.MaterialDesign.csproj"/>
+    <ProjectReference Include="..\..\NuStreamDocs.Theme.Common\NuStreamDocs.Theme.Common.csproj"/>
   </ItemGroup>
 
 </Project>

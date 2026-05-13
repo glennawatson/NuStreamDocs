@@ -15,7 +15,10 @@ public class CspInlineHasherTests
     [Test]
     public async Task HashesInlineScriptBodies()
     {
-        byte[] html = [.. "<html><head></head><body><script src=\"/a.js\"></script><script>alert(1)</script><script></script></body></html>"u8];
+        byte[] html =
+        [
+            .. "<html><head></head><body><script src=\"/a.js\"></script><script>alert(1)</script><script></script></body></html>"u8
+        ];
         List<byte[]> hashes = [];
         CspInlineHasher.HashScripts(html, hashes);
         var expected = "'sha256-" + Convert.ToBase64String(SHA256.HashData("alert(1)"u8)) + "'";

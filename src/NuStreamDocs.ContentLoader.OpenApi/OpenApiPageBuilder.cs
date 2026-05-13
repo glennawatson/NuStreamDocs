@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using NuStreamDocs.Common;
@@ -137,15 +136,11 @@ internal static class OpenApiPageBuilder
     /// <param name="path">The path template bytes.</param>
     /// <param name="method">The HTTP method name bytes (lowercase as in the spec).</param>
     /// <param name="state">Reused render state.</param>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Dispatch over the OpenAPI operation-property vocabulary; the branching tracks property names, not nested logic.")]
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S3776:Cognitive Complexity of methods should not be too high",
-        Justification = "Dispatch over the OpenAPI operation-property vocabulary; the branching tracks property names, not nested logic.")]
-    private static void ReadOperation(ref Utf8JsonReader reader, scoped ReadOnlySpan<byte> path, scoped ReadOnlySpan<byte> method, RenderState state)
+    private static void ReadOperation(
+        ref Utf8JsonReader reader,
+        scoped ReadOnlySpan<byte> path,
+        scoped ReadOnlySpan<byte> method,
+        RenderState state)
     {
         state.ResetOperation();
         while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
@@ -194,7 +189,10 @@ internal static class OpenApiPageBuilder
     /// <param name="state">Render state holding the buffered sections.</param>
     /// <param name="path">The path template bytes.</param>
     /// <param name="method">The HTTP method name bytes.</param>
-    private static void AssembleOperation(RenderState state, scoped ReadOnlySpan<byte> path, scoped ReadOnlySpan<byte> method)
+    private static void AssembleOperation(
+        RenderState state,
+        scoped ReadOnlySpan<byte> path,
+        scoped ReadOnlySpan<byte> method)
     {
         var operation = state.Operation;
         operation.ResetWrittenCount();
@@ -241,7 +239,7 @@ internal static class OpenApiPageBuilder
             markdown.Write(body.WrittenSpan);
 
             var route = ComposeRoute(routeBase, Slugify(tagBytes));
-            pages[index++] = new(new FilePath(Encoding.UTF8.GetString(route)), markdown.WrittenSpan.ToArray());
+            pages[index++] = new(new(Encoding.UTF8.GetString(route)), markdown.WrittenSpan.ToArray());
         }
 
         return pages;
@@ -286,10 +284,6 @@ internal static class OpenApiPageBuilder
     /// <summary>Reads one parameter object and appends its table row.</summary>
     /// <param name="reader">Reader at the parameter's <c>{</c>.</param>
     /// <param name="state">Reused render state.</param>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S1541:Methods should not be too complex",
-        Justification = "Dispatch over the OpenAPI parameter-property vocabulary; the branching tracks property names, not nested logic.")]
     private static void ReadParameterRow(ref Utf8JsonReader reader, RenderState state)
     {
         state.ResetParameterCells();
@@ -555,7 +549,10 @@ internal static class OpenApiPageBuilder
     /// <param name="destination">Destination.</param>
     /// <param name="block">A buffered section.</param>
     /// <param name="suffix">Trailing bytes.</param>
-    private static void AppendBlock(ArrayBufferWriter<byte> destination, ArrayBufferWriter<byte> block, ReadOnlySpan<byte> suffix)
+    private static void AppendBlock(
+        ArrayBufferWriter<byte> destination,
+        ArrayBufferWriter<byte> block,
+        ReadOnlySpan<byte> suffix)
     {
         if (block.WrittenCount == 0)
         {
@@ -615,7 +612,7 @@ internal static class OpenApiPageBuilder
     {
         (byte)'"' => "\\\""u8,
         (byte)'\\' => "\\\\"u8,
-        _ => " "u8,
+        _ => " "u8
     };
 
     /// <summary>Writes <paramref name="source"/> to <paramref name="destination"/> with ASCII letters uppercased.</summary>

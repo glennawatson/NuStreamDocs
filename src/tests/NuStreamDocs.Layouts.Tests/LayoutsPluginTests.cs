@@ -292,7 +292,7 @@ public class LayoutsPluginTests
                 return;
             }
 
-            Directory.Delete(_root, recursive: true);
+            Directory.Delete(_root, true);
         }
     }
 }

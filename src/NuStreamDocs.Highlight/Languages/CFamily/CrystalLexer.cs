@@ -31,7 +31,8 @@ public static class CrystalLexer
         "def class struct module lib fun macro alias abstract private protected public enum type include extend annotation instance_sizeof sizeof"u8);
 
     /// <summary>Constant keywords — shared <c>true</c>/<c>false</c> plus Crystal's <c>nil</c>.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNilLiteral);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNilLiteral);
 
     /// <summary>Operator alternation — shared C-style core plus Crystal's range / heredoc-style forms, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
@@ -54,7 +55,8 @@ public static class CrystalLexer
         var hashComment = new LexerRule(
             TokenMatchers.MatchHashComment,
             TokenClass.CommentSingle,
-            LexerRule.NoStateChange) { FirstBytes = HashFirst };
+            LexerRule.NoStateChange)
+        { FirstBytes = HashFirst };
 
         CFamilyConfig config = new()
         {

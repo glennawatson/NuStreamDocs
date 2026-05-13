@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
@@ -52,13 +53,13 @@ public class StaticAssetComposerTests
 
     /// <summary>Test plugin that exposes static assets.</summary>
     /// <param name="assets">Asset entries.</param>
-    private sealed class TestProvider(params (Common.FilePath Path, byte[] Bytes)[] assets) : IPlugin, IStaticAssetProvider
+    private sealed class TestProvider(params (FilePath Path, byte[] Bytes)[] assets) : IPlugin, IStaticAssetProvider
     {
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Name => "test-provider"u8;
 
         /// <inheritdoc/>
-        public (Common.FilePath Path, byte[] Bytes)[] StaticAssets { get; } = assets;
+        public (FilePath Path, byte[] Bytes)[] StaticAssets { get; } = assets;
     }
 
     /// <summary>Plugin that does not implement IStaticAssetProvider.</summary>
@@ -86,7 +87,7 @@ public class StaticAssetComposerTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

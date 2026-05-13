@@ -42,7 +42,7 @@ public static class ServedUrlBytes
     /// <param name="useDirectoryUrls">True for directory URLs.</param>
     /// <returns>UTF-8 URL bytes.</returns>
     public static byte[] FromPath(in FilePath path, bool useDirectoryUrls) =>
-        FromPath(path, useDirectoryUrls, leadingSlash: false);
+        FromPath(path, useDirectoryUrls, false);
 
     /// <summary>Returns served URL bytes for <paramref name="path"/>.</summary>
     /// <param name="path">Source-relative path.</param>

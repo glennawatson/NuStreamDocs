@@ -63,7 +63,13 @@ internal static class InlineStyleBlockBytes
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when at least one url(...) inside the body was rewritten.</returns>
-    internal static bool TryRewriteBlock(ReadOnlySpan<byte> html, int p, in UrlRewriteContext ctx, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo)
+    internal static bool TryRewriteBlock(
+        ReadOnlySpan<byte> html,
+        int p,
+        in UrlRewriteContext ctx,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo)
     {
         if (!TryMatchStyleBlock(html, p, out var bodyStart, out var bodyEnd, out var blockEnd))
         {
@@ -93,7 +99,12 @@ internal static class InlineStyleBlockBytes
     /// <param name="bodyEnd">Offset of the closing <c>&lt;/style&gt;</c>.</param>
     /// <param name="blockEnd">Offset just past the closing tag.</param>
     /// <returns>True on a successful match.</returns>
-    private static bool TryMatchStyleBlock(ReadOnlySpan<byte> html, int p, out int bodyStart, out int bodyEnd, out int blockEnd)
+    private static bool TryMatchStyleBlock(
+        ReadOnlySpan<byte> html,
+        int p,
+        out int bodyStart,
+        out int bodyEnd,
+        out int blockEnd)
     {
         bodyStart = -1;
         bodyEnd = -1;

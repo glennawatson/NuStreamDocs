@@ -13,7 +13,8 @@ public class CSharpApiGeneratorOptionsTests
     public async Task DefaultSubdirectoryIsApi()
     {
         var options = CSharpApiGeneratorOptions.FromManifest("/repo", "/cache");
-        await Assert.That(options.OutputMarkdownSubdirectory).IsEqualTo(CSharpApiGeneratorOptions.DefaultOutputSubdirectory);
+        await Assert.That(options.OutputMarkdownSubdirectory)
+            .IsEqualTo(CSharpApiGeneratorOptions.DefaultOutputSubdirectory);
         await Assert.That(options.OutputMarkdownSubdirectory).IsEqualTo("api");
     }
 
@@ -26,7 +27,8 @@ public class CSharpApiGeneratorOptionsTests
             .Throws<ArgumentException>();
         await Assert.That(static () => CSharpApiGeneratorOptions.FromManifest("/repo", "  ").Validate())
             .Throws<ArgumentException>();
-        await Assert.That(static () => CSharpApiGeneratorOptions.FromManifest("/repo", "/cache", string.Empty).Validate())
+        await Assert.That(static () =>
+                CSharpApiGeneratorOptions.FromManifest("/repo", "/cache", string.Empty).Validate())
             .Throws<ArgumentException>();
     }
 

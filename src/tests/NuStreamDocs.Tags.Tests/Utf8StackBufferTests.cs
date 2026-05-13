@@ -34,7 +34,7 @@ public class Utf8StackBufferTests
     public async Task OversizedInputFallsBackToPool()
     {
         string big = new('a', 32);
-        var copy = EncodeAndCopy(big, stackBufferSize: 8);
+        var copy = EncodeAndCopy(big, 8);
         await Assert.That(copy.Length).IsEqualTo(32);
         await Assert.That(Encoding.UTF8.GetString(copy)).IsEqualTo(big);
     }

@@ -104,7 +104,7 @@ public class CitationMarkerScannerTests
             .AddCase([.. "yes"u8], [.. "Case Yes"u8], [.. "[2020] 3"u8], 2020)
             .AddCase([.. "real"u8], [.. "Case Real"u8], [.. "[2020] 4"u8], 2020)
             .Build();
-        BibliographyOptions options = new(db, Aglc4Style.Instance, WarnOnMissing: false);
+        BibliographyOptions options = new(db, Aglc4Style.Instance, false);
         BibliographyPlugin plugin = new(options);
         ArrayBufferWriter<byte> sink = new(Math.Max(markdown.Length * 4, 16));
         PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(markdown), sink);

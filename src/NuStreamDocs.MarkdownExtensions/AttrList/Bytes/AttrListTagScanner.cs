@@ -46,7 +46,8 @@ internal static class AttrListTagScanner
             }
 
             var lt = p + rel;
-            if (lt + 1 < html.Length && html[lt + 1] is (byte)'/' && IsCloseFor(html, lt + CloseTagPrefixLength, tagName))
+            if (lt + 1 < html.Length && html[lt + 1] is (byte)'/' &&
+                IsCloseFor(html, lt + CloseTagPrefixLength, tagName))
             {
                 return lt;
             }

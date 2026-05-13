@@ -31,9 +31,9 @@ public static class AsciiWordBoundary
     /// <returns>True for ASCII letters, digits, and underscore.</returns>
     public static bool IsWordByte(byte b) =>
         b is >= (byte)'0' and <= (byte)'9'
-          or >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or (byte)'_';
+            or >= (byte)'A' and <= (byte)'Z'
+            or >= (byte)'a' and <= (byte)'z'
+            or (byte)'_';
 
     /// <summary>Returns true when <paramref name="token"/> matches exactly at <paramref name="offset"/> and is word-bounded on both sides.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -53,7 +53,8 @@ public static class AsciiWordBoundary
     /// <returns>True on a bounded ASCII-case-insensitive match.</returns>
     public static bool TryMatchBoundedIgnoreAsciiCase(ReadOnlySpan<byte> source, int offset, ReadOnlySpan<byte> token)
     {
-        if (offset + token.Length > source.Length || !IsBefore(source, offset) || !IsAfter(source, offset + token.Length))
+        if (offset + token.Length > source.Length || !IsBefore(source, offset) ||
+            !IsAfter(source, offset + token.Length))
         {
             return false;
         }

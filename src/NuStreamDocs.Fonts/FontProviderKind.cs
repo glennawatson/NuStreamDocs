@@ -14,5 +14,5 @@ public enum FontProviderKind
     Fontsource,
 
     /// <summary>Use font files already present in the author's input directory, matched by glob.</summary>
-    Local,
+    Local
 }

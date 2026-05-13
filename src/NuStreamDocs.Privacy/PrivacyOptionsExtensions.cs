@@ -24,7 +24,8 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="assetDirectory">New directory bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithAssetDirectory(this in PrivacyOptions options, ReadOnlySpan<byte> assetDirectory) =>
+    public static PrivacyOptions
+        WithAssetDirectory(this in PrivacyOptions options, ReadOnlySpan<byte> assetDirectory) =>
         options with { AssetDirectory = assetDirectory.ToArray() };
 
     /// <summary>Replaces the skip list with <paramref name="hosts"/>; clears the well-known defaults too.</summary>
@@ -38,32 +39,26 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="hosts">Host bytes (one entry per host).</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithHostsToSkip(this in PrivacyOptions options, params byte[][] hosts)
-    {
-        return options with { HostsToSkip = hosts };
-    }
+    public static PrivacyOptions WithHostsToSkip(this in PrivacyOptions options, params byte[][] hosts) =>
+        options with { HostsToSkip = hosts };
 
     /// <summary>Appends <paramref name="hosts"/> to the existing skip list — keeps the well-known defaults.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="hosts">Additional host strings.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddHostsToSkip(this in PrivacyOptions options, params string[] hosts)
-    {
-        return hosts.Length is 0
+    public static PrivacyOptions AddHostsToSkip(this in PrivacyOptions options, params string[] hosts) =>
+        hosts.Length is 0
             ? options
             : options.AppendHostsToSkip(hosts.EncodeUtf8Array());
-    }
 
     /// <summary>Appends UTF-8 <paramref name="hosts"/> to the existing skip list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="hosts">Additional host bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddHostsToSkip(this in PrivacyOptions options, params byte[][] hosts)
-    {
-        return hosts.Length is 0
+    public static PrivacyOptions AddHostsToSkip(this in PrivacyOptions options, params byte[][] hosts) =>
+        hosts.Length is 0
             ? options
             : options.AppendHostsToSkip(hosts);
-    }
 
     /// <summary>Appends a single UTF-8 host (e.g. a <c>"..."u8</c> literal) to the existing skip list.</summary>
     /// <param name="options">Source options.</param>
@@ -89,32 +84,26 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="hosts">Host bytes (one entry per host).</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithHostsAllowed(this in PrivacyOptions options, params byte[][] hosts)
-    {
-        return options with { HostsAllowed = hosts };
-    }
+    public static PrivacyOptions WithHostsAllowed(this in PrivacyOptions options, params byte[][] hosts) =>
+        options with { HostsAllowed = hosts };
 
     /// <summary>Appends <paramref name="hosts"/> to the existing allow list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="hosts">Additional host strings.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddHostsAllowed(this in PrivacyOptions options, params string[] hosts)
-    {
-        return hosts.Length is 0
+    public static PrivacyOptions AddHostsAllowed(this in PrivacyOptions options, params string[] hosts) =>
+        hosts.Length is 0
             ? options
             : options.AppendHostsAllowed(hosts.EncodeUtf8Array());
-    }
 
     /// <summary>Appends UTF-8 <paramref name="hosts"/> to the existing allow list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="hosts">Additional host bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddHostsAllowed(this in PrivacyOptions options, params byte[][] hosts)
-    {
-        return hosts.Length is 0
+    public static PrivacyOptions AddHostsAllowed(this in PrivacyOptions options, params byte[][] hosts) =>
+        hosts.Length is 0
             ? options
             : options.AppendHostsAllowed(hosts);
-    }
 
     /// <summary>Appends a single UTF-8 host (e.g. a <c>"..."u8</c> literal) to the existing allow list.</summary>
     /// <param name="options">Source options.</param>
@@ -140,32 +129,26 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Glob pattern bytes (one entry per pattern).</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithUrlIncludePatterns(this in PrivacyOptions options, params byte[][] patterns)
-    {
-        return options with { UrlIncludePatterns = patterns };
-    }
+    public static PrivacyOptions WithUrlIncludePatterns(this in PrivacyOptions options, params byte[][] patterns) =>
+        options with { UrlIncludePatterns = patterns };
 
     /// <summary>Appends <paramref name="patterns"/> to the existing URL include list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Additional glob pattern strings.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddUrlIncludePatterns(this in PrivacyOptions options, params string[] patterns)
-    {
-        return patterns.Length is 0
+    public static PrivacyOptions AddUrlIncludePatterns(this in PrivacyOptions options, params string[] patterns) =>
+        patterns.Length is 0
             ? options
             : options.AppendUrlIncludePatterns(patterns.EncodeUtf8Array());
-    }
 
     /// <summary>Appends UTF-8 <paramref name="patterns"/> to the existing URL include list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Additional glob pattern bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddUrlIncludePatterns(this in PrivacyOptions options, params byte[][] patterns)
-    {
-        return patterns.Length is 0
+    public static PrivacyOptions AddUrlIncludePatterns(this in PrivacyOptions options, params byte[][] patterns) =>
+        patterns.Length is 0
             ? options
             : options.AppendUrlIncludePatterns(patterns);
-    }
 
     /// <summary>Appends a single UTF-8 URL pattern (e.g. a <c>"..."u8</c> literal) to the existing include list.</summary>
     /// <param name="options">Source options.</param>
@@ -191,32 +174,26 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Glob pattern bytes (one entry per pattern).</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithUrlExcludePatterns(this in PrivacyOptions options, params byte[][] patterns)
-    {
-        return options with { UrlExcludePatterns = patterns };
-    }
+    public static PrivacyOptions WithUrlExcludePatterns(this in PrivacyOptions options, params byte[][] patterns) =>
+        options with { UrlExcludePatterns = patterns };
 
     /// <summary>Appends <paramref name="patterns"/> to the existing URL exclude list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Additional glob pattern strings.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddUrlExcludePatterns(this in PrivacyOptions options, params string[] patterns)
-    {
-        return patterns.Length is 0
+    public static PrivacyOptions AddUrlExcludePatterns(this in PrivacyOptions options, params string[] patterns) =>
+        patterns.Length is 0
             ? options
             : options.AppendUrlExcludePatterns(patterns.EncodeUtf8Array());
-    }
 
     /// <summary>Appends UTF-8 <paramref name="patterns"/> to the existing URL exclude list.</summary>
     /// <param name="options">Source options.</param>
     /// <param name="patterns">Additional glob pattern bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions AddUrlExcludePatterns(this in PrivacyOptions options, params byte[][] patterns)
-    {
-        return patterns.Length is 0
+    public static PrivacyOptions AddUrlExcludePatterns(this in PrivacyOptions options, params byte[][] patterns) =>
+        patterns.Length is 0
             ? options
             : options.AppendUrlExcludePatterns(patterns);
-    }
 
     /// <summary>Appends a single UTF-8 URL pattern (e.g. a <c>"..."u8</c> literal) to the existing exclude list.</summary>
     /// <param name="options">Source options.</param>
@@ -242,10 +219,8 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="path">UTF-8 forward-slash relative path bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithAuditManifestPath(this in PrivacyOptions options, byte[] path)
-    {
-        return options with { AuditManifestPath = path };
-    }
+    public static PrivacyOptions WithAuditManifestPath(this in PrivacyOptions options, byte[] path) =>
+        options with { AuditManifestPath = path };
 
     /// <summary>Replaces the audit manifest path with the supplied UTF-8 span.</summary>
     /// <param name="options">Source options.</param>
@@ -265,10 +240,8 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="path">UTF-8 absolute path bytes; empty falls back to <c>{outputRoot}/.cache/privacy</c>.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithCacheDirectory(this in PrivacyOptions options, byte[] path)
-    {
-        return options with { CacheDirectory = path };
-    }
+    public static PrivacyOptions WithCacheDirectory(this in PrivacyOptions options, byte[] path) =>
+        options with { CacheDirectory = path };
 
     /// <summary>Replaces the cache directory with the supplied UTF-8 span.</summary>
     /// <param name="options">Source options.</param>
@@ -288,10 +261,8 @@ public static class PrivacyOptionsExtensions
     /// <param name="options">Source options.</param>
     /// <param name="path">UTF-8 forward-slash relative path bytes.</param>
     /// <returns>The updated options.</returns>
-    public static PrivacyOptions WithCspManifestPath(this in PrivacyOptions options, byte[] path)
-    {
-        return options with { CspManifestPath = path };
-    }
+    public static PrivacyOptions WithCspManifestPath(this in PrivacyOptions options, byte[] path) =>
+        options with { CspManifestPath = path };
 
     /// <summary>Replaces the CSP manifest path with the supplied UTF-8 span.</summary>
     /// <param name="options">Source options.</param>

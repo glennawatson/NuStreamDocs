@@ -31,7 +31,9 @@ public class Phase2BatchLexerTests
     {
         var html = GroovyLexer.Instance.Render("def name = \"\"\"hi\nworld\"\"\"\nclass Foo { static int x = 1 }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">def</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"s2\">&quot;&quot;&quot;hi\nworld&quot;&quot;&quot;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"s2\">&quot;&quot;&quot;hi\nworld&quot;&quot;&quot;</span>",
+            StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">int</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -52,7 +54,8 @@ public class Phase2BatchLexerTests
     [Test]
     public async Task ObjectiveCClassifiesAtDirectivesAsDeclarations()
     {
-        var html = ObjectiveCLexer.Instance.Render("#import &lt;Foundation/Foundation.h&gt;\n@interface Foo : NSObject\n@end"u8);
+        var html = ObjectiveCLexer.Instance.Render(
+            "#import &lt;Foundation/Foundation.h&gt;\n@interface Foo : NSObject\n@end"u8);
         await Assert.That(html.Contains("<span class=\"cp\">", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">@interface</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">@end</span>", StringComparison.Ordinal)).IsTrue();
@@ -77,7 +80,8 @@ public class Phase2BatchLexerTests
     [Test]
     public async Task ElmClassifiesModuleAndTypeKeywords()
     {
-        var html = ElmLexer.Instance.Render("module Main exposing (..)\n-- comment\ntype alias Model = { count : Int }\n"u8);
+        var html = ElmLexer.Instance.Render(
+            "module Main exposing (..)\n-- comment\ntype alias Model = { count : Int }\n"u8);
         await Assert.That(html.Contains("<span class=\"kd\">module</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"c1\">-- comment</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">type</span>", StringComparison.Ordinal)).IsTrue();
@@ -90,7 +94,8 @@ public class Phase2BatchLexerTests
     [Test]
     public async Task CommonLispClassifiesDefunAndConstants()
     {
-        var html = CommonLispLexer.Instance.Render("(defun greet (name)\n  (when name\n    (format t \"hi ~a\" name)))"u8);
+        var html = CommonLispLexer.Instance.Render(
+            "(defun greet (name)\n  (when name\n    (format t \"hi ~a\" name)))"u8);
         await Assert.That(html.Contains("<span class=\"kd\">defun</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">when</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kc\">t</span>", StringComparison.Ordinal)).IsTrue();
@@ -116,7 +121,8 @@ public class Phase2BatchLexerTests
     public async Task LuaClassifiesLongString()
     {
         var html = LuaLexer.Instance.Render("local s = [[hello\nworld]]"u8);
-        await Assert.That(html.Contains("<span class=\"s2\">[[hello\nworld]]</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">[[hello\nworld]]</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Registry resolves the new aliases to their lexers.</summary>

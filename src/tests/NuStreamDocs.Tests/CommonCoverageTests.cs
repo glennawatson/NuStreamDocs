@@ -195,7 +195,10 @@ public class CommonCoverageTests
     /// <summary>Span-keyed alternate equality and Create round-trip span content into a byte[] copy.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    [SuppressMessage("Performance", "CA1859:Use concrete types when possible for improved performance", Justification = "Object of test")]
+    [SuppressMessage(
+        "Performance",
+        "CA1859:Use concrete types when possible for improved performance",
+        Justification = "Object of test")]
     public async Task ByteArrayComparerAlternateLookupRoundTrips()
     {
         IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]> alt = ByteArrayComparer.Instance;
@@ -300,7 +303,9 @@ public class CommonCoverageTests
     [Test]
     public async Task DirectoryPathFilesystemOpsRoundTrip()
     {
-        var root = (DirectoryPath)Path.Combine(Path.GetTempPath(), "smkd-dirpath-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var root = (DirectoryPath)Path.Combine(
+            Path.GetTempPath(),
+            "smkd-dirpath-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         try
         {
             await Assert.That(root.Exists()).IsFalse();
@@ -327,15 +332,19 @@ public class CommonCoverageTests
             await Assert.That(dirs.Length).IsEqualTo(1);
             await Assert.That(dirs[0].Name).IsEqualTo("nested");
             await Assert.That(root.EnumerateDirectories("ne*").ToArray().Length).IsEqualTo(1);
-            await Assert.That(root.EnumerateDirectories("ne*", SearchOption.TopDirectoryOnly).ToArray().Length).IsEqualTo(1);
+            await Assert.That(root.EnumerateDirectories("ne*", SearchOption.TopDirectoryOnly).ToArray().Length)
+                .IsEqualTo(1);
 
             // Empty wrappers yield empty enumerations without touching disk.
             await Assert.That(default(DirectoryPath).EnumerateFiles().ToArray().Length).IsEqualTo(0);
             await Assert.That(default(DirectoryPath).EnumerateFiles("*").ToArray().Length).IsEqualTo(0);
-            await Assert.That(default(DirectoryPath).EnumerateFiles("*", SearchOption.AllDirectories).ToArray().Length).IsEqualTo(0);
+            await Assert.That(default(DirectoryPath).EnumerateFiles("*", SearchOption.AllDirectories).ToArray().Length)
+                .IsEqualTo(0);
             await Assert.That(default(DirectoryPath).EnumerateDirectories().ToArray().Length).IsEqualTo(0);
             await Assert.That(default(DirectoryPath).EnumerateDirectories("*").ToArray().Length).IsEqualTo(0);
-            await Assert.That(default(DirectoryPath).EnumerateDirectories("*", SearchOption.AllDirectories).ToArray().Length).IsEqualTo(0);
+            await Assert
+                .That(default(DirectoryPath).EnumerateDirectories("*", SearchOption.AllDirectories).ToArray().Length)
+                .IsEqualTo(0);
 
             // Delete the file so we can also exercise Delete + DeleteRecursive.
             File.Delete(filePath);
@@ -346,7 +355,7 @@ public class CommonCoverageTests
             var leaf = root / "deep";
             leaf.Create();
             await File.WriteAllTextAsync(leaf.File("x.txt"), "x");
-            root.DeleteRecursive(recursive: true);
+            root.DeleteRecursive(true);
             await Assert.That(root.Exists()).IsFalse();
         }
         finally
@@ -355,7 +364,7 @@ public class CommonCoverageTests
             {
                 if (Directory.Exists(root))
                 {
-                    Directory.Delete(root, recursive: true);
+                    Directory.Delete(root, true);
                 }
             }
             catch (IOException)

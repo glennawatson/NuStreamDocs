@@ -35,7 +35,7 @@ public sealed class BoundedCache<TKey, TValue>
     /// <param name="capacity">Maximum entry count. Must be positive.</param>
     /// <param name="maxAge">Maximum age before an entry is considered stale.</param>
     public BoundedCache(int capacity, in TimeSpan maxAge)
-        : this(capacity, maxAge, equalityComparer: null, timeProvider: null, logger: null)
+        : this(capacity, maxAge, null, null, null)
     {
     }
 
@@ -44,8 +44,12 @@ public sealed class BoundedCache<TKey, TValue>
     /// <param name="maxAge">Maximum age before an entry is considered stale.</param>
     /// <param name="equalityComparer">Optional comparer for <typeparamref name="TKey"/>.</param>
     /// <param name="timeProvider">Optional wall-clock provider; defaults to <see cref="TimeProvider.System"/>.</param>
-    public BoundedCache(int capacity, in TimeSpan maxAge, IEqualityComparer<TKey>? equalityComparer, TimeProvider? timeProvider)
-        : this(capacity, maxAge, equalityComparer, timeProvider, logger: null)
+    public BoundedCache(
+        int capacity,
+        in TimeSpan maxAge,
+        IEqualityComparer<TKey>? equalityComparer,
+        TimeProvider? timeProvider)
+        : this(capacity, maxAge, equalityComparer, timeProvider, null)
     {
     }
 
@@ -55,7 +59,12 @@ public sealed class BoundedCache<TKey, TValue>
     /// <param name="equalityComparer">Optional comparer for <typeparamref name="TKey"/>.</param>
     /// <param name="timeProvider">Optional wall-clock provider; defaults to <see cref="TimeProvider.System"/>.</param>
     /// <param name="logger">Optional logger; eviction events are emitted at debug level when supplied.</param>
-    public BoundedCache(int capacity, in TimeSpan maxAge, IEqualityComparer<TKey>? equalityComparer, TimeProvider? timeProvider, ILogger? logger)
+    public BoundedCache(
+        int capacity,
+        in TimeSpan maxAge,
+        IEqualityComparer<TKey>? equalityComparer,
+        TimeProvider? timeProvider,
+        ILogger? logger)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         if (maxAge <= TimeSpan.Zero)
@@ -123,7 +132,8 @@ public sealed class BoundedCache<TKey, TValue>
                     LogLevel.Debug,
                     evicted,
                     _index.Count,
-                    static (l, removed, remaining) => CachingLoggingHelper.LogCacheEviction(l, "capacity", removed, remaining));
+                    static (l, removed, remaining) =>
+                        CachingLoggingHelper.LogCacheEviction(l, "capacity", removed, remaining));
             }
         }
     }

@@ -31,7 +31,12 @@ public class FeedEmitterTests
     public async Task RssOnlyWritesFeedXml()
     {
         using FeedTempDir temp = new();
-        var written = FeedEmitter.WriteEnabledFormats(TestOptions(FeedFormats.Rss), temp.Root, [TestPost()], TestTime, NullLogger.Instance);
+        var written = FeedEmitter.WriteEnabledFormats(
+            TestOptions(FeedFormats.Rss),
+            temp.Root,
+            [TestPost()],
+            TestTime,
+            NullLogger.Instance);
         await Assert.That(written).IsEqualTo(FeedFormats.Rss);
         await Assert.That(File.Exists(Path.Combine(temp.Root, "feed.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "atom.xml"))).IsFalse();
@@ -43,7 +48,12 @@ public class FeedEmitterTests
     public async Task AtomOnlyWritesAtomXml()
     {
         using FeedTempDir temp = new();
-        var written = FeedEmitter.WriteEnabledFormats(TestOptions(FeedFormats.Atom), temp.Root, [TestPost()], TestTime, NullLogger.Instance);
+        var written = FeedEmitter.WriteEnabledFormats(
+            TestOptions(FeedFormats.Atom),
+            temp.Root,
+            [TestPost()],
+            TestTime,
+            NullLogger.Instance);
         await Assert.That(written).IsEqualTo(FeedFormats.Atom);
         await Assert.That(File.Exists(Path.Combine(temp.Root, "atom.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "feed.xml"))).IsFalse();
@@ -55,7 +65,12 @@ public class FeedEmitterTests
     public async Task BothWritesBoth()
     {
         using FeedTempDir temp = new();
-        var written = FeedEmitter.WriteEnabledFormats(TestOptions(FeedFormats.Both), temp.Root, [TestPost()], TestTime, NullLogger.Instance);
+        var written = FeedEmitter.WriteEnabledFormats(
+            TestOptions(FeedFormats.Both),
+            temp.Root,
+            [TestPost()],
+            TestTime,
+            NullLogger.Instance);
         await Assert.That(written).IsEqualTo(FeedFormats.Both);
         await Assert.That(File.Exists(Path.Combine(temp.Root, "feed.xml"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "atom.xml"))).IsTrue();
@@ -67,20 +82,31 @@ public class FeedEmitterTests
     public async Task EmptyOutputRootRejected()
     {
         var opts = TestOptions(FeedFormats.Both);
-        var ex = Assert.Throws<ArgumentException>(() => FeedEmitter.WriteEnabledFormats(opts, string.Empty, [], TestTime, NullLogger.Instance));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            FeedEmitter.WriteEnabledFormats(opts, string.Empty, [], TestTime, NullLogger.Instance));
         await Assert.That(ex).IsNotNull();
     }
 
     /// <summary>Builds a sample post that satisfies FeedWriter's required fields.</summary>
     /// <returns>One sample post.</returns>
     private static BlogPost TestPost() =>
-        new("posts/2026-01-01-hello.md", [.. "posts/2026-01-01-hello.html"u8], [.. "hello"u8], [.. "Hello"u8], [], [], [.. "Author"u8], new(2026, 1, 1), [], [.. "An excerpt."u8]);
+        new(
+            "posts/2026-01-01-hello.md",
+            [.. "posts/2026-01-01-hello.html"u8],
+            [.. "hello"u8],
+            [.. "Hello"u8],
+            [],
+            [],
+            [.. "Author"u8],
+            new(2026, 1, 1),
+            [],
+            [.. "An excerpt."u8]);
 
     /// <summary>Builds a valid <see cref="FeedOptions"/> with the requested format flag.</summary>
     /// <param name="formats">Format flags.</param>
     /// <returns>Options.</returns>
     private static FeedOptions TestOptions(FeedFormats formats) =>
-        new([.. "https://x.test/"u8], [.. "Site"u8], [.. "Description"u8], "posts", "feeds", formats, MaxItems: 0);
+        new([.. "https://x.test/"u8], [.. "Site"u8], [.. "Description"u8], "posts", "feeds", formats, 0);
 
     /// <summary>Disposable scratch directory.</summary>
     private sealed class FeedTempDir : IDisposable
@@ -100,7 +126,7 @@ public class FeedEmitterTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

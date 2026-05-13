@@ -23,10 +23,12 @@ public static class LuaLexer
         "if then else elseif end for while do repeat until break goto return in and or not"u8);
 
     /// <summary>Declaration keywords.</summary>
-    private static readonly ByteKeywordSet KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated("function local"u8);
+    private static readonly ByteKeywordSet KeywordDeclarations =
+        ByteKeywordSet.CreateFromSpaceSeparated("function local"u8);
 
     /// <summary>Constant keywords.</summary>
-    private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("true false nil"u8);
+    private static readonly ByteKeywordSet KeywordConstants =
+        ByteKeywordSet.CreateFromSpaceSeparated("true false nil"u8);
 
     /// <summary>Operator alternation, sorted longest-first.</summary>
     private static readonly byte[][] OperatorTable = OperatorAlternationFactory.SplitLongestFirst(
@@ -71,7 +73,10 @@ public static class LuaLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            },
 
             // --[[ ... ]] block comment — must precede the line-comment rule.
             new(MatchDashBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = DashFirst },
@@ -83,21 +88,51 @@ public static class LuaLexer
             new(MatchLongString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = BracketFirst },
 
             // Regular strings.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst },
-            new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
+            {
+                FirstBytes = DoubleQuoteFirst
+            },
+            new(
+                static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
+                TokenClass.StringSingle,
+                LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst },
 
             // Numbers.
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits },
+            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiDigits
+            },
+            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiDigits
+            },
 
             // Keywords.
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations), TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
-            new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
+            new(
+                static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants),
+                TokenClass.KeywordConstant,
+                LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
+            new(
+                static slice => TokenMatchers.MatchKeyword(slice, KeywordDeclarations),
+                TokenClass.KeywordDeclaration,
+                LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst },
+            new(
+                static slice => TokenMatchers.MatchKeyword(slice, Keywords),
+                TokenClass.Keyword,
+                LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
 
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
-            new(static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
-            new(static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet), TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
+            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiIdentifierStart
+            },
+            new(
+                static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable),
+                TokenClass.Operator,
+                LexerRule.NoStateChange) { FirstBytes = OperatorFirst },
+            new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet),
+                TokenClass.Punctuation,
+                LexerRule.NoStateChange) { FirstBytes = PunctuationSet }
         ];
 
         return new(LanguageRuleBuilder.BuildSingleState(rules));

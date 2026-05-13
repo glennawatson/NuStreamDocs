@@ -105,7 +105,8 @@ internal static class AutoLink
         for (var i = 1; i < colon; i++)
         {
             var b = content[i];
-            if (!AsciiByteHelpers.IsAsciiLetter(b) && !AsciiByteHelpers.IsAsciiDigit(b) && b is not ((byte)'+' or (byte)'-' or (byte)'.'))
+            if (!AsciiByteHelpers.IsAsciiLetter(b) && !AsciiByteHelpers.IsAsciiDigit(b) &&
+                b is not ((byte)'+' or (byte)'-' or (byte)'.'))
             {
                 return false;
             }

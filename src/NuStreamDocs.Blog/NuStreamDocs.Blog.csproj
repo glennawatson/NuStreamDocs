@@ -8,17 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Blog.Common\NuStreamDocs.Blog.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Blog.Common\NuStreamDocs.Blog.Common.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Blog.Tests" />
-    <InternalsVisibleTo Include="NuStreamDocs.Blog.MkDocs.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Blog.Tests"/>
+    <InternalsVisibleTo Include="NuStreamDocs.Blog.MkDocs.Tests"/>
   </ItemGroup>
 
 </Project>

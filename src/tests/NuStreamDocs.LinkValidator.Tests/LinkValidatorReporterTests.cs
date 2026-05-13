@@ -31,14 +31,14 @@ public class LinkValidatorReporterTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task AdjustSeverityDemotesWhenLax() =>
-        await Assert.That(LinkValidatorReporter.AdjustSeverity(Err("x"), strict: false).Severity)
+        await Assert.That(LinkValidatorReporter.AdjustSeverity(Err("x"), false).Severity)
             .IsEqualTo(LinkSeverity.Warning);
 
     /// <summary>AdjustSeverity preserves errors when strict is true.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task AdjustSeverityKeepsWhenStrict() =>
-        await Assert.That(LinkValidatorReporter.AdjustSeverity(Err("x"), strict: true).Severity)
+        await Assert.That(LinkValidatorReporter.AdjustSeverity(Err("x"), true).Severity)
             .IsEqualTo(LinkSeverity.Error);
 
     /// <summary>Tally splits broken from warnings.</summary>
@@ -68,7 +68,7 @@ public class LinkValidatorReporterTests
     {
         LinkDiagnostic[] internalDiags = [Err("i1"), Err("i2")];
         LinkDiagnostic[] externalDiags = [Err("e1")];
-        var merged = LinkValidatorReporter.Merge(internalDiags, externalDiags, strictInternal: false, strictExternal: true);
+        var merged = LinkValidatorReporter.Merge(internalDiags, externalDiags, false, true);
         await Assert.That(merged.Length).IsEqualTo(3);
         await Assert.That(merged[0].Severity).IsEqualTo(LinkSeverity.Warning);
         await Assert.That(merged[1].Severity).IsEqualTo(LinkSeverity.Warning);

@@ -83,7 +83,11 @@ public class CodeAwareRewriterTests
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on match.</param>
     /// <returns>True when the cursor sits on <c>[X]</c>.</returns>
-    private static bool AngleBracketX(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool AngleBracketX(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         if (offset + 2 < source.Length
             && source[offset] is (byte)'['

@@ -71,16 +71,22 @@ public class ProfiledPhaseBenchmarks
         for (var i = 0; i < Paragraphs; i++)
         {
             sb.Append("# Heading ").Append(i).Append('\n')
-              .Append("Paragraph with **bold**, `code`, [link](https://x/").Append(i).Append(") and a > quote.\n\n")
-              .Append("- list item ").Append(i).Append('\n')
-              .Append("- list item B\n\n");
+                .Append("Paragraph with **bold**, `code`, [link](https://x/").Append(i).Append(") and a > quote.\n\n")
+                .Append("- list item ").Append(i).Append('\n')
+                .Append("- list item B\n\n");
         }
 
         _markdown = Encoding.UTF8.GetBytes(sb.ToString());
-        _csharp = RepeatBytes("public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n"u8, LexerRepetitions);
+        _csharp = RepeatBytes(
+            "public sealed class Foo { public int Bar(int x) => x + 1; /* comment */ string s = \"hi\"; }\n"u8,
+            LexerRepetitions);
 
-        _inputRoot = Path.Combine(Path.GetTempPath(), "smkd-prof-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        _outputRoot = Path.Combine(Path.GetTempPath(), "smkd-prof-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _inputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-prof-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _outputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-prof-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(_inputRoot);
         for (var i = 0; i < CorpusPages; i++)
         {
@@ -150,7 +156,8 @@ public class ProfiledPhaseBenchmarks
     private static string Page(int index) =>
         new StringBuilder(1024)
             .Append("# Page ").Append(index).Append('\n').Append('\n')
-            .Append("Some intro text with **bold** and `code` and a [link](https://example.com/").Append(index).Append(").\n\n")
+            .Append("Some intro text with **bold** and `code` and a [link](https://example.com/").Append(index)
+            .Append(").\n\n")
             .Append("## Code\n\n```csharp\npublic int Add(int a, int b) => a + b;\n```\n\n")
             .Append("- bullet 1\n- bullet 2\n\n")
             .Append("| h1 | h2 |\n| --- | --- |\n| a | b |\n")
@@ -181,7 +188,7 @@ public class ProfiledPhaseBenchmarks
         {
             if (Directory.Exists(path))
             {
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
         catch (IOException)

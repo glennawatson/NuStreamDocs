@@ -14,7 +14,8 @@ using NuStreamDocs.Yaml;
 namespace NuStreamDocs.Search;
 
 /// <summary>Base class for engine-specific search plugins; drives page scan, finalize, and head-extra emission.</summary>
-public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin, IHeadExtraProvider
+public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin,
+    IHeadExtraProvider
 {
     /// <summary>Engine implementation.</summary>
     private readonly ISearchEngine _engine;
@@ -220,7 +221,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
         }
 
         var path = useDirectoryUrls ? markdownPath : markdownPath.WithExtension(".html");
-        return ServedUrlBytes.FromPath(path, useDirectoryUrls, leadingSlash: true);
+        return ServedUrlBytes.FromPath(path, useDirectoryUrls, true);
     }
 
     /// <summary>Builds the site-relative manifest URL bytes; empty when the engine ships no fetchable manifest.</summary>

@@ -25,7 +25,8 @@ internal static class MdInHtmlRewriter
         var i = 0;
         while (i < source.Length)
         {
-            if (MarkdownCodeScanner.AtLineStart(source, i) && MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
+            if (MarkdownCodeScanner.AtLineStart(source, i) &&
+                MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
             {
                 writer.Write(source[i..fenceEnd]);
                 i = fenceEnd;
@@ -51,7 +52,11 @@ internal static class MdInHtmlRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True when a tag was rewritten.</returns>
-    private static bool TryRewriteTag(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteTag(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (!TryParseOpenTag(source, offset, out var name, out var openTagEnd, out var attrStart, out var attrEnd))
@@ -153,7 +158,13 @@ internal static class MdInHtmlRewriter
     /// <param name="attrStart">Inclusive start of the <c>markdown="…"</c> attribute on success (including the leading whitespace).</param>
     /// <param name="attrEnd">Exclusive end of the <c>markdown="…"</c> attribute on success.</param>
     /// <returns>True when the tag carries a recognized <c>markdown</c> attribute value.</returns>
-    private static bool TryParseOpenTag(ReadOnlySpan<byte> source, int offset, out ReadOnlySpan<byte> name, out int openTagEnd, out int attrStart, out int attrEnd)
+    private static bool TryParseOpenTag(
+        ReadOnlySpan<byte> source,
+        int offset,
+        out ReadOnlySpan<byte> name,
+        out int openTagEnd,
+        out int attrStart,
+        out int attrEnd)
     {
         name = default;
         openTagEnd = 0;
@@ -227,7 +238,11 @@ internal static class MdInHtmlRewriter
     /// <param name="tokenLength">Length of the literal <c>markdown</c> token.</param>
     /// <param name="relEnd">Exclusive end of the matched attribute on success.</param>
     /// <returns>True when a recognized <c>markdown</c> attribute was matched.</returns>
-    private static bool TryMatchAttributeFromTokenStart(ReadOnlySpan<byte> attrs, int boundaryOffset, int tokenLength, out int relEnd)
+    private static bool TryMatchAttributeFromTokenStart(
+        ReadOnlySpan<byte> attrs,
+        int boundaryOffset,
+        int tokenLength,
+        out int relEnd)
     {
         relEnd = 0;
         var afterToken = boundaryOffset + 1 + tokenLength;
@@ -294,7 +309,12 @@ internal static class MdInHtmlRewriter
     /// <param name="closeStart">Offset of the close tag's leading <c>&lt;</c>.</param>
     /// <param name="closeEnd">Offset just past the close tag's <c>&gt;</c>.</param>
     /// <returns>True when a matching close tag was found.</returns>
-    private static bool TryFindMatchingClose(ReadOnlySpan<byte> source, ReadOnlySpan<byte> name, int from, out int closeStart, out int closeEnd)
+    private static bool TryFindMatchingClose(
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> name,
+        int from,
+        out int closeStart,
+        out int closeEnd)
     {
         closeStart = 0;
         closeEnd = 0;
@@ -353,7 +373,8 @@ internal static class MdInHtmlRewriter
         }
 
         var afterName = offset + 1 + name.Length;
-        if (afterName >= source.Length || source[afterName] is not (byte)'>' and not (byte)' ' and not (byte)'\t' and not (byte)'\n')
+        if (afterName >= source.Length ||
+            source[afterName] is not (byte)'>' and not (byte)' ' and not (byte)'\t' and not (byte)'\n')
         {
             return false;
         }
@@ -424,7 +445,7 @@ internal static class MdInHtmlRewriter
     /// <returns>True for letters, digits, <c>-</c>, or <c>_</c>.</returns>
     private static bool IsTagNameByte(byte b) =>
         b is >= (byte)'A' and <= (byte)'Z'
-          or >= (byte)'a' and <= (byte)'z'
-          or >= (byte)'0' and <= (byte)'9'
-          or (byte)'-' or (byte)'_';
+            or >= (byte)'a' and <= (byte)'z'
+            or >= (byte)'0' and <= (byte)'9'
+            or (byte)'-' or (byte)'_';
 }

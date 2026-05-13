@@ -63,23 +63,44 @@ public static class MarkdownLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            },
 
             // ATX heading: # / ## / ... at line start, classify the whole line.
-            new(MatchAtxHeading, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = HashFirst, RequiresLineStart = true },
+            new(MatchAtxHeading, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst, RequiresLineStart = true
+            },
 
             // Fence opener / closer — line-anchored ``` or ~~~.
-            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = BacktickFirst, RequiresLineStart = true },
-            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = TildeFirst, RequiresLineStart = true },
+            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange)
+            {
+                FirstBytes = BacktickFirst, RequiresLineStart = true
+            },
+            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange)
+            {
+                FirstBytes = TildeFirst, RequiresLineStart = true
+            },
 
             // Blockquote prefix (>).
-            new(MatchBlockquotePrefix, TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = AngleFirst, RequiresLineStart = true },
+            new(MatchBlockquotePrefix, TokenClass.Keyword, LexerRule.NoStateChange)
+            {
+                FirstBytes = AngleFirst, RequiresLineStart = true
+            },
 
             // Bullet at line start: optional indent, then -/+/* then space.
-            new(MatchBulletPrefix, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = BulletFirst, RequiresLineStart = true },
+            new(MatchBulletPrefix, TokenClass.Operator, LexerRule.NoStateChange)
+            {
+                FirstBytes = BulletFirst, RequiresLineStart = true
+            },
 
             // Ordered-list marker: digit run + . + space.
-            new(MatchOrderedMarker, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = DigitFirst, RequiresLineStart = true },
+            new(MatchOrderedMarker, TokenClass.Operator, LexerRule.NoStateChange)
+            {
+                FirstBytes = DigitFirst, RequiresLineStart = true
+            },
 
             // Inline code span: `...` (single backtick form only — multi-backtick deferred).
             new(MatchInlineCode, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = BacktickFirst },

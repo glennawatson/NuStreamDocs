@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using NuStreamDocs.Common;
 using NuStreamDocs.Macros;
 using NuStreamDocs.Plugins;
 
@@ -34,14 +35,14 @@ public class MacrosBenchmarks
         _markerHeavySource = BuildRepeated("Project: {{ project }} Version: {{ version }} Author: {{ author }}\n");
         _noMarkerSource = BuildRepeated("Plain prose line with no curly markers anywhere here at all.\n");
 
-        Dictionary<byte[], byte[]> vars = new(Common.ByteArrayComparer.Instance)
+        Dictionary<byte[], byte[]> vars = new(ByteArrayComparer.Instance)
         {
-            [[.. "project"u8]] = [.."ReactiveUI"u8],
-            [[.. "version"u8]] = [.."20.0.0"u8],
-            [[.. "author"u8]] = [.."Glenn Watson"u8],
-            [[.. "year"u8]] = [.."2026"u8]
+            [[.. "project"u8]] = [.. "ReactiveUI"u8],
+            [[.. "version"u8]] = [.. "20.0.0"u8],
+            [[.. "author"u8]] = [.. "Glenn Watson"u8],
+            [[.. "year"u8]] = [.. "2026"u8]
         };
-        _plugin = new(new(vars, EscapeHtml: false, WarnOnMissing: false));
+        _plugin = new(new(vars, false, false));
     }
 
     /// <summary>Marker-heavy fixture — every <c>{{ name }}</c> resolves through the variable map.</summary>

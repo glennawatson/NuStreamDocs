@@ -22,7 +22,11 @@ internal static class EmojiRewriter
     /// <param name="writer">Sink.</param>
     /// <param name="consumed">Bytes consumed on success.</param>
     /// <returns>True when a known shortcode was rewritten.</returns>
-    private static bool TryRewriteShortcode(ReadOnlySpan<byte> source, int offset, IBufferWriter<byte> writer, out int consumed)
+    private static bool TryRewriteShortcode(
+        ReadOnlySpan<byte> source,
+        int offset,
+        IBufferWriter<byte> writer,
+        out int consumed)
     {
         consumed = 0;
         if (source[offset] is not (byte)':')

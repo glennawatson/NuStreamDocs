@@ -100,7 +100,10 @@ internal static class AsmFamilyRules
 
             // Bare identifier — labels, macro names, operand symbols.
             new(
-                slice => TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, AsmIdentifierContinue),
+                slice => TokenMatchers.MatchIdentifier(
+                    slice,
+                    TokenMatchers.AsciiIdentifierStart,
+                    AsmIdentifierContinue),
                 TokenClass.Name,
                 LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
 

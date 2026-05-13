@@ -14,22 +14,26 @@ public class CaretTildeRewriterTests
     /// <summary>Single carets become <c>&lt;sup&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task SingleCaretRewritesToSup() => await Assert.That(Rewrite("E = mc^2^ here")).IsEqualTo("E = mc<sup>2</sup> here");
+    public async Task SingleCaretRewritesToSup() =>
+        await Assert.That(Rewrite("E = mc^2^ here")).IsEqualTo("E = mc<sup>2</sup> here");
 
     /// <summary>Doubled carets become <c>&lt;ins&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task DoubleCaretRewritesToIns() => await Assert.That(Rewrite("a ^^new^^ thing")).IsEqualTo("a <ins>new</ins> thing");
+    public async Task DoubleCaretRewritesToIns() =>
+        await Assert.That(Rewrite("a ^^new^^ thing")).IsEqualTo("a <ins>new</ins> thing");
 
     /// <summary>Single tildes become <c>&lt;sub&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task SingleTildeRewritesToSub() => await Assert.That(Rewrite("H~2~O is water")).IsEqualTo("H<sub>2</sub>O is water");
+    public async Task SingleTildeRewritesToSub() =>
+        await Assert.That(Rewrite("H~2~O is water")).IsEqualTo("H<sub>2</sub>O is water");
 
     /// <summary>Doubled tildes become <c>&lt;del&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task DoubleTildeRewritesToDel() => await Assert.That(Rewrite("~~strikeout~~ this")).IsEqualTo("<del>strikeout</del> this");
+    public async Task DoubleTildeRewritesToDel() =>
+        await Assert.That(Rewrite("~~strikeout~~ this")).IsEqualTo("<del>strikeout</del> this");
 
     /// <summary>Mixed markers in a single line all rewrite.</summary>
     /// <returns>Async test.</returns>
@@ -77,7 +81,8 @@ public class CaretTildeRewriterTests
     /// <summary>Unclosed marker at end of line passes through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task UnclosedMarkerPassesThrough() => await Assert.That(Rewrite("trailing ^foo")).IsEqualTo("trailing ^foo");
+    public async Task UnclosedMarkerPassesThrough() =>
+        await Assert.That(Rewrite("trailing ^foo")).IsEqualTo("trailing ^foo");
 
     /// <summary>Rewrites <paramref name="input"/> via <c>CaretTildeRewriter</c>.</summary>
     /// <param name="input">Markdown source.</param>

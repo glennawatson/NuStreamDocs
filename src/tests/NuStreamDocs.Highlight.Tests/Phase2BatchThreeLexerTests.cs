@@ -15,7 +15,8 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task VbNetClassifiesDeclarationsCaseInsensitively()
     {
-        var html = VbNetLexer.Instance.Render("Public Class Foo\n  Public Sub Greet()\n    If x Then Return\n  End Sub\nEnd Class"u8);
+        var html = VbNetLexer.Instance.Render(
+            "Public Class Foo\n  Public Sub Greet()\n    If x Then Return\n  End Sub\nEnd Class"u8);
         await Assert.That(html.Contains("<span class=\"kd\">Public</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">Class</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">Sub</span>", StringComparison.Ordinal)).IsTrue();
@@ -30,7 +31,8 @@ public class Phase2BatchThreeLexerTests
     public async Task VbNetClassifiesSingleQuoteComment()
     {
         var html = VbNetLexer.Instance.Render("' inline comment\nDim x = 1\n"u8);
-        await Assert.That(html.Contains("<span class=\"c1\">' inline comment</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"c1\">' inline comment</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>GraphQL classifies <c>type</c>/<c>scalar</c>/<c>enum</c> and the built-in scalar types.</summary>
@@ -38,7 +40,8 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task GraphQlClassifiesSchemaDeclarations()
     {
-        var html = GraphQLLexer.Instance.Render("type User {\n  id: ID!\n  name: String\n  age: Int\n}\nenum Role { ADMIN USER }\n"u8);
+        var html = GraphQLLexer.Instance.Render(
+            "type User {\n  id: ID!\n  name: String\n  age: Int\n}\nenum Role { ADMIN USER }\n"u8);
         await Assert.That(html.Contains("<span class=\"kd\">type</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">enum</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">ID</span>", StringComparison.Ordinal)).IsTrue();
@@ -61,7 +64,8 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task ProtobufClassifiesMessageAndScalars()
     {
-        var html = ProtobufLexer.Instance.Render("syntax = \"proto3\";\nmessage User {\n  string name = 1;\n  int32 age = 2;\n  bool active = 3;\n}\n"u8);
+        var html = ProtobufLexer.Instance.Render(
+            "syntax = \"proto3\";\nmessage User {\n  string name = 1;\n  int32 age = 2;\n  bool active = 3;\n}\n"u8);
         await Assert.That(html.Contains("<span class=\"k\">syntax</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">message</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">string</span>", StringComparison.Ordinal)).IsTrue();
@@ -74,7 +78,8 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task HclClassifiesResourceBlocks()
     {
-        var html = HclLexer.Instance.Render("# top comment\nresource \"aws_instance\" \"web\" {\n  ami = \"ami-123\"\n  instance_type = \"t2.micro\"\n}\n"u8);
+        var html = HclLexer.Instance.Render(
+            "# top comment\nresource \"aws_instance\" \"web\" {\n  ami = \"ami-123\"\n  instance_type = \"t2.micro\"\n}\n"u8);
         await Assert.That(html.Contains("<span class=\"c1\"># top comment</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">resource</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -84,7 +89,8 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task RClassifiesFunctionAndArrowOperator()
     {
-        var html = RLexer.Instance.Render("greet <- function(name) {\n  if (is.null(name)) return(NULL)\n  cat(\"hi\", name)\n}\n"u8);
+        var html = RLexer.Instance.Render(
+            "greet <- function(name) {\n  if (is.null(name)) return(NULL)\n  cat(\"hi\", name)\n}\n"u8);
         await Assert.That(html.Contains("<span class=\"kd\">function</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">if</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">return</span>", StringComparison.Ordinal)).IsTrue();
@@ -97,8 +103,10 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task JuliaClassifiesFunctionAndBlockComment()
     {
-        var html = JuliaLexer.Instance.Render("#= block\ncomment =#\nfunction greet(name)\n  return \"hi $name\"\nend\n"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">#= block\ncomment =#</span>", StringComparison.Ordinal)).IsTrue();
+        var html = JuliaLexer.Instance.Render(
+            "#= block\ncomment =#\nfunction greet(name)\n  return \"hi $name\"\nend\n"u8);
+        await Assert.That(html.Contains("<span class=\"cm\">#= block\ncomment =#</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">function</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">return</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">end</span>", StringComparison.Ordinal)).IsTrue();
@@ -109,8 +117,10 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task MatlabClassifiesPercentCommentsAndFunction()
     {
-        var html = MatlabLexer.Instance.Render("%{ block comment %}\n% line comment\nfunction y = square(x)\n  y = x^2;\nend\n"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">%{ block comment %}</span>", StringComparison.Ordinal)).IsTrue();
+        var html = MatlabLexer.Instance.Render(
+            "%{ block comment %}\n% line comment\nfunction y = square(x)\n  y = x^2;\nend\n"u8);
+        await Assert.That(html.Contains("<span class=\"cm\">%{ block comment %}</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"c1\">% line comment</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">function</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">end</span>", StringComparison.Ordinal)).IsTrue();
@@ -121,8 +131,10 @@ public class Phase2BatchThreeLexerTests
     [Test]
     public async Task NimClassifiesProcAndBlockComment()
     {
-        var html = NimLexer.Instance.Render("#[ block comment ]#\n# line comment\nproc greet(name: string): string =\n  return \"hi \" &amp; name\n"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">#[ block comment ]#</span>", StringComparison.Ordinal)).IsTrue();
+        var html = NimLexer.Instance.Render(
+            "#[ block comment ]#\n# line comment\nproc greet(name: string): string =\n  return \"hi \" &amp; name\n"u8);
+        await Assert.That(html.Contains("<span class=\"cm\">#[ block comment ]#</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"c1\"># line comment</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">proc</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">string</span>", StringComparison.Ordinal)).IsTrue();

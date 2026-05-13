@@ -57,9 +57,14 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="resourceName">Manifest resource name.</param>
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraCssEmbedded(this DocBuilder builder, Assembly assembly, in ApiCompatString resourceName, in FilePath outputName)
+    public static DocBuilder AddExtraCssEmbedded(
+        this DocBuilder builder,
+        Assembly assembly,
+        in ApiCompatString resourceName,
+        in FilePath outputName)
     {
-        builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddCss(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
+        builder.GetOrAddPlugin<ExtraAssetsPlugin>()
+            .AddCss(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
         return builder;
     }
 
@@ -130,9 +135,14 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="resourceName">Manifest resource name.</param>
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraJsEmbedded(this DocBuilder builder, Assembly assembly, in ApiCompatString resourceName, in FilePath outputName)
+    public static DocBuilder AddExtraJsEmbedded(
+        this DocBuilder builder,
+        Assembly assembly,
+        in ApiCompatString resourceName,
+        in FilePath outputName)
     {
-        builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
+        builder.GetOrAddPlugin<ExtraAssetsPlugin>()
+            .AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName));
         return builder;
     }
 
@@ -178,9 +188,14 @@ public static class DocBuilderExtraAssetsExtensions
     /// <param name="resourceName">Manifest resource name.</param>
     /// <param name="outputName">File name written under <c>assets/extra/</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder AddExtraJsModuleEmbedded(this DocBuilder builder, Assembly assembly, in ApiCompatString resourceName, in FilePath outputName)
+    public static DocBuilder AddExtraJsModuleEmbedded(
+        this DocBuilder builder,
+        Assembly assembly,
+        in ApiCompatString resourceName,
+        in FilePath outputName)
     {
-        builder.GetOrAddPlugin<ExtraAssetsPlugin>().AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName).AsModule());
+        builder.GetOrAddPlugin<ExtraAssetsPlugin>()
+            .AddJs(ExtraAssetSource.Embedded(assembly, resourceName, outputName).AsModule());
         return builder;
     }
 

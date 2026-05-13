@@ -46,51 +46,92 @@ internal static class IniFamilyRules
         const int MaxRuleSlots = 12;
         var rules = new List<LexerRule>(MaxRuleSlots)
         {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst }
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = WhitespaceFirst
+            }
         };
 
         // Comment to end-of-line. Configured first-byte set selects which prefixes are valid.
         var commentFirst = config.CommentFirst;
-        rules.Add(new(slice => MatchCommentByPrefix(slice, commentFirst), TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = commentFirst });
+        rules.Add(new(
+                slice => MatchCommentByPrefix(slice, commentFirst),
+                TokenClass.CommentSingle,
+                LexerRule.NoStateChange)
+        { FirstBytes = commentFirst });
 
         // [[double bracket]] — TOML-only, must precede the single-bracket rule.
         if (config.RecognizeDoubleBracketHeader)
         {
-            rules.Add(new(MatchDoubleBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange) { FirstBytes = BracketFirst, RequiresLineStart = true });
+            rules.Add(new(MatchDoubleBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange)
+            {
+                FirstBytes = BracketFirst,
+                RequiresLineStart = true
+            });
         }
 
         // [section] header.
-        rules.Add(new(MatchBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange) { FirstBytes = BracketFirst, RequiresLineStart = true });
+        rules.Add(new(MatchBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange)
+        {
+            FirstBytes = BracketFirst,
+            RequiresLineStart = true
+        });
 
         // Key followed by separator — emit key as NameAttribute; the separator + value follow as their own tokens.
         var separatorFirst = config.SeparatorFirst;
         rules.Add(new(
             slice => MatchKeyBeforeSeparator(slice, separatorFirst),
             TokenClass.NameAttribute,
-            LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, RequiresLineStart = true });
+            LexerRule.NoStateChange)
+        { FirstBytes = TokenMatchers.AsciiIdentifierStart, RequiresLineStart = true });
 
         // Separator byte (=, :).
-        rules.Add(new(slice => TokenMatchers.MatchSingleByteOf(slice, separatorFirst), TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = separatorFirst });
+        rules.Add(new(
+                slice => TokenMatchers.MatchSingleByteOf(slice, separatorFirst),
+                TokenClass.Operator,
+                LexerRule.NoStateChange)
+        { FirstBytes = separatorFirst });
 
         if (config.RecognizeStringLiterals)
         {
-            rules.Add(new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst });
-            rules.Add(new(static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''), TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst });
+            rules.Add(new(
+                    TokenMatchers.MatchDoubleQuotedWithBackslashEscape,
+                    TokenClass.StringDouble,
+                    LexerRule.NoStateChange)
+            { FirstBytes = DoubleQuoteFirst });
+            rules.Add(new(
+                static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
+                TokenClass.StringSingle,
+                LexerRule.NoStateChange)
+            { FirstBytes = SingleQuoteFirst });
         }
 
         if (config.KeywordConstants is { } constants && config.KeywordConstantFirst is { } constantFirst)
         {
-            rules.Add(new(slice => TokenMatchers.MatchKeyword(slice, constants), TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = constantFirst });
+            rules.Add(new(
+                    slice => TokenMatchers.MatchKeyword(slice, constants),
+                    TokenClass.KeywordConstant,
+                    LexerRule.NoStateChange)
+            { FirstBytes = constantFirst });
         }
 
         if (config.RecognizeNumericLiterals)
         {
-            rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
-            rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits });
+            rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiDigits
+            });
+            rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
+            {
+                FirstBytes = TokenMatchers.AsciiDigits
+            });
         }
 
         // Bare identifier on the value side (TOML enums, INI references) — falls through after constants.
-        rules.Add(new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart });
+        rules.Add(new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
+        {
+            FirstBytes = TokenMatchers.AsciiIdentifierStart
+        });
 
         return [.. rules];
     }

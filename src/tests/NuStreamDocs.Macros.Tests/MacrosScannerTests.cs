@@ -50,14 +50,14 @@ public class MacrosScannerTests
     public async Task FencedCodeIsSkipped()
     {
         const string Input = """
-            Hello {{ name }}.
+                             Hello {{ name }}.
 
-            ```python
-            print("{{ name }}")
-            ```
+                             ```python
+                             print("{{ name }}")
+                             ```
 
-            And {{ name }} again.
-            """;
+                             And {{ name }} again.
+                             """;
         var output = Rewrite(Input, new() { ["name"] = "x" });
         await Assert.That(output).Contains("Hello x.");
         await Assert.That(output).Contains("print(\"{{ name }}\")");
@@ -156,8 +156,8 @@ public class MacrosScannerTests
                 v = [];
                 return false;
             },
-            escapeHtml: false,
-            onMissing: name => missing.Add(Encoding.UTF8.GetString(name)),
+            false,
+            name => missing.Add(Encoding.UTF8.GetString(name)),
             sink);
 
         await Assert.That(missing.Count).IsEqualTo(1);

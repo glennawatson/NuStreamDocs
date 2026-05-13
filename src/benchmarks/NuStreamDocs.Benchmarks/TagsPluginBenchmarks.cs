@@ -59,13 +59,17 @@ public class TagsPluginBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _docsRoot = Path.Combine(Path.GetTempPath(), "smkd-bench-tags-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        _docsRoot = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-bench-tags-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(_docsRoot);
 
         for (var i = 0; i < Pages; i++)
         {
             var tag = Tags[i % Tags.Length];
-            File.WriteAllText(Path.Combine(_docsRoot, "page-" + i.ToString(CultureInfo.InvariantCulture) + ".md"), BuildPostBody(i, tag));
+            File.WriteAllText(
+                Path.Combine(_docsRoot, "page-" + i.ToString(CultureInfo.InvariantCulture) + ".md"),
+                BuildPostBody(i, tag));
         }
 
         _plugin = new();
@@ -79,7 +83,7 @@ public class TagsPluginBenchmarks
         {
             if (Directory.Exists(_docsRoot))
             {
-                Directory.Delete(_docsRoot, recursive: true);
+                Directory.Delete(_docsRoot, true);
             }
         }
         catch (IOException)

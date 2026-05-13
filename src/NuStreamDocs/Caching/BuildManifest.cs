@@ -48,32 +48,38 @@ public sealed class BuildManifest
     /// <summary>Returns an empty manifest bound to <paramref name="buildFingerprint"/>.</summary>
     /// <param name="buildFingerprint">Current pipeline fingerprint bytes.</param>
     /// <returns>A manifest with no tracked entries.</returns>
-    public static BuildManifest Empty(byte[] buildFingerprint)
-    {
-        return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
-    }
+    public static BuildManifest Empty(byte[] buildFingerprint) =>
+        new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
 
     /// <summary>Loads the manifest from <paramref name="outputRoot"/>; returns an empty manifest when no file exists or it cannot be parsed.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest.</returns>
-    public static ValueTask<BuildManifest> LoadAsync(in DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
-        LoadAsync(outputRoot, cancellationToken, logger: null);
+    public static ValueTask<BuildManifest> LoadAsync(
+        in DirectoryPath outputRoot,
+        in CancellationToken cancellationToken) =>
+        LoadAsync(outputRoot, cancellationToken, null);
 
     /// <summary>Loads the manifest and rejects it when its build fingerprint differs from <paramref name="buildFingerprint"/>.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest, or an empty manifest on a fingerprint mismatch.</returns>
-    public static ValueTask<BuildManifest> LoadAsync(in DirectoryPath outputRoot, byte[] buildFingerprint, in CancellationToken cancellationToken) =>
-        LoadAsync(outputRoot, buildFingerprint, cancellationToken, logger: null);
+    public static ValueTask<BuildManifest> LoadAsync(
+        in DirectoryPath outputRoot,
+        byte[] buildFingerprint,
+        in CancellationToken cancellationToken) =>
+        LoadAsync(outputRoot, buildFingerprint, cancellationToken, null);
 
     /// <summary>Loads the manifest from <paramref name="outputRoot"/> with an optional logger; returns an empty manifest when no file exists or it cannot be parsed.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="logger">Optional logger; pass <see langword="null"/> to silence diagnostics.</param>
     /// <returns>The loaded manifest.</returns>
-    public static async ValueTask<BuildManifest> LoadAsync(DirectoryPath outputRoot, CancellationToken cancellationToken, ILogger? logger)
+    public static async ValueTask<BuildManifest> LoadAsync(
+        DirectoryPath outputRoot,
+        CancellationToken cancellationToken,
+        ILogger? logger)
     {
         if (outputRoot.IsEmpty)
         {
@@ -128,10 +134,7 @@ public sealed class BuildManifest
 
     /// <summary>Replaces the entries with <paramref name="updated"/>.</summary>
     /// <param name="updated">Right-sized array of entries to store.</param>
-    public void Replace(ManifestEntry[] updated)
-    {
-        _entries = ManifestIndex.Build(updated);
-    }
+    public void Replace(ManifestEntry[] updated) => _entries = ManifestIndex.Build(updated);
 
     /// <summary>Replaces the entries by draining <paramref name="updated"/> in a single pass.</summary>
     /// <param name="updated">Concurrent queue of fresh entries; ownership transfers to the manifest.</param>
@@ -146,7 +149,7 @@ public sealed class BuildManifest
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the file is written.</returns>
     public Task SaveAsync(in DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
-        SaveAsync(outputRoot, cancellationToken, logger: null);
+        SaveAsync(outputRoot, cancellationToken, null);
 
     /// <summary>Persists the manifest under <paramref name="outputRoot"/> with an optional logger.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
@@ -193,7 +196,7 @@ public sealed class BuildManifest
     /// <returns>The parsed manifest, or an empty manifest on a schema mismatch.</returns>
     private static BuildManifest Parse(ReadOnlySpan<byte> utf8)
     {
-        Utf8JsonReader reader = new(utf8, isFinalBlock: true, state: default);
+        Utf8JsonReader reader = new(utf8, true, default);
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
 

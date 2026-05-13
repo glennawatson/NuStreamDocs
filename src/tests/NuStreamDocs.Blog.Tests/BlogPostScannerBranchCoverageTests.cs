@@ -72,7 +72,7 @@ public class BlogPostScannerBranchCoverageTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

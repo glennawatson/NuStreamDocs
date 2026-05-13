@@ -177,5 +177,6 @@ internal ref struct TocLineParser
     /// <summary>Drops a single matching pair of leading/trailing single- or double-quote bytes.</summary>
     /// <param name="span">Value bytes.</param>
     /// <returns>Unquoted span.</returns>
-    private static ReadOnlySpan<byte> Dequote(ReadOnlySpan<byte> span) => span.Length >= 2 && span[0] is (byte)'"' or (byte)'\'' && span[^1] == span[0] ? span[1..^1] : span;
+    private static ReadOnlySpan<byte> Dequote(ReadOnlySpan<byte> span) =>
+        span.Length >= 2 && span[0] is (byte)'"' or (byte)'\'' && span[^1] == span[0] ? span[1..^1] : span;
 }

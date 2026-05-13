@@ -32,7 +32,11 @@ public static class CspInlineHasher
     /// <param name="open">Opening-tag prefix.</param>
     /// <param name="close">Closing tag.</param>
     /// <param name="sink">Destination list.</param>
-    private static void ScanInto(ReadOnlySpan<byte> html, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close, List<byte[]> sink)
+    private static void ScanInto(
+        ReadOnlySpan<byte> html,
+        ReadOnlySpan<byte> open,
+        ReadOnlySpan<byte> close,
+        List<byte[]> sink)
     {
         var blocks = new Utf8InlineBlockEnumerator(html, open, close);
         while (blocks.MoveNext())

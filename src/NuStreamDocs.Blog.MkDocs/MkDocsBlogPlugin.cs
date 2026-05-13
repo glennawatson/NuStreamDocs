@@ -15,7 +15,8 @@ namespace NuStreamDocs.Blog.MkDocs;
 /// archives as synthetic pages on the build context before page discovery —
 /// nothing lands on disk in the source tree.
 /// </summary>
-public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
+public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger)
+    : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Configured options.</summary>
     private readonly MkDocsBlogOptions _options = ValidateOptions(options);
@@ -48,20 +49,25 @@ public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) 
         // Publish the blog index's nav metadata up front (title/order come from the options) so the
         // section is anchored even if generation fails; the per-post entries (publish-date order)
         // come back from the generator and are merged onto the disk page nodes by the nav grafter.
-        var indexEntry = new SyntheticNavEntry(DirectoryPath.FromString(_options.BlogSubdirectory).UrlJoin((UrlPath)"index.md"), _options.IndexTitle, _options.NavOrder, Hidden: false);
+        var indexEntry =
+            new SyntheticNavEntry(
+                DirectoryPath.FromString(_options.BlogSubdirectory).UrlJoin((UrlPath)"index.md"),
+                _options.IndexTitle,
+                _options.NavOrder,
+                false);
         _navEntries = [indexEntry];
 
         var blogRoot = context.InputRoot / _options.BlogSubdirectory;
         var postEntries = await BlogContentGenerator.GenerateAsync(
             _logger,
             new(
-                PostsRoot: blogRoot / "posts",
-                DocsRoot: context.InputRoot,
-                IndexPath: blogRoot.File("index.md"),
-                IndexTitle: _options.IndexTitle,
-                EmitArchives: _options.EmitCategoryArchives,
-                ArchiveRoot: blogRoot / "category",
-                ArchiveFallbackSlug: [.. "category"u8]),
+                blogRoot / "posts",
+                context.InputRoot,
+                blogRoot.File("index.md"),
+                _options.IndexTitle,
+                _options.EmitCategoryArchives,
+                blogRoot / "category",
+                [.. "category"u8]),
             context.SyntheticPages,
             cancellationToken).ConfigureAwait(false);
 

@@ -52,7 +52,7 @@ public class CoverageBatchTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -73,12 +73,12 @@ public class CoverageBatchTests
         {
             if (Directory.Exists(input))
             {
-                Directory.Delete(input, recursive: true);
+                Directory.Delete(input, true);
             }
 
             if (Directory.Exists(output))
             {
-                Directory.Delete(output, recursive: true);
+                Directory.Delete(output, true);
             }
         }
     }
@@ -107,7 +107,7 @@ public class CoverageBatchTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 }

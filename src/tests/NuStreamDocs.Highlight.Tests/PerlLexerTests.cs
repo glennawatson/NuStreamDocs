@@ -51,7 +51,8 @@ public class PerlLexerTests
     {
         var html = PerlLexer.Instance.Render("my $s = q{plain};\nmy $t = qq(interp $name);\nmy @w = qw[a b c];"u8);
         await Assert.That(html.Contains("<span class=\"s2\">q{plain}</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"s2\">qq(interp $name)</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"s2\">qq(interp $name)</span>", StringComparison.Ordinal))
+            .IsTrue();
         await Assert.That(html.Contains("<span class=\"s2\">qw[a b c]</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -81,7 +82,9 @@ public class PerlLexerTests
     public async Task PerlClassifiesPodBlocks()
     {
         var html = PerlLexer.Instance.Render("=head1 NAME\nMy::Module - example\n=cut\nuse strict;"u8);
-        await Assert.That(html.Contains("<span class=\"cm\">=head1 NAME\nMy::Module - example\n=cut</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(
+            "<span class=\"cm\">=head1 NAME\nMy::Module - example\n=cut</span>",
+            StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Perl classifies heredoc introducers as a string token; the body bytes pass through.</summary>

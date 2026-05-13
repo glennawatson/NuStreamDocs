@@ -12,8 +12,5 @@ public static class DocBuilderEmojiExtensions
     /// <summary>Registers <see cref="EmojiPlugin"/>.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseEmoji(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new EmojiPlugin());
-    }
+    public static DocBuilder UseEmoji(this DocBuilder builder) => builder.UsePlugin(new EmojiPlugin());
 }

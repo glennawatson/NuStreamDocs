@@ -143,7 +143,11 @@ public class LunrSearchPluginTests
     /// <param name="relativePath">Source-relative markdown path.</param>
     /// <param name="source">Markdown bytes (frontmatter + body).</param>
     /// <param name="html">Rendered HTML bytes.</param>
-    private static void ScanPage(LunrSearchPlugin plugin, string relativePath, ReadOnlySpan<byte> source, ReadOnlySpan<byte> html)
+    private static void ScanPage(
+        LunrSearchPlugin plugin,
+        string relativePath,
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> html)
     {
         PageScanContext ctx = new(relativePath, source, html);
         plugin.Scan(in ctx);
@@ -175,7 +179,9 @@ public class LunrSearchPluginTests
         /// <returns>A new fixture; caller must dispose.</returns>
         public static TempBuildFixture Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-lunr-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            var root = Path.Combine(
+                Path.GetTempPath(),
+                "smkd-lunr-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(root);
             return new(root);
         }
@@ -187,7 +193,7 @@ public class LunrSearchPluginTests
             {
                 if (Directory.Exists(Root))
                 {
-                    Directory.Delete(Root, recursive: true);
+                    Directory.Delete(Root, true);
                 }
             }
             catch (IOException)

@@ -30,7 +30,9 @@ public static class StaticAssetComposer
             for (var j = 0; j < assets.Length; j++)
             {
                 var (relativePath, bytes) = assets[j];
-                var target = Path.Combine(outputRoot.Value, relativePath.Value.Replace('/', Path.DirectorySeparatorChar));
+                var target = Path.Combine(
+                    outputRoot.Value,
+                    relativePath.Value.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.WriteAllBytes(target, bytes);
             }

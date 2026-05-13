@@ -32,7 +32,9 @@ internal sealed class TempBuildFixture : IDisposable
     /// <returns>A new fixture; caller must dispose.</returns>
     public static TempBuildFixture Create()
     {
-        var root = Path.Combine(Path.GetTempPath(), "smkd-build-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-build-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(root);
         return new(root);
     }
@@ -44,7 +46,7 @@ internal sealed class TempBuildFixture : IDisposable
         {
             if (Directory.Exists(Root))
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
         }
         catch (IOException)

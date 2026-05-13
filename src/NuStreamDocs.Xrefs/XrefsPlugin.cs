@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using NuStreamDocs.Autorefs;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -141,7 +142,7 @@ public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
     /// <param name="baseUrl">Option-supplied base URL.</param>
     /// <returns>UTF-8 base-URL bytes.</returns>
     private static byte[] EncodeImportBaseUrl(string? baseUrl) =>
-        string.IsNullOrEmpty(baseUrl) ? [] : System.Text.Encoding.UTF8.GetBytes(baseUrl);
+        string.IsNullOrEmpty(baseUrl) ? [] : Encoding.UTF8.GetBytes(baseUrl);
 
     /// <summary>Fetches one import (local file or remote URL) and registers every entry into <see cref="Registry"/>.</summary>
     /// <param name="import">Import to fetch.</param>
@@ -161,7 +162,7 @@ public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
         {
             var (uid, href) = payload.Entries[i];
             var combined = CombineBytes(prefixBytes, href);
-            Registry.Register(uid, combined, fragment: default);
+            Registry.Register(uid, combined, default);
         }
     }
 }

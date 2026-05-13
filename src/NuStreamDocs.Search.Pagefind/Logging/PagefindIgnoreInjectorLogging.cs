@@ -23,6 +23,7 @@ internal static partial class PagefindIgnoreInjectorLogging
     /// <summary>Source-generated emitter for <see cref="LogInjected"/>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="count">File count.</param>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Marked {Count} page(s) with data-pagefind-ignore so Pagefind will skip them.")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Marked {Count} page(s) with data-pagefind-ignore so Pagefind will skip them.")]
     private static partial void LogInjectedCore(ILogger logger, int count);
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using NuStreamDocs.Blog.Common;
@@ -99,7 +100,11 @@ public static class FeedWriter
     /// <param name="indent">Leading whitespace bytes.</param>
     /// <param name="elementName">Element local name (UTF-8).</param>
     /// <param name="value">UTF-8 element value.</param>
-    private static void WriteElement(IBufferWriter<byte> sink, ReadOnlySpan<byte> indent, ReadOnlySpan<byte> elementName, ReadOnlySpan<byte> value)
+    private static void WriteElement(
+        IBufferWriter<byte> sink,
+        ReadOnlySpan<byte> indent,
+        ReadOnlySpan<byte> elementName,
+        ReadOnlySpan<byte> value)
     {
         sink.Write(indent);
         sink.Write("<"u8);
@@ -115,7 +120,7 @@ public static class FeedWriter
     /// <param name="value">Source date.</param>
     /// <param name="format">Standard or custom format string.</param>
     /// <returns>UTF-8 bytes.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+    [SuppressMessage(
         "Major Code Smell",
         "S6585:Do not hardcode the format specifier",
         Justification = "Callers pass a named constant (Rfc822Format) or the standard ISO 8601 spec 'o'.")]
@@ -143,7 +148,11 @@ public static class FeedWriter
             WriteElement(sink, "      "u8, "author"u8, authorBytes);
         }
 
-        WriteElement(sink, "      "u8, "pubDate"u8, FormatDate(new(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), Rfc822Format));
+        WriteElement(
+            sink,
+            "      "u8,
+            "pubDate"u8,
+            FormatDate(new(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), Rfc822Format));
 
         for (var i = 0; i < tagBytes.Length; i++)
         {
@@ -177,7 +186,11 @@ public static class FeedWriter
         XmlEntityEscaper.WriteEscaped(sink, linkBytes, XmlEntityEscaper.Mode.HtmlAttribute);
         sink.Write("\" />\n"u8);
 
-        WriteElement(sink, "    "u8, "updated"u8, FormatDate(new(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), "o"));
+        WriteElement(
+            sink,
+            "    "u8,
+            "updated"u8,
+            FormatDate(new(post.Published.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), "o"));
 
         if (authorBytes is [_, ..])
         {

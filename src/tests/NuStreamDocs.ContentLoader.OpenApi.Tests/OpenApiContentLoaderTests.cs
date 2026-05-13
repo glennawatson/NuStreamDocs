@@ -4,7 +4,6 @@
 
 using System.Text;
 using NuStreamDocs.Common;
-using NuStreamDocs.ContentLoader;
 
 namespace NuStreamDocs.ContentLoader.OpenApi.Tests;
 
@@ -31,7 +30,7 @@ public class OpenApiContentLoaderTests
             await File.WriteAllTextAsync(path, Spec);
             var loader = new OpenApiContentLoader(new FilePath(path), (PathSegment)"reference");
 
-            var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+            var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
             await Assert.That(pages.Length).IsEqualTo(1);
             await Assert.That(pages[0].RelativePath.Value).IsEqualTo("reference/users.md");
@@ -45,7 +44,7 @@ public class OpenApiContentLoaderTests
         }
         finally
         {
-            dir.Delete(recursive: true);
+            dir.Delete(true);
         }
     }
 
@@ -58,12 +57,12 @@ public class OpenApiContentLoaderTests
         try
         {
             var path = Path.Combine(dir.FullName, "api.yaml");
-            const string yaml = "openapi: 3.0.0\npaths:\n  /ping:\n    get:\n      tags:\n        - Health\n"
-                + "      summary: Ping\n      responses:\n        '200':\n          description: OK\n";
-            await File.WriteAllTextAsync(path, yaml);
+            const string Yaml = "openapi: 3.0.0\npaths:\n  /ping:\n    get:\n      tags:\n        - Health\n"
+                                + "      summary: Ping\n      responses:\n        '200':\n          description: OK\n";
+            await File.WriteAllTextAsync(path, Yaml);
             var loader = new OpenApiContentLoader(new FilePath(path), (PathSegment)"api");
 
-            var pages = await loader.LoadAsync(new ContentLoaderContext(default), CancellationToken.None);
+            var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
             await Assert.That(pages.Length).IsEqualTo(1);
             await Assert.That(pages[0].RelativePath.Value).IsEqualTo("api/health.md");
@@ -71,7 +70,7 @@ public class OpenApiContentLoaderTests
         }
         finally
         {
-            dir.Delete(recursive: true);
+            dir.Delete(true);
         }
     }
 
@@ -89,8 +88,9 @@ public class OpenApiContentLoaderTests
     [Test]
     public async Task UntaggedOperationsGoToDefault()
     {
-        const string spec = "{\"paths\":{\"/x\":{\"get\":{\"summary\":\"x\",\"responses\":{\"200\":{\"description\":\"OK\"}}}}}}";
-        var pages = OpenApiPageBuilder.Build(Encoding.UTF8.GetBytes(spec), "ref"u8);
+        const string SpecText =
+            "{\"paths\":{\"/x\":{\"get\":{\"summary\":\"x\",\"responses\":{\"200\":{\"description\":\"OK\"}}}}}}";
+        var pages = OpenApiPageBuilder.Build(Encoding.UTF8.GetBytes(SpecText), "ref"u8);
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("ref/default.md");
     }
@@ -99,5 +99,6 @@ public class OpenApiContentLoaderTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task RequiresExactlyOneSource() =>
-        await Assert.That(static () => new OpenApiContentLoader(default(FilePath), default)).Throws<ArgumentException>();
+        await Assert.That(static () => new OpenApiContentLoader(default(FilePath), default))
+            .Throws<ArgumentException>();
 }

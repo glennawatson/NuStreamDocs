@@ -46,7 +46,10 @@ public static class SqliteIndexWriter
             File.Delete(path.Value);
         }
 
-        Check(raw.sqlite3_open_v2(path.Value, out var db, raw.SQLITE_OPEN_READWRITE | raw.SQLITE_OPEN_CREATE, null), db, "open");
+        Check(
+            raw.sqlite3_open_v2(path.Value, out var db, raw.SQLITE_OPEN_READWRITE | raw.SQLITE_OPEN_CREATE, null),
+            db,
+            "open");
         try
         {
             Run(db, "PRAGMA journal_mode=MEMORY;");

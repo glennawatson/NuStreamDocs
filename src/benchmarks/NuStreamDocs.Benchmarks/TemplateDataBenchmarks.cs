@@ -62,7 +62,7 @@ public class TemplateDataBenchmarks
             scalars[keyBytes] = Encoding.UTF8.GetBytes("value-" + idx);
         }
 
-        _data = new(scalars, sections: null);
+        _data = new(scalars, null);
     }
 
     /// <summary>Resolves every key in <see cref="_keys"/> via the byte-keyed alt-lookup probe.</summary>

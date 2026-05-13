@@ -9,26 +9,26 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj" />
-    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj" />
+    <ProjectReference Include="..\NuStreamDocs.Common\NuStreamDocs.Common.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
     <!-- Core stays free of SourceDocParser. The CSharpApiGenerator plugin
          (NuStreamDocs.CSharpApiGenerator, separate assembly) takes the
          dependency and registers itself via builder.UseCSharpApiGenerator(). -->
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" />
-    <PackageReference Include="System.IO.Hashing" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing"/>
+    <PackageReference Include="System.IO.Hashing"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Tests" />
-    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks" />
+    <InternalsVisibleTo Include="NuStreamDocs.Tests"/>
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks"/>
   </ItemGroup>
 
 </Project>

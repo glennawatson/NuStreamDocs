@@ -20,5 +20,10 @@ internal interface IAttrListRewriteStrategy<TSelf>
     /// <param name="lastEmit">Source offset emitted up to.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when the element was rewritten.</returns>
-    static abstract bool TryRewriteAt(ReadOnlySpan<byte> html, int lt, IBufferWriter<byte> sink, ref int lastEmit, out int advanceTo);
+    static abstract bool TryRewriteAt(
+        ReadOnlySpan<byte> html,
+        int lt,
+        IBufferWriter<byte> sink,
+        ref int lastEmit,
+        out int advanceTo);
 }

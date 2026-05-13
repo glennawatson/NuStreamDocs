@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Config.DocFx\NuStreamDocs.Config.DocFx.csproj" />
-    <ProjectReference Include="..\..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Config.DocFx\NuStreamDocs.Config.DocFx.csproj"/>
+    <ProjectReference Include="..\..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj"/>
   </ItemGroup>
 
 </Project>

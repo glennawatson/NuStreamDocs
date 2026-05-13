@@ -13,18 +13,14 @@ public static class DocBuilderFeedExtensions
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFeed(this DocBuilder builder, FeedOptions options)
-    {
-        return builder.UsePlugin(new FeedPlugin(options));
-    }
+    public static DocBuilder UseFeed(this DocBuilder builder, FeedOptions options) =>
+        builder.UsePlugin(new FeedPlugin(options));
 
     /// <summary>Registers <see cref="FeedPlugin"/> with options and a logger.</summary>
     /// <param name="builder">Doc builder.</param>
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFeed(this DocBuilder builder, FeedOptions options, ILogger logger)
-    {
-        return builder.UsePlugin(new FeedPlugin(options, TimeProvider.System, logger));
-    }
+    public static DocBuilder UseFeed(this DocBuilder builder, FeedOptions options, ILogger logger) =>
+        builder.UsePlugin(new FeedPlugin(options, TimeProvider.System, logger));
 }

@@ -65,8 +65,13 @@ public static class MakefileLexer
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
         WhitespaceFirst = WhitespaceFirst,
-        LineComment = new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst },
-        PostStringRules = [new(MatchVariableExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst }],
+        LineComment =
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
+            {
+                FirstBytes = HashFirst
+            },
+        PostStringRules =
+            [new(MatchVariableExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst }],
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         IncludeIntegerLiteral = true,
@@ -75,7 +80,10 @@ public static class MakefileLexer
         KeywordsRequireLineStart = true,
         ExtraRules =
         [
-            new(MatchDeclarationDirective, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst, RequiresLineStart = true }
+            new(MatchDeclarationDirective, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
+            {
+                FirstBytes = KeywordDeclarationFirst, RequiresLineStart = true
+            }
         ],
         BuiltinKeywords = Builtins,
         BuiltinKeywordFirst = TokenMatchers.AsciiIdentifierStart,

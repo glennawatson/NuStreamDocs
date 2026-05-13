@@ -69,7 +69,7 @@ internal static class AttrListRewriter
         while (i >= 0 && i + 1 < html.Length)
         {
             var b = html[i + 1];
-            if (b is (>= (byte)'A' and <= (byte)'Z') or (>= (byte)'a' and <= (byte)'z') or (byte)'_')
+            if (b is >= (byte)'A' and <= (byte)'Z' or >= (byte)'a' and <= (byte)'z' or (byte)'_')
             {
                 return true;
             }
@@ -90,7 +90,9 @@ internal static class AttrListRewriter
     /// <param name="html">Source HTML.</param>
     /// <param name="scratch">Scratch sink used when at least one entity is rewritten.</param>
     /// <returns><paramref name="html"/> when no quote entity sits inside a brace region; otherwise <paramref name="scratch"/>'s written span.</returns>
-    private static ReadOnlySpan<byte> DecodeQuoteEntitiesInBraces(ReadOnlySpan<byte> html, ArrayBufferWriter<byte> scratch)
+    private static ReadOnlySpan<byte> DecodeQuoteEntitiesInBraces(
+        ReadOnlySpan<byte> html,
+        ArrayBufferWriter<byte> scratch)
     {
         if (FindEntityInsideBrace(html) < 0)
         {
@@ -249,7 +251,10 @@ internal static class AttrListRewriter
     /// <param name="slots">Ping-pong buffer pair.</param>
     /// <param name="stage">Stage delegate.</param>
     /// <returns>Memory view of the current pipeline output.</returns>
-    private static ReadOnlyMemory<byte> RunStage(in ReadOnlyMemory<byte> source, ref StageBuffers slots, ByteStage stage)
+    private static ReadOnlyMemory<byte> RunStage(
+        in ReadOnlyMemory<byte> source,
+        ref StageBuffers slots,
+        ByteStage stage)
     {
         slots.Spare.ResetWrittenCount();
         if (!stage(source.Span, slots.Spare))

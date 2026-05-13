@@ -28,7 +28,7 @@ internal static class RelTokenMerger
         Span<int> extraRanges = stackalloc int[MaxTokens * RangeStride];
         var extraCount = IndexTokens(extra, extraRanges);
 
-        var emittedAny = EmitNormalizedTokens(existing, existingRanges, existingCount, sink, isFirst: true);
+        var emittedAny = EmitNormalizedTokens(existing, existingRanges, existingCount, sink, true);
 
         for (var i = 0; i < extraCount; i++)
         {
@@ -89,7 +89,12 @@ internal static class RelTokenMerger
     /// <param name="sink">UTF-8 sink.</param>
     /// <param name="isFirst">Whether the first token here is also the first overall (no leading space).</param>
     /// <returns>True when at least one token was emitted.</returns>
-    private static bool EmitNormalizedTokens(ReadOnlySpan<byte> source, in ReadOnlySpan<int> ranges, int count, IBufferWriter<byte> sink, bool isFirst)
+    private static bool EmitNormalizedTokens(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<int> ranges,
+        int count,
+        IBufferWriter<byte> sink,
+        bool isFirst)
     {
         for (var i = 0; i < count; i++)
         {
@@ -113,7 +118,11 @@ internal static class RelTokenMerger
     /// <param name="count">Number of valid token entries to scan.</param>
     /// <param name="candidate">Candidate token bytes.</param>
     /// <returns>True when a duplicate already exists in the list.</returns>
-    private static bool TokenInList(ReadOnlySpan<byte> source, in ReadOnlySpan<int> ranges, int count, ReadOnlySpan<byte> candidate)
+    private static bool TokenInList(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<int> ranges,
+        int count,
+        ReadOnlySpan<byte> candidate)
     {
         for (var i = 0; i < count; i++)
         {

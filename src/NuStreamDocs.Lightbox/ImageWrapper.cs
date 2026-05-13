@@ -41,7 +41,7 @@ public static class ImageWrapper
             UpdateAnchorDepth(rel, ref anchorDepth);
 
             if (anchorDepth == 0 && StartsWith(rel, "<img "u8)
-                && TryWrapImage(source, tagStart, selector, sink, out var afterTag))
+                                 && TryWrapImage(source, tagStart, selector, sink, out var afterTag))
             {
                 cursor = afterTag;
                 wrapped++;

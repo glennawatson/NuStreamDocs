@@ -25,19 +25,36 @@ internal static class MarkupRootRules
         var index = leadingRules.Length;
 
         // &name; / &#nnn; entity reference.
-        output[index++] = new(LanguageCommon.EntityReference, TokenClass.StringEscape, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.EntityFirst };
+        output[index++] =
+            new(LanguageCommon.EntityReference, TokenClass.StringEscape, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.EntityFirst
+            };
 
         // < tag-open — pushes the tag state.
-        output[index++] = new(static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.AngleOpenFirst), TokenClass.Punctuation, tagStateId) { FirstBytes = LanguageCommon.AngleOpenFirst };
+        output[index++] =
+            new(
+                static slice => TokenMatchers.MatchSingleByteOf(slice, LanguageCommon.AngleOpenFirst),
+                TokenClass.Punctuation,
+                tagStateId)
+            { FirstBytes = LanguageCommon.AngleOpenFirst };
 
         // </ closing-tag-open — pushes the tag state.
-        output[index++] = new(LanguageCommon.AngleOpenSlash, TokenClass.Punctuation, tagStateId) { FirstBytes = LanguageCommon.AngleOpenFirst };
+        output[index++] =
+            new(LanguageCommon.AngleOpenSlash, TokenClass.Punctuation, tagStateId)
+            {
+                FirstBytes = LanguageCommon.AngleOpenFirst
+            };
 
         // Language-specific text-fallback rule (matches everything outside tags + entities).
         output[index++] = textRule;
 
         // [ \t\r\n]+ whitespace runs — moved to the front by MoveWhitespaceFirst so it wins before the text rule.
-        output[index] = new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst };
+        output[index] =
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+            {
+                FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst
+            };
 
         MoveWhitespaceFirst(output);
         return output;

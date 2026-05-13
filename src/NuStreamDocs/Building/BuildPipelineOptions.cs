@@ -21,6 +21,12 @@ public readonly record struct BuildPipelineOptions(
     byte[] SiteUrl,
     byte[] SiteAuthor)
 {
+    /// <summary>Default parallel-worker cap; tuned for laptops and CI runners.</summary>
+    private const int DefaultParallelism = 8;
+
+    /// <summary>Gets the maximum degree of parallelism.</summary>
+    public int Parallelism { get; init; } = DefaultParallelism;
+
     /// <summary>Gets the empty option set: no filter, no logger, flat URLs, drafts skipped, no site metadata.</summary>
     public static BuildPipelineOptions Default => new(PathFilter.Empty, null, false, false, [], [], []);
 }

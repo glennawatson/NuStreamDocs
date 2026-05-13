@@ -29,8 +29,14 @@ public static class XmlLexer
 
     /// <summary>Builds the lexer with both states populated.</summary>
     /// <returns>Configured lexer.</returns>
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1114", Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115", Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1114: A parameter must follow a declaration",
+        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
+    [SuppressMessage(
+        "StyleCop.CSharp.ReadabilityRules",
+        "SA1115: Closing generic brackets must be spaced correctly",
+        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
     private static Lexer Build()
     {
         LexerRule[][] states =
@@ -39,22 +45,40 @@ public static class XmlLexer
                 TagStateId,
 
                 // Document text — anything up to the next < or &.
-                new(static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop), TokenClass.Text, LexerRule.NoStateChange),
+                new(
+                    static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop),
+                    TokenClass.Text,
+                    LexerRule.NoStateChange),
 
                 // [ \t\r\n]+ whitespace runs.
-                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst },
+                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
+                {
+                    FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst
+                },
 
                 // <!-- … --> HTML comment.
-                new(static slice => TokenMatchers.MatchDelimited(slice, "<!--"u8, "-->"u8), TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
+                new(
+                    static slice => TokenMatchers.MatchDelimited(slice, "<!--"u8, "-->"u8),
+                    TokenClass.CommentMulti,
+                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
 
                 // <![CDATA[ … ]]> CDATA section.
-                new(static slice => TokenMatchers.MatchDelimited(slice, "<![CDATA["u8, "]]>"u8), TokenClass.CommentSpecial, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
+                new(
+                    static slice => TokenMatchers.MatchDelimited(slice, "<![CDATA["u8, "]]>"u8),
+                    TokenClass.CommentSpecial,
+                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
 
                 // <!DOCTYPE … > DOCTYPE declaration.
-                new(static slice => TokenMatchers.MatchDelimited(slice, "<!DOCTYPE"u8, ">"u8), TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
+                new(
+                    static slice => TokenMatchers.MatchDelimited(slice, "<!DOCTYPE"u8, ">"u8),
+                    TokenClass.CommentPreproc,
+                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst },
 
                 // <? … ?> processing instruction.
-                new(static slice => TokenMatchers.MatchDelimited(slice, "<?"u8, "?>"u8), TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst }),
+                new(
+                    static slice => TokenMatchers.MatchDelimited(slice, "<?"u8, "?>"u8),
+                    TokenClass.CommentPreproc,
+                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst }),
             MarkupTagRules.Build()
         ];
         return new(states);

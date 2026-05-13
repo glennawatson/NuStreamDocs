@@ -21,7 +21,11 @@ internal static class GitHubTreeReader
     /// <param name="routePrefix">Local subdirectory the files are mounted under (empty = repo-relative).</param>
     /// <returns>One entry per Markdown file found.</returns>
     /// <exception cref="ContentLoaderException">When the response is not valid JSON.</exception>
-    public static RawDocumentEntry[] Read(byte[] treeJson, in GitHubRepoRef repo, ReadOnlySpan<byte> sourcePath, ReadOnlySpan<byte> routePrefix)
+    public static RawDocumentEntry[] Read(
+        byte[] treeJson,
+        in GitHubRepoRef repo,
+        ReadOnlySpan<byte> sourcePath,
+        ReadOnlySpan<byte> routePrefix)
     {
         ArgumentNullException.ThrowIfNull(treeJson);
         var sourcePrefix = NormalizeSourcePrefix(sourcePath);
@@ -139,7 +143,13 @@ internal static class GitHubTreeReader
     /// <param name="routeBase">Local route prefix without a trailing slash, or empty.</param>
     /// <param name="entry">On success, the built entry.</param>
     /// <returns><see langword="true"/> when the node yielded an entry.</returns>
-    private static bool TryBuildEntry(byte[]? path, bool isBlob, in GitHubRepoRef repo, ReadOnlySpan<byte> sourcePrefix, ReadOnlySpan<byte> routeBase, out RawDocumentEntry entry)
+    private static bool TryBuildEntry(
+        byte[]? path,
+        bool isBlob,
+        in GitHubRepoRef repo,
+        ReadOnlySpan<byte> sourcePrefix,
+        ReadOnlySpan<byte> routeBase,
+        out RawDocumentEntry entry)
     {
         entry = default;
         if (!isBlob || path is null or [] || !EndsWithMarkdown(path))
@@ -154,8 +164,8 @@ internal static class GitHubTreeReader
         }
 
         var relative = sourcePrefix.Length > 0 ? resolved[sourcePrefix.Length..] : resolved;
-        byte[] route = routeBase.Length > 0 ? [.. routeBase, (byte)'/', .. relative] : relative.ToArray();
-        entry = new(GitHubUrls.RawFileUrl(in repo, resolved), new FilePath(Encoding.UTF8.GetString(route)));
+        var route = routeBase.Length > 0 ? [.. routeBase, (byte)'/', .. relative] : relative.ToArray();
+        entry = new(GitHubUrls.RawFileUrl(in repo, resolved), new(Encoding.UTF8.GetString(route)));
         return true;
     }
 
@@ -163,7 +173,8 @@ internal static class GitHubTreeReader
     /// <param name="path">Repository-relative path bytes.</param>
     /// <returns><see langword="true"/> for a Markdown file.</returns>
     private static bool EndsWithMarkdown(ReadOnlySpan<byte> path) =>
-        path.Length >= MarkdownSuffixLength && AsciiByteHelpers.EqualsIgnoreAsciiCase(path[^MarkdownSuffixLength..], ".md"u8);
+        path.Length >= MarkdownSuffixLength &&
+        AsciiByteHelpers.EqualsIgnoreAsciiCase(path[^MarkdownSuffixLength..], ".md"u8);
 
     /// <summary>Normalizes the source-path prefix to <c>{path}/</c> bytes (empty stays empty).</summary>
     /// <param name="sourcePath">Configured source path.</param>

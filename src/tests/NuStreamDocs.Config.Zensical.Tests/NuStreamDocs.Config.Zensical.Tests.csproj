@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NuStreamDocs.Config.Zensical\NuStreamDocs.Config.Zensical.csproj" />
+    <ProjectReference Include="..\..\NuStreamDocs.Config.Zensical\NuStreamDocs.Config.Zensical.csproj"/>
   </ItemGroup>
 
 </Project>

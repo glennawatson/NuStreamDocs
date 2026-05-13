@@ -23,7 +23,12 @@ public class Utf8HtmlScannerTests
     public async Task FindHeadingForEachLevel(int level)
     {
         var html = Encoding.UTF8.GetBytes($"prefix<h{level}>x</h{level}>");
-        var found = Utf8HtmlScanner.TryFindNextHeadingOpen(html, 0, out var tagStart, out var tagEnd, out var detectedLevel);
+        var found = Utf8HtmlScanner.TryFindNextHeadingOpen(
+            html,
+            0,
+            out var tagStart,
+            out var tagEnd,
+            out var detectedLevel);
         await Assert.That(found).IsTrue();
         await Assert.That(detectedLevel).IsEqualTo(level);
         await Assert.That(tagStart).IsEqualTo("prefix"u8.Length);

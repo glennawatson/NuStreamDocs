@@ -51,6 +51,7 @@ public class DocBuilderServeExtensionsTests
         await cts.CancelAsync();
 
         var invocations = 0;
+
         WatchAndServeOptions Configure(WatchAndServeOptions o)
         {
             invocations++;
@@ -71,13 +72,15 @@ public class DocBuilderServeExtensionsTests
         await cts.CancelAsync();
 
         var invocations = 0;
+
         WatchAndServeOptions Configure(WatchAndServeOptions o)
         {
             invocations++;
             return o with { OpenBrowser = false };
         }
 
-        await Assert.That(() => builder.WatchAndServeAsync(Configure, NullLogger.Instance, cts.Token)).Throws<OperationCanceledException>();
+        await Assert.That(() => builder.WatchAndServeAsync(Configure, NullLogger.Instance, cts.Token))
+            .Throws<OperationCanceledException>();
         await Assert.That(invocations).IsEqualTo(1);
     }
 

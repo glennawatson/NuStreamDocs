@@ -4,6 +4,7 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 using NuStreamDocs.Common;
@@ -41,10 +42,11 @@ public static class DocBuilderServeExtensions
     /// <param name="configure">Function that receives <see cref="WatchAndServeOptions.Default"/> and returns the customized set.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, in CancellationToken cancellationToken)
-    {
-        return builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), NullLogger.Instance, cancellationToken);
-    }
+    public static Task WatchAndServeAsync(
+        this DocBuilder builder,
+        Func<WatchAndServeOptions, WatchAndServeOptions> configure,
+        in CancellationToken cancellationToken) =>
+        builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), NullLogger.Instance, cancellationToken);
 
     /// <summary>Runs the watch + serve loop with options + logger.</summary>
     /// <param name="builder">Configured builder.</param>
@@ -52,10 +54,12 @@ public static class DocBuilderServeExtensions
     /// <param name="logger">Logger that receives lifecycle events.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(this DocBuilder builder, Func<WatchAndServeOptions, WatchAndServeOptions> configure, ILogger logger, in CancellationToken cancellationToken)
-    {
-        return builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), logger, cancellationToken);
-    }
+    public static Task WatchAndServeAsync(
+        this DocBuilder builder,
+        Func<WatchAndServeOptions, WatchAndServeOptions> configure,
+        ILogger logger,
+        in CancellationToken cancellationToken) =>
+        builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), logger, cancellationToken);
 
     /// <summary>Most-specific overload — every other entry point delegates here.</summary>
     /// <param name="builder">Configured builder.</param>
@@ -63,11 +67,15 @@ public static class DocBuilderServeExtensions
     /// <param name="logger">Logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+    [SuppressMessage(
         "ReSharper",
         "AccessToDisposedClosure",
         Justification = "Handler unregistered in finally before linkedCts dispose; catch ObjectDisposedException guards SIGINT race.")]
-    public static async Task WatchAndServeAsync(this DocBuilder builder, WatchAndServeOptions options, ILogger logger, CancellationToken cancellationToken)
+    public static async Task WatchAndServeAsync(
+        this DocBuilder builder,
+        WatchAndServeOptions options,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         // Link the supplied token with an internal Ctrl+C handler. Callers that pass CancellationToken.None
         // (e.g. Nuke's Serve target) still need an exit path on console interrupt — without this the
@@ -94,7 +102,8 @@ public static class DocBuilderServeExtensions
             await builder.BuildAsync(combinedToken).ConfigureAwait(false);
 
             LiveReloadBroker broker = new();
-            var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, combinedToken).ConfigureAwait(false);
+            var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, combinedToken)
+                .ConfigureAwait(false);
             var url = DevServer.BuildUrl(options);
             ServeLoggingHelper.LogServerStart(logger, url.Value, builder.InputRoot.Value, builder.OutputRoot.Value);
 
@@ -105,7 +114,12 @@ public static class DocBuilderServeExtensions
 
             try
             {
-                using WatchLoop watcher = new(builder.InputRoot, options.WatchOutput ? builder.OutputRoot : null, options.DebounceMs, options.IgnoredPathSegments, logger);
+                using WatchLoop watcher = new(
+                    builder.InputRoot,
+                    options.WatchOutput ? builder.OutputRoot : null,
+                    options.DebounceMs,
+                    options.IgnoredPathSegments,
+                    logger);
                 await foreach (var changes in watcher.WaitAsync(combinedToken).ConfigureAwait(false))
                 {
                     await RebuildAndSignalAsync(builder, broker, logger, changes, combinedToken).ConfigureAwait(false);
@@ -150,7 +164,12 @@ public static class DocBuilderServeExtensions
     /// <param name="changes">Changed paths in this debounce window.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task.</returns>
-    private static async Task RebuildAndSignalAsync(DocBuilder builder, LiveReloadBroker broker, ILogger logger, HashSet<string> changes, CancellationToken cancellationToken)
+    private static async Task RebuildAndSignalAsync(
+        DocBuilder builder,
+        LiveReloadBroker broker,
+        ILogger logger,
+        HashSet<string> changes,
+        CancellationToken cancellationToken)
     {
         ServeLoggingHelper.LogRebuildStart(logger, changes.Count);
         var stopwatch = Stopwatch.StartNew();
@@ -180,11 +199,7 @@ public static class DocBuilderServeExtensions
     {
         try
         {
-            ProcessStartInfo psi = new()
-            {
-                FileName = url,
-                UseShellExecute = true
-            };
+            ProcessStartInfo psi = new() { FileName = url, UseShellExecute = true };
             Process.Start(psi);
         }
         catch (Win32Exception)

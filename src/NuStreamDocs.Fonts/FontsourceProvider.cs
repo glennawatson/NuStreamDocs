@@ -45,7 +45,8 @@ public sealed class FontsourceProvider : IFontProvider
                 for (var st = 0; st < face.Styles.Length; st++)
                 {
                     var cssUrl = BuildStylesheetUrl(id, subset, face.Weights[w], face.Styles[st]);
-                    await AddFromStylesheetAsync(face, cssUrl, cache, resources, cancellationToken).ConfigureAwait(false);
+                    await AddFromStylesheetAsync(face, cssUrl, cache, resources, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
         }
@@ -83,7 +84,7 @@ public sealed class FontsourceProvider : IFontProvider
             chars[i] = familyBytes[i] == (byte)' ' ? '-' : (char)AsciiByteHelpers.ToAsciiLowerByte(familyBytes[i]);
         }
 
-        return new string(chars);
+        return new(chars);
     }
 
     /// <summary>Fetches one stylesheet, resolves its (relative) woff2 URL against the stylesheet URL, downloads it, and appends a resource.</summary>
@@ -93,7 +94,12 @@ public sealed class FontsourceProvider : IFontProvider
     /// <param name="resources">Destination list.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the woff2 file has been resolved.</returns>
-    private static async Task AddFromStylesheetAsync(FontFace face, ApiCompatString stylesheetUrl, FontDownloadCache cache, List<FontResource> resources, CancellationToken cancellationToken)
+    private static async Task AddFromStylesheetAsync(
+        FontFace face,
+        ApiCompatString stylesheetUrl,
+        FontDownloadCache cache,
+        List<FontResource> resources,
+        CancellationToken cancellationToken)
     {
         var cssBytes = await cache.GetAsync(stylesheetUrl, cancellationToken).ConfigureAwait(false);
         var faces = Css2StylesheetParser.Parse(cssBytes);
@@ -102,7 +108,14 @@ public sealed class FontsourceProvider : IFontProvider
         {
             var absolute = new Uri(baseUri, faces[i].Woff2Url.Value ?? string.Empty).ToString();
             var woff2 = await cache.GetAsync(absolute, cancellationToken).ConfigureAwait(false);
-            resources.Add(new((byte[])face.FamilyBytes.Clone(), faces[i].Weight, faces[i].Style, faces[i].UnicodeRange, woff2, absolute));
+            resources.Add(
+                new(
+                    (byte[])face.FamilyBytes.Clone(),
+                    faces[i].Weight,
+                    faces[i].Style,
+                    faces[i].UnicodeRange,
+                    woff2,
+                    absolute));
         }
     }
 }

@@ -48,11 +48,7 @@ internal sealed class WatchLoop : IDisposable
         _debounceMs = debounceMs;
         _ignoredSegments = ignoredSegments ?? [];
         _logger = logger;
-        _events = Channel.CreateUnbounded<string>(new()
-        {
-            SingleReader = true,
-            SingleWriter = false
-        });
+        _events = Channel.CreateUnbounded<string>(new() { SingleReader = true, SingleWriter = false });
         _watcher = new(fullInput)
         {
             IncludeSubdirectories = true,
@@ -70,7 +66,8 @@ internal sealed class WatchLoop : IDisposable
     /// <summary>Streams debounced rebuild signals; each yielded element carries the unique paths that changed in the window.</summary>
     /// <param name="cancellationToken">Cancellation token; cancellation gracefully ends the stream.</param>
     /// <returns>Async stream of debounced change-set tickets.</returns>
-    public async IAsyncEnumerable<HashSet<string>> WaitAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<HashSet<string>> WaitAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var reader = _events.Reader;
         while (!cancellationToken.IsCancellationRequested)
@@ -144,7 +141,10 @@ internal sealed class WatchLoop : IDisposable
     /// <param name="batch">Accumulator that the caller already seeded with the first event.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task that completes when the debounce window expires.</returns>
-    private async Task DrainDebounceWindowAsync(ChannelReader<string> reader, HashSet<string> batch, CancellationToken cancellationToken)
+    private async Task DrainDebounceWindowAsync(
+        ChannelReader<string> reader,
+        HashSet<string> batch,
+        CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {

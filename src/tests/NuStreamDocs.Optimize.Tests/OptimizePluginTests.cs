@@ -29,7 +29,7 @@ public class OptimizePluginTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -52,7 +52,7 @@ public class OptimizePluginTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -68,7 +68,11 @@ public class OptimizePluginTests
             await File.WriteAllTextAsync(page, new string('y', 4096));
             await File.WriteAllTextAsync(page + ".gz", "preexisting");
 
-            OptimizePlugin plugin = new(OptimizeOptions.Default with { Formats = OptimizeFormats.Gzip, MinimumBytes = 1024 });
+            OptimizePlugin plugin = new(OptimizeOptions.Default with
+            {
+                Formats = OptimizeFormats.Gzip,
+                MinimumBytes = 1024
+            });
             await plugin.CompressTreeAsync(dir, CancellationToken.None);
 
             // .gz sibling will be overwritten via .gz of the source — but we never iterate into the .gz itself.
@@ -77,7 +81,7 @@ public class OptimizePluginTests
         }
         finally
         {
-            Directory.Delete(dir, recursive: true);
+            Directory.Delete(dir, true);
         }
     }
 
@@ -85,7 +89,9 @@ public class OptimizePluginTests
     /// <returns>Absolute path.</returns>
     private static string TempDir()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smd-opt-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var dir = Path.Combine(
+            Path.GetTempPath(),
+            "smd-opt-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         Directory.CreateDirectory(dir);
         return dir;
     }

@@ -30,7 +30,11 @@ public static class PagefindCli
     /// <param name="logger">Diagnostic logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True when Pagefind ran and exited cleanly; false when skipped (binary missing with non-strict, or <c>RunCli=false</c>).</returns>
-    public static async Task<bool> RunAsync(DirectoryPath siteRoot, PagefindOptions options, ILogger logger, CancellationToken cancellationToken)
+    public static async Task<bool> RunAsync(
+        DirectoryPath siteRoot,
+        PagefindOptions options,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(siteRoot.Value);
 
@@ -64,7 +68,12 @@ public static class PagefindCli
     /// <param name="logger">Diagnostic logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True on exit-code-zero; false on tolerated failure (strict off).</returns>
-    private static async Task<bool> InvokeAsync(string binary, DirectoryPath siteRoot, PagefindOptions options, ILogger logger, CancellationToken cancellationToken)
+    private static async Task<bool> InvokeAsync(
+        string binary,
+        DirectoryPath siteRoot,
+        PagefindOptions options,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         ProcessStartInfo psi = new()
         {
@@ -154,7 +163,10 @@ public static class PagefindCli
     /// <param name="sink">Byte sink.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the stream signals EOF.</returns>
-    private static async ValueTask DrainIntoAsync(Stream stream, IBufferWriter<byte> sink, CancellationToken cancellationToken)
+    private static async ValueTask DrainIntoAsync(
+        Stream stream,
+        IBufferWriter<byte> sink,
+        CancellationToken cancellationToken)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(DrainBufferSize);
         try
@@ -214,7 +226,7 @@ public static class PagefindCli
     {
         try
         {
-            process.Kill(entireProcessTree: true);
+            process.Kill(true);
         }
         catch (InvalidOperationException) when (process.HasExited)
         {

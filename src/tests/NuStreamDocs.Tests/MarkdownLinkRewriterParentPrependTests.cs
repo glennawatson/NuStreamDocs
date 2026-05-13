@@ -15,14 +15,14 @@ public class MarkdownLinkRewriterParentPrependTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task ImageSrcGetsParentPrependOnNonIndex() =>
-        await Assert.That(Rewrite("<img src=\"img/x.png\">", useDirectoryUrls: true, prependParent: true))
+        await Assert.That(Rewrite("<img src=\"img/x.png\">", true, true))
             .IsEqualTo("<img src=\"../img/x.png\">");
 
     /// <summary>Image src on the index page (no prepend) is left untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ImageSrcOnIndexIsUnchanged() =>
-        await Assert.That(Rewrite("<img src=\"img/x.png\">", useDirectoryUrls: true, prependParent: false))
+        await Assert.That(Rewrite("<img src=\"img/x.png\">", true, false))
             .IsEqualTo("<img src=\"img/x.png\">");
 
     /// <summary>Absolute https image src is left untouched.</summary>
@@ -31,7 +31,7 @@ public class MarkdownLinkRewriterParentPrependTests
     public async Task AbsoluteImageSrcUnchanged()
     {
         const string Source = "<img src=\"https://cdn.example.test/x.png\">";
-        await Assert.That(Rewrite(Source, useDirectoryUrls: true, prependParent: true)).IsEqualTo(Source);
+        await Assert.That(Rewrite(Source, true, true)).IsEqualTo(Source);
     }
 
     /// <summary>Server-root image src is left untouched.</summary>
@@ -40,28 +40,28 @@ public class MarkdownLinkRewriterParentPrependTests
     public async Task RootRelativeImageSrcUnchanged()
     {
         const string Source = "<img src=\"/assets/x.png\">";
-        await Assert.That(Rewrite(Source, useDirectoryUrls: true, prependParent: true)).IsEqualTo(Source);
+        await Assert.That(Rewrite(Source, true, true)).IsEqualTo(Source);
     }
 
     /// <summary>Already-relative <c>../</c> src is left alone — the author wrote it URL-relative, matching mkdocs.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ParentRelativeNonMarkdownUrlIsNotPrepended() =>
-        await Assert.That(Rewrite("<img src=\"../already/x.png\">", useDirectoryUrls: true, prependParent: true))
+        await Assert.That(Rewrite("<img src=\"../already/x.png\">", true, true))
             .IsEqualTo("<img src=\"../already/x.png\">");
 
     /// <summary>Non-markdown anchor href on a dir-URL non-index page gains a <c>../</c> prefix (lightbox wrapper).</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NonMarkdownHrefGetsParentPrepend() =>
-        await Assert.That(Rewrite("<a href=\"img/x.png\">x</a>", useDirectoryUrls: true, prependParent: true))
+        await Assert.That(Rewrite("<a href=\"img/x.png\">x</a>", true, true))
             .IsEqualTo("<a href=\"../img/x.png\">x</a>");
 
     /// <summary>Markdown href continues to rewrite (with parent prepend) alongside the new behavior.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task MarkdownHrefRewritesWithPrepend() =>
-        await Assert.That(Rewrite("<a href=\"other.md\">x</a>", useDirectoryUrls: true, prependParent: true))
+        await Assert.That(Rewrite("<a href=\"other.md\">x</a>", true, true))
             .IsEqualTo("<a href=\"../other/\">x</a>");
 
     /// <summary>A page mixing a markdown href and an image src rewrites both attributes.</summary>
@@ -71,7 +71,7 @@ public class MarkdownLinkRewriterParentPrependTests
     {
         const string Source = "<a href=\"other.md\">x</a><img src=\"img/y.png\">";
         const string Expected = "<a href=\"../other/\">x</a><img src=\"../img/y.png\">";
-        await Assert.That(Rewrite(Source, useDirectoryUrls: true, prependParent: true)).IsEqualTo(Expected);
+        await Assert.That(Rewrite(Source, true, true)).IsEqualTo(Expected);
     }
 
     /// <summary>Flat-URL mode never prepends, even when the caller asks for it.</summary>
@@ -80,7 +80,7 @@ public class MarkdownLinkRewriterParentPrependTests
     public async Task FlatUrlModeDoesNotPrepend()
     {
         const string Source = "<img src=\"img/x.png\">";
-        await Assert.That(Rewrite(Source, useDirectoryUrls: false, prependParent: true)).IsEqualTo(Source);
+        await Assert.That(Rewrite(Source, false, true)).IsEqualTo(Source);
     }
 
     /// <summary>NeedsRewrite returns true for src-only HTML so image-only pages are not skipped.</summary>

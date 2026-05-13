@@ -27,12 +27,14 @@ public static class GroovyLexer
             KeywordDeclarations = ByteKeywordSet.CreateFromSpaceSeparated(
                 "def class interface trait enum extends implements abstract final static public private protected synchronized transient volatile"u8),
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
-            Operators = OperatorAlternationFactory.SplitLongestFirst(">>>= >>> :: ?: ?. *."u8, CFamilyShared.StandardOperatorsLiteral),
+            Operators = OperatorAlternationFactory.SplitLongestFirst(
+                ">>>= >>> :: ?: ?. *."u8,
+                CFamilyShared.StandardOperatorsLiteral),
             OperatorFirst = CFamilyShared.StandardOperatorFirst
         },
-        integerSuffix: SearchValues.Create("lLgG"u8),
-        floatSuffix: SearchValues.Create("fFdDgG"u8),
-        includeDocComment: false,
-        includeCharacterLiteral: true,
-        specialString: CFamilyRules.CreateTripleDoubleQuotedRawStringRule(minQuotes: 3));
+        SearchValues.Create("lLgG"u8),
+        SearchValues.Create("fFdDgG"u8),
+        false,
+        true,
+        CFamilyRules.CreateTripleDoubleQuotedRawStringRule());
 }

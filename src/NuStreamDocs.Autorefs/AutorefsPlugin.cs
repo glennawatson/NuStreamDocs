@@ -16,11 +16,11 @@ namespace NuStreamDocs.Autorefs;
 /// </summary>
 public sealed class AutorefsPlugin
     : IBuildConfigurePlugin,
-      IPagePreRenderPlugin,
-      IPageScanPlugin,
-      IBuildResolvePlugin,
-      IPagePostResolvePlugin,
-      IBuildFinalizePlugin
+        IPagePreRenderPlugin,
+        IPageScanPlugin,
+        IBuildResolvePlugin,
+        IPagePostResolvePlugin,
+        IBuildFinalizePlugin
 {
     /// <summary>Logger.</summary>
     private readonly ILogger _logger;
@@ -110,7 +110,7 @@ public sealed class AutorefsPlugin
     /// <inheritdoc/>
     public void Scan(in PageScanContext context)
     {
-        var pageUrlBytes = ServedUrlBytes.FromPath(context.RelativePath, _useDirectoryUrls, leadingSlash: true);
+        var pageUrlBytes = ServedUrlBytes.FromPath(context.RelativePath, _useDirectoryUrls, true);
         HeadingIdScanner.ScanAndRegister(context.Html, pageUrlBytes, Registry);
     }
 

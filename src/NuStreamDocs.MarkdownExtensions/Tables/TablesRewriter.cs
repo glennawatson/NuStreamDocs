@@ -85,7 +85,11 @@ internal static class TablesRewriter
     /// <param name="aligns">Column alignments parsed from the separator.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>Offset just past the last consumed body row.</returns>
-    private static int EmitBodyRows(ReadOnlySpan<byte> source, int start, in ReadOnlySpan<Align> aligns, IBufferWriter<byte> writer)
+    private static int EmitBodyRows(
+        ReadOnlySpan<byte> source,
+        int start,
+        in ReadOnlySpan<Align> aligns,
+        IBufferWriter<byte> writer)
     {
         var p = start;
         var bodyOpen = false;
@@ -282,7 +286,11 @@ internal static class TablesRewriter
     /// <param name="aligns">Column alignments.</param>
     /// <param name="tag">Cell element name (<c>th</c> or <c>td</c>).</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitRow(ReadOnlySpan<byte> row, in ReadOnlySpan<Align> aligns, ReadOnlySpan<byte> tag, IBufferWriter<byte> writer)
+    private static void EmitRow(
+        ReadOnlySpan<byte> row,
+        in ReadOnlySpan<Align> aligns,
+        ReadOnlySpan<byte> tag,
+        IBufferWriter<byte> writer)
     {
         Span<CellRange> cellBuffer = stackalloc CellRange[MaxColumns];
         var count = SplitCellsInto(row, cellBuffer);

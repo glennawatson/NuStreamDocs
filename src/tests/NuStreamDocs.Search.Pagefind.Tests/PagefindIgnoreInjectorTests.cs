@@ -88,16 +88,29 @@ public class PagefindIgnoreInjectorTests
         using TempDir dir = new();
         WriteFile(dir.Root, "index.html", "<html><body><h1>Home</h1></body></html>");
         WriteFile(dir.Root, Path.Combine("documentation", "intro.html"), "<html><body><h1>Intro</h1></body></html>");
-        WriteFile(dir.Root, Path.Combine("api", "ReactiveUI", "index.html"), "<html><body><h1>ReactiveUI</h1></body></html>");
-        WriteFile(dir.Root, Path.Combine("api", "DynamicData", "index.html"), "<html><body class=\"a\"><h1>DynamicData</h1></body></html>");
+        WriteFile(
+            dir.Root,
+            Path.Combine("api", "ReactiveUI", "index.html"),
+            "<html><body><h1>ReactiveUI</h1></body></html>");
+        WriteFile(
+            dir.Root,
+            Path.Combine("api", "DynamicData", "index.html"),
+            "<html><body class=\"a\"><h1>DynamicData</h1></body></html>");
 
-        var modified = await PagefindIgnoreInjector.InjectAsync(new(dir.Root), [[.. "api/"u8]], NullLogger.Instance, CancellationToken.None);
+        var modified = await PagefindIgnoreInjector.InjectAsync(
+            new(dir.Root),
+            [[.. "api/"u8]],
+            NullLogger.Instance,
+            CancellationToken.None);
 
         await Assert.That(modified).IsEqualTo(2);
         await Assert.That(ReadFile(dir.Root, "index.html")).DoesNotContain("data-pagefind-ignore");
-        await Assert.That(ReadFile(dir.Root, Path.Combine("documentation", "intro.html"))).DoesNotContain("data-pagefind-ignore");
-        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "ReactiveUI", "index.html"))).Contains("<body data-pagefind-ignore>");
-        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "DynamicData", "index.html"))).Contains("<body data-pagefind-ignore class=\"a\">");
+        await Assert.That(ReadFile(dir.Root, Path.Combine("documentation", "intro.html")))
+            .DoesNotContain("data-pagefind-ignore");
+        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "ReactiveUI", "index.html")))
+            .Contains("<body data-pagefind-ignore>");
+        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "DynamicData", "index.html")))
+            .Contains("<body data-pagefind-ignore class=\"a\">");
     }
 
     /// <summary><c>InjectAsync</c> with no prefixes is a no-op returning zero.</summary>
@@ -107,7 +120,8 @@ public class PagefindIgnoreInjectorTests
     {
         using TempDir dir = new();
         WriteFile(dir.Root, Path.Combine("api", "x.html"), "<html><body><h1>x</h1></body></html>");
-        var modified = await PagefindIgnoreInjector.InjectAsync(new(dir.Root), [], NullLogger.Instance, CancellationToken.None);
+        var modified =
+            await PagefindIgnoreInjector.InjectAsync(new(dir.Root), [], NullLogger.Instance, CancellationToken.None);
         await Assert.That(modified).IsEqualTo(0);
         await Assert.That(ReadFile(dir.Root, Path.Combine("api", "x.html"))).DoesNotContain("data-pagefind-ignore");
     }
@@ -117,8 +131,14 @@ public class PagefindIgnoreInjectorTests
     [Test]
     public async Task InjectAsyncMissingRootReturnsZero()
     {
-        var missing = Path.Combine(Path.GetTempPath(), "smkd-pf-missing-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        var modified = await PagefindIgnoreInjector.InjectAsync(new(missing), [[.. "api/"u8]], NullLogger.Instance, CancellationToken.None);
+        var missing = Path.Combine(
+            Path.GetTempPath(),
+            "smkd-pf-missing-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var modified = await PagefindIgnoreInjector.InjectAsync(
+            new(missing),
+            [[.. "api/"u8]],
+            NullLogger.Instance,
+            CancellationToken.None);
         await Assert.That(modified).IsEqualTo(0);
     }
 
@@ -131,8 +151,17 @@ public class PagefindIgnoreInjectorTests
         WriteFile(dir.Root, Path.Combine("api", "x.html"), "<html><body><h1>x</h1></body></html>");
         byte[][] prefixes = [[.. "api/"u8]];
 
-        var first = await PagefindIgnoreInjector.InjectAsync(new(dir.Root), prefixes, NullLogger.Instance, CancellationToken.None);
-        var second = await PagefindIgnoreInjector.InjectAsync(new(dir.Root), prefixes, NullLogger.Instance, CancellationToken.None);
+        var first = await PagefindIgnoreInjector.InjectAsync(
+            new(dir.Root),
+            prefixes,
+            NullLogger.Instance,
+            CancellationToken.None);
+        var second =
+            await PagefindIgnoreInjector.InjectAsync(
+                new(dir.Root),
+                prefixes,
+                NullLogger.Instance,
+                CancellationToken.None);
 
         await Assert.That(first).IsEqualTo(1);
         await Assert.That(second).IsEqualTo(0);
@@ -145,7 +174,12 @@ public class PagefindIgnoreInjectorTests
     [Test]
     public async Task InjectAsyncEmptyRootThrows()
     {
-        static Task Invoke() => PagefindIgnoreInjector.InjectAsync(new(string.Empty), [[.. "api/"u8]], NullLogger.Instance, CancellationToken.None);
+        static Task Invoke() => PagefindIgnoreInjector.InjectAsync(
+            new(string.Empty),
+            [[.. "api/"u8]],
+            NullLogger.Instance,
+            CancellationToken.None);
+
         await Assert.That(Invoke).Throws<ArgumentException>();
     }
 
@@ -164,7 +198,8 @@ public class PagefindIgnoreInjectorTests
     /// <param name="root">Scratch root.</param>
     /// <param name="relativePath">Path relative to <paramref name="root"/>.</param>
     /// <returns>File contents.</returns>
-    private static string ReadFile(string root, string relativePath) => File.ReadAllText(Path.Combine(root, relativePath));
+    private static string ReadFile(string root, string relativePath) =>
+        File.ReadAllText(Path.Combine(root, relativePath));
 
     /// <summary>Counts non-overlapping occurrences of <paramref name="needle"/> in <paramref name="haystack"/>.</summary>
     /// <param name="haystack">Text to scan.</param>
@@ -189,7 +224,9 @@ public class PagefindIgnoreInjectorTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-pf-inject-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            Root = Path.Combine(
+                Path.GetTempPath(),
+                "smkd-pf-inject-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
             Directory.CreateDirectory(Root);
         }
 
@@ -201,7 +238,7 @@ public class PagefindIgnoreInjectorTests
         {
             try
             {
-                Directory.Delete(Root, recursive: true);
+                Directory.Delete(Root, true);
             }
             catch (DirectoryNotFoundException)
             {

@@ -14,7 +14,10 @@ public static class CspBuilder
     /// <param name="styleHashes"><c>'sha256-…'</c> tokens for the page's inline styles (used only when <see cref="CspOptions.HashInlineStyles"/> is true).</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>The CSP value bytes.</returns>
-    public static byte[] Build(IReadOnlyList<byte[]> scriptHashes, IReadOnlyList<byte[]> styleHashes, in CspOptions options)
+    public static byte[] Build(
+        IReadOnlyList<byte[]> scriptHashes,
+        IReadOnlyList<byte[]> styleHashes,
+        in CspOptions options)
     {
         var directives = new List<Directive>
         {
@@ -25,7 +28,7 @@ public static class CspBuilder
             new([.. "img-src"u8], [[.. "'self'"u8], [.. "data:"u8]]),
             new([.. "font-src"u8], [[.. "'self'"u8]]),
             new([.. "style-src"u8], InlineSourceList(options.HashInlineStyles, styleHashes)),
-            new([.. "script-src"u8], InlineSourceList(options.HashInlineScripts, scriptHashes)),
+            new([.. "script-src"u8], InlineSourceList(options.HashInlineScripts, scriptHashes))
         };
 
         for (var i = 0; i < options.ExtraSources.Length; i++)

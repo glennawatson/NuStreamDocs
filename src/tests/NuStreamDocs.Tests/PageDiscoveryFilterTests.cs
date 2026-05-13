@@ -15,7 +15,9 @@ public class PageDiscoveryFilterTests
     [Test]
     public async Task DiscoveryHonorsExclude()
     {
-        var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         try
         {
             Directory.CreateDirectory(Path.Combine(root, "drafts"));
@@ -35,7 +37,7 @@ public class PageDiscoveryFilterTests
         }
         finally
         {
-            Directory.Delete(root, recursive: true);
+            Directory.Delete(root, true);
         }
     }
 
@@ -44,7 +46,9 @@ public class PageDiscoveryFilterTests
     [Test]
     public async Task DiscoveryHonorsInclude()
     {
-        var root = Path.Combine(Path.GetTempPath(), "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
         try
         {
             Directory.CreateDirectory(Path.Combine(root, "guide"));
@@ -64,7 +68,7 @@ public class PageDiscoveryFilterTests
         }
         finally
         {
-            Directory.Delete(root, recursive: true);
+            Directory.Delete(root, true);
         }
     }
 }

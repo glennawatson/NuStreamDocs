@@ -8,20 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj" />
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
   </ItemGroup>
 
   <!-- Packed font-metrics table (Resources\font-metrics.bin) embedded in the dll. -->
   <ItemGroup>
-    <EmbeddedResource Include="Resources\**" />
+    <EmbeddedResource Include="Resources\**"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Logging"/>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="NuStreamDocs.Fonts.Tests" />
+    <InternalsVisibleTo Include="NuStreamDocs.Fonts.Tests"/>
   </ItemGroup>
 
 </Project>

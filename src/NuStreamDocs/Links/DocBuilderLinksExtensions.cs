@@ -12,17 +12,13 @@ public static class DocBuilderLinksExtensions
     /// <summary>Registers <see cref="MarkdownLinkRewriterPlugin"/> with config-driven directory-URL behavior.</summary>
     /// <param name="builder">The builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMarkdownLinks(this DocBuilder builder)
-    {
-        return builder.UsePlugin(new MarkdownLinkRewriterPlugin());
-    }
+    public static DocBuilder UseMarkdownLinks(this DocBuilder builder) =>
+        builder.UsePlugin(new MarkdownLinkRewriterPlugin());
 
     /// <summary>Registers <see cref="MarkdownLinkRewriterPlugin"/> with an explicit directory-URL toggle that overrides the config.</summary>
     /// <param name="builder">The builder.</param>
     /// <param name="useDirectoryUrls">True for <c>foo/</c> targets; false for <c>foo.html</c>.</param>
     /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMarkdownLinks(this DocBuilder builder, bool useDirectoryUrls)
-    {
-        return builder.UsePlugin(new MarkdownLinkRewriterPlugin(useDirectoryUrls));
-    }
+    public static DocBuilder UseMarkdownLinks(this DocBuilder builder, bool useDirectoryUrls) =>
+        builder.UsePlugin(new MarkdownLinkRewriterPlugin(useDirectoryUrls));
 }

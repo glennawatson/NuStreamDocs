@@ -139,10 +139,8 @@ public class PagefindOptionsExtensionsTests
     /// <summary><c>WithStrictBinaryRequired</c> toggles the flag.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task WithStrictBinaryRequiredToggles()
-    {
-        await Assert.That(PagefindOptions.Default.WithStrictBinaryRequired(true).StrictBinaryRequired).IsTrue();
-    }
+    public async Task WithStrictBinaryRequiredToggles() => await Assert
+        .That(PagefindOptions.Default.WithStrictBinaryRequired(true).StrictBinaryRequired).IsTrue();
 
     /// <summary><c>WithExcludePathPrefixes(string[])</c> replaces the list, encoding to UTF-8.</summary>
     /// <returns>Async test.</returns>
@@ -183,8 +181,10 @@ public class PagefindOptionsExtensionsTests
     public async Task AddExcludePathPrefixesEmptyIsNoOp()
     {
         var seeded = PagefindOptions.Default.WithExcludePathPrefixes("api/");
-        await Assert.That(seeded.AddExcludePathPrefixes(Array.Empty<byte[]>()).ExcludePathPrefixes).IsSameReferenceAs(seeded.ExcludePathPrefixes);
-        await Assert.That(seeded.AddExcludePathPrefixes(Array.Empty<ApiCompatString>()).ExcludePathPrefixes).IsSameReferenceAs(seeded.ExcludePathPrefixes);
+        await Assert.That(seeded.AddExcludePathPrefixes(Array.Empty<byte[]>()).ExcludePathPrefixes)
+            .IsSameReferenceAs(seeded.ExcludePathPrefixes);
+        await Assert.That(seeded.AddExcludePathPrefixes(Array.Empty<ApiCompatString>()).ExcludePathPrefixes)
+            .IsSameReferenceAs(seeded.ExcludePathPrefixes);
     }
 
     /// <summary><c>ClearExcludePathPrefixes</c> empties the list.</summary>

@@ -39,10 +39,10 @@ public class InlineRendererBenchmarks
         for (var i = 0; i < Repetitions; i++)
         {
             sb.Append("Line with **bold**, *italic*, `code`, a [link](https://x/")
-              .Append(i)
-              .Append(") and an autolink <https://y/")
-              .Append(i)
-              .Append("> plus an escaped \\* asterisk.\n");
+                .Append(i)
+                .Append(") and an autolink <https://y/")
+                .Append(i)
+                .Append("> plus an escaped \\* asterisk.\n");
         }
 
         _source = Encoding.UTF8.GetBytes(sb.ToString());

@@ -28,8 +28,11 @@ public class Phase2BatchSixLexerTests
     public async Task LiquidClassifiesBlocks()
     {
         var html = LiquidLexer.Instance.Render("{% for item in collection %}\n{{ item.title }}\n{% endfor %}"u8);
-        await Assert.That(html.Contains("<span class=\"k\">{% for item in collection %}</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"n\">{{ item.title }}</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert
+            .That(html.Contains("<span class=\"k\">{% for item in collection %}</span>", StringComparison.Ordinal))
+            .IsTrue();
+        await Assert.That(html.Contains("<span class=\"n\">{{ item.title }}</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>ERB classifies <c>&lt;% %&gt;</c> statement and <c>&lt;%= %&gt;</c> expression blocks.</summary>
@@ -38,8 +41,10 @@ public class Phase2BatchSixLexerTests
     public async Task ErbClassifiesBlocks()
     {
         var html = ErbLexer.Instance.Render("<% if @user %>\nName: <%= @user.name %>\n<% end %>"u8);
-        await Assert.That(html.Contains("<span class=\"k\">&lt;% if @user %&gt;</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"n\">&lt;%= @user.name %&gt;</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("<span class=\"k\">&lt;% if @user %&gt;</span>", StringComparison.Ordinal))
+            .IsTrue();
+        await Assert.That(html.Contains("<span class=\"n\">&lt;%= @user.name %&gt;</span>", StringComparison.Ordinal))
+            .IsTrue();
     }
 
     /// <summary>Handlebars classifies <c>{{# }}</c> statement and <c>{{ }}</c> expression blocks.</summary>
@@ -92,7 +97,8 @@ public class Phase2BatchSixLexerTests
     [Test]
     public async Task WatClassifiesInstructions()
     {
-        var html = WatLexer.Instance.Render(";; comment\n(module\n  (func $add (param i32 i32) (result i32)\n    local.get 0\n    local.get 1\n    i32.add))"u8);
+        var html = WatLexer.Instance.Render(
+            ";; comment\n(module\n  (func $add (param i32 i32) (result i32)\n    local.get 0\n    local.get 1\n    i32.add))"u8);
         await Assert.That(html.Contains("<span class=\"c1\">;; comment</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">module</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">func</span>", StringComparison.Ordinal)).IsTrue();

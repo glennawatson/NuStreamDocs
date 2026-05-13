@@ -14,17 +14,17 @@ internal sealed class LayoutContext
 
     /// <summary>Initializes a new instance of the <see cref="LayoutContext"/> class.</summary>
     /// <param name="values">UTF-8 name → UTF-8 value map. Keys do not include the <c>page.</c> prefix.</param>
-    public LayoutContext(Dictionary<byte[], byte[]> values)
-    {
-        _lookup = values.AsUtf8Lookup();
-    }
+    public LayoutContext(Dictionary<byte[], byte[]> values) => _lookup = values.AsUtf8Lookup();
 
     /// <summary>Builds a <see cref="LayoutContext"/> from the page's frontmatter and the rendered HTML body.</summary>
     /// <param name="source">Original UTF-8 markdown bytes (frontmatter + body).</param>
     /// <param name="renderedHtml">UTF-8 HTML produced by the markdown renderer.</param>
     /// <param name="relativeUrl">Site-relative URL of the page (forward-slash, no leading slash).</param>
     /// <returns>A populated context.</returns>
-    public static LayoutContext FromPage(ReadOnlySpan<byte> source, ReadOnlySpan<byte> renderedHtml, ReadOnlySpan<byte> relativeUrl)
+    public static LayoutContext FromPage(
+        ReadOnlySpan<byte> source,
+        ReadOnlySpan<byte> renderedHtml,
+        ReadOnlySpan<byte> relativeUrl)
     {
         Dictionary<byte[], byte[]> values = new(ByteArrayComparer.Instance)
         {

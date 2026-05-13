@@ -16,7 +16,10 @@ public class XrefMapRoundTripTests
     {
         using var temp = TempDir.Create();
         var map = Path.Combine(temp.Root, "xrefmap.json");
-        XrefMapWriter.Write(map, [.. "https://example.com/"u8], [([.. "Foo.Bar"u8], [.. "api/Foo.Bar.html"u8]), ([.. "Baz"u8], [.. "api/Baz.html"u8])]);
+        XrefMapWriter.Write(
+            map,
+            [.. "https://example.com/"u8],
+            [([.. "Foo.Bar"u8], [.. "api/Foo.Bar.html"u8]), ([.. "Baz"u8], [.. "api/Baz.html"u8])]);
 
         var bytes = await File.ReadAllBytesAsync(map);
         var payload = XrefMapReader.Read(bytes);
@@ -45,7 +48,10 @@ public class XrefMapRoundTripTests
     {
         using var temp = TempDir.Create();
         var map = Path.Combine(temp.Root, "xrefmap.json");
-        XrefMapWriter.Write(map, [], [([.. "Zebra"u8], [.. "z.html"u8]), ([.. "Apple"u8], [.. "a.html"u8]), ([.. "Mango"u8], [.. "m.html"u8])]);
+        XrefMapWriter.Write(
+            map,
+            [],
+            [([.. "Zebra"u8], [.. "z.html"u8]), ([.. "Apple"u8], [.. "a.html"u8]), ([.. "Mango"u8], [.. "m.html"u8])]);
 
         var bytes = await File.ReadAllBytesAsync(map);
         var payload = XrefMapReader.Read(bytes);
@@ -70,7 +76,9 @@ public class XrefMapRoundTripTests
     [Test]
     public async Task ReaderSkipsMalformedEntries()
     {
-        var payload = XrefMapReader.Read("{\"references\":[{\"uid\":\"x\"},{\"href\":\"y.html\"},{\"uid\":\"z\",\"href\":\"z.html\"}]}"u8);
+        var payload =
+            XrefMapReader.Read(
+                "{\"references\":[{\"uid\":\"x\"},{\"href\":\"y.html\"},{\"uid\":\"z\",\"href\":\"z.html\"}]}"u8);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
         await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("z"u8)).IsTrue();
     }
@@ -80,7 +88,9 @@ public class XrefMapRoundTripTests
     [Test]
     public async Task ReaderTolerantOfDocFxExtraFields()
     {
-        var payload = XrefMapReader.Read("{\"references\":[{\"uid\":\"x\",\"name\":\"X\",\"fullName\":\"Foo.X\",\"href\":\"x.html\"}]}"u8);
+        var payload =
+            XrefMapReader.Read(
+                "{\"references\":[{\"uid\":\"x\",\"name\":\"X\",\"fullName\":\"Foo.X\",\"href\":\"x.html\"}]}"u8);
         await Assert.That(payload.Entries.Length).IsEqualTo(1);
         await Assert.That(payload.Entries[0].Uid.AsSpan().SequenceEqual("x"u8)).IsTrue();
         await Assert.That(payload.Entries[0].Href.AsSpan().SequenceEqual("x.html"u8)).IsTrue();
