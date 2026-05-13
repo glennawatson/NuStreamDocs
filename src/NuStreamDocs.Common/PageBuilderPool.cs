@@ -41,6 +41,13 @@ public static class PageBuilderPool
     /// <returns>A <see cref="PageBuilderRental"/> the caller disposes.</returns>
     public static PageBuilderRental Rent(int hintCapacity)
     {
+        // ArrayBufferWriter<T> rejects a non-positive initial capacity, and callers
+        // routinely derive the hint from source length (an empty page yields 0).
+        if (hintCapacity <= 0)
+        {
+            hintCapacity = DefaultHintCapacity;
+        }
+
         // Hot path: this thread parked a writer recently (no async hop on the prior page).
         var slots = _slots;
         if (slots is not null)
