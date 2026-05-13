@@ -24,28 +24,8 @@ public static class AssetReferenceValidator
     /// <param name="parallelism">Maximum parallel page checks.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Diagnostics in arbitrary order.</returns>
-    public static async Task<LinkDiagnostic[]> ValidateAsync(ValidationCorpus corpus, int parallelism, CancellationToken cancellationToken)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(parallelism);
-
-        ConcurrentBag<LinkDiagnostic> diagnostics = [];
-        ParallelOptions parallelOptions = new()
-        {
-            CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = parallelism
-        };
-
-        await Parallel.ForEachAsync(
-            corpus.Pages,
-            parallelOptions,
-            (page, _) =>
-            {
-                ValidatePage(corpus, page, diagnostics);
-                return ValueTask.CompletedTask;
-            }).ConfigureAwait(false);
-
-        return [.. diagnostics];
-    }
+    public static Task<LinkDiagnostic[]> ValidateAsync(ValidationCorpus corpus, int parallelism, CancellationToken cancellationToken) =>
+        LinkValidationRun.ForEachPageAsync(corpus, parallelism, ValidatePage, cancellationToken);
 
     /// <summary>Walks one page's asset references and reports any miss.</summary>
     /// <param name="corpus">Corpus.</param>
@@ -274,29 +254,14 @@ public static class AssetReferenceValidator
         {
             using var rental = PageBuilderPool.Rent(InitialMessageCapacity);
             var writer = rental.Writer;
-            WriteBytes(writer, "Local asset target '"u8);
-            WriteBytes(writer, resolved);
-            WriteBytes(writer, "' is not on disk under the site output."u8);
+            writer.Write("Local asset target '"u8);
+            writer.Write(resolved);
+            writer.Write("' is not on disk under the site output."u8);
             return new(
                 Encoding.UTF8.GetString(sourcePageBytes),
                 Encoding.UTF8.GetString(rawAsset),
                 LinkSeverity.Error,
                 Encoding.UTF8.GetString(writer.WrittenSpan));
-        }
-
-        /// <summary>Bulk-writes <paramref name="bytes"/> into <paramref name="writer"/>.</summary>
-        /// <param name="writer">Pooled UTF-8 sink.</param>
-        /// <param name="bytes">Bytes to append.</param>
-        private static void WriteBytes(ArrayBufferWriter<byte> writer, ReadOnlySpan<byte> bytes)
-        {
-            if (bytes.IsEmpty)
-            {
-                return;
-            }
-
-            var dst = writer.GetSpan(bytes.Length);
-            bytes.CopyTo(dst);
-            writer.Advance(bytes.Length);
         }
 
         /// <summary>Heap-allocating fallback when the resolved asset path overflows the scratch buffer.</summary>

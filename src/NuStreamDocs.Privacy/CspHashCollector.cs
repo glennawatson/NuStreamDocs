@@ -3,8 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy;
 
@@ -23,67 +22,26 @@ internal static class CspHashCollector
     /// <param name="scripts">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;script&gt;</c> blocks.</param>
     public static void Collect(ReadOnlySpan<byte> html, ConcurrentDictionary<byte[], byte> styles, ConcurrentDictionary<byte[], byte> scripts)
     {
-        ScanBlocks(html, "<style"u8, "</style>"u8, styles);
-        ScanBlocks(html, "<script"u8, "</script>"u8, scripts);
+        ScanInto(html, "<style"u8, "</style>"u8, styles);
+        ScanInto(html, "<script"u8, "</script>"u8, scripts);
     }
 
-    /// <summary>Walks <paramref name="html"/> for every <c>{open}…&gt;…{close}</c> block, hashes the body, and adds the formatted CSP source to <paramref name="sink"/>.</summary>
+    /// <summary>Hashes every non-empty <c>{open}…&gt;…{close}</c> block body and adds its CSP source token to <paramref name="sink"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="open">Opening-tag prefix (e.g. <c>&lt;style</c>).</param>
     /// <param name="close">Closing tag (e.g. <c>&lt;/style&gt;</c>).</param>
     /// <param name="sink">Output set.</param>
-    private static void ScanBlocks(ReadOnlySpan<byte> html, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close, ConcurrentDictionary<byte[], byte> sink)
+    private static void ScanInto(ReadOnlySpan<byte> html, ReadOnlySpan<byte> open, ReadOnlySpan<byte> close, ConcurrentDictionary<byte[], byte> sink)
     {
-        Span<byte> hash = stackalloc byte[SHA256.HashSizeInBytes];
-        const int MaxB64Length = (SHA256.HashSizeInBytes + 2) / 3 * 4;
-        Span<char> chars = stackalloc char[MaxB64Length];
-        var cursor = 0;
-        while (cursor < html.Length)
+        var blocks = new Utf8InlineBlockEnumerator(html, open, close);
+        while (blocks.MoveNext())
         {
-            var rel = html[cursor..].IndexOf(open);
-            if (rel < 0)
-            {
-                break;
-            }
-
-            // Skip past the opening-tag attributes to the closing '>'.
-            var tagOpenStart = cursor + rel;
-            var afterOpen = html[(tagOpenStart + open.Length)..];
-            var tagCloseRel = afterOpen.IndexOf((byte)'>');
-            if (tagCloseRel < 0)
-            {
-                break;
-            }
-
-            var bodyStart = tagOpenStart + open.Length + tagCloseRel + 1;
-            var endRel = html[bodyStart..].IndexOf(close);
-            if (endRel < 0)
-            {
-                break;
-            }
-
-            var body = html.Slice(bodyStart, endRel);
-            cursor = bodyStart + endRel + close.Length;
-
-            if (body.IsEmpty)
+            if (blocks.Current.IsEmpty)
             {
                 continue;
             }
 
-            SHA256.HashData(body, hash);
-
-            // Create "'sha256-{base64}'" as bytes
-            const int PrefixLen = 8; // "'sha256-".Length
-            var b64Length = (hash.Length + 2) / 3 * 4;
-            var totalLength = PrefixLen + b64Length + 1; // prefix + b64 + "'"
-            var buffer = new byte[totalLength];
-            "'sha256-"u8.CopyTo(buffer);
-
-            Convert.TryToBase64Chars(hash, chars, out var charsWritten);
-            var bytesWritten = Encoding.UTF8.GetBytes(chars[..charsWritten], buffer.AsSpan(PrefixLen));
-            buffer[PrefixLen + bytesWritten] = (byte)'\'';
-
-            sink.TryAdd(buffer, 0);
+            sink.TryAdd(CspSourceToken.FromBody(blocks.Current), 0);
         }
     }
 }
