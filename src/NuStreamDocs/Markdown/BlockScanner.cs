@@ -793,13 +793,13 @@ public static class BlockScanner
     /// <returns><see cref="BlockKind.Blank"/> on close, otherwise <see cref="BlockKind.HtmlBlockContent"/>.</returns>
     private static BlockKind ClassifyInsideType6Block(ReadOnlySpan<byte> line, ref HtmlBlockState html)
     {
-        if (line.IsEmpty || AsciiByteHelpers.IsAllAsciiWhitespace(line))
+        if (!line.IsEmpty && !AsciiByteHelpers.IsAllAsciiWhitespace(line))
         {
-            html = default;
-            return BlockKind.Blank;
+            return BlockKind.HtmlBlockContent;
         }
 
-        return BlockKind.HtmlBlockContent;
+        html = default;
+        return BlockKind.Blank;
     }
 
     /// <summary>Classifies a line inside an open Type-1 HTML block; closes on a case-insensitive match for the active tag's close form.</summary>

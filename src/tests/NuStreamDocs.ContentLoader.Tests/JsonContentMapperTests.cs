@@ -93,7 +93,7 @@ public class JsonContentMapperTests
     public async Task MalformedJsonThrows()
     {
         var mapping = ContentMapping.ForRoute("p/{slug}.md"u8);
-        var json = Encoding.UTF8.GetBytes("[ this is not json");
+        var json = "[ this is not json"u8.ToArray();
         await Assert.That(() => _ = JsonContentMapper.Map(json, mapping, "test"u8, NullLogger.Instance))
             .Throws<ContentLoaderException>();
     }

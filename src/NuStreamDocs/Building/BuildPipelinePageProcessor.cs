@@ -169,7 +169,7 @@ internal static class BuildPipelinePageProcessor
         SyntheticPageSink syntheticPages,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await foreach (var item in PageDiscovery.EnumerateAsync(inputRoot.Value, filter, cancellationToken)
+        await foreach (var item in PageDiscovery.EnumerateAsync(inputRoot.Value, filter, cancellationToken).WithCancellation(cancellationToken)
                            .ConfigureAwait(false))
         {
             yield return item;
@@ -219,17 +219,13 @@ internal static class BuildPipelinePageProcessor
             stale.ContentHash.AsSpan().SequenceEqual(hash) &&
             File.Exists(outputPath))
         {
-            // Hot incremental path: source matches previous build and output is on disk.
-            // Re-fire IPageScanPlugin.Scan against the cached output so plugins like
-            // SearchPluginBase / LinkValidator still observe every page — without this,
-            // cached pages would be invisible to scan-phase plugins and incremental
-            // rebuilds would emit indexes / validators that only know about pages
-            // re-rendered this build.
-            if (phases.Scans.Length > 0)
+            if (phases.Scans.Length == 0)
             {
-                var cachedHtml = await File.ReadAllBytesAsync(outputPath, cancellationToken).ConfigureAwait(false);
-                FireScans(phases.Scans, item.RelativePath, source.Span, cachedHtml, pluginTiming);
+                return (stale, true, false);
             }
+
+            var cachedHtml = await File.ReadAllBytesAsync(outputPath, cancellationToken).ConfigureAwait(false);
+            FireScans(phases.Scans, item.RelativePath, source.Span, cachedHtml, pluginTiming);
 
             return (stale, true, false);
         }
@@ -461,11 +457,13 @@ internal static class BuildPipelinePageProcessor
         var anyRewrites = false;
         for (var i = 0; i < plugins.Length; i++)
         {
-            if (plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
+            if (!plugins[i].NeedsRewrite(input.Writer.WrittenSpan))
             {
-                anyRewrites = true;
-                break;
+                continue;
             }
+
+            anyRewrites = true;
+            break;
         }
 
         if (!anyRewrites)

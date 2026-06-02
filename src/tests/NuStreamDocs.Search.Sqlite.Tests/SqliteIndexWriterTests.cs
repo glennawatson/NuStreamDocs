@@ -164,12 +164,9 @@ public class SqliteIndexWriterTests
             try
             {
                 raw.sqlite3_bind_text(stmt, 1, url);
-                if (raw.sqlite3_step(stmt) != raw.SQLITE_ROW)
-                {
-                    return -1;
-                }
-
-                return Encoding.UTF8.GetByteCount(raw.sqlite3_column_text(stmt, 0).utf8_to_string());
+                return raw.sqlite3_step(stmt) != raw.SQLITE_ROW
+                    ? -1
+                    : Encoding.UTF8.GetByteCount(raw.sqlite3_column_text(stmt, 0).utf8_to_string());
             }
             finally
             {

@@ -87,15 +87,17 @@ internal static class DocsAssetCopier
         var segmentStart = 0;
         for (var i = 0; i < span.Length; i++)
         {
-            if (span[i] is '/' or '\\')
+            if (span[i] is not ('/' or '\\'))
             {
-                if (i > segmentStart && span[segmentStart] is '.')
-                {
-                    return true;
-                }
-
-                segmentStart = i + 1;
+                continue;
             }
+
+            if (i > segmentStart && span[segmentStart] is '.')
+            {
+                return true;
+            }
+
+            segmentStart = i + 1;
         }
 
         return segmentStart < span.Length && span[segmentStart] is '.';

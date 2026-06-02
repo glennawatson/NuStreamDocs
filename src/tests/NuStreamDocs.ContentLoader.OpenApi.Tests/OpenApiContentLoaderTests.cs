@@ -79,7 +79,7 @@ public class OpenApiContentLoaderTests
     [Test]
     public async Task SpecWithoutPathsYieldsNothing()
     {
-        var pages = OpenApiPageBuilder.Build(Encoding.UTF8.GetBytes("{\"openapi\":\"3.0.0\"}"), "x"u8);
+        var pages = OpenApiPageBuilder.Build("{\"openapi\":\"3.0.0\"}"u8.ToArray(), "x"u8);
         await Assert.That(pages).IsEmpty();
     }
 

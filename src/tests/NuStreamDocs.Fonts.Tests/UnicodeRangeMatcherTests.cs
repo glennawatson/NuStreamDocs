@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace NuStreamDocs.Fonts.Tests;
 
 /// <summary>Coverage for <see cref="UnicodeRangeMatcher"/>.</summary>
@@ -15,12 +13,12 @@ public class UnicodeRangeMatcherTests
     public async Task MarkSeenSetsTouchedBlocks()
     {
         var ascii = UnicodeRangeMatcher.NewSeenBlocks();
-        UnicodeRangeMatcher.MarkSeen(Encoding.UTF8.GetBytes("Hello, world!"), ascii);
+        UnicodeRangeMatcher.MarkSeen("Hello, world!"u8, ascii);
         await Assert.That(ascii[0]).IsTrue();
         await Assert.That(ascii[4]).IsFalse(); // U+0400 block — no Cyrillic seen.
 
         var withCyrillic = UnicodeRangeMatcher.NewSeenBlocks();
-        UnicodeRangeMatcher.MarkSeen(Encoding.UTF8.GetBytes("Привет"), withCyrillic); // П = U+041F → block 4.
+        UnicodeRangeMatcher.MarkSeen("Привет"u8, withCyrillic); // П = U+041F → block 4.
         await Assert.That(withCyrillic[0]).IsTrue();
         await Assert.That(withCyrillic[4]).IsTrue();
     }
@@ -37,15 +35,15 @@ public class UnicodeRangeMatcherTests
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, ascii)).IsFalse();
 
         var withCyrillic = UnicodeRangeMatcher.NewSeenBlocks();
-        UnicodeRangeMatcher.MarkSeen(Encoding.UTF8.GetBytes("Привет"), withCyrillic);
+        UnicodeRangeMatcher.MarkSeen("Привет"u8, withCyrillic);
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0400-045F"u8, withCyrillic)).IsTrue();
 
         var withLatinExt = UnicodeRangeMatcher.NewSeenBlocks();
         UnicodeRangeMatcher.MarkSeen(
-            Encoding.UTF8.GetBytes("café"),
+            "café"u8,
             withLatinExt); // é = U+00E9 → block 0, but ē U+0113 would be block 1; here only block 0.
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, withLatinExt)).IsFalse();
-        UnicodeRangeMatcher.MarkSeen(Encoding.UTF8.GetBytes("Tōkyō"), withLatinExt); // ō = U+014D → block 1.
+        UnicodeRangeMatcher.MarkSeen("Tōkyō"u8, withLatinExt); // ō = U+014D → block 1.
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, withLatinExt)).IsTrue();
     }
 

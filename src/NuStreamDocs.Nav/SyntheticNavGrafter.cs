@@ -38,7 +38,7 @@ internal static class SyntheticNavGrafter
             placedAny |= Place(synthetic, entries[i]);
         }
 
-        if (!placedAny || (synthetic.Sections.Count == 0 && synthetic.Pages.Count == 0))
+        if (!placedAny || (synthetic.SectionsList.Count == 0 && synthetic.Pages.Count == 0))
         {
             return root;
         }
@@ -67,21 +67,32 @@ internal static class SyntheticNavGrafter
         bool useDirectoryUrls,
         out bool changed)
     {
-        List<NavNode> result = [.. root.Children];
-        changed = false;
-
-        foreach (var section in synthetic.Sections.Values)
+        var diskChildren = root.Children;
+        List<NavNode> result = new(diskChildren.Length + synthetic.SectionsList.Count + synthetic.Pages.Count);
+        for (var i = 0; i < diskChildren.Length; i++)
         {
-            changed |= AddOrMergeSection(result, root, section, useDirectoryUrls);
+            result.Add(diskChildren[i]);
         }
 
-        foreach (var page in synthetic.Pages)
+        changed = false;
+
+        var sections = synthetic.SectionsList;
+        for (var i = 0; i < sections.Count; i++)
         {
-            if (!HasTopLevelChildNamed(root, StemOf(page.RelativePath)))
+            changed |= AddOrMergeSection(result, root, sections[i], useDirectoryUrls);
+        }
+
+        var pages = synthetic.Pages;
+        for (var i = 0; i < pages.Count; i++)
+        {
+            var page = pages[i];
+            if (HasTopLevelChildNamed(root, StemOf(page.RelativePath)))
             {
-                result.Add(ToPageNode(page, useDirectoryUrls));
-                changed = true;
+                continue;
             }
+
+            result.Add(ToPageNode(page, useDirectoryUrls));
+            changed = true;
         }
 
         return [.. result];
@@ -165,17 +176,27 @@ internal static class SyntheticNavGrafter
     /// <returns>The combined, sorted child array.</returns>
     private static NavNode[] MergeSectionChildren(NavNode diskSection, SectionBuilder synthetic, bool useDirectoryUrls)
     {
-        List<NavNode> children = [.. diskSection.Children];
-        foreach (var sub in synthetic.Sections.Values)
+        var diskChildren = diskSection.Children;
+        List<NavNode> children = new(diskChildren.Length + synthetic.SectionsList.Count + synthetic.Pages.Count);
+        for (var i = 0; i < diskChildren.Length; i++)
         {
-            if (!HasChildNamed(diskSection.Children, sub.Name, true) && ToNavNode(sub, useDirectoryUrls) is { } node)
+            children.Add(diskChildren[i]);
+        }
+
+        var subs = synthetic.SectionsList;
+        for (var i = 0; i < subs.Count; i++)
+        {
+            var sub = subs[i];
+            if (!HasChildNamed(diskChildren, sub.Name, true) && ToNavNode(sub, useDirectoryUrls) is { } node)
             {
                 children.Add(node);
             }
         }
 
-        foreach (var page in synthetic.Pages)
+        var pages = synthetic.Pages;
+        for (var i = 0; i < pages.Count; i++)
         {
+            var page = pages[i];
             var existing = IndexOfPageNamed(children, StemOf(page.RelativePath));
             if (existing >= 0)
             {
@@ -187,7 +208,12 @@ internal static class SyntheticNavGrafter
             }
         }
 
-        var childArray = children.ToArray();
+        var childArray = new NavNode[children.Count];
+        for (var i = 0; i < childArray.Length; i++)
+        {
+            childArray[i] = children[i];
+        }
+
         Array.Sort(childArray, NavNodeFileNameComparer.Instance);
         return childArray;
     }
@@ -354,6 +380,7 @@ internal static class SyntheticNavGrafter
             {
                 child = new(segments[i], accumulated);
                 section.Sections[segments[i]] = child;
+                section.SectionsList.Add(child);
             }
 
             section = child;
@@ -389,38 +416,60 @@ internal static class SyntheticNavGrafter
             return null;
         }
 
-        var children = new List<NavNode>(section.Sections.Count + section.Pages.Count);
-        foreach (var child in section.Sections.Values)
-        {
-            if (ToNavNode(child, useDirectoryUrls) is { } node)
-            {
-                children.Add(node);
-            }
-        }
-
-        foreach (var page in section.Pages)
-        {
-            children.Add(ToPageNode(page, useDirectoryUrls));
-        }
+        var children = BuildSectionChildren(section, useDirectoryUrls);
 
         // Drop a synthetic section that ended up with no index page and no children — nothing to link to.
-        if (children.Count == 0 && string.IsNullOrEmpty(section.IndexRelativePath))
+        if (children.Length == 0 && string.IsNullOrEmpty(section.IndexRelativePath))
         {
             return null;
         }
-
-        var childArray = children.ToArray();
-        Array.Sort(childArray, NavNodeFileNameComparer.Instance);
 
         var title = section.Title is { Length: > 0 } t ? t : Encoding.UTF8.GetBytes(section.Name);
         return new(
             title,
             new(section.RelativePath),
             true,
-            childArray,
+            children,
             string.IsNullOrEmpty(section.IndexRelativePath) ? default : new FilePath(section.IndexRelativePath),
             useDirectoryUrls)
-        { Order = section.Order ?? int.MaxValue };
+        {
+            Order = section.Order ?? int.MaxValue
+        };
+    }
+
+    /// <summary>Builds the sorted child array for a working section: every visible sub-section converts in (hidden ones drop out), every page becomes a leaf node.</summary>
+    /// <param name="section">Working section.</param>
+    /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
+    /// <returns>The sorted child array (possibly empty).</returns>
+    private static NavNode[] BuildSectionChildren(SectionBuilder section, bool useDirectoryUrls)
+    {
+        // Upper-bound the child count: every sub-section contributes at most one node, every
+        // page exactly one. A hidden sub-section drops out, so the final array may be shorter.
+        var subs = section.SectionsList;
+        var pages = section.Pages;
+        var upperBound = subs.Count + pages.Count;
+        var children = new NavNode[upperBound];
+        var written = 0;
+        for (var i = 0; i < subs.Count; i++)
+        {
+            if (ToNavNode(subs[i], useDirectoryUrls) is { } node)
+            {
+                children[written++] = node;
+            }
+        }
+
+        for (var i = 0; i < pages.Count; i++)
+        {
+            children[written++] = ToPageNode(pages[i], useDirectoryUrls);
+        }
+
+        if (written != upperBound)
+        {
+            Array.Resize(ref children, written);
+        }
+
+        Array.Sort(children, NavNodeFileNameComparer.Instance);
+        return children;
     }
 
     /// <summary>Converts a working page to a leaf <see cref="NavNode"/>.</summary>
@@ -499,10 +548,13 @@ internal static class SyntheticNavGrafter
         /// <summary>Gets or sets a value indicating whether the section is hidden from the nav.</summary>
         public bool Hidden { get; set; }
 
-        /// <summary>Gets the child sections keyed by directory name (case-insensitive).</summary>
+        /// <summary>Gets the child sections keyed by directory name (case-insensitive) for O(1) lookup while routing entries.</summary>
         public Dictionary<string, SectionBuilder> Sections { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>Gets the leaf pages directly under this section.</summary>
+        /// <summary>Gets the child sections in insertion order, indexable for foreach-free iteration. Kept in lockstep with <see cref="Sections"/> at every add.</summary>
+        public List<SectionBuilder> SectionsList { get; } = [];
+
+        /// <summary>Gets the leaf pages directly under this section, indexable for foreach-free iteration.</summary>
         public List<PageEntry> Pages { get; } = [];
     }
 }

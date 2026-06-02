@@ -49,5 +49,5 @@ public class SqliteEngineTests
     /// <param name="url">Root-relative URL.</param>
     /// <returns>The document.</returns>
     private static SearchDocument Doc(string url) =>
-        new(Encoding.UTF8.GetBytes(url), Encoding.UTF8.GetBytes("T"), Encoding.UTF8.GetBytes("indexed body text"));
+        new(Encoding.UTF8.GetBytes(url), "T"u8.ToArray(), "indexed body text"u8.ToArray());
 }

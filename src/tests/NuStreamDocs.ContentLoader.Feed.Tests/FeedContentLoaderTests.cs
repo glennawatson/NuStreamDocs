@@ -55,7 +55,7 @@ public class FeedContentLoaderTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task InvalidXmlThrows() =>
-        await Assert.That(() => _ = RssAtomReader.Read(Encoding.UTF8.GetBytes("<not xml")))
+        await Assert.That(() => _ = RssAtomReader.Read("<not xml"u8.ToArray()))
             .Throws<ContentLoaderException>();
 
     /// <summary>The loader fetches the feed and produces one page per item with frontmatter and body.</summary>
