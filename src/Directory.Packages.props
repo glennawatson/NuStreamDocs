@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <SourceDocParserVersion>2.0.0</SourceDocParserVersion>
+    <SourceDocParserVersion>2.1.0</SourceDocParserVersion>
   </PropertyGroup>
 
   <ItemGroup>
