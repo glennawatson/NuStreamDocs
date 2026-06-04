@@ -6,7 +6,7 @@ namespace NuStreamDocs.Transitions;
 
 /// <summary>Configuration for <c>TransitionsPlugin</c>.</summary>
 /// <param name="ContentSelector">UTF-8 CSS selector for the page region the router swaps on navigation (the article body).</param>
-/// <param name="NavSelector">UTF-8 CSS selector for an additional region to swap (the sidebar / nav markup); empty leaves the chrome untouched.</param>
+/// <param name="NavSelector">CSS selector for an extra region to swap; defaults to the Material3 TOC sidebar so the TOC stays in sync on soft nav. Empty leaves chrome untouched.</param>
 /// <param name="Animation">The transition played on swap, where the View Transitions API is available.</param>
 /// <param name="Prefetch">When the router pre-fetches link targets.</param>
 /// <param name="PrefetchDelayMs">Debounce, in milliseconds, before a hover-triggered pre-fetch fires.</param>
@@ -27,7 +27,7 @@ public readonly record struct TransitionsOptions(
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static TransitionsOptions Default { get; } = new(
         [.. "[data-md-component='content']"u8],
-        [],
+        [.. ".md-sidebar--secondary"u8],
         TransitionAnimation.Fade,
         PrefetchStrategy.Hover,
         DefaultPrefetchDelayMs,

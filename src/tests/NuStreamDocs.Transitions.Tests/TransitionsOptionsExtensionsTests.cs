@@ -16,7 +16,7 @@ public class TransitionsOptionsExtensionsTests
     {
         var o = TransitionsOptions.Default;
         await Assert.That(Encoding.UTF8.GetString(o.ContentSelector)).IsEqualTo("[data-md-component='content']");
-        await Assert.That(o.NavSelector.Length).IsEqualTo(0);
+        await Assert.That(Encoding.UTF8.GetString(o.NavSelector)).IsEqualTo(".md-sidebar--secondary");
         await Assert.That(o.Prefetch).IsEqualTo(PrefetchStrategy.Hover);
         await Assert.That(o.Animation).IsEqualTo(TransitionAnimation.Fade);
         await Assert.That(o.PrefetchDelayMs).IsEqualTo(80);
