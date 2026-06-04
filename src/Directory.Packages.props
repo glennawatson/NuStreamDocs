@@ -8,7 +8,7 @@
     <PackageVersion Include="MinVer" Version="7.0.0"/>
     <PackageVersion Include="stylecop.analyzers" Version="1.2.0-beta.556"/>
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0"/>
-    <PackageVersion Include="Blazor.Common.Analyzers" Version="2.0.0"/>
+    <PackageVersion Include="Blazor.Common.Analyzers" Version="2.1.0"/>
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300"/>
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.27.0.140913"/>
   </ItemGroup>
@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageVersion Include="TUnit" Version="1.48.6"/>
+    <PackageVersion Include="TUnit" Version="1.49.0"/>
     <PackageVersion Include="Verify.TUnit" Version="31.19.0"/>
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.7.0"/>
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8"/>
@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageVersion Include="System.CommandLine" Version="2.0.7"/>
+    <PackageVersion Include="System.CommandLine" Version="2.0.8"/>
     <PackageVersion Include="Polly" Version="8.6.6"/>
     <PackageVersion Include="Polly.RateLimiting" Version="8.6.6"/>
   </ItemGroup>
