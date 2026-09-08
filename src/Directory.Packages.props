@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageVersion Include="Microsoft.Build.Tasks.Git" Version="10.0.303" />
     <PackageVersion Include="MinVer" Version="7.0.0"/>
     <PackageVersion Include="stylecop.analyzers" Version="1.2.0-beta.556"/>
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0"/>
@@ -31,7 +32,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.8"/>
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.8"/>
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.8"/>
-    <PackageVersion Include="System.IO.Hashing" Version="10.0.8"/>
+    <PackageVersion Include="System.IO.Hashing" Version="10.0.11"/>
   </ItemGroup>
 
   <ItemGroup>
