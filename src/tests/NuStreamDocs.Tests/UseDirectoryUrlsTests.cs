@@ -39,7 +39,7 @@ public class UseDirectoryUrlsTests
     public async Task DirectoryUrlsKeepIndexMdFlat()
     {
         var path = OutputPathBuilder.ForDirectoryUrls("/out", "guide/index.md");
-        await Assert.That(path).IsEqualTo($"/out{Sep}guide/index.html");
+        await Assert.That(path.Value).IsEqualTo(Path.Combine("/out", "guide", "index.html"));
     }
 
     /// <summary>Index filename casing does not change the directory URL's output filename.</summary>
