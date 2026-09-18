@@ -75,7 +75,7 @@ jobs:
                       /o:"glennawatson" \
                       /d:sonar.token="${SONAR_TOKEN}" \
                       /d:sonar.host.url="https://sonarcloud.io" \
-                      /d:sonar.cs.vscoveragexml.reportsPaths="**/TestResults/**/sonar-coverage.xml" \
+                      /d:sonar.cs.vscoveragexml.reportsPaths="**/TestResults/**/*.xml" \
                       /d:sonar.exclusions="**/tests/**,**/benchmarks/**,**/tools/**" \
                       /d:sonar.coverage.exclusions="**/tests/**,**/benchmarks/**,**/tools/**" \
                       /d:sonar.cpd.exclusions="**/tests/**,**/benchmarks/**,**/tools/**" \
@@ -87,7 +87,7 @@ jobs:
 
             -   name: Test with MTP coverage
                 working-directory: src
-                run: dotnet test --solution NuStreamDocs.slnx --configuration Release --no-restore -- --coverage --coverage-output-format xml --coverage-output sonar-coverage.xml
+                run: dotnet test --solution NuStreamDocs.slnx --configuration Release --no-restore -- --coverage --coverage-output-format xml
 
             -   name: End Sonar analysis
                 working-directory: src
