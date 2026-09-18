@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RoslynCommonAnalyzersVersion>5.1.0</RoslynCommonAnalyzersVersion>
+    <RoslynCommonAnalyzersVersion>5.1.1</RoslynCommonAnalyzersVersion>
     <SourceDocParserVersion>2.2.0</SourceDocParserVersion>
   </PropertyGroup>
 
