@@ -73,10 +73,7 @@ public static class LuaLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, },
 
             // --[[ ... ]] block comment — must precede the line-comment rule.
             new(MatchDashBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = DashFirst },
@@ -88,24 +85,15 @@ public static class LuaLexer
             new(MatchLongString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = BracketFirst },
 
             // Regular strings.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = DoubleQuoteFirst
-            },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst, },
             new(
                 static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
                 TokenClass.StringSingle,
                 LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst },
 
             // Numbers.
-            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
-            {
-                FirstBytes = TokenMatchers.AsciiDigits
-            },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
-            {
-                FirstBytes = TokenMatchers.AsciiDigits
-            },
+            new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, },
+            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, },
 
             // Keywords.
             new(
@@ -121,10 +109,7 @@ public static class LuaLexer
                 TokenClass.Keyword,
                 LexerRule.NoStateChange) { FirstBytes = KeywordFirst },
 
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
-            {
-                FirstBytes = TokenMatchers.AsciiIdentifierStart
-            },
+            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, },
             new(
                 static slice => TokenMatchers.MatchLongestLiteral(slice, OperatorTable),
                 TokenClass.Operator,
@@ -160,15 +145,9 @@ public static class LuaLexer
     /// <summary>Matches a Lua <c>--</c> line comment to end-of-line.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
-    private static int MatchDashLineComment(ReadOnlySpan<byte> slice)
-    {
-        if (slice.Length < LineCommentPrefixLength || slice[0] is not (byte)'-' || slice[1] is not (byte)'-')
-        {
-            return 0;
-        }
-
-        return LineCommentPrefixLength + TokenMatchers.LineLength(slice[LineCommentPrefixLength..]);
-    }
+    private static int MatchDashLineComment(ReadOnlySpan<byte> slice) => slice.Length < LineCommentPrefixLength || slice[0] is not (byte)'-' || slice[1] is not (byte)'-'
+        ? 0
+        : LineCommentPrefixLength + TokenMatchers.LineLength(slice[LineCommentPrefixLength..]);
 
     /// <summary>Matches a Lua long-string literal <c>[[ ... ]]</c> with optional level markers <c>[==[ ... ]==]</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
@@ -192,13 +171,7 @@ public static class LuaLexer
             pos++;
         }
 
-        if (pos >= slice.Length || slice[pos] is not (byte)'[')
-        {
-            return 0;
-        }
-
-        var levelCount = pos - 1;
-        return ScanLongStringClose(slice, pos + 1, levelCount);
+        return pos >= slice.Length || slice[pos] is not (byte)'[' ? 0 : ScanLongStringClose(slice, pos + 1, pos - 1);
     }
 
     /// <summary>Walks a long-string body until a matching <c>]</c> + <paramref name="levelCount"/> <c>=</c>s + <c>]</c> closer.</summary>

@@ -95,8 +95,8 @@ public class BlogPostScannerExcerptTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-bpsx-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-bpsx-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

@@ -56,7 +56,7 @@ internal static class TocFragmentRenderer
     /// <param name="headings">Headings (already slug-assigned).</param>
     /// <param name="options">Plugin options (filters by min/max level).</param>
     /// <param name="writer">Output sink.</param>
-    public static void Render(
+    internal static void Render(
         ReadOnlySpan<byte> snapshot,
         Heading[] headings,
         in TocOptions options,
@@ -124,7 +124,7 @@ internal static class TocFragmentRenderer
         var poppedSibling = false;
         while (stack.TryPeek(out var top) && top >= heading.Level)
         {
-            stack.Pop();
+            _ = stack.Pop();
             Utf8StringWriter.Write(writer, LiClose);
 
             if (top == heading.Level)
@@ -271,10 +271,13 @@ internal static class TocFragmentRenderer
         var idx = 0;
         for (var i = 0; i < headings.Length; i++)
         {
-            if (headings[i].Level >= min && headings[i].Level <= max)
+            if (headings[i].Level < min || headings[i].Level > max)
             {
-                result[idx++] = headings[i];
+                continue;
             }
+
+            var headingIndex = idx++;
+            result[headingIndex] = headings[i];
         }
 
         return result;

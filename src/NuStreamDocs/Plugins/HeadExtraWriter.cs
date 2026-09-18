@@ -6,9 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Plugins;
 
-/// <summary>
-/// Provides utility methods for writing UTF-8 encoded content to a specified buffer writer.
-/// </summary>
+/// <summary>Provides utility methods for writing UTF-8 encoded content to a specified buffer writer.</summary>
 public static class HeadExtraWriter
 {
     /// <summary>Bulk-writes <paramref name="bytes"/> to <paramref name="writer"/>.</summary>

@@ -84,16 +84,13 @@ public class DocBuilderServeExtensionsTests
         await Assert.That(invocations).IsEqualTo(1);
     }
 
-    /// <summary>
-    /// Builds a minimal <see cref="DocBuilder"/> pointed at fresh scratch input/output dirs;
-    /// sufficient for the validation paths under test.
-    /// </summary>
+    /// <summary>Builds a minimal <see cref="DocBuilder"/> pointed at scratch directories for argument validation.</summary>
     /// <returns>A configured builder.</returns>
     private static DocBuilder NewBuilder()
     {
-        var input = Path.Combine(Path.GetTempPath(), "smd-serve-in-" + Guid.NewGuid().ToString("N"));
-        var output = Path.Combine(Path.GetTempPath(), "smd-serve-out-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(input);
+        var input = Path.Combine(Path.GetTempPath(), $"smd-serve-in-{Guid.NewGuid():N}");
+        var output = Path.Combine(Path.GetTempPath(), $"smd-serve-out-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(input);
         return new DocBuilder().WithInput(input).WithOutput(output);
     }
 }

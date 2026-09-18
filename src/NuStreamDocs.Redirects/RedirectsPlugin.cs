@@ -15,6 +15,7 @@ using NuStreamDocs.Yaml;
 namespace NuStreamDocs.Redirects;
 
 /// <summary>Emits the <c>_redirects</c> file, per-redirect meta-refresh HTML pages, and the <c>_headers</c> file at the end of the build.</summary>
+[System.Diagnostics.DebuggerDisplay("RedirectsPlugin: {Name}")]
 public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin
 {
     /// <summary>Byte separators that delimit entries inside a <c>redirect_from</c> frontmatter value (whitespace, commas, flow-list brackets, quotes).</summary>
@@ -67,6 +68,9 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
     /// <inheritdoc/>
     public PluginPriority FinalizePriority => PluginPriority.Normal;
 
+    /// <summary>Gets the html extension.</summary>
+    private static ApiCompatString HtmlExtension => ".html";
+
     /// <inheritdoc/>
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
@@ -91,7 +95,7 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
             return;
         }
 
-        var pagePath = _useDirectoryUrls ? context.RelativePath : context.RelativePath.WithExtension(".html");
+        var pagePath = _useDirectoryUrls ? context.RelativePath : context.RelativePath.WithExtension(HtmlExtension);
         var target = ServedUrlBytes.FromPath(pagePath, _useDirectoryUrls, true);
         var start = 0;
         for (var i = 0; i <= raw.Length; i++)
@@ -172,8 +176,8 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
     /// <returns>The merged redirect list.</returns>
     private List<RedirectRule> MergeRedirects()
     {
-        List<RedirectRule> merged = new(_options.Redirects.Length + _scanned.Count);
-        HashSet<byte[]> seen = new(ByteArrayComparer.Instance);
+        List<RedirectRule> merged = [with(_options.Redirects.Length + _scanned.Count)];
+        HashSet<byte[]> seen = [with(ByteArrayComparer.Instance)];
         for (var i = 0; i < _options.Redirects.Length; i++)
         {
             var rule = _options.Redirects[i];
@@ -241,7 +245,7 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
             var dir = Path.GetDirectoryName(targetFile);
             if (!string.IsNullOrEmpty(dir))
             {
-                Directory.CreateDirectory(dir);
+                _ = Directory.CreateDirectory(dir);
             }
 
             ArrayBufferWriter<byte> sink = new();
@@ -262,17 +266,17 @@ public sealed class RedirectsPlugin : IBuildConfigurePlugin, IPageScanPlugin, IB
             return "index.html";
         }
 
-        if (rel.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
-            rel.EndsWith(".htm", StringComparison.OrdinalIgnoreCase))
+        if (rel.EndsWith(HtmlExtension, StringComparison.OrdinalIgnoreCase)
+            || rel.EndsWith(".htm", StringComparison.OrdinalIgnoreCase))
         {
             return rel;
         }
 
         if (rel.EndsWith('/'))
         {
-            return rel + "index.html";
+            return $"{rel}index.html";
         }
 
-        return rel + (_useDirectoryUrls ? "/index.html" : ".html");
+        return rel + (_useDirectoryUrls ? "/index.html" : HtmlExtension);
     }
 }

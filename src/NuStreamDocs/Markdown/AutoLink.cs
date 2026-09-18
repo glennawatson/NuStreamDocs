@@ -8,10 +8,7 @@ using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Markdown;
 
-/// <summary>
-/// Autolink handler. Recognizes <c>&lt;https://...&gt;</c> /
-/// <c>&lt;mailto:...&gt;</c> / any scheme followed by <c>://</c>.
-/// </summary>
+/// <summary>Autolink handler. Recognizes <c>&lt;https://...&gt;</c> / <c>&lt;mailto:...&gt;</c> / any scheme followed by <c>://</c>.</summary>
 internal static class AutoLink
 {
     /// <summary>Less-than byte.</summary>
@@ -26,15 +23,13 @@ internal static class AutoLink
     /// <summary>Minimum scheme name length per CommonMark §6.5.</summary>
     private const int MinSchemeLength = 2;
 
-    /// <summary>
-    /// Handles an open angle bracket at <paramref name="pos"/>.
-    /// </summary>
+    /// <summary>Handles an open angle bracket at <paramref name="pos"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="pos">Cursor; advanced past the close bracket on success.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when an autolink was emitted.</returns>
-    public static bool TryHandle(
+    internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
@@ -70,7 +65,7 @@ internal static class AutoLink
     /// <param name="source">UTF-8 source.</param>
     /// <param name="from">First byte to consider.</param>
     /// <returns>Index of the close, or -1.</returns>
-    public static int FindClose(ReadOnlySpan<byte> source, int from)
+    internal static int FindClose(ReadOnlySpan<byte> source, int from)
     {
         for (var i = from; i < source.Length; i++)
         {
@@ -89,7 +84,7 @@ internal static class AutoLink
     /// <summary>True when <paramref name="content"/> is a CommonMark URI autolink.</summary>
     /// <param name="content">Slice between the angle brackets.</param>
     /// <returns>True when the slice has the form <c>scheme:rest</c>.</returns>
-    public static bool IsAutolink(ReadOnlySpan<byte> content)
+    internal static bool IsAutolink(ReadOnlySpan<byte> content)
     {
         var colon = content.IndexOf(Colon);
         if (colon < MinSchemeLength)
@@ -105,8 +100,8 @@ internal static class AutoLink
         for (var i = 1; i < colon; i++)
         {
             var b = content[i];
-            if (!AsciiByteHelpers.IsAsciiLetter(b) && !AsciiByteHelpers.IsAsciiDigit(b) &&
-                b is not ((byte)'+' or (byte)'-' or (byte)'.'))
+            if (!AsciiByteHelpers.IsAsciiLetter(b) && !AsciiByteHelpers.IsAsciiDigit(b)
+                && b is not ((byte)'+' or (byte)'-' or (byte)'.'))
             {
                 return false;
             }

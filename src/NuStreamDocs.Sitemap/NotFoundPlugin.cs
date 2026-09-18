@@ -11,6 +11,7 @@ namespace NuStreamDocs.Sitemap;
 /// No-ops when a <c>404.html</c> is already present (e.g. produced from
 /// a user-supplied <c>404.md</c>).
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("NotFoundPlugin: {Name}")]
 public sealed class NotFoundPlugin : IBuildFinalizePlugin
 {
     /// <summary>UTF-8 bytes of the default 404 document.</summary>

@@ -11,12 +11,39 @@ namespace NuStreamDocs.Nav.Tests;
 /// <summary>Tests for <see cref="SyntheticNavGrafter"/>.</summary>
 public class SyntheticNavGrafterTests
 {
+    /// <summary>The ApiIndexPath fixture value.</summary>
+    private const string ApiIndexPath = "api/index.md";
+
+    /// <summary>The DocumentationDirectory fixture value.</summary>
+    private const string DocumentationDirectory = "documentation";
+
+    /// <summary>The DocumentationIndexPath fixture value.</summary>
+    private const string DocumentationIndexPath = "documentation/index.md";
+
+    /// <summary>The ApiReferenceTitle fixture value.</summary>
+    private const string ApiReferenceTitle = "API Reference";
+
+    /// <summary>The ArticlesDirectory fixture value.</summary>
+    private const string ArticlesDirectory = "articles";
+
+    /// <summary>The ArticlesIndexPath fixture value.</summary>
+    private const string ArticlesIndexPath = "articles/index.md";
+
+    /// <summary>The OlderArticlePath fixture value.</summary>
+    private const string OlderArticlePath = "articles/2013-02-27-old.md";
+
+    /// <summary>The NewerArticlePath fixture value.</summary>
+    private const string NewerArticlePath = "articles/2026-05-07-new.md";
+
+    /// <summary>Gets the ApiReferenceTitle fixture value.</summary>
+    private static ReadOnlySpan<byte> ApiReferenceTitleBytes => "API Reference"u8;
+
     /// <summary>An empty entry list returns the same root instance untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptyEntriesReturnsSameRoot()
     {
-        var root = Root(Section("documentation", "documentation/index.md"));
+        var root = Root(Section(DocumentationDirectory, DocumentationIndexPath));
         var result = SyntheticNavGrafter.Graft(root, [], true);
         await Assert.That(result).IsSameReferenceAs(root);
     }
@@ -26,17 +53,18 @@ public class SyntheticNavGrafterTests
     [Test]
     public async Task IndexEntryGraftsSection()
     {
-        var root = Root(Section("documentation", "documentation/index.md"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API Reference"u8], 2, false);
+        const int ExpectedOrder = 2;
+        var root = Root(Section(DocumentationDirectory, DocumentationIndexPath));
+        SyntheticNavEntry entry = new((FilePath)ApiIndexPath, [.. ApiReferenceTitleBytes], ExpectedOrder, false);
 
         var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
         var api = FindChild(result, "api");
         await Assert.That(api).IsNotNull();
         await Assert.That(api!.IsSection).IsTrue();
-        await Assert.That(api.IndexPath.Value).IsEqualTo("api/index.md");
-        await Assert.That(Encoding.UTF8.GetString(api.Title)).IsEqualTo("API Reference");
-        await Assert.That(api.Order).IsEqualTo(2);
+        await Assert.That(api.IndexPath.Value).IsEqualTo(ApiIndexPath);
+        await Assert.That(Encoding.UTF8.GetString(api.Title)).IsEqualTo(ApiReferenceTitle);
+        await Assert.That(api.Order).IsEqualTo(ExpectedOrder);
     }
 
     /// <summary>When a disk section already has an index page, the synthetic entry is ignored — disk wins.</summary>
@@ -44,8 +72,9 @@ public class SyntheticNavGrafterTests
     [Test]
     public async Task CompleteDiskSectionWins()
     {
-        var root = Root(Section("api", "api/index.md", "Hand-written API"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "Generated API"u8], 2, false);
+        var root = Root(Section("api", ApiIndexPath, "Hand-written API"));
+        const int SyntheticOrder = 2;
+        SyntheticNavEntry entry = new((FilePath)ApiIndexPath, [.. "Generated API"u8], SyntheticOrder, false);
 
         var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
@@ -58,18 +87,20 @@ public class SyntheticNavGrafterTests
     [Test]
     public async Task IncompleteDiskSectionMergesSyntheticIndex()
     {
+        const int ExpectedOrder = 3;
+
         // Mirrors the blog case: docs/articles/ has post .md files but no index.md on disk.
         var posts = new NavNode("2025-01-01-post", (FilePath)"articles/2025-01-01-post.md", false, [], true);
-        var diskArticles = new NavNode("articles", (FilePath)"articles", true, [posts], default, true);
+        var diskArticles = new NavNode(ArticlesDirectory, (FilePath)ArticlesDirectory, true, [posts], default, true);
         var root = Root(diskArticles);
-        SyntheticNavEntry entry = new((FilePath)"articles/index.md", [.. "Release Notes"u8], 3, false);
+        SyntheticNavEntry entry = new((FilePath)ArticlesIndexPath, [.. "Release Notes"u8], ExpectedOrder, false);
 
         var result = SyntheticNavGrafter.Graft(root, [entry], true);
-        var articles = FindChild(result, "articles")!;
+        var articles = FindChild(result, ArticlesDirectory)!;
 
-        await Assert.That(articles.IndexPath.Value).IsEqualTo("articles/index.md");
+        await Assert.That(articles.IndexPath.Value).IsEqualTo(ArticlesIndexPath);
         await Assert.That(Encoding.UTF8.GetString(articles.Title)).IsEqualTo("Release Notes");
-        await Assert.That(articles.Order).IsEqualTo(3);
+        await Assert.That(articles.Order).IsEqualTo(ExpectedOrder);
         await Assert.That(articles.Children.Length).IsEqualTo(1);
         await Assert.That(articles.Children[0].RelativePath.Value).IsEqualTo("articles/2025-01-01-post.md");
     }
@@ -79,31 +110,34 @@ public class SyntheticNavGrafterTests
     [Test]
     public async Task SyntheticPageEntryTransfersOrderOntoDiskPage()
     {
+        const int ExpectedCount = 2;
+
         // Disk: an `articles` section with no index page, two date-prefixed posts (filename order = oldest first).
-        var oldPost = new NavNode("Old Post", (FilePath)"articles/2013-02-27-old.md", false, [], true);
-        var newPost = new NavNode("New Post", (FilePath)"articles/2026-05-07-new.md", false, [], true);
-        var diskArticles = new NavNode("articles", (FilePath)"articles", true, [oldPost, newPost], default, true);
+        var oldPost = new NavNode("Old Post", (FilePath)OlderArticlePath, false, [], true);
+        var newPost = new NavNode("New Post", (FilePath)NewerArticlePath, false, [], true);
+        var diskArticles = new NavNode(ArticlesDirectory, (FilePath)ArticlesDirectory, true, [oldPost, newPost], default, true);
         var root = Root(diskArticles);
 
         // Synthetic: the blog index entry plus per-post entries carrying ascending Order (0 = newest).
+        const int SectionOrder = 3;
         SyntheticNavEntry[] entries =
         [
-            new((FilePath)"articles/index.md", [.. "Articles"u8], 3, false),
-            new((FilePath)"articles/2026-05-07-new.md", null, 0, false),
-            new((FilePath)"articles/2013-02-27-old.md", null, 1, false)
+            new((FilePath)ArticlesIndexPath, [.. "Articles"u8], SectionOrder, false),
+            new((FilePath)NewerArticlePath, null, 0, false),
+            new((FilePath)OlderArticlePath, null, 1, false)
         ];
 
         var result = SyntheticNavGrafter.Graft(root, entries, true);
-        var articles = FindChild(result, "articles")!;
+        var articles = FindChild(result, ArticlesDirectory)!;
 
-        await Assert.That(articles.IndexPath.Value).IsEqualTo("articles/index.md");
-        await Assert.That(articles.Children.Length).IsEqualTo(2);
+        await Assert.That(articles.IndexPath.Value).IsEqualTo(ArticlesIndexPath);
+        await Assert.That(articles.Children.Length).IsEqualTo(ExpectedCount);
 
         // Newest first (Order 0 then 1), and each post keeps its disk-frontmatter title.
-        await Assert.That(articles.Children[0].RelativePath.Value).IsEqualTo("articles/2026-05-07-new.md");
+        await Assert.That(articles.Children[0].RelativePath.Value).IsEqualTo(NewerArticlePath);
         await Assert.That(articles.Children[0].Order).IsEqualTo(0);
         await Assert.That(Encoding.UTF8.GetString(articles.Children[0].Title)).IsEqualTo("New Post");
-        await Assert.That(articles.Children[1].RelativePath.Value).IsEqualTo("articles/2013-02-27-old.md");
+        await Assert.That(articles.Children[1].RelativePath.Value).IsEqualTo(OlderArticlePath);
         await Assert.That(articles.Children[1].Order).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(articles.Children[1].Title)).IsEqualTo("Old Post");
     }
@@ -113,8 +147,8 @@ public class SyntheticNavGrafterTests
     [Test]
     public async Task HiddenEntryProducesNoSection()
     {
-        var root = Root(Section("documentation", "documentation/index.md"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API"u8], null, true);
+        var root = Root(Section(DocumentationDirectory, DocumentationIndexPath));
+        SyntheticNavEntry entry = new((FilePath)ApiIndexPath, [.. "API"u8], null, true);
 
         var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
@@ -126,10 +160,11 @@ public class SyntheticNavGrafterTests
     [Test]
     public async Task NestedEntriesBuildSubtree()
     {
+        const int SectionOrder = 2;
         var root = Root();
         SyntheticNavEntry[] entries =
         [
-            new((FilePath)"api/index.md", [.. "API Reference"u8], 2, false),
+            new((FilePath)ApiIndexPath, [.. ApiReferenceTitleBytes], SectionOrder, false),
             new((FilePath)"api/ReactiveUI/index.md", [.. "ReactiveUI"u8], null, false),
             new((FilePath)"api/ReactiveUI/ReactiveCommand.md", [.. "ReactiveCommand"u8], null, false)
         ];
@@ -152,17 +187,18 @@ public class SyntheticNavGrafterTests
     [Test]
     public async Task OrderedSectionSortsAmongSiblings()
     {
+        const int ExpectedCount = 3;
         var root = Root(
-            Section("documentation", "documentation/index.md"),
+            Section(DocumentationDirectory, DocumentationIndexPath),
             Section("vs", "vs/index.md"));
-        SyntheticNavEntry entry = new((FilePath)"api/index.md", [.. "API Reference"u8], 1, false);
+        SyntheticNavEntry entry = new((FilePath)ApiIndexPath, [.. ApiReferenceTitleBytes], 1, false);
 
         var result = SyntheticNavGrafter.Graft(root, [entry], true);
 
         // Order 1 < int.MaxValue, so api comes first; the unordered disk sections keep alpha order after it.
-        await Assert.That(result.Children.Length).IsEqualTo(3);
+        await Assert.That(result.Children.Length).IsEqualTo(ExpectedCount);
         await Assert.That(result.Children[0].RelativePath.Value).IsEqualTo("api");
-        await Assert.That(result.Children[1].RelativePath.Value).IsEqualTo("documentation");
+        await Assert.That(result.Children[1].RelativePath.Value).IsEqualTo(DocumentationDirectory);
         await Assert.That(result.Children[2].RelativePath.Value).IsEqualTo("vs");
     }
 

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -23,6 +24,9 @@ namespace NuStreamDocs.Search.Pagefind.Tests;
 /// </remarks>
 public class PagefindCliIntegrationTests
 {
+    /// <summary>Pagefind executable and output directory name.</summary>
+    private const string PagefindName = "pagefind";
+
     /// <summary>Pinned-version sanity: <see cref="PagefindCli.PinnedVersion"/> matches the upstream tag we ship.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -63,7 +67,7 @@ public class PagefindCliIntegrationTests
         var ran = await PagefindCli.RunAsync(siteRoot, options, NullLogger.Instance, CancellationToken.None);
         await Assert.That(ran).IsTrue();
 
-        var pagefindDir = Path.Combine(dir.Root, "pagefind");
+        var pagefindDir = Path.Combine(dir.Root, PagefindName);
         await Assert.That(Directory.Exists(pagefindDir)).IsTrue();
 
         var loader = Path.Combine(pagefindDir, "pagefind.js");
@@ -84,7 +88,133 @@ public class PagefindCliIntegrationTests
             NullLogger.Instance,
             CancellationToken.None);
         await Assert.That(ran).IsFalse();
-        await Assert.That(Directory.Exists(Path.Combine(dir.Root, "pagefind"))).IsFalse();
+        await Assert.That(Directory.Exists(Path.Combine(dir.Root, PagefindName))).IsFalse();
+    }
+
+    /// <summary>Normal exit codes determine whether invocation succeeds.</summary>
+    /// <param name="exitCode">Exit code returned by the child process.</param>
+    /// <param name="expected">Expected success result.</param>
+    /// <param name="cancellationToken">Test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(0, true)]
+    [Arguments(23, false)]
+    [Arguments(143, false)]
+    public async Task RunAsync_NormalExit_ReturnsSuccess(int exitCode, bool expected, CancellationToken cancellationToken)
+    {
+        using var dir = new TempDir();
+        var binary = await WriteExecutableAsync(dir.Root, $"exit {exitCode}", cancellationToken);
+        var options = PagefindOptions.Default with { BinaryPath = binary };
+
+        var result = await PagefindCli.RunAsync(dir.Root, options, NullLogger.Instance, cancellationToken);
+
+        await Assert.That(result).IsEqualTo(expected);
+    }
+
+    /// <summary>Strict failures preserve the ordinary exit code and captured stderr.</summary>
+    /// <param name="cancellationToken">Test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task RunAsync_StrictNormalExit_ReportsExitCode(CancellationToken cancellationToken)
+    {
+        using var dir = new TempDir();
+        var binary = await WriteExecutableAsync(dir.Root, "echo indexing-failed >&2\nexit 143", cancellationToken);
+        var options = PagefindOptions.Default with { BinaryPath = binary, StrictBinaryRequired = true };
+
+        var exception = await Assert.That(() => PagefindCli.RunAsync(dir.Root, options, NullLogger.Instance, cancellationToken))
+            .Throws<InvalidOperationException>();
+
+        await Assert.That(exception).IsNotNull();
+        await Assert.That(exception!.Message).Contains("Pagefind exited with code 143");
+        await Assert.That(exception.Message).Contains("indexing-failed");
+    }
+
+    /// <summary>Signal termination fails the invocation and is identified separately on .NET 11.</summary>
+    /// <param name="strict">Whether failure throws instead of returning false.</param>
+    /// <param name="cancellationToken">Test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task RunAsync_SignalTermination_ReportsFailure(bool strict, CancellationToken cancellationToken)
+    {
+        using var dir = new TempDir();
+        var binary = await WriteExecutableAsync(dir.Root, "echo interrupted >&2\nkill -TERM $$", cancellationToken);
+        var options = PagefindOptions.Default with { BinaryPath = binary, StrictBinaryRequired = strict };
+
+        if (!strict)
+        {
+            var result = await PagefindCli.RunAsync(dir.Root, options, NullLogger.Instance, cancellationToken);
+            await Assert.That(result).IsFalse();
+            return;
+        }
+
+        var exception = await Assert.That(() => PagefindCli.RunAsync(dir.Root, options, NullLogger.Instance, cancellationToken))
+            .Throws<InvalidOperationException>();
+        await Assert.That(exception).IsNotNull();
+#if NET11_0_OR_GREATER
+        await Assert.That(exception!.Message).Contains("Pagefind terminated by signal SIGTERM");
+#else
+        await Assert.That(exception!.Message).Contains("Pagefind exited with code 143");
+#endif
+        await Assert.That(exception.Message).Contains("interrupted");
+    }
+
+    /// <summary>Cancellation terminates a child that has closed its output pipes and propagates to the caller.</summary>
+    /// <param name="cancellationToken">Test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Timeout(10_000)]
+    public async Task RunAsync_CanceledAfterOutputCloses_KillsChild(CancellationToken cancellationToken)
+    {
+        const int readinessTimeoutSeconds = 5;
+        using var dir = new TempDir();
+        var binary = await WriteExecutableAsync(
+            dir.Root,
+            "exec 1>&- 2>&-\necho $$ > process.pid\nmv process.pid ready\nexec sleep 60",
+            cancellationToken);
+        var options = PagefindOptions.Default with { BinaryPath = binary, StrictBinaryRequired = true };
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var invocation = PagefindCli.RunAsync(dir.Root, options, NullLogger.Instance, cancellation.Token);
+        var ready = Path.Combine(dir.Root, "ready");
+
+        try
+        {
+            await Assert.That(() => File.Exists(ready)).WaitsFor(
+                static assertion => assertion.IsTrue(),
+                TimeSpan.FromSeconds(readinessTimeoutSeconds),
+                cancellationToken: cancellationToken);
+            var processId = int.Parse(await File.ReadAllTextAsync(ready, cancellationToken), CultureInfo.InvariantCulture);
+            using var child = Process.GetProcessById(processId);
+            await cancellation.CancelAsync();
+
+            await Assert.That(async () => _ = await invocation).Throws<OperationCanceledException>();
+            await child.WaitForExitAsync(cancellationToken);
+            await Assert.That(child.HasExited).IsTrue();
+        }
+        finally
+        {
+            await cancellation.CancelAsync();
+        }
+    }
+
+    /// <summary>Creates a Unix process fixture with the requested exit behavior.</summary>
+    /// <param name="directory">Fixture directory.</param>
+    /// <param name="body">Shell commands executed by the fixture.</param>
+    /// <param name="cancellationToken">Test cancellation token.</param>
+    /// <returns>The executable fixture path.</returns>
+    private static async Task<FilePath> WriteExecutableAsync(string directory, string body, CancellationToken cancellationToken)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            Skip.Test("The process fixture requires a POSIX shell.");
+            return default;
+        }
+
+        var path = Path.Combine(directory, PagefindName);
+        await File.WriteAllTextAsync(path, $"#!/bin/sh\n{body}\n", cancellationToken);
+        File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        return new(path);
     }
 
     /// <summary>Probe that mirrors the runner's resolution order — true when a binary will be found at run time.</summary>
@@ -92,7 +222,7 @@ public class PagefindCliIntegrationTests
     private static bool IsBinaryAvailable()
     {
         var rid = RuntimeInformation.RuntimeIdentifier;
-        var fileName = OperatingSystem.IsWindows() ? "pagefind.exe" : "pagefind";
+        var fileName = OperatingSystem.IsWindows() ? "pagefind.exe" : PagefindName;
         var probe = Path.Combine(AppContext.BaseDirectory, "runtimes", rid, "native", fileName);
         return File.Exists(probe);
     }
@@ -105,8 +235,8 @@ public class PagefindCliIntegrationTests
         {
             Root = Path.Combine(
                 Path.GetTempPath(),
-                "smkd-pf-cli-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(Root);
+                $"smkd-pf-cli-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch root.</summary>

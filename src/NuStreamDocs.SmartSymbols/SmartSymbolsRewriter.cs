@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.SmartSymbols;
@@ -74,7 +75,8 @@ internal static class SmartSymbolsRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
         CodeAwareRewriter.Run(source, writer, TrySubstitute);
 
     /// <summary>Tries every smart-symbol pattern at <paramref name="offset"/>; emits the replacement and reports the consumed byte count on success.</summary>

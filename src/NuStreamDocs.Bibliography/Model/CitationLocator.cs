@@ -4,13 +4,11 @@
 
 namespace NuStreamDocs.Bibliography.Model;
 
-/// <summary>
-/// Pinpoint locator inside a citation — the <c>p 23</c>, <c>[12]</c>,
-/// <c>ch 4</c> portion that pandoc captures in <c>[@key, p 23]</c>.
-/// </summary>
+/// <summary>Pinpoint locator inside a citation — the <c>p 23</c>, <c>[12]</c>, <c>ch 4</c> portion that pandoc captures in <c>[@key, p 23]</c>.</summary>
 /// <param name="Kind">Classified locator kind; <see cref="LocatorKind.None"/> when bare.</param>
 /// <param name="Start">Inclusive byte offset of the value within the rewriter's source span.</param>
 /// <param name="Length">Byte length of the value within the source span; zero when no value.</param>
+[System.Diagnostics.DebuggerDisplay("CitationLocator: {HasValue}")]
 public readonly record struct CitationLocator(LocatorKind Kind, int Start, int Length)
 {
     /// <summary>Gets the empty / no-locator sentinel.</summary>

@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Buffers.Text;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Nav;
@@ -18,6 +19,18 @@ internal static class NavRenderer
     /// <summary>Sentinel used for "no parent" (root) and "no children" (leaf) and "no active node".</summary>
     private const int NoIndex = -1;
 
+    /// <summary>Separators that distinguish nested pages from home pages.</summary>
+    private static readonly SearchValues<char> PathSeparators = SearchValues.Create("/\\");
+
+    /// <summary>Gets the navigation list open bytes.</summary>
+    private static ReadOnlySpan<byte> NavigationListOpen => "<ul class=\"md-nav__list\" data-md-scrollfix>"u8;
+
+    /// <summary>Gets the navigation list close bytes.</summary>
+    private static ReadOnlySpan<byte> NavigationListClose => "</ul>"u8;
+
+    /// <summary>Gets the span close bytes.</summary>
+    private static ReadOnlySpan<byte> SpanClose => "</span>"u8;
+
     /// <summary>Emits the full nav tree, marking the active branch derived from <paramref name="activeIndex"/>.</summary>
     /// <param name="tree">Flat nav tree.</param>
     /// <param name="activeIndex">Index of the active node in <paramref name="tree"/>, or <c>-1</c> when no page is active.</param>
@@ -26,7 +39,7 @@ internal static class NavRenderer
         "Roslynator",
         "RCS1118:Mark local variable as const",
         Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
-    public static void RenderFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
+    internal static void RenderFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
@@ -44,7 +57,7 @@ internal static class NavRenderer
         "Roslynator",
         "RCS1118:Mark local variable as const",
         Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
-    public static void RenderSidebarFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
+    internal static void RenderSidebarFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
@@ -61,7 +74,7 @@ internal static class NavRenderer
         "Roslynator",
         "RCS1118:Mark local variable as const",
         Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
-    public static void RenderPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
+    internal static void RenderPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
@@ -79,7 +92,7 @@ internal static class NavRenderer
         "Roslynator",
         "RCS1118:Mark local variable as const",
         Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
-    public static void RenderSidebarPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
+    internal static void RenderSidebarPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
         var chain = BuildActiveBranchChain(tree, activeIndex, chainBuffer);
@@ -92,7 +105,8 @@ internal static class NavRenderer
     /// <param name="tree">Flat nav tree.</param>
     /// <param name="activeIndex">Active node index, or <c>-1</c> when no page is active.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RenderTabs(NavTree tree, int activeIndex, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void RenderTabs(NavTree tree, int activeIndex, IBufferWriter<byte> writer) =>
         RenderTabs(tree, activeIndex, writer, false, default);
 
     /// <summary>Emits the top-level tab strip with optional synthetic Home tab.</summary>
@@ -101,7 +115,7 @@ internal static class NavRenderer
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="includeHomeTab">When true, prepends a synthetic Home tab whose href is the site root.</param>
     /// <param name="homeTabLabel">UTF-8 label for the Home tab; ignored when <paramref name="includeHomeTab"/> is false.</param>
-    public static void RenderTabs(
+    internal static void RenderTabs(
         NavTree tree,
         int activeIndex,
         IBufferWriter<byte> writer,
@@ -138,9 +152,9 @@ internal static class NavRenderer
     /// <summary>Indexes every node in <paramref name="tree"/> by UTF-8 URL bytes so per-page rendering can resolve the active node in O(1).</summary>
     /// <param name="tree">Flat nav tree.</param>
     /// <returns>UTF-8 URL bytes → node index map.</returns>
-    public static Dictionary<byte[], int> BuildUrlIndex(NavTree tree)
+    internal static Dictionary<byte[], int> BuildUrlIndex(NavTree tree)
     {
-        Dictionary<byte[], int> index = new(tree.Nodes.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], int> index = [with(tree.Nodes.Length, ByteArrayComparer.Instance)];
         var nodes = tree.Nodes;
         for (var i = 0; i < nodes.Length; i++)
         {
@@ -181,7 +195,8 @@ internal static class NavRenderer
         var nodes = tree.Nodes;
         while (current >= 0 && count < buffer.Length)
         {
-            buffer[count++] = current;
+            buffer[count] = current;
+            count++;
             current = nodes[current].ParentIndex;
         }
 
@@ -215,15 +230,15 @@ internal static class NavRenderer
             return false;
         }
 
-        var relative = node.RelativePath.Value;
-        if (string.IsNullOrEmpty(relative))
+        var relative = node.RelativePath;
+        if (relative.IsEmpty)
         {
             return false;
         }
 
-        return relative.AsSpan().IndexOfAny(['/', '\\']) < 0
-               && (string.Equals(relative, "index.md", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(relative, "README.md", StringComparison.OrdinalIgnoreCase));
+        return relative.Value.AsSpan().IndexOfAny(PathSeparators) < 0
+               && (string.Equals(relative.Value, "index.md", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(relative.Value, "README.md", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>Resolves the scoped primary-sidebar item range for the active page and emits the resulting list.</summary>
@@ -276,7 +291,7 @@ internal static class NavRenderer
         // section header around a one-page subtree.
         if (activeSection.ChildCount is 1 && !ctx.Tree.Nodes[activeSection.FirstChildIndex].IsSection)
         {
-            WriteUtf8(ctx.Writer, "<ul class=\"md-nav__list\" data-md-scrollfix>"u8);
+            WriteUtf8(ctx.Writer, NavigationListOpen);
             if (homeIdx >= 0)
             {
                 WriteItem(in ctx, homeIdx, 0, ref toggleCounter);
@@ -287,18 +302,18 @@ internal static class NavRenderer
                 WriteItem(in ctx, activeSection.FirstChildIndex + i, 0, ref toggleCounter);
             }
 
-            WriteUtf8(ctx.Writer, "</ul>"u8);
+            WriteUtf8(ctx.Writer, NavigationListClose);
             return;
         }
 
-        WriteUtf8(ctx.Writer, "<ul class=\"md-nav__list\" data-md-scrollfix>"u8);
+        WriteUtf8(ctx.Writer, NavigationListOpen);
         if (homeIdx >= 0)
         {
             WriteItem(in ctx, homeIdx, 0, ref toggleCounter);
         }
 
         WriteItem(in ctx, activeSectionIdx, 0, ref toggleCounter);
-        WriteUtf8(ctx.Writer, "</ul>"u8);
+        WriteUtf8(ctx.Writer, NavigationListClose);
     }
 
     /// <summary>Writes a list of items in a span over <see cref="NavTree.Nodes"/>.</summary>
@@ -319,13 +334,13 @@ internal static class NavRenderer
             return;
         }
 
-        WriteUtf8(ctx.Writer, "<ul class=\"md-nav__list\" data-md-scrollfix>"u8);
+        WriteUtf8(ctx.Writer, NavigationListOpen);
         for (var i = 0; i < childCount; i++)
         {
             WriteItem(in ctx, firstChild + i, level, ref toggleCounter);
         }
 
-        WriteUtf8(ctx.Writer, "</ul>"u8);
+        WriteUtf8(ctx.Writer, NavigationListClose);
     }
 
     /// <summary>Writes one <c>&lt;li&gt;</c> for either a section or a leaf page.</summary>
@@ -365,12 +380,7 @@ internal static class NavRenderer
                 return "<li class=\"md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested\">"u8;
             }
 
-            if (prune)
-            {
-                return "<li class=\"md-nav__item md-nav__item--pruned md-nav__item--nested\">"u8;
-            }
-
-            return "<li class=\"md-nav__item md-nav__item--nested\">"u8;
+            return prune ? "<li class=\"md-nav__item md-nav__item--pruned md-nav__item--nested\">"u8 : "<li class=\"md-nav__item md-nav__item--nested\">"u8;
         }
 
         if (active)
@@ -378,12 +388,7 @@ internal static class NavRenderer
             return "<li class=\"md-nav__item md-nav__item--active\">"u8;
         }
 
-        if (prune)
-        {
-            return "<li class=\"md-nav__item md-nav__item--pruned\">"u8;
-        }
-
-        return "<li class=\"md-nav__item\">"u8;
+        return prune ? "<li class=\"md-nav__item md-nav__item--pruned\">"u8 : "<li class=\"md-nav__item\">"u8;
     }
 
     /// <summary>Writes a section node's expandable toggle + link + nested list, or a leaf-style chevron link.</summary>
@@ -494,7 +499,7 @@ internal static class NavRenderer
             WriteUtf8(writer, "<span class=\"md-nav__icon md-icon\"></span>"u8);
         }
 
-        WriteUtf8(writer, hasHref ? "</a>"u8 : "</span>"u8);
+        WriteUtf8(writer, hasHref ? "</a>"u8 : SpanClose);
     }
 
     /// <summary>True when this section should emit its full expandable shape (children rendered inline).</summary>
@@ -528,7 +533,7 @@ internal static class NavRenderer
     {
         WriteUtf8(writer, "<span class=\"md-ellipsis\">"u8);
         WriteUtf8(writer, title);
-        WriteUtf8(writer, "</span>"u8);
+        WriteUtf8(writer, SpanClose);
     }
 
     /// <summary>Writes a small decimal integer into <paramref name="writer"/>.</summary>
@@ -668,7 +673,7 @@ internal static class NavRenderer
         {
             WriteUtf8(writer, "<span class=\"md-tabs__link\">"u8);
             WriteUtf8(writer, node.Title);
-            WriteUtf8(writer, "</span>"u8);
+            WriteUtf8(writer, SpanClose);
         }
         else
         {

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Search.Pagefind.Logging;
@@ -13,7 +14,7 @@ internal static partial class PagefindCliLogging
     /// <summary>Logs that no Pagefind binary could be located for the host RID.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="rid">Host runtime identifier (e.g. <c>linux-x64</c>).</param>
-    public static void LogBinaryMissing(ILogger logger, string rid)
+    internal static void LogBinaryMissing(ILogger logger, string rid)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
         {
@@ -31,7 +32,7 @@ internal static partial class PagefindCliLogging
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogInvoking(ILogger logger, string binary, in DirectoryPath siteRoot)
+    internal static void LogInvoking(ILogger logger, string binary, in DirectoryPath siteRoot)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {
@@ -45,7 +46,7 @@ internal static partial class PagefindCliLogging
     /// <param name="logger">Target logger.</param>
     /// <param name="binary">Resolved binary path that failed to start.</param>
     /// <param name="reason">Exception message text from the start failure.</param>
-    public static void LogStartFailed(ILogger logger, string binary, string reason)
+    internal static void LogStartFailed(ILogger logger, string binary, string reason)
     {
         if (!logger.IsEnabled(LogLevel.Error))
         {
@@ -59,7 +60,7 @@ internal static partial class PagefindCliLogging
     /// <param name="logger">Target logger.</param>
     /// <param name="exitCode">Process exit code.</param>
     /// <param name="stderr">Captured stderr text.</param>
-    public static void LogFailed(ILogger logger, int exitCode, string stderr)
+    internal static void LogFailed(ILogger logger, int exitCode, string stderr)
     {
         if (!logger.IsEnabled(LogLevel.Error))
         {
@@ -69,11 +70,25 @@ internal static partial class PagefindCliLogging
         LogFailedCore(logger, exitCode, stderr);
     }
 
+    /// <summary>Logs that a signal terminated Pagefind.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="signal">Termination signal.</param>
+    /// <param name="stderr">Captured stderr text.</param>
+    internal static void LogTerminated(ILogger logger, PosixSignal signal, in ApiCompatString stderr)
+    {
+        if (!logger.IsEnabled(LogLevel.Error))
+        {
+            return;
+        }
+
+        LogTerminatedCore(logger, signal, stderr);
+    }
+
     /// <summary>Logs successful invocation.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="stdoutBytes">Captured stdout byte length.</param>
     /// <param name="stderrBytes">Captured stderr byte length.</param>
-    public static void LogSucceeded(ILogger logger, int stdoutBytes, int stderrBytes)
+    internal static void LogSucceeded(ILogger logger, int stdoutBytes, int stderrBytes)
     {
         if (!logger.IsEnabled(LogLevel.Information))
         {
@@ -110,6 +125,13 @@ internal static partial class PagefindCliLogging
     /// <param name="stderr">Captured stderr.</param>
     [LoggerMessage(Level = LogLevel.Error, Message = "Pagefind exited with code {ExitCode}. stderr: {Stderr}")]
     private static partial void LogFailedCore(ILogger logger, int exitCode, string stderr);
+
+    /// <summary>Emits the process termination diagnostic.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="signal">Termination signal.</param>
+    /// <param name="stderr">Captured stderr.</param>
+    [LoggerMessage(Level = LogLevel.Error, Message = "Pagefind terminated by signal {Signal}. stderr: {Stderr}")]
+    private static partial void LogTerminatedCore(ILogger logger, PosixSignal signal, ApiCompatString stderr);
 
     /// <summary>Source-generated emitter for <see cref="LogSucceeded"/>.</summary>
     /// <param name="logger">Target logger.</param>

@@ -18,10 +18,14 @@ namespace NuStreamDocs.Privacy;
 /// under <see cref="PrivacyOptions.AssetDirectory"/>, and downloads each unique URL once at
 /// finalize time. Audit mode records the URLs without rewriting or downloading.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("PrivacyPlugin: {Name}")]
 public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
 {
     /// <summary>PostRender tiebreak ordering Privacy after the theme shell wrap and Nav.</summary>
     private const int PostRenderTiebreak = 3;
+
+    /// <summary>Maximum path length to decode on the stack.</summary>
+    private const int StackPathCharLimit = 256;
 
     /// <summary>Configured option set; captured at registration time.</summary>
     private readonly PrivacyOptions _options;
@@ -202,8 +206,9 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
     /// <returns>Absolute output file path.</returns>
     private static FilePath ResolveOutputPath(in DirectoryPath outputRoot, ReadOnlySpan<byte> pathBytes)
     {
-        Span<char> pathChars = stackalloc char[Encoding.UTF8.GetCharCount(pathBytes)];
-        Encoding.UTF8.GetChars(pathBytes, pathChars);
+        var pathLength = Encoding.UTF8.GetCharCount(pathBytes);
+        Span<char> pathChars = pathLength <= StackPathCharLimit ? stackalloc char[pathLength] : new char[pathLength];
+        _ = Encoding.UTF8.GetChars(pathBytes, pathChars);
         for (var i = 0; i < pathChars.Length; i++)
         {
             if (pathChars[i] is '/')
@@ -217,6 +222,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
 
     /// <summary>Throws <see cref="PrivacyDownloadException"/> when <see cref="PrivacyOptions.FailOnError"/> is set and any download failed.</summary>
     /// <param name="failures">Failed-URL list returned by the downloader.</param>
+    /// <exception cref="PrivacyDownloadException">A download failed and error reporting is required.</exception>
     private void ThrowIfRequested(string[] failures)
     {
         if (!_options.FailOnError || failures.Length is 0)
@@ -238,7 +244,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
         }
 
         var target = ResolveOutputPath(outputRoot, pathBytes);
-        Directory.CreateDirectory(target.Directory.Value);
+        _ = Directory.CreateDirectory(target.Directory.Value);
 
         using var stream = File.Create(target.Value);
         using Utf8JsonWriter json = new(stream, new() { Indented = true });
@@ -269,7 +275,7 @@ public sealed class PrivacyPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
         }
 
         var target = ResolveOutputPath(outputRoot, pathBytes);
-        Directory.CreateDirectory(target.Directory.Value);
+        _ = Directory.CreateDirectory(target.Directory.Value);
 
         using var stream = File.Create(target.Value);
         using Utf8JsonWriter json = new(stream, new() { Indented = true });

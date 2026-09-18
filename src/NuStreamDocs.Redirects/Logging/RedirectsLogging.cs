@@ -13,7 +13,7 @@ internal static partial class RedirectsLogging
     /// <param name="headerRuleCount">Number of <c>_headers</c> rule blocks written.</param>
     [LoggerMessage(EventId = 1, Level = LogLevel.Information,
         Message = "Wrote {redirectCount} redirects and {headerRuleCount} header rules")]
-    public static partial void LogWritten(ILogger logger, int redirectCount, int headerRuleCount);
+    internal static partial void LogWritten(ILogger logger, int redirectCount, int headerRuleCount);
 
     /// <summary>Logs that a meta-refresh page was skipped because a real page already occupies its path.</summary>
     /// <param name="logger">Diagnostic logger.</param>
@@ -21,12 +21,12 @@ internal static partial class RedirectsLogging
     [LoggerMessage(EventId = 2, Level = LogLevel.Warning,
         Message =
             "Redirect source '{path}' is already a rendered page; emitting the _redirects entry but not a meta-refresh HTML page there")]
-    public static partial void LogSkippedClobber(ILogger logger, string path);
+    internal static partial void LogSkippedClobber(ILogger logger, string path);
 
     /// <summary>Logs that a malformed redirect was ignored.</summary>
     /// <param name="logger">Diagnostic logger.</param>
     /// <param name="from">The (possibly empty) redirect source.</param>
     [LoggerMessage(EventId = 3, Level = LogLevel.Warning,
         Message = "Ignored a redirect with an empty source or destination (source='{from}')")]
-    public static partial void LogIgnoredRedirect(ILogger logger, string from);
+    internal static partial void LogIgnoredRedirect(ILogger logger, string from);
 }

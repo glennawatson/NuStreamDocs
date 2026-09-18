@@ -2,7 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Bibliography.Csl;
@@ -13,9 +15,10 @@ namespace NuStreamDocs.Benchmarks;
 /// <remarks>
 /// The loader was rewritten from <see cref="System.Text.Json.JsonDocument"/> + <see cref="System.Text.Json.JsonElement"/>
 /// (DOM, every string value materialized as <see cref="string"/>) to <see cref="System.Text.Json.Utf8JsonReader"/> +
-/// <see cref="System.Text.Json.Utf8JsonReader.CopyString(System.Span{byte})"/> (streaming, every string value lands directly
+/// <see cref="System.Text.Json.Utf8JsonReader.CopyString(Span{byte})"/> (streaming, every string value lands directly
 /// as a <see cref="byte"/> array). These benchmarks pin the resulting per-entry parse cost.
 /// </remarks>
+[DebuggerDisplay("CslJsonLoaderBenchmarks: EntryCount={EntryCount}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class CslJsonLoaderBenchmarks
@@ -32,6 +35,9 @@ public class CslJsonLoaderBenchmarks
     /// <summary>Year-spread modulus so synthetic entries cycle through a 25-year window.</summary>
     private const int YearSpread = 25;
 
+    /// <summary>Initial JSON capacity reserved per citation entry.</summary>
+    private const int BytesPerEntry = 256;
+
     /// <summary>Pre-built UTF-8 JSON fixture for the current iteration.</summary>
     private byte[] _json = [];
 
@@ -43,17 +49,17 @@ public class CslJsonLoaderBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var sb = new StringBuilder(EntryCount * 256)
+        var sb = new StringBuilder(EntryCount * BytesPerEntry)
             .Append('[');
         for (var i = 0; i < EntryCount; i++)
         {
             if (i > 0)
             {
-                sb.Append(',');
+                _ = sb.Append(',');
             }
 
-            var idx = i.ToString(CultureInfo.InvariantCulture);
-            sb.Append("{\"id\":\"entry-").Append(idx).Append('"')
+            var idx = i.ToString(CultureInfo.InvariantCulture).AsSpan();
+            _ = sb.Append("{\"id\":\"entry-").Append(idx).Append('"')
                 .Append(",\"type\":\"book\"")
                 .Append(",\"title\":\"Synthetic Citation Title ").Append(idx).Append('"')
                 .Append(",\"author\":[{\"family\":\"Family").Append(idx)
@@ -66,12 +72,13 @@ public class CslJsonLoaderBenchmarks
                 .Append('}');
         }
 
-        sb.Append(']');
+        _ = sb.Append(']');
         _json = Encoding.UTF8.GetBytes(sb.ToString());
     }
 
     /// <summary>Parses the full fixture via the streaming <c>CslJsonLoader.Parse</c>.</summary>
     /// <returns>The resolved entry count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int ParseStreaming() => CslJsonLoader.Parse(_json).Count;
 }

@@ -2,13 +2,12 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
-/// <summary>
-/// Filesystem layout for generated blog content.
-/// </summary>
+/// <summary>Filesystem layout for generated blog content.</summary>
 /// <param name="PostsRoot">Absolute path to the directory holding the post files.</param>
 /// <param name="DocsRoot">Absolute path to the docs root.</param>
 /// <param name="IndexPath">Absolute path to the generated index markdown file.</param>
@@ -16,7 +15,8 @@ namespace NuStreamDocs.Blog.Common;
 /// <param name="EmitArchives">When true, per-tag archive pages are generated.</param>
 /// <param name="ArchiveRoot">Absolute directory path where the archive markdown files are written.</param>
 /// <param name="ArchiveFallbackSlug">UTF-8 fallback slug bytes used when a tag contains no slug-safe characters.</param>
-public record BlogGenerationOptions(
+[System.Diagnostics.DebuggerDisplay("BlogGenerationOptions: {ToString(),nq}")]
+public sealed record BlogGenerationOptions(
     DirectoryPath PostsRoot,
     DirectoryPath DocsRoot,
     FilePath IndexPath,
@@ -39,6 +39,7 @@ public record BlogGenerationOptions(
     /// <summary>Throws when <paramref name="value"/> is null or zero-length.</summary>
     /// <param name="value">Bytes to validate.</param>
     /// <param name="paramName">Name carried into the exception.</param>
+    /// <exception cref="ArgumentException">The byte value is empty.</exception>
     private static void ThrowIfEmptyBytes(byte[]? value, string paramName)
     {
         if (value is [_, ..])
@@ -52,6 +53,7 @@ public record BlogGenerationOptions(
     /// <summary>Throws when <paramref name="value"/> is empty.</summary>
     /// <param name="value">Directory path to validate.</param>
     /// <param name="paramName">Name carried into the exception.</param>
+    /// <exception cref="ArgumentException">The directory path is empty.</exception>
     private static void ThrowIfEmptyDirectory(in DirectoryPath value, string paramName)
     {
         if (!value.IsEmpty)
@@ -65,6 +67,7 @@ public record BlogGenerationOptions(
     /// <summary>Throws when <paramref name="value"/> is empty.</summary>
     /// <param name="value">File path to validate.</param>
     /// <param name="paramName">Name carried into the exception.</param>
+    /// <exception cref="ArgumentException">The file path is empty.</exception>
     private static void ThrowIfEmptyFile(in FilePath value, string paramName)
     {
         if (!value.IsEmpty)
@@ -79,5 +82,6 @@ public record BlogGenerationOptions(
     /// <param name="paramName">Parameter name (always a non-null string from <c>nameof</c> or caller literal).</param>
     /// <param name="suffix">Constant suffix.</param>
     /// <returns>Composed message.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string BuildEmptyMessage(string paramName, string suffix) => StringCompose.Concat(paramName, suffix);
 }

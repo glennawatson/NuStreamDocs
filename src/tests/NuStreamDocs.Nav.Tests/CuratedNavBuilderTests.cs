@@ -10,20 +10,33 @@ namespace NuStreamDocs.Nav.Tests;
 /// <summary>End-to-end tests for the curated-nav builder integration with <c>NavPlugin</c>.</summary>
 public class CuratedNavBuilderTests
 {
+    /// <summary>The IndexFile fixture value.</summary>
+    private const string IndexFile = "index.md";
+
+    /// <summary>The GuideFile fixture value.</summary>
+    private const string GuideFile = "guide.md";
+
+    /// <summary>The GuideMarkdown fixture value.</summary>
+    private const string GuideMarkdown = "# Guide";
+
+    /// <summary>The GuideTitle fixture value.</summary>
+    private const string GuideTitle = "Guide";
+
     /// <summary>Curated entries fed via <see cref="NavOptions.CuratedEntries"/> drive the rendered tree instead of the directory walk.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CuratedEntriesDriveRenderedTree()
     {
+        const int ExpectedCount = 2;
         using var fixture = TempDocsTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide.md"), "# Guide");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFile), "# Home");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, GuideFile), GuideMarkdown);
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "extra.md"), "# Extra");
 
         NavEntry[] entries =
         [
-            NavEntryFactory.Leaf("Home", "index.md"),
-            NavEntryFactory.Leaf("Guide", "guide.md")
+            NavEntryFactory.Leaf("Home", IndexFile),
+            NavEntryFactory.Leaf(GuideTitle, GuideFile)
         ];
         var options = NavOptions.Default.WithCuratedEntries(entries);
         NavPlugin plugin = new(options);
@@ -35,9 +48,9 @@ public class CuratedNavBuilderTests
             .BuildAsync();
 
         var root = (NavNode)plugin.Root!;
-        await Assert.That(root.Children.Length).IsEqualTo(2);
+        await Assert.That(root.Children.Length).IsEqualTo(ExpectedCount);
         await Assert.That(Encoding.UTF8.GetString(root.Children[0].Title)).IsEqualTo("Home");
-        await Assert.That(Encoding.UTF8.GetString(root.Children[1].Title)).IsEqualTo("Guide");
+        await Assert.That(Encoding.UTF8.GetString(root.Children[1].Title)).IsEqualTo(GuideTitle);
     }
 
     /// <summary>An empty curated list falls back to the auto-discovery walker.</summary>
@@ -45,9 +58,10 @@ public class CuratedNavBuilderTests
     [Test]
     public async Task EmptyCuratedListFallsBackToAutoDiscovery()
     {
+        const int ExpectedCount = 3;
         using var fixture = TempDocsTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide.md"), "# Guide");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFile), "# Home");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, GuideFile), GuideMarkdown);
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "extra.md"), "# Extra");
 
         NavPlugin plugin = new(NavOptions.Default);
@@ -60,7 +74,7 @@ public class CuratedNavBuilderTests
         var root = (NavNode)plugin.Root!;
 
         // Auto-discovery picks up every top-level .md file (3 here).
-        await Assert.That(root.Children.Length).IsEqualTo(3);
+        await Assert.That(root.Children.Length).IsEqualTo(ExpectedCount);
     }
 
     /// <summary>Curated entries honor directory-style served URLs.</summary>
@@ -69,11 +83,11 @@ public class CuratedNavBuilderTests
     public async Task CuratedEntriesHonorDirectoryUrls()
     {
         using var fixture = TempDocsTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide.md"), "# Guide");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, GuideFile), GuideMarkdown);
 
         var root = CuratedNavBuilder.Build(
             fixture.Root,
-            [NavEntryFactory.Leaf("Guide", "guide.md")],
+            [NavEntryFactory.Leaf(GuideTitle, GuideFile)],
             true);
 
         await Assert.That(Encoding.UTF8.GetString(root.Children[0].RelativeUrlBytes)).IsEqualTo("guide/");

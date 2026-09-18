@@ -8,86 +8,86 @@ namespace NuStreamDocs.Highlight;
 public enum TokenClass
 {
     /// <summary>Plain source text with no specific classification.</summary>
-    Text,
+    Text = 0,
 
-    /// <summary>Whitespace.</summary>
-    Whitespace,
+    /// <summary>Whitespace characters.</summary>
+    Whitespace = 1,
 
     /// <summary>Generic name.</summary>
-    Name,
+    Name = 2,
 
     /// <summary>Function or method name.</summary>
-    NameFunction,
+    NameFunction = 3,
 
     /// <summary>Class / type name.</summary>
-    NameClass,
+    NameClass = 4,
 
     /// <summary>Built-in identifier (true / false / null).</summary>
-    NameBuiltin,
+    NameBuiltin = 5,
 
     /// <summary>Attribute name.</summary>
-    NameAttribute,
+    NameAttribute = 6,
 
-    /// <summary>Keyword.</summary>
-    Keyword,
+    /// <summary>Language keyword.</summary>
+    Keyword = 7,
 
     /// <summary>Constant keyword (true / false / null).</summary>
-    KeywordConstant,
+    KeywordConstant = 8,
 
     /// <summary>Declaration keyword (var / let / class / def / fn).</summary>
-    KeywordDeclaration,
+    KeywordDeclaration = 9,
 
     /// <summary>Type keyword (int / string / bool).</summary>
-    KeywordType,
+    KeywordType = 10,
 
-    /// <summary>Operator.</summary>
-    Operator,
+    /// <summary>Language operator.</summary>
+    Operator = 11,
 
-    /// <summary>Punctuation.</summary>
-    Punctuation,
+    /// <summary>Punctuation characters.</summary>
+    Punctuation = 12,
 
     /// <summary>String literal — generic.</summary>
-    String,
+    String = 13,
 
     /// <summary>Single-quoted string literal.</summary>
-    StringSingle,
+    StringSingle = 14,
 
     /// <summary>Double-quoted string literal.</summary>
-    StringDouble,
+    StringDouble = 15,
 
     /// <summary>Escape sequence inside a string.</summary>
-    StringEscape,
+    StringEscape = 16,
 
     /// <summary>Integer literal.</summary>
-    NumberInteger,
+    NumberInteger = 17,
 
     /// <summary>Floating-point literal.</summary>
-    NumberFloat,
+    NumberFloat = 18,
 
     /// <summary>Hexadecimal integer literal.</summary>
-    NumberHex,
+    NumberHex = 19,
 
     /// <summary>Single-line comment.</summary>
-    CommentSingle,
+    CommentSingle = 20,
 
     /// <summary>Multi-line comment.</summary>
-    CommentMulti,
+    CommentMulti = 21,
 
     /// <summary>Documentation comment.</summary>
-    CommentSpecial,
+    CommentSpecial = 22,
 
     /// <summary>Preprocessor directive.</summary>
-    CommentPreproc,
+    CommentPreproc = 23,
 
     /// <summary>Diff-format added line (<c>+ ...</c>); rendered as the<c>gi</c> CSS class.</summary>
-    DiffAddedLine,
+    DiffAddedLine = 24,
 
     /// <summary>Diff-format removed line (<c>- ...</c>); rendered as the<c>gd</c> CSS class.</summary>
-    DiffRemovedLine,
+    DiffRemovedLine = 25,
 
     /// <summary>Diff-format file header (<c>--- a/file</c>, <c>+++ b/file</c>, <c>diff …</c>, <c>index …</c>); rendered as the<c>gh</c> CSS class.</summary>
-    DiffFileHeader,
+    DiffFileHeader = 26,
 
     /// <summary>Diff-format hunk header (<c>@@ … @@</c>); rendered as the<c>gu</c> CSS class.</summary>
-    DiffHunkHeader
+    DiffHunkHeader = 27,
 }

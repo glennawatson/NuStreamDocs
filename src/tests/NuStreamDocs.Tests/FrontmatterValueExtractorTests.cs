@@ -11,11 +11,20 @@ namespace NuStreamDocs.Tests;
 /// <summary>Behavior tests for <c>FrontmatterValueExtractor</c>.</summary>
 public class FrontmatterValueExtractorTests
 {
+    /// <summary>Title Key used by the test cases.</summary>
+    private const string TitleKey = "title";
+
+    /// <summary>Small Buffer Capacity used by the test cases.</summary>
+    private const int SmallBufferCapacity = 16;
+
+    /// <summary>Extraction Buffer Capacity used by the test cases.</summary>
+    private const int ExtractionBufferCapacity = 64;
+
     /// <summary>An inline scalar value is appended preceded by a space.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task InlineScalarAppended() =>
-        await Assert.That(Extract("---\ntitle: Hello\n---\nbody", "title"))
+        await Assert.That(Extract("---\ntitle: Hello\n---\nbody", TitleKey))
             .IsEqualTo(" Hello");
 
     /// <summary>A block-list value appends each entry separated by spaces.</summary>
@@ -44,7 +53,7 @@ public class FrontmatterValueExtractorTests
     [Test]
     public async Task EmptyKeyArrayIsNoOp()
     {
-        ArrayBufferWriter<byte> sink = new(16);
+        ArrayBufferWriter<byte> sink = new(SmallBufferCapacity);
         FrontmatterValueExtractor.AppendKeysTo("---\ntitle: A\n---\nbody"u8, [], sink);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
     }
@@ -59,13 +68,13 @@ public class FrontmatterValueExtractorTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task NoFrontmatterIsNoOp() =>
-        await Assert.That(Extract("just body, no frontmatter", "title")).IsEqualTo(string.Empty);
+        await Assert.That(Extract("just body, no frontmatter", TitleKey)).IsEqualTo(string.Empty);
 
     /// <summary>An open-ended frontmatter (no closing <c>---</c>) is a no-op.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UnclosedFrontmatterIsNoOp() =>
-        await Assert.That(Extract("---\ntitle: A\nbody (no close)", "title")).IsEqualTo(string.Empty);
+        await Assert.That(Extract("---\ntitle: A\nbody (no close)", TitleKey)).IsEqualTo(string.Empty);
 
     /// <summary>An empty inline value is silently dropped.</summary>
     /// <returns>Async test.</returns>
@@ -78,7 +87,7 @@ public class FrontmatterValueExtractorTests
     [Test]
     public async Task MultipleKeysAppendedInOrder()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(ExtractionBufferCapacity);
         FrontmatterValueExtractor.AppendKeysTo(
             "---\ntitle: A\nauthor: B\n---\nbody"u8,
             [[.. "title"u8], [.. "author"u8]],
@@ -92,7 +101,7 @@ public class FrontmatterValueExtractorTests
     /// <returns>The collected text.</returns>
     private static string Extract(string source, string key)
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(ExtractionBufferCapacity);
         FrontmatterValueExtractor.AppendKeysTo(Encoding.UTF8.GetBytes(source), [Encoding.UTF8.GetBytes(key)], sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

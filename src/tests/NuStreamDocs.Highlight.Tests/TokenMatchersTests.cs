@@ -48,11 +48,11 @@ public class TokenMatchersTests
         [.. "="u8]
     ];
 
-    /// <summary>HTML comment opener literal as bytes.</summary>
-    private static readonly byte[] HtmlCommentOpen = [.. "<!--"u8];
+    /// <summary>Gets hTML comment opener literal as bytes.</summary>
+    private static ReadOnlySpan<byte> HtmlCommentOpen => "<!--"u8;
 
-    /// <summary>HTML comment closer literal as bytes.</summary>
-    private static readonly byte[] HtmlCommentClose = [.. "-->"u8];
+    /// <summary>Gets hTML comment closer literal as bytes.</summary>
+    private static ReadOnlySpan<byte> HtmlCommentClose => "-->"u8;
 
     /// <summary>ASCII whitespace runs match every contiguous space / tab / newline at the cursor.</summary>
     /// <param name="input">Input string.</param>
@@ -363,9 +363,10 @@ public class TokenMatchersTests
     [Test]
     public async Task MatchRawQuotedStringSpansNewlines()
     {
-        const string Source = "\"\"\"\n  multi\n  line\n  \"\"\"";
-        await Assert.That(TokenMatchers.MatchRawQuotedString(UTF8.GetBytes(Source), (byte)'"', 3))
-            .IsEqualTo(Source.Length);
+        const int MinimumQuoteCount = 3;
+        var source = "\"\"\"\n  multi\n  line\n  \"\"\""u8;
+        await Assert.That(TokenMatchers.MatchRawQuotedString(source, (byte)'"', MinimumQuoteCount))
+            .IsEqualTo(source.Length);
     }
 
     /// <summary>Doubled-quote-escape variant for double quotes (<c>"a""b"</c> Pascal/SQL style).</summary>
@@ -391,8 +392,9 @@ public class TokenMatchersTests
     [Arguments("-3.14", 0)]
     [Arguments("+3.14", 0)]
     [Arguments("3.", 0)]
-    public async Task MatchUnsignedAsciiFloatRejectsSignedInput(string input, int expected) =>
-        await Assert.That(TokenMatchers.MatchUnsignedAsciiFloat(UTF8.GetBytes(input))).IsEqualTo(expected);
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public Task MatchUnsignedAsciiFloatRejectsSignedInput(string input, int expected) =>
+        MatchUnsignedAsciiFloatRejectsMinus(input, expected);
 
     /// <summary>Match-literal returns the literal length on a starts-with match, 0 otherwise.</summary>
     /// <param name="input">Input string.</param>

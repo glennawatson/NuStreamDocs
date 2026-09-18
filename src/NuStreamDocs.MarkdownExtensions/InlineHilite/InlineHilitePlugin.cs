@@ -2,12 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.InlineHilite;
 
 /// <summary>Inline-highlight plugin — rewrites <c>`#!lang code`</c> inline spans into a <c>&lt;code class="highlight language-lang"&gt;</c> element for downstream syntax highlighting.</summary>
+[System.Diagnostics.DebuggerDisplay("InlineHilitePlugin: {Name}")]
 public sealed class InlineHilitePlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -17,10 +19,12 @@ public sealed class InlineHilitePlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasInlineHiliteFence(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         InlineHiliteRewriter.Rewrite(context.Source, context.Output);
 }

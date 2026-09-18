@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.LinkValidator.Tests;
@@ -10,6 +11,18 @@ namespace NuStreamDocs.LinkValidator.Tests;
 /// <summary>Branch-coverage tests for the ValidationCorpus loader.</summary>
 public class ValidationCorpusTests
 {
+    /// <summary>Index File Name used by the test cases.</summary>
+    private const string IndexFileName = "index.html";
+
+    /// <summary>Parallelism used by the test cases.</summary>
+    private const int Parallelism = 2;
+
+    /// <summary>Gets the URL of the root index.</summary>
+    private static ReadOnlySpan<byte> IndexUrl => "index.html"u8;
+
+    /// <summary>Gets the foo page url used by the test cases.</summary>
+    private static ReadOnlySpan<byte> FooPageUrl => "foo.html"u8;
+
     /// <summary>External links (http/https) and asset extensions are filtered out of the internal-links list.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -18,16 +31,16 @@ public class ValidationCorpusTests
         var dir = TempDir();
         try
         {
-            const string Html = "<a href=\"https://example.com\">ext1</a>" +
-                                "<a href=\"http://x.test\">ext2</a>" +
-                                "<a href=\"about.html\">internal</a>" +
-                                "<a href=\"image.png\">asset</a>" +
-                                "<a href=\"style.css\">asset2</a>" +
-                                "<img src=\"https://cdn.test/x.jpg\" />";
-            await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), Html);
+            const string Html = "<a href=\"https://example.com\">ext1</a>"
+                                + "<a href=\"http://x.test\">ext2</a>"
+                                + "<a href=\"about.html\">internal</a>"
+                                + "<a href=\"image.png\">asset</a>"
+                                + "<a href=\"style.css\">asset2</a>"
+                                + "<img src=\"https://cdn.test/x.jpg\" />";
+            await File.WriteAllTextAsync(Path.Combine(dir, IndexFileName), Html);
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 2, CancellationToken.None);
-            await Assert.That(corpus.TryGetPage([.. "index.html"u8], out var page)).IsTrue();
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            await Assert.That(corpus.TryGetPage([.. IndexUrl], out var page)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "about.html"u8)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "https://example.com"u8)).IsFalse();
             await Assert.That(ContainsBytes(page.InternalLinks, "image.png"u8)).IsFalse();
@@ -49,13 +62,13 @@ public class ValidationCorpusTests
         var dir = TempDir();
         try
         {
-            const string Html = "<a href=\"image.png?v=1\">asset</a>" +
-                                "<a href=\"style.css#section\">asset</a>" +
-                                "<a href=\"page.html?q=1\">page</a>";
-            await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), Html);
+            const string Html = "<a href=\"image.png?v=1\">asset</a>"
+                                + "<a href=\"style.css#section\">asset</a>"
+                                + "<a href=\"page.html?q=1\">page</a>";
+            await File.WriteAllTextAsync(Path.Combine(dir, IndexFileName), Html);
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 2, CancellationToken.None);
-            await Assert.That(corpus.TryGetPage([.. "index.html"u8], out var page)).IsTrue();
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            await Assert.That(corpus.TryGetPage([.. IndexUrl], out var page)).IsTrue();
             await Assert.That(ContainsBytes(page.InternalLinks, "image.png?v=1"u8)).IsFalse();
             await Assert.That(ContainsBytes(page.InternalLinks, "style.css#section"u8)).IsFalse();
             await Assert.That(ContainsBytes(page.InternalLinks, "page.html?q=1"u8)).IsTrue();
@@ -72,7 +85,7 @@ public class ValidationCorpusTests
     public async Task MissingRootYieldsEmptyCorpus()
     {
         var corpus = await ValidationCorpus.BuildAsync(
-            "/does-not-exist-" + Guid.NewGuid().ToString("N"),
+            $"/does-not-exist-{Guid.NewGuid():N}",
             1,
             CancellationToken.None);
         await Assert.That(corpus.Pages.Length).IsEqualTo(0);
@@ -86,10 +99,10 @@ public class ValidationCorpusTests
         var dir = TempDir();
         try
         {
-            await File.WriteAllTextAsync(Path.Combine(dir, "index.html"), "<h1 id=\"a\">Hi</h1>");
+            await File.WriteAllTextAsync(Path.Combine(dir, IndexFileName), "<h1 id=\"a\">Hi</h1>");
             var corpus = await ValidationCorpus.BuildAsync(dir, 1, CancellationToken.None);
-            await Assert.That(corpus.ContainsPage([.. "index.html"u8])).IsTrue();
-            await Assert.That(corpus.ContainsPage([.. "index.html"u8])).IsTrue();
+            await Assert.That(corpus.ContainsPage([.. IndexUrl])).IsTrue();
+            await Assert.That(corpus.ContainsPage([.. IndexUrl])).IsTrue();
             await Assert.That(corpus.ContainsPage([.. "missing.html"u8])).IsFalse();
             await Assert.That(corpus.ContainsPage([.. "missing.html"u8])).IsFalse();
         }
@@ -111,8 +124,8 @@ public class ValidationCorpusTests
     [Test]
     public async Task TryResolvePageMatchesVerbatim()
     {
-        var corpus = BuildCorpus([.. "foo.html"u8]);
-        await Assert.That(corpus.TryResolvePage("foo.html"u8, out _)).IsTrue();
+        var corpus = BuildCorpus([.. FooPageUrl]);
+        await Assert.That(corpus.TryResolvePage(FooPageUrl, out _)).IsTrue();
     }
 
     /// <summary>TryResolvePage maps directory-style URLs to the on-disk index file.</summary>
@@ -129,7 +142,7 @@ public class ValidationCorpusTests
     [Test]
     public async Task TryResolvePageHandlesTrailingSlashToHtml()
     {
-        var corpus = BuildCorpus([.. "foo.html"u8]);
+        var corpus = BuildCorpus([.. FooPageUrl]);
         await Assert.That(corpus.TryResolvePage("foo/"u8, out _)).IsTrue();
     }
 
@@ -138,7 +151,7 @@ public class ValidationCorpusTests
     [Test]
     public async Task TryResolvePageEmptyPathResolvesRootIndex()
     {
-        var corpus = BuildCorpus([.. "index.html"u8]);
+        var corpus = BuildCorpus([.. IndexUrl]);
         await Assert.That(corpus.TryResolvePage(default, out _)).IsTrue();
     }
 
@@ -169,15 +182,34 @@ public class ValidationCorpusTests
         await Assert.That(corpus.TryResolvePage("does-not-exist/"u8, out _)).IsFalse();
     }
 
+    /// <summary>Directory URL variants resolve across the stack-buffer boundary.</summary>
+    /// <param name="length">Length of the complete stored URL.</param>
+    /// <param name="trailingSlash">Whether the input URL ends with a slash.</param>
+    /// <param name="indexPage">Whether the stored URL names a directory index.</param>
+    /// <returns>The assertion task.</returns>
+    [Test]
+    [MatrixDataSource]
+    public async Task TryResolvePageHandlesLongVariants(
+        [Matrix(511, 512, 513, 4096)] int length,
+        [Matrix(false, true)] bool trailingSlash,
+        [Matrix(false, true)] bool indexPage)
+    {
+        var suffix = indexPage ? "/index.html" : ".html";
+        var stem = new string('a', length - suffix.Length);
+        var storedUrl = Encoding.UTF8.GetBytes($"{stem}{suffix}");
+        var inputUrl = Encoding.UTF8.GetBytes(trailingSlash ? $"{stem}/" : stem);
+        var corpus = BuildCorpus(storedUrl);
+
+        await Assert.That(corpus.TryResolvePage(inputUrl, out var page)).IsTrue();
+        await Assert.That(page.PageUrl.AsSpan().SequenceEqual(storedUrl)).IsTrue();
+    }
+
     /// <summary>Builds an in-memory corpus seeded with one URL whose body is an empty HTML span.</summary>
     /// <param name="url">The corpus URL.</param>
     /// <returns>The populated corpus.</returns>
     private static ValidationCorpus BuildCorpus(byte[] url)
     {
-        var pages = new Dictionary<byte[], PageLinks>(ByteArrayComparer.Instance)
-        {
-            [url] = ValidationCorpus.Scan(url, "<p>x</p>"u8)
-        };
+        var pages = new Dictionary<byte[], PageLinks>(ByteArrayComparer.Instance) { [url] = ValidationCorpus.Scan(url, "<p>x</p>"u8) };
         return ValidationCorpus.FromPages(pages);
     }
 
@@ -187,8 +219,8 @@ public class ValidationCorpusTests
     {
         var dir = Path.Combine(
             Path.GetTempPath(),
-            "smd-vc-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(dir);
+            $"smd-vc-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(dir);
         return dir;
     }
 

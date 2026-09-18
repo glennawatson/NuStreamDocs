@@ -58,10 +58,7 @@ public static class RustLexer
     private static Lexer Build()
     {
         var specialString =
-            new LexerRule(MatchRustSpecialString, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = SpecialStringFirst
-            };
+            new LexerRule(MatchRustSpecialString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = SpecialStringFirst, };
 
         CFamilyConfig config = new()
         {
@@ -72,7 +69,7 @@ public static class RustLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = PunctuationSet,
             IntegerSuffix = IntegerSuffixSet,
@@ -81,7 +78,7 @@ public static class RustLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = true,
             WhitespaceIncludesNewlines = true,
-            SpecialString = specialString
+            SpecialString = specialString,
         };
 
         return CFamilyRules.CreateLexer(config);
@@ -133,12 +130,7 @@ public static class RustLexer
             hashCount++;
         }
 
-        if (pos >= slice.Length || slice[pos] is not (byte)'"')
-        {
-            return 0;
-        }
-
-        return MatchRustRawStringBody(slice, pos + 1, hashCount);
+        return pos >= slice.Length || slice[pos] is not (byte)'"' ? 0 : MatchRustRawStringBody(slice, pos + 1, hashCount);
     }
 
     /// <summary>Walks the body of a raw string until a closing <c>"</c> followed by exactly <paramref name="hashCount"/> <c>#</c>s.</summary>

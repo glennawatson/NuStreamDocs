@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using NuStreamDocs.Caching;
 
 namespace NuStreamDocs.Tests;
@@ -10,6 +11,18 @@ namespace NuStreamDocs.Tests;
 /// <summary>Branch-coverage tests for BuildManifest.</summary>
 public class BuildManifestBranchTests
 {
+    /// <summary>First Output Length used by the test cases.</summary>
+    private const int FirstOutputLength = 10;
+
+    /// <summary>Second Output Length used by the test cases.</summary>
+    private const int SecondOutputLength = 20;
+
+    /// <summary>Expected Entry Count used by the test cases.</summary>
+    private const int ExpectedEntryCount = 2;
+
+    /// <summary>Round Trip Output Length used by the test cases.</summary>
+    private const int RoundTripOutputLength = 99;
+
     /// <summary>LoadAsync returns Empty when no manifest file exists.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -39,14 +52,14 @@ public class BuildManifestBranchTests
     {
         var manifest = BuildManifest.Empty();
         ConcurrentQueue<ManifestEntry> queue = new();
-        byte[] aHash = [1, 2, 3, 4, 5, 6, 7, 8];
-        byte[] bHash = [9, 10, 11, 12, 13, 14, 15, 16];
-        queue.Enqueue(new("a.md", aHash, 10));
-        queue.Enqueue(new("b.md", bHash, 20));
+        byte[] firstHash = [1, 2, 3, 4, 5, 6, 7, 8];
+        byte[] secondHash = [9, 10, 11, 12, 13, 14, 15, 16];
+        queue.Enqueue(new("a.md", firstHash, FirstOutputLength));
+        queue.Enqueue(new("b.md", secondHash, SecondOutputLength));
         manifest.Replace(queue);
-        await Assert.That(manifest.Count).IsEqualTo(2);
+        await Assert.That(manifest.Count).IsEqualTo(ExpectedEntryCount);
         await Assert.That(manifest.TryGet("a.md", out var entry)).IsTrue();
-        await Assert.That(entry.ContentHash.AsSpan().SequenceEqual(aHash)).IsTrue();
+        await Assert.That(CryptographicOperations.FixedTimeEquals(entry.ContentHash, firstHash)).IsTrue();
     }
 
     /// <summary>TryGet returns false for unknown paths.</summary>
@@ -66,13 +79,13 @@ public class BuildManifestBranchTests
         using ScratchDir temp = new();
         var manifest = BuildManifest.Empty([.. "test-build"u8]);
         byte[] hash = [0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04];
-        manifest.Replace([new("p.md", hash, 99)]);
+        manifest.Replace([new("p.md", hash, RoundTripOutputLength)]);
         await manifest.SaveAsync(temp.Root, CancellationToken.None);
         var loaded = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
         await Assert.That(loaded.Count).IsEqualTo(1);
         await Assert.That(loaded.TryGet("p.md", out var entry)).IsTrue();
-        await Assert.That(entry.ContentHash.AsSpan().SequenceEqual(hash)).IsTrue();
-        await Assert.That(entry.OutputLengthBytes).IsEqualTo(99);
+        await Assert.That(CryptographicOperations.FixedTimeEquals(entry.ContentHash, hash)).IsTrue();
+        await Assert.That(entry.OutputLengthBytes).IsEqualTo(RoundTripOutputLength);
     }
 
     /// <summary>A build fingerprint mismatch forces a cold-cache manifest.</summary>
@@ -82,7 +95,8 @@ public class BuildManifestBranchTests
     {
         using ScratchDir temp = new();
         var manifest = BuildManifest.Empty([.. "build-a"u8]);
-        manifest.Replace([new("p.md", [1, 2, 3, 4], 10)]);
+        byte[] hash = [1, 2, 3, 4];
+        manifest.Replace([new("p.md", hash, FirstOutputLength)]);
         await manifest.SaveAsync(temp.Root, CancellationToken.None);
 
         var loaded = await BuildManifest.LoadAsync(temp.Root, [.. "build-b"u8], CancellationToken.None);
@@ -95,8 +109,8 @@ public class BuildManifestBranchTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-bm-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-bm-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

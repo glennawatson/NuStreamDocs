@@ -43,7 +43,7 @@ internal static class AnchorBytes
     /// <param name="addTargetBlank">When true, append <c>target="_blank"</c> when no <c>target</c> attribute is already present.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
     /// <returns>True when at least one anchor was hardened; false when the input passed through unchanged.</returns>
-    public static bool RewriteInto(
+    internal static bool RewriteInto(
         ReadOnlySpan<byte> html,
         bool addRelNoOpener,
         bool addTargetBlank,

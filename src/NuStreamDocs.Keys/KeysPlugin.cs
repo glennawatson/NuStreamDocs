@@ -2,11 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Keys;
 
 /// <summary>Keys plugin — rewrites <c>++ctrl+alt+del++</c> shortcuts into pymdownx.keys-style <c>&lt;span class="keys"&gt;</c> markup. Unknown tokens render with a sanitized class.</summary>
+[System.Diagnostics.DebuggerDisplay("KeysPlugin: {Name}")]
 public sealed class KeysPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -19,6 +21,7 @@ public sealed class KeysPlugin : IPagePreRenderPlugin
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf("++"u8) >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         KeysRewriter.Rewrite(context.Source, context.Output);
 }

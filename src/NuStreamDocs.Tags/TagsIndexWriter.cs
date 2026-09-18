@@ -10,11 +10,14 @@ namespace NuStreamDocs.Tags;
 /// <summary>Emits the tags landing page and per-tag listing pages.</summary>
 internal static class TagsIndexWriter
 {
+    /// <summary>Initial tag bucket capacity.</summary>
+    private const int InitialTagBucketCapacity = 4;
+
     /// <summary>Emits the all-tags index plus one listing page per distinct tag.</summary>
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="options">Plugin options controlling the output layout.</param>
     /// <param name="entries">Per-page tag occurrences collected during the build.</param>
-    public static void Write(in DirectoryPath outputRoot, in TagsOptions options, TagEntry[] entries)
+    internal static void Write(in DirectoryPath outputRoot, in TagsOptions options, TagEntry[] entries)
     {
         if (entries.Length is 0)
         {
@@ -23,7 +26,7 @@ internal static class TagsIndexWriter
 
         var grouped = GroupByTag(entries);
         var tagsDir = Path.Combine(outputRoot, options.OutputSubdirectory);
-        Directory.CreateDirectory(tagsDir);
+        _ = Directory.CreateDirectory(tagsDir);
 
         using var rental = PageBuilderPool.Rent(TagsCommon.PageInitialCapacity);
         var sink = rental.Writer;
@@ -50,7 +53,7 @@ internal static class TagsIndexWriter
             var entry = entries[i];
             if (!map.TryGetValue(entry.Tag, out var bucket))
             {
-                bucket = new List<(byte[], byte[])>(4);
+                bucket = new List<(byte[], byte[])>(InitialTagBucketCapacity);
                 map[entry.Tag] = bucket;
             }
 

@@ -108,13 +108,13 @@ public static class HtmlTextExtractor
 
     /// <summary>Handles a tag-open byte.</summary>
     /// <param name="html">Source bytes.</param>
-    /// <param name="ltIndex">Index of the <c>&lt;</c>.</param>
+    /// <param name="tagStart">Index of the <c>&lt;</c>.</param>
     /// <param name="state">Current state.</param>
     /// <returns>Updated state.</returns>
-    private static ExtractState OpenTag(ReadOnlySpan<byte> html, int ltIndex, in ExtractState state)
+    private static ExtractState OpenTag(ReadOnlySpan<byte> html, int tagStart, in ExtractState state)
     {
-        var name = ReadTagName(html, ltIndex + 1);
-        var isClose = ltIndex + 1 < html.Length && html[ltIndex + 1] == Slash;
+        var name = ReadTagName(html, tagStart + 1);
+        var isClose = tagStart + 1 < html.Length && html[tagStart + 1] == Slash;
 
         if (TagEquals(name, "script"u8) || TagEquals(name, "style"u8))
         {

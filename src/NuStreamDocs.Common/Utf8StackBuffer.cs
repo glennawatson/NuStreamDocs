@@ -19,6 +19,7 @@ namespace NuStreamDocs.Common;
 /// return SomeByteApi(buf.Bytes);
 /// </code>
 /// </remarks>
+[System.Diagnostics.DebuggerDisplay("Utf8StackBuffer: {Bytes}")]
 public ref struct Utf8StackBuffer
 {
     /// <summary>Pooled rental, or null when the data fits on the caller's stack.</summary>
@@ -53,7 +54,7 @@ public ref struct Utf8StackBuffer
     public static int StackSize { get; } = 1024;
 
     /// <summary>Gets the encoded UTF-8 bytes (valid until <see cref="Dispose"/>).</summary>
-    public ReadOnlySpan<byte> Bytes { get; }
+    public readonly ReadOnlySpan<byte> Bytes { get; }
 
     /// <summary>Returns the pooled rental (no-op when the data fit on the stack).</summary>
     public void Dispose()

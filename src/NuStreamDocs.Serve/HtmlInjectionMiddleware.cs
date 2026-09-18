@@ -20,7 +20,7 @@ internal static class HtmlInjectionMiddleware
     /// <param name="ctx">Request context.</param>
     /// <param name="next">Next middleware delegate.</param>
     /// <returns>Async task.</returns>
-    public static async Task InvokeAsync(HttpContext ctx, RequestDelegate next)
+    internal static async Task InvokeAsync(HttpContext ctx, RequestDelegate next)
     {
         var originalBody = ctx.Response.Body;
         await using MemoryStream buffer = new();

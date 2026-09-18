@@ -11,12 +11,21 @@ namespace NuStreamDocs.Versions.Tests;
 /// <summary>Builder-extension tests for <c>VersionsPlugin</c>.</summary>
 public class VersionsRegistrationTests
 {
+    /// <summary>Display title for the stable release.</summary>
+    private const string StableTitle = "Stable";
+
+    /// <summary>Alias identifying the latest release.</summary>
+    private const string LatestAlias = "latest";
+
+    /// <summary>Expected aliases copied from the version options.</summary>
+    private const int CopiedAliasCount = 2;
+
     /// <summary>UseVersions(options) registers the plugin.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseVersionsRegisters()
     {
-        VersionOptions options = new("1.0", "Stable");
+        VersionOptions options = new("1.0", StableTitle);
         await Assert.That(new DocBuilder().UseVersions(options)).IsTypeOf<DocBuilder>();
     }
 
@@ -25,7 +34,7 @@ public class VersionsRegistrationTests
     [Test]
     public async Task UseVersionsLoggerRegisters()
     {
-        VersionOptions options = new("1.0", "Stable");
+        VersionOptions options = new("1.0", StableTitle);
         await Assert.That(new DocBuilder().UseVersions(options, NullLogger.Instance)).IsTypeOf<DocBuilder>();
     }
 
@@ -36,7 +45,7 @@ public class VersionsRegistrationTests
     {
         var opts = VersionOptions.Latest("1.2", "Recent");
         await Assert.That(opts.Aliases.Length).IsEqualTo(1);
-        await Assert.That(Encoding.UTF8.GetString(opts.Aliases[0])).IsEqualTo("latest");
+        await Assert.That(Encoding.UTF8.GetString(opts.Aliases[0])).IsEqualTo(LatestAlias);
     }
 
     /// <summary>Validate() throws on empty version.</summary>
@@ -64,11 +73,11 @@ public class VersionsRegistrationTests
     [Test]
     public async Task ToEntryCopies()
     {
-        var entry = new VersionOptions("1.0", "Stable", [[.. "latest"u8], [.. "v1"u8]]).ToEntry();
+        var entry = new VersionOptions("1.0", StableTitle, [[.. "latest"u8], [.. "v1"u8]]).ToEntry();
         await Assert.That(entry.Version).IsEqualTo("1.0");
-        await Assert.That(entry.Title).IsEqualTo("Stable");
-        await Assert.That(entry.Aliases.Length).IsEqualTo(2);
-        await Assert.That(Encoding.UTF8.GetString(entry.Aliases[0])).IsEqualTo("latest");
+        await Assert.That(entry.Title).IsEqualTo(StableTitle);
+        await Assert.That(entry.Aliases.Length).IsEqualTo(CopiedAliasCount);
+        await Assert.That(Encoding.UTF8.GetString(entry.Aliases[0])).IsEqualTo(LatestAlias);
         await Assert.That(Encoding.UTF8.GetString(entry.Aliases[1])).IsEqualTo("v1");
     }
 }

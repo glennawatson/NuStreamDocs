@@ -2,11 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Optimize;
 
 /// <summary>Plugin that minifies per-page HTML — collapses whitespace and strips comments. Pre/code/textarea/script/style bodies pass through verbatim.</summary>
+/// <param name="options">HTML minification settings.</param>
+[System.Diagnostics.DebuggerDisplay("HtmlMinifyPlugin: {Name}")]
 public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IPagePostResolvePlugin
 {
     /// <summary>Configured options.</summary>
@@ -25,9 +28,11 @@ public sealed class HtmlMinifyPlugin(HtmlMinifyOptions options) : IPagePostResol
     public PluginPriority PostResolvePriority => new(PluginBand.Latest);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Rewrite(in PagePostResolveContext context) =>
         HtmlMinifier.Minify(context.Html, context.Output, _options);
 }

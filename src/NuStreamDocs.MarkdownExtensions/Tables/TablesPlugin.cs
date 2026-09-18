@@ -2,11 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Tables;
 
 /// <summary>GitHub-flavored tables plugin — rewrites pipe-delimited tables into <c>&lt;table&gt;</c> HTML.</summary>
+[System.Diagnostics.DebuggerDisplay("TablesPlugin: {Name}")]
 public sealed class TablesPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -19,6 +21,7 @@ public sealed class TablesPlugin : IPagePreRenderPlugin
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)'|') >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         TablesRewriter.Rewrite(context.Source, context.Output);
 }

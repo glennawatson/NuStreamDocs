@@ -20,7 +20,7 @@ internal static class DocsAssetCopier
     /// <param name="outputRoot">Absolute site output root.</param>
     /// <param name="filter">Path filter from the build options; honors the same include/exclude globs that govern page discovery.</param>
     /// <returns>Number of files copied.</returns>
-    public static int Copy(in DirectoryPath inputRoot, in DirectoryPath outputRoot, PathFilter filter)
+    internal static int Copy(in DirectoryPath inputRoot, in DirectoryPath outputRoot, PathFilter filter)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot.Value);
         ArgumentException.ThrowIfNullOrEmpty(outputRoot.Value);
@@ -42,7 +42,7 @@ internal static class DocsAssetCopier
             }
 
             var destPath = Path.Combine(outputRoot.Value, relative.Replace(Path.DirectorySeparatorChar, '/'));
-            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
             // Kernel-level copy (CopyFile / copy_file_range) — same primitive the privacy
             // downloader uses for cache → output materialization.

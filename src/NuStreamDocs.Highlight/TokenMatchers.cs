@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Highlight;
 
@@ -39,12 +40,14 @@ public static class TokenMatchers
     /// <summary>Matches a run of ASCII whitespace (with newlines). Equivalent to <c>\G[ \t\r\n]+</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length of the run, or <c>0</c> when the cursor byte isn't whitespace.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int MatchAsciiWhitespace(ReadOnlySpan<byte> slice) =>
         MatchRunOf(slice, AsciiWhitespaceWithNewlines);
 
     /// <summary>Matches a run of ASCII inline whitespace (no newlines). Equivalent to <c>\G[ \t]+</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length of the run, or <c>0</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int MatchAsciiInlineWhitespace(ReadOnlySpan<byte> slice) =>
         MatchRunOf(slice, AsciiInlineWhitespace);
 
@@ -120,6 +123,7 @@ public static class TokenMatchers
     /// <summary>Matches one or more ASCII digits. Equivalent to <c>\G[0-9]+</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or <c>0</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int MatchAsciiDigits(ReadOnlySpan<byte> slice) => MatchRunOf(slice, AsciiDigits);
 
     /// <summary>Matches an unsigned ASCII float — at least one digit, a dot, at least one digit, optional <c>e/E</c> exponent. Equivalent to <c>\G\d+\.\d+(?:[eE][+-]?\d+)?</c>.</summary>
@@ -168,14 +172,15 @@ public static class TokenMatchers
             return 0;
         }
 
-        var bodyStop = slice[2..].IndexOfAnyExcept(hexBody);
-        var bodyLen = bodyStop < 0 ? slice.Length - 2 : bodyStop;
+        const int HexPrefixLength = 2;
+        var bodyStop = slice[HexPrefixLength..].IndexOfAnyExcept(hexBody);
+        var bodyLen = bodyStop < 0 ? slice.Length - HexPrefixLength : bodyStop;
         if (bodyLen is 0)
         {
             return 0;
         }
 
-        var pos = 2 + bodyLen;
+        var pos = HexPrefixLength + bodyLen;
         while (pos < slice.Length && suffixSet.Contains(slice[pos]))
         {
             pos++;
@@ -273,12 +278,14 @@ public static class TokenMatchers
     /// <summary>Double-quoted string with backslash escapes — <c>"(?:\\.|[^"\\])*"</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched (including the quotes), or <c>0</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int MatchDoubleQuotedWithBackslashEscape(ReadOnlySpan<byte> slice) =>
         MatchQuotedWithBackslashEscape(slice, (byte)'"');
 
     /// <summary>Hash-prefixed line comment — <c>#</c> to end of line. Equivalent to <c>\G#[^\r\n]*</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int MatchHashComment(ReadOnlySpan<byte> slice) => MatchLineCommentToEol(slice, (byte)'#');
 
     /// <summary>Matches a quoted string where the embedded-quote escape is the doubled quote.</summary>
@@ -470,12 +477,14 @@ public static class TokenMatchers
     /// <summary>Matches a single-quoted string where the embedded-quote escape is the doubled quote (<c>''</c>) rather than a backslash.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched (including the quotes), or <c>0</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int MatchSingleQuotedDoubledEscape(ReadOnlySpan<byte> slice) =>
         MatchQuotedDoubledEscape(slice, (byte)'\'');
 
     /// <summary>Matches a double-quoted string where the embedded-quote escape is the doubled quote (<c>""</c>).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched (including the quotes), or <c>0</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int MatchDoubleQuotedDoubledEscape(ReadOnlySpan<byte> slice) =>
         MatchQuotedDoubledEscape(slice, (byte)'"');
 
@@ -589,8 +598,7 @@ public static class TokenMatchers
                 pos++;
             }
 
-            var runLen = pos - runStart;
-            if (runLen >= openLen)
+            if ((pos - runStart) >= openLen)
             {
                 return pos;
             }

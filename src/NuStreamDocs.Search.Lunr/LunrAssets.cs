@@ -22,12 +22,13 @@ internal static class LunrAssets
     /// <summary>Gets the UTF-8 bytes of the vendored Lunr runtime.</summary>
     /// <returns>Bytes of <c>lunr.min.js</c>.</returns>
     /// <exception cref="InvalidOperationException">When the embedded resource is missing — should be impossible at run time.</exception>
-    public static byte[] LunrMinJsBytes() => _cached ??= ReadEmbeddedResource(LunrResourceName);
+    internal static byte[] LunrMinJsBytes() => _cached ??= ReadEmbeddedResource(LunrResourceName);
 
     /// <summary>Reads <paramref name="name"/> from this assembly's manifest resources.</summary>
     /// <param name="name">Embedded-resource identifier.</param>
     /// <returns>Resource bytes.</returns>
-    private static byte[] ReadEmbeddedResource(string name)
+    /// <exception cref="InvalidOperationException">The requested resource is missing from the assembly.</exception>
+    private static byte[] ReadEmbeddedResource(ApiCompatString name)
     {
         var asm = typeof(LunrAssets).Assembly;
         using var stream = asm.GetManifestResourceStream(name)

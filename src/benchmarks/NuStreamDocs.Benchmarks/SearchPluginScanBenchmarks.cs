@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Plugins;
@@ -21,12 +22,19 @@ namespace NuStreamDocs.Benchmarks;
 /// Two payload sizes: short (~300 bytes of HTML, no frontmatter) and long (~30 KB of HTML
 /// with frontmatter keys folded in) — to bracket the realistic per-page corpus.
 /// </remarks>
+[DebuggerDisplay("SearchPluginScanBenchmarks: shortHtml={_shortHtml}, longHtml={_longHtml}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class SearchPluginScanBenchmarks
 {
     /// <summary>Repetitions used to grow the long HTML payload past the page-builder pool's small-input fast path.</summary>
     private const int LongPayloadRepeats = 600;
+
+    /// <summary>Initial HTML capacity reserved per repeated paragraph.</summary>
+    private const int ParagraphCapacity = 50;
+
+    /// <summary>Initial HTML capacity reserved for the title.</summary>
+    private const int HeadingCapacity = 32;
 
     /// <summary>Page path supplied to every Scan call so the title-fallback branch never trips.</summary>
     private const string RelativePath = "guide/intro.md";
@@ -55,11 +63,11 @@ public class SearchPluginScanBenchmarks
     {
         _shortHtml = "<h1>Intro</h1><p>hello world content for the search index</p>"u8.ToArray();
 
-        StringBuilder html = new((LongPayloadRepeats * 50) + 32);
-        html.Append("<h1>Long Page Title</h1>");
+        StringBuilder html = new((LongPayloadRepeats * ParagraphCapacity) + HeadingCapacity);
+        _ = html.Append("<h1>Long Page Title</h1>");
         for (var i = 0; i < LongPayloadRepeats; i++)
         {
-            html.Append("<p>Paragraph ").Append(i).Append(" — searchable body content with keywords.</p>");
+            _ = html.Append("<p>Paragraph ").Append(i).Append(" — searchable body content with keywords.</p>");
         }
 
         _longHtml = Encoding.UTF8.GetBytes(html.ToString());

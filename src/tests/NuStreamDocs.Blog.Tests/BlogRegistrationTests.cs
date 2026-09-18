@@ -10,25 +10,28 @@ namespace NuStreamDocs.Blog.Tests;
 /// <summary>Builder-extension + options tests for <c>WyamBlogPlugin</c>.</summary>
 public class BlogRegistrationTests
 {
+    /// <summary>The PostsDirectory fixture value.</summary>
+    private const string PostsDirectory = "posts";
+
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NameIsStable() =>
-        await Assert.That(new WyamBlogPlugin(new("posts", [.. "Blog"u8])).Name.SequenceEqual("wyam-blog"u8)).IsTrue();
+        await Assert.That(new WyamBlogPlugin(new(PostsDirectory, [.. "Blog"u8])).Name.SequenceEqual("wyam-blog"u8)).IsTrue();
 
     /// <summary>2-arg ctor enables EmitTagArchives.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TwoArgCtorEnablesArchives() =>
-        await Assert.That(new WyamBlogOptions("posts", [.. "Blog"u8]).EmitTagArchives).IsTrue();
+        await Assert.That(new WyamBlogOptions(PostsDirectory, [.. "Blog"u8]).EmitTagArchives).IsTrue();
 
     /// <summary>Validate() throws on empty fields.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ValidateThrowsOnEmpty()
     {
-        Assert.Throws<ArgumentException>(static () => new WyamBlogOptions(string.Empty, [.. "T"u8]).Validate());
-        var ex = Assert.Throws<ArgumentException>(static () => new WyamBlogOptions("posts", []).Validate());
+        _ = Assert.Throws<ArgumentException>(static () => new WyamBlogOptions(string.Empty, [.. "T"u8]).Validate());
+        var ex = Assert.Throws<ArgumentException>(static () => new WyamBlogOptions(PostsDirectory, []).Validate());
         await Assert.That(ex).IsNotNull();
     }
 
@@ -36,12 +39,12 @@ public class BlogRegistrationTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseWyamBlogRegisters() =>
-        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]))).IsTypeOf<DocBuilder>();
+        await Assert.That(new DocBuilder().UseWyamBlog(new(PostsDirectory, [.. "Blog"u8]))).IsTypeOf<DocBuilder>();
 
     /// <summary>UseWyamBlog(options, logger) registers.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseWyamBlogLoggerRegisters() =>
-        await Assert.That(new DocBuilder().UseWyamBlog(new("posts", [.. "Blog"u8]), NullLogger.Instance))
+        await Assert.That(new DocBuilder().UseWyamBlog(new(PostsDirectory, [.. "Blog"u8]), NullLogger.Instance))
             .IsTypeOf<DocBuilder>();
 }

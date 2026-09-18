@@ -12,6 +12,12 @@ namespace NuStreamDocs.MarkdownExtensions.Tests;
 /// <summary>Behavior tests for <c>MdInHtmlRewriter</c>.</summary>
 public class MdInHtmlRewriterTests
 {
+    /// <summary>Body surrounded by blank lines.</summary>
+    private const string PaddedBody = "\n\nx\n\n";
+
+    /// <summary>Attribute enabling Markdown parsing.</summary>
+    private const string MarkdownAttribute = "markdown=\"1\"";
+
     /// <summary>A <c>markdown="1"</c> attribute is stripped and blank lines pad the body.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -131,13 +137,13 @@ public class MdInHtmlRewriterTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task OpenTagWithoutClose() =>
-        await Assert.That(Rewrite("<div markdown=\"1\"")).Contains("markdown=\"1\"");
+        await Assert.That(Rewrite("<div markdown=\"1\"")).Contains(MarkdownAttribute);
 
     /// <summary>Tag with markdown attribute but no matching close stays untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NoMatchingCloseTag() =>
-        await Assert.That(Rewrite("<div markdown=\"1\">body")).Contains("markdown=\"1\"");
+        await Assert.That(Rewrite("<div markdown=\"1\">body")).Contains(MarkdownAttribute);
 
     /// <summary>Unquoted markdown attribute is not recognized.</summary>
     /// <returns>Async test.</returns>
@@ -149,37 +155,37 @@ public class MdInHtmlRewriterTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task CloseTagWithWhitespace() =>
-        await Assert.That(Rewrite("<div markdown=\"1\">x</div >")).Contains("\n\nx\n\n");
+        await Assert.That(Rewrite("<div markdown=\"1\">x</div >")).Contains(PaddedBody);
 
     /// <summary>Close tag with non-whitespace inside the angle bracket is rejected.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CloseTagWithGarbage() =>
-        await Assert.That(Rewrite("<div markdown=\"1\">x</divx>")).Contains("markdown=\"1\"");
+        await Assert.That(Rewrite("<div markdown=\"1\">x</divx>")).Contains(MarkdownAttribute);
 
     /// <summary>Tag with tab between attributes is handled.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TagWithTabBetweenAttributes() =>
-        await Assert.That(Rewrite("<div\tmarkdown=\"1\">x</div>")).Contains("\n\nx\n\n");
+        await Assert.That(Rewrite("<div\tmarkdown=\"1\">x</div>")).Contains(PaddedBody);
 
     /// <summary>Open tag with attribute on a new line.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task OpenTagWithNewlineWhitespace() =>
-        await Assert.That(Rewrite("<div\nmarkdown=\"1\">x</div>")).Contains("\n\nx\n\n");
+        await Assert.That(Rewrite("<div\nmarkdown=\"1\">x</div>")).Contains(PaddedBody);
 
     /// <summary>Self-closing tag (no body) is left untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SelfClosingNotRewritten() =>
-        await Assert.That(Rewrite("<br markdown=\"1\"/>")).Contains("markdown=\"1\"");
+        await Assert.That(Rewrite("<br markdown=\"1\"/>")).Contains(MarkdownAttribute);
 
     /// <summary>Tag whose name continues with digits and hyphens is recognized.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TagNameWithDigitsAndHyphens() =>
-        await Assert.That(Rewrite("<my-tag2 markdown=\"1\">x</my-tag2>")).Contains("\n\nx\n\n");
+        await Assert.That(Rewrite("<my-tag2 markdown=\"1\">x</my-tag2>")).Contains(PaddedBody);
 
     /// <summary>Open tag at end of input without close angle is left alone.</summary>
     /// <returns>Async test.</returns>

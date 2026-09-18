@@ -13,6 +13,18 @@ namespace NuStreamDocs.Bibliography.Tests;
 /// <summary>Pandoc-style citation marker grammar — single, multi, locator-bearing, escape-into-code — verified end-to-end through the rewriter so the single-pass walker stays honest.</summary>
 public class CitationMarkerScannerTests
 {
+    /// <summary>Decision year of the Mabo fixture.</summary>
+    private const int CaseYear = 1992;
+
+    /// <summary>Publication year of the article and case fixtures.</summary>
+    private const int PublicationYear = 2020;
+
+    /// <summary>Capacity multiplier for expanded citation output.</summary>
+    private const int OutputCapacityMultiplier = 4;
+
+    /// <summary>Minimum initial capacity for rendered output.</summary>
+    private const int MinimumBufferCapacity = 16;
+
     /// <summary>A bare <c>[@key]</c> marker resolves into a footnote reference and emits a Bibliography section with a single entry.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -98,15 +110,15 @@ public class CitationMarkerScannerTests
     private static string Render(string markdown)
     {
         var db = new BibliographyDatabaseBuilder()
-            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
-            .AddCase([.. "one"u8], [.. "Case One"u8], [.. "[2020] 1"u8], 2020)
-            .AddCase([.. "two"u8], [.. "Case Two"u8], [.. "[2020] 2"u8], 2020)
-            .AddCase([.. "yes"u8], [.. "Case Yes"u8], [.. "[2020] 3"u8], 2020)
-            .AddCase([.. "real"u8], [.. "Case Real"u8], [.. "[2020] 4"u8], 2020)
+            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], CaseYear)
+            .AddCase([.. "one"u8], [.. "Case One"u8], [.. "[2020] 1"u8], PublicationYear)
+            .AddCase([.. "two"u8], [.. "Case Two"u8], [.. "[2020] 2"u8], PublicationYear)
+            .AddCase([.. "yes"u8], [.. "Case Yes"u8], [.. "[2020] 3"u8], PublicationYear)
+            .AddCase([.. "real"u8], [.. "Case Real"u8], [.. "[2020] 4"u8], PublicationYear)
             .Build();
         BibliographyOptions options = new(db, Aglc4Style.Instance, false);
         BibliographyPlugin plugin = new(options);
-        ArrayBufferWriter<byte> sink = new(Math.Max(markdown.Length * 4, 16));
+        ArrayBufferWriter<byte> sink = new(Math.Max(markdown.Length * OutputCapacityMultiplier, MinimumBufferCapacity));
         PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(markdown), sink);
         plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);

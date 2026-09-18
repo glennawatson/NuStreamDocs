@@ -7,9 +7,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Building;
 
-/// <summary>
-/// Static helper for orchestrating build pipeline plugin phases.
-/// </summary>
+/// <summary>Static helper for orchestrating build pipeline plugin phases.</summary>
 internal static class BuildPipelinePluginOrchestrator
 {
     /// <summary>Fires <see cref="IBuildConfigurePlugin.ConfigureAsync"/> on every plugin sorted by priority.</summary>
@@ -19,7 +17,7 @@ internal static class BuildPipelinePluginOrchestrator
     /// <param name="crossPageMarkers">Cross-page marker registry plugins seed during configure.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every participant's configure hook has settled.</returns>
-    public static async Task FireConfigureAsync(
+    internal static async Task FireConfigureAsync(
         IBuildConfigurePlugin[] configures,
         IPlugin[] allPlugins,
         BuildPhaseShell shell,
@@ -37,7 +35,7 @@ internal static class BuildPipelinePluginOrchestrator
             UseDirectoryUrls = options.UseDirectoryUrls,
             SiteName = options.SiteName ?? [],
             SiteUrl = options.SiteUrl ?? [],
-            SiteAuthor = options.SiteAuthor ?? []
+            SiteAuthor = options.SiteAuthor ?? [],
         };
         var log = shell.Log;
         var pluginTiming = shell.PluginTiming;
@@ -62,7 +60,7 @@ internal static class BuildPipelinePluginOrchestrator
     /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every participant's discover hook has settled.</returns>
-    public static async Task FireDiscoverAsync(
+    internal static async Task FireDiscoverAsync(
         IBuildDiscoverPlugin[] discovers,
         IPlugin[] allPlugins,
         BuildPhaseShell shell,
@@ -74,10 +72,7 @@ internal static class BuildPipelinePluginOrchestrator
             return;
         }
 
-        BuildDiscoverContext context = new(shell.InputRoot, shell.OutputRoot, allPlugins, syntheticPages)
-        {
-            UseDirectoryUrls = shell.Options.UseDirectoryUrls
-        };
+        BuildDiscoverContext context = new(shell.InputRoot, shell.OutputRoot, allPlugins, syntheticPages) { UseDirectoryUrls = shell.Options.UseDirectoryUrls, };
         var log = shell.Log;
         var pluginTiming = shell.PluginTiming;
         for (var i = 0; i < discovers.Length; i++)
@@ -97,7 +92,7 @@ internal static class BuildPipelinePluginOrchestrator
     /// <param name="shell">Shared build-wide phase state.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every participant's resolve hook has settled.</returns>
-    public static async Task FireResolveAsync(
+    internal static async Task FireResolveAsync(
         IBuildResolvePlugin[] resolves,
         IPlugin[] allPlugins,
         BuildPhaseShell shell,
@@ -128,7 +123,7 @@ internal static class BuildPipelinePluginOrchestrator
     /// <param name="shell">Shared build-wide phase state.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every participant's finalize hook has settled.</returns>
-    public static async Task FireFinalizeAsync(
+    internal static async Task FireFinalizeAsync(
         IBuildFinalizePlugin[] finalizes,
         IPlugin[] allPlugins,
         BuildPhaseShell shell,

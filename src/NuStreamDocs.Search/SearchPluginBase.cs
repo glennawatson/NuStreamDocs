@@ -14,17 +14,23 @@ using NuStreamDocs.Yaml;
 namespace NuStreamDocs.Search;
 
 /// <summary>Base class for engine-specific search plugins; drives page scan, finalize, and head-extra emission.</summary>
-public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin,
+/// <param name="engine">Engine implementation that owns the on-disk format.</param>
+/// <param name="logger">Logger for diagnostics.</param>
+[System.Diagnostics.DebuggerDisplay("SearchPluginBase: {Name}")]
+public abstract class SearchPluginBase(ISearchEngine engine, ILogger logger) : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin,
     IHeadExtraProvider
 {
+    /// <summary>Html to text capacity divisor.</summary>
+    private const int HtmlToTextCapacityDivisor = 2;
+
     /// <summary>Engine implementation.</summary>
-    private readonly ISearchEngine _engine;
+    private readonly ISearchEngine _engine = engine;
 
     /// <summary>Documents collected during scan.</summary>
     private readonly ConcurrentBag<SearchDocument> _documents = [];
 
     /// <summary>Logger for diagnostics.</summary>
-    private readonly ILogger _logger;
+    private readonly ILogger _logger = logger;
 
     /// <summary>Output root captured during configure.</summary>
     private DirectoryPath _outputRoot;
@@ -34,15 +40,6 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
 
     /// <summary>Pre-encoded manifest URL; empty when the engine has no fetchable manifest.</summary>
     private byte[]? _manifestUrlBytes;
-
-    /// <summary>Initializes a new instance of the <see cref="SearchPluginBase"/> class.</summary>
-    /// <param name="engine">Engine implementation that owns the on-disk format.</param>
-    /// <param name="logger">Logger for diagnostics.</param>
-    protected SearchPluginBase(ISearchEngine engine, ILogger logger)
-    {
-        _engine = engine;
-        _logger = logger;
-    }
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "search"u8;
@@ -90,7 +87,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
             return;
         }
 
-        using var textRental = PageBuilderPool.Rent(html.Length / 2);
+        using var textRental = PageBuilderPool.Rent(html.Length / HtmlToTextCapacityDivisor);
         var textBuffer = textRental.Writer;
         var titleBytes = HtmlTextExtractor.Extract(html, textBuffer);
         var url = ToHtmlUrl(context.RelativePath, _useDirectoryUrls);
@@ -104,7 +101,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
             var dotIdx = fileSpan.LastIndexOf('.');
             var stemSpan = dotIdx < 0 ? fileSpan : fileSpan[..dotIdx];
             titleBytes = new byte[Encoding.UTF8.GetByteCount(stemSpan)];
-            Encoding.UTF8.GetBytes(stemSpan, titleBytes);
+            _ = Encoding.UTF8.GetBytes(stemSpan, titleBytes);
         }
 
         var frontmatterKeys = SearchableFrontmatterKeys;
@@ -129,7 +126,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
         DirectoryPath searchRoot = Path.Combine(root.Value, OutputSubdirectory);
         var docs = FilterAndSort(_documents, MinTokenLength);
         SearchLoggingHelper.LogIndexBuildStart(_logger, docs.Length, _engine.FormatName, searchRoot);
-        searchRoot.Create();
+        _ = searchRoot.Create();
         PrimaryIndexPath = _engine.Write(searchRoot, docs);
 
         await OnIndexWrittenAsync(root, cancellationToken).ConfigureAwait(false);
@@ -196,7 +193,7 @@ public abstract class SearchPluginBase : IBuildConfigurePlugin, IPageScanPlugin,
     private static SearchDocument[] FilterAndSort(ConcurrentBag<SearchDocument> bag, int minTokenLength)
     {
         var min = Math.Max(0, minTokenLength);
-        List<SearchDocument> docs = new(bag.Count);
+        List<SearchDocument> docs = [with(bag.Count)];
         foreach (var doc in bag)
         {
             if (doc.Text.Length >= min)

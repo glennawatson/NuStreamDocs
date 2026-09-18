@@ -7,4 +7,5 @@ namespace NuStreamDocs.Redirects;
 /// <summary>One block of the <c>_headers</c> file: HTTP headers applied to paths matching a pattern.</summary>
 /// <param name="PathPattern">UTF-8 path pattern in the Netlify / Cloudflare-Pages syntax (e.g. <c>/assets/*</c>, <c>/blog/:slug</c>).</param>
 /// <param name="HeaderLines">UTF-8 header lines in <c>Name: value</c> form (e.g. <c>Cache-Control: public, max-age=31536000, immutable</c>).</param>
+[System.Diagnostics.DebuggerDisplay("HeaderRule: {ToString(),nq}")]
 public readonly record struct HeaderRule(byte[] PathPattern, byte[][] HeaderLines);

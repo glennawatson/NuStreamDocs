@@ -9,6 +9,7 @@ namespace NuStreamDocs.Tags;
 /// <summary>Configuration for <see cref="TagsPlugin"/>.</summary>
 /// <param name="OutputSubdirectory">Subdirectory under the site root where tag pages are written; defaults to <c>tags</c>.</param>
 /// <param name="IndexFileName">File name of the all-tags landing page (e.g. <c>index.html</c>).</param>
+[System.Diagnostics.DebuggerDisplay("TagsOptions: {ToString(),nq}")]
 public readonly record struct TagsOptions(
     PathSegment OutputSubdirectory,
     FilePath IndexFileName)

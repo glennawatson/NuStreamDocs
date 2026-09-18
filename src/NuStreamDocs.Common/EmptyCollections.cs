@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Common;
 
@@ -16,9 +17,10 @@ public static class EmptyCollections
     /// <typeparam name="TKey">Key type.</typeparam>
     /// <typeparam name="TValue">Value type.</typeparam>
     /// <returns>The shared empty dictionary singleton.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
-        "Sonar Code Smell",
-        "S4018:Generic methods should provide type parameters",
+        "Design",
+        "SST2307:Generic method type parameters should be inferable from the parameters",
         Justification = "Caller-supplied type parameters are the whole API surface — there is no value parameter to drive inference.")]
     public static Dictionary<TKey, TValue> DictionaryFor<TKey, TValue>()
         where TKey : notnull => EmptyDictionaryHolder<TKey, TValue>.Instance;
@@ -26,9 +28,10 @@ public static class EmptyCollections
     /// <summary>Returns the cached empty <see cref="HashSet{T}"/> for <typeparamref name="T"/>. Do not mutate.</summary>
     /// <typeparam name="T">Element type.</typeparam>
     /// <returns>The shared empty set singleton.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
-        "Sonar Code Smell",
-        "S4018:Generic methods should provide type parameters",
+        "Design",
+        "SST2307:Generic method type parameters should be inferable from the parameters",
         Justification = "Caller-supplied type parameter is the whole API surface — there is no value parameter to drive inference.")]
     public static HashSet<T> HashSetFor<T>() => EmptyHashSetHolder<T>.Instance;
 

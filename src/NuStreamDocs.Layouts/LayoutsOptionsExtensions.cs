@@ -9,21 +9,24 @@ namespace NuStreamDocs.Layouts;
 /// <summary>Construction helpers for <see cref="LayoutsOptions"/>.</summary>
 public static class LayoutsOptionsExtensions
 {
-    /// <summary>Returns a copy of <paramref name="options"/> with <see cref="LayoutsOptions.TemplateDirectory"/> set.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="templateDirectory">Directory layouts are loaded from.</param>
-    /// <returns>The updated options.</returns>
-    public static LayoutsOptions
-        WithTemplateDirectory(this LayoutsOptions options, in DirectoryPath templateDirectory) =>
-        options with { TemplateDirectory = templateDirectory };
-
-    /// <summary>Returns a copy of <paramref name="options"/> with <see cref="LayoutsOptions.MaxIncludeDepth"/> set.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="maxIncludeDepth">Nested-include cap; must be at least <c>1</c>.</param>
-    /// <returns>The updated options.</returns>
-    public static LayoutsOptions WithMaxIncludeDepth(this LayoutsOptions options, int maxIncludeDepth)
+    /// <summary>Extension members for <c>LayoutsOptions</c>.</summary>
+    /// <param name="options">Options to update.</param>
+    extension(LayoutsOptions options)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(maxIncludeDepth, 1);
-        return options with { MaxIncludeDepth = maxIncludeDepth };
+        /// <summary>Returns a copy of <paramref name="options"/> with <see cref="LayoutsOptions.TemplateDirectory"/> set.</summary>
+        /// <param name="templateDirectory">Directory layouts are loaded from.</param>
+        /// <returns>The updated options.</returns>
+        public LayoutsOptions
+            WithTemplateDirectory(in DirectoryPath templateDirectory) =>
+            options with { TemplateDirectory = templateDirectory };
+
+        /// <summary>Returns a copy of <paramref name="options"/> with <see cref="LayoutsOptions.MaxIncludeDepth"/> set.</summary>
+        /// <param name="maxIncludeDepth">Nested-include cap; must be at least <c>1</c>.</param>
+        /// <returns>The updated options.</returns>
+        public LayoutsOptions WithMaxIncludeDepth(int maxIncludeDepth)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(maxIncludeDepth, 1);
+            return options with { MaxIncludeDepth = maxIncludeDepth };
+        }
     }
 }

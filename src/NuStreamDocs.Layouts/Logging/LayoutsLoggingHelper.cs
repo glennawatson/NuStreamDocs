@@ -14,7 +14,7 @@ internal static partial class LayoutsLoggingHelper
         EventId = 9201,
         Level = LogLevel.Warning,
         Message = "Layouts: template not found at {Path}; passing rendered HTML through unchanged")]
-    public static partial void LogMissingTemplate(ILogger logger, string path);
+    internal static partial void LogMissingTemplate(ILogger logger, string path);
 
     /// <summary>Logs an unresolved <c>{{ page.X }}</c> reference at <c>Warning</c>.</summary>
     /// <param name="logger">Target logger.</param>
@@ -23,7 +23,7 @@ internal static partial class LayoutsLoggingHelper
         EventId = 9202,
         Level = LogLevel.Warning,
         Message = "Layouts: no value for {{{{ {Name} }}}}; emitting empty string")]
-    public static partial void LogMissingVariable(ILogger logger, string name);
+    internal static partial void LogMissingVariable(ILogger logger, string name);
 
     /// <summary>Logs an include-depth overflow at <c>Warning</c>.</summary>
     /// <param name="logger">Target logger.</param>
@@ -33,7 +33,7 @@ internal static partial class LayoutsLoggingHelper
         EventId = 9203,
         Level = LogLevel.Warning,
         Message = "Layouts: include depth {Depth} exceeded at {Path}; expansion stopped")]
-    public static partial void LogIncludeDepthExceeded(ILogger logger, int depth, string path);
+    internal static partial void LogIncludeDepthExceeded(ILogger logger, int depth, string path);
 
     /// <summary>Logs a missing include-target file at <c>Warning</c>.</summary>
     /// <param name="logger">Target logger.</param>
@@ -42,7 +42,7 @@ internal static partial class LayoutsLoggingHelper
         EventId = 9204,
         Level = LogLevel.Warning,
         Message = "Layouts: include target {Path} not found; skipping")]
-    public static partial void LogMissingInclude(ILogger logger, string path);
+    internal static partial void LogMissingInclude(ILogger logger, string path);
 
     /// <summary>Logs an unsupported tag at <c>Warning</c>; the tag text is passed through verbatim.</summary>
     /// <param name="logger">Target logger.</param>
@@ -51,7 +51,7 @@ internal static partial class LayoutsLoggingHelper
         EventId = 9205,
         Level = LogLevel.Warning,
         Message = "Layouts: unsupported tag {{% {Tag} %}}; passed through verbatim")]
-    public static partial void LogUnsupportedTag(ILogger logger, string tag);
+    internal static partial void LogUnsupportedTag(ILogger logger, string tag);
 
     /// <summary>Logs a <c>{{ super() }}</c> reference outside an overriding block at <c>Warning</c>.</summary>
     /// <param name="logger">Target logger.</param>
@@ -59,5 +59,5 @@ internal static partial class LayoutsLoggingHelper
         EventId = 9206,
         Level = LogLevel.Warning,
         Message = "Layouts: {{ super() }} called outside an overriding block; emitting empty string")]
-    public static partial void LogSuperOutsideBlock(ILogger logger);
+    internal static partial void LogSuperOutsideBlock(ILogger logger);
 }

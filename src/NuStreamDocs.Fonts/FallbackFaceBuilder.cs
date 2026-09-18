@@ -83,6 +83,7 @@ public static class FallbackFaceBuilder
     /// <param name="AscentOverride">The <c>ascent-override</c> fraction.</param>
     /// <param name="DescentOverride">The <c>descent-override</c> fraction.</param>
     /// <param name="LineGapOverride">The <c>line-gap-override</c> fraction.</param>
+    [System.Diagnostics.DebuggerDisplay("Overrides: {ToString(),nq}")]
     public readonly record struct Overrides(
         double SizeAdjust,
         double AscentOverride,

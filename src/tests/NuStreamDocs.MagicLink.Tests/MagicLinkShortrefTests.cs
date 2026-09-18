@@ -10,14 +10,17 @@ namespace NuStreamDocs.MagicLink.Tests;
 /// <summary>Behavior tests for the GitHub-shortref expansion path of <c>MagicLinkRewriter</c>.</summary>
 public class MagicLinkShortrefTests
 {
-    /// <summary>Default test repo bytes.</summary>
-    private static readonly byte[] DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray();
+    /// <summary>Issue reference without a repository URL.</summary>
+    private const string IssueReference = "see #377";
+
+    /// <summary>Gets the default test repository.</summary>
+    private static ReadOnlySpan<byte> DefaultRepo => "reactiveui/ReactiveUI"u8;
 
     /// <summary>A bare <c>#NNN</c> shortref expands to a Markdown link against the configured repo.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task BareIssueRefExpandsToMarkdownLink() =>
-        await Assert.That(Rewrite("see #377", false))
+        await Assert.That(Rewrite(IssueReference, false))
             .IsEqualTo("see [#377](https://github.com/reactiveui/ReactiveUI/issues/377)");
 
     /// <summary>Issue refs inside parentheses expand without consuming the trailing <c>)</c>.</summary>
@@ -86,7 +89,7 @@ public class MagicLinkShortrefTests
         byte[] bytes = [.. "see #377"u8];
         ArrayBufferWriter<byte> sink = new(bytes.Length);
         MagicLinkRewriter.Rewrite(bytes, sink, [], false);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("see #377");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(IssueReference);
     }
 
     /// <summary>Rewrites <paramref name="input"/> with shortref expansion enabled.</summary>

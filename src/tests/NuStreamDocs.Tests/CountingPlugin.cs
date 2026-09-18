@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
@@ -51,17 +52,18 @@ internal sealed class CountingPlugin : IBuildConfigurePlugin, IPagePostRenderPlu
     {
         _ = context;
         _ = cancellationToken;
-        Interlocked.Increment(ref _configureHits);
+        _ = Interlocked.Increment(ref _configureHits);
         return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
     /// <inheritdoc/>
     public void PostRender(in PagePostRenderContext context)
     {
-        Interlocked.Increment(ref _pageHits);
+        _ = Interlocked.Increment(ref _pageHits);
         context.Output.Write(context.Html);
     }
 
@@ -70,7 +72,7 @@ internal sealed class CountingPlugin : IBuildConfigurePlugin, IPagePostRenderPlu
     {
         _ = context;
         _ = cancellationToken;
-        Interlocked.Increment(ref _finalizeHits);
+        _ = Interlocked.Increment(ref _finalizeHits);
         return ValueTask.CompletedTask;
     }
 }

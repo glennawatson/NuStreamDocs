@@ -8,6 +8,7 @@ namespace NuStreamDocs.SphinxInventory;
 /// <param name="ProjectName">Project name written to the inventory header (Sphinx <c>project</c>).</param>
 /// <param name="Version">Project version written to the inventory header (Sphinx <c>version</c>); empty when no version is set.</param>
 /// <param name="OutputFileName">File name written under the build output root; defaults to <c>objects.inv</c>.</param>
+[System.Diagnostics.DebuggerDisplay("SphinxInventoryOptions: {ToString(),nq}")]
 public sealed record SphinxInventoryOptions(
     string ProjectName,
     string Version,

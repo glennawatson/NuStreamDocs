@@ -8,10 +8,7 @@ using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Markdown;
 
-/// <summary>
-/// Inline-link handler. Recognizes <c>[label](href)</c> and emits a
-/// matching <c>&lt;a&gt;</c> element with the href HTML-escaped.
-/// </summary>
+/// <summary>Inline-link handler. Recognizes <c>[label](href)</c> and emits a matching <c>&lt;a&gt;</c> element with the href HTML-escaped.</summary>
 internal static class LinkSpan
 {
     /// <summary>Open-bracket byte.</summary>
@@ -26,15 +23,16 @@ internal static class LinkSpan
     /// <summary>Close-paren byte.</summary>
     private const byte CloseParen = (byte)')';
 
-    /// <summary>
-    /// Handles an open bracket at <paramref name="pos"/>.
-    /// </summary>
+    /// <summary>Bytes separating a link label from its destination.</summary>
+    private const int LabelDestinationSeparatorLength = 2;
+
+    /// <summary>Handles an open bracket at <paramref name="pos"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="pos">Cursor; advanced past the close paren on success.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when the link was complete and rendered.</returns>
-    public static bool TryHandle(
+    internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
@@ -67,7 +65,7 @@ internal static class LinkSpan
     /// <param name="start">Index of the opening bracket.</param>
     /// <param name="shape">Shape descriptor on success.</param>
     /// <returns>True when the shape is well-formed.</returns>
-    public static bool TryReadShape(ReadOnlySpan<byte> source, int start, out LinkShape shape)
+    internal static bool TryReadShape(ReadOnlySpan<byte> source, int start, out LinkShape shape)
     {
         shape = default;
         if (source[start] != OpenBracket)
@@ -81,7 +79,7 @@ internal static class LinkSpan
             return false;
         }
 
-        var hrefStart = labelEnd + 2;
+        var hrefStart = labelEnd + LabelDestinationSeparatorLength;
         var hrefEnd = FindMatching(source, hrefStart, OpenParen, CloseParen);
         if (hrefEnd < 0)
         {
@@ -98,7 +96,7 @@ internal static class LinkSpan
     /// <param name="open">Open marker.</param>
     /// <param name="close">Close marker.</param>
     /// <returns>Index of the matching close, or -1.</returns>
-    public static int FindMatching(ReadOnlySpan<byte> source, int searchFrom, byte open, byte close)
+    internal static int FindMatching(ReadOnlySpan<byte> source, int searchFrom, byte open, byte close)
     {
         var depth = 1;
         for (var i = searchFrom; i < source.Length; i++)
@@ -131,7 +129,7 @@ internal static class LinkSpan
     /// <param name="HrefStart">Inclusive start of the href.</param>
     /// <param name="HrefEnd">Exclusive end of the href (the close paren).</param>
     /// <param name="End">Index after the close paren.</param>
-    public readonly record struct LinkShape(
+    internal readonly record struct LinkShape(
         int LabelStart,
         int LabelEnd,
         int HrefStart,

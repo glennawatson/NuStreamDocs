@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
@@ -16,25 +17,29 @@ namespace NuStreamDocs.Building;
 /// cref="UsePlugin{TPlugin}"/> (AOT-clean direct construction) or per-plugin <c>Use{Plugin}</c>
 /// extension methods.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("DocBuilder: {UseDirectoryUrlsEnabled}")]
 public sealed class DocBuilder
 {
     /// <summary>Initial slot capacity for registered plugins.</summary>
     private const int InitialPluginCapacity = 16;
 
-    /// <summary>Justification text for the S4018 suppression on <see cref="UsePlugin{TPlugin}"/>.</summary>
-    private const string S4018Justification =
-        "TPlugin is intentionally the only input — the AOT-clean registration pattern is " +
-        "`builder.UsePlugin<TPlugin>()` which compiles down to a direct `new TPlugin()` " +
-        "call. Adding a parameter would defeat the point.";
+    /// <summary>Allows post-render output to grow beyond the input size.</summary>
+    private const int RenderBufferMultiplier = 2;
+
+    /// <summary>Explains why plugin registration requires an explicit type argument.</summary>
+    private const string PluginTypeArgumentJustification =
+        "TPlugin is intentionally the only input — the AOT-clean registration pattern is "
+        + "`builder.UsePlugin<TPlugin>()` which compiles down to a direct `new TPlugin()` "
+        + "call. Adding a parameter would defeat the point.";
 
     /// <summary>Registered plugin instances, in registration order.</summary>
-    private readonly List<IPlugin> _plugins = new(InitialPluginCapacity);
+    private readonly List<IPlugin> _plugins = [with(InitialPluginCapacity)];
 
     /// <summary>Configured include globs (forward-slashed, relative to the docs root).</summary>
-    private readonly List<string> _includes = new(2);
+    private readonly List<string> _includes = [with(2)];
 
     /// <summary>Configured exclude globs (forward-slashed, relative to the docs root).</summary>
-    private readonly List<string> _excludes = new(4);
+    private readonly List<string> _excludes = [with(4)];
 
     /// <summary>Configured input docs directory; defaults to <c>./docs</c>.</summary>
     private DirectoryPath _inputRoot = new("./docs");
@@ -118,6 +123,7 @@ public sealed class DocBuilder
     /// <summary>Sets the input docs directory.</summary>
     /// <param name="path">Path to the docs root; string literals are accepted via the implicit <see cref="DirectoryPath"/> conversion.</param>
     /// <returns>This builder for chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>path.IsEmpty</c>.</exception>
     public DocBuilder WithInput(in DirectoryPath path)
     {
         if (path.IsEmpty)
@@ -132,6 +138,7 @@ public sealed class DocBuilder
     /// <summary>Sets the output site directory.</summary>
     /// <param name="path">Path to the output root; string literals are accepted via the implicit <see cref="DirectoryPath"/> conversion.</param>
     /// <returns>This builder for chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>path.IsEmpty</c>.</exception>
     public DocBuilder WithOutput(in DirectoryPath path)
     {
         if (path.IsEmpty)
@@ -146,6 +153,7 @@ public sealed class DocBuilder
     /// <summary>Adds an include glob (forward-slashed, relative to the docs root).</summary>
     /// <param name="pattern">Glob pattern, e.g. <c>guide/**/*.md</c>.</param>
     /// <returns>This builder for chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>pattern.IsEmpty</c>.</exception>
     /// <remarks>When at least one include is registered, only paths matching an include are processed (and must still survive the configured excludes).</remarks>
     public DocBuilder Include(in GlobPattern pattern)
     {
@@ -161,6 +169,7 @@ public sealed class DocBuilder
     /// <summary>Adds one or more include globs (forward-slashed, relative to the docs root).</summary>
     /// <param name="patterns">Glob patterns.</param>
     /// <returns>This builder for chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>patterns[i].IsEmpty</c>.</exception>
     public DocBuilder Include(params ReadOnlySpan<GlobPattern> patterns)
     {
         for (var i = 0; i < patterns.Length; i++)
@@ -179,6 +188,7 @@ public sealed class DocBuilder
     /// <summary>Adds an exclude glob (forward-slashed, relative to the docs root).</summary>
     /// <param name="pattern">Glob pattern, e.g. <c>drafts/**</c>.</param>
     /// <returns>This builder for chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>pattern.IsEmpty</c>.</exception>
     public DocBuilder Exclude(in GlobPattern pattern)
     {
         if (pattern.IsEmpty)
@@ -193,6 +203,7 @@ public sealed class DocBuilder
     /// <summary>Adds one or more exclude globs (forward-slashed, relative to the docs root).</summary>
     /// <param name="patterns">Glob patterns.</param>
     /// <returns>This builder for chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>patterns[i].IsEmpty</c>.</exception>
     public DocBuilder Exclude(params ReadOnlySpan<GlobPattern> patterns)
     {
         for (var i = 0; i < patterns.Length; i++)
@@ -212,9 +223,9 @@ public sealed class DocBuilder
     /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/>.</typeparam>
     /// <returns>This builder for chaining.</returns>
     [SuppressMessage(
-        "Major Code Smell",
-        "S4018:Generic methods should provide type parameters",
-        Justification = S4018Justification)]
+        "Design",
+        "SST2307:Generic method type parameters should be inferable from the parameters",
+        Justification = PluginTypeArgumentJustification)]
     public DocBuilder UsePlugin<TPlugin>()
         where TPlugin : IPlugin, new()
     {
@@ -235,9 +246,9 @@ public sealed class DocBuilder
     /// <typeparam name="TPlugin">Plugin type implementing <see cref="IPlugin"/> with a parameterless constructor.</typeparam>
     /// <returns>The single registered instance of <typeparamref name="TPlugin"/>.</returns>
     [SuppressMessage(
-        "Major Code Smell",
-        "S4018:Generic methods should provide type parameters",
-        Justification = S4018Justification)]
+        "Design",
+        "SST2307:Generic method type parameters should be inferable from the parameters",
+        Justification = PluginTypeArgumentJustification)]
     public TPlugin GetOrAddPlugin<TPlugin>()
         where TPlugin : class, IPlugin, new()
     {
@@ -256,11 +267,13 @@ public sealed class DocBuilder
 
     /// <summary>Runs the configured build pipeline without cancellation support.</summary>
     /// <returns>The number of pages emitted.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task<int> BuildAsync() => BuildAsync(CancellationToken.None);
 
     /// <summary>Runs the configured build pipeline with cancellation support.</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The number of pages emitted.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task<int> BuildAsync(in CancellationToken cancellationToken) =>
         BuildPipeline.RunAsync(
             _inputRoot,
@@ -271,10 +284,12 @@ public sealed class DocBuilder
 
     /// <summary>Gets the configured UTF-8 site name (empty when none).</summary>
     /// <returns>Configured bytes — never null.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> SiteName() => _siteName;
 
     /// <summary>Gets the configured UTF-8 canonical site URL (empty when none).</summary>
     /// <returns>Configured bytes — never null.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> SiteUrl() => _siteUrl;
 
     /// <summary>Sets the UTF-8 site name from a string.</summary>
@@ -333,6 +348,7 @@ public sealed class DocBuilder
 
     /// <summary>Gets the configured UTF-8 site-wide author name (empty when none).</summary>
     /// <returns>Configured bytes — never null.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> SiteAuthor() => _siteAuthor;
 
     /// <summary>Sets the UTF-8 site-wide author name from a string.</summary>
@@ -460,7 +476,7 @@ public sealed class DocBuilder
             return input;
         }
 
-        var back = PageBuilderPool.Rent(Math.Max(input.Writer.WrittenCount, source.Length) * 2);
+        var back = PageBuilderPool.Rent(Math.Max(input.Writer.WrittenCount, source.Length) * RenderBufferMultiplier);
         var front = input;
         for (var i = 0; i < plugins.Length; i++)
         {

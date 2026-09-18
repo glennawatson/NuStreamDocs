@@ -54,8 +54,8 @@ public class AutorefsPluginLifecycleTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-ar-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-ar-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

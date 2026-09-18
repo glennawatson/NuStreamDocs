@@ -10,6 +10,12 @@ namespace NuStreamDocs.Fonts.Tests;
 /// <summary>Coverage for <c>DocBuilderFontsExtensions</c> overloads.</summary>
 public class DocBuilderFontsExtensionsTests
 {
+    /// <summary>Expected normal weight in the fixture.</summary>
+    private const int NormalWeight = 400;
+
+    /// <summary>Expected bold weight in the fixture.</summary>
+    private const int BoldWeight = 700;
+
     /// <summary>The options overload returns a non-null builder.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -24,7 +30,7 @@ public class DocBuilderFontsExtensionsTests
     [Test]
     public async Task ConfigureDelegateOverload()
     {
-        var b = new DocBuilder().UseFonts(static o => o.AddGoogleFont("Source Sans 3"u8, 400, 700));
+        var b = new DocBuilder().UseFonts(static o => o.AddGoogleFont("Source Sans 3"u8, NormalWeight, BoldWeight));
         await Assert.That(b).IsNotNull();
     }
 

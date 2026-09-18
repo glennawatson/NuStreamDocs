@@ -3,7 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -12,6 +13,7 @@ using NuStreamDocs.Layouts;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks isolating the <see cref="TemplateCache"/> hit/miss/no-cache paths in <see cref="LayoutRenderer"/>.</summary>
+[DebuggerDisplay("LayoutsRenderBenchmarks: root={_root}, source={_source}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class LayoutsRenderBenchmarks
@@ -36,7 +38,7 @@ public class LayoutsRenderBenchmarks
     private const string HeaderTemplate = "<header>Site</header>";
 
     /// <summary>Temp directory for the layout fixture; lifetime-bound to the benchmark instance.</summary>
-    private string _root = string.Empty;
+    private DirectoryPath _root;
 
     /// <summary>Page source bytes (frontmatter only — body text isn't needed because <see cref="LayoutContext"/> takes the rendered HTML separately).</summary>
     private byte[] _source = [];
@@ -61,8 +63,8 @@ public class LayoutsRenderBenchmarks
     public void Setup()
     {
         _root = Directory.CreateTempSubdirectory("layouts-bench").FullName;
-        File.WriteAllBytes(Path.Combine(_root, "page.html"), Encoding.UTF8.GetBytes(PageTemplate));
-        File.WriteAllBytes(Path.Combine(_root, "header.html"), Encoding.UTF8.GetBytes(HeaderTemplate));
+        File.WriteAllText(_root.File("page.html"), PageTemplate);
+        File.WriteAllText(_root.File("header.html"), HeaderTemplate);
 
         _templateDir = _root;
         _templateName = "page.html"u8.ToArray();
@@ -91,7 +93,7 @@ public class LayoutsRenderBenchmarks
         _warmCache = new();
         _sink = new(SinkCapacity);
         var ctx = BuildLayoutContext();
-        LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, _warmCache);
+        _ = LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, _warmCache);
         _sink = new(SinkCapacity);
     }
 
@@ -106,7 +108,7 @@ public class LayoutsRenderBenchmarks
     public int Render_Cold_NoCache()
     {
         var ctx = BuildLayoutContext();
-        LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, null);
+        _ = LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, null);
         return _sink.WrittenCount;
     }
 
@@ -117,7 +119,7 @@ public class LayoutsRenderBenchmarks
     {
         TemplateCache cache = new();
         var ctx = BuildLayoutContext();
-        LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, cache);
+        _ = LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, cache);
         return _sink.WrittenCount;
     }
 
@@ -127,7 +129,7 @@ public class LayoutsRenderBenchmarks
     public int Render_Warm_WithCache()
     {
         var ctx = BuildLayoutContext();
-        LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, _warmCache);
+        _ = LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, _warmCache);
         return _sink.WrittenCount;
     }
 
@@ -139,7 +141,7 @@ public class LayoutsRenderBenchmarks
         var ctx = BuildLayoutContext();
         for (var i = 0; i < PageRepetitions; i++)
         {
-            LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, null);
+            _ = LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, null);
         }
 
         return _sink.WrittenCount;
@@ -153,7 +155,7 @@ public class LayoutsRenderBenchmarks
         var ctx = BuildLayoutContext();
         for (var i = 0; i < PageRepetitions; i++)
         {
-            LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, _warmCache);
+            _ = LayoutRenderer.Render(_templateName, _templateDir, ctx, MaxDepth, _sink, NullLogger.Instance, _warmCache);
         }
 
         return _sink.WrittenCount;
@@ -161,5 +163,6 @@ public class LayoutsRenderBenchmarks
 
     /// <summary>Builds a fresh <see cref="LayoutContext"/> for each measured render.</summary>
     /// <returns>Populated context.</returns>
-    private LayoutContext BuildLayoutContext() => LayoutContext.FromPage(_source, _html, "page.html"u8);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private LayoutContext BuildLayoutContext() => LayoutContext.FromPage(_source, _html, _templateName);
 }

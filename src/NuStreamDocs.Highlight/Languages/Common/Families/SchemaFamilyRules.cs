@@ -29,22 +29,16 @@ internal static class SchemaFamilyRules
     /// <summary>Builds a single-state schema-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateLexer(in SchemaFamilyConfig config) =>
+    internal static Lexer CreateLexer(in SchemaFamilyConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
     /// <summary>Builds the schema-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
-    public static LexerRule[] Build(in SchemaFamilyConfig config)
+    internal static LexerRule[] Build(in SchemaFamilyConfig config)
     {
         const int MaxRuleSlots = 16;
-        var rules = new List<LexerRule>(MaxRuleSlots)
-        {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            }
-        };
+        var rules = new List<LexerRule>(MaxRuleSlots) { new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, }, };
 
         AppendCommentRules(rules, config);
 
@@ -79,14 +73,8 @@ internal static class SchemaFamilyRules
             rules.Add(new(MatchSigilName, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = sigilFirst });
         }
 
-        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiDigits
-        });
-        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiDigits
-        });
+        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
+        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
 
         rules.Add(BuildKeywordRule(config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant));
         rules.Add(BuildKeywordRule(config.KeywordTypes, config.KeywordTypeFirst, TokenClass.KeywordType));
@@ -96,19 +84,16 @@ internal static class SchemaFamilyRules
             TokenClass.KeywordDeclaration));
         rules.Add(BuildKeywordRule(config.Keywords, config.KeywordFirst, TokenClass.Keyword));
 
-        rules.Add(new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiIdentifierStart
-        });
+        rules.Add(new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, });
 
         if (config.Operators is { } operators)
         {
-            var opFirst = config.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
+            var operatorFirst = config.OperatorFirst ?? OperatorAlternationFactory.FirstBytesOf(operators);
             rules.Add(new(
                     slice => TokenMatchers.MatchLongestLiteral(slice, operators),
                     TokenClass.Operator,
                     LexerRule.NoStateChange)
-            { FirstBytes = opFirst });
+            { FirstBytes = operatorFirst });
         }
 
         var punctuation = config.Punctuation;
@@ -128,10 +113,7 @@ internal static class SchemaFamilyRules
     {
         if (config.IncludeHashComment)
         {
-            rules.Add(new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            });
+            rules.Add(new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, });
         }
 
         if (!config.IncludeSlashComments)
@@ -139,14 +121,8 @@ internal static class SchemaFamilyRules
             return;
         }
 
-        rules.Add(new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.SlashFirst
-        });
-        rules.Add(new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.SlashFirst
-        });
+        rules.Add(new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, });
+        rules.Add(new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, });
     }
 
     /// <summary>Builds a keyword-set rule, falling back to the auto-derived first-byte set when no override is supplied.</summary>
@@ -160,10 +136,7 @@ internal static class SchemaFamilyRules
         TokenClass tokenClass)
     {
         var captured = keywords;
-        return new(slice => TokenMatchers.MatchKeyword(slice, captured), tokenClass, LexerRule.NoStateChange)
-        {
-            FirstBytes = firstBytes ?? captured.FirstByteSet
-        };
+        return new(slice => TokenMatchers.MatchKeyword(slice, captured), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet, };
     }
 
     /// <summary>Matches a sigil + identifier token (<c>$variable</c>, <c>@directive</c>, <c>:atom</c>).</summary>

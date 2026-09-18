@@ -9,13 +9,16 @@ namespace NuStreamDocs.Highlight.Tests;
 /// <summary>Tests covering the C# property-accessor state-machine — block-body and arrow-body forms, brace nesting, and pop semantics.</summary>
 public class CSharpAccessorStateTests
 {
+    /// <summary>The FieldKeywordHtml test value.</summary>
+    private const string FieldKeywordHtml = "<span class=\"k\">field</span>";
+
     /// <summary>Block-body accessor: <c>field</c> classified as keyword.</summary>
     /// <returns>Async task.</returns>
     [Test]
     public async Task BlockAccessorBody_classifies_field_as_keyword()
     {
         var html = CSharpLexer.Instance.Render("public int X { get { return field; } }"u8);
-        await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(FieldKeywordHtml, StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Block-body accessor: <c>value</c> classified as keyword inside setter.</summary>
@@ -35,7 +38,7 @@ public class CSharpAccessorStateTests
         var html = CSharpLexer.Instance.Render("public int X { get => field; } void M() { var field = 1; }"u8);
 
         // First `field` (in accessor) should be a keyword; second (in method body) should NOT be.
-        var firstKeyword = html.IndexOf("<span class=\"k\">field</span>", StringComparison.Ordinal);
+        var firstKeyword = html.IndexOf(FieldKeywordHtml, StringComparison.Ordinal);
         var firstIdentifier = html.IndexOf("<span class=\"n\">field</span>", StringComparison.Ordinal);
         await Assert.That(firstKeyword).IsGreaterThanOrEqualTo(0);
         await Assert.That(firstIdentifier).IsGreaterThan(firstKeyword);
@@ -50,7 +53,7 @@ public class CSharpAccessorStateTests
             "public int X { set { Action a = () => { Console.WriteLine(1); }; field = value; } }"u8);
 
         // Both `field` and `value` after the lambda's closing `}` must still be classified as keywords.
-        await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(FieldKeywordHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">value</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -62,8 +65,8 @@ public class CSharpAccessorStateTests
         var html = CSharpLexer.Instance.Render("public int X { get { return field; } set { field = value; } }"u8);
 
         // `field` should appear as a keyword at least twice (in both getter and setter).
-        var firstField = html.IndexOf("<span class=\"k\">field</span>", StringComparison.Ordinal);
-        var secondField = html.IndexOf("<span class=\"k\">field</span>", firstField + 1, StringComparison.Ordinal);
+        var firstField = html.IndexOf(FieldKeywordHtml, StringComparison.Ordinal);
+        var secondField = html.IndexOf(FieldKeywordHtml, firstField + 1, StringComparison.Ordinal);
         await Assert.That(firstField).IsGreaterThanOrEqualTo(0);
         await Assert.That(secondField).IsGreaterThan(firstField);
     }
@@ -76,7 +79,7 @@ public class CSharpAccessorStateTests
         var html = CSharpLexer.Instance.Render("public int X { get; set; } void M() { var field = 1; }"u8);
 
         // `field` in the method body should be a plain identifier, not a keyword.
-        await Assert.That(html.Contains("<span class=\"k\">field</span>", StringComparison.Ordinal)).IsFalse();
+        await Assert.That(html.Contains(FieldKeywordHtml, StringComparison.Ordinal)).IsFalse();
         await Assert.That(html.Contains("<span class=\"n\">field</span>", StringComparison.Ordinal)).IsTrue();
     }
 

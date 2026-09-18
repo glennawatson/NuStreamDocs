@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Plugins;
@@ -11,6 +13,7 @@ using NuStreamDocs.Toc;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for the TOC plugin's heading scan, rewrite, and fragment-render passes.</summary>
+[DebuggerDisplay("TocBenchmarks: HeadingCount={HeadingCount}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class TocBenchmarks
@@ -23,6 +26,21 @@ public class TocBenchmarks
 
     /// <summary>Large heading-count parameter — stress for the renderer.</summary>
     private const int LargeHeadings = 200;
+
+    /// <summary>Estimated bytes for each heading and its body.</summary>
+    private const int BytesPerHeading = 64;
+
+    /// <summary>First heading level included in navigation.</summary>
+    private const int FirstHeadingLevel = 2;
+
+    /// <summary>Number of heading levels cycled by the fixture.</summary>
+    private const int HeadingLevels = 3;
+
+    /// <summary>Headroom for inserted heading anchors.</summary>
+    private const int OutputExpansionFactor = 2;
+
+    /// <summary>Initial space for the navigation fragment.</summary>
+    private const int FragmentCapacity = 512;
 
     /// <summary>Pre-built HTML fixture sized by <c>HeadingCount</c>.</summary>
     private byte[] _html = [];
@@ -41,12 +59,12 @@ public class TocBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        StringBuilder sb = new(HeadingCount * 64);
-        sb.Append("<aside><!--@@toc@@--></aside>");
+        StringBuilder sb = new(HeadingCount * BytesPerHeading);
+        _ = sb.Append("<aside><!--@@toc@@--></aside>");
         for (var i = 0; i < HeadingCount; i++)
         {
-            var level = 2 + (i % 3);
-            sb.Append("<h").Append(level).Append('>')
+            var level = FirstHeadingLevel + (i % HeadingLevels);
+            _ = sb.Append("<h").Append(level).Append('>')
                 .Append("Section ").Append(i)
                 .Append("</h").Append(level).Append('>')
                 .Append("<p>Body ").Append(i).Append("</p>");
@@ -59,11 +77,13 @@ public class TocBenchmarks
 
     /// <summary>Benchmark for <c>HeadingSlugifier.AssignSlugs</c> — exercises text decode + byte slugify + dedup map for the whole page.</summary>
     /// <returns>The slugged heading count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int AssignSlugs() => HeadingSlugifier.AssignSlugs(_html, _scanned).Slugged.Length;
 
     /// <summary>Benchmark for the byte-only <c>SlugifyToBytes</c> hot path used by <c>AssignSlugs</c> for headings without an existing id.</summary>
     /// <returns>The slug byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int SlugifyToBytes() => HeadingSlugifier.SlugifyToBytes("Some Heading Title 42"u8).Length;
 
@@ -80,6 +100,7 @@ public class TocBenchmarks
 
     /// <summary>Benchmark for <c>HeadingScanner.Scan(ReadOnlySpan{byte})</c>.</summary>
     /// <returns>The scanned heading count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Scan() => HeadingScanner.Scan(_html).Length;
 
@@ -88,7 +109,7 @@ public class TocBenchmarks
     [Benchmark]
     public int Rewrite()
     {
-        ArrayBufferWriter<byte> sink = new(_html.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_html.Length * OutputExpansionFactor);
         HeadingRewriter.Rewrite(_html, _slugged, "¶"u8, sink);
         return sink.WrittenCount;
     }
@@ -98,7 +119,7 @@ public class TocBenchmarks
     [Benchmark]
     public int Fragment()
     {
-        ArrayBufferWriter<byte> sink = new(512);
+        ArrayBufferWriter<byte> sink = new(FragmentCapacity);
         var opts = TocOptions.Default;
         TocFragmentRenderer.Render(_html, _slugged, in opts, sink);
         return sink.WrittenCount;
@@ -109,7 +130,7 @@ public class TocBenchmarks
     [Benchmark]
     public int OnRenderPage()
     {
-        ArrayBufferWriter<byte> sink = new(_html.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_html.Length * OutputExpansionFactor);
         TocPlugin plugin = new();
         PagePostRenderContext ctx = new("page.md", default, _html, sink);
         plugin.PostRender(in ctx);

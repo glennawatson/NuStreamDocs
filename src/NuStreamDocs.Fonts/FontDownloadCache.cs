@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using NuStreamDocs.Common;
@@ -9,6 +10,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Fonts;
 
 /// <summary>A content-addressed on-disk cache for downloaded font files and stylesheets, so a second build (or warm CI) needs no network.</summary>
+[System.Diagnostics.DebuggerDisplay("FontDownloadCache: {_cacheDirectory}")]
 public sealed class FontDownloadCache
 {
     /// <summary>Number of hash bytes used in a cache filename (16 bytes → 32 hex chars).</summary>
@@ -67,7 +69,7 @@ public sealed class FontDownloadCache
             using var response = await Client
                 .GetAsync(new Uri(url.Value ?? string.Empty, UriKind.Absolute), cancellationToken)
                 .ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            _ = response.EnsureSuccessStatusCode();
             bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
@@ -82,6 +84,7 @@ public sealed class FontDownloadCache
     /// <summary>Returns the cache file path for <paramref name="url"/>.</summary>
     /// <param name="url">Absolute URL.</param>
     /// <returns>The absolute cache file path.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal string CacheFilePath(ApiCompatString url) =>
         Path.Combine(_cacheDirectory.Value, HashFileName(url.Value ?? string.Empty));
 
@@ -138,7 +141,7 @@ public sealed class FontDownloadCache
     private static HttpClient CreateClient()
     {
         var client = new HttpClient();
-        client.DefaultRequestHeaders.TryAddWithoutValidation(
+        _ = client.DefaultRequestHeaders.TryAddWithoutValidation(
             "User-Agent",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         return client;
@@ -180,7 +183,7 @@ public sealed class FontDownloadCache
             return;
         }
 
-        Directory.CreateDirectory(_cacheDirectory.Value);
+        _ = Directory.CreateDirectory(_cacheDirectory.Value);
         var temp = StringCompose.Concat(path, ".", Guid.NewGuid().ToString("N"));
         try
         {

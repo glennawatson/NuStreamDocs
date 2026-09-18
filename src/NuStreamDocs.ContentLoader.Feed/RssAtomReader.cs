@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Frozen;
 using System.Text;
 using System.Xml;
 using NuStreamDocs.Common;
@@ -14,8 +15,11 @@ namespace NuStreamDocs.ContentLoader.Feed;
 /// </summary>
 internal static class RssAtomReader
 {
+    /// <summary>Initial space for feed entries before their count is known.</summary>
+    private const int InitialItemCapacity = 16;
+
     /// <summary>Maps a recognized entry child-element local name to the handler that folds it into the draft.</summary>
-    private static readonly Dictionary<string, ElementHandler> ElementHandlers = new(StringComparer.Ordinal)
+    private static readonly FrozenDictionary<ApiCompatString, ElementHandler> ElementHandlers = new Dictionary<ApiCompatString, ElementHandler>
     {
         ["title"] = HandleTitle,
         ["link"] = HandleLink,
@@ -27,8 +31,8 @@ internal static class RssAtomReader
         ["encoded"] = HandleContent,
         ["content"] = HandleContent,
         ["summary"] = HandleSummary,
-        ["description"] = HandleSummary
-    };
+        ["description"] = HandleSummary,
+    }.ToFrozenDictionary();
 
     /// <summary>Folds one recognized entry child element into the running draft, consuming it from the reader.</summary>
     /// <param name="reader">Reader positioned on the child element start.</param>
@@ -39,19 +43,13 @@ internal static class RssAtomReader
     /// <param name="xml">UTF-8 feed XML.</param>
     /// <returns>The parsed items; empty when the document has none.</returns>
     /// <exception cref="ContentLoaderException">When the document is not valid XML.</exception>
-    public static FeedItem[] Read(byte[] xml)
+    internal static FeedItem[] Read(byte[] xml)
     {
         ArgumentNullException.ThrowIfNull(xml);
 
-        XmlReaderSettings settings = new()
-        {
-            DtdProcessing = DtdProcessing.Ignore,
-            XmlResolver = null,
-            MaxCharactersFromEntities = 0,
-            CloseInput = false
-        };
+        XmlReaderSettings settings = new() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null, MaxCharactersFromEntities = 0, CloseInput = false };
 
-        List<FeedItem> items = [];
+        List<FeedItem> items = [with(InitialItemCapacity)];
         using MemoryStream stream = new(xml, false);
         using var reader = XmlReader.Create(stream, settings);
         try
@@ -89,12 +87,12 @@ internal static class RssAtomReader
         var entryDepth = reader.Depth;
         EntryDraft draft = new([], [], [], [], [], [], []);
 
-        reader.Read();
+        _ = reader.Read();
         while (!(reader.NodeType == XmlNodeType.EndElement && reader.Depth == entryDepth))
         {
             if (reader.NodeType != XmlNodeType.Element || reader.Depth != entryDepth + 1)
             {
-                reader.Read();
+                _ = reader.Read();
                 continue;
             }
 

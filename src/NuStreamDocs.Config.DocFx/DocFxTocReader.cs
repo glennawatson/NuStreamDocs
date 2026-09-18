@@ -9,9 +9,7 @@ using NuStreamDocs.Nav;
 
 namespace NuStreamDocs.Config.DocFx;
 
-/// <summary>
-/// Reads docfx-style <c>toc.yml</c> files and converts them into <see cref="NavEntry"/> trees.
-/// </summary>
+/// <summary>Reads docfx-style <c>toc.yml</c> files and converts them into <see cref="NavEntry"/> trees.</summary>
 /// <remarks>
 /// Supports the narrow toc.yml subset docfx-style sites use:
 /// <list type="bullet">
@@ -27,6 +25,15 @@ namespace NuStreamDocs.Config.DocFx;
 /// </remarks>
 public static class DocFxTocReader
 {
+    /// <summary>Initial number of entries reserved for a table-of-contents section.</summary>
+    private const int InitialEntryCapacity = 8;
+
+    /// <summary>Capacity multiplier when the entry buffer fills.</summary>
+    private const int BufferGrowthFactor = 2;
+
+    /// <summary>Columns occupied by the sequence marker before an item's body keys.</summary>
+    private const int SequenceMarkerIndent = 2;
+
     /// <summary>Gets the default toc file name in each directory.</summary>
     public static string TocFileName => "toc.yml";
 
@@ -74,7 +81,7 @@ public static class DocFxTocReader
         ref TocLineParser lines,
         int baseIndent)
     {
-        var rented = ArrayPool<NavEntry>.Shared.Rent(8);
+        var rented = ArrayPool<NavEntry>.Shared.Rent(InitialEntryCapacity);
         var count = 0;
         try
         {
@@ -83,13 +90,14 @@ public static class DocFxTocReader
                 var item = ParseOneItem(rootDirectory, currentDirectory, ref lines);
                 if (count == rented.Length)
                 {
-                    var grown = ArrayPool<NavEntry>.Shared.Rent(rented.Length * 2);
+                    var grown = ArrayPool<NavEntry>.Shared.Rent(rented.Length * BufferGrowthFactor);
                     Array.Copy(rented, grown, count);
                     ArrayPool<NavEntry>.Shared.Return(rented, true);
                     rented = grown;
                 }
 
-                rented[count++] = item;
+                rented[count] = item;
+                count++;
             }
 
             if (count is 0)
@@ -121,12 +129,12 @@ public static class DocFxTocReader
         }
 
         ApplyKey(firstLine, ref fields);
-        var bodyIndent = firstLine.Indent + 2; // body keys live two columns past the `- ` marker.
+        var bodyIndent = firstLine.Indent + SequenceMarkerIndent;
         while (lines.Peek(out var next) && !next.IsSequenceItem && next.Indent >= bodyIndent)
         {
             if (next.HasItemsKey && bodyIndent <= next.Indent)
             {
-                lines.TryConsume(out _);
+                _ = lines.TryConsume(out _);
 
                 // mkdocs-style YAML lets items: children sit at the same column as the items key,
                 // so the floor here is one less than the items column rather than equal to it.
@@ -134,7 +142,7 @@ public static class DocFxTocReader
                 continue;
             }
 
-            lines.TryConsume(out _);
+            _ = lines.TryConsume(out _);
             ApplyKey(next, ref fields);
         }
 
@@ -165,6 +173,9 @@ public static class DocFxTocReader
                     fields.Homepage = line.Value.ToArray();
                     break;
                 }
+
+            case TocKey.Unknown:
+                break;
         }
     }
 
@@ -310,7 +321,7 @@ public static class DocFxTocReader
     /// <param name="path">UTF-8 path bytes.</param>
     /// <returns>True for trailing-slash refs.</returns>
     private static bool EndsWithSlash(ReadOnlySpan<byte> path) =>
-        path.Length > 0 && path[^1] is (byte)'/' or (byte)'\\';
+        !path.IsEmpty && path[^1] is (byte)'/' or (byte)'\\';
 
     /// <summary>Resolves <paramref name="hrefString"/> against <paramref name="currentDirectory"/> and returns it as a root-relative forward-slash path.</summary>
     /// <param name="rootDirectory">Site docs root.</param>

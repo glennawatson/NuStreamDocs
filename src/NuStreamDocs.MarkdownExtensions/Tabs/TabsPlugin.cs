@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
@@ -10,12 +11,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.Tabs;
 
 /// <summary>Content-tabs plugin — rewrites <c>=== "Title"</c> blocks into a radio-button-driven tabbed group.</summary>
+[System.Diagnostics.DebuggerDisplay("TabsPlugin: {Name}")]
 public sealed class TabsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>Head-link snippet injected on every page.</summary>
-    private static readonly byte[] LinkBytes =
-        [.. """<link rel="stylesheet" href="/assets/extensions/tabs.css">"""u8];
-
     /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
     [
@@ -41,14 +39,20 @@ public sealed class TabsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHe
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
+    /// <summary>Gets the stylesheet link injected on every page.</summary>
+    private static ReadOnlySpan<byte> LinkBytes => """<link rel="stylesheet" href="/assets/extensions/tabs.css">"""u8;
+
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasTabsOpener(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         TabsRewriter.Rewrite(context.Source, context.Output);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(LinkBytes);
 }

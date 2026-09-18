@@ -19,6 +19,7 @@ namespace NuStreamDocs.Nav;
 /// <param name="UseDirectoryUrls">Directory-URL override; null defers to the pipeline's flag.</param>
 /// <param name="HomeTab">When true (and <see cref="Tabs"/> is true), prepends a synthetic Home tab pointing at <c>/</c>.</param>
 /// <param name="HomeTabLabel">UTF-8 label for the synthetic Home tab. Defaults to <c>Home</c>.</param>
+[System.Diagnostics.DebuggerDisplay("NavOptions: {ToString(),nq}")]
 public readonly record struct NavOptions(
     GlobPattern[] Includes,
     GlobPattern[] Excludes,

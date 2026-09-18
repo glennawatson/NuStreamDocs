@@ -5,13 +5,14 @@
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Builder for assembling an <see cref="MdiIconLookup"/> from <c>(name, svg)</c> pairs.</summary>
+[System.Diagnostics.DebuggerDisplay("MdiIconLookupBuilder: {_blob}")]
 public sealed class MdiIconLookupBuilder
 {
     /// <summary>Accumulated SVG bytes.</summary>
     private readonly List<byte> _blob = [];
 
     /// <summary>Per-icon name to slice mapping.</summary>
-    private readonly Dictionary<byte[], (int Offset, int Length)> _entries = new(ByteArrayKeyComparer.Instance);
+    private readonly Dictionary<byte[], (int Offset, int Length)> _entries = [with(ByteArrayKeyComparer.Instance)];
 
     /// <summary>Adds an icon to the lookup.</summary>
     /// <param name="name">UTF-8 icon name (no <c>material-</c> prefix).</param>

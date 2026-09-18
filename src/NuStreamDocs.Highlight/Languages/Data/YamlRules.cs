@@ -79,20 +79,14 @@ internal static class YamlRules
     /// identifier so a leading <c>:</c> doesn't get eaten.
     /// </summary>
     /// <returns>Ordered rule list classifying YAML tokens.</returns>
-    public static LexerRule[] Build() =>
+    internal static LexerRule[] Build() =>
     [
 
         // [ \t\r\n]+ whitespace runs.
-        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines
-        },
+        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines, },
 
         // # line comment to end-of-line.
-        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-        {
-            FirstBytes = CommentFirst
-        },
+        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = CommentFirst, },
 
         // --- / ... document separator (no first-byte hint — line-anchored use).
         new(
@@ -116,49 +110,28 @@ internal static class YamlRules
         new(MatchTag, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = TagFirst },
 
         // "..." quoted mapping key — must precede the plain string-double rule.
-        new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.DoubleQuoteFirst
-        },
+        new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst, },
 
         // Plain mapping key — identifier shape followed by ':' lookahead.
         new(MatchKeyPlain, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = IdentifierFirst },
 
         // "..." double-quoted string with backslash escapes.
-        new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.DoubleQuoteFirst
-        },
+        new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst, },
 
         // '...' single-quoted string with '' as the embedded-quote escape (YAML/SQL style).
-        new(TokenMatchers.MatchSingleQuotedDoubledEscape, TokenClass.StringSingle, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.SingleQuoteFirst
-        },
+        new(TokenMatchers.MatchSingleQuotedDoubledEscape, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst, },
 
         // | / > block-scalar indicator with optional + - chomping and digit indent.
-        new(MatchBlockScalarIndicator, TokenClass.Punctuation, LexerRule.NoStateChange)
-        {
-            FirstBytes = BlockScalarFirst
-        },
+        new(MatchBlockScalarIndicator, TokenClass.Punctuation, LexerRule.NoStateChange) { FirstBytes = BlockScalarFirst, },
 
         // Case-insensitive YAML literal constants: true / false / null / yes / no / on / off / ~.
-        new(MatchKeywordConstant, TokenClass.KeywordConstant, LexerRule.NoStateChange)
-        {
-            FirstBytes = KeywordConstantFirst
-        },
+        new(MatchKeywordConstant, TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst, },
 
         // -?\d+\.\d+([eE][+-]?\d+)? float literal — must precede the integer rule.
-        new(TokenMatchers.MatchSignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
-        {
-            FirstBytes = NumberFirst
-        },
+        new(TokenMatchers.MatchSignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = NumberFirst, },
 
         // -?\d+ integer literal.
-        new(TokenMatchers.MatchSignedAsciiInteger, TokenClass.NumberInteger, LexerRule.NoStateChange)
-        {
-            FirstBytes = NumberFirst
-        },
+        new(TokenMatchers.MatchSignedAsciiInteger, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = NumberFirst, },
 
         // List bullet — line-anchored, optional indentation + '-' + whitespace.
         new(MatchBullet, TokenClass.Punctuation, LexerRule.NoStateChange) { RequiresLineStart = true },
@@ -250,7 +223,6 @@ internal static class YamlRules
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
     private static int MatchKeywordConstant(ReadOnlySpan<byte> slice) =>
-
         // YAML's spec includes "~" as a single-byte null literal.
         slice is [(byte)'~', ..] ? 1 : TokenMatchers.MatchKeyword(slice, KeywordConstants);
 

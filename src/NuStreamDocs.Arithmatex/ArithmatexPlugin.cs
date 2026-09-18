@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Arithmatex;
@@ -16,6 +17,7 @@ namespace NuStreamDocs.Arithmatex;
 /// must not be preceded by whitespace and must not be followed by a digit (so prices like <c>$5</c> never trigger).
 /// Fenced and inline-code regions pass through verbatim.
 /// </remarks>
+[System.Diagnostics.DebuggerDisplay("ArithmatexPlugin: {Name}")]
 public sealed class ArithmatexPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -28,6 +30,7 @@ public sealed class ArithmatexPlugin : IPagePreRenderPlugin
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)'$') >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         ArithmatexRewriter.Rewrite(context.Source, context.Output);
 }

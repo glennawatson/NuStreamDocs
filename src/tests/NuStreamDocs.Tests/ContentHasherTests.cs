@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Security.Cryptography;
 using NuStreamDocs.Caching;
 
 namespace NuStreamDocs.Tests;
@@ -14,7 +15,8 @@ public class ContentHasherTests
     [Test]
     public async Task HashFileAsync_computes_hash()
     {
-        var path = Path.GetTempFileName();
+        var directory = Directory.CreateTempSubdirectory();
+        var path = Path.Combine(directory.FullName, "content.txt");
         try
         {
             await File.WriteAllTextAsync(path, "content");
@@ -22,11 +24,11 @@ public class ContentHasherTests
             await Assert.That(hash.Length).IsEqualTo(ContentHasher.HashByteLength);
 
             var hash2 = await ContentHasher.HashFileAsync(path, CancellationToken.None);
-            await Assert.That(hash.AsSpan().SequenceEqual(hash2)).IsTrue();
+            await Assert.That(CryptographicOperations.FixedTimeEquals(hash, hash2)).IsTrue();
         }
         finally
         {
-            File.Delete(path);
+            directory.Delete(true);
         }
     }
 }

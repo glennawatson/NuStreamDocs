@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Tags.Tests;
@@ -56,6 +57,7 @@ public class TagsFrontmatterReaderTests
     /// <summary>Drives bytes through <c>TagsFrontmatterReader.Read</c>.</summary>
     /// <param name="markdown">Source text.</param>
     /// <returns>Parsed UTF-8 tag arrays.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte[][] Read(string markdown) =>
         TagsFrontmatterReader.Read(Encoding.UTF8.GetBytes(markdown));
 

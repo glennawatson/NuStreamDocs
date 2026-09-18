@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs</PackageId>
     <Description>Static-site generator core for building documentation sites from markdown. Includes the markdown parser, HTML renderer, page pipeline, plugin host, and incremental rebuild support. AOT-friendly and allocation-conscious. Pair with a theme plugin and the markdown / navigation / search extensions you need.</Description>
     <RootNamespace>NuStreamDocs</RootNamespace>

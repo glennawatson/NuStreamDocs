@@ -17,6 +17,7 @@ namespace NuStreamDocs.ContentLoader;
 /// under a key (set via the mapping's collection pointer); a YAML document must place the array under
 /// a key, since YAML files in this project are mapping-rooted like <c>mkdocs.yml</c>.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("FileContentLoader: {Name}")]
 public sealed class FileContentLoader : IContentLoader
 {
     /// <summary>Path to the source file; absolute, or relative to the build input root.</summary>
@@ -91,13 +92,6 @@ public sealed class FileContentLoader : IContentLoader
     /// <summary>Resolves the source path against the input root when it is relative.</summary>
     /// <param name="inputRoot">Build input root.</param>
     /// <returns>An absolute file path.</returns>
-    private FilePath ResolvePath(DirectoryPath inputRoot)
-    {
-        if (Path.IsPathRooted(_path.Value) || inputRoot.IsEmpty)
-        {
-            return _path;
-        }
-
-        return inputRoot.File(_path.Value);
-    }
+    private FilePath ResolvePath(DirectoryPath inputRoot) =>
+        Path.IsPathRooted(_path.Value) || inputRoot.IsEmpty ? _path : inputRoot.File(_path.Value);
 }

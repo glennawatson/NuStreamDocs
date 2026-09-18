@@ -8,8 +8,8 @@ namespace NuStreamDocs.LinkValidator;
 public enum LinkSeverity
 {
     /// <summary>Reportable in non-strict mode; doesn't fail the build.</summary>
-    Warning,
+    Warning = 0,
 
     /// <summary>Reportable in strict mode; non-zero exit code.</summary>
-    Error
+    Error = 1,
 }

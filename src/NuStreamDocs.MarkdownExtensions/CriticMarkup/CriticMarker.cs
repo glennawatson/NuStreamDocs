@@ -8,20 +8,20 @@ namespace NuStreamDocs.MarkdownExtensions.CriticMarkup;
 internal enum CriticMarker
 {
     /// <summary>No match.</summary>
-    None,
+    None = 0,
 
     /// <summary><c>{++ … ++}</c> — insertion.</summary>
-    Insert,
+    Insert = 1,
 
     /// <summary><c>{-- … --}</c> — deletion.</summary>
-    Delete,
+    Delete = 2,
 
     /// <summary><c>{~~old~&gt;new~~}</c> — substitution.</summary>
-    Substitute,
+    Substitute = 3,
 
     /// <summary><c>{== … ==}</c> — highlight.</summary>
-    Highlight,
+    Highlight = 4,
 
     /// <summary><c>{&gt;&gt; … &lt;&lt;}</c> — comment.</summary>
-    Comment
+    Comment = 5,
 }

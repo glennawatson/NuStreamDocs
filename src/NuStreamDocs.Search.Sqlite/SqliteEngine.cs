@@ -7,22 +7,16 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Search.Sqlite;
 
 /// <summary>SQLite/FTS5 <see cref="ISearchEngine"/> implementation — writes a single <c>search.db</c>.</summary>
-public sealed class SqliteEngine : ISearchEngine
+/// <param name="excludePathPrefixes">UTF-8 root-relative URL prefixes whose pages are dropped from the index; empty indexes every page.</param>
+/// <param name="indexFullBody">When true the full body text is stored; when false only a short leading excerpt.</param>
+[System.Diagnostics.DebuggerDisplay("SqliteEngine: {FormatName}")]
+public sealed class SqliteEngine(byte[][] excludePathPrefixes, bool indexFullBody) : ISearchEngine
 {
     /// <summary>UTF-8 root-relative URL prefixes whose pages are dropped from the index.</summary>
-    private readonly byte[][] _excludePathPrefixes;
+    private readonly byte[][] _excludePathPrefixes = excludePathPrefixes;
 
     /// <summary>Whether the full body text is stored in the index.</summary>
-    private readonly bool _indexFullBody;
-
-    /// <summary>Initializes a new instance of the <see cref="SqliteEngine"/> class.</summary>
-    /// <param name="excludePathPrefixes">UTF-8 root-relative URL prefixes whose pages are dropped from the index; empty indexes every page.</param>
-    /// <param name="indexFullBody">When true the full body text is stored; when false only a short leading excerpt.</param>
-    public SqliteEngine(byte[][] excludePathPrefixes, bool indexFullBody)
-    {
-        _excludePathPrefixes = excludePathPrefixes;
-        _indexFullBody = indexFullBody;
-    }
+    private readonly bool _indexFullBody = indexFullBody;
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> FormatName => "sqlite"u8;
@@ -50,7 +44,7 @@ public sealed class SqliteEngine : ISearchEngine
             return documents;
         }
 
-        List<SearchDocument> kept = new(documents.Length);
+        List<SearchDocument> kept = [with(documents.Length)];
         for (var i = 0; i < documents.Length; i++)
         {
             if (!StartsWithAny(documents[i].RelativeUrl, excludePrefixes))

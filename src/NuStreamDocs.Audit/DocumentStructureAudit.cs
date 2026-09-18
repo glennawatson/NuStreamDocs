@@ -41,7 +41,7 @@ internal static class DocumentStructureAudit
     /// <param name="page">Site-relative URL of the page.</param>
     /// <param name="options">Audit options (rule toggles).</param>
     /// <param name="sink">Receives the findings.</param>
-    public static void Check(ReadOnlySpan<byte> html, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
+    internal static void Check(ReadOnlySpan<byte> html, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
     {
         var (missingLang, missingTitle, missingViewport, missingH1, multipleH1, headingSkip) = ScanDocument(html);
         AddIf(sink, page, options, AuditRule.HtmlMissingLang, MissingLangMessage, missingLang);
@@ -163,8 +163,8 @@ internal static class DocumentStructureAudit
     /// <returns>The heading level, or 0.</returns>
     private static int HeadingLevel(ReadOnlySpan<byte> name)
     {
-        if (name.Length != 2 || AsciiByteHelpers.ToAsciiLowerByte(name[0]) != (byte)'h' ||
-            !AsciiByteHelpers.IsAsciiDigit(name[1]))
+        if (name.Length != 2 || AsciiByteHelpers.ToAsciiLowerByte(name[0]) != (byte)'h'
+            || !AsciiByteHelpers.IsAsciiDigit(name[1]))
         {
             return 0;
         }

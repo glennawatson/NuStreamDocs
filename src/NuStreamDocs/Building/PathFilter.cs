@@ -12,6 +12,7 @@ namespace NuStreamDocs.Building;
 /// docs-root-relative, and follow gitignore-style double-star semantics. With no includes
 /// configured, every path passes (only excludes apply).
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("PathFilter: {HasRules}")]
 public sealed class PathFilter
 {
     /// <summary>The configured matcher.</summary>
@@ -27,19 +28,18 @@ public sealed class PathFilter
         {
             for (var i = 0; i < includes.Length; i++)
             {
-                matcher.AddInclude(includes[i].Value);
+                _ = matcher.AddInclude(includes[i].Value);
             }
         }
         else
         {
-            // Matcher requires at least one include to ever produce a hit;
             // "**/*" stands in as "everything under the root".
-            matcher.AddInclude("**/*");
+            _ = matcher.AddInclude("**/*");
         }
 
         for (var i = 0; i < excludes.Length; i++)
         {
-            matcher.AddExclude(excludes[i].Value);
+            _ = matcher.AddExclude(excludes[i].Value);
         }
 
         _matcher = matcher;

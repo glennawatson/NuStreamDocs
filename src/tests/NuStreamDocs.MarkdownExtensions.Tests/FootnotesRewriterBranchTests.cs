@@ -16,9 +16,10 @@ public class FootnotesRewriterBranchTests
     [Test]
     public async Task RepeatedReferences()
     {
+        const int ReferenceCount = 2;
         var output = Rewrite("First[^a] then[^a].\n\n[^a]: note\n");
         var occurrences = output.Split("href=\"#fn-a\"").Length - 1;
-        await Assert.That(occurrences).IsGreaterThanOrEqualTo(2);
+        await Assert.That(occurrences).IsGreaterThanOrEqualTo(ReferenceCount);
     }
 
     /// <summary>Bracket without caret is not a footnote reference.</summary>

@@ -4,9 +4,8 @@
 
 namespace NuStreamDocs.Templating;
 
-/// <summary>
-/// Thrown by <see cref="Template.Compile"/> when a template's syntax is malformed.
-/// </summary>
+/// <summary>Thrown by <see cref="Template.Compile"/> when a template's syntax is malformed.</summary>
+[System.Diagnostics.DebuggerDisplay("TemplateSyntaxException: {ByteOffset}")]
 public sealed class TemplateSyntaxException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="TemplateSyntaxException"/> class.</summary>

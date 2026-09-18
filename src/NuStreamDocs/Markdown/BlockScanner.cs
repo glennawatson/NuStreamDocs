@@ -154,22 +154,22 @@ public static class BlockScanner
         None = 0,
 
         /// <summary>Type 1 — <c>&lt;pre&gt;</c>; closes on <c>&lt;/pre&gt;</c> on any line.</summary>
-        Pre,
+        Pre = 1,
 
         /// <summary>Type 1 — <c>&lt;script&gt;</c>; closes on <c>&lt;/script&gt;</c>.</summary>
-        Script,
+        Script = 2,
 
         /// <summary>Type 1 — <c>&lt;style&gt;</c>; closes on <c>&lt;/style&gt;</c>.</summary>
-        Style,
+        Style = 3,
 
         /// <summary>Type 1 — <c>&lt;textarea&gt;</c>; closes on <c>&lt;/textarea&gt;</c>.</summary>
-        Textarea,
+        Textarea = 4,
 
         /// <summary>Type 2 — HTML comment <c>&lt;!--</c>; closes on <c>--&gt;</c> on any line.</summary>
-        Comment,
+        Comment = 5,
 
         /// <summary>Type 6 — recognized block-level tag; closes on the next blank line.</summary>
-        Type6
+        Type6 = 6,
     }
 
     /// <summary>Scans <paramref name="utf8"/> and writes one <see cref="BlockSpan"/> per recognized line to <paramref name="writer"/>.</summary>
@@ -211,17 +211,17 @@ public static class BlockScanner
     /// <param name="nextLine">Set to the byte after the line terminator.</param>
     private static void ReadLineExtents(ReadOnlySpan<byte> utf8, int pos, out int contentEnd, out int nextLine)
     {
-        var lfOffset = utf8[pos..].IndexOf(Lf);
-        if (lfOffset < 0)
+        var newlineOffset = utf8[pos..].IndexOf(Lf);
+        if (newlineOffset < 0)
         {
             contentEnd = utf8.Length;
             nextLine = utf8.Length;
             return;
         }
 
-        var lfAbs = pos + lfOffset;
-        nextLine = lfAbs + 1;
-        contentEnd = lfOffset > 0 && utf8[lfAbs - 1] == Cr ? lfAbs - 1 : lfAbs;
+        var newlinePosition = pos + newlineOffset;
+        nextLine = newlinePosition + 1;
+        contentEnd = newlineOffset > 0 && utf8[newlinePosition - 1] == Cr ? newlinePosition - 1 : newlinePosition;
     }
 
     /// <summary>Classifies one already-trimmed-of-line-break line, with fence + html-block + list state.</summary>
@@ -674,41 +674,36 @@ public static class BlockScanner
     /// <returns>Lowercased tag-name slice (zero-length when the line isn't an HTML tag opener).</returns>
     private static ReadOnlySpan<byte> ExtractOpenerTagName(ReadOnlySpan<byte> body, Span<byte> lowercaseBuffer)
     {
-        if (body.Length < 2 || body[0] != (byte)'<')
+        if (body is not [(byte)'<', _, ..])
         {
             return default;
         }
 
-        var tagStart = body[1] is (byte)'/' ? 2 : 1;
+        var tagStart = body[1] is (byte)'/' ? "</"u8.Length : "<"u8.Length;
         return tagStart >= body.Length ? default : ExtractTagName(body, tagStart, lowercaseBuffer);
     }
 
     /// <summary>Maps a lowercased tag name to its <see cref="HtmlBlockKind"/> when it's one of the four CommonMark Type 1 tags; otherwise returns <see cref="HtmlBlockKind.None"/>.</summary>
-    /// <param name="tag">Lowercased ASCII tag-name slice.</param>
+    /// <param name="elementName">Lowercased ASCII element name.</param>
     /// <returns>The matching kind or <see cref="HtmlBlockKind.None"/>.</returns>
-    private static HtmlBlockKind MapType1Tag(ReadOnlySpan<byte> tag)
+    private static HtmlBlockKind MapType1Tag(ReadOnlySpan<byte> elementName)
     {
-        if (tag.SequenceEqual("pre"u8))
+        if (elementName.SequenceEqual("pre"u8))
         {
             return HtmlBlockKind.Pre;
         }
 
-        if (tag.SequenceEqual("script"u8))
+        if (elementName.SequenceEqual("script"u8))
         {
             return HtmlBlockKind.Script;
         }
 
-        if (tag.SequenceEqual("style"u8))
+        if (elementName.SequenceEqual("style"u8))
         {
             return HtmlBlockKind.Style;
         }
 
-        if (tag.SequenceEqual("textarea"u8))
-        {
-            return HtmlBlockKind.Textarea;
-        }
-
-        return HtmlBlockKind.None;
+        return elementName.SequenceEqual("textarea"u8) ? HtmlBlockKind.Textarea : HtmlBlockKind.None;
     }
 
     /// <summary>Returns the lower-cased ASCII tag name starting at <paramref name="offset"/>; empty when the bytes don't form a valid tag-name start.</summary>
@@ -724,8 +719,8 @@ public static class BlockScanner
         }
 
         var end = offset;
-        while (end < body.Length && (AsciiByteHelpers.IsAsciiLetter(body[end]) ||
-                                     AsciiByteHelpers.IsAsciiDigit(body[end]) || body[end] is (byte)'-'))
+        while (end < body.Length && (AsciiByteHelpers.IsAsciiLetter(body[end])
+                                     || AsciiByteHelpers.IsAsciiDigit(body[end]) || body[end] is (byte)'-'))
         {
             end++;
         }
@@ -809,7 +804,7 @@ public static class BlockScanner
     private static BlockKind ClassifyInsideType1Block(ReadOnlySpan<byte> line, ref HtmlBlockState html)
     {
         var closeNeedle = Type1CloseNeedle(html.Kind);
-        if (closeNeedle.Length > 0 && IndexOfIgnoreCase(line, closeNeedle) >= 0)
+        if (!closeNeedle.IsEmpty && IndexOfIgnoreCase(line, closeNeedle) >= 0)
         {
             html = default;
         }
@@ -892,15 +887,15 @@ public static class BlockScanner
         return true;
     }
 
-    /// <summary>True when <paramref name="tag"/> matches one of the CommonMark Type 6 block-level tags.</summary>
-    /// <param name="tag">Lowercased ASCII tag-name slice.</param>
+    /// <summary>True when <paramref name="elementName"/> matches one of the CommonMark Type 6 block-level tags.</summary>
+    /// <param name="elementName">Lowercased ASCII element name.</param>
     /// <returns>True for any tag in the spec's Type 6 whitelist.</returns>
-    private static bool IsType6Tag(ReadOnlySpan<byte> tag)
+    private static bool IsType6Tag(ReadOnlySpan<byte> elementName)
     {
         var tags = Type6Tags;
         for (var i = 0; i < tags.Length; i++)
         {
-            if (tag.SequenceEqual(tags[i]))
+            if (elementName.SequenceEqual(tags[i]))
             {
                 return true;
             }
@@ -910,6 +905,8 @@ public static class BlockScanner
     }
 
     /// <summary>Open-fence state held across lines during a single scan.</summary>
+    /// <param name="Marker">Fence delimiter byte.</param>
+    /// <param name="Length">Opening fence length.</param>
     private readonly record struct FenceState(byte Marker, int Length)
     {
         /// <summary>Gets a value indicating whether a fence is currently open.</summary>
@@ -917,6 +914,7 @@ public static class BlockScanner
     }
 
     /// <summary>Open-html-block state held across lines during a single scan.</summary>
+    /// <param name="Kind">Active HTML block kind.</param>
     private readonly record struct HtmlBlockState(HtmlBlockKind Kind)
     {
         /// <summary>Gets a value indicating whether an HTML block is currently open.</summary>

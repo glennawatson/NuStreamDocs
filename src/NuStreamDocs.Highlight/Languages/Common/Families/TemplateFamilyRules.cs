@@ -24,13 +24,13 @@ internal static class TemplateFamilyRules
     /// <summary>Builds a single-state templating <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateLexer(in TemplateFamilyConfig config) =>
+    internal static Lexer CreateLexer(in TemplateFamilyConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
     /// <summary>Builds the templating-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
-    public static LexerRule[] Build(in TemplateFamilyConfig config)
+    internal static LexerRule[] Build(in TemplateFamilyConfig config)
     {
         const int MaxRuleSlots = 6;
         var rules = new List<LexerRule>(MaxRuleSlots);

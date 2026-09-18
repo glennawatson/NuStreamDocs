@@ -110,12 +110,7 @@ public static class HtmlEntityDecoder
             return ((byte)'"', "&quot;"u8.Length);
         }
 
-        if (slice.StartsWith("&#39;"u8))
-        {
-            return ((byte)'\'', "&#39;"u8.Length);
-        }
-
-        return (0, 0);
+        return slice.StartsWith("&#39;"u8) ? ((byte)'\'', "&#39;"u8.Length) : ((byte)0, 0);
     }
 
     /// <summary>Writes a single byte into <paramref name="writer"/>.</summary>

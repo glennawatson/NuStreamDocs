@@ -12,6 +12,7 @@ namespace NuStreamDocs.Common;
 /// output", complementing <see cref="ApiCompatString"/> (BCL/consumer interop).
 /// </summary>
 /// <param name="Value">The wrapped diagnostic text. May be <see langword="null"/>; reads surface as <see cref="string.Empty"/>.</param>
+[System.Diagnostics.DebuggerDisplay("DiagnosticMessage: {IsEmpty}")]
 public readonly record struct DiagnosticMessage(string? Value)
 {
     /// <summary>Gets the empty diagnostic message (used for "no diagnostic" returns paired with a non-nullable struct).</summary>
@@ -40,5 +41,5 @@ public readonly record struct DiagnosticMessage(string? Value)
     public string ToStringValue() => Value ?? string.Empty;
 
     /// <inheritdoc />
-    public override string ToString() => Value ?? string.Empty;
+    public override string ToString() => ToStringValue();
 }

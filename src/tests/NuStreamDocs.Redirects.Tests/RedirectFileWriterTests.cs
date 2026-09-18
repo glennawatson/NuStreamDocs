@@ -45,10 +45,7 @@ public class RedirectFileWriterTests
     [Test]
     public async Task HeadersFileFormat()
     {
-        var rules = new List<HeaderRule>(HeadersFileWriter.DefaultRules())
-        {
-            new([.. "/api/*"u8], [[.. "X-Robots-Tag: noindex"u8]])
-        };
+        var rules = new List<HeaderRule>(HeadersFileWriter.DefaultRules()) { new([.. "/api/*"u8], [[.. "X-Robots-Tag: noindex"u8]]) };
         ArrayBufferWriter<byte> sink = new();
         HeadersFileWriter.WriteHeadersFile(rules, sink);
         var text = Encoding.UTF8.GetString(sink.WrittenSpan);

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MagicLink;
@@ -11,6 +12,7 @@ namespace NuStreamDocs.MagicLink;
 /// <c>mailto</c>) as CommonMark autolinks, and optionally expands GitHub <c>#NNN</c> /
 /// <c>@user</c> shortrefs.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("MagicLinkPlugin: {Name}")]
 public sealed class MagicLinkPlugin : IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>
@@ -33,9 +35,11 @@ public sealed class MagicLinkPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         MagicLinkRewriter.Rewrite(context.Source, context.Output, _options.DefaultRepo, _options.ExpandUserMentions);
 }

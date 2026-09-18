@@ -2,8 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
@@ -17,14 +18,14 @@ namespace NuStreamDocs.Benchmarks;
 /// Already on the pooled <c>PageBuilderPool</c> — captured for reference so any
 /// future change to the synthesis path can be compared back.
 /// </summary>
+[DebuggerDisplay("TagsPluginBenchmarks: Pages={Pages}")]
 [ShortRunJob]
 [MemoryDiagnoser]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class TagsPluginBenchmarks
 {
+    /// <summary>Reserves enough text space for the generated page fixture.</summary>
+    private const int PostTextCapacity = 512;
+
     /// <summary>Small page count (smoke).</summary>
     private const int SmallPages = 20;
 
@@ -61,14 +62,14 @@ public class TagsPluginBenchmarks
     {
         _docsRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-tags-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_docsRoot);
+            $"smkd-bench-tags-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(_docsRoot);
 
         for (var i = 0; i < Pages; i++)
         {
             var tag = Tags[i % Tags.Length];
             File.WriteAllText(
-                Path.Combine(_docsRoot, "page-" + i.ToString(CultureInfo.InvariantCulture) + ".md"),
+                Path.Combine(_docsRoot, $"page-{i.ToString(CultureInfo.InvariantCulture)}.md"),
                 BuildPostBody(i, tag));
         }
 
@@ -95,11 +96,11 @@ public class TagsPluginBenchmarks
     /// <summary>Runs <see cref="TagsPlugin.DiscoverAsync"/> against the corpus, registering pages with a fresh per-iteration <see cref="SyntheticPageSink"/>.</summary>
     /// <returns>Number of synthetic pages registered (returned so BenchmarkDotNet doesn't elide the call).</returns>
     [Benchmark]
-    public int Discover()
+    public async ValueTask<int> Discover()
     {
         SyntheticPageSink sink = new();
         BuildDiscoverContext context = new((DirectoryPath)_docsRoot, (DirectoryPath)"/out", [], sink);
-        _plugin.DiscoverAsync(context, CancellationToken.None).AsTask().GetAwaiter().GetResult();
+        await _plugin.DiscoverAsync(context, CancellationToken.None).ConfigureAwait(false);
         return sink.Count;
     }
 
@@ -107,10 +108,11 @@ public class TagsPluginBenchmarks
     /// <param name="index">Post index.</param>
     /// <param name="tag">Tag the post belongs to.</param>
     /// <returns>Markdown source.</returns>
-    private static string BuildPostBody(int index, string tag) =>
-        new StringBuilder(512)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ApiCompatString BuildPostBody(int index, ApiCompatString tag) =>
+        new StringBuilder(PostTextCapacity)
             .Append("---\n")
-            .Append("tags:\n  - ").Append(tag).Append('\n')
+            .Append("tags:\n  - ").Append(tag.Value).Append('\n')
             .Append("---\n\n")
             .Append("# Page ").Append(index.ToString(CultureInfo.InvariantCulture)).Append("\n\n")
             .Append("First paragraph for page ").Append(index.ToString(CultureInfo.InvariantCulture)).Append(".\n\n")

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Yaml;
 
@@ -14,13 +15,14 @@ internal static class FrontmatterReader
     /// <param name="source">UTF-8 markdown bytes (frontmatter + body).</param>
     /// <param name="key">UTF-8 key bytes.</param>
     /// <returns>Trimmed scalar slice into <paramref name="source"/>, or empty when the key is missing or has no inline scalar.</returns>
-    public static ReadOnlySpan<byte> GetScalar(ReadOnlySpan<byte> source, ReadOnlySpan<byte> key) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static ReadOnlySpan<byte> GetScalar(ReadOnlySpan<byte> source, ReadOnlySpan<byte> key) =>
         Unquote(FrontmatterValueExtractor.GetScalar(source, key));
 
     /// <summary>Walks every top-level scalar frontmatter key and adds it to <paramref name="values"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="values">Sink dictionary keyed by UTF-8 key bytes.</param>
-    public static void AppendScalars(ReadOnlySpan<byte> source, Dictionary<byte[], byte[]> values)
+    internal static void AppendScalars(ReadOnlySpan<byte> source, Dictionary<byte[], byte[]> values)
     {
         if (!YamlByteScanner.TryFindFrontmatter(source, out var closerStart, out _))
         {

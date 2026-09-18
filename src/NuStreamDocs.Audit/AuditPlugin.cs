@@ -11,8 +11,8 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Audit;
 
 /// <summary>Plugin that runs accessibility and performance lints over the rendered site at the end of a build.</summary>
-public sealed class AuditPlugin
-    : IBuildConfigurePlugin, IBuildFinalizePlugin
+[System.Diagnostics.DebuggerDisplay("AuditPlugin: {LastDiagnostics}")]
+public sealed class AuditPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Process exit code returned when strict mode is on and at least one finding surfaces.</summary>
     private const int StrictFailureExitCode = 2;
@@ -148,11 +148,7 @@ public sealed class AuditPlugin
         FilePath[] htmlFiles = [.. EnumerateHtml(fullRoot)];
         ConcurrentBag<AuditDiagnostic> findings = [];
 
-        ParallelOptions parallelOptions = new()
-        {
-            CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = _options.Parallelism
-        };
+        ParallelOptions parallelOptions = new() { CancellationToken = cancellationToken, MaxDegreeOfParallelism = _options.Parallelism, };
 
         await Parallel.ForEachAsync(
             htmlFiles,

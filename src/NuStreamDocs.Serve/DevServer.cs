@@ -2,11 +2,10 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net;
 using System.Net.WebSockets;
-using System.Text;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -29,22 +28,15 @@ internal static class DevServer
     /// <summary>Site-rooted path served on a 404.</summary>
     private const string NotFoundPagePath = "/404.html";
 
-    /// <summary>JavaScript snippet injected into HTML pages to enable live-reload.</summary>
-    private const string ReloadScript =
-        "<script>(function(){"
-        + "var s=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'" + LiveReloadPath + "');"
-        + "s.onmessage=function(e){if(e.data==='reload'){location.reload()}};"
-        + "s.onerror=function(){};"
-        + "})();</script>";
-
-    /// <summary>UTF-8 bytes for the closing body tag we splice the script before.</summary>
-    private static readonly byte[] BodyClose = [.. "</body>"u8];
-
     /// <summary>UTF-8 bytes for the reload script.</summary>
-    private static readonly byte[] ReloadScriptBytes = Encoding.UTF8.GetBytes(ReloadScript);
+    private static readonly byte[] ReloadScriptBytes =
+    [
+        .. "<script>(function(){var s=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/__livereload');"u8,
+        .. "s.onmessage=function(e){if(e.data==='reload'){location.reload()}};s.onerror=function(){};})();</script>"u8,
+    ];
 
     /// <summary>Gets the closing-body marker the injection middleware splits HTML on.</summary>
-    public static ReadOnlySpan<byte> BodyCloseMarker => BodyClose;
+    public static ReadOnlySpan<byte> BodyCloseMarker => "</body>"u8;
 
     /// <summary>Gets the reload-script bytes the injection middleware splices into HTML responses.</summary>
     public static ReadOnlySpan<byte> ReloadScriptMarker => ReloadScriptBytes;
@@ -58,7 +50,7 @@ internal static class DevServer
     /// <param name="broker">LiveReload connection registry.</param>
     /// <param name="cancellationToken">Cancellation token; cancellation triggers a graceful shutdown.</param>
     /// <returns>Started <see cref="WebApplication"/>.</returns>
-    public static async Task<WebApplication> StartAsync(
+    internal static async Task<WebApplication> StartAsync(
         string outputRoot,
         WatchAndServeOptions options,
         LiveReloadBroker broker,
@@ -66,7 +58,7 @@ internal static class DevServer
     {
         ArgumentException.ThrowIfNullOrEmpty(outputRoot);
 
-        Directory.CreateDirectory(outputRoot);
+        _ = Directory.CreateDirectory(outputRoot);
         var app = BuildApplication(outputRoot, options, broker);
         await app.StartAsync(cancellationToken).ConfigureAwait(false);
         return app;
@@ -75,11 +67,8 @@ internal static class DevServer
     /// <summary>Builds the bind URL from <paramref name="options"/>.</summary>
     /// <param name="options">Options.</param>
     /// <returns>URL string suitable for <see cref="HostingAbstractionsWebHostBuilderExtensions.UseUrls"/>.</returns>
-    [SuppressMessage(
-        "Justification",
-        "S5332: Using http protocol is insecure. Use https instead.",
-        Justification = "Local dev only.")]
-    public static UrlPath BuildUrl(in WatchAndServeOptions options) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static UrlPath BuildUrl(in WatchAndServeOptions options) =>
         string.Create(CultureInfo.InvariantCulture, $"http://{options.Host}:{options.Port}");
 
     /// <summary>Builds the slim WebApplication without starting it.</summary>
@@ -93,7 +82,7 @@ internal static class DevServer
         LiveReloadBroker broker)
     {
         var builder = WebApplication.CreateSlimBuilder();
-        builder.WebHost.ConfigureKestrel((_, kestrel) =>
+        _ = builder.WebHost.ConfigureKestrel((_, kestrel) =>
         {
             if (IPAddress.TryParse(options.Host, out var ip))
             {
@@ -103,7 +92,7 @@ internal static class DevServer
 
             kestrel.ListenLocalhost(options.Port);
         });
-        builder.Services.AddSingleton(broker);
+        _ = builder.Services.AddSingleton(broker);
         var app = builder.Build();
         ConfigurePipeline(app, outputRoot, options);
         return app;
@@ -115,33 +104,33 @@ internal static class DevServer
     /// <param name="options">Watch + serve options.</param>
     private static void ConfigurePipeline(WebApplication app, string outputRoot, in WatchAndServeOptions options)
     {
-        app.UseWebSockets();
+        _ = app.UseWebSockets();
 
         // Re-execute the pipeline against /404.html when a request would otherwise 404, so the
         // configured not-found page (synthesized by ThemePluginBase or authored as 404.md) is
         // served on every missing path. The status code stays 404 — only the body is swapped.
-        app.UseStatusCodePagesWithReExecute(NotFoundPagePath);
+        _ = app.UseStatusCodePagesWithReExecute(NotFoundPagePath);
 
         // Path-restricted MapGet avoids the manual path-check in Use().
         // When using a specialized RequestDelegate, RDG emits no reflection.
-        app.MapGet(LiveReloadPath, LiveReloadDispatchAsync);
+        _ = app.MapGet(LiveReloadPath, LiveReloadDispatchAsync);
 
         if (options.LiveReload)
         {
-            app.Use(HtmlInjectionMiddleware.InvokeAsync);
+            _ = app.Use(HtmlInjectionMiddleware.InvokeAsync);
         }
 
         PhysicalFileProvider fileProvider = new(Path.GetFullPath(outputRoot));
         DefaultFilesOptions defaultFiles = new() { FileProvider = fileProvider };
         defaultFiles.DefaultFileNames.Clear();
         defaultFiles.DefaultFileNames.Add("index.html");
-        app.UseDefaultFiles(defaultFiles);
-        app.UseStaticFiles(new StaticFileOptions
+        _ = app.UseDefaultFiles(defaultFiles);
+        _ = app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = fileProvider,
             ContentTypeProvider = new FileExtensionContentTypeProvider(),
             ServeUnknownFileTypes = true,
-            DefaultContentType = "application/octet-stream"
+            DefaultContentType = "application/octet-stream",
         });
     }
 

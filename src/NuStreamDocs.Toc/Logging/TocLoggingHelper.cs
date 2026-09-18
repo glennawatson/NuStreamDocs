@@ -14,7 +14,7 @@ internal static partial class TocLoggingHelper
         EventId = 8001,
         Level = LogLevel.Debug,
         Message = "Toc start for {RelativePath}")]
-    public static partial void LogTocStart(ILogger logger, string relativePath);
+    internal static partial void LogTocStart(ILogger logger, string relativePath);
 
     /// <summary>Logs the completion of TOC processing for a page.</summary>
     /// <param name="logger">Target logger.</param>
@@ -27,6 +27,6 @@ internal static partial class TocLoggingHelper
         Level = LogLevel.Debug,
         Message =
             "Toc complete for {RelativePath}: {HeadingCount} heading(s), {SlugCollisions} collision(s), {ElapsedMs} ms")]
-    public static partial void LogTocComplete(ILogger logger, string relativePath, int headingCount, int slugCollisions,
+    internal static partial void LogTocComplete(ILogger logger, string relativePath, int headingCount, int slugCollisions,
         long elapsedMs);
 }

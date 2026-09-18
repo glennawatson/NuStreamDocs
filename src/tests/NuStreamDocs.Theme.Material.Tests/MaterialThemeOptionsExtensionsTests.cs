@@ -7,6 +7,27 @@ namespace NuStreamDocs.Theme.Material.Tests;
 /// <summary>Behavior tests for <c>MaterialThemeOptionsExtensions</c>.</summary>
 public class MaterialThemeOptionsExtensionsTests
 {
+    /// <summary>Gets the fixture CDN root.</summary>
+    private static ReadOnlySpan<byte> CdnRootBytes => "https://cdn.example"u8;
+
+    /// <summary>Gets the fixture asset root.</summary>
+    private static ReadOnlySpan<byte> AssetRootBytes => "/assets"u8;
+
+    /// <summary>Gets the repository edit path.</summary>
+    private static ReadOnlySpan<byte> EditPrefixBytes => "edit/main/docs"u8;
+
+    /// <summary>Gets the fixture repository URL.</summary>
+    private static ReadOnlySpan<byte> RepositoryUrlBytes => "https://github.com/owner/repo"u8;
+
+    /// <summary>Gets the fixture copyright text.</summary>
+    private static ReadOnlySpan<byte> CopyrightTextBytes => "(c) 2026"u8;
+
+    /// <summary>Gets the fixture language.</summary>
+    private static ReadOnlySpan<byte> LanguageBytes => "en-GB"u8;
+
+    /// <summary>Gets the fixture site URL.</summary>
+    private static ReadOnlySpan<byte> SiteUrlBytes => "https://example.test"u8;
+
     /// <summary>String overloads encode to UTF-8 once at the boundary.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,12 +44,12 @@ public class MaterialThemeOptionsExtensionsTests
             .WithCdnRoot("https://cdn.example.test");
 
         await Assert.That(updated.SiteName.AsSpan().SequenceEqual("Site"u8)).IsTrue();
-        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual("https://example.test"u8)).IsTrue();
-        await Assert.That(updated.Language.AsSpan().SequenceEqual("en-GB"u8)).IsTrue();
-        await Assert.That(updated.Copyright.AsSpan().SequenceEqual("(c) 2026"u8)).IsTrue();
-        await Assert.That(updated.RepoUrl.AsSpan().SequenceEqual("https://github.com/owner/repo"u8)).IsTrue();
-        await Assert.That(updated.EditUri.AsSpan().SequenceEqual("edit/main/docs"u8)).IsTrue();
-        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual("/assets"u8)).IsTrue();
+        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual(SiteUrlBytes)).IsTrue();
+        await Assert.That(updated.Language.AsSpan().SequenceEqual(LanguageBytes)).IsTrue();
+        await Assert.That(updated.Copyright.AsSpan().SequenceEqual(CopyrightTextBytes)).IsTrue();
+        await Assert.That(updated.RepoUrl.AsSpan().SequenceEqual(RepositoryUrlBytes)).IsTrue();
+        await Assert.That(updated.EditUri.AsSpan().SequenceEqual(EditPrefixBytes)).IsTrue();
+        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual(AssetRootBytes)).IsTrue();
         await Assert.That(updated.CdnRoot.AsSpan().SequenceEqual("https://cdn.example.test"u8)).IsTrue();
     }
 
@@ -75,7 +96,7 @@ public class MaterialThemeOptionsExtensionsTests
         await Assert.That(d.Copyright.Length).IsEqualTo(0);
         await Assert.That(d.RepoUrl.Length).IsEqualTo(0);
         await Assert.That(d.EditUri.Length).IsEqualTo(0);
-        await Assert.That(d.EmbeddedAssetRoot.AsSpan().SequenceEqual("/assets"u8)).IsTrue();
+        await Assert.That(d.EmbeddedAssetRoot.AsSpan().SequenceEqual(AssetRootBytes)).IsTrue();
     }
 
     /// <summary><see cref="MaterialThemeOptions.ResolveAssetRoot"/> picks between CDN and embedded based on <c>AssetSource</c>.</summary>
@@ -84,10 +105,10 @@ public class MaterialThemeOptionsExtensionsTests
     public async Task ResolveAssetRootSwitchesByAssetSource()
     {
         var embedded = MaterialThemeOptions.Default;
-        await Assert.That(embedded.ResolveAssetRoot().SequenceEqual("/assets"u8)).IsTrue();
+        await Assert.That(embedded.ResolveAssetRoot().SequenceEqual(AssetRootBytes)).IsTrue();
 
         var cdn = embedded.WithCdnRoot("https://cdn.example") with { AssetSource = MaterialAssetSource.Cdn };
-        await Assert.That(cdn.ResolveAssetRoot().SequenceEqual("https://cdn.example"u8)).IsTrue();
+        await Assert.That(cdn.ResolveAssetRoot().SequenceEqual(CdnRootBytes)).IsTrue();
     }
 
     /// <summary>The <see cref="ReadOnlySpan{T}"/> overloads accept <c>"..."u8</c> literals directly and copy the bytes into the option's storage.</summary>
@@ -97,21 +118,21 @@ public class MaterialThemeOptionsExtensionsTests
     {
         var updated = MaterialThemeOptions.Default
             .WithSiteName("Site"u8)
-            .WithSiteUrl("https://example.test"u8)
-            .WithLanguage("en-GB"u8)
-            .WithCopyright("(c) 2026"u8)
-            .WithRepoUrl("https://github.com/owner/repo"u8)
-            .WithEditUri("edit/main/docs"u8)
-            .WithEmbeddedAssetRoot("/assets"u8)
-            .WithCdnRoot("https://cdn.example"u8);
+            .WithSiteUrl(SiteUrlBytes)
+            .WithLanguage(LanguageBytes)
+            .WithCopyright(CopyrightTextBytes)
+            .WithRepoUrl(RepositoryUrlBytes)
+            .WithEditUri(EditPrefixBytes)
+            .WithEmbeddedAssetRoot(AssetRootBytes)
+            .WithCdnRoot(CdnRootBytes);
 
         await Assert.That(updated.SiteName.AsSpan().SequenceEqual("Site"u8)).IsTrue();
-        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual("https://example.test"u8)).IsTrue();
-        await Assert.That(updated.Language.AsSpan().SequenceEqual("en-GB"u8)).IsTrue();
-        await Assert.That(updated.Copyright.AsSpan().SequenceEqual("(c) 2026"u8)).IsTrue();
-        await Assert.That(updated.RepoUrl.AsSpan().SequenceEqual("https://github.com/owner/repo"u8)).IsTrue();
-        await Assert.That(updated.EditUri.AsSpan().SequenceEqual("edit/main/docs"u8)).IsTrue();
-        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual("/assets"u8)).IsTrue();
-        await Assert.That(updated.CdnRoot.AsSpan().SequenceEqual("https://cdn.example"u8)).IsTrue();
+        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual(SiteUrlBytes)).IsTrue();
+        await Assert.That(updated.Language.AsSpan().SequenceEqual(LanguageBytes)).IsTrue();
+        await Assert.That(updated.Copyright.AsSpan().SequenceEqual(CopyrightTextBytes)).IsTrue();
+        await Assert.That(updated.RepoUrl.AsSpan().SequenceEqual(RepositoryUrlBytes)).IsTrue();
+        await Assert.That(updated.EditUri.AsSpan().SequenceEqual(EditPrefixBytes)).IsTrue();
+        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual(AssetRootBytes)).IsTrue();
+        await Assert.That(updated.CdnRoot.AsSpan().SequenceEqual(CdnRootBytes)).IsTrue();
     }
 }

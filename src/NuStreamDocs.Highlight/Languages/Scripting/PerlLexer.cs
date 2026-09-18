@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
@@ -41,7 +42,7 @@ public static class PerlLexer
         "print printf say sprintf chomp chop split join length lc uc lcfirst ucfirst reverse sort grep map ref"u8,
         "defined exists delete keys values scalar wantarray open close read write binmode bless shift unshift push pop splice"u8);
 
-    /// <summary>Constants.</summary>
+    /// <summary>Constant keywords.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
         "undef __FILE__ __LINE__ __PACKAGE__ __SUB__ __DATA__ __END__"u8);
 
@@ -100,28 +101,15 @@ public static class PerlLexer
     {
         WhitespaceFirst = WhitespaceFirst,
         PreCommentRule =
-            new(MatchPodBlock, TokenClass.CommentMulti, LexerRule.NoStateChange)
-            {
-                FirstBytes = EqualsFirst,
-                RequiresLineStart = true
-            },
+            new(MatchPodBlock, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualsFirst, RequiresLineStart = true, },
         LineComment =
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         PostStringRules =
         [
-            new(MatchHeredocIntroducer, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = AngleAngleFirst
-            },
-            new(MatchQuoteOperator, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = QuoteOperatorFirst
-            },
+            new(MatchHeredocIntroducer, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = AngleAngleFirst, },
+            new(MatchQuoteOperator, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = QuoteOperatorFirst, },
             new(
                 static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'`'),
                 TokenClass.StringDouble,
@@ -141,7 +129,7 @@ public static class PerlLexer
         BuiltinKeywordFirst = BuiltinFirst,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches a POD block — <c>=word</c> at line start through to a matching <c>=cut</c> on its own line.</summary>
@@ -165,12 +153,7 @@ public static class PerlLexer
 
         const int NewlineCutLength = 5;
         var afterEnd = endMarker + NewlineCutLength;
-        if (afterEnd >= slice.Length)
-        {
-            return afterEnd;
-        }
-
-        return afterEnd + TokenMatchers.LineLength(slice[afterEnd..]);
+        return afterEnd >= slice.Length ? afterEnd : afterEnd + TokenMatchers.LineLength(slice[afterEnd..]);
     }
 
     /// <summary>
@@ -287,6 +270,7 @@ public static class PerlLexer
     /// <summary>Matches a <c>0x...</c> hex literal with optional underscore digit separators.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchHexLiteral(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchAsciiHexLiteral(slice, HexBody, CFamilyRules.NoSuffix);
 
@@ -295,14 +279,8 @@ public static class PerlLexer
     /// <returns>Prefix byte count, or zero on miss.</returns>
     private static int ConsumeQuoteOperatorPrefix(ReadOnlySpan<byte> slice) => slice switch
     {
-        [(byte)'q', (byte)'q', ..] => TwoBytePrefix,
-        [(byte)'q', (byte)'w', ..] => TwoBytePrefix,
-        [(byte)'q', (byte)'r', ..] => TwoBytePrefix,
-        [(byte)'q', ..] => OneBytePrefix,
-        [(byte)'m', ..] => OneBytePrefix,
-        [(byte)'s', ..] => OneBytePrefix,
-        [(byte)'t', (byte)'r', ..] => TwoBytePrefix,
-        [(byte)'y', ..] => OneBytePrefix,
+        [(byte)'q', (byte)'q' or (byte)'w' or (byte)'r', ..] or [(byte)'t', (byte)'r', ..] => TwoBytePrefix,
+        [(byte)'q' or (byte)'m' or (byte)'s' or (byte)'y', ..] => OneBytePrefix,
         _ => 0
     };
 

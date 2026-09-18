@@ -10,32 +10,12 @@ namespace NuStreamDocs.Highlight.Languages.Common.Families;
 /// <summary>Shared keyword / operator / constant byte tables for the C-family lexers.</summary>
 /// <remarks>
 /// Pass the <c>*Literal</c> spans to
-/// <see cref="ByteKeywordSet.CreateFromSpaceSeparated(System.ReadOnlySpan{byte}, System.ReadOnlySpan{byte})"/>
-/// (or <see cref="OperatorAlternationFactory.SplitLongestFirst(System.ReadOnlySpan{byte},System.ReadOnlySpan{byte})"/>)
+/// <see cref="ByteKeywordSet.CreateFromSpaceSeparated(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/>
+/// (or <see cref="OperatorAlternationFactory.SplitLongestFirst(ReadOnlySpan{byte},ReadOnlySpan{byte})"/>)
 /// when assembling per-language tables so the duplicated control-flow / operator entries only appear once across the project.
 /// </remarks>
 internal static class CFamilyShared
 {
-    /// <summary>Control-flow keywords every brace-style C-family language ships with.</summary>
-    public static readonly byte[][] ControlFlow =
-    [
-        [.. "if"u8],
-        [.. "else"u8],
-        [.. "for"u8],
-        [.. "while"u8],
-        [.. "do"u8],
-        [.. "switch"u8],
-        [.. "case"u8],
-        [.. "default"u8],
-        [.. "break"u8],
-        [.. "continue"u8],
-        [.. "return"u8],
-        [.. "throw"u8],
-        [.. "try"u8],
-        [.. "catch"u8],
-        [.. "finally"u8]
-    ];
-
     /// <summary>
     /// First-byte dispatch set covering every byte that any <see cref="ControlFlow"/> entry
     /// starts with (<c>b</c>, <c>c</c>, <c>d</c>, <c>e</c>, <c>f</c>, <c>i</c>, <c>r</c>,
@@ -43,20 +23,8 @@ internal static class CFamilyShared
     /// </summary>
     public static readonly SearchValues<byte> ControlFlowFirst = SearchValues.Create("bcdefirstw"u8);
 
-    /// <summary>The canonical <c>true</c> / <c>false</c> / <c>null</c> constant triple.</summary>
-    public static readonly byte[][] TrueFalseNull =
-    [
-        [.. "true"u8],
-        [.. "false"u8],
-        [.. "null"u8]
-    ];
-
     /// <summary>First-byte dispatch set for <see cref="TrueFalseNull"/> (<c>t</c>, <c>f</c>, <c>n</c>).</summary>
     public static readonly SearchValues<byte> TrueFalseNullFirst = SearchValues.Create("tfn"u8);
-
-    /// <summary>Standard C-style operator alternation, sorted longest-first. Covers every operator C/C++/Java/Kotlin/Scala/Groovy/Dart/Swift/Zig/Rust/Go/etc. share.</summary>
-    public static readonly byte[][] StandardOperators = OperatorAlternationFactory.SplitLongestFirst(
-        "<<= >>= -> ++ -- == != <= >= && || << >> += -= *= /= %= &= |= ^= + - * / % & | ^ ! ~ = < > ?"u8);
 
     /// <summary>
     /// First-byte dispatch set for <see cref="StandardOperators"/>. Includes <c>:</c>
@@ -87,6 +55,38 @@ internal static class CFamilyShared
 
     /// <summary>Common C-style float-literal suffix bytes (<c>f</c>, <c>F</c>, <c>l</c>, <c>L</c>).</summary>
     public static readonly SearchValues<byte> CFloatSuffix = SearchValues.Create("fFlL"u8);
+
+    /// <summary>Gets the control-flow keywords shared by brace-style C-family languages.</summary>
+    public static byte[][] ControlFlow { get; } =
+    [
+        [.. "if"u8],
+        [.. "else"u8],
+        [.. "for"u8],
+        [.. "while"u8],
+        [.. "do"u8],
+        [.. "switch"u8],
+        [.. "case"u8],
+        [.. "default"u8],
+        [.. "break"u8],
+        [.. "continue"u8],
+        [.. "return"u8],
+        [.. "throw"u8],
+        [.. "try"u8],
+        [.. "catch"u8],
+        [.. "finally"u8]
+    ];
+
+    /// <summary>Gets the canonical <c>true</c>, <c>false</c>, and <c>null</c> keywords.</summary>
+    public static byte[][] TrueFalseNull { get; } =
+    [
+        [.. "true"u8],
+        [.. "false"u8],
+        [.. "null"u8]
+    ];
+
+    /// <summary>Gets the standard C-style operators in longest-first order.</summary>
+    public static byte[][] StandardOperators { get; } = OperatorAlternationFactory.SplitLongestFirst(
+        "<<= >>= -> ++ -- == != <= >= && || << >> += -= *= /= %= &= |= ^= + - * / % & | ^ ! ~ = < > ?"u8);
 
     /// <summary>Gets the control-flow keywords every brace-style C-family language ships with, as a space-separated literal.</summary>
     public static ReadOnlySpan<byte> ControlFlowLiteral =>

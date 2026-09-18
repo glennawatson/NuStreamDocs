@@ -9,20 +9,29 @@ namespace NuStreamDocs.Fonts.Tests;
 /// <summary>Coverage for <c>FontsOptionsExtensions</c>.</summary>
 public class FontsOptionsExtensionsTests
 {
+    /// <summary>Expected normal weight in the fixture.</summary>
+    private const int NormalWeight = 400;
+
+    /// <summary>Expected bold weight in the fixture.</summary>
+    private const int BoldWeight = 700;
+
+    /// <summary>Expected number of default subsets.</summary>
+    private const int ExpectedCount = 2;
+
     /// <summary><c>AddGoogleFont</c> (minimal) appends a face with sane defaults.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task AddGoogleFontMinimalDefaults()
     {
-        var o = FontsOptions.Default.AddGoogleFont("Source Sans 3"u8, 400, 700);
+        var o = FontsOptions.Default.AddGoogleFont("Source Sans 3"u8, NormalWeight, BoldWeight);
         await Assert.That(o.Faces.Length).IsEqualTo(1);
         var f = o.Faces[0];
         await Assert.That(Encoding.UTF8.GetString(f.FamilyBytes)).IsEqualTo("Source Sans 3");
         await Assert.That(Encoding.UTF8.GetString(f.Id)).IsEqualTo("source-sans-3");
         await Assert.That(f.Provider).IsEqualTo(FontProviderKind.Google);
-        await Assert.That(f.Weights.SequenceEqual([400, 700])).IsTrue();
+        await Assert.That(f.Weights.SequenceEqual([NormalWeight, BoldWeight])).IsTrue();
         await Assert.That(f.Styles.SequenceEqual([FontStyle.Normal])).IsTrue();
-        await Assert.That(f.Subsets.Length).IsEqualTo(2);
+        await Assert.That(f.Subsets.Length).IsEqualTo(ExpectedCount);
         await Assert.That(f.Display).IsEqualTo(FontDisplay.Swap);
         await Assert.That(f.Preload).IsTrue();
     }
@@ -33,7 +42,7 @@ public class FontsOptionsExtensionsTests
     public async Task AddGoogleFontEmptyWeightsDefaultsTo400()
     {
         var o = FontsOptions.Default.AddGoogleFont("Inter"u8);
-        await Assert.That(o.Faces[0].Weights.SequenceEqual([400])).IsTrue();
+        await Assert.That(o.Faces[0].Weights.SequenceEqual([NormalWeight])).IsTrue();
     }
 
     /// <summary><c>AddFace</c> stores a fully specified face verbatim.</summary>
@@ -45,7 +54,7 @@ public class FontsOptionsExtensionsTests
             [.. "jetbrains-mono"u8],
             [.. "JetBrains Mono"u8],
             FontProviderKind.Fontsource,
-            [400, 700],
+            [NormalWeight, BoldWeight],
             [FontStyle.Normal],
             [[.. "latin"u8]],
             FontDisplay.Optional,

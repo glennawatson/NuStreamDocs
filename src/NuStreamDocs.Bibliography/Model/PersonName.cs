@@ -6,14 +6,12 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Bibliography.Model;
 
-/// <summary>
-/// Single author / editor / contributor name. Field names align with
-/// CSL-JSON's name model.
-/// </summary>
+/// <summary>Single author / editor / contributor name. Field names align with CSL-JSON's name model.</summary>
 /// <param name="Family">UTF-8 family / surname bytes.</param>
 /// <param name="Given">UTF-8 given / forename bytes; may be empty for institutional authors.</param>
 /// <param name="Suffix">UTF-8 generational or honorary suffix bytes ("Jr.", "III", "QC"); may be empty.</param>
 /// <param name="Literal">UTF-8 institutional-name bytes; when non-empty, treats the name as a single string with no parts.</param>
+[System.Diagnostics.DebuggerDisplay("PersonName: {IsInstitutional}")]
 public sealed record PersonName(
     byte[] Family,
     byte[] Given,

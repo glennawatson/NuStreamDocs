@@ -10,18 +10,24 @@ namespace NuStreamDocs.ContentLoader.Tests;
 /// <summary>Coverage for <see cref="JsonContentMapper"/> via the public mapping types.</summary>
 public class JsonContentMapperTests
 {
+    /// <summary>Gets the route shared by slug-based mapping tests.</summary>
+    private static ReadOnlySpan<byte> SlugRoute => "p/{slug}.md"u8;
+
     /// <summary>A root-level JSON array maps to one page per object, with frontmatter and body.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RootArrayMapsToPages()
     {
-        const string Json = "[{\"slug\":\"alpha\",\"title\":\"Alpha\",\"body\":\"# Alpha\\n\\nHello.\"}," +
-                            "{\"slug\":\"beta\",\"title\":\"Beta\",\"body\":\"# Beta\"}]";
+        const int ExpectedPageCount = 2;
+        var json = """
+                   [{"slug":"alpha","title":"Alpha","body":"# Alpha\n\nHello."},
+                    {"slug":"beta","title":"Beta","body":"# Beta"}]
+                   """u8;
         var mapping = ContentMapping.ForRoute("posts/{slug}.md"u8).WithBodyKey("body"u8);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map([.. json], mapping, "test"u8, NullLogger.Instance);
 
-        await Assert.That(pages.Length).IsEqualTo(2);
+        await Assert.That(pages.Length).IsEqualTo(ExpectedPageCount);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("posts/alpha.md");
         var first = Encoding.UTF8.GetString(pages[0].MarkdownBytes);
         await Assert.That(first).Contains("title: \"Alpha\"");
@@ -36,10 +42,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task CollectionPointerNavigates()
     {
-        const string Json = "{\"data\":{\"items\":[{\"id\":\"x\",\"title\":\"X\"}]}}";
+        var json = """{"data":{"items":[{"id":"x","title":"X"}]}}"""u8;
         var mapping = ContentMapping.ForRoute("k/{id}.md"u8).WithCollectionPointer("data.items"u8);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map([.. json], mapping, "test"u8, NullLogger.Instance);
 
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("k/x.md");
@@ -50,10 +56,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task FrontmatterWhitelist()
     {
-        const string Json = "[{\"slug\":\"a\",\"title\":\"A\",\"secret\":\"hidden\"}]";
-        var mapping = ContentMapping.ForRoute("p/{slug}.md"u8).WithFrontmatterKeys([[.. "title"u8]]);
+        var json = """[{"slug":"a","title":"A","secret":"hidden"}]"""u8;
+        var mapping = ContentMapping.ForRoute(SlugRoute).WithFrontmatterKeys([[.. "title"u8]]);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map([.. json], mapping, "test"u8, NullLogger.Instance);
         var md = Encoding.UTF8.GetString(pages[0].MarkdownBytes);
 
         await Assert.That(md).Contains("title: \"A\"");
@@ -66,10 +72,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task EntryWithoutRouteFieldIsSkipped()
     {
-        const string Json = "[{\"slug\":\"good\",\"title\":\"G\"},{\"title\":\"no-slug\"}]";
-        var mapping = ContentMapping.ForRoute("p/{slug}.md"u8);
+        var json = """[{"slug":"good","title":"G"},{"title":"no-slug"}]"""u8;
+        var mapping = ContentMapping.ForRoute(SlugRoute);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map([.. json], mapping, "test"u8, NullLogger.Instance);
 
         await Assert.That(pages.Length).IsEqualTo(1);
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("p/good.md");
@@ -80,10 +86,10 @@ public class JsonContentMapperTests
     [Test]
     public async Task BadCollectionPointerYieldsNothing()
     {
-        const string Json = "{\"data\":{\"items\":\"not-an-array\"}}";
+        var json = """{"data":{"items":"not-an-array"}}"""u8;
         var mapping = ContentMapping.ForRoute("k/{id}.md"u8).WithCollectionPointer("data.items"u8);
 
-        var pages = JsonContentMapper.Map(Encoding.UTF8.GetBytes(Json), mapping, "test"u8, NullLogger.Instance);
+        var pages = JsonContentMapper.Map([.. json], mapping, "test"u8, NullLogger.Instance);
         await Assert.That(pages).IsEmpty();
     }
 
@@ -92,7 +98,7 @@ public class JsonContentMapperTests
     [Test]
     public async Task MalformedJsonThrows()
     {
-        var mapping = ContentMapping.ForRoute("p/{slug}.md"u8);
+        var mapping = ContentMapping.ForRoute(SlugRoute);
         var json = "[ this is not json"u8.ToArray();
         await Assert.That(() => _ = JsonContentMapper.Map(json, mapping, "test"u8, NullLogger.Instance))
             .Throws<ContentLoaderException>();

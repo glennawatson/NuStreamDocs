@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Nav</PackageId>
     <Description>Build the sidebar navigation for your NuStreamDocs site with glob includes, custom ordering, hidden sections, and per-directory overrides.</Description>
     <RootNamespace>NuStreamDocs.Nav</RootNamespace>

@@ -4,10 +4,7 @@
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// Selects how <see cref="CSharpApiGeneratorPlugin"/> hands API metadata
-/// to the rest of the build pipeline.
-/// </summary>
+/// <summary>Selects how <see cref="CSharpApiGeneratorPlugin"/> hands API metadata to the rest of the build pipeline.</summary>
 public enum CSharpApiGeneratorMode
 {
     /// <summary>
@@ -15,12 +12,12 @@ public enum CSharpApiGeneratorMode
     /// <c>{docsInputRoot}/{OutputMarkdownSubdirectory}</c> so the standard
     /// page-discovery pass picks the files up like author-written docs.
     /// </summary>
-    EmitMarkdown,
+    EmitMarkdown = 0,
 
     /// <summary>
     /// Run SourceDocParser's direct-extract pipeline (<c>ExtractAsync</c>);
     /// keep the canonical <c>ApiType[]</c> in memory for downstream plugins
     /// to consume without writing intermediate Markdown to disk.
     /// </summary>
-    Direct
+    Direct = 1,
 }

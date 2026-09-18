@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Templating;
 
 /// <summary>A compiled, reusable Mustache-style UTF-8 template. Compile once, render many — the same instance is safe to share across worker threads.</summary>
+[System.Diagnostics.DebuggerDisplay("Template: {InstructionCount}")]
 public sealed class Template
 {
     /// <summary>Original UTF-8 source kept for literal slices.</summary>
@@ -27,9 +29,7 @@ public sealed class Template
     /// <summary>Gets the number of instructions in the compiled template.</summary>
     public int InstructionCount => _instructions.Length;
 
-    /// <summary>
-    /// Compiles a UTF-8 template source.
-    /// </summary>
+    /// <summary>Compiles a UTF-8 template source.</summary>
     /// <param name="source">UTF-8 template bytes.</param>
     /// <returns>The compiled template.</returns>
     /// <exception cref="TemplateSyntaxException">Thrown on malformed syntax.</exception>
@@ -43,6 +43,7 @@ public sealed class Template
     /// <summary>Renders this template against <paramref name="data"/> with no partial map.</summary>
     /// <param name="data">Root data scope.</param>
     /// <param name="writer">UTF-8 sink.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Render(TemplateData data, IBufferWriter<byte> writer) =>
         TemplateRenderer.Render(_source, _instructions, data, null, writer);
 
@@ -50,6 +51,7 @@ public sealed class Template
     /// <param name="data">Root data scope.</param>
     /// <param name="partials">UTF-8-byte-keyed map of partial-name to compiled <see cref="Template"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Render(TemplateData data, Dictionary<byte[], Template> partials, IBufferWriter<byte> writer) =>
         TemplateRenderer.Render(_source, _instructions, data, partials, writer);
 }

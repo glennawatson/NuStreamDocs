@@ -66,7 +66,7 @@ public class HtmlEscapeTests
         ArrayBufferWriter<byte> charSink = new();
         HtmlEscape.EscapeText(Source.AsSpan(), charSink);
         ArrayBufferWriter<byte> byteSink = new();
-        HtmlEscape.EscapeText(Encoding.UTF8.GetBytes(Source), byteSink);
+        HtmlEscape.EscapeText("a & b < c > d \"e\""u8, byteSink);
         await Assert.That(charSink.WrittenSpan.SequenceEqual(byteSink.WrittenSpan)).IsTrue();
     }
 }

@@ -37,7 +37,7 @@ internal static class InteractiveAudit
     /// <param name="page">Site-relative URL of the page.</param>
     /// <param name="options">Audit options (rule toggles).</param>
     /// <param name="sink">Receives the findings.</param>
-    public static void Check(ReadOnlySpan<byte> html, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
+    internal static void Check(ReadOnlySpan<byte> html, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
     {
         if (!AnyRuleEnabled(options))
         {
@@ -142,8 +142,8 @@ internal static class InteractiveAudit
         AuditOptions options,
         List<AuditDiagnostic> sink)
     {
-        if (!options.IsRuleEnabled(AuditRule.EmptyButton) ||
-            !AsciiByteHelpers.EqualsIgnoreAsciiCase(cursor.Name, "button"u8))
+        if (!options.IsRuleEnabled(AuditRule.EmptyButton)
+            || !AsciiByteHelpers.EqualsIgnoreAsciiCase(cursor.Name, "button"u8))
         {
             return;
         }
@@ -189,7 +189,7 @@ internal static class InteractiveAudit
     /// <returns>The set of referenced control ids, byte-array keyed.</returns>
     private static HashSet<byte[]> CollectLabelTargets(ReadOnlySpan<byte> html)
     {
-        HashSet<byte[]> targets = new(ByteArrayComparer.Instance);
+        HashSet<byte[]> targets = [with(ByteArrayComparer.Instance)];
         HtmlTagCursor cursor = new(html);
         while (cursor.MoveNext())
         {
@@ -200,7 +200,7 @@ internal static class InteractiveAudit
 
             if (cursor.TryGetAttribute("for"u8, out var target) && AuditText.HasText(target))
             {
-                targets.Add([.. AsciiByteHelpers.TrimAsciiWhitespace(target)]);
+                _ = targets.Add([.. AsciiByteHelpers.TrimAsciiWhitespace(target)]);
             }
         }
 
@@ -300,7 +300,7 @@ internal static class InteractiveAudit
         }
 
         var trimmed = AsciiByteHelpers.TrimAsciiWhitespace(value);
-        return Utf8Parser.TryParse(trimmed, out int parsed, out var consumed) && consumed == trimmed.Length &&
-               parsed > 0;
+        return Utf8Parser.TryParse(trimmed, out int parsed, out var consumed) && consumed == trimmed.Length
+               && parsed > 0;
     }
 }

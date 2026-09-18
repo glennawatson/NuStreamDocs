@@ -23,17 +23,6 @@ internal sealed class TempDocsTree : IDisposable
     /// <summary>Gets the absolute path of the per-fixture output directory.</summary>
     public string Output { get; }
 
-    /// <summary>Creates a fresh temp tree under <c>Path.GetTempPath</c>.</summary>
-    /// <returns>A new fixture; caller must dispose.</returns>
-    public static TempDocsTree Create()
-    {
-        var root = Path.Combine(
-            Path.GetTempPath(),
-            "smkd-nav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(root);
-        return new(root);
-    }
-
     /// <inheritdoc/>
     public void Dispose()
     {
@@ -48,5 +37,16 @@ internal sealed class TempDocsTree : IDisposable
         {
             // Best-effort cleanup; the OS will reap the temp dir eventually.
         }
+    }
+
+    /// <summary>Creates a fresh temp tree under <c>Path.GetTempPath</c>.</summary>
+    /// <returns>A new fixture; caller must dispose.</returns>
+    internal static TempDocsTree Create()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            $"smkd-nav-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(root);
+        return new(root);
     }
 }

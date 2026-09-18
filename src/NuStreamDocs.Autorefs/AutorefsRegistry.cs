@@ -4,11 +4,13 @@
 
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Autorefs;
 
 /// <summary>Thread-safe map of cross-document reference IDs to the page URL and anchor fragment that own them.</summary>
+[System.Diagnostics.DebuggerDisplay("AutorefsRegistry: {Count}")]
 public sealed class AutorefsRegistry
 {
     /// <summary>Default capacity for the parameterless constructor; pass an explicit capacity for sites with more than ~15 K registered IDs.</summary>
@@ -41,6 +43,7 @@ public sealed class AutorefsRegistry
     /// <param name="id">UTF-8 reference ID bytes.</param>
     /// <param name="pageRelativeUrlBytes">UTF-8 page-relative URL bytes; the array reference is stored directly and must not be mutated after the call.</param>
     /// <param name="fragment">UTF-8 fragment bytes without the leading <c>#</c>; pass an empty span for whole-page references.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>id.IsEmpty</c>.</exception>
     public void Register(ReadOnlySpan<byte> id, byte[] pageRelativeUrlBytes, ReadOnlySpan<byte> fragment)
     {
         if (id.IsEmpty)
@@ -85,6 +88,7 @@ public sealed class AutorefsRegistry
     }
 
     /// <summary>Drops every registered entry.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => _anchors.Clear();
 
     /// <summary>Snapshots the registry into a fresh <c>(id, url)</c> array; order is unspecified.</summary>
@@ -112,12 +116,7 @@ public sealed class AutorefsRegistry
             return null;
         }
 
-        if (fragment.SequenceEqual(idBytes))
-        {
-            return idBytes;
-        }
-
-        return fragment.ToArray();
+        return fragment.SequenceEqual(idBytes) ? idBytes : fragment.ToArray();
     }
 
     /// <summary>Stored anchor — page URL plus optional fragment.</summary>

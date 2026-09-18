@@ -10,8 +10,8 @@ internal sealed class TempDir : IDisposable
     /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
     public TempDir()
     {
-        Root = Path.Combine(Path.GetTempPath(), "smkd-fonts-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(Root);
+        Root = Path.Combine(Path.GetTempPath(), $"smkd-fonts-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(Root);
     }
 
     /// <summary>Gets the absolute path to the scratch root.</summary>

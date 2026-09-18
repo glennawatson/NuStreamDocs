@@ -89,13 +89,10 @@ public class CodeAwareRewriterTests
         IBufferWriter<byte> writer,
         out int consumed)
     {
-        if (offset + 2 < source.Length
-            && source[offset] is (byte)'['
-            && source[offset + 1] is (byte)'X'
-            && source[offset + 2] is (byte)']')
+        if (source[offset..].StartsWith("[X]"u8))
         {
             writer.Write("<x/>"u8);
-            consumed = 3;
+            consumed = "[X]"u8.Length;
             return true;
         }
 

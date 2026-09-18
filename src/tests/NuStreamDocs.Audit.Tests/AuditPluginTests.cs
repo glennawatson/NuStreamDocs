@@ -33,10 +33,10 @@ public class AuditPluginTests
 
             await Assert.That(diagnostics.Length).IsGreaterThan(0);
             await Assert
-                .That(Array.TrueForAll(diagnostics, d => string.Equals(d.Page, "bad.html", StringComparison.Ordinal)))
+                .That(Array.TrueForAll(diagnostics, static d => string.Equals(d.Page, "bad.html", StringComparison.Ordinal)))
                 .IsTrue();
-            await Assert.That(diagnostics.Select(d => d.Rule)).Contains(AuditRule.ImageMissingAlt);
-            await Assert.That(diagnostics.Select(d => d.Rule)).Contains(AuditRule.HeadingLevelSkipped);
+            await Assert.That(Array.Exists(diagnostics, static d => d.Rule is AuditRule.ImageMissingAlt)).IsTrue();
+            await Assert.That(Array.Exists(diagnostics, static d => d.Rule is AuditRule.HeadingLevelSkipped)).IsTrue();
         }
         finally
         {
@@ -52,7 +52,7 @@ public class AuditPluginTests
         var plugin = new AuditPlugin();
         var diagnostics =
             await plugin.RunAsync(
-                new(Path.Combine(Path.GetTempPath(), "nstd-audit-does-not-exist-" + Guid.NewGuid().ToString("N"))),
+                new(Path.Combine(Path.GetTempPath(), $"nstd-audit-does-not-exist-{Guid.NewGuid():N}")),
                 CancellationToken.None);
         await Assert.That(diagnostics).IsEmpty();
     }

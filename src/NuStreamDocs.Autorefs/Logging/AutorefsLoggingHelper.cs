@@ -18,7 +18,7 @@ internal static partial class AutorefsLoggingHelper
         EventId = 5001,
         Level = LogLevel.Information,
         Message = "Autorefs resolution pass starting ({CatalogSize} registered ID(s))")]
-    public static partial void LogResolutionStart(ILogger logger, int catalogSize);
+    internal static partial void LogResolutionStart(ILogger logger, int catalogSize);
 
     /// <summary>Logs a resolved reference.</summary>
     /// <param name="logger">Target logger.</param>
@@ -28,7 +28,7 @@ internal static partial class AutorefsLoggingHelper
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "False positive: registry lookup is gated on logger.IsEnabled.")]
-    public static void LogReferenceResolved(ILogger? logger, ReadOnlySpan<byte> urlBytes, ReadOnlySpan<byte> id)
+    internal static void LogReferenceResolved(ILogger? logger, ReadOnlySpan<byte> urlBytes, ReadOnlySpan<byte> id)
     {
         if (logger is null)
         {
@@ -47,7 +47,7 @@ internal static partial class AutorefsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="id">UTF-8 unresolved ID bytes.</param>
     /// <param name="sourcePage">Page that referenced the ID.</param>
-    public static void LogReferenceUnresolved(ILogger logger, ReadOnlySpan<byte> id, in FilePath sourcePage)
+    internal static void LogReferenceUnresolved(ILogger logger, ReadOnlySpan<byte> id, in FilePath sourcePage)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
         {
@@ -65,7 +65,7 @@ internal static partial class AutorefsLoggingHelper
         EventId = 5004,
         Level = LogLevel.Information,
         Message = "Autorefs resolution complete: {ResolvedCount} resolved, {MissingCount} missing")]
-    public static partial void LogResolutionComplete(ILogger logger, int resolvedCount, int missingCount);
+    internal static partial void LogResolutionComplete(ILogger logger, int resolvedCount, int missingCount);
 
     /// <summary>Emitter for <see cref="LogReferenceResolved"/>.</summary>
     /// <param name="logger">Target logger.</param>

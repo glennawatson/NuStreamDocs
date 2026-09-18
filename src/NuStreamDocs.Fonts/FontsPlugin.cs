@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,6 +17,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Fonts;
 
 /// <summary>Self-hosts the declared fonts: resolves them at build time and contributes the woff2 files, <c>fonts.css</c>, and the preload + stylesheet links.</summary>
+[System.Diagnostics.DebuggerDisplay("FontsPlugin: {Name}")]
 public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>Weight a preload link targets.</summary>
@@ -26,9 +28,6 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
 
     /// <summary>Glob matching the markdown source files scanned for <c>auto</c>-subset detection.</summary>
     private const string MarkdownGlob = "**/*.md";
-
-    /// <summary>UTF-8 subset token meaning "derive the subsets from the rendered content".</summary>
-    private static readonly byte[] AutoSubsetToken = [.. "auto"u8];
 
     /// <summary>UTF-8 subset token meaning "every subset the provider offers".</summary>
     private static readonly byte[] AllSubsetsToken = [.. "all"u8];
@@ -79,6 +78,9 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => _staticAssets;
 
+    /// <summary>Gets the subset marker requesting automatic detection from site content.</summary>
+    private static ReadOnlySpan<byte> AutoSubsetMarker => "auto"u8;
+
     /// <inheritdoc/>
     public async ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
@@ -111,6 +113,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(_headExtra);
 
     /// <summary>Returns the provider for the given kind.</summary>
@@ -126,6 +129,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <summary>Content-addresses <paramref name="bytes"/> into a short hex filename stem.</summary>
     /// <param name="bytes">The font file bytes.</param>
     /// <returns>A lowercase hex stem.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string HashName(byte[] bytes) =>
         Convert.ToHexStringLower(SHA256.HashData(bytes).AsSpan(0, FilenameHashBytes));
 
@@ -157,7 +161,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The resolved resources.</returns>
     private static ValueTask<FontResource[]> ResolveForFaceAsync(
-        FontFace face,
+        in FontFace face,
         FontDownloadCache cache,
         DirectoryPath inputRoot,
         bool[]? seenBlocks,
@@ -185,7 +189,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <param name="subsets">A face's subset list.</param>
     /// <returns><see langword="true"/> when it is <c>["auto"]</c>.</returns>
     private static bool IsAutoSubsets(byte[][] subsets) =>
-        subsets is [var only] && only.AsSpan().SequenceEqual(AutoSubsetToken);
+        subsets is [var only] && only.AsSpan().SequenceEqual(AutoSubsetMarker);
 
     /// <summary>Scans the markdown source files under <paramref name="inputRoot"/> for which Unicode blocks they touch.</summary>
     /// <param name="inputRoot">Build input directory.</param>
@@ -199,7 +203,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
         }
 
         var matcher = new Matcher();
-        matcher.AddInclude(MarkdownGlob);
+        _ = matcher.AddInclude(MarkdownGlob);
         foreach (var file in matcher.Execute(new DirectoryInfoWrapper(new(inputRoot.Value))).Files)
         {
             var path = Path.Combine(inputRoot.Value, file.Path);
@@ -285,7 +289,7 @@ public sealed class FontsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, I
     /// <param name="resources">The resolved files.</param>
     /// <param name="acc">Accumulating build state.</param>
     /// <returns>The CSS rows for this face.</returns>
-    private FontCssWriter.ResourceCss[] BuildResourceCss(FontFace face, FontResource[] resources, Accumulator acc)
+    private FontCssWriter.ResourceCss[] BuildResourceCss(in FontFace face, FontResource[] resources, Accumulator acc)
     {
         var rows = new FontCssWriter.ResourceCss[resources.Length];
         byte[]? preloadPath = null;

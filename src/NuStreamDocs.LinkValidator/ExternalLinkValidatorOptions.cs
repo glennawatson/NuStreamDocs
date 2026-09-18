@@ -11,6 +11,7 @@ namespace NuStreamDocs.LinkValidator;
 /// <param name="MaxRetries">Retry attempts on transient failures (5xx, network errors).</param>
 /// <param name="RequestTimeoutSeconds">Per-request HTTP timeout.</param>
 /// <param name="UserAgent">User-Agent header sent with each request.</param>
+[System.Diagnostics.DebuggerDisplay("ExternalLinkValidatorOptions: {ToString(),nq}")]
 public sealed record ExternalLinkValidatorOptions(
     int MaxRequestsPerHost,
     int WindowSeconds,

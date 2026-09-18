@@ -2,9 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
-using System.Text;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Building;
 using NuStreamDocs.Common;
@@ -19,12 +19,9 @@ namespace NuStreamDocs.Benchmarks;
 /// Surfaces any per-page overhead the synthetic branch in
 /// <c>BuildPipeline.ProcessOnePageAsync</c> adds over the disk fast path.
 /// </summary>
+[DebuggerDisplay("PipelineSyntheticPagesBenchmarks: Pages={Pages}")]
 [ShortRunJob]
 [MemoryDiagnoser]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class PipelineSyntheticPagesBenchmarks
 {
     /// <summary>Small page count (smoke).</summary>
@@ -37,9 +34,8 @@ public class PipelineSyntheticPagesBenchmarks
     private const int LargePages = 2000;
 
     /// <summary>Markdown payload reused across pages — keeps per-iteration cost focused on the pipeline, not on payload generation.</summary>
-    private static readonly byte[] PagePayload = Encoding.UTF8.GetBytes(
-        "# Page\n\nbody with **bold** and `code` and a [link](https://example.com).\n\n"
-        + "## Section\n\nMore prose.\n");
+    private static readonly byte[] PagePayload =
+        [.. "# Page\n\nbody with **bold** and `code` and a [link](https://example.com).\n\n## Section\n\nMore prose.\n"u8];
 
     /// <summary>Empty input root used by the synthetic-only benchmarks (the pipeline still needs an existing input directory even when every page is synthetic).</summary>
     private string _emptyInputRoot = string.Empty;
@@ -63,22 +59,22 @@ public class PipelineSyntheticPagesBenchmarks
     {
         _emptyInputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-synth-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-bench-synth-in-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         _diskInputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-disk-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-bench-disk-in-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         _outputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-synth-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_emptyInputRoot);
-        Directory.CreateDirectory(_diskInputRoot);
+            $"smkd-bench-synth-out-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(_emptyInputRoot);
+        _ = Directory.CreateDirectory(_diskInputRoot);
 
         _syntheticPaths = new FilePath[Pages];
         for (var i = 0; i < Pages; i++)
         {
-            _syntheticPaths[i] = (FilePath)("api/Type" + i.ToString(CultureInfo.InvariantCulture) + ".md");
+            _syntheticPaths[i] = (FilePath)$"api/Type{i.ToString(CultureInfo.InvariantCulture)}.md";
             File.WriteAllBytes(
-                Path.Combine(_diskInputRoot, "page-" + i.ToString(CultureInfo.InvariantCulture) + ".md"),
+                Path.Combine(_diskInputRoot, $"page-{i.ToString(CultureInfo.InvariantCulture)}.md"),
                 PagePayload);
         }
     }
@@ -97,43 +93,40 @@ public class PipelineSyntheticPagesBenchmarks
     public void IterationSetup()
     {
         TryDelete(_outputRoot);
-        Directory.CreateDirectory(_outputRoot);
+        _ = Directory.CreateDirectory(_outputRoot);
     }
 
     /// <summary>Disk baseline: <c>Pages</c> markdown files on disk, no synthetic-page plugin.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark(Baseline = true)]
-    public int Disk() =>
+    public Task<int> Disk() =>
         new DocBuilder()
             .WithInput(_diskInputRoot)
             .WithOutput(_outputRoot)
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Eager synthetic: a discover plugin pre-registers every page.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int SyntheticEager() =>
+    public Task<int> SyntheticEager() =>
         new DocBuilder()
             .WithInput(_emptyInputRoot)
             .WithOutput(_outputRoot)
             .UsePlugin(new EagerSyntheticPlugin(_syntheticPaths, PagePayload))
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Streamed synthetic: a discover plugin registers an the pipeline pulls one at a time.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int SyntheticStreamed() =>
+    public Task<int> SyntheticStreamed() =>
         new DocBuilder()
             .WithInput(_emptyInputRoot)
             .WithOutput(_outputRoot)
             .UsePlugin(new StreamedSyntheticPlugin(_syntheticPaths, PagePayload))
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Best-effort recursive directory delete.</summary>
     /// <param name="path">Directory path.</param>
@@ -153,6 +146,8 @@ public class PipelineSyntheticPagesBenchmarks
     }
 
     /// <summary>Discover-phase plugin that eagerly seeds <see cref="SyntheticPageSink"/> with every page up front.</summary>
+    /// <param name="paths">Routes assigned to the synthetic pages.</param>
+    /// <param name="payload">Markdown content shared by the synthetic pages.</param>
     private sealed class EagerSyntheticPlugin(FilePath[] paths, byte[] payload) : IBuildDiscoverPlugin
     {
         /// <inheritdoc/>
@@ -174,6 +169,8 @@ public class PipelineSyntheticPagesBenchmarks
     }
 
     /// <summary>Discover-phase plugin that registers a lazy <see cref="IAsyncEnumerable{SyntheticPage}"/> the pipeline pulls page-by-page.</summary>
+    /// <param name="paths">Routes assigned to the synthetic pages.</param>
+    /// <param name="payload">Markdown content shared by the synthetic pages.</param>
     private sealed class StreamedSyntheticPlugin(FilePath[] paths, byte[] payload) : IBuildDiscoverPlugin
     {
         /// <inheritdoc/>

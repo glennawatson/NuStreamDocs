@@ -3,7 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.MarkdownExtensions.AttrList;
 using NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
@@ -15,6 +16,7 @@ using NuStreamDocs.Privacy.Bytes;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for the HTML post-render plugins (attr-list, mermaid, privacy scanner) and the individual byte-level scanners they rely on.</summary>
+[DebuggerDisplay("PostRenderBenchmarks: attrListHtml={_attrListHtml}, mermaidHtml={_mermaidHtml}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class PostRenderBenchmarks
@@ -77,39 +79,42 @@ public class PostRenderBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _attrListHtml = Repeat("<h1>Heading {: #intro .lead }</h1><p class=\"existing\">Body {: .extra .more }</p>");
-        _mermaidHtml = Repeat("<pre><code class=\"language-mermaid\">graph TD; A--&gt;B; B--&gt;C</code></pre>");
+        _attrListHtml = Repeat("<h1>Heading {: #intro .lead }</h1><p class=\"existing\">Body {: .extra .more }</p>"u8);
+        _mermaidHtml = Repeat("<pre><code class=\"language-mermaid\">graph TD; A--&gt;B; B--&gt;C</code></pre>"u8);
         _privacyHtml = Repeat(
-            "<img src=\"https://example.com/x.png\">"
-            + "<link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">"
-            + "<style>body{background:url(https://cdn.example/bg.png)}</style>"
-            + "<a href=\"https://docs.example/page\">link</a>");
-        _mixedContentHtml = Repeat("<a href=\"http://example.com/page\">x</a><img src=\"http://cdn.example/a.png\">");
+        [
+            .. "<img src=\"https://example.com/x.png\">"u8,
+            .. "<link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">"u8,
+            .. "<style>body{background:url(https://cdn.example/bg.png)}</style>"u8,
+            .. "<a href=\"https://docs.example/page\">link</a>"u8,
+        ]);
+        _mixedContentHtml = Repeat("<a href=\"http://example.com/page\">x</a><img src=\"http://cdn.example/a.png\">"u8);
         _externalAnchorHtml =
-            Repeat("<a href=\"https://example.com/page\">x</a><a href=\"https://docs.example\" rel=\"author\">y</a>");
+            Repeat("<a href=\"https://example.com/page\">x</a><a href=\"https://docs.example\" rel=\"author\">y</a>"u8);
         _assetAttrHtml =
             Repeat(
-                "<img src=\"https://cdn.example/a.png\"><link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">");
+                "<img src=\"https://cdn.example/a.png\"><link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">"u8);
         _srcsetHtml =
             Repeat(
-                "<img srcset=\"https://cdn.example/a.png 1x, https://cdn.example/b.png 2x, https://cdn.example/c.png 3x\">");
+                "<img srcset=\"https://cdn.example/a.png 1x, https://cdn.example/b.png 2x, https://cdn.example/c.png 3x\">"u8);
         _inlineStyleHtml =
             Repeat(
-                "<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>");
+                "<style>.x { background: url(https://cdn.example/a.png); border-image: url(\"https://cdn.example/b.png\"); }</style>"u8);
         _registry = new([.. "local"u8]);
         _filter = new(null, null);
 
-        const string ExistingAttrs = " class=\"existing\" data-x=\"1\"";
-        const string AttrListBody = " #intro .lead .extra target=\"_blank\" ";
-        _emitMergedSource = Encoding.UTF8.GetBytes(ExistingAttrs + "{:" + AttrListBody + "}");
+        var existingAttrs = " class=\"existing\" data-x=\"1\""u8;
+        var attrListBody = " #intro .lead .extra target=\"_blank\" "u8;
+        _emitMergedSource = [.. existingAttrs, .. "{:"u8, .. attrListBody, .. "}"u8];
         _emitMergedExistingStart = 0;
-        _emitMergedExistingEnd = ExistingAttrs.Length;
+        _emitMergedExistingEnd = existingAttrs.Length;
         _emitMergedAttrListStart = _emitMergedExistingEnd + OpenMarkerLength;
         _emitMergedAttrListEnd = _emitMergedSource.Length - 1;
     }
 
     /// <summary>Benchmark for <c>AttrListPlugin</c>'s post-render rewrite.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int AttrList() => RunPostRender(new AttrListPlugin(), _attrListHtml);
 
@@ -118,7 +123,7 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int AttrListDirect()
     {
-        ArrayBufferWriter<byte> sink = new(_attrListHtml.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_attrListHtml.Length * OutputExpansionFactor);
         AttrListRewriter.RewriteInto(_attrListHtml, sink);
         return sink.WrittenCount;
     }
@@ -145,11 +150,13 @@ public class PostRenderBenchmarks
 
     /// <summary>Benchmark for <c>MermaidPlugin</c>'s post-render retag.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Mermaid() => RunPostRender(new MermaidPlugin(), _mermaidHtml);
 
     /// <summary>Benchmark for <c>PrivacyPlugin</c>'s page scan (full pipeline through PrivacyRewriter).</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Privacy() => RunPostRender(new PrivacyPlugin(), _privacyHtml);
 
@@ -158,8 +165,8 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int MixedContentBytesDirect()
     {
-        ArrayBufferWriter<byte> sink = new(_mixedContentHtml.Length * 2);
-        MixedContentBytes.RewriteInto(_mixedContentHtml, sink);
+        ArrayBufferWriter<byte> sink = new(_mixedContentHtml.Length * OutputExpansionFactor);
+        _ = MixedContentBytes.RewriteInto(_mixedContentHtml, sink);
         return sink.WrittenCount;
     }
 
@@ -168,8 +175,8 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int AnchorBytesDirect()
     {
-        ArrayBufferWriter<byte> sink = new(_externalAnchorHtml.Length * 2);
-        AnchorBytes.RewriteInto(_externalAnchorHtml, true, true, sink);
+        ArrayBufferWriter<byte> sink = new(_externalAnchorHtml.Length * OutputExpansionFactor);
+        _ = AnchorBytes.RewriteInto(_externalAnchorHtml, true, true, sink);
         return sink.WrittenCount;
     }
 
@@ -178,9 +185,9 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int AssetAttributeBytesDirect()
     {
-        ArrayBufferWriter<byte> sink = new(_assetAttrHtml.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_assetAttrHtml.Length * OutputExpansionFactor);
         UrlRewriteContext ctx = new(_filter, _registry);
-        AssetAttributeBytes.RewriteInto(_assetAttrHtml, ctx, sink);
+        _ = AssetAttributeBytes.RewriteInto(_assetAttrHtml, ctx, sink);
         return sink.WrittenCount;
     }
 
@@ -189,9 +196,9 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int SrcsetBytesDirect()
     {
-        ArrayBufferWriter<byte> sink = new(_srcsetHtml.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_srcsetHtml.Length * OutputExpansionFactor);
         UrlRewriteContext ctx = new(_filter, _registry);
-        SrcsetBytes.RewriteInto(_srcsetHtml, ctx, sink);
+        _ = SrcsetBytes.RewriteInto(_srcsetHtml, ctx, sink);
         return sink.WrittenCount;
     }
 
@@ -200,9 +207,9 @@ public class PostRenderBenchmarks
     [Benchmark]
     public int InlineStyleBlockBytesDirect()
     {
-        ArrayBufferWriter<byte> sink = new(_inlineStyleHtml.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_inlineStyleHtml.Length * OutputExpansionFactor);
         UrlRewriteContext ctx = new(_filter, _registry);
-        InlineStyleBlockBytes.RewriteInto(_inlineStyleHtml, ctx, sink);
+        _ = InlineStyleBlockBytes.RewriteInto(_inlineStyleHtml, ctx, sink);
         return sink.WrittenCount;
     }
 
@@ -212,7 +219,7 @@ public class PostRenderBenchmarks
     /// <returns>Bytes written by the plugin.</returns>
     private static int RunPostRender(IPagePostRenderPlugin plugin, byte[] html)
     {
-        ArrayBufferWriter<byte> sink = new(html.Length * 2);
+        ArrayBufferWriter<byte> sink = new(html.Length * OutputExpansionFactor);
         PagePostRenderContext context = new("page.md", default, html, sink);
         plugin.PostRender(in context);
         return sink.WrittenCount;
@@ -221,14 +228,14 @@ public class PostRenderBenchmarks
     /// <summary>Stamps <paramref name="block"/> <c>Repetitions</c> times.</summary>
     /// <param name="block">Source fragment.</param>
     /// <returns>UTF-8 bytes.</returns>
-    private static byte[] Repeat(string block)
+    private static byte[] Repeat(ReadOnlySpan<byte> block)
     {
-        StringBuilder sb = new(block.Length * Repetitions);
+        var output = new byte[block.Length * Repetitions];
         for (var i = 0; i < Repetitions; i++)
         {
-            sb.Append(block);
+            block.CopyTo(output.AsSpan(i * block.Length));
         }
 
-        return Encoding.UTF8.GetBytes(sb.ToString());
+        return output;
     }
 }

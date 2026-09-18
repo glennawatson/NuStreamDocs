@@ -43,18 +43,14 @@ public static class XmlLexer
         [
             MarkupRootRules.Build(
                 TagStateId,
-
-                // Document text — anything up to the next < or &.
                 new(
                     static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop),
                     TokenClass.Text,
                     LexerRule.NoStateChange),
+                [
 
                 // [ \t\r\n]+ whitespace runs.
-                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-                {
-                    FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst
-                },
+                new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.WhitespaceWithNewlinesFirst, },
 
                 // <!-- … --> HTML comment.
                 new(
@@ -78,7 +74,8 @@ public static class XmlLexer
                 new(
                     static slice => TokenMatchers.MatchDelimited(slice, "<?"u8, "?>"u8),
                     TokenClass.CommentPreproc,
-                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst }),
+                    LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AngleOpenFirst }
+                ]),
             MarkupTagRules.Build()
         ];
         return new(states);

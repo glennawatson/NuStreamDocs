@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Search.Lunr</PackageId>
     <Description>Lunr-format search-index generation for NuStreamDocs. Emits the search_index.json document corpus consumed by mkdocs-material's bundled Lunr.js runtime — pair with the Material 1 theme.</Description>
     <RootNamespace>NuStreamDocs.Search.Lunr</RootNamespace>

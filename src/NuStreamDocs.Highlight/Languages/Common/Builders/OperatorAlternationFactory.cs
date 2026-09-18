@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Builders;
 
@@ -12,14 +13,15 @@ internal static class OperatorAlternationFactory
     /// <summary>Splits a space-delimited UTF-8 byte literal into a longest-first <c>byte[][]</c> alternation table.</summary>
     /// <param name="spaceSeparated">Whitespace-delimited UTF-8 operator bytes (e.g. <c>"+= -= + - *"u8</c>).</param>
     /// <returns>Operator byte arrays sorted by descending length.</returns>
-    public static byte[][] SplitLongestFirst(ReadOnlySpan<byte> spaceSeparated) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static byte[][] SplitLongestFirst(ReadOnlySpan<byte> spaceSeparated) =>
         SortLongestFirst(SplitSpaceSeparated(spaceSeparated));
 
     /// <summary>Splits two space-delimited UTF-8 byte literals into a single longest-first <c>byte[][]</c> alternation table.</summary>
     /// <param name="spaceSeparatedFirst">First whitespace-delimited UTF-8 operator chunk.</param>
     /// <param name="spaceSeparatedSecond">Second whitespace-delimited UTF-8 operator chunk.</param>
     /// <returns>Operator byte arrays sorted by descending length.</returns>
-    public static byte[][] SplitLongestFirst(
+    internal static byte[][] SplitLongestFirst(
         ReadOnlySpan<byte> spaceSeparatedFirst,
         ReadOnlySpan<byte> spaceSeparatedSecond)
     {
@@ -44,7 +46,8 @@ internal static class OperatorAlternationFactory
     /// <summary>Builds a <see cref="SearchValues{T}"/> covering every alternation entry's leading byte.</summary>
     /// <param name="operators">Operator byte arrays (typically the result of <see cref="SplitLongestFirst(ReadOnlySpan{byte})"/>).</param>
     /// <returns>First-byte dispatch set.</returns>
-    public static SearchValues<byte> FirstBytesOf(byte[][] operators)
+    /// <exception cref="ArgumentException">Thrown when <c>op is null or []</c>.</exception>
+    internal static SearchValues<byte> FirstBytesOf(byte[][] operators)
     {
         const int AsciiByteCount = 256;
         Span<bool> seen = stackalloc bool[AsciiByteCount];
@@ -72,10 +75,13 @@ internal static class OperatorAlternationFactory
         var idx = 0;
         for (var b = 0; b < seen.Length; b++)
         {
-            if (seen[b])
+            if (!seen[b])
             {
-                result[idx++] = (byte)b;
+                continue;
             }
+
+            result[idx] = (byte)b;
+            idx++;
         }
 
         return SearchValues.Create(result);
@@ -84,6 +90,7 @@ internal static class OperatorAlternationFactory
     /// <summary>Splits a UTF-8 byte span on ASCII space / tab, skipping empty runs.</summary>
     /// <param name="source">Source bytes.</param>
     /// <returns>Per-token byte arrays.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte[][] SplitSpaceSeparated(ReadOnlySpan<byte> source) =>
         WhitespaceSplitter.Split(source);
 
@@ -115,10 +122,13 @@ internal static class OperatorAlternationFactory
         {
             for (var i = 0; i < tokens.Length; i++)
             {
-                if (tokens[i].Length == len)
+                if (tokens[i].Length != len)
                 {
-                    result[cursor++] = tokens[i];
+                    continue;
                 }
+
+                result[cursor] = tokens[i];
+                cursor++;
             }
         }
 

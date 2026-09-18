@@ -11,42 +11,42 @@ public enum BlockKind
     None = 0,
 
     /// <summary>Blank line; closes open paragraphs and lazy continuations.</summary>
-    Blank,
+    Blank = 1,
 
     /// <summary>ATX heading (<c>#</c> .. <c>######</c>).</summary>
-    AtxHeading,
+    AtxHeading = 2,
 
     /// <summary>Setext heading underline (<c>===</c> or <c>---</c>).</summary>
-    SetextHeading,
+    SetextHeading = 3,
 
     /// <summary>Thematic break (<c>---</c>, <c>***</c>, <c>___</c>).</summary>
-    ThematicBreak,
+    ThematicBreak = 4,
 
     /// <summary>Indented (4-space) code block.</summary>
-    IndentedCode,
+    IndentedCode = 5,
 
     /// <summary>Fenced code block fence line (open or close marker).</summary>
-    FencedCode,
+    FencedCode = 6,
 
     /// <summary>Line inside an open fenced code block.</summary>
-    FencedCodeContent,
+    FencedCodeContent = 7,
 
     /// <summary>Block quote (<c>&gt;</c>).</summary>
-    BlockQuote,
+    BlockQuote = 8,
 
     /// <summary>List item, ordered or bullet.</summary>
-    ListItem,
+    ListItem = 9,
 
     /// <summary>Continuation line inside an open list item — body indented at or beyond the list's content column.</summary>
-    ListItemContent,
+    ListItemContent = 10,
 
     /// <summary>Default text container.</summary>
-    Paragraph,
+    Paragraph = 11,
 
     /// <summary>Opening line of a CommonMark HTML block (Type 1 or Type 6).</summary>
     /// <remarks>Type 1 covers <c>&lt;pre&gt;</c> / <c>&lt;script&gt;</c> / <c>&lt;style&gt;</c> / <c>&lt;textarea&gt;</c>; Type 6 covers a fixed list of block-level tag names.</remarks>
-    HtmlBlock,
+    HtmlBlock = 12,
 
     /// <summary>Continuation line inside an open HTML block; emitted verbatim by the renderer.</summary>
-    HtmlBlockContent
+    HtmlBlockContent = 13,
 }

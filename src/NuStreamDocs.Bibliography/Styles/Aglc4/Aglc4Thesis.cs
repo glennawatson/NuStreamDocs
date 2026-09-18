@@ -14,7 +14,7 @@ internal static class Aglc4Thesis
     /// <summary>Writes the citation per AGLC4 thesis rules directly to <paramref name="writer"/>.</summary>
     /// <param name="entry">Resolved entry.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Write(CitationEntry entry, IBufferWriter<byte> writer)
+    internal static void Write(CitationEntry entry, IBufferWriter<byte> writer)
     {
         if (entry.Authors.Length > 0)
         {

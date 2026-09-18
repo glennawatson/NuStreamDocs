@@ -5,6 +5,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 using NuStreamDocs.Common;
@@ -24,137 +26,152 @@ namespace NuStreamDocs.Serve;
 /// </remarks>
 public static class DocBuilderServeExtensions
 {
-    /// <summary>Runs an initial build, starts the dev server, then loops on file-system changes — rebuilding and signaling connected browsers.</summary>
-    /// <param name="builder">Configured builder.</param>
-    /// <returns>Async task that completes when the loop exits.</returns>
-    public static Task WatchAndServeAsync(this DocBuilder builder) =>
-        builder.WatchAndServeAsync(WatchAndServeOptions.Default, NullLogger.Instance, CancellationToken.None);
+    /// <summary>Shutdown timeout seconds.</summary>
+    private const int ShutdownTimeoutSeconds = 2;
 
-    /// <summary>Runs the watch + serve loop with explicit cancellation.</summary>
-    /// <param name="builder">Configured builder.</param>
-    /// <param name="cancellationToken">Cancellation token; cancellation triggers graceful shutdown.</param>
-    /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(this DocBuilder builder, in CancellationToken cancellationToken) =>
-        builder.WatchAndServeAsync(WatchAndServeOptions.Default, NullLogger.Instance, cancellationToken);
-
-    /// <summary>Runs the watch + serve loop with options-customization.</summary>
-    /// <param name="builder">Configured builder.</param>
-    /// <param name="configure">Function that receives <see cref="WatchAndServeOptions.Default"/> and returns the customized set.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(
-        this DocBuilder builder,
-        Func<WatchAndServeOptions, WatchAndServeOptions> configure,
-        in CancellationToken cancellationToken) =>
-        builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), NullLogger.Instance, cancellationToken);
-
-    /// <summary>Runs the watch + serve loop with options + logger.</summary>
-    /// <param name="builder">Configured builder.</param>
-    /// <param name="configure">Options customization.</param>
-    /// <param name="logger">Logger that receives lifecycle events.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Async task.</returns>
-    public static Task WatchAndServeAsync(
-        this DocBuilder builder,
-        Func<WatchAndServeOptions, WatchAndServeOptions> configure,
-        ILogger logger,
-        in CancellationToken cancellationToken) =>
-        builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), logger, cancellationToken);
-
-    /// <summary>Most-specific overload — every other entry point delegates here.</summary>
-    /// <param name="builder">Configured builder.</param>
-    /// <param name="options">Resolved watch + serve options.</param>
-    /// <param name="logger">Logger.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Async task.</returns>
-    [SuppressMessage(
-        "ReSharper",
-        "AccessToDisposedClosure",
-        Justification = "Handler unregistered in finally before linkedCts dispose; catch ObjectDisposedException guards SIGINT race.")]
-    public static async Task WatchAndServeAsync(
-        this DocBuilder builder,
-        WatchAndServeOptions options,
-        ILogger logger,
-        CancellationToken cancellationToken)
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to run and watch.</param>
+    extension(DocBuilder builder)
     {
-        // Link the supplied token with an internal Ctrl+C handler. Callers that pass CancellationToken.None
-        // (e.g. Nuke's Serve target) still need an exit path on console interrupt — without this the
-        // `await foreach` over the watcher never observes cancellation and the process hangs.
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var combinedToken = linkedCts.Token;
-        ConsoleCancelEventHandler consoleHandler = (_, args) =>
+        /// <summary>Runs an initial build, starts the dev server, then loops on file-system changes — rebuilding and signaling connected browsers.</summary>
+        /// <returns>Async task that completes when the loop exits.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WatchAndServeAsync() =>
+            builder.WatchAndServeAsync(WatchAndServeOptions.Default, NullLogger.Instance, CancellationToken.None);
+
+        /// <summary>Runs the watch + serve loop with explicit cancellation.</summary>
+        /// <param name="cancellationToken">Cancellation token; cancellation triggers graceful shutdown.</param>
+        /// <returns>Async task.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WatchAndServeAsync(in CancellationToken cancellationToken) =>
+            builder.WatchAndServeAsync(WatchAndServeOptions.Default, NullLogger.Instance, cancellationToken);
+
+        /// <summary>Runs the watch + serve loop with options-customization.</summary>
+        /// <param name="configure">Function that receives <see cref="WatchAndServeOptions.Default"/> and returns the customized set.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Async task.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WatchAndServeAsync(
+            Func<WatchAndServeOptions, WatchAndServeOptions> configure,
+            in CancellationToken cancellationToken) =>
+            builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), NullLogger.Instance, cancellationToken);
+
+        /// <summary>Runs the watch + serve loop with options + logger.</summary>
+        /// <param name="configure">Options customization.</param>
+        /// <param name="logger">Logger that receives lifecycle events.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Async task.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WatchAndServeAsync(
+            Func<WatchAndServeOptions, WatchAndServeOptions> configure,
+            ILogger logger,
+            in CancellationToken cancellationToken) =>
+            builder.WatchAndServeAsync(configure(WatchAndServeOptions.Default), logger, cancellationToken);
+
+        /// <summary>Most-specific overload — every other entry point delegates here.</summary>
+        /// <param name="options">Resolved watch + serve options.</param>
+        /// <param name="logger">Logger.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Async task.</returns>
+        [SuppressMessage(
+            "ReSharper",
+            "AccessToDisposedClosure",
+            Justification = "Handler unregistered in finally before linkedCts dispose; catch ObjectDisposedException guards SIGINT race.")]
+        public async Task WatchAndServeAsync(
+            WatchAndServeOptions options,
+            ILogger logger,
+            CancellationToken cancellationToken)
         {
-            args.Cancel = true;
+            // Link the supplied token with an internal Ctrl+C handler. Callers that pass CancellationToken.None
+            // (e.g. Nuke's Serve target) still need an exit path on console interrupt — without this the
+            // `await foreach` over the watcher never observes cancellation and the process hangs.
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var combinedToken = linkedCts.Token;
+            ConsoleCancelEventHandler consoleHandler = (_, args) => CancelFromConsole(linkedCts, args);
+            Console.CancelKeyPress += consoleHandler;
+
             try
             {
-                linkedCts.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Cancellation source already torn down; nothing to do.
-            }
-        };
-        Console.CancelKeyPress += consoleHandler;
+                // Initial build: synchronous in the lifecycle so the host has something to serve immediately.
+                await builder.BuildAsync(combinedToken).ConfigureAwait(false);
 
-        try
-        {
-            // Initial build: synchronous in the lifecycle so the host has something to serve immediately.
-            await builder.BuildAsync(combinedToken).ConfigureAwait(false);
+                LiveReloadBroker broker = new();
+                var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, combinedToken)
+                    .ConfigureAwait(false);
+                var url = DevServer.BuildUrl(options);
+                ServeLoggingHelper.LogServerStart(logger, url.Value, builder.InputRoot.Value, builder.OutputRoot.Value);
 
-            LiveReloadBroker broker = new();
-            var app = await DevServer.StartAsync(builder.OutputRoot, options, broker, combinedToken)
-                .ConfigureAwait(false);
-            var url = DevServer.BuildUrl(options);
-            ServeLoggingHelper.LogServerStart(logger, url.Value, builder.InputRoot.Value, builder.OutputRoot.Value);
-
-            if (options.OpenBrowser)
-            {
-                TryOpenBrowser(url);
-            }
-
-            try
-            {
-                using WatchLoop watcher = new(
-                    builder.InputRoot,
-                    options.WatchOutput ? builder.OutputRoot : null,
-                    options.DebounceMs,
-                    options.IgnoredPathSegments,
-                    logger);
-                await foreach (var changes in watcher.WaitAsync(combinedToken).ConfigureAwait(false))
+                if (options.OpenBrowser)
                 {
-                    await RebuildAndSignalAsync(builder, broker, logger, changes, combinedToken).ConfigureAwait(false);
+                    TryOpenBrowser(url);
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected on Ctrl+C / token cancellation; fall through to shutdown.
-            }
-            finally
-            {
-                ServeLoggingHelper.LogServerStopping(logger);
 
-                // Abort tracked WebSockets up-front so the in-flight LiveReload handlers exit
-                // promptly. Browsers don't always reply to the close handshake; relying on a
-                // graceful close lets Ctrl+C hang forever.
-                broker.AbortAll();
-
-                using CancellationTokenSource stopCts = new(TimeSpan.FromSeconds(2));
                 try
                 {
-                    await app.StopAsync(stopCts.Token).ConfigureAwait(false);
+                    using WatchLoop watcher = new(
+                        builder.InputRoot,
+                        options.WatchOutput ? builder.OutputRoot : null,
+                        options.DebounceMs,
+                        options.IgnoredPathSegments,
+                        logger);
+                    await foreach (var changes in watcher.WaitAsync(combinedToken).ConfigureAwait(false))
+                    {
+                        await RebuildAndSignalAsync(builder, broker, logger, changes, combinedToken).ConfigureAwait(false);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
-                    // 2-second shutdown budget elapsed; fall through to DisposeAsync.
+                    // Expected on Ctrl+C / token cancellation; fall through to shutdown.
                 }
-
-                await app.DisposeAsync().ConfigureAwait(false);
+                finally
+                {
+                    await StopServerAsync(app, broker, logger).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                Console.CancelKeyPress -= consoleHandler;
             }
         }
-        finally
+    }
+
+    /// <summary>Requests cancellation when the console receives an interrupt.</summary>
+    /// <param name="source">Cancellation source owned by the watch loop.</param>
+    /// <param name="args">Console interrupt event.</param>
+    private static void CancelFromConsole(CancellationTokenSource source, ConsoleCancelEventArgs args)
+    {
+        args.Cancel = true;
+        try
         {
-            Console.CancelKeyPress -= consoleHandler;
+            source.Cancel();
         }
+        catch (ObjectDisposedException)
+        {
+            // An interrupt can race with watch-loop disposal.
+        }
+    }
+
+    /// <summary>Stops the development server within the shutdown budget.</summary>
+    /// <param name="app">Server to stop and dispose.</param>
+    /// <param name="broker">Live-reload connections to abort.</param>
+    /// <param name="logger">Logger for server diagnostics.</param>
+    /// <returns>A task that completes after disposal.</returns>
+    private static async Task StopServerAsync(WebApplication app, LiveReloadBroker broker, ILogger logger)
+    {
+        ServeLoggingHelper.LogServerStopping(logger);
+        broker.AbortAll();
+
+        using var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(ShutdownTimeoutSeconds));
+        try
+        {
+            await app.StopAsync(stopCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Disposal closes connections that outlive the graceful shutdown budget.
+        }
+
+        await app.DisposeAsync().ConfigureAwait(false);
     }
 
     /// <summary>Runs one rebuild and signals connected browsers when it succeeds.</summary>
@@ -168,11 +185,11 @@ public static class DocBuilderServeExtensions
         DocBuilder builder,
         LiveReloadBroker broker,
         ILogger logger,
-        HashSet<string> changes,
+        HashSet<FilePath> changes,
         CancellationToken cancellationToken)
     {
         ServeLoggingHelper.LogRebuildStart(logger, changes.Count);
-        var stopwatch = Stopwatch.StartNew();
+        var started = Stopwatch.GetTimestamp();
         try
         {
             await builder.BuildAsync(cancellationToken).ConfigureAwait(false);
@@ -183,14 +200,13 @@ public static class DocBuilderServeExtensions
         }
         catch (Exception ex)
         {
-            stopwatch.Stop();
             ServeLoggingHelper.LogRebuildFailed(logger, ex);
             return;
         }
 
-        stopwatch.Stop();
+        var elapsed = Stopwatch.GetElapsedTime(started);
         var sent = await broker.ReloadAllAsync().ConfigureAwait(false);
-        ServeLoggingHelper.LogRebuildComplete(logger, stopwatch.ElapsedMilliseconds, sent);
+        ServeLoggingHelper.LogRebuildComplete(logger, (long)elapsed.TotalMilliseconds, sent);
     }
 
     /// <summary>Best-effort cross-platform "open URL in default browser" — silently swallows any failure.</summary>
@@ -200,7 +216,7 @@ public static class DocBuilderServeExtensions
         try
         {
             ProcessStartInfo psi = new() { FileName = url, UseShellExecute = true };
-            Process.Start(psi);
+            _ = Process.Start(psi);
         }
         catch (Win32Exception)
         {

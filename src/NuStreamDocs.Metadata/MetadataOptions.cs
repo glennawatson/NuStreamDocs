@@ -7,6 +7,7 @@ namespace NuStreamDocs.Metadata;
 /// <summary>Configuration for <see cref="MetadataPlugin"/>.</summary>
 /// <param name="DirectoryFileName">Directory-level metadata filename, applied to every page below the directory.</param>
 /// <param name="SidecarSuffix">Per-page sidecar suffix appended to the page filename (e.g. <c>.meta.yml</c> turns <c>intro.md</c> into <c>intro.md.meta.yml</c>).</param>
+[System.Diagnostics.DebuggerDisplay("MetadataOptions: {ToString(),nq}")]
 public sealed record MetadataOptions(string DirectoryFileName, string SidecarSuffix)
 {
     /// <summary>Gets the default options: <c>_meta.yml</c> for directories and <c>.meta.yml</c> sidecars.</summary>

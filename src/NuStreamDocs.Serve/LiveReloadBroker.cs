@@ -27,7 +27,7 @@ internal sealed class LiveReloadBroker
     /// <param name="socket">Newly-accepted client websocket.</param>
     /// <param name="cancellationToken">Cancellation token tied to the request lifetime.</param>
     /// <returns>Task that completes when the client disconnects.</returns>
-    public async Task TrackAsync(WebSocket socket, CancellationToken cancellationToken)
+    internal async Task TrackAsync(WebSocket socket, CancellationToken cancellationToken)
     {
         var id = Guid.NewGuid();
         _clients[id] = socket;
@@ -54,13 +54,13 @@ internal sealed class LiveReloadBroker
         }
         finally
         {
-            _clients.TryRemove(id, out _);
+            _ = _clients.TryRemove(id, out _);
         }
     }
 
     /// <summary>Sends a reload signal to every connected browser; returns the count that received it.</summary>
     /// <returns>Count of clients that successfully received the message.</returns>
-    public async Task<int> ReloadAllAsync()
+    internal async Task<int> ReloadAllAsync()
     {
         if (_clients.IsEmpty)
         {
@@ -76,14 +76,14 @@ internal sealed class LiveReloadBroker
                 continue;
             }
 
-            _clients.TryRemove(kvp.Key, out _);
+            _ = _clients.TryRemove(kvp.Key, out _);
         }
 
         return sent;
     }
 
     /// <summary>Aborts every tracked WebSocket so request handlers exit promptly during shutdown.</summary>
-    public void AbortAll()
+    internal void AbortAll()
     {
         foreach (var kvp in _clients)
         {

@@ -14,17 +14,20 @@ internal static class BlogSlugifier
     /// <param name="value">Source UTF-8 bytes.</param>
     /// <param name="fallback">Returned when nothing slug-safe survives.</param>
     /// <returns>Slug bytes.</returns>
-    public static byte[] Slugify(ReadOnlySpan<byte> value, ReadOnlySpan<byte> fallback)
+    internal static byte[] Slugify(ReadOnlySpan<byte> value, ReadOnlySpan<byte> fallback)
     {
         var dst = new byte[value.Length];
         var written = 0;
         for (var i = 0; i < value.Length; i++)
         {
             var mapped = MapByte(value[i]);
-            if (mapped != 0)
+            if (mapped == 0)
             {
-                dst[written++] = mapped;
+                continue;
             }
+
+            var slugIndex = written++;
+            dst[slugIndex] = mapped;
         }
 
         if (written == 0)

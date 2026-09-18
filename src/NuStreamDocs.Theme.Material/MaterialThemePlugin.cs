@@ -8,6 +8,7 @@ using NuStreamDocs.Theme.Common;
 namespace NuStreamDocs.Theme.Material;
 
 /// <summary>Plugin that wraps every rendered page in the Material theme shell.</summary>
+[System.Diagnostics.DebuggerDisplay("MaterialThemePlugin: {Name}")]
 public sealed class MaterialThemePlugin : ThemePluginBase<MaterialTheme, MaterialThemeOptions>
 {
     /// <summary>Initializes a new instance of the <see cref="MaterialThemePlugin"/> class with default options.</summary>

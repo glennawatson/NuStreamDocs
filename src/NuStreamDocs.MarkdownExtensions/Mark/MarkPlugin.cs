@@ -2,12 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Mark;
 
 /// <summary>Mark plugin — rewrites <c>==text==</c> spans into <c>&lt;mark&gt;</c>. Code spans are skipped.</summary>
+[System.Diagnostics.DebuggerDisplay("MarkPlugin: {Name}")]
 public sealed class MarkPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -17,10 +19,12 @@ public sealed class MarkPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasMarkSpan(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         MarkRewriter.Rewrite(context.Source, context.Output);
 }

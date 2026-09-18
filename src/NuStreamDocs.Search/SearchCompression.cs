@@ -8,11 +8,11 @@ namespace NuStreamDocs.Search;
 public enum SearchCompression
 {
     /// <summary>No compression — emit the index as plain UTF-8 JSON. Largest file, fastest write, easiest to inspect.</summary>
-    None,
+    None = 0,
 
     /// <summary>Emit the index as plain JSON plus a sibling <c>.gz</c> the static-server (or CDN) can serve via <c>Content-Encoding: gzip</c>.</summary>
-    Default,
+    Default = 1,
 
     /// <summary>Emit a sibling <c>.br</c> alongside the plain JSON for CDNs that prefer Brotli; smallest payload, slower build.</summary>
-    Smallest
+    Smallest = 2,
 }

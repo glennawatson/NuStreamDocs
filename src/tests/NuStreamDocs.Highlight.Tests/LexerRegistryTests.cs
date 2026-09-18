@@ -11,6 +11,18 @@ namespace NuStreamDocs.Highlight.Tests;
 /// <summary>Behavior + boundary tests for <c>LexerRegistry</c> construction and lookup.</summary>
 public class LexerRegistryTests
 {
+    /// <summary>Alias for an alternate custom lexer.</summary>
+    private const string AlternateLanguage = "vibescript";
+
+    /// <summary>Alias for a custom lexer.</summary>
+    private const string CustomLanguage = "brainfuck";
+
+    /// <summary>Gets the alternate custom lexer alias.</summary>
+    private static ReadOnlySpan<byte> AlternateLanguageBytes => "vibescript"u8;
+
+    /// <summary>Gets the custom lexer alias.</summary>
+    private static ReadOnlySpan<byte> CustomLanguageBytes => "brainfuck"u8;
+
     /// <summary>The built-in registry resolves a representative built-in alias byte-shaped.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -56,7 +68,8 @@ public class LexerRegistryTests
     [Test]
     public async Task LongAliasMissesCleanly()
     {
-        string oversized = new('a', 256);
+        const int OversizedAliasLength = 256;
+        var oversized = new string('a', OversizedAliasLength);
         var ok = LexerRegistry.Default.TryGet(Encoding.UTF8.GetBytes(oversized), out _);
         await Assert.That(ok).IsFalse();
     }
@@ -67,14 +80,14 @@ public class LexerRegistryTests
     public async Task CreateFromStringLexersRegistersExtras()
     {
         var registry = LexerRegistry.CreateFromStringLexers(
-            ("brainfuck", PassThroughLexer.Instance),
-            ("vibescript", JavaScriptLexer.Instance));
+            (CustomLanguage, PassThroughLexer.Instance),
+            (AlternateLanguage, JavaScriptLexer.Instance));
 
-        await Assert.That(registry.TryGet("brainfuck"u8, out var bf)).IsTrue();
-        await Assert.That(bf).IsEqualTo((Lexer)PassThroughLexer.Instance);
+        await Assert.That(registry.TryGet(CustomLanguageBytes, out var bf)).IsTrue();
+        await Assert.That(bf).IsEqualTo(PassThroughLexer.Instance);
 
-        await Assert.That(registry.TryGet("vibescript"u8, out var vibe)).IsTrue();
-        await Assert.That(vibe).IsEqualTo((Lexer)JavaScriptLexer.Instance);
+        await Assert.That(registry.TryGet(AlternateLanguageBytes, out var vibe)).IsTrue();
+        await Assert.That(vibe).IsEqualTo(JavaScriptLexer.Instance);
     }
 
     /// <summary><see cref="LexerRegistry.CreateFromStringLexers"/> still resolves the built-ins it didn't override.</summary>
@@ -82,7 +95,7 @@ public class LexerRegistryTests
     [Test]
     public async Task CreateFromStringLexersKeepsBuiltIns()
     {
-        var registry = LexerRegistry.CreateFromStringLexers(("brainfuck", PassThroughLexer.Instance));
+        var registry = LexerRegistry.CreateFromStringLexers((CustomLanguage, PassThroughLexer.Instance));
         await Assert.That(registry.TryGet("csharp"u8, out var cs)).IsTrue();
         await Assert.That(cs).IsNotNull();
     }
@@ -93,10 +106,10 @@ public class LexerRegistryTests
     public async Task CreateFromStringLexersFoldsAsciiCase()
     {
         var registry = LexerRegistry.CreateFromStringLexers(("BrainFuck", PassThroughLexer.Instance));
-        await Assert.That(registry.TryGet("brainfuck"u8, out var bf)).IsTrue();
-        await Assert.That(bf).IsEqualTo((Lexer)PassThroughLexer.Instance);
+        await Assert.That(registry.TryGet(CustomLanguageBytes, out var bf)).IsTrue();
+        await Assert.That(bf).IsEqualTo(PassThroughLexer.Instance);
         await Assert.That(registry.TryGet("BRAINFUCK"u8, out var upper)).IsTrue();
-        await Assert.That(upper).IsEqualTo((Lexer)PassThroughLexer.Instance);
+        await Assert.That(upper).IsEqualTo(PassThroughLexer.Instance);
     }
 
     /// <summary>A later override with the same id wins.</summary>
@@ -105,11 +118,11 @@ public class LexerRegistryTests
     public async Task CreateFromStringLexersLastWriteWins()
     {
         var registry = LexerRegistry.CreateFromStringLexers(
-            ("brainfuck", PassThroughLexer.Instance),
-            ("brainfuck", JavaScriptLexer.Instance));
+            (CustomLanguage, PassThroughLexer.Instance),
+            (CustomLanguage, JavaScriptLexer.Instance));
 
-        await Assert.That(registry.TryGet("brainfuck"u8, out var lexer)).IsTrue();
-        await Assert.That(lexer).IsEqualTo((Lexer)JavaScriptLexer.Instance);
+        await Assert.That(registry.TryGet(CustomLanguageBytes, out var lexer)).IsTrue();
+        await Assert.That(lexer).IsEqualTo(JavaScriptLexer.Instance);
     }
 
     /// <summary>Empty pair array throws <see cref="ArgumentOutOfRangeException"/> — the byte-keyed path expects at least one entry.</summary>
@@ -126,10 +139,10 @@ public class LexerRegistryTests
     {
         LexerNameValue[] entries =
         [
-            new([.. "vibescript"u8], PassThroughLexer.Instance)
+            new([.. AlternateLanguageBytes], PassThroughLexer.Instance)
         ];
         var registry = LexerRegistry.Build(entries);
-        await Assert.That(registry.TryGet("vibescript"u8, out var lexer)).IsTrue();
-        await Assert.That(lexer).IsEqualTo((Lexer)PassThroughLexer.Instance);
+        await Assert.That(registry.TryGet(AlternateLanguageBytes, out var lexer)).IsTrue();
+        await Assert.That(lexer).IsEqualTo(PassThroughLexer.Instance);
     }
 }

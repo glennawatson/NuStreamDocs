@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using NuStreamDocs.Common;
 
@@ -17,6 +18,7 @@ public static class LunrIndexWriter
     /// <param name="path">Absolute output path.</param>
     /// <param name="language">UTF-8 language code emitted in the <c>config</c> block; empty falls back to <c>en</c>.</param>
     /// <param name="documents">Document corpus.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Write(in FilePath path, ReadOnlySpan<byte> language, SearchDocument[] documents) =>
         Write(path, language, documents, []);
 
@@ -33,7 +35,7 @@ public static class LunrIndexWriter
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
 
-        path.Directory.Create();
+        _ = path.Directory.Create();
         using var stream = File.Create(path.Value);
         using Utf8JsonWriter writer = new(stream, WriterOptions);
 

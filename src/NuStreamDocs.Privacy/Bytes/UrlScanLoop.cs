@@ -17,7 +17,7 @@ internal static class UrlScanLoop
     /// <param name="lastEmit">Source offset up to which bytes have been emitted; updated by the predicate when it writes.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when a rewrite happened.</returns>
-    public delegate bool TryRewrite(
+    internal delegate bool TryRewrite(
         ReadOnlySpan<byte> html,
         int p,
         in UrlRewriteContext ctx,
@@ -31,7 +31,7 @@ internal static class UrlScanLoop
     /// <param name="audit">Audit collector.</param>
     /// <param name="advanceTo">Offset to resume scanning from.</param>
     /// <returns>True when a URL was matched (controls whether scan advances by URL length or one byte).</returns>
-    public delegate bool TryAudit(ReadOnlySpan<byte> html, int p, UrlAuditContext audit, out int advanceTo);
+    internal delegate bool TryAudit(ReadOnlySpan<byte> html, int p, UrlAuditContext audit, out int advanceTo);
 
     /// <summary>Runs the rewrite scan loop, emitting any unmodified prefix tail when at least one rewrite occurred.</summary>
     /// <param name="html">UTF-8 source.</param>
@@ -40,7 +40,7 @@ internal static class UrlScanLoop
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="probe">Predicate that owns the per-site work.</param>
     /// <returns>True when at least one rewrite happened.</returns>
-    public static bool Run(
+    internal static bool Run(
         ReadOnlySpan<byte> html,
         SearchValues<byte> firstByteSet,
         IBufferWriter<byte> sink,
@@ -83,7 +83,7 @@ internal static class UrlScanLoop
     /// <param name="firstByteSet">Search-values set that filters the byte loop down to candidate offsets.</param>
     /// <param name="audit">Audit context.</param>
     /// <param name="probe">Predicate that owns the per-site work.</param>
-    public static void RunAudit(
+    internal static void RunAudit(
         ReadOnlySpan<byte> html,
         SearchValues<byte> firstByteSet,
         UrlAuditContext audit,

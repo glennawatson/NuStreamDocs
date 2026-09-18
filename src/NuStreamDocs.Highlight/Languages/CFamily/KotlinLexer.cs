@@ -30,7 +30,7 @@ public static class KotlinLexer
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
             Operators = OperatorAlternationFactory.SplitLongestFirst(
                 "?: ..= .. -> :: == != <= >= && || ++ -- += -= *= /= %= ?. !! + - * / % ! = < > ?"u8),
-            OperatorFirst = CFamilyShared.StandardOperatorFirst
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
         },
         SearchValues.Create("Llu"u8),
         SearchValues.Create("fF"u8),

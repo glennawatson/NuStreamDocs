@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Globalization;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Building;
@@ -22,6 +23,7 @@ namespace NuStreamDocs.Benchmarks;
 /// both because the per-build composition is the only place where the new module branch costs
 /// anything; per-page emission is a single byte-copy regardless.
 /// </remarks>
+[DebuggerDisplay("ExtraAssetsHeadBenchmarks: plugin={_plugin}, tempRoot={_tempRoot}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class ExtraAssetsHeadBenchmarks
@@ -42,7 +44,7 @@ public class ExtraAssetsHeadBenchmarks
     private ExtraAssetsPlugin _plugin = null!;
 
     /// <summary>Per-instance scratch dir holding the mock asset files.</summary>
-    private string _tempRoot = string.Empty;
+    private DirectoryPath _tempRoot;
 
     /// <summary>Reused sink so per-iteration allocation reflects the head writer, not the buffer.</summary>
     private ArrayBufferWriter<byte> _sink = null!;
@@ -57,8 +59,8 @@ public class ExtraAssetsHeadBenchmarks
     {
         _tempRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-extra-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_tempRoot);
+            StringCompose.Concat("smkd-bench-extra-", Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)));
+        _ = Directory.CreateDirectory(_tempRoot);
 
         var jsBytes = "console.log('hello');"u8.ToArray();
         var cssBytes = ".foo { color: red; }"u8.ToArray();
@@ -66,22 +68,22 @@ public class ExtraAssetsHeadBenchmarks
         DocBuilder builder = new();
         for (var i = 0; i < CssCount; i++)
         {
-            var css = Path.Combine(_tempRoot, "style-" + i + ".css");
+            var css = _tempRoot.File(StringCompose.ConcatInt("style-", i, ".css"));
             await File.WriteAllBytesAsync(css, cssBytes).ConfigureAwait(false);
-            builder.AddExtraCss((FilePath)css);
+            _ = builder.AddExtraCss(css);
         }
 
         for (var i = 0; i < ScriptCount; i++)
         {
-            var js = Path.Combine(_tempRoot, "script-" + i + ".js");
+            var js = _tempRoot.File(StringCompose.ConcatInt("script-", i, ".js"));
             await File.WriteAllBytesAsync(js, jsBytes).ConfigureAwait(false);
             if (i % ModuleStridePeriod == 0)
             {
-                builder.AddExtraJs((FilePath)js);
+                _ = builder.AddExtraJs(js);
             }
             else
             {
-                builder.AddExtraJsModule((FilePath)js);
+                _ = builder.AddExtraJsModule(js);
             }
         }
 
@@ -119,27 +121,27 @@ public class ExtraAssetsHeadBenchmarks
     }
 
     /// <summary>One-shot configure pass — composes the head fragment + reads asset bytes from disk.</summary>
-    /// <remarks>Iterates a fresh plugin per benchmark so the configure path is actually re-run; the steady-state plugin in <see cref="WriteHeadExtra"/> is constructed once.</remarks>
     /// <returns>Length of the freshly-composed head fragment.</returns>
+    /// <remarks>Iterates a fresh plugin per benchmark so the configure path is actually re-run; the steady-state plugin in <see cref="WriteHeadExtra"/> is constructed once.</remarks>
     [Benchmark]
     public async ValueTask<int> ConfigureFromScratch()
     {
         DocBuilder builder = new();
         for (var i = 0; i < CssCount; i++)
         {
-            builder.AddExtraCss((FilePath)Path.Combine(_tempRoot, "style-" + i + ".css"));
+            _ = builder.AddExtraCss(_tempRoot.File(StringCompose.ConcatInt("style-", i, ".css")));
         }
 
         for (var i = 0; i < ScriptCount; i++)
         {
-            var js = Path.Combine(_tempRoot, "script-" + i + ".js");
+            var js = _tempRoot.File(StringCompose.ConcatInt("script-", i, ".js"));
             if (i % ModuleStridePeriod == 0)
             {
-                builder.AddExtraJs((FilePath)js);
+                _ = builder.AddExtraJs(js);
             }
             else
             {
-                builder.AddExtraJsModule((FilePath)js);
+                _ = builder.AddExtraJsModule(js);
             }
         }
 

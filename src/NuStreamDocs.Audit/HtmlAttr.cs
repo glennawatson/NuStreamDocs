@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Audit;
@@ -14,17 +15,19 @@ internal static class HtmlAttr
     /// <param name="name">Attribute name to find.</param>
     /// <param name="value">On success, the unquoted value bytes; empty for a bare attribute or <c>name=""</c>.</param>
     /// <returns><see langword="true"/> when the attribute is present.</returns>
-    public static bool TryGet(ReadOnlySpan<byte> attributes, ReadOnlySpan<byte> name, out ReadOnlySpan<byte> value)
+    internal static bool TryGet(ReadOnlySpan<byte> attributes, ReadOnlySpan<byte> name, out ReadOnlySpan<byte> value)
     {
         var i = 0;
         while (i < attributes.Length)
         {
             i = ParseAttribute(attributes, i, out var attrName, out var attrValue);
-            if (attrName is [_, ..] && AsciiByteHelpers.EqualsIgnoreAsciiCase(attrName, name))
+            if (attrName is not [_, ..] || !AsciiByteHelpers.EqualsIgnoreAsciiCase(attrName, name))
             {
-                value = attrValue;
-                return true;
+                continue;
             }
+
+            value = attrValue;
+            return true;
         }
 
         value = default;
@@ -35,7 +38,8 @@ internal static class HtmlAttr
     /// <param name="attributes">The bytes between the tag name and the closing <c>&gt;</c>.</param>
     /// <param name="name">Attribute name to find.</param>
     /// <returns><see langword="true"/> when the attribute is present.</returns>
-    public static bool Has(ReadOnlySpan<byte> attributes, ReadOnlySpan<byte> name) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool Has(ReadOnlySpan<byte> attributes, ReadOnlySpan<byte> name) =>
         TryGet(attributes, name, out _);
 
     /// <summary>Parses a single attribute starting at <paramref name="start"/> and returns the offset just past it.</summary>

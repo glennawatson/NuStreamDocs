@@ -11,6 +11,9 @@ namespace NuStreamDocs.Versions.Tests;
 /// <summary>End-to-end tests for <c>VersionsPlugin</c>.</summary>
 public class VersionsPluginTests
 {
+    /// <summary>Version published by the plugin fixture.</summary>
+    private const string PublishedVersion = "0.4.2";
+
     /// <summary>OnFinalize writes the manifest into the parent of the output root.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -18,19 +21,19 @@ public class VersionsPluginTests
     {
         var siteRoot = Path.Combine(
             Path.GetTempPath(),
-            "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        var versionRoot = Path.Combine(siteRoot, "0.4.2");
-        Directory.CreateDirectory(versionRoot);
+            $"smd-vplugin-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        var versionRoot = Path.Combine(siteRoot, PublishedVersion);
+        _ = Directory.CreateDirectory(versionRoot);
 
         try
         {
-            VersionsPlugin plugin = new(VersionOptions.Latest("0.4.2", "0.4 (latest)"));
+            VersionsPlugin plugin = new(VersionOptions.Latest(PublishedVersion, "0.4 (latest)"));
             BuildFinalizeContext context = new(versionRoot, []);
             await plugin.FinalizeAsync(context, CancellationToken.None);
 
             var entries = VersionsManifest.Read(siteRoot);
             await Assert.That(entries.Count).IsEqualTo(1);
-            await Assert.That(entries[0].Version).IsEqualTo("0.4.2");
+            await Assert.That(entries[0].Version).IsEqualTo(PublishedVersion);
             await Assert.That(Encoding.UTF8.GetString(entries[0].Aliases[0])).IsEqualTo("latest");
         }
         finally
@@ -46,14 +49,14 @@ public class VersionsPluginTests
     {
         var siteRoot = Path.Combine(
             Path.GetTempPath(),
-            "smd-vplugin-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        var versionRoot = Path.Combine(siteRoot, "0.4.2");
-        Directory.CreateDirectory(versionRoot);
+            $"smd-vplugin-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        var versionRoot = Path.Combine(siteRoot, PublishedVersion);
+        _ = Directory.CreateDirectory(versionRoot);
 
         try
         {
-            VersionsPlugin first = new(new("0.4.2", "0.4 (initial)"));
-            VersionsPlugin second = new(new("0.4.2", "0.4 (refreshed)", [[.. "latest"u8]]));
+            VersionsPlugin first = new(new(PublishedVersion, "0.4 (initial)"));
+            VersionsPlugin second = new(new(PublishedVersion, "0.4 (refreshed)", [[.. "latest"u8]]));
             BuildFinalizeContext context = new(versionRoot, []);
 
             await first.FinalizeAsync(context, CancellationToken.None);

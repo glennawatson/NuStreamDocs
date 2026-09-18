@@ -2,46 +2,48 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Builder-extension surface for applying mkdocs.yml config to a <see cref="DocBuilder"/>.
-/// </summary>
+/// <summary>Builder-extension surface for applying mkdocs.yml config to a <see cref="DocBuilder"/>.</summary>
 public static class DocBuilderMkDocsExtensions
 {
-    /// <summary>Reads <paramref name="yamlPath"/> as an <c>mkdocs.yml</c> file and applies its site-level metadata to <paramref name="builder"/>.</summary>
-    /// <param name="builder">Target builder.</param>
-    /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMkDocsConfig(this DocBuilder builder, in FilePath yamlPath)
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to configure.</param>
+    extension(DocBuilder builder)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
+        /// <summary>Reads <paramref name="yamlPath"/> as an <c>mkdocs.yml</c> file and applies its site-level metadata to <paramref name="builder"/>.</summary>
+        /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UseMkDocsConfig(in FilePath yamlPath)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
 
-        var bytes = File.ReadAllBytes(yamlPath);
-        return builder.UseMkDocsConfig((ReadOnlySpan<byte>)bytes);
+            var bytes = File.ReadAllBytes(yamlPath);
+            return builder.UseMkDocsConfig((ReadOnlySpan<byte>)bytes);
+        }
+
+        /// <summary>Parses <paramref name="utf8Yaml"/> as an mkdocs.yml document and applies its site-level metadata to <paramref name="builder"/>.</summary>
+        /// <param name="utf8Yaml">UTF-8 YAML bytes.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UseMkDocsConfig(ReadOnlySpan<byte> utf8Yaml)
+        {
+            var config = ConfigReaderJsonPipeline.Read(utf8Yaml, YamlToJson.Convert);
+            return builder.ApplyMkDocsConfig(in config);
+        }
+
+        /// <summary>Applies a pre-parsed <see cref="MkDocsConfig"/> onto <paramref name="builder"/>.</summary>
+        /// <param name="config">Parsed mkdocs config.</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder ApplyMkDocsConfig(in MkDocsConfig config) =>
+            builder
+                .WithSiteName(config.SiteName)
+                .WithSiteUrl(config.SiteUrl)
+                .WithSiteAuthor(config.SiteAuthor)
+                .UseDirectoryUrls(config.UseDirectoryUrls);
     }
-
-    /// <summary>Parses <paramref name="utf8Yaml"/> as an mkdocs.yml document and applies its site-level metadata to <paramref name="builder"/>.</summary>
-    /// <param name="builder">Target builder.</param>
-    /// <param name="utf8Yaml">UTF-8 YAML bytes.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMkDocsConfig(this DocBuilder builder, ReadOnlySpan<byte> utf8Yaml)
-    {
-        var config = ConfigReaderJsonPipeline.Read(utf8Yaml, YamlToJson.Convert);
-        return builder.ApplyMkDocsConfig(in config);
-    }
-
-    /// <summary>Applies a pre-parsed <see cref="MkDocsConfig"/> onto <paramref name="builder"/>.</summary>
-    /// <param name="builder">Target builder.</param>
-    /// <param name="config">Parsed mkdocs config.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder ApplyMkDocsConfig(this DocBuilder builder, in MkDocsConfig config) =>
-        builder
-            .WithSiteName(config.SiteName)
-            .WithSiteUrl(config.SiteUrl)
-            .WithSiteAuthor(config.SiteAuthor)
-            .UseDirectoryUrls(config.UseDirectoryUrls);
 }

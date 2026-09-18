@@ -7,9 +7,7 @@ using NuStreamDocs.Templating;
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Loaded page shell plus compiled partials and bundled static assets.
-/// </summary>
+/// <summary>Loaded page shell plus compiled partials and bundled static assets.</summary>
 public interface IThemePackage
 {
     /// <summary>Gets the compiled top-level page template.</summary>

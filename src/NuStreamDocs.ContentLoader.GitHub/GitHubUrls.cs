@@ -26,7 +26,7 @@ internal static class GitHubUrls
     /// <summary>Builds the recursive git-tree API URL for the repo reference.</summary>
     /// <param name="repo">Repository reference.</param>
     /// <returns>The API URL.</returns>
-    public static UrlPath TreeApiUrl(in GitHubRepoRef repo)
+    internal static UrlPath TreeApiUrl(in GitHubRepoRef repo)
     {
         ArrayBufferWriter<byte> writer = new(UrlCapacity);
         writer.Write(ApiBase);
@@ -40,7 +40,7 @@ internal static class GitHubUrls
     /// <summary>Builds the releases API URL for the repo.</summary>
     /// <param name="repo">Repository reference (only owner and name are used).</param>
     /// <returns>The API URL.</returns>
-    public static UrlPath ReleasesApiUrl(in GitHubRepoRef repo)
+    internal static UrlPath ReleasesApiUrl(in GitHubRepoRef repo)
     {
         ArrayBufferWriter<byte> writer = new(UrlCapacity);
         writer.Write(ApiBase);
@@ -53,7 +53,7 @@ internal static class GitHubUrls
     /// <param name="repo">Repository reference.</param>
     /// <param name="path">Repository-relative file path bytes.</param>
     /// <returns>The raw-content URL.</returns>
-    public static UrlPath RawFileUrl(in GitHubRepoRef repo, ReadOnlySpan<byte> path)
+    internal static UrlPath RawFileUrl(in GitHubRepoRef repo, ReadOnlySpan<byte> path)
     {
         ArrayBufferWriter<byte> writer = new(UrlCapacity + path.Length);
         writer.Write(RawBase);
@@ -68,7 +68,7 @@ internal static class GitHubUrls
     /// <summary>Builds the request headers — the required <c>User-Agent</c>, plus a bearer <c>Authorization</c> when a token is supplied.</summary>
     /// <param name="token">Personal access token bytes; empty for unauthenticated requests.</param>
     /// <returns>Header name/value byte pairs.</returns>
-    public static (byte[] Name, byte[] Value)[] Headers(byte[] token) =>
+    internal static (byte[] Name, byte[] Value)[] Headers(byte[] token) =>
         token is [_, ..]
             ? [([.. "User-Agent"u8], [.. UserAgent]), ([.. "Authorization"u8], BearerToken(token))]
             : [([.. "User-Agent"u8], [.. UserAgent])];

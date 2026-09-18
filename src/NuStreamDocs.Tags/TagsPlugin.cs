@@ -18,8 +18,12 @@ namespace NuStreamDocs.Tags;
 /// pipeline (theme, search index, sitemap, canonical) without leaving any intermediate
 /// files in the source folder.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("TagsPlugin: {Name}")]
 public sealed class TagsPlugin : IBuildDiscoverPlugin
 {
+    /// <summary>Heading prefix length.</summary>
+    private const int HeadingPrefixLength = 2;
+
     /// <summary>Plugin options.</summary>
     private readonly TagsOptions _options;
 
@@ -48,8 +52,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
         }
 
         var inputRoot = context.InputRoot;
-        var tagsDir = inputRoot / _options.OutputSubdirectory;
-        var collected = await CollectAsync(inputRoot, tagsDir, context.UseDirectoryUrls, cancellationToken)
+        var collected = await CollectAsync(inputRoot, inputRoot / _options.OutputSubdirectory, context.UseDirectoryUrls, cancellationToken)
             .ConfigureAwait(false);
         if (collected.Count is 0)
         {
@@ -117,7 +120,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             {
                 if (!map.TryGetValue(tags[t], out var bucket))
                 {
-                    bucket = new(InitialCapacity);
+                    bucket = [with(InitialCapacity)];
                     map[tags[t]] = bucket;
                 }
 
@@ -180,7 +183,7 @@ public sealed class TagsPlugin : IBuildDiscoverPlugin
             var trimmed = AsciiByteHelpers.TrimAsciiWhitespace(line);
             if (trimmed is [(byte)'#', (byte)' ', ..])
             {
-                var titleSpan = AsciiByteHelpers.TrimAsciiWhitespace(trimmed[2..]);
+                var titleSpan = AsciiByteHelpers.TrimAsciiWhitespace(trimmed[HeadingPrefixLength..]);
                 return titleSpan.IsEmpty ? fallback : titleSpan.ToArray();
             }
 

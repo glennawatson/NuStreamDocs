@@ -52,7 +52,7 @@ public static class ProtobufLexer
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = null,
-            Punctuation = PunctuationSet
+            Punctuation = PunctuationSet,
         };
 
         return SchemaFamilyRules.CreateLexer(config);

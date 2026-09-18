@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Templating;
@@ -37,7 +38,7 @@ internal static class TemplateCompiler
     /// <summary>Compiles <paramref name="source"/> into a flat instruction list.</summary>
     /// <param name="source">UTF-8 template source.</param>
     /// <returns>The right-sized instruction array.</returns>
-    public static TemplateInstruction[] Compile(ReadOnlySpan<byte> source)
+    internal static TemplateInstruction[] Compile(ReadOnlySpan<byte> source)
     {
         var pool = ArrayPool<TemplateInstruction>.Shared;
         var buffer = pool.Rent(EstimateCapacity(source.Length));
@@ -80,12 +81,14 @@ internal static class TemplateCompiler
     /// <summary>Estimates an instruction-buffer capacity from source size.</summary>
     /// <param name="length">Source byte length.</param>
     /// <returns>Conservative capacity hint.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int EstimateCapacity(int length) =>
         Math.Max(MinInstructionCapacity, length / BytesPerInstructionEstimate);
 
     /// <summary>Estimates the maximum nesting depth from source size.</summary>
     /// <param name="length">Source byte length.</param>
     /// <returns>Conservative capacity hint.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int EstimateSectionDepth(int length) =>
         Math.Max(MinSectionStackCapacity, length / BytesPerSectionEstimate);
 
@@ -104,8 +107,11 @@ internal static class TemplateCompiler
     /// <param name="count">Cursor; advanced.</param>
     /// <param name="start">Literal start offset.</param>
     /// <param name="length">Literal byte length.</param>
-    private static void AppendLiteral(TemplateInstruction[] buffer, ref int count, int start, int length) =>
-        buffer[count++] = new(TemplateOp.Literal, start, length, -1);
+    private static void AppendLiteral(TemplateInstruction[] buffer, ref int count, int start, int length)
+    {
+        var instructionIndex = count++;
+        buffer[instructionIndex] = new(TemplateOp.Literal, start, length, -1);
+    }
 
     /// <summary>Emits the instruction(s) for one tag and returns the cursor past it.</summary>
     /// <param name="source">Source bytes.</param>
@@ -115,6 +121,7 @@ internal static class TemplateCompiler
     /// <param name="openStack">Open-section index stack.</param>
     /// <param name="openCount">Open-section count.</param>
     /// <returns>Cursor positioned after the close delimiter.</returns>
+    /// <exception cref="TemplateSyntaxException">Thrown when <c>nameStart &gt;= source.Length</c>.</exception>
     private static int EmitTag(
         ReadOnlySpan<byte> source,
         int openIndex,
@@ -138,8 +145,7 @@ internal static class TemplateCompiler
         return sigil switch
         {
             (byte)'!' => SkipComment(source, openIndex),
-            (byte)'#' => EmitSectionOpen(source, openIndex, sigil, buffer, ref count, openStack, ref openCount),
-            (byte)'^' => EmitSectionOpen(source, openIndex, sigil, buffer, ref count, openStack, ref openCount),
+            (byte)'#' or (byte)'^' => EmitSectionOpen(source, openIndex, sigil, buffer, ref count, openStack, ref openCount),
             (byte)'/' => EmitSectionClose(source, openIndex, buffer, ref count, openStack, ref openCount),
             (byte)'&' => EmitRawVariable(source, openIndex, buffer, ref count),
             (byte)'>' => EmitPartial(source, openIndex, buffer, ref count),
@@ -169,7 +175,8 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelimiterLength + 1;
         var closeIndex = FindCloseDelimiter(source, nameStart, TripleCloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.RawVariable, nameStart2, nameLength, -1);
+        var instructionIndex = count++;
+        buffer[instructionIndex] = new(TemplateOp.RawVariable, nameStart2, nameLength, -1);
         return closeIndex + TripleCloseDelim.Length;
     }
 
@@ -188,7 +195,8 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelim.Length;
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.EscapedVariable, nameStart2, nameLength, -1);
+        var instructionIndex = count++;
+        buffer[instructionIndex] = new(TemplateOp.EscapedVariable, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -207,7 +215,8 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelim.Length + 1;
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.RawVariable, nameStart2, nameLength, -1);
+        var instructionIndex = count++;
+        buffer[instructionIndex] = new(TemplateOp.RawVariable, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -226,7 +235,8 @@ internal static class TemplateCompiler
         var nameStart = openIndex + OpenDelim.Length + 1;
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
-        buffer[count++] = new(TemplateOp.Partial, nameStart2, nameLength, -1);
+        var instructionIndex = count++;
+        buffer[instructionIndex] = new(TemplateOp.Partial, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -236,8 +246,7 @@ internal static class TemplateCompiler
     /// <returns>Cursor past the <c>}}</c>.</returns>
     private static int SkipComment(ReadOnlySpan<byte> source, int openIndex)
     {
-        var nameStart = openIndex + OpenDelim.Length + 1;
-        var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
+        var closeIndex = FindCloseDelimiter(source, openIndex + OpenDelim.Length + 1, CloseDelim, openIndex);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -263,8 +272,10 @@ internal static class TemplateCompiler
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
         var op = sigil == (byte)'#' ? TemplateOp.SectionOpen : TemplateOp.InvertedSectionOpen;
-        openStack[openCount++] = count;
-        buffer[count++] = new(op, nameStart2, nameLength, -1);
+        var sectionIndex = openCount++;
+        openStack[sectionIndex] = count;
+        var instructionIndex = count++;
+        buffer[instructionIndex] = new(op, nameStart2, nameLength, -1);
         return closeIndex + CloseDelim.Length;
     }
 
@@ -276,6 +287,7 @@ internal static class TemplateCompiler
     /// <param name="openStack">Open-section stack.</param>
     /// <param name="openCount">Open-section count.</param>
     /// <returns>Cursor past the <c>}}</c>.</returns>
+    /// <exception cref="TemplateSyntaxException">Thrown when <c>openCount == 0</c>.</exception>
     private static int EmitSectionClose(
         ReadOnlySpan<byte> source,
         int openIndex,
@@ -293,7 +305,8 @@ internal static class TemplateCompiler
         var closeIndex = FindCloseDelimiter(source, nameStart, CloseDelim, openIndex);
         var (nameStart2, nameLength) = TrimRange(source, nameStart, closeIndex);
 
-        var openInstruction = openStack[--openCount];
+        openCount--;
+        var openInstruction = openStack[openCount];
         var openName = source.Slice(buffer[openInstruction].Start, buffer[openInstruction].Length);
         var closeName = source.Slice(nameStart2, nameLength);
         if (!openName.SequenceEqual(closeName))
@@ -314,6 +327,7 @@ internal static class TemplateCompiler
     /// <param name="delimiter">Delimiter bytes.</param>
     /// <param name="openIndex">Index of the open delimiter (for error context).</param>
     /// <returns>Absolute offset of the close.</returns>
+    /// <exception cref="TemplateSyntaxException">The tag is unterminated.</exception>
     private static int FindCloseDelimiter(
         ReadOnlySpan<byte> source,
         int from,
@@ -348,6 +362,7 @@ internal static class TemplateCompiler
     /// <param name="sourceLength">Source length, for the error offset.</param>
     /// <param name="openStack">Open-section stack.</param>
     /// <param name="openCount">Open-section count.</param>
+    /// <exception cref="TemplateSyntaxException">A section is unterminated.</exception>
     private static void ValidateNoOpenSections(int sourceLength, int[] openStack, int openCount)
     {
         if (openCount <= 0)

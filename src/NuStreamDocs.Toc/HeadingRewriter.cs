@@ -40,7 +40,7 @@ internal static class HeadingRewriter
     /// <param name="headings">Headings the scanner returned, with slugs assigned.</param>
     /// <param name="permalinkSymbolBytes">UTF-8 bytes of the glyph rendered inside the permalink anchor.</param>
     /// <param name="writer">Target buffer writer.</param>
-    public static void Rewrite(
+    internal static void Rewrite(
         ReadOnlySpan<byte> snapshot,
         Heading[] headings,
         ReadOnlySpan<byte> permalinkSymbolBytes,

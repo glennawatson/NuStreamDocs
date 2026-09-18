@@ -10,13 +10,34 @@ namespace NuStreamDocs.Theme.Material3.Tests;
 /// <summary>End-to-end tests for the friendly defaults the theme ships out of the box.</summary>
 public class Material3DefaultsTests
 {
+    /// <summary>Length of the ISO timestamp through whole seconds.</summary>
+    private const int TimestampPrefixLength = 19;
+
+    /// <summary>Value for the not-found page output path.</summary>
+    private const string NotFoundOutputPath = "404.html";
+
+    /// <summary>Value for the images directory name.</summary>
+    private const string ImagesDirectory = "images";
+
+    /// <summary>Value for the assets directory name.</summary>
+    private const string AssetsDirectory = "assets";
+
+    /// <summary>Value for the page output path.</summary>
+    private const string PageOutputPath = "page.html";
+
+    /// <summary>Value for the page content.</summary>
+    private const string PageMarkdown = "# Page";
+
+    /// <summary>Value for the page source path.</summary>
+    private const string PageSourcePath = "page.md";
+
     /// <summary>When no favicon is configured and the docs tree is empty, the build still emits the bundled default favicon.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DefaultFaviconEmittedWhenNothingConfigured()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -24,11 +45,11 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         await Assert.That(html).Contains("rel=\"icon\"");
         await Assert.That(html).Contains("/assets/images/favicon.svg");
 
-        var faviconAsset = Path.Combine(fixture.Site, "assets", "images", "favicon.svg");
+        var faviconAsset = Path.Combine(fixture.Site, AssetsDirectory, ImagesDirectory, "favicon.svg");
         await Assert.That(File.Exists(faviconAsset)).IsTrue();
     }
 
@@ -38,10 +59,10 @@ public class Material3DefaultsTests
     public async Task DocsTreeFaviconIsAutoDiscovered()
     {
         using var fixture = TempBuildTree.Create();
-        var faviconDir = Path.Combine(fixture.Docs, "images", "favicons");
-        Directory.CreateDirectory(faviconDir);
+        var faviconDir = Path.Combine(fixture.Docs, ImagesDirectory, "favicons");
+        _ = Directory.CreateDirectory(faviconDir);
         await File.WriteAllBytesAsync(Path.Combine(faviconDir, "favicon.ico"), [0x00, 0x00, 0x01, 0x00]);
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -49,7 +70,7 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         await Assert.That(html).Contains("/images/favicons/favicon.ico");
         await Assert.That(html).DoesNotContain("/assets/images/favicon.svg");
     }
@@ -60,10 +81,10 @@ public class Material3DefaultsTests
     public async Task ExplicitWithFaviconWinsOverDiscoveryAndDefault()
     {
         using var fixture = TempBuildTree.Create();
-        var faviconDir = Path.Combine(fixture.Docs, "images", "favicons");
-        Directory.CreateDirectory(faviconDir);
+        var faviconDir = Path.Combine(fixture.Docs, ImagesDirectory, "favicons");
+        _ = Directory.CreateDirectory(faviconDir);
         await File.WriteAllBytesAsync(Path.Combine(faviconDir, "favicon.ico"), [0x00, 0x00, 0x01, 0x00]);
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -73,7 +94,7 @@ public class Material3DefaultsTests
                 .WithFavicon("/custom/path.svg"u8))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         await Assert.That(html).Contains("/custom/path.svg");
         await Assert.That(html).DoesNotContain("/images/favicons/favicon.ico");
     }
@@ -84,7 +105,7 @@ public class Material3DefaultsTests
     public async Task DefaultNotFoundPageIsEmitted()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -92,7 +113,7 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("My Site"))
             .BuildAsync();
 
-        var notFound = Path.Combine(fixture.Site, "404.html");
+        var notFound = Path.Combine(fixture.Site, NotFoundOutputPath);
         await Assert.That(File.Exists(notFound)).IsTrue();
 
         var html = await File.ReadAllTextAsync(notFound);
@@ -108,7 +129,7 @@ public class Material3DefaultsTests
     {
         using var fixture = TempBuildTree.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "404.md"), "# Custom Not Found\n\nMy custom message.");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -117,7 +138,7 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
             .BuildAsync();
 
-        var rootNotFound = Path.Combine(fixture.Site, "404.html");
+        var rootNotFound = Path.Combine(fixture.Site, NotFoundOutputPath);
         var directoryStyleNotFound = Path.Combine(fixture.Site, "404", "index.html");
 
         await Assert.That(File.Exists(rootNotFound)).IsTrue();
@@ -134,7 +155,7 @@ public class Material3DefaultsTests
     public async Task BuildDateMetaIsStamped()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -142,11 +163,11 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         var iso = ExtractBuildDate(html);
 
         // ISO 8601 round-trip ("o") starts with YYYY-MM-DDTHH:MM:SS.
-        await Assert.That(iso.Length).IsGreaterThanOrEqualTo(19);
+        await Assert.That(iso.Length).IsGreaterThanOrEqualTo(TimestampPrefixLength);
         await Assert.That(iso[4]).IsEqualTo('-');
         await Assert.That(iso[7]).IsEqualTo('-');
         await Assert.That(iso[10]).IsEqualTo('T');
@@ -160,7 +181,7 @@ public class Material3DefaultsTests
     public async Task CopyrightYearTokenExpands()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -170,8 +191,9 @@ public class Material3DefaultsTests
                 .WithCopyright("(c) {year} Acme — and friends"u8))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
-        var year = DateTimeOffset.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
+        var buildDate = DateTimeOffset.Parse(ExtractBuildDate(html), CultureInfo.InvariantCulture);
+        var year = buildDate.Year.ToString(CultureInfo.InvariantCulture);
         await Assert.That(html).Contains($"(c) {year} Acme — and friends");
         await Assert.That(html).DoesNotContain("{year}");
     }
@@ -182,7 +204,7 @@ public class Material3DefaultsTests
     public async Task CopyrightWithoutTokenRendersVerbatim()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -192,7 +214,7 @@ public class Material3DefaultsTests
                 .WithCopyright("(c) Acme Corp"u8))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         await Assert.That(html).Contains("(c) Acme Corp");
     }
 
@@ -202,7 +224,7 @@ public class Material3DefaultsTests
     public async Task SourceCardScopesItsOwnForegroundColour()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -210,7 +232,7 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
             .BuildAsync();
 
-        var css = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "assets", "stylesheets", "material3.css"));
+        var css = await File.ReadAllTextAsync(Path.Combine(fixture.Site, AssetsDirectory, "stylesheets", "material3.css"));
         await Assert.That(css).Contains(".md-source__icon");
 
         // The .md-source rule pins its colour explicitly to on-surface so a header
@@ -226,7 +248,7 @@ public class Material3DefaultsTests
     public async Task ContentArticlePinnedToCentreTrack()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -234,7 +256,7 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
             .BuildAsync();
 
-        var css = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "assets", "stylesheets", "material3.css"));
+        var css = await File.ReadAllTextAsync(Path.Combine(fixture.Site, AssetsDirectory, "stylesheets", "material3.css"));
         await Assert.That(css).Contains(".md-main__inner > .md-content");
         await Assert.That(css).Contains("grid-column: 2");
     }
@@ -246,7 +268,7 @@ public class Material3DefaultsTests
     {
         using var fixture = TempBuildTree.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "404.md"), "# Authored Not Found");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -254,7 +276,7 @@ public class Material3DefaultsTests
             .UseMaterial3Theme(static opts => opts.WithSiteName("Site"))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "404.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, NotFoundOutputPath));
         await Assert.That(html).Contains("Authored Not Found");
         await Assert.That(html).DoesNotContain("Page not found");
     }

@@ -11,6 +11,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Tests for the AutoLink scheme/close-byte helpers and the inline-renderer happy path.</summary>
 public class AutoLinkTests
 {
+    /// <summary>Closing Marker Offset used by the test cases.</summary>
+    private const int ClosingMarkerOffset = 2;
+
     /// <summary>Newline aborts the autolink scan with -1.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -117,7 +120,7 @@ public class AutoLinkTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task FindCloseReturnsImmediateIndex() =>
-        await Assert.That(AutoLink.FindClose([.. "ab>"u8], 0)).IsEqualTo(2);
+        await Assert.That(AutoLink.FindClose([.. "ab>"u8], 0)).IsEqualTo(ClosingMarkerOffset);
 
     /// <summary>An empty content (<c>&lt;&gt;</c>) is rejected as a non-autolink and renders as escaped text.</summary>
     /// <returns>Async test.</returns>

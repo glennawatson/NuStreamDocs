@@ -14,8 +14,7 @@ public class ConfigReaderJsonPipelineTests
     [Test]
     public async Task SyncReadInvokesConverterAndParsesJson()
     {
-        var source = "irrelevant"u8;
-        var config = ConfigReaderJsonPipeline.Read(source, WriteSiteNameJson);
+        var config = ConfigReaderJsonPipeline.Read("irrelevant"u8, WriteSiteNameJson);
         await Assert.That(config.SiteName).IsEqualTo("FromHelper");
     }
 

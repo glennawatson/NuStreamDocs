@@ -11,6 +11,18 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Direct tests for the shared byte helpers used by every privacy byte scanner.</summary>
 public class ByteHelpersTests
 {
+    /// <summary>Spaces Length used by the test cases.</summary>
+    private const int SpacesLength = 3;
+
+    /// <summary>Mixed Whitespace Length used by the test cases.</summary>
+    private const int MixedWhitespaceLength = 5;
+
+    /// <summary>Insufficient Suffix Offset used by the test cases.</summary>
+    private const int InsufficientSuffixOffset = 2;
+
+    /// <summary>Gets the localhost used by the test cases.</summary>
+    private static ReadOnlySpan<byte> Localhost => "localhost"u8;
+
     /// <summary>ASCII identifier check covers letters, digits, underscore.</summary>
     /// <param name="b">Input byte.</param>
     /// <param name="expected">Expected.</param>
@@ -72,10 +84,10 @@ public class ByteHelpersTests
     [Test]
     public async Task SkipWhitespaceAdvancesOverRun()
     {
-        await Assert.That(AsciiByteHelpers.SkipWhitespace("   x"u8, 0)).IsEqualTo(3);
-        await Assert.That(AsciiByteHelpers.SkipWhitespace("\t \r\n y"u8, 0)).IsEqualTo(5);
+        await Assert.That(AsciiByteHelpers.SkipWhitespace("   x"u8, 0)).IsEqualTo(SpacesLength);
+        await Assert.That(AsciiByteHelpers.SkipWhitespace("\t \r\n y"u8, 0)).IsEqualTo(MixedWhitespaceLength);
         await Assert.That(AsciiByteHelpers.SkipWhitespace("abc"u8, 0)).IsEqualTo(0);
-        await Assert.That(AsciiByteHelpers.SkipWhitespace("   "u8, 0)).IsEqualTo(3);
+        await Assert.That(AsciiByteHelpers.SkipWhitespace("   "u8, 0)).IsEqualTo(SpacesLength);
     }
 
     /// <summary>Case-insensitive prefix match: same length, mixed case, succeeds.</summary>
@@ -94,7 +106,7 @@ public class ByteHelpersTests
     public async Task StartsWithIgnoreAsciiCaseRejectsShortSource()
     {
         await Assert.That(AsciiByteHelpers.StartsWithIgnoreAsciiCase("hr"u8, 0, "href"u8)).IsFalse();
-        await Assert.That(AsciiByteHelpers.StartsWithIgnoreAsciiCase("xhref"u8, 2, "href"u8)).IsFalse();
+        await Assert.That(AsciiByteHelpers.StartsWithIgnoreAsciiCase("xhref"u8, InsufficientSuffixOffset, "href"u8)).IsFalse();
     }
 
     /// <summary>The case-fold trick must not coerce non-letters into letters: '@' | 0x20 == '`' which is not 'a'.</summary>
@@ -117,9 +129,9 @@ public class ByteHelpersTests
     [Test]
     public async Task EqualsIgnoreAsciiCaseFoldsCase()
     {
-        await Assert.That(AsciiByteHelpers.EqualsIgnoreAsciiCase("LocalHost"u8, "localhost"u8)).IsTrue();
-        await Assert.That(AsciiByteHelpers.EqualsIgnoreAsciiCase("LOCALHOST"u8, "localhost"u8)).IsTrue();
-        await Assert.That(AsciiByteHelpers.EqualsIgnoreAsciiCase("example"u8, "localhost"u8)).IsFalse();
+        await Assert.That(AsciiByteHelpers.EqualsIgnoreAsciiCase("LocalHost"u8, Localhost)).IsTrue();
+        await Assert.That(AsciiByteHelpers.EqualsIgnoreAsciiCase("LOCALHOST"u8, Localhost)).IsTrue();
+        await Assert.That(AsciiByteHelpers.EqualsIgnoreAsciiCase("example"u8, Localhost)).IsFalse();
     }
 
     /// <summary>Encoding the empty string is a no-op.</summary>

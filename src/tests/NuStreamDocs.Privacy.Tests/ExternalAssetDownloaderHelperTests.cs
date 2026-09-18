@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Text;
+using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
 
 namespace NuStreamDocs.Privacy.Tests;
@@ -11,6 +12,39 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Branch-coverage tests for the ExternalAssetDownloader retry/CSS-detection helpers.</summary>
 public class ExternalAssetDownloaderHelperTests
 {
+    /// <summary>Invalid request timeouts are rejected even when the registry is empty.</summary>
+    /// <param name="milliseconds">Configured timeout in milliseconds.</param>
+    /// <returns>The assertion task.</returns>
+    [Test]
+    [Arguments(0D)]
+    [Arguments(-2D)]
+    [Arguments(2147483648D)]
+    public async Task DownloadAllRejectsInvalidTimeout(double milliseconds)
+    {
+        var registry = new ExternalAssetRegistry([.. "assets"u8]);
+        var filter = new HostFilter(null, null);
+        var settings = new ExternalAssetDownloader.DownloadSettings(1, TimeSpan.FromMilliseconds(milliseconds), 1);
+        await Assert.That(async () =>
+        {
+            _ = await ExternalAssetDownloader.DownloadAllAsync(registry, "/output", "/cache", settings, filter, NullLogger.Instance, CancellationToken.None);
+        }).Throws<ArgumentOutOfRangeException>();
+    }
+
+    /// <summary>A finite or infinite request timeout is accepted for an empty download batch.</summary>
+    /// <param name="milliseconds">Configured timeout in milliseconds.</param>
+    /// <returns>The assertion task.</returns>
+    [Test]
+    [Arguments(-1D)]
+    [Arguments(1000D)]
+    public async Task DownloadAllAcceptsValidTimeout(double milliseconds)
+    {
+        var registry = new ExternalAssetRegistry([.. "assets"u8]);
+        var filter = new HostFilter(null, null);
+        var settings = new ExternalAssetDownloader.DownloadSettings(1, TimeSpan.FromMilliseconds(milliseconds), 1);
+        var failures = await ExternalAssetDownloader.DownloadAllAsync(registry, "/output", "/cache", settings, filter, NullLogger.Instance, CancellationToken.None);
+        await Assert.That(failures).IsEmpty();
+    }
+
     /// <summary>Server-error and rate-limited HTTP statuses are flagged as transient.</summary>
     /// <param name="status">HTTP status code.</param>
     /// <param name="expected">Expected IsTransient result.</param>

@@ -31,17 +31,17 @@ public class SqliteEngineTests
         await Assert.That(File.Exists(manifest.Value)).IsTrue();
 
         Batteries_V2.Init();
-        raw.sqlite3_open_v2(manifest.Value, out var db, raw.SQLITE_OPEN_READONLY, null);
+        _ = raw.sqlite3_open_v2(manifest.Value, out var db, raw.SQLITE_OPEN_READONLY, null);
         try
         {
-            raw.sqlite3_prepare_v2(db, "SELECT count(*) FROM pages", out var stmt);
-            raw.sqlite3_step(stmt);
+            _ = raw.sqlite3_prepare_v2(db, "SELECT count(*) FROM pages", out var stmt);
+            _ = raw.sqlite3_step(stmt);
             await Assert.That(raw.sqlite3_column_int(stmt, 0)).IsEqualTo(1);
-            raw.sqlite3_finalize(stmt);
+            _ = raw.sqlite3_finalize(stmt);
         }
         finally
         {
-            raw.sqlite3_close_v2(db);
+            _ = raw.sqlite3_close_v2(db);
         }
     }
 

@@ -3,41 +3,43 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Mermaid;
 
 /// <summary>Renders <c>mermaid</c> fenced code blocks as mermaid diagrams and pulls in the mermaid runtime.</summary>
+[System.Diagnostics.DebuggerDisplay("MermaidPlugin: {Name}")]
 public sealed class MermaidPlugin : IPagePostRenderPlugin, IHeadExtraProvider, ICustomFenceHandler
 {
-    /// <summary>Head fragment that loads the mermaid runtime and starts auto-discovery.</summary>
-    private static readonly byte[] HeadFragment =
-    [
-        .. """
-           <script type="module">
-           import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-           mermaid.initialize({ startOnLoad: true });
-           </script>
-           """u8
-    ];
-
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "mermaid"u8;
 
     /// <inheritdoc/>
     public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
+    /// <summary>Gets head fragment that loads the mermaid runtime and starts auto-discovery.</summary>
+    private static ReadOnlySpan<byte> HeadFragment => """
+           <script type="module">
+           import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+           mermaid.initialize({ startOnLoad: true });
+           </script>
+           """u8;
+
     /// <inheritdoc/>
     ReadOnlySpan<byte> ICustomFenceHandler.Language => "mermaid"u8;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => MermaidRetagger.NeedsRetag(html);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PostRender(in PagePostRenderContext context) =>
         MermaidRetagger.Retag(context.Html, context.Output);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(HeadFragment);
 
     /// <inheritdoc/>

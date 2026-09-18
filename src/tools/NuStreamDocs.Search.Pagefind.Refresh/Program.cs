@@ -25,9 +25,9 @@ namespace NuStreamDocs.Search.Pagefind.Refresh;
 /// upstream assets, drops them into the consuming package's content tree,
 /// done. Run after every Pagefind release bump:
 /// </para>
-/// <code>
+/// <c>
 /// dotnet run --project src/tools/NuStreamDocs.Search.Pagefind.Refresh -- --version 1.5.2
-/// </code>
+/// </c>
 /// <para>
 /// SHA-256 verification is enabled by default — every binary is checked
 /// against the <c>.sha256</c> sidecar published alongside the tarball. Use
@@ -49,6 +49,9 @@ public static class Program
 
     /// <summary>How many directory levels to walk up from <c>AppContext.BaseDirectory</c> looking for the <c>src/</c> root.</summary>
     private const int SrcRootProbeDepth = 8;
+
+    /// <summary>Maximum duration of an asset download in minutes.</summary>
+    private const int DownloadTimeoutMinutes = 5;
 
     /// <summary>Upstream release-asset URL template; <c>{0}</c> = version, <c>{1}</c> = filename.</summary>
     private static readonly CompositeFormat ReleaseAssetTemplate =
@@ -97,7 +100,7 @@ public static class Program
         handler.CheckCertificateRevocationList = true;
         using HttpClient http = new(handler);
         http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-        http.Timeout = TimeSpan.FromMinutes(5);
+        http.Timeout = TimeSpan.FromMinutes(DownloadTimeoutMinutes);
 
         var failures = 0;
         for (var i = 0; i < selected.Count; i++)
@@ -135,6 +138,7 @@ public static class Program
     /// <param name="verify">When true, fetch the upstream <c>.sha256</c> sidecar and verify the tarball.</param>
     /// <param name="stdout">Standard-output writer for progress lines.</param>
     /// <returns>A task that completes when the binary lands on disk.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when <c>!actual.Equals(expected, StringComparison.OrdinalIgnoreCase)</c>.</exception>
     private static async Task RefreshOneAsync(
         HttpClient http,
         string version,
@@ -154,7 +158,7 @@ public static class Program
         if (verify)
         {
             await stdout.WriteAsync("    verifying SHA-256… ").ConfigureAwait(false);
-            Uri sigUri = new(assetUrl + ".sha256");
+            Uri sigUri = new($"{assetUrl}.sha256");
             var sigText = await http.GetStringAsync(sigUri).ConfigureAwait(false);
             var expected = ParseShaSidecar(sigText);
             var actual = Convert.ToHexStringLower(SHA256.HashData(tarball));
@@ -166,10 +170,10 @@ public static class Program
             await stdout.WriteLineAsync("ok").ConfigureAwait(false);
         }
 
-        var binaryFileName = rid.IsWindows ? BinaryStem + ".exe" : BinaryStem;
+        var binaryFileName = rid.IsWindows ? $"{BinaryStem}.exe" : BinaryStem;
         var extractedBytes = ExtractBinaryBytes(tarball, binaryFileName);
         var targetDir = Path.Combine(outputBase, rid.Net, "native");
-        Directory.CreateDirectory(targetDir);
+        _ = Directory.CreateDirectory(targetDir);
         var targetPath = Path.Combine(targetDir, binaryFileName);
         await File.WriteAllBytesAsync(targetPath, extractedBytes).ConfigureAwait(false);
 
@@ -181,9 +185,9 @@ public static class Program
             try
             {
                 const UnixFileMode ExecutableMode =
-                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
                 File.SetUnixFileMode(targetPath, ExecutableMode);
             }
             catch (PlatformNotSupportedException)
@@ -208,9 +212,9 @@ public static class Program
         while (reader.GetNextEntry() is { } entry)
         {
             var leaf = Path.GetFileName(entry.Name);
-            if (entry.EntryType != TarEntryType.RegularFile ||
-                !string.Equals(leaf, binaryFileName, StringComparison.Ordinal) ||
-                entry.DataStream is null)
+            if (entry.EntryType != TarEntryType.RegularFile
+                || !string.Equals(leaf, binaryFileName, StringComparison.Ordinal)
+                || entry.DataStream is null)
             {
                 continue;
             }
@@ -245,7 +249,7 @@ public static class Program
     {
         if (string.IsNullOrWhiteSpace(filter))
         {
-            List<RidMapping> all = new(Rids.Length);
+            List<RidMapping> all = [with(Rids.Length)];
             for (var i = 0; i < Rids.Length; i++)
             {
                 all.Add(Rids[i]);
@@ -258,7 +262,7 @@ public static class Program
             new HashSet<string>(
                 filter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
                 StringComparer.OrdinalIgnoreCase);
-        List<RidMapping> selected = new(wanted.Count);
+        List<RidMapping> selected = [with(wanted.Count)];
         for (var i = 0; i < Rids.Length; i++)
         {
             if (wanted.Contains(Rids[i].Net))

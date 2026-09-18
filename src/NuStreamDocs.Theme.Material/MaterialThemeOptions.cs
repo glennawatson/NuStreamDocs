@@ -23,6 +23,7 @@ namespace NuStreamDocs.Theme.Material;
 /// <param name="SectionScopedFooter">Gets a value indicating whether the prev/next links should stop at
 /// the closest enclosing section instead of crossing siblings; only applies when
 /// <see cref="EnableNavigationFooter"/> is true.</param>
+[System.Diagnostics.DebuggerDisplay("MaterialThemeOptions: {WriteEmbeddedAssets}")]
 public readonly record struct MaterialThemeOptions(
     MaterialAssetSource AssetSource,
     byte[] EmbeddedAssetRoot,

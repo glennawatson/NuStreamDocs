@@ -8,11 +8,14 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Caching;
 
-/// <summary>xxHash3-based content hashing helper. Digests are raw 8-byte arrays; persistence layers encode at the boundary.</summary>
+/// <summary>XxHash3-based content hashing helper. Digests are raw 8-byte arrays; persistence layers encode at the boundary.</summary>
 public static class ContentHasher
 {
-    /// <summary>xxHash3 digest size in bytes; matches <c>System.IO.Hashing.XxHash3.HashLengthInBytes</c>.</summary>
+    /// <summary>XxHash3 digest size in bytes; matches <c>System.IO.Hashing.XxHash3.HashLengthInBytes</c>.</summary>
     private const int Xxhash3DigestBytes = 8;
+
+    /// <summary>Bounds the working buffer for streamed file hashing.</summary>
+    private const int FileBufferSize = 64 * 1024;
 
     /// <summary>Gets the length in bytes of an xxHash3 digest.</summary>
     public static int HashByteLength => Xxhash3DigestBytes;
@@ -23,7 +26,7 @@ public static class ContentHasher
     public static byte[] Hash(ReadOnlySpan<byte> utf8)
     {
         var digest = new byte[HashByteLength];
-        XxHash3.Hash(utf8, digest);
+        _ = XxHash3.Hash(utf8, digest);
         return digest;
     }
 
@@ -40,7 +43,7 @@ public static class ContentHasher
 
         // 64 KiB read window; bounded so a multi-MB page doesn't spike
         // working set on the worker thread.
-        var buffer = ArrayPool<byte>.Shared.Rent(64 * 1024);
+        var buffer = ArrayPool<byte>.Shared.Rent(FileBufferSize);
         try
         {
             int read;
@@ -50,7 +53,7 @@ public static class ContentHasher
             }
 
             var digest = new byte[HashByteLength];
-            hasher.GetCurrentHash(digest);
+            _ = hasher.GetCurrentHash(digest);
             return digest;
         }
         finally

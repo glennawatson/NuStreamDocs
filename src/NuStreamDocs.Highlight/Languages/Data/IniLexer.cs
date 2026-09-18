@@ -37,7 +37,7 @@ public static class IniLexer
             RecognizeStringLiterals = true,
             RecognizeNumericLiterals = false,
             KeywordConstants = null,
-            KeywordConstantFirst = null
+            KeywordConstantFirst = null,
         };
 
         return IniFamilyRules.CreateLexer(config);

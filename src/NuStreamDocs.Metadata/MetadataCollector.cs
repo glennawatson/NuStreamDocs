@@ -11,6 +11,12 @@ namespace NuStreamDocs.Metadata;
 /// <summary>Builds a <see cref="MetadataRegistry"/> by walking the input root and reading directory-level and per-page sidecar metadata files.</summary>
 internal static class MetadataCollector
 {
+    /// <summary>Initial ancestor capacity.</summary>
+    private const int InitialAncestorCapacity = 8;
+
+    /// <summary>Initial frontmatter capacity.</summary>
+    private const int InitialFrontmatterCapacity = 256;
+
     /// <summary>Markdown extension recognized by the walk.</summary>
     private const string MarkdownExtension = ".md";
 
@@ -18,18 +24,17 @@ internal static class MetadataCollector
     /// <param name="inputRoot">Absolute docs root.</param>
     /// <param name="options">Metadata options.</param>
     /// <returns>A populated registry; <see cref="MetadataRegistry.Empty"/> when no metadata files were found.</returns>
-    public static MetadataRegistry Build(in DirectoryPath inputRoot, in MetadataOptions options)
+    internal static MetadataRegistry Build(in DirectoryPath inputRoot, in MetadataOptions options)
     {
         if (!Directory.Exists(inputRoot))
         {
             return MetadataRegistry.Empty;
         }
 
-        var directoryFile = options.DirectoryFileName;
-        var sidecarSuffix = options.SidecarSuffix;
+        var (directoryFile, sidecarSuffix) = options;
         var directoryStack = ReadDirectoryFiles(inputRoot, directoryFile);
 
-        Dictionary<string, byte[]> byPath = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, byte[]> byPath = [with(StringComparer.OrdinalIgnoreCase)];
         Walk(inputRoot, inputRoot, directoryStack, sidecarSuffix, byPath);
         return byPath.Count is 0 ? MetadataRegistry.Empty : new(byPath);
     }
@@ -40,7 +45,7 @@ internal static class MetadataCollector
     /// <returns>Absolute directory path to file bytes.</returns>
     private static Dictionary<string, byte[]> ReadDirectoryFiles(string inputRoot, string directoryFile)
     {
-        Dictionary<string, byte[]> result = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, byte[]> result = [with(StringComparer.OrdinalIgnoreCase)];
         foreach (var path in Directory.EnumerateFiles(inputRoot, directoryFile, SearchOption.AllDirectories))
         {
             var dir = Path.GetDirectoryName(path);
@@ -69,7 +74,7 @@ internal static class MetadataCollector
         Dictionary<string, byte[]> byPath)
     {
         var inheritedChain = CollectInheritedChain(root, directory, directoryStack);
-        var files = Directory.GetFiles(directory, "*" + MarkdownExtension, SearchOption.TopDirectoryOnly);
+        var files = Directory.GetFiles(directory, $"*{MarkdownExtension}", SearchOption.TopDirectoryOnly);
         for (var i = 0; i < files.Length; i++)
         {
             var file = files[i];
@@ -103,7 +108,7 @@ internal static class MetadataCollector
         string directory,
         Dictionary<string, byte[]> directoryStack)
     {
-        List<byte[]> chain = new(8);
+        List<byte[]> chain = [with(InitialAncestorCapacity)];
         var cursor = directory;
         while (true)
         {
@@ -141,9 +146,9 @@ internal static class MetadataCollector
             return [];
         }
 
-        using var rental = PageBuilderPool.Rent(256);
+        using var rental = PageBuilderPool.Rent(InitialFrontmatterCapacity);
         var sink = rental.Writer;
-        HashSet<byte[]> seen = new(ByteArrayComparer.Instance);
+        HashSet<byte[]> seen = [with(ByteArrayComparer.Instance)];
         var seenLookup = seen.AsUtf8Lookup();
 
         // Iterate from highest-priority (sidecar, then closest ancestor) to
@@ -192,7 +197,7 @@ internal static class MetadataCollector
                 continue;
             }
 
-            seen.Add(key.ToArray());
+            _ = seen.Add(key.ToArray());
             var valueEnd = YamlByteScanner.AdvancePastValue(source, lineEnd);
             var block = source[lineStart..valueEnd];
             sink.Write(block);

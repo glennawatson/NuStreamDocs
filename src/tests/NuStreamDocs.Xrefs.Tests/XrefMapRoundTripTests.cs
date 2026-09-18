@@ -9,23 +9,27 @@ namespace NuStreamDocs.Xrefs.Tests;
 /// <summary>Round-trip tests for <c>XrefMapWriter</c> + <c>XrefMapReader</c>.</summary>
 public class XrefMapRoundTripTests
 {
+    /// <summary>Names the catalog written by round-trip tests.</summary>
+    private const string MapFileName = "xrefmap.json";
+
     /// <summary>Writing then reading the same payload reproduces the entries.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RoundTripsEveryEntry()
     {
         using var temp = TempDir.Create();
-        var map = Path.Combine(temp.Root, "xrefmap.json");
+        var map = Path.Combine(temp.Root, MapFileName);
+        (byte[] Id, byte[] Url)[] entries = [([.. "Foo.Bar"u8], [.. "api/Foo.Bar.html"u8]), ([.. "Baz"u8], [.. "api/Baz.html"u8])];
         XrefMapWriter.Write(
             map,
             [.. "https://example.com/"u8],
-            [([.. "Foo.Bar"u8], [.. "api/Foo.Bar.html"u8]), ([.. "Baz"u8], [.. "api/Baz.html"u8])]);
+            entries);
 
         var bytes = await File.ReadAllBytesAsync(map);
         var payload = XrefMapReader.Read(bytes);
 
         await Assert.That(payload.BaseUrl.AsSpan().SequenceEqual("https://example.com/"u8)).IsTrue();
-        await Assert.That(payload.Entries.Length).IsEqualTo(2);
+        await Assert.That(payload.Entries.Length).IsEqualTo(entries.Length);
     }
 
     /// <summary>Empty <c>baseUrl</c> is omitted from the emitted document.</summary>
@@ -34,7 +38,7 @@ public class XrefMapRoundTripTests
     public async Task EmptyBaseUrlIsOmitted()
     {
         using var temp = TempDir.Create();
-        var map = Path.Combine(temp.Root, "xrefmap.json");
+        var map = Path.Combine(temp.Root, MapFileName);
         XrefMapWriter.Write(map, [], [([.. "Foo"u8], [.. "f.html"u8])]);
 
         var text = await File.ReadAllTextAsync(map, Encoding.UTF8);
@@ -47,7 +51,7 @@ public class XrefMapRoundTripTests
     public async Task EntriesAreSortedByUid()
     {
         using var temp = TempDir.Create();
-        var map = Path.Combine(temp.Root, "xrefmap.json");
+        var map = Path.Combine(temp.Root, MapFileName);
         XrefMapWriter.Write(
             map,
             [],

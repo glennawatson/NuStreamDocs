@@ -15,7 +15,7 @@ internal static class WhitespaceSplitter
     /// <summary>Splits <paramref name="source"/> on ASCII space / tab, skipping empty runs.</summary>
     /// <param name="source">Source bytes.</param>
     /// <returns>Per-token byte arrays; empty when <paramref name="source"/> contains no non-whitespace bytes.</returns>
-    public static byte[][] Split(ReadOnlySpan<byte> source)
+    internal static byte[][] Split(ReadOnlySpan<byte> source)
     {
         var tokenCount = CountTokens(source);
         if (tokenCount is 0)
@@ -28,7 +28,8 @@ internal static class WhitespaceSplitter
         var rest = source;
         while (TryNextToken(ref rest, out var token))
         {
-            result[idx++] = token.ToArray();
+            result[idx] = token.ToArray();
+            idx++;
         }
 
         return result;

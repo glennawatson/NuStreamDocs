@@ -3,13 +3,10 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
-/// <summary>
-/// Shared scan loop for the attr-list byte rewriters.
-/// </summary>
+/// <summary>Shared scan loop for the attr-list byte rewriters.</summary>
 internal static class AttrListRewriteLoop
 {
     /// <summary>Walks <paramref name="html"/>, copying through verbatim and delegating each candidate tag open to <typeparamref name="TStrategy"/>.</summary>
@@ -17,11 +14,7 @@ internal static class AttrListRewriteLoop
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="sink">UTF-8 sink.</param>
     /// <returns>True when at least one element was rewritten.</returns>
-    [SuppressMessage(
-        "Minor Code Smell",
-        "S4018:Generic methods should provide type inference",
-        Justification = "The call sites intentionally specify the concrete static strategy type to keep the shared scan loop allocation-free.")]
-    public static bool RewriteInto<TStrategy>(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
+    internal static bool RewriteInto<TStrategy>(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
         where TStrategy : struct, IAttrListRewriteStrategy<TStrategy>
     {
         var changed = false;
@@ -35,8 +28,7 @@ internal static class AttrListRewriteLoop
                 break;
             }
 
-            var lt = cursor + rel;
-            if (TStrategy.TryRewriteAt(html, lt, sink, ref lastEmit, out var advanceTo))
+            if (TStrategy.TryRewriteAt(html, cursor + rel, sink, ref lastEmit, out var advanceTo))
             {
                 changed = true;
             }

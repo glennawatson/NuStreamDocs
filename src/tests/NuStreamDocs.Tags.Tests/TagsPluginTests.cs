@@ -61,13 +61,15 @@ public class TagsPluginTests
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "tags"))).IsFalse();
 
         var pages = sink.Snapshot();
-        var indexPage = pages.Single(p => p.RelativePath.Value == "tags/index.md");
-        var indexMd = Encoding.UTF8.GetString(indexPage.MarkdownBytes);
+        var indexPages = Array.FindAll(pages, static p => p.RelativePath.Value == "tags/index.md");
+        await Assert.That(indexPages).HasSingleItem();
+        var indexMd = Encoding.UTF8.GetString(indexPages[0].MarkdownBytes);
         await Assert.That(indexMd).Contains("alpha");
         await Assert.That(indexMd).Contains("beta");
 
-        var alphaPage = pages.Single(p => p.RelativePath.Value == "tags/alpha.md");
-        var alphaMd = Encoding.UTF8.GetString(alphaPage.MarkdownBytes);
+        var alphaPages = Array.FindAll(pages, static p => p.RelativePath.Value == "tags/alpha.md");
+        await Assert.That(alphaPages).HasSingleItem();
+        var alphaMd = Encoding.UTF8.GetString(alphaPages[0].MarkdownBytes);
         await Assert.That(alphaMd).Contains("First");
         await Assert.That(alphaMd).Contains("Second");
     }
@@ -88,8 +90,8 @@ public class TagsPluginTests
         // Pages register under the configured subdirectory; nothing lands on disk.
         await Assert.That(Directory.Exists(Path.Combine(temp.Root, "topics"))).IsFalse();
         var pages = sink.Snapshot();
-        await Assert.That(Array.Exists(pages, p => p.RelativePath.Value == "topics/index.md")).IsTrue();
-        await Assert.That(Array.Exists(pages, p => p.RelativePath.Value == "topics/foo.md")).IsTrue();
+        await Assert.That(Array.Exists(pages, static p => p.RelativePath.Value == "topics/index.md")).IsTrue();
+        await Assert.That(Array.Exists(pages, static p => p.RelativePath.Value == "topics/foo.md")).IsTrue();
     }
 
     /// <summary>RelativePathToUrlPath swaps <c>.md</c> for <c>.html</c> and normalizes separators.</summary>
@@ -129,8 +131,8 @@ public class TagsPluginTests
         /// <summary>Initializes a new instance of the <see cref="TagsTempDir"/> class.</summary>
         public TagsTempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-tags-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-tags-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch directory.</summary>

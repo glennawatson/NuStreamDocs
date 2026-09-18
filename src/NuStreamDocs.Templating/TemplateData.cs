@@ -8,16 +8,17 @@ namespace NuStreamDocs.Templating;
 
 /// <summary>Read-mostly data container handed to a <see cref="Template"/>'s <c>Render</c> method. Scalars are UTF-8 byte memory; sections are arrays of nested scopes.</summary>
 /// <remarks>Any <see cref="ReadOnlyMemory{T}"/> handed in must remain valid until <c>Render</c> returns.</remarks>
+[System.Diagnostics.DebuggerDisplay("TemplateData: {_scalarLookup}")]
 public sealed class TemplateData
 {
     /// <summary>Empty-section sentinel reused everywhere.</summary>
     private static readonly TemplateData[] EmptySections = [];
 
     /// <summary>Empty scalar lookup reused for the empty-data scope.</summary>
-    private static readonly Dictionary<byte[], ReadOnlyMemory<byte>> EmptyScalars = new(0, ByteArrayComparer.Instance);
+    private static readonly Dictionary<byte[], ReadOnlyMemory<byte>> EmptyScalars = [with(0, ByteArrayComparer.Instance)];
 
     /// <summary>Empty section lookup reused for the empty-data scope.</summary>
-    private static readonly Dictionary<byte[], TemplateData[]> EmptySectionMap = new(0, ByteArrayComparer.Instance);
+    private static readonly Dictionary<byte[], TemplateData[]> EmptySectionMap = [with(0, ByteArrayComparer.Instance)];
 
     /// <summary>Span-keyed alternate lookup over the scalar map.</summary>
     private readonly Dictionary<byte[], ReadOnlyMemory<byte>>.AlternateLookup<ReadOnlySpan<byte>> _scalarLookup;
@@ -70,5 +71,5 @@ public sealed class TemplateData
     /// <returns>Truthiness for Mustache section semantics.</returns>
     public bool IsTruthy(ReadOnlySpan<byte> key) =>
         (_sectionLookup.TryGetValue(key, out var items) && items.Length > 0)
-        || (_scalarLookup.TryGetValue(key, out var bytes) && bytes.Length > 0);
+        || (_scalarLookup.TryGetValue(key, out var bytes) && !bytes.IsEmpty);
 }

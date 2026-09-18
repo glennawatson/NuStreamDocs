@@ -20,7 +20,7 @@ public class FrontmatterTitleReaderTests
         using var fixture = await TempFile.WriteAsync("---\ntitle: Hello\n---\n# Body\n");
         await Assert.That(ReadString(fixture.Path)).IsEqualTo("Hello");
         var bytes = FrontmatterTitleReader.ReadBytes((FilePath)fixture.Path);
-        await Assert.That(bytes is not null && Encoding.UTF8.GetString(bytes) == "Hello").IsTrue();
+        await Assert.That(bytes is not null && bytes.AsSpan().SequenceEqual("Hello"u8)).IsTrue();
     }
 
     /// <summary>Capitalised <c>Title:</c> (Wyam convention) is honoured when no lower-case key is present.</summary>
@@ -71,7 +71,7 @@ public class FrontmatterTitleReaderTests
     {
         var missing = Path.Combine(
             Path.GetTempPath(),
-            "smkd-nofile-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-nofile-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         await Assert.That(ReadString(missing)).IsNull();
         await Assert.That(FrontmatterTitleReader.ReadBytes((FilePath)missing)).IsNull();
     }
@@ -80,7 +80,7 @@ public class FrontmatterTitleReaderTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptyPathsThrow() =>
-        await Assert.That(() => FrontmatterTitleReader.ReadBytes((FilePath)string.Empty)).Throws<ArgumentException>();
+        await Assert.That(static () => FrontmatterTitleReader.ReadBytes((FilePath)string.Empty)).Throws<ArgumentException>();
 
     /// <summary>Helper that decodes the byte-shaped result for the test assertions.</summary>
     /// <param name="absolutePath">Absolute path to a markdown page.</param>
@@ -110,8 +110,8 @@ public class FrontmatterTitleReaderTests
         public static async Task<TempFile> WriteAsync(string contents)
         {
             var dir = System.IO.Path.Combine(AppContext.BaseDirectory, "smkd-fmt-tests");
-            Directory.CreateDirectory(dir);
-            var path = System.IO.Path.Combine(dir, Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture) + ".md");
+            _ = Directory.CreateDirectory(dir);
+            var path = System.IO.Path.Combine(dir, $"{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}.md");
 
             // Explicit no-BOM UTF-8 — Encoding.UTF8 prepends a 3-byte BOM that prod files don't have.
             await File.WriteAllTextAsync(path, contents, NoBom).ConfigureAwait(false);

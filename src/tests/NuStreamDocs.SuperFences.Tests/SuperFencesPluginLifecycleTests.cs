@@ -11,6 +11,9 @@ namespace NuStreamDocs.SuperFences.Tests;
 /// <summary>End-to-end lifecycle tests for <c>SuperFencesPlugin</c>.</summary>
 public class SuperFencesPluginLifecycleTests
 {
+    /// <summary>Initial output capacity.</summary>
+    private const int InitialOutputCapacity = 128;
+
     /// <summary>Without ConfigureAsync the plugin is signalled as no-op via NeedsRewrite.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -76,7 +79,7 @@ public class SuperFencesPluginLifecycleTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(SuperFencesPlugin plugin, ReadOnlySpan<byte> html)
     {
-        ArrayBufferWriter<byte> output = new(128);
+        ArrayBufferWriter<byte> output = new(InitialOutputCapacity);
         PagePostRenderContext ctx = new("p.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];

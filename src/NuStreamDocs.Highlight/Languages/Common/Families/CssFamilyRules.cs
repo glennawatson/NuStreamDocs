@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
@@ -74,33 +75,24 @@ internal static class CssFamilyRules
     /// <summary>Builds a single-state CSS-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateLexer(in CssFamilyConfig config) =>
+    internal static Lexer CreateLexer(in CssFamilyConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
     /// <summary>Builds the CSS-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
-    public static LexerRule[] Build(in CssFamilyConfig config)
+    internal static LexerRule[] Build(in CssFamilyConfig config)
     {
         const int MaxRuleSlots = 16;
         var rules = new List<LexerRule>(MaxRuleSlots)
         {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            },
-            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.SlashFirst
-            }
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, },
+            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, },
         };
 
         if (config.IncludeLineComment)
         {
-            rules.Add(new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.SlashFirst
-            });
+            rules.Add(new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, });
         }
 
         rules.Add(new(
@@ -128,10 +120,7 @@ internal static class CssFamilyRules
         // SCSS variable $var.
         if (config.VariableSigil is (byte)'$')
         {
-            rules.Add(new(MatchDollarVariable, TokenClass.Name, LexerRule.NoStateChange)
-            {
-                FirstBytes = SearchValues.Create("$"u8)
-            });
+            rules.Add(new(MatchDollarVariable, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("$"u8), });
         }
 
         // Parent reference & — SCSS / Less only.
@@ -148,23 +137,14 @@ internal static class CssFamilyRules
         rules.Add(new(MatchImportant, TokenClass.KeywordConstant, LexerRule.NoStateChange) { FirstBytes = BangFirst });
 
         // Dimensioned float (1.5em, 100%, 12.5px).
-        rules.Add(new(MatchFloatWithUnit, TokenClass.NumberFloat, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiDigits
-        });
+        rules.Add(new(MatchFloatWithUnit, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
 
         // Dimensioned integer (12px, 100%).
-        rules.Add(new(MatchIntegerWithUnit, TokenClass.NumberInteger, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiDigits
-        });
+        rules.Add(new(MatchIntegerWithUnit, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
 
         // Identifier (property name, value keyword, element selector). Continue set includes dash so
         // CSS properties like `font-size` and values like `box-sizing` classify as one token.
-        rules.Add(new(MatchCssIdentifier, TokenClass.Name, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiIdentifierStart
-        });
+        rules.Add(new(MatchCssIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, });
 
         rules.Add(new(
                 static slice => TokenMatchers.MatchSingleByteOf(slice, OperatorFirst),
@@ -228,6 +208,7 @@ internal static class CssFamilyRules
     /// <summary>Matches an ID selector: <c>#</c> followed by an identifier body.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchIdSelector(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchPrefixedRun(slice, (byte)'#', IdentifierContinue);
 
@@ -242,23 +223,20 @@ internal static class CssFamilyRules
         }
 
         // Reject .5 (decimal-leading float) — let the float rule handle that.
-        if (slice.Length > 1 && TokenMatchers.AsciiDigits.Contains(slice[1]))
-        {
-            return 0;
-        }
-
-        return TokenMatchers.MatchPrefixedRun(slice, (byte)'.', IdentifierContinue);
+        return slice.Length > 1 && TokenMatchers.AsciiDigits.Contains(slice[1]) ? 0 : TokenMatchers.MatchPrefixedRun(slice, (byte)'.', IdentifierContinue);
     }
 
     /// <summary>Matches an at-rule or Less variable: <c>@</c> followed by an identifier body.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchAtIdentifier(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchPrefixedRun(slice, (byte)'@', IdentifierContinue);
 
     /// <summary>Matches a SCSS dollar variable: <c>$</c> followed by an identifier body.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchDollarVariable(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchPrefixedRun(slice, (byte)'$', IdentifierContinue);
 
@@ -288,12 +266,7 @@ internal static class CssFamilyRules
     private static int MatchFloatWithUnit(ReadOnlySpan<byte> slice)
     {
         var floatLen = TokenMatchers.MatchUnsignedAsciiFloat(slice);
-        if (floatLen is 0)
-        {
-            return 0;
-        }
-
-        return floatLen + ConsumeUnit(slice[floatLen..]);
+        return floatLen is 0 ? 0 : floatLen + ConsumeUnit(slice[floatLen..]);
     }
 
     /// <summary>Matches a CSS integer literal followed by an optional unit.</summary>
@@ -302,12 +275,7 @@ internal static class CssFamilyRules
     private static int MatchIntegerWithUnit(ReadOnlySpan<byte> slice)
     {
         var intLen = TokenMatchers.MatchAsciiDigits(slice);
-        if (intLen is 0)
-        {
-            return 0;
-        }
-
-        return intLen + ConsumeUnit(slice[intLen..]);
+        return intLen is 0 ? 0 : intLen + ConsumeUnit(slice[intLen..]);
     }
 
     /// <summary>Matches an optional unit suffix (identifier-continue bytes or <c>%</c>) following a numeric literal.</summary>
@@ -332,6 +300,7 @@ internal static class CssFamilyRules
     /// <summary>Matches a CSS identifier — leading letter, then letters / digits / underscore / dash.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchCssIdentifier(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, IdentifierContinue);
 }

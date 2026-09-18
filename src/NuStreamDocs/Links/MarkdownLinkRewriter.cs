@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Links;
@@ -51,19 +52,20 @@ internal static class MarkdownLinkRewriter
     /// <summary>Returns true when <paramref name="html"/> contains at least one href or src candidate.</summary>
     /// <param name="html">Rendered HTML.</param>
     /// <returns>True when either prefix is present.</returns>
-    public static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
+    internal static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
         html.IndexOf(HrefStub) >= 0 || html.IndexOf(SrcStub) >= 0;
 
     /// <summary>Rewrites every relative <c>.md</c> href in <paramref name="html"/> to <c>.html</c> (flat URL form).</summary>
     /// <param name="html">Rendered HTML.</param>
     /// <returns>The rewritten bytes (or a copy of the original when nothing matched).</returns>
-    public static byte[] Rewrite(ReadOnlySpan<byte> html) => Rewrite(html, false);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static byte[] Rewrite(ReadOnlySpan<byte> html) => Rewrite(html, false);
 
     /// <summary>Rewrites every relative <c>.md</c> href in <paramref name="html"/>, picking the URL shape via <paramref name="useDirectoryUrls"/>.</summary>
     /// <param name="html">Rendered HTML.</param>
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c> (and <c>index.md</c> → empty); when false, <c>foo.md</c> → <c>foo.html</c>.</param>
     /// <returns>The rewritten bytes (or a copy of the original when nothing matched).</returns>
-    public static byte[] Rewrite(ReadOnlySpan<byte> html, bool useDirectoryUrls)
+    internal static byte[] Rewrite(ReadOnlySpan<byte> html, bool useDirectoryUrls)
     {
         if (html.IsEmpty)
         {
@@ -79,7 +81,8 @@ internal static class MarkdownLinkRewriter
     /// <param name="html">Rendered HTML.</param>
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c> (and <c>index.md</c> → empty); when false, <c>foo.md</c> → <c>foo.html</c>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void RewriteInto(ReadOnlySpan<byte> html, bool useDirectoryUrls, IBufferWriter<byte> writer) =>
         RewriteInto(html, useDirectoryUrls, false, writer);
 
     /// <summary>
@@ -90,7 +93,7 @@ internal static class MarkdownLinkRewriter
     /// <param name="useDirectoryUrls">When true, <c>foo.md</c> → <c>foo/</c>.</param>
     /// <param name="prependParent">Prepend <c>../</c> for non-index pages emitted under directory URLs.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void RewriteInto(
+    internal static void RewriteInto(
         ReadOnlySpan<byte> html,
         bool useDirectoryUrls,
         bool prependParent,

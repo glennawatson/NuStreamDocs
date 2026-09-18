@@ -7,9 +7,7 @@ using System.Text;
 
 namespace NuStreamDocs.Tests;
 
-/// <summary>
-/// Smoke tests for the public <c>MarkdownRenderer</c> entry point.
-/// </summary>
+/// <summary>Smoke tests for the public <c>MarkdownRenderer</c> entry point.</summary>
 public class MarkdownRendererTests
 {
     /// <summary>An ATX heading should render as the matching <c>&lt;hN&gt;</c> element.</summary>

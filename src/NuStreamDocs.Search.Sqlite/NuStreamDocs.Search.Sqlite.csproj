@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Search.Sqlite</PackageId>
     <Description>SQLite/FTS5 search-index generation for NuStreamDocs. Emits a single search.db queried in the browser via sqlite-wasm-http over HTTP range requests — indexes an entire large site (API reference included) without the per-page fragment files Pagefind produces. Ships a small per-RID native (SourceGear.sqlite3 via SQLitePCLRaw.bundle_e_sqlite3); no external CLI.</Description>
     <RootNamespace>NuStreamDocs.Search.Sqlite</RootNamespace>

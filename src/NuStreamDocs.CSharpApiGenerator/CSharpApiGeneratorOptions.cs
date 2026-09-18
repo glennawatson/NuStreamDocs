@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using SourceDocParser;
 
@@ -19,6 +20,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// sits in a fixed slot in the parent nav (Statiq convention). <see langword="null"/> emits no
 /// <c>Order:</c> block.
 /// </param>
+[System.Diagnostics.DebuggerDisplay("CSharpApiGeneratorOptions: {ToString(),nq}")]
 public sealed record CSharpApiGeneratorOptions(
     CSharpApiGeneratorInput[] Inputs,
     PathSegment OutputMarkdownSubdirectory,
@@ -41,6 +43,7 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="rootDirectory">Repository root containing <c>nuget-packages.json</c>.</param>
     /// <param name="apiCachePath">Destination root for fetched packages.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CSharpApiGeneratorOptions
         FromManifest(in DirectoryPath rootDirectory, in DirectoryPath apiCachePath) =>
         From(new NuGetManifestInput(rootDirectory, apiCachePath));
@@ -63,6 +66,7 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="packages">Packages to fetch.</param>
     /// <param name="apiCachePath">Destination root for fetched packages and the synthesized manifest.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CSharpApiGeneratorOptions FromPackages(
         NuGetPackageReference[] packages,
         in DirectoryPath apiCachePath) =>
@@ -72,12 +76,14 @@ public sealed record CSharpApiGeneratorOptions(
     /// <param name="tfm">TFM the assemblies were built for.</param>
     /// <param name="assemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CSharpApiGeneratorOptions FromAssemblies(in ApiCompatString tfm, FilePath[] assemblyPaths) =>
         From(new LocalAssembliesInput(tfm, assemblyPaths));
 
     /// <summary>Builds an options record around a caller-supplied <see cref="IAssemblySource"/>.</summary>
     /// <param name="source">The caller-built source.</param>
     /// <returns>An options record using <see cref="DefaultOutputSubdirectory"/> and <see cref="CSharpApiGeneratorMode.EmitMarkdown"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CSharpApiGeneratorOptions FromSource(IAssemblySource source) =>
         From(new CustomInput(source));
 
@@ -106,6 +112,7 @@ public sealed record CSharpApiGeneratorOptions(
 
     /// <summary>Per-shape required-field validation.</summary>
     /// <param name="input">Input to validate.</param>
+    /// <exception cref="ArgumentException">The input shape is unsupported or has a missing required value.</exception>
     private static void ValidateInput(CSharpApiGeneratorInput input)
     {
         switch (input)

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Audit</PackageId>
     <Description>Build-time accessibility and performance lints for your NuStreamDocs site. Flags images without alt text or dimensions, skipped heading levels, missing document landmarks, empty interactive elements, and render-blocking head scripts. Warns by default; can fail the build under strict mode.</Description>
     <RootNamespace>NuStreamDocs.Audit</RootNamespace>

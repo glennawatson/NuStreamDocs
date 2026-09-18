@@ -70,8 +70,7 @@ public class XrefMapReaderTests
     [Test]
     public async Task ReferencesNotArray()
     {
-        var json = """{"references":"not an array"}"""u8;
-        var payload = XrefMapReader.Read(json);
+        var payload = XrefMapReader.Read("""{"references":"not an array"}"""u8);
         await Assert.That(payload.Entries.Length).IsEqualTo(0);
     }
 

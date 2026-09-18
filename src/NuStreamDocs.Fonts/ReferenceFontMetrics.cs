@@ -34,7 +34,7 @@ internal static class ReferenceFontMetrics
     /// <summary>Returns the reference-font metrics for the given generic family.</summary>
     /// <param name="generic">Generic font family.</param>
     /// <returns>The reference metrics.</returns>
-    public static FontMetrics ForGeneric(GenericFontFamily generic) => generic switch
+    internal static FontMetrics ForGeneric(GenericFontFamily generic) => generic switch
     {
         GenericFontFamily.Serif => TimesNewRoman,
         GenericFontFamily.Monospace => CourierNew,
@@ -44,7 +44,7 @@ internal static class ReferenceFontMetrics
     /// <summary>Returns the UTF-8 <c>src: local(...)</c> stack for the given generic family.</summary>
     /// <param name="generic">Generic font family.</param>
     /// <returns>The <c>src</c> bytes.</returns>
-    public static ReadOnlySpan<byte> LocalSourcesFor(GenericFontFamily generic) => generic switch
+    internal static ReadOnlySpan<byte> LocalSourcesFor(GenericFontFamily generic) => generic switch
     {
         GenericFontFamily.Serif => SerifSrc,
         GenericFontFamily.Monospace => MonoSrc,
@@ -54,7 +54,7 @@ internal static class ReferenceFontMetrics
     /// <summary>Returns the UTF-8 generic-family keyword (<c>sans-serif</c> / <c>serif</c> / <c>monospace</c>).</summary>
     /// <param name="generic">Generic font family.</param>
     /// <returns>The keyword bytes.</returns>
-    public static ReadOnlySpan<byte> KeywordFor(GenericFontFamily generic) => generic switch
+    internal static ReadOnlySpan<byte> KeywordFor(GenericFontFamily generic) => generic switch
     {
         GenericFontFamily.Serif => "serif"u8,
         GenericFontFamily.Monospace => "monospace"u8,

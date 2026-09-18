@@ -12,6 +12,7 @@ namespace NuStreamDocs.Transitions;
 /// <param name="PrefetchDelayMs">Debounce, in milliseconds, before a hover-triggered pre-fetch fires.</param>
 /// <param name="IgnoreSelector">UTF-8 CSS selector for links the router must not intercept or pre-fetch (downloads, new-tab links, opt-outs).</param>
 /// <param name="Enabled">Master switch; when false the plugin contributes nothing.</param>
+[System.Diagnostics.DebuggerDisplay("TransitionsOptions: {ToString(),nq}")]
 public readonly record struct TransitionsOptions(
     byte[] ContentSelector,
     byte[] NavSelector,

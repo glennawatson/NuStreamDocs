@@ -20,9 +20,9 @@ public class InlineStyleAndAuditTests
     public async Task RewritesUrlInsideInlineStyle()
     {
         ExternalAssetRegistry registry = new([.. "assets/external"u8]);
-        const string Source = "<style>body { background: url(https://example.com/bg.png) }</style>";
+        var sourceBytes = (byte[])[.. "<style>body { background: url(https://example.com/bg.png) }</style>"u8];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Source), registry, AllHosts));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(sourceBytes, registry, AllHosts));
         await Assert.That(output).Contains("url(/assets/external/");
         await Assert.That(output).DoesNotContain("https://example.com/bg.png");
     }
@@ -33,9 +33,8 @@ public class InlineStyleAndAuditTests
     public async Task AuditModeCollectsWithoutRewriting()
     {
         ConcurrentDictionary<byte[], byte> audit = new(ByteArrayComparer.Instance);
-        const string Source =
-            "<img src=\"https://example.com/x.png\"><style>a { background: url(https://example.com/y.png) }</style>";
-        ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Source), AllHosts, audit);
+        var sourceBytes = (byte[])[.. "<img src=\"https://example.com/x.png\"><style>a { background: url(https://example.com/y.png) }</style>"u8];
+        ExternalUrlScanner.Audit(sourceBytes, AllHosts, audit);
         await Assert.That(audit.ContainsKey([.. "https://example.com/x.png"u8])).IsTrue();
         await Assert.That(audit.ContainsKey([.. "https://example.com/y.png"u8])).IsTrue();
     }

@@ -11,6 +11,12 @@ namespace NuStreamDocs.MarkdownExtensions.Tests;
 /// <summary>Behavior tests for <c>AttrListRewriter</c>.</summary>
 public class AttrListRewriterTests
 {
+    /// <summary>Expected image width attribute.</summary>
+    private const string WidthAttribute = "width=\"700\"";
+
+    /// <summary>Image carrying the expected width attribute.</summary>
+    private const string SizedImage = "<img src=\"x.png\" alt=\"x\" width=\"700\">";
+
     /// <summary>A heading with a trailing <c>{: #id .class }</c> token lifts both onto the opening tag.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -51,29 +57,20 @@ public class AttrListRewriterTests
     /// <summary>HTML without the <c>{:</c> marker is left untouched.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task PassesThroughWhenNoMarker()
-    {
-        const string Html = "<h1>Heading</h1><p>Body</p>";
-        await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsFalse();
-    }
+    public async Task PassesThroughWhenNoMarker() =>
+        await Assert.That(AttrListRewriter.NeedsRewrite("<h1>Heading</h1><p>Body</p>"u8)).IsFalse();
 
     /// <summary>The <c>{#id}</c> shorthand triggers the <see cref="AttrListRewriter.NeedsRewrite"/> gate so the rewriter actually runs on pages that only contain the colon-less form.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task NeedsRewriteAcceptsHashShorthand()
-    {
-        const string Html = "<p><a href=\"\"></a>{#T:Foo}</p>";
-        await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsTrue();
-    }
+    public async Task NeedsRewriteAcceptsHashShorthand() =>
+        await Assert.That(AttrListRewriter.NeedsRewrite("<p><a href=\"\"></a>{#T:Foo}</p>"u8)).IsTrue();
 
     /// <summary>The <c>{.class}</c> shorthand triggers <see cref="AttrListRewriter.NeedsRewrite"/> alongside the hash form.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    public async Task NeedsRewriteAcceptsDotShorthand()
-    {
-        const string Html = "<p><span></span>{.callout}</p>";
-        await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsTrue();
-    }
+    public async Task NeedsRewriteAcceptsDotShorthand() =>
+        await Assert.That(AttrListRewriter.NeedsRewrite("<p><span></span>{.callout}</p>"u8)).IsTrue();
 
     /// <summary>
     /// End-to-end: pages whose only marker is the <c>{#id}</c> shorthand pass the
@@ -86,7 +83,7 @@ public class AttrListRewriterTests
     {
         const string Html =
             "<p><a href=\"\"></a>{#M:Foo.Bar.Baz(Foo.IThing)}</p>";
-        await Assert.That(AttrListRewriter.NeedsRewrite(Encoding.UTF8.GetBytes(Html))).IsTrue();
+        await Assert.That(AttrListRewriter.NeedsRewrite("<p><a href=\"\"></a>{#M:Foo.Bar.Baz(Foo.IThing)}</p>"u8)).IsTrue();
 
         var output = Rewrite(Html);
         await Assert.That(output).Contains("id=\"M:Foo.Bar.Baz(Foo.IThing)\"");
@@ -176,7 +173,7 @@ public class AttrListRewriterTests
     public async Task SpaceFormLiftsQuotedKvOntoImg()
     {
         var output = Rewrite("<p><img src=\"x.png\" alt=\"x\">{ width=\"700\" }</p>");
-        await Assert.That(output).Contains("<img src=\"x.png\" alt=\"x\" width=\"700\">");
+        await Assert.That(output).Contains(SizedImage);
         await Assert.That(output).DoesNotContain("&quot;");
     }
 
@@ -186,7 +183,7 @@ public class AttrListRewriterTests
     public async Task BareShorthandLiftsQuotedKvOntoImg()
     {
         var output = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=\"700\"}</p>");
-        await Assert.That(output).Contains("<img src=\"x.png\" alt=\"x\" width=\"700\">");
+        await Assert.That(output).Contains(SizedImage);
         await Assert.That(output).DoesNotContain("&quot;");
     }
 
@@ -197,7 +194,7 @@ public class AttrListRewriterTests
     public async Task BareShorthandWithEntityEscapedQuotesAttaches()
     {
         var output = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=&quot;700&quot;}</p>");
-        await Assert.That(output).Contains("<img src=\"x.png\" alt=\"x\" width=\"700\">");
+        await Assert.That(output).Contains(SizedImage);
         await Assert.That(output).DoesNotContain("{width=");
     }
 
@@ -207,9 +204,9 @@ public class AttrListRewriterTests
     public async Task BareShorthandNumericQuoteEntitiesAttach()
     {
         var decimalForm = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=&#34;700&#34;}</p>");
-        await Assert.That(decimalForm).Contains("width=\"700\"");
+        await Assert.That(decimalForm).Contains(WidthAttribute);
         var hexForm = Rewrite("<p><img src=\"x.png\" alt=\"x\">{width=&#x22;700&#x22;}</p>");
-        await Assert.That(hexForm).Contains("width=\"700\"");
+        await Assert.That(hexForm).Contains(WidthAttribute);
     }
 
     /// <summary>Quote entities outside any <c>{...}</c> region pass through unchanged.</summary>
@@ -229,7 +226,7 @@ public class AttrListRewriterTests
         const string Source =
             "<p><img src=\"x.png\" alt=\"&lt;abbr title=&quot;Foo&quot;&gt;F&lt;/abbr&gt; structure\">{ width=\"700\" }</p>";
         var output = Rewrite(Source);
-        await Assert.That(output).Contains("width=\"700\"");
+        await Assert.That(output).Contains(WidthAttribute);
         await Assert.That(output).DoesNotContain("width=\"&quot;");
     }
 

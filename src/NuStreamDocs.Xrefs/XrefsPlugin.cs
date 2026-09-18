@@ -10,6 +10,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Xrefs;
 
 /// <summary>DocFX-style xrefmap plugin: imports external xrefmaps into the shared <see cref="AutorefsRegistry"/> at configure time and emits <c>xrefmap.json</c> at finalize.</summary>
+[System.Diagnostics.DebuggerDisplay("XrefsPlugin: {Registry}")]
 public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Shared <see cref="HttpClient"/> for import fetches.</summary>
@@ -77,7 +78,7 @@ public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
             return ValueTask.CompletedTask;
         }
 
-        Directory.CreateDirectory(context.OutputRoot);
+        _ = Directory.CreateDirectory(context.OutputRoot);
         var outputPath = Path.Combine(context.OutputRoot, _options.OutputFileName);
         XrefMapWriter.Write(outputPath, _options.BaseUrl, Registry.Snapshot());
         return ValueTask.CompletedTask;
@@ -118,8 +119,8 @@ public sealed class XrefsPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
             return await File.ReadAllBytesAsync(source, cancellationToken).ConfigureAwait(false);
         }
 
-        if (!Uri.TryCreate(source, UriKind.Absolute, out var uri) ||
-            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        if (!Uri.TryCreate(source, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
             return [];
         }

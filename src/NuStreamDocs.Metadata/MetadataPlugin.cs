@@ -12,6 +12,7 @@ namespace NuStreamDocs.Metadata;
 /// (highest to lowest): page's own frontmatter, sidecar, closest ancestor directory,
 /// further ancestors. Only keys absent from the page itself are spliced.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("MetadataPlugin: {Name}")]
 public sealed class MetadataPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>

@@ -9,6 +9,18 @@ namespace NuStreamDocs.Serve.Tests;
 /// <summary>Tests for <see cref="WatchLoop"/> debounce behavior.</summary>
 public class WatchLoopTests
 {
+    /// <summary>Burst timeout seconds.</summary>
+    private const int BurstTimeoutSeconds = 10;
+
+    /// <summary>Debounce milliseconds.</summary>
+    private const int DebounceMilliseconds = 200;
+
+    /// <summary>Batch timeout seconds.</summary>
+    private const int BatchTimeoutSeconds = 5;
+
+    /// <summary>Ignored event timeout milliseconds.</summary>
+    private const int IgnoredEventTimeoutMilliseconds = 800;
+
     /// <summary>Touching files in quick succession yields a single debounced batch.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -17,17 +29,16 @@ public class WatchLoopTests
         var dir = CreateTempDir();
         try
         {
-            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(10));
-            using WatchLoop watcher = new(dir, null, 200, null, NullLogger.Instance);
+            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(BurstTimeoutSeconds));
+            using WatchLoop watcher = new(dir, null, DebounceMilliseconds, null, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
-            await Task.Delay(50, cts.Token);
 
             await File.WriteAllTextAsync(Path.Combine(dir, "a.md"), "x", cts.Token);
             await File.WriteAllTextAsync(Path.Combine(dir, "b.md"), "x", cts.Token);
             await File.WriteAllTextAsync(Path.Combine(dir, "c.md"), "x", cts.Token);
 
-            var advanced = await moveNext.AsTask().WaitAsync(TimeSpan.FromSeconds(5), cts.Token);
+            var advanced = await moveNext.AsTask().WaitAsync(TimeSpan.FromSeconds(BatchTimeoutSeconds), cts.Token);
             await Assert.That(advanced).IsTrue();
             await Assert.That(enumerator.Current.Count).IsGreaterThanOrEqualTo(1);
             await enumerator.DisposeAsync();
@@ -45,14 +56,13 @@ public class WatchLoopTests
     {
         var dir = CreateTempDir();
         var ignored = Path.Combine(dir, "site");
-        Directory.CreateDirectory(ignored);
+        _ = Directory.CreateDirectory(ignored);
         try
         {
-            using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(800));
-            using WatchLoop watcher = new(dir, ignored, 200, null, NullLogger.Instance);
+            using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(IgnoredEventTimeoutMilliseconds));
+            using WatchLoop watcher = new(dir, ignored, DebounceMilliseconds, null, NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
-            await Task.Delay(50, CancellationToken.None);
 
             await File.WriteAllTextAsync(Path.Combine(ignored, "page.html"), "x", CancellationToken.None);
 
@@ -73,14 +83,13 @@ public class WatchLoopTests
     {
         var dir = CreateTempDir();
         var binDir = Path.Combine(dir, "bin");
-        Directory.CreateDirectory(binDir);
+        _ = Directory.CreateDirectory(binDir);
         try
         {
-            using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(800));
-            using WatchLoop watcher = new(dir, null, 200, ["bin"], NullLogger.Instance);
+            using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(IgnoredEventTimeoutMilliseconds));
+            using WatchLoop watcher = new(dir, null, DebounceMilliseconds, ["bin"], NullLogger.Instance);
             var enumerator = watcher.WaitAsync(cts.Token).GetAsyncEnumerator(cts.Token);
             var moveNext = enumerator.MoveNextAsync();
-            await Task.Delay(50, CancellationToken.None);
 
             await File.WriteAllTextAsync(Path.Combine(binDir, "noisy.dll"), "x", CancellationToken.None);
 
@@ -98,8 +107,8 @@ public class WatchLoopTests
     /// <returns>Absolute path of the new directory.</returns>
     private static string CreateTempDir()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "NuStreamDocs.Serve.Tests-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(dir);
+        var dir = Path.Combine(Path.GetTempPath(), $"NuStreamDocs.Serve.Tests-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(dir);
         return dir;
     }
 

@@ -30,11 +30,6 @@ internal sealed class NavNodeTitleComparer : IComparer<NavNode>
             return 1;
         }
 
-        if (x.Order != y.Order)
-        {
-            return x.Order.CompareTo(y.Order);
-        }
-
-        return AsciiByteHelpers.CompareIgnoreAsciiCase(x.Title, y.Title);
+        return x.Order != y.Order ? x.Order.CompareTo(y.Order) : AsciiByteHelpers.CompareIgnoreAsciiCase(x.Title, y.Title);
     }
 }

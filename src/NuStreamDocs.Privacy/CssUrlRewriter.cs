@@ -26,7 +26,7 @@ internal static class CssUrlRewriter
     /// <param name="registry">URL registry; new entries are appended for every external URL seen.</param>
     /// <param name="filter">Host filter; URLs whose host fails the filter are left as-is.</param>
     /// <returns>The rewritten CSS bytes.</returns>
-    public static byte[] Rewrite(byte[] css, Uri cssBaseUri, ExternalAssetRegistry registry, HostFilter filter)
+    internal static byte[] Rewrite(byte[] css, Uri cssBaseUri, ExternalAssetRegistry registry, HostFilter filter)
     {
         using var rental = PageBuilderPool.Rent(css.Length);
         var sink = rental.Writer;

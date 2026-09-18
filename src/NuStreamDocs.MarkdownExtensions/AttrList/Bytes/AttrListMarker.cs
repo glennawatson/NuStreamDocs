@@ -27,7 +27,7 @@ internal static class AttrListMarker
     /// <param name="span">UTF-8 search span.</param>
     /// <returns>Earliest opener offset or -1.</returns>
     /// <remarks>The caller still re-validates via <see cref="TryMatchMarker"/> so the lead-byte lookahead applies.</remarks>
-    public static int IndexOfOpener(ReadOnlySpan<byte> span)
+    internal static int IndexOfOpener(ReadOnlySpan<byte> span)
     {
         var earliest = -1;
         var p = 0;
@@ -59,7 +59,7 @@ internal static class AttrListMarker
     /// <param name="contentEnd">Offset of the closing <c>}</c> on success.</param>
     /// <param name="markerEnd">Offset just past the closing <c>}</c> on success.</param>
     /// <returns>True when a well-formed marker was found.</returns>
-    public static bool TryMatchMarker(
+    internal static bool TryMatchMarker(
         ReadOnlySpan<byte> source,
         int p,
         out int contentStart,
@@ -96,7 +96,7 @@ internal static class AttrListMarker
     /// <param name="attrListStart">Offset of the inner attr-list text.</param>
     /// <param name="attrListEnd">Offset just past the inner attr-list text.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    public static void EmitMerged(
+    internal static void EmitMerged(
         ReadOnlySpan<byte> source,
         int existingAttrsStart,
         int existingAttrsEnd,
@@ -115,9 +115,9 @@ internal static class AttrListMarker
         }
 
         Span<ByteRange> classBuffer = stackalloc ByteRange[MaxClassTokens];
-        Span<KvRange> kvBuffer = stackalloc KvRange[MaxKvPairs];
-        Span<bool> kvEmitted = stackalloc bool[MaxKvPairs];
-        AttrListBuffers buffers = new(classBuffer, kvBuffer, kvEmitted);
+        Span<KvRange> attributeBuffer = stackalloc KvRange[MaxKvPairs];
+        Span<bool> emittedAttributes = stackalloc bool[MaxKvPairs];
+        AttrListBuffers buffers = new(classBuffer, attributeBuffer, emittedAttributes);
 
         ParseAttrList(source, attrListStart, attrListEnd, ref buffers);
 
@@ -127,7 +127,7 @@ internal static class AttrListMarker
             EmitOneExistingAttr(source, nameRange, valueRange, ref buffers, sink);
         }
 
-        if (buffers.IdRange.Length > 0 && !buffers.IdEmitted)
+        if (!buffers.IdRange.IsEmpty && !buffers.IdEmitted)
         {
             EmitIdAttr(source, buffers.IdRange, sink);
         }
@@ -172,7 +172,7 @@ internal static class AttrListMarker
                 case (byte)'#':
                     {
                         i = ReadToken(source, i + 1, attrListEnd, out var range);
-                        if (range.Length > 0)
+                        if (!range.IsEmpty)
                         {
                             buffers.IdRange = range;
                         }
@@ -399,7 +399,7 @@ internal static class AttrListMarker
         }
 
         var name = source.Slice(nameRange.Start, nameRange.Length);
-        if (name.SequenceEqual("id"u8) && buffers.IdRange.Length > 0)
+        if (name.SequenceEqual("id"u8) && !buffers.IdRange.IsEmpty)
         {
             EmitIdAttr(source, buffers.IdRange, sink);
             buffers.IdEmitted = true;
@@ -416,8 +416,8 @@ internal static class AttrListMarker
         var kvs = buffers.Kvs;
         for (var i = 0; i < kvs.Length; i++)
         {
-            var kvKey = source.Slice(kvs[i].Key.Start, kvs[i].Key.Length);
-            if (!name.SequenceEqual(kvKey))
+            var attributeKey = source.Slice(kvs[i].Key.Start, kvs[i].Key.Length);
+            if (!name.SequenceEqual(attributeKey))
             {
                 continue;
             }
@@ -477,7 +477,7 @@ internal static class AttrListMarker
     {
         Utf8StringWriter.Write(sink, " class=\""u8);
         var wrote = false;
-        if (existingValue.Length > 0)
+        if (!existingValue.IsEmpty)
         {
             WriteRange(sink, source, existingValue);
             wrote = true;
@@ -587,10 +587,10 @@ internal static class AttrListMarker
         || IsAttrNameStart(b);
 
     /// <summary>Returns true when the bytes after <paramref name="p"/> look like attr-list inner content.</summary>
-    /// <remarks>The lead byte must be one of <c>}</c> (empty marker), <c>.</c>, <c>#</c>, or an attribute-name start byte. Rules out incidental <c>{ </c> usage in code blocks / templates.</remarks>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="p">Offset just past the opening brace (must already be ASCII whitespace).</param>
     /// <returns>True when an attr-list lead byte follows the post-brace whitespace.</returns>
+    /// <remarks>The lead byte must be one of <c>}</c> (empty marker), <c>.</c>, <c>#</c>, or an attribute-name start byte. Rules out incidental <c>{ </c> usage in code blocks / templates.</remarks>
     private static bool LooksLikeAttrListInner(ReadOnlySpan<byte> source, int p)
     {
         var afterInnerWs = AsciiByteHelpers.SkipWhitespace(source, p);
@@ -650,13 +650,13 @@ internal static class AttrListMarker
     {
         /// <summary>Initializes a new instance of the <see cref="AttrListBuffers"/> struct.</summary>
         /// <param name="classBuffer">Backing storage for parsed <c>.class</c> tokens.</param>
-        /// <param name="kvBuffer">Backing storage for parsed <c>key=value</c> pairs.</param>
-        /// <param name="kvEmitted">Per-kv "already emitted as override" flag span.</param>
-        public AttrListBuffers(in Span<ByteRange> classBuffer, in Span<KvRange> kvBuffer, in Span<bool> kvEmitted)
+        /// <param name="attributeBuffer">Backing storage for parsed <c>key=value</c> pairs.</param>
+        /// <param name="emittedAttributes">Flags indicating attributes emitted as overrides.</param>
+        public AttrListBuffers(in Span<ByteRange> classBuffer, in Span<KvRange> attributeBuffer, in Span<bool> emittedAttributes)
         {
             ClassBuffer = classBuffer;
-            KvBuffer = kvBuffer;
-            KvEmitted = kvEmitted;
+            KvBuffer = attributeBuffer;
+            KvEmitted = emittedAttributes;
             IdRange = new(NoOffset, 0);
             ClassCount = 0;
             KvCount = 0;
@@ -668,19 +668,19 @@ internal static class AttrListMarker
         public ByteRange IdRange { get; set; }
 
         /// <summary>Gets the backing storage for parsed <c>.class</c> tokens.</summary>
-        public Span<ByteRange> ClassBuffer { get; }
+        public readonly Span<ByteRange> ClassBuffer { get; }
 
         /// <summary>Gets or sets the count of populated entries in <see cref="ClassBuffer"/>.</summary>
         public int ClassCount { get; set; }
 
         /// <summary>Gets the backing storage for parsed <c>key=value</c> pairs.</summary>
-        public Span<KvRange> KvBuffer { get; }
+        public readonly Span<KvRange> KvBuffer { get; }
 
         /// <summary>Gets or sets the count of populated entries in <see cref="KvBuffer"/>.</summary>
         public int KvCount { get; set; }
 
         /// <summary>Gets the per-kv "already emitted as override" flag span, parallel to <see cref="KvBuffer"/>.</summary>
-        public Span<bool> KvEmitted { get; }
+        public readonly Span<bool> KvEmitted { get; }
 
         /// <summary>Gets or sets a value indicating whether the id override has already replaced an existing <c>id</c> attribute.</summary>
         public bool IdEmitted { get; set; }
@@ -703,7 +703,8 @@ internal static class AttrListMarker
                 return;
             }
 
-            ClassBuffer[ClassCount++] = range;
+            ClassBuffer[ClassCount] = range;
+            ClassCount++;
         }
 
         /// <summary>Appends one kv pair, silently dropping when the key is empty or the buffer is full.</summary>
@@ -716,7 +717,8 @@ internal static class AttrListMarker
                 return;
             }
 
-            KvBuffer[KvCount++] = new(key, value);
+            KvBuffer[KvCount] = new(key, value);
+            KvCount++;
         }
     }
 }

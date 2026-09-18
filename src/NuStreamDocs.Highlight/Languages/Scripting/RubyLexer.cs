@@ -72,16 +72,9 @@ public static class RubyLexer
     {
         WhitespaceFirst = WhitespaceFirst,
         PreCommentRule =
-            new(MatchEqualBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
-            {
-                FirstBytes = EqualFirst,
-                RequiresLineStart = true
-            },
+            new(MatchEqualBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = EqualFirst, RequiresLineStart = true, },
         LineComment =
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         PostStringRules =
@@ -99,7 +92,7 @@ public static class RubyLexer
         KeywordFirst = KeywordFirst,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches a Ruby <c>=begin ... =end</c> block comment, line-anchored.</summary>
@@ -121,15 +114,7 @@ public static class RubyLexer
         // The "\n=end" needle is five bytes — newline + the four-byte =end token.
         const int NewlineEndMarkerLength = 5;
         var afterEnd = endMarker + NewlineEndMarkerLength;
-        if (afterEnd >= slice.Length)
-        {
-            return afterEnd;
-        }
-
-        // Consume any trailing characters on the =end line (per Ruby's spec) — but
-        // stop before the next newline so the comment span doesn't include the
-        // following line.
-        return afterEnd + TokenMatchers.LineLength(slice[afterEnd..]);
+        return afterEnd >= slice.Length ? afterEnd : afterEnd + TokenMatchers.LineLength(slice[afterEnd..]);
     }
 
     /// <summary>Matches a Ruby symbol literal (<c>:name</c>) — colon followed by an identifier body.</summary>

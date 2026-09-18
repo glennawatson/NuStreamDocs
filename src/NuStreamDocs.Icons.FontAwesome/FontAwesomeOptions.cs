@@ -8,6 +8,7 @@ namespace NuStreamDocs.Icons.FontAwesome;
 /// <param name="StylesheetUrl">UTF-8 URL of the Font Awesome stylesheet to inject into <c>&lt;head&gt;</c>.</param>
 /// <param name="Crossorigin">Optional UTF-8 <c>crossorigin</c> attribute value; empty to omit.</param>
 /// <param name="ReferrerPolicy">Optional UTF-8 <c>referrerpolicy</c> attribute value; empty to omit.</param>
+[System.Diagnostics.DebuggerDisplay("FontAwesomeOptions: {ToString(),nq}")]
 public readonly record struct FontAwesomeOptions(
     byte[] StylesheetUrl,
     byte[] Crossorigin,

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -12,6 +13,18 @@ namespace NuStreamDocs.Layouts.Tests;
 /// <summary>End-to-end tests for <see cref="LayoutsPlugin"/> via the post-render hook.</summary>
 public class LayoutsPluginTests
 {
+    /// <summary>Page template name.</summary>
+    private const string PageTemplateName = "page.html";
+
+    /// <summary>Include depth limit.</summary>
+    private const int IncludeDepthLimit = 3;
+
+    /// <summary>Base template name.</summary>
+    private const string BaseTemplateName = "base.html";
+
+    /// <summary>Page render count.</summary>
+    private const int PageRenderCount = 5;
+
     /// <summary>A page without a <c>template:</c> frontmatter key passes the rendered HTML through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -42,7 +55,7 @@ public class LayoutsPluginTests
     public async Task PageContent_Substituted()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("page.html", "<main>{{ page.content }}</main>");
+        fixture.WriteTemplate(PageTemplateName, "<main>{{ page.content }}</main>");
         const string Source = "---\ntemplate: page.html\n---\n";
         const string Html = "<h1>Body</h1>";
         var output = fixture.Run(Source, Html);
@@ -55,7 +68,7 @@ public class LayoutsPluginTests
     public async Task PageTitle_Substituted()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("page.html", "<title>{{ page.title }}</title>");
+        fixture.WriteTemplate(PageTemplateName, "<title>{{ page.title }}</title>");
         const string Source = "---\ntemplate: page.html\ntitle: Hello\n---\n";
         var output = fixture.Run(Source, string.Empty);
         await Assert.That(output).IsEqualTo("<title>Hello</title>");
@@ -67,7 +80,7 @@ public class LayoutsPluginTests
     public async Task FrontmatterScalar_Substituted()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("page.html", "<sub>{{ page.subtitle }}</sub>");
+        fixture.WriteTemplate(PageTemplateName, "<sub>{{ page.subtitle }}</sub>");
         const string Source = "---\ntemplate: page.html\nsubtitle: hello world\n---\n";
         var output = fixture.Run(Source, string.Empty);
         await Assert.That(output).IsEqualTo("<sub>hello world</sub>");
@@ -80,7 +93,7 @@ public class LayoutsPluginTests
     {
         using var fixture = new LayoutFixture();
         fixture.WriteTemplate("header.html", "<header>Site</header>");
-        fixture.WriteTemplate("page.html", "{% include \"header.html\" %}<main>{{ page.content }}</main>");
+        fixture.WriteTemplate(PageTemplateName, "{% include \"header.html\" %}<main>{{ page.content }}</main>");
         const string Source = "---\ntemplate: page.html\n---\n";
         const string Html = "<p>x</p>";
         var output = fixture.Run(Source, Html);
@@ -94,9 +107,9 @@ public class LayoutsPluginTests
     {
         using var fixture = new LayoutFixture();
         fixture.WriteTemplate("loop.html", "L{% include \"loop.html\" %}");
-        fixture.WriteTemplate("page.html", "{% include \"loop.html\" %}");
+        fixture.WriteTemplate(PageTemplateName, "{% include \"loop.html\" %}");
         const string Source = "---\ntemplate: page.html\n---\n";
-        var output = fixture.Run(Source, string.Empty, opts => opts.WithMaxIncludeDepth(3));
+        var output = fixture.Run(Source, string.Empty, static opts => opts.WithMaxIncludeDepth(IncludeDepthLimit));
 
         // Initial include + 2 nested expansions before the cap kicks in.
         await Assert.That(output).IsEqualTo("LLL");
@@ -108,8 +121,8 @@ public class LayoutsPluginTests
     public async Task ExtendsBlock_Overrides()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("base.html", "<html><body>{% block body %}DEFAULT{% endblock %}</body></html>");
-        fixture.WriteTemplate("page.html", "{% extends \"base.html\" %}{% block body %}CHILD{% endblock %}");
+        fixture.WriteTemplate(BaseTemplateName, "<html><body>{% block body %}DEFAULT{% endblock %}</body></html>");
+        fixture.WriteTemplate(PageTemplateName, "{% extends \"base.html\" %}{% block body %}CHILD{% endblock %}");
         const string Source = "---\ntemplate: page.html\n---\n";
         var output = fixture.Run(Source, string.Empty);
         await Assert.That(output).IsEqualTo("<html><body>CHILD</body></html>");
@@ -121,8 +134,8 @@ public class LayoutsPluginTests
     public async Task ExtendsBlock_UnmatchedRendersParentDefault()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("base.html", "[{% block a %}A{% endblock %}|{% block b %}B{% endblock %}]");
-        fixture.WriteTemplate("page.html", "{% extends \"base.html\" %}{% block a %}AA{% endblock %}");
+        fixture.WriteTemplate(BaseTemplateName, "[{% block a %}A{% endblock %}|{% block b %}B{% endblock %}]");
+        fixture.WriteTemplate(PageTemplateName, "{% extends \"base.html\" %}{% block a %}AA{% endblock %}");
         const string Source = "---\ntemplate: page.html\n---\n";
         var output = fixture.Run(Source, string.Empty);
         await Assert.That(output).IsEqualTo("[AA|B]");
@@ -134,8 +147,8 @@ public class LayoutsPluginTests
     public async Task Super_EmitsParentContent()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("base.html", "{% block body %}PARENT{% endblock %}");
-        fixture.WriteTemplate("page.html", "{% extends \"base.html\" %}{% block body %}[{{ super() }}]{% endblock %}");
+        fixture.WriteTemplate(BaseTemplateName, "{% block body %}PARENT{% endblock %}");
+        fixture.WriteTemplate(PageTemplateName, "{% extends \"base.html\" %}{% block body %}[{{ super() }}]{% endblock %}");
         const string Source = "---\ntemplate: page.html\n---\n";
         var output = fixture.Run(Source, string.Empty);
         await Assert.That(output).IsEqualTo("[PARENT]");
@@ -147,7 +160,7 @@ public class LayoutsPluginTests
     public async Task UnsupportedTag_PassesThrough()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("page.html", "[{% if x %}A{% endif %}]");
+        fixture.WriteTemplate(PageTemplateName, "[{% if x %}A{% endif %}]");
         const string Source = "---\ntemplate: page.html\n---\n";
         var output = fixture.Run(Source, string.Empty);
         await Assert.That(output).IsEqualTo("[{% if x %}A{% endif %}]");
@@ -159,14 +172,14 @@ public class LayoutsPluginTests
     public async Task Cache_SameBuild_TemplateParsedOnce()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("page.html", "<main>{{ page.content }}</main>");
+        fixture.WriteTemplate(PageTemplateName, "<main>{{ page.content }}</main>");
         const string Source = "---\ntemplate: page.html\n---\n";
         var opts = LayoutsOptions.Default.WithTemplateDirectory(fixture.Root);
         LayoutsPlugin plugin = new(opts);
 
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < PageRenderCount; i++)
         {
-            LayoutFixture.RunWith(plugin, Source, $"<p>{i}</p>");
+            _ = LayoutFixture.RunWith(plugin, Source, $"<p>{i}</p>");
         }
 
         // 5 renders, one cached template entry.
@@ -179,7 +192,7 @@ public class LayoutsPluginTests
     public async Task Cache_RebuildAfterConfigure_PicksUpDiskChanges()
     {
         using var fixture = new LayoutFixture();
-        fixture.WriteTemplate("page.html", "<main>FIRST {{ page.content }}</main>");
+        fixture.WriteTemplate(PageTemplateName, "<main>FIRST {{ page.content }}</main>");
         const string Source = "---\ntemplate: page.html\n---\n";
         var opts = LayoutsOptions.Default.WithTemplateDirectory(fixture.Root);
         LayoutsPlugin plugin = new(opts);
@@ -191,7 +204,7 @@ public class LayoutsPluginTests
         await Assert.That(firstOutput).IsEqualTo("<main>FIRST <p>x</p></main>");
 
         // Edit the template on disk (simulating a serve-mode file change).
-        fixture.WriteTemplate("page.html", "<main>SECOND {{ page.content }}</main>");
+        fixture.WriteTemplate(PageTemplateName, "<main>SECOND {{ page.content }}</main>");
 
         // Second build: ConfigureAsync clears the cache so the new bytes are picked up.
         await plugin.ConfigureAsync(ctx, CancellationToken.None);
@@ -200,11 +213,11 @@ public class LayoutsPluginTests
     }
 
     /// <summary>Regression guard for the priority ordering — Layouts must run before any theme-shell plugin at <c>Latest, 0</c>.</summary>
+    /// <returns>Async test.</returns>
     /// <remarks>
     /// An earlier version put Layouts at tiebreak <c>10</c>, which made it run after the theme and
     /// overwrite the full themed page with raw layout content (no chrome, no nav, no header).
     /// </remarks>
-    /// <returns>Async test.</returns>
     [Test]
     public async Task PostRenderPriority_RunsBeforeThemeShell()
     {
@@ -218,6 +231,9 @@ public class LayoutsPluginTests
     /// <summary>Helper that wires up a temp template directory + plugin and exposes a one-shot run.</summary>
     private sealed class LayoutFixture : IDisposable
     {
+        /// <summary>Initial capacity for rendered fixture HTML.</summary>
+        private const int InitialOutputCapacity = 256;
+
         /// <summary>Root directory layouts are written to.</summary>
         private readonly string _root = Directory.CreateTempSubdirectory("layouts-tests").FullName;
 
@@ -232,7 +248,7 @@ public class LayoutsPluginTests
         public static string RunWith(LayoutsPlugin plugin, string source, string html)
         {
             ArgumentNullException.ThrowIfNull(plugin);
-            ArrayBufferWriter<byte> sink = new(256);
+            ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
             PagePostRenderContext ctx = new(
                 "p.md",
                 Encoding.UTF8.GetBytes(source),
@@ -254,6 +270,7 @@ public class LayoutsPluginTests
         /// <summary>Writes a template file to the temp root.</summary>
         /// <param name="name">File name (e.g. <c>page.html</c>).</param>
         /// <param name="content">Template body.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteTemplate(string name, string content) =>
             File.WriteAllBytes(Path.Combine(_root, name), Encoding.UTF8.GetBytes(content));
 
@@ -261,8 +278,9 @@ public class LayoutsPluginTests
         /// <param name="source">UTF-8 markdown source (frontmatter + body).</param>
         /// <param name="html">Pre-rendered HTML body.</param>
         /// <returns>Rewritten HTML.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string Run(string source, string html) =>
-            Run(source, html, opts => opts);
+            Run(source, html, static opts => opts);
 
         /// <summary>Runs the plugin with caller-customized options.</summary>
         /// <param name="source">UTF-8 markdown source.</param>
@@ -274,7 +292,7 @@ public class LayoutsPluginTests
             ArgumentNullException.ThrowIfNull(configure);
             var opts = configure(LayoutsOptions.Default.WithTemplateDirectory(Root));
             LayoutsPlugin plugin = new(opts);
-            ArrayBufferWriter<byte> sink = new(256);
+            ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
             PagePostRenderContext ctx = new(
                 "p.md",
                 Encoding.UTF8.GetBytes(source),

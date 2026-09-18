@@ -15,7 +15,7 @@ internal static class Slug
     /// <summary>Lowercases ASCII letters/digits in <paramref name="source"/> and collapses every other run into a single hyphen.</summary>
     /// <param name="source">Source bytes (a title, an id, …).</param>
     /// <returns>A non-empty slug.</returns>
-    public static byte[] FromBytes(ReadOnlySpan<byte> source)
+    internal static byte[] FromBytes(ReadOnlySpan<byte> source)
     {
         var buffer = new byte[source.Length + 1];
         var length = 0;
@@ -25,12 +25,14 @@ internal static class Slug
             var b = source[i];
             if (AsciiByteHelpers.IsAsciiLetter(b) || AsciiByteHelpers.IsAsciiDigit(b))
             {
-                buffer[length++] = AsciiByteHelpers.ToAsciiLowerByte(b);
+                buffer[length] = AsciiByteHelpers.ToAsciiLowerByte(b);
+                length++;
                 lastWasHyphen = false;
             }
             else if (!lastWasHyphen)
             {
-                buffer[length++] = (byte)'-';
+                buffer[length] = (byte)'-';
+                length++;
                 lastWasHyphen = true;
             }
         }

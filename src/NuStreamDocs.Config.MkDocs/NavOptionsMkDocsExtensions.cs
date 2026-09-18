@@ -2,32 +2,34 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Nav;
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Fluent extensions that load a curated nav tree from an <c>mkdocs.yml</c> file or YAML byte
-/// stream into <see cref="NavOptions.CuratedEntries"/>.
-/// </summary>
+/// <summary>Fluent extensions that load a curated nav tree from an <c>mkdocs.yml</c> file or YAML byte stream into <see cref="NavOptions.CuratedEntries"/>.</summary>
 public static class NavOptionsMkDocsExtensions
 {
-    /// <summary>Reads <paramref name="yamlPath"/>, parses its <c>nav:</c> tree, and returns options with the curated list populated.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
-    /// <returns>The updated options.</returns>
-    public static NavOptions FromMkDocsYaml(this in NavOptions options, in FilePath yamlPath)
+    /// <summary>Extension members for <c>NavOptions</c>.</summary>
+    /// <param name="options">Navigation options to configure.</param>
+    extension(in NavOptions options)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
-        var bytes = File.ReadAllBytes(yamlPath.Value);
-        return options.FromMkDocsYaml((ReadOnlySpan<byte>)bytes);
-    }
+        /// <summary>Reads <paramref name="yamlPath"/>, parses its <c>nav:</c> tree, and returns options with the curated list populated.</summary>
+        /// <param name="yamlPath">Absolute or relative path to an mkdocs.yml file.</param>
+        /// <returns>The updated options.</returns>
+        public NavOptions FromMkDocsYaml(in FilePath yamlPath)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(yamlPath.Value);
+            var bytes = File.ReadAllBytes(yamlPath.Value);
+            return options.FromMkDocsYaml((ReadOnlySpan<byte>)bytes);
+        }
 
-    /// <summary>Parses <paramref name="utf8Yaml"/> as an mkdocs.yml document and returns options with the curated list populated.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="utf8Yaml">UTF-8 YAML bytes.</param>
-    /// <returns>The updated options.</returns>
-    public static NavOptions FromMkDocsYaml(this in NavOptions options, ReadOnlySpan<byte> utf8Yaml) =>
-        options.WithCuratedEntries(MkDocsNavParser.FromYaml(utf8Yaml));
+        /// <summary>Parses <paramref name="utf8Yaml"/> as an mkdocs.yml document and returns options with the curated list populated.</summary>
+        /// <param name="utf8Yaml">UTF-8 YAML bytes.</param>
+        /// <returns>The updated options.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public NavOptions FromMkDocsYaml(ReadOnlySpan<byte> utf8Yaml) =>
+            options.WithCuratedEntries(MkDocsNavParser.FromYaml(utf8Yaml));
+    }
 }

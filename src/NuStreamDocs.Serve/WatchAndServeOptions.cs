@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.Serve;
 
-/// <summary>
-/// Options for the watch + serve pipeline (see <see cref="DocBuilderServeExtensions"/>).
-/// </summary>
+/// <summary>Options for the watch + serve pipeline (see <see cref="DocBuilderServeExtensions"/>).</summary>
 /// <param name="Host">Bind address; defaults to <c>127.0.0.1</c>. Use <c>0.0.0.0</c> for LAN access.</param>
 /// <param name="Port">TCP port for the dev server; defaults to <c>8000</c>.</param>
 /// <param name="DebounceMs">How long to wait after the last file-system event before triggering a rebuild. Coalesces save bursts that editors and formatters produce.</param>
@@ -18,6 +16,7 @@ namespace NuStreamDocs.Serve;
 /// noise (<c>bin</c>, <c>obj</c>, <c>.git</c>, <c>_intermediate</c>, <c>.api-cache</c>, <c>node_modules</c>, <c>.vs</c>,
 /// <c>.idea</c>).
 /// </param>
+[System.Diagnostics.DebuggerDisplay("WatchAndServeOptions: {ToString(),nq}")]
 public readonly record struct WatchAndServeOptions(
     string Host,
     int Port,

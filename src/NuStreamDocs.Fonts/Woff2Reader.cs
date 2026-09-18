@@ -11,10 +11,10 @@ namespace NuStreamDocs.Fonts;
 /// <summary>Reads vertical metrics out of a woff2 font by decompressing its table block and reusing <see cref="SfntTableReader"/>.</summary>
 public static class Woff2Reader
 {
-    /// <summary>woff2 signature <c>wOF2</c>.</summary>
+    /// <summary>Woff2 signature <c>wOF2</c>.</summary>
     private const uint Woff2Signature = 0x774F4632;
 
-    /// <summary>sfnt version stamped on the synthetic font we hand to <see cref="SfntTableReader"/>.</summary>
+    /// <summary>Sfnt version stamped on the synthetic font we hand to <see cref="SfntTableReader"/>.</summary>
     private const uint SfntVersionTrueType = 0x00010000;
 
     /// <summary>Big-endian tag <c>head</c>.</summary>
@@ -108,8 +108,8 @@ public static class Woff2Reader
         var numTables = BinaryPrimitives.ReadUInt16BigEndian(woff2[NumTablesOffset..]);
         var totalCompressedSize = BinaryPrimitives.ReadUInt32BigEndian(woff2[TotalCompressedSizeOffset..]);
         var tables = new Woff2Table[numTables];
-        if (!TryReadDirectory(woff2, tables, out var directoryEnd, out var blockSize) ||
-            totalCompressedSize > (uint)(woff2.Length - directoryEnd))
+        if (!TryReadDirectory(woff2, tables, out var directoryEnd, out var blockSize)
+            || totalCompressedSize > (uint)(woff2.Length - directoryEnd))
         {
             return null;
         }
@@ -180,7 +180,8 @@ public static class Woff2Reader
             return false;
         }
 
-        var flags = woff2[pos++];
+        var flags = woff2[pos];
+        pos++;
         var knownIndex = flags & KnownIndexMask;
         var transformVersion = flags >> TransformVersionShift;
         if (knownIndex == ArbitraryTagIndex)
@@ -220,12 +221,7 @@ public static class Woff2Reader
         AddSlice(block, tables, HheaIndex, HheaTag, slices, ref found, ref hasHhea);
         var ignored = false;
         AddSlice(block, tables, Os2Index, Os2Tag, slices, ref found, ref ignored);
-        if (!hasHead || !hasHhea)
-        {
-            return null;
-        }
-
-        return SfntTableReader.TryRead(BuildSfnt(block, slices[..found]));
+        return !hasHead || !hasHhea ? null : SfntTableReader.TryRead(BuildSfnt(block, slices[..found]));
     }
 
     /// <summary>Appends the slice for the given known-tag index to <paramref name="slices"/> when present and untransformed.</summary>
@@ -257,7 +253,8 @@ public static class Woff2Reader
                 return;
             }
 
-            slices[found++] = (tag, tables[i].Offset, tables[i].OriginalLength);
+            slices[found] = (tag, tables[i].Offset, tables[i].OriginalLength);
+            found++;
             present = true;
             return;
         }
@@ -307,7 +304,8 @@ public static class Woff2Reader
                 return false;
             }
 
-            var b = data[pos++];
+            var b = data[pos];
+            pos++;
             if ((i == 0 && b == Base128ContinuationBit) || (value & Base128OverflowMask) != 0)
             {
                 return false;

@@ -53,15 +53,15 @@ public class LinkValidatorRegistrationTests
     [Test]
     public async Task ExternalValidateThrowsOnInvalid()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(static () =>
+        _ = Assert.Throws<ArgumentOutOfRangeException>(static () =>
             (ExternalLinkValidatorOptions.Default with { MaxRequestsPerHost = 0 }).Validate());
-        Assert.Throws<ArgumentOutOfRangeException>(static () =>
+        _ = Assert.Throws<ArgumentOutOfRangeException>(static () =>
             (ExternalLinkValidatorOptions.Default with { WindowSeconds = 0 }).Validate());
-        Assert.Throws<ArgumentOutOfRangeException>(static () =>
+        _ = Assert.Throws<ArgumentOutOfRangeException>(static () =>
             (ExternalLinkValidatorOptions.Default with { MaxConcurrencyPerHost = 0 }).Validate());
-        Assert.Throws<ArgumentOutOfRangeException>(static () =>
+        _ = Assert.Throws<ArgumentOutOfRangeException>(static () =>
             (ExternalLinkValidatorOptions.Default with { MaxRetries = -1 }).Validate());
-        Assert.Throws<ArgumentOutOfRangeException>(static () =>
+        _ = Assert.Throws<ArgumentOutOfRangeException>(static () =>
             (ExternalLinkValidatorOptions.Default with { RequestTimeoutSeconds = 0 }).Validate());
         var ex = Assert.Throws<ArgumentException>(static () =>
             (ExternalLinkValidatorOptions.Default with { UserAgent = string.Empty }).Validate());

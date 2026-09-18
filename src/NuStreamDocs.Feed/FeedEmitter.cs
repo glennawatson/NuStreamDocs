@@ -24,9 +24,7 @@ internal static class FeedEmitter
     private static readonly FeedFormatRequest AtomRequest =
         new(AtomFileName, "Atom", FeedFormats.Atom, FeedWriter.WriteAtom);
 
-    /// <summary>
-    /// Delegate type for feed writers.
-    /// </summary>
+    /// <summary>Delegate type for feed writers.</summary>
     /// <param name="options">Feed options (must already be valid).</param>
     /// <param name="posts">Posts to render.</param>
     /// <param name="generatedAt">Generation timestamp.</param>
@@ -40,7 +38,7 @@ internal static class FeedEmitter
     /// <param name="generatedAt">Generation timestamp.</param>
     /// <param name="logger">Logger for per-format diagnostics.</param>
     /// <returns>The set of formats actually written.</returns>
-    public static FeedFormats WriteEnabledFormats(
+    internal static FeedFormats WriteEnabledFormats(
         FeedOptions options,
         string outputDir,
         BlogPost[] posts,

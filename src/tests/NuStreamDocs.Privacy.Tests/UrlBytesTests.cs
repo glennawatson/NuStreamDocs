@@ -17,6 +17,12 @@ namespace NuStreamDocs.Privacy.Tests;
 /// </summary>
 public class UrlBytesTests
 {
+    /// <summary>Local Path Prefix used by the test cases.</summary>
+    private const string LocalPathPrefix = "/local/";
+
+    /// <summary>Gets the image markup used by the test cases.</summary>
+    private static ReadOnlySpan<byte> ImageMarkup => "<img src=\"https://cdn.test/a.png\">"u8;
+
     /// <summary>Mixed-case <c>SRC=</c> / <c>HREF=</c> attribute names are recognized.</summary>
     /// <param name="html">Input.</param>
     /// <returns>Async test.</returns>
@@ -40,7 +46,7 @@ public class UrlBytesTests
         var (registry, filter) = MakeAllAccept();
         const string Html = "<x datasrc=\"https://cdn.test/a.png\">";
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite((byte[])[.. "<x datasrc=\"https://cdn.test/a.png\">"u8], registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -50,12 +56,12 @@ public class UrlBytesTests
     public async Task UnicodeSurroundsAssetAttr()
     {
         var (registry, filter) = MakeAllAccept();
-        const string Html = "前 <img src=\"https://cdn.test/a.png\"> 後 🚀";
+        var htmlBytes = (byte[])[.. "前 <img src=\"https://cdn.test/a.png\"> 後 🚀"u8];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(htmlBytes, registry, filter));
         await Assert.That(output).StartsWith("前 ");
         await Assert.That(output).EndsWith(" 後 🚀");
-        await Assert.That(output).Contains("/local/");
+        await Assert.That(output).Contains(LocalPathPrefix);
     }
 
     /// <summary>Single-quoted asset values are supported.</summary>
@@ -64,9 +70,9 @@ public class UrlBytesTests
     public async Task AssetAttrSingleQuoted()
     {
         var (registry, filter) = MakeAllAccept();
-        const string Html = "<img src='https://cdn.test/a.png'>";
+        var htmlBytes = (byte[])[.. "<img src='https://cdn.test/a.png'>"u8];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(htmlBytes, registry, filter));
         await Assert.That(output).Contains("'/local/");
     }
 
@@ -76,10 +82,10 @@ public class UrlBytesTests
     public async Task AssetAttrWhitespaceAroundEq()
     {
         var (registry, filter) = MakeAllAccept();
-        const string Html = "<img src = \"https://cdn.test/a.png\">";
+        var htmlBytes = (byte[])[.. "<img src = \"https://cdn.test/a.png\">"u8];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
-        await Assert.That(output).Contains("/local/");
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(htmlBytes, registry, filter));
+        await Assert.That(output).Contains(LocalPathPrefix);
     }
 
     /// <summary>Multiple asset URLs on one page all rewrite.</summary>
@@ -88,11 +94,11 @@ public class UrlBytesTests
     public async Task MultipleAssetUrlsAllRewrite()
     {
         var (registry, filter) = MakeAllAccept();
-        const string Html = "<img src=\"https://cdn.test/a.png\"><img src=\"https://cdn.test/b.png\">";
+        var htmlBytes = (byte[])[.. "<img src=\"https://cdn.test/a.png\"><img src=\"https://cdn.test/b.png\">"u8];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
-        var first = output.IndexOf("/local/", StringComparison.Ordinal);
-        var second = output.IndexOf("/local/", first + 1, StringComparison.Ordinal);
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(htmlBytes, registry, filter));
+        var first = output.IndexOf(LocalPathPrefix, StringComparison.Ordinal);
+        var second = output.IndexOf(LocalPathPrefix, first + 1, StringComparison.Ordinal);
         await Assert.That(first).IsGreaterThanOrEqualTo(0);
         await Assert.That(second).IsGreaterThan(first);
     }
@@ -106,7 +112,7 @@ public class UrlBytesTests
         HostFilter filter = new(null, PrivacyTestHelpers.Utf8("other.test"));
         const string Html = "<img src=\"https://cdn.test/a.png\">";
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite((byte[])[.. ImageMarkup], registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -116,12 +122,12 @@ public class UrlBytesTests
     public async Task SrcsetMixedCaseAndUnicode()
     {
         var (registry, filter) = MakeAllAccept();
-        const string Html = "前 <img SRCSET=\"https://cdn.test/a.png 1x, https://cdn.test/b.png 2x\"> 後";
+        var htmlBytes = (byte[])[.. "前 <img SRCSET=\"https://cdn.test/a.png 1x, https://cdn.test/b.png 2x\"> 後"u8];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(htmlBytes, registry, filter));
         await Assert.That(output).Contains("前 ");
         await Assert.That(output).Contains(" 後");
-        await Assert.That(output).Contains("/local/");
+        await Assert.That(output).Contains(LocalPathPrefix);
         await Assert.That(output).Contains(" 1x");
         await Assert.That(output).Contains(" 2x");
     }
@@ -135,7 +141,7 @@ public class UrlBytesTests
         HostFilter filter = new(null, PrivacyTestHelpers.Utf8("other.test"));
         const string Html = "<img srcset=\"https://cdn.test/a.png 1x\">";
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite((byte[])[.. "<img srcset=\"https://cdn.test/a.png 1x\">"u8], registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -145,11 +151,14 @@ public class UrlBytesTests
     public async Task InlineStyleBlockRewritesUrls()
     {
         var (registry, filter) = MakeAllAccept();
-        const string Html = "<p>before url(https://cdn.test/before.png)</p>"
-                            + "<style>.x { background: url(https://cdn.test/a.png); }</style>"
-                            + "<p>after url(https://cdn.test/after.png)</p>";
+        byte[] html =
+        [
+            .. "<p>before url(https://cdn.test/before.png)</p>"u8,
+            .. "<style>.x { background: url(https://cdn.test/a.png); }</style>"u8,
+            .. "<p>after url(https://cdn.test/after.png)</p>"u8,
+        ];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(html, registry, filter));
 
         // Inside <style>: rewritten.
         await Assert.That(output).Contains("url(/local/");
@@ -165,9 +174,9 @@ public class UrlBytesTests
     public async Task StyleTagWithAttributesStillMatches()
     {
         var (registry, filter) = MakeAllAccept();
-        const string Html = "<style type=\"text/css\">.x { background: url(https://cdn.test/a.png); }</style>";
+        var htmlBytes = (byte[])[.. "<style type=\"text/css\">.x { background: url(https://cdn.test/a.png); }</style>"u8];
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(htmlBytes, registry, filter));
         await Assert.That(output).Contains("url(/local/");
     }
 
@@ -185,7 +194,7 @@ public class UrlBytesTests
         var html = $"<style>.x{{background:{bodyForm};}}</style>";
         var output =
             Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(html), registry, filter));
-        await Assert.That(output).Contains("/local/");
+        await Assert.That(output).Contains(LocalPathPrefix);
     }
 
     /// <summary>Substring <c>blurb(</c> doesn't match <c>url(</c> — the byte scanner advances correctly when the candidate fails.</summary>
@@ -196,7 +205,7 @@ public class UrlBytesTests
         var (registry, filter) = MakeAllAccept();
         const string Html = "<style>.x { background: blurb(https://cdn.test/a.png); }</style>";
         var output =
-            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(Html), registry, filter));
+            Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite((byte[])[.. "<style>.x { background: blurb(https://cdn.test/a.png); }</style>"u8], registry, filter));
         await Assert.That(output).IsEqualTo(Html);
     }
 
@@ -207,10 +216,13 @@ public class UrlBytesTests
     {
         HostFilter filter = new(null, PrivacyTestHelpers.Utf8("cdn.test"));
         ConcurrentDictionary<byte[], byte> auditSet = new(ByteArrayComparer.Instance);
-        const string Html = "<img src=\"https://cdn.test/a.png\">"
-                            + "<img srcset=\"https://cdn.test/b.png 2x\">"
-                            + "<style>.x { background: url(https://cdn.test/c.png); }</style>";
-        ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Html), filter, auditSet);
+        byte[] html =
+        [
+            .. ImageMarkup,
+            .. "<img srcset=\"https://cdn.test/b.png 2x\">"u8,
+            .. "<style>.x { background: url(https://cdn.test/c.png); }</style>"u8,
+        ];
+        ExternalUrlScanner.Audit(html, filter, auditSet);
         await Assert.That(auditSet.ContainsKey([.. "https://cdn.test/a.png"u8])).IsTrue();
         await Assert.That(auditSet.ContainsKey([.. "https://cdn.test/b.png"u8])).IsTrue();
         await Assert.That(auditSet.ContainsKey([.. "https://cdn.test/c.png"u8])).IsTrue();
@@ -223,8 +235,8 @@ public class UrlBytesTests
     {
         HostFilter filter = new(null, PrivacyTestHelpers.Utf8("only.test"));
         ConcurrentDictionary<byte[], byte> auditSet = new(ByteArrayComparer.Instance);
-        const string Html = "<img src=\"https://cdn.test/a.png\">";
-        ExternalUrlScanner.Audit(Encoding.UTF8.GetBytes(Html), filter, auditSet);
+        var htmlBytes = (byte[])[.. ImageMarkup];
+        ExternalUrlScanner.Audit(htmlBytes, filter, auditSet);
         await Assert.That(auditSet).IsEmpty();
     }
 

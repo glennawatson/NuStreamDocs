@@ -7,6 +7,12 @@ namespace NuStreamDocs.Sitemap.Tests;
 /// <summary>Behavior tests for <c>RedirectsPlugin</c> covering config file + frontmatter alias paths.</summary>
 public class RedirectsPluginTests
 {
+    /// <summary>Source URL shared by the redirect fixtures.</summary>
+    private const string AliasFileName = "old.html";
+
+    /// <summary>Markdown source filename used by frontmatter fixtures.</summary>
+    private const string PageFileName = "page.md";
+
     /// <summary>A redirects.yml file is loaded and merged into the redirect map.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -22,7 +28,7 @@ public class RedirectsPluginTests
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(output.Root, AliasFileName))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(output.Root, "legacy", "page.html"))).IsTrue();
     }
 
@@ -33,7 +39,7 @@ public class RedirectsPluginTests
     {
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
-        Directory.CreateDirectory(Path.Combine(input.Root, "guide"));
+        _ = Directory.CreateDirectory(Path.Combine(input.Root, "guide"));
         await File.WriteAllTextAsync(
             Path.Combine(input.Root, "guide", "intro.md"),
             "---\naliases:\n  - old/page\n  - really/old\n---\nbody");
@@ -54,14 +60,14 @@ public class RedirectsPluginTests
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
         await File.WriteAllTextAsync(
-            Path.Combine(input.Root, "page.md"),
+            Path.Combine(input.Root, PageFileName),
             "---\naliases: [\"old.html\", \"prev.html\"]\n---\nbody");
 
         RedirectsPlugin plugin = new();
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(output.Root, AliasFileName))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(output.Root, "prev.html"))).IsTrue();
     }
 
@@ -72,7 +78,7 @@ public class RedirectsPluginTests
     {
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
-        await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "---\naliases:\n  - section/\n---\nbody");
+        await File.WriteAllTextAsync(Path.Combine(input.Root, PageFileName), "---\naliases:\n  - section/\n---\nbody");
 
         RedirectsPlugin plugin = new();
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
@@ -88,7 +94,7 @@ public class RedirectsPluginTests
     {
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
-        await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "---\naliases:\n  - skipped.html\n---\nbody");
+        await File.WriteAllTextAsync(Path.Combine(input.Root, PageFileName), "---\naliases:\n  - skipped.html\n---\nbody");
 
         var options = RedirectsOptions.Default with { ScanFrontmatterAliases = false, LoadConfigFile = false };
         RedirectsPlugin plugin = new(options, []);
@@ -107,11 +113,11 @@ public class RedirectsPluginTests
         using RedirectsTempDir output = new();
         await File.WriteAllTextAsync(Path.Combine(input.Root, "loses.md"), "---\naliases:\n  - old.html\n---\nbody");
 
-        RedirectsPlugin plugin = new(("old.html", "/wins.html"));
+        RedirectsPlugin plugin = new((AliasFileName, "/wins.html"));
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
-        var html = await File.ReadAllTextAsync(Path.Combine(output.Root, "old.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(output.Root, AliasFileName));
         await Assert.That(html).Contains("/wins.html");
     }
 
@@ -122,7 +128,7 @@ public class RedirectsPluginTests
     {
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
-        await File.WriteAllTextAsync(Path.Combine(input.Root, "page.md"), "just body");
+        await File.WriteAllTextAsync(Path.Combine(input.Root, PageFileName), "just body");
 
         RedirectsPlugin plugin = new();
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
@@ -180,7 +186,7 @@ public class RedirectsPluginTests
         await plugin.DiscoverAsync(new(input.Root, output.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(output.Root, []), CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(output.Root, "old.html"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(output.Root, AliasFileName))).IsFalse();
     }
 
     /// <summary>An alias with no extension picks up <c>.html</c>; one already ending <c>.html</c> is left intact.</summary>
@@ -191,7 +197,7 @@ public class RedirectsPluginTests
         using RedirectsTempDir input = new();
         using RedirectsTempDir output = new();
         await File.WriteAllTextAsync(
-            Path.Combine(input.Root, "page.md"),
+            Path.Combine(input.Root, PageFileName),
             "---\naliases: [bare, already.html, with-ext.HTML]\n---\nbody");
 
         RedirectsPlugin plugin = new();
@@ -227,8 +233,8 @@ public class RedirectsPluginTests
         /// <summary>Initializes a new instance of the <see cref="RedirectsTempDir"/> class.</summary>
         public RedirectsTempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-rd-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-rd-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch directory.</summary>

@@ -64,8 +64,7 @@ public class UseDirectoryUrlsTests
     [Test]
     public async Task LinkRewriterFlatRewritesMdToHtml()
     {
-        var html = "<a href=\"about.md\">about</a>"u8;
-        var rewritten = MarkdownLinkRewriter.Rewrite(html, false);
+        var rewritten = MarkdownLinkRewriter.Rewrite("<a href=\"about.md\">about</a>"u8, false);
         await Assert.That(Encoding.UTF8.GetString(rewritten)).IsEqualTo("<a href=\"about.html\">about</a>");
     }
 
@@ -74,8 +73,7 @@ public class UseDirectoryUrlsTests
     [Test]
     public async Task LinkRewriterDirectoryAppendsSlash()
     {
-        var html = "<a href=\"about.md\">about</a>"u8;
-        var rewritten = MarkdownLinkRewriter.Rewrite(html, true);
+        var rewritten = MarkdownLinkRewriter.Rewrite("<a href=\"about.md\">about</a>"u8, true);
         await Assert.That(Encoding.UTF8.GetString(rewritten)).IsEqualTo("<a href=\"about/\">about</a>");
     }
 
@@ -84,8 +82,7 @@ public class UseDirectoryUrlsTests
     [Test]
     public async Task LinkRewriterDirectoryCollapsesIndexMd()
     {
-        var html = "<a href=\"guide/index.md\">guide</a>"u8;
-        var rewritten = MarkdownLinkRewriter.Rewrite(html, true);
+        var rewritten = MarkdownLinkRewriter.Rewrite("<a href=\"guide/index.md\">guide</a>"u8, true);
         await Assert.That(Encoding.UTF8.GetString(rewritten)).IsEqualTo("<a href=\"guide/\">guide</a>");
     }
 
@@ -94,8 +91,7 @@ public class UseDirectoryUrlsTests
     [Test]
     public async Task LinkRewriterDirectoryCollapsesBareIndexMd()
     {
-        var html = "<a href=\"index.md\">home</a>"u8;
-        var rewritten = MarkdownLinkRewriter.Rewrite(html, true);
+        var rewritten = MarkdownLinkRewriter.Rewrite("<a href=\"index.md\">home</a>"u8, true);
         await Assert.That(Encoding.UTF8.GetString(rewritten)).IsEqualTo("<a href=\"\">home</a>");
     }
 
@@ -134,8 +130,7 @@ public class UseDirectoryUrlsTests
     [Test]
     public async Task LinkRewriterDirectoryIndexWithAnchor()
     {
-        var html = "<a href=\"index.md#top\">top</a>"u8;
-        var rewritten = MarkdownLinkRewriter.Rewrite(html, true);
+        var rewritten = MarkdownLinkRewriter.Rewrite("<a href=\"index.md#top\">top</a>"u8, true);
         await Assert.That(Encoding.UTF8.GetString(rewritten)).IsEqualTo("<a href=\"#top\">top</a>");
     }
 
@@ -146,7 +141,7 @@ public class UseDirectoryUrlsTests
     {
         DocBuilder builder = new();
         await Assert.That(builder.UseDirectoryUrlsEnabled).IsFalse();
-        builder.UseDirectoryUrls();
+        _ = builder.UseDirectoryUrls();
         await Assert.That(builder.UseDirectoryUrlsEnabled).IsTrue();
     }
 

@@ -8,13 +8,11 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Csp;
 
 /// <summary>Injects a per-page <c>&lt;meta http-equiv="Content-Security-Policy"&gt;</c> into the head, hashing each page's inline scripts (and, optionally, styles) into the policy.</summary>
+[System.Diagnostics.DebuggerDisplay("CspPlugin: {Name}")]
 public sealed class CspPlugin : IPagePostRenderPlugin
 {
     /// <summary>Tiebreak putting this after the privacy plugin's external-asset rewrite, so the policy needn't allow rewritten-away origins.</summary>
     private const int PostRenderTiebreak = 100;
-
-    /// <summary>The closing-head marker the <c>&lt;meta&gt;</c> is spliced in front of.</summary>
-    private static readonly byte[] HeadClose = [.. "</head>"u8];
 
     /// <summary>Plugin options.</summary>
     private readonly CspOptions _options;
@@ -34,6 +32,9 @@ public sealed class CspPlugin : IPagePostRenderPlugin
 
     /// <inheritdoc/>
     public PluginPriority PostRenderPriority => new(PluginBand.Latest, PostRenderTiebreak);
+
+    /// <summary>Gets the closing-head marker the <c>&lt;meta&gt;</c> is spliced in front of.</summary>
+    private static ReadOnlySpan<byte> HeadClose => "</head>"u8;
 
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => _options.Enabled && html.IndexOf(HeadClose) >= 0;

@@ -33,20 +33,21 @@ internal static class SqliteAssets
 
     /// <summary>Gets the bytes of the sql.js-httpvfs UMD loader bundle.</summary>
     /// <returns>Bytes of <c>sql.js-httpvfs.js</c>.</returns>
-    public static byte[] LoaderBytes() => _loader ??= ReadEmbeddedResource(LoaderResourceName);
+    internal static byte[] LoaderBytes() => _loader ??= ReadEmbeddedResource(LoaderResourceName);
 
     /// <summary>Gets the bytes of the sql.js-httpvfs Web Worker bundle.</summary>
     /// <returns>Bytes of <c>sqlite.worker.js</c>.</returns>
-    public static byte[] WorkerBytes() => _worker ??= ReadEmbeddedResource(WorkerResourceName);
+    internal static byte[] WorkerBytes() => _worker ??= ReadEmbeddedResource(WorkerResourceName);
 
     /// <summary>Gets the bytes of the sql.js WebAssembly binary.</summary>
     /// <returns>Bytes of <c>sql-wasm.wasm</c>.</returns>
-    public static byte[] WasmBytes() => _wasm ??= ReadEmbeddedResource(WasmResourceName);
+    internal static byte[] WasmBytes() => _wasm ??= ReadEmbeddedResource(WasmResourceName);
 
     /// <summary>Reads <paramref name="name"/> from this assembly's manifest resources.</summary>
     /// <param name="name">Embedded-resource identifier.</param>
     /// <returns>Resource bytes.</returns>
-    private static byte[] ReadEmbeddedResource(string name)
+    /// <exception cref="InvalidOperationException">The requested resource is missing from the assembly.</exception>
+    private static byte[] ReadEmbeddedResource(ApiCompatString name)
     {
         var asm = typeof(SqliteAssets).Assembly;
         using var stream = asm.GetManifestResourceStream(name)

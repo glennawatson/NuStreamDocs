@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Markdown.Common;
@@ -20,6 +21,12 @@ public static class LinkReferenceRewriter
 
     /// <summary>Length of the <c>]:</c> separator between a definition's label and its href.</summary>
     private const int LabelTerminatorLength = 2;
+
+    /// <summary>Maximum indentation before a reference definition.</summary>
+    private const int MaxDefinitionIndent = 3;
+
+    /// <summary>Maximum label length stored on the stack.</summary>
+    private const int MaxStackLabelLength = 256;
 
     /// <summary>Skips the rewrite when the input has no chance of containing a definition line.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
@@ -289,7 +296,7 @@ public static class LinkReferenceRewriter
         }
 
         var key = NormalizeLabel(trimmed);
-        return definitions.TryGetValue(key, out def!);
+        return definitions.TryGetValue(key, out def);
     }
 
     /// <summary>Walks <paramref name="source"/> once, building the definition map.</summary>
@@ -297,7 +304,7 @@ public static class LinkReferenceRewriter
     /// <returns>Map keyed on the case-folded label.</returns>
     private static Dictionary<string, Definition> CollectDefinitions(ReadOnlySpan<byte> source)
     {
-        Dictionary<string, Definition> map = new(StringComparer.Ordinal);
+        Dictionary<string, Definition> map = [with(StringComparer.Ordinal)];
         var pos = 0;
         while (pos < source.Length)
         {
@@ -311,7 +318,7 @@ public static class LinkReferenceRewriter
             var lineEnd = Utf8LineSpan.LfLineEnd(source, pos);
             if (TryParseDefinitionLine(source, pos, lineEnd, out var def))
             {
-                map.TryAdd(def.Key, new(def.Href.ToArray()));
+                _ = map.TryAdd(def.Key, new(def.Href.ToArray()));
             }
 
             pos = lineEnd;
@@ -363,7 +370,7 @@ public static class LinkReferenceRewriter
     {
         label = default;
         afterColon = 0;
-        var p = SkipIndent(source, lineStart, lineEnd, 3);
+        var p = SkipIndent(source, lineStart, lineEnd, MaxDefinitionIndent);
         if (p >= lineEnd || source[p] is not (byte)'[')
         {
             return false;
@@ -491,11 +498,9 @@ public static class LinkReferenceRewriter
     private static int SkipIndent(ReadOnlySpan<byte> source, int lineStart, int lineEnd, int maxIndent)
     {
         var p = lineStart;
-        var consumed = 0;
-        while (p < lineEnd && consumed < maxIndent && source[p] is (byte)' ')
+        for (var consumed = 0; p < lineEnd && consumed < maxIndent && source[p] is (byte)' '; consumed++)
         {
             p++;
-            consumed++;
         }
 
         return p;
@@ -520,6 +525,7 @@ public static class LinkReferenceRewriter
     /// <param name="source">UTF-8 source.</param>
     /// <param name="openIndex">Index of the opening bracket.</param>
     /// <returns>Index of the close, or <c>-1</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FindMatchingBracket(ReadOnlySpan<byte> source, int openIndex) =>
         FindMatchingBracketOnLine(source, openIndex, source.Length);
 
@@ -571,7 +577,7 @@ public static class LinkReferenceRewriter
     /// <returns>Normalised string key.</returns>
     private static string NormalizeLabel(ReadOnlySpan<byte> label)
     {
-        Span<char> buf = stackalloc char[label.Length];
+        Span<char> buf = label.Length <= MaxStackLabelLength ? stackalloc char[label.Length] : new char[label.Length];
         var written = 0;
         var prevSpace = false;
         for (var i = 0; i < label.Length; i++)
@@ -584,7 +590,8 @@ public static class LinkReferenceRewriter
             }
 
             prevSpace = false;
-            buf[written++] = AsciiByteHelpers.ToAsciiLowerChar(b);
+            buf[written] = AsciiByteHelpers.ToAsciiLowerChar(b);
+            written++;
         }
 
         if (written > 0 && buf[written - 1] is ' ')
@@ -606,7 +613,8 @@ public static class LinkReferenceRewriter
             return;
         }
 
-        buf[written++] = ' ';
+        buf[written] = ' ';
+        written++;
         prevSpace = true;
     }
 

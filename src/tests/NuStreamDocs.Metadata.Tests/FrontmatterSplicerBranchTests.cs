@@ -10,6 +10,9 @@ namespace NuStreamDocs.Metadata.Tests;
 /// <summary>Branch-coverage edge cases for FrontmatterSplicer.</summary>
 public class FrontmatterSplicerBranchTests
 {
+    /// <summary>Heading preserved when frontmatter is inserted.</summary>
+    private const string BodyHeading = "# body";
+
     /// <summary>Empty extra makes Splice a passthrough.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -17,7 +20,7 @@ public class FrontmatterSplicerBranchTests
     {
         ArrayBufferWriter<byte> sink = new();
         FrontmatterSplicer.Splice("# body"u8, [], sink);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("# body");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(BodyHeading);
     }
 
     /// <summary>Body with no frontmatter wraps the inherited keys with <c>---</c> fences.</summary>
@@ -29,7 +32,7 @@ public class FrontmatterSplicerBranchTests
         FrontmatterSplicer.Splice("# body\n"u8, "title: A\n"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(output).StartsWith("---\ntitle: A\n---\n");
-        await Assert.That(output).Contains("# body");
+        await Assert.That(output).Contains(BodyHeading);
     }
 
     /// <summary>Inherited extra without trailing newline still emits a newline before the closing fence.</summary>

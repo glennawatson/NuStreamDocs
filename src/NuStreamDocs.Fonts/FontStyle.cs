@@ -7,9 +7,9 @@ namespace NuStreamDocs.Fonts;
 /// <summary>Font style of a single face.</summary>
 public enum FontStyle
 {
-    /// <summary>Upright.</summary>
-    Normal,
+    /// <summary>Upright font style.</summary>
+    Normal = 0,
 
     /// <summary>Italic (or oblique).</summary>
-    Italic
+    Italic = 1,
 }

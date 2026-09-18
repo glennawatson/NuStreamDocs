@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
@@ -35,22 +36,16 @@ internal static class IniFamilyRules
     /// <summary>Builds a single-state INI-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateLexer(in IniFamilyConfig config) =>
+    internal static Lexer CreateLexer(in IniFamilyConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
     /// <summary>Builds the canonical INI-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
-    public static LexerRule[] Build(in IniFamilyConfig config)
+    internal static LexerRule[] Build(in IniFamilyConfig config)
     {
         const int MaxRuleSlots = 12;
-        var rules = new List<LexerRule>(MaxRuleSlots)
-        {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            }
-        };
+        var rules = new List<LexerRule>(MaxRuleSlots) { new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, }, };
 
         // Comment to end-of-line. Configured first-byte set selects which prefixes are valid.
         var commentFirst = config.CommentFirst;
@@ -63,19 +58,11 @@ internal static class IniFamilyRules
         // [[double bracket]] — TOML-only, must precede the single-bracket rule.
         if (config.RecognizeDoubleBracketHeader)
         {
-            rules.Add(new(MatchDoubleBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange)
-            {
-                FirstBytes = BracketFirst,
-                RequiresLineStart = true
-            });
+            rules.Add(new(MatchDoubleBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange) { FirstBytes = BracketFirst, RequiresLineStart = true, });
         }
 
         // [section] header.
-        rules.Add(new(MatchBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange)
-        {
-            FirstBytes = BracketFirst,
-            RequiresLineStart = true
-        });
+        rules.Add(new(MatchBracketHeader, TokenClass.NameClass, LexerRule.NoStateChange) { FirstBytes = BracketFirst, RequiresLineStart = true, });
 
         // Key followed by separator — emit key as NameAttribute; the separator + value follow as their own tokens.
         var separatorFirst = config.SeparatorFirst;
@@ -117,21 +104,12 @@ internal static class IniFamilyRules
 
         if (config.RecognizeNumericLiterals)
         {
-            rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
-            {
-                FirstBytes = TokenMatchers.AsciiDigits
-            });
-            rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
-            {
-                FirstBytes = TokenMatchers.AsciiDigits
-            });
+            rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
+            rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
         }
 
         // Bare identifier on the value side (TOML enums, INI references) — falls through after constants.
-        rules.Add(new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiIdentifierStart
-        });
+        rules.Add(new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, });
 
         return [.. rules];
     }
@@ -140,19 +118,12 @@ internal static class IniFamilyRules
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="prefixSet">Allowed comment-introducer bytes.</param>
     /// <returns>Length matched, or zero.</returns>
-    private static int MatchCommentByPrefix(ReadOnlySpan<byte> slice, SearchValues<byte> prefixSet)
-    {
-        if (slice is [] || !prefixSet.Contains(slice[0]))
-        {
-            return 0;
-        }
-
-        return TokenMatchers.LineLength(slice);
-    }
+    private static int MatchCommentByPrefix(ReadOnlySpan<byte> slice, SearchValues<byte> prefixSet) => slice is [] || !prefixSet.Contains(slice[0]) ? 0 : TokenMatchers.LineLength(slice);
 
     /// <summary>Matches a single-bracket section header — <c>[name]</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchBracketHeader(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchBracketedBlock(slice, (byte)'[', (byte)']');
 

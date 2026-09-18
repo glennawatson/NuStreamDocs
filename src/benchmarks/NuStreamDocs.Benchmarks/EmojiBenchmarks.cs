@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Emoji;
 
@@ -14,6 +15,7 @@ namespace NuStreamDocs.Benchmarks;
 /// with a <c>ReadOnlySpan&lt;byte&gt;</c> alternate lookup. The hit / miss split pins both the
 /// successful-resolve path and the fall-through that <c>:not_an_emoji:</c> tokens take.
 /// </summary>
+[DebuggerDisplay("EmojiBenchmarks: writer={_writer}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class EmojiBenchmarks

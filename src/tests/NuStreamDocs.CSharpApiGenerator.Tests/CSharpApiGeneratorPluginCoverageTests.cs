@@ -16,6 +16,9 @@ namespace NuStreamDocs.CSharpApiGenerator.Tests;
 /// <summary>Coverage for CSharpApiGeneratorPlugin Name + DiscoverAsync, FromSource, CustomInput, builder extensions.</summary>
 public class CSharpApiGeneratorPluginCoverageTests
 {
+    /// <summary>Index Order used by the test cases.</summary>
+    private const int IndexOrder = 3;
+
     /// <summary>Name returns the registered string.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -66,7 +69,7 @@ public class CSharpApiGeneratorPluginCoverageTests
         CSharpApiGeneratorPlugin plugin = new(CSharpApiGeneratorOptions.FromSource(new EmptySource()) with
         {
             IndexTitle = [.. "ReactiveUI API"u8],
-            IndexOrder = 3
+            IndexOrder = IndexOrder
         });
         BuildDiscoverContext ctx = new((DirectoryPath)"/tmp", (DirectoryPath)"/out", [], new());
 
@@ -83,7 +86,7 @@ public class CSharpApiGeneratorPluginCoverageTests
         var entry = plugin.SyntheticNavEntries[0];
         await Assert.That(entry.RelativePath.Value).IsEqualTo("api/index.md");
         await Assert.That(Encoding.UTF8.GetString(entry.Title!)).IsEqualTo("ReactiveUI API");
-        await Assert.That(entry.Order).IsEqualTo(3);
+        await Assert.That(entry.Order).IsEqualTo(IndexOrder);
         await Assert.That(entry.Hidden).IsFalse();
     }
 
@@ -137,6 +140,7 @@ public class CSharpApiGeneratorPluginCoverageTests
     private sealed class EmptySource : IAssemblySource
     {
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
         /// <inheritdoc/>

@@ -17,7 +17,7 @@ public class KeysPluginTests
     [Test]
     public async Task PreRenderWrapsKeys()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new();
         PagePreRenderContext ctx = new("p.md", "press ++ctrl+c++"u8, sink);
         new KeysPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("<kbd");

@@ -13,14 +13,14 @@ internal static class ExternalLinkPolisher
     /// <summary>Returns true when <paramref name="html"/> may contain anchors or http URLs we'd touch.</summary>
     /// <param name="html">Page HTML.</param>
     /// <returns>True when the cheap pre-filter matches.</returns>
-    public static bool MayHaveExternalLinks(ReadOnlySpan<byte> html) =>
+    internal static bool MayHaveExternalLinks(ReadOnlySpan<byte> html) =>
         html.IndexOf("href"u8) >= 0 || html.IndexOf("http://"u8) >= 0;
 
     /// <summary>Polishes <paramref name="html"/> per <paramref name="options"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="options">Plugin options; only the link/mixed-content fields are read.</param>
     /// <returns>Rewritten HTML, or the original bytes when nothing changed.</returns>
-    public static byte[] Polish(ReadOnlySpan<byte> html, in PrivacyOptions options)
+    internal static byte[] Polish(ReadOnlySpan<byte> html, in PrivacyOptions options)
     {
         if (!options.AddRelNoOpener && !options.AddTargetBlank && !options.UpgradeMixedContent)
         {

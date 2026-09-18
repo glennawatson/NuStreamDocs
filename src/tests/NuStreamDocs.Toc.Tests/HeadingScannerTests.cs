@@ -9,17 +9,24 @@ namespace NuStreamDocs.Toc.Tests;
 /// <summary>Tests for <c>HeadingScanner</c>.</summary>
 public class HeadingScannerTests
 {
+    /// <summary>HTML second-level heading number.</summary>
+    private const int SectionLevel = 2;
+
+    /// <summary>HTML third-level heading number.</summary>
+    private const int SubsectionLevel = 3;
+
     /// <summary>Scanner finds h1/h2/h3 in order.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task FindsAllStandardHeadings()
     {
+        const int headingCount = 3;
         byte[] html = [.. "<h1>One</h1><p>x</p><h2>Two</h2><h3>Three</h3>"u8];
         var headings = HeadingScanner.Scan(html);
-        await Assert.That(headings.Length).IsEqualTo(3);
+        await Assert.That(headings.Length).IsEqualTo(headingCount);
         await Assert.That(headings[0].Level).IsEqualTo(1);
-        await Assert.That(headings[1].Level).IsEqualTo(2);
-        await Assert.That(headings[2].Level).IsEqualTo(3);
+        await Assert.That(headings[1].Level).IsEqualTo(SectionLevel);
+        await Assert.That(headings[2].Level).IsEqualTo(SubsectionLevel);
     }
 
     /// <summary>Non-heading tags are ignored.</summary>
@@ -52,7 +59,7 @@ public class HeadingScannerTests
         byte[] html = [.. "<h7>too deep</h7><h2>ok</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        await Assert.That(headings[0].Level).IsEqualTo(2);
+        await Assert.That(headings[0].Level).IsEqualTo(SectionLevel);
     }
 
     /// <summary>DecodeTextInto streams the stripped text bytes without UTF-16 transcoding.</summary>
@@ -60,9 +67,10 @@ public class HeadingScannerTests
     [Test]
     public async Task DecodeTextIntoEmitsBytes()
     {
+        const int outputCapacity = 32;
         byte[] html = [.. "<h2>Hello <code>World</code></h2>"u8];
         var headings = HeadingScanner.Scan(html);
-        ArrayBufferWriter<byte> sink = new(32);
+        ArrayBufferWriter<byte> sink = new(outputCapacity);
         HeadingScanner.DecodeTextInto(html, in headings[0], sink);
         await Assert.That(sink.WrittenSpan.SequenceEqual("Hello World"u8)).IsTrue();
     }
@@ -78,7 +86,7 @@ public class HeadingScannerTests
         ];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        await Assert.That(headings[0].Level).IsEqualTo(2);
+        await Assert.That(headings[0].Level).IsEqualTo(SectionLevel);
     }
 
     /// <summary>Anchor with attributes (<c>&lt;a href="…"&gt;</c>) still suppresses an enclosed heading.</summary>
@@ -99,6 +107,6 @@ public class HeadingScannerTests
         byte[] html = [.. "<a href=\"x/\">Link</a><h3>After</h3>"u8];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        await Assert.That(headings[0].Level).IsEqualTo(3);
+        await Assert.That(headings[0].Level).IsEqualTo(SubsectionLevel);
     }
 }

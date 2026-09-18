@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList;
@@ -11,6 +12,7 @@ namespace NuStreamDocs.MarkdownExtensions.AttrList;
 /// attributes on the enclosing block element. Covers <c>h1-h6</c>, <c>p</c>, <c>li</c>,
 /// <c>td</c>, <c>th</c>, <c>dd</c>, <c>dt</c>, <c>blockquote</c>.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("AttrListPlugin: {Name}")]
 public sealed class AttrListPlugin : IPagePostRenderPlugin
 {
     /// <inheritdoc/>
@@ -20,9 +22,11 @@ public sealed class AttrListPlugin : IPagePostRenderPlugin
     public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => AttrListRewriter.NeedsRewrite(html);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PostRender(in PagePostRenderContext context) =>
         AttrListRewriter.RewriteInto(context.Html, context.Output);
 }

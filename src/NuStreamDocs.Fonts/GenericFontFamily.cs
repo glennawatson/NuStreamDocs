@@ -8,11 +8,11 @@ namespace NuStreamDocs.Fonts;
 public enum GenericFontFamily
 {
     /// <summary><c>sans-serif</c>; reference font Arial.</summary>
-    SansSerif,
+    SansSerif = 0,
 
     /// <summary><c>serif</c>; reference font Times New Roman.</summary>
-    Serif,
+    Serif = 1,
 
     /// <summary><c>monospace</c>; reference font Courier New.</summary>
-    Monospace
+    Monospace = 2,
 }

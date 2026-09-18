@@ -15,8 +15,12 @@ namespace NuStreamDocs.ContentLoader.GitHub;
 /// mounts them under a local route prefix — for example, conceptual docs that live in <c>docs/</c> in
 /// the product repo. Uses the GitHub REST API; supply a token for private repos or higher rate limits.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("GitHubContentLoader: {Name}")]
 public sealed class GitHubContentLoader : IContentLoader
 {
+    /// <summary>HTTP transport for requests without a caller-supplied client.</summary>
+    private static readonly HttpClient SharedClient = new(new SocketsHttpHandler { UseCookies = false });
+
     /// <summary>The repository point to read from.</summary>
     private readonly GitHubRepoRef _repo;
 
@@ -29,7 +33,7 @@ public sealed class GitHubContentLoader : IContentLoader
     /// <summary>Personal access token; empty for unauthenticated requests.</summary>
     private readonly byte[] _token;
 
-    /// <summary>HTTP client factory; null means the loader owns a short-lived client.</summary>
+    /// <summary>Optional factory for caller-owned HTTP clients.</summary>
     private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger for diagnostics.</summary>
@@ -65,8 +69,9 @@ public sealed class GitHubContentLoader : IContentLoader
     /// <param name="sourcePath">Repository subdirectory to include.</param>
     /// <param name="routePrefix">Local subdirectory the files are mounted under.</param>
     /// <param name="token">Personal access token; empty for unauthenticated requests.</param>
-    /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
+    /// <param name="httpClientFactory">Factory producing a caller-owned HTTP client; null uses a shared client without cookies.</param>
     /// <param name="logger">Logger for diagnostics.</param>
+    /// <exception cref="ArgumentException">The repository owner, name, or reference is empty.</exception>
     public GitHubContentLoader(
         GitHubRepoRef repo,
         PathSegment sourcePath,
@@ -98,7 +103,7 @@ public sealed class GitHubContentLoader : IContentLoader
     public async ValueTask<SyntheticPage[]> LoadAsync(ContentLoaderContext context, CancellationToken cancellationToken)
     {
         var headers = GitHubUrls.Headers(_token);
-        var treeJson = await FetchTreeAsync(headers, cancellationToken).ConfigureAwait(false);
+        var treeJson = await GetAsync(_httpClientFactory is null ? SharedClient : _httpClientFactory(), headers, cancellationToken).ConfigureAwait(false);
         var entries = GitHubTreeReader.Read(treeJson, in _repo, PrefixBytes(_sourcePath), PrefixBytes(_routePrefix));
         if (entries is [])
         {
@@ -115,28 +120,12 @@ public sealed class GitHubContentLoader : IContentLoader
     private static byte[] PrefixBytes(PathSegment segment) =>
         string.IsNullOrEmpty(segment.Value) ? [] : Encoding.UTF8.GetBytes(segment.Value);
 
-    /// <summary>Fetches the recursive git-tree JSON.</summary>
-    /// <param name="headers">Request headers.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>UTF-8 JSON bytes.</returns>
-    private async Task<byte[]> FetchTreeAsync(
-        (byte[] Name, byte[] Value)[] headers,
-        CancellationToken cancellationToken)
-    {
-        if (_httpClientFactory is not null)
-        {
-            return await GetAsync(_httpClientFactory(), headers, cancellationToken).ConfigureAwait(false);
-        }
-
-        using HttpClient owned = new();
-        return await GetAsync(owned, headers, cancellationToken).ConfigureAwait(false);
-    }
-
     /// <summary>Issues the tree-API GET with the supplied headers.</summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="headers">Request headers.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>UTF-8 response body.</returns>
+    /// <exception cref="ContentLoaderException">The GitHub tree request failed.</exception>
     private async Task<byte[]> GetAsync(
         HttpClient client,
         (byte[] Name, byte[] Value)[] headers,
@@ -147,7 +136,7 @@ public sealed class GitHubContentLoader : IContentLoader
         using HttpRequestMessage request = new(HttpMethod.Get, endpoint);
         for (var i = 0; i < headers.Length; i++)
         {
-            request.Headers.TryAddWithoutValidation(
+            _ = request.Headers.TryAddWithoutValidation(
                 Encoding.UTF8.GetString(headers[i].Name),
                 Encoding.UTF8.GetString(headers[i].Value));
         }
@@ -155,7 +144,7 @@ public sealed class GitHubContentLoader : IContentLoader
         try
         {
             using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            _ = response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)

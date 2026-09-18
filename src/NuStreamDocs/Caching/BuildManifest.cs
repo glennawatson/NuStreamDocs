@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -14,6 +15,7 @@ namespace NuStreamDocs.Caching;
 /// Collection of <see cref="ManifestEntry"/> records persisted between builds and consulted at the
 /// start of each build to skip unchanged pages. Stored as UTF-8 JSON under the output root.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("BuildManifest: {Count}")]
 public sealed class BuildManifest
 {
     /// <summary>Schema version emitted in the JSON document; bumped on breaking changes.</summary>
@@ -55,6 +57,7 @@ public sealed class BuildManifest
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ValueTask<BuildManifest> LoadAsync(
         in DirectoryPath outputRoot,
         in CancellationToken cancellationToken) =>
@@ -65,6 +68,7 @@ public sealed class BuildManifest
     /// <param name="buildFingerprint">Current pipeline fingerprint.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The loaded manifest, or an empty manifest on a fingerprint mismatch.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ValueTask<BuildManifest> LoadAsync(
         in DirectoryPath outputRoot,
         byte[] buildFingerprint,
@@ -76,6 +80,7 @@ public sealed class BuildManifest
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="logger">Optional logger; pass <see langword="null"/> to silence diagnostics.</param>
     /// <returns>The loaded manifest.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>outputRoot.IsEmpty</c>.</exception>
     public static async ValueTask<BuildManifest> LoadAsync(
         DirectoryPath outputRoot,
         CancellationToken cancellationToken,
@@ -129,6 +134,7 @@ public sealed class BuildManifest
     /// <param name="relativePath">Relative path key.</param>
     /// <param name="entry">Found entry on success.</param>
     /// <returns>True when an entry was found.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(in FilePath relativePath, out ManifestEntry entry) =>
         _entries.TryGetValue(relativePath, out entry);
 
@@ -148,6 +154,7 @@ public sealed class BuildManifest
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the file is written.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task SaveAsync(in DirectoryPath outputRoot, in CancellationToken cancellationToken) =>
         SaveAsync(outputRoot, cancellationToken, null);
 
@@ -156,6 +163,7 @@ public sealed class BuildManifest
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="logger">Optional logger; pass <see langword="null"/> to silence diagnostics.</param>
     /// <returns>A task that completes when the file is written.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>outputRoot.IsEmpty</c>.</exception>
     public async Task SaveAsync(DirectoryPath outputRoot, CancellationToken cancellationToken, ILogger? logger)
     {
         if (outputRoot.IsEmpty)
@@ -163,7 +171,7 @@ public sealed class BuildManifest
             throw new ArgumentException("Output root must be non-empty.", nameof(outputRoot));
         }
 
-        Directory.CreateDirectory(outputRoot);
+        _ = Directory.CreateDirectory(outputRoot);
 
         var log = logger ?? NullLogger.Instance;
         var path = Path.Combine(outputRoot, FileName);
@@ -198,9 +206,8 @@ public sealed class BuildManifest
     {
         Utf8JsonReader reader = new(utf8, true, default);
         using var doc = JsonDocument.ParseValue(ref reader);
-        var root = doc.RootElement;
 
-        if (!TryReadDocument(root, out var buildFingerprint, out var entries))
+        if (!TryReadDocument(doc.RootElement, out var buildFingerprint, out var entries))
         {
             return Empty();
         }
@@ -234,9 +241,9 @@ public sealed class BuildManifest
     {
         buildFingerprint = [];
         entries = default;
-        if (!root.TryGetProperty("schema"u8, out var schema) ||
-            schema.ValueKind != JsonValueKind.Number ||
-            schema.GetInt32() != SchemaVersion)
+        if (!root.TryGetProperty("schema"u8, out var schema)
+            || schema.ValueKind != JsonValueKind.Number
+            || schema.GetInt32() != SchemaVersion)
         {
             return false;
         }
@@ -281,10 +288,13 @@ public sealed class BuildManifest
         var iter = entries.EnumerateArray();
         while (iter.MoveNext())
         {
-            if (TryReadEntry(iter.Current, out var entry))
+            if (!TryReadEntry(iter.Current, out var entry))
             {
-                buffer[count++] = entry;
+                continue;
             }
+
+            buffer[count] = entry;
+            count++;
         }
 
         return count;
@@ -297,10 +307,10 @@ public sealed class BuildManifest
     private static bool TryReadEntry(in JsonElement item, out ManifestEntry entry)
     {
         entry = default;
-        if (item.ValueKind != JsonValueKind.Object ||
-            !item.TryGetProperty("path"u8, out var pathProp) ||
-            !item.TryGetProperty("hash"u8, out var hashProp) ||
-            !item.TryGetProperty("len"u8, out var lenProp))
+        if (item.ValueKind != JsonValueKind.Object
+            || !item.TryGetProperty("path"u8, out var pathProp)
+            || !item.TryGetProperty("hash"u8, out var hashProp)
+            || !item.TryGetProperty("len"u8, out var lenProp))
         {
             return false;
         }

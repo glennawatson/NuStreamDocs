@@ -54,7 +54,7 @@ public static class VLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = CFamilyShared.AnnotationColonPunctuation,
             IntegerSuffix = CFamilyRules.NoSuffix,
@@ -63,7 +63,7 @@ public static class VLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = true,
             WhitespaceIncludesNewlines = true,
-            SpecialString = null
+            SpecialString = null,
         };
 
         return CFamilyRules.CreateLexer(config);

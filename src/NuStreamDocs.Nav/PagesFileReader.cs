@@ -10,16 +10,19 @@ namespace NuStreamDocs.Nav;
 /// <summary>Reads a <c>.pages</c> YAML override (literate-nav, mkdocs-awesome-pages compatible subset).</summary>
 internal static class PagesFileReader
 {
+    /// <summary>Initial entry capacity.</summary>
+    private const int InitialEntryCapacity = 8;
+
     /// <summary>Reads a <c>.pages</c> file from <paramref name="path"/>; returns <see cref="PagesFile.Empty"/> when missing.</summary>
     /// <param name="path">Absolute path to the candidate <c>.pages</c> file.</param>
     /// <returns>Parsed override.</returns>
-    public static PagesFile ReadOrEmpty(in FilePath path) =>
+    internal static PagesFile ReadOrEmpty(in FilePath path) =>
         !path.Exists() ? PagesFile.Empty : Parse(path.ReadAllBytes());
 
     /// <summary>Parses <paramref name="source"/> into a <see cref="PagesFile"/>.</summary>
     /// <param name="source">UTF-8 file bytes.</param>
     /// <returns>Parsed override; defaults preserved when keys are absent.</returns>
-    public static PagesFile Parse(ReadOnlySpan<byte> source)
+    internal static PagesFile Parse(ReadOnlySpan<byte> source)
     {
         byte[] title = [];
         var hide = false;
@@ -32,9 +35,8 @@ internal static class PagesFileReader
             var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
             var line = source[cursor..lineEnd];
             var trimmed = YamlByteScanner.TrimLeading(line);
-            var indent = line.Length - trimmed.Length;
 
-            if (indent is 0 && !trimmed.IsEmpty)
+            if ((line.Length - trimmed.Length) is 0 && !trimmed.IsEmpty)
             {
                 if (trimmed.StartsWith("title:"u8))
                 {
@@ -75,7 +77,7 @@ internal static class PagesFileReader
     /// <returns>Entry list.</returns>
     private static PagesEntry[] ReadBlockList(ReadOnlySpan<byte> source, int cursor)
     {
-        List<PagesEntry> entries = new(8);
+        List<PagesEntry> entries = [with(InitialEntryCapacity)];
         while (cursor < source.Length)
         {
             var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);

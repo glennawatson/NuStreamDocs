@@ -3,26 +3,26 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
-/// <summary>
-/// Byte-level scanner for the block-level attr-list pattern —
-/// <c>&lt;tag&gt;prefix {: attrs } suffix&lt;/tag&gt;</c>.
-/// </summary>
+/// <summary>Byte-level scanner for the block-level attr-list pattern — <c>&lt;tag&gt;prefix {: attrs } suffix&lt;/tag&gt;</c>.</summary>
 internal static class BlockAttrListBytes
 {
     /// <summary>Walks <paramref name="html"/>, copying through verbatim, but rewriting every block element whose text content ends with a <c>{: ... }</c> token.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="sink">UTF-8 sink.</param>
     /// <returns>True when at least one element was rewritten.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink) =>
         AttrListRewriteLoop.RewriteInto<Strategy>(html, sink);
 
     /// <summary>Static dispatch strategy for the shared scan loop.</summary>
     private readonly record struct Strategy : IAttrListRewriteStrategy<Strategy>
     {
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryRewriteAt(
             ReadOnlySpan<byte> html,
             int lt,

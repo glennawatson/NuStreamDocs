@@ -12,6 +12,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>End-to-end tests exercising HtmlEmitter fenced-code paths.</summary>
 public class HtmlEmitterFencedCodeTests
 {
+    /// <summary>Maximum Heading Level used by the test cases.</summary>
+    private const int MaximumHeadingLevel = 6;
+
     /// <summary>Renders a fenced code block with a language tag.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -57,7 +60,7 @@ public class HtmlEmitterFencedCodeTests
     public async Task HeadingLevels()
     {
         var html = Render("# h1\n## h2\n### h3\n#### h4\n##### h5\n###### h6\n");
-        for (var i = 1; i <= 6; i++)
+        for (var i = 1; i <= MaximumHeadingLevel; i++)
         {
             await Assert.That(html).Contains($"<h{i}>");
         }
@@ -70,7 +73,7 @@ public class HtmlEmitterFencedCodeTests
     {
         var bytes = Encoding.UTF8.GetBytes(markdown);
         ArrayBufferWriter<BlockSpan> blockSink = new();
-        BlockScanner.Scan(bytes, blockSink);
+        _ = BlockScanner.Scan(bytes, blockSink);
         ArrayBufferWriter<byte> htmlSink = new();
         HtmlEmitter.Emit(bytes, blockSink.WrittenSpan, htmlSink);
         return Encoding.UTF8.GetString(htmlSink.WrittenSpan);

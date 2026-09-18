@@ -66,10 +66,7 @@ public static class MakefileLexer
     {
         WhitespaceFirst = WhitespaceFirst,
         LineComment =
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
         PostStringRules =
             [new(MatchVariableExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst }],
         IncludeDoubleQuotedString = true,
@@ -80,17 +77,14 @@ public static class MakefileLexer
         KeywordsRequireLineStart = true,
         ExtraRules =
         [
-            new(MatchDeclarationDirective, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
-            {
-                FirstBytes = KeywordDeclarationFirst, RequiresLineStart = true
-            }
+            new(MatchDeclarationDirective, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = KeywordDeclarationFirst, RequiresLineStart = true, }
         ],
         BuiltinKeywords = Builtins,
         BuiltinKeywordFirst = TokenMatchers.AsciiIdentifierStart,
         IdentifierContinue = IdentifierContinue,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches Makefile variable expansion forms — <c>$(VAR)</c>, <c>${VAR}</c>, <c>$@</c>, <c>$&lt;</c>, <c>$$</c> literal.</summary>
@@ -125,12 +119,7 @@ public static class MakefileLexer
         }
 
         // $@ / $< / $^ / $? automatic variables, or $X single-letter user variable.
-        if (AutomaticVariableBytes.Contains(slice[1]) || TokenMatchers.AsciiIdentifierStart.Contains(slice[1]))
-        {
-            return DollarPlusOne;
-        }
-
-        return 0;
+        return AutomaticVariableBytes.Contains(slice[1]) || TokenMatchers.AsciiIdentifierStart.Contains(slice[1]) ? DollarPlusOne : 0;
     }
 
     /// <summary>Matches a Makefile directive — either a bare keyword or the <c>-include</c> dash-prefixed form.</summary>

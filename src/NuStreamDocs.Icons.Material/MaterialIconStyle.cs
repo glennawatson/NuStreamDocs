@@ -4,20 +4,18 @@
 
 namespace NuStreamDocs.Icons.Material;
 
-/// <summary>
-/// Which Google Material icon family to load.
-/// </summary>
+/// <summary>Which Google Material icon family to load.</summary>
 public enum MaterialIconStyle
 {
     /// <summary>Classic Material Icons (filled), <c>&lt;i class="material-icons"&gt;face&lt;/i&gt;</c>.</summary>
     Classic = 0,
 
     /// <summary>Material Symbols Outlined (variable font).</summary>
-    SymbolsOutlined,
+    SymbolsOutlined = 1,
 
     /// <summary>Material Symbols Rounded (variable font).</summary>
-    SymbolsRounded,
+    SymbolsRounded = 2,
 
     /// <summary>Material Symbols Sharp (variable font).</summary>
-    SymbolsSharp
+    SymbolsSharp = 3,
 }

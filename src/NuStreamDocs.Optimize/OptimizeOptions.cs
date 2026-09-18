@@ -13,6 +13,7 @@ namespace NuStreamDocs.Optimize;
 /// <param name="Extensions">UTF-8 file-extension entries to compress (lowercase, leading dot, e.g. <c>.html</c>).</param>
 /// <param name="MinimumBytes">Skip compression when the source is smaller than this many bytes.</param>
 /// <param name="Parallelism">Maximum parallel compression workers.</param>
+[System.Diagnostics.DebuggerDisplay("OptimizeOptions: {ToString(),nq}")]
 public sealed record OptimizeOptions(
     OptimizeFormats Formats,
     CompressionLevel GzipLevel,

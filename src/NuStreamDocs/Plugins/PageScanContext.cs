@@ -7,6 +7,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>Per-page context handed to <see cref="IPageScanPlugin.Scan"/>; read-only view of the post-render HTML.</summary>
+[System.Diagnostics.DebuggerDisplay("PageScanContext: {RelativePath}")]
 public readonly ref struct PageScanContext
 {
     /// <summary>Initializes a new instance of the <see cref="PageScanContext"/> struct.</summary>

@@ -11,6 +11,9 @@ namespace NuStreamDocs.Templating.Tests;
 /// <summary>End-to-end tests for the UTF-8 Mustache-style <c>Template</c>.</summary>
 public class TemplateTests
 {
+    /// <summary>Scalar key read from each navigation item.</summary>
+    private const string TitleKey = "title";
+
     /// <summary>A literal-only template should round-trip its bytes verbatim.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -65,9 +68,9 @@ public class TemplateTests
     [Test]
     public async Task SectionIteratesEveryItem()
     {
-        var first = Build([("title", "A")], []);
-        var second = Build([("title", "B")], []);
-        var third = Build([("title", "C")], []);
+        var first = Build([(TitleKey, "A")], []);
+        var second = Build([(TitleKey, "B")], []);
+        var third = Build([(TitleKey, "C")], []);
         var data = Build([], [("nav", [first, second, third])]);
         var html = Render("<{{#nav}}{{title}}|{{/nav}}>"u8, data);
         await Assert.That(html).IsEqualTo("<A|B|C|>");
@@ -78,8 +81,8 @@ public class TemplateTests
     [Test]
     public async Task SectionInheritsOuterScopeScalars()
     {
-        var first = Build([("title", "A")], []);
-        var second = Build([("title", "B")], []);
+        var first = Build([(TitleKey, "A")], []);
+        var second = Build([(TitleKey, "B")], []);
         var data = Build([("brand", "Site")], [("nav", [first, second])]);
         var html = Render("{{#nav}}[{{brand}}/{{title}}]{{/nav}}"u8, data);
         await Assert.That(html).IsEqualTo("[Site/A][Site/B]");
@@ -91,7 +94,8 @@ public class TemplateTests
     public async Task PartialIsIncludedAndRendered()
     {
         var partial = Template.Compile("{{name}}!"u8);
-        Dictionary<string, Template> partials = new(StringComparer.Ordinal) { ["greeting"] = partial };
+        Dictionary<string, Template> partials = [with(StringComparer.Ordinal)];
+        partials["greeting"] = partial;
         var data = Build([("name", "world")], []);
         var html = RenderWithPartials("hi {{> greeting}}"u8, data, partials);
         await Assert.That(html).IsEqualTo("hi world!");
@@ -102,7 +106,7 @@ public class TemplateTests
     [Test]
     public async Task UnknownPartialRendersEmpty()
     {
-        Dictionary<string, Template> partials = new(StringComparer.Ordinal);
+        Dictionary<string, Template> partials = [with(StringComparer.Ordinal)];
         var html = RenderWithPartials("a{{> missing}}b"u8, TemplateData.Empty, partials);
         await Assert.That(html).IsEqualTo("ab");
     }
@@ -147,7 +151,7 @@ public class TemplateTests
     {
         var template = Template.Compile(source);
         ArrayBufferWriter<byte> writer = new();
-        Dictionary<byte[], Template> bytePartials = new(partials.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], Template> bytePartials = [with(partials.Count, ByteArrayComparer.Instance)];
         foreach (var pair in partials)
         {
             bytePartials[Encoding.UTF8.GetBytes(pair.Key)] = pair.Value;
@@ -177,13 +181,13 @@ public class TemplateTests
         (string Key, string Value)[] scalars,
         (string Key, TemplateData[] Items)[] sections)
     {
-        Dictionary<byte[], ReadOnlyMemory<byte>> s = new(scalars.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], ReadOnlyMemory<byte>> s = [with(scalars.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < scalars.Length; i++)
         {
             s[Encoding.UTF8.GetBytes(scalars[i].Key)] = Encoding.UTF8.GetBytes(scalars[i].Value);
         }
 
-        Dictionary<byte[], TemplateData[]> t = new(sections.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], TemplateData[]> t = [with(sections.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < sections.Length; i++)
         {
             t[Encoding.UTF8.GetBytes(sections[i].Key)] = sections[i].Items;

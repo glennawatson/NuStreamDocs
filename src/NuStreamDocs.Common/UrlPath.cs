@@ -2,10 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Common;
 
 /// <summary>Type-safe URL path wrapper (e.g. <c>/assets/stylesheets/highlight.css</c>, <c>https://example.com/foo/</c>). Pure string carrier; never resolves a base URL.</summary>
 /// <param name="Value">The underlying URL string. Forward slashes preserved; not normalized.</param>
+[System.Diagnostics.DebuggerDisplay("UrlPath: {IsEmpty}")]
 public readonly record struct UrlPath(string Value)
 {
     /// <summary>Gets a value indicating whether this URL is empty (uninitialized / placeholder).</summary>
@@ -33,25 +36,30 @@ public readonly record struct UrlPath(string Value)
     /// <summary>Friendly named alias for the string→<see cref="UrlPath"/> implicit operator (CA2225).</summary>
     /// <param name="value">Source URL string.</param>
     /// <returns>The wrapped URL.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UrlPath FromString(string? value) => value;
 
     /// <summary>Friendly named alias for the <see cref="UrlPath"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="url">Source URL.</param>
     /// <returns>The underlying URL string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToStringValue(in UrlPath url) => url;
 
     /// <summary>Friendly named alias for the <see cref="UrlPath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
     /// <param name="url">Source URL.</param>
     /// <returns>The underlying URL as a span.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ReadOnlySpan<char> ToReadOnlySpan(in UrlPath url) => url;
 
     /// <summary>Returns the underlying URL as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
     /// <returns>The URL span; empty when the wrapper is default.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> AsSpan() => Value.AsSpan();
 
     /// <summary>Returns true when this URL ends with <paramref name="value"/> ordinally.</summary>
     /// <param name="value">Suffix to test for.</param>
     /// <returns>True when the URL ends with <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool EndsWith(in ReadOnlySpan<char> value) =>
         AsSpan().EndsWith(value, StringComparison.Ordinal);
 
@@ -59,12 +67,14 @@ public readonly record struct UrlPath(string Value)
     /// <param name="value">Suffix to test for.</param>
     /// <param name="comparison">Comparison kind.</param>
     /// <returns>True when the URL ends with <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool EndsWith(in ReadOnlySpan<char> value, StringComparison comparison) =>
         AsSpan().EndsWith(value, comparison);
 
     /// <summary>Returns true when this URL starts with <paramref name="value"/> ordinally.</summary>
     /// <param name="value">Prefix to test for.</param>
     /// <returns>True when the URL starts with <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool StartsWith(in ReadOnlySpan<char> value) =>
         AsSpan().StartsWith(value, StringComparison.Ordinal);
 
@@ -72,6 +82,7 @@ public readonly record struct UrlPath(string Value)
     /// <param name="value">Prefix to test for.</param>
     /// <param name="comparison">Comparison kind.</param>
     /// <returns>True when the URL starts with <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool StartsWith(in ReadOnlySpan<char> value, StringComparison comparison) =>
         AsSpan().StartsWith(value, comparison);
 

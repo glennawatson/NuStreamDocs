@@ -9,17 +9,21 @@ namespace NuStreamDocs.Building;
 /// <summary>Bulk-registration helpers wrapping repeated <see cref="DocBuilder.UsePlugin(IPlugin)"/> calls.</summary>
 public static class DocBuilderBulkExtensions
 {
-    /// <summary>Registers every plugin in <paramref name="plugins"/>, in order.</summary>
-    /// <param name="builder">Doc builder.</param>
-    /// <param name="plugins">Plugins to register.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UsePlugins(this DocBuilder builder, params ReadOnlySpan<IPlugin> plugins)
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to configure.</param>
+    extension(DocBuilder builder)
     {
-        for (var i = 0; i < plugins.Length; i++)
+        /// <summary>Registers every plugin in <paramref name="plugins"/>, in order.</summary>
+        /// <param name="plugins">Plugins to register.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UsePlugins(params ReadOnlySpan<IPlugin> plugins)
         {
-            builder.UsePlugin(plugins[i]);
-        }
+            for (var i = 0; i < plugins.Length; i++)
+            {
+                _ = builder.UsePlugin(plugins[i]);
+            }
 
-        return builder;
+            return builder;
+        }
     }
 }

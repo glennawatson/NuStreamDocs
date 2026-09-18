@@ -12,10 +12,13 @@ internal static class LayoutScanner
     /// <summary>Length of a two-byte open / close marker (<c>{{</c>, <c>}}</c>, <c>{%</c>, <c>%}</c>).</summary>
     private const int MarkerLength = 2;
 
+    /// <summary>Gets the page property prefix bytes.</summary>
+    private static ReadOnlySpan<byte> PagePropertyPrefix => "page."u8;
+
     /// <summary>Scans <paramref name="template"/> and writes every token into <paramref name="output"/>.</summary>
     /// <param name="template">UTF-8 template bytes.</param>
     /// <param name="output">Destination list.</param>
-    public static void Scan(ReadOnlySpan<byte> template, List<LayoutToken> output)
+    internal static void Scan(ReadOnlySpan<byte> template, List<LayoutToken> output)
     {
         var cursor = 0;
         var literalStart = 0;
@@ -85,8 +88,7 @@ internal static class LayoutScanner
 
         if (TryStripPagePrefix(name, out var bare))
         {
-            var bareStart = nameEnd - bare.Length;
-            output.Add(new(LayoutTokenKind.Variable, open, end, bareStart, nameEnd));
+            output.Add(new(LayoutTokenKind.Variable, open, end, nameEnd - bare.Length, nameEnd));
             return end;
         }
 
@@ -156,12 +158,9 @@ internal static class LayoutScanner
             return new(LayoutTokenKind.Include, open, end, incS, incE);
         }
 
-        if (TryFindBlockName(template, body, trimStart, trimEnd, out var bnS, out var bnE))
-        {
-            return new(LayoutTokenKind.BlockOpen, open, end, bnS, bnE);
-        }
-
-        return new(LayoutTokenKind.Unsupported, open, end, bodyStart, bodyEnd);
+        return TryFindBlockName(template, body, trimStart, trimEnd, out var bnS, out var bnE)
+            ? new(LayoutTokenKind.BlockOpen, open, end, bnS, bnE)
+            : new(LayoutTokenKind.Unsupported, open, end, bodyStart, bodyEnd);
     }
 
     /// <summary>Tries to extract the unquoted target of a <c>{% keyword "target" %}</c> tag.</summary>
@@ -300,12 +299,12 @@ internal static class LayoutScanner
     private static bool TryStripPagePrefix(ReadOnlySpan<byte> span, out ReadOnlySpan<byte> bare)
     {
         bare = default;
-        if (!span.StartsWith("page."u8) || span.Length <= "page.".Length)
+        if (!span.StartsWith(PagePropertyPrefix) || span.Length <= PagePropertyPrefix.Length)
         {
             return false;
         }
 
-        var rest = span["page.".Length..];
+        var rest = span[PagePropertyPrefix.Length..];
         if (!IsBareIdentifier(rest))
         {
             return false;

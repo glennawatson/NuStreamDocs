@@ -15,13 +15,16 @@ namespace NuStreamDocs.Tags;
 /// </summary>
 internal static class TagsFrontmatterReader
 {
+    /// <summary>Initial tag capacity.</summary>
+    private const int InitialTagCapacity = 4;
+
     /// <summary>Gets the UTF-8 bytes of the <c>tags:</c> key prefix.</summary>
     private static ReadOnlySpan<byte> TagsKey => "tags:"u8;
 
     /// <summary>Reads tags from <paramref name="source"/>'s frontmatter; returns empty when no frontmatter or no tags field.</summary>
     /// <param name="source">UTF-8 markdown source bytes.</param>
     /// <returns>A possibly empty array of UTF-8 tag byte arrays.</returns>
-    public static byte[][] Read(ReadOnlySpan<byte> source)
+    internal static byte[][] Read(ReadOnlySpan<byte> source)
     {
         if (!YamlByteScanner.TryFindFrontmatter(source, out _, out var bodyStart))
         {
@@ -69,13 +72,7 @@ internal static class TagsFrontmatterReader
             return ParseInlineList(inline[1..^1]);
         }
 
-        if (!inline.IsEmpty)
-        {
-            // Single inline scalar (`tags: foo` or `tags: "foo, bar"`).
-            return ParseInlineList(inline);
-        }
-
-        return ParseBlockList(frontmatter, lineEnd);
+        return !inline.IsEmpty ? ParseInlineList(inline) : ParseBlockList(frontmatter, lineEnd);
     }
 
     /// <summary>Splits a comma-separated inline list (with optional surrounding quotes per token).</summary>
@@ -88,7 +85,7 @@ internal static class TagsFrontmatterReader
             return [];
         }
 
-        List<byte[]> tags = new(4);
+        List<byte[]> tags = [with(InitialTagCapacity)];
         var cursor = 0;
         while (cursor < span.Length)
         {
@@ -112,7 +109,7 @@ internal static class TagsFrontmatterReader
     /// <returns>UTF-8 tag arrays.</returns>
     private static byte[][] ParseBlockList(ReadOnlySpan<byte> frontmatter, int cursor)
     {
-        List<byte[]> tags = new(4);
+        List<byte[]> tags = [with(InitialTagCapacity)];
         while (cursor < frontmatter.Length)
         {
             var lineEnd = Utf8LineSpan.LfLineEnd(frontmatter, cursor);

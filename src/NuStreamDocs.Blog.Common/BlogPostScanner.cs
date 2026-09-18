@@ -8,12 +8,12 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
-/// <summary>
-/// Walks a flat directory of <c>YYYY-MM-DD-slug.md</c> blog posts and
-/// returns the parsed metadata.
-/// </summary>
+/// <summary>Walks a flat directory of <c>YYYY-MM-DD-slug.md</c> blog posts and returns the parsed metadata.</summary>
 public static class BlogPostScanner
 {
+    /// <summary>Initial post capacity.</summary>
+    private const int InitialPostCapacity = 64;
+
     /// <summary>The expected filename date prefix length: <c>YYYY-MM-DD-</c>.</summary>
     private const int DatePrefixLength = 11;
 
@@ -48,7 +48,7 @@ public static class BlogPostScanner
             return [];
         }
 
-        List<BlogPost> posts = new(64);
+        List<BlogPost> posts = [with(InitialPostCapacity)];
         foreach (var path in postsRoot.EnumerateFiles("*.md", SearchOption.TopDirectoryOnly))
         {
             var post = TryReadPost(path, docsRoot);
@@ -230,11 +230,13 @@ public static class BlogPostScanner
 
             if (pendingSpace)
             {
-                dst[write++] = (byte)' ';
+                var separatorIndex = write++;
+                dst[separatorIndex] = (byte)' ';
                 pendingSpace = false;
             }
 
-            dst[write++] = titleCaseNext ? AsciiToUpperByte(c) : c;
+            var titleIndex = write++;
+            dst[titleIndex] = titleCaseNext ? AsciiToUpperByte(c) : c;
             titleCaseNext = false;
         }
 

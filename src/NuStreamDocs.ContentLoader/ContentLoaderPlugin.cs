@@ -13,8 +13,8 @@ namespace NuStreamDocs.ContentLoader;
 /// Discovery-phase plugin that runs each registered <see cref="IContentLoader"/> and feeds the pages
 /// it produces into the build's synthetic-page sink so they render alongside disk-loaded Markdown.
 /// </summary>
-public sealed class ContentLoaderPlugin
-    : IBuildDiscoverPlugin
+[System.Diagnostics.DebuggerDisplay("ContentLoaderPlugin: {Name}")]
+public sealed class ContentLoaderPlugin : IBuildDiscoverPlugin
 {
     /// <summary>The loaders to run, in registration order.</summary>
     private readonly IContentLoader[] _loaders;

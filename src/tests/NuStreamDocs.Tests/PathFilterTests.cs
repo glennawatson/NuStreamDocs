@@ -9,6 +9,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Behavior tests for <c>PathFilter</c>.</summary>
 public class PathFilterTests
 {
+    /// <summary>Guide Intro Path used by the test cases.</summary>
+    private const string GuideIntroPath = "guide/intro.md";
+
     /// <summary>The empty filter keeps everything and reports no rules.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -26,7 +29,7 @@ public class PathFilterTests
         PathFilter filter = new([], ["drafts/**", "**/_partial.md"]);
 
         await Assert.That(filter.HasRules).IsTrue();
-        await Assert.That(filter.Matches("guide/intro.md")).IsTrue();
+        await Assert.That(filter.Matches(GuideIntroPath)).IsTrue();
         await Assert.That(filter.Matches("drafts/wip.md")).IsFalse();
         await Assert.That(filter.Matches("guide/_partial.md")).IsFalse();
     }
@@ -38,7 +41,7 @@ public class PathFilterTests
     {
         PathFilter filter = new(["guide/**/*.md"], []);
 
-        await Assert.That(filter.Matches("guide/intro.md")).IsTrue();
+        await Assert.That(filter.Matches(GuideIntroPath)).IsTrue();
         await Assert.That(filter.Matches("guide/sub/page.md")).IsTrue();
         await Assert.That(filter.Matches("blog/post.md")).IsFalse();
     }
@@ -50,7 +53,7 @@ public class PathFilterTests
     {
         PathFilter filter = new(["guide/**/*.md"], ["**/_partial.md"]);
 
-        await Assert.That(filter.Matches("guide/intro.md")).IsTrue();
+        await Assert.That(filter.Matches(GuideIntroPath)).IsTrue();
         await Assert.That(filter.Matches("guide/_partial.md")).IsFalse();
     }
 }

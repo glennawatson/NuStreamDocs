@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Buffers.Text;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography.Styles.Aglc4;
@@ -14,7 +15,7 @@ internal static class Aglc4Writer
     /// <summary>Writes a UTF-8 byte literal to the sink.</summary>
     /// <param name="bytes">UTF-8 bytes (typically a <c>"..."u8</c> literal).</param>
     /// <param name="writer">Sink.</param>
-    public static void WriteBytes(ReadOnlySpan<byte> bytes, IBufferWriter<byte> writer)
+    internal static void WriteBytes(ReadOnlySpan<byte> bytes, IBufferWriter<byte> writer)
     {
         if (bytes.IsEmpty)
         {
@@ -29,13 +30,14 @@ internal static class Aglc4Writer
     /// <summary>Writes UTF-8 entry-field bytes to the sink.</summary>
     /// <param name="value">UTF-8 source bytes.</param>
     /// <param name="writer">Sink.</param>
-    public static void WriteString(ReadOnlySpan<byte> value, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void WriteString(ReadOnlySpan<byte> value, IBufferWriter<byte> writer) =>
         WriteBytes(value, writer);
 
     /// <summary>Writes an integer as ASCII (invariant culture).</summary>
     /// <param name="value">Integer value.</param>
     /// <param name="writer">Sink.</param>
-    public static void WriteInt(int value, IBufferWriter<byte> writer)
+    internal static void WriteInt(int value, IBufferWriter<byte> writer)
     {
         Span<byte> buffer = stackalloc byte[16];
         if (!Utf8Formatter.TryFormat(value, buffer, out var written))
@@ -49,7 +51,7 @@ internal static class Aglc4Writer
     /// <summary>Writes a parenthesized year suffix when the year is non-zero (e.g. <c> (1992)</c>).</summary>
     /// <param name="year">Year value; 0 means unknown.</param>
     /// <param name="writer">Sink.</param>
-    public static void WriteParenthesizedYear(int year, IBufferWriter<byte> writer)
+    internal static void WriteParenthesizedYear(int year, IBufferWriter<byte> writer)
     {
         if (year is 0)
         {
@@ -64,7 +66,7 @@ internal static class Aglc4Writer
     /// <summary>Writes the AGLC4 author list — joined as <c>A, B and C</c>.</summary>
     /// <param name="authors">Author list.</param>
     /// <param name="writer">Sink.</param>
-    public static void WriteAuthors(PersonName[] authors, IBufferWriter<byte> writer)
+    internal static void WriteAuthors(PersonName[] authors, IBufferWriter<byte> writer)
     {
         for (var i = 0; i < authors.Length; i++)
         {
@@ -90,7 +92,7 @@ internal static class Aglc4Writer
     /// <summary>Writes a single name — <c>Given Family</c> for personal names, the literal for institutional ones.</summary>
     /// <param name="name">Name.</param>
     /// <param name="writer">Sink.</param>
-    public static void WriteName(PersonName name, IBufferWriter<byte> writer)
+    internal static void WriteName(PersonName name, IBufferWriter<byte> writer)
     {
         if (name.IsInstitutional)
         {

@@ -12,11 +12,11 @@ public enum OptimizeFormats
     None = 0,
 
     /// <summary>Emit a gzip-compressed sibling (<c>.gz</c>).</summary>
-    Gzip = 1,
+    Gzip = 1 << 0,
 
     /// <summary>Emit a brotli-compressed sibling (<c>.br</c>).</summary>
-    Brotli = 2,
+    Brotli = 1 << 1,
 
     /// <summary>Emit both gzip and brotli siblings.</summary>
-    Both = Gzip | Brotli
+    Both = Gzip | Brotli,
 }

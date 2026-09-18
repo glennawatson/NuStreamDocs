@@ -10,16 +10,29 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.LinkValidator;
 
 /// <summary>Plugin that validates internal and external links across the rendered site.</summary>
-public sealed class LinkValidatorPlugin
-    : IBuildConfigurePlugin, IBuildFinalizePlugin
+[System.Diagnostics.DebuggerDisplay("LinkValidatorPlugin: {LastDiagnostics}")]
+public sealed class LinkValidatorPlugin : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Process exit code returned when at least one fatal diagnostic surfaces.</summary>
     private const int StrictFailureExitCode = 2;
 
+    /// <summary>Maximum lifetime of a pooled HTTP connection, in minutes.</summary>
+    private const int ConnectionLifetimeMinutes = 2;
+
+    /// <summary>Maximum idle time of a pooled HTTP connection, in seconds.</summary>
+    private const int ConnectionIdleSeconds = 15;
+
+    /// <summary>Client shared by validation runs without an injected factory.</summary>
+    private static readonly HttpClient SharedHttpClient = new(new SocketsHttpHandler
+    {
+        PooledConnectionLifetime = TimeSpan.FromMinutes(ConnectionLifetimeMinutes),
+        PooledConnectionIdleTimeout = TimeSpan.FromSeconds(ConnectionIdleSeconds),
+    });
+
     /// <summary>Configured options.</summary>
     private readonly LinkValidatorOptions _options;
 
-    /// <summary>HTTP client factory; when null the plugin owns its own client.</summary>
+    /// <summary>Optional HTTP client factory for external validation.</summary>
     private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger captured at construction; defaults to <see cref="NullLogger.Instance"/> when no logger is supplied.</summary>
@@ -177,11 +190,7 @@ public sealed class LinkValidatorPlugin
                 .ConfigureAwait(false);
         }
 
-        using SocketsHttpHandler handler = new();
-        handler.PooledConnectionLifetime = TimeSpan.FromMinutes(2);
-        handler.PooledConnectionIdleTimeout = TimeSpan.FromSeconds(15);
-        using HttpClient owned = new(handler, false);
-        return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, owned, cancellationToken)
+        return await ExternalLinkValidator.ValidateAsync(corpus, _options.External, SharedHttpClient, cancellationToken)
             .ConfigureAwait(false);
     }
 }

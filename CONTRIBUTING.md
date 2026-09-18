@@ -9,13 +9,13 @@ for narrative.
 
 ## Getting set up
 
-Prerequisites: .NET 10 SDK (matched in `src/global.json`).
+Prerequisites: .NET 11 RC SDK and .NET 10 runtime. Projects target both .NET 10 and .NET 11.
 
 ```sh
 cd src
 dotnet build NuStreamDocs.slnx
-dotnet run --project tests/NuStreamDocs.Tests/NuStreamDocs.Tests.csproj
-dotnet run --project tests/NuStreamDocs.Nav.Tests/NuStreamDocs.Nav.Tests.csproj
+dotnet test --project tests/NuStreamDocs.Tests/NuStreamDocs.Tests.csproj
+dotnet test --project tests/NuStreamDocs.Nav.Tests/NuStreamDocs.Nav.Tests.csproj
 ```
 
 Tests use Microsoft Testing Platform + TUnit (configured in

@@ -63,13 +63,13 @@ public sealed class FontsourceProvider : IFontProvider
     internal static ApiCompatString BuildStylesheetUrl(string id, string subset, int weight, FontStyle style)
     {
         var sb = new StringBuilder("https://cdn.jsdelivr.net/npm/@fontsource/");
-        sb.Append(id).Append("@latest/").Append(subset).Append('-').Append(weight);
+        _ = sb.Append(id).Append("@latest/").Append(subset).Append('-').Append(weight);
         if (style == FontStyle.Italic)
         {
-            sb.Append("-italic");
+            _ = sb.Append("-italic");
         }
 
-        sb.Append(".css");
+        _ = sb.Append(".css");
         return sb.ToString();
     }
 

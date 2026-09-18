@@ -14,6 +14,9 @@ namespace NuStreamDocs.MarkdownExtensions.Tests;
 /// <summary>Static-asset / head-extra contract tests for plugins that ship CSS.</summary>
 public class MarkdownExtensionPluginAssetTests
 {
+    /// <summary>Initial capacity for a stylesheet link.</summary>
+    private const int HeadBufferCapacity = 64;
+
     /// <summary>AdmonitionPlugin ships its stylesheet via IStaticAssetProvider.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -30,7 +33,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task AdmonitionHeadExtra()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(HeadBufferCapacity);
         new AdmonitionPlugin().WriteHeadExtra(sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("admonition");
     }
@@ -46,7 +49,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task DetailsHeadExtra()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(HeadBufferCapacity);
         new DetailsPlugin().WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }
@@ -62,7 +65,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task CheckListHeadExtra()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(HeadBufferCapacity);
         new CheckListPlugin().WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }
@@ -78,7 +81,7 @@ public class MarkdownExtensionPluginAssetTests
     [Test]
     public async Task TabsHeadExtra()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(HeadBufferCapacity);
         new TabsPlugin().WriteHeadExtra(sink);
         await Assert.That(sink.WrittenCount).IsGreaterThan(0);
     }

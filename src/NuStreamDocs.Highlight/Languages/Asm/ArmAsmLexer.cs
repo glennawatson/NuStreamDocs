@@ -27,11 +27,5 @@ public static class ArmAsmLexer
     private static readonly SearchValues<byte> CommentFirst = SearchValues.Create(";@"u8);
 
     /// <summary>Gets the singleton ARM / AArch64 assembly lexer.</summary>
-    public static Lexer Instance { get; } = AsmFamilyRules.CreateLexer(new()
-    {
-        CommentFirst = CommentFirst,
-        Mnemonics = Mnemonics,
-        Registers = Registers,
-        HexPrefix = true
-    });
+    public static Lexer Instance { get; } = AsmFamilyRules.CreateLexer(new() { CommentFirst = CommentFirst, Mnemonics = Mnemonics, Registers = Registers, HexPrefix = true, });
 }

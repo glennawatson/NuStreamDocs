@@ -4,10 +4,7 @@
 
 namespace NuStreamDocs.Logging;
 
-/// <summary>
-/// Source-generated <see cref="ILogger"/> messages for the
-/// <c>NuStreamDocs.Caching</c> namespace (manifest + bounded cache).
-/// </summary>
+/// <summary>Source-generated <see cref="ILogger"/> messages for the <c>NuStreamDocs.Caching</c> namespace (manifest + bounded cache).</summary>
 internal static partial class CachingLoggingHelper
 {
     /// <summary>Logs that a build manifest was read from disk.</summary>
@@ -16,7 +13,7 @@ internal static partial class CachingLoggingHelper
     /// <param name="entryCount">Number of entries loaded.</param>
     [LoggerMessage(Level = LogLevel.Information,
         Message = "Loaded build manifest from {Path} ({EntryCount} entry/entries)")]
-    public static partial void LogManifestLoaded(ILogger logger, string path, int entryCount);
+    internal static partial void LogManifestLoaded(ILogger logger, string path, int entryCount);
 
     /// <summary>Logs that a build manifest was written to disk.</summary>
     /// <param name="logger">Target logger.</param>
@@ -24,7 +21,7 @@ internal static partial class CachingLoggingHelper
     /// <param name="entryCount">Number of entries persisted.</param>
     [LoggerMessage(Level = LogLevel.Information,
         Message = "Saved build manifest to {Path} ({EntryCount} entry/entries)")]
-    public static partial void LogManifestSaved(ILogger logger, string path, int entryCount);
+    internal static partial void LogManifestSaved(ILogger logger, string path, int entryCount);
 
     /// <summary>Logs a bounded-cache eviction event at debug level.</summary>
     /// <param name="logger">Target logger.</param>
@@ -33,5 +30,5 @@ internal static partial class CachingLoggingHelper
     /// <param name="remaining">Entries still in the cache after the sweep.</param>
     [LoggerMessage(Level = LogLevel.Debug,
         Message = "BoundedCache evicted {RemovedCount} entry/entries ({Reason}); {Remaining} remaining")]
-    public static partial void LogCacheEviction(ILogger logger, string reason, int removedCount, int remaining);
+    internal static partial void LogCacheEviction(ILogger logger, string reason, int removedCount, int remaining);
 }

@@ -40,7 +40,7 @@ internal static class HtmlMinifier
     /// <param name="source">UTF-8 HTML bytes.</param>
     /// <param name="writer">Destination buffer writer.</param>
     /// <param name="options">Minify options.</param>
-    public static void Minify(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, in HtmlMinifyOptions options)
+    internal static void Minify(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, in HtmlMinifyOptions options)
     {
         var cursor = 0;
         var pendingSpace = false;

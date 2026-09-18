@@ -11,19 +11,66 @@ namespace NuStreamDocs.Icons.MaterialDesign.Tests;
 /// <summary>End-to-end coverage for the MDI lookup, resolver, and rewriter integration.</summary>
 public class MdiIconLookupTests
 {
+    /// <summary>Expected icon count.</summary>
+    private const int ExpectedIconCount = 2;
+
+    /// <summary>Rocket icon name.</summary>
+    private const string RocketIconName = "rocket-launch";
+
+    /// <summary>Name of the source-control branch icon.</summary>
+    private const string BranchIconName = "source-branch";
+
+    /// <summary>Rocket path data.</summary>
+    private const string RocketPathData = "M1,1H2";
+
+    /// <summary>Initial output capacity.</summary>
+    private const int InitialOutputCapacity = 128;
+
+    /// <summary>Missing output capacity.</summary>
+    private const int MissingOutputCapacity = 64;
+
+    /// <summary>Minimum bundle count.</summary>
+    private const int MinimumBundleCount = 6000;
+
+    /// <summary>Gets the rocket icon name bytes.</summary>
+    private static ReadOnlySpan<byte> RocketIconNameBytes => "rocket-launch"u8;
+
+    /// <summary>Gets the rocket path data bytes.</summary>
+    private static ReadOnlySpan<byte> RocketPathDataBytes => "M1,1H2"u8;
+
+    /// <summary>Supplies documentation icon names required in the bundle.</summary>
+    /// <returns>Names exercised by the bundle lookup test.</returns>
+    public static IEnumerable<string> IconNames() =>
+    [
+        RocketIconName, BranchIconName, "test-tube", "monitor-cellphone",
+        "puzzle-outline", "script-text-outline", "book-open-page-variant-outline", "account-group-outline",
+        "weather-night", "weather-sunny", "account", "account-circle",
+        "login", "logout", "alert", "alert-circle",
+        "check", "check-circle", "close", "close-circle",
+        "information", "information-outline", "help-circle", "arrow-up",
+        "arrow-down", "arrow-left", "arrow-right", "chevron-up",
+        "chevron-down", "chevron-left", "chevron-right", "menu",
+        "home", "cog", "magnify", "dots-vertical",
+        "pencil", "delete", "download", "upload",
+        "share-variant", "content-copy", "folder", "folder-open",
+        "file", "file-document", "calendar", "clock",
+        "github", "code-tags", "bug", "lightbulb",
+        "lock", "lock-open", "key"
+    ];
+
     /// <summary>Builder produces a lookup whose <c>TryGet</c> returns the path-data bytes verbatim.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task BuilderRoundTripsPathData()
     {
         var lookup = new MdiIconLookupBuilder()
-            .Add("rocket-launch"u8, "M1,1H2"u8)
+            .Add(RocketIconNameBytes, RocketPathDataBytes)
             .Add("source-branch"u8, "M3,3H4"u8)
             .Build();
 
-        await Assert.That(lookup.Count).IsEqualTo(2);
-        await Assert.That(Resolve(lookup, "rocket-launch")).IsEqualTo("M1,1H2");
-        await Assert.That(Resolve(lookup, "source-branch")).IsEqualTo("M3,3H4");
+        await Assert.That(lookup.Count).IsEqualTo(ExpectedIconCount);
+        await Assert.That(Resolve(lookup, RocketIconName)).IsEqualTo(RocketPathData);
+        await Assert.That(Resolve(lookup, BranchIconName)).IsEqualTo("M3,3H4");
     }
 
     /// <summary>Unknown names miss cleanly.</summary>
@@ -31,7 +78,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task UnknownNameMisses()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add(RocketIconNameBytes, "M1H2"u8).Build();
         await Assert.That(Resolve(lookup, "no-such-icon")).IsEqualTo(string.Empty);
     }
 
@@ -40,7 +87,7 @@ public class MdiIconLookupTests
     [Test]
     public async Task LookupIsCaseSensitive()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add(RocketIconNameBytes, "M1H2"u8).Build();
         await Assert.That(Resolve(lookup, "Rocket-Launch")).IsEqualTo(string.Empty);
     }
 
@@ -49,11 +96,11 @@ public class MdiIconLookupTests
     [Test]
     public async Task ResolverWrapsPathDataInSvgEnvelope()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add(RocketIconNameBytes, RocketPathDataBytes).Build();
         MdiIconResolver resolver = new(lookup);
 
-        ArrayBufferWriter<byte> sink = new(128);
-        var found = resolver.TryResolve("rocket-launch"u8, sink);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
+        var found = resolver.TryResolve(RocketIconNameBytes, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
         await Assert.That(found).IsTrue();
@@ -66,10 +113,10 @@ public class MdiIconLookupTests
     [Test]
     public async Task ResolverWritesNothingOnMiss()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add(RocketIconNameBytes, RocketPathDataBytes).Build();
         MdiIconResolver resolver = new(lookup);
 
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(MissingOutputCapacity);
         var found = resolver.TryResolve("missing"u8, sink);
 
         await Assert.That(found).IsFalse();
@@ -81,9 +128,9 @@ public class MdiIconLookupTests
     [Test]
     public async Task RewriterInlinesResolvedSvg()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add(RocketIconNameBytes, RocketPathDataBytes).Build();
         MdiIconResolver resolver = new(lookup);
-        ArrayBufferWriter<byte> sink = new(128);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
 
         IconShortcodeRewriter.Rewrite(
             "Click :material-rocket-launch: now"u8,
@@ -101,9 +148,9 @@ public class MdiIconLookupTests
     [Test]
     public async Task UnresolvedFallsBackToFontLigature()
     {
-        var lookup = new MdiIconLookupBuilder().Add("rocket-launch"u8, "M1,1H2"u8).Build();
+        var lookup = new MdiIconLookupBuilder().Add(RocketIconNameBytes, RocketPathDataBytes).Build();
         MdiIconResolver resolver = new(lookup);
-        ArrayBufferWriter<byte> sink = new(128);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
 
         IconShortcodeRewriter.Rewrite(
             "Use :material-not-in-bundle: here"u8,
@@ -119,86 +166,20 @@ public class MdiIconLookupTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task DefaultBundleHasFullMdiCatalogue() =>
-
         // Sanity floor — the upstream catalogue has been > 7000 icons since 2023; guards against
         // an empty / partial bundle slipping through on regen.
-        await Assert.That(MdiIconBundle.Count).IsGreaterThan(6000);
+        await Assert.That(MdiIconBundle.Count).IsGreaterThan(MinimumBundleCount);
 
-    /// <summary>Every icon name rxui's docs use today resolves through the default bundle.</summary>
+    /// <summary>Documentation icons resolve through the default bundle.</summary>
     /// <param name="iconName">MDI icon name (kebab-case, no <c>material-</c> prefix).</param>
     /// <returns>Async test.</returns>
     [Test]
-    [Arguments("rocket-launch")]
-    [Arguments("source-branch")]
-    [Arguments("test-tube")]
-    [Arguments("monitor-cellphone")]
-    [Arguments("puzzle-outline")]
-    [Arguments("script-text-outline")]
-    [Arguments("book-open-page-variant-outline")]
-    [Arguments("account-group-outline")]
-    [Arguments("weather-night")]
-    [Arguments("weather-sunny")]
-    public Task RxuiUsedIconsResolveInDefaultBundle(string iconName) => AssertIconResolves(iconName);
-
-    /// <summary>Common docs-site MDI staples resolve through the default bundle — guards against a regen accidentally dropping one.</summary>
-    /// <param name="iconName">MDI icon name (kebab-case, no <c>material-</c> prefix).</param>
-    /// <returns>Async test.</returns>
-    [Test]
-    [Arguments("account")]
-    [Arguments("account-circle")]
-    [Arguments("login")]
-    [Arguments("logout")]
-    [Arguments("alert")]
-    [Arguments("alert-circle")]
-    [Arguments("check")]
-    [Arguments("check-circle")]
-    [Arguments("close")]
-    [Arguments("close-circle")]
-    [Arguments("information")]
-    [Arguments("information-outline")]
-    [Arguments("help-circle")]
-    [Arguments("arrow-up")]
-    [Arguments("arrow-down")]
-    [Arguments("arrow-left")]
-    [Arguments("arrow-right")]
-    [Arguments("chevron-up")]
-    [Arguments("chevron-down")]
-    [Arguments("chevron-left")]
-    [Arguments("chevron-right")]
-    [Arguments("menu")]
-    [Arguments("home")]
-    [Arguments("cog")]
-    [Arguments("magnify")]
-    [Arguments("dots-vertical")]
-    [Arguments("pencil")]
-    [Arguments("delete")]
-    [Arguments("download")]
-    [Arguments("upload")]
-    [Arguments("share-variant")]
-    [Arguments("content-copy")]
-    [Arguments("folder")]
-    [Arguments("folder-open")]
-    [Arguments("file")]
-    [Arguments("file-document")]
-    [Arguments("calendar")]
-    [Arguments("clock")]
-    [Arguments("github")]
-    [Arguments("code-tags")]
-    [Arguments("bug")]
-    [Arguments("lightbulb")]
-    [Arguments("lock")]
-    [Arguments("lock-open")]
-    [Arguments("key")]
-    public Task CommonIconsResolveInDefaultBundle(string iconName) => AssertIconResolves(iconName);
-
-    /// <summary>Asserts <paramref name="iconName"/> resolves to a non-empty path-data span in the default bundle.</summary>
-    /// <param name="iconName">UTF-8 icon name.</param>
-    /// <returns>Async test.</returns>
-    private static async Task AssertIconResolves(string iconName)
+    [MethodDataSource(nameof(IconNames))]
+    public async Task IconsResolveInDefaultBundle(string iconName)
     {
         var bytes = Encoding.UTF8.GetBytes(iconName);
         var found = MdiIconBundle.TryGet(bytes, out var path);
-        var nonEmpty = path.Length > 0;
+        var nonEmpty = !path.IsEmpty;
 
         await Assert.That(found).IsTrue();
         await Assert.That(nonEmpty).IsTrue();

@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Caching;
 using NuStreamDocs.Common;
@@ -19,14 +20,12 @@ namespace NuStreamDocs.Building;
 /// </summary>
 public static class BuildPipeline
 {
-    /// <summary>Milliseconds per second for user-facing elapsed-time conversion.</summary>
-    private const double MillisecondsPerSecond = 1000d;
-
     /// <summary>Runs the build with no cancellation support and default options.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="outputRoot">Absolute path to the site output root.</param>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>The total number of pages processed (rendered + skipped).</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<int> RunAsync(in DirectoryPath inputRoot, in DirectoryPath outputRoot, IPlugin[] plugins) =>
         RunAsync(inputRoot, outputRoot, plugins, BuildPipelineOptions.Default, CancellationToken.None);
 
@@ -36,6 +35,7 @@ public static class BuildPipeline
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The total number of pages processed.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<int> RunAsync(
         in DirectoryPath inputRoot,
         in DirectoryPath outputRoot,
@@ -65,11 +65,11 @@ public static class BuildPipeline
 
         var log = options.Logger ?? NullLogger.Instance;
         BuildPipelineLoggingHelper.LogBuildStart(log, inputRoot.Value, outputRoot.Value, plugins.Length);
-        var stopwatch = Stopwatch.StartNew();
+        var buildStarted = Stopwatch.GetTimestamp();
         PluginTimingTable pluginTiming = new();
         var buildFingerprint = BuildFingerprint.Create(plugins, options);
 
-        Directory.CreateDirectory(outputRoot);
+        _ = Directory.CreateDirectory(outputRoot);
         var previous = await BuildManifest.LoadAsync(outputRoot, buildFingerprint, cancellationToken, log)
             .ConfigureAwait(false);
 
@@ -93,7 +93,7 @@ public static class BuildPipeline
         PerPageDispatch perPage = new(phases, previous, pluginTiming, bufferedPages, SnapshotMarkerNeedles(phases, crossPageMarkers));
 
         BuildPipelineLoggingHelper.LogRenderStart(log, parallelOptions.MaxDegreeOfParallelism);
-        var renderStarted = stopwatch.ElapsedMilliseconds;
+        var renderStarted = Stopwatch.GetTimestamp();
         await Parallel.ForEachAsync(
             BuildPipelinePageProcessor.EnumerateDiskAndSyntheticAsync(inputRoot, filter, syntheticPages, cancellationToken),
             parallelOptions,
@@ -111,16 +111,44 @@ public static class BuildPipeline
                     fresh.Enqueue(entry);
                 }
 
-                Interlocked.Increment(ref processed);
+                _ = Interlocked.Increment(ref processed);
                 if (hit)
                 {
-                    Interlocked.Increment(ref cacheHits);
+                    _ = Interlocked.Increment(ref cacheHits);
                 }
 
                 BuildPipelineLoggingHelper.LogPageProcessed(log, item.RelativePath, hit);
             }).ConfigureAwait(false);
 
-        BuildPipelineLoggingHelper.LogRenderComplete(log, processed, (stopwatch.ElapsedMilliseconds - renderStarted) / MillisecondsPerSecond);
+        BuildPipelineLoggingHelper.LogRenderComplete(log, processed, Stopwatch.GetElapsedTime(renderStarted).TotalSeconds);
+
+        await CompleteBuildAsync(phases, plugins, shell, bufferedPages, fresh, previous, cancellationToken).ConfigureAwait(false);
+
+        var elapsed = Stopwatch.GetElapsedTime(buildStarted);
+        pluginTiming.Emit(log);
+        BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, elapsed.TotalSeconds);
+        return processed;
+    }
+
+    /// <summary>Resolves buffered pages, copies assets, and finalizes the build.</summary>
+    /// <param name="phases">Registered build phases.</param>
+    /// <param name="plugins">Registered plugins.</param>
+    /// <param name="shell">Build context.</param>
+    /// <param name="bufferedPages">Pages awaiting cross-page resolution.</param>
+    /// <param name="fresh">Manifest entries produced by this build.</param>
+    /// <param name="previous">Manifest to replace and persist.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes after finalization.</returns>
+    private static async Task CompleteBuildAsync(
+        PluginPhases phases,
+        IPlugin[] plugins,
+        BuildPhaseShell shell,
+        ConcurrentQueue<BufferedPage> bufferedPages,
+        ConcurrentQueue<ManifestEntry> fresh,
+        BuildManifest previous,
+        CancellationToken cancellationToken)
+    {
+        var log = shell.Log;
 
         if (phases.NeedsCrossPageBarrier)
         {
@@ -131,24 +159,20 @@ public static class BuildPipeline
         // Copy author-supplied static content from docs/ to site/ — images, fonts, vendor JS,
         // anything the page templates or theme options reference by docs-relative path. Runs
         // before finalize so plugins like sitemap/search/privacy see the assets in place.
-        var assetsCopied = DocsAssetCopier.Copy(inputRoot, outputRoot, filter);
+        var assetsCopied = DocsAssetCopier.Copy(shell.InputRoot, shell.OutputRoot, shell.Options.Filter ?? PathFilter.Empty);
         BuildPipelineLoggingHelper.LogAssetsCopied(log, assetsCopied);
 
         previous.Replace(fresh);
-        await previous.SaveAsync(outputRoot, cancellationToken, log).ConfigureAwait(false);
+        await previous.SaveAsync(shell.OutputRoot, cancellationToken, log).ConfigureAwait(false);
 
         BuildPipelineLoggingHelper.LogFinalizeStart(log, phases.Finalizes.Length);
         await BuildPipelinePluginOrchestrator.FireFinalizeAsync(phases.Finalizes, plugins, shell, cancellationToken).ConfigureAwait(false);
-
-        stopwatch.Stop();
-        pluginTiming.Emit(log);
-        BuildPipelineLoggingHelper.LogBuildComplete(log, processed, cacheHits, stopwatch.ElapsedMilliseconds / MillisecondsPerSecond);
-        return processed;
     }
 
     /// <summary>Validates that the input and output roots are non-empty.</summary>
     /// <param name="inputRoot">The input directory root.</param>
     /// <param name="outputRoot">The output directory root.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>inputRoot.IsEmpty</c>.</exception>
     private static void ValidateInputs(DirectoryPath inputRoot, DirectoryPath outputRoot)
     {
         if (inputRoot.IsEmpty)

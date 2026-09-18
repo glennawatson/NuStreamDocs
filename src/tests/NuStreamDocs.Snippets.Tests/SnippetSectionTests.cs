@@ -11,13 +11,16 @@ namespace NuStreamDocs.Snippets.Tests;
 /// <summary>Section-marker include support — <c>--8&lt;-- "file#name"</c> + <c>&lt;!-- @section name --&gt;</c>.</summary>
 public class SnippetSectionTests
 {
+    /// <summary>Document path.</summary>
+    private const string DocumentPath = "doc.md";
+
     /// <summary>Section-include splices only the marked block.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SectionIncludeSplicesOnlySection()
     {
         using SnippetFixture fixture = new();
-        fixture.Write("doc.md", "Header\n<!-- @section example -->\nA\nB\n<!-- @endsection -->\nFooter\n");
+        fixture.Write(DocumentPath, "Header\n<!-- @section example -->\nA\nB\n<!-- @endsection -->\nFooter\n");
         var result = fixture.Rewrite("Before.\n--8<-- \"doc.md#example\"\nAfter.");
         await Assert.That(result).IsEqualTo("Before.\nA\nB\nAfter.");
     }
@@ -28,7 +31,7 @@ public class SnippetSectionTests
     public async Task UnknownSectionProducesErrorBlock()
     {
         using SnippetFixture fixture = new();
-        fixture.Write("doc.md", "no markers here\n");
+        fixture.Write(DocumentPath, "no markers here\n");
         var result = fixture.Rewrite("--8<-- \"doc.md#missing\"\n");
         await Assert.That(result).Contains("snippet section not found");
     }
@@ -39,7 +42,7 @@ public class SnippetSectionTests
     public async Task FullFileSectionMatches()
     {
         using SnippetFixture fixture = new();
-        fixture.Write("doc.md", "<!-- @section all -->\nbody\n<!-- @endsection -->\n");
+        fixture.Write(DocumentPath, "<!-- @section all -->\nbody\n<!-- @endsection -->\n");
         var result = fixture.Rewrite("--8<-- \"doc.md#all\"\n");
         await Assert.That(result).IsEqualTo("body\n");
     }
@@ -50,7 +53,7 @@ public class SnippetSectionTests
     public async Task SectionNameIsCaseSensitive()
     {
         using SnippetFixture fixture = new();
-        fixture.Write("doc.md", "<!-- @section Example -->\nbody\n<!-- @endsection -->\n");
+        fixture.Write(DocumentPath, "<!-- @section Example -->\nbody\n<!-- @endsection -->\n");
         var result = fixture.Rewrite("--8<-- \"doc.md#example\"\n");
         await Assert.That(result).Contains("snippet section not found");
     }
@@ -62,7 +65,7 @@ public class SnippetSectionTests
     {
         using SnippetFixture fixture = new();
         fixture.Write(
-            "doc.md",
+            DocumentPath,
             "<!-- @section first -->\nA\n<!-- @endsection -->\n<!-- @section second -->\nB\n<!-- @endsection -->\n");
         var result = fixture.Rewrite("--8<-- \"doc.md#second\"\n");
         await Assert.That(result).IsEqualTo("B\n");
@@ -85,9 +88,12 @@ public class SnippetSectionTests
     /// <summary>Test fixture mirroring the one in <c>SnippetsRewriterTests</c>.</summary>
     private sealed class SnippetFixture : IDisposable
     {
+        /// <summary>Initial space for expanded snippet content.</summary>
+        private const int InitialOutputCapacity = 256;
+
         /// <summary>Throwaway directory for snippet files.</summary>
         private readonly string _root =
-            Path.Combine(Path.GetTempPath(), "smkd-snippet-section-" + Guid.NewGuid().ToString("N"));
+            Path.Combine(Path.GetTempPath(), $"smkd-snippet-section-{Guid.NewGuid():N}");
 
         /// <summary>Initializes a new instance of the <see cref="SnippetFixture"/> class.</summary>
         public SnippetFixture() => Directory.CreateDirectory(_root);
@@ -98,7 +104,7 @@ public class SnippetSectionTests
         public void Write(string relativePath, string content)
         {
             var path = Path.Combine(_root, relativePath);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, content);
         }
 
@@ -107,8 +113,8 @@ public class SnippetSectionTests
         /// <returns>Decoded UTF-8 result.</returns>
         public string Rewrite(string source)
         {
-            ArrayBufferWriter<byte> sink = new(256);
-            Dictionary<byte[], byte[]> cache = new(ByteArrayComparer.Instance);
+            ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
+            Dictionary<byte[], byte[]> cache = [with(ByteArrayComparer.Instance)];
             SnippetsRewriter.Rewrite(Encoding.UTF8.GetBytes(source), _root, cache, sink);
             return Encoding.UTF8.GetString(sink.WrittenSpan);
         }

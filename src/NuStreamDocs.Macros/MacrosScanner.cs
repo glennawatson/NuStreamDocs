@@ -18,11 +18,11 @@ internal static class MacrosScanner
     /// <param name="name">UTF-8 name bytes.</param>
     /// <param name="value">Resolved UTF-8 value bytes on hit; callers must not mutate.</param>
     /// <returns>True when resolved.</returns>
-    public delegate bool Lookup(ReadOnlySpan<byte> name, out byte[] value);
+    internal delegate bool Lookup(ReadOnlySpan<byte> name, out byte[] value);
 
     /// <summary>Invoked for each <c>{{ name }}</c> with no resolved value.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
-    public delegate void MissingCallback(ReadOnlySpan<byte> name);
+    internal delegate void MissingCallback(ReadOnlySpan<byte> name);
 
     /// <summary>Gets the two-byte opening marker.</summary>
     private static ReadOnlySpan<byte> Open => "{{"u8;
@@ -36,7 +36,7 @@ internal static class MacrosScanner
     /// <param name="escapeHtml">When true, resolved values are HTML-escaped before being written.</param>
     /// <param name="onMissing">Optional callback invoked for unknown names; <c>null</c> to silently leave them in place.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(
+    internal static void Rewrite(
         ReadOnlySpan<byte> source,
         Lookup lookup,
         bool escapeHtml,
@@ -129,8 +129,7 @@ internal static class MacrosScanner
             return cursor + 1;
         }
 
-        var nameStart = cursor + Open.Length;
-        var trimmedStart = SkipSpace(source, nameStart);
+        var trimmedStart = SkipSpace(source, cursor + Open.Length);
         var closeRel = source[trimmedStart..].IndexOf(Close);
         if (closeRel < 0)
         {
@@ -236,8 +235,7 @@ internal static class MacrosScanner
     /// <param name="writer">UTF-8 sink.</param>
     private static void EmitEscaped(ReadOnlySpan<byte> value, IBufferWriter<byte> writer)
     {
-        var p = 0;
-        while (p < value.Length)
+        for (var p = 0; p < value.Length; p++)
         {
             var rel = value[p..].IndexOfAny(EscapeChars);
             if (rel < 0)
@@ -248,7 +246,7 @@ internal static class MacrosScanner
 
             Write(writer, value[p..(p + rel)]);
             EmitEntity(value[p + rel], writer);
-            p += rel + 1;
+            p += rel;
         }
     }
 

@@ -11,13 +11,19 @@ namespace NuStreamDocs.MarkdownExtensions.Tests;
 /// <summary>Behavior tests for <c>TabsRewriter</c>.</summary>
 public class TabsRewriterTests
 {
+    /// <summary>Attribute marking the selected tab.</summary>
+    private const string CheckedAttribute = " checked";
+
+    /// <summary>Opening tag for a tab set.</summary>
+    private const string TabSetOpenTag = "<div class=\"tabbed-set\">";
+
     /// <summary>Two consecutive openers form a single tabbed-set with one input/label pair per tab.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task GroupsConsecutiveOpenersIntoOneSet()
     {
         var output = Rewrite("=== \"First\"\n    one\n=== \"Second\"\n    two\n");
-        await Assert.That(output).Contains("<div class=\"tabbed-set\">");
+        await Assert.That(output).Contains(TabSetOpenTag);
         await Assert.That(output).Contains("<label for=\"__tabbed_");
         await Assert.That(output).Contains(">First</label>");
         await Assert.That(output).Contains(">Second</label>");
@@ -29,7 +35,7 @@ public class TabsRewriterTests
     public async Task FirstTabIsCheckedByDefault()
     {
         var output = Rewrite("=== \"Solo\"\n    only\n");
-        await Assert.That(output).Contains(" checked");
+        await Assert.That(output).Contains(CheckedAttribute);
     }
 
     /// <summary>Subsequent tabs in a set do not get the <c>checked</c> attribute.</summary>
@@ -41,11 +47,9 @@ public class TabsRewriterTests
 
         // Single ' checked' occurrence — only the first input gets the attribute.
         var checkedOccurrences = 0;
-        var idx = 0;
-        while ((idx = output.IndexOf(" checked", idx, StringComparison.Ordinal)) >= 0)
+        for (var idx = 0; (idx = output.IndexOf(CheckedAttribute, idx, StringComparison.Ordinal)) >= 0; idx += CheckedAttribute.Length)
         {
             checkedOccurrences++;
-            idx += " checked".Length;
         }
 
         await Assert.That(checkedOccurrences).IsEqualTo(1);
@@ -117,9 +121,9 @@ public class TabsRewriterTests
         var output = Rewrite(Input);
 
         // Single tabbed-set wraps both labels.
-        var setOpenIdx = output.IndexOf("<div class=\"tabbed-set\">", StringComparison.Ordinal);
+        var setOpenIdx = output.IndexOf(TabSetOpenTag, StringComparison.Ordinal);
         var nextSetIdx = setOpenIdx >= 0
-            ? output.IndexOf("<div class=\"tabbed-set\">", setOpenIdx + 1, StringComparison.Ordinal)
+            ? output.IndexOf(TabSetOpenTag, setOpenIdx + 1, StringComparison.Ordinal)
             : -1;
         await Assert.That(setOpenIdx).IsGreaterThanOrEqualTo(0);
         await Assert.That(nextSetIdx).IsEqualTo(-1);

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.ContentLoader.OpenApi</PackageId>
     <Description>A NuStreamDocs content loader that turns an OpenAPI 3.x specification (JSON or YAML, local file or URL) into reference pages — one page per tag, listing each operation with its parameters, request body, and responses.</Description>
     <RootNamespace>NuStreamDocs.ContentLoader.OpenApi</RootNamespace>

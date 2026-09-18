@@ -10,13 +10,15 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Blog.MkDocs;
 
 /// <summary>
-/// mkdocs-material-style blog plugin: reads posts under
+/// Mkdocs-material-style blog plugin: reads posts under
 /// <c>{BlogSubdirectory}/posts/</c> and registers an index plus category
 /// archives as synthetic pages on the build context before page discovery —
 /// nothing lands on disk in the source tree.
 /// </summary>
-public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger)
-    : IBuildDiscoverPlugin, ISyntheticNavProvider
+/// <param name="options">Blog generation options.</param>
+/// <param name="logger">Receives blog generation diagnostics.</param>
+[System.Diagnostics.DebuggerDisplay("MkDocsBlogPlugin: {Name}")]
+public sealed class MkDocsBlogPlugin(MkDocsBlogOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Configured options.</summary>
     private readonly MkDocsBlogOptions _options = ValidateOptions(options);

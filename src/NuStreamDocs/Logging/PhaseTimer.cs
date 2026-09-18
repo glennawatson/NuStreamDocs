@@ -26,15 +26,14 @@ public static class PhaseTimer
         Func<ValueTask> action)
     {
         logStart(logger);
-        var stopwatch = Stopwatch.StartNew();
+        var started = Stopwatch.GetTimestamp();
         try
         {
             await action().ConfigureAwait(false);
         }
         finally
         {
-            stopwatch.Stop();
-            logComplete(logger, stopwatch.Elapsed.TotalSeconds);
+            logComplete(logger, Stopwatch.GetElapsedTime(started).TotalSeconds);
         }
     }
 
@@ -43,9 +42,9 @@ public static class PhaseTimer
     /// <param name="logger">Logger forwarded to both delegates.</param>
     /// <param name="logStart">Start log entry.</param>
     /// <param name="logComplete">Completion log entry; receives the result and elapsed seconds. Fires only on success.</param>
-    /// <remarks>When <paramref name="action"/> throws, the start log is the only marker and the exception propagates without firing <paramref name="logComplete"/>.</remarks>
     /// <param name="action">The work to time.</param>
     /// <returns>The value produced by <paramref name="action"/>.</returns>
+    /// <remarks>When <paramref name="action"/> throws, the start log is the only marker and the exception propagates without firing <paramref name="logComplete"/>.</remarks>
     public static async ValueTask<TResult> RunAsync<TResult>(
         ILogger logger,
         Action<ILogger> logStart,
@@ -53,10 +52,9 @@ public static class PhaseTimer
         Func<ValueTask<TResult>> action)
     {
         logStart(logger);
-        var stopwatch = Stopwatch.StartNew();
+        var started = Stopwatch.GetTimestamp();
         var result = await action().ConfigureAwait(false);
-        stopwatch.Stop();
-        logComplete(logger, result, stopwatch.Elapsed.TotalSeconds);
+        logComplete(logger, result, Stopwatch.GetElapsedTime(started).TotalSeconds);
         return result;
     }
 
@@ -72,15 +70,14 @@ public static class PhaseTimer
         Action action)
     {
         logStart(logger);
-        var stopwatch = Stopwatch.StartNew();
+        var started = Stopwatch.GetTimestamp();
         try
         {
             action();
         }
         finally
         {
-            stopwatch.Stop();
-            logComplete(logger, stopwatch.Elapsed.TotalSeconds);
+            logComplete(logger, Stopwatch.GetElapsedTime(started).TotalSeconds);
         }
     }
 }

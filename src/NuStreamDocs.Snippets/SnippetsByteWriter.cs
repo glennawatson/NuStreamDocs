@@ -12,7 +12,7 @@ internal static class SnippetsByteWriter
     /// <summary>Writes <paramref name="b"/> as a single UTF-8 byte to <paramref name="writer"/>.</summary>
     /// <param name="writer">Sink.</param>
     /// <param name="b">Byte to write.</param>
-    public static void WriteOne(IBufferWriter<byte> writer, byte b)
+    internal static void WriteOne(IBufferWriter<byte> writer, byte b)
     {
         var dst = writer.GetSpan(1);
         dst[0] = b;

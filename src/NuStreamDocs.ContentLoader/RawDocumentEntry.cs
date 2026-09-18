@@ -9,4 +9,5 @@ namespace NuStreamDocs.ContentLoader;
 /// <summary>One remote Markdown document to pull in, paired with the route it should be served at.</summary>
 /// <param name="Url">Absolute URL of the raw Markdown (for example a <c>raw.githubusercontent.com</c> link).</param>
 /// <param name="RoutePath">Forward-slashed path relative to the input root that the document is served at (e.g. <c>guide/setup.md</c>).</param>
+[System.Diagnostics.DebuggerDisplay("RawDocumentEntry: {ToString(),nq}")]
 public readonly record struct RawDocumentEntry(UrlPath Url, FilePath RoutePath);

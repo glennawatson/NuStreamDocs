@@ -15,8 +15,11 @@ namespace NuStreamDocs.Feed;
 /// <c>{OutputRoot}/{OutputSubdirectory}/feed.xml</c> (RSS) and
 /// <c>atom.xml</c> (Atom).
 /// </summary>
-public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger)
-    : IBuildConfigurePlugin, IBuildFinalizePlugin
+/// <param name="options">Feed generation options.</param>
+/// <param name="timeProvider">Supplies feed generation timestamps.</param>
+/// <param name="logger">Receives feed generation diagnostics.</param>
+[System.Diagnostics.DebuggerDisplay("FeedPlugin: {Name}")]
+public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, ILogger logger) : IBuildConfigurePlugin, IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
     private readonly FeedOptions _options = ValidateOptions(options);
@@ -24,7 +27,7 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
     /// <summary>Wall-clock provider.</summary>
     private readonly TimeProvider _timeProvider = timeProvider;
 
-    /// <summary>Logger.</summary>
+    /// <summary>Receives feed generation diagnostics.</summary>
     private readonly ILogger _logger = logger;
 
     /// <summary>Input root captured from the configure phase.</summary>
@@ -79,9 +82,9 @@ public sealed class FeedPlugin(FeedOptions options, TimeProvider timeProvider, I
         }
 
         var outputDir = Path.Combine(context.OutputRoot, _options.OutputSubdirectory);
-        Directory.CreateDirectory(outputDir);
+        _ = Directory.CreateDirectory(outputDir);
         var generatedAt = _timeProvider.GetUtcNow();
-        FeedEmitter.WriteEnabledFormats(_options, outputDir, posts, generatedAt, _logger);
+        _ = FeedEmitter.WriteEnabledFormats(_options, outputDir, posts, generatedAt, _logger);
 
         return ValueTask.CompletedTask;
     }

@@ -7,6 +7,9 @@ namespace NuStreamDocs.Search.Pagefind.Tests;
 /// <summary>Defaults coverage for <see cref="PagefindOptions"/>.</summary>
 public class PagefindOptionsTests
 {
+    /// <summary>Minimum token length of the default options.</summary>
+    private const int DefaultMinimumLength = 3;
+
     /// <summary><see cref="PagefindOptions.Default"/> has the documented baseline values.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -14,7 +17,7 @@ public class PagefindOptionsTests
     {
         var d = PagefindOptions.Default;
         await Assert.That(d.OutputSubdirectory.Value).IsEqualTo("search");
-        await Assert.That(d.MinTokenLength).IsEqualTo(3);
+        await Assert.That(d.MinTokenLength).IsEqualTo(DefaultMinimumLength);
         await Assert.That(d.SearchableFrontmatterKeys.Length).IsEqualTo(0);
         await Assert.That(d.SectionPriorities.Length).IsEqualTo(0);
         await Assert.That(d.RunCli).IsTrue();
@@ -28,7 +31,8 @@ public class PagefindOptionsTests
     [Test]
     public async Task DefaultIsNotMutatedByWithExpression()
     {
-        _ = PagefindOptions.Default with { MinTokenLength = 99 };
-        await Assert.That(PagefindOptions.Default.MinTokenLength).IsEqualTo(3);
+        const int customMinimumLength = 99;
+        _ = PagefindOptions.Default with { MinTokenLength = customMinimumLength };
+        await Assert.That(PagefindOptions.Default.MinTokenLength).IsEqualTo(DefaultMinimumLength);
     }
 }

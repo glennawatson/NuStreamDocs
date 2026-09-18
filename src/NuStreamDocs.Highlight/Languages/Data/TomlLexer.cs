@@ -45,7 +45,7 @@ public static class TomlLexer
             RecognizeStringLiterals = true,
             RecognizeNumericLiterals = true,
             KeywordConstants = KeywordConstants,
-            KeywordConstantFirst = KeywordConstantFirst
+            KeywordConstantFirst = KeywordConstantFirst,
         };
 
         return IniFamilyRules.CreateLexer(config);

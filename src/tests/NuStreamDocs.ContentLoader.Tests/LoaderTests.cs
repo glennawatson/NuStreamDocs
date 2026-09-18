@@ -12,6 +12,18 @@ namespace NuStreamDocs.ContentLoader.Tests;
 /// <summary>Coverage for the built-in <see cref="IContentLoader"/> implementations.</summary>
 public class LoaderTests
 {
+    /// <summary>Names the header whose scope is restricted to a loader.</summary>
+    private const string LoaderHeaderName = "X-Loader";
+
+    /// <summary>Body accepted by both JSON and raw-document transports.</summary>
+    private const string RemoteBody = """[{"slug":"remote","body":"remote body"}]""";
+
+    /// <summary>Gets the route shared by file-loader tests.</summary>
+    private static ReadOnlySpan<byte> SlugRoute => "p/{slug}.md"u8;
+
+    /// <summary>Gets the configured request header name as UTF-8 bytes.</summary>
+    private static ReadOnlySpan<byte> LoaderHeaderBytes => "X-Loader"u8;
+
     /// <summary>The file loader reads a JSON array and produces pages.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,7 +35,7 @@ public class LoaderTests
             var path = Path.Combine(dir.FullName, "data.json");
             await File.WriteAllTextAsync(path, "[{\"slug\":\"a\",\"title\":\"A\",\"body\":\"Hi A\"}]");
             var loader =
-                new FileContentLoader(new(path), ContentMapping.ForRoute("p/{slug}.md"u8).WithBodyKey("body"u8));
+                new FileContentLoader(new(path), ContentMapping.ForRoute(SlugRoute).WithBodyKey("body"u8));
 
             var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
@@ -49,7 +61,7 @@ public class LoaderTests
             await File.WriteAllTextAsync(path, "posts:\n  - slug: b\n    title: B\n");
             var loader = new FileContentLoader(
                 new(path),
-                ContentMapping.ForRoute("p/{slug}.md"u8).WithCollectionPointer("posts"u8));
+                ContentMapping.ForRoute(SlugRoute).WithCollectionPointer("posts"u8));
 
             var pages = await loader.LoadAsync(new(default), CancellationToken.None);
 
@@ -69,8 +81,8 @@ public class LoaderTests
     {
         var loader =
             new FileContentLoader(
-                new(Path.Combine(Path.GetTempPath(), "nstd-missing-" + Guid.NewGuid().ToString("N") + ".json")),
-                ContentMapping.ForRoute("p/{slug}.md"u8));
+                new(Path.Combine(Path.GetTempPath(), $"nstd-missing-{Guid.NewGuid():N}.json")),
+                ContentMapping.ForRoute(SlugRoute));
         await Assert.That(async () => _ = await loader.LoadAsync(new(default), CancellationToken.None))
             .Throws<ContentLoaderException>();
     }
@@ -86,7 +98,7 @@ public class LoaderTests
             [],
             [],
             ContentMapping.ForRoute("api/{id}.md"u8).WithBodyKey("body"u8).WithCollectionPointer("results"u8),
-            () => StubHttpHandler.ClientReturning(Json),
+            static () => StubHttpHandler.ClientReturning(Json),
             NullLogger.Instance);
 
         var pages = await loader.LoadAsync(new(default), CancellationToken.None);
@@ -101,7 +113,7 @@ public class LoaderTests
     [Test]
     public async Task HttpLoaderPostsWhenBodyGiven()
     {
-        StubHttpHandler handler = new(_ => (HttpStatusCode.OK, "{\"data\":{\"nodes\":[{\"id\":\"q\"}]}}"));
+        StubHttpHandler handler = new(static _ => (HttpStatusCode.OK, "{\"data\":{\"nodes\":[{\"id\":\"q\"}]}}"));
         var loader = new HttpContentLoader(
             (UrlPath)"https://gql.example.test/graphql",
             [.. "{\"query\":\"{ nodes { id } }\"}"u8],
@@ -126,7 +138,7 @@ public class LoaderTests
             [],
             [],
             ContentMapping.ForRoute("api/{id}.md"u8),
-            () => new(new StubHttpHandler(_ => (HttpStatusCode.InternalServerError, "boom"))),
+            static () => new(new StubHttpHandler(static _ => (HttpStatusCode.InternalServerError, "boom"))),
             NullLogger.Instance);
 
         await Assert.That(async () => _ = await loader.LoadAsync(new(default), CancellationToken.None))
@@ -142,7 +154,7 @@ public class LoaderTests
         var loader = new RawDocumentContentLoader(
             [new((UrlPath)"https://raw.example.test/guide.md", new("guide/remote.md"))],
             [],
-            () => StubHttpHandler.ClientReturning(Markdown),
+            static () => StubHttpHandler.ClientReturning(Markdown),
             NullLogger.Instance);
 
         var pages = await loader.LoadAsync(new(default), CancellationToken.None);
@@ -151,4 +163,112 @@ public class LoaderTests
         await Assert.That(pages[0].RelativePath.Value).IsEqualTo("guide/remote.md");
         await Assert.That(Encoding.UTF8.GetString(pages[0].MarkdownBytes)).IsEqualTo(Markdown);
     }
+
+    /// <summary>Default transports remain usable across repeated loads.</summary>
+    /// <param name="rawDocument">True to load raw Markdown; false to map JSON.</param>
+    /// <param name="cancellationToken">Token that cancels the test.</param>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task DefaultClientSupportsRepeatedLoads(bool rawDocument, CancellationToken cancellationToken)
+    {
+        const int LoadCount = 2;
+        await using var server = new LoopbackHttpServer(LoadCount, RemoteBody);
+        var loader = CreateHttpLoader(rawDocument, server.Endpoint, [], null);
+
+        for (var i = 0; i < LoadCount; i++)
+        {
+            var pages = await loader.LoadAsync(new(default), cancellationToken);
+            await Assert.That(pages.Length).IsEqualTo(1);
+            await Assert.That(pages[0].RelativePath.Value).IsEqualTo("remote.md");
+            await Assert.That(Encoding.UTF8.GetString(pages[0].MarkdownBytes)).Contains("remote body");
+        }
+
+        await Assert.That((await server.Requests).Length).IsEqualTo(LoadCount);
+    }
+
+    /// <summary>Default transports isolate configured headers and ignore response cookies.</summary>
+    /// <param name="rawDocument">True to load raw Markdown; false to map JSON.</param>
+    /// <param name="cancellationToken">Token that cancels the test.</param>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task DefaultClientKeepsHeadersAndCookiesIsolated(bool rawDocument, CancellationToken cancellationToken)
+    {
+        const int RequestCount = 3;
+        await using var server = new LoopbackHttpServer(RequestCount, RemoteBody);
+        var first = CreateHttpLoader(rawDocument, server.Endpoint, [([.. LoaderHeaderBytes], [.. "first"u8])], null);
+        var second = CreateHttpLoader(rawDocument, server.Endpoint, [([.. LoaderHeaderBytes], [.. "second"u8])], null);
+        var plain = CreateHttpLoader(rawDocument, server.Endpoint, [], null);
+
+        _ = await first.LoadAsync(new(default), cancellationToken);
+        _ = await second.LoadAsync(new(default), cancellationToken);
+        _ = await plain.LoadAsync(new(default), cancellationToken);
+
+        var requests = await server.Requests;
+        await Assert.That(requests[0][LoaderHeaderName]).IsEqualTo("first");
+        await Assert.That(requests[1][LoaderHeaderName]).IsEqualTo("second");
+        await Assert.That(requests[^1].ContainsKey(LoaderHeaderName)).IsFalse();
+        for (var i = 0; i < requests.Length; i++)
+        {
+            await Assert.That(requests[i].ContainsKey("Cookie")).IsFalse();
+        }
+    }
+
+    /// <summary>Loader success and failure leave supplied clients usable without changing their default headers.</summary>
+    /// <param name="rawDocument">True to load raw Markdown; false to map JSON.</param>
+    /// <param name="fails">True to return an unsuccessful status from the transport.</param>
+    /// <param name="cancellationToken">Token that cancels the test.</param>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    [Arguments(false, false)]
+    [Arguments(false, true)]
+    [Arguments(true, false)]
+    [Arguments(true, true)]
+    public async Task SuppliedClientRemainsCallerOwned(bool rawDocument, bool fails, CancellationToken cancellationToken)
+    {
+        var status = fails ? HttpStatusCode.InternalServerError : HttpStatusCode.OK;
+        using var fixture = new HttpClientFixture(status, RemoteBody);
+        var handler = fixture.Handler;
+        var client = fixture.Client;
+        client.DefaultRequestHeaders.Add("X-Caller", "caller");
+        var endpoint = new Uri("https://transport.example.test/content");
+        using var initialResponse = await client.GetAsync(endpoint, cancellationToken);
+        await Assert.That(initialResponse.StatusCode).IsEqualTo(status);
+        var loader = CreateHttpLoader(rawDocument, endpoint.AbsoluteUri, [([.. LoaderHeaderBytes], [.. "scoped"u8])], () => client);
+
+        if (fails)
+        {
+            await Assert.That(async () => _ = await loader.LoadAsync(new(default), cancellationToken)).Throws<ContentLoaderException>();
+        }
+        else
+        {
+            _ = await loader.LoadAsync(new(default), cancellationToken);
+            _ = await loader.LoadAsync(new(default), cancellationToken);
+        }
+
+        await Assert.That(handler.Requests[1].Headers.Contains(LoaderHeaderName)).IsTrue();
+        await Assert.That(client.DefaultRequestHeaders.Contains(LoaderHeaderName)).IsFalse();
+        using var response = await client.GetAsync(endpoint, cancellationToken);
+        await Assert.That(response.StatusCode).IsEqualTo(status);
+        await Assert.That(handler.Requests[^1].Headers.Contains(LoaderHeaderName)).IsFalse();
+        await Assert.That(handler.Requests[^1].Headers.Contains("X-Caller")).IsTrue();
+    }
+
+    /// <summary>Builds either HTTP-backed loader with the selected transport.</summary>
+    /// <param name="rawDocument">True to load raw Markdown; false to map JSON.</param>
+    /// <param name="endpoint">Response endpoint.</param>
+    /// <param name="headers">Headers scoped to the loader.</param>
+    /// <param name="clientFactory">Optional factory for a caller-owned client.</param>
+    /// <returns>The configured loader.</returns>
+    private static IContentLoader CreateHttpLoader(
+        bool rawDocument,
+        UrlPath endpoint,
+        (byte[] Name, byte[] Value)[] headers,
+        Func<HttpClient>? clientFactory) =>
+        rawDocument
+            ? new RawDocumentContentLoader([new(endpoint, new("remote.md"))], headers, clientFactory, NullLogger.Instance)
+            : new HttpContentLoader(endpoint, [], headers, ContentMapping.ForRoute("{slug}.md"u8).WithBodyKey("body"u8), clientFactory, NullLogger.Instance);
 }

@@ -18,6 +18,15 @@ public static class SfntTableReader
     /// <summary>Size in bytes of a 16-bit field.</summary>
     private const int Uint16Size = 2;
 
+    /// <summary>Offset of the table count in the sfnt header.</summary>
+    private const int TableCountOffset = 4;
+
+    /// <summary>Offset of a table's location in its directory entry.</summary>
+    private const int TableOffsetOffset = 8;
+
+    /// <summary>Offset of a table's byte length in its directory entry.</summary>
+    private const int TableLengthOffset = 12;
+
     /// <summary>Tag <c>head</c>.</summary>
     private const uint HeadTag = 0x68656164;
 
@@ -58,20 +67,20 @@ public static class SfntTableReader
             return null;
         }
 
-        var numTables = BinaryPrimitives.ReadUInt16BigEndian(sfnt[4..]);
+        var numTables = BinaryPrimitives.ReadUInt16BigEndian(sfnt[TableCountOffset..]);
         if (sfnt.Length < OffsetTableSize + (numTables * TableRecordSize))
         {
             return null;
         }
 
-        if (!TryFindTable(sfnt, numTables, HeadTag, out var headStart, out var headLen) ||
-            headLen < HeadUnitsPerEmOffset + Uint16Size)
+        if (!TryFindTable(sfnt, numTables, HeadTag, out var headStart, out var headLen)
+            || headLen < HeadUnitsPerEmOffset + Uint16Size)
         {
             return null;
         }
 
-        if (!TryFindTable(sfnt, numTables, HheaTag, out var hheaStart, out var hheaLen) ||
-            hheaLen < HheaLineGapOffset + Uint16Size)
+        if (!TryFindTable(sfnt, numTables, HheaTag, out var hheaStart, out var hheaLen)
+            || hheaLen < HheaLineGapOffset + Uint16Size)
         {
             return null;
         }
@@ -95,18 +104,15 @@ public static class SfntTableReader
     /// <returns>The x-height and cap-height, or <c>(0, 0)</c>.</returns>
     private static (int XHeight, int CapHeight) ReadOs2Heights(ReadOnlySpan<byte> sfnt, int numTables)
     {
-        if (!TryFindTable(sfnt, numTables, Os2Tag, out var os2Start, out var os2Len) ||
-            os2Len < Os2CapHeightOffset + Uint16Size)
+        if (!TryFindTable(sfnt, numTables, Os2Tag, out var os2Start, out var os2Len)
+            || os2Len < Os2CapHeightOffset + Uint16Size)
         {
             return (0, 0);
         }
 
-        if (BinaryPrimitives.ReadUInt16BigEndian(sfnt.Slice(os2Start)) < Os2MetricsMinVersion)
-        {
-            return (0, 0);
-        }
-
-        return (
+        return BinaryPrimitives.ReadUInt16BigEndian(sfnt.Slice(os2Start)) < Os2MetricsMinVersion
+            ? (0, 0)
+            : (
             BinaryPrimitives.ReadInt16BigEndian(sfnt.Slice(os2Start + Os2XHeightOffset)),
             BinaryPrimitives.ReadInt16BigEndian(sfnt.Slice(os2Start + Os2CapHeightOffset)));
     }
@@ -128,8 +134,8 @@ public static class SfntTableReader
                 continue;
             }
 
-            var offset = BinaryPrimitives.ReadUInt32BigEndian(record[8..]);
-            var len = BinaryPrimitives.ReadUInt32BigEndian(record[12..]);
+            var offset = BinaryPrimitives.ReadUInt32BigEndian(record[TableOffsetOffset..]);
+            var len = BinaryPrimitives.ReadUInt32BigEndian(record[TableLengthOffset..]);
             if (offset > (uint)sfnt.Length || len > (uint)sfnt.Length - offset)
             {
                 break;

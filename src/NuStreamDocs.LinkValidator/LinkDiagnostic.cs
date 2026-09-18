@@ -11,6 +11,7 @@ namespace NuStreamDocs.LinkValidator;
 /// <param name="Link">The raw href value (or fragment).</param>
 /// <param name="Severity">Whether the finding is fatal under strict mode.</param>
 /// <param name="Message">Human-readable description carried across the diagnostic boundary.</param>
+[System.Diagnostics.DebuggerDisplay("LinkDiagnostic: {ToString(),nq}")]
 public readonly record struct LinkDiagnostic(
     UrlPath SourcePage,
     UrlPath Link,

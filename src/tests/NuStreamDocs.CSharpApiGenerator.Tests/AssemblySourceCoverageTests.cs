@@ -17,7 +17,7 @@ public class AssemblySourceCoverageTests
     [Test]
     public async Task CompositeEmpty()
     {
-        CompositeAssemblySource composite = new([]);
+        using CompositeAssemblySource composite = new([]);
         var count = 0;
         await foreach (var g in composite.DiscoverAsync())
         {
@@ -32,7 +32,7 @@ public class AssemblySourceCoverageTests
     [Test]
     public async Task CompositeForwardsEmpty()
     {
-        CompositeAssemblySource composite = new([new EmptySource()]);
+        using CompositeAssemblySource composite = new([new EmptySource()]);
         var count = 0;
         await foreach (var g in composite.DiscoverAsync())
         {
@@ -47,8 +47,8 @@ public class AssemblySourceCoverageTests
     [Test]
     public async Task LocalEmpty()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smkd-las-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(dir);
+        var dir = Path.Combine(Path.GetTempPath(), $"smkd-las-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(dir);
         try
         {
             LocalAssemblySource local = new("net10.0", [], [dir]);
@@ -91,6 +91,7 @@ public class AssemblySourceCoverageTests
     private sealed class EmptySource : IAssemblySource
     {
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
         /// <inheritdoc/>

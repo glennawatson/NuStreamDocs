@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.CSharpApiGenerator</PackageId>
     <Description>Generate API reference pages from your .NET assemblies as part of your NuStreamDocs build. Point at NuGet packages or local DLLs and the plugin writes Markdown reference docs into your docs tree, ready to be linked from your handwritten content.</Description>
     <RootNamespace>NuStreamDocs.CSharpApiGenerator</RootNamespace>

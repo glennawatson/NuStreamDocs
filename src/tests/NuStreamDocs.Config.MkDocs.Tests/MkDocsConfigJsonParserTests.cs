@@ -2,13 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace NuStreamDocs.Config.MkDocs.Tests;
 
 /// <summary>Behavior tests for <c>MkDocsConfigJsonParser</c>.</summary>
 public class MkDocsConfigJsonParserTests
 {
+    /// <summary>Theme selected when no valid theme name is configured.</summary>
+    private const string DefaultThemeName = "material";
+
     /// <summary>An empty object yields all defaults.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -17,7 +18,7 @@ public class MkDocsConfigJsonParserTests
         var config = MkDocsConfigJsonParser.FromJson("{}"u8);
         await Assert.That(config.SiteName).IsEqualTo(string.Empty);
         await Assert.That(config.SiteUrl).IsNull();
-        await Assert.That(config.ThemeName).IsEqualTo("material");
+        await Assert.That(config.ThemeName).IsEqualTo(DefaultThemeName);
         await Assert.That(config.UseDirectoryUrls).IsTrue();
     }
 
@@ -26,8 +27,7 @@ public class MkDocsConfigJsonParserTests
     [Test]
     public async Task SiteFieldsRoundtrip()
     {
-        const string Json = "{\"site_name\":\"Docs\",\"site_url\":\"https://x.test/\",\"use_directory_urls\":false}";
-        var config = MkDocsConfigJsonParser.FromJson(Encoding.UTF8.GetBytes(Json));
+        var config = MkDocsConfigJsonParser.FromJson("{\"site_name\":\"Docs\",\"site_url\":\"https://x.test/\",\"use_directory_urls\":false}"u8);
         await Assert.That(config.SiteName).IsEqualTo("Docs");
         await Assert.That(config.SiteUrl).IsEqualTo("https://x.test/");
         await Assert.That(config.UseDirectoryUrls).IsFalse();
@@ -57,7 +57,7 @@ public class MkDocsConfigJsonParserTests
     public async Task ThemeObjectWithoutName()
     {
         var config = MkDocsConfigJsonParser.FromJson("{\"theme\":{\"palette\":\"dark\"}}"u8);
-        await Assert.That(config.ThemeName).IsEqualTo("material");
+        await Assert.That(config.ThemeName).IsEqualTo(DefaultThemeName);
     }
 
     /// <summary>Theme of an unexpected JSON kind also falls back.</summary>
@@ -66,10 +66,10 @@ public class MkDocsConfigJsonParserTests
     public async Task ThemeUnexpectedKind()
     {
         var config = MkDocsConfigJsonParser.FromJson("{\"theme\":42}"u8);
-        await Assert.That(config.ThemeName).IsEqualTo("material");
+        await Assert.That(config.ThemeName).IsEqualTo(DefaultThemeName);
     }
 
-    /// <summary>use_directory_urls of an unexpected kind falls back to true.</summary>
+    /// <summary>An unexpected use_directory_urls value falls back to true.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task UseDirectoryUrlsFallback()

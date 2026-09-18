@@ -2,11 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Highlight;
 using NuStreamDocs.MarkdownExtensions;
 using NuStreamDocs.Mermaid;
@@ -24,14 +26,14 @@ namespace NuStreamDocs.Benchmarks;
 /// so individual times measure the per-build cost (parse + render +
 /// plugin hooks + write) without the corpus-creation overhead.
 /// </remarks>
+[DebuggerDisplay("BuildPipelineBenchmarks: Pages={Pages}")]
 [ShortRunJob]
 [MemoryDiagnoser]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class BuildPipelineBenchmarks
 {
+    /// <summary>Reserves enough text space for each generated page.</summary>
+    private const int PageTextCapacity = 1024;
+
     /// <summary>Small synthetic-corpus size (smoke).</summary>
     private const int SmallPages = 50;
 
@@ -54,25 +56,25 @@ public class BuildPipelineBenchmarks
     {
         _inputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-bench-in-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         _outputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_inputRoot);
+            $"smkd-bench-out-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(_inputRoot);
 
         // Spread pages across nested sections so nav rendering exercises depth.
+        DirectoryPath[] directories =
+        [
+            _inputRoot,
+            Path.Combine(_inputRoot, "guide"),
+            Path.Combine(_inputRoot, "guide", "deep"),
+            Path.Combine(_inputRoot, "reference"),
+            Path.Combine(_inputRoot, "blog")
+        ];
         for (var i = 0; i < Pages; i++)
         {
-            var bucket = i % 5;
-            var dir = bucket switch
-            {
-                0 => _inputRoot,
-                1 => Path.Combine(_inputRoot, "guide"),
-                2 => Path.Combine(_inputRoot, "guide", "deep"),
-                3 => Path.Combine(_inputRoot, "reference"),
-                _ => Path.Combine(_inputRoot, "blog")
-            };
-            Directory.CreateDirectory(dir);
+            var dir = directories[i % directories.Length];
+            _ = Directory.CreateDirectory(dir);
             File.WriteAllText(Path.Combine(dir, $"page-{i}.md"), Page(i));
         }
     }
@@ -86,84 +88,80 @@ public class BuildPipelineBenchmarks
     }
 
     /// <summary>Resets the per-iteration output directory.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [IterationSetup]
     public void IterationSetup() => ResetOutput();
 
     /// <summary>Build pipeline with no plugins (pure render + write).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark(Baseline = true)]
-    public int Baseline() =>
+    public Task<int> Baseline() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with the markdown-extension bundle.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithMarkdownExtensions() =>
+    public Task<int> WithMarkdownExtensions() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
             .UseCommonMarkdownExtensions()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with syntax highlighting.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithHighlight() =>
+    public Task<int> WithHighlight() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
             .UseHighlight()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with the nav plugin (full render).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithNav() =>
+    public Task<int> WithNav() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
             .UseNav()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with privacy in audit-only mode (no network).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithPrivacyAuditOnly() =>
+    public Task<int> WithPrivacyAuditOnly() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
             .UsePrivacy(static opts => opts with { AuditOnly = true })
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with mermaid retag (no diagrams in fixture, so it's a pre-filter cost only).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithMermaid() =>
+    public Task<int> WithMermaid() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
             .UseMermaid()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with all the in-process plugins stacked: markdown extensions + highlight + nav + mermaid + privacy audit.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int FullStackInProcess() =>
+    public Task<int> FullStackInProcess() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
@@ -172,15 +170,14 @@ public class BuildPipelineBenchmarks
             .UseNav()
             .UseMermaid()
             .UsePrivacy(static opts => opts with { AuditOnly = true })
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Generates one realistic markdown page.</summary>
     /// <param name="index">Page index for unique anchors.</param>
     /// <returns>Markdown source.</returns>
-    private static string Page(int index) =>
-        new StringBuilder(1024)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ApiCompatString Page(int index) =>
+        new StringBuilder(PageTextCapacity)
             .Append("# Page ").Append(index).Append('\n').Append('\n')
             .Append("Some intro text with **bold** and `code` and a [link](https://example.com/").Append(index)
             .Append(").\n\n")
@@ -213,6 +210,6 @@ public class BuildPipelineBenchmarks
     private void ResetOutput()
     {
         TryDelete(_outputRoot);
-        Directory.CreateDirectory(_outputRoot);
+        _ = Directory.CreateDirectory(_outputRoot);
     }
 }

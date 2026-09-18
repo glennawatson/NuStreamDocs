@@ -9,13 +9,16 @@ namespace NuStreamDocs.Search.Sqlite.Tests;
 /// <summary>Coverage for <c>SqliteOptionsExtensions</c>.</summary>
 public class SqliteOptionsExtensionsTests
 {
+    /// <summary>Identifies the additional directory excluded by option tests.</summary>
+    private const string DraftPrefix = "drafts/";
+
     /// <summary><c>WithExcludePathPrefixes</c> replaces the list.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WithExcludePathPrefixesReplaces()
     {
-        var o = SqliteOptions.Default.WithExcludePathPrefixes("api/", "drafts/");
-        await Assert.That(o.ExcludePathPrefixes.Length).IsEqualTo(2);
+        var o = SqliteOptions.Default.WithExcludePathPrefixes("api/", DraftPrefix);
+        await Assert.That(Array.ConvertAll(o.ExcludePathPrefixes, Encoding.UTF8.GetString).AsSpan().SequenceEqual(["api/", DraftPrefix])).IsTrue();
     }
 
     /// <summary><c>AddExcludePathPrefixes</c> appends.</summary>
@@ -23,8 +26,8 @@ public class SqliteOptionsExtensionsTests
     [Test]
     public async Task AddExcludePathPrefixesAppends()
     {
-        var o = SqliteOptions.Default.WithExcludePathPrefixes("api/").AddExcludePathPrefixes("drafts/");
-        await Assert.That(o.ExcludePathPrefixes.Length).IsEqualTo(2);
+        var o = SqliteOptions.Default.WithExcludePathPrefixes("api/").AddExcludePathPrefixes(DraftPrefix);
+        await Assert.That(Array.ConvertAll(o.ExcludePathPrefixes, Encoding.UTF8.GetString).AsSpan().SequenceEqual(["api/", DraftPrefix])).IsTrue();
     }
 
     /// <summary>The single-byte-span exclude overload accepts u8 literals directly.</summary>
@@ -59,8 +62,9 @@ public class SqliteOptionsExtensionsTests
     [Test]
     public async Task ScalarSettersRoundTrip()
     {
-        var o = SqliteOptions.Default.WithMinTokenLength(5).WithOutputSubdirectory("find");
-        await Assert.That(o.MinTokenLength).IsEqualTo(5);
+        const int MinTokenLength = 5;
+        var o = SqliteOptions.Default.WithMinTokenLength(MinTokenLength).WithOutputSubdirectory("find");
+        await Assert.That(o.MinTokenLength).IsEqualTo(MinTokenLength);
         await Assert.That(o.OutputSubdirectory.Value).IsEqualTo("find");
     }
 
@@ -71,7 +75,7 @@ public class SqliteOptionsExtensionsTests
     {
         var seeded = SqliteOptions.Default.WithSearchableFrontmatterKeys("tags");
         var added = seeded.AddSearchableFrontmatterKeys("summary", "author");
-        await Assert.That(added.SearchableFrontmatterKeys.Length).IsEqualTo(3);
+        await Assert.That(Array.ConvertAll(added.SearchableFrontmatterKeys, Encoding.UTF8.GetString).AsSpan().SequenceEqual(["tags", "summary", "author"])).IsTrue();
     }
 
     /// <summary><c>WithSectionPriorities(string)</c> encodes UTF-8.</summary>

@@ -138,7 +138,7 @@ public static class Utf8HtmlScanner
             return false;
         }
 
-        var detectedLevel = html[absOpen + 2] - (byte)'0';
+        var detectedLevel = html[absOpen + OpenTagStubLength - 1] - (byte)'0';
         if (detectedLevel is < MinHeadingLevel or > MaxHeadingLevel)
         {
             return false;

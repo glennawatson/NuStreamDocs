@@ -9,8 +9,17 @@ namespace NuStreamDocs.Fonts.Tests;
 /// <summary>Coverage for <see cref="GoogleFontProvider"/> (offline, fixture-fed).</summary>
 public class GoogleFontProviderTests
 {
-    /// <summary>A captured css2 fixture with a labelled <c>latin</c> block and a labelled <c>cyrillic</c> block.</summary>
-    private const string GoogleCss = """
+    /// <summary>Expected bold weight in the fixture.</summary>
+    private const int BoldWeight = 700;
+
+    /// <summary>Expected normal weight in the fixture.</summary>
+    private const int NormalWeight = 400;
+
+    /// <summary>Gets the expected family.</summary>
+    private static ReadOnlySpan<byte> FamilyBytes => "Source Sans 3"u8;
+
+    /// <summary>Gets a stylesheet with Latin and Cyrillic subsets.</summary>
+    private static ReadOnlySpan<byte> GoogleCss => """
                                      /* cyrillic */
                                      @font-face {
                                        font-family: 'Source Sans 3';
@@ -27,14 +36,14 @@ public class GoogleFontProviderTests
                                        src: url(https://fonts.gstatic.com/s/sourcesans3/v18/lat.woff2) format('woff2');
                                        unicode-range: U+0000-00FF;
                                      }
-                                     """;
+                                     """u8;
 
     /// <summary>The css2 URL encodes the family with <c>+</c>, the (sorted) weight list, and the display token — and carries no <c>subset=</c> param (css2 ignores it).</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task BuildsCss2Url()
     {
-        var face = FontsOptions.Default.AddGoogleFont("Source Sans 3"u8, 700, 400).Faces[0];
+        var face = FontsOptions.Default.AddGoogleFont(FamilyBytes, BoldWeight, NormalWeight).Faces[0];
         var url = (string)GoogleFontProvider.BuildStylesheetUrl(face);
         await Assert.That(url)
             .IsEqualTo("https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;700&display=swap");
@@ -48,11 +57,11 @@ public class GoogleFontProviderTests
     {
         using TempDir dir = new();
         var cache = new FontDownloadCache(dir.Root, true);
-        var face = FontsOptions.Default.AddGoogleFont("Source Sans 3"u8, 400).Faces[0];
+        var face = FontsOptions.Default.AddGoogleFont(FamilyBytes, NormalWeight).Faces[0];
 
         await File.WriteAllBytesAsync(
             cache.CacheFilePath(GoogleFontProvider.BuildStylesheetUrl(face)),
-            Encoding.UTF8.GetBytes(GoogleCss));
+            GoogleCss.ToArray());
         byte[] latinBytes = [10, 20, 30];
         await File.WriteAllBytesAsync(
             cache.CacheFilePath("https://fonts.gstatic.com/s/sourcesans3/v18/lat.woff2"),
@@ -67,7 +76,7 @@ public class GoogleFontProviderTests
             null,
             CancellationToken.None);
         await Assert.That(resources.Length).IsEqualTo(1);
-        await Assert.That(resources[0].Weight).IsEqualTo(400);
+        await Assert.That(resources[0].Weight).IsEqualTo(NormalWeight);
         await Assert.That(resources[0].Woff2Bytes.SequenceEqual(latinBytes)).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(resources[0].FamilyBytes)).IsEqualTo("Source Sans 3");
     }
@@ -79,11 +88,11 @@ public class GoogleFontProviderTests
     {
         using TempDir dir = new();
         var cache = new FontDownloadCache(dir.Root, true);
-        var face = FontsOptions.Default.AddGoogleFont("Source Sans 3"u8, 400).Faces[0];
+        var face = FontsOptions.Default.AddGoogleFont(FamilyBytes, NormalWeight).Faces[0];
 
         await File.WriteAllBytesAsync(
             cache.CacheFilePath(GoogleFontProvider.BuildStylesheetUrl(face)),
-            Encoding.UTF8.GetBytes(GoogleCss));
+            GoogleCss.ToArray());
         byte[] latinBytes = [11, 22, 33];
 
         // Only the latin woff2 is in the cache. If the resolver tried to fetch cyr.woff2, it would throw (offline miss).

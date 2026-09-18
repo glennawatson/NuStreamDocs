@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 using NuStreamDocs.Plugins;
 
@@ -10,6 +11,12 @@ namespace NuStreamDocs.Tests;
 /// <summary>End-to-end tests for the streaming build pipeline.</summary>
 public class BuildPipelineTests
 {
+    /// <summary>Guide Directory used by the test cases.</summary>
+    private const string GuideDirectory = "guide";
+
+    /// <summary>Expected Page Count used by the test cases.</summary>
+    private const int ExpectedPageCount = 2;
+
     /// <summary>The pipeline should walk a docs tree and emit one HTML file per markdown source.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -17,17 +24,17 @@ public class BuildPipelineTests
     {
         using var fixture = TempBuildFixture.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "a.md"), "# A");
-        Directory.CreateDirectory(Path.Combine(fixture.Input, "guide"));
-        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "guide", "b.md"), "# B");
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Input, GuideDirectory));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, GuideDirectory, "b.md"), "# B");
 
         var count = await new DocBuilder()
             .WithInput(fixture.Input)
             .WithOutput(fixture.Output)
             .BuildAsync();
 
-        await Assert.That(count).IsEqualTo(2);
+        await Assert.That(count).IsEqualTo(ExpectedPageCount);
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "a.html"))).IsTrue();
-        await Assert.That(File.Exists(Path.Combine(fixture.Output, "guide", "b.html"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(fixture.Output, GuideDirectory, "b.html"))).IsTrue();
     }
 
     /// <summary>Plugins registered via the builder receive page-render hooks during the pipeline.</summary>
@@ -46,8 +53,8 @@ public class BuildPipelineTests
             .UsePlugin(counter)
             .BuildAsync();
 
-        await Assert.That(rendered).IsEqualTo(2);
-        await Assert.That(counter.PageHits).IsEqualTo(2);
+        await Assert.That(rendered).IsEqualTo(ExpectedPageCount);
+        await Assert.That(counter.PageHits).IsEqualTo(ExpectedPageCount);
         await Assert.That(counter.ConfigureHits).IsEqualTo(1);
         await Assert.That(counter.FinalizeHits).IsEqualTo(1);
     }
@@ -98,7 +105,7 @@ public class BuildPipelineTests
         var options = BuildPipelineOptions.Default with { UseDirectoryUrls = true };
         await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(fixture.Output, "guide", "index.html"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(fixture.Output, GuideDirectory, "index.html"))).IsTrue();
     }
 
     /// <summary>Re-running with the same source bytes produces a cache hit (manifest hash match).</summary>
@@ -140,8 +147,8 @@ public class BuildPipelineTests
     [Test]
     public async Task RootArgValidation()
     {
-        await Assert.That(() => BuildPipeline.RunAsync(string.Empty, "/out", [])).Throws<ArgumentException>();
-        await Assert.That(() => BuildPipeline.RunAsync("/in", string.Empty, [])).Throws<ArgumentException>();
+        await Assert.That(static () => BuildPipeline.RunAsync(string.Empty, "/out", [])).Throws<ArgumentException>();
+        await Assert.That(static () => BuildPipeline.RunAsync("/in", string.Empty, [])).Throws<ArgumentException>();
     }
 
     /// <summary>Test pre-render plugin that replaces every <c>A</c> with <c>B</c>.</summary>
@@ -154,6 +161,7 @@ public class BuildPipelineTests
         public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
         /// <inheritdoc/>
@@ -180,6 +188,7 @@ public class BuildPipelineTests
         public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
         /// <inheritdoc/>

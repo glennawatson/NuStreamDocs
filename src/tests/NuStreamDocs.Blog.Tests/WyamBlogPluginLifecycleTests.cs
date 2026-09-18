@@ -13,7 +13,7 @@ public class WyamBlogPluginLifecycleTests
     public async Task DiscoverAsync()
     {
         using ScratchDir temp = new();
-        Directory.CreateDirectory(Path.Combine(temp.Root, "posts"));
+        _ = Directory.CreateDirectory(Path.Combine(temp.Root, "posts"));
         WyamBlogPlugin plugin = new(new("posts", [.. "Blog"u8]));
         await plugin.DiscoverAsync(new(temp.Root, "/out", [], new()), CancellationToken.None);
     }
@@ -24,8 +24,8 @@ public class WyamBlogPluginLifecycleTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-wb-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-wb-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

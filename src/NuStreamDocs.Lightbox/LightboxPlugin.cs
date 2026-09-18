@@ -3,11 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Lightbox;
 
 /// <summary>Pulls in glightbox CSS/JS and optionally wraps content images in lightbox triggers.</summary>
+[System.Diagnostics.DebuggerDisplay("LightboxPlugin: {Name}")]
 public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
 {
     /// <summary>Configured options.</summary>
@@ -33,6 +35,7 @@ public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => _options.WrapImages && html.IndexOf("<img "u8) >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PostRender(in PagePostRenderContext context) =>
         ImageWrapper.Rewrite(context.Html, _options.Selector, context.Output);
 

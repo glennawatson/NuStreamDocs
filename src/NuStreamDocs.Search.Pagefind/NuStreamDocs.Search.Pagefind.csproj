@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Search.Pagefind</PackageId>
     <Description>Pagefind-format search-index generation for NuStreamDocs. Phase 1 ships the JSON manifest used by the Material 3 theme's bespoke runtime; later phases bind the official Pagefind WASM runtime for sharded inverted-index search.</Description>
     <RootNamespace>NuStreamDocs.Search.Pagefind</RootNamespace>

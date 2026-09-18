@@ -9,17 +9,26 @@ namespace NuStreamDocs.CSharpApiGenerator.Tests;
 /// <summary>Branch-coverage tests for LocalAssemblySource.BuildFallbackIndex.</summary>
 public class LocalAssemblySourceTests
 {
+    /// <summary>Assembly File Name used by the test cases.</summary>
+    private const string AssemblyFileName = "A.dll";
+
+    /// <summary>Target Framework used by the test cases.</summary>
+    private const string TargetFramework = "net10.0";
+
+    /// <summary>Duplicate File Name used by the test cases.</summary>
+    private const string DuplicateFileName = "Dup.dll";
+
     /// <summary>The fallback index includes dlls next to every supplied assembly path.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task IndexCoversAssemblyDirectories()
     {
         using TempDir dir = new();
-        var asmA = await Touch(dir.Root, "A.dll");
+        var asmA = await Touch(dir.Root, AssemblyFileName);
         await Touch(dir.Root, "Sibling.dll");
-        LocalAssemblySource src = new("net10.0", [asmA], []);
+        LocalAssemblySource src = new(TargetFramework, [asmA], []);
         var group = await FirstGroup(src);
-        await Assert.That(group.FallbackIndex).ContainsKey("A.dll");
+        await Assert.That(group.FallbackIndex).ContainsKey(AssemblyFileName);
         await Assert.That(group.FallbackIndex).ContainsKey("Sibling.dll");
     }
 
@@ -28,7 +37,7 @@ public class LocalAssemblySourceTests
     [Test]
     public async Task EmptyDirectoryComponentSkipped()
     {
-        LocalAssemblySource src = new("net10.0", ["bare.dll"], []);
+        LocalAssemblySource src = new(TargetFramework, ["bare.dll"], []);
         var group = await FirstGroup(src);
         await Assert.That(group.FallbackIndex.Count).IsEqualTo(0);
     }
@@ -40,9 +49,9 @@ public class LocalAssemblySourceTests
     {
         using TempDir asmDir = new();
         using TempDir fallbackDir = new();
-        var asmA = await Touch(asmDir.Root, "A.dll");
+        var asmA = await Touch(asmDir.Root, AssemblyFileName);
         await Touch(fallbackDir.Root, "Fallback.dll");
-        LocalAssemblySource src = new("net10.0", [asmA], [fallbackDir.Root]);
+        LocalAssemblySource src = new(TargetFramework, [asmA], [fallbackDir.Root]);
         var group = await FirstGroup(src);
         await Assert.That(group.FallbackIndex).ContainsKey("Fallback.dll");
     }
@@ -53,10 +62,10 @@ public class LocalAssemblySourceTests
     public async Task NonexistentSearchPathSkipped()
     {
         using TempDir asmDir = new();
-        var asmA = await Touch(asmDir.Root, "A.dll");
-        LocalAssemblySource src = new("net10.0", [asmA], ["/does-not-exist-" + Guid.NewGuid().ToString("N")]);
+        var asmA = await Touch(asmDir.Root, AssemblyFileName);
+        LocalAssemblySource src = new(TargetFramework, [asmA], [$"/does-not-exist-{Guid.NewGuid():N}"]);
         var group = await FirstGroup(src);
-        await Assert.That(group.FallbackIndex).ContainsKey("A.dll");
+        await Assert.That(group.FallbackIndex).ContainsKey(AssemblyFileName);
     }
 
     /// <summary>The first directory wins on duplicate filenames.</summary>
@@ -66,12 +75,12 @@ public class LocalAssemblySourceTests
     {
         using TempDir asmDir = new();
         using TempDir fallbackDir = new();
-        var winner = await Touch(asmDir.Root, "Dup.dll");
-        await Touch(fallbackDir.Root, "Dup.dll");
+        var winner = await Touch(asmDir.Root, DuplicateFileName);
+        await Touch(fallbackDir.Root, DuplicateFileName);
         await Touch(asmDir.Root, "Asm.dll");
-        LocalAssemblySource src = new("net10.0", [Path.Combine(asmDir.Root, "Asm.dll")], [fallbackDir.Root]);
+        LocalAssemblySource src = new(TargetFramework, [Path.Combine(asmDir.Root, "Asm.dll")], [fallbackDir.Root]);
         var group = await FirstGroup(src);
-        await Assert.That(group.FallbackIndex["Dup.dll"]).IsEqualTo(winner);
+        await Assert.That(group.FallbackIndex[DuplicateFileName]).IsEqualTo(winner);
     }
 
     /// <summary>Creates an empty file at <paramref name="dir"/>/<paramref name="name"/>.</summary>
@@ -105,8 +114,8 @@ public class LocalAssemblySourceTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-las-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-las-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch root.</summary>

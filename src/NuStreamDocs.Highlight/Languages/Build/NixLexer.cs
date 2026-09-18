@@ -57,20 +57,11 @@ public static class NixLexer
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
         LineComment =
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
         BlockComment =
-            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.SlashFirst
-            },
+            new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, },
         SpecialString =
-            new(MatchIndentedString, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.SingleQuoteFirst
-            },
+            new(MatchIndentedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst, },
         IncludeDoubleQuotedString = true,
         PostStringRules =
             [new(MatchPathLiteral, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = PathFirst }],
@@ -82,7 +73,7 @@ public static class NixLexer
         IdentifierContinue = IdentifierContinue,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches a Nix indented string <c>'' ... ''</c>.</summary>

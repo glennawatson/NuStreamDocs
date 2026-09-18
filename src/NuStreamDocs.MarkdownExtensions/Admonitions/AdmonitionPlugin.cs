@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
@@ -10,12 +11,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 
 /// <summary>Admonition plugin — rewrites <c>!!! type "title"</c> blocks into <c>&lt;div class="admonition type"&gt;</c> HTML and ships the matching stylesheet.</summary>
+[System.Diagnostics.DebuggerDisplay("AdmonitionPlugin: {Name}")]
 public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>Head-link snippet injected on every page.</summary>
-    private static readonly byte[] LinkBytes =
-        [.. """<link rel="stylesheet" href="/assets/extensions/admonition.css">"""u8];
-
     /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
     [
@@ -44,14 +42,20 @@ public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvide
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
+    /// <summary>Gets the stylesheet link injected on every page.</summary>
+    private static ReadOnlySpan<byte> LinkBytes => """<link rel="stylesheet" href="/assets/extensions/admonition.css">"""u8;
+
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasAdmonitionOpener(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         AdmonitionRewriter.Rewrite(context.Source, context.Output);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(LinkBytes);
 }

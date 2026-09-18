@@ -12,11 +12,11 @@ public enum FeedFormats
     None = 0,
 
     /// <summary>Emit an RSS 2.0 feed.</summary>
-    Rss = 1,
+    Rss = 1 << 0,
 
     /// <summary>Emit an Atom 1.0 feed.</summary>
-    Atom = 2,
+    Atom = 1 << 1,
 
     /// <summary>Emit both RSS and Atom feeds.</summary>
-    Both = Rss | Atom
+    Both = Rss | Atom,
 }

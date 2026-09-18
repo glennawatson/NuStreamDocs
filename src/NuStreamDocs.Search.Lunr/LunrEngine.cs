@@ -7,22 +7,16 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Search.Lunr;
 
 /// <summary>Lunr-format <see cref="ISearchEngine"/> implementation.</summary>
-public sealed class LunrEngine : ISearchEngine
+/// <param name="language">UTF-8 Lunr language code.</param>
+/// <param name="extraStopwords">UTF-8 stopwords surfaced to the runtime.</param>
+[System.Diagnostics.DebuggerDisplay("LunrEngine: {FormatName}")]
+public sealed class LunrEngine(byte[] language, byte[][] extraStopwords) : ISearchEngine
 {
     /// <summary>UTF-8 Lunr language code emitted into the <c>config</c> block.</summary>
-    private readonly byte[] _language;
+    private readonly byte[] _language = language;
 
     /// <summary>Extra stopwords emitted into the <c>config</c> block.</summary>
-    private readonly byte[][] _extraStopwords;
-
-    /// <summary>Initializes a new instance of the <see cref="LunrEngine"/> class.</summary>
-    /// <param name="language">UTF-8 Lunr language code.</param>
-    /// <param name="extraStopwords">UTF-8 stopwords surfaced to the runtime.</param>
-    public LunrEngine(byte[] language, byte[][] extraStopwords)
-    {
-        _language = language;
-        _extraStopwords = extraStopwords;
-    }
+    private readonly byte[][] _extraStopwords = extraStopwords;
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> FormatName => "lunr"u8;

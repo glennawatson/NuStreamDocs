@@ -9,10 +9,7 @@ using NuStreamDocs.Nav;
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Parses an mkdocs.yml document's <c>nav:</c> tree into a
-/// dialect-neutral <see cref="NavEntry"/> array.
-/// </summary>
+/// <summary>Parses an mkdocs.yml document's <c>nav:</c> tree into a dialect-neutral <see cref="NavEntry"/> array.</summary>
 public static class MkDocsNavParser
 {
     /// <summary>Reads the <c>nav</c> field from <paramref name="utf8Json"/> and returns the curated tree.</summary>
@@ -22,8 +19,7 @@ public static class MkDocsNavParser
     {
         Utf8JsonReader reader = new(utf8Json, true, default);
         using var doc = JsonDocument.ParseValue(ref reader);
-        var root = doc.RootElement;
-        return !root.TryGetProperty("nav"u8, out var nav) || nav.ValueKind != JsonValueKind.Array
+        return !doc.RootElement.TryGetProperty("nav"u8, out var nav) || nav.ValueKind != JsonValueKind.Array
             ? []
             : ReadNavArray(nav);
     }
@@ -56,10 +52,13 @@ public static class MkDocsNavParser
             var items = array.EnumerateArray();
             while (items.MoveNext())
             {
-                if (TryReadEntry(items.Current, out var entry))
+                if (!TryReadEntry(items.Current, out var entry))
                 {
-                    buffer[count++] = entry;
+                    continue;
                 }
+
+                buffer[count] = entry;
+                count++;
             }
 
             return NavBuilder.ToArray(buffer, count);

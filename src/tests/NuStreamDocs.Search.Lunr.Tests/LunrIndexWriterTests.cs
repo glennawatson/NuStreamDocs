@@ -7,14 +7,20 @@ namespace NuStreamDocs.Search.Lunr.Tests;
 /// <summary>Coverage for the LunrIndexWriter overloads.</summary>
 public class LunrIndexWriterTests
 {
+    /// <summary>Names the index written by each test.</summary>
+    private const string IndexFileName = "lunr.json";
+
+    /// <summary>Gets the URL of the indexed sample document.</summary>
+    private static ReadOnlySpan<byte> DocumentUrl => "/a.html"u8;
+
     /// <summary>Three-arg Write emits a JSON file with the language tag.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WriteSimpleOverload()
     {
         using TempDir dir = new();
-        var path = Path.Combine(dir.Root, "lunr.json");
-        LunrIndexWriter.Write(path, "en"u8, [new([.. "/a.html"u8], [.. "A"u8], [.. "body"u8])]);
+        var path = Path.Combine(dir.Root, IndexFileName);
+        LunrIndexWriter.Write(path, "en"u8, [new([.. DocumentUrl], [.. "A"u8], [.. "body"u8])]);
         await Assert.That(File.Exists(path)).IsTrue();
         await Assert.That(await File.ReadAllTextAsync(path)).Contains("\"lang\":\"en\"");
     }
@@ -25,8 +31,8 @@ public class LunrIndexWriterTests
     public async Task EmptyLanguageDefaultsToEn()
     {
         using TempDir dir = new();
-        var path = Path.Combine(dir.Root, "lunr.json");
-        LunrIndexWriter.Write(path, default, [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])]);
+        var path = Path.Combine(dir.Root, IndexFileName);
+        LunrIndexWriter.Write(path, default, [new([.. DocumentUrl], [.. "A"u8], [.. "B"u8])]);
         await Assert.That(await File.ReadAllTextAsync(path)).Contains("\"lang\":\"en\"");
     }
 
@@ -36,11 +42,11 @@ public class LunrIndexWriterTests
     public async Task ExtraStopwordsEmittedWhenProvided()
     {
         using TempDir dir = new();
-        var path = Path.Combine(dir.Root, "lunr.json");
+        var path = Path.Combine(dir.Root, IndexFileName);
         LunrIndexWriter.Write(
             path,
             "en"u8,
-            [new([.. "/a.html"u8], [.. "A"u8], [.. "B"u8])],
+            [new([.. DocumentUrl], [.. "A"u8], [.. "B"u8])],
             [[.. "foo"u8], [.. "bar"u8]]);
         var json = await File.ReadAllTextAsync(path);
         await Assert.That(json).Contains("\"extra_stopwords\"");
@@ -54,7 +60,7 @@ public class LunrIndexWriterTests
     public async Task MultipleDocumentsEmitted()
     {
         using TempDir dir = new();
-        var path = Path.Combine(dir.Root, "lunr.json");
+        var path = Path.Combine(dir.Root, IndexFileName);
         LunrIndexWriter.Write(
             path,
             "en"u8,
@@ -73,8 +79,8 @@ public class LunrIndexWriterTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-lunr-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-lunr-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch root.</summary>

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
@@ -39,7 +40,7 @@ internal static class CFamilyRules
     /// <summary>Builds a single-state C-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateLexer(in CFamilyConfig config) =>
+    internal static Lexer CreateLexer(in CFamilyConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
     /// <summary>Builds a brace-style annotation-punctuation language lexer (Java / Kotlin / Scala / Dart / Groovy shape).</summary>
@@ -50,7 +51,8 @@ internal static class CFamilyRules
     /// <param name="includeCharacterLiteral">Whether <c>'x'</c> character literals are recognized.</param>
     /// <param name="specialString">Optional pre-string rule (raw / triple-quoted / interpolated).</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateBraceAnnotationLexer(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static Lexer CreateBraceAnnotationLexer(
         in KeywordTablePack tables,
         SearchValues<byte> integerSuffix,
         SearchValues<byte> floatSuffix,
@@ -67,7 +69,7 @@ internal static class CFamilyRules
             IncludePreprocessor = false,
             IncludeCharacterLiteral = includeCharacterLiteral,
             WhitespaceIncludesNewlines = true,
-            SpecialString = specialString
+            SpecialString = specialString,
         });
 
     /// <summary>
@@ -77,7 +79,8 @@ internal static class CFamilyRules
     /// </summary>
     /// <param name="tables">Keyword + operator tables.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateJvmTripleQuotedBraceLexer(in KeywordTablePack tables) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static Lexer CreateJvmTripleQuotedBraceLexer(in KeywordTablePack tables) =>
         CreateBraceAnnotationLexer(
             tables,
             CFamilyShared.JvmIntegerSuffix,
@@ -88,9 +91,9 @@ internal static class CFamilyRules
 
     /// <summary>Builds a triple-double-quoted raw-string rule (Java text blocks, Kotlin / Scala / Groovy / Dart triple-quoted strings).</summary>
     /// <returns>The triple-quoted raw-string rule.</returns>
-    public static LexerRule CreateTripleDoubleQuotedRawStringRule() =>
+    internal static LexerRule CreateTripleDoubleQuotedRawStringRule() =>
         new(
-                slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', TripleQuoteRunLength),
+                static slice => TokenMatchers.MatchRawQuotedString(slice, (byte)'"', TripleQuoteRunLength),
                 TokenClass.StringDouble,
                 LexerRule.NoStateChange)
         { FirstBytes = LanguageCommon.DoubleQuoteFirst };
@@ -98,7 +101,7 @@ internal static class CFamilyRules
     /// <summary>Builds the canonical C-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
-    public static LexerRule[] Build(in CFamilyConfig config)
+    internal static LexerRule[] Build(in CFamilyConfig config)
     {
         var rules = new CStyleRuleSet(
             BuildWhitespaceRule(config),
@@ -135,55 +138,33 @@ internal static class CFamilyRules
     /// <returns>The whitespace rule.</returns>
     private static LexerRule BuildWhitespaceRule(in CFamilyConfig config) =>
         config.WhitespaceIncludesNewlines
-            ? new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceWithNewlinesFirst
-            }
-            : new(TokenMatchers.MatchAsciiInlineWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = InlineWhitespaceFirst
-            };
+            ? new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceWithNewlinesFirst, }
+            : new(TokenMatchers.MatchAsciiInlineWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = InlineWhitespaceFirst, };
 
     /// <summary>Doc-comment rule — <c>///</c> to end-of-line.</summary>
     /// <returns>The doc-comment rule.</returns>
     private static LexerRule BuildDocCommentRule() =>
-        new(LanguageCommon.XmlDocCommentToEol, TokenClass.CommentSpecial, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.SlashFirst
-        };
+        new(LanguageCommon.XmlDocCommentToEol, TokenClass.CommentSpecial, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, };
 
     /// <summary>Line-comment rule — <c>//</c> to end-of-line.</summary>
     /// <returns>The line-comment rule.</returns>
     private static LexerRule BuildLineCommentRule() =>
-        new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.SlashFirst
-        };
+        new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, };
 
     /// <summary>Block-comment rule — non-greedy <c>/* ... */</c>.</summary>
     /// <returns>The block-comment rule.</returns>
     private static LexerRule BuildBlockCommentRule() =>
-        new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.SlashFirst
-        };
+        new(LanguageCommon.BlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, };
 
     /// <summary>Preprocessor rule — line-anchored <c>#</c> directive.</summary>
     /// <returns>The preprocessor rule.</returns>
     private static LexerRule BuildPreprocessorRule() =>
-        new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange)
-        {
-            FirstBytes = SearchValues.Create(" \t#"u8),
-            RequiresLineStart = true
-        };
+        new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create(" \t#"u8), RequiresLineStart = true, };
 
     /// <summary>Double-quoted string with backslash escapes.</summary>
     /// <returns>The double-string rule.</returns>
     private static LexerRule BuildDoubleStringRule() =>
-        new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.DoubleQuoteFirst
-        };
+        new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst, };
 
     /// <summary>Single-quoted string rule.</summary>
     /// <param name="includeCharacterLiteral">Whether the language has dedicated character literals.</param>
@@ -194,15 +175,9 @@ internal static class CFamilyRules
         // single-quote is consumed by the char rule, so put a no-op rule that
         // never fires here. Languages without char literals can still surface
         // a single-quoted string form via SpecialString.
-        if (includeCharacterLiteral)
-        {
-            return new(static _ => 0, TokenClass.StringSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.SingleQuoteFirst
-            };
-        }
-
-        return new(
+        return includeCharacterLiteral
+            ? new(static _ => 0, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst, }
+            : new(
             static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
             TokenClass.StringSingle,
             LexerRule.NoStateChange)
@@ -212,10 +187,7 @@ internal static class CFamilyRules
     /// <summary>Single-character literal rule — <c>'x'</c> or <c>'\x'</c>.</summary>
     /// <returns>The character-literal rule.</returns>
     private static LexerRule BuildCharLiteralRule() =>
-        new(LanguageCommon.CharLiteral, TokenClass.StringSingle, LexerRule.NoStateChange)
-        {
-            FirstBytes = LanguageCommon.SingleQuoteFirst
-        };
+        new(LanguageCommon.CharLiteral, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SingleQuoteFirst, };
 
     /// <summary>Hex-literal rule — <c>0x...</c> with optional suffix.</summary>
     /// <param name="config">Configuration.</param>
@@ -265,30 +237,18 @@ internal static class CFamilyRules
         ByteKeywordSet keywords,
         SearchValues<byte>? firstBytes,
         TokenClass tokenClass) =>
-        new(slice => TokenMatchers.MatchKeyword(slice, keywords), tokenClass, LexerRule.NoStateChange)
-        {
-            FirstBytes = firstBytes ?? keywords.FirstByteSet
-        };
+        new(slice => TokenMatchers.MatchKeyword(slice, keywords), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes ?? keywords.FirstByteSet, };
 
     /// <summary>Identifier rule; uses the language-specific identifier-start / continue sets when supplied, else the ASCII-letter default.</summary>
     /// <param name="config">Configuration.</param>
     /// <returns>The identifier rule.</returns>
-    private static LexerRule BuildIdentifierRule(in CFamilyConfig config)
-    {
-        if (config.IdentifierFirst is { } first && config.IdentifierContinue is { } cont)
-        {
-            return new(
+    private static LexerRule BuildIdentifierRule(in CFamilyConfig config) => config.IdentifierFirst is { } first && config.IdentifierContinue is { } cont
+        ? new(
                     slice => TokenMatchers.MatchIdentifier(slice, first, cont),
                     TokenClass.Name,
                     LexerRule.NoStateChange)
-            { FirstBytes = first };
-        }
-
-        return new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiIdentifierStart
-        };
-    }
+            { FirstBytes = first }
+        : new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, };
 
     /// <summary>Operator-alternation rule (longest-first).</summary>
     /// <param name="config">Configuration.</param>

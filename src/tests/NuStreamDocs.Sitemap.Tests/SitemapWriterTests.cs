@@ -10,19 +10,22 @@ namespace NuStreamDocs.Sitemap.Tests;
 /// <summary>Behavior tests for <c>SitemapWriter</c> and <c>NotFoundPlugin</c>.</summary>
 public class SitemapWriterTests
 {
+    /// <summary>Rendered URL of the introductory guide fixture.</summary>
+    private const string IntroUrl = "guide/intro.html";
+
     /// <summary>Maps <c>foo.md</c> to <c>foo.html</c> in flat-URL mode.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathSwapsExtension() =>
         await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", false)))
-            .IsEqualTo("guide/intro.html");
+            .IsEqualTo(IntroUrl);
 
     /// <summary>Backslashes are normalized to forward slashes.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RelativePathToUrlPathNormalizesSeparators() =>
         await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide\\intro.md", false)))
-            .IsEqualTo("guide/intro.html");
+            .IsEqualTo(IntroUrl);
 
     /// <summary>Empty input yields empty output.</summary>
     /// <returns>Async test.</returns>
@@ -111,13 +114,11 @@ public class SitemapWriterTests
     /// <summary>Disposable scratch-directory helper.</summary>
     private sealed class TempDirectory : IDisposable
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TempDirectory"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="TempDirectory"/> class.</summary>
         public TempDirectory()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-sitemap-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-sitemap-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute scratch-directory path.</summary>

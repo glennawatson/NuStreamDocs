@@ -9,10 +9,14 @@ namespace NuStreamDocs.Autorefs;
 /// <summary>Scans rendered HTML for heading and anchor <c>id="..."</c> attributes and publishes them to an <see cref="AutorefsRegistry"/>.</summary>
 public static class HeadingIdScanner
 {
+    /// <summary>Heading tag prefix length.</summary>
+    private const int HeadingTagPrefixLength = 2;
+
     /// <summary>Scans <paramref name="html"/> and registers every heading ID it finds.</summary>
     /// <param name="html">UTF-8 rendered HTML bytes.</param>
     /// <param name="pageUrlBytes">UTF-8 page URL bytes; the array reference is stored directly and must not be mutated after the call.</param>
     /// <param name="registry">Registry to publish into.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>pageUrlBytes.Length is 0</c>.</exception>
     public static void ScanAndRegister(ReadOnlySpan<byte> html, byte[] pageUrlBytes, AutorefsRegistry registry)
     {
         if (pageUrlBytes.Length is 0)
@@ -55,7 +59,7 @@ public static class HeadingIdScanner
             }
 
             var tagStart = cursor + rel;
-            var afterStub = tagStart + 2;
+            var afterStub = tagStart + HeadingTagPrefixLength;
             if (afterStub >= html.Length || !IsTagBoundary(html[afterStub]))
             {
                 cursor = afterStub;

@@ -23,6 +23,6 @@ public static class LiquidLexer
         ExpressionOpen = [.. "{{"u8],
         ExpressionClose = [.. "}}"u8],
         CommentOpen = null,
-        CommentClose = null
+        CommentClose = null,
     });
 }

@@ -140,9 +140,12 @@ internal static class RouterScript
                                                     mergeHead(newDoc);
                                                     if (!isPop) { history.pushState({ nstdScroll: 0 }, "", url); }
                                                     applyScroll(url, isPop, savedScroll);
+                                                    // Fire after the DOM + URL (pushState) are updated so listeners
+                                                    // see the new location. With the View Transitions API, doSwap runs
+                                                    // asynchronously, so dispatching outside it would fire too early.
+                                                    dispatch("nstd:page-load", { url: location.href });
                                                   }
                                                   if (animate) { document.startViewTransition(doSwap); } else { doSwap(); }
-                                                  dispatch("nstd:page-load", { url: location.href });
                                                   return true;
                                                 }
 

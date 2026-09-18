@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
@@ -9,12 +10,15 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Behavior tests for <c>CssUrlRewriter</c>.</summary>
 public class CssUrlRewriterTests
 {
+    /// <summary>Gets the asset directory used by the test cases.</summary>
+    private static ReadOnlySpan<byte> AssetDirectory => "assets/external"u8;
+
     /// <summary>An absolute http(s) URL inside <c>url()</c> is registered and rewritten to the local path.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task RewritesAbsoluteUrl()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite(
             "@font-face { src: url(https://fonts.example/x.woff2) }",
             "https://example.com/fonts.css",
@@ -28,7 +32,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task ResolvesRelativeUrlAgainstBase()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("body { background: url(./bg.png) }", "https://example.com/styles/main.css", registry);
         await Assert.That(output).Contains("url(/assets/external/");
 
@@ -42,7 +46,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task LeavesDataUrlsAlone()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("a { background: url(data:image/png;base64,AAA) }", "https://example.com/x.css", registry);
         await Assert.That(output).Contains("url(data:image/png");
     }
@@ -52,7 +56,7 @@ public class CssUrlRewriterTests
     [Test]
     public async Task PreservesQuoteStyle()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("a { src: url(\"https://x.test/a.woff2\") }", "https://x.test/", registry);
         await Assert.That(output).Contains("url(\"/assets/external/");
     }
@@ -62,6 +66,7 @@ public class CssUrlRewriterTests
     /// <param name="baseUrl">Base URL the CSS file came from.</param>
     /// <param name="registry">URL registry.</param>
     /// <returns>Rewritten CSS.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Rewrite(string css, string baseUrl, ExternalAssetRegistry registry) =>
         Encoding.UTF8.GetString(
             CssUrlRewriter.Rewrite(Encoding.UTF8.GetBytes(css), new(baseUrl), registry, new(null, null)));

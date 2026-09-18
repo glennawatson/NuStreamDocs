@@ -57,7 +57,8 @@ public class SpaceSeparatedFactoryTests
     {
         var ops = OperatorAlternationFactory.SplitLongestFirst("+ ..= == += -"u8);
 
-        await Assert.That(ops.Length).IsEqualTo(5);
+        const int ExpectedOperatorCount = 5;
+        await Assert.That(ops.Length).IsEqualTo(ExpectedOperatorCount);
         await Assert.That(ops[0].AsSpan().SequenceEqual("..="u8)).IsTrue();
         await Assert.That(ops[1].AsSpan().SequenceEqual("=="u8)).IsTrue();
         await Assert.That(ops[2].AsSpan().SequenceEqual("+="u8)).IsTrue();

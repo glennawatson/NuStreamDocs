@@ -10,8 +10,20 @@ namespace NuStreamDocs.Feed.Tests;
 /// <summary>Direct unit tests for the static <c>FeedEmitter</c> helper extracted out of the plugin.</summary>
 public class FeedEmitterTests
 {
+    /// <summary>Year shared by the sample post and generation timestamp.</summary>
+    private const int PublicationYear = 2026;
+
+    /// <summary>The RssFile fixture value.</summary>
+    private const string RssFile = "feed.xml";
+
+    /// <summary>The AtomFile fixture value.</summary>
+    private const string AtomFile = "atom.xml";
+
     /// <summary>Gets the deterministic test timestamp.</summary>
     private static DateTimeOffset TestTime => new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
+
+    /// <summary>Gets the publication date of the sample post.</summary>
+    private static DateOnly PublicationDate => new(PublicationYear, 1, 1);
 
     /// <summary>WriteEnabledFormats with FeedFormats.None writes nothing.</summary>
     /// <returns>Async test.</returns>
@@ -38,8 +50,8 @@ public class FeedEmitterTests
             TestTime,
             NullLogger.Instance);
         await Assert.That(written).IsEqualTo(FeedFormats.Rss);
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "feed.xml"))).IsTrue();
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "atom.xml"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, RssFile))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, AtomFile))).IsFalse();
     }
 
     /// <summary>Atom-only flag writes atom.xml.</summary>
@@ -55,8 +67,8 @@ public class FeedEmitterTests
             TestTime,
             NullLogger.Instance);
         await Assert.That(written).IsEqualTo(FeedFormats.Atom);
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "atom.xml"))).IsTrue();
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "feed.xml"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, AtomFile))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, RssFile))).IsFalse();
     }
 
     /// <summary>Both flags writes both files.</summary>
@@ -72,8 +84,8 @@ public class FeedEmitterTests
             TestTime,
             NullLogger.Instance);
         await Assert.That(written).IsEqualTo(FeedFormats.Both);
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "feed.xml"))).IsTrue();
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "atom.xml"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, RssFile))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, AtomFile))).IsTrue();
     }
 
     /// <summary>An empty output path is rejected.</summary>
@@ -98,7 +110,7 @@ public class FeedEmitterTests
             [],
             [],
             [.. "Author"u8],
-            new(2026, 1, 1),
+            PublicationDate,
             [],
             [.. "An excerpt."u8]);
 
@@ -114,8 +126,8 @@ public class FeedEmitterTests
         /// <summary>Initializes a new instance of the <see cref="FeedTempDir"/> class.</summary>
         public FeedTempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-feed-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-feed-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch directory.</summary>

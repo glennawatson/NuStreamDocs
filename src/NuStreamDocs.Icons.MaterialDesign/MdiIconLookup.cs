@@ -8,6 +8,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Resolves a Material Design icon name to its SVG path-data bytes.</summary>
+[System.Diagnostics.DebuggerDisplay("MdiIconLookup: {Count}")]
 public sealed class MdiIconLookup
 {
     /// <summary>The concatenated SVG-path blob — every icon's bytes laid end-to-end.</summary>

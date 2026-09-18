@@ -12,10 +12,22 @@ namespace NuStreamDocs.Mermaid.Tests;
 /// <summary>Lifecycle / registration tests for <c>MermaidPlugin</c>.</summary>
 public class MermaidPluginTests
 {
+    /// <summary>Initial capacity for the script element.</summary>
+    private const int HeadOutputCapacity = 256;
+
+    /// <summary>Initial capacity for a rendered code fence.</summary>
+    private const int FenceOutputCapacity = 64;
+
+    /// <summary>Initial capacity for rewritten HTML.</summary>
+    private const int RewriteOutputCapacity = 128;
+
+    /// <summary>Gets the diagram language identifier.</summary>
+    private static ReadOnlySpan<byte> MermaidLanguage => "mermaid"u8;
+
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task NameIsStable() => await Assert.That(new MermaidPlugin().Name.SequenceEqual("mermaid"u8)).IsTrue();
+    public async Task NameIsStable() => await Assert.That(new MermaidPlugin().Name.SequenceEqual(MermaidLanguage)).IsTrue();
 
     /// <summary>PostRender rewrites <c>language-mermaid</c> code blocks.</summary>
     /// <returns>Async test.</returns>
@@ -37,7 +49,7 @@ public class MermaidPluginTests
     [Test]
     public async Task WriteHeadExtraEmitsScript()
     {
-        ArrayBufferWriter<byte> sink = new(256);
+        ArrayBufferWriter<byte> sink = new(HeadOutputCapacity);
         new MermaidPlugin().WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(head).Contains("mermaid");
@@ -49,7 +61,7 @@ public class MermaidPluginTests
     [Test]
     public async Task CustomFenceRenderEmitsWrapper()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(FenceOutputCapacity);
         ICustomFenceHandler handler = new MermaidPlugin();
         handler.Render("graph TD\nA-->B"u8, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))
@@ -62,7 +74,7 @@ public class MermaidPluginTests
     public async Task CustomFenceLanguageIsMermaid()
     {
         ICustomFenceHandler handler = new MermaidPlugin();
-        await Assert.That(handler.Language.SequenceEqual("mermaid"u8)).IsTrue();
+        await Assert.That(handler.Language.SequenceEqual(MermaidLanguage)).IsTrue();
     }
 
     /// <summary>UseMermaid registers the plugin.</summary>
@@ -77,7 +89,7 @@ public class MermaidPluginTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(MermaidPlugin plugin, ReadOnlySpan<byte> html)
     {
-        ArrayBufferWriter<byte> output = new(128);
+        ArrayBufferWriter<byte> output = new(RewriteOutputCapacity);
         PagePostRenderContext ctx = new("page.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];

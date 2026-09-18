@@ -6,13 +6,12 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
-/// <summary>
-/// Values of the Adjacent-page metadata.
-/// </summary>
+/// <summary>Values of the Adjacent-page metadata.</summary>
 /// <param name="PreviousPath">Source-relative path of the previous leaf page in nav order; empty when there is none.</param>
 /// <param name="PreviousTitle">Display title of the previous page; empty when there is none.</param>
 /// <param name="NextPath">Source-relative path of the next leaf page in nav order; empty when there is none.</param>
 /// <param name="NextTitle">Display title of the next page; empty when there is none.</param>
+[System.Diagnostics.DebuggerDisplay("NavNeighbours: {ToString(),nq}")]
 public readonly record struct NavNeighbours(
     FilePath PreviousPath,
     byte[] PreviousTitle,

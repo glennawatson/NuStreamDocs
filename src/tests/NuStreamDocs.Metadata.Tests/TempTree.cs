@@ -18,17 +18,17 @@ internal sealed class TempTree : IDisposable
 
     /// <summary>Creates a fresh temp tree under <c>Path.GetTempPath</c>.</summary>
     /// <returns>A new fixture; caller must dispose.</returns>
-    public static TempTree Create()
+    internal static TempTree Create()
     {
         var root = Path.Combine(
             Path.GetTempPath(),
-            "smkd-meta-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(root);
+            $"smkd-meta-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(root);
         return new(root);
     }
 
     /// <inheritdoc/>
-    public void Dispose()
+    void IDisposable.Dispose()
     {
         try
         {

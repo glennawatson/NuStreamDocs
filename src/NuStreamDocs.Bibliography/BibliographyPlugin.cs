@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Bibliography.Logging;
 using NuStreamDocs.Plugins;
@@ -14,12 +15,13 @@ namespace NuStreamDocs.Bibliography;
 /// — <c>[@key]</c>, <c>[@key, p 23]</c>, <c>[@a; @b]</c> — into footnote
 /// references and appends a Bibliography section to each page.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("BibliographyPlugin: {Name}")]
 public sealed class BibliographyPlugin : IPagePreRenderPlugin
 {
     /// <summary>Plugin options.</summary>
     private readonly BibliographyOptions _options;
 
-    /// <summary>Logger.</summary>
+    /// <summary>Logger for citation diagnostics.</summary>
     private readonly ILogger _logger;
 
     /// <summary>Missing-citation callback, or null when warnings are off.</summary>
@@ -86,6 +88,7 @@ public sealed class BibliographyPlugin : IPagePreRenderPlugin
 
     /// <summary>Missing-citation callback that logs at <c>Warning</c>.</summary>
     /// <param name="key">The unresolved key.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WarnMissing(string key) =>
         BibliographyLoggingHelper.LogMissingCitation(_logger, key);
 }

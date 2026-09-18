@@ -3,8 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
+using NuStreamDocs.Common;
 using NuStreamDocs.Nav;
 using NuStreamDocs.Plugins;
 
@@ -22,6 +25,7 @@ namespace NuStreamDocs.Benchmarks;
 /// of the build pipeline into the measurement.
 /// </para>
 /// </remarks>
+[DebuggerDisplay("NavRenderBenchmarks: inputRoot={_inputRoot}, outputRoot={_outputRoot}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class NavRenderBenchmarks
@@ -45,10 +49,10 @@ public class NavRenderBenchmarks
     private const string ActivePage = "section-47/deep/page-11.md";
 
     /// <summary>Temp input root containing the synthetic docs tree.</summary>
-    private string _inputRoot = string.Empty;
+    private DirectoryPath _inputRoot;
 
     /// <summary>Temp output root passed to the plugin configure context.</summary>
-    private string _outputRoot = string.Empty;
+    private DirectoryPath _outputRoot;
 
     /// <summary>Plugin configured for full-tree rendering.</summary>
     private NavPlugin _fullPlugin = null!;
@@ -63,7 +67,10 @@ public class NavRenderBenchmarks
     private ArrayBufferWriter<byte> _prunedHtml = null!;
 
     /// <summary>Gets the root index page body.</summary>
-    private static string RootIndexPage => "# Docs\n\nSynthetic nav benchmark corpus.\n";
+    private static ReadOnlySpan<byte> RootIndexPage => "# Docs\n\nSynthetic nav benchmark corpus.\n"u8;
+
+    /// <summary>Gets the index filename used by each section.</summary>
+    private static FilePath IndexFile => new("index.md");
 
     /// <summary>Builds the synthetic corpus and configures both nav-plugin variants.</summary>
     /// <returns>A task representing the asynchronous setup.</returns>
@@ -72,12 +79,12 @@ public class NavRenderBenchmarks
     {
         _inputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-nav-bench-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            StringCompose.Concat("smkd-nav-bench-in-", Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)));
         _outputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-nav-bench-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_inputRoot);
-        Directory.CreateDirectory(_outputRoot);
+            StringCompose.Concat("smkd-nav-bench-out-", Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)));
+        _ = Directory.CreateDirectory(_inputRoot);
+        _ = Directory.CreateDirectory(_outputRoot);
 
         CreateCorpus(_inputRoot);
 
@@ -100,43 +107,45 @@ public class NavRenderBenchmarks
 
     /// <summary>Measures the full-nav render path for a deep active page.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark(Baseline = true)]
     public int RenderFull() =>
         Render(_fullPlugin, _fullHtml);
 
     /// <summary>Measures the pruned-nav render path for the same deep active page.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int RenderPruned() =>
         Render(_prunedPlugin, _prunedHtml);
 
     /// <summary>Creates the synthetic docs tree used by the benchmark.</summary>
     /// <param name="inputRoot">Absolute input root.</param>
-    private static void CreateCorpus(string inputRoot)
+    private static void CreateCorpus(DirectoryPath inputRoot)
     {
-        File.WriteAllText(Path.Combine(inputRoot, "index.md"), RootIndexPage);
+        inputRoot.File(IndexFile.Value).WriteAllBytes(RootIndexPage);
 
         for (var section = 0; section < TopLevelSections; section++)
         {
-            var sectionName = "section-" + section.ToString("D2", CultureInfo.InvariantCulture);
-            var sectionDir = Path.Combine(inputRoot, sectionName);
-            var nestedDir = Path.Combine(sectionDir, "deep");
-            Directory.CreateDirectory(nestedDir);
+            var sectionName = new PathSegment(StringCompose.Concat("section-", section.ToString("D2", CultureInfo.InvariantCulture)));
+            var sectionDir = inputRoot / sectionName.Value;
+            var nestedDir = sectionDir / "deep";
+            _ = Directory.CreateDirectory(nestedDir);
 
-            File.WriteAllText(Path.Combine(sectionDir, "index.md"), SectionIndexPage(sectionName));
-            File.WriteAllText(Path.Combine(nestedDir, "index.md"), NestedIndexPage(sectionName));
+            File.WriteAllText(sectionDir.File(IndexFile.Value), SectionIndexPage(sectionName));
+            File.WriteAllText(nestedDir.File(IndexFile.Value), NestedIndexPage(sectionName));
 
             for (var page = 0; page < SectionLeafPages; page++)
             {
                 File.WriteAllText(
-                    Path.Combine(sectionDir, "page-" + page.ToString("D2", CultureInfo.InvariantCulture) + ".md"),
+                    sectionDir.File(StringCompose.Concat("page-", page.ToString("D2", CultureInfo.InvariantCulture), ".md")),
                     Page(sectionName, page, false));
             }
 
             for (var page = 0; page < NestedLeafPages; page++)
             {
                 File.WriteAllText(
-                    Path.Combine(nestedDir, "page-" + page.ToString("D2", CultureInfo.InvariantCulture) + ".md"),
+                    nestedDir.File(StringCompose.Concat("page-", page.ToString("D2", CultureInfo.InvariantCulture), ".md")),
                     Page(sectionName, page, true));
             }
         }
@@ -149,8 +158,7 @@ public class NavRenderBenchmarks
     private static int Render(NavPlugin plugin, ArrayBufferWriter<byte> html)
     {
         html.ResetWrittenCount();
-        var body = "<nav><!--@@nav@@--></nav>"u8;
-        PagePostRenderContext context = new(ActivePage, default, body, html);
+        PagePostRenderContext context = new(ActivePage, default, "<nav><!--@@nav@@--></nav>"u8, html);
         plugin.PostRender(in context);
         return html.WrittenCount;
     }
@@ -160,7 +168,7 @@ public class NavRenderBenchmarks
     /// <param name="inputRoot">Absolute input root.</param>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <returns>A task representing the asynchronous setup.</returns>
-    private static Task ConfigureAsync(NavPlugin plugin, string inputRoot, string outputRoot)
+    private static Task ConfigureAsync(NavPlugin plugin, DirectoryPath inputRoot, DirectoryPath outputRoot)
     {
         BuildDiscoverContext context = new(inputRoot, outputRoot, [plugin], new());
         return plugin.DiscoverAsync(context, CancellationToken.None).AsTask();
@@ -168,7 +176,7 @@ public class NavRenderBenchmarks
 
     /// <summary>Best-effort recursive directory delete.</summary>
     /// <param name="path">Directory path.</param>
-    private static void TryDelete(string path)
+    private static void TryDelete(DirectoryPath path)
     {
         try
         {
@@ -186,22 +194,28 @@ public class NavRenderBenchmarks
     /// <summary>Builds one section index page.</summary>
     /// <param name="sectionName">Section folder name.</param>
     /// <returns>Markdown body.</returns>
-    private static string SectionIndexPage(string sectionName) =>
-        "# " + sectionName + "\n\nSection landing page.\n";
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ApiCompatString SectionIndexPage(PathSegment sectionName) =>
+        StringCompose.Concat("# ", sectionName.Value, "\n\nSection landing page.\n");
 
     /// <summary>Builds one nested-section index page.</summary>
     /// <param name="sectionName">Top-level section folder name.</param>
     /// <returns>Markdown body.</returns>
-    private static string NestedIndexPage(string sectionName) =>
-        "# " + sectionName + " deep\n\nNested landing page.\n";
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ApiCompatString NestedIndexPage(PathSegment sectionName) =>
+        StringCompose.Concat("# ", sectionName.Value, " deep\n\nNested landing page.\n");
 
     /// <summary>Builds one leaf page body.</summary>
     /// <param name="sectionName">Owning section folder name.</param>
     /// <param name="pageIndex">Page index within the section.</param>
     /// <param name="nested">True when the page lives under the nested section.</param>
     /// <returns>Markdown body.</returns>
-    private static string Page(string sectionName, int pageIndex, bool nested) =>
-        "# " + sectionName + " page " + pageIndex.ToString(CultureInfo.InvariantCulture) + "\n\n"
-        + (nested ? "Nested" : "Section")
-        + " page for nav-render benchmarks.\n";
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ApiCompatString Page(PathSegment sectionName, int pageIndex, bool nested) =>
+        StringCompose.Concat(
+            "# ",
+            sectionName.Value,
+            " page ",
+            pageIndex.ToString(CultureInfo.InvariantCulture),
+            nested ? "\n\nNested page for nav-render benchmarks.\n" : "\n\nSection page for nav-render benchmarks.\n");
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Theme.Common;
 
@@ -20,12 +21,14 @@ internal static class EmbeddedAsset
     /// <summary>Reads <paramref name="relativePath"/> as a UTF-8 byte array.</summary>
     /// <param name="relativePath">Forward-slashed path under <c>Templates/</c>.</param>
     /// <returns>The asset bytes.</returns>
-    public static byte[] ReadBytes(in FilePath relativePath)
-        => EmbeddedAssetLoader.ReadBytes(Owning, ResourcePrefix, relativePath);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static byte[] ReadBytes(in FilePath relativePath) =>
+        EmbeddedAssetLoader.ReadBytes(Owning, ResourcePrefix, relativePath);
 
     /// <summary>Translates a folder-path asset key to the MSBuild manifest resource name as UTF-8 bytes.</summary>
     /// <param name="relativePath">Forward-slashed path under <c>Templates/</c>.</param>
     /// <returns>The fully-qualified manifest resource name as UTF-8 bytes.</returns>
-    public static byte[] ToResourceName(in FilePath relativePath)
-        => EmbeddedAssetLoader.ToResourceName(ResourcePrefix, relativePath);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static byte[] ToResourceName(in FilePath relativePath) =>
+        EmbeddedAssetLoader.ToResourceName(ResourcePrefix, relativePath);
 }

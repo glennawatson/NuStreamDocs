@@ -68,8 +68,8 @@ public class VersionsManifestParameterizedTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-vmp-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-vmp-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

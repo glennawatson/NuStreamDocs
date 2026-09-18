@@ -8,9 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Reads theme assets out of an assembly's embedded-resource table.
-/// </summary>
+/// <summary>Reads theme assets out of an assembly's embedded-resource table.</summary>
 public static class EmbeddedAssetLoader
 {
     /// <summary>Gets the embedded-resource subfolder segment between the root namespace and the file path.</summary>
@@ -21,6 +19,7 @@ public static class EmbeddedAssetLoader
     /// <param name="resourcePrefix">Root namespace prefix MSBuild prepends to the resource.</param>
     /// <param name="relativePath">Forward-slashed path under the <c>Templates/</c> root.</param>
     /// <returns>The asset bytes.</returns>
+    /// <exception cref="FileNotFoundException">The assembly does not contain the requested asset.</exception>
     public static byte[] ReadBytes(Assembly owningAssembly, in ApiCompatString resourcePrefix, in FilePath relativePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(resourcePrefix.Value);
@@ -33,8 +32,7 @@ public static class EmbeddedAssetLoader
                                relativePath.Value);
 
         var buffer = new byte[checked((int)stream.Length)];
-        var read = 0;
-        while (read < buffer.Length)
+        for (var read = 0; read < buffer.Length;)
         {
             var step = stream.Read(buffer, read, buffer.Length - read);
             if (step is 0)

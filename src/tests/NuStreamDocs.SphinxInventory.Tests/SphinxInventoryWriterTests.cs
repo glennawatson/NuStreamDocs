@@ -13,13 +13,16 @@ namespace NuStreamDocs.SphinxInventory.Tests;
 /// <summary>End-to-end coverage for the Sphinx <c>objects.inv</c> writer.</summary>
 public class SphinxInventoryWriterTests
 {
+    /// <summary>Filename of the Sphinx inventory fixture.</summary>
+    private const string InventoryFileName = "objects.inv";
+
     /// <summary>The header is plain UTF-8 with the four canonical lines.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task HeaderIsCanonicalSphinxV2()
     {
         using InventoryFixture fixture = new();
-        SphinxInventoryWriter.Write(fixture.Path, new("MyDocs", "1.2.3", "objects.inv"), []);
+        SphinxInventoryWriter.Write(fixture.Path, new("MyDocs", "1.2.3", InventoryFileName), []);
         var bytes = await File.ReadAllBytesAsync(fixture.Path);
         var header = ReadHeaderText(bytes, out _);
         await Assert.That(header).IsEqualTo(
@@ -67,11 +70,11 @@ public class SphinxInventoryWriterTests
         using InventoryFixture fixture = new();
         AutorefsRegistry registry = new();
         registry.Register("Foo"u8, [.. "api/Foo.html"u8], default);
-        SphinxInventoryPlugin plugin = new(registry, new("X", string.Empty, "objects.inv"));
+        SphinxInventoryPlugin plugin = new(registry, new("X", string.Empty, InventoryFileName));
         BuildFinalizeContext context = new(fixture.Directory, []);
         await plugin.FinalizeAsync(context, CancellationToken.None);
 
-        var path = Path.Combine(fixture.Directory, "objects.inv");
+        var path = Path.Combine(fixture.Directory, InventoryFileName);
         await Assert.That(File.Exists(path)).IsTrue();
         var bytes = await File.ReadAllBytesAsync(path);
         _ = ReadHeaderText(bytes, out var bodyOffset);
@@ -105,8 +108,7 @@ public class SphinxInventoryWriterTests
     {
         DocBuilder builder = new();
         AutorefsRegistry registry = new();
-        var options = SphinxInventoryOptions.Default;
-        await Assert.That(builder.UseSphinxInventory(registry, options)).IsSameReferenceAs(builder);
+        await Assert.That(builder.UseSphinxInventory(registry, SphinxInventoryOptions.Default)).IsSameReferenceAs(builder);
     }
 
     /// <summary>Reads the four header lines as UTF-8 text and returns the offset of the first compressed byte.</summary>
@@ -115,6 +117,7 @@ public class SphinxInventoryWriterTests
     /// <returns>The decoded header text.</returns>
     private static string ReadHeaderText(byte[] bytes, out int bodyOffset)
     {
+        const int headerLineCount = 4;
         var newlines = 0;
         for (var i = 0; i < bytes.Length; i++)
         {
@@ -123,7 +126,7 @@ public class SphinxInventoryWriterTests
                 newlines++;
             }
 
-            if (newlines is not 4)
+            if (newlines is not headerLineCount)
             {
                 continue;
             }
@@ -157,9 +160,9 @@ public class SphinxInventoryWriterTests
         {
             Directory = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(),
-                "smkd-inv-" + Guid.NewGuid().ToString("N"));
-            System.IO.Directory.CreateDirectory(Directory);
-            Path = System.IO.Path.Combine(Directory, "objects.inv");
+                $"smkd-inv-{Guid.NewGuid():N}");
+            _ = System.IO.Directory.CreateDirectory(Directory);
+            Path = System.IO.Path.Combine(Directory, InventoryFileName);
         }
 
         /// <summary>Gets the temp directory hosting the inventory file.</summary>

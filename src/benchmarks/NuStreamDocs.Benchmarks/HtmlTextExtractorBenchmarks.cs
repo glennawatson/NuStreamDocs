@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
@@ -16,6 +17,7 @@ namespace NuStreamDocs.Benchmarks;
 /// realistic mixed (heading + paragraphs + code + list), and chatty (script / style noise
 /// the walker has to skip).
 /// </summary>
+[DebuggerDisplay("HtmlTextExtractorBenchmarks: shortHtml={_shortHtml}, mixedHtml={_mixedHtml}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class HtmlTextExtractorBenchmarks
@@ -25,6 +27,12 @@ public class HtmlTextExtractorBenchmarks
 
     /// <summary>Half-payload-size hint passed to <see cref="PageBuilderPool.Rent(int)"/> — text output is always smaller than the HTML input because tag bytes get stripped.</summary>
     private const int RentHintDivisor = 2;
+
+    /// <summary>Initial character capacity for the mixed HTML fixture.</summary>
+    private const int MixedCapacity = 40 * 1024;
+
+    /// <summary>Initial character capacity for the script-heavy HTML fixture.</summary>
+    private const int ChattyCapacity = 60 * 1024;
 
     /// <summary>Bare prose with one H1 and a few paragraphs (~300 B).</summary>
     private byte[] _shortHtml = [];
@@ -39,16 +47,18 @@ public class HtmlTextExtractorBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _shortHtml = Encoding.UTF8.GetBytes(
-            "<h1>Page Title</h1>"
-            + "<p>Short paragraph with <em>emphasis</em> and a <a href=\"x\">link</a>.</p>"
-            + "<p>Second paragraph for body coverage.</p>");
+        _shortHtml =
+        [
+            .. "<h1>Page Title</h1>"u8,
+            .. "<p>Short paragraph with <em>emphasis</em> and a <a href=\"x\">link</a>.</p>"u8,
+            .. "<p>Second paragraph for body coverage.</p>"u8
+        ];
 
-        var mixed = new StringBuilder(40 * 1024)
+        var mixed = new StringBuilder(MixedCapacity)
             .Append("<h1>Long Page Title</h1>");
         for (var i = 0; i < LongPayloadRepeats; i++)
         {
-            mixed
+            _ = mixed
                 .Append("<h2>Section ").Append(i).Append("</h2>")
                 .Append("<p>Body paragraph with <code>inline code</code> and a <a href=\"x\">link</a>.</p>")
                 .Append("<ul><li>Item one</li><li>Item two</li></ul>");
@@ -56,20 +66,20 @@ public class HtmlTextExtractorBenchmarks
 
         _mixedHtml = Encoding.UTF8.GetBytes(mixed.ToString());
 
-        var chatty = new StringBuilder(60 * 1024)
+        var chatty = new StringBuilder(ChattyCapacity)
             .Append("<h1>Page With Scripts</h1>")
             .Append("<script>");
         for (var i = 0; i < LongPayloadRepeats; i++)
         {
-            chatty.Append("var x").Append(i).Append('=').Append(i).Append(';');
+            _ = chatty.Append("var x").Append(i).Append('=').Append(i).Append(';');
         }
 
-        chatty
+        _ = chatty
             .Append("</script>")
             .Append("<style>body{color:red}.foo{display:none}</style>");
         for (var i = 0; i < LongPayloadRepeats / RentHintDivisor; i++)
         {
-            chatty.Append("<p>Visible paragraph ").Append(i).Append(".</p>");
+            _ = chatty.Append("<p>Visible paragraph ").Append(i).Append(".</p>");
         }
 
         _chattyHtml = Encoding.UTF8.GetBytes(chatty.ToString());

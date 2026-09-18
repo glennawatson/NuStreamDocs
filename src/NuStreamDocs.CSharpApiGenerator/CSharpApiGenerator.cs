@@ -4,8 +4,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging.Abstractions;
-using NuStreamDocs.Common;
 using NuStreamDocs.CSharpApiGenerator.Logging;
+using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 using SourceDocParser;
 using SourceDocParser.Model;

@@ -12,6 +12,12 @@ namespace NuStreamDocs.Snippets.Tests;
 /// <summary>Lifecycle / registration tests for <c>SnippetsPlugin</c>.</summary>
 public class SnippetsPluginTests
 {
+    /// <summary>Small output capacity.</summary>
+    private const int SmallOutputCapacity = 32;
+
+    /// <summary>Large output capacity.</summary>
+    private const int LargeOutputCapacity = 64;
+
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -24,7 +30,7 @@ public class SnippetsPluginTests
     public async Task PreRenderPassesThroughBeforeConfigure()
     {
         SnippetsPlugin plugin = new();
-        ArrayBufferWriter<byte> sink = new(32);
+        ArrayBufferWriter<byte> sink = new(SmallOutputCapacity);
         PagePreRenderContext ctx = new("p.md", "hello"u8, sink);
         plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");
@@ -41,7 +47,7 @@ public class SnippetsPluginTests
         SnippetsPlugin plugin = new();
         await plugin.ConfigureAsync(new(temp.Root, "/out", [], new()), CancellationToken.None);
 
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(LargeOutputCapacity);
         PagePreRenderContext ctx = new("page.md", "--8<-- \"include.md\""u8, sink);
         plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("spliced");
@@ -58,7 +64,7 @@ public class SnippetsPluginTests
         SnippetsPlugin plugin = new(temp.Root);
         await plugin.ConfigureAsync(new("/wrong", "/out", [], new()), CancellationToken.None);
 
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(LargeOutputCapacity);
         PagePreRenderContext ctx = new("page.md", "--8<-- \"include.md\""u8, sink);
         plugin.PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("explicit");
@@ -98,8 +104,8 @@ public class SnippetsPluginTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-sn-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-sn-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch directory.</summary>

@@ -15,4 +15,5 @@ namespace NuStreamDocs.Plugins;
 /// <param name="Title">UTF-8 display title; <see langword="null"/> or empty falls back to the path stem.</param>
 /// <param name="Order">Optional <c>Order:</c> sort key; <see langword="null"/> sorts the entry after explicitly-ordered siblings.</param>
 /// <param name="Hidden">When true the entry (and any section it would otherwise create) is omitted from the nav.</param>
+[System.Diagnostics.DebuggerDisplay("SyntheticNavEntry: {ToString(),nq}")]
 public readonly record struct SyntheticNavEntry(FilePath RelativePath, byte[]? Title, int? Order, bool Hidden);

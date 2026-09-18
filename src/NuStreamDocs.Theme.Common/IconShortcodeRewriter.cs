@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Theme.Common;
@@ -25,6 +26,7 @@ public static class IconShortcodeRewriter
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="materialIconClass">UTF-8 class name to use for <c>:material-…:</c> shortcodes (e.g. <c>material-icons</c> or <c>material-symbols-outlined</c>).</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Rewrite(
         ReadOnlySpan<byte> source,
         IBufferWriter<byte> writer,
@@ -47,8 +49,8 @@ public static class IconShortcodeRewriter
         {
             // Check fence-at-line-start first — fences begin on bytes (' ' / '`' / '~') we'd otherwise
             // scan past, and they can land just past a newline we just bulk-copied through.
-            if (MarkdownCodeScanner.AtLineStart(source, i) &&
-                MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
+            if (MarkdownCodeScanner.AtLineStart(source, i)
+                && MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
             {
                 writer.Write(source[i..fenceEnd]);
                 i = fenceEnd;

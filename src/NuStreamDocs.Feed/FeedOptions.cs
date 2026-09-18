@@ -14,6 +14,7 @@ namespace NuStreamDocs.Feed;
 /// <param name="OutputSubdirectory">Output subdirectory (under the site root) where the feed files are written.</param>
 /// <param name="Formats">Which formats to generate.</param>
 /// <param name="MaxItems">Cap on the number of items included; 0 means no cap.</param>
+[System.Diagnostics.DebuggerDisplay("FeedOptions: {ToString(),nq}")]
 public sealed record FeedOptions(
     byte[] SiteUrl,
     byte[] Title,

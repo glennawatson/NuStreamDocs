@@ -13,6 +13,7 @@ namespace NuStreamDocs.Templating;
 /// <param name="Start">Start offset of the literal slice or variable name.</param>
 /// <param name="Length">Length in bytes of the literal slice or variable name.</param>
 /// <param name="JumpTarget">Index of the matching open/close instruction, or -1.</param>
+[System.Diagnostics.DebuggerDisplay("TemplateInstruction: {ToString(),nq}")]
 public readonly record struct TemplateInstruction(
     TemplateOp Op,
     int Start,

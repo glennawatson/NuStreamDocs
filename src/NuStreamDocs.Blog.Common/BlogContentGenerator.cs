@@ -114,7 +114,7 @@ public static class BlogContentGenerator
         foreach (var (tag, postsForTag) in GroupByTag(posts))
         {
             var safeSlugBytes = BlogSlugifier.Slugify(tag, fallback);
-            var slugFileName = (UrlPath)(Encoding.UTF8.GetString(safeSlugBytes) + ".md");
+            var slugFileName = (UrlPath)($"{Encoding.UTF8.GetString(safeSlugBytes)}.md");
             writer.ResetWrittenCount();
             BlogIndexEmitter.WriteTagArchive(writer, tag, [.. postsForTag], archiveDirectoryRelativeUtf8);
             sink.Add(new(archiveSubdir.UrlJoin(slugFileName), writer.WrittenSpan.ToArray()));
@@ -170,7 +170,7 @@ public static class BlogContentGenerator
                 var tag = post.Tags[t];
                 if (!map.TryGetValue(tag, out var bucket))
                 {
-                    bucket = new(TagBucketCapacity);
+                    bucket = [with(TagBucketCapacity)];
                     map[tag] = bucket;
                 }
 

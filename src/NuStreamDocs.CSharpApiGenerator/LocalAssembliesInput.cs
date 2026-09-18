@@ -14,6 +14,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <param name="Tfm">TFM the assemblies were built for (e.g. <c>net10.0</c>); used to stamp <c>ApiType.AppliesTo</c>.</param>
 /// <param name="AssemblyPaths">Absolute paths to the <c>.dll</c> files to walk.</param>
 /// <param name="FallbackSearchPaths">Additional directories whose contents the resolver consults when a transitive reference can't be located. Empty by default.</param>
+[System.Diagnostics.DebuggerDisplay("LocalAssembliesInput: {ToString(),nq}")]
 public sealed record LocalAssembliesInput(
     ApiCompatString Tfm,
     FilePath[] AssemblyPaths,

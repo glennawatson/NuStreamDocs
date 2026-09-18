@@ -10,6 +10,9 @@ namespace NuStreamDocs.Config.DocFx.Tests;
 /// <summary>Tests for <see cref="NavOptionsDocFxExtensions.FromDocFxTocs"/>.</summary>
 public class NavOptionsDocFxExtensionsTests
 {
+    /// <summary>Expected Entry Count used by the test cases.</summary>
+    private const int ExpectedEntryCount = 3;
+
     /// <summary>A populated <c>toc.yml</c> produces a curated list mirroring the YAML order.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -26,13 +29,13 @@ public class NavOptionsDocFxExtensionsTests
                            """;
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "toc.yml"), Toc);
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "reference.md"), "# Reference");
 
         var result = NavOptions.Default.FromDocFxTocs(fixture.Root);
 
-        await Assert.That(result.CuratedEntries.Length).IsEqualTo(3);
+        await Assert.That(result.CuratedEntries.Length).IsEqualTo(ExpectedEntryCount);
         await Assert.That(Encoding.UTF8.GetString(result.CuratedEntries[0].Title)).IsEqualTo("Home");
         await Assert.That(Encoding.UTF8.GetString(result.CuratedEntries[0].Path)).IsEqualTo("index.md");
         await Assert.That(Encoding.UTF8.GetString(result.CuratedEntries[1].Title)).IsEqualTo("Guide");

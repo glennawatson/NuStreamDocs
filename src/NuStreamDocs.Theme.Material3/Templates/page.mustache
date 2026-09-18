@@ -89,24 +89,33 @@
 {{/scroll_to_top}}
 {{#toc_follow}}
     <script>(function () {
-        var hs = document.querySelectorAll('.md-content article :is(h1,h2,h3,h4,h5,h6)[id]');
-        var ls = document.querySelectorAll('.md-sidebar--secondary .md-nav--secondary a[href^="#"]');
-        if (!hs.length || !ls.length) return;
+        var io = null;
 
-        function active(id) {
-            ls.forEach(function (a) {
-                a.classList.toggle('md-nav__link--active', a.getAttribute('href') === '#' + id)
+        function setup() {
+            if (io) { io.disconnect(); io = null; }
+            var hs = document.querySelectorAll('.md-content article :is(h1,h2,h3,h4,h5,h6)[id]');
+            var ls = document.querySelectorAll('.md-sidebar--secondary .md-nav--secondary a[href^="#"]');
+            if (!hs.length || !ls.length) return;
+
+            function active(id) {
+                ls.forEach(function (a) {
+                    a.classList.toggle('md-nav__link--active', a.getAttribute('href') === '#' + id)
+                })
+            }
+
+            io = new IntersectionObserver(function (es) {
+                es.forEach(function (e) {
+                    if (e.isIntersecting) active(e.target.id)
+                })
+            }, {rootMargin: '-30% 0px -65% 0px'});
+            hs.forEach(function (h) {
+                io.observe(h)
             })
         }
 
-        var io = new IntersectionObserver(function (es) {
-            es.forEach(function (e) {
-                if (e.isIntersecting) active(e.target.id)
-            })
-        }, {rootMargin: '-30% 0px -65% 0px'});
-        hs.forEach(function (h) {
-            io.observe(h)
-        })
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', setup); } else { setup(); }
+        // Re-run after the client router swaps the content/TOC regions on soft navigation.
+        if (!document.__nstdTocFollowBound) { document.__nstdTocFollowBound = true; document.addEventListener('nstd:page-load', setup); }
     })();</script>
 {{/toc_follow}}
 {{> body_scripts}}

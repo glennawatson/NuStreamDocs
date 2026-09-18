@@ -49,7 +49,7 @@ public class StaticAssetComposerTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptyOutputRootThrows() =>
-        await Assert.That(() => StaticAssetComposer.WriteAll([], string.Empty)).Throws<ArgumentException>();
+        await Assert.That(static () => StaticAssetComposer.WriteAll([], string.Empty)).Throws<ArgumentException>();
 
     /// <summary>Test plugin that exposes static assets.</summary>
     /// <param name="assets">Asset entries.</param>
@@ -75,8 +75,8 @@ public class StaticAssetComposerTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-sac-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-sac-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch root.</summary>

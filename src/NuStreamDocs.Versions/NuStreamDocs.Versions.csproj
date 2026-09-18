@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Versions</PackageId>
     <Description>Publish multiple versions of your NuStreamDocs site side by side and give readers a version selector to switch between them.</Description>
     <RootNamespace>NuStreamDocs.Versions</RootNamespace>

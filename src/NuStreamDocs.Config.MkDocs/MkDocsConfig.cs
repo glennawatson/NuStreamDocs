@@ -4,14 +4,13 @@
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Subset of mkdocs.yml site-level metadata fields the renderer consumes.
-/// </summary>
+/// <summary>Subset of mkdocs.yml site-level metadata fields the renderer consumes.</summary>
 /// <param name="SiteName">Top-bar/site title.</param>
 /// <param name="SiteUrl">Canonical site URL; optional.</param>
 /// <param name="ThemeName">Theme identifier (e.g. <c>material</c>, <c>zensical</c>).</param>
 /// <param name="UseDirectoryUrls">When true, pages emit as <c>foo/index.html</c> and links resolve to <c>foo/</c>.</param>
 /// <param name="SiteAuthor">Site-wide author name written into the <c>&lt;meta name="author"&gt;</c> tag; optional.</param>
+[System.Diagnostics.DebuggerDisplay("MkDocsConfig: {ToString(),nq}")]
 public readonly record struct MkDocsConfig(
     string SiteName,
     string? SiteUrl,

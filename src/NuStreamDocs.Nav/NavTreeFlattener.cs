@@ -13,10 +13,10 @@ internal static class NavTreeFlattener
     /// <summary>Flattens the build-time tree rooted at <paramref name="root"/> into a <see cref="NavTree"/>.</summary>
     /// <param name="root">Build-time root node.</param>
     /// <returns>Flat nav tree; root sits at index <c>0</c>.</returns>
-    public static NavTree Flatten(NavNode root)
+    internal static NavTree Flatten(NavNode root)
     {
         var capacity = EstimateCount(root);
-        List<NavTreeNode> nodes = new(capacity);
+        List<NavTreeNode> nodes = [with(capacity)];
         Queue<(int OwnIndex, NavNode Node)> queue = new(capacity);
 
         nodes.Add(BuildSlot(root, -1));
@@ -50,7 +50,7 @@ internal static class NavTreeFlattener
     /// <param name="root">Build-time root node.</param>
     /// <param name="active">Build-time active node, or null when no page is active.</param>
     /// <returns>The flat tree and the active node's index (<c>-1</c> when <paramref name="active"/> is null or absent).</returns>
-    public static (NavTree Tree, int ActiveIndex) FlattenWithActive(NavNode root, NavNode? active)
+    internal static (NavTree Tree, int ActiveIndex) FlattenWithActive(NavNode root, NavNode? active)
     {
         var tree = Flatten(root);
         if (active is null)

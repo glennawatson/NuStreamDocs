@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography.Styles.Aglc4;
@@ -13,5 +14,6 @@ internal static class Aglc4Reports
     /// <summary>Writes the citation per AGLC4 report rules directly to <paramref name="writer"/>.</summary>
     /// <param name="entry">Resolved entry.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Write(CitationEntry entry, IBufferWriter<byte> writer) => Aglc4Books.Write(entry, writer);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Write(CitationEntry entry, IBufferWriter<byte> writer) => Aglc4Books.Write(entry, writer);
 }

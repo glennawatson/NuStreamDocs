@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Common;
 
@@ -34,6 +35,7 @@ public static class PageBuilderPool
 
     /// <summary>Rents a UTF-8 buffer writer using the default capacity hint.</summary>
     /// <returns>A <see cref="PageBuilderRental"/> the caller disposes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PageBuilderRental Rent() => Rent(DefaultHintCapacity);
 
     /// <summary>Rents a UTF-8 buffer writer pre-sized to <paramref name="hintCapacity"/>.</summary>
@@ -73,7 +75,7 @@ public static class PageBuilderPool
             return new(new(hintCapacity));
         }
 
-        Interlocked.Decrement(ref _sharedPoolCount);
+        _ = Interlocked.Decrement(ref _sharedPoolCount);
         shared.ResetWrittenCount();
         return new(shared);
     }
@@ -108,6 +110,6 @@ public static class PageBuilderPool
             return;
         }
 
-        Interlocked.Decrement(ref _sharedPoolCount);
+        _ = Interlocked.Decrement(ref _sharedPoolCount);
     }
 }

@@ -8,36 +8,29 @@ namespace NuStreamDocs.Common;
 /// Walks UTF-8 HTML and yields the body of every <c>{open}…&gt;…{close}</c> block — for example
 /// inline <c>&lt;script&gt;</c> / <c>&lt;style&gt;</c> elements. Tolerant scanner, not a full HTML parser.
 /// </summary>
-public ref struct Utf8InlineBlockEnumerator
+/// <param name="html">Page HTML.</param>
+/// <param name="openTagPrefix">Opening-tag prefix (e.g. <c>"&lt;script"u8</c>).</param>
+/// <param name="closeTag">Closing tag (e.g. <c>"&lt;/script&gt;"u8</c>).</param>
+[System.Diagnostics.DebuggerDisplay("Utf8InlineBlockEnumerator: {Current}")]
+public ref struct Utf8InlineBlockEnumerator(
+        ReadOnlySpan<byte> html,
+        ReadOnlySpan<byte> openTagPrefix,
+        ReadOnlySpan<byte> closeTag)
 {
     /// <summary>ASCII byte for the closing angle bracket of the opening tag.</summary>
     private const byte CloseAngle = (byte)'>';
 
     /// <summary>Page HTML being scanned.</summary>
-    private readonly ReadOnlySpan<byte> _html;
+    private readonly ReadOnlySpan<byte> _html = html;
 
     /// <summary>Opening-tag prefix to search for (e.g. <c>"&lt;style"u8</c>).</summary>
-    private readonly ReadOnlySpan<byte> _open;
+    private readonly ReadOnlySpan<byte> _open = openTagPrefix;
 
     /// <summary>Closing tag that terminates a block body (e.g. <c>"&lt;/style&gt;"u8</c>).</summary>
-    private readonly ReadOnlySpan<byte> _close;
+    private readonly ReadOnlySpan<byte> _close = closeTag;
 
     /// <summary>Offset into <see cref="_html"/> where the next search starts.</summary>
     private int _cursor;
-
-    /// <summary>Initializes a new instance of the <see cref="Utf8InlineBlockEnumerator"/> struct over <paramref name="html"/>.</summary>
-    /// <param name="html">Page HTML.</param>
-    /// <param name="openTagPrefix">Opening-tag prefix (e.g. <c>"&lt;script"u8</c>).</param>
-    /// <param name="closeTag">Closing tag (e.g. <c>"&lt;/script&gt;"u8</c>).</param>
-    public Utf8InlineBlockEnumerator(
-        ReadOnlySpan<byte> html,
-        ReadOnlySpan<byte> openTagPrefix,
-        ReadOnlySpan<byte> closeTag)
-    {
-        _html = html;
-        _open = openTagPrefix;
-        _close = closeTag;
-    }
 
     /// <summary>Gets the current block body span (the bytes between the opening tag's <c>&gt;</c> and the closing tag). May be empty.</summary>
     public ReadOnlySpan<byte> Current { get; private set; }

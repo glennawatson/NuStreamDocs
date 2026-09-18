@@ -30,8 +30,9 @@ public class RedirectsOptionsExtensionsTests
     [Test]
     public async Task AddAccumulates()
     {
+        const int redirectCount = 2;
         var o = RedirectsOptions.Default.Add("/old/"u8, "/new/"u8).Add("/gone/"u8, "https://elsewhere.test/"u8, false);
-        await Assert.That(o.Redirects.Length).IsEqualTo(2);
+        await Assert.That(o.Redirects.Length).IsEqualTo(redirectCount);
         await Assert.That(Encoding.UTF8.GetString(o.Redirects[0].From)).IsEqualTo("/old/");
         await Assert.That(Encoding.UTF8.GetString(o.Redirects[0].To)).IsEqualTo("/new/");
         await Assert.That(o.Redirects[0].Permanent).IsTrue();
@@ -43,10 +44,11 @@ public class RedirectsOptionsExtensionsTests
     [Test]
     public async Task HeaderRulesAndSecurityHeaders()
     {
+        const int headerRuleCount = 2;
         var o = RedirectsOptions.Default
             .AddHeaders("/api/*"u8, [.. "X-Robots-Tag: noindex"u8])
             .WithSecurityHeaders();
-        await Assert.That(o.Headers.Length).IsEqualTo(2);
+        await Assert.That(o.Headers.Length).IsEqualTo(headerRuleCount);
         await Assert.That(Encoding.UTF8.GetString(o.Headers[0].PathPattern)).IsEqualTo("/api/*");
         await Assert.That(Encoding.UTF8.GetString(o.Headers[0].HeaderLines[0])).IsEqualTo("X-Robots-Tag: noindex");
         await Assert.That(Encoding.UTF8.GetString(o.Headers[1].PathPattern)).IsEqualTo("/*");

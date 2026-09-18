@@ -12,6 +12,12 @@ namespace NuStreamDocs.Lightbox.Tests;
 /// <summary>Builder-extension + lifecycle tests for <c>LightboxPlugin</c>.</summary>
 public class LightboxRegistrationTests
 {
+    /// <summary>Lightbox library name.</summary>
+    private const string LightboxLibraryName = "glightbox";
+
+    /// <summary>Initial output capacity.</summary>
+    private const int InitialOutputCapacity = 128;
+
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -24,7 +30,7 @@ public class LightboxRegistrationTests
     public async Task DefaultOptions()
     {
         var defaults = LightboxOptions.Default;
-        await Assert.That(Encoding.UTF8.GetString(defaults.StylesheetUrl)).Contains("glightbox");
+        await Assert.That(Encoding.UTF8.GetString(defaults.StylesheetUrl)).Contains(LightboxLibraryName);
         await Assert.That(defaults.WrapImages).IsTrue();
         await Assert.That(defaults.Selector.AsSpan().SequenceEqual("glightbox"u8)).IsTrue();
     }
@@ -35,7 +41,7 @@ public class LightboxRegistrationTests
     public async Task WrapsBareImages()
     {
         var output = RunPostRender(new(), "<p><img src=\"a.png\" alt=\"a\"></p>"u8);
-        await Assert.That(Encoding.UTF8.GetString(output)).Contains("glightbox");
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains(LightboxLibraryName);
     }
 
     /// <summary>NeedsRewrite returns false when WrapImages is false.</summary>
@@ -65,7 +71,7 @@ public class LightboxRegistrationTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(LightboxPlugin plugin, ReadOnlySpan<byte> html)
     {
-        ArrayBufferWriter<byte> output = new(128);
+        ArrayBufferWriter<byte> output = new(InitialOutputCapacity);
         PagePostRenderContext ctx = new("p.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];

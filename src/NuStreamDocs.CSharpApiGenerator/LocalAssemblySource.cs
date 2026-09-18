@@ -19,6 +19,7 @@ internal sealed record LocalAssemblySource(
     DirectoryPath[] FallbackSearchPaths) : IAssemblySource
 {
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
     /// <inheritdoc/>
@@ -30,28 +31,6 @@ internal sealed record LocalAssemblySource(
         var fallback = BuildFallbackIndex();
         yield return new(Tfm, ToStringArray(AssemblyPaths), fallback);
         await Task.CompletedTask.ConfigureAwait(false);
-    }
-
-    /// <summary>Builds a filename to absolute-path index for the resolver fallback.</summary>
-    /// <returns>A case-insensitive lookup keyed by filename.</returns>
-    private Dictionary<string, string> BuildFallbackIndex()
-    {
-        Dictionary<string, string> index = new(StringComparer.OrdinalIgnoreCase);
-        for (var i = 0; i < AssemblyPaths.Length; i++)
-        {
-            var dir = AssemblyPaths[i].Directory;
-            if (!dir.IsEmpty)
-            {
-                AddDllsFromDirectory(index, dir);
-            }
-        }
-
-        for (var i = 0; i < FallbackSearchPaths.Length; i++)
-        {
-            AddDllsFromDirectory(index, FallbackSearchPaths[i]);
-        }
-
-        return index;
     }
 
     /// <summary>Adds every <c>.dll</c> in <paramref name="directory"/> to <paramref name="index"/>; the first directory wins on duplicate filenames.</summary>
@@ -68,10 +47,7 @@ internal sealed record LocalAssemblySource(
         for (var i = 0; i < files.Length; i++)
         {
             var name = Path.GetFileName(files[i]);
-            if (!index.ContainsKey(name))
-            {
-                index[name] = files[i];
-            }
+            _ = index.TryAdd(name, files[i]);
         }
     }
 
@@ -92,5 +68,27 @@ internal sealed record LocalAssemblySource(
         }
 
         return result;
+    }
+
+    /// <summary>Builds a filename to absolute-path index for the resolver fallback.</summary>
+    /// <returns>A case-insensitive lookup keyed by filename.</returns>
+    private Dictionary<string, string> BuildFallbackIndex()
+    {
+        Dictionary<string, string> index = [with(StringComparer.OrdinalIgnoreCase)];
+        for (var i = 0; i < AssemblyPaths.Length; i++)
+        {
+            var dir = AssemblyPaths[i].Directory;
+            if (!dir.IsEmpty)
+            {
+                AddDllsFromDirectory(index, dir);
+            }
+        }
+
+        for (var i = 0; i < FallbackSearchPaths.Length; i++)
+        {
+            AddDllsFromDirectory(index, FallbackSearchPaths[i]);
+        }
+
+        return index;
     }
 }

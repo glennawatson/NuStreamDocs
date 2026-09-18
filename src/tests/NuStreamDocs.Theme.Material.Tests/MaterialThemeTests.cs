@@ -32,18 +32,15 @@ public class MaterialThemeTests
     public async Task PageTemplateRendersMaterialShell()
     {
         var theme = MaterialTheme.Load();
-        TemplateData data = new(
-            new(ByteArrayComparer.Instance)
-            {
-                [[.. "language"u8]] = (byte[])[.. "en"u8],
-                [[.. "site_name"u8]] = (byte[])[.. "Test Site"u8],
-                [[.. "site_root"u8]] = (byte[])[.. "/"u8],
-                [[.. "page_title"u8]] = (byte[])[.. "Hi"u8],
-                [[.. "body"u8]] = (byte[])[.. "<h1>Hello</h1>"u8],
-                [[.. "asset_root"u8]] = (byte[])[.. "/assets"u8],
-                [[.. "copyright"u8]] = (byte[])[.. ""u8]
-            },
-            null);
+        Dictionary<byte[], ReadOnlyMemory<byte>> scalars = [with(ByteArrayComparer.Instance)];
+        scalars[[.. "language"u8]] = (byte[])[.. "en"u8];
+        scalars[[.. "site_name"u8]] = (byte[])[.. "Test Site"u8];
+        scalars[[.. "site_root"u8]] = (byte[])[.. "/"u8];
+        scalars[[.. "page_title"u8]] = (byte[])[.. "Hi"u8];
+        scalars[[.. "body"u8]] = (byte[])[.. "<h1>Hello</h1>"u8];
+        scalars[[.. "asset_root"u8]] = (byte[])[.. "/assets"u8];
+        scalars[[.. "copyright"u8]] = ReadOnlyMemory<byte>.Empty;
+        TemplateData data = new(scalars, null);
 
         ArrayBufferWriter<byte> writer = new();
         theme.Page.Render(data, theme.Partials, writer);

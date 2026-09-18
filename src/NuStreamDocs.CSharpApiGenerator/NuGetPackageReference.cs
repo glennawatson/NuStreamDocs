@@ -4,9 +4,8 @@
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// Inline NuGet-package reference handed to <see cref="NuGetPackagesInput"/>.
-/// </summary>
+/// <summary>Inline NuGet-package reference handed to <see cref="NuGetPackagesInput"/>.</summary>
 /// <param name="PackageId">NuGet package identifier (e.g. <c>ReactiveUI</c>).</param>
 /// <param name="Version">Exact version string (e.g. <c>20.0.0</c>); never a range.</param>
+[System.Diagnostics.DebuggerDisplay("NuGetPackageReference: {ToString(),nq}")]
 public readonly record struct NuGetPackageReference(string PackageId, string Version);

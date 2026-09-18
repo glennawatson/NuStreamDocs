@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Blog.MkDocs</PackageId>
     <Description>Add a blog with categories, dates, and authors to your NuStreamDocs site. Drop posts under `blog/posts/` and the plugin generates an index page and per-category archive pages.</Description>
     <RootNamespace>NuStreamDocs.Blog.MkDocs</RootNamespace>

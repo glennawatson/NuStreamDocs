@@ -17,9 +17,9 @@ public class RawVariableTests
     public async Task RawVariableEmitsUnescaped()
     {
         var template = Template.Compile("hi {{&name}} bye"u8);
-        TemplateData data = new(
-            new(ByteArrayComparer.Instance) { [[.. "name"u8]] = new([.. "<b>X</b>"u8]) },
-            null);
+        Dictionary<byte[], ReadOnlyMemory<byte>> values = [with(ByteArrayComparer.Instance)];
+        values[[.. "name"u8]] = new([.. "<b>X</b>"u8]);
+        TemplateData data = new(values, null);
         ArrayBufferWriter<byte> sink = new();
         template.Render(data, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hi <b>X</b> bye");

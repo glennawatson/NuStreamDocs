@@ -2,15 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Templating;
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Shared helpers for loading the stock theme model shape.
-/// </summary>
+/// <summary>Shared helpers for loading the stock theme model shape.</summary>
 public static class ThemeModelLoader
 {
     /// <summary>Standard partials used by both built-in Material-derived themes.</summary>
@@ -28,6 +27,7 @@ public static class ThemeModelLoader
     /// <summary>Compiles the shared top-level page template.</summary>
     /// <param name="readBytes">Embedded-asset byte reader.</param>
     /// <returns>The compiled template.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Template LoadPage(PartialLoader readBytes) => Template.Compile(readBytes("page.mustache"));
 
     /// <summary>Compiles the standard <c>partials/*.mustache</c> set into a byte-keyed registry.</summary>
@@ -35,11 +35,11 @@ public static class ThemeModelLoader
     /// <returns>A UTF-8 byte-keyed registry of compiled partials.</returns>
     public static Dictionary<byte[], Template> LoadStandardPartials(PartialLoader readBytes)
     {
-        Dictionary<byte[], Template> working = new(StandardPartialNames.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], Template> working = [with(StandardPartialNames.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < StandardPartialNames.Length; i++)
         {
             var name = StandardPartialNames[i];
-            working[Encoding.UTF8.GetBytes(name)] = Template.Compile(readBytes("partials/" + name + ".mustache"));
+            working[Encoding.UTF8.GetBytes(name)] = Template.Compile(readBytes($"partials/{name}.mustache"));
         }
 
         return working;
@@ -51,7 +51,7 @@ public static class ThemeModelLoader
     /// <returns>A plain dictionary keyed by relative output path.</returns>
     public static Dictionary<FilePath, byte[]> LoadStaticAssets(FilePath[] staticAssetPaths, PartialLoader readBytes)
     {
-        Dictionary<FilePath, byte[]> working = new(staticAssetPaths.Length);
+        Dictionary<FilePath, byte[]> working = [with(staticAssetPaths.Length)];
         for (var i = 0; i < staticAssetPaths.Length; i++)
         {
             var path = staticAssetPaths[i];

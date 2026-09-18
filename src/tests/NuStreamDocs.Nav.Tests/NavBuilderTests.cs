@@ -22,11 +22,12 @@ public class NavBuilderTests
     [Test]
     public async Task ResultIsRightSized()
     {
+        const int ExpectedCount = 2;
         var buffer = new NavEntry[8];
         buffer[0] = NavEntryFactory.Leaf("First", "first.md");
         buffer[1] = NavEntryFactory.Leaf("Second", "second.md");
-        var result = NavBuilder.ToArray(buffer, 2);
-        await Assert.That(result.Length).IsEqualTo(2);
+        var result = NavBuilder.ToArray(buffer, ExpectedCount);
+        await Assert.That(result.Length).IsEqualTo(ExpectedCount);
         await Assert.That(result[0]).IsEqualTo(buffer[0]);
         await Assert.That(result[1]).IsEqualTo(buffer[1]);
     }

@@ -6,22 +6,19 @@ using System.Buffers;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Builders;
 
-/// <summary>
-/// Generic single-state lexer rule-list builder for languages that don't fit a tighter family
-/// helper.
-/// </summary>
+/// <summary>Generic single-state lexer rule-list builder for languages that don't fit a tighter family helper.</summary>
 internal static class SingleStateLexerRules
 {
     /// <summary>Builds a single-state <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateLexer(in SingleStateLexerConfig config) =>
+    internal static Lexer CreateLexer(in SingleStateLexerConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
     /// <summary>Builds the ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
-    public static LexerRule[] Build(in SingleStateLexerConfig config)
+    internal static LexerRule[] Build(in SingleStateLexerConfig config)
     {
         const int MaxRuleSlots = 16;
         var rules = new List<LexerRule>(MaxRuleSlots)
@@ -29,10 +26,7 @@ internal static class SingleStateLexerRules
             new(
                 TokenMatchers.MatchAsciiWhitespace,
                 TokenClass.Whitespace,
-                LexerRule.NoStateChange)
-            {
-                FirstBytes = config.WhitespaceFirst ?? TokenMatchers.AsciiWhitespaceWithNewlines
-            }
+                LexerRule.NoStateChange) { FirstBytes = config.WhitespaceFirst ?? TokenMatchers.AsciiWhitespaceWithNewlines, },
         };
 
         AppendIfPresent(rules, config.PreCommentRule);
@@ -183,11 +177,7 @@ internal static class SingleStateLexerRules
         rules.Add(new(
             slice => TokenMatchers.MatchKeyword(slice, captured),
             tokenClass,
-            LexerRule.NoStateChange)
-        {
-            FirstBytes = firstBytes ?? captured.FirstByteSet,
-            RequiresLineStart = requiresLineStart
-        });
+            LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet, RequiresLineStart = requiresLineStart, });
     }
 
     /// <summary>Appends the identifier rule to <paramref name="rules"/> — uses <paramref name="continueSet"/> when supplied, else the ASCII default.</summary>

@@ -13,7 +13,7 @@ internal static class AnchorAttributeFinder
     /// <param name="attrs">Tag body span (between <c>&lt;a</c> and the closing <c>&gt;</c>).</param>
     /// <param name="name">Lowercase ASCII attribute name to match.</param>
     /// <returns>Range of the matched attribute, or <see cref="NamedAttribute.None"/> when no match exists.</returns>
-    public static NamedAttribute Find(ReadOnlySpan<byte> attrs, ReadOnlySpan<byte> name)
+    internal static NamedAttribute Find(ReadOnlySpan<byte> attrs, ReadOnlySpan<byte> name)
     {
         for (var p = 0; p < attrs.Length; p++)
         {
@@ -39,8 +39,7 @@ internal static class AnchorAttributeFinder
             return NamedAttribute.None;
         }
 
-        var afterName = p + name.Length;
-        var afterWs = AsciiByteHelpers.SkipWhitespace(attrs, afterName);
+        var afterWs = AsciiByteHelpers.SkipWhitespace(attrs, p + name.Length);
         if (afterWs >= attrs.Length || attrs[afterWs] is not (byte)'=')
         {
             return NamedAttribute.None;
@@ -55,12 +54,6 @@ internal static class AnchorAttributeFinder
         var quote = attrs[afterEq];
         var valStart = afterEq + 1;
         var endQuoteRel = attrs[valStart..].IndexOf(quote);
-        if (endQuoteRel < 0)
-        {
-            return NamedAttribute.None;
-        }
-
-        var valEnd = valStart + endQuoteRel;
-        return new(p, valStart, valEnd);
+        return endQuoteRel < 0 ? NamedAttribute.None : new(p, valStart, valStart + endQuoteRel);
     }
 }

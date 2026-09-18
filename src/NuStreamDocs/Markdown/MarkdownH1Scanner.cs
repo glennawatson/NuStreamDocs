@@ -130,7 +130,7 @@ public static class MarkdownH1Scanner
     private static bool IsAtxH1(ReadOnlySpan<byte> line, out ReadOnlySpan<byte> text)
     {
         text = [];
-        if (line is not [(byte)'#', ..] || line.Length < 2 || line[1] is (byte)'#')
+        if (line is not [(byte)'#', _, ..] || line[1] is (byte)'#')
         {
             return false;
         }
@@ -140,7 +140,7 @@ public static class MarkdownH1Scanner
             return false;
         }
 
-        var rest = YamlByteScanner.TrimWhitespace(line[2..]);
+        var rest = YamlByteScanner.TrimWhitespace(line["# "u8.Length..]);
         rest = StripTrailingAtxClosingHashes(rest);
         if (rest.IsEmpty)
         {
@@ -167,13 +167,7 @@ public static class MarkdownH1Scanner
             return text;
         }
 
-        if (end > 0 && text[end - 1] is not ((byte)' ' or (byte)'\t'))
-        {
-            // Hashes were attached to a word — keep them (e.g. "C#").
-            return text;
-        }
-
-        return YamlByteScanner.TrimWhitespace(text[..end]);
+        return end > 0 && text[end - 1] is not ((byte)' ' or (byte)'\t') ? text : YamlByteScanner.TrimWhitespace(text[..end]);
     }
 
     /// <summary>Returns true when <paramref name="line"/> is a Setext H1 underline (<c>=</c> bytes only, optional trailing whitespace).</summary>
@@ -190,8 +184,7 @@ public static class MarkdownH1Scanner
         {
             switch (line[i])
             {
-                case (byte)'=':
-                case (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n':
+                case (byte)'=' or (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n':
                     continue;
                 default:
                     return false;

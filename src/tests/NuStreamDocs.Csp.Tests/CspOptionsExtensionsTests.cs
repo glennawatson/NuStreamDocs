@@ -9,6 +9,9 @@ namespace NuStreamDocs.Csp.Tests;
 /// <summary>Coverage for <c>CspOptionsExtensions</c>.</summary>
 public class CspOptionsExtensionsTests
 {
+    /// <summary>Gets the directive value that disallows all sources.</summary>
+    private static ReadOnlySpan<byte> NoneSource => "'none'"u8;
+
     /// <summary>The defaults: enforce mode, hash scripts, don't hash styles, <c>'self'</c> base directives, on.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -32,8 +35,8 @@ public class CspOptionsExtensionsTests
     public async Task SettersRoundTrip()
     {
         var o = CspOptions.Default
-            .WithDefaultSrc("'none'"u8)
-            .WithFrameAncestors("'none'"u8)
+            .WithDefaultSrc(NoneSource)
+            .WithFrameAncestors(NoneSource)
             .WithReportUri("/csp-report"u8)
             .WithReportOnly()
             .WithoutScriptHashing()
@@ -41,8 +44,8 @@ public class CspOptionsExtensionsTests
             .WithUpgradeInsecureRequests()
             .AllowSource("script-src"u8, "https://plausible.io"u8)
             .WithExtraDirective("worker-src 'self'"u8);
-        await Assert.That(Encoding.UTF8.GetString(o.DefaultSrc)).IsEqualTo("'none'");
-        await Assert.That(Encoding.UTF8.GetString(o.FrameAncestors)).IsEqualTo("'none'");
+        await Assert.That(o.DefaultSrc.AsSpan().SequenceEqual(NoneSource)).IsTrue();
+        await Assert.That(o.FrameAncestors.AsSpan().SequenceEqual(NoneSource)).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(o.ReportUri)).IsEqualTo("/csp-report");
         await Assert.That(o.Mode).IsEqualTo(CspMode.ReportOnly);
         await Assert.That(o.HashInlineScripts).IsFalse();

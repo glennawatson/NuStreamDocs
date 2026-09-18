@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Families;
@@ -59,21 +60,18 @@ internal static class LispFamilyRules
     /// <summary>Builds a single-state Lisp-family <see cref="Lexer"/> from <paramref name="config"/> in one call.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Built lexer.</returns>
-    public static Lexer CreateLexer(in LispFamilyConfig config) =>
+    internal static Lexer CreateLexer(in LispFamilyConfig config) =>
         new(LanguageRuleBuilder.BuildSingleState(Build(config)));
 
     /// <summary>Builds the Lisp-family ordered rule list from <paramref name="config"/>.</summary>
     /// <param name="config">Per-language configuration.</param>
     /// <returns>Ordered <see cref="LexerRule"/> list for the root state.</returns>
-    public static LexerRule[] Build(in LispFamilyConfig config)
+    internal static LexerRule[] Build(in LispFamilyConfig config)
     {
         const int MaxRuleSlots = 14;
         var rules = new List<LexerRule>(MaxRuleSlots)
         {
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, },
 
             // ; line comment to end-of-line.
             new(
@@ -87,32 +85,20 @@ internal static class LispFamilyRules
             new(MatchHashDispatch, TokenClass.Text, LexerRule.NoStateChange) { FirstBytes = HashFirst },
 
             // "..." string with backslash escapes.
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = DoubleQuoteFirst
-            },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst, },
 
             // ' / ` / , quote prefix.
-            new(MatchQuotePrefix, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = QuoteFirst }
+            new(MatchQuotePrefix, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = QuoteFirst },
         };
 
         if (config.IncludeColonKeyword)
         {
-            rules.Add(new(MatchColonKeyword, TokenClass.NameAttribute, LexerRule.NoStateChange)
-            {
-                FirstBytes = ColonFirst
-            });
+            rules.Add(new(MatchColonKeyword, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = ColonFirst, });
         }
 
         // Numeric literal — float first.
-        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiDigits
-        });
-        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiDigits
-        });
+        rules.Add(new(TokenMatchers.MatchUnsignedAsciiFloat, TokenClass.NumberFloat, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
+        rules.Add(new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, });
 
         // Keyword tables (case-sensitive). Constants first so `t` / `nil` win over the symbol rule.
         rules.Add(BuildKeywordRule(config.KeywordConstants, config.KeywordConstantFirst, TokenClass.KeywordConstant));
@@ -147,24 +133,17 @@ internal static class LispFamilyRules
         TokenClass tokenClass)
     {
         var captured = keywords;
-        return new(slice => MatchSymbolKeyword(slice, captured), tokenClass, LexerRule.NoStateChange)
-        {
-            FirstBytes = firstBytes ?? captured.FirstByteSet
-        };
+        return new(slice => MatchSymbolKeyword(slice, captured), tokenClass, LexerRule.NoStateChange) { FirstBytes = firstBytes ?? captured.FirstByteSet, };
     }
 
-    /// <summary>
-    /// Matches forms introduced by <c>#</c>: <c>#|...|#</c> block comments,
-    /// <c>#\x</c> character literals, and the <c>#;</c> / <c>#_</c> datum-comment markers.
-    /// </summary>
+    /// <summary>Matches forms introduced by <c>#</c>: <c>#|...|#</c> block comments, <c>#\x</c> character literals, and the <c>#;</c> / <c>#_</c> datum-comment markers.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
     private static int MatchHashDispatch(ReadOnlySpan<byte> slice) => slice switch
     {
         [(byte)'#', (byte)'|', ..] => MatchBlockComment(slice),
         [(byte)'#', (byte)'\\', _, ..] => MatchCharacterLiteral(slice),
-        [(byte)'#', (byte)';', ..] => DatumCommentMarkerLength,
-        [(byte)'#', (byte)'_', ..] => DatumCommentMarkerLength,
+        [(byte)'#', (byte)';', ..] or [(byte)'#', (byte)'_', ..] => DatumCommentMarkerLength,
         _ => 0
     };
 
@@ -215,12 +194,7 @@ internal static class LispFamilyRules
         }
 
         // ,@ unquote-splicing.
-        if (slice.Length > 1 && slice[0] is (byte)',' && slice[1] is (byte)'@')
-        {
-            return ColonAndStartLength;
-        }
-
-        return 1;
+        return slice.Length > 1 && slice[0] is (byte)',' && slice[1] is (byte)'@' ? ColonAndStartLength : 1;
     }
 
     /// <summary>Matches a colon-keyword literal <c>:foo</c>.</summary>
@@ -245,6 +219,7 @@ internal static class LispFamilyRules
     /// <summary>Matches a bare Lisp symbol — start byte then continuation bytes.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchSymbol(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchIdentifier(slice, SymbolStart, SymbolContinue);
 

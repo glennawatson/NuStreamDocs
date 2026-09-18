@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using BenchmarkDotNet.Attributes;
@@ -21,6 +23,7 @@ namespace NuStreamDocs.Benchmarks;
 /// runs once per build per source, scaling with the number of records. Excludes network/disk I/O,
 /// which the loaders layer on top.
 /// </summary>
+[DebuggerDisplay("ContentLoaderBenchmarks: Records={Records}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class ContentLoaderBenchmarks
@@ -39,9 +42,6 @@ public class ContentLoaderBenchmarks
 
     /// <summary>Number of HTTP methods the OpenAPI fixture cycles through.</summary>
     private const int MethodCount = 4;
-
-    /// <summary>Loader name passed to <see cref="JsonContentMapper"/> for diagnostics.</summary>
-    private static readonly byte[] LoaderName = [.. "bench"u8];
 
     /// <summary>Mapping used for the JSON-collection benchmark.</summary>
     private static readonly ContentMapping Mapping =
@@ -79,6 +79,9 @@ public class ContentLoaderBenchmarks
     [Params(SmallRecordCount, LargeRecordCount)]
     public int Records { get; set; }
 
+    /// <summary>Gets the loader name passed to <see cref="JsonContentMapper"/> for diagnostics.</summary>
+    private static ReadOnlySpan<byte> LoaderName => "bench"u8;
+
     /// <summary>Builds the source fixtures for the current record count.</summary>
     [GlobalSetup]
     public void Setup()
@@ -93,6 +96,7 @@ public class ContentLoaderBenchmarks
 
     /// <summary>Maps the JSON collection into synthetic pages.</summary>
     /// <returns>The number of pages produced.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int JsonMap() => JsonContentMapper.Map(_json, Mapping, LoaderName, NullLogger.Instance).Length;
 
@@ -112,27 +116,32 @@ public class ContentLoaderBenchmarks
 
     /// <summary>Parses the RSS feed into items.</summary>
     /// <returns>The number of items parsed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int RssRead() => RssAtomReader.Read(_rss).Length;
 
     /// <summary>Parses the Atom feed into entries.</summary>
     /// <returns>The number of entries parsed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int AtomRead() => RssAtomReader.Read(_atom).Length;
 
     /// <summary>Resolves the GitHub tree response into raw-document entries.</summary>
     /// <returns>The number of entries.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int GitHubTreeRead() => GitHubTreeReader.Read(_tree, in Repo, "docs"u8, "product"u8).Length;
 
     /// <summary>Renders the OpenAPI document into per-tag reference pages.</summary>
     /// <returns>The number of pages produced.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int OpenApiBuild() => OpenApiPageBuilder.Build(_openApi, "reference"u8).Length;
 
     /// <summary>Decimal text of <paramref name="i"/>.</summary>
     /// <param name="i">Value.</param>
     /// <returns>The text.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string N(int i) => i.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>Builds a JSON array of <paramref name="count"/> post objects.</summary>
@@ -141,22 +150,22 @@ public class ContentLoaderBenchmarks
     private static string BuildJsonArray(int count)
     {
         StringBuilder sb = new(count * ApproxBytesPerRecord);
-        sb.Append('[');
+        _ = sb.Append('[');
         for (var i = 0; i < count; i++)
         {
             if (i > 0)
             {
-                sb.Append(',');
+                _ = sb.Append(',');
             }
 
-            sb.Append("{\"slug\":\"post-").Append(N(i))
+            _ = sb.Append("{\"slug\":\"post-").Append(N(i))
                 .Append("\",\"title\":\"Post ").Append(N(i))
                 .Append("\",\"date\":\"2026-05-01\",\"tags\":[\"a\",\"b\"],\"draft\":false,\"body\":\"# Post ")
                 .Append(N(i))
                 .Append("\\n\\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\"}");
         }
 
-        sb.Append(']');
+        _ = sb.Append(']');
         return sb.ToString();
     }
 
@@ -166,10 +175,10 @@ public class ContentLoaderBenchmarks
     private static string BuildYaml(int count)
     {
         StringBuilder sb = new(count * ApproxBytesPerRecord);
-        sb.Append("posts:\n");
+        _ = sb.Append("posts:\n");
         for (var i = 0; i < count; i++)
         {
-            sb.Append("  - slug: post-").Append(N(i)).Append('\n')
+            _ = sb.Append("  - slug: post-").Append(N(i)).Append('\n')
                 .Append("    title: Post ").Append(N(i)).Append('\n')
                 .Append("    date: 2026-05-01\n")
                 .Append("    draft: false\n");
@@ -184,16 +193,16 @@ public class ContentLoaderBenchmarks
     private static string BuildRss(int count)
     {
         StringBuilder sb = new(count * ApproxBytesPerRecord);
-        sb.Append("<?xml version=\"1.0\"?><rss version=\"2.0\"><channel><title>Bench</title>");
+        _ = sb.Append("<?xml version=\"1.0\"?><rss version=\"2.0\"><channel><title>Bench</title>");
         for (var i = 0; i < count; i++)
         {
-            sb.Append("<item><title>Item ").Append(N(i))
+            _ = sb.Append("<item><title>Item ").Append(N(i))
                 .Append("</title><link>https://blog.test/").Append(N(i))
                 .Append("</link><pubDate>Mon, 04 May 2026 12:00:00 GMT</pubDate><guid>https://blog.test/").Append(N(i))
                 .Append("</guid><description>&lt;p&gt;Body ").Append(N(i)).Append("&lt;/p&gt;</description></item>");
         }
 
-        sb.Append("</channel></rss>");
+        _ = sb.Append("</channel></rss>");
         return sb.ToString();
     }
 
@@ -203,17 +212,17 @@ public class ContentLoaderBenchmarks
     private static string BuildAtom(int count)
     {
         StringBuilder sb = new(count * ApproxBytesPerRecord);
-        sb.Append("<?xml version=\"1.0\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"><title>Bench</title>");
+        _ = sb.Append("<?xml version=\"1.0\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"><title>Bench</title>");
         for (var i = 0; i < count; i++)
         {
-            sb.Append("<entry><title>Entry ").Append(N(i))
+            _ = sb.Append("<entry><title>Entry ").Append(N(i))
                 .Append("</title><link rel=\"alternate\" href=\"https://a.test/").Append(N(i))
                 .Append("\"/><updated>2026-05-04T12:00:00Z</updated><id>urn:uuid:").Append(N(i))
                 .Append("</id><content type=\"html\">&lt;p&gt;Body ").Append(N(i))
                 .Append("&lt;/p&gt;</content></entry>");
         }
 
-        sb.Append("</feed>");
+        _ = sb.Append("</feed>");
         return sb.ToString();
     }
 
@@ -223,20 +232,20 @@ public class ContentLoaderBenchmarks
     private static string BuildTree(int count)
     {
         StringBuilder sb = new(count * ApproxBytesPerRecord);
-        sb.Append("{\"sha\":\"x\",\"tree\":[");
+        _ = sb.Append("{\"sha\":\"x\",\"tree\":[");
         for (var i = 0; i < count; i++)
         {
             if (i > 0)
             {
-                sb.Append(',');
+                _ = sb.Append(',');
             }
 
-            sb.Append("{\"path\":\"docs/section").Append(i % GroupCount)
+            _ = sb.Append("{\"path\":\"docs/section").Append(i % GroupCount)
                 .Append("/page").Append(N(i))
                 .Append(".md\",\"type\":\"blob\",\"sha\":\"deadbeef").Append(N(i)).Append("\"}");
         }
 
-        sb.Append(",{\"path\":\"docs\",\"type\":\"tree\",\"sha\":\"t\"},")
+        _ = sb.Append(",{\"path\":\"docs\",\"type\":\"tree\",\"sha\":\"t\"},")
             .Append("{\"path\":\"docs/logo.png\",\"type\":\"blob\",\"sha\":\"p\"}]}");
         return sb.ToString();
     }
@@ -247,15 +256,15 @@ public class ContentLoaderBenchmarks
     private static string BuildOpenApi(int count)
     {
         StringBuilder sb = new(count * ApproxBytesPerRecord);
-        sb.Append("{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"Bench\"},\"paths\":{");
+        _ = sb.Append("{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"Bench\"},\"paths\":{");
         for (var i = 0; i < count; i++)
         {
             if (i > 0)
             {
-                sb.Append(',');
+                _ = sb.Append(',');
             }
 
-            sb.Append("\"/resource").Append(N(i)).Append("/{id}\":{\"").Append(HttpMethods[i % MethodCount])
+            _ = sb.Append("\"/resource").Append(N(i)).Append("/{id}\":{\"").Append(HttpMethods[i % MethodCount])
                 .Append("\":{\"tags\":[\"tag").Append(i % GroupCount)
                 .Append("\"],\"summary\":\"Operation ").Append(N(i))
                 .Append(
@@ -264,7 +273,7 @@ public class ContentLoaderBenchmarks
                 .Append("\"responses\":{\"200\":{\"description\":\"OK\"},\"404\":{\"description\":\"Missing\"}}}}");
         }
 
-        sb.Append("}}");
+        _ = sb.Append("}}");
         return sb.ToString();
     }
 }

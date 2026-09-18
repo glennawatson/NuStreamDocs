@@ -61,7 +61,7 @@ public static class ObjectiveCLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = CFamilyShared.StandardPunctuation,
             IntegerSuffix = CFamilyShared.CIntegerSuffix,
@@ -70,7 +70,7 @@ public static class ObjectiveCLexer
             IncludePreprocessor = true,
             IncludeCharacterLiteral = true,
             WhitespaceIncludesNewlines = true,
-            SpecialString = null
+            SpecialString = null,
         };
 
         var coreRules = CFamilyRules.Build(config);

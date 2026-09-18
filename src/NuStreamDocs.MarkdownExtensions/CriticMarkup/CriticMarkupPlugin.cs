@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.CriticMarkup;
@@ -11,6 +12,7 @@ namespace NuStreamDocs.MarkdownExtensions.CriticMarkup;
 /// <c>{==…==}</c>, and <c>{&gt;&gt;…&lt;&lt;}</c> spans into pymdownx.critic-style HTML. Code
 /// spans pass through.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("CriticMarkupPlugin: {Name}")]
 public sealed class CriticMarkupPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -23,6 +25,7 @@ public sealed class CriticMarkupPlugin : IPagePreRenderPlugin
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)'{') >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         CriticMarkupRewriter.Rewrite(context.Source, context.Output);
 }

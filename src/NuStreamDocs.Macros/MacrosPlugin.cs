@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -12,6 +13,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Macros;
 
 /// <summary>Substitutes <c>{{ name }}</c> markers in markdown source with values from <see cref="MacrosOptions.Variables"/> before parsing.</summary>
+[System.Diagnostics.DebuggerDisplay("MacrosPlugin: {Name}")]
 public sealed class MacrosPlugin : IPagePreRenderPlugin
 {
     /// <summary>Configured options.</summary>
@@ -96,11 +98,13 @@ public sealed class MacrosPlugin : IPagePreRenderPlugin
     /// <param name="name">UTF-8 name bytes.</param>
     /// <param name="value">Resolved UTF-8 value bytes on hit.</param>
     /// <returns>True when the name is in the dictionary.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool ResolveVariable(ReadOnlySpan<byte> name, out byte[] value) =>
         _variableLookup.TryGetValue(name, out value!);
 
     /// <summary>Logs an unresolved name at <c>Warning</c>.</summary>
     /// <param name="name">UTF-8 name bytes.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WarnMissing(ReadOnlySpan<byte> name) =>
         MacrosLoggingHelper.LogMissingVariable(_logger, Encoding.UTF8.GetString(name));
 }

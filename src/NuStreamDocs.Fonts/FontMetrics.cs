@@ -11,6 +11,7 @@ namespace NuStreamDocs.Fonts;
 /// <param name="LineGap">Typographic line gap (the <c>hhea</c> table's <c>lineGap</c>).</param>
 /// <param name="XHeight">Height of a lowercase <c>x</c> (the <c>OS/2</c> table's <c>sxHeight</c>; zero when the font omits it).</param>
 /// <param name="CapHeight">Height of a capital letter (the <c>OS/2</c> table's <c>sCapHeight</c>; zero when the font omits it).</param>
+[System.Diagnostics.DebuggerDisplay("FontMetrics: {ToString(),nq}")]
 public readonly record struct FontMetrics(
     int UnitsPerEm,
     int Ascender,

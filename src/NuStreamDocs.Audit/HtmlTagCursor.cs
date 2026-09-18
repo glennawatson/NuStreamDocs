@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Audit;
@@ -62,18 +63,20 @@ internal ref struct HtmlTagCursor
     /// <param name="name">Attribute name.</param>
     /// <param name="value">On success, the unquoted value bytes.</param>
     /// <returns><see langword="true"/> when the attribute is present.</returns>
-    public readonly bool TryGetAttribute(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> value) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal readonly bool TryGetAttribute(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> value) =>
         HtmlAttr.TryGet(Attributes, name, out value);
 
     /// <summary>Tests whether the current tag has <paramref name="name"/>.</summary>
     /// <param name="name">Attribute name.</param>
     /// <returns><see langword="true"/> when the attribute is present.</returns>
-    public readonly bool HasAttribute(ReadOnlySpan<byte> name) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal readonly bool HasAttribute(ReadOnlySpan<byte> name) =>
         HtmlAttr.Has(Attributes, name);
 
     /// <summary>Advances to the next tag.</summary>
     /// <returns><see langword="true"/> when a tag was found; <see langword="false"/> at end of input.</returns>
-    public bool MoveNext()
+    internal bool MoveNext()
     {
         Reset();
         while (_pos < _html.Length)

@@ -11,6 +11,12 @@ namespace NuStreamDocs.Tests;
 /// <summary>Unit tests for the YamlByteScanner helpers.</summary>
 public class YamlByteScannerTests
 {
+    /// <summary>First Line End used by the test cases.</summary>
+    private const int FirstLineEnd = 3;
+
+    /// <summary>Input Length used by the test cases.</summary>
+    private const int InputLength = 5;
+
     /// <summary>FrontmatterDelimiter returns the literal three-dash bytes.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,8 +29,8 @@ public class YamlByteScannerTests
     public async Task LineEndCases()
     {
         byte[] bytes = [.. "ab\ncd"u8];
-        await Assert.That(Utf8LineSpan.LfLineEnd(bytes, 0)).IsEqualTo(3);
-        await Assert.That(Utf8LineSpan.LfLineEnd(bytes, 3)).IsEqualTo(5);
+        await Assert.That(Utf8LineSpan.LfLineEnd(bytes, 0)).IsEqualTo(FirstLineEnd);
+        await Assert.That(Utf8LineSpan.LfLineEnd(bytes, FirstLineEnd)).IsEqualTo(InputLength);
     }
 
     /// <summary>TrimLeading drops space, tab, and CR.</summary>

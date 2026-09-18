@@ -9,6 +9,7 @@ namespace NuStreamDocs.Plugins;
 /// <summary>Read-only context handed to <see cref="IBuildResolvePlugin.ResolveAsync"/>.</summary>
 /// <param name="OutputRoot">Absolute path to the site output directory.</param>
 /// <param name="Plugins">Every plugin registered with the builder; resolvers consult sibling registries through their owning plugin instance.</param>
+[System.Diagnostics.DebuggerDisplay("BuildResolveContext: {ToString(),nq}")]
 public readonly record struct BuildResolveContext(
     DirectoryPath OutputRoot,
     IPlugin[] Plugins);

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using BenchmarkDotNet.Attributes;
@@ -9,10 +10,7 @@ using NuStreamDocs.Autorefs;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>
-/// Per-page cost of <see cref="HeadingIdScanner.ScanAndRegister"/> across
-/// a matrix of page sizes and heading densities.
-/// </summary>
+/// <summary>Per-page cost of <see cref="HeadingIdScanner.ScanAndRegister"/> across a matrix of page sizes and heading densities.</summary>
 /// <remarks>
 /// The autorefs heading scan runs for every rendered page when an
 /// <see cref="AutorefsRegistry"/> is in play, so the per-page cost
@@ -21,6 +19,7 @@ namespace NuStreamDocs.Benchmarks;
 /// the longer/denser shapes catch the outliers (long blog posts, API
 /// reference dumps).
 /// </remarks>
+[DebuggerDisplay("HeadingIdScannerBenchmarks: PageSizeKb={PageSizeKb}, HeadingCount={HeadingCount}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class HeadingIdScannerBenchmarks
@@ -103,7 +102,7 @@ public class HeadingIdScannerBenchmarks
                 continue;
             }
 
-            sb.Append("<h2 id=\"section-")
+            _ = sb.Append("<h2 id=\"section-")
                 .Append(i.ToString(CultureInfo.InvariantCulture))
                 .Append("\">Section ")
                 .Append(i.ToString(CultureInfo.InvariantCulture))
@@ -118,11 +117,9 @@ public class HeadingIdScannerBenchmarks
     /// <param name="approximateLength">Approximate byte target for the chunk.</param>
     private static void AppendFiller(StringBuilder sb, int approximateLength)
     {
-        var written = 0;
-        while (written < approximateLength)
+        for (var written = 0; written < approximateLength; written += FillerChunkBytes)
         {
-            sb.Append("<p>The lazy dog jumps over <a href=\"#x\">the box</a> in the meadow.</p>");
-            written += FillerChunkBytes;
+            _ = sb.Append("<p>The lazy dog jumps over <a href=\"#x\">the box</a> in the meadow.</p>");
         }
     }
 }

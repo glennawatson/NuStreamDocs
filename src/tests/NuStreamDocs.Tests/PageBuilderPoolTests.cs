@@ -10,18 +10,26 @@ namespace NuStreamDocs.Tests;
 /// <summary>Tests for the page-builder rental pool.</summary>
 public class PageBuilderPoolTests
 {
+    /// <summary>Large Capacity used by the test cases.</summary>
+    private const int LargeCapacity = 1024;
+
+    /// <summary>Rental Count used by the test cases.</summary>
+    private const int RentalCount = 10;
+
+    /// <summary>Initial Capacity used by the test cases.</summary>
+    private const int InitialCapacity = 512;
+
     /// <summary>Rent + dispose returns the writer to the per-thread slot, so a follow-up rent reuses it.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RentReturnRoundTripReusesWriter()
     {
-        using (var rental = PageBuilderPool.Rent(1024))
+        using (var rental = PageBuilderPool.Rent(LargeCapacity))
         {
-            var first = rental.Writer;
-            first.Write("hello"u8);
+            rental.Writer.Write("hello"u8);
         }
 
-        using var rental2 = PageBuilderPool.Rent(1024);
+        using var rental2 = PageBuilderPool.Rent(LargeCapacity);
         await Assert.That(rental2.Writer.WrittenCount).IsEqualTo(0);
     }
 
@@ -42,12 +50,12 @@ public class PageBuilderPoolTests
         List<PageBuilderRental> rentals = [];
         try
         {
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < RentalCount; i++)
             {
-                rentals.Add(PageBuilderPool.Rent(512));
+                rentals.Add(PageBuilderPool.Rent(InitialCapacity));
             }
 
-            await Assert.That(rentals.Count).IsEqualTo(10);
+            await Assert.That(rentals.Count).IsEqualTo(RentalCount);
         }
         finally
         {
@@ -63,12 +71,12 @@ public class PageBuilderPoolTests
     [Test]
     public async Task RentalIsResetBetweenUses()
     {
-        using (var first = PageBuilderPool.Rent(512))
+        using (var first = PageBuilderPool.Rent(InitialCapacity))
         {
             first.Writer.Write("data"u8);
         }
 
-        using var second = PageBuilderPool.Rent(512);
+        using var second = PageBuilderPool.Rent(InitialCapacity);
         await Assert.That(second.Writer.WrittenCount).IsEqualTo(0);
     }
 }

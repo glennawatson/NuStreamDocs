@@ -62,10 +62,7 @@ public static class CppLexer
     private static Lexer Build()
     {
         var rawString =
-            new LexerRule(MatchRawOrPrefixedString, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = RawStringFirst
-            };
+            new LexerRule(MatchRawOrPrefixedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = RawStringFirst, };
 
         CFamilyConfig config = new()
         {
@@ -76,7 +73,7 @@ public static class CppLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = CFamilyShared.StandardPunctuation,
             IntegerSuffix = IntegerSuffixSet,
@@ -85,7 +82,7 @@ public static class CppLexer
             IncludePreprocessor = true,
             IncludeCharacterLiteral = true,
             WhitespaceIncludesNewlines = true,
-            SpecialString = rawString
+            SpecialString = rawString,
         };
 
         return CFamilyRules.CreateLexer(config);
@@ -111,12 +108,7 @@ public static class CppLexer
         pos++;
         var delimStart = pos;
         var delimEnd = pos + slice[pos..].IndexOfAny(RawStringDelimiterStop);
-        if (delimEnd < pos || slice[delimEnd] is not (byte)'(')
-        {
-            return 0;
-        }
-
-        return MatchRawStringBody(slice, delimEnd + 1, slice[delimStart..delimEnd]);
+        return delimEnd < pos || slice[delimEnd] is not (byte)'(' ? 0 : MatchRawStringBody(slice, delimEnd + 1, slice[delimStart..delimEnd]);
     }
 
     /// <summary>Consumes the optional encoding prefix (<c>L</c>, <c>u</c>, <c>u8</c>, or <c>U</c>) at the cursor.</summary>

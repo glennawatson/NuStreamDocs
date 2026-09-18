@@ -12,7 +12,7 @@ internal static partial class OptimizeLoggingHelper
     /// <param name="fileCount">Files discovered as eligible for compression.</param>
     /// <param name="outputRoot">Site output root.</param>
     [LoggerMessage(Level = LogLevel.Information, Message = "Optimize starting: {FileCount} file(s) under {OutputRoot}")]
-    public static partial void LogOptimizeStart(ILogger logger, int fileCount, string outputRoot);
+    internal static partial void LogOptimizeStart(ILogger logger, int fileCount, string outputRoot);
 
     /// <summary>Logs a successfully processed file.</summary>
     /// <param name="logger">Target logger.</param>
@@ -21,14 +21,14 @@ internal static partial class OptimizeLoggingHelper
     /// <param name="compressedBytes">Compressed sibling size in bytes.</param>
     [LoggerMessage(Level = LogLevel.Debug,
         Message = "Optimize processed {Path}: {OriginalBytes} -> {CompressedBytes} bytes")]
-    public static partial void LogFileProcessed(ILogger logger, string path, long originalBytes, long compressedBytes);
+    internal static partial void LogFileProcessed(ILogger logger, string path, long originalBytes, long compressedBytes);
 
     /// <summary>Logs a skipped file with a reason.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Absolute path of the skipped file.</param>
     /// <param name="reason">Why the file was skipped.</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Optimize skipped {Path}: {Reason}")]
-    public static partial void LogFileSkipped(ILogger logger, string path, string reason);
+    internal static partial void LogFileSkipped(ILogger logger, string path, string reason);
 
     /// <summary>Logs the end-of-pass summary.</summary>
     /// <param name="logger">Target logger.</param>
@@ -36,5 +36,5 @@ internal static partial class OptimizeLoggingHelper
     /// <param name="bytesSaved">Total bytes saved (sum of original minus compressed across formats).</param>
     [LoggerMessage(Level = LogLevel.Information,
         Message = "Optimize complete: {FilesProcessed} file(s) processed, {BytesSaved} byte(s) saved")]
-    public static partial void LogOptimizeComplete(ILogger logger, int filesProcessed, long bytesSaved);
+    internal static partial void LogOptimizeComplete(ILogger logger, int filesProcessed, long bytesSaved);
 }

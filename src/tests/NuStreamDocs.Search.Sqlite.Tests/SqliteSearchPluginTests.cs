@@ -14,13 +14,19 @@ namespace NuStreamDocs.Search.Sqlite.Tests;
 /// <summary>End-to-end + coverage tests for <see cref="SqliteSearchPlugin"/>.</summary>
 public class SqliteSearchPluginTests
 {
+    /// <summary>Names the input document used by page tests.</summary>
+    private const string PageFileName = "page.md";
+
+    /// <summary>Names the search output directory.</summary>
+    private const string SearchDirectory = "search";
+
     /// <summary>Default mode writes a single search.db under the search subdirectory.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DefaultModeWritesSingleDatabase()
     {
         using var fixture = TempBuildFixture.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page\n\nbody words about widgets");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageFileName), "# Page\n\nbody words about widgets");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -28,7 +34,7 @@ public class SqliteSearchPluginTests
             .UseSqliteSearch()
             .BuildAsync();
 
-        var dbPath = Path.Combine(fixture.Site, "search", "search.db");
+        var dbPath = Path.Combine(fixture.Site, SearchDirectory, "search.db");
         await Assert.That(File.Exists(dbPath)).IsTrue();
         await Assert.That(PageCount(dbPath)).IsGreaterThanOrEqualTo(1);
     }
@@ -39,7 +45,7 @@ public class SqliteSearchPluginTests
     public async Task EmptyHtmlSkipsDocument()
     {
         SqliteSearchPlugin plugin = new();
-        ScanPage(plugin, "page.md", default, default);
+        ScanPage(plugin, PageFileName, default, default);
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
 
@@ -61,7 +67,7 @@ public class SqliteSearchPluginTests
     public async Task SearchableFrontmatterKeysAppendBytes()
     {
         SqliteSearchPlugin plugin = new(SqliteOptions.Default with { SearchableFrontmatterKeys = [[.. "tags"u8]] });
-        ScanPage(plugin, "page.md", "---\ntags: [foo, bar]\n---\nbody"u8, "<h1>Hi</h1><p>body</p>"u8);
+        ScanPage(plugin, PageFileName, "---\ntags: [foo, bar]\n---\nbody"u8, "<h1>Hi</h1><p>body</p>"u8);
         var docs = plugin.DocumentsSnapshot();
         await Assert.That(docs.Length).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(docs[0].Text)).Contains("foo");
@@ -100,7 +106,7 @@ public class SqliteSearchPluginTests
         var paths = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < assets.Length; i++)
         {
-            paths.Add(assets[i].Path.Value);
+            _ = paths.Add(assets[i].Path.Value);
             await Assert.That(assets[i].Bytes.Length).IsGreaterThan(0);
         }
 
@@ -123,7 +129,7 @@ public class SqliteSearchPluginTests
         ScanPage(plugin, "api/Foo.md", default, "<h1>Foo</h1><p>indexed body text</p>"u8);
         await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
-        var dbPath = Path.Combine(fixture.Root, "search", "search.db");
+        var dbPath = Path.Combine(fixture.Root, SearchDirectory, "search.db");
         await Assert.That(File.Exists(dbPath)).IsTrue();
         await Assert.That(PageCount(dbPath)).IsEqualTo(1);
     }
@@ -164,23 +170,23 @@ public class SqliteSearchPluginTests
     private static int PageCount(string dbPath)
     {
         Batteries_V2.Init();
-        raw.sqlite3_open_v2(dbPath, out var db, raw.SQLITE_OPEN_READONLY, null);
+        _ = raw.sqlite3_open_v2(dbPath, out var db, raw.SQLITE_OPEN_READONLY, null);
         try
         {
-            raw.sqlite3_prepare_v2(db, "SELECT count(*) FROM pages", out var stmt);
+            _ = raw.sqlite3_prepare_v2(db, "SELECT count(*) FROM pages", out var stmt);
             try
             {
-                raw.sqlite3_step(stmt);
+                _ = raw.sqlite3_step(stmt);
                 return raw.sqlite3_column_int(stmt, 0);
             }
             finally
             {
-                raw.sqlite3_finalize(stmt);
+                _ = raw.sqlite3_finalize(stmt);
             }
         }
         finally
         {
-            raw.sqlite3_close_v2(db);
+            _ = raw.sqlite3_close_v2(db);
         }
     }
 
@@ -194,7 +200,7 @@ public class SqliteSearchPluginTests
             Root = root;
             Docs = Path.Combine(root, "docs");
             Site = Path.Combine(root, "site");
-            Directory.CreateDirectory(Docs);
+            _ = Directory.CreateDirectory(Docs);
         }
 
         /// <summary>Gets the fixture root directory.</summary>
@@ -212,8 +218,8 @@ public class SqliteSearchPluginTests
         {
             var root = Path.Combine(
                 Path.GetTempPath(),
-                "smkd-sqlite-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(root);
+                $"smkd-sqlite-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+            _ = Directory.CreateDirectory(root);
             return new(root);
         }
 

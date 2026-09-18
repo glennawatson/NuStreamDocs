@@ -11,6 +11,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Search.Lunr;
 
 /// <summary>Lunr-format search-index plugin.</summary>
+[System.Diagnostics.DebuggerDisplay("LunrSearchPlugin: {StaticAssets}")]
 public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
 {
     /// <summary>Output path of the vendored Lunr runtime.</summary>
@@ -18,15 +19,6 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
 
     /// <summary>Output path of the bind glue script.</summary>
     private static readonly FilePath BindScriptPath = new("assets/javascripts/lunr-bind.js");
-
-    /// <summary>UTF-8 head-extra snippet referencing the Lunr runtime and the deferred glue script.</summary>
-    private static readonly byte[] HeadExtraBytes =
-    [
-        .. """
-           <script src="/assets/javascripts/lunr.min.js" defer></script>
-           <script src="/assets/javascripts/lunr-bind.js" defer></script>
-           """u8
-    ];
 
     /// <summary>Cached bind-script bytes.</summary>
     private static readonly byte[] BindScriptBytes = LunrBindScript.Bytes.ToArray();
@@ -79,6 +71,12 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
     /// <inheritdoc/>
     protected override byte[] SectionPriorities => _options.SectionPriorities;
 
+    /// <summary>Gets the script tags that load the Lunr runtime and search bindings.</summary>
+    private static ReadOnlySpan<byte> HeadExtraBytes => """
+           <script src="/assets/javascripts/lunr.min.js" defer></script>
+           <script src="/assets/javascripts/lunr-bind.js" defer></script>
+           """u8;
+
     /// <inheritdoc/>
     protected override async ValueTask OnIndexWrittenAsync(DirectoryPath siteRoot, CancellationToken cancellationToken)
     {
@@ -89,10 +87,10 @@ public sealed class LunrSearchPlugin : SearchPluginBase, IStaticAssetProvider
         }
 
         var raw = await File.ReadAllBytesAsync(primary.Value, cancellationToken).ConfigureAwait(false);
-        await WriteGzipAsync(primary.Value + ".gz", raw, cancellationToken).ConfigureAwait(false);
+        await WriteGzipAsync($"{primary.Value}.gz", raw, cancellationToken).ConfigureAwait(false);
         if (_options.Compression is SearchCompression.Smallest)
         {
-            await WriteBrotliAsync(primary.Value + ".br", raw, cancellationToken).ConfigureAwait(false);
+            await WriteBrotliAsync($"{primary.Value}.br", raw, cancellationToken).ConfigureAwait(false);
         }
 
         _ = siteRoot;

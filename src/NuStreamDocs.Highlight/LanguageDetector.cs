@@ -14,6 +14,9 @@ internal static class LanguageDetector
     /// <summary>Maximum body bytes inspected.</summary>
     private const int ScanLimit = 2048;
 
+    /// <summary>Maximum number of profile scores stored on the stack.</summary>
+    private const int StackProfileLimit = 64;
+
     /// <summary>Minimum score required for a match to be reported.</summary>
     private const int MinScore = 3;
 
@@ -299,7 +302,7 @@ internal static class LanguageDetector
     /// <param name="allowList">Optional language-alias allow-list (lowercase UTF-8); empty means no restriction.</param>
     /// <param name="languageId">On success, the lowercased alias bytes (do not mutate — tied to a static buffer).</param>
     /// <returns>True when a confident match was found.</returns>
-    public static bool TryDetect(
+    internal static bool TryDetect(
         ReadOnlySpan<byte> escapedBody,
         LexerRegistry registry,
         byte[][] allowList,
@@ -313,7 +316,7 @@ internal static class LanguageDetector
             return false;
         }
 
-        Span<int> scores = stackalloc int[Profiles.Length];
+        var scores = Profiles.Length <= StackProfileLimit ? stackalloc int[Profiles.Length] : new int[Profiles.Length];
         for (var i = 0; i < Profiles.Length; i++)
         {
             scores[i] = ScoreProfile(scan, in Profiles[i]);

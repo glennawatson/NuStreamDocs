@@ -9,6 +9,12 @@ namespace NuStreamDocs.Redirects.Tests;
 /// <summary>End-to-end coverage for <see cref="RedirectsPlugin"/> (drives configure → scan → finalize directly).</summary>
 public class RedirectsPluginTests
 {
+    /// <summary>Hosting-provider redirect configuration filename.</summary>
+    private const string RedirectsFileName = "_redirects";
+
+    /// <summary>Default page filename for directory URLs.</summary>
+    private const string IndexFileName = "index.html";
+
     /// <summary>Config and frontmatter redirects both land in <c>_redirects</c>; a meta-refresh page is written for each; <c>_headers</c> has the default cache rules.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,7 +29,7 @@ public class RedirectsPluginTests
         ScanPage(plugin, "ref/api.md", "---\nredirect_from:\n  - /old-api/\n  - /older-api/\n---\nbody"u8);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
 
-        var redirects = await File.ReadAllTextAsync(Path.Combine(dir.Root, "_redirects"));
+        var redirects = await File.ReadAllTextAsync(Path.Combine(dir.Root, RedirectsFileName));
         await Assert.That(redirects).Contains("/old/section/  /new/section/  301");
         await Assert.That(redirects).Contains("/legacy-intro/  /guide/intro/  301");
         await Assert.That(redirects).Contains("/old-api/  /ref/api/  301");
@@ -33,7 +39,7 @@ public class RedirectsPluginTests
         await Assert.That(headers).Contains("/assets/fonts/*");
         await Assert.That(headers).Contains("immutable");
 
-        var legacyPage = await File.ReadAllTextAsync(Path.Combine(dir.Root, "legacy-intro", "index.html"));
+        var legacyPage = await File.ReadAllTextAsync(Path.Combine(dir.Root, "legacy-intro", IndexFileName));
         await Assert.That(legacyPage).Contains("<meta http-equiv=\"refresh\" content=\"0; url=/guide/intro/\">");
     }
 
@@ -42,9 +48,10 @@ public class RedirectsPluginTests
     [Test]
     public async Task DoesNotClobberAnExistingPage()
     {
+        const string existingDirectory = "existing";
         using TempDir dir = new();
-        Directory.CreateDirectory(Path.Combine(dir.Root, "existing"));
-        await File.WriteAllTextAsync(Path.Combine(dir.Root, "existing", "index.html"), "<html>real page</html>");
+        _ = Directory.CreateDirectory(Path.Combine(dir.Root, existingDirectory));
+        await File.WriteAllTextAsync(Path.Combine(dir.Root, existingDirectory, IndexFileName), "<html>real page</html>");
 
         var plugin = new RedirectsPlugin(RedirectsOptions.Default.Add("/existing/"u8, "/new/"u8));
         await plugin.ConfigureAsync(
@@ -52,9 +59,9 @@ public class RedirectsPluginTests
             CancellationToken.None);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
 
-        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, "existing", "index.html")))
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, existingDirectory, IndexFileName)))
             .IsEqualTo("<html>real page</html>");
-        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, "_redirects")))
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(dir.Root, RedirectsFileName)))
             .Contains("/existing/  /new/  301");
     }
 
@@ -73,9 +80,9 @@ public class RedirectsPluginTests
         var plugin = new RedirectsPlugin(options);
         await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
-        await Assert.That(File.Exists(Path.Combine(dir.Root, "_redirects"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(dir.Root, RedirectsFileName))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "_headers"))).IsFalse();
-        await Assert.That(File.Exists(Path.Combine(dir.Root, "old", "index.html"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(dir.Root, "old", IndexFileName))).IsFalse();
         await Assert.That(plugin.Name.SequenceEqual("redirects"u8)).IsTrue();
     }
 

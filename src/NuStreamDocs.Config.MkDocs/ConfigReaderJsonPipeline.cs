@@ -8,10 +8,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Shared source-to-JSON-to-<see cref="MkDocsConfig"/> pipeline used by every
-/// <see cref="IConfigReader"/>; the caller supplies the format-specific converter.
-/// </summary>
+/// <summary>Shared source-to-JSON-to-<see cref="MkDocsConfig"/> pipeline used by every <see cref="IConfigReader"/>; the caller supplies the format-specific converter.</summary>
 public static class ConfigReaderJsonPipeline
 {
     /// <summary>Synchronous span converter callback (e.g. <c>YamlToJson.Convert</c>).</summary>

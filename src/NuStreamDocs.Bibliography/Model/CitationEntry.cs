@@ -4,10 +4,12 @@
 
 namespace NuStreamDocs.Bibliography.Model;
 
-/// <summary>
-/// Single bibliography entry. Field names align with CSL-JSON's item model.
-/// Unused fields are left empty.
-/// </summary>
+/// <summary>Single bibliography entry. Field names align with CSL-JSON's item model. Unused fields are left empty.</summary>
+[System.Diagnostics.DebuggerDisplay("CitationEntry: {Id}")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Design",
+    "SST2338",
+    Justification = "A citation carries its title, authors, publication details, and links together; these are not exclusive alternatives.")]
 public sealed record CitationEntry
 {
     /// <summary>Gets the citation key bytes — the <c>id</c> a markdown <c>[@key]</c> resolves against.</summary>

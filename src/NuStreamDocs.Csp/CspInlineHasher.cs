@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Csp;
@@ -18,12 +19,14 @@ public static class CspInlineHasher
     /// <summary>Hashes every non-empty inline <c>&lt;script&gt;</c> body in <paramref name="html"/>, appending each <c>'sha256-…'</c> token to <paramref name="hashes"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="hashes">Destination list.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void HashScripts(ReadOnlySpan<byte> html, List<byte[]> hashes) =>
         ScanInto(html, "<script"u8, "</script>"u8, hashes);
 
     /// <summary>Hashes every non-empty inline <c>&lt;style&gt;</c> body in <paramref name="html"/>, appending each <c>'sha256-…'</c> token to <paramref name="hashes"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="hashes">Destination list.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void HashStyles(ReadOnlySpan<byte> html, List<byte[]> hashes) =>
         ScanInto(html, "<style"u8, "</style>"u8, hashes);
 

@@ -2,9 +2,11 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using NuStreamDocs.Common;
 using NuStreamDocs.Search;
 using NuStreamDocs.Search.Lunr;
 
@@ -20,6 +22,7 @@ namespace NuStreamDocs.Benchmarks;
 /// pipeline hits it. Disposed by the <c>[GlobalCleanup]</c> teardown; runs across two corpus
 /// sizes (small / mid) so a quadratic regression in the writer is visible.
 /// </remarks>
+[DebuggerDisplay("LunrIndexWriterBenchmarks: Documents={Documents}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class LunrIndexWriterBenchmarks
@@ -37,7 +40,7 @@ public class LunrIndexWriterBenchmarks
     private const int MidDocCount = 500;
 
     /// <summary>Per-instance temp root for the JSON output files.</summary>
-    private string _tempRoot = string.Empty;
+    private DirectoryPath _tempRoot;
 
     /// <summary>Pre-built small corpus.</summary>
     private SearchDocument[] _smallCorpus = [];
@@ -55,8 +58,8 @@ public class LunrIndexWriterBenchmarks
     {
         _tempRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-lunr-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_tempRoot);
+            StringCompose.Concat("smkd-bench-lunr-", Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)));
+        _ = Directory.CreateDirectory(_tempRoot);
         _smallCorpus = BuildCorpus(SmallDocCount);
         _midCorpus = BuildCorpus(MidDocCount);
     }
@@ -84,9 +87,9 @@ public class LunrIndexWriterBenchmarks
     public string Write()
     {
         var corpus = Documents <= SmallDocCount ? _smallCorpus : _midCorpus;
-        var path = Path.Combine(_tempRoot, "search_index_" + Documents + ".json");
+        var path = _tempRoot.File(StringCompose.ConcatInt("search_index_", Documents, ".json"));
         LunrIndexWriter.Write(path, "en"u8, corpus);
-        return path;
+        return path.Value;
     }
 
     /// <summary>Builds <paramref name="count"/> SearchDocument records with deterministic content.</summary>
@@ -97,15 +100,15 @@ public class LunrIndexWriterBenchmarks
         var bodyBlob = new StringBuilder(BodyBytes + BytesPerSentence);
         for (var i = 0; i < BodyBytes / BytesPerSentence; i++)
         {
-            bodyBlob.Append("body sentence with searchable words. ");
+            _ = bodyBlob.Append("body sentence with searchable words. ");
         }
 
         var bodyBytes = Encoding.UTF8.GetBytes(bodyBlob.ToString());
         var corpus = new SearchDocument[count];
         for (var i = 0; i < count; i++)
         {
-            var url = Encoding.UTF8.GetBytes("/page-" + i.ToString(CultureInfo.InvariantCulture) + ".html");
-            var title = Encoding.UTF8.GetBytes("Page " + i.ToString(CultureInfo.InvariantCulture));
+            var url = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("/page-", i, ".html"));
+            var title = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("Page ", i));
             corpus[i] = new(url, title, bodyBytes);
         }
 

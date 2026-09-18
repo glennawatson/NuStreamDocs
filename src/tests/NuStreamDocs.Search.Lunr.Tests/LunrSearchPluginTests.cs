@@ -14,13 +14,22 @@ namespace NuStreamDocs.Search.Lunr.Tests;
 /// <summary>End-to-end + coverage tests for <see cref="LunrSearchPlugin"/>.</summary>
 public class LunrSearchPluginTests
 {
+    /// <summary>Names the input document used by page tests.</summary>
+    private const string PageFileName = "page.md";
+
+    /// <summary>Names the search output directory.</summary>
+    private const string SearchDirectory = "search";
+
+    /// <summary>Names the emitted search index.</summary>
+    private const string IndexFileName = "search_index.json";
+
     /// <summary>Default mode writes a single search_index.json with config + docs.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DefaultModeWritesSingleIndex()
     {
         using var fixture = TempBuildFixture.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page\n\nbody words");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageFileName), "# Page\n\nbody words");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -28,7 +37,7 @@ public class LunrSearchPluginTests
             .UseLunrSearch()
             .BuildAsync();
 
-        var indexPath = Path.Combine(fixture.Site, "search", "search_index.json");
+        var indexPath = Path.Combine(fixture.Site, SearchDirectory, IndexFileName);
         await Assert.That(File.Exists(indexPath)).IsTrue();
 
         var indexBytes = await File.ReadAllBytesAsync(indexPath);
@@ -46,7 +55,7 @@ public class LunrSearchPluginTests
     public async Task EmptyHtmlSkipsDocument()
     {
         LunrSearchPlugin plugin = new();
-        ScanPage(plugin, "page.md", default, default);
+        ScanPage(plugin, PageFileName, default, default);
         await Assert.That(plugin.DocumentsSnapshot().Length).IsEqualTo(0);
     }
 
@@ -68,7 +77,7 @@ public class LunrSearchPluginTests
     public async Task SearchableFrontmatterKeysAppendBytes()
     {
         LunrSearchPlugin plugin = new(LunrOptions.Default with { SearchableFrontmatterKeys = [[.. "tags"u8]] });
-        ScanPage(plugin, "page.md", "---\ntags: [foo, bar]\n---\nbody"u8, "<h1>Hi</h1><p>body</p>"u8);
+        ScanPage(plugin, PageFileName, "---\ntags: [foo, bar]\n---\nbody"u8, "<h1>Hi</h1><p>body</p>"u8);
         var docs = plugin.DocumentsSnapshot();
         await Assert.That(docs.Length).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(docs[0].Text)).Contains("foo");
@@ -96,9 +105,9 @@ public class LunrSearchPluginTests
         ScanPage(plugin, "a.md", default, "<h1>Hi</h1><p>body content</p>"u8);
         await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
-        var json = Path.Combine(fixture.Root, "search", "search_index.json");
-        await Assert.That(File.Exists(json + ".gz")).IsTrue();
-        await Assert.That(File.Exists(json + ".br")).IsTrue();
+        var json = Path.Combine(fixture.Root, SearchDirectory, IndexFileName);
+        await Assert.That(File.Exists($"{json}.gz")).IsTrue();
+        await Assert.That(File.Exists($"{json}.br")).IsTrue();
     }
 
     /// <summary>Compression.Default writes only the .gz sibling.</summary>
@@ -113,9 +122,9 @@ public class LunrSearchPluginTests
         ScanPage(plugin, "a.md", default, "<h1>Hi</h1><p>body</p>"u8);
         await plugin.FinalizeAsync(new(fixture.Root, []), CancellationToken.None);
 
-        var json = Path.Combine(fixture.Root, "search", "search_index.json");
-        await Assert.That(File.Exists(json + ".gz")).IsTrue();
-        await Assert.That(File.Exists(json + ".br")).IsFalse();
+        var json = Path.Combine(fixture.Root, SearchDirectory, IndexFileName);
+        await Assert.That(File.Exists($"{json}.gz")).IsTrue();
+        await Assert.That(File.Exists($"{json}.br")).IsFalse();
     }
 
     /// <summary>WriteHeadExtra emits the Lunr index path as the search-index discovery target.</summary>
@@ -126,7 +135,7 @@ public class LunrSearchPluginTests
         LunrSearchPlugin plugin = new();
         ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("search_index.json");
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains(IndexFileName);
     }
 
     /// <summary>Name returns "search".</summary>
@@ -163,7 +172,7 @@ public class LunrSearchPluginTests
             Root = root;
             Docs = Path.Combine(root, "docs");
             Site = Path.Combine(root, "site");
-            Directory.CreateDirectory(Docs);
+            _ = Directory.CreateDirectory(Docs);
         }
 
         /// <summary>Gets the fixture root directory.</summary>
@@ -181,8 +190,8 @@ public class LunrSearchPluginTests
         {
             var root = Path.Combine(
                 Path.GetTempPath(),
-                "smkd-lunr-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(root);
+                $"smkd-lunr-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+            _ = Directory.CreateDirectory(root);
             return new(root);
         }
 

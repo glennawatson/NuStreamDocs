@@ -126,10 +126,10 @@ public static class FrontmatterValueExtractor
     }
 
     /// <summary>Appends the value bytes of the top-level <paramref name="keyBytes"/> in <paramref name="frontmatter"/> to <paramref name="sink"/> when present.</summary>
-    /// <remarks>The appended value is preceded by a single space-byte delimiter.</remarks>
     /// <param name="frontmatter">Frontmatter bytes.</param>
     /// <param name="keyBytes">UTF-8 key bytes.</param>
     /// <param name="sink">Output sink.</param>
+    /// <remarks>The appended value is preceded by a single space-byte delimiter.</remarks>
     private static void AppendValueIfPresent(
         ReadOnlySpan<byte> frontmatter,
         ReadOnlySpan<byte> keyBytes,
@@ -218,8 +218,7 @@ public static class FrontmatterValueExtractor
         }
 
         var inner = trimmed[1..^1];
-        var cursor = 0;
-        while (cursor < inner.Length)
+        for (var cursor = 0; cursor < inner.Length;)
         {
             var rest = inner[cursor..];
             var commaIdx = rest.IndexOf((byte)',');

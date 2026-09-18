@@ -11,6 +11,9 @@ namespace NuStreamDocs.Highlight.Tests;
 /// <summary>Smoke tests for the C-family lexers (Rust, Go, C, C++, Java, Kotlin) built on top of <c>CFamilyRules</c>.</summary>
 public class CFamilyLexerTests
 {
+    /// <summary>The ClassDeclarationHtml test value.</summary>
+    private const string ClassDeclarationHtml = "<span class=\"kd\">class</span>";
+
     /// <summary>Rust classifies <c>fn</c>/<c>let</c>/<c>mut</c> as declarations and primitive types as type keywords.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -73,7 +76,7 @@ public class CFamilyLexerTests
     public async Task CppClassifiesClassAndConstant()
     {
         var html = CppLexer.Instance.Render("class Foo { public: int* p = nullptr; }; std::string s;"u8);
-        await Assert.That(html.Contains("<span class=\"kd\">class</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(ClassDeclarationHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">public</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kc\">nullptr</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"o\">::</span>", StringComparison.Ordinal)).IsTrue();
@@ -96,7 +99,7 @@ public class CFamilyLexerTests
     {
         var html = JavaLexer.Instance.Render("public class Foo { public static void main(String[] args) {} }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">public</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"kd\">class</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(ClassDeclarationHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">static</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">void</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -119,7 +122,7 @@ public class CFamilyLexerTests
     {
         var html = KotlinLexer.Instance.Render("data class Foo(val name: String) { fun greet() = name ?: \"x\" }"u8);
         await Assert.That(html.Contains("<span class=\"kd\">data</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"kd\">class</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(ClassDeclarationHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">val</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">fun</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"o\">?:</span>", StringComparison.Ordinal)).IsTrue();

@@ -22,7 +22,7 @@ public static class SchemeLexer
         LispFamilyShared.CommonKeywordsLiteral,
         "begin delay force quasiquote unquote syntax-rules"u8);
 
-    /// <summary>Constants.</summary>
+    /// <summary>Constant keywords.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
         "#t #f true false"u8);
 
@@ -39,7 +39,7 @@ public static class SchemeLexer
             Keywords = Keywords,
             KeywordConstants = KeywordConstants,
             IncludeDataBrackets = false,
-            IncludeColonKeyword = true
+            IncludeColonKeyword = true,
         };
 
         return LispFamilyRules.CreateLexer(config);

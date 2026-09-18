@@ -12,12 +12,21 @@ namespace NuStreamDocs.Macros.Tests;
 /// <summary>Tests for <see cref="MacrosScanner"/> — variable substitution + code-region passthrough.</summary>
 public class MacrosScannerTests
 {
+    /// <summary>Value used for the name variable.</summary>
+    private const string WorldValue = "world";
+
+    /// <summary>Capacity for a short rendered fixture.</summary>
+    private const int InitialOutputCapacity = 64;
+
+    /// <summary>Output space reserved for variable expansion.</summary>
+    private const int OutputCapacityMultiplier = 2;
+
     /// <summary>Simple <c>{{ name }}</c> resolves to the dictionary value.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SimpleVariableExpands()
     {
-        var output = Rewrite("Hello {{ name }}!", new() { ["name"] = "world" });
+        var output = Rewrite("Hello {{ name }}!", new() { ["name"] = WorldValue });
         await Assert.That(output).IsEqualTo("Hello world!");
     }
 
@@ -69,7 +78,7 @@ public class MacrosScannerTests
     [Test]
     public async Task InlineCodeIsSkipped()
     {
-        var output = Rewrite("Use `{{ name }}` to interpolate {{ name }}.", new() { ["name"] = "world" });
+        var output = Rewrite("Use `{{ name }}` to interpolate {{ name }}.", new() { ["name"] = WorldValue });
         await Assert.That(output).IsEqualTo("Use `{{ name }}` to interpolate world.");
     }
 
@@ -96,12 +105,7 @@ public class MacrosScannerTests
     [Test]
     public async Task DottedAndHyphenatedNamesResolve()
     {
-        Dictionary<ApiCompatString, ApiCompatString> vars = new()
-        {
-            ["site.name"] = "S",
-            ["my-var"] = "H",
-            ["snake_case"] = "K"
-        };
+        Dictionary<ApiCompatString, ApiCompatString> vars = new() { ["site.name"] = "S", ["my-var"] = "H", ["snake_case"] = "K" };
         var output = Rewrite("{{ site.name }} / {{ my-var }} / {{ snake_case }}", vars);
         await Assert.That(output).IsEqualTo("S / H / K");
     }
@@ -129,11 +133,11 @@ public class MacrosScannerTests
     [Test]
     public async Task PluginNoVariablesIsNoOp()
     {
-        ArrayBufferWriter<byte> sink = new(64);
-        const string Input = "Hello {{ name }}.";
-        PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(Input), sink);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
+        var input = "Hello {{ name }}."u8;
+        PagePreRenderContext ctx = new("p.md", input, sink);
         new MacrosPlugin().PreRender(in ctx);
-        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo(Input);
+        await Assert.That(sink.WrittenSpan.SequenceEqual(input)).IsTrue();
     }
 
     /// <summary>WarnOnMissing fires the missing callback (verified via the public delegate path).</summary>
@@ -142,10 +146,10 @@ public class MacrosScannerTests
     public async Task MissingCallbackFires()
     {
         List<string> missing = [];
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
         MacrosScanner.Rewrite(
             "Hi {{ name }}, {{ other }}"u8,
-            (n, out v) =>
+            static (n, out v) =>
             {
                 if (n.SequenceEqual("name"u8))
                 {
@@ -172,7 +176,7 @@ public class MacrosScannerTests
     private static string Rewrite(string input, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
         MacrosPlugin plugin = new(MacrosOptions.Default.WithVariables(variables));
-        ArrayBufferWriter<byte> sink = new(input.Length * 2);
+        ArrayBufferWriter<byte> sink = new(input.Length * OutputCapacityMultiplier);
         PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(input), sink);
         plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -185,7 +189,7 @@ public class MacrosScannerTests
     private static string RewriteEscaped(string input, Dictionary<ApiCompatString, ApiCompatString> variables)
     {
         MacrosPlugin plugin = new(MacrosOptions.Default.WithVariables(variables) with { EscapeHtml = true });
-        ArrayBufferWriter<byte> sink = new(input.Length * 2);
+        ArrayBufferWriter<byte> sink = new(input.Length * OutputCapacityMultiplier);
         PagePreRenderContext ctx = new("p.md", Encoding.UTF8.GetBytes(input), sink);
         plugin.PreRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);

@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using NuStreamDocs.Caching;
 using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
@@ -14,9 +15,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Building;
 
-/// <summary>
-/// Static helper for processing individual pages through the build pipeline.
-/// </summary>
+/// <summary>Static helper for processing individual pages through the build pipeline.</summary>
 internal static class BuildPipelinePageProcessor
 {
     /// <summary>Initial-capacity multiplier for preprocessor scratch buffers — pages typically grow only modestly through rewrites.</summary>
@@ -33,7 +32,7 @@ internal static class BuildPipelinePageProcessor
     /// <param name="dispatch">Bundle of per-page shared state (phases, previous manifest, timing, buffered queue).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The fresh manifest entry, a flag indicating cache hit, and a flag indicating whether the rental was transferred to the buffered queue.</returns>
-    public static async ValueTask<(ManifestEntry Entry, bool CacheHit, bool DidBuffer)> ProcessOnePageAsync(
+    internal static async ValueTask<(ManifestEntry Entry, bool CacheHit, bool DidBuffer)> ProcessOnePageAsync(
         PageWorkItem item,
         DirectoryPath outputRoot,
         bool useDirectoryUrls,
@@ -88,7 +87,7 @@ internal static class BuildPipelinePageProcessor
     /// <param name="shell">Shared build-wide phase state.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when every buffered page has been written and its rental disposed.</returns>
-    public static async Task DrainBufferedPagesAsync(
+    internal static async Task DrainBufferedPagesAsync(
         ConcurrentQueue<BufferedPage> bufferedPages,
         IPagePostResolvePlugin[] postResolves,
         ConcurrentQueue<ManifestEntry> fresh,
@@ -96,11 +95,7 @@ internal static class BuildPipelinePageProcessor
         CancellationToken cancellationToken)
     {
         var pluginTiming = shell.PluginTiming;
-        ParallelOptions parallelOptions = new()
-        {
-            CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = shell.Options.Parallelism
-        };
+        ParallelOptions parallelOptions = new() { CancellationToken = cancellationToken, MaxDegreeOfParallelism = shell.Options.Parallelism, };
 
         await Parallel.ForEachAsync(bufferedPages, parallelOptions, (page, _) =>
         {
@@ -138,7 +133,7 @@ internal static class BuildPipelinePageProcessor
     /// <param name="relativePath">Source-relative path.</param>
     /// <param name="useDirectoryUrls">When true, emits non-index pages as <c>foo/index.html</c>; when false, emits as <c>foo.html</c>.</param>
     /// <returns>The absolute output path with the <c>.html</c> extension.</returns>
-    public static FilePath OutputPathFor(in DirectoryPath outputRoot, in FilePath relativePath, bool useDirectoryUrls)
+    internal static FilePath OutputPathFor(in DirectoryPath outputRoot, in FilePath relativePath, bool useDirectoryUrls)
     {
         // 404.md always emits as /404.html at the site root, regardless of the
         // directory-URL toggle — most static hosts (GitHub Pages, Netlify, S3
@@ -163,7 +158,7 @@ internal static class BuildPipelinePageProcessor
     /// <param name="syntheticPages">Sink populated during the discover phase.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Combined async stream of work items.</returns>
-    public static async IAsyncEnumerable<PageWorkItem> EnumerateDiskAndSyntheticAsync(
+    internal static async IAsyncEnumerable<PageWorkItem> EnumerateDiskAndSyntheticAsync(
         DirectoryPath inputRoot,
         PathFilter filter,
         SyntheticPageSink syntheticPages,
@@ -209,28 +204,21 @@ internal static class BuildPipelinePageProcessor
         PerPageDispatch dispatch,
         CancellationToken cancellationToken)
     {
-        var hash = ContentHasher.Hash(raw.Span);
+        var contentDigest = ContentHasher.Hash(raw.Span);
         var source = raw[Utf8Bom.LengthOf(raw.Span)..];
         var outputPath = OutputPathFor(outputRoot, item.RelativePath, useDirectoryUrls);
         var phases = dispatch.Phases;
         var pluginTiming = dispatch.PluginTiming;
 
-        if (dispatch.Previous.TryGet(item.RelativePath, out var stale) &&
-            stale.ContentHash.AsSpan().SequenceEqual(hash) &&
-            File.Exists(outputPath))
+        if (dispatch.Previous.TryGet(item.RelativePath, out var stale)
+            && CryptographicOperations.FixedTimeEquals(stale.ContentHash, contentDigest)
+            && File.Exists(outputPath))
         {
-            if (phases.Scans.Length == 0)
-            {
-                return (stale, true, false);
-            }
-
-            var cachedHtml = await File.ReadAllBytesAsync(outputPath, cancellationToken).ConfigureAwait(false);
-            FireScans(phases.Scans, item.RelativePath, source.Span, cachedHtml, pluginTiming);
-
+            await ScanCachedPageAsync(item.RelativePath, outputPath, source, dispatch, cancellationToken).ConfigureAwait(false);
             return (stale, true, false);
         }
 
-        var rental = PageBuilderPool.Rent(source.Length * 2);
+        var rental = PageBuilderPool.Rent(source.Length * PreprocessorScratchMultiplier);
         List<PageBuilderRental> scratchRentals = [];
         PageBuilderRental? owned = rental;
         try
@@ -262,7 +250,7 @@ internal static class BuildPipelinePageProcessor
             {
                 // Transfer rental ownership to the buffered queue. The drain phase
                 // disposes the rental after PostResolve + Write.
-                dispatch.Buffered.Enqueue(new(item.RelativePath, outputPath, finalRental, hash));
+                dispatch.Buffered.Enqueue(new(item.RelativePath, outputPath, finalRental, contentDigest));
                 owned = null;
                 return (default, false, true);
             }
@@ -272,20 +260,48 @@ internal static class BuildPipelinePageProcessor
             // Sync write skips the BufferedFileStreamStrategy + ThreadPoolValueTaskSource
             // alloc chain. Page bytes are already in memory; nothing to overlap with.
             File.WriteAllBytes(outputPath, finalRental.Writer.WrittenSpan);
-            return (new(item.RelativePath, hash, finalRental.Writer.WrittenCount), false, false);
+            return (new(item.RelativePath, contentDigest, finalRental.Writer.WrittenCount), false, false);
         }
         finally
         {
-            for (var i = 0; i < scratchRentals.Count; i++)
-            {
-                scratchRentals[i].Dispose();
-            }
-
-            if (owned is { } o)
-            {
-                o.Dispose();
-            }
+            DisposeRenderRentals(scratchRentals, owned);
         }
+    }
+
+    /// <summary>Runs scan plugins against a cached page.</summary>
+    /// <param name="relativePath">Path relative to the documentation root.</param>
+    /// <param name="outputPath">Cached output file.</param>
+    /// <param name="source">Source markdown.</param>
+    /// <param name="dispatch">Registered phases and timing state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes after scanning.</returns>
+    private static async ValueTask ScanCachedPageAsync(
+        FilePath relativePath,
+        FilePath outputPath,
+        ReadOnlyMemory<byte> source,
+        PerPageDispatch dispatch,
+        CancellationToken cancellationToken)
+    {
+        if (dispatch.Phases.Scans is [])
+        {
+            return;
+        }
+
+        var cachedHtml = await File.ReadAllBytesAsync(outputPath, cancellationToken).ConfigureAwait(false);
+        FireScans(dispatch.Phases.Scans, relativePath, source.Span, cachedHtml, dispatch.PluginTiming);
+    }
+
+    /// <summary>Returns scratch and owned render buffers.</summary>
+    /// <param name="scratch">Scratch buffers to return.</param>
+    /// <param name="owned">Final buffer when ownership was not transferred.</param>
+    private static void DisposeRenderRentals(List<PageBuilderRental> scratch, PageBuilderRental? owned)
+    {
+        for (var i = 0; i < scratch.Count; i++)
+        {
+            scratch[i].Dispose();
+        }
+
+        owned?.Dispose();
     }
 
     /// <summary>Threads <paramref name="source"/> through every <see cref="IPagePreRenderPlugin"/> sorted by priority.</summary>
@@ -565,6 +581,6 @@ internal static class BuildPipelinePageProcessor
             return;
         }
 
-        Directory.CreateDirectory(dirSpan.ToString());
+        _ = Directory.CreateDirectory(dirSpan.ToString());
     }
 }

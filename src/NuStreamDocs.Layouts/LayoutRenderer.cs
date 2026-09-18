@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Layouts.Logging;
@@ -27,7 +28,7 @@ internal static class LayoutRenderer
     /// <param name="logger">Logger for warnings.</param>
     /// <param name="cache">Optional per-build template cache; when <see langword="null"/> every load re-reads from disk.</param>
     /// <returns>True when the template was loaded and rendered; false when the template file was missing.</returns>
-    public static bool Render(
+    internal static bool Render(
         ReadOnlySpan<byte> templateName,
         in DirectoryPath templateDirectory,
         LayoutContext context,
@@ -176,7 +177,7 @@ internal static class LayoutRenderer
             return;
         }
 
-        Dictionary<byte[], BlockRange> childBlocks = new(ByteArrayComparer.Instance);
+        Dictionary<byte[], BlockRange> childBlocks = [with(ByteArrayComparer.Instance)];
         CollectBlocks(child, childBlocks);
 
         BlockOverlay overlay = new(childBlocks, child);
@@ -212,6 +213,7 @@ internal static class LayoutRenderer
     /// <param name="blocks">Optional child-block overlay.</param>
     /// <param name="currentBlock">Block currently being rendered (drives <c>{{ super() }}</c>).</param>
     /// <param name="depth">Current include depth.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void RenderTokens(
         in TemplateUnit template,
         in RenderState state,
@@ -262,13 +264,12 @@ internal static class LayoutRenderer
         var t = template.Tokens[i];
         return t.Kind switch
         {
-            LayoutTokenKind.Literal => EmitLiteral(template, t, state),
+            LayoutTokenKind.Literal or LayoutTokenKind.Malformed => EmitLiteral(template, t, state),
             LayoutTokenKind.Variable => EmitVariable(template, t, state),
             LayoutTokenKind.Super => EmitSuper(currentBlock, blocks, state, depth, i),
             LayoutTokenKind.Include => EmitInclude(template, t, state, blocks, depth, i),
             LayoutTokenKind.BlockOpen => RenderBlock(template, i, state, blocks, depth),
             LayoutTokenKind.Unsupported => EmitUnsupported(template, t, state, i),
-            LayoutTokenKind.Malformed => EmitLiteral(template, t, state),
             _ => i
         };
     }
@@ -435,6 +436,15 @@ internal static class LayoutRenderer
 
                         break;
                     }
+
+                case LayoutTokenKind.Literal:
+                case LayoutTokenKind.Variable:
+                case LayoutTokenKind.Super:
+                case LayoutTokenKind.Extends:
+                case LayoutTokenKind.Include:
+                case LayoutTokenKind.Unsupported:
+                case LayoutTokenKind.Malformed:
+                    break;
             }
         }
 
@@ -446,6 +456,7 @@ internal static class LayoutRenderer
     /// <param name="template">Template unit.</param>
     /// <param name="t">Token.</param>
     /// <returns>Zero-based index of <paramref name="t"/>; -1 when absent.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int IndexOf(in TemplateUnit template, in LayoutToken t) => template.Tokens.IndexOf(t);
 
     /// <summary>Bulk-writes <paramref name="bytes"/> to <paramref name="writer"/>.</summary>
@@ -498,7 +509,7 @@ internal static class LayoutRenderer
         {
             Children = childBlocks;
             Child = child;
-            Parents = new(ByteArrayComparer.Instance);
+            Parents = [with(ByteArrayComparer.Instance)];
         }
 
         /// <summary>Gets the child override map.</summary>
@@ -514,6 +525,7 @@ internal static class LayoutRenderer
         /// <param name="name">UTF-8 block name.</param>
         /// <param name="range">Child block range on hit.</param>
         /// <returns>True on hit.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetChildRange(ReadOnlySpan<byte> name, out BlockRange range) =>
             Children.GetAlternateLookup<ReadOnlySpan<byte>>().TryGetValue(name, out range);
 
@@ -528,6 +540,7 @@ internal static class LayoutRenderer
         /// <param name="name">UTF-8 block name.</param>
         /// <param name="entry">Parent entry on hit.</param>
         /// <returns>True when a parent body was recorded.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetParentRange(byte[] name, out ParentEntry entry) =>
             Parents.TryGetValue(name, out entry);
     }

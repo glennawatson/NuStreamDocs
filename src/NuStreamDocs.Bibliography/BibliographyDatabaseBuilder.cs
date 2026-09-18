@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography;
@@ -23,6 +24,7 @@ namespace NuStreamDocs.Bibliography;
 ///     .Build();
 /// </code>
 /// </example>
+[System.Diagnostics.DebuggerDisplay("BibliographyDatabaseBuilder: {_entries}")]
 public sealed class BibliographyDatabaseBuilder
 {
     /// <summary>Entries in insertion order.</summary>
@@ -44,17 +46,10 @@ public sealed class BibliographyDatabaseBuilder
     /// <param name="year">Publication year.</param>
     /// <param name="publisher">Publisher bytes.</param>
     /// <returns>This builder for chaining.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BibliographyDatabaseBuilder
         AddBook(byte[] id, byte[] title, PersonName author, int year, byte[] publisher) =>
-        Add(new()
-        {
-            Id = id,
-            Type = EntryType.Book,
-            Title = title,
-            Authors = [author],
-            Year = year,
-            Publisher = publisher
-        });
+        Add(new() { Id = id, Type = EntryType.Book, Title = title, Authors = [author], Year = year, Publisher = publisher, });
 
     /// <summary>Adds a journal-article entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
@@ -65,6 +60,7 @@ public sealed class BibliographyDatabaseBuilder
     /// <param name="volume">Volume bytes.</param>
     /// <param name="page">Page-range bytes.</param>
     /// <returns>This builder for chaining.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BibliographyDatabaseBuilder AddArticle(
         byte[] id,
         byte[] title,
@@ -73,17 +69,7 @@ public sealed class BibliographyDatabaseBuilder
         byte[] journal,
         byte[] volume,
         byte[] page) =>
-        Add(new()
-        {
-            Id = id,
-            Type = EntryType.ArticleJournal,
-            Title = title,
-            Authors = [author],
-            Year = year,
-            ContainerTitle = journal,
-            Volume = volume,
-            Page = page
-        });
+        Add(new() { Id = id, Type = EntryType.ArticleJournal, Title = title, Authors = [author], Year = year, ContainerTitle = journal, Volume = volume, Page = page, });
 
     /// <summary>Adds a legal-case entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
@@ -91,15 +77,9 @@ public sealed class BibliographyDatabaseBuilder
     /// <param name="lawReportSeries">AGLC4 law-report-series citation bytes.</param>
     /// <param name="year">Decision year.</param>
     /// <returns>This builder for chaining.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BibliographyDatabaseBuilder AddCase(byte[] id, byte[] name, byte[] lawReportSeries, int year) =>
-        Add(new()
-        {
-            Id = id,
-            Type = EntryType.LegalCase,
-            Title = name,
-            Year = year,
-            LawReportSeries = lawReportSeries
-        });
+        Add(new() { Id = id, Type = EntryType.LegalCase, Title = name, Year = year, LawReportSeries = lawReportSeries, });
 
     /// <summary>Adds a legislation entry from UTF-8 byte arrays.</summary>
     /// <param name="id">Citation key bytes.</param>
@@ -107,15 +87,9 @@ public sealed class BibliographyDatabaseBuilder
     /// <param name="jurisdiction">Jurisdiction-code bytes.</param>
     /// <param name="year">Year of enactment.</param>
     /// <returns>This builder for chaining.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BibliographyDatabaseBuilder AddLegislation(byte[] id, byte[] title, byte[] jurisdiction, int year) =>
-        Add(new()
-        {
-            Id = id,
-            Type = EntryType.Legislation,
-            Title = title,
-            Jurisdiction = jurisdiction,
-            Year = year
-        });
+        Add(new() { Id = id, Type = EntryType.Legislation, Title = title, Jurisdiction = jurisdiction, Year = year, });
 
     /// <summary>Builds the immutable database.</summary>
     /// <returns>The built <see cref="BibliographyDatabase"/>.</returns>

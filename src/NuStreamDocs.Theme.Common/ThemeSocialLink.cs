@@ -8,4 +8,5 @@ namespace NuStreamDocs.Theme.Common;
 /// <param name="Url">UTF-8 destination URL bytes.</param>
 /// <param name="Title">UTF-8 link title / tooltip bytes.</param>
 /// <param name="IconSvg">UTF-8 raw SVG markup bytes emitted verbatim inside the anchor.</param>
+[System.Diagnostics.DebuggerDisplay("ThemeSocialLink: {ToString(),nq}")]
 public readonly record struct ThemeSocialLink(byte[] Url, byte[] Title, byte[] IconSvg);

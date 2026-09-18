@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Common;
 
 /// <summary>UTF-8 byte-order-mark (<c>EF BB BF</c>) helpers for byte-level scanners.</summary>
@@ -31,6 +33,7 @@ public static class Utf8Bom
     /// <summary>Returns <paramref name="source"/> with any leading UTF-8 BOM removed.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
     /// <returns>The source advanced past a leading BOM, or the input unchanged.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ReadOnlySpan<byte> Strip(ReadOnlySpan<byte> source) =>
         source[LengthOf(source)..];
 

@@ -49,7 +49,7 @@ public static class GlslLexer
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = CFamilyShared.StandardOperators,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
         },
         Punctuation = CFamilyShared.StandardPunctuation,
         IntegerSuffix = SearchValues.Create("uU"u8),
@@ -58,6 +58,6 @@ public static class GlslLexer
         IncludePreprocessor = true,
         IncludeCharacterLiteral = false,
         WhitespaceIncludesNewlines = true,
-        SpecialString = null
+        SpecialString = null,
     });
 }

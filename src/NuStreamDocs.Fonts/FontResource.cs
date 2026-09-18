@@ -13,6 +13,7 @@ namespace NuStreamDocs.Fonts;
 /// <param name="UnicodeRange">UTF-8 value for the <c>unicode-range</c> descriptor; empty when the file covers everything (e.g. a local font).</param>
 /// <param name="Woff2Bytes">The woff2 file contents.</param>
 /// <param name="SourceUrl">Where the file came from (a remote URL, or a local file path) — informational; the only string in the module, forced by the HTTP layer.</param>
+[System.Diagnostics.DebuggerDisplay("FontResource: {ToString(),nq}")]
 public readonly record struct FontResource(
     byte[] FamilyBytes,
     int Weight,

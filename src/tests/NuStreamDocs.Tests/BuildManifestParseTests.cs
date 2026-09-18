@@ -9,6 +9,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Parameterized tests for BuildManifest.LoadAsync's parse-rejection branches.</summary>
 public class BuildManifestParseTests
 {
+    /// <summary>Valid Entry Count used by the test cases.</summary>
+    private const int ValidEntryCount = 2;
+
     /// <summary>Parameterized cases covering every shape that must yield an empty manifest.</summary>
     /// <param name="json">On-disk manifest contents.</param>
     /// <returns>Async test.</returns>
@@ -41,14 +44,14 @@ public class BuildManifestParseTests
 
         // The "build" fingerprint and per-entry "hash" fields are both base64-encoded byte arrays.
         // "YWJj" decodes to "abc"; "AQIDBAUGBwg=" decodes to {1,2,3,4,5,6,7,8}.
-        const string Json = "{\"schema\":2,\"build\":\"YWJj\",\"entries\":[" +
-                            "{\"path\":\"good.md\",\"hash\":\"AQIDBAUGBwg=\",\"len\":1}," +
-                            "{\"path\":\"missing-hash.md\",\"len\":2}," +
-                            "\"not an object\"," +
-                            "{\"path\":\"second-good.md\",\"hash\":\"CQoLDA0ODxA=\",\"len\":3}]}";
+        const string Json = "{\"schema\":2,\"build\":\"YWJj\",\"entries\":["
+                            + "{\"path\":\"good.md\",\"hash\":\"AQIDBAUGBwg=\",\"len\":1},"
+                            + "{\"path\":\"missing-hash.md\",\"len\":2},"
+                            + "\"not an object\","
+                            + "{\"path\":\"second-good.md\",\"hash\":\"CQoLDA0ODxA=\",\"len\":3}]}";
         await File.WriteAllTextAsync(path, Json);
         var manifest = await BuildManifest.LoadAsync(temp.Root, CancellationToken.None);
-        await Assert.That(manifest.Count).IsEqualTo(2);
+        await Assert.That(manifest.Count).IsEqualTo(ValidEntryCount);
         await Assert.That(manifest.TryGet("good.md", out _)).IsTrue();
         await Assert.That(manifest.TryGet("second-good.md", out _)).IsTrue();
     }
@@ -59,8 +62,8 @@ public class BuildManifestParseTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-bm2-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-bm2-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

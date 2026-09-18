@@ -145,20 +145,20 @@ public class PageAuditorTests
             "page.html",
             Encoding.UTF8.GetBytes(Wrap("<img src=\"a.png\" width=\"1\" height=\"1\">")),
             options);
-        await Assert.That(diagnostics.Select(d => d.Rule)).DoesNotContain(AuditRule.ImageMissingAlt);
+        await Assert.That(Array.Exists(diagnostics, static d => d.Rule is AuditRule.ImageMissingAlt)).IsFalse();
     }
 
     /// <summary>Wraps a body fragment in a clean document shell containing a single <c>&lt;h1&gt;</c>.</summary>
     /// <param name="bodyFragment">Markup to place after the heading.</param>
     /// <returns>A complete HTML document.</returns>
     private static string Wrap(string bodyFragment) =>
-        "<html lang=\"en\">" + GoodHead + "<body><h1>h</h1>" + bodyFragment + "</body></html>";
+        $"<html lang=\"en\">{GoodHead}<body><h1>h</h1>{bodyFragment}</body></html>";
 
     /// <summary>Wraps body markup (including its own headings) in a clean document shell.</summary>
     /// <param name="body">Body markup.</param>
     /// <returns>A complete HTML document.</returns>
     private static string WrapBody(string body) =>
-        "<html lang=\"en\">" + GoodHead + "<body>" + body + "</body></html>";
+        $"<html lang=\"en\">{GoodHead}<body>{body}</body></html>";
 
     /// <summary>Audits a page and returns the rules that fired.</summary>
     /// <param name="html">Page HTML.</param>
@@ -166,6 +166,12 @@ public class PageAuditorTests
     private static AuditRule[] RulesFor(string html)
     {
         var diagnostics = PageAuditor.Audit("page.html", Encoding.UTF8.GetBytes(html), AuditOptions.Default);
-        return [.. diagnostics.Select(d => d.Rule)];
+        var rules = new AuditRule[diagnostics.Length];
+        for (var i = 0; i < diagnostics.Length; i++)
+        {
+            rules[i] = diagnostics[i].Rule;
+        }
+
+        return rules;
     }
 }

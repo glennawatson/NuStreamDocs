@@ -12,9 +12,9 @@ namespace NuStreamDocs.Csp.Tests;
 /// <summary>Coverage for <see cref="CspPlugin"/>.</summary>
 public class CspPluginTests
 {
-    /// <summary>A representative rendered page with a head and an inline body script.</summary>
-    private const string Page =
-        "<html><head><title>t</title></head><body><script>alert(1)</script><p>hi</p></body></html>";
+    /// <summary>Gets a rendered page with a head and an inline body script.</summary>
+    private static ReadOnlySpan<byte> Page =>
+        "<html><head><title>t</title></head><body><script>alert(1)</script><p>hi</p></body></html>"u8;
 
     /// <summary>The plugin splices a <c>&lt;meta http-equiv="Content-Security-Policy"&gt;</c> before <c>&lt;/head&gt;</c>, with the page's inline script hashed in.</summary>
     /// <returns>Async test.</returns>
@@ -23,7 +23,7 @@ public class CspPluginTests
     {
         var plugin = new CspPlugin();
         await Assert.That(plugin.Name.SequenceEqual("csp"u8)).IsTrue();
-        await Assert.That(plugin.NeedsRewrite(Encoding.UTF8.GetBytes(Page))).IsTrue();
+        await Assert.That(plugin.NeedsRewrite(Page)).IsTrue();
 
         var output = Run(plugin, Page);
         var metaIdx = output.IndexOf(
@@ -31,8 +31,8 @@ public class CspPluginTests
             StringComparison.Ordinal);
         await Assert.That(metaIdx).IsGreaterThan(0);
         await Assert.That(metaIdx).IsLessThan(output.IndexOf("</head>", StringComparison.Ordinal));
-        var hash = "'sha256-" + Convert.ToBase64String(SHA256.HashData("alert(1)"u8)) + "'";
-        await Assert.That(output).Contains("script-src 'self' " + hash);
+        var hash = $"'sha256-{Convert.ToBase64String(SHA256.HashData("alert(1)"u8))}'";
+        await Assert.That(output).Contains($"script-src 'self' {hash}");
         await Assert.That(output).Contains("default-src 'self'");
         await Assert.That(output).Contains("<p>hi</p>"); // body left intact
     }
@@ -52,20 +52,20 @@ public class CspPluginTests
     public async Task PassthroughCases()
     {
         await Assert.That(new CspPlugin().NeedsRewrite("<p>no head here</p>"u8)).IsFalse();
-        await Assert.That(Run(new(), "<body><p>no head here</p></body>")).IsEqualTo("<body><p>no head here</p></body>");
-        await Assert.That(new CspPlugin(CspOptions.Default.Disable()).NeedsRewrite(Encoding.UTF8.GetBytes(Page)))
+        await Assert.That(Run(new(), "<body><p>no head here</p></body>"u8)).IsEqualTo("<body><p>no head here</p></body>");
+        await Assert.That(new CspPlugin(CspOptions.Default.Disable()).NeedsRewrite(Page))
             .IsFalse();
-        await Assert.That(Run(new(CspOptions.Default.Disable()), Page)).IsEqualTo(Page);
+        await Assert.That(Run(new(CspOptions.Default.Disable()), Page)).IsEqualTo(Encoding.UTF8.GetString(Page));
     }
 
     /// <summary>Runs the post-render rewrite and returns the output as a string.</summary>
     /// <param name="plugin">The plugin.</param>
     /// <param name="html">Input HTML.</param>
     /// <returns>The rewritten HTML.</returns>
-    private static string Run(CspPlugin plugin, string html)
+    private static string Run(CspPlugin plugin, ReadOnlySpan<byte> html)
     {
         ArrayBufferWriter<byte> sink = new();
-        PagePostRenderContext ctx = new("page.md", default, Encoding.UTF8.GetBytes(html), sink);
+        PagePostRenderContext ctx = new("page.md", default, html, sink);
         plugin.PostRender(in ctx);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

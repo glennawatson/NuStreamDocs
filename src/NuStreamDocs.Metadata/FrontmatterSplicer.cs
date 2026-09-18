@@ -11,14 +11,14 @@ namespace NuStreamDocs.Metadata;
 /// <summary>Splices inherited frontmatter keys into a page's UTF-8 source; keys already declared by the page are not overwritten.</summary>
 internal static class FrontmatterSplicer
 {
-    /// <summary>UTF-8 bytes of the YAML frontmatter delimiter <c>---\n</c>.</summary>
-    private static readonly byte[] DelimiterLine = [.. "---\n"u8];
+    /// <summary>Gets uTF-8 bytes of the YAML frontmatter delimiter <c>---\n</c>.</summary>
+    private static ReadOnlySpan<byte> DelimiterLine => "---\n"u8;
 
     /// <summary>Writes <paramref name="source"/> into <paramref name="writer"/>, splicing any inherited keys from <paramref name="extra"/> that the page hasn't already defined.</summary>
     /// <param name="source">UTF-8 page bytes (frontmatter + body, or just body).</param>
     /// <param name="extra">Merged inherited-keys body (no surrounding <c>---</c>); empty for a no-op pass-through.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Splice(ReadOnlySpan<byte> source, ReadOnlySpan<byte> extra, IBufferWriter<byte> writer)
+    internal static void Splice(ReadOnlySpan<byte> source, ReadOnlySpan<byte> extra, IBufferWriter<byte> writer)
     {
         if (extra.IsEmpty)
         {
@@ -131,7 +131,7 @@ internal static class FrontmatterSplicer
     /// <returns>Set of top-level UTF-8 key bytes, ordinal-compared.</returns>
     private static HashSet<byte[]> CollectKeys(ReadOnlySpan<byte> frontmatter)
     {
-        HashSet<byte[]> keys = new(ByteArrayComparer.Instance);
+        HashSet<byte[]> keys = [with(ByteArrayComparer.Instance)];
         var cursor = Utf8LineSpan.LfLineEnd(frontmatter, 0);
         while (cursor < frontmatter.Length)
         {
@@ -140,7 +140,7 @@ internal static class FrontmatterSplicer
             if (YamlByteScanner.IsTopLevelKey(line))
             {
                 var key = YamlByteScanner.KeyOf(line);
-                keys.Add(key.ToArray());
+                _ = keys.Add(key.ToArray());
             }
 
             cursor = lineEnd;

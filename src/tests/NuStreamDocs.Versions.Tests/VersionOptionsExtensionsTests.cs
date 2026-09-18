@@ -10,16 +10,28 @@ namespace NuStreamDocs.Versions.Tests;
 /// <summary>Behavior tests for <c>VersionOptionsExtensions</c>'s alias-list helpers.</summary>
 public class VersionOptionsExtensionsTests
 {
+    /// <summary>Alias for the stable release.</summary>
+    private const string StableAlias = "stable";
+
+    /// <summary>Alias for the current release.</summary>
+    private const string CurrentAlias = "current";
+
+    /// <summary>Expected count when two aliases are present.</summary>
+    private const int AliasPairCount = 2;
+
+    /// <summary>Expected count after appending two aliases to the latest alias.</summary>
+    private const int AppendedAliasCount = 3;
+
     /// <summary><c>WithAliases(string[])</c> replaces the existing list, encoding to UTF-8.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WithAliasesStringReplaces()
     {
         var seeded = VersionOptions.Latest("1.0", "1.0 (latest)");
-        var updated = seeded.WithAliases("stable", "current");
-        await Assert.That(updated.Aliases.Length).IsEqualTo(2);
-        await Assert.That(Encoding.UTF8.GetString(updated.Aliases[0])).IsEqualTo("stable");
-        await Assert.That(Encoding.UTF8.GetString(updated.Aliases[1])).IsEqualTo("current");
+        var updated = seeded.WithAliases(StableAlias, CurrentAlias);
+        await Assert.That(updated.Aliases.Length).IsEqualTo(AliasPairCount);
+        await Assert.That(Encoding.UTF8.GetString(updated.Aliases[0])).IsEqualTo(StableAlias);
+        await Assert.That(Encoding.UTF8.GetString(updated.Aliases[1])).IsEqualTo(CurrentAlias);
     }
 
     /// <summary><c>WithAliases(byte[][])</c> stores the supplied UTF-8 bytes verbatim.</summary>
@@ -38,11 +50,11 @@ public class VersionOptionsExtensionsTests
     public async Task AddAliasesStringAppends()
     {
         var seeded = VersionOptions.Latest("1.0", "1.0");
-        var updated = seeded.AddAliases("v1", "stable");
-        await Assert.That(updated.Aliases.Length).IsEqualTo(3);
+        var updated = seeded.AddAliases("v1", StableAlias);
+        await Assert.That(updated.Aliases.Length).IsEqualTo(AppendedAliasCount);
         await Assert.That(Encoding.UTF8.GetString(updated.Aliases[0])).IsEqualTo("latest");
         await Assert.That(Encoding.UTF8.GetString(updated.Aliases[1])).IsEqualTo("v1");
-        await Assert.That(Encoding.UTF8.GetString(updated.Aliases[2])).IsEqualTo("stable");
+        await Assert.That(Encoding.UTF8.GetString(updated.Aliases[2])).IsEqualTo(StableAlias);
     }
 
     /// <summary><c>AddAliases(byte[][])</c> appends UTF-8 bytes to the existing list.</summary>
@@ -53,7 +65,7 @@ public class VersionOptionsExtensionsTests
         var seeded = VersionOptions.Latest("1.0", "1.0");
         byte[][] extra = [[.. "v1"u8]];
         var updated = seeded.AddAliases(extra);
-        await Assert.That(updated.Aliases.Length).IsEqualTo(2);
+        await Assert.That(updated.Aliases.Length).IsEqualTo(AliasPairCount);
         await Assert.That(Encoding.UTF8.GetString(updated.Aliases[1])).IsEqualTo("v1");
     }
 
@@ -63,8 +75,10 @@ public class VersionOptionsExtensionsTests
     public async Task AddAliasesEmptyIsNoOp()
     {
         var seeded = VersionOptions.Latest("1.0", "1.0");
-        var stringNoOp = seeded.AddAliases(Array.Empty<ApiCompatString>());
-        var bytesNoOp = seeded.AddAliases(Array.Empty<byte[]>());
+        ApiCompatString[] emptyAliases = [];
+        byte[][] emptyAliasBytes = [];
+        var stringNoOp = seeded.AddAliases(emptyAliases);
+        var bytesNoOp = seeded.AddAliases(emptyAliasBytes);
         await Assert.That(stringNoOp.Aliases).IsSameReferenceAs(seeded.Aliases);
         await Assert.That(bytesNoOp.Aliases).IsSameReferenceAs(seeded.Aliases);
     }
@@ -98,7 +112,7 @@ public class VersionOptionsExtensionsTests
     public async Task SpanOverloadAcceptsU8LiteralDirectly()
     {
         var updated = VersionOptions.Latest("1.0", "1.0").AddAliases("v1"u8);
-        await Assert.That(updated.Aliases.Length).IsEqualTo(2);
+        await Assert.That(updated.Aliases.Length).IsEqualTo(AliasPairCount);
         await Assert.That(updated.Aliases[1].AsSpan().SequenceEqual("v1"u8)).IsTrue();
     }
 }

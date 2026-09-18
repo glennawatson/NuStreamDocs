@@ -6,9 +6,7 @@ using System.Text.Json;
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Reads a <see cref="MkDocsConfig"/> from a UTF-8 JSON byte span.
-/// </summary>
+/// <summary>Reads a <see cref="MkDocsConfig"/> from a UTF-8 JSON byte span.</summary>
 /// <remarks>
 /// Site-level metadata only; nav parsing is handled by the dialect-specific reader assemblies.
 /// </remarks>
@@ -55,8 +53,8 @@ public static class MkDocsConfigJsonParser
             : theme.ValueKind switch
             {
                 JsonValueKind.String => theme.GetString() ?? DefaultThemeName,
-                JsonValueKind.Object when theme.TryGetProperty("name"u8, out var name) => name.GetString() ??
-                    DefaultThemeName,
+                JsonValueKind.Object when theme.TryGetProperty("name"u8, out var name) => name.GetString()
+                    ?? DefaultThemeName,
                 _ => DefaultThemeName
             };
 }

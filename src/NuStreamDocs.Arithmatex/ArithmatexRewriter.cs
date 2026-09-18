@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
@@ -17,7 +18,8 @@ internal static class ArithmatexRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
         CodeAwareRewriter.Run(source, writer, TryRewriteMath);
 
     /// <summary>Tries to match a math span starting at <paramref name="offset"/>.</summary>

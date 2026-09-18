@@ -11,6 +11,7 @@ namespace NuStreamDocs.Fonts;
 /// <param name="CacheDirectory">Directory for the content-addressed download cache; empty falls back to a default under the temp path.</param>
 /// <param name="Offline">When true, a download-cache miss is an error instead of a network fetch (for reproducible CI once the cache is warm).</param>
 /// <param name="OutputSubdirectory">Site-relative directory the font files and <c>fonts.css</c> are written under (e.g. <c>assets/fonts</c>).</param>
+[System.Diagnostics.DebuggerDisplay("FontsOptions: {ToString(),nq}")]
 public readonly record struct FontsOptions(
     FontFace[] Faces,
     DirectoryPath CacheDirectory,

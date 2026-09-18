@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
@@ -21,13 +22,15 @@ internal static class SrcsetBytes
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
     /// <returns>True when at least one srcset was rewritten.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink) =>
         UrlScanLoop.Run(html, AttrStart, sink, ctx, TryRewriteAt);
 
     /// <summary>Walks <paramref name="html"/> in audit mode, recording every srcset entry's URL.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="audit">Audit collector.</param>
-    public static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit) =>
         UrlScanLoop.RunAudit(html, AttrStart, audit, TryAuditAt);
 
     /// <summary>Tries to rewrite a srcset attribute starting at <paramref name="p"/>.</summary>
@@ -183,7 +186,7 @@ internal static class SrcsetBytes
             return;
         }
 
-        audit.Set.TryAdd(urlBytes.ToArray(), 0);
+        _ = audit.Set.TryAdd(urlBytes.ToArray(), 0);
     }
 
     /// <summary>Validates <c>\bsrcset\s*=\s*("|')</c> at <paramref name="p"/> and returns the value byte range.</summary>

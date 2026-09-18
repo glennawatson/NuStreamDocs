@@ -4,6 +4,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
+using NuStreamDocs.Common;
 using NuStreamDocs.Serve.Logging;
 
 namespace NuStreamDocs.Serve;
@@ -27,7 +28,7 @@ internal sealed class WatchLoop : IDisposable
     private readonly ILogger _logger;
 
     /// <summary>Unbounded channel of raw file-system events.</summary>
-    private readonly Channel<string> _events;
+    private readonly Channel<FilePath> _events;
 
     /// <summary>The underlying watcher; lifetime matches this loop.</summary>
     private readonly FileSystemWatcher _watcher;
@@ -48,44 +49,19 @@ internal sealed class WatchLoop : IDisposable
         _debounceMs = debounceMs;
         _ignoredSegments = ignoredSegments ?? [];
         _logger = logger;
-        _events = Channel.CreateUnbounded<string>(new() { SingleReader = true, SingleWriter = false });
+        _events = Channel.CreateUnbounded<FilePath>(new() { SingleReader = true, SingleWriter = false });
         _watcher = new(fullInput)
         {
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
             InternalBufferSize = InternalBufferBytes,
-            EnableRaisingEvents = true
+            EnableRaisingEvents = true,
         };
         _watcher.Changed += OnEvent;
         _watcher.Created += OnEvent;
         _watcher.Deleted += OnEvent;
         _watcher.Renamed += OnRenamed;
         _watcher.Error += OnError;
-    }
-
-    /// <summary>Streams debounced rebuild signals; each yielded element carries the unique paths that changed in the window.</summary>
-    /// <param name="cancellationToken">Cancellation token; cancellation gracefully ends the stream.</param>
-    /// <returns>Async stream of debounced change-set tickets.</returns>
-    public async IAsyncEnumerable<HashSet<string>> WaitAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        var reader = _events.Reader;
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            string first;
-            try
-            {
-                first = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                yield break;
-            }
-
-            HashSet<string> batch = new(StringComparer.Ordinal) { first };
-            await DrainDebounceWindowAsync(reader, batch, cancellationToken).ConfigureAwait(false);
-            yield return batch;
-        }
     }
 
     /// <inheritdoc/>
@@ -98,7 +74,32 @@ internal sealed class WatchLoop : IDisposable
         _watcher.Renamed -= OnRenamed;
         _watcher.Error -= OnError;
         _watcher.Dispose();
-        _events.Writer.TryComplete();
+        _ = _events.Writer.TryComplete();
+    }
+
+    /// <summary>Streams debounced rebuild signals; each yielded element carries the unique paths that changed in the window.</summary>
+    /// <param name="cancellationToken">Cancellation token; cancellation gracefully ends the stream.</param>
+    /// <returns>Async stream of debounced change-set tickets.</returns>
+    internal async IAsyncEnumerable<HashSet<FilePath>> WaitAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var reader = _events.Reader;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            FilePath first;
+            try
+            {
+                first = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                yield break;
+            }
+
+            HashSet<FilePath> batch = [first];
+            await DrainDebounceWindowAsync(reader, batch, cancellationToken).ConfigureAwait(false);
+            yield return batch;
+        }
     }
 
     /// <summary>Returns true when <paramref name="path"/> contains <paramref name="segment"/> bounded by directory separators (or path ends).</summary>
@@ -142,8 +143,8 @@ internal sealed class WatchLoop : IDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async task that completes when the debounce window expires.</returns>
     private async Task DrainDebounceWindowAsync(
-        ChannelReader<string> reader,
-        HashSet<string> batch,
+        ChannelReader<FilePath> reader,
+        HashSet<FilePath> batch,
         CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -153,7 +154,7 @@ internal sealed class WatchLoop : IDisposable
             try
             {
                 var next = await reader.ReadAsync(deadline.Token).ConfigureAwait(false);
-                batch.Add(next);
+                _ = batch.Add(next);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
@@ -204,7 +205,7 @@ internal sealed class WatchLoop : IDisposable
         }
 
         ServeLoggingHelper.LogWatchEvent(_logger, e.ChangeType, e.FullPath);
-        _events.Writer.TryWrite(e.FullPath);
+        _ = _events.Writer.TryWrite(e.FullPath);
     }
 
     /// <summary>FileSystemWatcher event handler for Renamed.</summary>
@@ -218,7 +219,7 @@ internal sealed class WatchLoop : IDisposable
         }
 
         ServeLoggingHelper.LogWatchEvent(_logger, e.ChangeType, e.FullPath);
-        _events.Writer.TryWrite(e.FullPath);
+        _ = _events.Writer.TryWrite(e.FullPath);
     }
 
     /// <summary>FileSystemWatcher error handler — pushes <see cref="OverflowSentinel"/> on buffer overflow.</summary>
@@ -227,6 +228,6 @@ internal sealed class WatchLoop : IDisposable
     private void OnError(object sender, ErrorEventArgs e)
     {
         ServeLoggingHelper.LogWatchError(_logger, e.GetException());
-        _events.Writer.TryWrite(OverflowSentinel);
+        _ = _events.Writer.TryWrite(OverflowSentinel);
     }
 }

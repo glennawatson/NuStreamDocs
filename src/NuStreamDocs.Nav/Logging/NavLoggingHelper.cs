@@ -15,7 +15,7 @@ internal static partial class NavLoggingHelper
         EventId = 4001,
         Level = LogLevel.Information,
         Message = "Nav build starting under {InputRoot} ({PageCount} candidate page(s))")]
-    public static partial void LogNavBuildStart(ILogger logger, string inputRoot, int pageCount);
+    internal static partial void LogNavBuildStart(ILogger logger, string inputRoot, int pageCount);
 
     /// <summary>Logs nav build completion.</summary>
     /// <param name="logger">Target logger.</param>
@@ -26,7 +26,7 @@ internal static partial class NavLoggingHelper
         EventId = 4002,
         Level = LogLevel.Information,
         Message = "Nav build complete: {SectionCount} section(s), {LeafCount} leaf page(s), {PrunedCount} pruned")]
-    public static partial void LogNavBuildComplete(ILogger logger, int sectionCount, int leafCount, int prunedCount);
+    internal static partial void LogNavBuildComplete(ILogger logger, int sectionCount, int leafCount, int prunedCount);
 
     /// <summary>Logs a single pruning decision.</summary>
     /// <param name="logger">Target logger.</param>
@@ -36,7 +36,7 @@ internal static partial class NavLoggingHelper
         EventId = 4003,
         Level = LogLevel.Debug,
         Message = "Nav pruned {RelativePath}: {Reason}")]
-    public static partial void LogNavPruned(ILogger logger, string relativePath, string reason);
+    internal static partial void LogNavPruned(ILogger logger, string relativePath, string reason);
 
     /// <summary>Logs the count of pages on disk that aren't reachable through the nav tree.</summary>
     /// <param name="logger">Target logger.</param>
@@ -46,7 +46,7 @@ internal static partial class NavLoggingHelper
         Level = LogLevel.Warning,
         Message =
             "Nav orphan check: {OrphanCount} page(s) exist in the input directory but are not included in the nav configuration")]
-    public static partial void LogOrphanPagesHeader(ILogger logger, int orphanCount);
+    internal static partial void LogOrphanPagesHeader(ILogger logger, int orphanCount);
 
     /// <summary>Logs one orphan page; one entry per file so log filters can pick out specific paths.</summary>
     /// <param name="logger">Target logger.</param>
@@ -55,7 +55,7 @@ internal static partial class NavLoggingHelper
         EventId = 4005,
         Level = LogLevel.Warning,
         Message = "Nav orphan: {RelativePath}")]
-    public static partial void LogOrphanPage(ILogger logger, string relativePath);
+    internal static partial void LogOrphanPage(ILogger logger, string relativePath);
 
     /// <summary>Logs that a nav rebuild was skipped because the input fingerprint matched the previous build.</summary>
     /// <param name="logger">Target logger.</param>
@@ -63,5 +63,5 @@ internal static partial class NavLoggingHelper
         EventId = 4006,
         Level = LogLevel.Information,
         Message = "Nav rebuild skipped: input tree unchanged (incremental).")]
-    public static partial void LogNavRebuildSkipped(ILogger logger);
+    internal static partial void LogNavRebuildSkipped(ILogger logger);
 }

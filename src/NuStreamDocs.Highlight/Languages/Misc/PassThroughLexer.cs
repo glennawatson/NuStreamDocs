@@ -6,10 +6,7 @@ using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Misc;
 
-/// <summary>
-/// Builds a placeholder <see cref="Lexer"/> that classifies the whole
-/// input as <see cref="TokenClass.Text"/>.
-/// </summary>
+/// <summary>Builds a placeholder <see cref="Lexer"/> that classifies the whole input as <see cref="TokenClass.Text"/>.</summary>
 /// <remarks>
 /// Used for languages we register a name for but haven't fully ported
 /// yet. Authors writing
@@ -20,9 +17,7 @@ namespace NuStreamDocs.Highlight.Languages.Misc;
 /// </remarks>
 public static class PassThroughLexer
 {
-    /// <summary>
-    /// Gets the singleton lexer instance.
-    /// </summary>
+    /// <summary>Gets the singleton lexer instance.</summary>
     public static Lexer Instance { get; } = new(LanguageRuleBuilder.BuildSingleState(
     [
 

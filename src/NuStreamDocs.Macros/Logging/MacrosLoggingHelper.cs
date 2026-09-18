@@ -14,5 +14,5 @@ internal static partial class MacrosLoggingHelper
         EventId = 9001,
         Level = LogLevel.Warning,
         Message = "Macros: no value for {{ {Name} }}; left in place")]
-    public static partial void LogMissingVariable(ILogger logger, string name);
+    internal static partial void LogMissingVariable(ILogger logger, string name);
 }

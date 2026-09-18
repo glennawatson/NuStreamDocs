@@ -18,6 +18,7 @@ namespace NuStreamDocs.Toc;
 /// permalink anchors, and (when <see cref="TocOptions.MarkerSubstitute"/> is true)
 /// replaces a <c>&lt;!--@@toc@@--&gt;</c> marker with the rendered TOC fragment.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("TocPlugin: {Name}")]
 public sealed class TocPlugin : IPagePostRenderPlugin
 {
     /// <summary>Tiebreak that orders TOC marker substitution after the theme shell wrap (which uses the bare <see cref="PluginBand.Latest"/>).</summary>
@@ -26,7 +27,7 @@ public sealed class TocPlugin : IPagePostRenderPlugin
     /// <summary>Configured option set.</summary>
     private readonly TocOptions _options;
 
-    /// <summary>Logger.</summary>
+    /// <summary>Logger for heading diagnostics.</summary>
     private readonly ILogger _logger;
 
     /// <summary>UTF-8 bytes of the configured permalink glyph.</summary>
@@ -80,15 +81,15 @@ public sealed class TocPlugin : IPagePostRenderPlugin
         }
 
         TocLoggingHelper.LogTocStart(_logger, context.RelativePath.Value);
-        var sw = Stopwatch.StartNew();
+        var started = Stopwatch.GetTimestamp();
 
         var headings = HeadingScanner.Scan(snapshot);
         if (headings.Length is 0)
         {
             // No headings — pass through verbatim.
             Utf8StringWriter.Write(output, snapshot);
-            sw.Stop();
-            TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, 0, 0, sw.ElapsedMilliseconds);
+            var duration = (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+            TocLoggingHelper.LogTocComplete(_logger, context.RelativePath.Value, 0, 0, duration);
             return;
         }
 
@@ -106,13 +107,13 @@ public sealed class TocPlugin : IPagePostRenderPlugin
             HeadingRewriter.Rewrite(snapshot, slugged, _permalinkSymbolBytes, output);
         }
 
-        sw.Stop();
+        var elapsed = Stopwatch.GetElapsedTime(started);
         TocLoggingHelper.LogTocComplete(
             _logger,
             context.RelativePath.Value,
             slugged.Length,
             collisions,
-            sw.ElapsedMilliseconds);
+            (long)elapsed.TotalMilliseconds);
     }
 
     /// <summary>Locates the TOC marker in the heading-rewritten body and either splices the fragment in or copies the body verbatim.</summary>

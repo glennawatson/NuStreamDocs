@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Tests;
@@ -20,6 +21,7 @@ internal sealed class RecordingPlugin : IPagePostRenderPlugin
     public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
     /// <inheritdoc/>

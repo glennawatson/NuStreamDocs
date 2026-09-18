@@ -28,7 +28,7 @@ public class MkDocsBlogRegistrationTests
     [Test]
     public async Task ValidateThrowsOnEmpty()
     {
-        Assert.Throws<ArgumentException>(static () => new MkDocsBlogOptions(string.Empty, [.. "T"u8]).Validate());
+        _ = Assert.Throws<ArgumentException>(static () => new MkDocsBlogOptions(string.Empty, [.. "T"u8]).Validate());
         var ex = Assert.Throws<ArgumentException>(static () => new MkDocsBlogOptions("blog", []).Validate());
         await Assert.That(ex).IsNotNull();
     }

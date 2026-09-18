@@ -30,7 +30,7 @@ public static class AutorefsRewriter
 
         // Capture-by-ref via local action; Parallel.ForEach passes the file path through as the body input.
         var registryLocal = registry;
-        Parallel.ForEach(files, file => Interlocked.Add(ref rewritten, RewriteOne(file, registryLocal) ? 1 : 0));
+        _ = Parallel.ForEach(files, file => Interlocked.Add(ref rewritten, RewriteOne(file, registryLocal) ? 1 : 0));
         return rewritten;
     }
 
@@ -57,12 +57,12 @@ public static class AutorefsRewriter
         var registryLocal = registry;
         var loggerLocal = logger;
 
-        Parallel.ForEach(files, file =>
+        _ = Parallel.ForEach(files, file =>
         {
             RewriteTotals local = default;
             RewriteOneLogged(file, registryLocal, loggerLocal, ref local);
-            Interlocked.Add(ref resolved, local.Resolved);
-            Interlocked.Add(ref missing, local.Missing);
+            _ = Interlocked.Add(ref resolved, local.Resolved);
+            _ = Interlocked.Add(ref missing, local.Missing);
         });
 
         return (resolved, missing);
@@ -208,7 +208,7 @@ public static class AutorefsRewriter
         var idSpan = idLength > 0 ? source.Slice(match.IdStart, idLength) : default;
         if (idLength > 0 && registry.TryResolveInto(idSpan, sink))
         {
-            totals.Resolved++;
+            totals = totals with { Resolved = totals.Resolved + 1 };
             if (logger is null)
             {
                 return true;
@@ -231,7 +231,7 @@ public static class AutorefsRewriter
         // so the corpus-completeness gap is surfaced for the maintainer to fix. Returns true
         // because we still wrote bytes that differ from the input marker.
         sink.Write("#"u8);
-        totals.Missing++;
+        totals = totals with { Missing = totals.Missing + 1 };
         if (logger is null || sourcePage is null)
         {
             return true;

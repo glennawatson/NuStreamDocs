@@ -13,37 +13,64 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>End-to-end tests that drive the plugin through the real <c>DocBuilder</c> pipeline against a loopback HTTP server.</summary>
 public class PrivacyPluginLifecycleTests
 {
+    /// <summary>Retry allowance for the transient-error scenario.</summary>
+    private const int RetryCount = 2;
+
+    /// <summary>One failed request followed by one successful request.</summary>
+    private const int ExpectedRequestCount = 2;
+
+    /// <summary>Png Content Type used by the test cases.</summary>
+    private const string PngContentType = "image/png";
+
+    /// <summary>Page File Name used by the test cases.</summary>
+    private const string PageFileName = "page.md";
+
+    /// <summary>Assets Directory used by the test cases.</summary>
+    private const string AssetsDirectory = "assets";
+
+    /// <summary>External Directory used by the test cases.</summary>
+    private const string ExternalDirectory = "external";
+
+    /// <summary>Cached Image Path used by the test cases.</summary>
+    private const string CachedImagePath = "/cached.png";
+
+    /// <summary>Download Parallelism used by the test cases.</summary>
+    private const int DownloadParallelism = 2;
+
+    /// <summary>Download Timeout Seconds used by the test cases.</summary>
+    private const int DownloadTimeoutSeconds = 60;
+
+    /// <summary>Expected Asset Count used by the test cases.</summary>
+    private const int ExpectedAssetCount = 2;
+
     /// <summary>A markdown page with an absolute <c>img</c> URL ends up referencing the local copy and the asset bytes are present on disk.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task LocalizesExternalImageOnBuild()
     {
         using var fixture = TempSite.Create();
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            const string AssetText = "fake-png-bytes";
-            server.AddRoute("/logo.png", "image/png", Encoding.UTF8.GetBytes(AssetText));
-            server.Start();
+        await using var server = new LoopbackHttpServer();
+        const string AssetText = "fake-png-bytes";
+        server.AddRoute("/logo.png", PngContentType, (byte[])[.. "fake-png-bytes"u8]);
+        server.Start();
 
-            var pageUrl = $"{server.BaseUrl}logo.png";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![logo]({pageUrl})\n");
+        var pageUrl = $"{server.BaseUrl}logo.png";
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PageFileName), $"![logo]({pageUrl})\n");
 
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
-                .UsePrivacy(static opts => opts with { DownloadParallelism = 2 })
-                .BuildAsync();
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(fixture.Output)
+            .UsePrivacy(static opts => opts with { DownloadParallelism = DownloadParallelism })
+            .BuildAsync();
 
-            var rendered = await File.ReadAllTextAsync(Path.Combine(fixture.Output, "page.html"));
-            await Assert.That(rendered).Contains("/assets/external/");
-            await Assert.That(rendered).DoesNotContain(pageUrl);
+        var rendered = await File.ReadAllTextAsync(Path.Combine(fixture.Output, "page.html"));
+        await Assert.That(rendered).Contains("/assets/external/");
+        await Assert.That(rendered).DoesNotContain(pageUrl);
 
-            var localized = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
-            await Assert.That(localized).HasSingleItem();
-            var bytes = await File.ReadAllBytesAsync(localized[0]);
-            await Assert.That(Encoding.UTF8.GetString(bytes)).IsEqualTo(AssetText);
-        }
+        var localized = Directory.GetFiles(Path.Combine(fixture.Output, AssetsDirectory, ExternalDirectory));
+        await Assert.That(localized).HasSingleItem();
+        var bytes = await File.ReadAllBytesAsync(localized[0]);
+        await Assert.That(Encoding.UTF8.GetString(bytes)).IsEqualTo(AssetText);
     }
 
     /// <summary>The same external URL shared across two pages downloads exactly once.</summary>
@@ -52,29 +79,26 @@ public class PrivacyPluginLifecycleTests
     public async Task DedupesAcrossPages()
     {
         using var fixture = TempSite.Create();
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            server.AddRoute("/shared.png", "image/png", [.. "shared"u8]);
-            server.Start();
+        await using var server = new LoopbackHttpServer();
+        server.AddRoute("/shared.png", PngContentType, [.. "shared"u8]);
+        server.Start();
 
-            var url = $"{server.BaseUrl}shared.png";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "a.md"), $"![]({url})");
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "b.md"), $"![]({url})");
+        var url = $"{server.BaseUrl}shared.png";
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "a.md"), $"![]({url})");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "b.md"), $"![]({url})");
 
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(fixture.Output)
 
-                // A loopback fetch never takes seconds — but a heavily-contended CI agent can stall one
-                // past the default 10s timeout, which then retries and double-hits the server. Pin a
-                // generous timeout so the hit count is deterministic; the de-dup (one registry entry)
-                // is still what makes this exactly 1.
-                .UsePrivacy(static opts => opts with { DownloadTimeout = TimeSpan.FromSeconds(60) })
-                .BuildAsync();
+            // A loopback fetch never takes seconds — but a heavily-contended CI agent can stall one
+            // past the default 10s timeout, which then retries and double-hits the server. Pin a
+            // generous timeout so the hit count is deterministic; the de-dup (one registry entry)
+            // is still what makes this exactly 1.
+            .UsePrivacy(static opts => opts with { DownloadTimeout = TimeSpan.FromSeconds(DownloadTimeoutSeconds) })
+            .BuildAsync();
 
-            await Assert.That(server.HitCountFor("/shared.png")).IsEqualTo(1);
-        }
+        await Assert.That(server.HitCountFor("/shared.png")).IsEqualTo(1);
     }
 
     /// <summary>A CSS file referencing a font URL drives a second download pass; the font lands locally too.</summary>
@@ -83,35 +107,34 @@ public class PrivacyPluginLifecycleTests
     public async Task FollowsNestedCssUrls()
     {
         using var fixture = TempSite.Create();
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            const string FontBytes = "FONT-DATA";
-            server.Start();
-            var fontUrl = $"{server.BaseUrl}font.woff2";
-            server.AddRoute("/font.woff2", "font/woff2", Encoding.UTF8.GetBytes(FontBytes));
-            server.AddRoute("/fonts.css", "text/css", Encoding.UTF8.GetBytes($"@font-face {{ src: url({fontUrl}) }}"));
+        await using var server = new LoopbackHttpServer();
+        const string FontBytes = "FONT-DATA";
+        server.Start();
+        var fontUrl = $"{server.BaseUrl}font.woff2";
+        server.AddRoute("/font.woff2", "font/woff2", (byte[])[.. "FONT-DATA"u8]);
+        server.AddRoute("/fonts.css", "text/css", Encoding.UTF8.GetBytes($"@font-face {{ src: url({fontUrl}) }}"));
 
-            var pageUrl = $"{server.BaseUrl}fonts.css";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![]({pageUrl})\n");
+        var pageUrl = $"{server.BaseUrl}fonts.css";
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PageFileName), $"![]({pageUrl})\n");
 
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
-                .UsePrivacy()
-                .BuildAsync();
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(fixture.Output)
+            .UsePrivacy()
+            .BuildAsync();
 
-            var localized = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
-            await Assert.That(localized.Length).IsEqualTo(2);
+        var localized = Directory.GetFiles(Path.Combine(fixture.Output, AssetsDirectory, ExternalDirectory));
+        await Assert.That(localized.Length).IsEqualTo(ExpectedAssetCount);
 
-            var fontFile = localized.First(static f => f.EndsWith(".woff2", StringComparison.Ordinal));
-            await Assert.That(await File.ReadAllTextAsync(fontFile)).IsEqualTo(FontBytes);
+        var fontFile = Array.Find(localized, static f => f.EndsWith(".woff2", StringComparison.Ordinal));
+        await Assert.That(fontFile).IsNotNull();
+        await Assert.That(await File.ReadAllTextAsync(fontFile)).IsEqualTo(FontBytes);
 
-            var cssFile = localized.First(static f => f.EndsWith(".css", StringComparison.Ordinal));
-            var rewrittenCss = await File.ReadAllTextAsync(cssFile);
-            await Assert.That(rewrittenCss).Contains("/assets/external/");
-            await Assert.That(rewrittenCss).DoesNotContain(fontUrl);
-        }
+        var cssFile = Array.Find(localized, static f => f.EndsWith(".css", StringComparison.Ordinal));
+        await Assert.That(cssFile).IsNotNull();
+        var rewrittenCss = await File.ReadAllTextAsync(cssFile);
+        await Assert.That(rewrittenCss).Contains("/assets/external/");
+        await Assert.That(rewrittenCss).DoesNotContain(fontUrl);
     }
 
     /// <summary>Audit-only mode writes a manifest of detected external URLs and never hits the network.</summary>
@@ -120,30 +143,27 @@ public class PrivacyPluginLifecycleTests
     public async Task AuditOnlyModeEmitsManifestWithoutDownloading()
     {
         using var fixture = TempSite.Create();
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            server.AddRoute("/asset.png", "image/png", [.. "should-not-be-fetched"u8]);
-            server.Start();
+        await using var server = new LoopbackHttpServer();
+        server.AddRoute("/asset.png", PngContentType, [.. "should-not-be-fetched"u8]);
+        server.Start();
 
-            var url = $"{server.BaseUrl}asset.png";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![]({url})\n");
+        var url = $"{server.BaseUrl}asset.png";
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PageFileName), $"![]({url})\n");
 
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
-                .UsePrivacy(static opts => opts with { AuditOnly = true })
-                .BuildAsync();
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(fixture.Output)
+            .UsePrivacy(static opts => opts with { AuditOnly = true })
+            .BuildAsync();
 
-            await Assert.That(server.HitCountFor("/asset.png")).IsEqualTo(0);
-            await Assert.That(Directory.Exists(Path.Combine(fixture.Output, "assets", "external"))).IsFalse();
+        await Assert.That(server.HitCountFor("/asset.png")).IsEqualTo(0);
+        await Assert.That(Directory.Exists(Path.Combine(fixture.Output, AssetsDirectory, ExternalDirectory))).IsFalse();
 
-            var manifestPath = Path.Combine(fixture.Output, "privacy-audit.json");
-            await Assert.That(File.Exists(manifestPath)).IsTrue();
-            var manifest = await File.ReadAllTextAsync(manifestPath);
-            await Assert.That(manifest).Contains(url);
-            await Assert.That(manifest).Contains("\"auditOnly\": true");
-        }
+        var manifestPath = Path.Combine(fixture.Output, "privacy-audit.json");
+        await Assert.That(File.Exists(manifestPath)).IsTrue();
+        var manifest = await File.ReadAllTextAsync(manifestPath);
+        await Assert.That(manifest).Contains(url);
+        await Assert.That(manifest).Contains("\"auditOnly\": true");
     }
 
     /// <summary><c>PrivacyOptions.FailOnError</c> turns a 404 into a thrown <c>PrivacyDownloadException</c>.</summary>
@@ -152,23 +172,20 @@ public class PrivacyPluginLifecycleTests
     public async Task FailOnErrorRaisesOnUpstreamFailure()
     {
         using var fixture = TempSite.Create();
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            server.Start();
-            var url = $"{server.BaseUrl}missing.png";
-            var inputRoot = fixture.Root;
-            var outputRoot = fixture.Output;
-            await File.WriteAllTextAsync(Path.Combine(inputRoot, "page.md"), $"![]({url})");
+        await using var server = new LoopbackHttpServer();
+        server.Start();
+        var url = $"{server.BaseUrl}missing.png";
+        var inputRoot = fixture.Root;
+        var outputRoot = fixture.Output;
+        await File.WriteAllTextAsync(Path.Combine(inputRoot, PageFileName), $"![]({url})");
 
-            await Assert.That((Func<Task>)Build).Throws<PrivacyDownloadException>();
+        await Assert.That((Func<Task>)Build).Throws<PrivacyDownloadException>();
 
-            Task Build() =>
-                new DocBuilder().WithInput(inputRoot)
-                    .WithOutput(outputRoot)
-                    .UsePrivacy(static opts => opts with { FailOnError = true })
-                    .BuildAsync();
-        }
+        Task Build() =>
+            new DocBuilder().WithInput(inputRoot)
+                .WithOutput(outputRoot)
+                .UsePrivacy(static opts => opts with { FailOnError = true })
+                .BuildAsync();
     }
 
     /// <summary>An explicit cache directory survives a clean build (i.e. fresh output dir): the second build hits the cache and never touches the network.</summary>
@@ -178,40 +195,37 @@ public class PrivacyPluginLifecycleTests
     {
         using var fixture = TempSite.Create();
         var cacheDir = Path.Combine(fixture.Root, "shared-cache");
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            server.AddRoute("/cached.png", "image/png", [.. "cached"u8]);
-            server.Start();
+        await using var server = new LoopbackHttpServer();
+        server.AddRoute(CachedImagePath, PngContentType, [.. "cached"u8]);
+        server.Start();
 
-            var url = $"{server.BaseUrl}cached.png";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![]({url})\n");
+        var url = $"{server.BaseUrl}cached.png";
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PageFileName), $"![]({url})\n");
 
-            // Generous timeout: a contended CI agent can stall a loopback fetch past the default 10s
-            // timeout, which then retries and double-hits the server. Pinning it keeps the hit count
-            // deterministic so the cache-vs-network assertions below stay meaningful.
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
-                .UsePrivacy(opts =>
-                    opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
-                .BuildAsync();
+        // Generous timeout: a contended CI agent can stall a loopback fetch past the default 10s
+        // timeout, which then retries and double-hits the server. Pinning it keeps the hit count
+        // deterministic so the cache-vs-network assertions below stay meaningful.
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(fixture.Output)
+            .UsePrivacy(opts =>
+                opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(DownloadTimeoutSeconds) })
+            .BuildAsync();
 
-            await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
+        await Assert.That(server.HitCountFor(CachedImagePath)).IsEqualTo(1);
 
-            // Fresh output dir simulates a clean build; the cache survives.
-            var freshOutput = Path.Combine(fixture.Root, "_site2");
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(freshOutput)
-                .UsePrivacy(opts =>
-                    opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(60) })
-                .BuildAsync();
+        // Fresh output dir simulates a clean build; the cache survives.
+        var freshOutput = Path.Combine(fixture.Root, "_site2");
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(freshOutput)
+            .UsePrivacy(opts =>
+                opts.WithCacheDirectory(cacheDir) with { DownloadTimeout = TimeSpan.FromSeconds(DownloadTimeoutSeconds) })
+            .BuildAsync();
 
-            await Assert.That(server.HitCountFor("/cached.png")).IsEqualTo(1);
-            var localized = Directory.GetFiles(Path.Combine(freshOutput, "assets", "external"));
-            await Assert.That(localized).HasSingleItem();
-        }
+        await Assert.That(server.HitCountFor(CachedImagePath)).IsEqualTo(1);
+        var localized = Directory.GetFiles(Path.Combine(freshOutput, AssetsDirectory, ExternalDirectory));
+        await Assert.That(localized).HasSingleItem();
     }
 
     /// <summary>Polly retry recovers from a one-shot 503 followed by a 200.</summary>
@@ -220,25 +234,22 @@ public class PrivacyPluginLifecycleTests
     public async Task PollyRetryRecoversFromTransientServerError()
     {
         using var fixture = TempSite.Create();
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            server.AddFlakyRoute("/flaky.png", "image/png", [.. "ok"u8], 1);
-            server.Start();
+        await using var server = new LoopbackHttpServer();
+        server.AddFlakyRoute("/flaky.png", PngContentType, [.. "ok"u8], 1);
+        server.Start();
 
-            var url = $"{server.BaseUrl}flaky.png";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![]({url})\n");
+        var url = $"{server.BaseUrl}flaky.png";
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PageFileName), $"![]({url})\n");
 
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
-                .UsePrivacy(static opts => opts with { MaxRetries = 2 })
-                .BuildAsync();
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(fixture.Output)
+            .UsePrivacy(static opts => opts with { MaxRetries = RetryCount })
+            .BuildAsync();
 
-            await Assert.That(server.HitCountFor("/flaky.png")).IsEqualTo(2);
-            var localized = Directory.GetFiles(Path.Combine(fixture.Output, "assets", "external"));
-            await Assert.That(localized).HasSingleItem();
-        }
+        await Assert.That(server.HitCountFor("/flaky.png")).IsEqualTo(ExpectedRequestCount);
+        var localized = Directory.GetFiles(Path.Combine(fixture.Output, AssetsDirectory, ExternalDirectory));
+        await Assert.That(localized).HasSingleItem();
     }
 
     /// <summary>A 404 from the upstream is logged-and-swallowed; the build still succeeds.</summary>
@@ -247,21 +258,18 @@ public class PrivacyPluginLifecycleTests
     public async Task BuildSurvivesUpstreamFailure()
     {
         using var fixture = TempSite.Create();
-        LoopbackHttpServer server = new();
-        await using (server.ConfigureAwait(false))
-        {
-            server.Start();
-            var url = $"{server.BaseUrl}missing.png";
-            await File.WriteAllTextAsync(Path.Combine(fixture.Root, "page.md"), $"![missing]({url})");
+        await using var server = new LoopbackHttpServer();
+        server.Start();
+        var url = $"{server.BaseUrl}missing.png";
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PageFileName), $"![missing]({url})");
 
-            await new DocBuilder()
-                .WithInput(fixture.Root)
-                .WithOutput(fixture.Output)
-                .UsePrivacy()
-                .BuildAsync();
+        await new DocBuilder()
+            .WithInput(fixture.Root)
+            .WithOutput(fixture.Output)
+            .UsePrivacy()
+            .BuildAsync();
 
-            await Assert.That(File.Exists(Path.Combine(fixture.Output, "page.html"))).IsTrue();
-        }
+        await Assert.That(File.Exists(Path.Combine(fixture.Output, "page.html"))).IsTrue();
     }
 
     /// <summary>Disposable temp-directory fixture for end-to-end build tests.</summary>
@@ -287,8 +295,8 @@ public class PrivacyPluginLifecycleTests
         {
             var root = Path.Combine(
                 Path.GetTempPath(),
-                "smkd-priv-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(root);
+                $"smkd-priv-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+            _ = Directory.CreateDirectory(root);
             return new(root);
         }
 
@@ -313,14 +321,14 @@ public class PrivacyPluginLifecycleTests
     private sealed class LoopbackHttpServer : IAsyncDisposable
     {
         /// <summary>Routes registered before <c>Start</c> is called.</summary>
-        private readonly Dictionary<string, (string ContentType, byte[] Bytes)> _routes = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, (string ContentType, byte[] Bytes)> _routes = [with(StringComparer.Ordinal)];
 
         /// <summary>Flaky routes that fail a fixed number of times before succeeding.</summary>
         private readonly Dictionary<string, (string ContentType, byte[] Bytes, int FailuresRemaining)> _flakyRoutes =
-            new(StringComparer.Ordinal);
+            [with(StringComparer.Ordinal)];
 
         /// <summary>Per-route hit counter.</summary>
-        private readonly Dictionary<string, int> _hits = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> _hits = [with(StringComparer.Ordinal)];
 
         /// <summary>Underlying HTTP listener.</summary>
         private readonly HttpListener _listener = new();
@@ -408,7 +416,7 @@ public class PrivacyPluginLifecycleTests
         /// <returns>An unused port number.</returns>
         private static int GetFreePort()
         {
-            TcpListener l = new(IPAddress.Loopback, 0);
+            using TcpListener l = new(IPAddress.Loopback, 0);
             l.Start();
             try
             {

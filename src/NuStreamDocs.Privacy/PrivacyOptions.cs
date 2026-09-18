@@ -23,6 +23,7 @@ namespace NuStreamDocs.Privacy;
 /// <param name="UrlExcludePatterns">UTF-8 URL-level glob patterns that drop matched URLs even when the host would otherwise pass.</param>
 /// <param name="GenerateCspManifest">When true, the plugin computes SHA-256 hashes of every inline <c>&lt;style&gt;</c>/<c>&lt;script&gt;</c> body.</param>
 /// <param name="CspManifestPath">UTF-8 forward-slash relative path under the output root where the CSP-hash manifest is written.</param>
+[System.Diagnostics.DebuggerDisplay("PrivacyOptions: {ToString(),nq}")]
 public readonly record struct PrivacyOptions(
     bool Enabled,
     byte[] AssetDirectory,

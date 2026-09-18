@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using NuStreamDocs.Common;
@@ -14,13 +15,11 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Shared page-shell implementation for the built-in themes.
-/// </summary>
+/// <summary>Shared page-shell implementation for the built-in themes.</summary>
 /// <typeparam name="TTheme">Loaded theme bundle type.</typeparam>
 /// <typeparam name="TOptions">Theme option shape.</typeparam>
-public abstract class ThemePluginBase<TTheme, TOptions>
-    : IBuildConfigurePlugin, IBuildDiscoverPlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
+[System.Diagnostics.DebuggerDisplay("ThemePluginBase: {Name}")]
+public abstract class ThemePluginBase<TTheme, TOptions> : IBuildConfigurePlugin, IBuildDiscoverPlugin, IPagePostRenderPlugin, IBuildFinalizePlugin
     where TTheme : class, IThemePackage
     where TOptions : struct, IThemeShellOptions
 {
@@ -32,6 +31,12 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
     /// <summary>Scalar entries per social-section item.</summary>
     private const int SocialItemScalarCount = 3;
+
+    /// <summary>Initial number of page template values.</summary>
+    private const int PageScalarCapacity = 26;
+
+    /// <summary>Conventional source path for the not-found page.</summary>
+    private static readonly FilePath NotFoundPage = "404.md";
 
     /// <summary>Configured options.</summary>
     private readonly TOptions _options;
@@ -102,6 +107,9 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     /// <summary>Gets the loaded theme.</summary>
     protected TTheme LoadedTheme { get; }
 
+    /// <summary>Gets the root-relative prefix for bundled assets.</summary>
+    private static ReadOnlySpan<byte> AssetUrlPrefix => "/assets/"u8;
+
     /// <inheritdoc/>
     public ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
@@ -113,7 +121,8 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _ = cancellationToken;
-        ValidateUrlOptions(_options);
+        var options = _options;
+        ValidateUrlOptions(options);
         _outputRoot = context.OutputRoot;
         _headExtras = HeadExtraComposer.Compose(context.Plugins);
         _plugins = context.Plugins;
@@ -123,7 +132,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         _repoLabel = BuildRepoLabel(_options.RepoUrl);
         _siteAuthor = context.SiteAuthor;
         _useDirectoryUrls = context.UseDirectoryUrls;
-        _assetRoot = [.. _options.ResolveAssetRoot()];
+        _assetRoot = [.. options.ResolveAssetRoot()];
         _resolvedCopyright = ExpandYearToken(_options.Copyright);
         _resolvedFavicon = ResolveFavicon(context.InputRoot);
         _footerPartialBytes = LoadFooterPartial(context.InputRoot, _options.FooterPartialPath);
@@ -132,6 +141,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
     /// <inheritdoc/>
@@ -142,56 +152,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         try
         {
             context.Html.CopyTo(bodyBuffer);
-
-            var pageTitle = ResolvePageTitle(context.Source, context.RelativePath);
-            var neighbours = ResolveNeighbours(context.RelativePath);
-            var socialSection = BuildSocialSection(_options.SocialLinks);
-            TemplateData data = new(
-                new(26, ByteArrayComparer.Instance)
-                {
-                    [ThemeShellBytes.LanguageKey] = _options.Language,
-                    [ThemeShellBytes.SiteNameKey] = _options.SiteName,
-                    [ThemeShellBytes.LogoKey] =
-                        ResolvePageRelativeUrl(_options.Logo, context.RelativePath, _useDirectoryUrls),
-                    [ThemeShellBytes.SiteUrlKey] = _options.SiteUrl,
-                    [ThemeShellBytes.CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath),
-                    [ThemeShellBytes.SiteRootKey] = ThemeShellBytes.SiteRoot,
-                    [ThemeShellBytes.PageTitleKey] = Utf8Encoder.Encode(pageTitle),
-                    [ThemeShellBytes.BodyKey] = new(bodyBuffer, 0, bodyLength),
-                    [ThemeShellBytes.AssetRootKey] =
-                        new([.. ResolvePageRelativeAssetRoot(_assetRoot, context.RelativePath, _useDirectoryUrls)]),
-                    [ThemeShellBytes.CopyrightKey] = _resolvedCopyright,
-                    [ThemeShellBytes.CopyrightHtmlKey] = _options.CopyrightHtml,
-                    [ThemeShellBytes.FooterPartialKey] = _footerPartialBytes,
-                    [ThemeShellBytes.SocialPresentKey] =
-                        _options.SocialLinks is [_, ..] ? ThemeShellBytes.Truthy : null,
-                    [ThemeShellBytes.RepoUrlKey] = _options.RepoUrl,
-                    [ThemeShellBytes.RepoLabelKey] = _repoLabel,
-                    [ThemeShellBytes.EditUrlKey] = ResolveEditUrlBytes(context.RelativePath),
-                    [ThemeShellBytes.ScrollToTopKey] = _options.EnableScrollToTop ? ThemeShellBytes.Truthy : null,
-                    [ThemeShellBytes.TocFollowKey] = _options.EnableTocFollow ? ThemeShellBytes.Truthy : null,
-                    [ThemeShellBytes.PrevUrlKey] =
-                        ServedUrlBytes.FromPath(neighbours.PreviousPath, _useDirectoryUrls, true),
-                    [ThemeShellBytes.PrevTitleKey] = neighbours.PreviousTitle,
-                    [ThemeShellBytes.NextUrlKey] =
-                        ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, true),
-                    [ThemeShellBytes.NextTitleKey] = neighbours.NextTitle,
-                    [ThemeShellBytes.HeadExtrasKey] =
-                        RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls),
-                    [ThemeShellBytes.DescriptionKey] = ResolveDescription(context.Source),
-                    [ThemeShellBytes.HideNavigationKey] =
-                        ShouldHideNavigation(context.Source, context.RelativePath) ? ThemeShellBytes.Truthy : null,
-                    [ThemeShellBytes.HideTocKey] =
-                        FrontmatterValueExtractor.ListContains(context.Source, "hide"u8, "toc"u8)
-                            ? ThemeShellBytes.Truthy
-                            : null,
-                    [ThemeShellBytes.GeneratorKey] = ThemeShellBytes.Generator,
-                    [ThemeShellBytes.BuildDateKey] = ThemeShellBytes.BuildDate,
-                    [ThemeShellBytes.FaviconKey] = _resolvedFavicon,
-                    [ThemeShellBytes.AuthorKey] = ResolveAuthor(context.Source, _siteAuthor)
-                },
-                socialSection);
-
+            var data = CreatePageData(context, bodyBuffer, bodyLength);
             LoadedTheme.Page.Render(data, LoadedTheme.Partials, context.Output);
         }
         finally
@@ -216,7 +177,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             {
                 var (relativePath, bytes) = assets[i];
                 var target = Path.Combine(root, TranslateDirectorySeparators(relativePath));
-                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                _ = Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 await File.WriteAllBytesAsync(target, bytes, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -297,17 +258,19 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         for (var i = 0; i < links.Length; i++)
         {
             var link = links[i];
+            Dictionary<byte[], ReadOnlyMemory<byte>> scalars = [with(SocialItemScalarCount, ByteArrayComparer.Instance)];
+            scalars[ThemeShellBytes.SocialUrlKey] = link.Url;
+            scalars[ThemeShellBytes.SocialTitleKey] = link.Title;
+            scalars[ThemeShellBytes.SocialIconKey] = link.IconSvg;
             items[i] = new(
-                new(SocialItemScalarCount, ByteArrayComparer.Instance)
-                {
-                    [ThemeShellBytes.SocialUrlKey] = link.Url,
-                    [ThemeShellBytes.SocialTitleKey] = link.Title,
-                    [ThemeShellBytes.SocialIconKey] = link.IconSvg
-                },
+                scalars,
                 null);
         }
 
-        return new(1, ByteArrayComparer.Instance) { [ThemeShellBytes.SocialKey] = items };
+        Dictionary<byte[], TemplateData[]> sections = [with(1, ByteArrayComparer.Instance)];
+        sections[ThemeShellBytes.SocialKey] = items;
+
+        return sections;
     }
 
     /// <summary>Returns the first <see cref="INavNeighboursProvider"/> in <paramref name="plugins"/>, or null when none is registered.</summary>
@@ -365,12 +328,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         var stem = Path.GetFileNameWithoutExtension(relativePath);
-        if (string.Equals(stem, "index", StringComparison.OrdinalIgnoreCase))
-        {
-            return string.Empty;
-        }
-
-        return HtmlEncoder.Default.Encode(stem);
+        return string.Equals(stem, "index", StringComparison.OrdinalIgnoreCase) ? string.Empty : HtmlEncoder.Default.Encode(stem);
     }
 
     /// <summary>Drops a single matching pair of leading/trailing single- or double-quote bytes from <paramref name="value"/>.</summary>
@@ -409,6 +367,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
     /// <summary>Throws when <paramref name="diagnostic"/> carries a non-empty diagnostic message.</summary>
     /// <param name="diagnostic">Diagnostic returned by <see cref="ThemeUrlValidator.Inspect"/>.</param>
+    /// <exception cref="InvalidOperationException">The diagnostic describes a malformed URL.</exception>
     private static void ThrowIfMalformed(in DiagnosticMessage diagnostic)
     {
         if (diagnostic.IsEmpty)
@@ -625,19 +584,15 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         // Strip a leading '/' so concatenation with the page-relative prefix doesn't produce a site-root absolute URL.
         var trimmed = assetRoot is [(byte)'/', ..] ? assetRoot[1..] : assetRoot;
         var prefix = PageRelativePrefixBytes(PageDepth(relativePath, useDirectoryUrls));
-        if (prefix.Length is 0)
-        {
-            return trimmed.ToArray();
-        }
-
-        return Utf8Concat.Concat(prefix, trimmed);
+        return prefix.Length is 0 ? trimmed.ToArray() : Utf8Concat.Concat(prefix, trimmed);
     }
 
     /// <summary>True when <paramref name="relativePath"/> is the conventional <c>404.md</c> at the site root.</summary>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True for the 404 page.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool Is404Page(in FilePath relativePath) =>
-        string.Equals(relativePath.Value, "404.md", StringComparison.OrdinalIgnoreCase);
+        string.Equals(relativePath.Value, NotFoundPage.Value, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Prefixes <paramref name="path"/> with <c>/</c> to anchor it at the site root.</summary>
     /// <param name="path">UTF-8 path bytes.</param>
@@ -670,12 +625,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         var span = href.AsSpan();
         var trimmed = span is [(byte)'/', ..] ? span[1..] : span;
         var prefix = PageRelativePrefixBytes(PageDepth(relativePath, useDirectoryUrls));
-        if (prefix.Length is 0)
-        {
-            return trimmed.ToArray();
-        }
-
-        return Utf8Concat.Concat(prefix, trimmed);
+        return prefix.Length is 0 ? trimmed.ToArray() : Utf8Concat.Concat(prefix, trimmed);
     }
 
     /// <summary>Rewrites every <c>"/assets/</c> / <c>'/assets/</c> href in the cached head-extras blob to be page-relative for the current page.</summary>
@@ -691,7 +641,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         }
 
         var source = headExtras.AsSpan();
-        if (source.IndexOf("/assets/"u8) < 0 || Is404Page(relativePath))
+        if (source.IndexOf(AssetUrlPrefix) < 0 || Is404Page(relativePath))
         {
             return headExtras;
         }
@@ -702,7 +652,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         while (cursor < source.Length)
         {
             var rest = source[cursor..];
-            var idx = rest.IndexOf("/assets/"u8);
+            var idx = rest.IndexOf(AssetUrlPrefix);
             if (idx < 0)
             {
                 writer.Write(rest);
@@ -718,13 +668,13 @@ public abstract class ThemePluginBase<TTheme, TOptions>
 
                 // Drop the leading '/'; emit "assets/" then continue past the matched separator.
                 writer.Write("assets/"u8);
-                cursor = absolute + "/assets/"u8.Length;
+                cursor = absolute + AssetUrlPrefix.Length;
                 continue;
             }
 
             // No quote in front; copy through up to and including the match and keep scanning.
-            writer.Write(rest[..(idx + "/assets/"u8.Length)]);
-            cursor = absolute + "/assets/"u8.Length;
+            writer.Write(rest[..(idx + AssetUrlPrefix.Length)]);
+            cursor = absolute + AssetUrlPrefix.Length;
         }
 
         return [.. writer.WrittenSpan];
@@ -776,12 +726,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         var tail = span[(lastSlash + 1)..];
         var prevSlash = head.LastIndexOf((byte)'/');
         var owner = prevSlash < 0 ? head : head[(prevSlash + 1)..];
-        if (owner.IsEmpty || tail.IsEmpty)
-        {
-            return [.. repoUrl];
-        }
-
-        return Utf8Concat.Concat(owner, "/"u8, tail);
+        return owner.IsEmpty || tail.IsEmpty ? [.. repoUrl] : Utf8Concat.Concat(owner, "/"u8, tail);
     }
 
     /// <summary>Returns the URL slug for the page, matching the build pipeline's emit shape.</summary>
@@ -837,13 +782,13 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return ValueTask.CompletedTask;
         }
 
-        var target = Path.Combine(inputRoot.Value, "404.md");
+        FilePath target = Path.Combine(inputRoot.Value, NotFoundPage.Value);
         if (File.Exists(target))
         {
             return ValueTask.CompletedTask;
         }
 
-        var body = readThemeAsset((FilePath)"404.md");
+        var body = readThemeAsset(NotFoundPage);
         return body is null ? ValueTask.CompletedTask : new(File.WriteAllBytesAsync(target, body));
     }
 
@@ -887,12 +832,7 @@ public abstract class ThemePluginBase<TTheme, TOptions>
             return NavNeighbours.None;
         }
 
-        if (_options.SectionScopedFooter)
-        {
-            return _neighbours.GetSectionNeighbours(relativePath);
-        }
-
-        return _neighbours.GetNeighbours(relativePath);
+        return _options.SectionScopedFooter ? _neighbours.GetSectionNeighbours(relativePath) : _neighbours.GetNeighbours(relativePath);
     }
 
     /// <summary>Returns the canonical URL for the page; empty when no site URL is configured.</summary>
@@ -917,7 +857,8 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         for (var i = 0; i < slug.Length; i++)
         {
             // Source-relative paths from the build pipeline are ASCII-safe; Windows back-slashes fold to '/'.
-            dst[write++] = slug[i] is '\\' ? (byte)'/' : (byte)slug[i];
+            dst[write] = slug[i] is '\\' ? (byte)'/' : (byte)slug[i];
+            write++;
         }
 
         return dst;
@@ -941,9 +882,57 @@ public abstract class ThemePluginBase<TTheme, TOptions>
         for (var i = start; i < path.Length; i++)
         {
             // Relative paths from the build pipeline are already ASCII-safe (a-z, 0-9, -, _, /, .) — back-slash on Windows folds to '/'.
-            dst[write++] = path[i] is '\\' ? (byte)'/' : (byte)path[i];
+            dst[write] = path[i] is '\\' ? (byte)'/' : (byte)path[i];
+            write++;
         }
 
         return dst;
+    }
+
+    /// <summary>Builds the template values for one rendered page.</summary>
+    /// <param name="context">Page content and output paths.</param>
+    /// <param name="bodyBuffer">Buffer containing the rendered body.</param>
+    /// <param name="bodyLength">Length of the rendered body.</param>
+    /// <returns>The values supplied to the theme template.</returns>
+    private TemplateData CreatePageData(in PagePostRenderContext context, byte[] bodyBuffer, int bodyLength)
+    {
+        var pageTitle = ResolvePageTitle(context.Source, context.RelativePath);
+        var neighbours = ResolveNeighbours(context.RelativePath);
+        var socialSection = BuildSocialSection(_options.SocialLinks);
+        Dictionary<byte[], ReadOnlyMemory<byte>> scalars = [with(PageScalarCapacity, ByteArrayComparer.Instance)];
+        scalars[ThemeShellBytes.LanguageKey] = _options.Language;
+        scalars[ThemeShellBytes.SiteNameKey] = _options.SiteName;
+        scalars[ThemeShellBytes.LogoKey] = ResolvePageRelativeUrl(_options.Logo, context.RelativePath, _useDirectoryUrls);
+        scalars[ThemeShellBytes.SiteUrlKey] = _options.SiteUrl;
+        scalars[ThemeShellBytes.CanonicalUrlKey] = ResolveCanonicalUrlBytes(context.RelativePath);
+        scalars[ThemeShellBytes.SiteRootKey] = ThemeShellBytes.SiteRoot;
+        scalars[ThemeShellBytes.PageTitleKey] = Utf8Encoder.Encode(pageTitle);
+        scalars[ThemeShellBytes.BodyKey] = new(bodyBuffer, 0, bodyLength);
+        scalars[ThemeShellBytes.AssetRootKey] = new([.. ResolvePageRelativeAssetRoot(_assetRoot, context.RelativePath, _useDirectoryUrls)]);
+        scalars[ThemeShellBytes.CopyrightKey] = _resolvedCopyright;
+        scalars[ThemeShellBytes.CopyrightHtmlKey] = _options.CopyrightHtml;
+        scalars[ThemeShellBytes.FooterPartialKey] = _footerPartialBytes;
+        scalars[ThemeShellBytes.SocialPresentKey] = _options.SocialLinks is [_, ..] ? ThemeShellBytes.Truthy : null;
+        scalars[ThemeShellBytes.RepoUrlKey] = _options.RepoUrl;
+        scalars[ThemeShellBytes.RepoLabelKey] = _repoLabel;
+        scalars[ThemeShellBytes.EditUrlKey] = ResolveEditUrlBytes(context.RelativePath);
+        scalars[ThemeShellBytes.ScrollToTopKey] = _options.EnableScrollToTop ? ThemeShellBytes.Truthy : null;
+        scalars[ThemeShellBytes.TocFollowKey] = _options.EnableTocFollow ? ThemeShellBytes.Truthy : null;
+        scalars[ThemeShellBytes.PrevUrlKey] = ServedUrlBytes.FromPath(neighbours.PreviousPath, _useDirectoryUrls, true);
+        scalars[ThemeShellBytes.PrevTitleKey] = neighbours.PreviousTitle;
+        scalars[ThemeShellBytes.NextUrlKey] = ServedUrlBytes.FromPath(neighbours.NextPath, _useDirectoryUrls, true);
+        scalars[ThemeShellBytes.NextTitleKey] = neighbours.NextTitle;
+        scalars[ThemeShellBytes.HeadExtrasKey] = RewriteHeadExtraAssetHrefs(_headExtras, context.RelativePath, _useDirectoryUrls);
+        scalars[ThemeShellBytes.DescriptionKey] = ResolveDescription(context.Source);
+        scalars[ThemeShellBytes.HideNavigationKey] = ShouldHideNavigation(context.Source, context.RelativePath) ? ThemeShellBytes.Truthy : null;
+        scalars[ThemeShellBytes.HideTocKey] = FrontmatterValueExtractor.ListContains(context.Source, "hide"u8, "toc"u8) ? ThemeShellBytes.Truthy : null;
+        scalars[ThemeShellBytes.GeneratorKey] = ThemeShellBytes.Generator;
+        scalars[ThemeShellBytes.BuildDateKey] = ThemeShellBytes.BuildDate;
+        scalars[ThemeShellBytes.FaviconKey] = _resolvedFavicon;
+        scalars[ThemeShellBytes.AuthorKey] = ResolveAuthor(context.Source, _siteAuthor);
+        TemplateData data = new(
+            scalars,
+            socialSection);
+        return data;
     }
 }

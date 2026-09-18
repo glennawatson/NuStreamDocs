@@ -24,7 +24,8 @@ public class DocBuilderPagefindExtensionsTests
     [Test]
     public async Task ConfigureDelegateOverload()
     {
-        var b = new DocBuilder().UsePagefindSearch(static o => o.WithMinTokenLength(5));
+        const int minimumLength = 5;
+        var b = new DocBuilder().UsePagefindSearch(static o => o.WithMinTokenLength(minimumLength));
         await Assert.That(b).IsNotNull();
     }
 

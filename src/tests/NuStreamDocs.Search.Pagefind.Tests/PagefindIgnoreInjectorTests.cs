@@ -2,7 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -11,6 +11,18 @@ namespace NuStreamDocs.Search.Pagefind.Tests;
 /// <summary>Behavior tests for <see cref="PagefindIgnoreInjector"/>.</summary>
 public class PagefindIgnoreInjectorTests
 {
+    /// <summary>Body opening tag marked for exclusion from indexing.</summary>
+    private const string IgnoredBodyTag = "<body data-pagefind-ignore>";
+
+    /// <summary>Default page filename used in directory fixtures.</summary>
+    private const string IndexFileName = "index.html";
+
+    /// <summary>Attribute excluding a page from indexing.</summary>
+    private const string IgnoreAttribute = "data-pagefind-ignore";
+
+    /// <summary>Page filename for the single-file API fixture.</summary>
+    private const string ApiFileName = "x.html";
+
     /// <summary><c>TryInject</c> adds the attribute immediately after <c>&lt;body</c>, preserving existing attributes.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -30,7 +42,7 @@ public class PagefindIgnoreInjectorTests
         byte[] input = [.. "<html><body><p>x</p></body></html>"u8];
         var changed = PagefindIgnoreInjector.TryInject(input, out var output);
         await Assert.That(changed).IsTrue();
-        await Assert.That(Encoding.UTF8.GetString(output)).Contains("<body data-pagefind-ignore>");
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains(IgnoredBodyTag);
     }
 
     /// <summary><c>TryInject</c> is idempotent — a page already carrying the attribute is left untouched.</summary>
@@ -64,7 +76,7 @@ public class PagefindIgnoreInjectorTests
         byte[] input = [.. "<html><p>&lt;bodysuit&gt;</p><body><h1>x</h1></body></html>"u8];
         var changed = PagefindIgnoreInjector.TryInject(input, out var output);
         await Assert.That(changed).IsTrue();
-        await Assert.That(Encoding.UTF8.GetString(output)).Contains("<body data-pagefind-ignore>");
+        await Assert.That(Encoding.UTF8.GetString(output)).Contains(IgnoredBodyTag);
     }
 
     /// <summary><c>MatchesPrefix</c> matches on any prefix and normalizes backslashes.</summary>
@@ -85,16 +97,17 @@ public class PagefindIgnoreInjectorTests
     [Test]
     public async Task InjectAsyncRewritesOnlyMatchingFiles()
     {
+        const int excludedPageCount = 2;
         using TempDir dir = new();
-        WriteFile(dir.Root, "index.html", "<html><body><h1>Home</h1></body></html>");
+        WriteFile(dir.Root, IndexFileName, "<html><body><h1>Home</h1></body></html>");
         WriteFile(dir.Root, Path.Combine("documentation", "intro.html"), "<html><body><h1>Intro</h1></body></html>");
         WriteFile(
             dir.Root,
-            Path.Combine("api", "ReactiveUI", "index.html"),
+            Path.Combine("api", "ReactiveUI", IndexFileName),
             "<html><body><h1>ReactiveUI</h1></body></html>");
         WriteFile(
             dir.Root,
-            Path.Combine("api", "DynamicData", "index.html"),
+            Path.Combine("api", "DynamicData", IndexFileName),
             "<html><body class=\"a\"><h1>DynamicData</h1></body></html>");
 
         var modified = await PagefindIgnoreInjector.InjectAsync(
@@ -103,13 +116,13 @@ public class PagefindIgnoreInjectorTests
             NullLogger.Instance,
             CancellationToken.None);
 
-        await Assert.That(modified).IsEqualTo(2);
-        await Assert.That(ReadFile(dir.Root, "index.html")).DoesNotContain("data-pagefind-ignore");
+        await Assert.That(modified).IsEqualTo(excludedPageCount);
+        await Assert.That(ReadFile(dir.Root, IndexFileName)).DoesNotContain(IgnoreAttribute);
         await Assert.That(ReadFile(dir.Root, Path.Combine("documentation", "intro.html")))
-            .DoesNotContain("data-pagefind-ignore");
-        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "ReactiveUI", "index.html")))
-            .Contains("<body data-pagefind-ignore>");
-        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "DynamicData", "index.html")))
+            .DoesNotContain(IgnoreAttribute);
+        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "ReactiveUI", IndexFileName)))
+            .Contains(IgnoredBodyTag);
+        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "DynamicData", IndexFileName)))
             .Contains("<body data-pagefind-ignore class=\"a\">");
     }
 
@@ -119,11 +132,11 @@ public class PagefindIgnoreInjectorTests
     public async Task InjectAsyncEmptyPrefixesIsNoOp()
     {
         using TempDir dir = new();
-        WriteFile(dir.Root, Path.Combine("api", "x.html"), "<html><body><h1>x</h1></body></html>");
+        WriteFile(dir.Root, Path.Combine("api", ApiFileName), "<html><body><h1>x</h1></body></html>");
         var modified =
             await PagefindIgnoreInjector.InjectAsync(new(dir.Root), [], NullLogger.Instance, CancellationToken.None);
         await Assert.That(modified).IsEqualTo(0);
-        await Assert.That(ReadFile(dir.Root, Path.Combine("api", "x.html"))).DoesNotContain("data-pagefind-ignore");
+        await Assert.That(ReadFile(dir.Root, Path.Combine("api", ApiFileName))).DoesNotContain(IgnoreAttribute);
     }
 
     /// <summary><c>InjectAsync</c> on a missing site root returns zero rather than throwing.</summary>
@@ -133,7 +146,7 @@ public class PagefindIgnoreInjectorTests
     {
         var missing = Path.Combine(
             Path.GetTempPath(),
-            "smkd-pf-missing-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-pf-missing-{Guid.NewGuid():N}");
         var modified = await PagefindIgnoreInjector.InjectAsync(
             new(missing),
             [[.. "api/"u8]],
@@ -148,7 +161,7 @@ public class PagefindIgnoreInjectorTests
     public async Task InjectAsyncIsIdempotentAcrossRuns()
     {
         using TempDir dir = new();
-        WriteFile(dir.Root, Path.Combine("api", "x.html"), "<html><body><h1>x</h1></body></html>");
+        WriteFile(dir.Root, Path.Combine("api", ApiFileName), "<html><body><h1>x</h1></body></html>");
         byte[][] prefixes = [[.. "api/"u8]];
 
         var first = await PagefindIgnoreInjector.InjectAsync(
@@ -165,8 +178,8 @@ public class PagefindIgnoreInjectorTests
 
         await Assert.That(first).IsEqualTo(1);
         await Assert.That(second).IsEqualTo(0);
-        var html = ReadFile(dir.Root, Path.Combine("api", "x.html"));
-        await Assert.That(CountOccurrences(html, "data-pagefind-ignore")).IsEqualTo(1);
+        var html = ReadFile(dir.Root, Path.Combine("api", ApiFileName));
+        await Assert.That(CountOccurrences(html, IgnoreAttribute)).IsEqualTo(1);
     }
 
     /// <summary><c>InjectAsync</c> rejects an empty site root.</summary>
@@ -190,7 +203,7 @@ public class PagefindIgnoreInjectorTests
     private static void WriteFile(string root, string relativePath, string content)
     {
         var path = Path.Combine(root, relativePath);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        _ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, content);
     }
 
@@ -198,6 +211,7 @@ public class PagefindIgnoreInjectorTests
     /// <param name="root">Scratch root.</param>
     /// <param name="relativePath">Path relative to <paramref name="root"/>.</param>
     /// <returns>File contents.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string ReadFile(string root, string relativePath) =>
         File.ReadAllText(Path.Combine(root, relativePath));
 
@@ -208,11 +222,9 @@ public class PagefindIgnoreInjectorTests
     private static int CountOccurrences(string haystack, string needle)
     {
         var count = 0;
-        var index = 0;
-        while ((index = haystack.IndexOf(needle, index, StringComparison.Ordinal)) >= 0)
+        for (var index = 0; (index = haystack.IndexOf(needle, index, StringComparison.Ordinal)) >= 0; index += needle.Length)
         {
             count++;
-            index += needle.Length;
         }
 
         return count;
@@ -226,8 +238,8 @@ public class PagefindIgnoreInjectorTests
         {
             Root = Path.Combine(
                 Path.GetTempPath(),
-                "smkd-pf-inject-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(Root);
+                $"smkd-pf-inject-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch root.</summary>

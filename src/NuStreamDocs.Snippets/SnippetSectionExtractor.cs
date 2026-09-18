@@ -7,11 +7,7 @@ using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Snippets;
 
-/// <summary>
-/// Extracts snippet sections delimited by
-/// <c>&lt;!-- @section name --&gt;</c> ... <c>&lt;!-- @endsection --&gt;</c>
-/// markers.
-/// </summary>
+/// <summary>Extracts snippet sections delimited by <c>&lt;!-- @section name --&gt;</c> ... <c>&lt;!-- @endsection --&gt;</c> markers.</summary>
 internal static class SnippetSectionExtractor
 {
     /// <summary>Length of the trailing <c>\r\n</c> line terminator stripped from a marker line.</summary>
@@ -32,7 +28,7 @@ internal static class SnippetSectionExtractor
     /// <param name="bodyStart">Byte offset where the section body begins (immediately after the open marker line).</param>
     /// <param name="bodyLength">Byte length of the section body (excluding the end marker line).</param>
     /// <returns>True when the section was found.</returns>
-    public static bool TryFind(
+    internal static bool TryFind(
         ReadOnlySpan<byte> source,
         ReadOnlySpan<byte> section,
         out int bodyStart,

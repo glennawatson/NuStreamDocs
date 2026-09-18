@@ -56,7 +56,8 @@ internal sealed class ExternalAssetRegistry
     /// <summary>Returns the local path bytes for <paramref name="urlBytes"/>, registering a new entry on first sight.</summary>
     /// <param name="urlBytes">External URL bytes.</param>
     /// <returns>Forward-slash relative path bytes under the output root (e.g. <c>assets/external/3a7f0d.png</c>).</returns>
-    public byte[] GetOrAdd(ReadOnlySpan<byte> urlBytes)
+    /// <exception cref="ArgumentException">Thrown when <c>urlBytes.IsEmpty</c>.</exception>
+    internal byte[] GetOrAdd(ReadOnlySpan<byte> urlBytes)
     {
         if (urlBytes.IsEmpty)
         {
@@ -66,12 +67,12 @@ internal sealed class ExternalAssetRegistry
         // Look up using a temporary copy to honor the ByteArrayComparer contract; the factory
         // only fires on first sight so the local-path alloc only pays for registered URLs.
         byte[] key = [.. urlBytes];
-        return _urlToLocal.GetOrAdd(key, static (k, dir) => BuildLocalPathBytes(k, dir), _assetDirectoryBytes);
+        return _urlToLocal.GetOrAdd(key, BuildLocalPathBytes, _assetDirectoryBytes);
     }
 
     /// <summary>Gets a snapshot of the registered <c>(url, localPath)</c> byte pairs.</summary>
     /// <returns>Snapshot array; both entries are UTF-8 byte arrays the caller must not mutate.</returns>
-    public (byte[] Url, byte[] LocalPath)[] EntriesSnapshot()
+    internal (byte[] Url, byte[] LocalPath)[] EntriesSnapshot()
     {
         KeyValuePair<byte[], byte[]>[] snapshot = [.. _urlToLocal];
         var result = new (byte[] Url, byte[] LocalPath)[snapshot.Length];
@@ -85,7 +86,7 @@ internal sealed class ExternalAssetRegistry
 
     /// <summary>Gets a snapshot of just the registered URLs as UTF-8 byte arrays.</summary>
     /// <returns>Right-sized URL byte-array snapshot.</returns>
-    public byte[][] UrlsSnapshot() => [.. _urlToLocal.Keys];
+    internal byte[][] UrlsSnapshot() => [.. _urlToLocal.Keys];
 
     /// <summary>Computes the local-path bytes for <paramref name="urlBytes"/> from its xxHash3 digest and original extension.</summary>
     /// <param name="urlBytes">External URL bytes.</param>
@@ -94,8 +95,8 @@ internal sealed class ExternalAssetRegistry
     private static byte[] BuildLocalPathBytes(byte[] urlBytes, byte[] assetDirectoryBytes)
     {
         Span<byte> digest = stackalloc byte[HashByteLength];
-        XxHash3.Hash(urlBytes, digest);
-        Span<byte> hexBuf = stackalloc byte[HashByteLength * 2];
+        _ = XxHash3.Hash(urlBytes, digest);
+        Span<byte> hexBuf = stackalloc byte[HashByteLength * HexCharsPerByte];
         WriteLowerHex(digest, hexBuf);
         var extBytes = ExtractExtensionBytes(urlBytes);
 
@@ -104,10 +105,11 @@ internal sealed class ExternalAssetRegistry
         var write = 0;
         assetDirectoryBytes.CopyTo(output, write);
         write += assetDirectoryBytes.Length;
-        output[write++] = (byte)'/';
+        output[write] = (byte)'/';
+        write++;
         hexBuf.CopyTo(output.AsSpan(write));
         write += hexBuf.Length;
-        if (extBytes.Length > 0)
+        if (!extBytes.IsEmpty)
         {
             extBytes.CopyTo(output.AsSpan(write));
         }
@@ -140,7 +142,7 @@ internal sealed class ExternalAssetRegistry
             return default;
         }
 
-        var afterScheme = schemeEnd + 3;
+        var afterScheme = schemeEnd + "://"u8.Length;
         var pathStart = afterScheme + urlBytes[afterScheme..].IndexOf((byte)'/');
         if (pathStart <= afterScheme)
         {

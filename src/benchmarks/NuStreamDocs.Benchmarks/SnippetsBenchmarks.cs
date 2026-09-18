@@ -2,8 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
-using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -17,6 +17,7 @@ namespace NuStreamDocs.Benchmarks;
 /// syntax, and a no-marker pass-through — pin the cost of the three paths real
 /// pages take through the rewriter.
 /// </remarks>
+[DebuggerDisplay("SnippetsBenchmarks: baseDir={_baseDir}, wholeFileSource={_wholeFileSource}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class SnippetsBenchmarks
@@ -24,8 +25,11 @@ public class SnippetsBenchmarks
     /// <summary>Per-fixture include count.</summary>
     private const int Repetitions = 100;
 
+    /// <summary>Headroom for expanded snippet content.</summary>
+    private const int OutputExpansionFactor = 2;
+
     /// <summary>Temp directory hosting the snippet files for the lifetime of the benchmark.</summary>
-    private string _baseDir = string.Empty;
+    private DirectoryPath _baseDir;
 
     /// <summary>Pre-built whole-file <c>--8&lt;-- "file"</c> source.</summary>
     private byte[] _wholeFileSource = [];
@@ -39,6 +43,9 @@ public class SnippetsBenchmarks
     /// <summary>Configured plugin instance.</summary>
     private SnippetsPlugin _plugin = null!;
 
+    /// <summary>Gets the page path used for snippet resolution.</summary>
+    private static FilePath PagePath => "page.md";
+
     /// <summary>Allocates the snippet fixtures + plugin.</summary>
     /// <returns>Task tracking the async configure call.</returns>
     [GlobalSetup]
@@ -46,8 +53,8 @@ public class SnippetsBenchmarks
     {
         _baseDir = Path.Combine(
             Path.GetTempPath(),
-            "smkd-snip-bench-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_baseDir);
+            StringCompose.Concat("smkd-snip-bench-", Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)));
+        _ = Directory.CreateDirectory(_baseDir);
         await File.WriteAllTextAsync(Path.Combine(_baseDir, "whole.md"), "Hello from the whole-file snippet.\n")
             .ConfigureAwait(false);
         await File.WriteAllTextAsync(
@@ -55,9 +62,9 @@ public class SnippetsBenchmarks
                 "Header.\n<!-- @section example -->\nSection body that gets spliced.\n<!-- @endsection -->\nFooter.\n")
             .ConfigureAwait(false);
 
-        _wholeFileSource = BuildRepeated("--8<-- \"whole.md\"\n");
-        _sectionSource = BuildRepeated("--8<-- \"sectioned.md#example\"\n");
-        _noMarkerSource = BuildRepeated("Plain markdown line with no include directive anywhere here.\n");
+        _wholeFileSource = BuildRepeated("--8<-- \"whole.md\"\n"u8);
+        _sectionSource = BuildRepeated("--8<-- \"sectioned.md#example\"\n"u8);
+        _noMarkerSource = BuildRepeated("Plain markdown line with no include directive anywhere here.\n"u8);
 
         _plugin = new(_baseDir);
 
@@ -71,7 +78,7 @@ public class SnippetsBenchmarks
     [GlobalCleanup]
     public void Cleanup()
     {
-        if (string.IsNullOrEmpty(_baseDir) || !Directory.Exists(_baseDir))
+        if (_baseDir.IsEmpty || !Directory.Exists(_baseDir))
         {
             return;
         }
@@ -91,8 +98,8 @@ public class SnippetsBenchmarks
     [Benchmark]
     public int WholeFileInclude()
     {
-        using var rental = PageBuilderPool.Rent(_wholeFileSource.Length * 2);
-        PagePreRenderContext ctx = new("page.md", _wholeFileSource, rental.Writer);
+        using var rental = PageBuilderPool.Rent(_wholeFileSource.Length * OutputExpansionFactor);
+        PagePreRenderContext ctx = new(PagePath, _wholeFileSource, rental.Writer);
         _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
@@ -102,8 +109,8 @@ public class SnippetsBenchmarks
     [Benchmark]
     public int SectionInclude()
     {
-        using var rental = PageBuilderPool.Rent(_sectionSource.Length * 2);
-        PagePreRenderContext ctx = new("page.md", _sectionSource, rental.Writer);
+        using var rental = PageBuilderPool.Rent(_sectionSource.Length * OutputExpansionFactor);
+        PagePreRenderContext ctx = new(PagePath, _sectionSource, rental.Writer);
         _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
@@ -113,8 +120,8 @@ public class SnippetsBenchmarks
     [Benchmark]
     public int NoMarkerPassThrough()
     {
-        using var rental = PageBuilderPool.Rent(_noMarkerSource.Length * 2);
-        PagePreRenderContext ctx = new("page.md", _noMarkerSource, rental.Writer);
+        using var rental = PageBuilderPool.Rent(_noMarkerSource.Length * OutputExpansionFactor);
+        PagePreRenderContext ctx = new(PagePath, _noMarkerSource, rental.Writer);
         _plugin.PreRender(in ctx);
         return rental.Writer.WrittenCount;
     }
@@ -122,13 +129,12 @@ public class SnippetsBenchmarks
     /// <summary>Stamps <paramref name="block"/> <see cref="Repetitions"/> times into a UTF-8 buffer.</summary>
     /// <param name="block">Source fragment.</param>
     /// <returns>Pre-built fixture bytes.</returns>
-    private static byte[] BuildRepeated(string block)
+    private static byte[] BuildRepeated(ReadOnlySpan<byte> block)
     {
-        var blockBytes = Encoding.UTF8.GetBytes(block);
-        var output = new byte[blockBytes.Length * Repetitions];
+        var output = new byte[block.Length * Repetitions];
         for (var i = 0; i < Repetitions; i++)
         {
-            blockBytes.AsSpan().CopyTo(output.AsSpan(i * blockBytes.Length));
+            block.CopyTo(output.AsSpan(i * block.Length));
         }
 
         return output;

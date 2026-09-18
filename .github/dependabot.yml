@@ -38,8 +38,6 @@ updates:
       test-stack:
         patterns:
           - "TUnit*"
-          - "Verify.TUnit"
-          - "NSubstitute"
           - "Microsoft.Testing.*"
           - "Microsoft.Extensions.TimeProvider.Testing"
       microsoft:

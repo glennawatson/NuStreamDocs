@@ -35,6 +35,6 @@ public static class NimLexer
             "if elif else when case of for while do block break continue return yield raise try except finally discard import from include as in notin is isnot and or not xor div mod shl shr echo"u8),
         Operators = OperatorAlternationFactory.SplitLongestFirst(
             "..= <<= >>= && || .. -> => <= >= == != += -= *= /= %= + - * / % & | ^ ! ~ = < > ?"u8),
-        Punctuation = CFamilyShared.AnnotationColonPunctuation
+        Punctuation = CFamilyShared.AnnotationColonPunctuation,
     });
 }

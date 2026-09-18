@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.SmartSymbols</PackageId>
     <Description>Auto-substitute typographic symbols in your NuStreamDocs markdown — copyright, registered, trademark, plus-minus, arrows, and common fractions — without needing to type the Unicode characters yourself.</Description>
     <RootNamespace>NuStreamDocs.SmartSymbols</RootNamespace>

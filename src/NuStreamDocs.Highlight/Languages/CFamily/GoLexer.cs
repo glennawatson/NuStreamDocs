@@ -68,7 +68,7 @@ public static class GoLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = PunctuationSet,
             IntegerSuffix = NumericSuffixSet,
@@ -77,7 +77,7 @@ public static class GoLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = true,
             WhitespaceIncludesNewlines = true,
-            SpecialString = backtickRaw
+            SpecialString = backtickRaw,
         };
 
         return CFamilyRules.CreateLexer(config);

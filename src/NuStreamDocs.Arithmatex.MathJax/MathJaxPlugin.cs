@@ -4,17 +4,25 @@
 
 using System.Buffers;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Arithmatex.MathJax;
 
-/// <summary>
-/// Ships the MathJax 3 runtime to every rendered page so <c>ArithmatexPlugin</c> output is
-/// typeset client-side.
-/// </summary>
+/// <summary>Ships the MathJax 3 runtime to every rendered page so <c>ArithmatexPlugin</c> output is typeset client-side.</summary>
+[System.Diagnostics.DebuggerDisplay("MathJaxPlugin: {Name}")]
 public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
 {
+    /// <summary>Formats the MathJax options before the loader executes.</summary>
+    private static readonly CompositeFormat ConfigTemplate = CompositeFormat.Parse(
+        @"<script>window.MathJax={{tex:{{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']],"
+        + "processEscapes:true,processEnvironments:true}},"
+        + "options:{{ignoreHtmlClass:'{0}',processHtmlClass:'{1}'}}}};</script>");
+
+    /// <summary>Formats the asynchronous MathJax loader element.</summary>
+    private static readonly CompositeFormat LoaderTemplate = CompositeFormat.Parse("<script src=\"{0}\" async></script>");
+
     /// <summary>Pre-encoded UTF-8 head fragment computed once at construction.</summary>
     private readonly byte[] _headExtraBytes;
 
@@ -32,6 +40,7 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
     public ReadOnlySpan<byte> Name => "mathjax"u8;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(_headExtraBytes);
 
     /// <summary>Builds the inline-config + async-loader head fragment for the given options.</summary>
@@ -53,12 +62,6 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
         // Inline math delimiters mirror Arithmatex's output: `\(…\)` for inline, `\[…\]` for
         // display. Escape only the chars that matter inside a single-quoted JS string literal
         // ('\\' for backslash, "'" for the quote itself).
-        const string ConfigTemplate =
-            @"<script>window.MathJax={{tex:{{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]," +
-            "processEscapes:true,processEnvironments:true}}," +
-            "options:{{ignoreHtmlClass:'{0}',processHtmlClass:'{1}'}}}};</script>";
-        const string LoaderTemplate = "<script src=\"{0}\" async></script>";
-
         var config = string.Format(
             CultureInfo.InvariantCulture,
             ConfigTemplate,
@@ -74,12 +77,14 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
     /// <summary>Escapes the four characters meaningful inside a single-quoted JS string literal: backslash and apostrophe.</summary>
     /// <param name="value">Source string.</param>
     /// <returns>Escaped form safe to drop between single quotes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string EscapeJsString(string value) =>
         value.Replace("\\", @"\\", StringComparison.Ordinal).Replace("'", "\\'", StringComparison.Ordinal);
 
     /// <summary>Escapes the two characters meaningful inside a double-quoted HTML attribute value: ampersand and double-quote.</summary>
     /// <param name="value">Source URL/string.</param>
     /// <returns>Escaped form safe to drop between double quotes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string EscapeAttribute(string value) =>
         value.Replace("&", "&amp;", StringComparison.Ordinal).Replace("\"", "&quot;", StringComparison.Ordinal);
 }

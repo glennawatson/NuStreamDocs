@@ -4,12 +4,14 @@
 
 using System.Buffers;
 using System.Buffers.Text;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Transitions;
 
 /// <summary>Ships the client router script and the head-extra (config meta + script tag) that turn a NuStreamDocs site into an instant-navigation, view-transitioned SPA.</summary>
+[System.Diagnostics.DebuggerDisplay("TransitionsPlugin: {Name}")]
 public sealed class TransitionsPlugin : IPlugin, IHeadExtraProvider, IStaticAssetProvider
 {
     /// <summary>Maximum digits the <c>delay</c> value needs when formatted.</summary>
@@ -50,6 +52,7 @@ public sealed class TransitionsPlugin : IPlugin, IHeadExtraProvider, IStaticAsse
     public (FilePath Path, byte[] Bytes)[] StaticAssets { get; }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(_headExtra);
 
     /// <summary>Builds the head-extra bytes: the <c>nstd:router</c> config meta tag followed by the deferred router script tag.</summary>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Theme.Common</PackageId>
     <Description>Shared building blocks for NuStreamDocs theme plugins. You don't normally reference this directly — the theme you're using brings it in for you.</Description>
     <RootNamespace>NuStreamDocs.Theme.Common</RootNamespace>

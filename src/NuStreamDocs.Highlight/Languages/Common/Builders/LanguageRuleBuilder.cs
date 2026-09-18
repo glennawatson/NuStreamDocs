@@ -12,65 +12,62 @@ internal static class LanguageRuleBuilder
     /// <summary>Builds the ordered rule list shared by the C# / TypeScript family.</summary>
     /// <param name="rules">Language-specific matcher / classification set.</param>
     /// <returns>Ordered rule list.</returns>
-    public static LexerRule[] BuildCStyleRules(in CStyleRuleSet rules)
+    internal static LexerRule[] BuildCStyleRules(in CStyleRuleSet rules)
     {
-        var count = 15;
-        if (rules.DocComment is not null)
-        {
-            count++;
-        }
-
-        if (rules.Preprocessor is not null)
-        {
-            count++;
-        }
-
-        if (rules.SpecialString is not null)
-        {
-            count++;
-        }
-
-        if (rules.CharacterLiteral is not null)
-        {
-            count++;
-        }
-
-        var output = new LexerRule[count];
+        var output = new LexerRule[CountCStyleRules(in rules)];
         var index = 0;
-        output[index++] = rules.Whitespace;
+        output[index] = rules.Whitespace;
+        index++;
         if (rules.DocComment is { } docComment)
         {
-            output[index++] = docComment;
+            output[index] = docComment;
+            index++;
         }
 
-        output[index++] = rules.LineComment;
-        output[index++] = rules.BlockComment;
+        output[index] = rules.LineComment;
+        index++;
+        output[index] = rules.BlockComment;
+        index++;
         if (rules.Preprocessor is { } preprocessor)
         {
-            output[index++] = preprocessor;
+            output[index] = preprocessor;
+            index++;
         }
 
         if (rules.SpecialString is { } specialString)
         {
-            output[index++] = specialString;
+            output[index] = specialString;
+            index++;
         }
 
-        output[index++] = rules.DoubleString;
-        output[index++] = rules.SingleString;
+        output[index] = rules.DoubleString;
+        index++;
+        output[index] = rules.SingleString;
+        index++;
         if (rules.CharacterLiteral is { } characterLiteral)
         {
-            output[index++] = characterLiteral;
+            output[index] = characterLiteral;
+            index++;
         }
 
-        output[index++] = rules.HexNumber;
-        output[index++] = rules.FloatNumber;
-        output[index++] = rules.IntegerNumber;
-        output[index++] = rules.KeywordConstant;
-        output[index++] = rules.KeywordType;
-        output[index++] = rules.KeywordDeclaration;
-        output[index++] = rules.Keyword;
-        output[index++] = rules.Identifier;
-        output[index++] = rules.Operator;
+        output[index] = rules.HexNumber;
+        index++;
+        output[index] = rules.FloatNumber;
+        index++;
+        output[index] = rules.IntegerNumber;
+        index++;
+        output[index] = rules.KeywordConstant;
+        index++;
+        output[index] = rules.KeywordType;
+        index++;
+        output[index] = rules.KeywordDeclaration;
+        index++;
+        output[index] = rules.Keyword;
+        index++;
+        output[index] = rules.Identifier;
+        index++;
+        output[index] = rules.Operator;
+        index++;
         output[index] = rules.Punctuation;
         return output;
     }
@@ -78,6 +75,19 @@ internal static class LanguageRuleBuilder
     /// <summary>Builds a state table for a single-state lexer.</summary>
     /// <param name="rules">Root-state rules.</param>
     /// <returns>State table indexed by state id; <c>states[<see cref="Lexer.RootStateId"/>]</c> holds <paramref name="rules"/>.</returns>
-    public static LexerRule[][] BuildSingleState(LexerRule[] rules) =>
+    internal static LexerRule[][] BuildSingleState(LexerRule[] rules) =>
         [rules];
+
+    /// <summary>Counts the required and optional C-style rules.</summary>
+    /// <param name="rules">Rules to count.</param>
+    /// <returns>The number of rules present.</returns>
+    private static int CountCStyleRules(in CStyleRuleSet rules)
+    {
+        const int RequiredRuleCount = 15;
+        return RequiredRuleCount
+            + (rules.DocComment is null ? 0 : 1)
+            + (rules.Preprocessor is null ? 0 : 1)
+            + (rules.SpecialString is null ? 0 : 1)
+            + (rules.CharacterLiteral is null ? 0 : 1);
+    }
 }

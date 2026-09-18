@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Building;
 
@@ -10,47 +11,49 @@ namespace NuStreamDocs.Layouts;
 /// <summary>Builder-extension surface for the layouts plugin.</summary>
 public static class DocBuilderLayoutsExtensions
 {
-    /// <summary>Registers <see cref="LayoutsPlugin"/> with the default option set.</summary>
-    /// <param name="builder">Builder.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder) => builder.UsePlugin(new LayoutsPlugin());
-
-    /// <summary>Registers <see cref="LayoutsPlugin"/> with options-customization.</summary>
-    /// <param name="builder">Builder.</param>
-    /// <param name="configure">Function that receives <see cref="LayoutsOptions.Default"/> and returns the customized set.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder, Func<LayoutsOptions, LayoutsOptions> configure)
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to configure.</param>
+    extension(DocBuilder builder)
     {
-        var options = configure(LayoutsOptions.Default);
-        return builder.UsePlugin(new LayoutsPlugin(options));
+        /// <summary>Registers <see cref="LayoutsPlugin"/> with the default option set.</summary>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseLayouts() => builder.UsePlugin(new LayoutsPlugin());
+
+        /// <summary>Registers <see cref="LayoutsPlugin"/> with options-customization.</summary>
+        /// <param name="configure">Function that receives <see cref="LayoutsOptions.Default"/> and returns the customized set.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UseLayouts(Func<LayoutsOptions, LayoutsOptions> configure)
+        {
+            var options = configure(LayoutsOptions.Default);
+            return builder.UsePlugin(new LayoutsPlugin(options));
+        }
+
+        /// <summary>Registers <see cref="LayoutsPlugin"/> with options-customization and a logger.</summary>
+        /// <param name="configure">Options customization.</param>
+        /// <param name="logger">Logger that receives diagnostic warnings.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UseLayouts(
+            Func<LayoutsOptions, LayoutsOptions> configure,
+            ILogger logger)
+        {
+            var options = configure(LayoutsOptions.Default);
+            return builder.UsePlugin(new LayoutsPlugin(options, logger));
+        }
+
+        /// <summary>Registers <see cref="LayoutsPlugin"/> with pre-built options and a logger.</summary>
+        /// <param name="options">Resolved options.</param>
+        /// <param name="logger">Logger.</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseLayouts(LayoutsOptions options, ILogger logger) =>
+            builder.UsePlugin(new LayoutsPlugin(options, logger));
+
+        /// <summary>Registers <see cref="LayoutsPlugin"/> with pre-built options and no logger.</summary>
+        /// <param name="options">Resolved options.</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseLayouts(LayoutsOptions options) =>
+            builder.UseLayouts(options, NullLogger.Instance);
     }
-
-    /// <summary>Registers <see cref="LayoutsPlugin"/> with options-customization and a logger.</summary>
-    /// <param name="builder">Builder.</param>
-    /// <param name="configure">Options customization.</param>
-    /// <param name="logger">Logger that receives diagnostic warnings.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(
-        this DocBuilder builder,
-        Func<LayoutsOptions, LayoutsOptions> configure,
-        ILogger logger)
-    {
-        var options = configure(LayoutsOptions.Default);
-        return builder.UsePlugin(new LayoutsPlugin(options, logger));
-    }
-
-    /// <summary>Registers <see cref="LayoutsPlugin"/> with pre-built options and a logger.</summary>
-    /// <param name="builder">Builder.</param>
-    /// <param name="options">Resolved options.</param>
-    /// <param name="logger">Logger.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder, LayoutsOptions options, ILogger logger) =>
-        builder.UsePlugin(new LayoutsPlugin(options, logger));
-
-    /// <summary>Registers <see cref="LayoutsPlugin"/> with pre-built options and no logger.</summary>
-    /// <param name="builder">Builder.</param>
-    /// <param name="options">Resolved options.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseLayouts(this DocBuilder builder, LayoutsOptions options) =>
-        builder.UseLayouts(options, NullLogger.Instance);
 }

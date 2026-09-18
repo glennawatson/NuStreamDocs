@@ -24,7 +24,7 @@ public class DocBuilderNavExtensionsCoverageTests
     [Test]
     public async Task UseNavConfigureLogger()
     {
-        var b = new DocBuilder().UseNav(o => o, NullLogger.Instance);
+        var b = new DocBuilder().UseNav(static o => o, NullLogger.Instance);
         await Assert.That(b).IsNotNull();
     }
 

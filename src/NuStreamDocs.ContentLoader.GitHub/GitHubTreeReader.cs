@@ -21,7 +21,7 @@ internal static class GitHubTreeReader
     /// <param name="routePrefix">Local subdirectory the files are mounted under (empty = repo-relative).</param>
     /// <returns>One entry per Markdown file found.</returns>
     /// <exception cref="ContentLoaderException">When the response is not valid JSON.</exception>
-    public static RawDocumentEntry[] Read(
+    internal static RawDocumentEntry[] Read(
         byte[] treeJson,
         in GitHubRepoRef repo,
         ReadOnlySpan<byte> sourcePath,
@@ -158,13 +158,13 @@ internal static class GitHubTreeReader
         }
 
         ReadOnlySpan<byte> resolved = path;
-        if (sourcePrefix.Length > 0 && !resolved.StartsWith(sourcePrefix))
+        if (!sourcePrefix.IsEmpty && !resolved.StartsWith(sourcePrefix))
         {
             return false;
         }
 
-        var relative = sourcePrefix.Length > 0 ? resolved[sourcePrefix.Length..] : resolved;
-        var route = routeBase.Length > 0 ? [.. routeBase, (byte)'/', .. relative] : relative.ToArray();
+        var relative = !sourcePrefix.IsEmpty ? resolved[sourcePrefix.Length..] : resolved;
+        byte[] route = !routeBase.IsEmpty ? [.. routeBase, (byte)'/', .. relative] : [.. relative];
         entry = new(GitHubUrls.RawFileUrl(in repo, resolved), new(Encoding.UTF8.GetString(route)));
         return true;
     }
@@ -173,8 +173,8 @@ internal static class GitHubTreeReader
     /// <param name="path">Repository-relative path bytes.</param>
     /// <returns><see langword="true"/> for a Markdown file.</returns>
     private static bool EndsWithMarkdown(ReadOnlySpan<byte> path) =>
-        path.Length >= MarkdownSuffixLength &&
-        AsciiByteHelpers.EqualsIgnoreAsciiCase(path[^MarkdownSuffixLength..], ".md"u8);
+        path.Length >= MarkdownSuffixLength
+        && AsciiByteHelpers.EqualsIgnoreAsciiCase(path[^MarkdownSuffixLength..], ".md"u8);
 
     /// <summary>Normalizes the source-path prefix to <c>{path}/</c> bytes (empty stays empty).</summary>
     /// <param name="sourcePath">Configured source path.</param>

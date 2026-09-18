@@ -10,13 +10,20 @@ namespace NuStreamDocs.Search.Pagefind.Tests;
 /// <summary>Behavior tests for <c>PagefindOptionsExtensions</c>.</summary>
 public class PagefindOptionsExtensionsTests
 {
+    /// <summary>Prefix for release-note pages.</summary>
+    private const string ChangelogPrefix = "changelog/";
+
+    /// <summary>Gets the section-priority fixture shared by the byte overloads.</summary>
+    private static ReadOnlySpan<byte> ApiSectionPriority => "api/:-200"u8;
+
     /// <summary><c>WithSearchableFrontmatterKeys(string[])</c> replaces the existing list, encoding to UTF-8.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WithSearchableFrontmatterKeysStringReplaces()
     {
+        const int keyCount = 2;
         var updated = PagefindOptions.Default.WithSearchableFrontmatterKeys("tags", "summary");
-        await Assert.That(updated.SearchableFrontmatterKeys.Length).IsEqualTo(2);
+        await Assert.That(updated.SearchableFrontmatterKeys.Length).IsEqualTo(keyCount);
         await Assert.That(Encoding.UTF8.GetString(updated.SearchableFrontmatterKeys[0])).IsEqualTo("tags");
     }
 
@@ -35,10 +42,11 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task AddSearchableFrontmatterKeysAppends()
     {
+        const int keyCount = 3;
         var seeded = PagefindOptions.Default.WithSearchableFrontmatterKeys("tags");
         var afterString = seeded.AddSearchableFrontmatterKeys("summary");
         var afterBytes = afterString.AddSearchableFrontmatterKeys([[.. "author"u8]]);
-        await Assert.That(afterBytes.SearchableFrontmatterKeys.Length).IsEqualTo(3);
+        await Assert.That(afterBytes.SearchableFrontmatterKeys.Length).IsEqualTo(keyCount);
     }
 
     /// <summary><c>ClearSearchableFrontmatterKeys</c> empties the list.</summary>
@@ -66,9 +74,10 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task UnrelatedKnobsPreserved()
     {
-        var custom = PagefindOptions.Default with { MinTokenLength = 4 };
+        const int minimumLength = 4;
+        var custom = PagefindOptions.Default with { MinTokenLength = minimumLength };
         var updated = custom.AddSearchableFrontmatterKeys("tags");
-        await Assert.That(updated.MinTokenLength).IsEqualTo(4);
+        await Assert.That(updated.MinTokenLength).IsEqualTo(minimumLength);
     }
 
     /// <summary><c>WithSectionPriorities(string)</c> encodes UTF-8.</summary>
@@ -85,7 +94,7 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task WithSectionPrioritiesBytesStoresVerbatim()
     {
-        byte[] value = [.. "api/:-200"u8];
+        byte[] value = [.. ApiSectionPriority];
         var updated = PagefindOptions.Default.WithSectionPriorities(value);
         await Assert.That(updated.SectionPriorities).IsSameReferenceAs(value);
     }
@@ -95,8 +104,8 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task WithSectionPrioritiesSpanAcceptsU8Literal()
     {
-        var updated = PagefindOptions.Default.WithSectionPriorities("api/:-200"u8);
-        await Assert.That(updated.SectionPriorities.AsSpan().SequenceEqual("api/:-200"u8)).IsTrue();
+        var updated = PagefindOptions.Default.WithSectionPriorities(ApiSectionPriority);
+        await Assert.That(updated.SectionPriorities.AsSpan().SequenceEqual(ApiSectionPriority)).IsTrue();
     }
 
     /// <summary><c>WithOutputSubdirectory</c> replaces the subdirectory.</summary>
@@ -113,8 +122,9 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task WithMinTokenLengthReplaces()
     {
-        var updated = PagefindOptions.Default.WithMinTokenLength(7);
-        await Assert.That(updated.MinTokenLength).IsEqualTo(7);
+        const int minimumLength = 7;
+        var updated = PagefindOptions.Default.WithMinTokenLength(minimumLength);
+        await Assert.That(updated.MinTokenLength).IsEqualTo(minimumLength);
     }
 
     /// <summary><c>WithRunCli</c> toggles the flag.</summary>
@@ -147,10 +157,11 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task WithExcludePathPrefixesStringReplaces()
     {
-        var updated = PagefindOptions.Default.WithExcludePathPrefixes("api/", "changelog/");
-        await Assert.That(updated.ExcludePathPrefixes.Length).IsEqualTo(2);
+        const int prefixCount = 2;
+        var updated = PagefindOptions.Default.WithExcludePathPrefixes("api/", ChangelogPrefix);
+        await Assert.That(updated.ExcludePathPrefixes.Length).IsEqualTo(prefixCount);
         await Assert.That(Encoding.UTF8.GetString(updated.ExcludePathPrefixes[0])).IsEqualTo("api/");
-        await Assert.That(Encoding.UTF8.GetString(updated.ExcludePathPrefixes[1])).IsEqualTo("changelog/");
+        await Assert.That(Encoding.UTF8.GetString(updated.ExcludePathPrefixes[1])).IsEqualTo(ChangelogPrefix);
     }
 
     /// <summary><c>WithExcludePathPrefixes(byte[][])</c> stores the supplied bytes verbatim.</summary>
@@ -168,10 +179,11 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task AddExcludePathPrefixesAppends()
     {
+        const int prefixCount = 3;
         var afterString = PagefindOptions.Default.AddExcludePathPrefixes("api/");
         var afterBytes = afterString.AddExcludePathPrefixes([[.. "changelog/"u8]]);
         var afterSpan = afterBytes.AddExcludePathPrefixes("internal/"u8);
-        await Assert.That(afterSpan.ExcludePathPrefixes.Length).IsEqualTo(3);
+        await Assert.That(afterSpan.ExcludePathPrefixes.Length).IsEqualTo(prefixCount);
         await Assert.That(afterSpan.ExcludePathPrefixes[2].AsSpan().SequenceEqual("internal/"u8)).IsTrue();
     }
 
@@ -180,10 +192,12 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task AddExcludePathPrefixesEmptyIsNoOp()
     {
+        byte[][] emptyBytes = [];
+        ApiCompatString[] emptyText = [];
         var seeded = PagefindOptions.Default.WithExcludePathPrefixes("api/");
-        await Assert.That(seeded.AddExcludePathPrefixes(Array.Empty<byte[]>()).ExcludePathPrefixes)
+        await Assert.That(seeded.AddExcludePathPrefixes(emptyBytes).ExcludePathPrefixes)
             .IsSameReferenceAs(seeded.ExcludePathPrefixes);
-        await Assert.That(seeded.AddExcludePathPrefixes(Array.Empty<ApiCompatString>()).ExcludePathPrefixes)
+        await Assert.That(seeded.AddExcludePathPrefixes(emptyText).ExcludePathPrefixes)
             .IsSameReferenceAs(seeded.ExcludePathPrefixes);
     }
 
@@ -201,8 +215,9 @@ public class PagefindOptionsExtensionsTests
     [Test]
     public async Task UnrelatedKnobsPreservedAcrossExcludeEdits()
     {
-        var custom = PagefindOptions.Default with { MinTokenLength = 5 };
+        const int minimumLength = 5;
+        var custom = PagefindOptions.Default with { MinTokenLength = minimumLength };
         var updated = custom.AddExcludePathPrefixes("api/");
-        await Assert.That(updated.MinTokenLength).IsEqualTo(5);
+        await Assert.That(updated.MinTokenLength).IsEqualTo(minimumLength);
     }
 }

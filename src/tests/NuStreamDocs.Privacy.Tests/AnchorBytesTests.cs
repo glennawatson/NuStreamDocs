@@ -16,13 +16,19 @@ namespace NuStreamDocs.Privacy.Tests;
 /// </summary>
 public class AnchorBytesTests
 {
+    /// <summary>Hardened Rel Attribute used by the test cases.</summary>
+    private const string HardenedRelAttribute = "rel=\"noopener noreferrer\"";
+
+    /// <summary>Expected Anchor Count used by the test cases.</summary>
+    private const int ExpectedAnchorCount = 2;
+
     /// <summary>External anchor without rel/target gains both attributes when configured.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ExternalAnchorGainsRelAndTarget()
     {
         var output = Rewrite("<a href=\"https://example.com\">x</a>", true, true);
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains(HardenedRelAttribute);
         await Assert.That(output).Contains("target=\"_blank\"");
     }
 
@@ -63,7 +69,7 @@ public class AnchorBytesTests
     public async Task CaseInsensitiveTagAndAttrNames(string html)
     {
         var output = Rewrite(html, true, false);
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains(HardenedRelAttribute);
     }
 
     /// <summary>Existing <c>rel="author"</c> gets <c>noopener noreferrer</c> appended.</summary>
@@ -107,7 +113,7 @@ public class AnchorBytesTests
     public async Task SingleQuotedHrefSupported()
     {
         var output = Rewrite("<a href='https://example.com'>x</a>", true, false);
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains(HardenedRelAttribute);
     }
 
     /// <summary>Whitespace around <c>=</c> is tolerated (matches the regex's <c>\s*=\s*</c>).</summary>
@@ -116,7 +122,7 @@ public class AnchorBytesTests
     public async Task WhitespaceAroundEqualsTolerated()
     {
         var output = Rewrite("<a href = \"https://example.com\">x</a>", true, false);
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains(HardenedRelAttribute);
     }
 
     /// <summary>Multibyte UTF-8 link text and surrounding markup pass through verbatim.</summary>
@@ -128,7 +134,7 @@ public class AnchorBytesTests
         await Assert.That(output).Contains("これは ");
         await Assert.That(output).Contains("テスト 🚀");
         await Assert.That(output).Contains(" です");
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains(HardenedRelAttribute);
     }
 
     /// <summary>Both options off → false return, no rewrite even on external anchor.</summary>
@@ -153,14 +159,12 @@ public class AnchorBytesTests
             true,
             false);
         var occurrences = 0;
-        var idx = 0;
-        while ((idx = output.IndexOf("rel=\"noopener noreferrer\"", idx, StringComparison.Ordinal)) >= 0)
+        for (var idx = 0; (idx = output.IndexOf(HardenedRelAttribute, idx, StringComparison.Ordinal)) >= 0; idx++)
         {
             occurrences++;
-            idx++;
         }
 
-        await Assert.That(occurrences).IsEqualTo(2);
+        await Assert.That(occurrences).IsEqualTo(ExpectedAnchorCount);
     }
 
     /// <summary>Mixed external + internal: only external gets hardened.</summary>
@@ -173,7 +177,7 @@ public class AnchorBytesTests
             true,
             false);
         await Assert.That(output).Contains("href=\"/about\">i</a>");
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains(HardenedRelAttribute);
 
         // The internal anchor should not have rel.
         var internalIdx = output.IndexOf("\"/about\"", StringComparison.Ordinal);
@@ -199,7 +203,7 @@ public class AnchorBytesTests
 
         // We can't validate href, so the scan won't recognize this as external.
         var output = Rewrite(Html, true, true);
-        await Assert.That(output.Contains("rel=\"noopener noreferrer\"", StringComparison.Ordinal)).IsFalse();
+        await Assert.That(output.Contains(HardenedRelAttribute, StringComparison.Ordinal)).IsFalse();
     }
 
     /// <summary>HTTP-scheme href is treated as external (we add hardening even before any UpgradeMixedContent).</summary>
@@ -208,7 +212,7 @@ public class AnchorBytesTests
     public async Task HttpSchemeIsExternal()
     {
         var output = Rewrite("<a href=\"http://example.com\">x</a>", true, false);
-        await Assert.That(output).Contains("rel=\"noopener noreferrer\"");
+        await Assert.That(output).Contains(HardenedRelAttribute);
     }
 
     /// <summary>Mailto / data / javascript schemes are NOT external (regex required <c>https?://</c>).</summary>

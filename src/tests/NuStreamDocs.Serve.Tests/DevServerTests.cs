@@ -5,6 +5,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Builder;
 
 namespace NuStreamDocs.Serve.Tests;
@@ -19,12 +20,24 @@ namespace NuStreamDocs.Serve.Tests;
 /// </remarks>
 public class DevServerTests
 {
+    /// <summary>Index request path.</summary>
+    private const string IndexRequestPath = "/index.html";
+
+    /// <summary>Ip host port.</summary>
+    private const int IpHostPort = 9100;
+
+    /// <summary>Dns host port.</summary>
+    private const int DnsHostPort = 1234;
+
+    /// <summary>Index file name.</summary>
+    private const string IndexFileName = "index.html";
+
     /// <summary>Requests for missing paths return the synthesised 404.html body with a 404 status.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task NotFoundFallsBackTo404HtmlWithNotFoundStatus()
     {
-        using var fixture = await DevServerFixture.StartAsync(SeedHomeAndNotFound);
+        await using var fixture = await DevServerFixture.StartAsync(SeedHomeAndNotFound);
 
         using var response = await fixture.Client.GetAsync(new Uri("/does-not-exist", UriKind.Relative));
         var body = await response.Content.ReadAsStringAsync();
@@ -38,9 +51,9 @@ public class DevServerTests
     [Test]
     public async Task ExistingFileServedWith200()
     {
-        using var fixture = await DevServerFixture.StartAsync(SeedHomeOnly);
+        await using var fixture = await DevServerFixture.StartAsync(SeedHomeOnly);
 
-        using var response = await fixture.Client.GetAsync(new Uri("/index.html", UriKind.Relative));
+        using var response = await fixture.Client.GetAsync(new Uri(IndexRequestPath, UriKind.Relative));
         var body = await response.Content.ReadAsStringAsync();
 
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
@@ -52,7 +65,7 @@ public class DevServerTests
     [Test]
     public async Task DirectoryRootServesIndexHtml()
     {
-        using var fixture = await DevServerFixture.StartAsync(SeedRootMarker);
+        await using var fixture = await DevServerFixture.StartAsync(SeedRootMarker);
 
         using var response = await fixture.Client.GetAsync(new Uri("/", UriKind.Relative));
         var body = await response.Content.ReadAsStringAsync();
@@ -66,9 +79,9 @@ public class DevServerTests
     [Test]
     public async Task LiveReloadDisabledSkipsScriptInjection()
     {
-        using var fixture = await DevServerFixture.StartAsync(SeedHelloBody, false);
+        await using var fixture = await DevServerFixture.StartAsync(SeedHelloBody, false);
 
-        using var response = await fixture.Client.GetAsync(new Uri("/index.html", UriKind.Relative));
+        using var response = await fixture.Client.GetAsync(new Uri(IndexRequestPath, UriKind.Relative));
         var body = await response.Content.ReadAsStringAsync();
 
         await Assert.That(body).DoesNotContain("__livereload");
@@ -79,9 +92,9 @@ public class DevServerTests
     [Test]
     public async Task LiveReloadInjectsScript()
     {
-        using var fixture = await DevServerFixture.StartAsync(SeedHelloBody);
+        await using var fixture = await DevServerFixture.StartAsync(SeedHelloBody);
 
-        using var response = await fixture.Client.GetAsync(new Uri("/index.html", UriKind.Relative));
+        using var response = await fixture.Client.GetAsync(new Uri(IndexRequestPath, UriKind.Relative));
         var body = await response.Content.ReadAsStringAsync();
 
         await Assert.That(body).Contains("__livereload");
@@ -92,8 +105,8 @@ public class DevServerTests
     [Test]
     public async Task BuildUrlFormatsHostAndPort()
     {
-        var url1 = DevServer.BuildUrl(new() { Host = "127.0.0.1", Port = 9100 });
-        var url2 = DevServer.BuildUrl(new() { Host = "localhost", Port = 1234 });
+        var url1 = DevServer.BuildUrl(new() { Host = "127.0.0.1", Port = IpHostPort });
+        var url2 = DevServer.BuildUrl(new() { Host = "localhost", Port = DnsHostPort });
         await Assert.That(url1.Value).IsEqualTo("http://127.0.0.1:9100");
         await Assert.That(url2.Value).IsEqualTo("http://localhost:1234");
     }
@@ -131,7 +144,7 @@ public class DevServerTests
     /// <param name="dir">Output root.</param>
     private static void SeedHomeAndNotFound(string dir)
     {
-        File.WriteAllText(Path.Combine(dir, "index.html"), "<!doctype html><title>Home</title>");
+        File.WriteAllText(Path.Combine(dir, IndexFileName), "<!doctype html><title>Home</title>");
         File.WriteAllText(
             Path.Combine(dir, "404.html"),
             "<!doctype html><title>Missing</title><h1>Page not found</h1>");
@@ -139,22 +152,28 @@ public class DevServerTests
 
     /// <summary>Seeds the temp root with a single <c>index.html</c>.</summary>
     /// <param name="dir">Output root.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SeedHomeOnly(string dir) =>
-        File.WriteAllText(Path.Combine(dir, "index.html"), "<!doctype html><title>Home</title>");
+        File.WriteAllText(Path.Combine(dir, IndexFileName), "<!doctype html><title>Home</title>");
 
     /// <summary>Seeds the temp root with a recognisable index marker.</summary>
     /// <param name="dir">Output root.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SeedRootMarker(string dir) =>
-        File.WriteAllText(Path.Combine(dir, "index.html"), "<!doctype html>ROOT_INDEX_MARKER");
+        File.WriteAllText(Path.Combine(dir, IndexFileName), "<!doctype html>ROOT_INDEX_MARKER");
 
     /// <summary>Seeds the temp root with a body-bearing HTML page used by injection tests.</summary>
     /// <param name="dir">Output root.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SeedHelloBody(string dir) =>
-        File.WriteAllText(Path.Combine(dir, "index.html"), "<!doctype html><body>hello</body></html>");
+        File.WriteAllText(Path.Combine(dir, IndexFileName), "<!doctype html><body>hello</body></html>");
 
     /// <summary>Disposable test fixture: starts a real Kestrel-backed dev server on an ephemeral port.</summary>
-    private sealed class DevServerFixture : IDisposable
+    private sealed class DevServerFixture : IAsyncDisposable
     {
+        /// <summary>Maximum wait for the server to stop during teardown.</summary>
+        private const int ShutdownTimeoutSeconds = 2;
+
         /// <summary>Initializes a new instance of the <see cref="DevServerFixture"/> class.</summary>
         /// <param name="root">Temp directory used as the static root.</param>
         /// <param name="app">Started <see cref="Microsoft.AspNetCore.Builder.WebApplication"/>.</param>
@@ -183,8 +202,8 @@ public class DevServerTests
         {
             var root = Path.Combine(
                 Path.GetTempPath(),
-                "smkd-devserver-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(root);
+                $"smkd-devserver-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+            _ = Directory.CreateDirectory(root);
             seed(root);
 
             var port = ReserveLoopbackPort();
@@ -196,38 +215,27 @@ public class DevServerTests
         }
 
         /// <inheritdoc/>
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             Client.Dispose();
             try
             {
-                using CancellationTokenSource stopCts = new(TimeSpan.FromSeconds(2));
-                App.StopAsync(stopCts.Token).GetAwaiter().GetResult();
+                using CancellationTokenSource stopCts = new(TimeSpan.FromSeconds(ShutdownTimeoutSeconds));
+                await App.StopAsync(stopCts.Token).ConfigureAwait(false);
             }
-            catch
+            finally
             {
-                // best-effort shutdown
-            }
-
-            try
-            {
-                ((IDisposable)App).Dispose();
-            }
-            catch
-            {
-                // best-effort dispose
-            }
-
-            try
-            {
-                if (Directory.Exists(Root))
+                try
                 {
-                    Directory.Delete(Root, true);
+                    await App.DisposeAsync().ConfigureAwait(false);
                 }
-            }
-            catch (IOException)
-            {
-                // best-effort cleanup
+                finally
+                {
+                    if (Directory.Exists(Root))
+                    {
+                        Directory.Delete(Root, true);
+                    }
+                }
             }
         }
 

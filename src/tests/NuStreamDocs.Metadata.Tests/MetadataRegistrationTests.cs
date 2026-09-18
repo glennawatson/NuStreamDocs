@@ -29,7 +29,7 @@ public class MetadataRegistrationTests
     [Test]
     public async Task ValidateThrowsOnEmpty()
     {
-        Assert.Throws<ArgumentException>(static () => new MetadataOptions(string.Empty, ".meta.yml").Validate());
+        _ = Assert.Throws<ArgumentException>(static () => new MetadataOptions(string.Empty, ".meta.yml").Validate());
         var ex =
             Assert.Throws<ArgumentException>(static () => new MetadataOptions("_meta.yml", string.Empty).Validate());
         await Assert.That(ex).IsNotNull();

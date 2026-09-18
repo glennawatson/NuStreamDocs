@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
@@ -18,6 +19,7 @@ namespace NuStreamDocs.Benchmarks;
 /// so the benchmarks confirm the dedup didn't introduce delegate
 /// boxing, extra copies, or per-call allocations.
 /// </summary>
+[DebuggerDisplay("CommonHelperBenchmarks: snapshotInput={_snapshotInput}, xmlEscapeInput={_xmlEscapeInput}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class CommonHelperBenchmarks
@@ -39,6 +41,9 @@ public class CommonHelperBenchmarks
 
     /// <summary>Repeat factor for the XML-escape payload (denser per-line).</summary>
     private const int XmlPayloadRepetitions = 128;
+
+    /// <summary>Headroom for XML entities expanding the input bytes.</summary>
+    private const int XmlOutputExpansionFactor = 2;
 
     /// <summary>Sample HTML buffer reused across snapshot-rewrite iterations.</summary>
     private byte[] _snapshotInput = [];
@@ -134,7 +139,7 @@ public class CommonHelperBenchmarks
     [Benchmark]
     public int XmlEntityEscaper_XmlMode()
     {
-        ArrayBufferWriter<byte> writer = new(_xmlEscapeInput.Length * 2);
+        ArrayBufferWriter<byte> writer = new(_xmlEscapeInput.Length * XmlOutputExpansionFactor);
         XmlEntityEscaper.WriteEscaped(writer, _xmlEscapeInput, XmlEntityEscaper.Mode.Xml);
         return writer.WrittenCount;
     }
@@ -144,7 +149,7 @@ public class CommonHelperBenchmarks
     [Benchmark]
     public int XmlEntityEscaper_HtmlAttributeMode()
     {
-        ArrayBufferWriter<byte> writer = new(_xmlEscapeInput.Length * 2);
+        ArrayBufferWriter<byte> writer = new(_xmlEscapeInput.Length * XmlOutputExpansionFactor);
         XmlEntityEscaper.WriteEscaped(writer, _xmlEscapeInput, XmlEntityEscaper.Mode.HtmlAttribute);
         return writer.WrittenCount;
     }

@@ -20,10 +20,10 @@ public class PluginThemeIntegrationTests
     public enum ThemeKind
     {
         /// <summary>Classic Material (mkdocs-material 9.x).</summary>
-        Material,
+        Material = 0,
 
         /// <summary>Material 3.</summary>
-        Material3
+        Material3 = 1,
     }
 
     /// <summary>A fenced csharp code block emits short-form CSS-class token spans plus the highlight wrapper, on both themes.</summary>
@@ -187,7 +187,7 @@ public class PluginThemeIntegrationTests
                               Hello :smile: world
                               """;
 
-        var html = await BuildPageAsync(theme, Source, b => b.UseEmoji());
+        var html = await BuildPageAsync(theme, Source, static b => b.UseEmoji());
 
         // The emoji plugin emits an inline span with the twemoji class family.
         await Assert.That(html).Contains("twemoji");
@@ -202,7 +202,7 @@ public class PluginThemeIntegrationTests
     public async Task PageShellExposesCoreScaffolding(ThemeKind theme)
     {
         const string Source = "# Hi";
-        var html = await BuildPageAsync(theme, Source, _ => { });
+        var html = await BuildPageAsync(theme, Source, static _ => { });
 
         await Assert.That(html).Contains("class=\"md-skip\"");
         await Assert.That(html).Contains("class=\"md-overlay\"");
@@ -229,7 +229,7 @@ public class PluginThemeIntegrationTests
                               ### Beta
                               """;
 
-        var html = await BuildPageAsync(theme, Source, b => b.UseToc());
+        var html = await BuildPageAsync(theme, Source, static b => b.UseToc());
         await Assert.That(CountOccurrences(html, "class=\"md-nav md-nav--secondary\"")).IsEqualTo(1);
         await Assert.That(html).Contains("aria-label=\"On this page\"");
     }
@@ -240,6 +240,7 @@ public class PluginThemeIntegrationTests
     /// <param name="configure">Caller-supplied plugin registration (e.g. <c>b => b.UseHighlight()</c>).</param>
     /// <param name="extraPages">Optional extra pages dropped into the docs tree before the build runs.</param>
     /// <returns>The rendered HTML.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The theme variant is not supported.</exception>
     private static async Task<string> BuildPageAsync(
         ThemeKind theme,
         string source,
@@ -256,7 +257,7 @@ public class PluginThemeIntegrationTests
             {
                 var (path, body) = extraPages[i];
                 var target = Path.Combine(fixture.Docs, path);
-                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                _ = Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 await File.WriteAllTextAsync(target, body);
             }
         }
@@ -269,13 +270,13 @@ public class PluginThemeIntegrationTests
         {
             case ThemeKind.Material:
                 {
-                    builder.UseMaterialTheme();
+                    _ = builder.UseMaterialTheme();
                     break;
                 }
 
             case ThemeKind.Material3:
                 {
-                    builder.UseMaterial3Theme();
+                    _ = builder.UseMaterial3Theme();
                     break;
                 }
 

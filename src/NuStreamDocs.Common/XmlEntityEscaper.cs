@@ -16,10 +16,10 @@ public static class XmlEntityEscaper
     public enum Mode
     {
         /// <summary>Minimal XML element-content escape: <c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>.</summary>
-        Xml,
+        Xml = 0,
 
         /// <summary>HTML attribute-safe escape: adds <c>&quot;</c> to the minimal set.</summary>
-        HtmlAttribute
+        HtmlAttribute = 1,
     }
 
     /// <summary>Streams <paramref name="bytes"/> to <paramref name="writer"/>, replacing reserved bytes with the named entities for <paramref name="mode"/>.</summary>

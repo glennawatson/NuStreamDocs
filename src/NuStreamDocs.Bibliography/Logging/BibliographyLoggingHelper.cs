@@ -14,5 +14,5 @@ internal static partial class BibliographyLoggingHelper
         EventId = 9101,
         Level = LogLevel.Warning,
         Message = "Bibliography: no entry for [@{Key}]; left in place")]
-    public static partial void LogMissingCitation(ILogger logger, string key);
+    internal static partial void LogMissingCitation(ILogger logger, string key);
 }

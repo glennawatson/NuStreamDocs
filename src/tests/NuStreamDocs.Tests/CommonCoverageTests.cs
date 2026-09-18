@@ -13,6 +13,27 @@ namespace NuStreamDocs.Tests;
 /// <summary>Targeted coverage for the small but heavily-shared helpers under <c>NuStreamDocs.Common</c>.</summary>
 public class CommonCoverageTests
 {
+    /// <summary>Sample Url used by the test cases.</summary>
+    private const string SampleUrl = "/foo/bar";
+
+    /// <summary>Guide Directory used by the test cases.</summary>
+    private const string GuideDirectory = "guide";
+
+    /// <summary>Intro File Name used by the test cases.</summary>
+    private const string IntroFileName = "intro.md";
+
+    /// <summary>Distinct Entry Count used by the test cases.</summary>
+    private const int DistinctEntryCount = 3;
+
+    /// <summary>Paired Entry Count used by the test cases.</summary>
+    private const int PairedEntryCount = 2;
+
+    /// <summary>World Byte Length used by the test cases.</summary>
+    private const int WorldByteLength = 5;
+
+    /// <summary>Gets the greeting bytes used by the test cases.</summary>
+    private static ReadOnlySpan<byte> GreetingBytes => "hello"u8;
+
     /// <summary><see cref="Utf8Snapshot.Decode(byte[][])"/> round-trips every entry from UTF-8 to a string.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -20,7 +41,7 @@ public class CommonCoverageTests
     {
         byte[][] bytes = [[.. "alpha"u8], [.. "β-rays"u8], []];
         var decoded = Utf8Snapshot.Decode(bytes);
-        await Assert.That(decoded.Length).IsEqualTo(3);
+        await Assert.That(decoded.Length).IsEqualTo(DistinctEntryCount);
         await Assert.That(decoded[0]).IsEqualTo("alpha");
         await Assert.That(decoded[1]).IsEqualTo("β-rays");
         await Assert.That(decoded[2]).IsEqualTo(string.Empty);
@@ -79,8 +100,8 @@ public class CommonCoverageTests
         byte[][] source = [[.. "Foo"u8], [.. "FOO"u8], [.. "bar"u8]];
         var ordinal = source.ToStringSet(StringComparer.Ordinal);
         var ordinalIgnoreCase = source.ToStringSet(StringComparer.OrdinalIgnoreCase);
-        await Assert.That(ordinal.Count).IsEqualTo(3);
-        await Assert.That(ordinalIgnoreCase.Count).IsEqualTo(2);
+        await Assert.That(ordinal.Count).IsEqualTo(DistinctEntryCount);
+        await Assert.That(ordinalIgnoreCase.Count).IsEqualTo(PairedEntryCount);
     }
 
     /// <summary><see cref="ByteArrayCollectionExtensions.ToStringArray"/> short-circuits on an empty source.</summary>
@@ -99,7 +120,7 @@ public class CommonCoverageTests
     {
         byte[][] source = [[.. "one"u8], [.. "two"u8]];
         var arr = source.ToStringArray();
-        await Assert.That(arr.Length).IsEqualTo(2);
+        await Assert.That(arr.Length).IsEqualTo(PairedEntryCount);
         await Assert.That(arr[0]).IsEqualTo("one");
         await Assert.That(arr[1]).IsEqualTo("two");
     }
@@ -126,7 +147,7 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerHashCodeMatchesContent()
     {
         var c = ByteArrayComparer.Instance;
-        byte[] hello = [.. "hello"u8];
+        byte[] hello = [.. GreetingBytes];
         await Assert.That(c.GetHashCode(hello)).IsEqualTo(c.GetHashCode(hello));
     }
 
@@ -202,12 +223,12 @@ public class CommonCoverageTests
     public async Task ByteArrayComparerAlternateLookupRoundTrips()
     {
         IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]> alt = ByteArrayComparer.Instance;
-        byte[] stored = [.. "hello"u8];
-        await Assert.That(alt.Equals("hello"u8, stored)).IsTrue();
+        byte[] stored = [.. GreetingBytes];
+        await Assert.That(alt.Equals(GreetingBytes, stored)).IsTrue();
         await Assert.That(alt.Equals("nope"u8, stored)).IsFalse();
-        await Assert.That(alt.GetHashCode("hello"u8)).IsEqualTo(ByteArrayComparer.Instance.GetHashCode(stored));
+        await Assert.That(alt.GetHashCode(GreetingBytes)).IsEqualTo(ByteArrayComparer.Instance.GetHashCode(stored));
         var copy = alt.Create("world"u8);
-        await Assert.That(copy.Length).IsEqualTo(5);
+        await Assert.That(copy.Length).IsEqualTo(WorldByteLength);
         await Assert.That(copy.AsSpan().SequenceEqual("world"u8)).IsTrue();
     }
 
@@ -229,14 +250,14 @@ public class CommonCoverageTests
     [Test]
     public async Task UrlPathConversionsAgree()
     {
-        UrlPath wrapped = "/foo/bar";
+        UrlPath wrapped = SampleUrl;
         string asString = wrapped;
-        await Assert.That(asString).IsEqualTo("/foo/bar");
-        await Assert.That((ReadOnlySpan<char>)wrapped is "/foo/bar").IsTrue();
-        await Assert.That(wrapped.ToString()).IsEqualTo("/foo/bar");
-        await Assert.That(UrlPath.FromString("/foo/bar").Value).IsEqualTo("/foo/bar");
-        await Assert.That(UrlPath.ToStringValue(wrapped)).IsEqualTo("/foo/bar");
-        await Assert.That(UrlPath.ToReadOnlySpan(wrapped) is "/foo/bar").IsTrue();
+        await Assert.That(asString).IsEqualTo(SampleUrl);
+        await Assert.That((ReadOnlySpan<char>)wrapped is SampleUrl).IsTrue();
+        await Assert.That(wrapped.ToString()).IsEqualTo(SampleUrl);
+        await Assert.That(UrlPath.FromString(SampleUrl).Value).IsEqualTo(SampleUrl);
+        await Assert.That(UrlPath.ToStringValue(wrapped)).IsEqualTo(SampleUrl);
+        await Assert.That(UrlPath.ToReadOnlySpan(wrapped) is SampleUrl).IsTrue();
 
         // Default URL ToString lands on string.Empty (Value is null).
         await Assert.That(default(UrlPath).ToString()).IsEqualTo(string.Empty);
@@ -265,17 +286,17 @@ public class CommonCoverageTests
         var docs = (DirectoryPath)Path.Combine("/", "var", "docs");
         await Assert.That(docs.Name).IsEqualTo("docs");
         await Assert.That(docs.Parent.Name).IsEqualTo("var");
-        await Assert.That((docs / "guide").Name).IsEqualTo("guide");
-        await Assert.That((docs / (DirectoryPath)"guide").Name).IsEqualTo("guide");
+        await Assert.That((docs / GuideDirectory).Name).IsEqualTo(GuideDirectory);
+        await Assert.That((docs / (DirectoryPath)GuideDirectory).Name).IsEqualTo(GuideDirectory);
 
         // Empty subpath stays the same after the directory-divide overload.
         await Assert.That((docs / default(DirectoryPath)).Name).IsEqualTo("docs");
 
-        var combined = docs.Combine("intro.md");
-        await Assert.That(combined.Name).IsEqualTo("intro.md");
+        var combined = docs.Combine(IntroFileName);
+        await Assert.That(combined.Name).IsEqualTo(IntroFileName);
 
-        var file = docs.File("intro.md");
-        await Assert.That(file.FileName).IsEqualTo("intro.md");
+        var file = docs.File(IntroFileName);
+        await Assert.That(file.FileName).IsEqualTo(IntroFileName);
 
         // Building from empty allows fresh construction.
         await Assert.That(default(DirectoryPath).Combine("seed").Name).IsEqualTo("seed");
@@ -291,8 +312,8 @@ public class CommonCoverageTests
         await Assert.That(DirectoryPath.FromString("/x").Value).IsEqualTo("/x");
         await Assert.That(DirectoryPath.ToStringValue(docs)).IsEqualTo(docs.Value);
         await Assert.That(DirectoryPath.ToReadOnlySpan(docs).SequenceEqual(docs.Value)).IsTrue();
-        await Assert.That(DirectoryPath.Divide(docs, "guide").Name).IsEqualTo("guide");
-        await Assert.That(DirectoryPath.Divide(docs, (DirectoryPath)"guide").Name).IsEqualTo("guide");
+        await Assert.That(DirectoryPath.Divide(docs, GuideDirectory).Name).IsEqualTo(GuideDirectory);
+        await Assert.That(DirectoryPath.Divide(docs, (DirectoryPath)GuideDirectory).Name).IsEqualTo(GuideDirectory);
 
         // AsSpan on default returns empty.
         await Assert.That(default(DirectoryPath).AsSpan().Length).IsEqualTo(0);
@@ -305,16 +326,16 @@ public class CommonCoverageTests
     {
         var root = (DirectoryPath)Path.Combine(
             Path.GetTempPath(),
-            "smkd-dirpath-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-dirpath-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         try
         {
             await Assert.That(root.Exists()).IsFalse();
-            root.Create();
+            _ = root.Create();
             await Assert.That(root.Exists()).IsTrue();
 
             // EnumerateFiles / EnumerateDirectories yield wrappers over the real names.
             var nestedDir = root / "nested";
-            nestedDir.Create();
+            _ = nestedDir.Create();
             var filePath = root.File("a.txt");
             await File.WriteAllTextAsync(filePath, "x");
 
@@ -331,20 +352,18 @@ public class CommonCoverageTests
             DirectoryPath[] dirs = [.. root.EnumerateDirectories()];
             await Assert.That(dirs.Length).IsEqualTo(1);
             await Assert.That(dirs[0].Name).IsEqualTo("nested");
-            await Assert.That(root.EnumerateDirectories("ne*").ToArray().Length).IsEqualTo(1);
-            await Assert.That(root.EnumerateDirectories("ne*", SearchOption.TopDirectoryOnly).ToArray().Length)
-                .IsEqualTo(1);
+            await Assert.That(root.EnumerateDirectories("ne*")).HasSingleItem();
+            await Assert.That(root.EnumerateDirectories("ne*", SearchOption.TopDirectoryOnly)).HasSingleItem();
 
             // Empty wrappers yield empty enumerations without touching disk.
-            await Assert.That(default(DirectoryPath).EnumerateFiles().ToArray().Length).IsEqualTo(0);
-            await Assert.That(default(DirectoryPath).EnumerateFiles("*").ToArray().Length).IsEqualTo(0);
-            await Assert.That(default(DirectoryPath).EnumerateFiles("*", SearchOption.AllDirectories).ToArray().Length)
-                .IsEqualTo(0);
-            await Assert.That(default(DirectoryPath).EnumerateDirectories().ToArray().Length).IsEqualTo(0);
-            await Assert.That(default(DirectoryPath).EnumerateDirectories("*").ToArray().Length).IsEqualTo(0);
+            await Assert.That(default(DirectoryPath).EnumerateFiles()).IsEmpty();
+            await Assert.That(default(DirectoryPath).EnumerateFiles("*")).IsEmpty();
+            await Assert.That(default(DirectoryPath).EnumerateFiles("*", SearchOption.AllDirectories)).IsEmpty();
+            await Assert.That(default(DirectoryPath).EnumerateDirectories()).IsEmpty();
+            await Assert.That(default(DirectoryPath).EnumerateDirectories("*")).IsEmpty();
             await Assert
-                .That(default(DirectoryPath).EnumerateDirectories("*", SearchOption.AllDirectories).ToArray().Length)
-                .IsEqualTo(0);
+                .That(default(DirectoryPath).EnumerateDirectories("*", SearchOption.AllDirectories))
+                .IsEmpty();
 
             // Delete the file so we can also exercise Delete + DeleteRecursive.
             File.Delete(filePath);
@@ -353,7 +372,7 @@ public class CommonCoverageTests
 
             // DeleteRecursive on a populated tree.
             var leaf = root / "deep";
-            leaf.Create();
+            _ = leaf.Create();
             await File.WriteAllTextAsync(leaf.File("x.txt"), "x");
             root.DeleteRecursive(true);
             await Assert.That(root.Exists()).IsFalse();

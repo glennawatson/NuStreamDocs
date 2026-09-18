@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Common</PackageId>
     <Description>Shared utility types and helpers used across the NuStreamDocs assemblies. You don't normally reference this directly — the plugin you're using brings it in for you.</Description>
     <RootNamespace>NuStreamDocs.Common</RootNamespace>

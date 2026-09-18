@@ -4,29 +4,27 @@
 
 namespace NuStreamDocs.Templating;
 
-/// <summary>
-/// Opcode in a compiled <see cref="Template"/> instruction stream.
-/// </summary>
+/// <summary>Opcode in a compiled <see cref="Template"/> instruction stream.</summary>
 public enum TemplateOp
 {
     /// <summary>Verbatim slice of the template source.</summary>
     Literal = 0,
 
     /// <summary>HTML-escaped variable substitution (<c>{{name}}</c>).</summary>
-    EscapedVariable,
+    EscapedVariable = 1,
 
     /// <summary>Unescaped variable substitution (<c>{{{name}}}</c> or <c>{{&amp;name}}</c>).</summary>
-    RawVariable,
+    RawVariable = 2,
 
     /// <summary>Truthy section open (<c>{{#name}}</c>).</summary>
-    SectionOpen,
+    SectionOpen = 3,
 
     /// <summary>Inverted section open (<c>{{^name}}</c>).</summary>
-    InvertedSectionOpen,
+    InvertedSectionOpen = 4,
 
     /// <summary>Section close (<c>{{/name}}</c>).</summary>
-    SectionClose,
+    SectionClose = 5,
 
     /// <summary>Partial inclusion (<c>{{&gt; name}}</c>).</summary>
-    Partial
+    Partial = 6,
 }

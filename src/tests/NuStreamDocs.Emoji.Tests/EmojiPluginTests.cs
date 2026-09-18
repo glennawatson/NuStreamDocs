@@ -12,12 +12,15 @@ namespace NuStreamDocs.Emoji.Tests;
 /// <summary>Lifecycle / registration tests for <c>EmojiPlugin</c>.</summary>
 public class EmojiPluginTests
 {
+    /// <summary>Initial output capacity.</summary>
+    private const int InitialOutputCapacity = 64;
+
     /// <summary>The PreRender hook produces the same output as the rewriter.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task PreRenderMatchesRewriter()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
         PagePreRenderContext ctx = new("p.md", "hi :rocket:"u8, sink);
         new EmojiPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))

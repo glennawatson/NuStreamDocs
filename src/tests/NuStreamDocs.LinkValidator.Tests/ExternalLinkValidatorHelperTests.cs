@@ -7,6 +7,9 @@ namespace NuStreamDocs.LinkValidator.Tests;
 /// <summary>Direct tests for the previously private helpers in ExternalLinkValidator.</summary>
 public class ExternalLinkValidatorHelperTests
 {
+    /// <summary>Expected Host Count used by the test cases.</summary>
+    private const int ExpectedHostCount = 2;
+
     /// <summary>BucketByHost groups links by host, skipping URLs that aren't absolute.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -22,7 +25,7 @@ public class ExternalLinkValidatorHelperTests
         await Assert.That(bucketed.ContainsKey("b.test")).IsTrue();
 
         // Case-insensitive grouping
-        await Assert.That(bucketed["a.test"].Count).IsEqualTo(2);
+        await Assert.That(bucketed["a.test"].Count).IsEqualTo(ExpectedHostCount);
     }
 
     /// <summary>BucketByHost on an empty corpus returns an empty map.</summary>
@@ -50,8 +53,8 @@ public class ExternalLinkValidatorHelperTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-elv-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-elv-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

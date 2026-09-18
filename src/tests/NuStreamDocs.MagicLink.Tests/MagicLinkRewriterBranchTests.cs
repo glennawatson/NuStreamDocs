@@ -10,12 +10,15 @@ namespace NuStreamDocs.MagicLink.Tests;
 /// <summary>Branch-coverage edge cases for MagicLinkRewriter.</summary>
 public class MagicLinkRewriterBranchTests
 {
+    /// <summary>Autolink expected for the HTTPS test URL.</summary>
+    private const string HttpsAutolink = "<https://x.test>";
+
     /// <summary>Each recognized scheme is wrapped.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SchemesWrapped()
     {
-        await Assert.That(Rewrite("see https://x.test")).Contains("<https://x.test>");
+        await Assert.That(Rewrite("see https://x.test")).Contains(HttpsAutolink);
         await Assert.That(Rewrite("see http://x.test")).Contains("<http://x.test>");
         await Assert.That(Rewrite("see ftps://x.test")).Contains("<ftps://x.test>");
         await Assert.That(Rewrite("see ftp://x.test")).Contains("<ftp://x.test>");
@@ -44,7 +47,7 @@ public class MagicLinkRewriterBranchTests
     {
         await Assert.That(Rewrite("see https://x.test.")).IsEqualTo("see <https://x.test>.");
         await Assert.That(Rewrite("see https://x.test, more")).Contains("<https://x.test>,");
-        await Assert.That(Rewrite("see https://x.test).")).Contains("<https://x.test>");
+        await Assert.That(Rewrite("see https://x.test).")).Contains(HttpsAutolink);
     }
 
     /// <summary>URL preceded by a word byte is NOT a boundary, no rewrite.</summary>
@@ -80,7 +83,7 @@ public class MagicLinkRewriterBranchTests
     public async Task UnclosedAngle()
     {
         var result = Rewrite("a < no close https://x.test");
-        await Assert.That(result).Contains("<https://x.test>");
+        await Assert.That(result).Contains(HttpsAutolink);
     }
 
     /// <summary>Markdown link is preserved verbatim.</summary>
@@ -99,7 +102,7 @@ public class MagicLinkRewriterBranchTests
     public async Task BareOpenBracket()
     {
         var result = Rewrite("a [ no close https://x.test");
-        await Assert.That(result).Contains("<https://x.test>");
+        await Assert.That(result).Contains(HttpsAutolink);
     }
 
     /// <summary>Brackets without (...) just keep the label.</summary>
@@ -108,7 +111,7 @@ public class MagicLinkRewriterBranchTests
     public async Task BracketWithoutDest()
     {
         var result = Rewrite("see [label] then https://x.test");
-        await Assert.That(result).Contains("<https://x.test>");
+        await Assert.That(result).Contains(HttpsAutolink);
     }
 
     /// <summary>Helper that runs the rewriter and decodes UTF-8 output.</summary>

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 using NuStreamDocs.Caching;
 using NuStreamDocs.Plugins;
@@ -12,13 +13,22 @@ namespace NuStreamDocs.Tests;
 /// <summary>End-to-end tests for the content-hash incremental manifest.</summary>
 public class IncrementalBuildTests
 {
+    /// <summary>Stable Page Name used by the test cases.</summary>
+    private const string StablePageName = "stable.md";
+
+    /// <summary>Initial Page Count used by the test cases.</summary>
+    private const int InitialPageCount = 2;
+
+    /// <summary>Total Render Count used by the test cases.</summary>
+    private const int TotalRenderCount = 3;
+
     /// <summary>An unchanged page should be skipped on the second build (no plugin hook firing).</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task SkipsUnchangedPageOnRebuild()
     {
         using var fixture = TempBuildFixture.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "stable.md"), "# Hi");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, StablePageName), "# Hi");
 
         CountingPlugin counter = new();
         var builder = new DocBuilder()
@@ -39,7 +49,7 @@ public class IncrementalBuildTests
     public async Task ReRendersOnlyChangedPages()
     {
         using var fixture = TempBuildFixture.Create();
-        var stablePath = Path.Combine(fixture.Input, "stable.md");
+        var stablePath = Path.Combine(fixture.Input, StablePageName);
         var changingPath = Path.Combine(fixture.Input, "changing.md");
         await File.WriteAllTextAsync(stablePath, "# Stable");
         await File.WriteAllTextAsync(changingPath, "# Original");
@@ -51,12 +61,12 @@ public class IncrementalBuildTests
             .UsePlugin(counter);
 
         await builder.BuildAsync();
-        await Assert.That(counter.PageHits).IsEqualTo(2);
+        await Assert.That(counter.PageHits).IsEqualTo(InitialPageCount);
 
         await File.WriteAllTextAsync(changingPath, "# Updated");
 
         await builder.BuildAsync();
-        await Assert.That(counter.PageHits).IsEqualTo(3);
+        await Assert.That(counter.PageHits).IsEqualTo(TotalRenderCount);
     }
 
     /// <summary>The manifest file should be written under the output root after a successful build.</summary>
@@ -82,7 +92,7 @@ public class IncrementalBuildTests
     public async Task RebuildsWhenPluginFingerprintChanges()
     {
         using var fixture = TempBuildFixture.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "stable.md"), "# Hi");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, StablePageName), "# Hi");
 
         var builder = new DocBuilder()
             .WithInput(fixture.Input)
@@ -108,15 +118,19 @@ public class IncrementalBuildTests
         /// <inheritdoc/>
         public PluginPriority PostRenderPriority => PluginPriority.Normal;
 
+        /// <summary>Gets the comment appended to rendered pages.</summary>
+        private static ReadOnlySpan<byte> PipelineMarker => "<!--pipeline-changed-->"u8;
+
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
         /// <inheritdoc/>
         public void PostRender(in PagePostRenderContext context)
         {
             context.Output.Write(context.Html);
-            "<!--pipeline-changed-->"u8.CopyTo(context.Output.GetSpan("<!--pipeline-changed-->".Length));
-            context.Output.Advance("<!--pipeline-changed-->".Length);
+            PipelineMarker.CopyTo(context.Output.GetSpan(PipelineMarker.Length));
+            context.Output.Advance(PipelineMarker.Length);
         }
     }
 }

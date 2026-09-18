@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Theme.Material3</PackageId>
     <Description>Material Design 3 theme for NuStreamDocs. MD3 design tokens (color roles, shape, typography, elevation) for a modern look. Page template, styles, and scripts all ship inside the package — no external assets to manage.</Description>
     <RootNamespace>NuStreamDocs.Theme.Material3</RootNamespace>

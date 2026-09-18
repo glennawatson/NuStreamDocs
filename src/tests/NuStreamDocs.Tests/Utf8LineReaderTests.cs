@@ -10,6 +10,15 @@ namespace NuStreamDocs.Tests;
 /// <summary>Branch-coverage tests for the async UTF-8 line reader.</summary>
 public class Utf8LineReaderTests
 {
+    /// <summary>Long Line Kibibytes used by the test cases.</summary>
+    private const int LongLineKibibytes = 32;
+
+    /// <summary>Bytes Per Kibibyte used by the test cases.</summary>
+    private const int BytesPerKibibyte = 1024;
+
+    /// <summary>Expected Line Count used by the test cases.</summary>
+    private const int ExpectedLineCount = 2;
+
     /// <summary>LF and CR-LF terminators are both stripped from the returned slice.</summary>
     /// <param name="source">Source text.</param>
     /// <param name="expected">Expected concatenation of returned lines, separated by '|'.</param>
@@ -32,10 +41,10 @@ public class Utf8LineReaderTests
     [Test]
     public async Task LongLineGrowsBuffer()
     {
-        string longLine = new('x', 32 * 1024);
-        var lines = await ReadAll(longLine + "\nshort\n");
-        await Assert.That(lines.Length).IsEqualTo(2);
-        await Assert.That(lines[0].Length).IsEqualTo(32 * 1024);
+        string longLine = new('x', LongLineKibibytes * BytesPerKibibyte);
+        var lines = await ReadAll($"{longLine}\nshort\n");
+        await Assert.That(lines.Length).IsEqualTo(ExpectedLineCount);
+        await Assert.That(lines[0].Length).IsEqualTo(LongLineKibibytes * BytesPerKibibyte);
         await Assert.That(lines[1]).IsEqualTo("short");
     }
 
@@ -53,7 +62,7 @@ public class Utf8LineReaderTests
         await Assert.That(stream.ReadByte).Throws<ObjectDisposedException>();
     }
 
-    /// <summary>leaveOpen keeps the underlying stream usable after the reader disposes.</summary>
+    /// <summary>LeaveOpen keeps the underlying stream usable after the reader disposes.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task LeaveOpenKeepsStreamAlive()

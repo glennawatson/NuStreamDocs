@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace NuStreamDocs.Redirects;
 
 /// <summary>Configuration for <c>RedirectsPlugin</c>.</summary>
@@ -15,10 +13,7 @@ namespace NuStreamDocs.Redirects;
 /// <param name="ReadFrontmatterRedirects">When true, pick up <c>redirect_from</c> entries from page frontmatter.</param>
 /// <param name="DefaultCacheHeaders">When true, prepend default <c>_headers</c> rules: a one-week cache for <c>/assets/*</c> and an immutable cache for <c>/assets/fonts/*</c>.</param>
 /// <param name="FrontmatterKey">UTF-8 frontmatter key read for redirect sources.</param>
-[SuppressMessage(
-    "Major Code Smell",
-    "S107",
-    Justification = "A flat options record; each field is an independent knob.")]
+[System.Diagnostics.DebuggerDisplay("RedirectsOptions: {ToString(),nq}")]
 public readonly record struct RedirectsOptions(
     RedirectRule[] Redirects,
     HeaderRule[] Headers,

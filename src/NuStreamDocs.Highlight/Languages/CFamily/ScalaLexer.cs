@@ -28,6 +28,6 @@ public static class ScalaLexer
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(CFamilyShared.TrueFalseNullLiteral),
             Operators =
                 OperatorAlternationFactory.SplitLongestFirst("<- => ::"u8, CFamilyShared.StandardOperatorsLiteral),
-            OperatorFirst = CFamilyShared.StandardOperatorFirst
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
         });
 }

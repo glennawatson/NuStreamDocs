@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Building;
 using NuStreamDocs.Yaml;
@@ -65,7 +66,7 @@ public class FrontmatterFlagReaderTests
     [Test]
     public async Task ReadPathRoundtrips()
     {
-        var path = Path.Combine(Path.GetTempPath(), "smkd-flag-" + Guid.NewGuid().ToString("N") + ".md");
+        var path = Path.Combine(Path.GetTempPath(), $"smkd-flag-{Guid.NewGuid():N}.md");
         try
         {
             await File.WriteAllTextAsync(path, "---\ndraft: true\n---\nbody");
@@ -81,7 +82,7 @@ public class FrontmatterFlagReaderTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task ReadMissingPathIsNone() =>
-        await Assert.That(FrontmatterFlagReader.Read("/nonexistent/" + Guid.NewGuid().ToString("N") + ".md"))
+        await Assert.That(FrontmatterFlagReader.Read($"/nonexistent/{Guid.NewGuid():N}.md"))
             .IsEqualTo(PageFlags.None);
 
     /// <summary>Read(path) rejects null/empty.</summary>
@@ -102,6 +103,7 @@ public class FrontmatterFlagReaderTests
     /// <summary>Encodes <paramref name="source"/> as UTF-8 and reads the flags.</summary>
     /// <param name="source">Markdown source.</param>
     /// <returns>Detected flags.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static PageFlags Read(string source) =>
         FrontmatterFlagReader.ReadFlags(Encoding.UTF8.GetBytes(source));
 }

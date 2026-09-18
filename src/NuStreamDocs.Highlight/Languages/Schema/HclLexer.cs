@@ -65,7 +65,7 @@ public static class HclLexer
             KeywordConstants = KeywordConstants,
             Operators = OperatorTable,
             OperatorFirst = OperatorFirst,
-            Punctuation = PunctuationSet
+            Punctuation = PunctuationSet,
         };
 
         return SchemaFamilyRules.CreateLexer(config);

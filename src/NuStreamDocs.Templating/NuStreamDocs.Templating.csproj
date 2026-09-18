@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Templating</PackageId>
     <Description>Mustache-style template engine used by NuStreamDocs themes to render page shells. AOT-friendly and allocation-conscious. Theme authors pull this in to render their templates.</Description>
     <RootNamespace>NuStreamDocs.Templating</RootNamespace>

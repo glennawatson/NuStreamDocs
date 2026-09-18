@@ -36,6 +36,6 @@ public static class JuliaLexer
             "if elseif else end for while do begin let where in isa return break continue throw try catch finally import using export global local quote"u8),
         Operators = OperatorAlternationFactory.SplitLongestFirst(
             "<<= >>= ... <= >= == != && || << >> -> <: >: += -= *= /= %= // ^ + - * / % & | ! ~ = < > ?"u8),
-        Punctuation = CFamilyShared.AnnotationColonPunctuation
+        Punctuation = CFamilyShared.AnnotationColonPunctuation,
     });
 }

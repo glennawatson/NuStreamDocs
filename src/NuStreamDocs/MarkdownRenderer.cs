@@ -10,9 +10,7 @@ using NuStreamDocs.Yaml;
 
 namespace NuStreamDocs;
 
-/// <summary>
-/// Façade that runs <see cref="BlockScanner"/> followed by <see cref="HtmlEmitter"/>.
-/// </summary>
+/// <summary>Façade that runs <see cref="BlockScanner"/> followed by <see cref="HtmlEmitter"/>.</summary>
 public static class MarkdownRenderer
 {
     /// <summary>Initial capacity for the block buffer; sized for a typical page (~32 blocks) so the writer rarely re-grows.</summary>
@@ -25,9 +23,7 @@ public static class MarkdownRenderer
     [ThreadStatic]
     private static ArrayBufferWriter<BlockSpan>? _blockBufferCache;
 
-    /// <summary>
-    /// Renders <paramref name="markdown"/> as UTF-8 HTML into <paramref name="writer"/>.
-    /// </summary>
+    /// <summary>Renders <paramref name="markdown"/> as UTF-8 HTML into <paramref name="writer"/>.</summary>
     /// <param name="markdown">UTF-8 markdown source.</param>
     /// <param name="writer">UTF-8 sink for the rendered HTML.</param>
     public static void Render(ReadOnlySpan<byte> markdown, IBufferWriter<byte> writer)
@@ -65,7 +61,7 @@ public static class MarkdownRenderer
 
         try
         {
-            BlockScanner.Scan(markdown, blockBuffer);
+            _ = BlockScanner.Scan(markdown, blockBuffer);
             HtmlEmitter.Emit(markdown, blockBuffer.WrittenSpan, writer);
         }
         finally

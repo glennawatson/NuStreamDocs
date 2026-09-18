@@ -15,8 +15,12 @@ namespace NuStreamDocs.ContentLoader;
 /// Fetches a JSON document from an HTTP endpoint — a REST API, or a GraphQL endpoint when a request
 /// body is supplied — and turns the array it locates into Markdown pages via a <see cref="ContentMapping"/>.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("HttpContentLoader: {Name}")]
 public sealed class HttpContentLoader : IContentLoader
 {
+    /// <summary>HTTP transport for requests without a caller-supplied client.</summary>
+    private static readonly HttpClient SharedClient = new(new SocketsHttpHandler { UseCookies = false });
+
     /// <summary>The endpoint URL.</summary>
     private readonly UrlPath _url;
 
@@ -29,7 +33,7 @@ public sealed class HttpContentLoader : IContentLoader
     /// <summary>Field mapping.</summary>
     private readonly ContentMapping _mapping;
 
-    /// <summary>HTTP client factory; null means the loader owns a short-lived client.</summary>
+    /// <summary>Optional factory for caller-owned HTTP clients.</summary>
     private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger for diagnostics.</summary>
@@ -64,7 +68,7 @@ public sealed class HttpContentLoader : IContentLoader
     /// <param name="requestBody">JSON request body for a POST (e.g. a GraphQL query); empty issues a GET.</param>
     /// <param name="headers">Extra request headers (UTF-8 name/value byte pairs).</param>
     /// <param name="mapping">Field mapping.</param>
-    /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
+    /// <param name="httpClientFactory">Factory producing a caller-owned HTTP client; null uses a shared client without cookies.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public HttpContentLoader(
         UrlPath url,
@@ -95,14 +99,7 @@ public sealed class HttpContentLoader : IContentLoader
     {
         _ = context;
 
-        if (_httpClientFactory is not null)
-        {
-            var json = await FetchAsync(_httpClientFactory(), cancellationToken).ConfigureAwait(false);
-            return JsonContentMapper.Map(json, _mapping, Name, _logger);
-        }
-
-        using HttpClient owned = new();
-        var fetched = await FetchAsync(owned, cancellationToken).ConfigureAwait(false);
+        var fetched = await FetchAsync(_httpClientFactory is null ? SharedClient : _httpClientFactory(), cancellationToken).ConfigureAwait(false);
         return JsonContentMapper.Map(fetched, _mapping, Name, _logger);
     }
 
@@ -110,6 +107,7 @@ public sealed class HttpContentLoader : IContentLoader
     /// <param name="client">HTTP client.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The UTF-8 response body.</returns>
+    /// <exception cref="ContentLoaderException">The HTTP request failed.</exception>
     private async Task<byte[]> FetchAsync(HttpClient client, CancellationToken cancellationToken)
     {
         Uri endpoint = new(_url.Value, UriKind.Absolute);
@@ -125,7 +123,7 @@ public sealed class HttpContentLoader : IContentLoader
         try
         {
             using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            _ = response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
@@ -143,7 +141,7 @@ public sealed class HttpContentLoader : IContentLoader
     {
         for (var i = 0; i < _headers.Length; i++)
         {
-            headers.TryAddWithoutValidation(
+            _ = headers.TryAddWithoutValidation(
                 Encoding.UTF8.GetString(_headers[i].Name),
                 Encoding.UTF8.GetString(_headers[i].Value));
         }

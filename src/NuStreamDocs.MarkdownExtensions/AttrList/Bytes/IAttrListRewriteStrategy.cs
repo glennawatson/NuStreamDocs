@@ -6,9 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
-/// <summary>
-/// Static strategy contract for the attr-list byte scanners.
-/// </summary>
+/// <summary>Static strategy contract for the attr-list byte scanners.</summary>
 /// <typeparam name="TSelf">Concrete strategy type.</typeparam>
 internal interface IAttrListRewriteStrategy<TSelf>
     where TSelf : struct, IAttrListRewriteStrategy<TSelf>

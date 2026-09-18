@@ -8,4 +8,5 @@ namespace NuStreamDocs.Versions;
 /// <param name="Version">Stable version identifier (e.g. <c>0.4.2</c>).</param>
 /// <param name="Title">Human-readable selector label.</param>
 /// <param name="Aliases">UTF-8 mirror identifiers like <c>latest</c> or <c>stable</c>.</param>
+[System.Diagnostics.DebuggerDisplay("VersionEntry: {ToString(),nq}")]
 public readonly record struct VersionEntry(string Version, string Title, byte[][] Aliases);

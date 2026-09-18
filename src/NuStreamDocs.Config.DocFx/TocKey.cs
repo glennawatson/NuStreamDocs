@@ -8,14 +8,14 @@ namespace NuStreamDocs.Config.DocFx;
 internal enum TocKey
 {
     /// <summary>Unknown / unrecognized key.</summary>
-    Unknown,
+    Unknown = 0,
 
     /// <summary>The <c>name</c> key (display title).</summary>
-    Name,
+    Name = 1,
 
     /// <summary>The <c>href</c> key (target path or sub-toc).</summary>
-    Href,
+    Href = 2,
 
     /// <summary>The <c>homepage</c> key (landing page for a directory ref).</summary>
-    Homepage
+    Homepage = 3,
 }

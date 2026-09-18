@@ -9,12 +9,18 @@ namespace NuStreamDocs.Feed.Tests;
 /// <summary>Tests for FeedPlugin's lifecycle hooks and FinalizeAsync conditionals.</summary>
 public class FeedPluginTests
 {
+    /// <summary>The RssFile fixture value.</summary>
+    private const string RssFile = "feed.xml";
+
+    /// <summary>Gets the SiteUrl fixture value.</summary>
+    private static ReadOnlySpan<byte> SiteUrlBytes => "https://x.test/"u8;
+
     /// <summary>Two-arg constructor sets defaults.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TwoArgCtor()
     {
-        FeedPlugin plugin = new(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"), TimeProvider.System);
+        FeedPlugin plugin = new(new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog"), TimeProvider.System);
         await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
     }
 
@@ -22,7 +28,7 @@ public class FeedPluginTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task ConfigureAsyncSucceeds() =>
-        await new FeedPlugin(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"))
+        await new FeedPlugin(new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog"))
             .ConfigureAsync(new("/in", "/out", [], new()), CancellationToken.None);
 
     /// <summary>FinalizeAsync runs against an empty output dir without error.</summary>
@@ -31,7 +37,7 @@ public class FeedPluginTests
     public async Task FinalizeAsyncEmptyDirSucceeds()
     {
         using TempDir dir = new();
-        FeedPlugin plugin = new(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"));
+        FeedPlugin plugin = new(new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog"));
         await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
     }
@@ -42,11 +48,11 @@ public class FeedPluginTests
     public async Task FormatsNoneShortCircuits()
     {
         using TempDir dir = new();
-        FeedOptions opts = new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog") { Formats = FeedFormats.None };
+        FeedOptions opts = new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog") { Formats = FeedFormats.None };
         FeedPlugin plugin = new(opts);
         await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
-        await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", RssFile))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsFalse();
     }
 
@@ -56,7 +62,7 @@ public class FeedPluginTests
     public async Task EmptyInputRootShortCircuits()
     {
         using TempDir dir = new();
-        FeedPlugin plugin = new(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"));
+        FeedPlugin plugin = new(new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog"));
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
         await Assert.That(Directory.GetFiles(dir.Root, "*", SearchOption.AllDirectories)).IsEmpty();
     }
@@ -67,11 +73,11 @@ public class FeedPluginTests
     public async Task EmptyPostsDirNoOutput()
     {
         using TempDir dir = new();
-        Directory.CreateDirectory(Path.Combine(dir.Root, "blog"));
-        FeedPlugin plugin = new(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"));
+        _ = Directory.CreateDirectory(Path.Combine(dir.Root, "blog"));
+        FeedPlugin plugin = new(new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog"));
         await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
-        await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", RssFile))).IsFalse();
     }
 
     /// <summary>A populated posts directory yields the configured feed files at the deterministic clock.</summary>
@@ -81,17 +87,17 @@ public class FeedPluginTests
     {
         using TempDir dir = new();
         var posts = Path.Combine(dir.Root, "blog");
-        Directory.CreateDirectory(posts);
+        _ = Directory.CreateDirectory(posts);
         await File.WriteAllTextAsync(
             Path.Combine(posts, "2026-04-01-hello.md"),
             "---\ntitle: Hi\n---\nbody\n");
 
         FakeTimeProvider clock = new(new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero));
-        FeedPlugin plugin = new(new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"), clock);
+        FeedPlugin plugin = new(new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog"), clock);
         await plugin.ConfigureAsync(new(dir.Root, dir.Root, [], new()), CancellationToken.None);
         await plugin.FinalizeAsync(new(dir.Root, []), CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "feed.xml"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", RssFile))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(dir.Root, "blog", "atom.xml"))).IsTrue();
     }
 
@@ -101,7 +107,7 @@ public class FeedPluginTests
     public async Task ThreeArgCtorAcceptsLogger()
     {
         FeedPlugin plugin = new(
-            new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog"),
+            new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog"),
             TimeProvider.System,
             NullLogger.Instance);
         await Assert.That(plugin.Name.SequenceEqual("feed"u8)).IsTrue();
@@ -113,8 +119,8 @@ public class FeedPluginTests
         /// <summary>Initializes a new instance of the <see cref="TempDir"/> class.</summary>
         public TempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-feed-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-feed-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch root.</summary>

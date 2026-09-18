@@ -24,14 +24,15 @@ public class AuditOptionsTests
     [Test]
     public async Task MutatorsCompose()
     {
+        const int Parallelism = 2;
         var options = AuditOptions.Default
             .WithStrict()
-            .WithParallelism(2)
+            .WithParallelism(Parallelism)
             .Disable(AuditRule.PositiveTabIndex)
             .Disable(AuditRule.PositiveTabIndex);
 
         await Assert.That(options.Strict).IsTrue();
-        await Assert.That(options.Parallelism).IsEqualTo(2);
+        await Assert.That(options.Parallelism).IsEqualTo(Parallelism);
         await Assert.That(options.IsRuleEnabled(AuditRule.PositiveTabIndex)).IsFalse();
         await Assert.That(options.DisabledRules.Length).IsEqualTo(1);
         await Assert.That(AuditOptions.Default.Strict).IsFalse();

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Nav.Tests;
@@ -66,8 +67,9 @@ public class PagesFileReaderTests
     [Test]
     public async Task ReadsAwesomePagesTitleMap()
     {
+        const int ExpectedCount = 3;
         var parsed = Parse("nav:\n  - Home: index.md\n  - Aerodromes: aerodromes\n  - bare.md\n");
-        await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(3);
+        await Assert.That(parsed.OrderedEntries.Length).IsEqualTo(ExpectedCount);
         await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[0].Path)).IsEqualTo("index.md");
         await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[0].Title)).IsEqualTo("Home");
         await Assert.That(Encoding.UTF8.GetString(parsed.OrderedEntries[1].Path)).IsEqualTo("aerodromes");
@@ -129,6 +131,7 @@ public class PagesFileReaderTests
     /// <summary>Helper to drive the parser over UTF-8 bytes.</summary>
     /// <param name="text">Source text.</param>
     /// <returns>Parsed <c>PagesFile</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static PagesFile Parse(string text) => PagesFileReader.Parse(Encoding.UTF8.GetBytes(text));
 
     /// <summary>Decodes <paramref name="entries"/> and joins paths with <c>|</c> for compact assertion.</summary>

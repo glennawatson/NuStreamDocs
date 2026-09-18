@@ -78,7 +78,7 @@ public static class TypeScriptLexer
                 KeywordDeclarations = DeclarationKeywords,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = OperatorFirst
+                OperatorFirst = OperatorFirst,
             },
             Punctuation = LanguageCommon.CCurlyPunctuationFirst,
             IntegerSuffix = BigintSuffix,
@@ -89,7 +89,7 @@ public static class TypeScriptLexer
             WhitespaceIncludesNewlines = true,
             SpecialString = templateString,
             IdentifierFirst = IdentifierFirst,
-            IdentifierContinue = IdentifierContinue
+            IdentifierContinue = IdentifierContinue,
         };
 
         return CFamilyRules.Build(config);

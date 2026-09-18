@@ -17,7 +17,7 @@ public class MagicLinkPluginTests
     [Test]
     public async Task PreRenderWrapsBareUrl()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new();
         PagePreRenderContext ctx = new("p.md", "see https://example.com here"u8, sink);
         new MagicLinkPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).Contains("<https://example.com>");

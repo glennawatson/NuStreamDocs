@@ -16,6 +16,7 @@ namespace NuStreamDocs.Plugins;
 /// plugins that emit many pages register a stream so the pipeline pulls one page at a time
 /// and lets each render before reading the next.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("SyntheticPageSink: {Count}")]
 public sealed class SyntheticPageSink
 {
     /// <summary>Backing collection. <see cref="ConcurrentBag{T}"/> because plugin discover hooks may run concurrently in future and registration order is irrelevant.</summary>
@@ -32,16 +33,19 @@ public sealed class SyntheticPageSink
 
     /// <summary>Adds <paramref name="page"/> to the sink.</summary>
     /// <param name="page">The synthetic page to register.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(in SyntheticPage page) => _pages.Add(page);
 
     /// <summary>Adds a synthetic page with the given relative path and markdown bytes.</summary>
     /// <param name="relativePath">Forward-slashed path relative to the input root.</param>
     /// <param name="markdownBytes">UTF-8 markdown source.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(in FilePath relativePath, byte[] markdownBytes) =>
         _pages.Add(new(relativePath, markdownBytes));
 
     /// <summary>Registers an async stream the pipeline will drain after the eager bag is consumed.</summary>
     /// <param name="stream">A lazy stream of pages; pulled one at a time so the producer can hold peak memory low.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RegisterStream(IAsyncEnumerable<SyntheticPage> stream) => _streams.Add(stream);
 
     /// <summary>Returns the registered eagerly-added pages as an array snapshot.</summary>

@@ -16,17 +16,6 @@ internal sealed class TempDir : IDisposable
     /// <summary>Gets the absolute path of the temp root.</summary>
     public string Root { get; }
 
-    /// <summary>Creates a fresh temp tree.</summary>
-    /// <returns>New fixture; caller must dispose.</returns>
-    public static TempDir Create()
-    {
-        var root = Path.Combine(
-            Path.GetTempPath(),
-            "smkd-xrefs-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(root);
-        return new(root);
-    }
-
     /// <inheritdoc/>
     public void Dispose()
     {
@@ -41,5 +30,16 @@ internal sealed class TempDir : IDisposable
         {
             // Best-effort cleanup.
         }
+    }
+
+    /// <summary>Creates a fresh temp tree.</summary>
+    /// <returns>New fixture; caller must dispose.</returns>
+    internal static TempDir Create()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            $"smkd-xrefs-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(root);
+        return new(root);
     }
 }

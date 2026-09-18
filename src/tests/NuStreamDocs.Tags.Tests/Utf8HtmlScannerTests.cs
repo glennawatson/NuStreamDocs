@@ -22,6 +22,7 @@ public class Utf8HtmlScannerTests
     [Arguments(6)]
     public async Task FindHeadingForEachLevel(int level)
     {
+        const int headingOpenLength = 4;
         var html = Encoding.UTF8.GetBytes($"prefix<h{level}>x</h{level}>");
         var found = Utf8HtmlScanner.TryFindNextHeadingOpen(
             html,
@@ -32,7 +33,7 @@ public class Utf8HtmlScannerTests
         await Assert.That(found).IsTrue();
         await Assert.That(detectedLevel).IsEqualTo(level);
         await Assert.That(tagStart).IsEqualTo("prefix"u8.Length);
-        await Assert.That(tagEnd).IsEqualTo("prefix"u8.Length + 4);
+        await Assert.That(tagEnd).IsEqualTo("prefix"u8.Length + headingOpenLength);
     }
 
     /// <summary>Tags with attributes are bounded correctly at the closing angle.</summary>
@@ -40,10 +41,11 @@ public class Utf8HtmlScannerTests
     [Test]
     public async Task TagWithAttributesBoundsToCloseAngle()
     {
+        const int headingLevel = 2;
         byte[] html = [.. "<h2 id=\"intro\" class=\"x\">body</h2>"u8];
         var found = Utf8HtmlScanner.TryFindNextHeadingOpen(html, 0, out var tagStart, out var tagEnd, out var level);
         await Assert.That(found).IsTrue();
-        await Assert.That(level).IsEqualTo(2);
+        await Assert.That(level).IsEqualTo(headingLevel);
         await Assert.That(tagStart).IsEqualTo(0);
         await Assert.That(html[tagEnd - 1]).IsEqualTo((byte)'>');
     }
@@ -108,8 +110,7 @@ public class Utf8HtmlScannerTests
     [Test]
     public async Task AttributeMissing()
     {
-        var openTag = "<h2 class=\"x\">"u8;
-        var (start, length) = Utf8HtmlScanner.FindAttributeValue(openTag, "id"u8);
+        var (start, length) = Utf8HtmlScanner.FindAttributeValue("<h2 class=\"x\">"u8, "id"u8);
         await Assert.That(start).IsEqualTo(-1);
         await Assert.That(length).IsEqualTo(0);
     }
@@ -119,8 +120,7 @@ public class Utf8HtmlScannerTests
     [Test]
     public async Task AttributeUnclosedQuoteMissing()
     {
-        var openTag = "<h2 id=\"never"u8;
-        var (start, length) = Utf8HtmlScanner.FindAttributeValue(openTag, "id"u8);
+        var (start, length) = Utf8HtmlScanner.FindAttributeValue("<h2 id=\"never"u8, "id"u8);
         await Assert.That(start).IsEqualTo(-1);
         await Assert.That(length).IsEqualTo(0);
     }
@@ -130,11 +130,12 @@ public class Utf8HtmlScannerTests
     [Test]
     public async Task FindNextHeadingAdvancesPastPrevious()
     {
+        const int secondHeadingLevel = 3;
         byte[] html = [.. "<h1>A</h1><p>x</p><h3>B</h3>"u8];
-        Utf8HtmlScanner.TryFindNextHeadingOpen(html, 0, out _, out var tagEnd, out var level1);
+        _ = Utf8HtmlScanner.TryFindNextHeadingOpen(html, 0, out _, out var tagEnd, out var level1);
         await Assert.That(level1).IsEqualTo(1);
 
-        Utf8HtmlScanner.TryFindNextHeadingOpen(html, tagEnd, out _, out _, out var level2);
-        await Assert.That(level2).IsEqualTo(3);
+        _ = Utf8HtmlScanner.TryFindNextHeadingOpen(html, tagEnd, out _, out _, out var level2);
+        await Assert.That(level2).IsEqualTo(secondHeadingLevel);
     }
 }

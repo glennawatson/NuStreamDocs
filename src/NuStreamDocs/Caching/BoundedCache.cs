@@ -13,6 +13,7 @@ namespace NuStreamDocs.Caching;
 /// </summary>
 /// <typeparam name="TKey">Key type; equality compared.</typeparam>
 /// <typeparam name="TValue">Value type held by the cache.</typeparam>
+[System.Diagnostics.DebuggerDisplay("BoundedCache: {Capacity}")]
 public sealed class BoundedCache<TKey, TValue>
     where TKey : notnull
 {
@@ -59,6 +60,7 @@ public sealed class BoundedCache<TKey, TValue>
     /// <param name="equalityComparer">Optional comparer for <typeparamref name="TKey"/>.</param>
     /// <param name="timeProvider">Optional wall-clock provider; defaults to <see cref="TimeProvider.System"/>.</param>
     /// <param name="logger">Optional logger; eviction events are emitted at debug level when supplied.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <c>maxAge &lt;= TimeSpan.Zero</c>.</exception>
     public BoundedCache(
         int capacity,
         in TimeSpan maxAge,
@@ -74,7 +76,7 @@ public sealed class BoundedCache<TKey, TValue>
 
         Capacity = capacity;
         MaxAge = maxAge;
-        _index = new(capacity, equalityComparer ?? EqualityComparer<TKey>.Default);
+        _index = [with(capacity, equalityComparer ?? EqualityComparer<TKey>.Default)];
         _timeProvider = timeProvider ?? TimeProvider.System;
         _logger = logger;
     }
@@ -125,7 +127,7 @@ public sealed class BoundedCache<TKey, TValue>
                 evicted++;
             }
 
-            if (evicted > 0 && _logger != null)
+            if (evicted > 0 && _logger is not null)
             {
                 LogInvokerHelper.Invoke(
                     _logger,
@@ -156,7 +158,7 @@ public sealed class BoundedCache<TKey, TValue>
             if (now - node.Value.WriteTime > MaxAge)
             {
                 _order.Remove(node);
-                _index.Remove(key);
+                _ = _index.Remove(key);
                 value = default!;
                 return false;
             }
@@ -181,7 +183,7 @@ public sealed class BoundedCache<TKey, TValue>
             }
 
             _order.Remove(node);
-            _index.Remove(key);
+            _ = _index.Remove(key);
             return true;
         }
     }
@@ -200,7 +202,7 @@ public sealed class BoundedCache<TKey, TValue>
             {
                 var prev = node.Previous;
                 _order.Remove(node);
-                _index.Remove(node.Value.Key);
+                _ = _index.Remove(node.Value.Key);
                 removed++;
                 node = prev;
             }
@@ -208,7 +210,7 @@ public sealed class BoundedCache<TKey, TValue>
             remaining = _index.Count;
         }
 
-        if (removed > 0 && _logger != null)
+        if (removed > 0 && _logger is not null)
         {
             LogInvokerHelper.Invoke(
                 _logger,
@@ -241,10 +243,13 @@ public sealed class BoundedCache<TKey, TValue>
         }
 
         _order.RemoveLast();
-        _index.Remove(tail.Value.Key);
+        _ = _index.Remove(tail.Value.Key);
     }
 
     /// <summary>One bucket on the recency list.</summary>
+    /// <param name="key">Cache key.</param>
+    /// <param name="value">Value to cache.</param>
+    /// <param name="writeTime">Time the entry was written.</param>
     private sealed class Entry(TKey key, TValue value, DateTimeOffset writeTime)
     {
         /// <summary>Gets the key that addresses this entry.</summary>

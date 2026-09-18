@@ -28,7 +28,7 @@ internal static class CodeSpan
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when a complete code span was emitted.</returns>
-    public static bool TryHandle(
+    internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
@@ -59,7 +59,7 @@ internal static class CodeSpan
     /// <param name="searchFrom">First byte to consider.</param>
     /// <param name="targetLength">Required run length.</param>
     /// <returns>Start index of the matching close run, or -1.</returns>
-    public static int FindMatchingClose(ReadOnlySpan<byte> source, int searchFrom, int targetLength)
+    internal static int FindMatchingClose(ReadOnlySpan<byte> source, int searchFrom, int targetLength)
     {
         var i = searchFrom;
         while (i < source.Length)

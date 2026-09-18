@@ -3,8 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Blog.Common;
 using NuStreamDocs.Common;
@@ -23,6 +23,9 @@ public static class FeedWriter
     /// <summary>Initial sink capacity.</summary>
     private const int InitialCapacity = 8 * 1024;
 
+    /// <summary>Gets the XML element name used for feed and post titles.</summary>
+    private static ReadOnlySpan<byte> TitleElement => "title"u8;
+
     /// <summary>Renders an RSS 2.0 document.</summary>
     /// <param name="options">Feed options.</param>
     /// <param name="posts">Posts to include.</param>
@@ -34,7 +37,7 @@ public static class FeedWriter
         sink.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"u8);
         sink.Write("<rss version=\"2.0\">\n  <channel>\n"u8);
 
-        WriteElement(sink, "    "u8, "title"u8, options.Title);
+        WriteElement(sink, "    "u8, TitleElement, options.Title);
         WriteElement(sink, "    "u8, "link"u8, options.SiteUrl);
         WriteElement(sink, "    "u8, "description"u8, options.Description);
         WriteElement(sink, "    "u8, "lastBuildDate"u8, FormatDate(generatedUtc, Rfc822Format));
@@ -63,7 +66,7 @@ public static class FeedWriter
 
         var siteUrlBytes = options.SiteUrl;
         WriteElement(sink, "  "u8, "id"u8, siteUrlBytes);
-        WriteElement(sink, "  "u8, "title"u8, options.Title);
+        WriteElement(sink, "  "u8, TitleElement, options.Title);
         WriteElement(sink, "  "u8, "subtitle"u8, options.Description);
         WriteElement(sink, "  "u8, "updated"u8, FormatDate(generatedUtc, "o"));
 
@@ -120,11 +123,8 @@ public static class FeedWriter
     /// <param name="value">Source date.</param>
     /// <param name="format">Standard or custom format string.</param>
     /// <returns>UTF-8 bytes.</returns>
-    [SuppressMessage(
-        "Major Code Smell",
-        "S6585:Do not hardcode the format specifier",
-        Justification = "Callers pass a named constant (Rfc822Format) or the standard ISO 8601 spec 'o'.")]
-    private static byte[] FormatDate(in DateTimeOffset value, string format) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static byte[] FormatDate(in DateTimeOffset value, ApiCompatString format) =>
         Encoding.UTF8.GetBytes(value.ToString(format, CultureInfo.InvariantCulture));
 
     /// <summary>Writes one RSS 2.0 <c>&lt;item&gt;</c> element.</summary>
@@ -140,7 +140,7 @@ public static class FeedWriter
         var linkBytes = BuildLinkBytes(siteUrlBytes, post.RelativePath);
 
         sink.Write("    <item>\n"u8);
-        WriteElement(sink, "      "u8, "title"u8, titleBytes);
+        WriteElement(sink, "      "u8, TitleElement, titleBytes);
         WriteElement(sink, "      "u8, "link"u8, linkBytes);
         WriteElement(sink, "      "u8, "guid"u8, linkBytes);
         if (authorBytes is [_, ..])
@@ -180,7 +180,7 @@ public static class FeedWriter
 
         sink.Write("  <entry>\n"u8);
         WriteElement(sink, "    "u8, "id"u8, linkBytes);
-        WriteElement(sink, "    "u8, "title"u8, titleBytes);
+        WriteElement(sink, "    "u8, TitleElement, titleBytes);
 
         sink.Write("    <link href=\""u8);
         XmlEntityEscaper.WriteEscaped(sink, linkBytes, XmlEntityEscaper.Mode.HtmlAttribute);

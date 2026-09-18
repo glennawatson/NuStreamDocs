@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.CFamily;
@@ -42,7 +43,7 @@ public static class HlslLexer
             KeywordDeclarations = KeywordDeclarations,
             KeywordConstants = KeywordConstants,
             Operators = CFamilyShared.StandardOperators,
-            OperatorFirst = CFamilyShared.StandardOperatorFirst
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
         },
         Punctuation = CFamilyShared.StandardPunctuation,
         IntegerSuffix = CFamilyShared.CIntegerSuffix,
@@ -51,11 +52,12 @@ public static class HlslLexer
         IncludePreprocessor = true,
         IncludeCharacterLiteral = false,
         WhitespaceIncludesNewlines = true,
-        SpecialString = null
+        SpecialString = null,
     });
 
     /// <summary>Builds the HLSL type keyword set across four UTF-8 chunks (scalars, vectors, matrices, resource handles).</summary>
     /// <returns>HLSL type keyword set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ByteKeywordSet BuildKeywordTypes() => ByteKeywordSet.CreateFromSpaceSeparated(
         "void bool int uint half float double min16float min10float min16int min12int min16uint"u8,
         "float2 float3 float4 float2x2 float3x3 float4x4 float2x4 float4x2 int2 int3 int4 uint2 uint3 uint4 bool2 bool3 bool4 matrix vector"u8,

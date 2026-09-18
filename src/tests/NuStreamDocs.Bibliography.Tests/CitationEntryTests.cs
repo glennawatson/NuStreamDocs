@@ -9,21 +9,23 @@ namespace NuStreamDocs.Bibliography.Tests;
 /// <summary>Tests for the <see cref="CitationEntry"/> record.</summary>
 public class CitationEntryTests
 {
+    /// <summary>Publication year in the citation fixture.</summary>
+    private const int PublicationYear = 2026;
+
+    /// <summary>Publication month in the citation fixture.</summary>
+    private const int PublicationMonth = 5;
+
+    /// <summary>Publication day in the citation fixture.</summary>
+    private const int PublicationDay = 2;
+
     /// <summary>Month and Day properties can be set and retrieved.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task MonthAndDayProperties()
     {
-        CitationEntry entry = new()
-        {
-            Id = [.. "test"u8],
-            Type = EntryType.Book,
-            Year = 2026,
-            Month = 5,
-            Day = 2
-        };
+        CitationEntry entry = new() { Id = [.. "test"u8], Type = EntryType.Book, Year = PublicationYear, Month = PublicationMonth, Day = PublicationDay };
 
-        await Assert.That(entry.Month).IsEqualTo(5);
-        await Assert.That(entry.Day).IsEqualTo(2);
+        await Assert.That(entry.Month).IsEqualTo(PublicationMonth);
+        await Assert.That(entry.Day).IsEqualTo(PublicationDay);
     }
 }

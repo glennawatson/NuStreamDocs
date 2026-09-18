@@ -8,6 +8,7 @@ namespace NuStreamDocs.Icons.Material;
 /// <param name="Style">Which Material icon family to load.</param>
 /// <param name="StylesheetUrlOverride">Optional explicit UTF-8 stylesheet URL; empty to derive from <see cref="Style"/>.</param>
 /// <param name="Preconnect">When true, also emit <c>&lt;link rel="preconnect"&gt;</c> hints to fonts.googleapis.com / fonts.gstatic.com.</param>
+[System.Diagnostics.DebuggerDisplay("MaterialIconsOptions: {ToString(),nq}")]
 public readonly record struct MaterialIconsOptions(
     MaterialIconStyle Style,
     byte[] StylesheetUrlOverride,

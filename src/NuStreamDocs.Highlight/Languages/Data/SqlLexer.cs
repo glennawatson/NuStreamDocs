@@ -65,14 +65,7 @@ public static class SqlLexer
 
         CFamilyConfig config = new()
         {
-            Tables = new()
-            {
-                Keywords = Keywords,
-                KeywordTypes = KeywordTypes,
-                KeywordDeclarations = KeywordDeclarations,
-                KeywordConstants = KeywordConstants,
-                Operators = OperatorTable
-            },
+            Tables = new() { Keywords = Keywords, KeywordTypes = KeywordTypes, KeywordDeclarations = KeywordDeclarations, KeywordConstants = KeywordConstants, Operators = OperatorTable, },
             Punctuation = PunctuationSet,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,
@@ -80,7 +73,7 @@ public static class SqlLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = false,
             WhitespaceIncludesNewlines = true,
-            SpecialString = sqlString
+            SpecialString = sqlString,
         };
 
         var coreRules = CFamilyRules.Build(config);

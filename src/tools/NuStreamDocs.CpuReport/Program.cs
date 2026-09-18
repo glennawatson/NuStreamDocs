@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Diagnostics.Tracing.Etlx;
 
@@ -44,7 +45,7 @@ internal static class Program
     private const double MillisecondsPerSample = 1.0;
 
     /// <summary>Threshold (in milliseconds) above which the duration formatter switches to seconds.</summary>
-    private const double SecondsThresholdMs = 1000d;
+    private const double SecondsThresholdMs = 1000D;
 
     /// <summary>Provider name for the EventPipe sample-profiler events emitted by <c>EventPipeProfile.CpuSampling</c>.</summary>
     private const string SampleProfilerProvider = "Microsoft-DotNETCore-SampleProfiler";
@@ -70,9 +71,9 @@ internal static class Program
             return ExitCodeTraceFileNotFound;
         }
 
-        var topN = args.Length >= 2 &&
-                   int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) &&
-                   parsed > 0
+        var topN = args.Length >= 2
+                   && int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+                   && parsed > 0
             ? parsed
             : DefaultTopN;
 
@@ -80,14 +81,14 @@ internal static class Program
         if (stats.TotalSamples is 0)
         {
             Console.Error.WriteLine(
-                "trace contained no CPU sample events. Make sure the benchmark was instrumented with " +
-                "[EventPipeProfiler(EventPipeProfile.CpuSampling)].");
+                "trace contained no CPU sample events. Make sure the benchmark was instrumented with "
+                + "[EventPipeProfiler(EventPipeProfile.CpuSampling)].");
             return ExitCodeNoCpuSamples;
         }
 
-        WriteHeader(tracePath, stats);
-        WriteMethodTable(stats, topN);
-        WriteStackTable(stats, topN);
+        WriteHeader(tracePath, stats, Console.Out);
+        WriteMethodTable(stats, topN, Console.Out);
+        WriteStackTable(stats, topN, Console.Out);
         return 0;
     }
 
@@ -96,8 +97,8 @@ internal static class Program
     /// <returns>The aggregated stats.</returns>
     private static AggregatedStats AggregateSamples(string tracePath)
     {
-        Dictionary<string, MethodStat> byMethod = new(StringComparer.Ordinal);
-        Dictionary<string, StackStat> byStack = new(StringComparer.Ordinal);
+        Dictionary<string, MethodStat> byMethod = [with(StringComparer.Ordinal)];
+        Dictionary<string, StackStat> byStack = [with(StringComparer.Ordinal)];
         long totalSamples = 0;
 
         // TraceLog needs the .etlx indexed form to expose CallStack data.
@@ -136,11 +137,10 @@ internal static class Program
                 stackStat.LeafMethod ??= LeafMethodOf(callStack);
             };
 
-            source.Process();
+            _ = source.Process();
         }
         finally
         {
-            // CreateFromEventPipeDataFile writes the etlx next to the input;
             // clean it up so repeat runs don't accumulate copies.
             if (!string.Equals(etlxPath, tracePath, StringComparison.OrdinalIgnoreCase) && File.Exists(etlxPath))
             {
@@ -173,7 +173,7 @@ internal static class Program
     {
         // Per-sample HashSet so a method appearing twice on one stack (recursion) still counts
         // once toward inclusive time — matches how speedscope / dotnet-trace present the metric.
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         var current = stack;
         while (current is not null)
         {
@@ -207,51 +207,60 @@ internal static class Program
     /// <summary>Prints the markdown header + summary line.</summary>
     /// <param name="tracePath">Trace file name surfaced in the title.</param>
     /// <param name="stats">Aggregated stats whose totals are printed.</param>
-    private static void WriteHeader(string tracePath, AggregatedStats stats)
+    /// <param name="writer">Report output destination.</param>
+    private static void WriteHeader(string tracePath, AggregatedStats stats, TextWriter writer)
     {
-        Console.WriteLine($"# CPU Report -- {Path.GetFileName(tracePath)}");
-        Console.WriteLine();
-        Console.WriteLine($"- Total CPU sample events: **{stats.TotalSamples:N0}**");
-        Console.WriteLine($"- Approx wall-time captured: **{FormatDuration(stats.TotalSamples)}**");
-        Console.WriteLine(
-            "- CPU sampling fires once per millisecond per running managed thread; absolute durations are an estimate, *relative* ranking between methods is accurate.");
-        Console.WriteLine();
+        writer.WriteLine($"# CPU Report -- {Path.GetFileName(tracePath)}");
+        writer.WriteLine();
+        writer.WriteLine($"- Total CPU sample events: **{stats.TotalSamples:N0}**");
+        writer.WriteLine($"- Approx wall-time captured: **{FormatDuration(stats.TotalSamples)}**");
+        writer.WriteLine(
+                    "- CPU sampling fires once per millisecond per running managed thread; absolute durations are an estimate, *relative* ranking between methods is accurate.");
+        writer.WriteLine();
     }
 
     /// <summary>Prints the top-N methods table (self-time and inclusive-time columns).</summary>
     /// <param name="stats">Aggregated stats to render.</param>
     /// <param name="topN">Maximum rows to emit.</param>
-    private static void WriteMethodTable(AggregatedStats stats, int topN)
+    /// <param name="writer">Report output destination.</param>
+    private static void WriteMethodTable(AggregatedStats stats, int topN, TextWriter writer)
     {
-        Console.WriteLine($"## Top {topN} methods by self-time");
-        Console.WriteLine();
-        Console.WriteLine("| Method | Self samples | Self % | Inclusive samples | Inclusive % |");
-        Console.WriteLine("|---|---:|---:|---:|---:|");
-        foreach (var (method, stat) in stats.ByMethod.OrderByDescending(static kvp => kvp.Value.SelfSamples).Take(topN))
+        writer.WriteLine($"## Top {topN} methods by self-time");
+        writer.WriteLine();
+        writer.WriteLine("| Method | Self samples | Self % | Inclusive samples | Inclusive % |");
+        writer.WriteLine("|---|---:|---:|---:|---:|");
+        KeyValuePair<string, MethodStat>[] methods = [.. stats.ByMethod];
+        Array.Sort(methods, static (left, right) => right.Value.SelfSamples.CompareTo(left.Value.SelfSamples));
+        for (var i = 0; i < Math.Min(topN, methods.Length); i++)
         {
-            var selfPct = stats.TotalSamples == 0 ? 0d : stat.SelfSamples * PercentMultiplier / stats.TotalSamples;
-            var inclPct = stats.TotalSamples == 0 ? 0d : stat.InclusiveSamples * PercentMultiplier / stats.TotalSamples;
-            Console.WriteLine(
-                $"| `{Escape(method)}` | {stat.SelfSamples:N0} | {selfPct:F1}% | {stat.InclusiveSamples:N0} | {inclPct:F1}% |");
+            var (method, stat) = methods[i];
+            var selfPct = stats.TotalSamples == 0 ? 0D : stat.SelfSamples * PercentMultiplier / stats.TotalSamples;
+            var inclPct = stats.TotalSamples == 0 ? 0D : stat.InclusiveSamples * PercentMultiplier / stats.TotalSamples;
+            writer.WriteLine(
+                            $"| `{Escape(method)}` | {stat.SelfSamples:N0} | {selfPct:F1}% | {stat.InclusiveSamples:N0} | {inclPct:F1}% |");
         }
 
-        Console.WriteLine();
+        writer.WriteLine();
     }
 
     /// <summary>Prints the top-N call stacks by sample count.</summary>
     /// <param name="stats">Aggregated stats to render.</param>
     /// <param name="topN">Maximum rows to emit.</param>
-    private static void WriteStackTable(AggregatedStats stats, int topN)
+    /// <param name="writer">Report output destination.</param>
+    private static void WriteStackTable(AggregatedStats stats, int topN, TextWriter writer)
     {
-        Console.WriteLine($"## Top {topN} call stacks by sample count (depth {StackDepth})");
-        Console.WriteLine();
-        Console.WriteLine("| Leaf | Samples | % | Stack |");
-        Console.WriteLine("|---|---:|---:|---|");
-        foreach (var (stack, stat) in stats.ByStack.OrderByDescending(static kvp => kvp.Value.Samples).Take(topN))
+        writer.WriteLine($"## Top {topN} call stacks by sample count (depth {StackDepth})");
+        writer.WriteLine();
+        writer.WriteLine("| Leaf | Samples | % | Stack |");
+        writer.WriteLine("|---|---:|---:|---|");
+        KeyValuePair<string, StackStat>[] stacks = [.. stats.ByStack];
+        Array.Sort(stacks, static (left, right) => right.Value.Samples.CompareTo(left.Value.Samples));
+        for (var i = 0; i < Math.Min(topN, stacks.Length); i++)
         {
-            var pct = stats.TotalSamples == 0 ? 0d : stat.Samples * PercentMultiplier / stats.TotalSamples;
-            Console.WriteLine(
-                $"| `{Escape(stat.LeafMethod ?? "<n/a>")}` | {stat.Samples:N0} | {pct:F1}% | {Escape(stack)} |");
+            var (stack, stat) = stacks[i];
+            var pct = stats.TotalSamples == 0 ? 0D : stat.Samples * PercentMultiplier / stats.TotalSamples;
+            writer.WriteLine(
+                            $"| `{Escape(stat.LeafMethod ?? "<n/a>")}` | {stat.Samples:N0} | {pct:F1}% | {Escape(stack)} |");
         }
     }
 
@@ -272,7 +281,7 @@ internal static class Program
     /// <returns>The formatted stack line.</returns>
     private static string FormatStack(TraceCallStack stack, int depth)
     {
-        List<string> frames = new(depth);
+        List<string> frames = [with(depth)];
         var current = stack;
         while (current is not null && frames.Count < depth)
         {
@@ -300,6 +309,7 @@ internal static class Program
     /// <summary>Escapes a value so it's safe to drop into a markdown table cell.</summary>
     /// <param name="value">Raw text.</param>
     /// <returns>Escaped text.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Escape(string value) => value
         .Replace("|", "\\|", StringComparison.Ordinal)
         .Replace("\n", " ", StringComparison.Ordinal);
@@ -307,21 +317,21 @@ internal static class Program
     /// <summary>Per-method sample accumulator (mutable struct held in dictionary).</summary>
     private record struct MethodStat
     {
-        /// <summary>Number of samples whose leaf-most stack frame was this method.</summary>
-        public long SelfSamples;
+        /// <summary>Gets or sets number of samples whose leaf-most stack frame was this method.</summary>
+        public long SelfSamples { get; set; }
 
-        /// <summary>Number of samples whose stack contained this method anywhere.</summary>
-        public long InclusiveSamples;
+        /// <summary>Gets or sets number of samples whose stack contained this method anywhere.</summary>
+        public long InclusiveSamples { get; set; }
     }
 
     /// <summary>Per-stack sample accumulator (mutable struct held in dictionary).</summary>
     private record struct StackStat
     {
-        /// <summary>Number of samples that landed on this stack.</summary>
-        public long Samples;
+        /// <summary>Gets or sets number of samples that landed on this stack.</summary>
+        public long Samples { get; set; }
 
-        /// <summary>Leaf-most managed method observed on this stack -- used as the row label.</summary>
-        public string? LeafMethod;
+        /// <summary>Gets or sets leaf-most managed method observed on this stack -- used as the row label.</summary>
+        public string? LeafMethod { get; set; }
     }
 
     /// <summary>Result of the trace pass.</summary>

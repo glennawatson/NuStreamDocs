@@ -35,7 +35,7 @@ internal static class OutputPathBuilder
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    public static FilePath ForFlatUrls(in DirectoryPath outputRoot, in FilePath relativePath)
+    internal static FilePath ForFlatUrls(in DirectoryPath outputRoot, in FilePath relativePath)
     {
         var rootStr = outputRoot.Value ?? string.Empty;
         var relStr = relativePath.Value ?? string.Empty;
@@ -43,11 +43,10 @@ internal static class OutputPathBuilder
         var endsWithMd = relSpan.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase);
         var keepLength = endsWithMd ? relSpan.Length - MarkdownExtensionLength : relSpan.Length;
         var totalLength = rootStr.Length + 1 + keepLength + (endsWithMd ? HtmlExtensionLength : 0);
-        var separator = Path.DirectorySeparatorChar;
 
         return string.Create(
             totalLength,
-            (rootStr, relStr, keepLength, endsWithMd, separator),
+            (rootStr, relStr, keepLength, endsWithMd, Path.DirectorySeparatorChar),
             static (span, state) => WriteOutputPath(span, state));
     }
 
@@ -55,7 +54,7 @@ internal static class OutputPathBuilder
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
-    public static FilePath ForDirectoryUrls(in DirectoryPath outputRoot, in FilePath relativePath)
+    internal static FilePath ForDirectoryUrls(in DirectoryPath outputRoot, in FilePath relativePath)
     {
         var rootStr = outputRoot.Value ?? string.Empty;
         var relStr = relativePath.Value ?? string.Empty;
@@ -75,10 +74,9 @@ internal static class OutputPathBuilder
 
         var stemLength = stem.Length;
         var totalLength = rootStr.Length + 1 + stemLength + IndexHtmlSuffixLength;
-        var separator = Path.DirectorySeparatorChar;
         return string.Create(
             totalLength,
-            (rootStr, relStr, stemLength, separator),
+            (rootStr, relStr, stemLength, Path.DirectorySeparatorChar),
             static (span, state) => WriteDirectoryUrlPath(span, state));
     }
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -72,6 +73,7 @@ public class SuperFencesDispatcherTests
     /// <param name="input">HTML input.</param>
     /// <param name="handler">Handler.</param>
     /// <returns>Rewritten HTML.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Dispatch(string input, ICustomFenceHandler handler) => Dispatch(input, [handler]);
 
     /// <summary>Drives bytes through the dispatcher with a list of handlers.</summary>
@@ -80,7 +82,7 @@ public class SuperFencesDispatcherTests
     /// <returns>Rewritten HTML.</returns>
     private static string Dispatch(string input, ICustomFenceHandler[] handlers)
     {
-        Dictionary<byte[], ICustomFenceHandler> index = new(handlers.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], ICustomFenceHandler> index = [with(handlers.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < handlers.Length; i++)
         {
             index[handlers[i].Language.ToArray()] = handlers[i];

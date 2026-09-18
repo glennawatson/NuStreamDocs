@@ -33,9 +33,11 @@ public class Utf8StackBufferTests
     [Test]
     public async Task OversizedInputFallsBackToPool()
     {
-        string big = new('a', 32);
-        var copy = EncodeAndCopy(big, 8);
-        await Assert.That(copy.Length).IsEqualTo(32);
+        const int inputLength = 32;
+        const int stackLength = 8;
+        string big = new('a', inputLength);
+        var copy = EncodeAndCopy(big, stackLength);
+        await Assert.That(copy.Length).IsEqualTo(inputLength);
         await Assert.That(Encoding.UTF8.GetString(copy)).IsEqualTo(big);
     }
 
@@ -44,8 +46,8 @@ public class Utf8StackBufferTests
     [Test]
     public async Task RejectsNullOrEmpty()
     {
-        await Assert.That(() => MakeBuffer(null!)).Throws<ArgumentException>();
-        await Assert.That(() => MakeBuffer(string.Empty)).Throws<ArgumentException>();
+        await Assert.That(static () => MakeBuffer(null!)).Throws<ArgumentException>();
+        await Assert.That(static () => MakeBuffer(string.Empty)).Throws<ArgumentException>();
     }
 
     /// <summary>Encodes <paramref name="value"/> through a buffer sized at <paramref name="stackBufferSize"/>, copying the bytes out before await.</summary>
@@ -54,8 +56,12 @@ public class Utf8StackBufferTests
     /// <returns>Heap copy of the encoded UTF-8 bytes.</returns>
     private static byte[] EncodeAndCopy(string value, int stackBufferSize)
     {
+        const int maximumStackSize = 1024;
+
         // The ref-struct buffer can't cross an await; copy out before returning.
-        Span<byte> stack = stackalloc byte[Utf8StackBuffer.StackSize];
+        Span<byte> stack = Utf8StackBuffer.StackSize <= maximumStackSize
+            ? stackalloc byte[Utf8StackBuffer.StackSize]
+            : new byte[Utf8StackBuffer.StackSize];
 
         // Slicing the stack span lets the test exercise the small-stack pool-fallback path.
         using Utf8StackBuffer buf = new(value, stack[..stackBufferSize]);
@@ -66,7 +72,10 @@ public class Utf8StackBufferTests
     /// <param name="value">String value.</param>
     private static void MakeBuffer(string value)
     {
-        Span<byte> stack = stackalloc byte[Utf8StackBuffer.StackSize];
+        const int maximumStackSize = 1024;
+        Span<byte> stack = Utf8StackBuffer.StackSize <= maximumStackSize
+            ? stackalloc byte[Utf8StackBuffer.StackSize]
+            : new byte[Utf8StackBuffer.StackSize];
         using Utf8StackBuffer buf = new(value, stack);
         _ = buf.Bytes;
     }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
@@ -10,12 +11,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.CheckList;
 
 /// <summary>Check-list plugin — rewrites <c>- [ ]</c> / <c>- [x]</c> tasks into disabled-checkbox HTML.</summary>
+[System.Diagnostics.DebuggerDisplay("CheckListPlugin: {Name}")]
 public sealed class CheckListPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>Head-link snippet injected on every page.</summary>
-    private static readonly byte[] LinkBytes =
-        [.. """<link rel="stylesheet" href="/assets/extensions/checklist.css">"""u8];
-
     /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
     [
@@ -37,14 +35,20 @@ public sealed class CheckListPlugin : IPagePreRenderPlugin, IStaticAssetProvider
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
+    /// <summary>Gets the stylesheet link injected on every page.</summary>
+    private static ReadOnlySpan<byte> LinkBytes => """<link rel="stylesheet" href="/assets/extensions/checklist.css">"""u8;
+
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasCheckListBullet(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         CheckListRewriter.Rewrite(context.Source, context.Output);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(LinkBytes);
 }

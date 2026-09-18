@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.MarkdownExtensions.Abbr;
@@ -12,12 +13,16 @@ using NuStreamDocs.SmartSymbols;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Micro-benchmarks for inline markdown rewriters that operate on the byte-level fast path.</summary>
+[DebuggerDisplay("InlineRewriterBenchmarks: abbr={_abbr}, smartSymbols={_smartSymbols}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class InlineRewriterBenchmarks
 {
     /// <summary>Number of times each benchmark block is repeated.</summary>
     private const int Repetitions = 120;
+
+    /// <summary>Headroom for markup inserted by the inline rewriters.</summary>
+    private const int OutputExpansionFactor = 2;
 
     /// <summary>Pre-built abbreviation fixture with multiple definitions and repeated usages.</summary>
     private byte[] _abbr = [];
@@ -53,7 +58,7 @@ public class InlineRewriterBenchmarks
     [Benchmark]
     public int Abbr()
     {
-        ArrayBufferWriter<byte> sink = new(_abbr.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_abbr.Length * OutputExpansionFactor);
         PagePreRenderContext ctx = new("page.md", _abbr, sink);
         _abbrPlugin.PreRender(in ctx);
         return sink.WrittenCount;
@@ -64,7 +69,7 @@ public class InlineRewriterBenchmarks
     [Benchmark]
     public int SmartSymbols()
     {
-        ArrayBufferWriter<byte> sink = new(_smartSymbols.Length * 2);
+        ArrayBufferWriter<byte> sink = new(_smartSymbols.Length * OutputExpansionFactor);
         PagePreRenderContext ctx = new("page.md", _smartSymbols, sink);
         _smartSymbolsPlugin.PreRender(in ctx);
         return sink.WrittenCount;
@@ -79,7 +84,7 @@ public class InlineRewriterBenchmarks
         StringBuilder builder = new(block.Length * count);
         for (var i = 0; i < count; i++)
         {
-            builder.Append(block);
+            _ = builder.Append(block);
         }
 
         return builder.ToString();

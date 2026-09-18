@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -16,15 +17,22 @@ namespace NuStreamDocs.ContentLoader.Feed;
 /// the consume-side counterpart to NuStreamDocs.Feed. Each page carries <c>title</c>, <c>date</c>,
 /// <c>source</c>, and <c>external_url</c> frontmatter; the body is the item's content (usually HTML).
 /// </summary>
+[DebuggerDisplay("FeedContentLoader: {_feedUrl.Value,nq}")]
 public sealed class FeedContentLoader : IContentLoader
 {
+    /// <summary>Space reserved for route separators and numeric suffixes.</summary>
+    private const int RouteCapacityPadding = 8;
+
+    /// <summary>HTTP transport for requests without a caller-supplied client.</summary>
+    private static readonly HttpClient SharedClient = new(new SocketsHttpHandler { UseCookies = false });
+
     /// <summary>The feed URL.</summary>
     private readonly UrlPath _feedUrl;
 
     /// <summary>Subdirectory the synthesized pages are placed under (e.g. <c>blog/external</c>).</summary>
     private readonly PathSegment _routePrefix;
 
-    /// <summary>HTTP client factory; null means the loader owns a short-lived client.</summary>
+    /// <summary>Optional factory for caller-owned HTTP clients.</summary>
     private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger for diagnostics.</summary>
@@ -50,7 +58,7 @@ public sealed class FeedContentLoader : IContentLoader
     /// <summary>Initializes a new instance of the <see cref="FeedContentLoader"/> class.</summary>
     /// <param name="feedUrl">The feed URL.</param>
     /// <param name="routePrefix">Subdirectory the synthesized pages are placed under.</param>
-    /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
+    /// <param name="httpClientFactory">Factory producing a caller-owned HTTP client; null uses a shared client without cookies.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public FeedContentLoader(
         UrlPath feedUrl,
@@ -73,36 +81,23 @@ public sealed class FeedContentLoader : IContentLoader
     public async ValueTask<SyntheticPage[]> LoadAsync(ContentLoaderContext context, CancellationToken cancellationToken)
     {
         _ = context;
-        var xml = await FetchAsync(cancellationToken).ConfigureAwait(false);
+        var xml = await GetBytesAsync(_httpClientFactory is null ? SharedClient : _httpClientFactory(), cancellationToken).ConfigureAwait(false);
         var items = RssAtomReader.Read(xml);
         return BuildPages(items);
-    }
-
-    /// <summary>Fetches the feed XML.</summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>UTF-8 feed bytes.</returns>
-    private async Task<byte[]> FetchAsync(CancellationToken cancellationToken)
-    {
-        if (_httpClientFactory is not null)
-        {
-            return await GetBytesAsync(_httpClientFactory(), cancellationToken).ConfigureAwait(false);
-        }
-
-        using HttpClient owned = new();
-        return await GetBytesAsync(owned, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Issues the GET and reads the body.</summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>UTF-8 response body.</returns>
+    /// <exception cref="ContentLoaderException">The HTTP request failed.</exception>
     private async Task<byte[]> GetBytesAsync(HttpClient client, CancellationToken cancellationToken)
     {
         Uri endpoint = new(_feedUrl.Value, UriKind.Absolute);
         try
         {
             using var response = await client.GetAsync(endpoint, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            _ = response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
@@ -120,14 +115,14 @@ public sealed class FeedContentLoader : IContentLoader
     private SyntheticPage[] BuildPages(FeedItem[] items)
     {
         var pages = new SyntheticPage[items.Length];
-        HashSet<byte[]> usedRoutes = new(ByteArrayComparer.Instance);
+        HashSet<byte[]> usedRoutes = [with(ByteArrayComparer.Instance)];
         var feedUrlBytes = Encoding.UTF8.GetBytes(_feedUrl.Value);
         for (var i = 0; i < items.Length; i++)
         {
-            var item = items[i];
+            ref readonly var item = ref items[i];
             var slugSource = item.Title is [_, ..] ? item.Title : item.Identifier;
             var route = UniqueRoute(Slug.FromBytes(slugSource), usedRoutes);
-            pages[i] = new(new(Encoding.UTF8.GetString(route)), FeedMarkdown.Build(item, feedUrlBytes));
+            pages[i] = new(new(Encoding.UTF8.GetString(route)), FeedMarkdown.Build(in item, feedUrlBytes));
         }
 
         return pages;
@@ -141,27 +136,26 @@ public sealed class FeedContentLoader : IContentLoader
     {
         Span<byte> digits = stackalloc byte[16];
         var suffix = 1;
-        while (true)
+        byte[] route;
+        do
         {
-            ArrayBufferWriter<byte> writer = new(_routePrefix.Value.Length + slug.Length + 8);
-            Encoding.UTF8.GetBytes(_routePrefix.Value.AsSpan(), writer);
+            ArrayBufferWriter<byte> writer = new(_routePrefix.Value.Length + slug.Length + RouteCapacityPadding);
+            _ = Encoding.UTF8.GetBytes(_routePrefix.Value.AsSpan(), writer);
             writer.Write("/"u8);
             writer.Write(slug);
             if (suffix > 1)
             {
                 writer.Write("-"u8);
-                suffix.TryFormat(digits, out var written);
+                _ = suffix.TryFormat(digits, out var written);
                 writer.Write(digits[..written]);
             }
 
             writer.Write(".md"u8);
-            var route = writer.WrittenSpan.ToArray();
-            if (usedRoutes.Add(route))
-            {
-                return route;
-            }
-
+            route = writer.WrittenSpan.ToArray();
             suffix++;
         }
+        while (!usedRoutes.Add(route));
+
+        return route;
     }
 }

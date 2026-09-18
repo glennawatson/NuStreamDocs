@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
@@ -19,6 +20,7 @@ namespace NuStreamDocs.Benchmarks;
 /// <see cref="IconShortcodesWithMdi"/> measures the rewriter end-to-end with
 /// the resolver wired in.
 /// </remarks>
+[DebuggerDisplay("IconShortcodeBenchmarks: mixedSource={_mixedSource}, withMdi={_withMdi}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class IconShortcodeBenchmarks
@@ -98,8 +100,8 @@ public class IconShortcodeBenchmarks
     }
 
     /// <summary>Icon shortcode rewriter end-to-end with the MDI resolver, renting from <see cref="PageBuilderPool"/> to mirror production.</summary>
-    /// <remarks>Inlines SVGs for known names; falls back to the font-ligature span for the rest.</remarks>
     /// <returns>Bytes written.</returns>
+    /// <remarks>Inlines SVGs for known names; falls back to the font-ligature span for the rest.</remarks>
     [Benchmark]
     public int IconShortcodesWithMdi()
     {
@@ -110,8 +112,8 @@ public class IconShortcodeBenchmarks
     }
 
     /// <summary>Icon shortcode rewriter without a resolver, renting from <see cref="PageBuilderPool"/> to mirror production.</summary>
-    /// <remarks>Every Material shortcode emits a font-ligature span (the legacy path).</remarks>
     /// <returns>Bytes written.</returns>
+    /// <remarks>Every Material shortcode emits a font-ligature span (the legacy path).</remarks>
     [Benchmark]
     public int IconShortcodesLigatureOnly()
     {

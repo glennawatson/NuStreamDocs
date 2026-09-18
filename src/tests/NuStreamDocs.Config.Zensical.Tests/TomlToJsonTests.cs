@@ -11,6 +11,9 @@ namespace NuStreamDocs.Config.Zensical.Tests;
 /// <summary>Branch-coverage tests for TomlToJson.</summary>
 public class TomlToJsonTests
 {
+    /// <summary>Expected integer property shared by the scalar and streaming cases.</summary>
+    private const string IntegerProperty = "\"a\":1";
+
     /// <summary>Empty input produces empty object.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -40,13 +43,13 @@ public class TomlToJsonTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task CommentsAndBlanksSkipped() =>
-        await Assert.That(Convert("# comment\n\na = 1\n")).Contains("\"a\":1");
+        await Assert.That(Convert("# comment\n\na = 1\n")).Contains(IntegerProperty);
 
     /// <summary>Trailing comment on a value is stripped.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TrailingComment() =>
-        await Assert.That(Convert("a = 1 # tail comment\n")).Contains("\"a\":1");
+        await Assert.That(Convert("a = 1 # tail comment\n")).Contains(IntegerProperty);
 
     /// <summary>Single-segment table header opens a sub-object.</summary>
     /// <returns>Async test.</returns>
@@ -95,12 +98,11 @@ public class TomlToJsonTests
     {
         ArrayBufferWriter<byte> sink = new();
         await using Utf8JsonWriter writer = new(sink);
-        const string Input = "a = 1\n[t]\nk = 2\n";
-        await using MemoryStream stream = new(Encoding.UTF8.GetBytes(Input));
+        await using MemoryStream stream = new([.. "a = 1\n[t]\nk = 2\n"u8]);
         await TomlToJson.ConvertAsync(stream, writer, CancellationToken.None);
         await writer.FlushAsync();
         var json = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(json).Contains("\"a\":1");
+        await Assert.That(json).Contains(IntegerProperty);
         await Assert.That(json).Contains("\"t\":{\"k\":2}");
     }
 

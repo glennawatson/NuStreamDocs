@@ -9,6 +9,15 @@ namespace NuStreamDocs.Optimize.Tests;
 /// <summary>End-to-end tests for <c>OptimizePlugin</c>.</summary>
 public class OptimizePluginTests
 {
+    /// <summary>Page length large enough to exercise both compression formats.</summary>
+    private const int PageLength = 8192;
+
+    /// <summary>Page length above the custom compression threshold.</summary>
+    private const int SiblingPageLength = 4096;
+
+    /// <summary>Compression threshold for the sibling-file scenario.</summary>
+    private const int MinimumBytes = 1024;
+
     /// <summary>HTML files above the minimum size get gzip + brotli siblings.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -18,14 +27,14 @@ public class OptimizePluginTests
         try
         {
             var page = Path.Combine(dir, "page.html");
-            await File.WriteAllTextAsync(page, new string('x', 8192));
+            await File.WriteAllTextAsync(page, new string('x', PageLength));
 
             OptimizePlugin plugin = new(OptimizeOptions.Default);
             await plugin.CompressTreeAsync(dir, CancellationToken.None);
 
-            await Assert.That(File.Exists(page + ".gz")).IsTrue();
-            await Assert.That(File.Exists(page + ".br")).IsTrue();
-            await Assert.That(new FileInfo(page + ".gz").Length).IsLessThan(new FileInfo(page).Length);
+            await Assert.That(File.Exists($"{page}.gz")).IsTrue();
+            await Assert.That(File.Exists($"{page}.br")).IsTrue();
+            await Assert.That(new FileInfo($"{page}.gz").Length).IsLessThan(new FileInfo(page).Length);
         }
         finally
         {
@@ -47,8 +56,8 @@ public class OptimizePluginTests
             OptimizePlugin plugin = new(OptimizeOptions.Default);
             await plugin.CompressTreeAsync(dir, CancellationToken.None);
 
-            await Assert.That(File.Exists(tiny + ".gz")).IsFalse();
-            await Assert.That(File.Exists(tiny + ".br")).IsFalse();
+            await Assert.That(File.Exists($"{tiny}.gz")).IsFalse();
+            await Assert.That(File.Exists($"{tiny}.br")).IsFalse();
         }
         finally
         {
@@ -65,19 +74,19 @@ public class OptimizePluginTests
         try
         {
             var page = Path.Combine(dir, "page.html");
-            await File.WriteAllTextAsync(page, new string('y', 4096));
-            await File.WriteAllTextAsync(page + ".gz", "preexisting");
+            await File.WriteAllTextAsync(page, new string('y', SiblingPageLength));
+            await File.WriteAllTextAsync($"{page}.gz", "preexisting");
 
             OptimizePlugin plugin = new(OptimizeOptions.Default with
             {
                 Formats = OptimizeFormats.Gzip,
-                MinimumBytes = 1024
+                MinimumBytes = MinimumBytes
             });
             await plugin.CompressTreeAsync(dir, CancellationToken.None);
 
             // .gz sibling will be overwritten via .gz of the source — but we never iterate into the .gz itself.
-            await Assert.That(File.Exists(page + ".gz")).IsTrue();
-            await Assert.That(File.Exists(page + ".gz.gz")).IsFalse();
+            await Assert.That(File.Exists($"{page}.gz")).IsTrue();
+            await Assert.That(File.Exists($"{page}.gz.gz")).IsFalse();
         }
         finally
         {
@@ -91,8 +100,8 @@ public class OptimizePluginTests
     {
         var dir = Path.Combine(
             Path.GetTempPath(),
-            "smd-opt-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(dir);
+            $"smd-opt-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(dir);
         return dir;
     }
 }

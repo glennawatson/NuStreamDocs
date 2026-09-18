@@ -10,6 +10,12 @@ namespace NuStreamDocs.Tests;
 /// <summary>Behavior tests for <c>DocsAssetCopier</c>.</summary>
 public class DocsAssetCopierTests
 {
+    /// <summary>Images Directory used by the test cases.</summary>
+    private const string ImagesDirectory = "images";
+
+    /// <summary>Expected Asset Count used by the test cases.</summary>
+    private const int ExpectedAssetCount = 3;
+
     /// <summary>Non-markdown content under the docs root is mirrored into the output tree.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -24,10 +30,10 @@ public class DocsAssetCopierTests
         var copied =
             DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
 
-        await Assert.That(File.Exists(Path.Combine(fixture.Output, "images", "logo.png"))).IsTrue();
-        await Assert.That(File.Exists(Path.Combine(fixture.Output, "images", "diagram.svg"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(fixture.Output, ImagesDirectory, "logo.png"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(fixture.Output, ImagesDirectory, "diagram.svg"))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "javascripts", "extra.js"))).IsTrue();
-        await Assert.That(copied).IsEqualTo(3);
+        await Assert.That(copied).IsEqualTo(ExpectedAssetCount);
     }
 
     /// <summary>Markdown files are skipped — pages are emitted by the render pipeline, not by the asset copier.</summary>
@@ -39,7 +45,7 @@ public class DocsAssetCopierTests
         await fixture.WriteAsync("guide/intro.md", "# Intro");
         await fixture.WriteAsync("README.md", "# Readme");
 
-        DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
+        _ = DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
 
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "guide", "intro.md"))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "README.md"))).IsFalse();
@@ -53,7 +59,7 @@ public class DocsAssetCopierTests
         using var fixture = ScratchTree.Create();
         await fixture.WriteAsync("guide/.pages", "title: Guide");
 
-        DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
+        _ = DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
 
         await Assert.That(File.Exists(Path.Combine(fixture.Output, "guide", ".pages"))).IsFalse();
     }
@@ -68,11 +74,11 @@ public class DocsAssetCopierTests
         await fixture.WriteAsync(".cache/data.bin", "cache stuff");
         await fixture.WriteAsync("images/.DS_Store", "mac state");
 
-        DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
+        _ = DocsAssetCopier.Copy((DirectoryPath)fixture.Input, (DirectoryPath)fixture.Output, PathFilter.Empty);
 
         await Assert.That(File.Exists(Path.Combine(fixture.Output, ".git", "config"))).IsFalse();
         await Assert.That(File.Exists(Path.Combine(fixture.Output, ".cache", "data.bin"))).IsFalse();
-        await Assert.That(File.Exists(Path.Combine(fixture.Output, "images", ".DS_Store"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(fixture.Output, ImagesDirectory, ".DS_Store"))).IsFalse();
     }
 
     /// <summary>An empty input root returns zero copies and doesn't fail.</summary>
@@ -80,8 +86,8 @@ public class DocsAssetCopierTests
     [Test]
     public async Task MissingInputRootReturnsZero()
     {
-        var phantom = Path.Combine(Path.GetTempPath(), "smkd-asset-missing-" + Guid.NewGuid().ToString("N"));
-        var output = Path.Combine(Path.GetTempPath(), "smkd-asset-out-" + Guid.NewGuid().ToString("N"));
+        var phantom = Path.Combine(Path.GetTempPath(), $"smkd-asset-missing-{Guid.NewGuid():N}");
+        var output = Path.Combine(Path.GetTempPath(), $"smkd-asset-out-{Guid.NewGuid():N}");
         try
         {
             var copied = DocsAssetCopier.Copy((DirectoryPath)phantom, (DirectoryPath)output, PathFilter.Empty);
@@ -106,8 +112,8 @@ public class DocsAssetCopierTests
             Root = root;
             Input = Path.Combine(root, "docs");
             Output = Path.Combine(root, "site");
-            Directory.CreateDirectory(Input);
-            Directory.CreateDirectory(Output);
+            _ = Directory.CreateDirectory(Input);
+            _ = Directory.CreateDirectory(Output);
         }
 
         /// <summary>Gets the fixture root directory.</summary>
@@ -123,7 +129,7 @@ public class DocsAssetCopierTests
         /// <returns>A new fixture; caller must dispose.</returns>
         public static ScratchTree Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "smkd-assetcopy-" + Guid.NewGuid().ToString("N"));
+            var root = Path.Combine(Path.GetTempPath(), $"smkd-assetcopy-{Guid.NewGuid():N}");
             return new(root);
         }
 
@@ -134,7 +140,7 @@ public class DocsAssetCopierTests
         public Task WriteAsync(string relativePath, string content)
         {
             var path = Path.Combine(Input, relativePath);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             return File.WriteAllTextAsync(path, content);
         }
 

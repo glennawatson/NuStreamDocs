@@ -9,6 +9,12 @@ namespace NuStreamDocs.Transitions.Tests;
 /// <summary>Coverage for <c>TransitionsOptionsExtensions</c>.</summary>
 public class TransitionsOptionsExtensionsTests
 {
+    /// <summary>Default prefetch delay.</summary>
+    private const int DefaultPrefetchDelay = 80;
+
+    /// <summary>Custom prefetch delay.</summary>
+    private const int CustomPrefetchDelay = 150;
+
     /// <summary>The defaults are the expected content selector, hover prefetch, and fade animation.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -19,7 +25,7 @@ public class TransitionsOptionsExtensionsTests
         await Assert.That(Encoding.UTF8.GetString(o.NavSelector)).IsEqualTo(".md-sidebar--secondary");
         await Assert.That(o.Prefetch).IsEqualTo(PrefetchStrategy.Hover);
         await Assert.That(o.Animation).IsEqualTo(TransitionAnimation.Fade);
-        await Assert.That(o.PrefetchDelayMs).IsEqualTo(80);
+        await Assert.That(o.PrefetchDelayMs).IsEqualTo(DefaultPrefetchDelay);
         await Assert.That(o.Enabled).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(o.IgnoreSelector)).Contains("download");
     }
@@ -34,13 +40,13 @@ public class TransitionsOptionsExtensionsTests
             .WithNavSelector(".sidebar"u8)
             .WithAnimation(TransitionAnimation.None)
             .WithPrefetch(PrefetchStrategy.Viewport)
-            .WithPrefetchDelay(150)
+            .WithPrefetchDelay(CustomPrefetchDelay)
             .WithIgnoreSelector(".no-router"u8);
         await Assert.That(Encoding.UTF8.GetString(o.ContentSelector)).IsEqualTo("main");
         await Assert.That(Encoding.UTF8.GetString(o.NavSelector)).IsEqualTo(".sidebar");
         await Assert.That(o.Animation).IsEqualTo(TransitionAnimation.None);
         await Assert.That(o.Prefetch).IsEqualTo(PrefetchStrategy.Viewport);
-        await Assert.That(o.PrefetchDelayMs).IsEqualTo(150);
+        await Assert.That(o.PrefetchDelayMs).IsEqualTo(CustomPrefetchDelay);
         await Assert.That(Encoding.UTF8.GetString(o.IgnoreSelector)).IsEqualTo(".no-router");
     }
 

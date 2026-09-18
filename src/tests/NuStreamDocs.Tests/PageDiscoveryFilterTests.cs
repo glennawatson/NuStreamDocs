@@ -10,6 +10,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>End-to-end tests that <c>PageDiscovery</c> honors <c>PathFilter</c>.</summary>
 public class PageDiscoveryFilterTests
 {
+    /// <summary>Guide Directory used by the test cases.</summary>
+    private const string GuideDirectory = "guide";
+
     /// <summary>Excluded paths never appear in the discovered stream.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -17,12 +20,12 @@ public class PageDiscoveryFilterTests
     {
         var root = Path.Combine(
             Path.GetTempPath(),
-            "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smd-discovery-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         try
         {
-            Directory.CreateDirectory(Path.Combine(root, "drafts"));
-            Directory.CreateDirectory(Path.Combine(root, "guide"));
-            await File.WriteAllTextAsync(Path.Combine(root, "guide", "intro.md"), "# Intro");
+            _ = Directory.CreateDirectory(Path.Combine(root, "drafts"));
+            _ = Directory.CreateDirectory(Path.Combine(root, GuideDirectory));
+            await File.WriteAllTextAsync(Path.Combine(root, GuideDirectory, "intro.md"), "# Intro");
             await File.WriteAllTextAsync(Path.Combine(root, "drafts", "wip.md"), "# WIP");
 
             PathFilter filter = new([], ["drafts/**"]);
@@ -48,12 +51,12 @@ public class PageDiscoveryFilterTests
     {
         var root = Path.Combine(
             Path.GetTempPath(),
-            "smd-discovery-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smd-discovery-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         try
         {
-            Directory.CreateDirectory(Path.Combine(root, "guide"));
-            Directory.CreateDirectory(Path.Combine(root, "blog"));
-            await File.WriteAllTextAsync(Path.Combine(root, "guide", "intro.md"), "# Intro");
+            _ = Directory.CreateDirectory(Path.Combine(root, GuideDirectory));
+            _ = Directory.CreateDirectory(Path.Combine(root, "blog"));
+            await File.WriteAllTextAsync(Path.Combine(root, GuideDirectory, "intro.md"), "# Intro");
             await File.WriteAllTextAsync(Path.Combine(root, "blog", "post.md"), "# Post");
 
             PathFilter filter = new(["guide/**/*.md"], []);

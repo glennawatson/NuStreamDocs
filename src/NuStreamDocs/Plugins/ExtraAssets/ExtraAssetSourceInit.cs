@@ -8,6 +8,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
 /// <summary>Init-only bundle for <see cref="ExtraAssetSource"/>'s private ctor; callers should use the per-kind factory methods on <see cref="ExtraAssetSource"/>.</summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "SST2338", Justification = "The asset initialization contract targets .NET 10, which has no runtime union support.")]
 internal readonly record struct ExtraAssetSourceInit
 {
     /// <summary>Gets the source kind.</summary>

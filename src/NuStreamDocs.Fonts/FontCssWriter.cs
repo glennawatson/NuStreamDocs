@@ -121,6 +121,7 @@ public static class FontCssWriter
     /// <param name="Style">Upright or italic.</param>
     /// <param name="UnicodeRange">UTF-8 <c>unicode-range</c> value (empty to omit the descriptor).</param>
     /// <param name="AssetPath">Site-relative path the file is written to (without a leading slash).</param>
+    [System.Diagnostics.DebuggerDisplay("ResourceCss: {ToString(),nq}")]
     public readonly record struct ResourceCss(int Weight, FontStyle Style, byte[] UnicodeRange, byte[] AssetPath);
 
     /// <summary>One declared family's contribution to the stylesheet.</summary>
@@ -131,6 +132,7 @@ public static class FontCssWriter
     /// <param name="ThemeVariables">UTF-8 names of CSS custom properties to alias to <c>--nstd-font-&lt;id&gt;</c>.</param>
     /// <param name="Metrics">Webfont metrics for the CLS fallback face, or <see langword="null"/> to skip it.</param>
     /// <param name="Resources">The resolved files.</param>
+    [System.Diagnostics.DebuggerDisplay("FaceCss: {ToString(),nq}")]
     public readonly record struct FaceCss(
         byte[] Id,
         byte[] FamilyBytes,

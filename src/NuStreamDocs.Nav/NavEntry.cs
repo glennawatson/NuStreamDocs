@@ -8,6 +8,7 @@ namespace NuStreamDocs.Nav;
 /// <param name="Title">UTF-8 display title; empty to derive from the source file (front-matter, first heading, or filename).</param>
 /// <param name="Path">UTF-8 source-relative markdown path (forward slashes), absolute URL (http/https), or empty for a pure section.</param>
 /// <param name="Children">Nested entries; empty for a leaf.</param>
+[System.Diagnostics.DebuggerDisplay("NavEntry: {IsSection}")]
 public readonly record struct NavEntry(byte[] Title, byte[] Path, NavEntry[] Children)
 {
     /// <summary>Gets a value indicating whether this entry represents a section (has children).</summary>

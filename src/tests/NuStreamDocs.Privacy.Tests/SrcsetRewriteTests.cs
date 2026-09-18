@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
@@ -12,12 +13,15 @@ public class SrcsetRewriteTests
     /// <summary>Filter that allows every host.</summary>
     private static readonly HostFilter EmptyHosts = new(null, null);
 
+    /// <summary>Gets the asset directory used by the test cases.</summary>
+    private static ReadOnlySpan<byte> AssetDirectory => "assets/external"u8;
+
     /// <summary>A single-URL srcset gets rewritten to the local path.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task RewritesSingleUrlSrcset()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("<img srcset=\"https://example.com/x.png\">", registry);
         await Assert.That(output).Contains("srcset=\"/assets/external/");
         await Assert.That(output).DoesNotContain("https://example.com/x.png");
@@ -28,7 +32,7 @@ public class SrcsetRewriteTests
     [Test]
     public async Task RewritesMultiUrlSrcsetPreservingDescriptors()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite(
             "<img srcset=\"https://example.com/a.png 1x, https://example.com/b.png 2x\">",
             registry);
@@ -43,7 +47,7 @@ public class SrcsetRewriteTests
     [Test]
     public async Task PreservesWidthDescriptors()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite(
             "<img srcset=\"https://example.com/sm.jpg 480w, https://example.com/lg.jpg 1080w\">",
             registry);
@@ -56,7 +60,7 @@ public class SrcsetRewriteTests
     [Test]
     public async Task LeavesRelativeUrlsAloneInSrcset()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("<img srcset=\"/local/x.png 1x\">", registry);
         await Assert.That(output).IsEqualTo("<img srcset=\"/local/x.png 1x\">");
     }
@@ -65,6 +69,7 @@ public class SrcsetRewriteTests
     /// <param name="source">HTML input.</param>
     /// <param name="registry">URL registry.</param>
     /// <returns>Rewritten HTML.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Rewrite(string source, ExternalAssetRegistry registry) =>
         Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(source), registry, EmptyHosts));
 }

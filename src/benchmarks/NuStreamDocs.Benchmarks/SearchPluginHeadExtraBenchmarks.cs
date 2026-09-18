@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Search.Lunr;
 using NuStreamDocs.Search.Pagefind;
@@ -19,6 +20,7 @@ namespace NuStreamDocs.Benchmarks;
 /// Both also conditionally emit the section-priority meta — covered by a separate parameter
 /// set to keep the with/without distinction visible.
 /// </remarks>
+[DebuggerDisplay("SearchPluginHeadExtraBenchmarks: pagefindBare={_pagefindBare}, pagefindWithSections={_pagefindWithSections}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class SearchPluginHeadExtraBenchmarks

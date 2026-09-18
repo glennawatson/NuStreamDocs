@@ -7,6 +7,9 @@ namespace NuStreamDocs.Search.Sqlite.Tests;
 /// <summary>Confirms the vendored runtime resources are embedded and readable.</summary>
 public class SqliteAssetEmissionTests
 {
+    /// <summary>Rejects a truncated WebAssembly runtime.</summary>
+    private const int MinimumWasmBytes = 100_000;
+
     /// <summary>The loader bundle, worker bundle, and wasm binary are all non-empty.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -14,7 +17,7 @@ public class SqliteAssetEmissionTests
     {
         await Assert.That(SqliteAssets.LoaderBytes().Length).IsGreaterThan(0);
         await Assert.That(SqliteAssets.WorkerBytes().Length).IsGreaterThan(0);
-        await Assert.That(SqliteAssets.WasmBytes().Length).IsGreaterThan(100_000);
+        await Assert.That(SqliteAssets.WasmBytes().Length).IsGreaterThan(MinimumWasmBytes);
     }
 
     /// <summary>The pinned runtime version constant is set.</summary>

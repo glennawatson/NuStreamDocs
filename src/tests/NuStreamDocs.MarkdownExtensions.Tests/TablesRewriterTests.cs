@@ -11,6 +11,9 @@ namespace NuStreamDocs.MarkdownExtensions.Tests;
 /// <summary>Behavior tests for <c>TablesRewriter</c>.</summary>
 public class TablesRewriterTests
 {
+    /// <summary>Separator for a table with two columns.</summary>
+    private const string SeparatorRow = "| --- | --- |\n";
+
     /// <summary>A header + separator + body row produces a complete <c>&lt;table&gt;</c>.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -55,9 +58,7 @@ public class TablesRewriterTests
     public async Task BodyCellRendersInlineMarkdownLinksAndEmphasis()
     {
         var output = Rewrite(
-            "| Type | Notes |\n" +
-            "| --- | --- |\n" +
-            "| [AkavacheBuilderExtensions](AkavacheBuilderExtensions.md) | use *carefully* with `cache.Get` |\n");
+            $"| Type | Notes |\n{SeparatorRow}| [AkavacheBuilderExtensions](AkavacheBuilderExtensions.md) | use *carefully* with `cache.Get` |\n");
 
         await Assert.That(output).Contains("<a href=\"AkavacheBuilderExtensions.md\">AkavacheBuilderExtensions</a>");
         await Assert.That(output).Contains("<em>carefully</em>");
@@ -73,9 +74,7 @@ public class TablesRewriterTests
     public async Task HeaderCellRendersInlineMarkdown()
     {
         var output = Rewrite(
-            "| [Spec](spec.md) | Count |\n" +
-            "| --- | --- |\n" +
-            "| row | 1 |\n");
+            $"| [Spec](spec.md) | Count |\n{SeparatorRow}| row | 1 |\n");
 
         await Assert.That(output).Contains("<th><a href=\"spec.md\">Spec</a></th>");
     }
@@ -86,9 +85,7 @@ public class TablesRewriterTests
     public async Task PlainCellsStillEscapeHtmlSpecials()
     {
         var output = Rewrite(
-            "| h1 | h2 |\n" +
-            "| --- | --- |\n" +
-            "| a < b | x & y |\n");
+            $"| h1 | h2 |\n{SeparatorRow}| a < b | x & y |\n");
 
         await Assert.That(output).Contains("<td>a &lt; b</td>");
         await Assert.That(output).Contains("<td>x &amp; y</td>");

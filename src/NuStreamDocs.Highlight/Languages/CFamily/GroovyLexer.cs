@@ -30,7 +30,7 @@ public static class GroovyLexer
             Operators = OperatorAlternationFactory.SplitLongestFirst(
                 ">>>= >>> :: ?: ?. *."u8,
                 CFamilyShared.StandardOperatorsLiteral),
-            OperatorFirst = CFamilyShared.StandardOperatorFirst
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
         },
         SearchValues.Create("lLgG"u8),
         SearchValues.Create("fFdDgG"u8),

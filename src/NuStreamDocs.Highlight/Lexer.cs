@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Highlight;
 
@@ -13,6 +14,7 @@ namespace NuStreamDocs.Highlight;
 /// advances by one byte with the <see cref="TokenClass.Text"/> classification, guaranteeing
 /// forward progress.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("Lexer: {States}")]
 public sealed class Lexer
 {
     /// <summary>The integer id of every lexer's root state.</summary>
@@ -223,6 +225,7 @@ public sealed class Lexer
         public DelegateTokenSink(TokenSink sink) => _sink = sink;
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnToken(int offset, int length, TokenClass tokenClass) => _sink(offset, length, tokenClass);
     }
 
@@ -246,12 +249,16 @@ public sealed class Lexer
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnToken(int offset, int length, TokenClass tokenClass) => _sink(_state, offset, length, tokenClass);
     }
 
     /// <summary>Lexer state stack backed by stack memory or <see cref="ArrayPool{T}"/>.</summary>
     private ref struct StateStack
     {
+        /// <summary>Factor used when the state stack needs more capacity.</summary>
+        private const int StateStackGrowthFactor = 2;
+
         /// <summary>The active stack storage.</summary>
         private Span<int> _items;
 
@@ -272,6 +279,7 @@ public sealed class Lexer
 
         /// <summary>Peeks the current top state id.</summary>
         /// <returns>The state id at the top of the stack.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly int Peek() => _items[_count - 1];
 
         /// <summary>Pushes a state id onto the stack.</summary>
@@ -283,7 +291,8 @@ public sealed class Lexer
                 Grow();
             }
 
-            _items[_count++] = value;
+            _items[_count] = value;
+            _count++;
         }
 
         /// <summary>Pops the top state id if doing so would not remove the root state.</summary>
@@ -313,9 +322,9 @@ public sealed class Lexer
         /// <summary>Grows the stack storage, preserving all active state ids.</summary>
         private void Grow()
         {
-            var newCapacity = _items.Length == 0
+            var newCapacity = _items.IsEmpty
                 ? StateStackInitialCapacity
-                : _items.Length * 2;
+                : _items.Length * StateStackGrowthFactor;
 
             var previous = _rented;
             var rented = ArrayPool<int>.Shared.Rent(newCapacity);

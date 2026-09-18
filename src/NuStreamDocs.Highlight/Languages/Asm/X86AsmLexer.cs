@@ -7,7 +7,7 @@ using NuStreamDocs.Highlight.Languages.Common.Families;
 
 namespace NuStreamDocs.Highlight.Languages.Asm;
 
-/// <summary>x86 / x86-64 assembly lexer (AT&amp;T and Intel syntaxes share enough that one lexer covers both).</summary>
+/// <summary>X86 / x86-64 assembly lexer (AT&amp;T and Intel syntaxes share enough that one lexer covers both).</summary>
 /// <remarks>
 /// Common opcode + register tables. Comments use either <c>;</c> (Intel-style) or
 /// <c>#</c> (AT&amp;T after pre-processing); both are recognized.
@@ -28,11 +28,5 @@ public static class X86AsmLexer
     private static readonly SearchValues<byte> CommentFirst = SearchValues.Create(";#"u8);
 
     /// <summary>Gets the singleton x86 / x86-64 assembly lexer.</summary>
-    public static Lexer Instance { get; } = AsmFamilyRules.CreateLexer(new()
-    {
-        CommentFirst = CommentFirst,
-        Mnemonics = Mnemonics,
-        Registers = Registers,
-        HexPrefix = true
-    });
+    public static Lexer Instance { get; } = AsmFamilyRules.CreateLexer(new() { CommentFirst = CommentFirst, Mnemonics = Mnemonics, Registers = Registers, HexPrefix = true, });
 }

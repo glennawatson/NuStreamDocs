@@ -8,11 +8,11 @@ namespace NuStreamDocs.Config.MkDocs;
 internal enum ContainerKind
 {
     /// <summary>JSON object.</summary>
-    Mapping,
+    Mapping = 0,
 
     /// <summary>JSON array.</summary>
-    Sequence,
+    Sequence = 1,
 
     /// <summary>Mapping value with no payload yet; resolves on the next line.</summary>
-    Pending
+    Pending = 2,
 }

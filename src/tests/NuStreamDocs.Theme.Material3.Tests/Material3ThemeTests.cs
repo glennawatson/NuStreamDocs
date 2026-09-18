@@ -10,6 +10,21 @@ namespace NuStreamDocs.Theme.Material3.Tests;
 /// <summary>End-to-end tests for the Material 3 theme assembly.</summary>
 public class Material3ThemeTests
 {
+    /// <summary>Value for the settings section title.</summary>
+    private const string SettingsTitle = "Settings";
+
+    /// <summary>Value for the fixture library name.</summary>
+    private const string LibraryName = "Akavache";
+
+    /// <summary>Value for the settings namespace.</summary>
+    private const string SettingsNamespace = "Akavache.Settings";
+
+    /// <summary>Value for the fixture site title.</summary>
+    private const string SiteTitle = "MD3 Site";
+
+    /// <summary>Value for the page content.</summary>
+    private const string PageMarkdown = "# Page";
+
     /// <summary>Loading the theme should compile every shipped template and asset.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -36,7 +51,7 @@ public class Material3ThemeTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterial3Theme(static opts => opts.WithSiteName("MD3 Site"))
+            .UseMaterial3Theme(static opts => opts.WithSiteName(SiteTitle))
             .BuildAsync();
 
         var cssPath = Path.Combine(fixture.Site, "assets", "stylesheets", "material3.css");
@@ -45,7 +60,7 @@ public class Material3ThemeTests
         var pagePath = Path.Combine(fixture.Site, "intro.html");
         var html = await File.ReadAllTextAsync(pagePath);
         await Assert.That(html).Contains("<!doctype html>");
-        await Assert.That(html).Contains("MD3 Site");
+        await Assert.That(html).Contains(SiteTitle);
         await Assert.That(html).Contains("data-md-color-scheme=\"default\"");
         await Assert.That(html).Contains("href=\"assets/stylesheets/material3.css\"");
         await Assert.That(html).Contains("<h1>");
@@ -57,14 +72,14 @@ public class Material3ThemeTests
     public async Task SearchAndRepoBadgeRenderInHeader()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UsePagefindSearch()
             .UseMaterial3Theme(static opts => opts
-                .WithSiteName("MD3 Site")
+                .WithSiteName(SiteTitle)
                 .WithRepoUrl("https://github.com/owner/repo"))
             .BuildAsync();
 
@@ -101,23 +116,23 @@ public class Material3ThemeTests
     public async Task DirectoryUrlNonIndexPagesUseExtraDoubleDotForAssets()
     {
         using var fixture = TempBuildTree.Create();
-        var deepDir = Path.Combine(fixture.Docs, "api", "Akavache.Settings", "Akavache", "Settings");
-        Directory.CreateDirectory(deepDir);
-        await File.WriteAllTextAsync(Path.Combine(deepDir, "AkavacheBuilderAsyncExtensions.md"), "# Page");
+        var deepDir = Path.Combine(fixture.Docs, "api", SettingsNamespace, LibraryName, SettingsTitle);
+        _ = Directory.CreateDirectory(deepDir);
+        await File.WriteAllTextAsync(Path.Combine(deepDir, "AkavacheBuilderAsyncExtensions.md"), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseDirectoryUrls()
-            .UseMaterial3Theme(static opts => opts.WithSiteName("MD3 Site"))
+            .UseMaterial3Theme(static opts => opts.WithSiteName(SiteTitle))
             .BuildAsync();
 
         var pagePath = Path.Combine(
             fixture.Site,
             "api",
-            "Akavache.Settings",
-            "Akavache",
-            "Settings",
+            SettingsNamespace,
+            LibraryName,
+            SettingsTitle,
             "AkavacheBuilderAsyncExtensions",
             "index.html");
         var html = await File.ReadAllTextAsync(pagePath);
@@ -140,22 +155,22 @@ public class Material3ThemeTests
     public async Task NonDirectoryUrlPagesKeepDepthMatchingSourcePath()
     {
         using var fixture = TempBuildTree.Create();
-        var deepDir = Path.Combine(fixture.Docs, "api", "Akavache.Settings", "Akavache", "Settings");
-        Directory.CreateDirectory(deepDir);
-        await File.WriteAllTextAsync(Path.Combine(deepDir, "AkavacheBuilderAsyncExtensions.md"), "# Page");
+        var deepDir = Path.Combine(fixture.Docs, "api", SettingsNamespace, LibraryName, SettingsTitle);
+        _ = Directory.CreateDirectory(deepDir);
+        await File.WriteAllTextAsync(Path.Combine(deepDir, "AkavacheBuilderAsyncExtensions.md"), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterial3Theme(static opts => opts.WithSiteName("MD3 Site"))
+            .UseMaterial3Theme(static opts => opts.WithSiteName(SiteTitle))
             .BuildAsync();
 
         var pagePath = Path.Combine(
             fixture.Site,
             "api",
-            "Akavache.Settings",
-            "Akavache",
-            "Settings",
+            SettingsNamespace,
+            LibraryName,
+            SettingsTitle,
             "AkavacheBuilderAsyncExtensions.html");
         var html = await File.ReadAllTextAsync(pagePath);
 
@@ -175,14 +190,14 @@ public class Material3ThemeTests
     {
         using var fixture = TempBuildTree.Create();
         var apiDir = Path.Combine(fixture.Docs, "api");
-        Directory.CreateDirectory(apiDir);
+        _ = Directory.CreateDirectory(apiDir);
         await File.WriteAllTextAsync(Path.Combine(apiDir, "index.md"), "# API");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseDirectoryUrls()
-            .UseMaterial3Theme(static opts => opts.WithSiteName("MD3 Site"))
+            .UseMaterial3Theme(static opts => opts.WithSiteName(SiteTitle))
             .BuildAsync();
 
         var pagePath = Path.Combine(fixture.Site, "api", "index.html");
@@ -199,7 +214,7 @@ public class Material3ThemeTests
     public async Task CdnModeSkipsAssetsAndPointsAtCdn()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)

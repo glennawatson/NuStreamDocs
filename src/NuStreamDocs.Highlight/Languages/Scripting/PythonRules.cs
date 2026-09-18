@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Scripting;
@@ -200,22 +201,17 @@ internal static class PythonRules
 
     /// <summary>Builds the Python root-state rule list.</summary>
     /// <returns>Ordered rule list.</returns>
-    public static LexerRule[] Build() =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static LexerRule[] Build() =>
         BuildRules();
 
     /// <summary>Constructs the Python rule list — order matters: longer / more-specific rules precede their substring counterparts.</summary>
     /// <returns>Ordered rule list.</returns>
     private static LexerRule[] BuildRules() =>
     [
-        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines
-        },
+        new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiWhitespaceWithNewlines, },
 
-        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-        {
-            FirstBytes = HashFirst
-        },
+        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
 
         new(MatchPrefixedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = StringFirst },
 
@@ -253,10 +249,7 @@ internal static class PythonRules
             TokenClass.KeywordConstant,
             LexerRule.NoStateChange) { FirstBytes = KeywordConstantFirst },
 
-        new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange)
-        {
-            FirstBytes = KeywordFirst
-        },
+        new(static slice => TokenMatchers.MatchKeyword(slice, Keywords), TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = KeywordFirst, },
 
         new(
             static slice =>
@@ -266,10 +259,7 @@ internal static class PythonRules
             TokenClass.NameBuiltin,
             LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart },
 
-        new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
-        {
-            FirstBytes = TokenMatchers.AsciiIdentifierStart
-        },
+        new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, },
 
         new(
             static slice => TokenMatchers.MatchLongestLiteral(slice, Operators),

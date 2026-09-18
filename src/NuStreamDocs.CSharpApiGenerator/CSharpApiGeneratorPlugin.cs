@@ -14,9 +14,9 @@ using SourceDocParser.Model;
 
 namespace NuStreamDocs.CSharpApiGenerator;
 
-/// <summary>
-/// Plugin that runs the C# reference generator before page discovery.
-/// </summary>
+/// <summary>Plugin that runs the C# reference generator before page discovery.</summary>
+/// <param name="options">Generator options.</param>
+/// <param name="logger">Logger for generator diagnostics.</param>
 /// <remarks>
 /// In <see cref="CSharpApiGeneratorMode.EmitMarkdown"/> mode the plugin generates the pages, hands
 /// each one to the build pipeline as a <see cref="SyntheticPage"/>, and records a lightweight
@@ -26,8 +26,8 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// render drains them; no intermediate <c>.md</c> files land on disk. In <see cref="CSharpApiGeneratorMode.Direct"/>
 /// mode it stashes the merged catalog on <see cref="LastExtraction"/> without invoking an emitter.
 /// </remarks>
-public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger)
-    : IBuildDiscoverPlugin, ISyntheticNavProvider
+[System.Diagnostics.DebuggerDisplay("CSharpApiGeneratorPlugin: {LastExtraction}")]
+public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Forward-slash byte separating path segments in synthetic relative paths.</summary>
     private const byte SlashByte = (byte)'/';
@@ -75,12 +75,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         // complete nav tree without spilling intermediate .md files onto disk. We retain only the
         // lightweight per-page nav metadata (the relative path); titles fall back to the path stem.
         var subdir = _options.OutputMarkdownSubdirectory;
-        var channel = Channel.CreateUnbounded<SyntheticPage>(new()
-        {
-            SingleReader = true,
-            SingleWriter = false,
-            AllowSynchronousContinuations = false
-        });
+        var channel = Channel.CreateUnbounded<SyntheticPage>(new() { SingleReader = true, SingleWriter = false, AllowSynchronousContinuations = false, });
 
         // Pre-seed the landing-page nav entry so a totally-empty generation (or a generation that
         // throws) still leaves the "API" section pointed somewhere sensible. The "API Reference"
@@ -111,12 +106,12 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
                 var head = relBytes.AsSpan(0, slashIdx);
                 if (!ApiIndexWriter.IsInfraDirectory(head))
                 {
-                    namespaces.TryAdd(head.ToArray(), 0);
+                    _ = namespaces.TryAdd(head.ToArray(), 0);
                 }
             }
 
             var virtualPath = BuildVirtualPath(subdir, relBytes);
-            channel.Writer.TryWrite(new(virtualPath, bytes));
+            _ = channel.Writer.TryWrite(new(virtualPath, bytes));
 
             // Path-only entry: the grafter derives section titles from directory names and page
             // titles from file stems — clean for the vast majority of API pages — so we don't
@@ -160,12 +155,7 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
         // Single UTF-8 → string decode at the BCL boundary; UrlJoin then composes with
         // explicit '/' separators (no Path.Combine, so Windows / Linux match).
         var emitterRelativePath = (UrlPath)Encoding.UTF8.GetString(emitterRelative);
-        if (subdir.IsEmpty)
-        {
-            return (FilePath)emitterRelativePath.Value;
-        }
-
-        return DirectoryPath.FromString(subdir).UrlJoin(emitterRelativePath);
+        return subdir.IsEmpty ? (FilePath)emitterRelativePath.Value : DirectoryPath.FromString(subdir).UrlJoin(emitterRelativePath);
     }
 
     /// <summary>Drains <paramref name="reader"/>; the channel is already fully written and completed by the time render enumerates this.</summary>
@@ -205,9 +195,10 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
 
         var sorted = new byte[namespaces.Count][];
         var i = 0;
-        foreach (var key in namespaces.Keys)
+        foreach (var (key, _) in namespaces)
         {
-            sorted[i++] = key;
+            sorted[i] = key;
+            i++;
         }
 
         Array.Sort(sorted, ByteArrayComparer.Instance);
@@ -221,6 +212,6 @@ public sealed class CSharpApiGeneratorPlugin(CSharpApiGeneratorOptions options, 
             return;
         }
 
-        writer.TryWrite(new(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexBytes));
+        _ = writer.TryWrite(new(BuildVirtualPath(subdir, "index.md"u8.ToArray()), indexBytes));
     }
 }

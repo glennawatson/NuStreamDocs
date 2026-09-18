@@ -15,15 +15,19 @@ namespace NuStreamDocs.ContentLoader;
 /// page. Works for any host that serves raw files (GitHub, GitLab, Gitea, a CDN, …); the document may
 /// already carry its own frontmatter or not.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("RawDocumentContentLoader: {Name}")]
 public sealed class RawDocumentContentLoader : IContentLoader
 {
+    /// <summary>HTTP transport for requests without a caller-supplied client.</summary>
+    private static readonly HttpClient SharedClient = new(new SocketsHttpHandler { UseCookies = false });
+
     /// <summary>The documents to fetch.</summary>
     private readonly RawDocumentEntry[] _entries;
 
     /// <summary>Extra request headers (name/value UTF-8 byte pairs) sent with every fetch.</summary>
     private readonly (byte[] Name, byte[] Value)[] _headers;
 
-    /// <summary>HTTP client factory; null means the loader owns a short-lived client.</summary>
+    /// <summary>Optional factory for caller-owned HTTP clients.</summary>
     private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger for diagnostics.</summary>
@@ -48,7 +52,7 @@ public sealed class RawDocumentContentLoader : IContentLoader
     /// <summary>Initializes a new instance of the <see cref="RawDocumentContentLoader"/> class.</summary>
     /// <param name="entries">The documents to fetch.</param>
     /// <param name="headers">Extra request headers (UTF-8 name/value byte pairs).</param>
-    /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
+    /// <param name="httpClientFactory">Factory producing a caller-owned HTTP client; null uses a shared client without cookies.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public RawDocumentContentLoader(
         RawDocumentEntry[] entries,
@@ -71,18 +75,9 @@ public sealed class RawDocumentContentLoader : IContentLoader
     public async ValueTask<SyntheticPage[]> LoadAsync(ContentLoaderContext context, CancellationToken cancellationToken)
     {
         _ = context;
-        if (_entries is [])
-        {
-            return [];
-        }
-
-        if (_httpClientFactory is not null)
-        {
-            return await FetchAllAsync(_httpClientFactory(), cancellationToken).ConfigureAwait(false);
-        }
-
-        using HttpClient owned = new();
-        return await FetchAllAsync(owned, cancellationToken).ConfigureAwait(false);
+        return _entries is []
+            ? []
+            : await FetchAllAsync(_httpClientFactory is null ? SharedClient : _httpClientFactory(), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Fetches every configured document and builds the page array.</summary>
@@ -107,13 +102,14 @@ public sealed class RawDocumentContentLoader : IContentLoader
     /// <param name="url">Document URL.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The UTF-8 document bytes.</returns>
+    /// <exception cref="ContentLoaderException">The HTTP request failed.</exception>
     private async Task<byte[]> FetchAsync(HttpClient client, UrlPath url, CancellationToken cancellationToken)
     {
         Uri endpoint = new(url.Value, UriKind.Absolute);
         using HttpRequestMessage request = new(HttpMethod.Get, endpoint);
         for (var i = 0; i < _headers.Length; i++)
         {
-            request.Headers.TryAddWithoutValidation(
+            _ = request.Headers.TryAddWithoutValidation(
                 Encoding.UTF8.GetString(_headers[i].Name),
                 Encoding.UTF8.GetString(_headers[i].Value));
         }
@@ -121,7 +117,7 @@ public sealed class RawDocumentContentLoader : IContentLoader
         try
         {
             using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            _ = response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)

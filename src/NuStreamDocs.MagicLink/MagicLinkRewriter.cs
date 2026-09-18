@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
+using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using static NuStreamDocs.Markdown.Common.MarkdownCodeScanner;
 
@@ -20,7 +22,8 @@ internal static class MagicLinkRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> with no shortref expansion.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
         Rewrite(source, writer, default, false);
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> with optional GitHub-shortref expansion.</summary>
@@ -28,7 +31,7 @@ internal static class MagicLinkRewriter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="defaultRepo"><c>org/repo</c> bytes used to expand bare <c>#NNN</c> issue refs; empty disables that pass.</param>
     /// <param name="expandMentions">When true, <c>@user</c> mentions at word boundaries become <c>[@user](https://github.com/user)</c> Markdown links.</param>
-    public static void Rewrite(
+    internal static void Rewrite(
         ReadOnlySpan<byte> source,
         IBufferWriter<byte> writer,
         ReadOnlySpan<byte> defaultRepo,
@@ -80,8 +83,8 @@ internal static class MagicLinkRewriter
                         continue;
                     }
 
-                case (byte)'#' when defaultRepo.Length > 0 &&
-                                    TryRewriteIssueRef(source, i, defaultRepo, writer, out var issueConsumed):
+                case (byte)'#' when !defaultRepo.IsEmpty
+                                    && TryRewriteIssueRef(source, i, defaultRepo, writer, out var issueConsumed):
                     {
                         i += issueConsumed;
                         continue;
@@ -94,9 +97,7 @@ internal static class MagicLinkRewriter
                 continue;
             }
 
-            var dest = writer.GetSpan(1);
-            dest[0] = source[i];
-            writer.Advance(1);
+            Utf8StringWriter.WriteByte(writer, source[i]);
             i++;
         }
     }
@@ -315,17 +316,7 @@ internal static class MagicLinkRewriter
             return "ftp://"u8.Length;
         }
 
-        if (slice.StartsWith("mailto:"u8))
-        {
-            return "mailto:"u8.Length;
-        }
-
-        if (slice.StartsWith("www."u8))
-        {
-            return 0; // leave for now — bare `www.` autolinking needs scheme synthesis we don't yet do
-        }
-
-        return 0;
+        return slice.StartsWith("mailto:"u8) ? "mailto:"u8.Length : 0;
     }
 
     /// <summary>Returns true when <paramref name="b"/> can start a URL body.</summary>

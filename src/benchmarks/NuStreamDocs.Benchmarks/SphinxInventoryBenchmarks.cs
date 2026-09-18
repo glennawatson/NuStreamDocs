@@ -2,10 +2,12 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Autorefs;
+using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 using NuStreamDocs.SphinxInventory;
 
@@ -17,6 +19,7 @@ namespace NuStreamDocs.Benchmarks;
 /// interesting than the per-entry encode + zlib cost — the benchmark fans out
 /// across registry sizes that bracket realistic doc sites.
 /// </remarks>
+[DebuggerDisplay("SphinxInventoryBenchmarks: EntryCount={EntryCount}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class SphinxInventoryBenchmarks
@@ -31,7 +34,7 @@ public class SphinxInventoryBenchmarks
     private const int LargeSite = 10_000;
 
     /// <summary>Per-iteration output directory — re-created so each emit writes a fresh file.</summary>
-    private string _outputDir = string.Empty;
+    private DirectoryPath _outputDir;
 
     /// <summary>Configured plugin instance — backed by the registry sized to <see cref="EntryCount"/>.</summary>
     private SphinxInventoryPlugin _plugin = null!;
@@ -47,9 +50,8 @@ public class SphinxInventoryBenchmarks
         AutorefsRegistry registry = new(EntryCount);
         for (var i = 0; i < EntryCount; i++)
         {
-            var idx = i.ToString(CultureInfo.InvariantCulture);
-            var idBytes = Encoding.UTF8.GetBytes("Symbol_" + idx);
-            var urlBytes = Encoding.UTF8.GetBytes("api/Symbol_" + idx + ".html");
+            var idBytes = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("Symbol_", i));
+            var urlBytes = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("api/Symbol_", i, ".html"));
             registry.Register(idBytes, urlBytes, default);
         }
 
@@ -62,15 +64,15 @@ public class SphinxInventoryBenchmarks
     {
         _outputDir = Path.Combine(
             Path.GetTempPath(),
-            "smkd-inv-bench-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_outputDir);
+            StringCompose.Concat("smkd-inv-bench-", Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)));
+        _ = Directory.CreateDirectory(_outputDir);
     }
 
     /// <summary>Cleans up the per-iteration output directory.</summary>
     [IterationCleanup]
     public void IterationCleanup()
     {
-        if (string.IsNullOrEmpty(_outputDir) || !Directory.Exists(_outputDir))
+        if (_outputDir.IsEmpty || !Directory.Exists(_outputDir))
         {
             return;
         }

@@ -14,6 +14,18 @@ namespace NuStreamDocs.Bibliography.Tests;
 /// <summary>Plugin lifecycle, end-to-end rewrite, and DocBuilder wiring.</summary>
 public class BibliographyPluginTests
 {
+    /// <summary>Initial capacity for a short footnote.</summary>
+    private const int FootnoteBufferCapacity = 64;
+
+    /// <summary>Decision year of the Mabo fixture.</summary>
+    private const int CaseYear = 1992;
+
+    /// <summary>Initial capacity for a page with citations.</summary>
+    private const int PageBufferCapacity = 256;
+
+    /// <summary>Publication year of the first book.</summary>
+    private const int FirstBookYear = 2000;
+
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -25,7 +37,7 @@ public class BibliographyPluginTests
     [Test]
     public async Task PassThroughWhenNoMarkers()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(FootnoteBufferCapacity);
         PagePreRenderContext ctx = new("p.md", "plain text\n"u8, sink);
         new BibliographyPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("plain text\n");
@@ -37,11 +49,11 @@ public class BibliographyPluginTests
     public async Task ResolvedMarkerProducesFootnoteAndBibliography()
     {
         var db = new BibliographyDatabaseBuilder()
-            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], 1992)
+            .AddCase([.. "mabo"u8], [.. "Mabo v Queensland (No 2)"u8], [.. "(1992) 175 CLR 1"u8], CaseYear)
             .Build();
         BibliographyOptions options = new(db, Aglc4Style.Instance, false);
         BibliographyPlugin plugin = new(options);
-        ArrayBufferWriter<byte> sink = new(256);
+        ArrayBufferWriter<byte> sink = new(PageBufferCapacity);
         PagePreRenderContext ctx = new("p.md", "see [@mabo]\n"u8, sink);
         plugin.PreRender(in ctx);
 
@@ -57,7 +69,7 @@ public class BibliographyPluginTests
     public async Task MissingKeyDoesNotProduceFootnote()
     {
         BibliographyOptions options = new(BibliographyDatabase.Empty, Aglc4Style.Instance, true);
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(FootnoteBufferCapacity);
         PagePreRenderContext ctx = new("p.md", "[@nope]\n"u8, sink);
         new BibliographyPlugin(options).PreRender(in ctx);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
@@ -82,7 +94,7 @@ public class BibliographyPluginTests
     {
         DocBuilder builder = new();
         var result = builder.UseBibliography(static b =>
-            b.AddBook([.. "g"u8], [.. "T"u8], PersonName.Of("X", "Y"), 2000, [.. "P"u8]));
+            b.AddBook([.. "g"u8], [.. "T"u8], PersonName.Of("X", "Y"), FirstBookYear, [.. "P"u8]));
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 }

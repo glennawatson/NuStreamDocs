@@ -31,6 +31,6 @@ internal readonly record struct Heading(
     /// <summary>Returns the bytes of the existing <c>id</c> attribute value, sliced from <paramref name="html"/>.</summary>
     /// <param name="html">Original HTML snapshot.</param>
     /// <returns>The id bytes, or an empty span when no existing id was found.</returns>
-    public ReadOnlySpan<byte> ExistingIdBytes(ReadOnlySpan<byte> html) =>
+    internal ReadOnlySpan<byte> ExistingIdBytes(ReadOnlySpan<byte> html) =>
         ExistingIdLength is 0 ? default : html.Slice(ExistingIdStart, ExistingIdLength);
 }

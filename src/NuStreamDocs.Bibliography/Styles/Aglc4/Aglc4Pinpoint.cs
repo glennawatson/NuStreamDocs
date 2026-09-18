@@ -14,7 +14,7 @@ internal static class Aglc4Pinpoint
     /// <param name="locator">Source locator.</param>
     /// <param name="source">Original source span the locator's offsets point into.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Write(in CitationLocator locator, ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    internal static void Write(in CitationLocator locator, ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         var value = source.Slice(locator.Start, locator.Length);
         if (locator.Kind is LocatorKind.Paragraph)

@@ -18,10 +18,10 @@ public class MkDocsBlogPluginTests
     {
         var docsRoot = Path.Combine(
             Path.GetTempPath(),
-            "smd-mkblog-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smd-mkblog-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         var blogRoot = Path.Combine(docsRoot, "blog");
         var postsRoot = Path.Combine(blogRoot, "posts");
-        Directory.CreateDirectory(postsRoot);
+        _ = Directory.CreateDirectory(postsRoot);
 
         try
         {
@@ -39,12 +39,10 @@ public class MkDocsBlogPluginTests
             await Assert.That(Directory.Exists(Path.Combine(blogRoot, "category"))).IsFalse();
 
             var pages = sink.Snapshot();
-            var index = Encoding.UTF8.GetString(
-                pages.Single(p => p.RelativePath.Value == "blog/index.md").MarkdownBytes);
+            var index = await ReadSinglePageAsync(pages, "blog/index.md");
             await Assert.That(index.Contains("Launch", StringComparison.Ordinal)).IsTrue();
 
-            var archive = Encoding.UTF8.GetString(pages.Single(p => p.RelativePath.Value == "blog/category/release.md")
-                .MarkdownBytes);
+            var archive = await ReadSinglePageAsync(pages, "blog/category/release.md");
             await Assert.That(archive.Contains("Launch", StringComparison.Ordinal)).IsTrue();
         }
         finally
@@ -58,14 +56,15 @@ public class MkDocsBlogPluginTests
     [Test]
     public async Task PublishesBlogIndexNavEntry()
     {
+        const int ExpectedOrder = 5;
         var docsRoot = Path.Combine(
             Path.GetTempPath(),
-            "smd-mkblognav-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(Path.Combine(docsRoot, "blog", "posts"));
+            $"smd-mkblognav-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(Path.Combine(docsRoot, "blog", "posts"));
 
         try
         {
-            MkDocsBlogPlugin plugin = new(new("blog", [.. "News"u8], false, 5));
+            MkDocsBlogPlugin plugin = new(new("blog", [.. "News"u8], false, ExpectedOrder));
             BuildDiscoverContext ctx = new(docsRoot, "/out", [], new());
             await plugin.DiscoverAsync(ctx, CancellationToken.None);
 
@@ -73,12 +72,35 @@ public class MkDocsBlogPluginTests
             var entry = plugin.SyntheticNavEntries[0];
             await Assert.That(entry.RelativePath.Value).IsEqualTo("blog/index.md");
             await Assert.That(Encoding.UTF8.GetString(entry.Title!)).IsEqualTo("News");
-            await Assert.That(entry.Order).IsEqualTo(5);
+            await Assert.That(entry.Order).IsEqualTo(ExpectedOrder);
             await Assert.That(entry.Hidden).IsFalse();
         }
         finally
         {
             Directory.Delete(docsRoot, true);
         }
+    }
+
+    /// <summary>Reads the unique synthetic page with the requested path.</summary>
+    /// <param name="pages">Generated pages.</param>
+    /// <param name="relativePath">Requested source-relative path.</param>
+    /// <returns>The page's markdown text.</returns>
+    private static async Task<string> ReadSinglePageAsync(SyntheticPage[] pages, string relativePath)
+    {
+        var match = default(SyntheticPage);
+        var count = 0;
+        for (var i = 0; i < pages.Length; i++)
+        {
+            if (!string.Equals(pages[i].RelativePath.Value, relativePath, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            match = pages[i];
+            count++;
+        }
+
+        await Assert.That(count).IsEqualTo(1);
+        return Encoding.UTF8.GetString(match.MarkdownBytes);
     }
 }

@@ -10,6 +10,27 @@ namespace NuStreamDocs.Fonts.Tests;
 /// <summary>Coverage for <see cref="FontCssWriter"/>.</summary>
 public class FontCssWriterTests
 {
+    /// <summary>Expected normal weight in the fixture.</summary>
+    private const int NormalWeight = 400;
+
+    /// <summary>Expected bold weight in the fixture.</summary>
+    private const int BoldWeight = 700;
+
+    /// <summary>Expected units per em in the fixture.</summary>
+    private const int UnitsPerEm = 1000;
+
+    /// <summary>Expected ascender in the fixture.</summary>
+    private const int Ascender = 950;
+
+    /// <summary>Expected descender in the fixture.</summary>
+    private const int Descender = -250;
+
+    /// <summary>Height of the fixture's lowercase x.</summary>
+    private const int XHeight = 500;
+
+    /// <summary>Expected cap height in the fixture.</summary>
+    private const int CapHeight = 700;
+
     /// <summary>The stylesheet has an <c>@font-face</c> per resource, the fallback face, and the theme-variable wiring.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -17,8 +38,8 @@ public class FontCssWriterTests
     {
         FontCssWriter.ResourceCss[] resources =
         [
-            new(400, FontStyle.Normal, [.. "U+0000-00FF"u8], [.. "assets/fonts/aaaa.woff2"u8]),
-            new(700, FontStyle.Italic, [], [.. "assets/fonts/bbbb.woff2"u8])
+            new(NormalWeight, FontStyle.Normal, [.. "U+0000-00FF"u8], [.. "assets/fonts/aaaa.woff2"u8]),
+            new(BoldWeight, FontStyle.Italic, [], [.. "assets/fonts/bbbb.woff2"u8])
         ];
         FontCssWriter.FaceCss[] faces =
         [
@@ -28,7 +49,7 @@ public class FontCssWriterTests
                 FontDisplay.Swap,
                 GenericFontFamily.SansSerif,
                 [[.. "--md-text-font"u8]],
-                new FontMetrics(1000, 950, -250, 0, 500, 700),
+                new FontMetrics(UnitsPerEm, Ascender, Descender, 0, XHeight, CapHeight),
                 resources)
         ];
 
@@ -62,7 +83,7 @@ public class FontCssWriterTests
                 GenericFontFamily.SansSerif,
                 [],
                 null,
-                [new(400, FontStyle.Normal, [], [.. "assets/fonts/cccc.woff2"u8])])
+                [new(NormalWeight, FontStyle.Normal, [], [.. "assets/fonts/cccc.woff2"u8])])
         ];
         ArrayBufferWriter<byte> sink = new();
         FontCssWriter.Write(faces, sink);

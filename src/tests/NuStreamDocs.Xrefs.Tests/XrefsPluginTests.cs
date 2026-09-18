@@ -24,7 +24,7 @@ public class XrefsPluginTests
 
         var bytes = await File.ReadAllBytesAsync(Path.Combine(temp.Root, "xrefmap.json"));
         var payload = XrefMapReader.Read(bytes);
-        await Assert.That(payload.Entries.Length).IsEqualTo(2);
+        await Assert.That(payload.Entries.Length).IsEqualTo(registry.Count);
     }
 
     /// <summary>Imports register their entries into the shared registry with the configured base URL prepended.</summary>
@@ -63,7 +63,8 @@ public class XrefsPluginTests
 
         await plugin.ConfigureAsync(new("/in", temp.Root, [], new()), CancellationToken.None);
 
-        registry.TryResolve("Foo"u8, out var url);
+        var resolved = registry.TryResolve("Foo"u8, out var url);
+        await Assert.That(resolved).IsTrue();
         await Assert.That(url.AsSpan().SequenceEqual("https://example.com/docs/api/Foo.html"u8)).IsTrue();
     }
 

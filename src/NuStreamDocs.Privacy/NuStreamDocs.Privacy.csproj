@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Privacy</PackageId>
     <Description>Stop your NuStreamDocs pages from leaking visitor data to third-party CDNs. Downloads external images, scripts, and stylesheets at build time, ships them with your site, and rewrites the page HTML to load the local copies.</Description>
     <RootNamespace>NuStreamDocs.Privacy</RootNamespace>

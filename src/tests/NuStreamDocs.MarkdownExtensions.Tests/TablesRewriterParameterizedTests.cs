@@ -42,8 +42,8 @@ public class TablesRewriterParameterizedTests
     public async Task ColumnCountMatchesHeader(string header, string separator, int expectedTh)
     {
         var output = Rewrite($"{header}\n{separator}\n| v |\n");
-        var thOpens = output.Split("<th>").Length - 1 + (output.Split("<th ").Length - 1);
-        await Assert.That(thOpens).IsEqualTo(expectedTh);
+        var headerOpenTags = output.Split("<th>").Length - 1 + (output.Split("<th ").Length - 1);
+        await Assert.That(headerOpenTags).IsEqualTo(expectedTh);
     }
 
     /// <summary>Empty input or non-table source passes through unchanged.</summary>

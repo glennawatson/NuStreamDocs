@@ -13,8 +13,15 @@ namespace NuStreamDocs.Highlight.Languages.Common.Families;
 /// </remarks>
 internal static class LispFamilyShared
 {
-    /// <summary>Common control-flow / binding forms shared across Lisp dialects.</summary>
-    public static readonly byte[][] CommonKeywords =
+    /// <summary>First-byte dispatch set for <see cref="CommonKeywords"/>.</summary>
+    public static readonly SearchValues<byte> CommonKeywordFirst = SearchValues.Create("acdilnoquw"u8);
+
+    /// <summary>Gets the common control-flow / binding forms shared across Lisp dialects, as a space-separated literal.</summary>
+    public static ReadOnlySpan<byte> CommonKeywordsLiteral =>
+        "if when unless cond case and or not do let lambda quote"u8;
+
+    /// <summary>Gets the control-flow and binding forms shared across Lisp dialects.</summary>
+    public static byte[][] CommonKeywords { get; } =
     [
         [.. "if"u8],
         [.. "when"u8],
@@ -29,11 +36,4 @@ internal static class LispFamilyShared
         [.. "lambda"u8],
         [.. "quote"u8]
     ];
-
-    /// <summary>First-byte dispatch set for <see cref="CommonKeywords"/>.</summary>
-    public static readonly SearchValues<byte> CommonKeywordFirst = SearchValues.Create("acdilnoquw"u8);
-
-    /// <summary>Gets the common control-flow / binding forms shared across Lisp dialects, as a space-separated literal.</summary>
-    public static ReadOnlySpan<byte> CommonKeywordsLiteral =>
-        "if when unless cond case and or not do let lambda quote"u8;
 }

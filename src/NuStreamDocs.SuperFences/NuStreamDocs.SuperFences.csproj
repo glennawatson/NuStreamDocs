@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.SuperFences</PackageId>
     <Description>Lets other plugins claim a fenced-code-block language (like `mermaid` or `math`) and render the block however they like. Pull this in when you're using a plugin that asks for it.</Description>
     <RootNamespace>NuStreamDocs.SuperFences</RootNamespace>

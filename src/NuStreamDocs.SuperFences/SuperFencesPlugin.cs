@@ -15,6 +15,7 @@ namespace NuStreamDocs.SuperFences;
 /// blocks are replaced with the handler's rendering. Handlers receive the fence
 /// body with HTML entities decoded back to their literal bytes.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("SuperFencesPlugin: {Name}")]
 public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPlugin
 {
     /// <summary>Handler index keyed on language bytes; built during configure.</summary>
@@ -34,7 +35,7 @@ public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPl
     {
         _ = cancellationToken;
         var plugins = context.Plugins;
-        Dictionary<byte[], ICustomFenceHandler> seed = new(plugins.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], ICustomFenceHandler> seed = [with(plugins.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < plugins.Length; i++)
         {
             if (plugins[i] is not ICustomFenceHandler handler)
@@ -56,8 +57,8 @@ public sealed class SuperFencesPlugin : IBuildConfigurePlugin, IPagePostRenderPl
     }
 
     /// <inheritdoc/>
-    public bool NeedsRewrite(ReadOnlySpan<byte> html) => _handlers is not null && _handlers.Count is not 0 &&
-                                                         SuperFencesDispatcher.NeedsDispatch(html);
+    public bool NeedsRewrite(ReadOnlySpan<byte> html) => _handlers is not null && _handlers.Count is not 0
+                                                         && SuperFencesDispatcher.NeedsDispatch(html);
 
     /// <inheritdoc/>
     public void PostRender(in PagePostRenderContext context)

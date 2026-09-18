@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Markup;
 
-/// <summary>reStructuredText (RST) lexer.</summary>
+/// <summary>ReStructuredText (RST) lexer.</summary>
 /// <remarks>
 /// Single-state RST scanner covering the inline + block markers a reader sees
 /// most often: directives (<c>.. directive:: …</c>), comments (<c>..</c> at line
@@ -62,34 +63,19 @@ public static class RstLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, },
 
             // ".. directive:: …" or ".." comment — line-anchored.
-            new(MatchDirectiveOrComment, TokenClass.CommentPreproc, LexerRule.NoStateChange)
-            {
-                FirstBytes = DotFirst, RequiresLineStart = true
-            },
+            new(MatchDirectiveOrComment, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = DotFirst, RequiresLineStart = true, },
 
             // Heading underline — line-anchored.
-            new(MatchHeadingUnderline, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
-            {
-                FirstBytes = UnderlineFirst, RequiresLineStart = true
-            },
+            new(MatchHeadingUnderline, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = UnderlineFirst, RequiresLineStart = true, },
 
             // List bullet — line-anchored.
-            new(MatchBulletMarker, TokenClass.Operator, LexerRule.NoStateChange)
-            {
-                FirstBytes = BulletFirst, RequiresLineStart = true
-            },
+            new(MatchBulletMarker, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = BulletFirst, RequiresLineStart = true, },
 
             // Field list — :field: at line start.
-            new(MatchFieldName, TokenClass.NameAttribute, LexerRule.NoStateChange)
-            {
-                FirstBytes = ColonFirst, RequiresLineStart = true
-            },
+            new(MatchFieldName, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = ColonFirst, RequiresLineStart = true, },
 
             // ``inline literal`` — must precede the single-backtick interpreted-text rule.
             new(MatchInlineLiteral, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = BacktickFirst },
@@ -113,18 +99,9 @@ public static class RstLexer
     /// <summary>Matches a directive (<c>.. name::</c>) or a comment line (<c>..</c> followed by free text).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length of the line, or zero on miss.</returns>
-    private static int MatchDirectiveOrComment(ReadOnlySpan<byte> slice)
-    {
-        if (slice.Length < DirectiveIntroducerLength
+    private static int MatchDirectiveOrComment(ReadOnlySpan<byte> slice) => slice.Length < DirectiveIntroducerLength
             || slice[0] is not (byte)'.'
-            || slice[1] is not (byte)'.')
-        {
-            return 0;
-        }
-
-        // Bare ".." with optional whitespace + content; the whole line is consumed.
-        return TokenMatchers.LineLength(slice);
-    }
+            || slice[1] is not (byte)'.' ? 0 : TokenMatchers.LineLength(slice);
 
     /// <summary>Matches a heading-underline line — three or more identical valid underline characters with no other content.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
@@ -212,9 +189,9 @@ public static class RstLexer
             return 0;
         }
 
-        var stop = slice[2..].IndexOfAnyExcept(NameContinue);
-        var nameLen = stop < 0 ? slice.Length - 2 : stop;
-        var afterName = 1 + 1 + nameLen;
+        const int FieldPrefixLength = 2;
+        var stop = slice[FieldPrefixLength..].IndexOfAnyExcept(NameContinue);
+        var afterName = FieldPrefixLength + (stop < 0 ? slice.Length - FieldPrefixLength : stop);
         return afterName < slice.Length && slice[afterName] is (byte)':' ? afterName + 1 : 0;
     }
 
@@ -296,12 +273,14 @@ public static class RstLexer
     /// <summary>Matches a substitution reference — <c>|name|</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchSubstitution(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchBracketedBlock(slice, (byte)'|', (byte)'|');
 
     /// <summary>Matches a standalone role marker — <c>:rolename:</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchRoleColon(ReadOnlySpan<byte> slice) =>
         MatchFieldName(slice);
 }

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
@@ -15,6 +16,9 @@ namespace NuStreamDocs.Versions;
 /// version-specific subdirectory (e.g. <c>./site/0.4.2</c>) and the
 /// plugin upserts the entry into <c>./site/versions.json</c>.
 /// </summary>
+/// <param name="options">Version publishing settings.</param>
+/// <param name="logger">Logger for publishing diagnostics.</param>
+[System.Diagnostics.DebuggerDisplay("VersionsPlugin: {Name}")]
 public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>
@@ -63,6 +67,7 @@ public sealed class VersionsPlugin(VersionOptions options, ILogger logger) : IBu
     /// <summary>Returns the parent directory of <paramref name="outputRoot"/>, or empty when <paramref name="outputRoot"/> is at the filesystem root.</summary>
     /// <param name="outputRoot">Build output root.</param>
     /// <returns>Parent directory, or an empty <see cref="DirectoryPath"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static DirectoryPath ResolveParentDirectory(in DirectoryPath outputRoot) =>
         Path.GetDirectoryName(outputRoot.Value.TrimEnd('/', '\\'));
 

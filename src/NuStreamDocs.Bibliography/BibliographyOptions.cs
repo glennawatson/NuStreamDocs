@@ -7,12 +7,11 @@ using NuStreamDocs.Bibliography.Styles.Aglc4;
 
 namespace NuStreamDocs.Bibliography;
 
-/// <summary>
-/// Configuration for <see cref="BibliographyPlugin"/>.
-/// </summary>
+/// <summary>Configuration for <see cref="BibliographyPlugin"/>.</summary>
 /// <param name="Database">Resolved citation database.</param>
 /// <param name="Style">Citation style.</param>
 /// <param name="WarnOnMissing">When true, an unresolved <c>[@key]</c> is logged at <c>Warning</c>.</param>
+[System.Diagnostics.DebuggerDisplay("BibliographyOptions: {ToString(),nq}")]
 public sealed record BibliographyOptions(
     BibliographyDatabase Database,
     ICitationStyle Style,

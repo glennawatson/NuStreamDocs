@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -21,7 +22,8 @@ internal static class SnippetsRewriter
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="basePaths">Ordered list of directories to resolve include paths against; the first hit wins.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, DirectoryPath[] basePaths) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer, DirectoryPath[] basePaths) =>
         Expand(source, writer, basePaths, 0);
 
     /// <summary>Expands <paramref name="source"/> recursively, capped at <see cref="MaxIncludeDepth"/>.</summary>
@@ -40,8 +42,8 @@ internal static class SnippetsRewriter
         {
             var lineEnd = Utf8LineSpan.FindLineEnd(source, cursor);
             var lineBody = source[cursor..lineEnd];
-            if (TryParseInclude(lineBody, out var path) && depth < MaxIncludeDepth &&
-                TryReadSnippet(path, basePaths, out var included))
+            if (TryParseInclude(lineBody, out var path) && depth < MaxIncludeDepth
+                && TryReadSnippet(path, basePaths, out var included))
             {
                 Expand(included, writer, basePaths, depth + 1);
                 cursor = Utf8LineSpan.AdvancePastLineTerminator(source, lineEnd);
@@ -75,7 +77,7 @@ internal static class SnippetsRewriter
         }
 
         path = rest[1..^1];
-        return path.Length > 0;
+        return !path.IsEmpty;
     }
 
     /// <summary>Resolves <paramref name="path"/> against each base directory in order and reads the first match.</summary>

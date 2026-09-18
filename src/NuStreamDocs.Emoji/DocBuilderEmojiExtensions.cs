@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Emoji;
@@ -9,8 +10,13 @@ namespace NuStreamDocs.Emoji;
 /// <summary>Builder-extension surface for the emoji plugin.</summary>
 public static class DocBuilderEmojiExtensions
 {
-    /// <summary>Registers <see cref="EmojiPlugin"/>.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseEmoji(this DocBuilder builder) => builder.UsePlugin(new EmojiPlugin());
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to configure.</param>
+    extension(DocBuilder builder)
+    {
+        /// <summary>Registers <see cref="EmojiPlugin"/>.</summary>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseEmoji() => builder.UsePlugin(new EmojiPlugin());
+    }
 }

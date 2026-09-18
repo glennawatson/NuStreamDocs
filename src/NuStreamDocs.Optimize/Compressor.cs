@@ -21,7 +21,7 @@ internal static class Compressor
     /// <param name="level">Compression level.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous write.</returns>
-    public static async Task WriteGzipAsync(
+    internal static async Task WriteGzipAsync(
         FilePath sourcePath,
         CompressionLevel level,
         CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ internal static class Compressor
     /// <param name="level">Compression level.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous write.</returns>
-    public static async Task WriteBrotliAsync(
+    internal static async Task WriteBrotliAsync(
         FilePath sourcePath,
         CompressionLevel level,
         CancellationToken cancellationToken)

@@ -9,6 +9,15 @@ namespace NuStreamDocs.Nav.Tests;
 /// <summary>End-to-end tests for literate-nav (<c>.pages</c>) overrides applied during <c>NavTreeBuilder.Build(string, in NavOptions)</c>.</summary>
 public class LiterateNavTests
 {
+    /// <summary>The IndexFile fixture value.</summary>
+    private const string IndexFile = "index.md";
+
+    /// <summary>The PagesFile fixture value.</summary>
+    private const string PagesFile = ".pages";
+
+    /// <summary>The HomeMarkdown fixture value.</summary>
+    private const string HomeMarkdown = "# home";
+
     /// <summary><c>nav:</c> entries reorder children to match the explicit list.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -18,7 +27,7 @@ public class LiterateNavTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "alpha.md"), "# alpha");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "beta.md"), "# beta");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "gamma.md"), "# gamma");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, ".pages"), "nav:\n  - gamma.md\n  - alpha.md\n");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PagesFile), "nav:\n  - gamma.md\n  - alpha.md\n");
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         var names = new string[root.Children.Length];
@@ -39,10 +48,10 @@ public class LiterateNavTests
     {
         using var fixture = TempDocsTree.Create();
         var sub = Path.Combine(fixture.Root, "guide");
-        Directory.CreateDirectory(sub);
+        _ = Directory.CreateDirectory(sub);
         await File.WriteAllTextAsync(Path.Combine(sub, "intro.md"), "# intro");
-        await File.WriteAllTextAsync(Path.Combine(sub, ".pages"), "title: User Guide\n");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# home");
+        await File.WriteAllTextAsync(Path.Combine(sub, PagesFile), "title: User Guide\n");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFile), HomeMarkdown);
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         var section = Array.Find(root.Children, static c => c.IsSection)!;
@@ -55,13 +64,13 @@ public class LiterateNavTests
     public async Task AwesomePagesTitleMapAppliesOverride()
     {
         using var fixture = TempDocsTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# home");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFile), HomeMarkdown);
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "alpha.md"), "# Alpha");
         var sub = Path.Combine(fixture.Root, "client");
-        Directory.CreateDirectory(sub);
+        _ = Directory.CreateDirectory(sub);
         await File.WriteAllTextAsync(Path.Combine(sub, "page.md"), "# Inner");
         await File.WriteAllTextAsync(
-            Path.Combine(fixture.Root, ".pages"),
+            Path.Combine(fixture.Root, PagesFile),
             "nav:\n  - Client Usage: client\n  - alpha.md\n");
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
@@ -88,14 +97,14 @@ public class LiterateNavTests
     {
         using var fixture = TempDocsTree.Create();
         var sub = Path.Combine(fixture.Root, "secret");
-        Directory.CreateDirectory(sub);
+        _ = Directory.CreateDirectory(sub);
         await File.WriteAllTextAsync(Path.Combine(sub, "page.md"), "# secret");
-        await File.WriteAllTextAsync(Path.Combine(sub, ".pages"), "hide: true\n");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# home");
+        await File.WriteAllTextAsync(Path.Combine(sub, PagesFile), "hide: true\n");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFile), HomeMarkdown);
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         await Assert
-            .That(Array.Exists(root.Children, static c => c.IsSection && Encoding.UTF8.GetString(c.Title) == "secret"))
+            .That(Array.Exists(root.Children, static c => c.IsSection && c.Title.AsSpan().SequenceEqual("secret"u8)))
             .IsFalse();
     }
 
@@ -108,7 +117,7 @@ public class LiterateNavTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "2013-01-01-old.md"), "# old");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "2020-06-15-mid.md"), "# mid");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "2026-05-07-new.md"), "# new");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, ".pages"), "order: desc\n");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PagesFile), "order: desc\n");
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         var names = new string[root.Children.Length];
@@ -129,7 +138,7 @@ public class LiterateNavTests
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "a.md"), "# a");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "b.md"), "# b");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "c.md"), "# c");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, ".pages"), "order: desc\nnav:\n  - b.md\n  - a.md\n");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, PagesFile), "order: desc\nnav:\n  - b.md\n  - a.md\n");
 
         var root = NavTreeBuilder.Build(fixture.Root, NavOptions.Default);
         var names = new string[root.Children.Length];

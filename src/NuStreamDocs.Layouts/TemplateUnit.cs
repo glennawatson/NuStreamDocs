@@ -9,12 +9,15 @@ namespace NuStreamDocs.Layouts;
 /// <param name="Tokens">Token stream produced by <see cref="LayoutScanner"/>.</param>
 internal readonly record struct TemplateUnit(byte[] Bytes, List<LayoutToken> Tokens)
 {
+    /// <summary>Initial token capacity.</summary>
+    private const int InitialTokenCapacity = 64;
+
     /// <summary>Parses <paramref name="bytes"/> into a token stream.</summary>
     /// <param name="bytes">UTF-8 template bytes.</param>
     /// <returns>The parsed unit.</returns>
-    public static TemplateUnit From(byte[] bytes)
+    internal static TemplateUnit From(byte[] bytes)
     {
-        List<LayoutToken> tokens = new(64);
+        List<LayoutToken> tokens = [with(InitialTokenCapacity)];
         LayoutScanner.Scan(bytes, tokens);
         return new(bytes, tokens);
     }

@@ -12,6 +12,7 @@ namespace NuStreamDocs.Building;
 /// <param name="SiteName">UTF-8 site name surfaced to plugins through <see cref="Plugins.BuildConfigureContext.SiteName"/>; empty when none configured.</param>
 /// <param name="SiteUrl">UTF-8 canonical site URL surfaced to plugins through <see cref="Plugins.BuildConfigureContext.SiteUrl"/>; empty when none configured.</param>
 /// <param name="SiteAuthor">UTF-8 site-wide author name surfaced to plugins through <see cref="Plugins.BuildConfigureContext.SiteAuthor"/>; empty when none configured.</param>
+[System.Diagnostics.DebuggerDisplay("BuildPipelineOptions: {Parallelism}")]
 public readonly record struct BuildPipelineOptions(
     PathFilter Filter,
     ILogger? Logger,
@@ -24,9 +25,9 @@ public readonly record struct BuildPipelineOptions(
     /// <summary>Default parallel-worker cap; tuned for laptops and CI runners.</summary>
     private const int DefaultParallelism = 8;
 
-    /// <summary>Gets the maximum degree of parallelism.</summary>
-    public int Parallelism { get; init; } = DefaultParallelism;
-
     /// <summary>Gets the empty option set: no filter, no logger, flat URLs, drafts skipped, no site metadata.</summary>
     public static BuildPipelineOptions Default => new(PathFilter.Empty, null, false, false, [], [], []);
+
+    /// <summary>Gets the maximum degree of parallelism.</summary>
+    public int Parallelism { get; init; } = DefaultParallelism;
 }

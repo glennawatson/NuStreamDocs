@@ -7,6 +7,7 @@ namespace NuStreamDocs.Xrefs;
 /// <summary>One external xrefmap to import at configure time.</summary>
 /// <param name="Source">Local <c>xrefmap.json</c> path or <c>http(s)://</c> URL.</param>
 /// <param name="BaseUrl">URL prefix prepended to every imported <c>href</c>; overrides the file's embedded <c>baseUrl</c>. Empty leaves hrefs untouched.</param>
+[System.Diagnostics.DebuggerDisplay("XrefImport: {ToString(),nq}")]
 public readonly record struct XrefImport(string Source, string BaseUrl)
 {
     /// <summary>Initializes a new instance of the <see cref="XrefImport"/> struct without a base-URL override.</summary>

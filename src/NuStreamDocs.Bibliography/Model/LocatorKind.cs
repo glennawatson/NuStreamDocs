@@ -13,11 +13,11 @@ namespace NuStreamDocs.Bibliography.Model;
 [SuppressMessage(
     "Design",
     "CA1028:Enum storage should be Int32",
-    Justification = "Closed vocabulary of <16 members; byte storage halves CitationLocator footprint.")]
+    Justification = "The published locator enum has byte storage; changing it would break its binary contract.")]
 [SuppressMessage(
-    "Sonar Code Smell",
-    "S4022:Enums storage should be Int32",
-    Justification = "Closed vocabulary of <16 members; byte storage halves CitationLocator footprint.")]
+    "Design",
+    "SST2313:Enum storage type",
+    Justification = "The published locator enum has byte storage; changing it would break its binary contract.")]
 public enum LocatorKind : byte
 {
     /// <summary>No label present (<c>[@key, 23]</c>).</summary>
@@ -45,5 +45,5 @@ public enum LocatorKind : byte
     Article = 7,
 
     /// <summary>Unknown label — emitted verbatim with the value (rare; mainly for forward-compat).</summary>
-    Other = 255
+    Other = 255,
 }

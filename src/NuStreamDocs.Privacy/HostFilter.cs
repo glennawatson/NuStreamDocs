@@ -53,7 +53,7 @@ internal sealed class HostFilter
     /// <summary>Returns true when <paramref name="urlBytes"/> is an absolute http(s) URL whose host passes the configured allow/skip rules.</summary>
     /// <param name="urlBytes">UTF-8 URL slice from the source page.</param>
     /// <returns>True when the URL should be localized.</returns>
-    public bool ShouldLocalize(ReadOnlySpan<byte> urlBytes)
+    internal bool ShouldLocalize(ReadOnlySpan<byte> urlBytes)
     {
         if (!TryExtractHttpHost(urlBytes, out var host))
         {

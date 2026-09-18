@@ -12,12 +12,15 @@ namespace NuStreamDocs.SmartSymbols.Tests;
 /// <summary>Lifecycle / registration tests for <c>SmartSymbolsPlugin</c>.</summary>
 public class SmartSymbolsPluginTests
 {
+    /// <summary>Initial output capacity.</summary>
+    private const int InitialOutputCapacity = 32;
+
     /// <summary>PreRender substitutes a known marker.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task PreRenderSubstitutes()
     {
-        ArrayBufferWriter<byte> sink = new(32);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
         PagePreRenderContext ctx = new("p.md", "(c) acme"u8, sink);
         new SmartSymbolsPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("© acme");

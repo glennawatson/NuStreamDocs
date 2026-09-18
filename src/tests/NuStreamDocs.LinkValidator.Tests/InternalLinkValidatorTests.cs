@@ -9,6 +9,12 @@ namespace NuStreamDocs.LinkValidator.Tests;
 /// <summary>End-to-end tests for the corpus + internal validator.</summary>
 public class InternalLinkValidatorTests
 {
+    /// <summary>Index File Name used by the test cases.</summary>
+    private const string IndexFileName = "index.html";
+
+    /// <summary>Parallelism used by the test cases.</summary>
+    private const int Parallelism = 4;
+
     /// <summary>A clean site produces no diagnostics.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -18,14 +24,14 @@ public class InternalLinkValidatorTests
         try
         {
             await File.WriteAllTextAsync(
-                Path.Combine(dir, "index.html"),
+                Path.Combine(dir, IndexFileName),
                 "<h1 id=\"top\">Hello</h1><a href=\"about.html\">About</a>");
             await File.WriteAllTextAsync(
                 Path.Combine(dir, "about.html"),
                 "<h1 id=\"about\">About</h1><a href=\"index.html#top\">Home</a>");
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
-            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, Parallelism, CancellationToken.None);
 
             await Assert.That(diags.Length).IsEqualTo(0);
         }
@@ -44,11 +50,11 @@ public class InternalLinkValidatorTests
         try
         {
             await File.WriteAllTextAsync(
-                Path.Combine(dir, "index.html"),
+                Path.Combine(dir, IndexFileName),
                 "<h1 id=\"top\">Hi</h1><a href=\"missing.html\">missing</a>");
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
-            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, Parallelism, CancellationToken.None);
 
             await Assert.That(diags.Length).IsEqualTo(1);
             await Assert.That(diags[0].Severity).IsEqualTo(LinkSeverity.Error);
@@ -69,11 +75,11 @@ public class InternalLinkValidatorTests
         try
         {
             await File.WriteAllTextAsync(
-                Path.Combine(dir, "index.html"),
+                Path.Combine(dir, IndexFileName),
                 "<h1 id=\"top\">Hi</h1><a href=\"#nope\">missing-anchor</a>");
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
-            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, Parallelism, CancellationToken.None);
 
             await Assert.That(diags.Length).IsEqualTo(1);
             await Assert.That(diags[0].Link).IsEqualTo("#nope");
@@ -93,14 +99,14 @@ public class InternalLinkValidatorTests
         try
         {
             await File.WriteAllTextAsync(
-                Path.Combine(dir, "index.html"),
+                Path.Combine(dir, IndexFileName),
                 "<h1 id=\"top\">Hi</h1><a href=\"about.html#missing\">x</a>");
             await File.WriteAllTextAsync(
                 Path.Combine(dir, "about.html"),
                 "<h1 id=\"about\">About</h1>");
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
-            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, Parallelism, CancellationToken.None);
 
             await Assert.That(diags.Length).IsEqualTo(1);
             await Assert.That(diags[0].Link).IsEqualTo("about.html#missing");
@@ -119,16 +125,16 @@ public class InternalLinkValidatorTests
         var dir = TempDir();
         try
         {
-            Directory.CreateDirectory(Path.Combine(dir, "guide"));
+            _ = Directory.CreateDirectory(Path.Combine(dir, "guide"));
             await File.WriteAllTextAsync(
                 Path.Combine(dir, "guide", "intro.html"),
                 "<a href=\"../index.html\">home</a>");
             await File.WriteAllTextAsync(
-                Path.Combine(dir, "index.html"),
+                Path.Combine(dir, IndexFileName),
                 "<h1 id=\"top\">Home</h1>");
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
-            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, Parallelism, CancellationToken.None);
 
             await Assert.That(diags.Length).IsEqualTo(0);
         }
@@ -147,11 +153,11 @@ public class InternalLinkValidatorTests
         try
         {
             await File.WriteAllTextAsync(
-                Path.Combine(dir, "index.html"),
+                Path.Combine(dir, IndexFileName),
                 "<h2>Intro <a name=\"introduction\"></a></h2><a href=\"#introduction\">go</a>");
 
-            var corpus = await ValidationCorpus.BuildAsync(dir, 4, CancellationToken.None);
-            var diags = await InternalLinkValidator.ValidateAsync(corpus, 4, CancellationToken.None);
+            var corpus = await ValidationCorpus.BuildAsync(dir, Parallelism, CancellationToken.None);
+            var diags = await InternalLinkValidator.ValidateAsync(corpus, Parallelism, CancellationToken.None);
 
             await Assert.That(diags.Length).IsEqualTo(1);
             await Assert.That(diags[0].Severity).IsEqualTo(LinkSeverity.Error);
@@ -171,8 +177,8 @@ public class InternalLinkValidatorTests
     {
         var dir = Path.Combine(
             Path.GetTempPath(),
-            "smd-linkval-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(dir);
+            $"smd-linkval-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(dir);
         return dir;
     }
 }

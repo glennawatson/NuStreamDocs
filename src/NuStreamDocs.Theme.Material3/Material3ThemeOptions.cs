@@ -26,6 +26,7 @@ namespace NuStreamDocs.Theme.Material3;
 /// <param name="EnableNavigationFooter">Render prev/next page links in the page footer (mkdocs-material's <c>navigation.footer</c>).</param>
 /// <param name="SectionScopedFooter">When true, prev/next stop at the closest enclosing section instead
 /// of crossing siblings; only applies when <see cref="EnableNavigationFooter"/> is true.</param>
+[System.Diagnostics.DebuggerDisplay("Material3ThemeOptions: {WriteEmbeddedAssets}")]
 public readonly record struct Material3ThemeOptions(
     Material3AssetSource AssetSource,
     byte[] EmbeddedAssetRoot,

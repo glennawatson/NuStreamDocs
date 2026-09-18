@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins.ExtraAssets;
 
 /// <summary>Plugin that ships caller-supplied stylesheet and script assets, emitting matching <c>&lt;link&gt;</c> / <c>&lt;script&gt;</c> tags into every page's <c>&lt;head&gt;</c>.</summary>
+[System.Diagnostics.DebuggerDisplay("ExtraAssetsPlugin: {Name}")]
 public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>CSS sources accumulated through the builder API.</summary>
@@ -40,10 +42,12 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
 
     /// <summary>Appends a CSS source. Called by the builder API; folds onto the existing instance when one is already registered.</summary>
     /// <param name="source">Source to add.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddCss(ExtraAssetSource source) => _cssSources.Add(source);
 
     /// <summary>Appends a JS source. Called by the builder API; folds onto the existing instance when one is already registered.</summary>
     /// <param name="source">Source to add.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddJs(ExtraAssetSource source) => _jsSources.Add(source);
 
     /// <inheritdoc/>
@@ -90,6 +94,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <summary>Reads the bytes for one shippable source.</summary>
     /// <param name="source">Source to resolve.</param>
     /// <returns>UTF-8 asset bytes.</returns>
+    /// <exception cref="InvalidOperationException">The source has no shippable content.</exception>
     private static byte[] ReadBytes(ExtraAssetSource source) => source.Kind switch
     {
         ExtraAssetSourceKind.File => File.ReadAllBytes(source.FilePath.Value),
@@ -101,6 +106,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <summary>Reads an embedded resource into a fresh byte array.</summary>
     /// <param name="source">Embedded-resource source.</param>
     /// <returns>UTF-8 asset bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte[] ReadEmbedded(ExtraAssetSource source) => EmbeddedResourceReader.Read(source);
 
     /// <summary>Writes one <c>&lt;link rel="stylesheet" href="…"&gt;</c> tag.</summary>
@@ -145,6 +151,7 @@ public sealed class ExtraAssetsPlugin : IBuildConfigurePlugin, IStaticAssetProvi
     /// <summary>Composes the asset's site-relative file path (<c>assets/extra/&lt;outputName&gt;</c>) via the project's <see cref="StringCompose"/> helper.</summary>
     /// <param name="outputName">Caller-supplied output filename (already validated non-null upstream).</param>
     /// <returns>Composed path string suitable for <see cref="FilePath"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string ComposeAssetPath(string outputName) => StringCompose.Concat("assets/extra/", outputName);
 
     /// <summary>Composes the head fragment: one <c>&lt;link&gt;</c> per CSS source, one <c>&lt;script&gt;</c> per JS source.</summary>

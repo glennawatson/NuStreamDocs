@@ -41,7 +41,7 @@ internal static class MixedContentBytes
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
     /// <returns>True when at least one URL was upgraded.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
+    internal static bool RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
     {
         var changed = false;
         var lastEmit = 0;
@@ -199,7 +199,7 @@ internal static class MixedContentBytes
             return true;
         }
 
-        return host.StartsWith(Ipv4Loopback) || host.SequenceEqual(Ipv6LoopbackBare) ||
-               host.SequenceEqual(Ipv6LoopbackBracketed);
+        return host.StartsWith(Ipv4Loopback) || host.SequenceEqual(Ipv6LoopbackBare)
+               || host.SequenceEqual(Ipv6LoopbackBracketed);
     }
 }

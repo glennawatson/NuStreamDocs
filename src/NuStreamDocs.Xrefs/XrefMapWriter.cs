@@ -15,18 +15,21 @@ namespace NuStreamDocs.Xrefs;
 /// </summary>
 internal static class XrefMapWriter
 {
+    /// <summary>Reserves output space for small catalogs before growth is needed.</summary>
+    private const int InitialOutputCapacity = 1024;
+
     /// <summary>Writes the snapshot to <paramref name="outputPath"/>.</summary>
     /// <param name="outputPath">Absolute path to write to.</param>
     /// <param name="baseUrl">Optional base URL embedded as the <c>baseUrl</c> field; empty omits the field.</param>
     /// <param name="entries">Snapshot from <c>AutorefsRegistry.Snapshot()</c>.</param>
-    public static void Write(in FilePath outputPath, byte[] baseUrl, (byte[] Id, byte[] Url)[] entries)
+    internal static void Write(in FilePath outputPath, byte[] baseUrl, (byte[] Id, byte[] Url)[] entries)
     {
         // Copy then sort by UID byte sequence — ordinal UTF-8 byte compare matches
         // ordinal string compare for valid UTF-8 and gives deterministic build-to-build ordering.
         (byte[] Id, byte[] Url)[] sorted = [.. entries];
         Array.Sort(sorted, static (a, b) => a.Id.AsSpan().SequenceCompareTo(b.Id.AsSpan()));
 
-        ArrayBufferWriter<byte> sink = new(1024);
+        var sink = new ArrayBufferWriter<byte>(InitialOutputCapacity);
         using (Utf8JsonWriter writer = new(sink, new() { Indented = false }))
         {
             writer.WriteStartObject();

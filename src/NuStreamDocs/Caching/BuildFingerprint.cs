@@ -13,13 +13,19 @@ namespace NuStreamDocs.Caching;
 /// <summary>Computes the manifest fingerprint for the current build pipeline so the incremental cache invalidates whenever generator or plugin binaries change.</summary>
 internal static class BuildFingerprint
 {
+    /// <summary>Initial capacity for the core build fingerprint.</summary>
+    private const int CoreFingerprintCapacity = 256;
+
+    /// <summary>Estimated bytes contributed by each plugin identity.</summary>
+    private const int PluginFingerprintCapacity = 96;
+
     /// <summary>Returns the cache fingerprint for the current build configuration.</summary>
     /// <param name="plugins">Registered plugins, in execution order.</param>
     /// <param name="options">Pipeline options that affect emitted output.</param>
     /// <returns>Raw SHA-256 digest bytes for this build shape.</returns>
-    public static byte[] Create(IPlugin[] plugins, in BuildPipelineOptions options)
+    internal static byte[] Create(IPlugin[] plugins, in BuildPipelineOptions options)
     {
-        ArrayBufferWriter<byte> buffer = new(256 + (plugins.Length * 96));
+        ArrayBufferWriter<byte> buffer = new(CoreFingerprintCapacity + (plugins.Length * PluginFingerprintCapacity));
         Write(buffer, "core="u8);
         AppendTypeFingerprint(buffer, typeof(BuildPipeline));
         Write(buffer, "|dir="u8);

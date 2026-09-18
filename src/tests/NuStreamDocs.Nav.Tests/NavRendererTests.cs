@@ -12,14 +12,68 @@ namespace NuStreamDocs.Nav.Tests;
 /// <summary>Behavior tests for nav rendering, including <c>navigation.prune</c>.</summary>
 public class NavRendererTests
 {
+    /// <summary>The IndexFile fixture value.</summary>
+    private const string IndexFile = "index.md";
+
+    /// <summary>The GuideTitle fixture value.</summary>
+    private const string GuideTitle = "Guide";
+
+    /// <summary>The GuideDirectory fixture value.</summary>
+    private const string GuideDirectory = "guide";
+
+    /// <summary>The IntroTitle fixture value.</summary>
+    private const string IntroTitle = "Intro";
+
+    /// <summary>The GuideIntroPath fixture value.</summary>
+    private const string GuideIntroPath = "guide/intro.md";
+
+    /// <summary>The AkavacheTitle fixture value.</summary>
+    private const string AkavacheTitle = "Akavache";
+
+    /// <summary>The AkavacheDirectory fixture value.</summary>
+    private const string AkavacheDirectory = "api/Akavache";
+
+    /// <summary>The AkavacheIndexPath fixture value.</summary>
+    private const string AkavacheIndexPath = "api/Akavache/index.md";
+
+    /// <summary>The AkavacheCoreTitle fixture value.</summary>
+    private const string AkavacheCoreTitle = "Akavache.Core";
+
+    /// <summary>The AkavacheCoreDirectory fixture value.</summary>
+    private const string AkavacheCoreDirectory = "api/Akavache.Core";
+
+    /// <summary>The AkavacheCoreIndexPath fixture value.</summary>
+    private const string AkavacheCoreIndexPath = "api/Akavache.Core/index.md";
+
+    /// <summary>The BlogPostPath fixture value.</summary>
+    private const string BlogPostPath = "blog/post.md";
+
+    /// <summary>The GuideIndexPath fixture value.</summary>
+    private const string GuideIndexPath = "guide/index.md";
+
+    /// <summary>The GuideIntroUrl fixture value.</summary>
+    private const string GuideIntroUrl = "guide/intro.html";
+
+    /// <summary>The ApiIndexPath fixture value.</summary>
+    private const string ApiIndexPath = "api/index.md";
+
+    /// <summary>Gets the GuideTitle fixture value.</summary>
+    private static ReadOnlySpan<byte> GuideTitleBytes => "Guide"u8;
+
+    /// <summary>Gets the IntroTitle fixture value.</summary>
+    private static ReadOnlySpan<byte> IntroTitleBytes => "Intro"u8;
+
+    /// <summary>Gets the GuideIntroUrl fixture value.</summary>
+    private static ReadOnlySpan<byte> GuideIntroUrlBytes => "guide/intro.html"u8;
+
     /// <summary>The full renderer emits every page even when the active page is deep in the tree.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task FullRendererEmitsEveryNode()
     {
-        NavNode intro = new("Intro", "guide/intro.md", false, []);
-        NavNode post = new("Post", "blog/post.md", false, []);
-        NavNode guide = new("Guide", "guide", true, [intro], "guide/index.md");
+        NavNode intro = new(IntroTitle, GuideIntroPath, false, []);
+        NavNode post = new("Post", BlogPostPath, false, []);
+        NavNode guide = new(GuideTitle, GuideDirectory, true, [intro], GuideIndexPath);
         NavNode blog = new("Blog", "blog", true, [post], "blog/index.md");
         NavNode root = new(string.Empty, string.Empty, true, [guide, blog]);
         root.AttachParents();
@@ -38,9 +92,9 @@ public class NavRendererTests
     [Test]
     public async Task PrunedRendererCollapsesSectionsOutsideActiveBranch()
     {
-        var html = await RenderAsync(true, "guide/intro.html");
+        var html = await RenderAsync(true, GuideIntroUrl);
 
-        await Assert.That(html.Contains("guide/intro.html", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(GuideIntroUrl, StringComparison.Ordinal)).IsTrue();
 
         // Blog section's child page should be hidden when pruning while the
         // active page is in guide/. The "Blog" label still appears as a
@@ -53,7 +107,7 @@ public class NavRendererTests
     [Test]
     public async Task ActiveLeafGetsActiveClass()
     {
-        var html = await RenderAsync(false, "guide/intro.html");
+        var html = await RenderAsync(false, GuideIntroUrl);
         await Assert.That(html.Contains("md-nav__link--active", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -62,10 +116,10 @@ public class NavRendererTests
     [Test]
     public async Task SidebarScopesToActiveTopLevelSection()
     {
-        NavNode home = new("Home", "index.md", false, []);
-        NavNode intro = new("Intro", "guide/intro.md", false, []);
-        NavNode post = new("Post", "blog/post.md", false, []);
-        NavNode guide = new("Guide", "guide", true, [intro]);
+        NavNode home = new("Home", IndexFile, false, []);
+        NavNode intro = new(IntroTitle, GuideIntroPath, false, []);
+        NavNode post = new("Post", BlogPostPath, false, []);
+        NavNode guide = new(GuideTitle, GuideDirectory, true, [intro]);
         NavNode blog = new("Blog", "blog", true, [post]);
         NavNode root = new(string.Empty, string.Empty, true, [home, guide, blog]);
         root.AttachParents();
@@ -86,8 +140,8 @@ public class NavRendererTests
     [Test]
     public async Task TabsLinkToSectionRootWhenSectionHasNoIndexPage()
     {
-        NavNode home = new("Home", "index.md", false, []);
-        NavNode apiIndex = new("API home", "api/index.md", false, []);
+        NavNode home = new("Home", IndexFile, false, []);
+        NavNode apiIndex = new("API home", ApiIndexPath, false, []);
         NavNode api = new("API", "api", true, [apiIndex]);
         NavNode root = new(string.Empty, string.Empty, true, [home, api]);
         root.AttachParents();
@@ -106,8 +160,8 @@ public class NavRendererTests
     [Test]
     public async Task SidebarLeafLinksAreRootRelative()
     {
-        NavNode intro = new("Intro", "guide/intro.md", false, []);
-        NavNode guide = new("Guide", "guide", true, [intro], "guide/index.md");
+        NavNode intro = new(IntroTitle, GuideIntroPath, false, []);
+        NavNode guide = new(GuideTitle, GuideDirectory, true, [intro], GuideIndexPath);
         NavNode root = new(string.Empty, string.Empty, true, [guide]);
         root.AttachParents();
 
@@ -126,12 +180,12 @@ public class NavRendererTests
     public async Task DirectoryUrlSectionIndexScopesSidebar()
     {
         using var fixture = TempDocsTree.Create();
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "blog"));
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Index");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "index.md"), "# Guide");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", "index.md"), "# Blog");
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Root, GuideDirectory));
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Root, "blog"));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFile), "# Index");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, GuideDirectory, IndexFile), "# Guide");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, GuideDirectory, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", IndexFile), "# Blog");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", "post.md"), "# Post");
 
         var options = NavOptions.Default with { Tabs = true, UseDirectoryUrls = true };
@@ -140,7 +194,7 @@ public class NavRendererTests
             new(fixture.Root, fixture.Output, [plugin], new()) { UseDirectoryUrls = true };
         await plugin.DiscoverAsync(discoverContext, CancellationToken.None);
 
-        var html = RunPostRender(plugin, "guide/index.md");
+        var html = RunPostRender(plugin, GuideIndexPath);
         await Assert.That(html).Contains("Home");
         await Assert.That(html).Contains("href=\"/guide/intro/\"");
         await Assert.That(html).DoesNotContain(">Guide<");
@@ -198,10 +252,10 @@ public class NavRendererTests
     [Test]
     public async Task SidebarKeepsActiveSectionHeaderWhenSectionHasManyChildren()
     {
-        NavNode akavache = new("Akavache", "api/Akavache", true, [], "api/Akavache/index.md");
-        NavNode core = new("Akavache.Core", "api/Akavache.Core", true, [], "api/Akavache.Core/index.md");
+        NavNode akavache = new(AkavacheTitle, AkavacheDirectory, true, [], AkavacheIndexPath);
+        NavNode core = new(AkavacheCoreTitle, AkavacheCoreDirectory, true, [], AkavacheCoreIndexPath);
         NavNode drawing = new("Akavache.Drawing", "api/Akavache.Drawing", true, [], "api/Akavache.Drawing/index.md");
-        NavNode api = new("API", "api", true, [akavache, core, drawing], "api/index.md");
+        NavNode api = new("API", "api", true, [akavache, core, drawing], ApiIndexPath);
         NavNode root = new(string.Empty, string.Empty, true, [api]);
         root.AttachParents();
 
@@ -235,9 +289,9 @@ public class NavRendererTests
     [Test]
     public async Task ActiveSectionEmitsToggleAndContainerStructure()
     {
-        NavNode akavache = new("Akavache", "api/Akavache", true, [], "api/Akavache/index.md");
-        NavNode core = new("Akavache.Core", "api/Akavache.Core", true, [], "api/Akavache.Core/index.md");
-        NavNode api = new("API", "api", true, [akavache, core], "api/index.md");
+        NavNode akavache = new(AkavacheTitle, AkavacheDirectory, true, [], AkavacheIndexPath);
+        NavNode core = new(AkavacheCoreTitle, AkavacheCoreDirectory, true, [], AkavacheCoreIndexPath);
+        NavNode api = new("API", "api", true, [akavache, core], ApiIndexPath);
         NavNode root = new(string.Empty, string.Empty, true, [api]);
         root.AttachParents();
 
@@ -272,9 +326,9 @@ public class NavRendererTests
     [Test]
     public async Task NonActiveSectionsKeepLeafChevronShape()
     {
-        NavNode intro = new("Intro", "guide/intro.md", false, []);
-        NavNode post = new("Post", "blog/post.md", false, []);
-        NavNode guide = new("Guide", "guide", true, [intro], "guide/index.md");
+        NavNode intro = new(IntroTitle, GuideIntroPath, false, []);
+        NavNode post = new("Post", BlogPostPath, false, []);
+        NavNode guide = new(GuideTitle, GuideDirectory, true, [intro], GuideIndexPath);
         NavNode blog = new("Blog", "blog", true, [post], "blog/index.md");
         NavNode root = new(string.Empty, string.Empty, true, [guide, blog]);
         root.AttachParents();
@@ -300,15 +354,15 @@ public class NavRendererTests
     [Test]
     public async Task ToggleIdsAreUniquePerRender()
     {
-        NavNode aIntro = new("A intro", "a/intro.md", false, []);
-        NavNode bIntro = new("B intro", "b/intro.md", false, []);
-        NavNode a = new("A", "a", true, [aIntro], "a/index.md");
-        NavNode b = new("B", "b", true, [bIntro], "b/index.md");
+        var firstIntro = new NavNode("A intro", "a/intro.md", false, []);
+        var secondIntro = new NavNode("B intro", "b/intro.md", false, []);
+        NavNode a = new("A", "a", true, [firstIntro], "a/index.md");
+        NavNode b = new("B", "b", true, [secondIntro], "b/index.md");
         NavNode root = new(string.Empty, string.Empty, true, [a, b]);
         root.AttachParents();
 
         ArrayBufferWriter<byte> writer = new();
-        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, aIntro);
+        var (tree, activeIdx) = NavTreeFlattener.FlattenWithActive(root, firstIntro);
         NavRenderer.RenderFull(tree, activeIdx, writer);
 
         var html = Encoding.UTF8.GetString(writer.WrittenSpan);
@@ -327,10 +381,10 @@ public class NavRendererTests
     [Test]
     public async Task SidebarTabsModeKeepsActiveSectionHeaderForSubSections()
     {
-        NavNode home = new("Home", "index.md", false, []);
-        NavNode akavache = new("Akavache", "api/Akavache", true, [], "api/Akavache/index.md");
-        NavNode core = new("Akavache.Core", "api/Akavache.Core", true, [], "api/Akavache.Core/index.md");
-        NavNode api = new("API", "api", true, [akavache, core], "api/index.md");
+        NavNode home = new("Home", IndexFile, false, []);
+        NavNode akavache = new(AkavacheTitle, AkavacheDirectory, true, [], AkavacheIndexPath);
+        NavNode core = new(AkavacheCoreTitle, AkavacheCoreDirectory, true, [], AkavacheCoreIndexPath);
+        NavNode api = new("API", "api", true, [akavache, core], ApiIndexPath);
         NavNode root = new(string.Empty, string.Empty, true, [home, api]);
         root.AttachParents();
 
@@ -361,10 +415,10 @@ public class NavRendererTests
         var tree = NavTreeFlattener.Flatten(root);
         var index = NavRenderer.BuildUrlIndex(tree);
 
-        await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
+        await Assert.That(index.ContainsKeyByUtf8(GuideIntroUrlBytes)).IsTrue();
         await Assert.That(index.ContainsKeyByUtf8("blog/post.html"u8)).IsTrue();
-        await Assert.That(index.TryGetValueByUtf8("guide/intro.html"u8, out var introIdx) &&
-                          Encoding.UTF8.GetString(tree.Nodes[introIdx].Title) == "Intro").IsTrue();
+        await Assert.That(index.TryGetValueByUtf8(GuideIntroUrlBytes, out var introIdx)
+                          && tree.Nodes[introIdx].Title.AsSpan().SequenceEqual(IntroTitleBytes)).IsTrue();
     }
 
     /// <summary>BuildUrlIndex includes section index URLs (when present).</summary>
@@ -372,19 +426,19 @@ public class NavRendererTests
     [Test]
     public async Task BuildUrlIndexIncludesSectionIndex()
     {
-        NavNode leaf = new("Intro", "guide/intro.md", false, []);
+        NavNode leaf = new(IntroTitle, GuideIntroPath, false, []);
 
         // Sections expose IndexUrl via the 5-arg ctor's indexPath argument.
-        NavNode section = new("Guide", string.Empty, true, [leaf], "guide/index.md");
+        NavNode section = new(GuideTitle, string.Empty, true, [leaf], GuideIndexPath);
         NavNode root = new(string.Empty, string.Empty, true, [section]);
         var tree = NavTreeFlattener.Flatten(root);
 
         var index = NavRenderer.BuildUrlIndex(tree);
 
-        await Assert.That(index.ContainsKeyByUtf8("guide/intro.html"u8)).IsTrue();
+        await Assert.That(index.ContainsKeyByUtf8(GuideIntroUrlBytes)).IsTrue();
         await Assert.That(index.ContainsKeyByUtf8("guide/index.html"u8)).IsTrue();
-        await Assert.That(index.TryGetValueByUtf8("guide/index.html"u8, out var guideIdx) &&
-                          Encoding.UTF8.GetString(tree.Nodes[guideIdx].Title) == "Guide").IsTrue();
+        await Assert.That(index.TryGetValueByUtf8("guide/index.html"u8, out var guideIdx)
+                          && tree.Nodes[guideIdx].Title.AsSpan().SequenceEqual(GuideTitleBytes)).IsTrue();
     }
 
     /// <summary>BuildUrlIndex returns an empty dictionary for an empty tree.</summary>
@@ -405,10 +459,10 @@ public class NavRendererTests
     private static async Task<string> RenderAsync(bool prune, string currentPage)
     {
         using var fixture = TempDocsTree.Create();
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "blog"));
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Index");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "intro.md"), "# Intro");
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Root, GuideDirectory));
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Root, "blog"));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFile), "# Index");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, GuideDirectory, "intro.md"), "# Intro");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "blog", "post.md"), "# Post");
 
         var options = NavOptions.Default with { Prune = prune };
@@ -441,9 +495,9 @@ public class NavRendererTests
     /// <returns>Tree root.</returns>
     private static NavNode BuildSampleTree()
     {
-        NavNode intro = new("Intro", "guide/intro.md", false, []);
-        NavNode post = new("Post", "blog/post.md", false, []);
-        NavNode guide = new("Guide", string.Empty, true, [intro]);
+        NavNode intro = new(IntroTitle, GuideIntroPath, false, []);
+        NavNode post = new("Post", BlogPostPath, false, []);
+        NavNode guide = new(GuideTitle, string.Empty, true, [intro]);
         NavNode blog = new("Blog", string.Empty, true, [post]);
         return new(string.Empty, string.Empty, true, [guide, blog]);
     }

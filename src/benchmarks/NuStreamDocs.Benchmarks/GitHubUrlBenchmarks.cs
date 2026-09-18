@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.ContentLoader.GitHub;
 
@@ -19,16 +20,18 @@ public class GitHubUrlBenchmarks
     /// <summary>A representative repository reference.</summary>
     private static readonly GitHubRepoRef Repo = new([.. "acme"u8], [.. "widgets"u8], [.. "main"u8]);
 
-    /// <summary>A representative deep blob path.</summary>
-    private static readonly byte[] BlobPath = [.. "docs/guide/getting-started/installation.md"u8];
+    /// <summary>Gets a representative deep blob path.</summary>
+    private static ReadOnlySpan<byte> BlobPath => "docs/guide/getting-started/installation.md"u8;
 
     /// <summary>Builds the recursive git-tree API URL.</summary>
     /// <returns>The URL length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TreeApiUrl() => GitHubUrls.TreeApiUrl(in Repo).Value.Length;
 
     /// <summary>Builds a raw-content URL for a blob path.</summary>
     /// <returns>The URL length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int RawFileUrl() => GitHubUrls.RawFileUrl(in Repo, BlobPath).Value.Length;
 }

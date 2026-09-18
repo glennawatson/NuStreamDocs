@@ -2,8 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using NuStreamDocs.Autorefs;
@@ -42,13 +43,10 @@ namespace NuStreamDocs.Benchmarks;
 /// + warmup + a few iterations is plenty for relative ranking.
 /// </para>
 /// </remarks>
+[DebuggerDisplay("RxuiCorpusBenchmarks: outputRoot={_outputRoot}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 [EventPipeProfiler(EventPipeProfile.GcVerbose)]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class RxuiCorpusBenchmarks
 {
     /// <summary>Absolute path to the maintainer's local rxui-website corpus checkout.</summary>
@@ -73,77 +71,73 @@ public class RxuiCorpusBenchmarks
         TryDelete(_outputRoot);
         _outputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-rxui-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_outputRoot);
+            $"smkd-rxui-out-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(_outputRoot);
     }
 
     /// <summary>Cleans the last iteration's output directory.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [GlobalCleanup]
     public void GlobalCleanup() => TryDelete(_outputRoot);
 
     /// <summary>Baseline: pure render + write, no plugins.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark(Baseline = true)]
-    public int Baseline() =>
+    public Task<int> Baseline() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with the markdown-extension bundle (admonitions, details, tabs, footnotes, …).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithMarkdownExtensions() =>
+    public Task<int> WithMarkdownExtensions() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseCommonMarkdownExtensions()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with syntax highlighting on every fenced block.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithHighlight() =>
+    public Task<int> WithHighlight() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseHighlight()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with nav generation (full discovery + per-page render of the active branch).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithNav() =>
+    public Task<int> WithNav() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseNav()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with magic-link URL autolinking + GitHub-shortref expansion against the rxui repo.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithMagicLink() =>
+    public Task<int> WithMagicLink() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseMagicLink(new() { DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray(), ExpandUserMentions = true })
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with the full in-process plugin stack — markdown extensions + highlight + magic-link + nav + autorefs + search + mermaid.</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
-    public int FullStack()
+    public Task<int> FullStack()
     {
         AutorefsRegistry registry = new(RxuiHeadingHint);
         return new DocBuilder()
@@ -156,66 +150,59 @@ public class RxuiCorpusBenchmarks
             .UseAutorefs(registry)
             .UseLunrSearch()
             .UseMermaid()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
     }
 
     /// <summary>Build with snippet-include preprocessor (whole-file + section markers).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithSnippets() =>
+    public Task<int> WithSnippets() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseSnippets()
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with the macros preprocessor (<c>{{ name }}</c> substitution).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithMacros() =>
+    public Task<int> WithMacros() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseMacros(static opts => opts.WithVariable("project", "ReactiveUI"))
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with the bibliography preprocessor — empty database, exercises the marker scanner only.</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int WithBibliography() =>
+    public Task<int> WithBibliography() =>
         new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UseBibliography(BibliographyOptions.Default)
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Build with the MDI inline-SVG resolver wired into the icon shortcode rewriter (~7400 entries).</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
-    public int WithMdiIcons()
+    public Task<int> WithMdiIcons()
     {
         MdiIconResolver resolver = new();
         return new DocBuilder()
             .WithInput(RxuiDocsRoot)
             .WithOutput(_outputRoot)
             .UsePlugin(new IconShortcodePlugin(resolver))
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
     }
 
     /// <summary>Build with the Sphinx-inventory finalize emitter (drives the autorefs registry snapshot path).</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
-    public int WithSphinxInventory()
+    public Task<int> WithSphinxInventory()
     {
         AutorefsRegistry registry = new(RxuiHeadingHint);
         return new DocBuilder()
@@ -223,15 +210,13 @@ public class RxuiCorpusBenchmarks
             .WithOutput(_outputRoot)
             .UseAutorefs(registry)
             .UseSphinxInventory(registry)
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
     }
 
     /// <summary>Kitchen sink — every shipped plugin in the pipeline at once. The honest end-to-end stress profile.</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
-    public int EverythingStack()
+    public Task<int> EverythingStack()
     {
         AutorefsRegistry registry = new(RxuiHeadingHint);
         MdiIconResolver iconResolver = new();
@@ -249,9 +234,7 @@ public class RxuiCorpusBenchmarks
             .UseMermaid()
             .UseSphinxInventory(registry)
             .UsePlugin(new IconShortcodePlugin(iconResolver))
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
     }
 
     /// <summary>Best-effort recursive directory delete.</summary>

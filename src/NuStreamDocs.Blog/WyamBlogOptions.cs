@@ -11,6 +11,7 @@ namespace NuStreamDocs.Blog;
 /// <param name="IndexTitle">UTF-8 title bytes rendered at the top of the generated index page and used as the blog section's nav title.</param>
 /// <param name="EmitTagArchives">When true, a <c>tags/{tag}.md</c> archive page is generated for each tag in use.</param>
 /// <param name="NavOrder">Optional <c>Order:</c> sort key for the blog section in the navigation; <see langword="null"/> sorts it after explicitly-ordered siblings.</param>
+[System.Diagnostics.DebuggerDisplay("WyamBlogOptions: {ToString(),nq}")]
 public sealed record WyamBlogOptions(
     PathSegment PostsSubdirectory,
     byte[] IndexTitle,

@@ -11,16 +11,25 @@ namespace NuStreamDocs.Tests;
 /// <summary>Direct tests for the byte-only relative-URL helper.</summary>
 public class Utf8RelativePathTests
 {
+    /// <summary>Articles Directory used by the test cases.</summary>
+    private const string ArticlesDirectory = "articles";
+
+    /// <summary>Post File Name used by the test cases.</summary>
+    private const string PostFileName = "post.md";
+
+    /// <summary>Posts Directory used by the test cases.</summary>
+    private const string PostsDirectory = "blog/posts";
+
     /// <summary>Identical inputs collapse to a self-reference so the link still resolves.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task SelfReferenceWhenIdentical() => await Assert.That(Compute("articles", "articles")).IsEqualTo(".");
+    public async Task SelfReferenceWhenIdentical() => await Assert.That(Compute(ArticlesDirectory, ArticlesDirectory)).IsEqualTo(".");
 
     /// <summary>A target inside the source directory is emitted as a sibling.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TargetInsideFromIsSibling() =>
-        await Assert.That(Compute("articles", "articles/post.md")).IsEqualTo("post.md");
+        await Assert.That(Compute(ArticlesDirectory, "articles/post.md")).IsEqualTo(PostFileName);
 
     /// <summary>A target outside the source directory walks up via <c>../</c> for each unmatched segment.</summary>
     /// <returns>Async test.</returns>
@@ -37,14 +46,14 @@ public class Utf8RelativePathTests
     /// <summary>A sibling-directory target needs one parent hop and the target's directory.</summary>
     /// <returns>Async test.</returns>
     [Test]
-    public async Task SiblingDirectoryTarget() => await Assert.That(Compute("blog/posts", "blog/category/dotnet.md"))
+    public async Task SiblingDirectoryTarget() => await Assert.That(Compute(PostsDirectory, "blog/category/dotnet.md"))
         .IsEqualTo("../category/dotnet.md");
 
     /// <summary>An empty source directory passes the target through unchanged.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EmptyFromPassesTargetThrough() =>
-        await Assert.That(Compute(string.Empty, "post.md")).IsEqualTo("post.md");
+        await Assert.That(Compute(string.Empty, PostFileName)).IsEqualTo(PostFileName);
 
     /// <summary>An empty source directory and empty target both collapse to a self-reference.</summary>
     /// <returns>Async test.</returns>
@@ -62,13 +71,13 @@ public class Utf8RelativePathTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task DisjointTargetWalksUpFullFrom() =>
-        await Assert.That(Compute("blog/posts", "guide/intro.md")).IsEqualTo("../../guide/intro.md");
+        await Assert.That(Compute(PostsDirectory, "guide/intro.md")).IsEqualTo("../../guide/intro.md");
 
     /// <summary>A target sitting at the docs root from a deep directory walks back up to the root.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RootTargetFromDeepFrom() =>
-        await Assert.That(Compute("blog/posts", "index.md")).IsEqualTo("../../index.md");
+        await Assert.That(Compute(PostsDirectory, "index.md")).IsEqualTo("../../index.md");
 
     /// <summary>Convenience wrapper that runs WriteRelative against UTF-8 string inputs.</summary>
     /// <param name="from">Forward-slashed source-directory text.</param>

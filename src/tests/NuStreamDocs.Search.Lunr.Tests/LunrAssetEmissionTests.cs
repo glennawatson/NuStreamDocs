@@ -10,6 +10,15 @@ namespace NuStreamDocs.Search.Lunr.Tests;
 /// <summary>Asset surface tests for <see cref="LunrSearchPlugin"/>.</summary>
 public class LunrAssetEmissionTests
 {
+    /// <summary>Both the runtime and binding script must be emitted.</summary>
+    private const int ExpectedAssetCount = 2;
+
+    /// <summary>Rejects a truncated runtime bundle.</summary>
+    private const int MinimumRuntimeBytes = 10_000;
+
+    /// <summary>Rejects a truncated binding script.</summary>
+    private const int MinimumGlueBytes = 500;
+
     /// <summary><see cref="LunrSearchPlugin.PinnedRuntimeVersion"/> matches the vendored <c>lunr.min.js</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -26,14 +35,14 @@ public class LunrAssetEmissionTests
     {
         LunrSearchPlugin plugin = new();
         var assets = plugin.StaticAssets;
-        await Assert.That(assets.Length).IsEqualTo(2);
+        await Assert.That(assets.Length).IsEqualTo(ExpectedAssetCount);
 
         var paths = new HashSet<string>(StringComparer.Ordinal);
         var runtimeBytes = 0;
         var glueBytes = 0;
         for (var i = 0; i < assets.Length; i++)
         {
-            paths.Add(assets[i].Path.Value);
+            _ = paths.Add(assets[i].Path.Value);
             if (assets[i].Path.Value.EndsWith("lunr.min.js", StringComparison.Ordinal))
             {
                 runtimeBytes = assets[i].Bytes.Length;
@@ -48,8 +57,8 @@ public class LunrAssetEmissionTests
         await Assert.That(paths.Contains("assets/javascripts/lunr-bind.js")).IsTrue();
 
         // Sanity: runtime bundle is well above 10 KB; glue is well above 500 bytes.
-        await Assert.That(runtimeBytes).IsGreaterThan(10_000);
-        await Assert.That(glueBytes).IsGreaterThan(500);
+        await Assert.That(runtimeBytes).IsGreaterThan(MinimumRuntimeBytes);
+        await Assert.That(glueBytes).IsGreaterThan(MinimumGlueBytes);
     }
 
     /// <summary>The vendored <c>lunr.min.js</c> body declares its own version inline; verify it matches the pin.</summary>
@@ -62,11 +71,13 @@ public class LunrAssetEmissionTests
         var assets = plugin.StaticAssets;
         for (var i = 0; i < assets.Length; i++)
         {
-            if (assets[i].Path.Value.EndsWith("lunr.min.js", StringComparison.Ordinal))
+            if (!assets[i].Path.Value.EndsWith("lunr.min.js", StringComparison.Ordinal))
             {
-                runtime = assets[i].Bytes;
-                break;
+                continue;
             }
+
+            runtime = assets[i].Bytes;
+            break;
         }
 
         await Assert.That(runtime).IsNotNull();

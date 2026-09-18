@@ -32,6 +32,9 @@ internal static class RawHtml
     /// <summary>Bytes consumed by the closing <c>--&gt;</c> of an HTML comment.</summary>
     private const int CommentCloseLength = 3;
 
+    /// <summary>Bytes in the closing element prefix.</summary>
+    private const int CloseTagPrefixLength = 2;
+
     /// <summary>Offset into <c>&lt;!--</c> at which the first <c>-</c> sits.</summary>
     private const int CommentFirstHyphenOffset = 2;
 
@@ -53,7 +56,7 @@ internal static class RawHtml
     /// <param name="pendingTextStart">Start of the pending plain-text run.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when a raw-HTML construct was emitted.</returns>
-    public static bool TryHandle(
+    internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
@@ -131,7 +134,7 @@ internal static class RawHtml
     /// <returns>Exclusive end offset, or -1 when no close tag is recognized.</returns>
     private static int FindCloseTagEnd(ReadOnlySpan<byte> source, int start)
     {
-        var p = start + 2;
+        var p = start + CloseTagPrefixLength;
         if (p >= source.Length || !IsTagNameStart(source[p]))
         {
             return -1;

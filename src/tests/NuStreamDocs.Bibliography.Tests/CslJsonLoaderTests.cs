@@ -10,6 +10,9 @@ namespace NuStreamDocs.Bibliography.Tests;
 /// <summary>CSL-JSON parser — round-trips canonical CSL fields into <see cref="CitationEntry"/>.</summary>
 public class CslJsonLoaderTests
 {
+    /// <summary>Publication year of the book fixture.</summary>
+    private const int BookYear = 2018;
+
     /// <summary>A book entry round-trips through the loader.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,7 +26,7 @@ public class CslJsonLoaderTests
         await Assert.That(e.Id.AsSpan().SequenceEqual("g"u8)).IsTrue();
         await Assert.That(e.Type).IsEqualTo(EntryType.Book);
         await Assert.That(e.Title.AsSpan().SequenceEqual("Change and Continuity"u8)).IsTrue();
-        await Assert.That(e.Year).IsEqualTo(2018);
+        await Assert.That(e.Year).IsEqualTo(BookYear);
         await Assert.That(e.Authors).HasSingleItem();
         await Assert.That(e.Authors[0].Family.AsSpan().SequenceEqual("Gummow"u8)).IsTrue();
     }
@@ -75,7 +78,8 @@ public class CslJsonLoaderTests
     [Test]
     public async Task LoadFile_reads_from_disk()
     {
-        var path = Path.GetTempFileName();
+        var directory = Directory.CreateTempSubdirectory();
+        var path = Path.Combine(directory.FullName, "bibliography.json");
         try
         {
             await File.WriteAllTextAsync(path, """[{"id":"f","type":"book","title":"File"}]""");
@@ -85,7 +89,7 @@ public class CslJsonLoaderTests
         }
         finally
         {
-            File.Delete(path);
+            directory.Delete(true);
         }
     }
 }

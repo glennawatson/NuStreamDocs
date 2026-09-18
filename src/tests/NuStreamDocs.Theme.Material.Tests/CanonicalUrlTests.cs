@@ -9,6 +9,9 @@ namespace NuStreamDocs.Theme.Material.Tests;
 /// <summary>End-to-end coverage for <c>SiteUrl</c> driving canonical / og:url emission.</summary>
 public class CanonicalUrlTests
 {
+    /// <summary>Value for the source path of the introduction page.</summary>
+    private const string IntroSourcePath = "intro.md";
+
     /// <summary>Pretty URLs map <c>foo/bar.md</c> to a directory-slug canonical URL.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -16,8 +19,8 @@ public class CanonicalUrlTests
     {
         using var fixture = TempBuildTree.Create();
         var sub = Path.Combine(fixture.Docs, "guide");
-        Directory.CreateDirectory(sub);
-        await File.WriteAllTextAsync(Path.Combine(sub, "intro.md"), "# Sub");
+        _ = Directory.CreateDirectory(sub);
+        await File.WriteAllTextAsync(Path.Combine(sub, IntroSourcePath), "# Sub");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -38,7 +41,7 @@ public class CanonicalUrlTests
     public async Task FlatUrlsEmitHtmlCanonical()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), "# Page");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -56,7 +59,7 @@ public class CanonicalUrlTests
     public async Task EmptySiteUrlOmitsCanonical()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), "# Page");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)

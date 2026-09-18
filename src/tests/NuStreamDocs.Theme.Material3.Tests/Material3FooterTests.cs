@@ -9,13 +9,22 @@ namespace NuStreamDocs.Theme.Material3.Tests;
 /// <summary>End-to-end tests covering the rich-HTML copyright passthrough and the social-link list rendered by the Material 3 footer.</summary>
 public class Material3FooterTests
 {
+    /// <summary>Value for the page output path.</summary>
+    private const string PageOutputPath = "page.html";
+
+    /// <summary>Value for the page content.</summary>
+    private const string PageMarkdown = "# Page";
+
+    /// <summary>Value for the page source path.</summary>
+    private const string PageSourcePath = "page.md";
+
     /// <summary>When <c>WithCopyrightHtml</c> is set, the footer renders the supplied bytes verbatim and skips the plain-text <c>md-copyright</c> wrapper.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CopyrightHtmlRendersVerbatim()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -26,7 +35,7 @@ public class Material3FooterTests
                 .WithCopyrightHtml("<div class=\"md-copyright\"><a href=\"/legal/\">Legal</a> | © Acme</div>"u8))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         await Assert.That(html).Contains("<div class=\"md-copyright\"><a href=\"/legal/\">Legal</a> | © Acme</div>");
         await Assert.That(html).DoesNotContain("plain text fallback");
         await Assert.That(html).DoesNotContain("&lt;a href=");
@@ -38,7 +47,7 @@ public class Material3FooterTests
     public async Task SocialLinksRenderInFooter()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -55,7 +64,7 @@ public class Material3FooterTests
                     "<svg id=\"discord-svg\"><path d=\"M1 1\"/></svg>"u8.ToArray()))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         await Assert.That(html).Contains("<div class=\"md-social\">");
         await Assert.That(html).Contains("href=\"https://github.com/example\"");
         await Assert.That(html).Contains("title=\"Example on Github\"");
@@ -73,7 +82,7 @@ public class Material3FooterTests
     public async Task PlainCopyrightStillRendersWithoutRichHtmlOrSocial()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "page.md"), "# Page");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, PageSourcePath), PageMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -83,7 +92,7 @@ public class Material3FooterTests
                 .WithCopyright("(c) Acme Corp"u8))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, PageOutputPath));
         await Assert.That(html).Contains("<div class=\"md-copyright\">(c) Acme Corp</div>");
         await Assert.That(html).DoesNotContain("md-social");
     }

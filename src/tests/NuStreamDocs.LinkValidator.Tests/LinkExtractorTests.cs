@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.LinkValidator.Tests;
@@ -9,6 +10,9 @@ namespace NuStreamDocs.LinkValidator.Tests;
 /// <summary>Behavior tests for the byte-only LinkExtractor.</summary>
 public class LinkExtractorTests
 {
+    /// <summary>Expected Match Count used by the test cases.</summary>
+    private const int ExpectedMatchCount = 2;
+
     /// <summary>Every <c>href</c> attribute on the page is captured as a byte range.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -16,7 +20,7 @@ public class LinkExtractorTests
     {
         byte[] html = [.. "<a href=\"a.html\">a</a> <a href=\"https://example.com\">b</a>"u8];
         var ranges = LinkExtractor.ExtractHrefRanges(html);
-        await Assert.That(ranges.Length).IsEqualTo(2);
+        await Assert.That(ranges.Length).IsEqualTo(ExpectedMatchCount);
         await Assert.That(SliceEquals(html, ranges[0], "a.html"u8)).IsTrue();
         await Assert.That(SliceEquals(html, ranges[1], "https://example.com"u8)).IsTrue();
     }
@@ -28,7 +32,7 @@ public class LinkExtractorTests
     {
         byte[] html = [.. "<img src=\"x.png\"/><img src=\"https://cdn.test/y.jpg\"/>"u8];
         var ranges = LinkExtractor.ExtractSrcRanges(html);
-        await Assert.That(ranges.Length).IsEqualTo(2);
+        await Assert.That(ranges.Length).IsEqualTo(ExpectedMatchCount);
         await Assert.That(SliceEquals(html, ranges[0], "x.png"u8)).IsTrue();
         await Assert.That(SliceEquals(html, ranges[1], "https://cdn.test/y.jpg"u8)).IsTrue();
     }
@@ -40,7 +44,7 @@ public class LinkExtractorTests
     {
         byte[] html = [.. "<h1 id=\"intro\">Intro</h1><p id=\"para\">body</p><h2 id=\"detail\">x</h2>"u8];
         var ranges = LinkExtractor.ExtractHeadingIdRanges(html);
-        await Assert.That(ranges.Length).IsEqualTo(2);
+        await Assert.That(ranges.Length).IsEqualTo(ExpectedMatchCount);
         await Assert.That(SliceEquals(html, ranges[0], "intro"u8)).IsTrue();
         await Assert.That(SliceEquals(html, ranges[1], "detail"u8)).IsTrue();
     }
@@ -60,6 +64,7 @@ public class LinkExtractorTests
     /// <param name="range">Captured range.</param>
     /// <param name="expected">Expected bytes.</param>
     /// <returns>True when the slice equals the expected span.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool SliceEquals(byte[] source, in ByteRange range, ReadOnlySpan<byte> expected) =>
         range.AsSpan(source).SequenceEqual(expected);
 }

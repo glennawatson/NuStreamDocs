@@ -43,7 +43,7 @@ public class LunrOptionsExtensionsTests
     public async Task WithExtraStopwordsString()
     {
         var updated = LunrOptions.Default.WithExtraStopwords("foo", "bar");
-        await Assert.That(updated.ExtraStopwords.Length).IsEqualTo(2);
+        await Assert.That(Array.ConvertAll(updated.ExtraStopwords, Encoding.UTF8.GetString).AsSpan().SequenceEqual(["foo", "bar"])).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(updated.ExtraStopwords[0])).IsEqualTo("foo");
     }
 
@@ -55,7 +55,7 @@ public class LunrOptionsExtensionsTests
         var seeded = LunrOptions.Default.WithExtraStopwords("foo");
         var afterString = seeded.AddExtraStopwords("bar");
         var afterBytes = afterString.AddExtraStopwords([[.. "baz"u8]]);
-        await Assert.That(afterBytes.ExtraStopwords.Length).IsEqualTo(3);
+        await Assert.That(Array.ConvertAll(afterBytes.ExtraStopwords, Encoding.UTF8.GetString).AsSpan().SequenceEqual(["foo", "bar", "baz"])).IsTrue();
     }
 
     /// <summary><c>ClearExtraStopwords</c> empties the list.</summary>
@@ -85,7 +85,7 @@ public class LunrOptionsExtensionsTests
     {
         var seeded = LunrOptions.Default.WithSearchableFrontmatterKeys("tags");
         var added = seeded.AddSearchableFrontmatterKeys("summary", "author");
-        await Assert.That(added.SearchableFrontmatterKeys.Length).IsEqualTo(3);
+        await Assert.That(Array.ConvertAll(added.SearchableFrontmatterKeys, Encoding.UTF8.GetString).AsSpan().SequenceEqual(["tags", "summary", "author"])).IsTrue();
     }
 
     /// <summary><c>WithSectionPriorities(string)</c> encodes UTF-8.</summary>

@@ -9,20 +9,23 @@ namespace NuStreamDocs.Autorefs.Tests;
 /// <summary>End-to-end file-walk tests for <c>AutorefsRewriter</c>.</summary>
 public class AutorefsRewriterFileWalkTests
 {
+    /// <summary>The PageFile fixture value.</summary>
+    private const string PageFile = "page.html";
+
     /// <summary>RewriteAll resolves markers across files in a temp directory.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task RewriteAllResolves()
     {
         using ScratchDir temp = new();
-        await File.WriteAllTextAsync(Path.Combine(temp.Root, "page.html"), "see <a href=\"@autoref:Foo\">Foo</a>");
+        await File.WriteAllTextAsync(Path.Combine(temp.Root, PageFile), "see <a href=\"@autoref:Foo\">Foo</a>");
 
         AutorefsRegistry registry = new();
         registry.Register("Foo"u8, [.. "/api/foo.html"u8], default);
 
         var count = AutorefsRewriter.RewriteAll(temp.Root, registry);
         await Assert.That(count).IsEqualTo(1);
-        var html = await File.ReadAllTextAsync(Path.Combine(temp.Root, "page.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(temp.Root, PageFile));
         await Assert.That(html).Contains("/api/foo.html");
     }
 
@@ -32,7 +35,7 @@ public class AutorefsRewriterFileWalkTests
     public async Task RewriteAllLoggedReportsCounts()
     {
         using ScratchDir temp = new();
-        var pagePath = Path.Combine(temp.Root, "page.html");
+        var pagePath = Path.Combine(temp.Root, PageFile);
         await File.WriteAllTextAsync(
             pagePath,
             "<a href=\"@autoref:Resolved\">x</a> and <a href=\"@autoref:Missing\">y</a>");
@@ -50,7 +53,7 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteAllMissingDirectory()
     {
-        var path = Path.Combine(Path.GetTempPath(), "smkd-ar-missing-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(Path.GetTempPath(), $"smkd-ar-missing-{Guid.NewGuid():N}");
         await Assert.That(AutorefsRewriter.RewriteAll(path, new())).IsEqualTo(0);
     }
 
@@ -59,7 +62,7 @@ public class AutorefsRewriterFileWalkTests
     [Test]
     public async Task RewriteAllLoggedMissingDirectory()
     {
-        var path = Path.Combine(Path.GetTempPath(), "smkd-ar-missing-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(Path.GetTempPath(), $"smkd-ar-missing-{Guid.NewGuid():N}");
         var (r, m) = AutorefsRewriter.RewriteAll(path, new(), NullLogger.Instance);
         await Assert.That(r).IsEqualTo(0);
         await Assert.That(m).IsEqualTo(0);
@@ -130,8 +133,8 @@ public class AutorefsRewriterFileWalkTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-ar-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-ar-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

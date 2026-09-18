@@ -17,6 +17,7 @@ namespace NuStreamDocs.LinkValidator;
 /// Values of obsolete HTML4 <c>&lt;a name="..."&gt;</c> elements present on the page; surfaced as a
 /// specific deprecation diagnostic when a fragment resolves through one.
 /// </param>
+[System.Diagnostics.DebuggerDisplay("PageLinks: {ToString(),nq}")]
 public sealed record PageLinks(
     byte[] PageUrl,
     byte[][] InternalLinks,

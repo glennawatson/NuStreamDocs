@@ -15,7 +15,7 @@ internal static class AuditText
     /// <summary>Tests whether an attribute run carries a non-empty <c>aria-label</c>, <c>aria-labelledby</c>, or <c>title</c>.</summary>
     /// <param name="attributes">Attribute text from a tag.</param>
     /// <returns><see langword="true"/> when one of those attributes is present with a non-whitespace value.</returns>
-    public static bool HasAccessibleNameAttribute(ReadOnlySpan<byte> attributes) =>
+    internal static bool HasAccessibleNameAttribute(ReadOnlySpan<byte> attributes) =>
         HasNonEmptyAttribute(attributes, "aria-label"u8)
         || HasNonEmptyAttribute(attributes, "aria-labelledby"u8)
         || HasNonEmptyAttribute(attributes, "title"u8);
@@ -24,13 +24,13 @@ internal static class AuditText
     /// <param name="attributes">Attribute text from a tag.</param>
     /// <param name="name">Attribute name.</param>
     /// <returns><see langword="true"/> when present and non-empty.</returns>
-    public static bool HasNonEmptyAttribute(ReadOnlySpan<byte> attributes, ReadOnlySpan<byte> name) =>
+    internal static bool HasNonEmptyAttribute(ReadOnlySpan<byte> attributes, ReadOnlySpan<byte> name) =>
         HtmlAttr.TryGet(attributes, name, out var value) && HasText(value);
 
     /// <summary>True when <paramref name="bytes"/> contains at least one byte that is not ASCII whitespace.</summary>
     /// <param name="bytes">Bytes to scan.</param>
     /// <returns><see langword="true"/> when non-whitespace content is present.</returns>
-    public static bool HasText(ReadOnlySpan<byte> bytes) =>
+    internal static bool HasText(ReadOnlySpan<byte> bytes) =>
         !AsciiByteHelpers.IsAllAsciiWhitespace(bytes);
 
     /// <summary>
@@ -41,7 +41,7 @@ internal static class AuditText
     /// </summary>
     /// <param name="innerHtml">The bytes between the element's start and end tags.</param>
     /// <returns><see langword="true"/> when the element is not empty.</returns>
-    public static bool HasDiscernibleContent(ReadOnlySpan<byte> innerHtml)
+    internal static bool HasDiscernibleContent(ReadOnlySpan<byte> innerHtml)
     {
         if (ContainsLikelyNamedDescendant(innerHtml))
         {
@@ -68,7 +68,7 @@ internal static class AuditText
     /// <param name="searchFrom">Offset to start searching from.</param>
     /// <param name="name">Tag name whose end tag to find.</param>
     /// <returns>The offset of the end tag's <c>&lt;</c>, or <c>-1</c> when no matching end tag exists.</returns>
-    public static int FindCloseTag(ReadOnlySpan<byte> html, int searchFrom, ReadOnlySpan<byte> name)
+    internal static int FindCloseTag(ReadOnlySpan<byte> html, int searchFrom, ReadOnlySpan<byte> name)
     {
         var i = searchFrom;
         while (i < html.Length)

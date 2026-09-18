@@ -19,7 +19,7 @@ internal static class OpenerLineParser
     /// <param name="titleStart">Set to the title-token offset when present.</param>
     /// <param name="titleLen">Set to the title-token length when present.</param>
     /// <returns>True when no title is present or a complete <c>"…"</c> token was parsed.</returns>
-    public static bool TryParseTitle(ReadOnlySpan<byte> source, ref int p, out int titleStart, out int titleLen)
+    internal static bool TryParseTitle(ReadOnlySpan<byte> source, ref int p, out int titleStart, out int titleLen)
     {
         titleStart = 0;
         titleLen = 0;
@@ -50,7 +50,7 @@ internal static class OpenerLineParser
     /// <param name="offset">Starting offset.</param>
     /// <param name="predicate">Byte-class predicate.</param>
     /// <returns>The first offset where the predicate fails.</returns>
-    public static int ScanWhile(ReadOnlySpan<byte> source, int offset, Func<byte, bool> predicate)
+    internal static int ScanWhile(ReadOnlySpan<byte> source, int offset, Func<byte, bool> predicate)
     {
         var p = offset;
         while (p < source.Length && predicate(source[p]))
@@ -64,7 +64,7 @@ internal static class OpenerLineParser
     /// <summary>Returns true for trailing header bytes — horizontal whitespace plus CR.</summary>
     /// <param name="b">Candidate byte.</param>
     /// <returns>True when allowed trailing the opener.</returns>
-    public static bool IsTrailingHeaderByte(byte b) => b is (byte)' ' or (byte)'\t' or (byte)'\r';
+    internal static bool IsTrailingHeaderByte(byte b) => b is (byte)' ' or (byte)'\t' or (byte)'\r';
 
     /// <summary>Parses the post-marker tail: type token, optional title, then a newline.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
@@ -75,7 +75,7 @@ internal static class OpenerLineParser
     /// <param name="titleLen">Length of the title token (zero when absent).</param>
     /// <param name="headerEnd">Offset just past the opener line's terminator on success.</param>
     /// <returns>True when the opener tail is well-formed.</returns>
-    public static bool TryParseTypeAndTitle(
+    internal static bool TryParseTypeAndTitle(
         ReadOnlySpan<byte> source,
         int markerEnd,
         out int typeStart,
@@ -116,7 +116,7 @@ internal static class OpenerLineParser
     /// <summary>Title-cases <paramref name="type"/> by uppercasing the first ASCII letter and writes it.</summary>
     /// <param name="type">UTF-8 type token; an empty span writes nothing.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void WriteTitleCase(ReadOnlySpan<byte> type, IBufferWriter<byte> writer)
+    internal static void WriteTitleCase(ReadOnlySpan<byte> type, IBufferWriter<byte> writer)
     {
         if (type.Length is 0)
         {

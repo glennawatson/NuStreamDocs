@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Threading.RateLimiting;
 using Polly;
 using Polly.RateLimiting;
@@ -14,7 +15,8 @@ internal static class ExternalLinkPipelineFactory
     /// <summary>Creates a configured pipeline for <paramref name="options"/>.</summary>
     /// <param name="options">Validator options.</param>
     /// <returns>The configured pipeline.</returns>
-    public static ResiliencePipeline Create(ExternalLinkValidatorOptions options) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static ResiliencePipeline Create(ExternalLinkValidatorOptions options) =>
         new ResiliencePipelineBuilder()
             .AddRateLimiter(new RateLimiterStrategyOptions
             {
@@ -24,8 +26,8 @@ internal static class ExternalLinkPipelineFactory
                     Window = TimeSpan.FromSeconds(options.WindowSeconds),
                     SegmentsPerWindow = Math.Max(1, options.WindowSeconds),
                     QueueLimit = int.MaxValue,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst
-                }).AcquireAsync(1, args.Context.CancellationToken)
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                }).AcquireAsync(1, args.Context.CancellationToken),
             })
             .AddRetry(new()
             {
@@ -37,7 +39,7 @@ internal static class ExternalLinkPipelineFactory
                 {
                     HttpRequestException or TaskCanceledException => PredicateResult.True(),
                     _ => PredicateResult.False()
-                }
+                },
             })
             .Build();
 }

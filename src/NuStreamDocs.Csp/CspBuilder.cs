@@ -9,6 +9,9 @@ namespace NuStreamDocs.Csp;
 /// <summary>Builds the <c>Content-Security-Policy</c> directive string for a page from its inline-block hashes and the configured options.</summary>
 public static class CspBuilder
 {
+    /// <summary>Gets the self source bytes.</summary>
+    private static ReadOnlySpan<byte> SelfSource => "'self'"u8;
+
     /// <summary>Builds the CSP value (the <c>content="…"</c> string) for one page.</summary>
     /// <param name="scriptHashes"><c>'sha256-…'</c> tokens for the page's inline scripts (used only when <see cref="CspOptions.HashInlineScripts"/> is true).</param>
     /// <param name="styleHashes"><c>'sha256-…'</c> tokens for the page's inline styles (used only when <see cref="CspOptions.HashInlineStyles"/> is true).</param>
@@ -25,10 +28,10 @@ public static class CspBuilder
             new([.. "base-uri"u8], [options.BaseUri]),
             new([.. "object-src"u8], [[.. "'none'"u8]]),
             new([.. "frame-ancestors"u8], [options.FrameAncestors]),
-            new([.. "img-src"u8], [[.. "'self'"u8], [.. "data:"u8]]),
-            new([.. "font-src"u8], [[.. "'self'"u8]]),
+            new([.. "img-src"u8], [[.. SelfSource], [.. "data:"u8]]),
+            new([.. "font-src"u8], [[.. SelfSource]]),
             new([.. "style-src"u8], InlineSourceList(options.HashInlineStyles, styleHashes)),
-            new([.. "script-src"u8], InlineSourceList(options.HashInlineScripts, scriptHashes))
+            new([.. "script-src"u8], InlineSourceList(options.HashInlineScripts, scriptHashes)),
         };
 
         for (var i = 0; i < options.ExtraSources.Length; i++)
@@ -77,7 +80,7 @@ public static class CspBuilder
     /// <returns>The source list.</returns>
     private static List<byte[]> InlineSourceList(bool hash, IReadOnlyList<byte[]> hashes)
     {
-        List<byte[]> sources = [[.. "'self'"u8]];
+        List<byte[]> sources = [[.. SelfSource]];
         if (!hash)
         {
             sources.Add([.. "'unsafe-inline'"u8]);
@@ -125,5 +128,7 @@ public static class CspBuilder
     }
 
     /// <summary>One CSP directive being assembled.</summary>
+    /// <param name="Name">Directive name.</param>
+    /// <param name="Sources">Allowed sources for the directive.</param>
     private sealed record Directive(byte[] Name, List<byte[]> Sources);
 }

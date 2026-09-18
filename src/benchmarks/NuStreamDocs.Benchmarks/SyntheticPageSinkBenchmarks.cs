@@ -2,22 +2,17 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>
-/// Microbenchmarks for <see cref="SyntheticPageSink"/>.
-/// </summary>
+/// <summary>Microbenchmarks for <see cref="SyntheticPageSink"/>.</summary>
+[DebuggerDisplay("SyntheticPageSinkBenchmarks: Pages={Pages}")]
 [ShortRunJob]
 [MemoryDiagnoser]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class SyntheticPageSinkBenchmarks
 {
     /// <summary>Small fan-out (one-page-per-tag style synthesis).</summary>
@@ -27,7 +22,7 @@ public class SyntheticPageSinkBenchmarks
     private const int MediumFanout = 1000;
 
     /// <summary>Large fan-out (C# API generator scale — ~10k pages on a Roslyn-sized corpus).</summary>
-    private const int LargeFanout = 10000;
+    private const int LargeFanout = 10_000;
 
     /// <summary>Reused page payload — keeps the per-iteration cost focused on the sink, not on byte-array allocation.</summary>
     private static readonly byte[] PagePayload = "# Page\n\nbody"u8.ToArray();
@@ -46,7 +41,7 @@ public class SyntheticPageSinkBenchmarks
         _items = new SyntheticPage[Pages];
         for (var i = 0; i < Pages; i++)
         {
-            _items[i] = new((FilePath)("api/Type" + i + ".md"), PagePayload);
+            _items[i] = new((FilePath)$"api/Type{i}.md", PagePayload);
         }
     }
 
@@ -67,7 +62,7 @@ public class SyntheticPageSinkBenchmarks
     /// <summary>Eagerly adds entries then drains them via <see cref="SyntheticPageSink.DrainAsync(CancellationToken)"/> — what the build pipeline pays per build.</summary>
     /// <returns>Pages drained.</returns>
     [Benchmark]
-    public int EagerAddThenDrain()
+    public Task<int> EagerAddThenDrain()
     {
         SyntheticPageSink sink = new();
         for (var i = 0; i < _items.Length; i++)
@@ -75,24 +70,18 @@ public class SyntheticPageSinkBenchmarks
             sink.Add(_items[i]);
         }
 
-        return DrainSync(sink);
+        return CountDrainAsync(sink);
     }
 
     /// <summary>Registers the items as one async stream; mimics the API-generator path where pages flow through a Channel.</summary>
     /// <returns>Pages drained.</returns>
     [Benchmark]
-    public int RegisterStreamThenDrain()
+    public Task<int> RegisterStreamThenDrain()
     {
         SyntheticPageSink sink = new();
         sink.RegisterStream(IteratePages(_items));
-        return DrainSync(sink);
+        return CountDrainAsync(sink);
     }
-
-    /// <summary>Drains the sink synchronously so BDN can time the full iteration without async overhead in the timer loop.</summary>
-    /// <param name="sink">Sink to drain.</param>
-    /// <returns>Page count yielded.</returns>
-    private static int DrainSync(SyntheticPageSink sink) =>
-        CountDrainAsync(sink).GetAwaiter().GetResult();
 
     /// <summary>Async helper that walks the full <c>DrainAsync</c> stream and returns the count.</summary>
     /// <param name="sink">Sink to drain.</param>

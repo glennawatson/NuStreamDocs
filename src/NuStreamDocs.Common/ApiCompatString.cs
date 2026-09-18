@@ -9,6 +9,7 @@ namespace NuStreamDocs.Common;
 /// outside-consumer compatibility. Implicitly converts to and from <see cref="string"/>.
 /// </summary>
 /// <param name="Value">The compatibility string. May be <see langword="null"/>; reads surface as <see cref="string.Empty"/>.</param>
+[System.Diagnostics.DebuggerDisplay("{Value,nq}")]
 public readonly record struct ApiCompatString(string? Value)
 {
     /// <summary>Gets a value indicating whether the wrapped string is null or empty.</summary>
@@ -34,5 +35,5 @@ public readonly record struct ApiCompatString(string? Value)
     public string ToStringValue() => Value ?? string.Empty;
 
     /// <inheritdoc />
-    public override string ToString() => Value ?? string.Empty;
+    public override string ToString() => ToStringValue();
 }

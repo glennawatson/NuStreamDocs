@@ -57,7 +57,7 @@ public class Phase2BatchSixLexerTests
         await Assert.That(html.Contains("<span class=\"n\">{{user.name}}</span>", StringComparison.Ordinal)).IsTrue();
     }
 
-    /// <summary>x86 classifies mnemonics and registers, accepts both <c>;</c> and <c>#</c> comments.</summary>
+    /// <summary>X86 classifies mnemonics and registers, accepts both <c>;</c> and <c>#</c> comments.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task X86ClassifiesMnemonicsAndRegisters()
@@ -71,7 +71,7 @@ public class Phase2BatchSixLexerTests
         await Assert.That(html.Contains("<span class=\"nb\">rbx</span>", StringComparison.Ordinal)).IsTrue();
     }
 
-    /// <summary>x86 classifies <c>0x</c>-prefixed hex literals.</summary>
+    /// <summary>X86 classifies <c>0x</c>-prefixed hex literals.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task X86ClassifiesHexLiterals()

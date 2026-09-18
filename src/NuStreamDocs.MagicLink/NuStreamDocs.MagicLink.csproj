@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.MagicLink</PackageId>
     <Description>Auto-link bare URLs and email addresses in your NuStreamDocs markdown. Write `https://example.com` or `me@example.com` and it renders as a clickable link without needing explicit angle brackets or markdown link syntax.</Description>
     <RootNamespace>NuStreamDocs.MagicLink</RootNamespace>

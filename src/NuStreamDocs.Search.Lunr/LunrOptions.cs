@@ -14,6 +14,7 @@ namespace NuStreamDocs.Search.Lunr;
 /// <param name="ExtraStopwords">UTF-8 stopwords appended to the language defaults.</param>
 /// <param name="Compression">Sibling-compression knob honored after the manifest is written.</param>
 /// <param name="SectionPriorities">UTF-8 comma-separated <c>prefix:weight</c> pairs that bias result ranking by URL prefix; empty disables section weighting.</param>
+[System.Diagnostics.DebuggerDisplay("LunrOptions: {ToString(),nq}")]
 public readonly record struct LunrOptions(
     PathSegment OutputSubdirectory,
     byte[] Language,
@@ -23,9 +24,7 @@ public readonly record struct LunrOptions(
     SearchCompression Compression,
     byte[] SectionPriorities)
 {
-    /// <summary>
-    /// The default minimum token length.
-    /// </summary>
+    /// <summary>The default minimum token length.</summary>
     private const int DefaultTokenLength = 3;
 
     /// <summary>Gets the option set with all defaults populated.</summary>

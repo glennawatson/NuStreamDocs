@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.LinkValidator;
@@ -10,6 +11,9 @@ namespace NuStreamDocs.LinkValidator;
 /// <summary>Extracts <c>href</c> / <c>src</c> URL values and heading anchor IDs from rendered HTML as offset+length ranges.</summary>
 public static class LinkExtractor
 {
+    /// <summary>Capacity multiplier when a range buffer fills.</summary>
+    private const int BufferGrowthFactor = 2;
+
     /// <summary>Initial pooled-buffer capacity for attribute extraction; covers small/medium pages without growth.</summary>
     private const int InitialAttributeCapacity = 64;
 
@@ -31,24 +35,28 @@ public static class LinkExtractor
     /// <summary>Extracts every <c>href</c> attribute value as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteRange[] ExtractHrefRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, HrefMarker);
 
     /// <summary>Extracts every <c>src</c> attribute value as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteRange[] ExtractSrcRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, SrcMarker);
 
     /// <summary>Extracts every <c>id</c> attribute value (any element) as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteRange[] ExtractIdRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, IdMarker);
 
     /// <summary>Extracts the values of obsolete HTML4 <c>&lt;a name="..."&gt;</c> fragment anchors as offset+length pairs.</summary>
     /// <param name="html">UTF-8 HTML.</param>
     /// <returns>Byte ranges in document order.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteRange[] ExtractDeprecatedNameAnchorRanges(ReadOnlySpan<byte> html) =>
         ExtractAttributeRanges(html, AnchorNameMarker);
 
@@ -142,7 +150,7 @@ public static class LinkExtractor
     {
         if (count >= buffer.Length)
         {
-            var bigger = ArrayPool<ByteRange>.Shared.Rent(buffer.Length * 2);
+            var bigger = ArrayPool<ByteRange>.Shared.Rent(buffer.Length * BufferGrowthFactor);
             buffer.AsSpan(0, count).CopyTo(bigger);
             ArrayPool<ByteRange>.Shared.Return(buffer);
             buffer = bigger;

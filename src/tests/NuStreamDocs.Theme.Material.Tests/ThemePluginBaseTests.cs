@@ -11,21 +11,39 @@ namespace NuStreamDocs.Theme.Material.Tests;
 /// <summary>Drives ThemePluginBase through every option permutation.</summary>
 public class ThemePluginBaseTests
 {
+    /// <summary>Value for the previous page URL.</summary>
+    private const string PreviousPageUrl = "/prev-page";
+
+    /// <summary>Value for the introduction page content.</summary>
+    private const string IntroMarkdown = "# Intro";
+
+    /// <summary>Value for the repository edit path.</summary>
+    private const string EditPrefix = "edit/main/docs";
+
+    /// <summary>Value for the fixture repository URL.</summary>
+    private const string RepositoryUrl = "https://github.com/owner/repo";
+
+    /// <summary>Value for the output path of the introduction page.</summary>
+    private const string IntroOutputPath = "intro.html";
+
+    /// <summary>Value for the source path of the introduction page.</summary>
+    private const string IntroSourcePath = "intro.md";
+
     /// <summary>EnableScrollToTop + EnableTocFollow + RepoUrl + EditUri all set surfaces in the rendered HTML.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task AllOptionsEnabled()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro\n\nbody");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), "# Intro\n\nbody");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseMaterialTheme(static opts => opts
                     .WithSiteName("Hi")
-                    .WithRepoUrl("https://github.com/owner/repo")
-                    .WithEditUri("edit/main/docs") with
+                    .WithRepoUrl(RepositoryUrl)
+                    .WithEditUri(EditPrefix) with
             {
                 EnableScrollToTop = true,
                 EnableTocFollow = true,
@@ -33,14 +51,14 @@ public class ThemePluginBaseTests
             })
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
         await Assert.That(html).Contains("github.com/owner/repo");
         await Assert.That(html).Contains("edit/main/docs/intro.md");
     }
 
     /// <summary>Home page falls back to the site name in <c>&lt;title&gt;</c> and the header topic when no explicit page title exists.</summary>
-    /// <remarks>Regression guard: an earlier version emitted <c>"My Site - index"</c> because the fallback resolved to the file stem.</remarks>
     /// <returns>Async test.</returns>
+    /// <remarks>Regression guard: an earlier version emitted <c>"My Site - index"</c> because the fallback resolved to the file stem.</remarks>
     [Test]
     public async Task HomePageFallsBackToSiteName()
     {
@@ -65,19 +83,19 @@ public class ThemePluginBaseTests
     public async Task RepoUrlWithoutEditUriOmitsEditLink()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseMaterialTheme(static opts => opts
                 .WithSiteName("Hi")
-                .WithRepoUrl("https://github.com/owner/repo")
+                .WithRepoUrl(RepositoryUrl)
                 .WithEditUri(string.Empty))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
-        await Assert.That(html).DoesNotContain("edit/main/docs");
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
+        await Assert.That(html).DoesNotContain(EditPrefix);
     }
 
     /// <summary>EditUri set without RepoUrl is treated as not configured.</summary>
@@ -86,7 +104,7 @@ public class ThemePluginBaseTests
     public async Task EditUriWithoutRepoOmitsEditLink()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -94,11 +112,11 @@ public class ThemePluginBaseTests
             .UseMaterialTheme(static opts => opts
                 .WithSiteName("Hi")
                 .WithRepoUrl(string.Empty)
-                .WithEditUri("edit/main/docs"))
+                .WithEditUri(EditPrefix))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
-        await Assert.That(html).DoesNotContain("edit/main/docs");
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
+        await Assert.That(html).DoesNotContain(EditPrefix);
     }
 
     /// <summary>Trailing slashes on RepoUrl are normalized to a single separator.</summary>
@@ -107,7 +125,7 @@ public class ThemePluginBaseTests
     public async Task RepoUrlTrailingSlashNormalized()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -118,7 +136,7 @@ public class ThemePluginBaseTests
                 .WithEditUri("/edit/main/docs/"))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
         await Assert.That(html).Contains("https://github.com/owner/repo/edit/main/docs/intro.md");
         await Assert.That(html).DoesNotContain("repo//edit");
     }
@@ -130,19 +148,19 @@ public class ThemePluginBaseTests
     {
         using var fixture = TempBuildTree.Create();
         var sub = Path.Combine(fixture.Docs, "guide");
-        Directory.CreateDirectory(sub);
-        await File.WriteAllTextAsync(Path.Combine(sub, "intro.md"), "# Sub");
+        _ = Directory.CreateDirectory(sub);
+        await File.WriteAllTextAsync(Path.Combine(sub, IntroSourcePath), "# Sub");
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseMaterialTheme(static opts => opts
                 .WithSiteName("Hi")
-                .WithRepoUrl("https://github.com/owner/repo")
-                .WithEditUri("edit/main/docs"))
+                .WithRepoUrl(RepositoryUrl)
+                .WithEditUri(EditPrefix))
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "guide", "intro.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "guide", IntroOutputPath));
         await Assert.That(html).Contains("edit/main/docs/guide/intro.md");
     }
 
@@ -152,7 +170,7 @@ public class ThemePluginBaseTests
     public async Task EmbeddedAssetsDisabledSkipsCssEmit()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -170,12 +188,12 @@ public class ThemePluginBaseTests
     public async Task NavFooterGlobalNeighboursRendered()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UsePlugin(new StubNeighbours("/prev-page", "/section-page"))
+            .UsePlugin(new StubNeighbours(PreviousPageUrl, "/section-page"))
             .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
             {
                 EnableNavigationFooter = true,
@@ -183,8 +201,8 @@ public class ThemePluginBaseTests
             })
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
-        await Assert.That(html).Contains("/prev-page");
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
+        await Assert.That(html).Contains(PreviousPageUrl);
     }
 
     /// <summary>SectionScopedFooter true selects GetSectionNeighbours instead of GetNeighbours.</summary>
@@ -193,7 +211,7 @@ public class ThemePluginBaseTests
     public async Task SectionScopedFooterUsesSectionNeighbours()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -206,7 +224,7 @@ public class ThemePluginBaseTests
             })
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
         await Assert.That(html).Contains("/section-only");
         await Assert.That(html).DoesNotContain("/global");
     }
@@ -217,13 +235,13 @@ public class ThemePluginBaseTests
     public async Task NavFooterUsesDirectoryUrlsWhenEnabled()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
             .UseDirectoryUrls()
-            .UsePlugin(new StubNeighbours("/prev-page", "/section-page"))
+            .UsePlugin(new StubNeighbours(PreviousPageUrl, "/section-page"))
             .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with
             {
                 EnableNavigationFooter = true,
@@ -242,7 +260,7 @@ public class ThemePluginBaseTests
     public async Task NavFooterDisabledNoNeighbourLinks()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -251,7 +269,7 @@ public class ThemePluginBaseTests
             .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = false })
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
         await Assert.That(html).DoesNotContain("should-not-appear");
     }
 
@@ -261,7 +279,7 @@ public class ThemePluginBaseTests
     public async Task NavFooterEnabledButNoProviderRegistered()
     {
         using var fixture = TempBuildTree.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, "intro.md"), "# Intro");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
 
         await new DocBuilder()
             .WithInput(fixture.Docs)
@@ -269,7 +287,7 @@ public class ThemePluginBaseTests
             .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { EnableNavigationFooter = true })
             .BuildAsync();
 
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, "intro.html"));
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Site, IntroOutputPath));
 
         // Build succeeds without throwing; no neighbour links produced.
         await Assert.That(html).Contains("Hi");
@@ -285,10 +303,10 @@ public class ThemePluginBaseTests
 
         /// <inheritdoc/>
         public NavNeighbours GetNeighbours(in FilePath relativePath) =>
-            new(globalUrl.TrimStart('/') + ".md", [.. "Prev"u8], string.Empty, []);
+            new($"{globalUrl.TrimStart('/')}.md", [.. "Prev"u8], string.Empty, []);
 
         /// <inheritdoc/>
         public NavNeighbours GetSectionNeighbours(in FilePath relativePath) =>
-            new(sectionUrl.TrimStart('/') + ".md", [.. "Section Prev"u8], string.Empty, []);
+            new($"{sectionUrl.TrimStart('/')}.md", [.. "Section Prev"u8], string.Empty, []);
     }
 }

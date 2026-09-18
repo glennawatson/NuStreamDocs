@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
-/// <summary>
-/// Shared low-level HTML tag scanning helpers for attr-list byte rewriters.
-/// </summary>
+/// <summary>Shared low-level HTML tag scanning helpers for attr-list byte rewriters.</summary>
 internal static class AttrListTagScanner
 {
     /// <summary>Length overhead of the closing tag <c>&lt;/&gt;</c> (excluding the tag name).</summary>
@@ -23,7 +21,7 @@ internal static class AttrListTagScanner
     /// <param name="from">Search start.</param>
     /// <param name="b">Byte to find.</param>
     /// <returns>Offset of the byte, or <c>-1</c>.</returns>
-    public static int FindFirst(ReadOnlySpan<byte> source, int from, byte b)
+    internal static int FindFirst(ReadOnlySpan<byte> source, int from, byte b)
     {
         var rel = source[from..].IndexOf(b);
         return rel < 0 ? -1 : from + rel;
@@ -34,7 +32,7 @@ internal static class AttrListTagScanner
     /// <param name="from">Search start offset (inner-text start).</param>
     /// <param name="tagName">Tag name bytes (case-insensitive match).</param>
     /// <returns>Offset of the <c>&lt;</c> in <c>&lt;/tag&gt;</c>, or <c>-1</c> when not found.</returns>
-    public static int FindMatchingClose(ReadOnlySpan<byte> html, int from, ReadOnlySpan<byte> tagName)
+    internal static int FindMatchingClose(ReadOnlySpan<byte> html, int from, ReadOnlySpan<byte> tagName)
     {
         var p = from;
         while (p < html.Length)
@@ -46,8 +44,8 @@ internal static class AttrListTagScanner
             }
 
             var lt = p + rel;
-            if (lt + 1 < html.Length && html[lt + 1] is (byte)'/' &&
-                IsCloseFor(html, lt + CloseTagPrefixLength, tagName))
+            if (lt + 1 < html.Length && html[lt + 1] is (byte)'/'
+                && IsCloseFor(html, lt + CloseTagPrefixLength, tagName))
             {
                 return lt;
             }
@@ -63,7 +61,7 @@ internal static class AttrListTagScanner
     /// <param name="offset">Offset just past <c>&lt;/</c>.</param>
     /// <param name="tagName">Tag name bytes.</param>
     /// <returns>True when this is the closing tag being sought.</returns>
-    public static bool IsCloseFor(ReadOnlySpan<byte> html, int offset, ReadOnlySpan<byte> tagName)
+    internal static bool IsCloseFor(ReadOnlySpan<byte> html, int offset, ReadOnlySpan<byte> tagName)
     {
         if (offset + tagName.Length >= html.Length)
         {

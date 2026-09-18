@@ -16,7 +16,7 @@ internal static class DownloadHttpClassifier
     /// <summary>Returns true when the outcome is a transient failure worth retrying.</summary>
     /// <param name="outcome">Polly outcome.</param>
     /// <returns>True when the request should be retried (5xx, 408, 429, or any thrown <see cref="HttpRequestException"/> / <see cref="TaskCanceledException"/>).</returns>
-    public static bool IsTransient(in Outcome<HttpResponseMessage> outcome)
+    internal static bool IsTransient(in Outcome<HttpResponseMessage> outcome)
     {
         if (outcome.Exception is HttpRequestException or TaskCanceledException)
         {
@@ -29,16 +29,15 @@ internal static class DownloadHttpClassifier
             return false;
         }
 
-        var code = (int)response.StatusCode;
         return response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests
-               || code >= ServerErrorStatusFloor;
+               || ((int)response.StatusCode) >= ServerErrorStatusFloor;
     }
 
     /// <summary>Returns true when the response looks like a CSS file (extension or Content-Type).</summary>
     /// <param name="uri">Request URI.</param>
     /// <param name="response">HTTP response.</param>
     /// <returns>True when the body should run through <c>CssUrlRewriter</c>.</returns>
-    public static bool LooksLikeCss(Uri uri, HttpResponseMessage response)
+    internal static bool LooksLikeCss(Uri uri, HttpResponseMessage response)
     {
         var contentType = response.Content.Headers.ContentType?.MediaType;
         if (string.Equals(contentType, "text/css", StringComparison.OrdinalIgnoreCase))
@@ -46,7 +45,6 @@ internal static class DownloadHttpClassifier
             return true;
         }
 
-        var path = uri.AbsolutePath;
-        return path.EndsWith(".css", StringComparison.OrdinalIgnoreCase);
+        return uri.AbsolutePath.EndsWith(".css", StringComparison.OrdinalIgnoreCase);
     }
 }

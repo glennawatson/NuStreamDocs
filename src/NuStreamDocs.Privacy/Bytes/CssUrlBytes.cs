@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
@@ -30,13 +31,15 @@ internal static class CssUrlBytes
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
     /// <returns>True when at least one URL was rewritten.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> source, in UrlRewriteContext ctx, IBufferWriter<byte> sink) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool RewriteInto(ReadOnlySpan<byte> source, in UrlRewriteContext ctx, IBufferWriter<byte> sink) =>
         UrlScanLoop.Run(source, TokenStart, sink, ctx, TryRewriteAt);
 
     /// <summary>Walks <paramref name="source"/> in audit mode, recording every URL the host filter accepts.</summary>
     /// <param name="source">UTF-8 source span.</param>
     /// <param name="audit">Audit collector.</param>
-    public static void AuditInto(ReadOnlySpan<byte> source, UrlAuditContext audit) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void AuditInto(ReadOnlySpan<byte> source, UrlAuditContext audit) =>
         UrlScanLoop.RunAudit(source, TokenStart, audit, TryAuditAt);
 
     /// <summary>Tries to rewrite a <c>url(...)</c> token at <paramref name="p"/>.</summary>
@@ -93,7 +96,7 @@ internal static class CssUrlBytes
         var urlBytes = source[urlStart..urlEnd];
         if (audit.Filter.ShouldLocalize(urlBytes))
         {
-            audit.Set.TryAdd([.. urlBytes], 0);
+            _ = audit.Set.TryAdd([.. urlBytes], 0);
         }
 
         advanceTo = tokenEnd;

@@ -21,7 +21,7 @@ public class CspInlineHasherTests
         ];
         List<byte[]> hashes = [];
         CspInlineHasher.HashScripts(html, hashes);
-        var expected = "'sha256-" + Convert.ToBase64String(SHA256.HashData("alert(1)"u8)) + "'";
+        var expected = $"'sha256-{Convert.ToBase64String(SHA256.HashData("alert(1)"u8))}'";
         await Assert.That(hashes.Count).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(hashes[0])).IsEqualTo(expected);
     }
@@ -37,7 +37,7 @@ public class CspInlineHasherTests
         await Assert.That(CspInlineHasher.MayHaveInlineBlocks(noBlocks)).IsFalse();
         List<byte[]> hashes = [];
         CspInlineHasher.HashStyles(html, hashes);
-        var expected = "'sha256-" + Convert.ToBase64String(SHA256.HashData("body{color:red}"u8)) + "'";
+        var expected = $"'sha256-{Convert.ToBase64String(SHA256.HashData("body{color:red}"u8))}'";
         await Assert.That(hashes.Count).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(hashes[0])).IsEqualTo(expected);
     }

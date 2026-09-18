@@ -10,4 +10,5 @@ namespace NuStreamDocs.Audit;
 /// <param name="Page">Site-relative URL of the page the finding came from.</param>
 /// <param name="Rule">Which lint produced the finding.</param>
 /// <param name="Message">Human-readable description carried across the diagnostic boundary.</param>
+[System.Diagnostics.DebuggerDisplay("AuditDiagnostic: {ToString(),nq}")]
 public readonly record struct AuditDiagnostic(UrlPath Page, AuditRule Rule, ApiCompatString Message);

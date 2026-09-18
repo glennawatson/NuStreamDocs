@@ -2,8 +2,9 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -21,14 +22,14 @@ namespace NuStreamDocs.Benchmarks;
 /// the migration with the same parameter set so the wall-time / allocation deltas
 /// are directly comparable.
 /// </summary>
+[DebuggerDisplay("BlogContentGeneratorBenchmarks: Posts={Posts}")]
 [ShortRunJob]
 [MemoryDiagnoser]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class BlogContentGeneratorBenchmarks
 {
+    /// <summary>Reserves enough text space for the generated post fixture.</summary>
+    private const int PostTextCapacity = 1024;
+
     /// <summary>Small post count (smoke).</summary>
     private const int SmallPosts = 10;
 
@@ -70,10 +71,10 @@ public class BlogContentGeneratorBenchmarks
     {
         _docsRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-bench-blog-docs-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-bench-blog-docs-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         var postsRoot = Path.Combine(_docsRoot, "articles");
         var archiveRoot = Path.Combine(postsRoot, "tags");
-        Directory.CreateDirectory(postsRoot);
+        _ = Directory.CreateDirectory(postsRoot);
 
         for (var i = 0; i < Posts; i++)
         {
@@ -93,49 +94,37 @@ public class BlogContentGeneratorBenchmarks
     }
 
     /// <summary>Cleans the corpus once at the end.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [GlobalCleanup]
     public void GlobalCleanup() => TryDelete(_docsRoot);
 
     /// <summary>End-to-end <see cref="BlogContentGenerator.GenerateAsync"/> on the configured corpus, registering pages with a fresh per-iteration <see cref="SyntheticPageSink"/>.</summary>
     /// <returns>Number of synthetic pages registered (returned so BenchmarkDotNet doesn't elide the call).</returns>
     [Benchmark]
-    public int Generate()
+    public async ValueTask<int> Generate()
     {
         SyntheticPageSink sink = new();
-        BlogContentGenerator.GenerateAsync(NullLogger.Instance, _options, sink, CancellationToken.None)
-            .AsTask()
-            .GetAwaiter()
-            .GetResult();
+        _ = await BlogContentGenerator.GenerateAsync(NullLogger.Instance, _options, sink, CancellationToken.None).ConfigureAwait(false);
         return sink.Count;
     }
 
     /// <summary>Builds a deterministic per-post filename of the form <c>YYYY-MM-DD-post-N.md</c>.</summary>
     /// <param name="index">Zero-based post index.</param>
     /// <returns>Slug + extension.</returns>
-    [SuppressMessage(
-        "Major Code Smell",
-        "S6585:Do not hardcode the format specifier",
-        Justification = "ISO-8601 date is the canonical Wyam blog frontmatter shape; matching it deliberately.")]
-    private static string BuildPostFileName(int index) =>
-        string.Concat(
-            PostEpoch.AddDays(index).ToString(IsoDate, CultureInfo.InvariantCulture),
-            "-post-",
-            index.ToString(CultureInfo.InvariantCulture),
-            ".md");
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static FilePath BuildPostFileName(int index) =>
+        $"{PostEpoch.AddDays(index).ToString(IsoDate, CultureInfo.InvariantCulture)}-post-{index.ToString(CultureInfo.InvariantCulture)}.md";
 
     /// <summary>Builds a realistic-shape post body with frontmatter (title/tag/date) and a few paragraphs of prose.</summary>
     /// <param name="index">Post index.</param>
     /// <param name="tag">Tag the post belongs to.</param>
     /// <returns>Markdown source.</returns>
-    [SuppressMessage(
-        "Major Code Smell",
-        "S6585:Do not hardcode the format specifier",
-        Justification = "ISO-8601 date is the canonical Wyam blog frontmatter shape; matching it deliberately.")]
-    private static string BuildPostBody(int index, string tag) =>
-        new StringBuilder(1024)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ApiCompatString BuildPostBody(int index, ApiCompatString tag) =>
+        new StringBuilder(PostTextCapacity)
             .Append("---\n")
             .Append("Title: Post ").Append(index.ToString(CultureInfo.InvariantCulture)).Append('\n')
-            .Append("Tags: ").Append(tag).Append('\n')
+            .Append("Tags: ").Append(tag.Value).Append('\n')
             .Append("Author: Bench Author\n")
             .Append("Published: ").Append(PostEpoch.AddDays(index).ToString(IsoDate, CultureInfo.InvariantCulture))
             .Append('\n')

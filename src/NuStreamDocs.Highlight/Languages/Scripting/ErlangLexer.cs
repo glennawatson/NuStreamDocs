@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Scripting;
@@ -83,11 +84,7 @@ public static class ErlangLexer
                     LexerRule.NoStateChange)
             { FirstBytes = PercentFirst },
         PreCommentRule =
-            new(MatchDashAttribute, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
-            {
-                FirstBytes = DashFirst,
-                RequiresLineStart = true
-            },
+            new(MatchDashAttribute, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = DashFirst, RequiresLineStart = true, },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         IncludeFloatLiteral = true,
@@ -106,7 +103,7 @@ public static class ErlangLexer
         SuppressIdentifierRule = true,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches a leading <c>-attribute</c> at the start of a line.</summary>
@@ -126,12 +123,14 @@ public static class ErlangLexer
     /// <summary>Matches an Erlang variable — uppercase or underscore start, then identifier-continue bytes.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchVariable(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchIdentifier(slice, VariableStart, AtomContinue);
 
     /// <summary>Matches an Erlang atom — lowercase start, then identifier-continue bytes (including <c>@</c>).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchAtom(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchIdentifier(slice, AtomStart, AtomContinue);
 }

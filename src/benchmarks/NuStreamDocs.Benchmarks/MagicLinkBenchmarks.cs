@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.MagicLink;
 
@@ -17,6 +19,7 @@ namespace NuStreamDocs.Benchmarks;
 /// expansion off (matches the default plugin shape) and once on (the
 /// rxui website configuration).
 /// </remarks>
+[DebuggerDisplay("MagicLinkBenchmarks: urlsFixture={_urlsFixture}, issueRefsFixture={_issueRefsFixture}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class MagicLinkBenchmarks
@@ -26,9 +29,6 @@ public class MagicLinkBenchmarks
 
     /// <summary>Headroom factor for the rewritten output (each shortref expands ~7×; 8× covers worst case).</summary>
     private const int OutputExpansionFactor = 8;
-
-    /// <summary>Default test repo bytes used by the issue-ref expansion paths.</summary>
-    private static readonly byte[] DefaultRepo = "reactiveui/ReactiveUI"u8.ToArray();
 
     /// <summary>Pre-built URL-heavy fixture.</summary>
     private byte[] _urlsFixture = [];
@@ -41,6 +41,9 @@ public class MagicLinkBenchmarks
 
     /// <summary>Pre-built combined fixture (URLs + issue refs + mentions interleaved).</summary>
     private byte[] _combinedFixture = [];
+
+    /// <summary>Gets the repository used by the issue-reference scenarios.</summary>
+    private static ReadOnlySpan<byte> DefaultRepo => "reactiveui/ReactiveUI"u8;
 
     /// <summary>Generates the per-mode fixtures.</summary>
     [GlobalSetup]
@@ -65,21 +68,25 @@ public class MagicLinkBenchmarks
 
     /// <summary>URL autolinking only, shortref expansion disabled.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark(Baseline = true)]
     public int UrlsOnly() => Run(_urlsFixture, [], false);
 
     /// <summary>Issue-ref expansion against a configured repo.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int IssueRefsExpanded() => Run(_issueRefsFixture, DefaultRepo, false);
 
     /// <summary>Mention expansion only.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int MentionsExpanded() => Run(_mentionsFixture, [], true);
 
     /// <summary>Combined URL autolinking + issue-ref + mention expansion (rxui release-notes shape).</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int CombinedRxuiShape() => Run(_combinedFixture, DefaultRepo, true);
 

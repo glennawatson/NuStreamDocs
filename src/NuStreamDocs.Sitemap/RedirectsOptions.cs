@@ -27,6 +27,7 @@ namespace NuStreamDocs.Sitemap;
 /// Frontmatter key to look up when <see cref="ScanFrontmatterAliases"/>
 /// is enabled; defaults to <c>aliases</c>.
 /// </param>
+[System.Diagnostics.DebuggerDisplay("RedirectsOptions: {ToString(),nq}")]
 public readonly record struct RedirectsOptions(
     string ConfigFileName,
     bool LoadConfigFile,

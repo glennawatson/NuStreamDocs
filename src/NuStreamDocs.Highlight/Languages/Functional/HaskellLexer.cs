@@ -35,7 +35,7 @@ public static class HaskellLexer
                 "module import data newtype type class instance family"u8),
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated(
                 "True False Nothing Just Left Right"u8),
-            Operators = OperatorTable
-        }
+            Operators = OperatorTable,
+        },
     });
 }

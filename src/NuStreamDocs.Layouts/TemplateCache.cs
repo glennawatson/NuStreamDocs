@@ -13,7 +13,7 @@ internal sealed class TemplateCache
     private const int InitialCapacity = 8;
 
     /// <summary>Backing store keyed by UTF-8 template name.</summary>
-    private readonly Dictionary<byte[], TemplateEntry> _entries = new(InitialCapacity, ByteArrayComparer.Instance);
+    private readonly Dictionary<byte[], TemplateEntry> _entries = [with(InitialCapacity, ByteArrayComparer.Instance)];
 
     /// <summary>Guards <see cref="_entries"/> against concurrent post-render workers.</summary>
     private readonly Lock _gate = new();
@@ -34,7 +34,7 @@ internal sealed class TemplateCache
     /// <param name="templateName">UTF-8 template name.</param>
     /// <param name="entry">Cached entry on hit; default on miss.</param>
     /// <returns>True when cached.</returns>
-    public bool TryGet(ReadOnlySpan<byte> templateName, out TemplateEntry entry)
+    internal bool TryGet(ReadOnlySpan<byte> templateName, out TemplateEntry entry)
     {
         lock (_gate)
         {
@@ -45,16 +45,16 @@ internal sealed class TemplateCache
     /// <summary>Inserts <paramref name="entry"/> under <paramref name="templateName"/> if absent.</summary>
     /// <param name="templateName">UTF-8 template name; ownership transfers to the cache.</param>
     /// <param name="entry">Entry to associate with the name.</param>
-    public void Add(byte[] templateName, TemplateEntry entry)
+    internal void Add(byte[] templateName, TemplateEntry entry)
     {
         lock (_gate)
         {
-            _entries.TryAdd(templateName, entry);
+            _ = _entries.TryAdd(templateName, entry);
         }
     }
 
     /// <summary>Empties the cache.</summary>
-    public void Clear()
+    internal void Clear()
     {
         lock (_gate)
         {

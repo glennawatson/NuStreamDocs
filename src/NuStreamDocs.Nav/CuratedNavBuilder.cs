@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -12,14 +13,15 @@ namespace NuStreamDocs.Nav;
 /// <summary>Builds a <see cref="NavNode"/> tree from a curated <see cref="NavEntry"/> array (mkdocs.yml <c>nav:</c> or docfx <c>toc.yml</c>).</summary>
 internal static class CuratedNavBuilder
 {
-    /// <summary>UTF-8 markdown extension bytes.</summary>
-    private static readonly byte[] MarkdownExtensionBytes = [.. ".md"u8];
+    /// <summary>Gets uTF-8 markdown extension bytes.</summary>
+    private static ReadOnlySpan<byte> MarkdownExtensionBytes => ".md"u8;
 
     /// <summary>Builds the nav tree from <paramref name="entries"/>.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="entries">Top-level curated entries.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries) =>
         Build(inputRoot, entries, false, NullLogger.Instance);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with an explicit served URL shape.</summary>
@@ -27,7 +29,8 @@ internal static class CuratedNavBuilder
     /// <param name="entries">Top-level curated entries.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls) =>
         Build(inputRoot, entries, useDirectoryUrls, NullLogger.Instance);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with a logger for orphan / missing-file diagnostics.</summary>
@@ -35,8 +38,9 @@ internal static class CuratedNavBuilder
     /// <param name="entries">Top-level curated entries.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, ILogger logger)
-        => Build(inputRoot, entries, false, logger);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, ILogger logger) =>
+        Build(inputRoot, entries, false, logger);
 
     /// <summary>Builds the nav tree from <paramref name="entries"/> with a logger for orphan / missing-file diagnostics.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
@@ -44,7 +48,7 @@ internal static class CuratedNavBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>Root <see cref="NavNode"/>.</returns>
-    public static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls, ILogger logger)
+    internal static NavNode Build(in DirectoryPath inputRoot, NavEntry[] entries, bool useDirectoryUrls, ILogger logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(inputRoot);
 
@@ -53,10 +57,13 @@ internal static class CuratedNavBuilder
         for (var i = 0; i < entries.Length; i++)
         {
             var built = BuildEntry(inputRoot, entries[i], useDirectoryUrls, logger);
-            if (built is not null)
+            if (built is null)
             {
-                children[written++] = built;
+                continue;
             }
+
+            children[written] = built;
+            written++;
         }
 
         if (written != entries.Length)
@@ -88,13 +95,7 @@ internal static class CuratedNavBuilder
             return BuildSectionEntry(inputRoot, entry, useDirectoryUrls, logger);
         }
 
-        if (entry.Path.Length is 0)
-        {
-            // Empty leaf: skip silently (callers can carry placeholder entries).
-            return null;
-        }
-
-        return BuildLeafEntry(inputRoot, entry, useDirectoryUrls);
+        return entry.Path.Length is 0 ? null : BuildLeafEntry(inputRoot, entry, useDirectoryUrls);
     }
 
     /// <summary>Builds a leaf page or external-link node.</summary>
@@ -126,10 +127,13 @@ internal static class CuratedNavBuilder
         for (var i = 0; i < entry.Children.Length; i++)
         {
             var built = BuildEntry(inputRoot, entry.Children[i], useDirectoryUrls, logger);
-            if (built is not null)
+            if (built is null)
             {
-                children[written++] = built;
+                continue;
             }
+
+            children[written] = built;
+            written++;
         }
 
         if (written != children.Length)
@@ -156,14 +160,10 @@ internal static class CuratedNavBuilder
             return [.. entry.Title];
         }
 
-        if (IsAbsoluteUrl(entry.Path) || !PathLooksLikeMarkdown(entry.Path))
-        {
-            // External link or non-markdown — fall back to the path stem.
-            return Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
-        }
-
-        return FrontmatterTitleReader.ReadBytes(inputRoot.File(path.Value)) ??
-               Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
+        return IsAbsoluteUrl(entry.Path) || !PathLooksLikeMarkdown(entry.Path)
+            ? Encoding.UTF8.GetBytes(path.FileNameWithoutExtension)
+            : FrontmatterTitleReader.ReadBytes(inputRoot.File(path.Value))
+               ?? Encoding.UTF8.GetBytes(path.FileNameWithoutExtension);
     }
 
     /// <summary>Returns true when the UTF-8 path begins with <c>http://</c> or <c>https://</c>.</summary>

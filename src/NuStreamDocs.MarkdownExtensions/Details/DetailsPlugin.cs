@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
@@ -10,12 +11,9 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.MarkdownExtensions.Details;
 
 /// <summary>Collapsible-details plugin — rewrites <c>???</c> (collapsed) and <c>???+</c> (open) blocks into <c>&lt;details&gt;</c> elements.</summary>
+[System.Diagnostics.DebuggerDisplay("DetailsPlugin: {Name}")]
 public sealed class DetailsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
-    /// <summary>Head-link snippet injected on every page.</summary>
-    private static readonly byte[] LinkBytes =
-        [.. """<link rel="stylesheet" href="/assets/extensions/details.css">"""u8];
-
     /// <summary>Stylesheet shipped with every site.</summary>
     private static readonly byte[] CssBytes =
     [
@@ -46,14 +44,20 @@ public sealed class DetailsPlugin : IPagePreRenderPlugin, IStaticAssetProvider, 
     /// <inheritdoc/>
     public (FilePath Path, byte[] Bytes)[] StaticAssets => [(AssetFilePath, CssBytes)];
 
+    /// <summary>Gets the stylesheet link injected on every page.</summary>
+    private static ReadOnlySpan<byte> LinkBytes => """<link rel="stylesheet" href="/assets/extensions/details.css">"""u8;
+
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasDetailsOpener(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         DetailsRewriter.Rewrite(context.Source, context.Output);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(LinkBytes);
 }

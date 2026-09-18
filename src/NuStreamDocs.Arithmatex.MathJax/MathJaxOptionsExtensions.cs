@@ -9,27 +9,28 @@ namespace NuStreamDocs.Arithmatex.MathJax;
 /// <summary>Construction helpers for the <see cref="MathJaxOptions"/> record.</summary>
 public static class MathJaxOptionsExtensions
 {
-    /// <summary>Replaces the MathJax loader URL.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="loaderUrl">New loader URL.</param>
-    /// <returns>The updated options.</returns>
-    public static MathJaxOptions WithLoaderUrl(this in MathJaxOptions options, in UrlPath loaderUrl) =>
-        options with { LoaderUrl = loaderUrl };
+    /// <summary>Extension members for <c>MathJaxOptions</c>.</summary>
+    /// <param name="options">Options to update.</param>
+    extension(in MathJaxOptions options)
+    {
+        /// <summary>Replaces the MathJax loader URL.</summary>
+        /// <param name="loaderUrl">New loader URL.</param>
+        /// <returns>The updated options.</returns>
+        public MathJaxOptions WithLoaderUrl(in UrlPath loaderUrl) =>
+            options with { LoaderUrl = loaderUrl };
 
-    /// <summary>Replaces the <c>processHtmlClass</c> regex.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="processHtmlClass">Regex of HTML class values MathJax should typeset.</param>
-    /// <returns>The updated options.</returns>
-    public static MathJaxOptions WithProcessHtmlClass(
-        this in MathJaxOptions options,
-        in ApiCompatString processHtmlClass) =>
-        options with { ProcessHtmlClass = processHtmlClass };
+        /// <summary>Replaces the <c>processHtmlClass</c> regex.</summary>
+        /// <param name="processHtmlClass">Regex of HTML class values MathJax should typeset.</param>
+        /// <returns>The updated options.</returns>
+        public MathJaxOptions WithProcessHtmlClass(
+            in ApiCompatString processHtmlClass) =>
+            options with { ProcessHtmlClass = processHtmlClass };
 
-    /// <summary>Replaces the <c>ignoreHtmlClass</c> regex.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="ignoreHtmlClass">Regex of HTML class values MathJax should skip.</param>
-    /// <returns>The updated options.</returns>
-    public static MathJaxOptions
-        WithIgnoreHtmlClass(this in MathJaxOptions options, in ApiCompatString ignoreHtmlClass) =>
-        options with { IgnoreHtmlClass = ignoreHtmlClass };
+        /// <summary>Replaces the <c>ignoreHtmlClass</c> regex.</summary>
+        /// <param name="ignoreHtmlClass">Regex of HTML class values MathJax should skip.</param>
+        /// <returns>The updated options.</returns>
+        public MathJaxOptions
+            WithIgnoreHtmlClass(in ApiCompatString ignoreHtmlClass) =>
+            options with { IgnoreHtmlClass = ignoreHtmlClass };
+    }
 }

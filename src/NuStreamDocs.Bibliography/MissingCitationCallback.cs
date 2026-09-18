@@ -4,9 +4,6 @@
 
 namespace NuStreamDocs.Bibliography;
 
-/// <summary>
-/// Callback fired by <see cref="BibliographyRewriter"/> for each
-/// <c>[@key]</c> marker whose key is not in the configured database.
-/// </summary>
+/// <summary>Callback fired by <see cref="BibliographyRewriter"/> for each <c>[@key]</c> marker whose key is not in the configured database.</summary>
 /// <param name="key">The unresolved citation key.</param>
 public delegate void MissingCitationCallback(string key);

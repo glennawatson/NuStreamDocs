@@ -37,16 +37,13 @@ public static class JsonLexer
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
         SpecialString =
-            new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, LexerRule.NoStateChange)
-            {
-                FirstBytes = QuoteFirst
-            },
+            new(TokenMatchers.MatchDoubleQuotedKey, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = QuoteFirst, },
         IncludeDoubleQuotedString = true,
         IncludeSignedFloatLiteral = true,
         IncludeSignedIntegerLiteral = true,
         NumberFirst = NumberFirst,
         KeywordConstants = KeywordConstants,
         KeywordConstantFirst = KeywordFirst,
-        Punctuation = PunctuationFirst
+        Punctuation = PunctuationFirst,
     });
 }

@@ -10,6 +10,15 @@ namespace NuStreamDocs.Tests;
 /// <summary>Direct unit tests for the <see cref="AsciiByteHelpers"/> shared byte-level helpers.</summary>
 public class AsciiByteHelpersTests
 {
+    /// <summary>Remaining Marker Count used by the test cases.</summary>
+    private const int RemainingMarkerCount = 2;
+
+    /// <summary>Input Length used by the test cases.</summary>
+    private const int InputLength = 3;
+
+    /// <summary>Beyond Input Offset used by the test cases.</summary>
+    private const int BeyondInputOffset = 100;
+
     /// <summary>RunLength counts the leading run of <paramref name="marker"/> from <paramref name="pos"/>.</summary>
     /// <param name="source">UTF-8 input.</param>
     /// <param name="pos">Probe offset.</param>
@@ -35,8 +44,8 @@ public class AsciiByteHelpersTests
     public async Task RunLengthStopsAtEnd()
     {
         byte[] bytes = [.. "***"u8];
-        await Assert.That(AsciiByteHelpers.RunLength(bytes, 1, (byte)'*')).IsEqualTo(2);
-        await Assert.That(AsciiByteHelpers.RunLength(bytes, 3, (byte)'*')).IsEqualTo(0);
+        await Assert.That(AsciiByteHelpers.RunLength(bytes, 1, (byte)'*')).IsEqualTo(RemainingMarkerCount);
+        await Assert.That(AsciiByteHelpers.RunLength(bytes, InputLength, (byte)'*')).IsEqualTo(0);
     }
 
     /// <summary>RunLength returns 0 when the probe offset is at or past the end.</summary>
@@ -45,8 +54,8 @@ public class AsciiByteHelpersTests
     public async Task RunLengthOutOfRange()
     {
         byte[] bytes = [.. "abc"u8];
-        await Assert.That(AsciiByteHelpers.RunLength(bytes, 3, (byte)'a')).IsEqualTo(0);
-        await Assert.That(AsciiByteHelpers.RunLength(bytes, 100, (byte)'a')).IsEqualTo(0);
+        await Assert.That(AsciiByteHelpers.RunLength(bytes, InputLength, (byte)'a')).IsEqualTo(0);
+        await Assert.That(AsciiByteHelpers.RunLength(bytes, BeyondInputOffset, (byte)'a')).IsEqualTo(0);
     }
 
     /// <summary>ToLowerCaseInvariant converts ASCII to lowercase.</summary>

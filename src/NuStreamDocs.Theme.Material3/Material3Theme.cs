@@ -10,6 +10,7 @@ using NuStreamDocs.Theme.Common;
 namespace NuStreamDocs.Theme.Material3;
 
 /// <summary>Material Design 3 theme: compiled page + partial templates plus the bundled CSS / JS assets.</summary>
+[System.Diagnostics.DebuggerDisplay("Material3Theme: {Page}")]
 public sealed class Material3Theme : IThemePackage
 {
     /// <summary>Static asset paths shipped by the theme.</summary>

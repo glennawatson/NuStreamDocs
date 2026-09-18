@@ -53,8 +53,7 @@ public class MarkdownCodeScannerTests
     {
         var ok = MarkdownCodeScanner.TryConsumeFence(Encoding.UTF8.GetBytes(source), 0, out var fenceEnd);
         await Assert.That(ok).IsEqualTo(expectConsumed);
-        var observedEnd = ok ? fenceEnd : expectedEnd;
-        await Assert.That(observedEnd).IsEqualTo(expectedEnd);
+        await Assert.That(ok ? fenceEnd : expectedEnd).IsEqualTo(expectedEnd);
     }
 
     /// <summary>ConsumeInlineCode pairs equal-length backtick runs and falls back to single run when unmatched.</summary>

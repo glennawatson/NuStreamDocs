@@ -19,10 +19,7 @@ public static class Utf8Encoder
     /// <returns>UTF-8 bytes, always ending in <paramref name="trailingAscii"/>.</returns>
     public static byte[] EncodeWithTrailingAscii(string? value, byte trailingAscii)
     {
-        if (trailingAscii > AsciiMax)
-        {
-            throw new ArgumentOutOfRangeException(nameof(trailingAscii), "Only ASCII trailing bytes are supported.");
-        }
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(trailingAscii, AsciiMax);
 
         if (string.IsNullOrEmpty(value))
         {
@@ -32,7 +29,7 @@ public static class Utf8Encoder
         var hasTrailing = value[^1] == (char)trailingAscii;
         var byteCount = Encoding.UTF8.GetByteCount(value);
         var dst = new byte[byteCount + (hasTrailing ? 0 : 1)];
-        Encoding.UTF8.GetBytes(value, dst);
+        _ = Encoding.UTF8.GetBytes(value, dst);
         if (!hasTrailing)
         {
             dst[byteCount] = trailingAscii;
@@ -86,14 +83,14 @@ public static class Utf8Encoder
     }
 
     /// <summary>Extension form of <see cref="EncodeArray(string[])"/>; lets call sites read <c>values.EncodeUtf8Array()</c> at the natural string-boundary.</summary>
-    /// <param name="values">Source strings.</param>
+    /// <param name="values">Source text to encode.</param>
     /// <returns>Per-entry UTF-8 bytes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte[][] EncodeUtf8Array(this string[]? values) => EncodeArray(values);
+    public static byte[][] EncodeUtf8Array(string[]? values) => EncodeArray(values);
 
     /// <summary>Extension form of <see cref="EncodeArray(ApiCompatString[])"/>; lets call sites read <c>values.EncodeUtf8Array()</c> at the natural compat-string boundary.</summary>
-    /// <param name="values">Source compatibility-string entries.</param>
+    /// <param name="values">Source text to encode.</param>
     /// <returns>Per-entry UTF-8 bytes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte[][] EncodeUtf8Array(this ApiCompatString[]? values) => EncodeArray(values);
+    public static byte[][] EncodeUtf8Array(ApiCompatString[]? values) => EncodeArray(values);
 }

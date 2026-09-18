@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
@@ -20,13 +21,13 @@ internal static class MdInHtmlRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < source.Length)
         {
-            if (MarkdownCodeScanner.AtLineStart(source, i) &&
-                MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
+            if (MarkdownCodeScanner.AtLineStart(source, i)
+                && MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
             {
                 writer.Write(source[i..fenceEnd]);
                 i = fenceEnd;
@@ -291,6 +292,7 @@ internal static class MdInHtmlRewriter
     /// <param name="span">Attribute span.</param>
     /// <param name="offset">Position to test.</param>
     /// <returns>True for an attribute-separator boundary.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsAttributeBoundary(ReadOnlySpan<byte> span, int offset) =>
         AsciiByteHelpers.IsAsciiWhitespace(span[offset]);
 
@@ -373,8 +375,8 @@ internal static class MdInHtmlRewriter
         }
 
         var afterName = offset + 1 + name.Length;
-        if (afterName >= source.Length ||
-            source[afterName] is not (byte)'>' and not (byte)' ' and not (byte)'\t' and not (byte)'\n')
+        if (afterName >= source.Length
+            || source[afterName] is not (byte)'>' and not (byte)' ' and not (byte)'\t' and not (byte)'\n')
         {
             return false;
         }

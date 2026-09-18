@@ -10,6 +10,30 @@ namespace NuStreamDocs.Fonts.Tests;
 /// <summary>End-to-end coverage for <see cref="FontsPlugin"/> using the local provider (offline).</summary>
 public class FontsPluginTests
 {
+    /// <summary>Directory holding the fixture fonts.</summary>
+    private const string FontDirectory = "fonts";
+
+    /// <summary>Expected units per em in the fixture.</summary>
+    private const int UnitsPerEm = 2048;
+
+    /// <summary>Expected ascender in the fixture.</summary>
+    private const int Ascender = 1900;
+
+    /// <summary>Expected descender in the fixture.</summary>
+    private const int Descender = -500;
+
+    /// <summary>Height of the fixture's lowercase x.</summary>
+    private const int XHeight = 1082;
+
+    /// <summary>Expected cap height in the fixture.</summary>
+    private const int CapHeight = 1462;
+
+    /// <summary>Expected normal weight in the fixture.</summary>
+    private const int NormalWeight = 400;
+
+    /// <summary>Expected number of generated assets.</summary>
+    private const int ExpectedCount = 2;
+
     /// <summary>With no declared faces, the plugin contributes nothing.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -31,15 +55,15 @@ public class FontsPluginTests
     public async Task LocalFaceEmitsAssetsCssAndHeadLinks()
     {
         using TempDir dir = new();
-        Directory.CreateDirectory(Path.Combine(dir.Root, "fonts"));
-        var woff2 = StubFont.BuildWoff2(2048, 1900, -500, 0, 1082, 1462);
-        await File.WriteAllBytesAsync(Path.Combine(dir.Root, "fonts", "MyFont-Regular.woff2"), woff2);
+        _ = Directory.CreateDirectory(Path.Combine(dir.Root, FontDirectory));
+        var woff2 = StubFont.BuildWoff2(UnitsPerEm, Ascender, Descender, 0, XHeight, CapHeight);
+        await File.WriteAllBytesAsync(Path.Combine(dir.Root, FontDirectory, "MyFont-Regular.woff2"), woff2);
 
         var face = new FontFace(
             [.. "myfont"u8],
             [.. "MyFont"u8],
             FontProviderKind.Local,
-            [400],
+            [NormalWeight],
             [FontStyle.Normal],
             [],
             FontDisplay.Swap,
@@ -51,7 +75,7 @@ public class FontsPluginTests
         await plugin.ConfigureAsync(new(dir.Root, Path.Combine(dir.Root, "site"), [], new()), CancellationToken.None);
 
         var assets = plugin.StaticAssets;
-        await Assert.That(assets.Length).IsEqualTo(2);
+        await Assert.That(assets.Length).IsEqualTo(ExpectedCount);
         byte[]? cssBytes = null;
         var hasWoff2 = false;
         for (var i = 0; i < assets.Length; i++)
@@ -60,8 +84,8 @@ public class FontsPluginTests
             {
                 cssBytes = assets[i].Bytes;
             }
-            else if (assets[i].Path.Value.StartsWith("assets/fonts/", StringComparison.Ordinal) &&
-                     assets[i].Path.Value.EndsWith(".woff2", StringComparison.Ordinal))
+            else if (assets[i].Path.Value.StartsWith("assets/fonts/", StringComparison.Ordinal)
+                     && assets[i].Path.Value.EndsWith(".woff2", StringComparison.Ordinal))
             {
                 hasWoff2 = true;
                 await Assert.That(assets[i].Bytes.SequenceEqual(woff2)).IsTrue();

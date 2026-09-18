@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Logging;
@@ -13,6 +14,7 @@ namespace NuStreamDocs.Logging;
 /// an end-of-build summary log sorted by total time descending. Plugins under <see
 /// cref="SignificantSeconds"/> drop to Debug.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("PluginTimingTable: {_ticks}")]
 public sealed class PluginTimingTable
 {
     /// <summary>Threshold (in seconds) under which an entry is logged at Debug level rather than Info — 10ms.</summary>
@@ -27,6 +29,7 @@ public sealed class PluginTimingTable
     /// <summary>Begins a measurement scope for <paramref name="pluginName"/>; disposing the returned scope adds the elapsed ticks to the running total.</summary>
     /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes.</param>
     /// <returns>A scope to wrap with <c>using</c>.</returns>
+    /// <exception cref="ArgumentException">The plugin name is empty.</exception>
     public MeasurementScope Measure(ReadOnlySpan<byte> pluginName) =>
         pluginName.Length is 0
             ? throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName))
@@ -35,6 +38,7 @@ public sealed class PluginTimingTable
     /// <summary>Adds a pre-captured tick delta to <paramref name="pluginName"/>'s running total.</summary>
     /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes.</param>
     /// <param name="elapsedTicks"><see cref="Stopwatch"/>-frequency tick delta from a caller-managed timestamp.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>pluginName.Length is 0</c>.</exception>
     /// <remarks>Prefer <see cref="Measure"/>; this overload is for callers that already have the delta in hand.</remarks>
     public void Add(byte[] pluginName, long elapsedTicks)
     {
@@ -43,7 +47,7 @@ public sealed class PluginTimingTable
             throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName));
         }
 
-        _ticks.AddOrUpdate(
+        _ = _ticks.AddOrUpdate(
             pluginName,
             static (_, ticks) => ticks,
             static (_, prev, ticks) => prev + ticks,
@@ -91,19 +95,23 @@ public sealed class PluginTimingTable
     }
 
     /// <summary>Disposable scope returned from <see cref="Measure"/>; captures <see cref="Stopwatch.GetTimestamp"/> at entry and accumulates the delta on disposal.</summary>
+    /// <param name="Table">Timing totals to update.</param>
+    /// <param name="PluginName">Plugin whose work is measured.</param>
+    [System.Diagnostics.DebuggerDisplay("MeasurementScope: {_start}")]
     public readonly record struct MeasurementScope(PluginTimingTable Table, byte[] PluginName) : IDisposable
     {
         /// <summary>Stopwatch timestamp captured at scope entry.</summary>
         private readonly long _start = Stopwatch.GetTimestamp();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose() => Table.Add(PluginName, Stopwatch.GetTimestamp() - _start);
 
         /// <inheritdoc/>
         public bool Equals(MeasurementScope other) =>
-            _start == other._start &&
-            ReferenceEquals(Table, other.Table) &&
-            ByteArrayComparer.Instance.Equals(PluginName, other.PluginName);
+            _start == other._start
+            && ReferenceEquals(Table, other.Table)
+            && ByteArrayComparer.Instance.Equals(PluginName, other.PluginName);
 
         /// <inheritdoc/>
         public override int GetHashCode() =>

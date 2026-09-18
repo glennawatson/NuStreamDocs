@@ -191,7 +191,7 @@ public static class PhpLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = OperatorFirst
+                OperatorFirst = OperatorFirst,
             },
             Punctuation = PunctuationSet,
             IntegerSuffix = CFamilyRules.NoSuffix,
@@ -200,7 +200,7 @@ public static class PhpLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = false,
             WhitespaceIncludesNewlines = true,
-            SpecialString = null
+            SpecialString = null,
         };
 
         var coreRules = CFamilyRules.Build(config);
@@ -213,10 +213,7 @@ public static class PhpLexer
                 static slice => TokenMatchers.MatchPrefixedRun(slice, (byte)'$', TokenMatchers.AsciiIdentifierContinue),
                 TokenClass.Name,
                 LexerRule.NoStateChange) { FirstBytes = DollarFirst },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            }
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, }
         ];
 
         var allRules = new LexerRule[frontRules.Length + coreRules.Length];
@@ -233,8 +230,7 @@ public static class PhpLexer
     {
         [(byte)'<', (byte)'?', (byte)'p', (byte)'h', (byte)'p', ..] => PhpOpenTagLength,
         [(byte)'<', (byte)'?', (byte)'=', ..] => ShortEchoTagLength,
-        [(byte)'<', (byte)'?', ..] => BareTagLength,
-        [(byte)'?', (byte)'>', ..] => BareTagLength,
+        [(byte)'<', (byte)'?', ..] or [(byte)'?', (byte)'>', ..] => BareTagLength,
         _ => 0
     };
 }

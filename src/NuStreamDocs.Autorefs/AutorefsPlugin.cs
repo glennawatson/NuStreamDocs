@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Autorefs.Logging;
 using NuStreamDocs.Links;
@@ -14,6 +15,7 @@ namespace NuStreamDocs.Autorefs;
 /// <c>@autoref:</c> markers, registers heading anchors, and substitutes resolved URLs after the
 /// cross-page barrier.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("AutorefsPlugin: {Name}")]
 public sealed class AutorefsPlugin
     : IBuildConfigurePlugin,
         IPagePreRenderPlugin,
@@ -22,7 +24,7 @@ public sealed class AutorefsPlugin
         IPagePostResolvePlugin,
         IBuildFinalizePlugin
 {
-    /// <summary>Logger.</summary>
+    /// <summary>Receives reference-resolution diagnostics.</summary>
     private readonly ILogger _logger;
 
     /// <summary>Count of references resolved during the post-resolve pass.</summary>
@@ -91,8 +93,8 @@ public sealed class AutorefsPlugin
         // Scan hook fires. Other plugins register from their per-page hook (which runs strictly
         // after ConfigureAsync), so this clear is safe regardless of registration order.
         Registry.Clear();
-        Interlocked.Exchange(ref _resolvedCount, 0);
-        Interlocked.Exchange(ref _missingCount, 0);
+        _ = Interlocked.Exchange(ref _resolvedCount, 0);
+        _ = Interlocked.Exchange(ref _missingCount, 0);
 
         // Register the @autoref: marker so the engine's cross-page fast-path skips pages without it.
         context.CrossPageMarkers.Register([.. AutorefScanner.Marker]);
@@ -100,10 +102,12 @@ public sealed class AutorefsPlugin
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         AutorefsReferenceLinkPreprocessor.NeedsRewrite(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         AutorefsReferenceLinkPreprocessor.Rewrite(context.Source, context.Output);
 
@@ -131,10 +135,9 @@ public sealed class AutorefsPlugin
     /// <inheritdoc/>
     public void Rewrite(in PagePostResolveContext context)
     {
-        var sourcePage = context.RelativePath.FileName;
-        var totals = AutorefsRewriter.RewriteSpan(context.Html, Registry, context.Output, _logger, sourcePage);
-        Interlocked.Add(ref _resolvedCount, totals.Resolved);
-        Interlocked.Add(ref _missingCount, totals.Missing);
+        var totals = AutorefsRewriter.RewriteSpan(context.Html, Registry, context.Output, _logger, context.RelativePath.FileName);
+        _ = Interlocked.Add(ref _resolvedCount, totals.Resolved);
+        _ = Interlocked.Add(ref _missingCount, totals.Missing);
     }
 
     /// <inheritdoc/>

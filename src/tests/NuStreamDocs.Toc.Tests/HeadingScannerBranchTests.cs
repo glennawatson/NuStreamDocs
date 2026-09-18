@@ -57,10 +57,11 @@ public class HeadingScannerBranchTests
     [Test]
     public async Task DecodeUnclosedInnerTag()
     {
+        const int outputCapacity = 16;
         byte[] html = [.. "<h2>Hello <code unclosed</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         await Assert.That(headings.Length).IsEqualTo(1);
-        ArrayBufferWriter<byte> sink = new(16);
+        ArrayBufferWriter<byte> sink = new(outputCapacity);
         HeadingScanner.DecodeTextInto(html, in headings[0], sink);
         await Assert.That(sink.WrittenSpan.SequenceEqual("Hello "u8)).IsTrue();
     }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Highlight;
@@ -28,7 +29,7 @@ public static class HighlightEmitter
         // Pre-grow the writer once based on source length so the per-token GetSpan calls inside
         // EmitFromState never trigger an Array.Resize doubling chain. Output is roughly 2.5× the
         // source for typical highlighted code (span wrappers + entity escapes).
-        var hint = source.Length > 0
+        var hint = !source.IsEmpty
             ? Math.Max(MinHintBytes, source.Length * OutputMultiplierNumerator / OutputMultiplierDenominator)
             : MinHintBytes;
         _ = writer.GetSpan(hint);
@@ -42,6 +43,7 @@ public static class HighlightEmitter
     /// <param name="offset">Token offset.</param>
     /// <param name="length">Token length.</param>
     /// <param name="cls">Token classification.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void EmitFromState(EmitState state, int offset, int length, TokenClass cls) =>
         EmitToken(state.Source.Span.Slice(offset, length), cls, state.Writer);
 
@@ -52,7 +54,7 @@ public static class HighlightEmitter
     private static void EmitToken(ReadOnlySpan<byte> text, TokenClass cls, IBufferWriter<byte> writer)
     {
         var className = TokenClassNames.Css(cls);
-        if (className.Length == 0)
+        if (className.IsEmpty)
         {
             HtmlEscape.EscapeText(text, writer);
             return;

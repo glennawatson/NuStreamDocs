@@ -12,6 +12,7 @@ namespace NuStreamDocs.Plugins;
 /// is the raw markdown for the first preprocessor and the prior preprocessor's output for
 /// subsequent ones.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("PagePreRenderContext: {RelativePath}")]
 public readonly ref struct PagePreRenderContext
 {
     /// <summary>Initializes a new instance of the <see cref="PagePreRenderContext"/> struct.</summary>

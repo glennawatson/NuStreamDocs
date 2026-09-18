@@ -13,4 +13,5 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// other inputs don't cover.
 /// </summary>
 /// <param name="Source">The caller-built source.</param>
+[System.Diagnostics.DebuggerDisplay("CustomInput: {ToString(),nq}")]
 public sealed record CustomInput(IAssemblySource Source) : CSharpApiGeneratorInput;

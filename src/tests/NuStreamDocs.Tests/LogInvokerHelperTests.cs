@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Logging;
@@ -11,6 +12,18 @@ namespace NuStreamDocs.Tests;
 /// <summary>Coverage for LogInvokerHelper overloads.</summary>
 public class LogInvokerHelperTests
 {
+    /// <summary>Projection Input used by the test cases.</summary>
+    private const int ProjectionInput = 2;
+
+    /// <summary>Expected Calls used by the test cases.</summary>
+    private const int ExpectedCalls = 21;
+
+    /// <summary>Projection Multiplier used by the test cases.</summary>
+    private const int ProjectionMultiplier = 10;
+
+    /// <summary>Unexpected Call Count used by the test cases.</summary>
+    private const int UnexpectedCallCount = 99;
+
     /// <summary>One-arg overload runs the action when logging is enabled.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -37,22 +50,22 @@ public class LogInvokerHelperTests
     public async Task ProjectionRunsWhenEnabled()
     {
         var calls = 0;
-        LogInvokerHelper.Invoke<string, int, int, int>(
+        LogInvokerHelper.Invoke(
             new EnabledLogger(),
             LogLevel.Information,
             "k",
             1,
-            2,
+            ProjectionInput,
             ProjectEnabled,
             (_, _, _, p) => calls += p);
 
-        await Assert.That(calls).IsEqualTo(21);
+        await Assert.That(calls).IsEqualTo(ExpectedCalls);
         return;
 
         int ProjectEnabled(int x)
         {
             calls++;
-            return x * 10;
+            return x * ProjectionMultiplier;
         }
     }
 
@@ -62,12 +75,12 @@ public class LogInvokerHelperTests
     public async Task ProjectionSkippedWhenDisabled()
     {
         var calls = 0;
-        LogInvokerHelper.Invoke<string, int, int, int>(
+        LogInvokerHelper.Invoke(
             NullLogger.Instance,
             LogLevel.Information,
             "k",
             1,
-            2,
+            ProjectionInput,
             ProjectDisabled,
             (_, _, _, _) => calls = 1);
 
@@ -76,7 +89,7 @@ public class LogInvokerHelperTests
 
         int ProjectDisabled(int x)
         {
-            calls = 99;
+            calls = UnexpectedCallCount;
             return x;
         }
     }
@@ -85,11 +98,13 @@ public class LogInvokerHelperTests
     private sealed class EnabledLogger : ILogger
     {
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IDisposable? BeginScope<TState>(TState state)
             where TState : notnull =>
             null;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsEnabled(LogLevel logLevel) => true;
 
         /// <inheritdoc/>

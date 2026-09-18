@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -10,6 +11,9 @@ namespace NuStreamDocs.Tags.Tests;
 /// <summary>Branch-coverage tests for TagsIndexWriter.</summary>
 public class TagsIndexWriterTests
 {
+    /// <summary>Rendered URL of the introductory guide fixture.</summary>
+    private const string IntroUrl = "guide/intro.html";
+
     /// <summary>Empty input yields no files.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -26,9 +30,9 @@ public class TagsIndexWriterTests
     public async Task RelativePathToUrlPathBranches()
     {
         await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", false)))
-            .IsEqualTo("guide/intro.html");
+            .IsEqualTo(IntroUrl);
         await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.MD", false)))
-            .IsEqualTo("guide/intro.html");
+            .IsEqualTo(IntroUrl);
         await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/intro.md", true)))
             .IsEqualTo("guide/intro/");
         await Assert.That(Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath("guide/index.md", true)))
@@ -49,9 +53,9 @@ public class TagsIndexWriterTests
         using ScratchDir temp = new();
         TagEntry[] entries =
         [
-            new(Bytes("Alpha & Beta"), Bytes("guide/intro.html"), Bytes("<Title>")),
+            new(Bytes("Alpha & Beta"), Bytes(IntroUrl), Bytes("<Title>")),
             new(Bytes("Alpha & Beta"), Bytes("ref/api.html"), Bytes("API")),
-            new(Bytes("gamma"), Bytes("guide/intro.html"), Bytes("<Title>"))
+            new(Bytes("gamma"), Bytes(IntroUrl), Bytes("<Title>"))
         ];
         TagsIndexWriter.Write(temp.Root, TagsOptions.Default, entries);
         var tagsDir = Path.Combine(temp.Root, "tags");
@@ -81,6 +85,7 @@ public class TagsIndexWriterTests
     /// <summary>UTF-8 encodes <paramref name="value"/> for the byte-shaped <see cref="TagEntry"/> ctor.</summary>
     /// <param name="value">Source text.</param>
     /// <returns>UTF-8 byte array.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte[] Bytes(string value) => Encoding.UTF8.GetBytes(value);
 
     /// <summary>Disposable scratch directory.</summary>
@@ -89,8 +94,8 @@ public class TagsIndexWriterTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-tags-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-tags-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

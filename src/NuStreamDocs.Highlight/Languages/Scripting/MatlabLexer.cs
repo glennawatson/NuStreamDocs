@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Scripting;
@@ -59,12 +60,13 @@ public static class MatlabLexer
         Keywords = Keywords,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches a MATLAB <c>%{ ... %}</c> block comment.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchBlockComment(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchPairedBlockComment(slice, "%{"u8, "%}"u8);
 }

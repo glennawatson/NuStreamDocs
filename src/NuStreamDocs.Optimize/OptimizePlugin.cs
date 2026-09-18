@@ -11,8 +11,14 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Optimize;
 
 /// <summary>Plugin that emits precompressed (gzip / brotli) sibling files for every output whose extension is in the configured set.</summary>
+/// <param name="options">Asset compression settings.</param>
+/// <param name="logger">Logger for compression diagnostics.</param>
+[System.Diagnostics.DebuggerDisplay("OptimizePlugin: {Name}")]
 public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IBuildFinalizePlugin
 {
+    /// <summary>Initial asset capacity.</summary>
+    private const int InitialAssetCapacity = 256;
+
     /// <summary>The <c>.gz</c> filename suffix.</summary>
     private const string GzipSuffix = ".gz";
 
@@ -65,11 +71,7 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <returns>A task representing the asynchronous walk.</returns>
     internal async Task CompressTreeAsync(DirectoryPath outputRoot, CancellationToken cancellationToken)
     {
-        ParallelOptions parallelOptions = new()
-        {
-            CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = _options.Parallelism
-        };
+        ParallelOptions parallelOptions = new() { CancellationToken = cancellationToken, MaxDegreeOfParallelism = _options.Parallelism, };
 
         var eligible = EnumerateEligible(outputRoot);
         OptimizeLoggingHelper.LogOptimizeStart(_logger, eligible.Length, outputRoot.Value);
@@ -82,8 +84,8 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
                 async (path, ct) =>
                 {
                     var saved = await CompressOneAsync(path, ct).ConfigureAwait(false);
-                    Interlocked.Increment(ref processed);
-                    Interlocked.Add(ref bytesSaved, saved);
+                    _ = Interlocked.Increment(ref processed);
+                    _ = Interlocked.Add(ref bytesSaved, saved);
                 })
             .ConfigureAwait(false);
 
@@ -104,12 +106,12 @@ public sealed class OptimizePlugin(OptimizeOptions options, ILogger logger) : IB
     /// <returns>Eligible absolute paths.</returns>
     private FilePath[] EnumerateEligible(in DirectoryPath root)
     {
-        List<FilePath> buffer = new(256);
+        List<FilePath> buffer = [with(InitialAssetCapacity)];
         foreach (var info in new DirectoryInfo(root.Value).EnumerateFiles("*", SearchOption.AllDirectories))
         {
             var path = info.FullName;
-            if (path.EndsWith(GzipSuffix, StringComparison.OrdinalIgnoreCase) ||
-                path.EndsWith(BrotliSuffix, StringComparison.OrdinalIgnoreCase))
+            if (path.EndsWith(GzipSuffix, StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(BrotliSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }

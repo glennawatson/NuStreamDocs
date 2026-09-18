@@ -8,8 +8,8 @@ namespace NuStreamDocs.Transitions;
 public enum TransitionAnimation
 {
     /// <summary>A short cross-fade of the page root.</summary>
-    Fade,
+    Fade = 0,
 
     /// <summary>No animation — the swap is instant even where the View Transitions API is available.</summary>
-    None
+    None = 1,
 }

@@ -15,32 +15,38 @@ namespace NuStreamDocs.Common;
     Justification = "Utf8JsonReader is a ref struct; mutating its position requires a ref parameter.")]
 public static class Utf8JsonReaderByteExtensions
 {
-    /// <summary>Returns the current string token's UTF-8 bytes as a fresh array.</summary>
-    /// <param name="reader">Reader positioned on a <see cref="JsonTokenType.String"/> token.</param>
-    /// <returns>A copy of the token's UTF-8 bytes.</returns>
-    public static byte[] CopyStringValueBytes(this ref Utf8JsonReader reader) =>
-        reader.HasValueSequence ? CopySequence(reader.ValueSequence) : reader.ValueSpan.ToArray();
+    /// <summary>Initial capacity for short JSON string arrays.</summary>
+    private const int InitialArrayCapacity = 4;
 
-    /// <summary>Reads a JSON array of strings as UTF-8 byte snapshots, advancing past the closing bracket.</summary>
-    /// <param name="reader">Reader positioned just before the array's opening bracket.</param>
-    /// <returns>The parsed bytes; one entry per JSON string. Returns an empty array when the next token isn't an array start.</returns>
-    public static byte[][] ReadStringArrayAsBytes(this ref Utf8JsonReader reader)
+    /// <summary>Extension members for <c>Utf8JsonReader</c>.</summary>
+    /// <param name="reader"></param>
+    extension(ref Utf8JsonReader reader)
     {
-        if (!reader.Read() || reader.TokenType != JsonTokenType.StartArray)
-        {
-            return [];
-        }
+        /// <summary>Returns the current string token's UTF-8 bytes as a fresh array.</summary>
+        /// <returns>A copy of the token's UTF-8 bytes.</returns>
+        public byte[] CopyStringValueBytes() =>
+            reader.HasValueSequence ? CopySequence(reader.ValueSequence) : reader.ValueSpan.ToArray();
 
-        List<byte[]> values = new(4);
-        while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+        /// <summary>Reads a JSON array of strings as UTF-8 byte snapshots, advancing past the closing bracket.</summary>
+        /// <returns>The parsed bytes; one entry per JSON string. Returns an empty array when the next token isn't an array start.</returns>
+        public byte[][] ReadStringArrayAsBytes()
         {
-            if (reader.TokenType == JsonTokenType.String)
+            if (!reader.Read() || reader.TokenType != JsonTokenType.StartArray)
             {
-                values.Add(reader.CopyStringValueBytes());
+                return [];
             }
-        }
 
-        return [.. values];
+            List<byte[]> values = [with(InitialArrayCapacity)];
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+            {
+                if (reader.TokenType == JsonTokenType.String)
+                {
+                    values.Add(reader.CopyStringValueBytes());
+                }
+            }
+
+            return [.. values];
+        }
     }
 
     /// <summary>Copies a multi-segment <see cref="ReadOnlySequence{T}"/> into a single right-sized array.</summary>

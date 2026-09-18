@@ -7,9 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
-/// <summary>
-/// Emits a literate-nav <c>.pages</c> override that pins blog posts in publish-date-descending order.
-/// </summary>
+/// <summary>Emits a literate-nav <c>.pages</c> override that pins blog posts in publish-date-descending order.</summary>
 public static class BlogPagesFileEmitter
 {
     /// <summary>Initial byte capacity for the rendered <c>.pages</c> file.</summary>

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.CriticMarkup;
@@ -19,10 +20,14 @@ internal static class CriticMarkupRewriter
     /// <summary>Offset of the trailing <c>}</c> within a close-marker triple (e.g. <c>++}</c>).</summary>
     private const int CloseBraceOffset = 2;
 
+    /// <summary>Gets the opening tag for deleted text.</summary>
+    private static ReadOnlySpan<byte> DeleteOpenTag => "<del>"u8;
+
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
         CodeAwareRewriter.Run(source, writer, TryRewriteSpan);
 
     /// <summary>Tries to match a CriticMarkup span at <paramref name="offset"/>.</summary>
@@ -132,6 +137,9 @@ internal static class CriticMarkupRewriter
                     writer.Write("</span>"u8);
                     return;
                 }
+
+            default:
+                break;
         }
 
         writer.Write(OpenTagFor(marker));
@@ -148,13 +156,13 @@ internal static class CriticMarkupRewriter
         if (arrow < 0)
         {
             // Bare {~~text~~} with no arrow — render as a plain delete.
-            writer.Write("<del>"u8);
+            writer.Write(DeleteOpenTag);
             writer.Write(content);
             writer.Write("</del>"u8);
             return;
         }
 
-        writer.Write("<del>"u8);
+        writer.Write(DeleteOpenTag);
         writer.Write(content[..arrow]);
         writer.Write("</del><ins>"u8);
         writer.Write(content[(arrow + SubstituteArrowLength)..]);
@@ -167,7 +175,7 @@ internal static class CriticMarkupRewriter
     private static ReadOnlySpan<byte> OpenTagFor(CriticMarker marker) => marker switch
     {
         CriticMarker.Insert => "<ins>"u8,
-        CriticMarker.Delete => "<del>"u8,
+        CriticMarker.Delete => DeleteOpenTag,
         _ => "<mark>"u8
     };
 

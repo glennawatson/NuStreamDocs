@@ -25,7 +25,7 @@ internal static class JsonContentMapper
     /// <param name="logger">Logger for diagnostics.</param>
     /// <returns>The produced pages, in document order.</returns>
     /// <exception cref="ContentLoaderException">When the JSON is malformed or the route template is unbalanced.</exception>
-    public static SyntheticPage[] Map(
+    internal static SyntheticPage[] Map(
         byte[] json,
         ContentMapping mapping,
         ReadOnlySpan<byte> loaderName,
@@ -462,7 +462,7 @@ internal static class JsonContentMapper
 
         /// <summary>Initializes a new instance of the <see cref="RenderBuffers"/> class.</summary>
         /// <param name="placeholderCount">Number of placeholder slots to track.</param>
-        public RenderBuffers(int placeholderCount) => _slots = new (int, int)[placeholderCount];
+        public RenderBuffers(int placeholderCount) => _slots = new (int Start, int Length)[placeholderCount];
 
         /// <summary>Gets the Markdown output buffer.</summary>
         public ArrayBufferWriter<byte> Markdown { get; } = new(InitialMarkdownCapacity);

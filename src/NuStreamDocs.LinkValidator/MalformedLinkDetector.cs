@@ -30,10 +30,7 @@ public static class MalformedLinkDetector
     /// <summary>Gets the UTF-8 bytes of the double-slash sequence (<c>//</c>).</summary>
     private static ReadOnlySpan<byte> DoubleSlash => "//"u8;
 
-    /// <summary>
-    /// Returns a diagnostic when <paramref name="href"/> is structurally malformed, or
-    /// <see cref="DiagnosticMessage.None"/> when the shape looks well-formed.
-    /// </summary>
+    /// <summary>Returns a diagnostic when <paramref name="href"/> is structurally malformed, or <see cref="DiagnosticMessage.None"/> when the shape looks well-formed.</summary>
     /// <param name="href">UTF-8 bytes of the raw href (no <c>#fragment</c> stripping required).</param>
     /// <returns>The diagnostic message, or <see cref="DiagnosticMessage.None"/> on a clean href.</returns>
     public static DiagnosticMessage Inspect(ReadOnlySpan<byte> href)
@@ -52,10 +49,7 @@ public static class MalformedLinkDetector
         return path.IndexOf(DoubleSlash) >= 0 ? DoubleSlashMessage : DiagnosticMessage.None;
     }
 
-    /// <summary>
-    /// Strips a leading <c>scheme://host</c> from <paramref name="href"/> so the double-slash
-    /// scan only inspects the path portion.
-    /// </summary>
+    /// <summary>Strips a leading <c>scheme://host</c> from <paramref name="href"/> so the double-slash scan only inspects the path portion.</summary>
     /// <param name="href">UTF-8 href bytes.</param>
     /// <returns>The path slice; the input verbatim when no scheme is present.</returns>
     private static ReadOnlySpan<byte> StripScheme(ReadOnlySpan<byte> href)

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Mermaid</PackageId>
     <Description>Render Mermaid diagrams (flowcharts, sequence diagrams, class diagrams, …) from fenced ```mermaid blocks in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Mermaid</RootNamespace>

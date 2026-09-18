@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
@@ -13,6 +14,7 @@ namespace NuStreamDocs.Highlight;
 /// case-insensitive variants are supported; case-insensitive entries must be
 /// supplied lowercase.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("ByteKeywordSet: {FirstByteSet}")]
 public sealed class ByteKeywordSet
 {
     /// <summary>Empty bucket used as a sentinel for unused length slots.</summary>
@@ -41,16 +43,19 @@ public sealed class ByteKeywordSet
     /// <summary>Builds a case-sensitive set from the supplied UTF-8 keywords. Pass <c>[.. "name"u8]</c> or <c>[.. "name"u8]</c> per entry.</summary>
     /// <param name="keywords">Keyword bytes; each entry must be non-empty.</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet Create(params byte[][] keywords) => Build(keywords, false);
 
     /// <summary>Builds a case-insensitive set; entries must already be lowercase ASCII.</summary>
     /// <param name="lowercaseKeywords">Lowercase UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateIgnoreCase(params byte[][] lowercaseKeywords) => Build(lowercaseKeywords, true);
 
     /// <summary>Builds a case-sensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab.</summary>
     /// <param name="spaceSeparated">Whitespace-delimited UTF-8 keyword bytes (e.g. <c>"if else for"u8</c>).</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateFromSpaceSeparated(ReadOnlySpan<byte> spaceSeparated) =>
         Build(SplitSpaceSeparated(spaceSeparated), false);
 
@@ -58,6 +63,7 @@ public sealed class ByteKeywordSet
     /// <param name="spaceSeparatedFirst">First chunk of whitespace-delimited UTF-8 keyword bytes.</param>
     /// <param name="spaceSeparatedSecond">Second chunk of whitespace-delimited UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateFromSpaceSeparated(
         ReadOnlySpan<byte> spaceSeparatedFirst,
         ReadOnlySpan<byte> spaceSeparatedSecond) =>
@@ -68,6 +74,7 @@ public sealed class ByteKeywordSet
     /// <param name="spaceSeparatedSecond">Second chunk.</param>
     /// <param name="spaceSeparatedThird">Third chunk.</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateFromSpaceSeparated(
         ReadOnlySpan<byte> spaceSeparatedFirst,
         ReadOnlySpan<byte> spaceSeparatedSecond,
@@ -80,6 +87,7 @@ public sealed class ByteKeywordSet
     /// <param name="spaceSeparatedThird">Third chunk.</param>
     /// <param name="spaceSeparatedFourth">Fourth chunk.</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateFromSpaceSeparated(
         ReadOnlySpan<byte> spaceSeparatedFirst,
         ReadOnlySpan<byte> spaceSeparatedSecond,
@@ -92,6 +100,7 @@ public sealed class ByteKeywordSet
     /// <summary>Builds a case-insensitive set from a single UTF-8 byte literal whose entries are separated by ASCII space or tab; entries must already be lowercase ASCII.</summary>
     /// <param name="spaceSeparatedLowercase">Whitespace-delimited lowercase UTF-8 keyword bytes (e.g. <c>"select from where"u8</c>).</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(ReadOnlySpan<byte> spaceSeparatedLowercase) =>
         Build(SplitSpaceSeparated(spaceSeparatedLowercase), true);
 
@@ -99,6 +108,7 @@ public sealed class ByteKeywordSet
     /// <param name="spaceSeparatedLowercaseFirst">First chunk of whitespace-delimited lowercase UTF-8 keyword bytes.</param>
     /// <param name="spaceSeparatedLowercaseSecond">Second chunk of whitespace-delimited lowercase UTF-8 keyword bytes.</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(
         ReadOnlySpan<byte> spaceSeparatedLowercaseFirst,
         ReadOnlySpan<byte> spaceSeparatedLowercaseSecond) =>
@@ -109,6 +119,7 @@ public sealed class ByteKeywordSet
     /// <param name="spaceSeparatedLowercaseSecond">Second chunk.</param>
     /// <param name="spaceSeparatedLowercaseThird">Third chunk.</param>
     /// <returns>Built set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ByteKeywordSet CreateFromSpaceSeparatedIgnoreCase(
         ReadOnlySpan<byte> spaceSeparatedLowercaseFirst,
         ReadOnlySpan<byte> spaceSeparatedLowercaseSecond,
@@ -142,6 +153,7 @@ public sealed class ByteKeywordSet
     /// <summary>Splits a UTF-8 byte span on ASCII space / tab, skipping empty runs.</summary>
     /// <param name="source">Source bytes.</param>
     /// <returns>Per-token byte arrays.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte[][] SplitSpaceSeparated(ReadOnlySpan<byte> source) =>
         WhitespaceSplitter.Split(source);
 
@@ -236,6 +248,7 @@ public sealed class ByteKeywordSet
     /// <param name="keywords">Keyword bytes.</param>
     /// <param name="ignoreCase">Whether to use ASCII case-fold compare.</param>
     /// <returns>Built set.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>kw is null or []</c>.</exception>
     private static ByteKeywordSet Build(byte[][] keywords, bool ignoreCase)
     {
         if (keywords.Length is 0)
@@ -274,7 +287,8 @@ public sealed class ByteKeywordSet
         for (var i = 0; i < keywords.Length; i++)
         {
             var kw = keywords[i];
-            byLength[kw.Length][cursors[kw.Length]++] = kw;
+            byLength[kw.Length][cursors[kw.Length]] = kw;
+            cursors[kw.Length]++;
         }
 
         return new(byLength, ignoreCase, BuildFirstByteSet(keywords, ignoreCase));
@@ -329,10 +343,13 @@ public sealed class ByteKeywordSet
         var idx = 0;
         for (var b = 0; b < seen.Length; b++)
         {
-            if (seen[b])
+            if (!seen[b])
             {
-                result[idx++] = (byte)b;
+                continue;
             }
+
+            result[idx] = (byte)b;
+            idx++;
         }
 
         return SearchValues.Create(result);

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
@@ -33,13 +34,15 @@ internal static class AssetAttributeBytes
     /// <param name="ctx">URL-rewrite context (filter + registry).</param>
     /// <param name="sink">UTF-8 sink the rewritten output lands in.</param>
     /// <returns>True when at least one URL was rewritten; false when the input passed through unchanged.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink) =>
         UrlScanLoop.Run(html, AttrStart, sink, ctx, TryRewriteAt);
 
     /// <summary>Walks <paramref name="html"/> in audit mode, recording matched URLs in <paramref name="audit"/> without modifying the page.</summary>
     /// <param name="html">UTF-8 page HTML.</param>
     /// <param name="audit">Audit collector.</param>
-    public static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void AuditInto(ReadOnlySpan<byte> html, UrlAuditContext audit) =>
         UrlScanLoop.RunAudit(html, AttrStart, audit, TryAuditAt);
 
     /// <summary>Attempts to rewrite an asset-attribute URL at <paramref name="p"/>; emits prefix + rewritten URL into <paramref name="sink"/> when localized.</summary>
@@ -113,7 +116,7 @@ internal static class AssetAttributeBytes
         var urlBytes = html[urlStart..urlEnd];
         if (audit.Filter.ShouldLocalize(urlBytes))
         {
-            audit.Set.TryAdd(urlBytes.ToArray(), 0);
+            _ = audit.Set.TryAdd(urlBytes.ToArray(), 0);
         }
 
         advanceTo = urlEnd;

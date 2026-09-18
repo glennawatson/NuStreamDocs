@@ -82,7 +82,7 @@ public class SmartSymbolsRewriterBranchTests
         await Assert.That(Rewrite("1/9")).IsEqualTo("1/9");
     }
 
-    /// <summary>c/o requires word boundary on both sides.</summary>
+    /// <summary>C/o requires word boundary on both sides.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CareOfBoundary()

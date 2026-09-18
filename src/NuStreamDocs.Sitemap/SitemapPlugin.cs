@@ -13,6 +13,7 @@ namespace NuStreamDocs.Sitemap;
 /// <c>sitemap.xml</c> plus <c>robots.txt</c> to the output root.
 /// Requires <c>site_url</c> in the config; otherwise no-ops.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("SitemapPlugin: {Name}")]
 public sealed class SitemapPlugin : IBuildConfigurePlugin, IPageScanPlugin, IBuildFinalizePlugin
 {
     /// <summary>Collected UTF-8 URL bytes per page.</summary>

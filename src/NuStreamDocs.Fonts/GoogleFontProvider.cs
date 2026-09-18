@@ -13,13 +13,13 @@ public sealed class GoogleFontProvider : IFontProvider
     /// <summary>Shared instance.</summary>
     public static readonly GoogleFontProvider Instance = new();
 
-    /// <summary>UTF-8 subset name meaning "every subset the provider offers".</summary>
-    private static readonly byte[] AllSubsets = [.. "all"u8];
-
     /// <summary>Initializes a new instance of the <see cref="GoogleFontProvider"/> class.</summary>
     private GoogleFontProvider()
     {
     }
+
+    /// <summary>Gets the subset name requesting every available subset.</summary>
+    private static ReadOnlySpan<byte> AllSubsets => "all"u8;
 
     /// <inheritdoc/>
     public async ValueTask<FontResource[]> ResolveAsync(
@@ -33,8 +33,8 @@ public sealed class GoogleFontProvider : IFontProvider
         _ = inputRoot;
         ArgumentNullException.ThrowIfNull(cache);
 
-        var keepAll = requestedSubsets is [] ||
-                      (requestedSubsets is [var only] && only.AsSpan().SequenceEqual(AllSubsets));
+        var keepAll = requestedSubsets is []
+                      || (requestedSubsets is [var only] && only.AsSpan().SequenceEqual(AllSubsets));
         var cssBytes = await cache.GetAsync(BuildStylesheetUrl(face), cancellationToken).ConfigureAwait(false);
         var parsed = Css2StylesheetParser.Parse(cssBytes);
         List<FontResource> resources = [];
@@ -46,8 +46,8 @@ public sealed class GoogleFontProvider : IFontProvider
                 continue;
             }
 
-            if (subsetUsage is not null && entry.UnicodeRange is [_, ..] &&
-                !UnicodeRangeMatcher.Overlaps(entry.UnicodeRange, subsetUsage))
+            if (subsetUsage is not null && entry.UnicodeRange is [_, ..]
+                && !UnicodeRangeMatcher.Overlaps(entry.UnicodeRange, subsetUsage))
             {
                 // auto mode: this subset covers nothing the site uses — don't even download it.
                 continue;
@@ -73,7 +73,7 @@ public sealed class GoogleFontProvider : IFontProvider
     internal static ApiCompatString BuildStylesheetUrl(in FontFace face)
     {
         var sb = new StringBuilder("https://fonts.googleapis.com/css2?family=");
-        sb.Append(Encoding.UTF8.GetString(face.FamilyBytes).Replace(' ', '+'));
+        _ = sb.Append(Encoding.UTF8.GetString(face.FamilyBytes).Replace(' ', '+'));
 
         var hasItalic = false;
         for (var i = 0; i < face.Styles.Length; i++)
@@ -83,7 +83,7 @@ public sealed class GoogleFontProvider : IFontProvider
 
         var weights = face.Weights;
         Array.Sort(weights);
-        sb.Append(hasItalic ? ":ital,wght@" : ":wght@");
+        _ = sb.Append(hasItalic ? ":ital,wght@" : ":wght@");
         var first = true;
         for (var ital = 0; ital <= (hasItalic ? 1 : 0); ital++)
         {
@@ -91,20 +91,20 @@ public sealed class GoogleFontProvider : IFontProvider
             {
                 if (!first)
                 {
-                    sb.Append(';');
+                    _ = sb.Append(';');
                 }
 
                 first = false;
                 if (hasItalic)
                 {
-                    sb.Append(ital).Append(',');
+                    _ = sb.Append(ital).Append(',');
                 }
 
-                sb.Append(weights[w]);
+                _ = sb.Append(weights[w]);
             }
         }
 
-        sb.Append("&display=").Append(DisplayToken(face.Display));
+        _ = sb.Append("&display=").Append(DisplayToken(face.Display));
         return sb.ToString();
     }
 

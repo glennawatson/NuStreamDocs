@@ -9,12 +9,15 @@ namespace NuStreamDocs.Tests;
 /// <summary>Equality coverage for PageBuilderRental.</summary>
 public class PageBuilderRentalEqualityTests
 {
+    /// <summary>Initial Capacity used by the test cases.</summary>
+    private const int InitialCapacity = 16;
+
     /// <summary>Two rentals owning the same writer compare equal.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SameWriterEquals()
     {
-        using var a = PageBuilderPool.Rent(16);
+        using var a = PageBuilderPool.Rent(InitialCapacity);
         var b = a;
         await Assert.That(a == b).IsTrue();
         await Assert.That(a != b).IsFalse();
@@ -28,8 +31,8 @@ public class PageBuilderRentalEqualityTests
     [Test]
     public async Task DifferentWriterNotEqual()
     {
-        using var a = PageBuilderPool.Rent(16);
-        using var b = PageBuilderPool.Rent(16);
+        using var a = PageBuilderPool.Rent(InitialCapacity);
+        using var b = PageBuilderPool.Rent(InitialCapacity);
         await Assert.That(a != b).IsTrue();
         await Assert.That(a.Equals((object?)null)).IsFalse();
         await Assert.That(a.Equals((object)"not a rental")).IsFalse();

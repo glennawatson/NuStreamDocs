@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Fonts;
@@ -19,7 +18,7 @@ namespace NuStreamDocs.Fonts;
 /// <param name="Fallback">Generic fallback family; also picks the system reference font for the CLS overrides.</param>
 /// <param name="LocalSrc">Glob patterns (relative to the input root) for the files; only used when <see cref="Provider"/> is <see cref="FontProviderKind.Local"/>.</param>
 /// <param name="ThemeVariables">UTF-8 names of CSS custom properties this face should drive (each set to <c>var(--nstd-font-&lt;id&gt;)</c>).</param>
-[SuppressMessage("Major Code Smell", "S107", Justification = "A font-face declaration has this many orthogonal knobs.")]
+[System.Diagnostics.DebuggerDisplay("FontFace: {ToString(),nq}")]
 public readonly record struct FontFace(
     byte[] Id,
     byte[] FamilyBytes,

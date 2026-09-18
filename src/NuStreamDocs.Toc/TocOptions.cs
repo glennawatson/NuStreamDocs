@@ -9,6 +9,7 @@ namespace NuStreamDocs.Toc;
 /// <param name="MaxLevel">Maximum heading level (inclusive) to include in the rendered TOC fragment.</param>
 /// <param name="PermalinkSymbol">Glyph used inside the permalink anchor (e.g. <c>¶</c>, <c>#</c>). Rendered as the anchor's inner text.</param>
 /// <param name="MarkerSubstitute">When true, <see cref="TocPlugin"/> looks for <c>&lt;!--@@toc@@--&gt;</c> in the rendered HTML and replaces it with the rendered TOC fragment.</param>
+[System.Diagnostics.DebuggerDisplay("TocOptions: {ToString(),nq}")]
 public readonly record struct TocOptions(
     int MinLevel,
     int MaxLevel,

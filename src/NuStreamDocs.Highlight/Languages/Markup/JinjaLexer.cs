@@ -20,6 +20,6 @@ public static class JinjaLexer
         ExpressionOpen = [.. "{{"u8],
         ExpressionClose = [.. "}}"u8],
         CommentOpen = [.. "{#"u8],
-        CommentClose = [.. "#}"u8]
+        CommentClose = [.. "#}"u8],
     });
 }

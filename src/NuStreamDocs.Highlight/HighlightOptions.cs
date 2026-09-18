@@ -7,9 +7,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Highlight;
 
-/// <summary>
-/// Configuration for <see cref="HighlightPlugin"/>.
-/// </summary>
+/// <summary>Configuration for <see cref="HighlightPlugin"/>.</summary>
 /// <param name="ExtraLexers">Caller-supplied lexers registered alongside the built-ins.</param>
 /// <param name="WrapInHighlightDiv">Wrap each block in <c>&lt;div class="highlight"&gt;</c> (mkdocs-material convention).</param>
 /// <param name="EmitTitleBar">When a fence has <c>title="..."</c>, render it as <c>&lt;span class="filename"&gt;</c>; needs <c>WrapInHighlightDiv</c>.</param>
@@ -19,6 +17,7 @@ namespace NuStreamDocs.Highlight;
 /// high-confidence matches receive a <c>class="language-X"</c> attribute. Default off.
 /// </param>
 /// <param name="DetectionLanguages">Optional allow-list of language aliases the auto-detector may select (e.g. <c>"csharp"u8</c>). Empty array means "consider every registered lexer".</param>
+[System.Diagnostics.DebuggerDisplay("HighlightOptions: {ToString(),nq}")]
 public sealed record HighlightOptions(
     in LexerNameValue[] ExtraLexers,
     bool WrapInHighlightDiv,

@@ -24,7 +24,7 @@ internal static class InlineStyleBlockBytes
     /// <param name="ctx">URL-rewrite context.</param>
     /// <param name="sink">UTF-8 sink.</param>
     /// <returns>True when at least one URL inside an inline-style body was rewritten.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink)
+    internal static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink)
     {
         var changed = false;
         var lastEmit = 0;
@@ -37,8 +37,7 @@ internal static class InlineStyleBlockBytes
                 break;
             }
 
-            var p = cursor + rel;
-            if (TryRewriteBlock(html, p, ctx, sink, ref lastEmit, out var advanceTo))
+            if (TryRewriteBlock(html, cursor + rel, ctx, sink, ref lastEmit, out var advanceTo))
             {
                 changed = true;
             }

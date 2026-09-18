@@ -15,6 +15,12 @@ namespace NuStreamDocs.Versions;
 /// </summary>
 public static class VersionsManifest
 {
+    /// <summary>Initial version capacity.</summary>
+    private const int InitialVersionCapacity = 8;
+
+    /// <summary>Initial manifest capacity.</summary>
+    private const int InitialManifestCapacity = 256;
+
     /// <summary>Gets the on-disk filename.</summary>
     public static string FileName => "versions.json";
 
@@ -32,7 +38,7 @@ public static class VersionsManifest
     /// <returns>The parsed entries.</returns>
     public static VersionEntry[] ReadFromUtf8(ReadOnlySpan<byte> bytes)
     {
-        List<VersionEntry> entries = new(8);
+        List<VersionEntry> entries = [with(InitialVersionCapacity)];
         Utf8JsonReader reader = new(bytes, true, default);
         if (!reader.Read() || reader.TokenType != JsonTokenType.StartArray)
         {
@@ -53,9 +59,9 @@ public static class VersionsManifest
     public static void Write(in DirectoryPath parentDir, VersionEntry[] entries)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parentDir.Value);
-        Directory.CreateDirectory(parentDir);
+        _ = Directory.CreateDirectory(parentDir);
 
-        ArrayBufferWriter<byte> sink = new(256);
+        ArrayBufferWriter<byte> sink = new(InitialManifestCapacity);
         WriteToUtf8(entries, sink);
         File.WriteAllBytes(Path.Combine(parentDir, FileName), sink.WrittenSpan);
     }
@@ -84,7 +90,7 @@ public static class VersionsManifest
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(entry.Version);
 
-        List<VersionEntry> merged = new(existing.Length + 1);
+        List<VersionEntry> merged = [with(existing.Length + 1)];
         var replaced = false;
         for (var i = 0; i < existing.Length; i++)
         {
@@ -124,12 +130,12 @@ public static class VersionsManifest
 
             if (reader.ValueTextEquals("version"u8))
             {
-                reader.Read();
+                _ = reader.Read();
                 version = reader.GetString() ?? string.Empty;
             }
             else if (reader.ValueTextEquals("title"u8))
             {
-                reader.Read();
+                _ = reader.Read();
                 title = reader.GetString() ?? string.Empty;
             }
             else if (reader.ValueTextEquals("aliases"u8))
@@ -138,7 +144,7 @@ public static class VersionsManifest
             }
             else
             {
-                reader.Read();
+                _ = reader.Read();
                 reader.Skip();
             }
         }

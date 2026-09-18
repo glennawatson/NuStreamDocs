@@ -8,6 +8,7 @@ using NuStreamDocs.Theme.Common;
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Resolves Material Design Icon names to inline 24×24 SVG markup.</summary>
+[System.Diagnostics.DebuggerDisplay("MdiIconResolver: {_customLookup}")]
 public sealed class MdiIconResolver : IIconResolver
 {
     /// <summary>Optional user-supplied lookup; <c>null</c> means route through the generated catalogue.</summary>

@@ -24,15 +24,14 @@ internal static class MermaidRetagger
     /// <summary>Returns true when <paramref name="html"/> contains at least one mermaid block.</summary>
     /// <param name="html">Page HTML span.</param>
     /// <returns>True when the open marker is present.</returns>
-    public static bool NeedsRetag(ReadOnlySpan<byte> html) => html.IndexOf(OpenMarker) >= 0;
+    internal static bool NeedsRetag(ReadOnlySpan<byte> html) => html.IndexOf(OpenMarker) >= 0;
 
     /// <summary>Retags every mermaid block in <paramref name="html"/> directly into <paramref name="output"/>.</summary>
     /// <param name="html">Page HTML span.</param>
     /// <param name="output">Destination sink for the rewritten HTML.</param>
-    public static void Retag(ReadOnlySpan<byte> html, IBufferWriter<byte> output)
+    internal static void Retag(ReadOnlySpan<byte> html, IBufferWriter<byte> output)
     {
-        var i = 0;
-        while (i < html.Length)
+        for (var i = 0; i < html.Length; i += CloseMarker.Length)
         {
             var rel = html[i..].IndexOf(OpenMarker);
             if (rel < 0)
@@ -55,7 +54,7 @@ internal static class MermaidRetagger
             output.Write(NewOpen);
             output.Write(html.Slice(i, closeRel));
             output.Write(NewClose);
-            i += closeRel + CloseMarker.Length;
+            i += closeRel;
         }
     }
 }

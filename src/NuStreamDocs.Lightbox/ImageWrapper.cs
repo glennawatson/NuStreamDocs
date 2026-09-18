@@ -14,6 +14,7 @@ public static class ImageWrapper
     /// <param name="selector">UTF-8 class name applied to the wrapping anchor.</param>
     /// <param name="sink">UTF-8 sink.</param>
     /// <returns>The number of images that were wrapped.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>selector.IsEmpty</c>.</exception>
     public static int Rewrite(ReadOnlySpan<byte> source, ReadOnlySpan<byte> selector, IBufferWriter<byte> sink)
     {
         if (selector.IsEmpty)

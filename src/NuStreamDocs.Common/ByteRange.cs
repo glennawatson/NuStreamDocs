@@ -12,6 +12,7 @@ namespace NuStreamDocs.Common;
 /// </summary>
 /// <param name="Start">Inclusive start offset into the snapshot.</param>
 /// <param name="Length">Byte length of the matched span.</param>
+[System.Diagnostics.DebuggerDisplay("ByteRange: {IsEmpty}")]
 public readonly record struct ByteRange(int Start, int Length)
 {
     /// <summary>Gets a value indicating whether the range covers any bytes.</summary>

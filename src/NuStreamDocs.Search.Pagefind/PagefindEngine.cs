@@ -7,6 +7,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Search.Pagefind;
 
 /// <summary>Pagefind-format <see cref="ISearchEngine"/> implementation; the actual index is produced by the Pagefind CLI from rendered HTML.</summary>
+[System.Diagnostics.DebuggerDisplay("PagefindEngine: {FormatName}")]
 public sealed class PagefindEngine : ISearchEngine
 {
     /// <summary>Stateless singleton instance.</summary>

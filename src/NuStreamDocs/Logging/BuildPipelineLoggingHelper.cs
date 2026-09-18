@@ -6,10 +6,7 @@ using System.Text;
 
 namespace NuStreamDocs.Logging;
 
-/// <summary>
-/// Source-generated <see cref="ILogger"/> messages for the
-/// <see cref="NuStreamDocs.Building.BuildPipeline"/> driver.
-/// </summary>
+/// <summary>Source-generated <see cref="ILogger"/> messages for the <see cref="Building.BuildPipeline"/> driver.</summary>
 internal static partial class BuildPipelineLoggingHelper
 {
     /// <summary>Logs the build start and configuration summary.</summary>
@@ -19,7 +16,7 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="pluginCount">Number of registered plugins.</param>
     [LoggerMessage(Level = LogLevel.Information,
         Message = "Build starting: input={InputRoot} output={OutputRoot} plugins={PluginCount}")]
-    public static partial void LogBuildStart(ILogger logger, string inputRoot, string outputRoot, int pluginCount);
+    internal static partial void LogBuildStart(ILogger logger, string inputRoot, string outputRoot, int pluginCount);
 
     /// <summary>Logs the build end-of-run summary.</summary>
     /// <param name="logger">Target logger.</param>
@@ -29,24 +26,24 @@ internal static partial class BuildPipelineLoggingHelper
     [LoggerMessage(Level = LogLevel.Information,
         Message =
             "Build complete: {PageCount} page(s) processed, {CacheHits} cache hit(s), elapsed={ElapsedSeconds:F3}s")]
-    public static partial void LogBuildComplete(ILogger logger, int pageCount, int cacheHits, double elapsedSeconds);
+    internal static partial void LogBuildComplete(ILogger logger, int pageCount, int cacheHits, double elapsedSeconds);
 
     /// <summary>Logs entry into the configure phase before any plugin's <c>OnConfigureAsync</c> fires.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginCount">Number of plugins to configure.</param>
     [LoggerMessage(Level = LogLevel.Information, Message = "Configuring {PluginCount} plugin(s)...")]
-    public static partial void LogConfigureStart(ILogger logger, int pluginCount);
+    internal static partial void LogConfigureStart(ILogger logger, int pluginCount);
 
     /// <summary>Logs the start of one plugin's <c>OnConfigureAsync</c> hook (Debug — most plugins are no-ops on this hook so the per-plugin trail is too noisy at Info level).</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginName">Plugin name (<see cref="NuStreamDocs.Plugins.IPlugin.Name"/>).</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Configuring plugin: {PluginName}")]
-    public static partial void LogPluginConfigure(ILogger logger, string pluginName);
+    internal static partial void LogPluginConfigure(ILogger logger, string pluginName);
 
     /// <summary>UTF-8 byte overload for <see cref="LogPluginConfigure(ILogger, string)"/>; the encode step only runs when Debug is enabled.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginName">Plugin name as UTF-8 bytes.</param>
-    public static void LogPluginConfigure(ILogger logger, ReadOnlySpan<byte> pluginName)
+    internal static void LogPluginConfigure(ILogger logger, ReadOnlySpan<byte> pluginName)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
         {
@@ -60,7 +57,7 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="parallelism">Effective <see cref="System.Threading.Tasks.ParallelOptions.MaxDegreeOfParallelism"/>.</param>
     [LoggerMessage(Level = LogLevel.Information, Message = "Rendering pages (parallelism={Parallelism})...")]
-    public static partial void LogRenderStart(ILogger logger, int parallelism);
+    internal static partial void LogRenderStart(ILogger logger, int parallelism);
 
     /// <summary>Logs the end of the parallel render phase.</summary>
     /// <param name="logger">Target logger.</param>
@@ -68,30 +65,30 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="elapsedSeconds">Phase duration in seconds (three decimal places).</param>
     [LoggerMessage(Level = LogLevel.Information,
         Message = "Render complete: {PageCount} page(s) in {ElapsedSeconds:F3}s")]
-    public static partial void LogRenderComplete(ILogger logger, int pageCount, double elapsedSeconds);
+    internal static partial void LogRenderComplete(ILogger logger, int pageCount, double elapsedSeconds);
 
     /// <summary>Logs the docs static-asset copy step result.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="assetCount">Number of files copied from the input docs tree to the output site tree.</param>
     [LoggerMessage(Level = LogLevel.Information, Message = "Copied {AssetCount} static asset(s) from docs/ to site/")]
-    public static partial void LogAssetsCopied(ILogger logger, int assetCount);
+    internal static partial void LogAssetsCopied(ILogger logger, int assetCount);
 
     /// <summary>Logs entry into the finalize phase before any plugin's <c>OnFinalizeAsync</c> fires.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginCount">Number of plugins to finalize.</param>
     [LoggerMessage(Level = LogLevel.Information, Message = "Finalizing {PluginCount} plugin(s)...")]
-    public static partial void LogFinalizeStart(ILogger logger, int pluginCount);
+    internal static partial void LogFinalizeStart(ILogger logger, int pluginCount);
 
     /// <summary>Logs the start of one plugin's <c>OnFinalizeAsync</c> hook (Debug — most plugins are no-ops on this hook).</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginName">Plugin name.</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Finalizing plugin: {PluginName}")]
-    public static partial void LogPluginFinalize(ILogger logger, string pluginName);
+    internal static partial void LogPluginFinalize(ILogger logger, string pluginName);
 
     /// <summary>UTF-8 byte overload for <see cref="LogPluginFinalize(ILogger, string)"/>; the encode step only runs when Debug is enabled.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="pluginName">Plugin name as UTF-8 bytes.</param>
-    public static void LogPluginFinalize(ILogger logger, ReadOnlySpan<byte> pluginName)
+    internal static void LogPluginFinalize(ILogger logger, ReadOnlySpan<byte> pluginName)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
         {
@@ -106,5 +103,5 @@ internal static partial class BuildPipelineLoggingHelper
     /// <param name="relativePath">Page relative path.</param>
     /// <param name="cacheHit">True when the page was reused from the manifest.</param>
     [LoggerMessage(Level = LogLevel.Debug, Message = "Page processed: {RelativePath} (cacheHit={CacheHit})")]
-    public static partial void LogPageProcessed(ILogger logger, string relativePath, bool cacheHit);
+    internal static partial void LogPageProcessed(ILogger logger, string relativePath, bool cacheHit);
 }

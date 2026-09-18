@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.MarkdownExtensions</PackageId>
     <Description>Extra markdown features for your NuStreamDocs documentation — admonitions, content tabs, collapsible details, task-list checkboxes, highlighted text, footnotes, and definition lists.</Description>
     <RootNamespace>NuStreamDocs.MarkdownExtensions</RootNamespace>

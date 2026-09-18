@@ -11,6 +11,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Direct coverage for small core helpers that lack dedicated tests.</summary>
 public class CoverageBatchTests
 {
+    /// <summary>Output Byte Length used by the test cases.</summary>
+    private const long OutputByteLength = 42L;
+
     /// <summary><see cref="ContentHasher.Empty"/> returns an 8-byte zero-filled digest.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -38,12 +41,12 @@ public class CoverageBatchTests
     [Test]
     public async Task BuildManifestRoundTrip()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smkd-mf-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(dir);
+        var dir = Path.Combine(Path.GetTempPath(), $"smkd-mf-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(dir);
         try
         {
             var manifest = BuildManifest.Empty([.. "test-build"u8]);
-            manifest.Replace([new("a.md", new byte[ContentHasher.HashByteLength], 42L)]);
+            manifest.Replace([new("a.md", new byte[ContentHasher.HashByteLength], OutputByteLength)]);
             await manifest.SaveAsync(dir, CancellationToken.None);
             await Assert.That(manifest.Count).IsEqualTo(1);
 
@@ -61,9 +64,9 @@ public class CoverageBatchTests
     [Test]
     public async Task BuildPipelineRunAsyncOverloads()
     {
-        var input = Path.Combine(Path.GetTempPath(), "smkd-bp-in-" + Guid.NewGuid().ToString("N"));
-        var output = Path.Combine(Path.GetTempPath(), "smkd-bp-out-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(input);
+        var input = Path.Combine(Path.GetTempPath(), $"smkd-bp-in-{Guid.NewGuid():N}");
+        var output = Path.Combine(Path.GetTempPath(), $"smkd-bp-out-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(input);
         try
         {
             await BuildPipeline.RunAsync(input, output, []);
@@ -88,8 +91,8 @@ public class CoverageBatchTests
     [Test]
     public async Task PageDiscoveryEnumerateAsync()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smkd-pd-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(dir);
+        var dir = Path.Combine(Path.GetTempPath(), $"smkd-pd-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(dir);
         try
         {
             var count = 0;

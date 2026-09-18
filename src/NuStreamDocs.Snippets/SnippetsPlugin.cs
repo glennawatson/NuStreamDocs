@@ -17,6 +17,7 @@ namespace NuStreamDocs.Snippets;
 /// Recursive includes are bounded; missing files render as a fenced-code
 /// error block.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("SnippetsPlugin: {Name}")]
 public sealed class SnippetsPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
 {
     /// <summary>Optional override for the snippet base directory; empty means use the build's input root.</summary>
@@ -26,7 +27,7 @@ public sealed class SnippetsPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
     private DirectoryPath _baseDirectory;
 
     /// <summary>Build-scoped cache of resolved snippet bytes, keyed by include-path bytes.</summary>
-    private Dictionary<byte[], byte[]> _fileCache = new(ByteArrayComparer.Instance);
+    private Dictionary<byte[], byte[]> _fileCache = [with(ByteArrayComparer.Instance)];
 
     /// <summary>Initializes a new instance of the <see cref="SnippetsPlugin"/> class with no base-directory override (defaults to the build's docs root).</summary>
     public SnippetsPlugin()
@@ -51,7 +52,7 @@ public sealed class SnippetsPlugin : IBuildConfigurePlugin, IPagePreRenderPlugin
     public ValueTask ConfigureAsync(BuildConfigureContext context, CancellationToken cancellationToken)
     {
         _baseDirectory = _baseDirectoryOverride.IsEmpty ? context.InputRoot : _baseDirectoryOverride;
-        _fileCache = new(ByteArrayComparer.Instance);
+        _fileCache = [with(ByteArrayComparer.Instance)];
         _ = cancellationToken;
         return ValueTask.CompletedTask;
     }

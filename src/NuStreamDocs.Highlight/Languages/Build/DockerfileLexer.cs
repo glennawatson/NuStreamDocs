@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Build;
@@ -67,34 +68,16 @@ public static class DockerfileLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            },
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            },
-            new(MatchInstructionAtLineStart, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
-            {
-                FirstBytes = InstructionFirst, RequiresLineStart = true
-            },
-            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = DoubleQuoteFirst
-            },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
+            new(MatchInstructionAtLineStart, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = InstructionFirst, RequiresLineStart = true, },
+            new(TokenMatchers.MatchDoubleQuotedWithBackslashEscape, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = DoubleQuoteFirst, },
             new(
                 static slice => TokenMatchers.MatchQuotedWithBackslashEscape(slice, (byte)'\''),
                 TokenClass.StringSingle,
                 LexerRule.NoStateChange) { FirstBytes = SingleQuoteFirst },
-            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange)
-            {
-                FirstBytes = TokenMatchers.AsciiIdentifierStart
-            },
-            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange)
-            {
-                FirstBytes = TokenMatchers.AsciiDigits
-            },
+            new(TokenMatchers.MatchAsciiIdentifier, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiIdentifierStart, },
+            new(TokenMatchers.MatchAsciiDigits, TokenClass.NumberInteger, LexerRule.NoStateChange) { FirstBytes = TokenMatchers.AsciiDigits, },
             new(
                 static slice => TokenMatchers.MatchSingleByteOf(slice, PunctuationSet),
                 TokenClass.Punctuation,
@@ -107,6 +90,7 @@ public static class DockerfileLexer
     /// <summary>Matches a Dockerfile instruction verb at the start of a line.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchInstructionAtLineStart(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchKeyword(slice, Instructions);
 }

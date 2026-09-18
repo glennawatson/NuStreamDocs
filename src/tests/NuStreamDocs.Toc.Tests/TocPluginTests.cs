@@ -48,7 +48,7 @@ public class TocPluginTests
     public async Task NoHeadingsLeavesHtmlUnchanged()
     {
         const string Body = "<p>just a paragraph</p>";
-        var output = RunPostRender(new(), Encoding.UTF8.GetBytes(Body));
+        var output = RunPostRender(new(), "<p>just a paragraph</p>"u8);
         await Assert.That(Encoding.UTF8.GetString(output)).IsEqualTo(Body);
     }
 
@@ -70,7 +70,8 @@ public class TocPluginTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(TocPlugin plugin, ReadOnlySpan<byte> html)
     {
-        ArrayBufferWriter<byte> output = new(256);
+        const int outputCapacity = 256;
+        ArrayBufferWriter<byte> output = new(outputCapacity);
         PagePostRenderContext ctx = new("page.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];

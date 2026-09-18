@@ -10,14 +10,18 @@ namespace NuStreamDocs.Highlight.Tests;
 /// <summary>Test-only extensions sharing the lex+emit-and-decode flow across the lexer tests.</summary>
 internal static class LexerTestExtensions
 {
-    /// <summary>Tokenizes <paramref name="source"/> through <paramref name="lexer"/>, emits the classed HTML, and decodes the UTF-8 result back to a <see cref="string"/> for assertions.</summary>
+    /// <summary>Extension members for <c>Lexer</c>.</summary>
     /// <param name="lexer">Configured lexer.</param>
-    /// <param name="source">Source as UTF-8 bytes.</param>
-    /// <returns>Rendered HTML.</returns>
-    public static string Render(this Lexer lexer, ReadOnlySpan<byte> source)
+    extension(Lexer lexer)
     {
-        ArrayBufferWriter<byte> sink = new();
-        HighlightEmitter.Emit(lexer, source.ToArray(), sink);
-        return Encoding.UTF8.GetString(sink.WrittenSpan);
+        /// <summary>Tokenizes <paramref name="source"/> through <paramref name="lexer"/>, emits the classed HTML, and decodes the UTF-8 result back to a <see cref="string"/> for assertions.</summary>
+        /// <param name="source">Source as UTF-8 bytes.</param>
+        /// <returns>Rendered HTML.</returns>
+        internal string Render(ReadOnlySpan<byte> source)
+        {
+            ArrayBufferWriter<byte> sink = new();
+            HighlightEmitter.Emit(lexer, source.ToArray(), sink);
+            return Encoding.UTF8.GetString(sink.WrittenSpan);
+        }
     }
 }

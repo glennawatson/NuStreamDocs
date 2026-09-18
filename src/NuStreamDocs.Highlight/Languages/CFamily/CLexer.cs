@@ -49,7 +49,7 @@ public static class CLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = CFamilyShared.StandardOperators,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = CFamilyShared.StandardPunctuation,
             IntegerSuffix = CFamilyShared.CIntegerSuffix,
@@ -58,7 +58,7 @@ public static class CLexer
             IncludePreprocessor = true,
             IncludeCharacterLiteral = true,
             WhitespaceIncludesNewlines = true,
-            SpecialString = null
+            SpecialString = null,
         };
 
         return CFamilyRules.CreateLexer(config);

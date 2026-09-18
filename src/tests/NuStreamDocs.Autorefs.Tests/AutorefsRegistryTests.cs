@@ -7,15 +7,18 @@ namespace NuStreamDocs.Autorefs.Tests;
 /// <summary>Behavior tests for <c>AutorefsRegistry</c>.</summary>
 public class AutorefsRegistryTests
 {
+    /// <summary>Gets the IntroAnchor fixture value.</summary>
+    private static ReadOnlySpan<byte> IntroAnchorBytes => "intro"u8;
+
     /// <summary>Registering with a fragment yields a hash-suffixed URL.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task RegisterWithFragmentYieldsSuffix()
     {
         AutorefsRegistry registry = new();
-        registry.Register("intro"u8, [.. "guide/intro.html"u8], "intro"u8);
+        registry.Register(IntroAnchorBytes, [.. "guide/intro.html"u8], IntroAnchorBytes);
 
-        await Assert.That(registry.TryResolve("intro"u8, out var url)).IsTrue();
+        await Assert.That(registry.TryResolve(IntroAnchorBytes, out var url)).IsTrue();
         await Assert.That(url.AsSpan().SequenceEqual("guide/intro.html#intro"u8)).IsTrue();
     }
 

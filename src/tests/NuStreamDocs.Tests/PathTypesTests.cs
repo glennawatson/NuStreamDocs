@@ -9,6 +9,18 @@ namespace NuStreamDocs.Tests;
 /// <summary>Behavior tests for <c>DirectoryPath</c> and <c>FilePath</c> primitives.</summary>
 public class PathTypesTests
 {
+    /// <summary>Docs Directory used by the test cases.</summary>
+    private const string DocsDirectory = "/docs";
+
+    /// <summary>Guide Directory used by the test cases.</summary>
+    private const string GuideDirectory = "guide";
+
+    /// <summary>Intro File Name used by the test cases.</summary>
+    private const string IntroFileName = "intro.md";
+
+    /// <summary>Intro Path used by the test cases.</summary>
+    private const string IntroPath = "/docs/intro.md";
+
     /// <summary>Default-constructed paths report empty.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,9 +35,8 @@ public class PathTypesTests
     [Test]
     public async Task CombineProducesChildDirectory()
     {
-        DirectoryPath root = new("/docs");
-        var child = root / "guide";
-        await Assert.That(child.Value).IsEqualTo(Path.Combine("/docs", "guide"));
+        DirectoryPath root = new(DocsDirectory);
+        await Assert.That((root / GuideDirectory).Value).IsEqualTo(Path.Combine(DocsDirectory, GuideDirectory));
     }
 
     /// <summary>The <see cref="DirectoryPath.File(string)"/> helper composes a file path.</summary>
@@ -33,10 +44,10 @@ public class PathTypesTests
     [Test]
     public async Task FileHelperComposesFilePath()
     {
-        DirectoryPath root = new("/docs");
-        var page = root.File("intro.md");
-        await Assert.That(page.Value).IsEqualTo(Path.Combine("/docs", "intro.md"));
-        await Assert.That(page.FileName).IsEqualTo("intro.md");
+        DirectoryPath root = new(DocsDirectory);
+        var page = root.File(IntroFileName);
+        await Assert.That(page.Value).IsEqualTo(Path.Combine(DocsDirectory, IntroFileName));
+        await Assert.That(page.FileName).IsEqualTo(IntroFileName);
         await Assert.That(page.FileNameWithoutExtension).IsEqualTo("intro");
         await Assert.That(page.Extension).IsEqualTo(".md");
     }
@@ -46,7 +57,7 @@ public class PathTypesTests
     [Test]
     public async Task FileDirectoryReturnsParent()
     {
-        var pageValue = Path.Combine("/docs", "guide", "intro.md");
+        var pageValue = Path.Combine(DocsDirectory, GuideDirectory, IntroFileName);
         FilePath page = new(pageValue);
         await Assert.That(page.Directory.Value).IsEqualTo(Path.GetDirectoryName(pageValue));
     }
@@ -56,9 +67,9 @@ public class PathTypesTests
     [Test]
     public async Task WithExtensionRenamesFile()
     {
-        FilePath page = new("/docs/intro.md");
+        FilePath page = new(IntroPath);
         var html = page.WithExtension(".html");
-        await Assert.That(html.Value).IsEqualTo(Path.ChangeExtension("/docs/intro.md", ".html"));
+        await Assert.That(html.Value).IsEqualTo(Path.ChangeExtension(IntroPath, ".html"));
     }
 
     /// <summary>Implicit conversion to string lets path types feed BCL APIs unmodified.</summary>
@@ -66,11 +77,11 @@ public class PathTypesTests
     [Test]
     public async Task ImplicitStringConversion()
     {
-        DirectoryPath dir = new("/docs");
-        await Assert.That((string)dir).IsEqualTo("/docs");
+        DirectoryPath dir = new(DocsDirectory);
+        await Assert.That((string)dir).IsEqualTo(DocsDirectory);
 
-        FilePath file = new("/docs/intro.md");
-        await Assert.That((string)file).IsEqualTo("/docs/intro.md");
+        FilePath file = new(IntroPath);
+        await Assert.That((string)file).IsEqualTo(IntroPath);
     }
 
     /// <summary>Equality is value-based for both types.</summary>
@@ -87,10 +98,10 @@ public class PathTypesTests
     [Test]
     public async Task ImplicitFromStringWraps()
     {
-        DirectoryPath dir = "/docs";
-        FilePath file = "/docs/intro.md";
-        await Assert.That(dir.Value).IsEqualTo("/docs");
-        await Assert.That(file.Value).IsEqualTo("/docs/intro.md");
+        DirectoryPath dir = DocsDirectory;
+        FilePath file = IntroPath;
+        await Assert.That(dir.Value).IsEqualTo(DocsDirectory);
+        await Assert.That(file.Value).IsEqualTo(IntroPath);
     }
 
     /// <summary>A null string converts to an empty path.</summary>

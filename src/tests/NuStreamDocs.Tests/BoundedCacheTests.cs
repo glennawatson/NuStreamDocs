@@ -10,22 +10,73 @@ namespace NuStreamDocs.Tests;
 /// <summary>Behavior tests for <c>BoundedCache{TKey, TValue}</c>.</summary>
 public class BoundedCacheTests
 {
+    /// <summary>Pair Capacity used by the test cases.</summary>
+    private const int PairCapacity = 2;
+
+    /// <summary>Max Age Minutes used by the test cases.</summary>
+    private const int MaxAgeMinutes = 10;
+
+    /// <summary>Second Entry Value used by the test cases.</summary>
+    private const int SecondEntryValue = 2;
+
+    /// <summary>Third Entry Value used by the test cases.</summary>
+    private const int ThirdEntryValue = 3;
+
+    /// <summary>Cache Capacity used by the test cases.</summary>
+    private const int CacheCapacity = 8;
+
+    /// <summary>Max Age Seconds used by the test cases.</summary>
+    private const int MaxAgeSeconds = 5;
+
+    /// <summary>Expired Entry Value used by the test cases.</summary>
+    private const int ExpiredEntryValue = 42;
+
+    /// <summary>Expired Age Seconds used by the test cases.</summary>
+    private const int ExpiredAgeSeconds = 6;
+
+    /// <summary>Cached Value used by the test cases.</summary>
+    private const int CachedValue = 7;
+
+    /// <summary>Fresh Age Seconds used by the test cases.</summary>
+    private const int FreshAgeSeconds = 2;
+
+    /// <summary>Advance Interval Seconds used by the test cases.</summary>
+    private const int AdvanceIntervalSeconds = 3;
+
+    /// <summary>Expired Entry Count used by the test cases.</summary>
+    private const int ExpiredEntryCount = 2;
+
+    /// <summary>Refresh Age Seconds used by the test cases.</summary>
+    private const int RefreshAgeSeconds = 4;
+
+    /// <summary>Updated Value used by the test cases.</summary>
+    private const int UpdatedValue = 11;
+
+    /// <summary>Small Cache Capacity used by the test cases.</summary>
+    private const int SmallCacheCapacity = 4;
+
+    /// <summary>Configured Capacity used by the test cases.</summary>
+    private const int ConfiguredCapacity = 7;
+
+    /// <summary>Configured Max Age Seconds used by the test cases.</summary>
+    private const int ConfiguredMaxAgeSeconds = 13;
+
     /// <summary>Adding past <c>Capacity</c> evicts the least-recently-used entry.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task EvictsLeastRecentlyUsedAtCapacity()
     {
-        BoundedCache<string, int> cache = new(2, TimeSpan.FromMinutes(10));
+        BoundedCache<string, int> cache = new(PairCapacity, TimeSpan.FromMinutes(MaxAgeMinutes));
         cache.Set("a", 1);
-        cache.Set("b", 2);
+        cache.Set("b", SecondEntryValue);
         _ = cache.TryGet("a", out _); // touch a — b becomes LRU
-        cache.Set("c", 3);
+        cache.Set("c", ThirdEntryValue);
 
         await Assert.That(cache.TryGet("a", out var a)).IsTrue();
         await Assert.That(a).IsEqualTo(1);
         await Assert.That(cache.TryGet("b", out _)).IsFalse();
         await Assert.That(cache.TryGet("c", out var c)).IsTrue();
-        await Assert.That(c).IsEqualTo(3);
+        await Assert.That(c).IsEqualTo(ThirdEntryValue);
     }
 
     /// <summary>A read past <c>MaxAge</c> evicts the entry and reports a miss.</summary>
@@ -34,10 +85,10 @@ public class BoundedCacheTests
     public async Task TryGetEvictsAgedEntry()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), null, time);
-        cache.Set("k", 42);
+        BoundedCache<string, int> cache = new(CacheCapacity, TimeSpan.FromSeconds(MaxAgeSeconds), null, time);
+        cache.Set("k", ExpiredEntryValue);
 
-        time.Advance(TimeSpan.FromSeconds(6));
+        time.Advance(TimeSpan.FromSeconds(ExpiredAgeSeconds));
         await Assert.That(cache.TryGet("k", out _)).IsFalse();
         await Assert.That(cache.Count).IsEqualTo(0);
     }
@@ -48,12 +99,12 @@ public class BoundedCacheTests
     public async Task TryGetReturnsFreshEntry()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), null, time);
-        cache.Set("k", 7);
-        time.Advance(TimeSpan.FromSeconds(2));
+        BoundedCache<string, int> cache = new(CacheCapacity, TimeSpan.FromSeconds(MaxAgeSeconds), null, time);
+        cache.Set("k", CachedValue);
+        time.Advance(TimeSpan.FromSeconds(FreshAgeSeconds));
 
         await Assert.That(cache.TryGet("k", out var v)).IsTrue();
-        await Assert.That(v).IsEqualTo(7);
+        await Assert.That(v).IsEqualTo(CachedValue);
     }
 
     /// <summary><c>BoundedCache{TKey, TValue}.Compact</c> drops every aged entry.</summary>
@@ -62,16 +113,16 @@ public class BoundedCacheTests
     public async Task CompactRemovesAgedEntries()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromSeconds(5), null, time);
+        BoundedCache<string, int> cache = new(CacheCapacity, TimeSpan.FromSeconds(MaxAgeSeconds), null, time);
         cache.Set("a", 1);
-        cache.Set("b", 2);
-        time.Advance(TimeSpan.FromSeconds(3));
-        cache.Set("c", 3); // newer
+        cache.Set("b", SecondEntryValue);
+        time.Advance(TimeSpan.FromSeconds(AdvanceIntervalSeconds));
+        cache.Set("c", ThirdEntryValue); // newer
 
-        time.Advance(TimeSpan.FromSeconds(3)); // a, b now > 5s old; c is 3s old
+        time.Advance(TimeSpan.FromSeconds(AdvanceIntervalSeconds)); // a, b now > 5s old; c is 3s old
         var removed = cache.Compact(time.GetUtcNow());
 
-        await Assert.That(removed).IsEqualTo(2);
+        await Assert.That(removed).IsEqualTo(ExpiredEntryCount);
         await Assert.That(cache.Count).IsEqualTo(1);
         await Assert.That(cache.TryGet("c", out _)).IsTrue();
     }
@@ -82,16 +133,16 @@ public class BoundedCacheTests
     public async Task SetRefreshesExistingEntry()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(2, TimeSpan.FromSeconds(5), null, time);
+        BoundedCache<string, int> cache = new(PairCapacity, TimeSpan.FromSeconds(MaxAgeSeconds), null, time);
         cache.Set("a", 1);
-        cache.Set("b", 2);
-        time.Advance(TimeSpan.FromSeconds(4));
-        cache.Set("a", 11); // refresh a; b should now be LRU
-        cache.Set("c", 3); // pushes b out
+        cache.Set("b", SecondEntryValue);
+        time.Advance(TimeSpan.FromSeconds(RefreshAgeSeconds));
+        cache.Set("a", UpdatedValue); // refresh a; b should now be LRU
+        cache.Set("c", ThirdEntryValue); // pushes b out
 
         await Assert.That(cache.TryGet("b", out _)).IsFalse();
         await Assert.That(cache.TryGet("a", out var a)).IsTrue();
-        await Assert.That(a).IsEqualTo(11);
+        await Assert.That(a).IsEqualTo(UpdatedValue);
     }
 
     /// <summary><c>BoundedCache{TKey, TValue}.Remove</c> drops the entry and reports success exactly once.</summary>
@@ -99,7 +150,7 @@ public class BoundedCacheTests
     [Test]
     public async Task RemoveDropsEntry()
     {
-        BoundedCache<string, int> cache = new(4, TimeSpan.FromMinutes(1));
+        BoundedCache<string, int> cache = new(SmallCacheCapacity, TimeSpan.FromMinutes(1));
         cache.Set("a", 1);
         await Assert.That(cache.Remove("a")).IsTrue();
         await Assert.That(cache.Remove("a")).IsFalse();
@@ -113,7 +164,7 @@ public class BoundedCacheTests
     {
         await Assert.That(static () => new BoundedCache<string, int>(0, TimeSpan.FromSeconds(1)))
             .Throws<ArgumentOutOfRangeException>();
-        await Assert.That(static () => new BoundedCache<string, int>(4, TimeSpan.Zero))
+        await Assert.That(static () => new BoundedCache<string, int>(SmallCacheCapacity, TimeSpan.Zero))
             .Throws<ArgumentOutOfRangeException>();
     }
 
@@ -122,7 +173,7 @@ public class BoundedCacheTests
     [Test]
     public async Task NullKeyRejected()
     {
-        BoundedCache<string, int> cache = new(2, TimeSpan.FromMinutes(1));
+        BoundedCache<string, int> cache = new(PairCapacity, TimeSpan.FromMinutes(1));
         await Assert.That(() => cache.Set(null!, 1)).Throws<ArgumentNullException>();
         await Assert.That(() => cache.TryGet(null!, out _)).Throws<ArgumentNullException>();
         await Assert.That(() => cache.Remove(null!)).Throws<ArgumentNullException>();
@@ -133,7 +184,7 @@ public class BoundedCacheTests
     [Test]
     public async Task TryGetMissOnEmpty()
     {
-        BoundedCache<string, int> cache = new(2, TimeSpan.FromMinutes(1));
+        BoundedCache<string, int> cache = new(PairCapacity, TimeSpan.FromMinutes(1));
         await Assert.That(cache.TryGet("missing", out _)).IsFalse();
     }
 
@@ -142,8 +193,8 @@ public class BoundedCacheTests
     [Test]
     public async Task CompactOnEmptyReturnsZero()
     {
-        BoundedCache<string, int> cache = new(2, TimeSpan.FromMinutes(1));
-        await Assert.That(cache.Compact(DateTimeOffset.UtcNow)).IsEqualTo(0);
+        BoundedCache<string, int> cache = new(PairCapacity, TimeSpan.FromMinutes(1));
+        await Assert.That(cache.Compact(DateTimeOffset.UnixEpoch)).IsEqualTo(0);
     }
 
     /// <summary>Compact when nothing has aged returns 0 entries removed.</summary>
@@ -152,7 +203,7 @@ public class BoundedCacheTests
     public async Task CompactWithFreshEntriesNoOp()
     {
         FakeTimeProvider time = new(DateTimeOffset.UnixEpoch);
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromMinutes(10), null, time);
+        BoundedCache<string, int> cache = new(CacheCapacity, TimeSpan.FromMinutes(MaxAgeMinutes), null, time);
         cache.Set("k", 1);
         await Assert.That(cache.Compact(time.GetUtcNow())).IsEqualTo(0);
         await Assert.That(cache.Count).IsEqualTo(1);
@@ -163,9 +214,9 @@ public class BoundedCacheTests
     [Test]
     public async Task ClearEmptiesCache()
     {
-        BoundedCache<string, int> cache = new(8, TimeSpan.FromMinutes(1));
+        BoundedCache<string, int> cache = new(CacheCapacity, TimeSpan.FromMinutes(1));
         cache.Set("a", 1);
-        cache.Set("b", 2);
+        cache.Set("b", SecondEntryValue);
         cache.Clear();
         await Assert.That(cache.Count).IsEqualTo(0);
         await Assert.That(cache.TryGet("a", out _)).IsFalse();
@@ -176,10 +227,10 @@ public class BoundedCacheTests
     [Test]
     public async Task CustomComparerUsedForLookup()
     {
-        BoundedCache<string, int> cache = new(4, TimeSpan.FromMinutes(1), StringComparer.OrdinalIgnoreCase, null);
-        cache.Set("Key", 7);
+        BoundedCache<string, int> cache = new(SmallCacheCapacity, TimeSpan.FromMinutes(1), StringComparer.OrdinalIgnoreCase, null);
+        cache.Set("Key", CachedValue);
         await Assert.That(cache.TryGet("KEY", out var v)).IsTrue();
-        await Assert.That(v).IsEqualTo(7);
+        await Assert.That(v).IsEqualTo(CachedValue);
     }
 
     /// <summary>Capacity and MaxAge round-trip through their public properties.</summary>
@@ -187,8 +238,8 @@ public class BoundedCacheTests
     [Test]
     public async Task PropertiesReflectConstructorArguments()
     {
-        BoundedCache<string, int> cache = new(7, TimeSpan.FromSeconds(13));
-        await Assert.That(cache.Capacity).IsEqualTo(7);
-        await Assert.That(cache.MaxAge).IsEqualTo(TimeSpan.FromSeconds(13));
+        BoundedCache<string, int> cache = new(ConfiguredCapacity, TimeSpan.FromSeconds(ConfiguredMaxAgeSeconds));
+        await Assert.That(cache.Capacity).IsEqualTo(ConfiguredCapacity);
+        await Assert.That(cache.MaxAge).IsEqualTo(TimeSpan.FromSeconds(ConfiguredMaxAgeSeconds));
     }
 }

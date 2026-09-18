@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -24,6 +25,7 @@ public static class AssetReferenceValidator
     /// <param name="parallelism">Maximum parallel page checks.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Diagnostics in arbitrary order.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<LinkDiagnostic[]> ValidateAsync(
         ValidationCorpus corpus,
         int parallelism,
@@ -53,7 +55,7 @@ public static class AssetReferenceValidator
                 page,
                 scratch,
                 sink,
-                new(page.InternalAssets.Length, ByteArrayComparer.Instance));
+                [with(page.InternalAssets.Length, ByteArrayComparer.Instance)]);
             for (var i = 0; i < page.InternalAssets.Length; i++)
             {
                 context.ResolveAndReport(page.InternalAssets[i]);
@@ -144,7 +146,7 @@ public static class AssetReferenceValidator
                 pathSpan.CopyTo(combined);
             }
 
-            var normalized = Scratch.AsSpan(combined.Length, Scratch.Length - combined.Length);
+            var normalized = Scratch.AsSpan(combined.Length);
             if (normalized.Length < combined.Length)
             {
                 ResolveOverflow(rawAsset, pathSpan);
@@ -232,7 +234,8 @@ public static class AssetReferenceValidator
 
             if (written > 0)
             {
-                destination[written++] = SlashByte;
+                destination[written] = SlashByte;
+                written++;
             }
 
             segment.CopyTo(destination[written..]);

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Keys;
@@ -16,17 +17,37 @@ internal static class KeyNames
     private static readonly Dictionary<byte[], KeyEntry>.AlternateLookup<ReadOnlySpan<byte>> SpanLookup =
         Map.AsUtf8Lookup();
 
+    /// <summary>Gets the windows key bytes.</summary>
+    private static ReadOnlySpan<byte> WindowsKey => "windows"u8;
+
+    /// <summary>Gets the enter key bytes.</summary>
+    private static ReadOnlySpan<byte> EnterKey => "enter"u8;
+
+    /// <summary>Gets the space key bytes.</summary>
+    private static ReadOnlySpan<byte> SpaceKey => "space"u8;
+
+    /// <summary>Gets the delete key bytes.</summary>
+    private static ReadOnlySpan<byte> DeleteKey => "delete"u8;
+
+    /// <summary>Gets the escape key bytes.</summary>
+    private static ReadOnlySpan<byte> EscapeKey => "escape"u8;
+
+    /// <summary>Gets the insert key bytes.</summary>
+    private static ReadOnlySpan<byte> InsertKey => "insert"u8;
+
     /// <summary>Tries to resolve <paramref name="token"/> against the alias map.</summary>
     /// <param name="token">Lower-case UTF-8 token bytes.</param>
     /// <param name="entry">Resolved entry on success.</param>
     /// <returns>True when the token is known.</returns>
-    public static bool TryGet(ReadOnlySpan<byte> token, out KeyEntry entry) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool TryGet(ReadOnlySpan<byte> token, out KeyEntry entry) =>
         SpanLookup.TryGetValue(token, out entry);
 
     /// <summary>Builds the alias map.</summary>
     /// <returns>The alias map.</returns>
-    private static Dictionary<byte[], KeyEntry> BuildMap() =>
-        new(ByteArrayComparer.Instance)
+    private static Dictionary<byte[], KeyEntry> BuildMap()
+    {
+        var map = new Dictionary<byte[], KeyEntry>(ByteArrayComparer.Instance)
         {
             // modifiers
             [[.. "ctrl"u8]] = new([.. "ctrl"u8], [.. "Ctrl"u8]),
@@ -37,23 +58,23 @@ internal static class KeyNames
             [[.. "meta"u8]] = new([.. "meta"u8], [.. "Meta"u8]),
             [[.. "cmd"u8]] = new([.. "cmd"u8], [.. "Cmd"u8]),
             [[.. "command"u8]] = new([.. "cmd"u8], [.. "Cmd"u8]),
-            [[.. "win"u8]] = new([.. "windows"u8], [.. "Win"u8]),
-            [[.. "windows"u8]] = new([.. "windows"u8], [.. "Win"u8]),
+            [[.. "win"u8]] = new([.. WindowsKey], [.. "Win"u8]),
+            [[.. WindowsKey]] = new([.. WindowsKey], [.. "Win"u8]),
             [[.. "super"u8]] = new([.. "super"u8], [.. "Super"u8]),
 
             // navigation / editing
-            [[.. "enter"u8]] = new([.. "enter"u8], [.. "Enter"u8]),
-            [[.. "return"u8]] = new([.. "enter"u8], [.. "Enter"u8]),
+            [[.. EnterKey]] = new([.. EnterKey], [.. "Enter"u8]),
+            [[.. "return"u8]] = new([.. EnterKey], [.. "Enter"u8]),
             [[.. "tab"u8]] = new([.. "tab"u8], [.. "Tab"u8]),
-            [[.. "space"u8]] = new([.. "space"u8], [.. "Space"u8]),
-            [[.. "spacebar"u8]] = new([.. "space"u8], [.. "Space"u8]),
+            [[.. SpaceKey]] = new([.. SpaceKey], [.. "Space"u8]),
+            [[.. "spacebar"u8]] = new([.. SpaceKey], [.. "Space"u8]),
             [[.. "backspace"u8]] = new([.. "backspace"u8], [.. "Backspace"u8]),
-            [[.. "delete"u8]] = new([.. "delete"u8], [.. "Delete"u8]),
-            [[.. "del"u8]] = new([.. "delete"u8], [.. "Delete"u8]),
-            [[.. "escape"u8]] = new([.. "escape"u8], [.. "Esc"u8]),
-            [[.. "esc"u8]] = new([.. "escape"u8], [.. "Esc"u8]),
-            [[.. "insert"u8]] = new([.. "insert"u8], [.. "Insert"u8]),
-            [[.. "ins"u8]] = new([.. "insert"u8], [.. "Insert"u8]),
+            [[.. DeleteKey]] = new([.. DeleteKey], [.. "Delete"u8]),
+            [[.. "del"u8]] = new([.. DeleteKey], [.. "Delete"u8]),
+            [[.. EscapeKey]] = new([.. EscapeKey], [.. "Esc"u8]),
+            [[.. "esc"u8]] = new([.. EscapeKey], [.. "Esc"u8]),
+            [[.. InsertKey]] = new([.. InsertKey], [.. "Insert"u8]),
+            [[.. "ins"u8]] = new([.. InsertKey], [.. "Insert"u8]),
             [[.. "home"u8]] = new([.. "home"u8], [.. "Home"u8]),
             [[.. "end"u8]] = new([.. "end"u8], [.. "End"u8]),
             [[.. "pageup"u8]] = new([.. "page-up"u8], [.. "PgUp"u8]),
@@ -89,6 +110,9 @@ internal static class KeyNames
             [[.. "f9"u8]] = new([.. "f9"u8], [.. "F9"u8]),
             [[.. "f10"u8]] = new([.. "f10"u8], [.. "F10"u8]),
             [[.. "f11"u8]] = new([.. "f11"u8], [.. "F11"u8]),
-            [[.. "f12"u8]] = new([.. "f12"u8], [.. "F12"u8])
+            [[.. "f12"u8]] = new([.. "f12"u8], [.. "F12"u8]),
         };
+
+        return map;
+    }
 }

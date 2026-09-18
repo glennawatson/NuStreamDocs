@@ -4,9 +4,7 @@
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Common page-shell knobs shared by the built-in themes.
-/// </summary>
+/// <summary>Common page-shell knobs shared by the built-in themes.</summary>
 public interface IThemeShellOptions
 {
     /// <summary>Gets the UTF-8 top-bar site title injected into every page.</summary>

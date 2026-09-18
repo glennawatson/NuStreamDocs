@@ -10,61 +10,61 @@ namespace NuStreamDocs.Macros;
 /// <summary>Construction helpers for <see cref="MacrosOptions"/>.</summary>
 public static class MacrosOptionsExtensions
 {
-    /// <summary>Returns a copy of <paramref name="options"/> with one extra UTF-8 <c>(name, value)</c> pair added to the variables map.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="name">UTF-8 variable name bytes.</param>
-    /// <param name="value">UTF-8 variable value bytes.</param>
-    /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariable(this MacrosOptions options, byte[] name, byte[] value) =>
-        name.Length is 0
-            ? throw new ArgumentException("Name must be non-empty.", nameof(name))
-            : WithVariableCore(options, name, value);
-
-    /// <summary>String adapter for <see cref="WithVariable(MacrosOptions, byte[], byte[])"/>.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="name">Variable name.</param>
-    /// <param name="value">Variable value.</param>
-    /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariable(
-        this MacrosOptions options,
-        in ApiCompatString name,
-        in ApiCompatString value)
+    /// <summary>Extension members for <c>MacrosOptions</c>.</summary>
+    /// <param name="options">Options to update.</param>
+    extension(MacrosOptions options)
     {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        return WithVariableCore(options, Encoding.UTF8.GetBytes(name), Encoding.UTF8.GetBytes(value));
-    }
+        /// <summary>Returns a copy of <paramref name="options"/> with one extra UTF-8 <c>(name, value)</c> pair added to the variables map.</summary>
+        /// <param name="name">UTF-8 variable name bytes.</param>
+        /// <param name="value">UTF-8 variable value bytes.</param>
+        /// <returns>The updated options.</returns>
+        /// <exception cref="ArgumentException">The variable name is empty.</exception>
+        public MacrosOptions WithVariable(byte[] name, byte[] value) =>
+            name.Length is 0
+                ? throw new ArgumentException("Name must be non-empty.", nameof(name))
+                : WithVariableCore(options, name, value);
 
-    /// <summary>Returns a copy of <paramref name="options"/> with a fresh UTF-8 variables map seeded from <paramref name="variables"/>.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="variables">UTF-8 byte-keyed variable map.</param>
-    /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariables(this MacrosOptions options, Dictionary<byte[], byte[]> variables)
-    {
-        Dictionary<byte[], byte[]> map = new(variables.Count, ByteArrayComparer.Instance);
-        foreach (var pair in variables)
+        /// <summary>String adapter for <see cref="WithVariable(MacrosOptions, byte[], byte[])"/>.</summary>
+        /// <param name="name">Variable name.</param>
+        /// <param name="value">Variable value.</param>
+        /// <returns>The updated options.</returns>
+        public MacrosOptions WithVariable(
+            in ApiCompatString name,
+            in ApiCompatString value)
         {
-            map[pair.Key] = pair.Value;
+            ArgumentException.ThrowIfNullOrEmpty(name);
+            return WithVariableCore(options, Encoding.UTF8.GetBytes(name), Encoding.UTF8.GetBytes(value));
         }
 
-        return options with { Variables = map };
-    }
-
-    /// <summary>String adapter for <see cref="WithVariables(MacrosOptions, Dictionary{byte[], byte[]})"/>.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="variables">String → string variable map; both name and value are encoded once to UTF-8.</param>
-    /// <returns>The updated options.</returns>
-    public static MacrosOptions WithVariables(
-        this MacrosOptions options,
-        Dictionary<ApiCompatString, ApiCompatString> variables)
-    {
-        Dictionary<byte[], byte[]> map = new(variables.Count, ByteArrayComparer.Instance);
-        foreach (var pair in variables)
+        /// <summary>Returns a copy of <paramref name="options"/> with a fresh UTF-8 variables map seeded from <paramref name="variables"/>.</summary>
+        /// <param name="variables">UTF-8 byte-keyed variable map.</param>
+        /// <returns>The updated options.</returns>
+        public MacrosOptions WithVariables(Dictionary<byte[], byte[]> variables)
         {
-            ArgumentException.ThrowIfNullOrEmpty(pair.Key.Value);
-            map[Encoding.UTF8.GetBytes(pair.Key)] = Encoding.UTF8.GetBytes(pair.Value);
+            Dictionary<byte[], byte[]> map = [with(variables.Count, ByteArrayComparer.Instance)];
+            foreach (var pair in variables)
+            {
+                map[pair.Key] = pair.Value;
+            }
+
+            return options with { Variables = map };
         }
 
-        return options with { Variables = map };
+        /// <summary>String adapter for <see cref="WithVariables(MacrosOptions, Dictionary{byte[], byte[]})"/>.</summary>
+        /// <param name="variables">String → string variable map; both name and value are encoded once to UTF-8.</param>
+        /// <returns>The updated options.</returns>
+        public MacrosOptions WithVariables(
+            Dictionary<ApiCompatString, ApiCompatString> variables)
+        {
+            Dictionary<byte[], byte[]> map = [with(variables.Count, ByteArrayComparer.Instance)];
+            foreach (var pair in variables)
+            {
+                ArgumentException.ThrowIfNullOrEmpty(pair.Key.Value);
+                map[Encoding.UTF8.GetBytes(pair.Key)] = Encoding.UTF8.GetBytes(pair.Value);
+            }
+
+            return options with { Variables = map };
+        }
     }
 
     /// <summary>Returns a copy of <paramref name="options"/> with <paramref name="name"/> set to <paramref name="value"/>.</summary>
@@ -74,7 +74,7 @@ public static class MacrosOptionsExtensions
     /// <returns>The updated options.</returns>
     private static MacrosOptions WithVariableCore(MacrosOptions options, byte[] name, byte[] value)
     {
-        Dictionary<byte[], byte[]> map = new(options.Variables.Count + 1, ByteArrayComparer.Instance);
+        Dictionary<byte[], byte[]> map = [with(options.Variables.Count + 1, ByteArrayComparer.Instance)];
         foreach (var pair in options.Variables)
         {
             map[pair.Key] = pair.Value;

@@ -41,6 +41,9 @@ public static class HtmlEmitter
         [.. "</h6>\n"u8]
     ];
 
+    /// <summary>Gets the paragraph terminator emitted after block content.</summary>
+    private static ReadOnlySpan<byte> ParagraphClose => "</p>\n"u8;
+
     /// <summary>Renders <paramref name="blocks"/> against <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">Original UTF-8 source the block descriptors index into.</param>
     /// <param name="blocks">Block descriptors emitted by <see cref="BlockScanner"/>.</param>
@@ -132,7 +135,7 @@ public static class HtmlEmitter
     private static ReadOnlySpan<byte> ExtractFenceInfoLine(ReadOnlySpan<byte> source, in BlockSpan opener)
     {
         var line = source.Slice(opener.Start, opener.Length);
-        var marker = line.Length > 0 && line[0] == (byte)'~' ? (byte)'~' : (byte)'`';
+        var marker = !line.IsEmpty && line[0] == (byte)'~' ? (byte)'~' : (byte)'`';
         var i = 0;
         while (i < line.Length && line[i] == marker)
         {
@@ -175,14 +178,14 @@ public static class HtmlEmitter
         var infoTail = ExtractInfoStringTail(source, opener);
 
         Write("<pre><code"u8, writer);
-        if (info.Length > 0)
+        if (!info.IsEmpty)
         {
             Write(" class=\"language-"u8, writer);
             Write(info, writer);
             Write("\""u8, writer);
         }
 
-        if (infoTail.Length > 0)
+        if (!infoTail.IsEmpty)
         {
             Write(" data-info=\""u8, writer);
             HtmlEscape.EscapeText(infoTail, writer);
@@ -246,7 +249,7 @@ public static class HtmlEmitter
     {
         Write("<p>"u8, writer);
         InlineRenderer.Render(source.Slice(block.Start, block.Length), writer);
-        Write("</p>\n"u8, writer);
+        Write(ParagraphClose, writer);
     }
 
     /// <summary>Emits one paragraph spanning every consecutive <see cref="BlockKind.Paragraph"/> block from <paramref name="openerIndex"/>.</summary>
@@ -280,7 +283,7 @@ public static class HtmlEmitter
             InlineRenderer.Render(line, writer);
         }
 
-        Write("</p>\n"u8, writer);
+        Write(ParagraphClose, writer);
         return end;
     }
 
@@ -299,8 +302,7 @@ public static class HtmlEmitter
         var block = blocks[i];
         switch (block.Kind)
         {
-            case BlockKind.HtmlBlock:
-            case BlockKind.HtmlBlockContent:
+            case BlockKind.HtmlBlock or BlockKind.HtmlBlockContent:
                 {
                     EmitHtmlBlockLine(source, block, writer);
                     return i;
@@ -322,8 +324,7 @@ public static class HtmlEmitter
                     return EmitIndentedCode(source, blocks, i, writer);
                 }
 
-            case BlockKind.Blank:
-            case BlockKind.None:
+            case BlockKind.Blank or BlockKind.None:
                 {
                     return i;
                 }
@@ -378,6 +379,20 @@ public static class HtmlEmitter
                         pendingBlanks++;
                         continue;
                     }
+
+                case BlockKind.None:
+                case BlockKind.AtxHeading:
+                case BlockKind.SetextHeading:
+                case BlockKind.ThematicBreak:
+                case BlockKind.FencedCode:
+                case BlockKind.FencedCodeContent:
+                case BlockKind.BlockQuote:
+                case BlockKind.ListItem:
+                case BlockKind.ListItemContent:
+                case BlockKind.Paragraph:
+                case BlockKind.HtmlBlock:
+                case BlockKind.HtmlBlockContent:
+                    break;
             }
 
             // Any other block ends the run; trailing blanks are ignored (CommonMark trims trailing blank lines).
@@ -406,7 +421,7 @@ public static class HtmlEmitter
     private static ReadOnlySpan<byte> StripIndentPrefix(ReadOnlySpan<byte> line)
     {
         const int IndentColumn = 4;
-        if (line.Length >= 1 && line[0] is (byte)'\t')
+        if (!line.IsEmpty && line[0] is (byte)'\t')
         {
             return line[1..];
         }
@@ -576,7 +591,7 @@ public static class HtmlEmitter
             FindFirstBlank(blocks, opener + 1, end),
             contentIndent,
             writer);
-        Write("</p>\n"u8, writer);
+        Write(ParagraphClose, writer);
 
         var i = FindFirstBlank(blocks, opener + 1, end);
         while (i < end)
@@ -661,7 +676,7 @@ public static class HtmlEmitter
             first = false;
         }
 
-        Write("</p>\n"u8, writer);
+        Write(ParagraphClose, writer);
     }
 
     /// <summary>Emits the continuation lines of a tight list item directly inside the <c>&lt;li&gt;</c>, separated by spaces.</summary>

@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Links;
 
@@ -61,6 +62,7 @@ public class MarkdownLinkRewriterDirectoryUrlsTests
     /// <summary>Drives bytes through the rewriter in directory-URL mode.</summary>
     /// <param name="input">HTML.</param>
     /// <returns>Rewritten HTML.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Rewrite(string input) =>
         Encoding.UTF8.GetString(MarkdownLinkRewriter.Rewrite(Encoding.UTF8.GetBytes(input), true));
 }

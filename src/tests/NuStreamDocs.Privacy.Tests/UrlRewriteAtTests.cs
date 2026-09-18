@@ -11,24 +11,39 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Direct tests for the per-shape <c>TryRewriteAt</c> / <c>TryRewriteBlock</c> internals exposed for the combined-walker dispatch path.</summary>
 public class UrlRewriteAtTests
 {
+    /// <summary>Attribute Offset used by the test cases.</summary>
+    private const int AttributeOffset = 5;
+
+    /// <summary>Attribute Miss Offset used by the test cases.</summary>
+    private const int AttributeMissOffset = 6;
+
+    /// <summary>Following Attribute Offset used by the test cases.</summary>
+    private const int FollowingAttributeOffset = 7;
+
+    /// <summary>Gets the image markup used by the test cases.</summary>
+    private static ReadOnlySpan<byte> ImageMarkup => "<img src=\"https://cdn.test/a.png\">"u8;
+
+    /// <summary>Gets the asset directory used by the test cases.</summary>
+    private static ReadOnlySpan<byte> AssetDirectory => "local"u8;
+
     /// <summary>AssetAttributeBytes.TryRewriteAt rewrites a matched <c>src=</c> at the candidate position.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task AssetAttributeRewritesSrc()
     {
-        byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        byte[] html = [.. ImageMarkup];
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
 
         // Candidate position is the 's' in "src=" inside the tag — index 5.
         var lastEmit = 0;
-        var changed = AssetAttributeBytes.TryRewriteAt(html, 5, ctx, sink, ref lastEmit, out var advanceTo);
+        var changed = AssetAttributeBytes.TryRewriteAt(html, AttributeOffset, ctx, sink, ref lastEmit, out var advanceTo);
 
         await Assert.That(changed).IsTrue();
-        await Assert.That(advanceTo).IsGreaterThan(5);
-        await Assert.That(lastEmit).IsGreaterThan(5);
+        await Assert.That(advanceTo).IsGreaterThan(AttributeOffset);
+        await Assert.That(lastEmit).IsGreaterThan(AttributeOffset);
         var written = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(written).Contains("/local/");
     }
@@ -39,17 +54,17 @@ public class UrlRewriteAtTests
     public async Task AssetAttributeMissAdvancesOneByte()
     {
         byte[] html = [.. "hello world"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         // Index 6 is 'w' in "world" — definitely not src/href.
-        var changed = AssetAttributeBytes.TryRewriteAt(html, 6, ctx, sink, ref lastEmit, out var advanceTo);
+        var changed = AssetAttributeBytes.TryRewriteAt(html, AttributeMissOffset, ctx, sink, ref lastEmit, out var advanceTo);
 
         await Assert.That(changed).IsFalse();
-        await Assert.That(advanceTo).IsEqualTo(7);
+        await Assert.That(advanceTo).IsEqualTo(FollowingAttributeOffset);
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
         await Assert.That(lastEmit).IsEqualTo(0);
     }
@@ -60,17 +75,17 @@ public class UrlRewriteAtTests
     public async Task SrcsetRewritesAttributeValue()
     {
         byte[] html = [.. "<img srcset=\"https://cdn.test/a.png 2x\">"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         // Index 5 is the 's' of 'srcset='.
-        var changed = SrcsetBytes.TryRewriteAt(html, 5, ctx, sink, ref lastEmit, out var advanceTo);
+        var changed = SrcsetBytes.TryRewriteAt(html, AttributeOffset, ctx, sink, ref lastEmit, out var advanceTo);
 
         await Assert.That(changed).IsTrue();
-        await Assert.That(advanceTo).IsGreaterThan(5);
+        await Assert.That(advanceTo).IsGreaterThan(AttributeOffset);
         var written = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(written).Contains("/local/");
         await Assert.That(written).Contains(" 2x");
@@ -81,20 +96,20 @@ public class UrlRewriteAtTests
     [Test]
     public async Task SrcsetMissDoesNotWrite()
     {
-        byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        byte[] html = [.. ImageMarkup];
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
         var lastEmit = 0;
 
         // Index 5 is 's' of 'src=' — not srcset.
-        var changed = SrcsetBytes.TryRewriteAt(html, 5, ctx, sink, ref lastEmit, out var advanceTo);
+        var changed = SrcsetBytes.TryRewriteAt(html, AttributeOffset, ctx, sink, ref lastEmit, out var advanceTo);
 
         await Assert.That(changed).IsFalse();
         await Assert.That(sink.WrittenCount).IsEqualTo(0);
         await Assert.That(lastEmit).IsEqualTo(0);
-        await Assert.That(advanceTo).IsEqualTo(6);
+        await Assert.That(advanceTo).IsEqualTo(AttributeMissOffset);
     }
 
     /// <summary>InlineStyleBlockBytes.TryRewriteBlock rewrites url() tokens inside a style block at the candidate position.</summary>
@@ -103,7 +118,7 @@ public class UrlRewriteAtTests
     public async Task InlineStyleBlockRewritesUrlsInBody()
     {
         byte[] html = [.. "<style>.x { background: url(https://cdn.test/a.png); }</style>"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
@@ -124,7 +139,7 @@ public class UrlRewriteAtTests
     public async Task InlineStyleBlockMissOnNonStyleTag()
     {
         byte[] html = [.. "<div>plain</div>"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
@@ -143,12 +158,14 @@ public class UrlRewriteAtTests
     [Test]
     public async Task CombinedWalkerHandlesAllThreeShapes()
     {
-        const string Html = "<img src=\"https://cdn.test/a.png\">"
-                            + "<img srcset=\"https://cdn.test/b.png 2x\">"
-                            + "<style>.x { background: url(https://cdn.test/c.png); }</style>"
-                            + "<a href=\"https://cdn.test/page\">link</a>";
-        byte[] bytes = [.. Encoding.UTF8.GetBytes(Html)];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        byte[] bytes =
+        [
+            .. ImageMarkup,
+            .. "<img srcset=\"https://cdn.test/b.png 2x\">"u8,
+            .. "<style>.x { background: url(https://cdn.test/c.png); }</style>"u8,
+            .. "<a href=\"https://cdn.test/page\">link</a>"u8,
+        ];
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(bytes.Length);
@@ -169,7 +186,7 @@ public class UrlRewriteAtTests
     public async Task CombinedWalkerNoMatchReturnsFalse()
     {
         byte[] html = [.. "<p>plain text with no urls</p>"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, null);
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);
@@ -185,8 +202,8 @@ public class UrlRewriteAtTests
     [Test]
     public async Task CombinedWalkerRespectsFilter()
     {
-        byte[] html = [.. "<img src=\"https://cdn.test/a.png\">"u8];
-        ExternalAssetRegistry registry = new([.. "local"u8]);
+        byte[] html = [.. ImageMarkup];
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter filter = new(null, PrivacyTestHelpers.Utf8("only.test"));
         UrlRewriteContext ctx = new(filter, registry);
         ArrayBufferWriter<byte> sink = new(html.Length);

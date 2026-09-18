@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Transitions;
@@ -9,27 +10,30 @@ namespace NuStreamDocs.Transitions;
 /// <summary>Builder-extension surface for <see cref="TransitionsPlugin"/>.</summary>
 public static class DocBuilderTransitionsExtensions
 {
-    /// <summary>Registers <see cref="TransitionsPlugin"/> with default options.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTransitions(this DocBuilder builder) => builder.UsePlugin(new TransitionsPlugin());
-
-    /// <summary>Registers <see cref="TransitionsPlugin"/> with caller-tweaked options.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="TransitionsOptions.Default"/> and returns the customized set.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTransitions(
-        this DocBuilder builder,
-        Func<TransitionsOptions, TransitionsOptions> configure)
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to configure.</param>
+    extension(DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(configure);
-        return builder.UsePlugin(new TransitionsPlugin(configure(TransitionsOptions.Default)));
-    }
+        /// <summary>Registers <see cref="TransitionsPlugin"/> with default options.</summary>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseTransitions() => builder.UsePlugin(new TransitionsPlugin());
 
-    /// <summary>Registers <see cref="TransitionsPlugin"/> with caller-supplied options.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="options">Plugin options.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseTransitions(this DocBuilder builder, in TransitionsOptions options) =>
-        builder.UsePlugin(new TransitionsPlugin(options));
+        /// <summary>Registers <see cref="TransitionsPlugin"/> with caller-tweaked options.</summary>
+        /// <param name="configure">Function that receives <see cref="TransitionsOptions.Default"/> and returns the customized set.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UseTransitions(
+            Func<TransitionsOptions, TransitionsOptions> configure)
+        {
+            ArgumentNullException.ThrowIfNull(configure);
+            return builder.UsePlugin(new TransitionsPlugin(configure(TransitionsOptions.Default)));
+        }
+
+        /// <summary>Registers <see cref="TransitionsPlugin"/> with caller-supplied options.</summary>
+        /// <param name="options">Plugin options.</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseTransitions(in TransitionsOptions options) =>
+            builder.UsePlugin(new TransitionsPlugin(options));
+    }
 }

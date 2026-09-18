@@ -39,7 +39,8 @@ public static class ThemeUrlValidator
             return requireAbsolute
                 ? (DiagnosticMessage)StringCompose.Concat(
                     optionName,
-                    " is required but was not set; canonical URLs and Open Graph metadata will be omitted from every page.") : DiagnosticMessage.None;
+                    " is required but was not set; canonical URLs and Open Graph metadata will be omitted from every page.")
+                : DiagnosticMessage.None;
         }
 
         if (!HasHttpScheme(value))
@@ -52,23 +53,21 @@ public static class ThemeUrlValidator
                     optionName,
                     " '",
                     valueText,
-                    "' is protocol-relative; canonical URLs need an explicit http(s) scheme.") : (DiagnosticMessage)StringCompose.Concat(
+                    "' is protocol-relative; canonical URLs need an explicit http(s) scheme.")
+                : (DiagnosticMessage)StringCompose.Concat(
                     optionName,
                     " '",
                     valueText,
                     "' is not an absolute http(s) URL; the build will emit invalid canonical / repo / edit links.");
         }
 
-        if (HasFragmentOrQuery(value))
-        {
-            return (DiagnosticMessage)StringCompose.Concat(
+        return HasFragmentOrQuery(value)
+            ? (DiagnosticMessage)StringCompose.Concat(
                 optionName,
                 " '",
                 Encoding.UTF8.GetString(value),
-                "' contains a '?' or '#' segment; this leaks into every per-page canonical URL.");
-        }
-
-        return DiagnosticMessage.None;
+                "' contains a '?' or '#' segment; this leaks into every per-page canonical URL.")
+            : DiagnosticMessage.None;
     }
 
     /// <summary>True when <paramref name="value"/> starts with <c>http://</c> or <c>https://</c>.</summary>

@@ -97,10 +97,7 @@ public static class CMakeLexer
         PreCommentRule =
             new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = HashFirst },
         LineComment =
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
         SpecialString =
             new(MatchDollarExpansion, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = DollarFirst },
         IncludeDoubleQuotedString = true,
@@ -109,7 +106,7 @@ public static class CMakeLexer
         KeywordDeclarations = KeywordDeclarations,
         Keywords = Keywords,
         IdentifierContinue = IdentifierContinue,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches a CMake <c>#[[ ... ]]</c> block comment (with optional <c>=</c> level markers — same shape as Lua's long-bracket form).</summary>
@@ -135,8 +132,7 @@ public static class CMakeLexer
             return 0;
         }
 
-        var levelCount = pos - 1;
-        var bodyEnd = ScanLongBracketClose(rest, pos + 1, levelCount);
+        var bodyEnd = ScanLongBracketClose(rest, pos + 1, pos - 1);
         return bodyEnd is 0 ? 0 : HashOpenLength + bodyEnd;
     }
 
@@ -187,12 +183,6 @@ public static class CMakeLexer
 
         // ${VAR} environment-or-cache variable.
         var brace = TokenMatchers.MatchPrefixedBracketedBlock(slice, (byte)'$', (byte)'{', (byte)'}');
-        if (brace > 0)
-        {
-            return brace;
-        }
-
-        // $<...> generator expression.
-        return TokenMatchers.MatchPrefixedBracketedBlock(slice, (byte)'$', (byte)'<', (byte)'>');
+        return brace > 0 ? brace : TokenMatchers.MatchPrefixedBracketedBlock(slice, (byte)'$', (byte)'<', (byte)'>');
     }
 }

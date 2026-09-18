@@ -29,6 +29,7 @@ namespace NuStreamDocs.Search.Pagefind;
 /// must produce real shards.
 /// </param>
 /// <param name="ExcludePathPrefixes">UTF-8 site-relative prefixes (e.g. <c>"api/"</c>) whose pages are skipped by the indexer.</param>
+[System.Diagnostics.DebuggerDisplay("PagefindOptions: {ToString(),nq}")]
 public readonly record struct PagefindOptions(
     PathSegment OutputSubdirectory,
     int MinTokenLength,
@@ -39,9 +40,7 @@ public readonly record struct PagefindOptions(
     bool StrictBinaryRequired,
     byte[][] ExcludePathPrefixes)
 {
-    /// <summary>
-    /// The default minimum token length.
-    /// </summary>
+    /// <summary>The default minimum token length.</summary>
     private const int DefaultTokenLength = 3;
 
     /// <summary>Gets the option set with all defaults populated.</summary>

@@ -39,7 +39,7 @@ internal sealed class PluginPhases
     /// <summary>Partitions a flat plugin list into per-phase sorted arrays.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <returns>The per-phase plugin arrays.</returns>
-    public static PluginPhases Partition(IPlugin[] plugins) =>
+    internal static PluginPhases Partition(IPlugin[] plugins) =>
         new()
         {
             Configures = Collect<IBuildConfigurePlugin>(plugins, static p => p.ConfigurePriority),
@@ -49,7 +49,7 @@ internal sealed class PluginPhases
             Scans = Collect<IPageScanPlugin>(plugins, static p => p.ScanPriority),
             Resolves = Collect<IBuildResolvePlugin>(plugins, static p => p.ResolvePriority),
             PostResolves = Collect<IPagePostResolvePlugin>(plugins, static p => p.PostResolvePriority),
-            Finalizes = Collect<IBuildFinalizePlugin>(plugins, static p => p.FinalizePriority)
+            Finalizes = Collect<IBuildFinalizePlugin>(plugins, static p => p.FinalizePriority),
         };
 
     /// <summary>Selects every <typeparamref name="T"/>-implementing plugin and sorts by the supplied priority projection.</summary>
@@ -60,7 +60,7 @@ internal sealed class PluginPhases
     private static T[] Collect<T>(IPlugin[] plugins, Func<T, PluginPriority> getPriority)
         where T : class, IPlugin
     {
-        List<T> matches = new(plugins.Length);
+        List<T> matches = [with(plugins.Length)];
         for (var i = 0; i < plugins.Length; i++)
         {
             if (plugins[i] is T t)

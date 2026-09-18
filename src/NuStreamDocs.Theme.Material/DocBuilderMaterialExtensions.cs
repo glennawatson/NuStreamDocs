@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 using NuStreamDocs.Fonts;
 using NuStreamDocs.Theme.Common;
@@ -12,48 +13,50 @@ namespace NuStreamDocs.Theme.Material;
 /// <summary>Builder-extension surface for the Material theme.</summary>
 public static class DocBuilderMaterialExtensions
 {
-    /// <summary>Registers <see cref="MaterialThemePlugin"/> with default options + the Material icon-shortcode preprocessor.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterialTheme(this DocBuilder builder) => builder.UseMaterialTheme(iconResolver: null);
-
-    /// <summary>Registers <see cref="MaterialThemePlugin"/> with default options + the Material icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="iconResolver">
-    /// Optional inline-icon resolver (e.g.
-    /// <c>NuStreamDocs.Icons.MaterialDesign.MdiIconResolver</c>)
-    /// consulted for <c>:material-foo:</c> shortcodes before the
-    /// font-ligature fallback.
-    /// </param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterialTheme(this DocBuilder builder, IIconResolver? iconResolver) =>
-        builder
-            .UsePlugin(new IconShortcodePlugin(iconResolver))
-            .UsePlugin(new FontsPlugin(MaterialFonts.Default))
-            .UsePlugin(new MaterialThemePlugin());
-
-    /// <summary>Registers <see cref="MaterialThemePlugin"/> with caller-tweaked options + the Material icon-shortcode preprocessor.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="MaterialThemeOptions.Default"/> and returns the customized set.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterialTheme(
-        this DocBuilder builder,
-        Func<MaterialThemeOptions, MaterialThemeOptions> configure) => builder.UseMaterialTheme(configure, null);
-
-    /// <summary>Registers <see cref="MaterialThemePlugin"/> with caller-tweaked options + the Material icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="MaterialThemeOptions.Default"/> and returns the customized set.</param>
-    /// <param name="iconResolver">Optional inline-icon resolver consulted for <c>:material-foo:</c> shortcodes before the font-ligature fallback.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMaterialTheme(
-        this DocBuilder builder,
-        Func<MaterialThemeOptions, MaterialThemeOptions> configure,
-        IIconResolver? iconResolver)
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">The builder to configure.</param>
+    extension(DocBuilder builder)
     {
-        var options = configure(MaterialThemeOptions.Default);
-        return builder
-            .UsePlugin(new IconShortcodePlugin(iconResolver))
-            .UsePlugin(new FontsPlugin(MaterialFonts.Default))
-            .UsePlugin(new MaterialThemePlugin(options));
+        /// <summary>Registers <see cref="MaterialThemePlugin"/> with default options + the Material icon-shortcode preprocessor.</summary>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseMaterialTheme() => builder.UseMaterialTheme(iconResolver: null);
+
+        /// <summary>Registers <see cref="MaterialThemePlugin"/> with default options + the Material icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
+        /// <param name="iconResolver">
+        /// Optional inline-icon resolver (e.g.
+        /// <c>NuStreamDocs.Icons.MaterialDesign.MdiIconResolver</c>)
+        /// consulted for <c>:material-foo:</c> shortcodes before the
+        /// font-ligature fallback.
+        /// </param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseMaterialTheme(IIconResolver? iconResolver) =>
+            builder
+                .UsePlugin(new IconShortcodePlugin(iconResolver))
+                .UsePlugin(new FontsPlugin(MaterialFonts.Default))
+                .UsePlugin(new MaterialThemePlugin());
+
+        /// <summary>Registers <see cref="MaterialThemePlugin"/> with caller-tweaked options + the Material icon-shortcode preprocessor.</summary>
+        /// <param name="configure">Function that receives <see cref="MaterialThemeOptions.Default"/> and returns the customized set.</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseMaterialTheme(
+            Func<MaterialThemeOptions, MaterialThemeOptions> configure) => builder.UseMaterialTheme(configure, null);
+
+        /// <summary>Registers <see cref="MaterialThemePlugin"/> with caller-tweaked options + the Material icon-shortcode preprocessor wired to <paramref name="iconResolver"/>.</summary>
+        /// <param name="configure">Function that receives <see cref="MaterialThemeOptions.Default"/> and returns the customized set.</param>
+        /// <param name="iconResolver">Optional inline-icon resolver consulted for <c>:material-foo:</c> shortcodes before the font-ligature fallback.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UseMaterialTheme(
+            Func<MaterialThemeOptions, MaterialThemeOptions> configure,
+            IIconResolver? iconResolver)
+        {
+            var options = configure(MaterialThemeOptions.Default);
+            return builder
+                .UsePlugin(new IconShortcodePlugin(iconResolver))
+                .UsePlugin(new FontsPlugin(MaterialFonts.Default))
+                .UsePlugin(new MaterialThemePlugin(options));
+        }
     }
 }

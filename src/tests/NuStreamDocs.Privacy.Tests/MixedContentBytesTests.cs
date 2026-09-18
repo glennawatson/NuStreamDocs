@@ -166,14 +166,18 @@ public class MixedContentBytesTests
     [Arguments("<a href=")]
     [Arguments("<a href=\"")]
     [Arguments("<a hr")]
-    public async Task TruncatedInputBeforeSchemePassesThrough(string html) =>
+    public async Task TruncatedInputBeforeSchemePassesThrough(string html)
+    {
+        ArrayBufferWriter<byte> sink = new();
+        await Assert.That(MixedContentBytes.RewriteInto(Encoding.UTF8.GetBytes(html), sink)).IsFalse();
+        await Assert.That(sink.WrittenCount).IsEqualTo(0);
         await Assert.That(Rewrite(html)).IsEqualTo(html);
+    }
 
     /// <summary>Truncated input that already contains <c>http://</c> with an empty host doesn't throw — the scanner upgrades it to <c>https://</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TruncatedInputAfterSchemeStillUpgrades() =>
-
         // Empty host is not loopback, so it gets upgraded — the important
         // thing is no out-of-range read on the truncated buffer.
         await Assert.That(Rewrite("<a href=\"http://")).IsEqualTo("<a href=\"https://");

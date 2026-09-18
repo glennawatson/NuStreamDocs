@@ -12,6 +12,9 @@ namespace NuStreamDocs.SphinxInventory;
 /// <summary>Emits a Sphinx v2 <c>objects.inv</c> inventory for an autorefs snapshot — plain UTF-8 header, zlib-compressed body of <c>NAME std:label -1 URI -</c> lines.</summary>
 internal static class SphinxInventoryWriter
 {
+    /// <summary>Initial space for inventory entries before compression.</summary>
+    private const int InitialBodyCapacity = 1024;
+
     /// <summary>Gets header line 1 — Sphinx version marker (must be byte-exact).</summary>
     private static ReadOnlySpan<byte> HeaderLine1 => "# Sphinx inventory version 2\n"u8;
 
@@ -35,9 +38,9 @@ internal static class SphinxInventoryWriter
     /// <param name="outputPath">Absolute output path.</param>
     /// <param name="options">Header options (project, version, file name).</param>
     /// <param name="entries">Snapshot from the autorefs registry — <c>(uid, href)</c> pairs.</param>
-    public static void Write(in FilePath outputPath, SphinxInventoryOptions options, (byte[] Id, byte[] Url)[] entries)
+    internal static void Write(in FilePath outputPath, SphinxInventoryOptions options, (byte[] Id, byte[] Url)[] entries)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        _ = Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         using var stream = File.Create(outputPath);
         WriteHeader(stream, options);
         WriteCompressedBody(stream, entries);
@@ -85,7 +88,7 @@ internal static class SphinxInventoryWriter
     private static void WriteCompressedBody(Stream stream, (byte[] Id, byte[] Url)[] entries)
     {
         using ZLibStream zlib = new(stream, CompressionLevel.Optimal, true);
-        ArrayBufferWriter<byte> sink = new(1024);
+        ArrayBufferWriter<byte> sink = new(InitialBodyCapacity);
         for (var i = 0; i < entries.Length; i++)
         {
             WriteEntry(sink, entries[i].Id, entries[i].Url);

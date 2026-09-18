@@ -6,10 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Contract for a config-file reader that produces a
-/// <see cref="MkDocsConfig"/> from on-disk source bytes.
-/// </summary>
+/// <summary>Contract for a config-file reader that produces a <see cref="MkDocsConfig"/> from on-disk source bytes.</summary>
 /// <remarks>
 /// Implementations are registered with <see cref="Building.DocBuilder"/>
 /// through their assembly's <c>Use{Format}Config(...)</c> extension method.
@@ -29,14 +26,13 @@ public interface IConfigReader
     /// <returns>The parsed config.</returns>
     MkDocsConfig Read(ReadOnlySpan<byte> utf8Source);
 
-    /// <summary>
-    /// Reads <paramref name="utf8Stream"/> and parses it. Override to support incremental parsing.
-    /// </summary>
+    /// <summary>Reads <paramref name="utf8Stream"/> and parses it. Override to support incremental parsing.</summary>
     /// <param name="utf8Stream">UTF-8 source stream; positioned at the start of the document.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The parsed config.</returns>
     async Task<MkDocsConfig> ReadAsync(Stream utf8Stream, CancellationToken cancellationToken)
     {
+        const int BufferGrowthFactor = 2;
         var sizeHint = TryGetSizeHint(utf8Stream);
         var pool = ArrayPool<byte>.Shared;
         var buffer = pool.Rent(sizeHint);
@@ -46,7 +42,7 @@ public interface IConfigReader
             while (true)
             {
                 var read = await utf8Stream
-                    .ReadAsync(buffer.AsMemory(written, buffer.Length - written), cancellationToken)
+                    .ReadAsync(buffer.AsMemory(written), cancellationToken)
                     .ConfigureAwait(false);
                 if (read == 0)
                 {
@@ -59,7 +55,7 @@ public interface IConfigReader
                     continue;
                 }
 
-                var bigger = pool.Rent(buffer.Length * 2);
+                var bigger = pool.Rent(buffer.Length * BufferGrowthFactor);
                 buffer.AsSpan(0, written).CopyTo(bigger);
                 pool.Return(buffer, true);
                 buffer = bigger;

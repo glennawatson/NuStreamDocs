@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
@@ -18,6 +20,7 @@ namespace NuStreamDocs.Benchmarks;
 /// is most visible at high reject rates — this benchmark makes that
 /// visible.
 /// </summary>
+[DebuggerDisplay("PrivacyUrlScanBenchmarks: PageSizeKb={PageSizeKb}, UrlsPer200Bytes={UrlsPer200Bytes}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class PrivacyUrlScanBenchmarks
@@ -40,6 +43,15 @@ public class PrivacyUrlScanBenchmarks
     /// <summary>Number of element shapes the synthesizer cycles through (img / link / srcset / inline-style url() / heading).</summary>
     private const int ElementShapes = 5;
 
+    /// <summary>Body-byte interval used to define URL density.</summary>
+    private const int DensityIntervalBytes = 200;
+
+    /// <summary>Position of the multi-resolution image fixture.</summary>
+    private const int SrcsetShape = 2;
+
+    /// <summary>Position of the inline stylesheet fixture.</summary>
+    private const int InlineStyleShape = 3;
+
     /// <summary>Pre-built page bytes for the current iteration.</summary>
     private byte[] _html = [];
 
@@ -60,34 +72,36 @@ public class PrivacyUrlScanBenchmarks
     [Params(LowDensity, HighDensity)]
     public int UrlsPer200Bytes { get; set; }
 
+    /// <summary>Gets the prose inserted between asset references.</summary>
+    private static ApiCompatString Filler => "<p>Lorem ipsum dolor sit amet.</p>";
+
     /// <summary>Generates the HTML fixture for the current params.</summary>
     [GlobalSetup]
     public void Setup()
     {
         StringBuilder sb = new(PageSizeKb * BytesPerKb);
         var totalBytes = PageSizeKb * BytesPerKb;
-        var blockEvery = 200 / Math.Max(1, UrlsPer200Bytes);
+        var blockEvery = DensityIntervalBytes / Math.Max(1, UrlsPer200Bytes);
         var idx = 0;
         var written = 0;
         while (written < totalBytes)
         {
-            var i = idx.ToString(CultureInfo.InvariantCulture);
-            var emitted = (idx % ElementShapes) switch
+            var i = new ApiCompatString(idx.ToString(CultureInfo.InvariantCulture));
+            var emitted = new ApiCompatString((idx % ElementShapes) switch
             {
-                0 => $"<img src=\"https://cdn.example/img{i}.png\">",
-                1 => $"<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/c{i}\">",
-                2 => $"<img srcset=\"https://cdn.example/x{i}.png 2x, https://cdn.example/y{i}.png 1x\">",
-                3 => $"<style>.b{i} {{ background: url(https://cdn.example/bg{i}.png); }}</style>",
-                _ => $"<h2 id=\"section-{i}\">Section {i}</h2>"
-            };
-            sb.Append(emitted);
-            written += emitted.Length;
+                0 => StringCompose.Concat("<img src=\"https://cdn.example/img", i, ".png\">"),
+                1 => StringCompose.Concat("<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/c", i, "\">"),
+                SrcsetShape => StringCompose.Concat("<img srcset=\"https://cdn.example/x", i, ".png 2x, https://cdn.example/y", i, ".png 1x\">"),
+                InlineStyleShape => StringCompose.Concat("<style>.b", i, " { background: url(https://cdn.example/bg", i, ".png); }</style>"),
+                _ => StringCompose.Concat("<h2 id=\"section-", i, "\">Section ", i, "</h2>")
+            });
+            _ = sb.Append(emitted.ToStringValue());
+            written += emitted.ToStringValue().Length;
 
             for (var f = 0; f < blockEvery && written < totalBytes; f++)
             {
-                const string Filler = "<p>Lorem ipsum dolor sit amet.</p>";
-                sb.Append(Filler);
-                written += Filler.Length;
+                _ = sb.Append(Filler.ToStringValue());
+                written += Filler.ToStringValue().Length;
             }
 
             idx++;
@@ -123,12 +137,14 @@ public class PrivacyUrlScanBenchmarks
 
     /// <summary>Rewrite pass with a filter that accepts every host — exercises the full byte-keyed registry path.</summary>
     /// <returns>The rewritten byte count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int RewriteAcceptAll() =>
         ExternalUrlScanner.Rewrite(_html, _registry, _acceptAll).Length;
 
     /// <summary>Rewrite pass with a filter that rejects every host — short-circuits to the verbatim-copy path.</summary>
     /// <returns>The rewritten byte count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int RewriteRejectAll() =>
         ExternalUrlScanner.Rewrite(_html, _registry, _rejectAll).Length;

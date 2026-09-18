@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Markup;
@@ -63,44 +64,23 @@ public static class MarkdownLexer
     {
         LexerRule[] rules =
         [
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            },
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, },
 
             // ATX heading: # / ## / ... at line start, classify the whole line.
-            new(MatchAtxHeading, TokenClass.KeywordDeclaration, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst, RequiresLineStart = true
-            },
+            new(MatchAtxHeading, TokenClass.KeywordDeclaration, LexerRule.NoStateChange) { FirstBytes = HashFirst, RequiresLineStart = true, },
 
             // Fence opener / closer — line-anchored ``` or ~~~.
-            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange)
-            {
-                FirstBytes = BacktickFirst, RequiresLineStart = true
-            },
-            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange)
-            {
-                FirstBytes = TildeFirst, RequiresLineStart = true
-            },
+            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = BacktickFirst, RequiresLineStart = true, },
+            new(MatchFenceLine, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = TildeFirst, RequiresLineStart = true, },
 
             // Blockquote prefix (>).
-            new(MatchBlockquotePrefix, TokenClass.Keyword, LexerRule.NoStateChange)
-            {
-                FirstBytes = AngleFirst, RequiresLineStart = true
-            },
+            new(MatchBlockquotePrefix, TokenClass.Keyword, LexerRule.NoStateChange) { FirstBytes = AngleFirst, RequiresLineStart = true, },
 
             // Bullet at line start: optional indent, then -/+/* then space.
-            new(MatchBulletPrefix, TokenClass.Operator, LexerRule.NoStateChange)
-            {
-                FirstBytes = BulletFirst, RequiresLineStart = true
-            },
+            new(MatchBulletPrefix, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = BulletFirst, RequiresLineStart = true, },
 
             // Ordered-list marker: digit run + . + space.
-            new(MatchOrderedMarker, TokenClass.Operator, LexerRule.NoStateChange)
-            {
-                FirstBytes = DigitFirst, RequiresLineStart = true
-            },
+            new(MatchOrderedMarker, TokenClass.Operator, LexerRule.NoStateChange) { FirstBytes = DigitFirst, RequiresLineStart = true, },
 
             // Inline code span: `...` (single backtick form only — multi-backtick deferred).
             new(MatchInlineCode, TokenClass.StringSingle, LexerRule.NoStateChange) { FirstBytes = BacktickFirst },
@@ -132,12 +112,7 @@ public static class MarkdownLexer
             return 0;
         }
 
-        if (hashes >= slice.Length || slice[hashes] is not ((byte)' ' or (byte)'\t'))
-        {
-            return 0;
-        }
-
-        return hashes + TokenMatchers.LineLength(slice[hashes..]);
+        return hashes >= slice.Length || slice[hashes] is not ((byte)' ' or (byte)'\t') ? 0 : hashes + TokenMatchers.LineLength(slice[hashes..]);
     }
 
     /// <summary>Matches a fenced code-block opener / closer line — three or more backticks or tildes plus an optional info string.</summary>
@@ -220,6 +195,7 @@ public static class MarkdownLexer
     /// <summary>Matches a single-backtick inline code span — <c>`...`</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched, or zero.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int MatchInlineCode(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchBracketedBlock(slice, (byte)'`', (byte)'`');
 

@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Building;
 using NuStreamDocs.Common;
@@ -33,7 +34,13 @@ public class ExtraAssetsTests
             await builder.BuildAsync();
 
             var plugin = ExtractPlugin(builder);
-            List<FilePath> assetPaths = [.. plugin.StaticAssets.Select(static p => p.Path)];
+            var assets = plugin.StaticAssets;
+            var assetPaths = new FilePath[assets.Length];
+            for (var i = 0; i < assets.Length; i++)
+            {
+                assetPaths[i] = assets[i].Path;
+            }
+
             await Assert.That(assetPaths).Contains("assets/extra/one.css");
             await Assert.That(assetPaths).Contains("assets/extra/two.css");
         }
@@ -163,6 +170,7 @@ public class ExtraAssetsTests
     /// <summary>Pulls the singleton <c>ExtraAssetsPlugin</c> back out of the builder via the public extension.</summary>
     /// <param name="builder">Builder.</param>
     /// <returns>The folded plugin instance.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ExtraAssetsPlugin ExtractPlugin(DocBuilder builder) =>
         builder.GetOrAddPlugin<ExtraAssetsPlugin>();
 
@@ -189,8 +197,8 @@ public class ExtraAssetsTests
         {
             var root = Path.Combine(
                 Path.GetTempPath(),
-                "smkd-extras-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(root);
+                $"smkd-extras-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+            _ = Directory.CreateDirectory(root);
             return new(root);
         }
 

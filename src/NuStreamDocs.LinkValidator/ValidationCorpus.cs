@@ -3,14 +3,19 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.LinkValidator;
 
 /// <summary>In-memory inventory of every page in the rendered site, consumed by both validators.</summary>
+[System.Diagnostics.DebuggerDisplay("ValidationCorpus: {Pages}")]
 public sealed class ValidationCorpus
 {
+    /// <summary>Maximum URL lookup length to allocate on the stack.</summary>
+    private const int StackUrlByteLimit = 512;
+
     /// <summary>Lowercased asset extensions (with leading dot) treated as static assets rather than pages.</summary>
     private static readonly byte[][] AssetExtensions =
     [
@@ -40,19 +45,23 @@ public sealed class ValidationCorpus
     /// <summary>Gets every page in the corpus.</summary>
     public PageLinks[] Pages { get; private init; } = [];
 
+    /// <summary>Gets the extension used for rendered HTML pages.</summary>
+    private static ReadOnlySpan<byte> HtmlExtension => ".html"u8;
+
     /// <summary>Builds an immutable corpus from a previously-collected page set (e.g. accumulated from per-page Scan hooks).</summary>
     /// <param name="pages">Pages keyed by URL bytes.</param>
     /// <returns>The populated corpus.</returns>
     public static ValidationCorpus FromPages(IDictionary<byte[], PageLinks> pages)
     {
         Dictionary<byte[], PageLinks> snapshot = new(pages, ByteArrayComparer.Instance);
-        return new(snapshot, new(ByteArrayComparer.Instance)) { Pages = [.. snapshot.Values] };
+        return new(snapshot, [with(ByteArrayComparer.Instance)]) { Pages = [.. snapshot.Values] };
     }
 
     /// <summary>Scans one page's HTML into a <see cref="PageLinks"/>.</summary>
     /// <param name="pageUrl">Page URL bytes.</param>
     /// <param name="html">UTF-8 HTML bytes.</param>
     /// <returns>The captured inventory.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PageLinks Scan(byte[] pageUrl, ReadOnlySpan<byte> html) => ScanPage(pageUrl, html);
 
     /// <summary>Walks <paramref name="outputRoot"/> in parallel and builds an immutable corpus.</summary>
@@ -71,11 +80,7 @@ public sealed class ValidationCorpus
         DirectoryPath fullRoot = new(Path.GetFullPath(outputRoot.Value));
         ConcurrentDictionary<byte[], PageLinks> pages = new(ByteArrayComparer.Instance);
 
-        ParallelOptions parallelOptions = new()
-        {
-            CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = parallelism
-        };
+        ParallelOptions parallelOptions = new() { CancellationToken = cancellationToken, MaxDegreeOfParallelism = parallelism, };
 
         await Parallel.ForEachAsync(
             EnumerateHtml(fullRoot),
@@ -89,7 +94,7 @@ public sealed class ValidationCorpus
                 // register them so inbound links resolve, but skip their outbound link scan
                 // since the bytes are just the redirect chrome.
                 pages[pageUrlBytes] = IsRedirectStub(bytes)
-                    ? new(pageUrlBytes, [], [], [], new(ByteArrayComparer.Instance), new(ByteArrayComparer.Instance))
+                    ? new(pageUrlBytes, [], [], [], [with(ByteArrayComparer.Instance)], [with(ByteArrayComparer.Instance)])
                     : ScanPage(pageUrlBytes, bytes);
             }).ConfigureAwait(false);
 
@@ -101,18 +106,21 @@ public sealed class ValidationCorpus
     /// <summary>True when an asset file exists at <paramref name="assetUrl"/>.</summary>
     /// <param name="assetUrl">Site-relative asset URL bytes (forward-slashed UTF-8, no leading slash).</param>
     /// <returns>True for known disk assets.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsAsset(ReadOnlySpan<byte> assetUrl) =>
         _assets.GetAlternateLookup<ReadOnlySpan<byte>>().Contains(assetUrl);
 
     /// <summary>Tests whether a page exists at <paramref name="pageUrl"/>.</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>
     /// <returns>True when the page is in the corpus.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsPage(byte[] pageUrl) => _pages.ContainsKey(pageUrl);
 
     /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>.</summary>
     /// <param name="pageUrl">Site-relative URL bytes.</param>
     /// <param name="page">Resolved page on success.</param>
     /// <returns>True when found.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetPage(byte[] pageUrl, out PageLinks page) => _pages.TryGetValue(pageUrl, out page!);
 
     /// <summary>Resolves <paramref name="pageUrl"/> to its <see cref="PageLinks"/>, accepting directory-URL variants (<c>foo/</c>, <c>foo</c>, empty path).</summary>
@@ -137,37 +145,15 @@ public sealed class ValidationCorpus
         // foo/ → try foo/index.html (disk-style) then foo.html (source-style).
         if (pageUrl[^1] == (byte)'/')
         {
-            Span<byte> withIndex = stackalloc byte[pageUrl.Length + "index.html"u8.Length];
-            pageUrl.CopyTo(withIndex);
-            "index.html"u8.CopyTo(withIndex[pageUrl.Length..]);
-            if (lookup.TryGetValue(withIndex, out page!))
-            {
-                return true;
-            }
-
-            var trimmed = pageUrl[..^1];
-            Span<byte> withHtmlNoSlash = stackalloc byte[trimmed.Length + ".html"u8.Length];
-            trimmed.CopyTo(withHtmlNoSlash);
-            ".html"u8.CopyTo(withHtmlNoSlash[trimmed.Length..]);
-            return lookup.TryGetValue(withHtmlNoSlash, out page!);
+            return TryResolveWithSuffix(_pages, pageUrl, "index.html"u8, out page!)
+                || TryResolveWithSuffix(_pages, pageUrl[..^1], HtmlExtension, out page!);
         }
 
         // foo (no trailing slash, no .html) → try foo/index.html, then foo.html.
-        if (!pageUrl.EndsWith(".html"u8))
+        if (!pageUrl.EndsWith(HtmlExtension))
         {
-            Span<byte> withSlashIndex = stackalloc byte[pageUrl.Length + 1 + "index.html"u8.Length];
-            pageUrl.CopyTo(withSlashIndex);
-            withSlashIndex[pageUrl.Length] = (byte)'/';
-            "index.html"u8.CopyTo(withSlashIndex[(pageUrl.Length + 1)..]);
-            if (lookup.TryGetValue(withSlashIndex, out page!))
-            {
-                return true;
-            }
-
-            Span<byte> withHtml = stackalloc byte[pageUrl.Length + ".html"u8.Length];
-            pageUrl.CopyTo(withHtml);
-            ".html"u8.CopyTo(withHtml[pageUrl.Length..]);
-            return lookup.TryGetValue(withHtml, out page!);
+            return TryResolveWithSuffix(_pages, pageUrl, "/index.html"u8, out page!)
+                || TryResolveWithSuffix(_pages, pageUrl, HtmlExtension, out page!);
         }
 
         page = null!;
@@ -179,7 +165,7 @@ public sealed class ValidationCorpus
     /// <returns>Set of site-relative asset URLs.</returns>
     private static HashSet<byte[]> EnumerateAssetUrls(in DirectoryPath root)
     {
-        HashSet<byte[]> set = new(ByteArrayComparer.Instance);
+        HashSet<byte[]> set = [with(ByteArrayComparer.Instance)];
         if (!Directory.Exists(root.Value))
         {
             return set;
@@ -201,10 +187,25 @@ public sealed class ValidationCorpus
             }
 
             var rel = Path.GetRelativePath(root.Value, path).Replace('\\', '/');
-            set.Add(Encoding.UTF8.GetBytes(rel));
+            _ = set.Add(Encoding.UTF8.GetBytes(rel));
         }
 
         return set;
+    }
+
+    /// <summary>Looks up a page URL with an appended suffix.</summary>
+    /// <param name="pages">Pages indexed by URL.</param>
+    /// <param name="pageUrl">Site-relative URL bytes.</param>
+    /// <param name="suffix">Suffix to append for the lookup.</param>
+    /// <param name="page">Resolved page on success.</param>
+    /// <returns>Whether the suffixed page exists.</returns>
+    private static bool TryResolveWithSuffix(Dictionary<byte[], PageLinks> pages, ReadOnlySpan<byte> pageUrl, ReadOnlySpan<byte> suffix, out PageLinks page)
+    {
+        var length = pageUrl.Length + suffix.Length;
+        Span<byte> candidate = length <= StackUrlByteLimit ? stackalloc byte[length] : new byte[length];
+        pageUrl.CopyTo(candidate);
+        suffix.CopyTo(candidate[pageUrl.Length..]);
+        return pages.GetAlternateLookup<ReadOnlySpan<byte>>().TryGetValue(candidate, out page!);
     }
 
     /// <summary>Yields every <c>.html</c> file under <paramref name="root"/>.</summary>
@@ -249,16 +250,16 @@ public sealed class ValidationCorpus
         // can flow into externalLinks or internalAssets. Pre-sizing avoids List<>.AddWithResize
         // copies as the buckets fill — these were among the largest allocators in the suite.
         var maxAttributes = hrefs.Length + srcs.Length;
-        List<byte[]> internalLinks = new(hrefs.Length);
-        List<byte[]> externalLinks = new(maxAttributes);
-        List<byte[]> internalAssets = new(maxAttributes);
+        List<byte[]> internalLinks = [with(hrefs.Length)];
+        List<byte[]> externalLinks = [with(maxAttributes)];
+        List<byte[]> internalAssets = [with(maxAttributes)];
         BucketHrefs(hrefs, bytes, internalLinks, externalLinks, internalAssets);
         BucketSrcs(srcs, bytes, externalLinks, internalAssets);
 
-        HashSet<byte[]> anchorIds = new(idRanges.Length, ByteArrayComparer.Instance);
+        HashSet<byte[]> anchorIds = [with(idRanges.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < idRanges.Length; i++)
         {
-            anchorIds.Add([.. idRanges[i].AsSpan(bytes)]);
+            _ = anchorIds.Add([.. idRanges[i].AsSpan(bytes)]);
         }
 
         var deprecatedNameAnchors = nameRanges.Length is 0
@@ -352,10 +353,10 @@ public sealed class ValidationCorpus
     /// <returns>Hash set keyed by the byte values of each name attribute.</returns>
     private static HashSet<byte[]> BuildDeprecatedNameSet(ByteRange[] ranges, ReadOnlySpan<byte> bytes)
     {
-        HashSet<byte[]> set = new(ranges.Length, ByteArrayComparer.Instance);
+        HashSet<byte[]> set = [with(ranges.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < ranges.Length; i++)
         {
-            set.Add([.. ranges[i].AsSpan(bytes)]);
+            _ = set.Add([.. ranges[i].AsSpan(bytes)]);
         }
 
         return set;

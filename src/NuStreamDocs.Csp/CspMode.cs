@@ -8,8 +8,8 @@ namespace NuStreamDocs.Csp;
 public enum CspMode
 {
     /// <summary>Emit <c>&lt;meta http-equiv="Content-Security-Policy"&gt;</c> — violations are blocked.</summary>
-    Enforce,
+    Enforce = 0,
 
     /// <summary>Emit <c>&lt;meta http-equiv="Content-Security-Policy-Report-Only"&gt;</c> — violations are reported but not blocked (useful while rolling a policy out).</summary>
-    ReportOnly
+    ReportOnly = 1,
 }

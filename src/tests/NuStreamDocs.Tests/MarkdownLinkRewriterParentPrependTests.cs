@@ -11,19 +11,25 @@ namespace NuStreamDocs.Tests;
 /// <summary>Behavior tests for image / asset URL handling on directory-URL non-index pages.</summary>
 public class MarkdownLinkRewriterParentPrependTests
 {
+    /// <summary>Image Markup used by the test cases.</summary>
+    private const string ImageMarkup = "<img src=\"img/x.png\">";
+
+    /// <summary>Output Capacity Padding used by the test cases.</summary>
+    private const int OutputCapacityPadding = 16;
+
     /// <summary>Image src on a non-index dir-URL page gains a <c>../</c> prefix.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ImageSrcGetsParentPrependOnNonIndex() =>
-        await Assert.That(Rewrite("<img src=\"img/x.png\">", true, true))
+        await Assert.That(Rewrite(ImageMarkup, true, true))
             .IsEqualTo("<img src=\"../img/x.png\">");
 
     /// <summary>Image src on the index page (no prepend) is left untouched.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ImageSrcOnIndexIsUnchanged() =>
-        await Assert.That(Rewrite("<img src=\"img/x.png\">", true, false))
-            .IsEqualTo("<img src=\"img/x.png\">");
+        await Assert.That(Rewrite(ImageMarkup, true, false))
+            .IsEqualTo(ImageMarkup);
 
     /// <summary>Absolute https image src is left untouched.</summary>
     /// <returns>Async test.</returns>
@@ -79,7 +85,7 @@ public class MarkdownLinkRewriterParentPrependTests
     [Test]
     public async Task FlatUrlModeDoesNotPrepend()
     {
-        const string Source = "<img src=\"img/x.png\">";
+        const string Source = ImageMarkup;
         await Assert.That(Rewrite(Source, false, true)).IsEqualTo(Source);
     }
 
@@ -103,7 +109,7 @@ public class MarkdownLinkRewriterParentPrependTests
     private static string Rewrite(string input, bool useDirectoryUrls, bool prependParent)
     {
         var bytes = Encoding.UTF8.GetBytes(input);
-        ArrayBufferWriter<byte> sink = new(bytes.Length + 16);
+        ArrayBufferWriter<byte> sink = new(bytes.Length + OutputCapacityPadding);
         MarkdownLinkRewriter.RewriteInto(bytes, useDirectoryUrls, prependParent, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

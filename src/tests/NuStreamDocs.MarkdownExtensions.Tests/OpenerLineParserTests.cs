@@ -61,10 +61,10 @@ public class OpenerLineParserTests
     public async Task ScanWhileBranches()
     {
         byte[] src = [.. "aaab"u8];
-        var end = OpenerLineParser.ScanWhile(src, 0, b => b is (byte)'a');
-        await Assert.That(end).IsEqualTo(3);
-        var endAtEnd = OpenerLineParser.ScanWhile(src, 4, b => b is (byte)'a');
-        await Assert.That(endAtEnd).IsEqualTo(4);
+        var end = OpenerLineParser.ScanWhile(src, 0, static b => b is (byte)'a');
+        await Assert.That(end).IsEqualTo("aaa"u8.Length);
+        var endAtEnd = OpenerLineParser.ScanWhile(src, src.Length, static b => b is (byte)'a');
+        await Assert.That(endAtEnd).IsEqualTo(src.Length);
     }
 
     /// <summary>Slug-byte predicate accepts identifier bytes plus dash.</summary>

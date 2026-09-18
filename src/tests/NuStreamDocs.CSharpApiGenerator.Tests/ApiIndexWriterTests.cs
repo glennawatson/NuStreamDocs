@@ -9,6 +9,9 @@ namespace NuStreamDocs.CSharpApiGenerator.Tests;
 /// <summary>Pins <see cref="ApiIndexWriter.BuildBytes"/> on the rendered shape and the <see cref="ApiIndexWriter.IsInfraDirectory"/> infra-name filter.</summary>
 public class ApiIndexWriterTests
 {
+    /// <summary>Index Order used by the test cases.</summary>
+    private const int IndexOrder = 2;
+
     /// <summary>An empty namespace list short-circuits to a zero-length payload.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -70,7 +73,7 @@ public class ApiIndexWriterTests
     public async Task BuildBytesEmitsOrderFrontmatterBlock()
     {
         byte[][] namespaces = ["Foo"u8.ToArray()];
-        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], 2));
+        var contents = Encoding.UTF8.GetString(ApiIndexWriter.BuildBytes(namespaces, [], [], IndexOrder));
 
         await Assert.That(contents).StartsWith("---\nOrder: 2\n---\n\n# API Reference");
     }

@@ -7,12 +7,24 @@ namespace NuStreamDocs.CSharpApiGenerator.Tests;
 /// <summary>Behavior tests for <c>CSharpApiGeneratorOptions</c>.</summary>
 public class CSharpApiGeneratorOptionsTests
 {
+    /// <summary>Repository Directory used by the test cases.</summary>
+    private const string RepositoryDirectory = "/repo";
+
+    /// <summary>Cache Directory used by the test cases.</summary>
+    private const string CacheDirectory = "/cache";
+
+    /// <summary>Target Framework used by the test cases.</summary>
+    private const string TargetFramework = "net10.0";
+
+    /// <summary>Input Count used by the test cases.</summary>
+    private const int InputCount = 2;
+
     /// <summary>The factory uses the documented default subdirectory.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task DefaultSubdirectoryIsApi()
     {
-        var options = CSharpApiGeneratorOptions.FromManifest("/repo", "/cache");
+        var options = CSharpApiGeneratorOptions.FromManifest(RepositoryDirectory, CacheDirectory);
         await Assert.That(options.OutputMarkdownSubdirectory)
             .IsEqualTo(CSharpApiGeneratorOptions.DefaultOutputSubdirectory);
         await Assert.That(options.OutputMarkdownSubdirectory).IsEqualTo("api");
@@ -23,12 +35,12 @@ public class CSharpApiGeneratorOptionsTests
     [Test]
     public async Task ValidateRejectsEmptyFields()
     {
-        await Assert.That(static () => CSharpApiGeneratorOptions.FromManifest(string.Empty, "/cache").Validate())
+        await Assert.That(static () => CSharpApiGeneratorOptions.FromManifest(string.Empty, CacheDirectory).Validate())
             .Throws<ArgumentException>();
-        await Assert.That(static () => CSharpApiGeneratorOptions.FromManifest("/repo", "  ").Validate())
+        await Assert.That(static () => CSharpApiGeneratorOptions.FromManifest(RepositoryDirectory, "  ").Validate())
             .Throws<ArgumentException>();
         await Assert.That(static () =>
-                CSharpApiGeneratorOptions.FromManifest("/repo", "/cache", string.Empty).Validate())
+                CSharpApiGeneratorOptions.FromManifest(RepositoryDirectory, CacheDirectory, string.Empty).Validate())
             .Throws<ArgumentException>();
     }
 
@@ -37,7 +49,7 @@ public class CSharpApiGeneratorOptionsTests
     [Test]
     public async Task ValidateAcceptsPopulatedManifest()
     {
-        var options = CSharpApiGeneratorOptions.FromManifest("/repo", "/cache", "reference");
+        var options = CSharpApiGeneratorOptions.FromManifest(RepositoryDirectory, CacheDirectory, "reference");
         options.Validate();
         await Assert.That(options.OutputMarkdownSubdirectory).IsEqualTo("reference");
     }
@@ -49,7 +61,7 @@ public class CSharpApiGeneratorOptionsTests
     {
         var options = CSharpApiGeneratorOptions.FromPackages(
             [new("ReactiveUI", "20.0.0")],
-            "/cache");
+            CacheDirectory);
         options.Validate();
         await Assert.That(options.Inputs.Length).IsEqualTo(1);
         var input = options.Inputs[0];
@@ -63,11 +75,11 @@ public class CSharpApiGeneratorOptionsTests
     [Test]
     public async Task FromAssembliesRoundTripsList()
     {
-        var options = CSharpApiGeneratorOptions.FromAssemblies("net10.0", ["/tmp/foo.dll"]);
+        var options = CSharpApiGeneratorOptions.FromAssemblies(TargetFramework, ["/tmp/foo.dll"]);
         options.Validate();
         var input = options.Inputs[0] as LocalAssembliesInput;
         await Assert.That(input).IsNotNull();
-        await Assert.That(input!.Tfm).IsEqualTo("net10.0");
+        await Assert.That(input!.Tfm).IsEqualTo(TargetFramework);
     }
 
     /// <summary>Composite mode (multiple inputs) validates each entry.</summary>
@@ -76,10 +88,10 @@ public class CSharpApiGeneratorOptionsTests
     public async Task FromCompositeValidatesEveryEntry()
     {
         var options = CSharpApiGeneratorOptions.From(
-            new NuGetManifestInput("/repo", "/cache"),
-            new LocalAssembliesInput("net10.0", ["/tmp/foo.dll"]));
+            new NuGetManifestInput(RepositoryDirectory, CacheDirectory),
+            new LocalAssembliesInput(TargetFramework, ["/tmp/foo.dll"]));
         options.Validate();
-        await Assert.That(options.Inputs.Length).IsEqualTo(2);
+        await Assert.That(options.Inputs.Length).IsEqualTo(InputCount);
     }
 
     /// <summary>Validate rejects an empty input array.</summary>

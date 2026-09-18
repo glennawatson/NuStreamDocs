@@ -55,7 +55,7 @@ public class OptimizeRegistrationTests
     [Test]
     public async Task HtmlMinifyRewrite()
     {
-        ArrayBufferWriter<byte> output = new(64);
+        ArrayBufferWriter<byte> output = new();
         PagePostResolveContext ctx = new("p.md", "<p>   spaces   </p>"u8, output);
         new HtmlMinifyPlugin().Rewrite(in ctx);
         await Assert.That(Encoding.UTF8.GetString(output.WrittenSpan)).DoesNotContain("   spaces   ");

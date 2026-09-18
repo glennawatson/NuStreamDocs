@@ -115,7 +115,7 @@ internal static class BashRules
 
     /// <summary>Builds the Bash rule list.</summary>
     /// <returns>Ordered rule list.</returns>
-    public static LexerRule[] Build()
+    internal static LexerRule[] Build()
     {
         ShellFamilyConfig config = new()
         {
@@ -124,7 +124,7 @@ internal static class BashRules
             Operators = Operators,
             OperatorFirst = OperatorFirst,
             VariableSigil = (byte)'$',
-            SpecialVariableBytes = SpecialVariableBytes
+            SpecialVariableBytes = SpecialVariableBytes,
         };
 
         return ShellFamilyRules.Build(config);

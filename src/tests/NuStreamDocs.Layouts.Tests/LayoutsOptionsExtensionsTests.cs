@@ -7,6 +7,9 @@ namespace NuStreamDocs.Layouts.Tests;
 /// <summary>Tests for the <see cref="LayoutsOptionsExtensions"/> helpers.</summary>
 public class LayoutsOptionsExtensionsTests
 {
+    /// <summary>Include depth limit.</summary>
+    private const int IncludeDepthLimit = 3;
+
     /// <summary>WithTemplateDirectory copies the directory through.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -21,14 +24,14 @@ public class LayoutsOptionsExtensionsTests
     [Test]
     public async Task WithMaxIncludeDepth_Sets()
     {
-        var opts = LayoutsOptions.Default.WithMaxIncludeDepth(3);
-        await Assert.That(opts.MaxIncludeDepth).IsEqualTo(3);
+        var opts = LayoutsOptions.Default.WithMaxIncludeDepth(IncludeDepthLimit);
+        await Assert.That(opts.MaxIncludeDepth).IsEqualTo(IncludeDepthLimit);
     }
 
     /// <summary>WithMaxIncludeDepth rejects zero.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WithMaxIncludeDepth_RejectsZero() =>
-        await Assert.That(() => LayoutsOptions.Default.WithMaxIncludeDepth(0))
+        await Assert.That(static () => LayoutsOptions.Default.WithMaxIncludeDepth(0))
             .Throws<ArgumentOutOfRangeException>();
 }

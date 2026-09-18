@@ -13,6 +13,9 @@ namespace NuStreamDocs.Highlight.Tests;
 /// <summary>Smoke tests for bash, json, yaml, diff, and razor — the lexers needed for the rxui corpus's first release.</summary>
 public class AdditionalLanguagesTests
 {
+    /// <summary>The TrueConstantHtml test value.</summary>
+    private const string TrueConstantHtml = "<span class=\"kc\">true</span>";
+
     /// <summary>Bash classifies <c>if</c>/<c>then</c> as keywords and <c>$VAR</c> as a name.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -37,7 +40,7 @@ public class AdditionalLanguagesTests
         await Assert.That(html.Contains("<span class=\"s2\">&quot;Alice&quot;</span>", StringComparison.Ordinal))
             .IsTrue();
         await Assert.That(html.Contains("<span class=\"mi\">42</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(TrueConstantHtml, StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>YAML classifies plain mapping keys as <c>na</c> and constants as <c>kc</c>.</summary>
@@ -47,7 +50,7 @@ public class AdditionalLanguagesTests
     {
         var html = YamlLexer.Instance.Render("site_name: ReactiveUI\nstrict: true\n"u8);
         await Assert.That(html.Contains("<span class=\"na\">site_name</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(TrueConstantHtml, StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>CSV classifies the <c>,</c> separator, quoted fields, and unquoted fields with the doubled-quote escape preserved inside strings.</summary>
@@ -127,7 +130,7 @@ public class AdditionalLanguagesTests
     public async Task FSharpClassifiesConstantsAndPrimitives()
     {
         var html = FSharpLexer.Instance.Render("let active : bool = true\nlet items : list = []\n"u8);
-        await Assert.That(html.Contains("<span class=\"kc\">true</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(TrueConstantHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">bool</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">list</span>", StringComparison.Ordinal)).IsTrue();
     }

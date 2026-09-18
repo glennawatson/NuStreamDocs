@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Logging;
 
@@ -10,6 +11,15 @@ namespace NuStreamDocs.Tests;
 /// <summary>Behavior tests for <c>PhaseTimer</c>.</summary>
 public class PhaseTimerTests
 {
+    /// <summary>Delay Milliseconds used by the test cases.</summary>
+    private const int DelayMilliseconds = 50;
+
+    /// <summary>Minimum Elapsed Seconds used by the test cases.</summary>
+    private const double MinimumElapsedSeconds = 0.04D;
+
+    /// <summary>Work Result used by the test cases.</summary>
+    private const int WorkResult = 42;
+
     /// <summary>The async overload runs the work and emits the start log before, the complete log after, in that order.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -42,7 +52,7 @@ public class PhaseTimerTests
                 NullLogger.Instance,
                 _ => startCalls++,
                 (_, _) => completeCalls++,
-                () => throw new InvalidOperationException("work failed"))));
+                static () => throw new InvalidOperationException("work failed"))));
 
         await Assert.That(exception).IsNotNull();
         await Assert.That(startCalls).IsEqualTo(1);
@@ -54,15 +64,15 @@ public class PhaseTimerTests
     [Test]
     public async Task RunAsyncMeasuresElapsedSecondsAroundTheAwait()
     {
-        var captured = -1d;
+        var captured = -1D;
         await PhaseTimer.RunAsync(
             NullLogger.Instance,
             static _ => { },
             (_, secs) => captured = secs,
-            async () => await Task.Delay(50).ConfigureAwait(false));
+            static async () => await Task.Delay(DelayMilliseconds).ConfigureAwait(false));
 
-        await Assert.That(captured).IsGreaterThanOrEqualTo(0d);
-        await Assert.That(captured).IsGreaterThanOrEqualTo(0.04d); // 50ms ± clock granularity
+        await Assert.That(captured).IsGreaterThanOrEqualTo(0D);
+        await Assert.That(captured).IsGreaterThanOrEqualTo(MinimumElapsedSeconds); // 50ms ± clock granularity
     }
 
     /// <summary>The result-returning overload returns the value the work produced, hands the result to the completion delegate, and still emits both log entries.</summary>
@@ -81,10 +91,10 @@ public class PhaseTimerTests
                 capturedResult = value;
                 completeCalls++;
             },
-            () => ValueTask.FromResult(42));
+            static () => ValueTask.FromResult(WorkResult));
 
-        await Assert.That(result).IsEqualTo(42);
-        await Assert.That(capturedResult).IsEqualTo(42);
+        await Assert.That(result).IsEqualTo(WorkResult);
+        await Assert.That(capturedResult).IsEqualTo(WorkResult);
         await Assert.That(startCalls).IsEqualTo(1);
         await Assert.That(completeCalls).IsEqualTo(1);
     }
@@ -101,7 +111,7 @@ public class PhaseTimerTests
                 NullLogger.Instance,
                 _ => startCalls++,
                 (_, _, _) => completeCalls++,
-                () => throw new InvalidOperationException("boom"))));
+                static () => throw new InvalidOperationException("boom"))));
 
         await Assert.That(thrown).IsNotNull();
         await Assert.That(startCalls).IsEqualTo(1);
@@ -134,7 +144,7 @@ public class PhaseTimerTests
                 NullLogger.Instance,
                 static _ => { },
                 (_, _) => completeCalls++,
-                () => throw new InvalidOperationException("sync work failed")));
+                static () => throw new InvalidOperationException("sync work failed")));
 
         await Assert.That(thrown).IsNotNull();
         await Assert.That(completeCalls).IsEqualTo(1);
@@ -143,11 +153,13 @@ public class PhaseTimerTests
     /// <summary>Adapts a single <see cref="ValueTask"/> instance into a <see cref="Task"/> so it's only consumed once even when fed to <c>Assert.ThrowsAsync</c>'s lambda.</summary>
     /// <param name="valueTask">Value task to adapt.</param>
     /// <returns>The equivalent <see cref="Task"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task RunAsTask(in ValueTask valueTask) => valueTask.AsTask();
 
     /// <summary>Adapts a single <see cref="ValueTask{T}"/> instance into a <see cref="Task{T}"/> for the same reason.</summary>
     /// <typeparam name="T">Result type.</typeparam>
     /// <param name="valueTask">Value task to adapt.</param>
     /// <returns>The equivalent <see cref="Task{T}"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task<T> RunAsTask<T>(in ValueTask<T> valueTask) => valueTask.AsTask();
 }

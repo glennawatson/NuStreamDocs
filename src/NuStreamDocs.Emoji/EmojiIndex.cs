@@ -479,10 +479,10 @@ internal static class EmojiIndex
     /// <param name="shortcode">UTF-8 shortcode bytes (without surrounding colons).</param>
     /// <param name="glyph">Resolved glyph bytes on success.</param>
     /// <returns>True when the shortcode is known.</returns>
-    public static bool TryGet(ReadOnlySpan<byte> shortcode, out ReadOnlySpan<byte> glyph)
+    internal static bool TryGet(ReadOnlySpan<byte> shortcode, out ReadOnlySpan<byte> glyph)
     {
         glyph = MatchGlyph(shortcode);
-        return glyph.Length > 0;
+        return !glyph.IsEmpty;
     }
 
     /// <summary>Matches <paramref name="shortcode"/> against the curated table.</summary>
@@ -495,10 +495,10 @@ internal static class EmojiIndex
     /// <returns>The populated table.</returns>
     private static Dictionary<byte[], byte[]> BuildTable()
     {
-        Dictionary<byte[], byte[]> table = new(EmojiEntries.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], byte[]> table = [with(EmojiEntries.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < EmojiEntries.Length; i++)
         {
-            table.TryAdd(EmojiEntries[i].Code, EmojiEntries[i].Glyph);
+            _ = table.TryAdd(EmojiEntries[i].Code, EmojiEntries[i].Glyph);
         }
 
         return table;

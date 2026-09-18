@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Sitemap</PackageId>
     <Description>Generate the standard site-level files for your NuStreamDocs build — sitemap.xml, robots.txt, a 404 page, and URL redirect stubs.</Description>
     <RootNamespace>NuStreamDocs.Sitemap</RootNamespace>

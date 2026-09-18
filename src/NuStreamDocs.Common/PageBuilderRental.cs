@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 namespace NuStreamDocs.Common;
 
 /// <summary>Disposable rental of a pooled <see cref="ArrayBufferWriter{T}"/> of UTF-8 bytes. Write through <see cref="Writer"/>; the writer is reset and returned to the pool on dispose.</summary>
+[System.Diagnostics.DebuggerDisplay("PageBuilderRental: {Writer}")]
 public readonly struct PageBuilderRental : IDisposable, IEquatable<PageBuilderRental>
 {
     /// <summary>Initializes a new instance of the <see cref="PageBuilderRental"/> struct.</summary>
@@ -21,6 +22,7 @@ public readonly struct PageBuilderRental : IDisposable, IEquatable<PageBuilderRe
     /// <param name="left">Left side.</param>
     /// <param name="right">Right side.</param>
     /// <returns>True when both rentals own the same writer.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(in PageBuilderRental left, in PageBuilderRental right) => left.Equals(right);
 
     /// <summary>Inequality compares the rented writer reference.</summary>
@@ -42,6 +44,7 @@ public readonly struct PageBuilderRental : IDisposable, IEquatable<PageBuilderRe
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(PageBuilderRental other) => ReferenceEquals(Writer, other.Writer);
 
     /// <inheritdoc/>

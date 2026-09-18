@@ -16,6 +16,7 @@ public static class PageDiscovery
     /// <summary>Enumerates markdown pages under <paramref name="inputRoot"/> without cancellation support.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <returns>An async stream of <see cref="PageWorkItem"/>s.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IAsyncEnumerable<PageWorkItem> EnumerateAsync(string inputRoot) =>
         EnumerateAsync(inputRoot, PathFilter.Empty, CancellationToken.None);
 
@@ -23,6 +24,7 @@ public static class PageDiscovery
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async stream of <see cref="PageWorkItem"/>s.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IAsyncEnumerable<PageWorkItem> EnumerateAsync(
         string inputRoot,
         in CancellationToken cancellationToken) =>
@@ -65,7 +67,7 @@ public static class PageDiscovery
 
         var enumerator = Directory.EnumerateFiles(
             inputRoot,
-            "*" + MarkdownExtension,
+            $"*{MarkdownExtension}",
             SearchOption.AllDirectories).GetEnumerator();
         try
         {

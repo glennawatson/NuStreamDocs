@@ -7,12 +7,6 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Arithmatex.MathJax;
 
 /// <summary>Configuration for <see cref="MathJaxPlugin"/>.</summary>
-/// <remarks>
-/// MathJax 3 reads <c>window.MathJax</c> at startup; the plugin emits a small inline
-/// configuration object before the loader script so the runtime picks up our processing
-/// class hooks. The CDN URL points at the most common <c>tex-mml-chtml</c> bundle by
-/// default; sites that need a different output (SVG, PreView only, etc.) can override.
-/// </remarks>
 /// <param name="LoaderUrl">URL of the MathJax loader script. Default is the jsDelivr-hosted <c>tex-mml-chtml</c> bundle for MathJax 3.</param>
 /// <param name="ProcessHtmlClass">
 /// Regex (matched as a whole-word selector) of HTML <c>class</c> values MathJax should typeset. Default
@@ -22,6 +16,13 @@ namespace NuStreamDocs.Arithmatex.MathJax;
 /// Regex of HTML <c>class</c> values MathJax should skip. Default <c>.*|</c> means "ignore everything by
 /// default" so we only typeset the explicitly-tagged blocks.
 /// </param>
+/// <remarks>
+/// MathJax 3 reads <c>window.MathJax</c> at startup; the plugin emits a small inline
+/// configuration object before the loader script so the runtime picks up our processing
+/// class hooks. The CDN URL points at the most common <c>tex-mml-chtml</c> bundle by
+/// default; sites that need a different output (SVG, PreView only, etc.) can override.
+/// </remarks>
+[System.Diagnostics.DebuggerDisplay("MathJaxOptions: {ToString(),nq}")]
 public readonly record struct MathJaxOptions(
     UrlPath LoaderUrl,
     ApiCompatString ProcessHtmlClass,

@@ -19,7 +19,7 @@ internal static class FootnotesRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         List<Definition> defs = [];
         CollectAndStripDefs(source, defs, writer);
@@ -223,8 +223,8 @@ internal static class FootnotesRewriter
         idStart = 0;
         idLen = 0;
         afterId = 0;
-        if (offset + ReferencePrefixLength >= source.Length || source[offset] != (byte)'[' ||
-            source[offset + 1] != (byte)'^')
+        if (offset + ReferencePrefixLength >= source.Length || source[offset] != (byte)'['
+            || source[offset + 1] != (byte)'^')
         {
             return false;
         }

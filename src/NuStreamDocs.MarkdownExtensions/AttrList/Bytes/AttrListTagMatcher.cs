@@ -6,10 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
-/// <summary>
-/// Case-insensitive tag-name dispatch for the three attr-list
-/// categories: block, paired-inline, void-inline.
-/// </summary>
+/// <summary>Case-insensitive tag-name dispatch for the three attr-list categories: block, paired-inline, void-inline.</summary>
 internal static class AttrListTagMatcher
 {
     /// <summary>Bytes that terminate a tag name (whitespace, <c>&gt;</c>, or <c>/</c>).</summary>
@@ -22,7 +19,7 @@ internal static class AttrListTagMatcher
     /// <param name="source">UTF-8 source.</param>
     /// <param name="offset">Candidate offset.</param>
     /// <returns>True when the byte at <paramref name="offset"/> ends the tag name.</returns>
-    public static bool IsTagBoundary(ReadOnlySpan<byte> source, int offset) =>
+    internal static bool IsTagBoundary(ReadOnlySpan<byte> source, int offset) =>
         offset >= source.Length || TagNameTerminator.Contains(source[offset]);
 
     /// <summary>Tries to match a block-level attr-list-target tag.</summary>
@@ -30,7 +27,7 @@ internal static class AttrListTagMatcher
     /// <param name="p">Offset just after <c>&lt;</c>.</param>
     /// <param name="nameLen">Matched tag-name byte length on success.</param>
     /// <returns>True on a match.</returns>
-    public static bool TryMatchBlockTag(ReadOnlySpan<byte> source, int p, out int nameLen)
+    internal static bool TryMatchBlockTag(ReadOnlySpan<byte> source, int p, out int nameLen)
     {
         nameLen = 0;
         if (p >= source.Length)
@@ -47,7 +44,7 @@ internal static class AttrListTagMatcher
     /// <param name="p">Offset just after <c>&lt;</c>.</param>
     /// <param name="nameLen">Matched tag-name byte length on success.</param>
     /// <returns>True on a match.</returns>
-    public static bool TryMatchInlinePairedTag(ReadOnlySpan<byte> source, int p, out int nameLen)
+    internal static bool TryMatchInlinePairedTag(ReadOnlySpan<byte> source, int p, out int nameLen)
     {
         nameLen = 0;
         if (p >= source.Length)
@@ -65,7 +62,7 @@ internal static class AttrListTagMatcher
     /// <param name="p">Offset just after <c>&lt;</c>.</param>
     /// <param name="nameLen">Matched tag-name byte length on success.</param>
     /// <returns>True on a match.</returns>
-    public static bool TryMatchInlineVoidTag(ReadOnlySpan<byte> source, int p, out int nameLen)
+    internal static bool TryMatchInlineVoidTag(ReadOnlySpan<byte> source, int p, out int nameLen)
     {
         nameLen = 0;
         if (p >= source.Length)

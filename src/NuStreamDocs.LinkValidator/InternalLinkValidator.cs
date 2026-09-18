@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -20,6 +21,7 @@ public static class InternalLinkValidator
     /// <param name="parallelism">Maximum parallel page checks.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Diagnostics in arbitrary order.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<LinkDiagnostic[]> ValidateAsync(
         ValidationCorpus corpus,
         int parallelism,
@@ -47,7 +49,7 @@ public static class InternalLinkValidator
                 resolvedScratch,
                 combinedScratch,
                 sink,
-                new(page.InternalLinks.Length, ByteArrayComparer.Instance));
+                [with(page.InternalLinks.Length, ByteArrayComparer.Instance)]);
 
             for (var i = 0; i < page.InternalLinks.Length; i++)
             {
@@ -94,6 +96,9 @@ public static class InternalLinkValidator
 
         /// <summary>Initial pooled-buffer capacity for message assembly; covers every diagnostic shape on this validator without growth.</summary>
         private const int InitialMessageCapacity = 256;
+
+        /// <summary>Capacity multiplier when a segment buffer fills.</summary>
+        private const int BufferGrowthFactor = 2;
 
         /// <summary>Gets the two-byte parent-segment marker.</summary>
         private static ReadOnlySpan<byte> DotDot => ".."u8;
@@ -228,6 +233,7 @@ public static class InternalLinkValidator
         /// <param name="sourcePage">Source page URL bytes.</param>
         /// <param name="target">Target path bytes (no fragment).</param>
         /// <returns>The canonical site-relative bytes.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when <c>written &lt; 0</c>.</exception>
         private static byte[] ResolveTargetOverflow(ReadOnlySpan<byte> sourcePage, ReadOnlySpan<byte> target)
         {
             var sourceDirLen = LastSlashIndex(sourcePage);
@@ -254,6 +260,7 @@ public static class InternalLinkValidator
         /// <summary>Returns the index of the last <c>/</c> in <paramref name="path"/>, or <c>-1</c> when none.</summary>
         /// <param name="path">Path bytes.</param>
         /// <returns>Index, or -1.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int LastSlashIndex(ReadOnlySpan<byte> path) => path.LastIndexOf(SlashByte);
 
         /// <summary>Strips any leading <c>/</c> bytes.</summary>
@@ -317,7 +324,8 @@ public static class InternalLinkValidator
                 {
                     if (i > 0)
                     {
-                        destination[write++] = SlashByte;
+                        destination[write] = SlashByte;
+                        write++;
                     }
 
                     var (start, length) = segments[i];
@@ -368,8 +376,7 @@ public static class InternalLinkValidator
 
             if (count == segments.Length)
             {
-                var newSize = segments.Length * 2;
-                var newRented = ArrayPool<(int Start, int Length)>.Shared.Rent(newSize);
+                var newRented = ArrayPool<(int Start, int Length)>.Shared.Rent(segments.Length * BufferGrowthFactor);
                 segments[..count].CopyTo(newRented);
                 if (rented is not null)
                 {
@@ -380,7 +387,8 @@ public static class InternalLinkValidator
                 segments = newRented;
             }
 
-            segments[count++] = (start, length);
+            segments[count] = (start, length);
+            count++;
         }
 
         /// <summary>Resolves a pure same-page anchor (<c>#id</c>) and emits a diagnostic on miss.</summary>

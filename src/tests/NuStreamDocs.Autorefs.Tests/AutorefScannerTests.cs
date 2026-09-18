@@ -20,8 +20,7 @@ public class AutorefScannerTests
     [Test]
     public async Task TryFindNextLocatesMarker()
     {
-        var src = "before @autoref:System.String more"u8;
-        var ok = AutorefScanner.TryFindNext(src, 0, out var match);
+        var ok = AutorefScanner.TryFindNext("before @autoref:System.String more"u8, 0, out var match);
         await Assert.That(ok).IsTrue();
         await Assert.That(match.MarkerStart).IsEqualTo("before ".Length);
         await Assert.That(match.IdStart).IsEqualTo("before @autoref:".Length);
@@ -46,7 +45,8 @@ public class AutorefScannerTests
         byte[] bytes = [.. "abc"u8];
         var len = bytes.Length;
         var pastEnd = AutorefScanner.TryFindNext(bytes, len, out _);
-        var farPast = AutorefScanner.TryFindNext(bytes, len + 5, out _);
+        const int PastEndOffset = 5;
+        var farPast = AutorefScanner.TryFindNext(bytes, len + PastEndOffset, out _);
         await Assert.That(pastEnd).IsFalse();
         await Assert.That(farPast).IsFalse();
     }
@@ -67,14 +67,15 @@ public class AutorefScannerTests
     [Test]
     public async Task FindIdEndStopsAtTerminator()
     {
-        await Assert.That(AutorefScanner.FindIdEnd("Id\""u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id'"u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id "u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id<"u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id>"u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id\n"u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id\r"u8, 0)).IsEqualTo(2);
-        await Assert.That(AutorefScanner.FindIdEnd("Id\t"u8, 0)).IsEqualTo(2);
+        const int ExpectedIdentifierLength = 2;
+        await Assert.That(AutorefScanner.FindIdEnd("Id\""u8, 0)).IsEqualTo(ExpectedIdentifierLength);
+        await Assert.That(AutorefScanner.FindIdEnd("Id'"u8, 0)).IsEqualTo(ExpectedIdentifierLength);
+        await Assert.That(AutorefScanner.FindIdEnd("Id "u8, 0)).IsEqualTo(ExpectedIdentifierLength);
+        await Assert.That(AutorefScanner.FindIdEnd("Id<"u8, 0)).IsEqualTo(ExpectedIdentifierLength);
+        await Assert.That(AutorefScanner.FindIdEnd("Id>"u8, 0)).IsEqualTo(ExpectedIdentifierLength);
+        await Assert.That(AutorefScanner.FindIdEnd("Id\n"u8, 0)).IsEqualTo(ExpectedIdentifierLength);
+        await Assert.That(AutorefScanner.FindIdEnd("Id\r"u8, 0)).IsEqualTo(ExpectedIdentifierLength);
+        await Assert.That(AutorefScanner.FindIdEnd("Id\t"u8, 0)).IsEqualTo(ExpectedIdentifierLength);
     }
 
     /// <summary>FindIdEnd treats a trailing method signature as part of the ID rather than truncating at <c>(</c>.</summary>

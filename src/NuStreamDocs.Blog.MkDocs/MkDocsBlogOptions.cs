@@ -11,6 +11,7 @@ namespace NuStreamDocs.Blog.MkDocs;
 /// <param name="IndexTitle">UTF-8 title bytes rendered at the top of the generated index page and used as the blog section's nav title.</param>
 /// <param name="EmitCategoryArchives">When true, a <c>{BlogSubdirectory}/category/{slug}.md</c> archive page is generated for each tag/category in use.</param>
 /// <param name="NavOrder">Optional <c>Order:</c> sort key for the blog section in the navigation; <see langword="null"/> sorts it after explicitly-ordered siblings.</param>
+[System.Diagnostics.DebuggerDisplay("MkDocsBlogOptions: {ToString(),nq}")]
 public sealed record MkDocsBlogOptions(
     PathSegment BlogSubdirectory,
     byte[] IndexTitle,

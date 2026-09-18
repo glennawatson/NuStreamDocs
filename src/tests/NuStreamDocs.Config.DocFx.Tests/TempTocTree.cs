@@ -14,15 +14,6 @@ internal sealed class TempTocTree : IDisposable
     /// <summary>Gets the absolute path of the temporary docs root.</summary>
     public string Root { get; }
 
-    /// <summary>Allocates a fresh temporary directory.</summary>
-    /// <returns>The fixture.</returns>
-    public static TempTocTree Create()
-    {
-        var path = Path.Combine(Path.GetTempPath(), "nustreamdocs-toc-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(path);
-        return new(path);
-    }
-
     /// <inheritdoc/>
     public void Dispose()
     {
@@ -41,5 +32,14 @@ internal sealed class TempTocTree : IDisposable
         {
             // Same — leave temp residue rather than masking real failures.
         }
+    }
+
+    /// <summary>Allocates a fresh temporary directory.</summary>
+    /// <returns>The fixture.</returns>
+    internal static TempTocTree Create()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"nustreamdocs-toc-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(path);
+        return new(path);
     }
 }

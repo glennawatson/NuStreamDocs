@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Common;
 
@@ -33,7 +34,16 @@ public sealed class ByteArrayComparer
             : y is not null && x.AsSpan().SequenceEqual(y);
 
     /// <inheritdoc/>
+    public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) =>
+        other is not null && alternate.SequenceEqual(other);
+
+    /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetHashCode(byte[] obj) => GetSpanHashCode(obj);
+
+    /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetHashCode(ReadOnlySpan<byte> alternate) => GetSpanHashCode(alternate);
 
     /// <inheritdoc/>
     public int Compare(byte[]? x, byte[]? y) =>
@@ -69,13 +79,7 @@ public sealed class ByteArrayComparer
     int IEqualityComparer.GetHashCode(object obj) => obj is byte[] bytes ? GetHashCode(bytes) : obj.GetHashCode();
 
     /// <inheritdoc/>
-    public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) =>
-        other is not null && alternate.SequenceEqual(other);
-
-    /// <inheritdoc/>
-    public int GetHashCode(ReadOnlySpan<byte> alternate) => GetSpanHashCode(alternate);
-
-    /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte[] Create(ReadOnlySpan<byte> alternate) => alternate.ToArray();
 
     /// <summary>Hashes the bytes of <paramref name="bytes"/> via <see cref="HashCode.AddBytes(ReadOnlySpan{byte})"/>.</summary>

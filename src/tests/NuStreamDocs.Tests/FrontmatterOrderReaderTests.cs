@@ -12,13 +12,22 @@ namespace NuStreamDocs.Tests;
 /// <summary>End-to-end tests for the front-matter <c>Order:</c> integer reader.</summary>
 public class FrontmatterOrderReaderTests
 {
+    /// <summary>Capitalized Order used by the test cases.</summary>
+    private const int CapitalizedOrder = 7;
+
+    /// <summary>Lowercase Order used by the test cases.</summary>
+    private const int LowercaseOrder = 3;
+
+    /// <summary>Negative Order Magnitude used by the test cases.</summary>
+    private const int NegativeOrderMagnitude = 2;
+
     /// <summary>Capitalised <c>Order:</c> (Statiq convention) parses cleanly.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task ReadsCapitalisedOrder()
     {
         using var fixture = await TempFile.WriteAsync("---\nOrder: 7\n---\n# Body\n");
-        await Assert.That(FrontmatterOrderReader.TryRead(fixture.Path, out var order) && order == 7).IsTrue();
+        await Assert.That(FrontmatterOrderReader.TryRead(fixture.Path, out var order) && order == CapitalizedOrder).IsTrue();
     }
 
     /// <summary>Lower-case <c>order:</c> is honoured as a fallback.</summary>
@@ -27,7 +36,7 @@ public class FrontmatterOrderReaderTests
     public async Task ReadsLowerCaseOrder()
     {
         using var fixture = await TempFile.WriteAsync("---\norder: 3\n---\n# Body\n");
-        await Assert.That(FrontmatterOrderReader.TryRead(fixture.Path, out var order) && order == 3).IsTrue();
+        await Assert.That(FrontmatterOrderReader.TryRead(fixture.Path, out var order) && order == LowercaseOrder).IsTrue();
     }
 
     /// <summary>Negative integers are accepted (so an item can sort above the default zero).</summary>
@@ -36,7 +45,7 @@ public class FrontmatterOrderReaderTests
     public async Task ReadsNegativeOrder()
     {
         using var fixture = await TempFile.WriteAsync("---\nOrder: -2\n---\n# Body\n");
-        await Assert.That(FrontmatterOrderReader.TryRead(fixture.Path, out var order) && order == -2).IsTrue();
+        await Assert.That(FrontmatterOrderReader.TryRead(fixture.Path, out var order) && order == -NegativeOrderMagnitude).IsTrue();
     }
 
     /// <summary>Pages without an <c>Order:</c> key short-circuit to false.</summary>
@@ -64,7 +73,7 @@ public class FrontmatterOrderReaderTests
     {
         var missing = Path.Combine(
             Path.GetTempPath(),
-            "smkd-nofile-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-nofile-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         await Assert.That(FrontmatterOrderReader.TryRead((FilePath)missing, out _)).IsFalse();
     }
 
@@ -93,8 +102,8 @@ public class FrontmatterOrderReaderTests
         public static async Task<TempFile> WriteAsync(string contents)
         {
             var dir = System.IO.Path.Combine(AppContext.BaseDirectory, "smkd-order-tests");
-            Directory.CreateDirectory(dir);
-            var path = System.IO.Path.Combine(dir, Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture) + ".md");
+            _ = Directory.CreateDirectory(dir);
+            var path = System.IO.Path.Combine(dir, $"{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}.md");
             await File.WriteAllTextAsync(path, contents, NoBom).ConfigureAwait(false);
             return new(path);
         }

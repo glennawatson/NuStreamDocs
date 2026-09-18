@@ -67,7 +67,7 @@ public static class CrystalLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = CFamilyShared.AnnotationColonPunctuation,
             IntegerSuffix = CFamilyRules.NoSuffix,
@@ -76,7 +76,7 @@ public static class CrystalLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = true,
             WhitespaceIncludesNewlines = true,
-            SpecialString = hashComment
+            SpecialString = hashComment,
         };
 
         return CFamilyRules.CreateLexer(config);

@@ -8,6 +8,7 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.SphinxInventory;
 
 /// <summary>Emits a Sphinx-compatible <c>objects.inv</c> at finalize time so external Sphinx sites can intersphinx-link into the rendered output.</summary>
+[System.Diagnostics.DebuggerDisplay("SphinxInventoryPlugin: {Registry}")]
 public sealed class SphinxInventoryPlugin : IBuildFinalizePlugin
 {
     /// <summary>Configured options.</summary>

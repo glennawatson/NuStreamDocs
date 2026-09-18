@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Icons.MaterialDesign.Regen;
@@ -36,7 +37,7 @@ public static class Program
     /// <summary>Subdirectory in the cloned repo that holds one SVG per icon.</summary>
     private const string SvgSubdirectory = "svg";
 
-    /// <summary>Lowest printable ASCII byte — bytes below this get hex-escaped in <see cref="Utf8Literal(System.ReadOnlySpan{byte})"/>.</summary>
+    /// <summary>Lowest printable ASCII byte — bytes below this get hex-escaped in <see cref="Utf8Literal(ReadOnlySpan{byte})"/>.</summary>
     private const byte FirstPrintableAsciiByte = 0x20;
 
     /// <summary>Highest printable ASCII byte — bytes at or above this (i.e. DEL + non-ASCII) get hex-escaped.</summary>
@@ -50,6 +51,15 @@ public static class Program
 
     /// <summary>Generated-file extension required of any caller-supplied <c>--output</c> path.</summary>
     private const string RequiredOutputExtension = ".g.cs";
+
+    /// <summary>Initial space for a bucket of names with the same UTF-8 length.</summary>
+    private const int InitialBucketCapacity = 16;
+
+    /// <summary>Space for literal delimiters and common byte escapes.</summary>
+    private const int LiteralCapacityPadding = 8;
+
+    /// <summary>Source form of one length dispatch case.</summary>
+    private static readonly CompositeFormat LengthCaseFormat = CompositeFormat.Parse("            case {0}: return TryGetLen{0}(name, out svg);");
 
     /// <summary>Entry point.</summary>
     /// <param name="args">CLI args — optional <c>--output &lt;path&gt;</c> to override the generated-file location.</param>
@@ -120,11 +130,9 @@ public static class Program
 
     /// <summary>Resolves the repository root the regen tool is running inside.</summary>
     /// <returns>Absolute, trailing-slash-free repo root.</returns>
-    private static string ResolveRepoRoot()
-    {
-        var here = AppContext.BaseDirectory;
-        return Path.GetFullPath(Path.Combine(here, "..", "..", "..", "..", "..", ".."));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string ResolveRepoRoot() =>
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", ".."));
 
     /// <summary>Validates that <paramref name="resolved"/> lives under <paramref name="repoRoot"/> and ends in <see cref="RequiredOutputExtension"/>.</summary>
     /// <param name="resolved">Absolute path produced by <see cref="Path.GetFullPath(string)"/>.</param>
@@ -151,6 +159,7 @@ public static class Program
     /// <param name="repoUrl">Upstream URL.</param>
     /// <param name="targetDirectory">Empty directory to clone into.</param>
     /// <returns>Task tracking the clone; throws when <c>git</c> exits non-zero.</returns>
+    /// <exception cref="InvalidOperationException">Git could not start or the clone did not complete successfully.</exception>
     private static async Task CloneShallowAsync(string repoUrl, string targetDirectory)
     {
         var info = new ProcessStartInfo("git")
@@ -162,14 +171,35 @@ public static class Program
         };
 
         using var process = Process.Start(info) ?? throw new InvalidOperationException("Failed to spawn git.");
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+#if NET11_0_OR_GREATER
+        var status = await process.WaitForExitStatusAsync().ConfigureAwait(false);
+#else
         await process.WaitForExitAsync().ConfigureAwait(false);
+#endif
+        _ = await stdoutTask.ConfigureAwait(false);
+        var stderr = await stderrTask.ConfigureAwait(false);
+#if NET11_0_OR_GREATER
+        if (status is { ExitCode: 0, Signal: null, Canceled: false })
+        {
+            return;
+        }
+
+        if (status.Signal is { } signal)
+        {
+            throw new InvalidOperationException($"git clone terminated by signal {signal}: {stderr}");
+        }
+
+        throw new InvalidOperationException($"git clone exited {status.ExitCode}: {stderr}");
+#else
         if (process.ExitCode is 0)
         {
             return;
         }
 
-        var stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
         throw new InvalidOperationException($"git clone exited {process.ExitCode}: {stderr}");
+#endif
     }
 
     /// <summary>Reads every <c>.svg</c> under <paramref name="svgRoot"/>, strips the SVG wrapper, and returns <c>(name, path-bytes)</c> pairs sorted by name.</summary>
@@ -219,33 +249,37 @@ public static class Program
 
         var afterOpen = pathDataStart + "<path d=\"".Length;
         var rel = span[afterOpen..].IndexOf((byte)'"');
-        if (rel < 0)
-        {
-            return null;
-        }
-
-        return span.Slice(afterOpen, rel).ToArray();
+        return rel < 0 ? null : span.Slice(afterOpen, rel).ToArray();
     }
 
     /// <summary>Writes the generated catalogue file (<c>MdiIconData.g.cs</c>) for <paramref name="entries"/>.</summary>
     /// <param name="outputPath">Absolute output path.</param>
-    /// <param name="entries">Per-icon entries.</param>
+    /// <param name="entries">Per-icon entries in ordinal-name order.</param>
     /// <returns>Task tracking the write.</returns>
     private static async Task WriteGeneratedFileAsync(string outputPath, List<(string Name, byte[] Svg)> entries)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        _ = Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         await using var writer = new StreamWriter(outputPath, append: false, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
         await EmitFilePreambleAsync(writer, entries.Count).ConfigureAwait(false);
 
-        var byLength = entries
-            .GroupBy(static e => Encoding.UTF8.GetByteCount(e.Name))
-            .OrderBy(static g => g.Key)
-            .ToList();
-
-        foreach (var group in byLength)
+        var byLength = new SortedList<int, List<(string Name, byte[] Svg)>>(entries.Count);
+        for (var i = 0; i < entries.Count; i++)
         {
-            await writer.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, "            case {0}: return TryGetLen{0}(name, out svg);", group.Key)).ConfigureAwait(false);
+            var entry = entries[i];
+            var length = Encoding.UTF8.GetByteCount(entry.Name);
+            if (!byLength.TryGetValue(length, out var group))
+            {
+                group = [with(InitialBucketCapacity)];
+                byLength.Add(length, group);
+            }
+
+            group.Add(entry);
+        }
+
+        for (var i = 0; i < byLength.Count; i++)
+        {
+            await writer.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, LengthCaseFormat, byLength.Keys[i])).ConfigureAwait(false);
         }
 
         await writer.WriteLineAsync("            default: svg = default; return false;").ConfigureAwait(false);
@@ -253,10 +287,9 @@ public static class Program
         await writer.WriteLineAsync("    }").ConfigureAwait(false);
 
         // Per-length methods. Within each, switch on the first byte before exact matching.
-        foreach (var group in byLength)
+        for (var i = 0; i < byLength.Count; i++)
         {
-            var sortedGroup = group.OrderBy(static e => e.Name, StringComparer.Ordinal).ToList();
-            await EmitLengthBucketAsync(writer, group.Key, sortedGroup).ConfigureAwait(false);
+            await EmitLengthBucketAsync(writer, byLength.Keys[i], byLength.Values[i]).ConfigureAwait(false);
         }
 
         await writer.WriteLineAsync("}").ConfigureAwait(false);
@@ -383,6 +416,7 @@ public static class Program
     /// <param name="format">Composite format string.</param>
     /// <param name="args">Arguments.</param>
     /// <returns>Formatted string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string FormatInvariant(string format, params object?[] args) =>
         string.Format(CultureInfo.InvariantCulture, format, args);
 
@@ -400,6 +434,7 @@ public static class Program
     /// <summary>Renders <paramref name="value"/> as a C# <c>"..."u8</c> literal — escapes non-printables and quotes.</summary>
     /// <param name="value">String value.</param>
     /// <returns>Source-form literal including the trailing <c>u8</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Utf8Literal(string value) => Utf8Literal(Encoding.UTF8.GetBytes(value));
 
     /// <summary>Renders <paramref name="bytes"/> as a C# <c>"..."u8</c> literal — escapes non-printables and quotes.</summary>
@@ -407,14 +442,14 @@ public static class Program
     /// <returns>Source-form literal including the trailing <c>u8</c>.</returns>
     private static string Utf8Literal(ReadOnlySpan<byte> bytes)
     {
-        var builder = new StringBuilder(bytes.Length + 8);
-        builder.Append('"');
+        var builder = new StringBuilder(bytes.Length + LiteralCapacityPadding);
+        _ = builder.Append('"');
         for (var i = 0; i < bytes.Length; i++)
         {
             AppendByte(builder, bytes[i]);
         }
 
-        builder.Append("\"u8");
+        _ = builder.Append("\"u8");
         return builder.ToString();
     }
 
@@ -425,40 +460,40 @@ public static class Program
     {
         if (b is (byte)'"')
         {
-            builder.Append("\\\"");
+            _ = builder.Append("\\\"");
             return;
         }
 
         if (b is (byte)'\\')
         {
-            builder.Append("\\\\");
+            _ = builder.Append("\\\\");
             return;
         }
 
         if (b is (byte)'\n')
         {
-            builder.Append("\\n");
+            _ = builder.Append("\\n");
             return;
         }
 
         if (b is (byte)'\r')
         {
-            builder.Append("\\r");
+            _ = builder.Append("\\r");
             return;
         }
 
         if (b is (byte)'\t')
         {
-            builder.Append("\\t");
+            _ = builder.Append("\\t");
             return;
         }
 
         if (b is >= FirstPrintableAsciiByte and <= LastPrintableAsciiByte)
         {
-            builder.Append((char)b);
+            _ = builder.Append((char)b);
             return;
         }
 
-        builder.Append('\\').Append('x').Append(b.ToString("X2", CultureInfo.InvariantCulture));
+        _ = builder.Append('\\').Append('x').Append(b.ToString("X2", CultureInfo.InvariantCulture));
     }
 }

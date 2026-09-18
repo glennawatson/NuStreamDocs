@@ -11,6 +11,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Parameterized key + value-shape tests for FrontmatterValueExtractor.AppendKeysTo.</summary>
 public class FrontmatterValueExtractorParameterizedTests
 {
+    /// <summary>Extraction Buffer Capacity used by the test cases.</summary>
+    private const int ExtractionBufferCapacity = 64;
+
     /// <summary>Inputs that have no frontmatter or no matching key produce empty output.</summary>
     /// <param name="source">Source markdown.</param>
     /// <returns>Async test.</returns>
@@ -81,7 +84,7 @@ public class FrontmatterValueExtractorParameterizedTests
             keyBytes[i] = Encoding.UTF8.GetBytes(keys[i]);
         }
 
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(ExtractionBufferCapacity);
         FrontmatterValueExtractor.AppendKeysTo(bytes, keyBytes, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

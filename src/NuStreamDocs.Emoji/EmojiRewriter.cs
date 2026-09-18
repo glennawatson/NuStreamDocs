@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.Emoji;
@@ -13,7 +14,8 @@ internal static class EmojiRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
         CodeAwareRewriter.Run(source, writer, TryRewriteShortcode);
 
     /// <summary>Tries to match a <c>:shortcode:</c> at <paramref name="offset"/>.</summary>

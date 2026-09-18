@@ -75,16 +75,16 @@ public class AttrListMarkerEmitMergedTests
     }
 
     /// <summary>Runs <c>EmitMerged</c> over a synthetic source span and returns the UTF-8 result as a string.</summary>
-    /// <remarks>The synthetic span carries both the existing-attrs window and the attr-list body at known offsets, mirroring how the rewriter walks an opening tag.</remarks>
     /// <param name="existingAttrs">Existing attribute fragment (with leading space when non-empty).</param>
     /// <param name="attrListBody">Attr-list body contents (between the <c>{:</c> and <c>}</c> markers).</param>
     /// <returns>Merged attribute fragment as a string.</returns>
+    /// <remarks>The synthetic span carries both the existing-attrs window and the attr-list body at known offsets, mirroring how the rewriter walks an opening tag.</remarks>
     private static string EmitMerged(string existingAttrs, string attrListBody)
     {
-        var source = Encoding.UTF8.GetBytes(existingAttrs + "{:" + attrListBody + "}");
+        var source = Encoding.UTF8.GetBytes($"{existingAttrs}{{:{attrListBody}}}");
         const int ExistingStart = 0;
         var existingEnd = existingAttrs.Length;
-        var attrListStart = existingEnd + 2; // skip "{:"
+        var attrListStart = existingEnd + "{:".Length;
         var attrListEnd = source.Length - 1; // skip "}"
 
         ArrayBufferWriter<byte> sink = new();

@@ -8,10 +8,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SuperFences;
 
-/// <summary>
-/// Dispatches matched <c>&lt;pre&gt;&lt;code class="language-{lang}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c>
-/// blocks in rendered HTML to registered <see cref="ICustomFenceHandler"/>s.
-/// </summary>
+/// <summary>Dispatches matched <c>&lt;pre&gt;&lt;code class="language-{lang}"&gt;…&lt;/code&gt;&lt;/pre&gt;</c> blocks in rendered HTML to registered <see cref="ICustomFenceHandler"/>s.</summary>
 internal static class SuperFencesDispatcher
 {
     /// <summary>Gets the UTF-8 bytes of the prefix every candidate block starts with.</summary>
@@ -26,14 +23,14 @@ internal static class SuperFencesDispatcher
     /// <summary>Returns true when <paramref name="html"/> contains at least one candidate block worth scanning further.</summary>
     /// <param name="html">Rendered HTML.</param>
     /// <returns>True when the prefix is present.</returns>
-    public static bool NeedsDispatch(ReadOnlySpan<byte> html) => html.IndexOf(Prefix) >= 0;
+    internal static bool NeedsDispatch(ReadOnlySpan<byte> html) => html.IndexOf(Prefix) >= 0;
 
     /// <summary>Walks <paramref name="html"/>, dispatching matched fences in <paramref name="handlers"/> directly into <paramref name="sink"/>.</summary>
     /// <param name="html">Rendered HTML bytes.</param>
     /// <param name="handlers">Span-keyed handler lookup (an alternate lookup over a byte-array keyed dictionary).</param>
     /// <param name="sink">UTF-8 sink to receive the rewritten output.</param>
     /// <returns>True when at least one block was dispatched (i.e. the sink content differs from <paramref name="html"/>); false when no candidate matched a handler.</returns>
-    public static bool DispatchInto(
+    internal static bool DispatchInto(
         ReadOnlySpan<byte> html,
         in Dictionary<byte[], ICustomFenceHandler>.AlternateLookup<ReadOnlySpan<byte>> handlers,
         IBufferWriter<byte> sink)

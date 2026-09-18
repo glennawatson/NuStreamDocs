@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Common;
 
 /// <summary>
@@ -12,6 +14,7 @@ namespace NuStreamDocs.Common;
 /// </summary>
 /// <param name="Value">The underlying segment string. May contain forward slashes (multi-level)
 /// but never represents an absolute path.</param>
+[System.Diagnostics.DebuggerDisplay("PathSegment: {IsEmpty}")]
 public readonly record struct PathSegment(string Value)
 {
     /// <summary>Gets a value indicating whether this segment is empty (uninitialized / placeholder).</summary>
@@ -28,11 +31,13 @@ public readonly record struct PathSegment(string Value)
     /// <summary>Friendly named alias for the string→<see cref="PathSegment"/> implicit operator (CA2225).</summary>
     /// <param name="value">Source string.</param>
     /// <returns>The wrapped segment.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PathSegment FromString(string? value) => value;
 
     /// <summary>Friendly named alias for the <see cref="PathSegment"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="segment">Source segment.</param>
     /// <returns>The underlying string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToStringValue(in PathSegment segment) => segment;
 
     /// <inheritdoc/>

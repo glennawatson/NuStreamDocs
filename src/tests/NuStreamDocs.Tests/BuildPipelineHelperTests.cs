@@ -19,7 +19,7 @@ public class BuildPipelineHelperTests
         await Assert.That(path.Value).EndsWith("asset.css");
     }
 
-    /// <summary>index.md keeps a flat output path.</summary>
+    /// <summary>Index.md keeps a flat output path.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task IndexMdStaysFlat()

@@ -9,49 +9,48 @@ namespace NuStreamDocs.Versions;
 /// <summary>Construction helpers for <see cref="VersionOptions"/>.</summary>
 public static class VersionOptionsExtensions
 {
-    /// <summary>Replaces the alias list with <paramref name="aliases"/>.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="aliases">Alias strings.</param>
-    /// <returns>The updated options.</returns>
-    public static VersionOptions WithAliases(this VersionOptions options, params ApiCompatString[] aliases) =>
-        options with { Aliases = aliases.EncodeUtf8Array() };
-
-    /// <summary>Replaces the alias list with the supplied UTF-8 alias bytes.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="aliases">Alias bytes (one entry per alias).</param>
-    /// <returns>The updated options.</returns>
-    public static VersionOptions WithAliases(this VersionOptions options, params byte[][] aliases) =>
-        options with { Aliases = aliases };
-
-    /// <summary>Appends <paramref name="aliases"/> to the existing alias list.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="aliases">Additional alias strings.</param>
-    /// <returns>The updated options.</returns>
-    public static VersionOptions AddAliases(this VersionOptions options, params ApiCompatString[] aliases) =>
-        aliases.Length is 0
-            ? options
-            : options with { Aliases = ArrayJoiner.Concat(options.Aliases, aliases.EncodeUtf8Array()) };
-
-    /// <summary>Appends UTF-8 <paramref name="aliases"/> to the existing alias list.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="aliases">Additional alias bytes.</param>
-    /// <returns>The updated options.</returns>
-    public static VersionOptions AddAliases(this VersionOptions options, params byte[][] aliases) =>
-        aliases.Length is 0
-            ? options
-            : options with { Aliases = ArrayJoiner.Concat(options.Aliases, aliases) };
-
-    /// <summary>Appends a single UTF-8 alias (e.g. a <c>"..."u8</c> literal) to the existing alias list.</summary>
-    /// <param name="options">Source options.</param>
-    /// <param name="alias">UTF-8 alias bytes.</param>
-    /// <returns>The updated options.</returns>
-    public static VersionOptions AddAliases(this VersionOptions options, ReadOnlySpan<byte> alias) => options with
+    /// <summary>Extension members for <c>VersionOptions</c>.</summary>
+    /// <param name="options">Options to update.</param>
+    extension(VersionOptions options)
     {
-        Aliases = ArrayJoiner.Concat(options.Aliases, [alias.ToArray()])
-    };
+        /// <summary>Replaces the alias list with <paramref name="aliases"/>.</summary>
+        /// <param name="aliases">Alias strings.</param>
+        /// <returns>The updated options.</returns>
+        public VersionOptions WithAliases(params ApiCompatString[] aliases) =>
+            options with { Aliases = aliases.EncodeUtf8Array() };
 
-    /// <summary>Empties the alias list.</summary>
-    /// <param name="options">Source options.</param>
-    /// <returns>The updated options.</returns>
-    public static VersionOptions ClearAliases(this VersionOptions options) => options with { Aliases = [] };
+        /// <summary>Replaces the alias list with the supplied UTF-8 alias bytes.</summary>
+        /// <param name="aliases">Alias bytes (one entry per alias).</param>
+        /// <returns>The updated options.</returns>
+        public VersionOptions WithAliases(params byte[][] aliases) =>
+            options with { Aliases = aliases };
+
+        /// <summary>Appends <paramref name="aliases"/> to the existing alias list.</summary>
+        /// <param name="aliases">Additional alias strings.</param>
+        /// <returns>The updated options.</returns>
+        public VersionOptions AddAliases(params ApiCompatString[] aliases) =>
+            aliases.Length is 0
+                ? options
+                : options with { Aliases = ArrayJoiner.Concat(options.Aliases, aliases.EncodeUtf8Array()) };
+
+        /// <summary>Appends UTF-8 <paramref name="aliases"/> to the existing alias list.</summary>
+        /// <param name="aliases">Additional alias bytes.</param>
+        /// <returns>The updated options.</returns>
+        public VersionOptions AddAliases(params byte[][] aliases) =>
+            aliases.Length is 0
+                ? options
+                : options with { Aliases = ArrayJoiner.Concat(options.Aliases, aliases) };
+
+        /// <summary>Appends a single UTF-8 alias (e.g. a <c>"..."u8</c> literal) to the existing alias list.</summary>
+        /// <param name="alias">UTF-8 alias bytes.</param>
+        /// <returns>The updated options.</returns>
+        public VersionOptions AddAliases(ReadOnlySpan<byte> alias) => options with
+        {
+            Aliases = ArrayJoiner.Concat(options.Aliases, [alias.ToArray()])
+        };
+
+        /// <summary>Empties the alias list.</summary>
+        /// <returns>The updated options.</returns>
+        public VersionOptions ClearAliases() => options with { Aliases = [] };
+    }
 }

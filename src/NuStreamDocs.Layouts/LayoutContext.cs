@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Layouts;
@@ -21,16 +22,16 @@ internal sealed class LayoutContext
     /// <param name="renderedHtml">UTF-8 HTML produced by the markdown renderer.</param>
     /// <param name="relativeUrl">Site-relative URL of the page (forward-slash, no leading slash).</param>
     /// <returns>A populated context.</returns>
-    public static LayoutContext FromPage(
+    internal static LayoutContext FromPage(
         ReadOnlySpan<byte> source,
         ReadOnlySpan<byte> renderedHtml,
         ReadOnlySpan<byte> relativeUrl)
     {
-        Dictionary<byte[], byte[]> values = new(ByteArrayComparer.Instance)
+        var values = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance)
         {
             ["content"u8.ToArray()] = renderedHtml.ToArray(),
             ["title"u8.ToArray()] = FrontmatterReader.GetScalar(source, "title"u8).ToArray(),
-            ["url"u8.ToArray()] = relativeUrl.ToArray()
+            ["url"u8.ToArray()] = relativeUrl.ToArray(),
         };
         FrontmatterReader.AppendScalars(source, values);
         return new(values);
@@ -40,6 +41,7 @@ internal sealed class LayoutContext
     /// <param name="name">UTF-8 bare name (the <c>X</c> in <c>page.X</c>).</param>
     /// <param name="value">Resolved bytes on hit; otherwise empty.</param>
     /// <returns>True when the name is known.</returns>
-    public bool TryGetValue(ReadOnlySpan<byte> name, out byte[] value) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryGetValue(ReadOnlySpan<byte> name, out byte[] value) =>
         _lookup.TryGetValue(name, out value!);
 }

@@ -61,15 +61,16 @@ public class UrlPatternAndCspTests
     {
         ConcurrentDictionary<byte[], byte> styles = new(ByteArrayComparer.Instance);
         ConcurrentDictionary<byte[], byte> scripts = new(ByteArrayComparer.Instance);
-        const string Html = "<style>body{color:red}</style><script>alert(1)</script>";
-        CspHashCollector.Collect(Encoding.UTF8.GetBytes(Html), styles, scripts);
+        var htmlBytes = (byte[])[.. "<style>body{color:red}</style><script>alert(1)</script>"u8];
+        CspHashCollector.Collect(htmlBytes, styles, scripts);
 
         await Assert.That(styles).HasSingleItem();
         await Assert.That(scripts).HasSingleItem();
-        await Assert.That(Encoding.UTF8.GetString(styles.Keys.Single())).StartsWith("'sha256-");
+        byte[][] styleHashes = [.. styles.Keys];
+        await Assert.That(Encoding.UTF8.GetString(styleHashes[0])).StartsWith("'sha256-");
 
         // Idempotent: re-running the same input doesn't grow the set.
-        CspHashCollector.Collect(Encoding.UTF8.GetBytes(Html), styles, scripts);
+        CspHashCollector.Collect(htmlBytes, styles, scripts);
         await Assert.That(styles).HasSingleItem();
     }
 
@@ -91,8 +92,8 @@ public class UrlPatternAndCspTests
     {
         var outputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-csp-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(outputRoot);
+            $"smkd-csp-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(outputRoot);
         try
         {
             PrivacyPlugin plugin = new(PrivacyOptions.Default with { GenerateCspManifest = true });

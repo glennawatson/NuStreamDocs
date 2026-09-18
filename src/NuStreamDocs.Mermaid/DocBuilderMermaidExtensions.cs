@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Mermaid;
@@ -9,8 +10,13 @@ namespace NuStreamDocs.Mermaid;
 /// <summary>Builder-extension surface for the mermaid plugin.</summary>
 public static class DocBuilderMermaidExtensions
 {
-    /// <summary>Registers <see cref="MermaidPlugin"/>.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseMermaid(this DocBuilder builder) => builder.UsePlugin(new MermaidPlugin());
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to configure.</param>
+    extension(DocBuilder builder)
+    {
+        /// <summary>Registers <see cref="MermaidPlugin"/>.</summary>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseMermaid() => builder.UsePlugin(new MermaidPlugin());
+    }
 }

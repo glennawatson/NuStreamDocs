@@ -2,12 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Footnotes;
 
 /// <summary>Footnotes plugin — rewrites <c>[^id]</c> references and <c>[^id]: definition</c> entries into linked superscripts plus a footnotes section.</summary>
+[System.Diagnostics.DebuggerDisplay("FootnotesPlugin: {Name}")]
 public sealed class FootnotesPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -17,10 +19,12 @@ public sealed class FootnotesPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
         MarkdownMarkerProbes.HasFootnoteMarker(source);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         FootnotesRewriter.Rewrite(context.Source, context.Output);
 }

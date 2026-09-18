@@ -8,17 +8,17 @@ namespace NuStreamDocs.Fonts;
 public enum FontDisplay
 {
     /// <summary>Browser default behavior (<c>auto</c>).</summary>
-    Auto,
+    Auto = 0,
 
     /// <summary>Short block period, infinite swap period (<c>block</c>).</summary>
-    Block,
+    Block = 1,
 
     /// <summary>Tiny block period, infinite swap period (<c>swap</c>) — the usual choice for body text.</summary>
-    Swap,
+    Swap = 2,
 
     /// <summary>Tiny block period, short swap period (<c>fallback</c>).</summary>
-    Fallback,
+    Fallback = 3,
 
     /// <summary>Tiny block period, no swap period (<c>optional</c>) — the font is used only if it's already cached.</summary>
-    Optional
+    Optional = 4,
 }

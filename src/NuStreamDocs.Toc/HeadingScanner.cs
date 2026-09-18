@@ -11,6 +11,9 @@ namespace NuStreamDocs.Toc;
 /// <summary>Locates <c>&lt;h1&gt;</c>..<c>&lt;h6&gt;</c> open/close tag pairs in a UTF-8 HTML snapshot.</summary>
 internal static class HeadingScanner
 {
+    /// <summary>Initial heading capacity.</summary>
+    private const int InitialHeadingCapacity = 16;
+
     /// <summary>ASCII byte for the opening angle bracket.</summary>
     private const byte OpenAngle = (byte)'<';
 
@@ -38,14 +41,14 @@ internal static class HeadingScanner
     /// <summary>Scans <paramref name="html"/> for heading tags.</summary>
     /// <param name="html">Rendered HTML snapshot (UTF-8).</param>
     /// <returns>Heading records ordered by appearance.</returns>
-    public static Heading[] Scan(ReadOnlySpan<byte> html)
+    internal static Heading[] Scan(ReadOnlySpan<byte> html)
     {
         if (html.IsEmpty)
         {
             return [];
         }
 
-        List<Heading> found = new(16);
+        List<Heading> found = [with(InitialHeadingCapacity)];
         var cursor = 0;
         var anchorDepth = 0;
         var anchorCursor = 0;
@@ -95,7 +98,7 @@ internal static class HeadingScanner
     /// <param name="html">Original HTML snapshot.</param>
     /// <param name="heading">Heading record.</param>
     /// <param name="sink">UTF-8 sink.</param>
-    public static void DecodeTextInto(ReadOnlySpan<byte> html, in Heading heading, IBufferWriter<byte> sink)
+    internal static void DecodeTextInto(ReadOnlySpan<byte> html, in Heading heading, IBufferWriter<byte> sink)
     {
         var inner = html[heading.TextStart..heading.TextEnd];
         if (inner.IsEmpty)

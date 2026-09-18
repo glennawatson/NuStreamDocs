@@ -9,6 +9,7 @@ namespace NuStreamDocs.LinkValidator;
 /// <param name="StrictExternal">When true, external-link diagnostics fail the build (and the network checker runs).</param>
 /// <param name="Parallelism">Maximum parallel readers / page checks.</param>
 /// <param name="External">External validator settings (used only when <paramref name="StrictExternal"/> is true).</param>
+[System.Diagnostics.DebuggerDisplay("LinkValidatorOptions: {ToString(),nq}")]
 public sealed record LinkValidatorOptions(
     bool StrictInternal,
     bool StrictExternal,

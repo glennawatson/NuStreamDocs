@@ -45,10 +45,7 @@ public static class RLexer
     public static Lexer Instance { get; } = SingleStateLexerRules.CreateLexer(new()
     {
         LineComment =
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = SearchValues.Create("#"u8)
-            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = SearchValues.Create("#"u8), },
         IncludeDoubleQuotedString = true,
         IncludeSingleQuotedString = true,
         IncludeFloatLiteral = true,
@@ -59,6 +56,6 @@ public static class RLexer
         IdentifierContinue = IdentifierContinue,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 }

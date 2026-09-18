@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for <c>MarkdownRenderer</c>.</summary>
+[DebuggerDisplay("RendererBenchmarks: Paragraphs={Paragraphs}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class RendererBenchmarks
@@ -40,7 +42,7 @@ public class RendererBenchmarks
         StringBuilder sb = new();
         for (var i = 0; i < Paragraphs; i++)
         {
-            sb.Append("# Heading ").Append(i).Append('\n')
+            _ = sb.Append("# Heading ").Append(i).Append('\n')
                 .Append("This is a paragraph with some text & a < b.\n\n");
         }
 

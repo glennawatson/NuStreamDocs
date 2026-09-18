@@ -10,6 +10,12 @@ namespace NuStreamDocs.Nav.Tests;
 /// <summary>Parameterized inputs for NavTreeBuilder covering every combination of sort, prune, indexes, and hide-empty toggles.</summary>
 public class NavTreeBuilderParameterizedTests
 {
+    /// <summary>The GuideIndexPath fixture value.</summary>
+    private const string GuideIndexPath = "guide/index.md";
+
+    /// <summary>The PageMarkdown fixture value.</summary>
+    private const string PageMarkdown = "# Page\n";
+
     /// <summary>Each <see cref="NavSortBy"/> mode produces a tree with the expected page count.</summary>
     /// <param name="sort">Sort mode.</param>
     /// <returns>Async test.</returns>
@@ -19,12 +25,13 @@ public class NavTreeBuilderParameterizedTests
     [Arguments(NavSortBy.None)]
     public async Task SortModes(NavSortBy sort)
     {
+        const int ExpectedCount = 2;
         using ScratchTree temp = new();
         await temp.WriteAsync("a.md", "# A\n");
         await temp.WriteAsync("b.md", "# B\n");
         var options = NavOptions.Default with { SortBy = sort };
         var root = NavTreeBuilder.Build(temp.Root, options);
-        await Assert.That(root.Children.Length).IsEqualTo(2);
+        await Assert.That(root.Children.Length).IsEqualTo(ExpectedCount);
     }
 
     /// <summary>Indexes toggle controls whether index.md becomes a section index.</summary>
@@ -36,7 +43,7 @@ public class NavTreeBuilderParameterizedTests
     public async Task IndexesToggle(bool indexes)
     {
         using ScratchTree temp = new();
-        await temp.WriteAsync("guide/index.md", "# Guide\n");
+        await temp.WriteAsync(GuideIndexPath, "# Guide\n");
         await temp.WriteAsync("guide/intro.md", "# Intro\n");
         var options = NavOptions.Default with { Indexes = indexes };
         var root = NavTreeBuilder.Build(temp.Root, options);
@@ -53,7 +60,7 @@ public class NavTreeBuilderParameterizedTests
     {
         using ScratchTree temp = new();
         await temp.WriteAsync("a.md", "# A\n");
-        Directory.CreateDirectory(Path.Combine(temp.Root, "empty"));
+        _ = Directory.CreateDirectory(Path.Combine(temp.Root, "empty"));
         var options = NavOptions.Default with { HideEmptySections = hide };
         var root = NavTreeBuilder.Build(temp.Root, options);
         await Assert.That(root).IsNotNull();
@@ -127,7 +134,7 @@ public class NavTreeBuilderParameterizedTests
     public async Task DirectoryUrlsFlowIntoBuiltNodes()
     {
         using ScratchTree temp = new();
-        await temp.WriteAsync("guide/index.md", "# Guide\n");
+        await temp.WriteAsync(GuideIndexPath, "# Guide\n");
         await temp.WriteAsync("guide/intro.md", "# Intro\n");
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default, true);
@@ -150,7 +157,7 @@ public class NavTreeBuilderParameterizedTests
         await temp.WriteAsync(
             "Akavache.Settings/index.md",
             "---\ntitle: Akavache Settings\n---\n# overview\n");
-        await temp.WriteAsync("Akavache.Settings/page.md", "# Page\n");
+        await temp.WriteAsync("Akavache.Settings/page.md", PageMarkdown);
 
         var options = NavOptions.Default with { Indexes = true };
         var root = NavTreeBuilder.Build(temp.Root, options);
@@ -166,7 +173,7 @@ public class NavTreeBuilderParameterizedTests
     {
         using ScratchTree temp = new();
         await temp.WriteAsync("getting-started/index.md", "# Welcome\n");
-        await temp.WriteAsync("getting-started/page.md", "# Page\n");
+        await temp.WriteAsync("getting-started/page.md", PageMarkdown);
 
         var options = NavOptions.Default with { Indexes = true };
         var root = NavTreeBuilder.Build(temp.Root, options);
@@ -182,9 +189,9 @@ public class NavTreeBuilderParameterizedTests
     {
         using ScratchTree temp = new();
         await temp.WriteAsync(
-            "guide/index.md",
+            GuideIndexPath,
             "---\ntitle: Authored Title\n---\n# Welcome\n");
-        await temp.WriteAsync("guide/page.md", "# Page\n");
+        await temp.WriteAsync("guide/page.md", PageMarkdown);
         await temp.WriteAsync("guide/.pages", "title: Override Title\n");
 
         var options = NavOptions.Default with { Indexes = true };
@@ -207,9 +214,7 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
 
-        var pathOrder = string.Join(
-            ",",
-            root.Children.Select(static c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var pathOrder = string.Join(",", GetChildNames(root.Children, false));
         await Assert.That(pathOrder).IsEqualTo("bravo-early,alpha-late,charlie-no-order,delta-no-order");
     }
 
@@ -228,9 +233,7 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var sectionOrder = string.Join(
-            ",",
-            root.Children.Where(static c => c.IsSection).Select(static c => Path.GetFileName(c.RelativePath.Value)));
+        var sectionOrder = string.Join(",", GetChildNames(root.Children, true));
         await Assert.That(sectionOrder).IsEqualTo("bravo,alpha,charlie");
     }
 
@@ -256,12 +259,7 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var ordered = string.Join(
-            ",",
-            root.Children.Select(static c =>
-                c.IsSection
-                    ? Path.GetFileName(c.RelativePath.Value)
-                    : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var ordered = string.Join(",", GetChildNames(root.Children, false));
         await Assert.That(ordered).IsEqualTo("docs,api,contribute,Slack,vs,Book,Announcements,articles,license");
     }
 
@@ -273,19 +271,14 @@ public class NavTreeBuilderParameterizedTests
         using ScratchTree temp = new();
         await temp.WriteAsync("alpha.md", "# A\n");
         await temp.WriteAsync("zulu.md", "# Z\n");
-        await temp.WriteAsync("guide/index.md", "# G\n");
+        await temp.WriteAsync(GuideIndexPath, "# G\n");
         await temp.WriteAsync("guide/p.md", "# P\n");
         await temp.WriteAsync("api/index.md", "# A\n");
         await temp.WriteAsync("api/p.md", "# P\n");
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default with { Indexes = true });
 
-        var ordered = string.Join(
-            ",",
-            root.Children.Select(static c =>
-                c.IsSection
-                    ? Path.GetFileName(c.RelativePath.Value)
-                    : Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var ordered = string.Join(",", GetChildNames(root.Children, false));
 
         // Pages alpha-sorted first, then sections alpha-sorted — the existing default.
         await Assert.That(ordered).IsEqualTo("alpha,zulu,api,guide");
@@ -303,10 +296,33 @@ public class NavTreeBuilderParameterizedTests
 
         var root = NavTreeBuilder.Build(temp.Root, NavOptions.Default);
 
-        var pathOrder = string.Join(
-            ",",
-            root.Children.Select(c => Path.GetFileNameWithoutExtension(c.RelativePath.Value)));
+        var pathOrder = string.Join(",", GetChildNames(root.Children, false));
         await Assert.That(pathOrder).IsEqualTo("alpha,mike,zulu");
+    }
+
+    /// <summary>Gets page stems and section names in navigation order.</summary>
+    /// <param name="children">Navigation children.</param>
+    /// <param name="sectionsOnly">Whether to omit leaf pages.</param>
+    /// <returns>The selected names in their original order.</returns>
+    private static string[] GetChildNames(NavNode[] children, bool sectionsOnly)
+    {
+        var names = new string[children.Length];
+        var count = 0;
+        for (var i = 0; i < children.Length; i++)
+        {
+            var child = children[i];
+            if (sectionsOnly && !child.IsSection)
+            {
+                continue;
+            }
+
+            names[count] = child.IsSection
+                ? Path.GetFileName(child.RelativePath.Value)
+                : Path.GetFileNameWithoutExtension(child.RelativePath.Value);
+            count++;
+        }
+
+        return names[..count];
     }
 
     /// <summary>Disposable scratch tree.</summary>
@@ -315,8 +331,8 @@ public class NavTreeBuilderParameterizedTests
         /// <summary>Initializes a new instance of the <see cref="ScratchTree"/> class.</summary>
         public ScratchTree()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-nav-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-nav-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch root.</summary>
@@ -329,7 +345,7 @@ public class NavTreeBuilderParameterizedTests
         public Task WriteAsync(string relativePath, string content)
         {
             var path = Path.Combine(Root, relativePath);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             return File.WriteAllTextAsync(path, content);
         }
 

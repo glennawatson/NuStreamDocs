@@ -14,7 +14,7 @@ internal static partial class CSharpApiGeneratorLoggingHelper
         EventId = 6001,
         Level = LogLevel.Information,
         Message = "ApiGenerator starting: root={RootDirectory}")]
-    public static partial void LogGeneratorStart(ILogger logger, string rootDirectory);
+    internal static partial void LogGeneratorStart(ILogger logger, string rootDirectory);
 
     /// <summary>Logs the completion of a per-assembly walk.</summary>
     /// <param name="logger">Target logger.</param>
@@ -24,7 +24,7 @@ internal static partial class CSharpApiGeneratorLoggingHelper
         EventId = 6002,
         Level = LogLevel.Information,
         Message = "ApiGenerator walked {AssemblyName}: {TypeCount} type(s)")]
-    public static partial void LogAssemblyWalked(ILogger logger, string assemblyName, int typeCount);
+    internal static partial void LogAssemblyWalked(ILogger logger, string assemblyName, int typeCount);
 
     /// <summary>Logs the end-of-run summary.</summary>
     /// <param name="logger">Target logger.</param>
@@ -35,7 +35,7 @@ internal static partial class CSharpApiGeneratorLoggingHelper
         EventId = 6003,
         Level = LogLevel.Information,
         Message = "ApiGenerator complete: {TotalTypes} type(s), {TotalPages} page(s) in {ElapsedSeconds:F3}s")]
-    public static partial void LogGeneratorComplete(ILogger logger, int totalTypes, int totalPages,
+    internal static partial void LogGeneratorComplete(ILogger logger, int totalTypes, int totalPages,
         double elapsedSeconds);
 
     /// <summary>Logs a source-link miss at debug level.</summary>
@@ -46,7 +46,7 @@ internal static partial class CSharpApiGeneratorLoggingHelper
         EventId = 6004,
         Level = LogLevel.Debug,
         Message = "CSharpApiGenerator source-link miss in {AssemblyName} for {TypeFullName}")]
-    public static partial void LogSourceLinkMiss(ILogger logger, string assemblyName, string typeFullName);
+    internal static partial void LogSourceLinkMiss(ILogger logger, string assemblyName, string typeFullName);
 
     /// <summary>Logs the start of a direct-mode extract run.</summary>
     /// <param name="logger">Target logger.</param>
@@ -55,7 +55,7 @@ internal static partial class CSharpApiGeneratorLoggingHelper
         EventId = 6005,
         Level = LogLevel.Information,
         Message = "CSharpApiGenerator direct-extract starting: root={RootDirectory}")]
-    public static partial void LogDirectExtractStart(ILogger logger, string rootDirectory);
+    internal static partial void LogDirectExtractStart(ILogger logger, string rootDirectory);
 
     /// <summary>Logs the completion of a direct-mode extract run.</summary>
     /// <param name="logger">Target logger.</param>
@@ -67,6 +67,6 @@ internal static partial class CSharpApiGeneratorLoggingHelper
         Level = LogLevel.Information,
         Message =
             "CSharpApiGenerator direct-extract complete: {TypeCount} type(s), {SourceLinkCount} source link(s) in {ElapsedSeconds:F3}s")]
-    public static partial void LogDirectExtractComplete(ILogger logger, int typeCount, int sourceLinkCount,
+    internal static partial void LogDirectExtractComplete(ILogger logger, int typeCount, int sourceLinkCount,
         double elapsedSeconds);
 }

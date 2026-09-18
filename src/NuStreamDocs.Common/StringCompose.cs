@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Common;
 
@@ -29,6 +30,7 @@ public static class StringCompose
     /// <param name="a">First fragment.</param>
     /// <param name="b">Second fragment.</param>
     /// <returns>Composed string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Concat(string a, string b) =>
         string.Create(a.Length + b.Length, (a, b), static (span, p) =>
         {
@@ -41,6 +43,7 @@ public static class StringCompose
     /// <param name="b">Second fragment.</param>
     /// <param name="c">Third fragment.</param>
     /// <returns>Composed string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Concat(string a, string b, string c) =>
         string.Create(a.Length + b.Length + c.Length, (a, b, c), static (span, p) =>
         {
@@ -57,6 +60,7 @@ public static class StringCompose
     /// <param name="c">Third fragment.</param>
     /// <param name="d">Fourth fragment.</param>
     /// <returns>Composed string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Concat(string a, string b, string c, string d) =>
         string.Create(a.Length + b.Length + c.Length + d.Length, (a, b, c, d), static (span, p) =>
         {
@@ -76,6 +80,7 @@ public static class StringCompose
     /// <param name="d">Fourth fragment.</param>
     /// <param name="e">Fifth fragment.</param>
     /// <returns>Composed string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Concat(string a, string b, string c, string d, string e) =>
         string.Create(a.Length + b.Length + c.Length + d.Length + e.Length, (a, b, c, d, e), static (span, p) =>
         {
@@ -94,11 +99,12 @@ public static class StringCompose
     /// <param name="prefix">Constant prefix.</param>
     /// <param name="value">Integer value to render.</param>
     /// <returns>Composed string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ConcatInt(string prefix, int value) =>
         string.Create(prefix.Length + DecimalDigitCount(value), (prefix, value), static (span, p) =>
         {
             p.prefix.AsSpan().CopyTo(span);
-            p.value.TryFormat(span[p.prefix.Length..], out _, default, CultureInfo.InvariantCulture);
+            _ = p.value.TryFormat(span[p.prefix.Length..], out _, default, CultureInfo.InvariantCulture);
         });
 
     /// <summary>Allocates one string equal to <paramref name="prefix"/> + decimal-formatted <paramref name="value"/> + <paramref name="suffix"/>.</summary>
@@ -113,7 +119,7 @@ public static class StringCompose
         {
             p.prefix.AsSpan().CopyTo(span);
             var i = p.prefix.Length;
-            p.value.TryFormat(span[i..], out var written, default, CultureInfo.InvariantCulture);
+            _ = p.value.TryFormat(span[i..], out var written, default, CultureInfo.InvariantCulture);
             i += written;
             p.suffix.AsSpan().CopyTo(span[i..]);
         });

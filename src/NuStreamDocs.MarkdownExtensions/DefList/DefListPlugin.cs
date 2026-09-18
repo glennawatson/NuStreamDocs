@@ -2,11 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.DefList;
 
 /// <summary>Definition-list plugin — rewrites <c>term \n : definition</c> blocks into <c>&lt;dl&gt;</c>/<c>&lt;dt&gt;</c>/<c>&lt;dd&gt;</c> HTML.</summary>
+[System.Diagnostics.DebuggerDisplay("DefListPlugin: {Name}")]
 public sealed class DefListPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -19,6 +21,7 @@ public sealed class DefListPlugin : IPagePreRenderPlugin
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf("\n: "u8) >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         DefListRewriter.Rewrite(context.Source, context.Output);
 }

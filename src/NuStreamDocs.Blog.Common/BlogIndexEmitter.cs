@@ -3,17 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
-/// <summary>
-/// Renders a blog index page (Markdown) listing every post, plus
-/// per-tag archive pages.
-/// </summary>
+/// <summary>Renders a blog index page (Markdown) listing every post, plus per-tag archive pages.</summary>
 public static class BlogIndexEmitter
 {
     /// <summary>ISO date format used in the <c>datetime</c> attribute.</summary>
@@ -36,6 +32,7 @@ public static class BlogIndexEmitter
     /// <param name="title">UTF-8 page heading bytes, e.g. <c>"Blog"u8</c> or <c>"Announcements"u8</c>.</param>
     /// <param name="posts">Posts to list. Caller controls ordering.</param>
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the index page's directory relative to the docs root.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>title.IsEmpty</c>.</exception>
     public static void WriteIndex(
         IBufferWriter<byte> writer,
         ReadOnlySpan<byte> title,
@@ -69,6 +66,7 @@ public static class BlogIndexEmitter
     /// <param name="tag">The tag.</param>
     /// <param name="posts">Posts that carry the tag.</param>
     /// <param name="pageDirectoryRelativeUtf8">Forward-slashed UTF-8 bytes of the archive page's directory relative to the docs root (e.g. <c>"articles/tags"u8</c>).</param>
+    /// <exception cref="ArgumentException">Thrown when <c>tag.Length is 0</c>.</exception>
     public static void WriteTagArchive(
         IBufferWriter<byte> writer,
         byte[] tag,
@@ -207,10 +205,6 @@ public static class BlogIndexEmitter
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="published">Date to write.</param>
     /// <param name="format">Date format string.</param>
-    [SuppressMessage(
-        "Major Code Smell",
-        "S6585:Do not hardcode the format specifier",
-        Justification = "IsoDateFormat / LongDateFormat are named constants documented at their declaration.")]
     private static void WriteDate(IBufferWriter<byte> writer, in DateOnly published, string format)
     {
         Span<char> chars = stackalloc char[64];

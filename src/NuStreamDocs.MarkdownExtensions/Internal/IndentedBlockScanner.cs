@@ -17,7 +17,7 @@ internal static class IndentedBlockScanner
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="offset">Byte offset just past the opener line.</param>
     /// <returns>The exclusive end of the block.</returns>
-    public static int ConsumeBody(ReadOnlySpan<byte> source, int offset)
+    internal static int ConsumeBody(ReadOnlySpan<byte> source, int offset)
     {
         var p = offset;
         var lastContent = offset;
@@ -48,7 +48,7 @@ internal static class IndentedBlockScanner
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="offset">Offset of the line's first byte.</param>
     /// <returns>True when indented enough to belong to the body.</returns>
-    public static bool HasBodyIndent(ReadOnlySpan<byte> source, int offset)
+    internal static bool HasBodyIndent(ReadOnlySpan<byte> source, int offset)
     {
         if (offset >= source.Length)
         {
@@ -72,7 +72,7 @@ internal static class IndentedBlockScanner
     /// <summary>Strips <see cref="BodyIndent"/> columns of leading indentation from each line and writes the rest to <paramref name="writer"/>.</summary>
     /// <param name="body">UTF-8 body bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void WriteDeindented(ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
+    internal static void WriteDeindented(ReadOnlySpan<byte> body, IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < body.Length)
@@ -88,7 +88,7 @@ internal static class IndentedBlockScanner
                 continue;
             }
 
-            if (line.Length > 0 && line[0] == (byte)'\t')
+            if (!line.IsEmpty && line[0] == (byte)'\t')
             {
                 writer.Write(line[1..]);
             }

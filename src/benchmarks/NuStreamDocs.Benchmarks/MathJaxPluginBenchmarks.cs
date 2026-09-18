@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Arithmatex.MathJax;
 
@@ -15,6 +16,7 @@ namespace NuStreamDocs.Benchmarks;
 /// regression in the formatting path; the per-page benchmark captures the steady-state cost
 /// (which should be a single byte-copy + null check).
 /// </remarks>
+[DebuggerDisplay("MathJaxPluginBenchmarks: plugin={_plugin}, sink={_sink}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class MathJaxPluginBenchmarks

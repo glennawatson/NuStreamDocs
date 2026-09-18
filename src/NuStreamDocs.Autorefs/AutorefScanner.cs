@@ -21,7 +21,7 @@ internal static class AutorefScanner
     /// <param name="cursor">Search-start offset.</param>
     /// <param name="match">Captured offsets on success.</param>
     /// <returns>True when a marker was found.</returns>
-    public static bool TryFindNext(ReadOnlySpan<byte> source, int cursor, out AutorefMatch match)
+    internal static bool TryFindNext(ReadOnlySpan<byte> source, int cursor, out AutorefMatch match)
     {
         match = default;
         if (cursor >= source.Length)
@@ -46,7 +46,7 @@ internal static class AutorefScanner
     /// <param name="source">UTF-8 source.</param>
     /// <param name="start">Index of the first ID byte.</param>
     /// <returns>Index just past the last ID byte (or <paramref name="source"/>'s length when no terminator is found).</returns>
-    public static int FindIdEnd(ReadOnlySpan<byte> source, int start)
+    internal static int FindIdEnd(ReadOnlySpan<byte> source, int start)
     {
         if (start >= source.Length)
         {

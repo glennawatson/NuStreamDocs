@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Static lookup over the generated Material Design Icon catalogue.</summary>
@@ -14,6 +16,7 @@ public static class MdiIconBundle
     /// <param name="name">UTF-8 icon name (no <c>material-</c> prefix, no surrounding colons).</param>
     /// <param name="svg">UTF-8 SVG bytes on hit.</param>
     /// <returns>True when the icon is in the catalogue.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGet(ReadOnlySpan<byte> name, out ReadOnlySpan<byte> svg) =>
         MdiIconData.TryGet(name, out svg);
 }

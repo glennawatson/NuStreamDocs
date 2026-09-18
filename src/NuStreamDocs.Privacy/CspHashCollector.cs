@@ -13,14 +13,14 @@ internal static class CspHashCollector
     /// <summary>Returns true when <paramref name="html"/> contains any inline style or script tag worth hashing.</summary>
     /// <param name="html">Page HTML.</param>
     /// <returns>True when the cheap pre-filter matches.</returns>
-    public static bool MayHaveInlineBlocks(ReadOnlySpan<byte> html) =>
+    internal static bool MayHaveInlineBlocks(ReadOnlySpan<byte> html) =>
         html.IndexOf("<style"u8) >= 0 || html.IndexOf("<script"u8) >= 0;
 
     /// <summary>Hashes every inline style and script body in <paramref name="html"/> and adds the formatted CSP source to <paramref name="styles"/> / <paramref name="scripts"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="styles">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;style&gt;</c> blocks.</param>
     /// <param name="scripts">Sink for <c>'sha256-…'</c> tokens from inline <c>&lt;script&gt;</c> blocks.</param>
-    public static void Collect(
+    internal static void Collect(
         ReadOnlySpan<byte> html,
         ConcurrentDictionary<byte[], byte> styles,
         ConcurrentDictionary<byte[], byte> scripts)
@@ -48,7 +48,7 @@ internal static class CspHashCollector
                 continue;
             }
 
-            sink.TryAdd(CspSourceToken.FromBody(blocks.Current), 0);
+            _ = sink.TryAdd(CspSourceToken.FromBody(blocks.Current), 0);
         }
     }
 }

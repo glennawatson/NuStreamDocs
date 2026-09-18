@@ -7,6 +7,9 @@ namespace NuStreamDocs.Toc.Tests;
 /// <summary>Tests for <c>HeadingSlugifier</c>.</summary>
 public class HeadingSlugifierTests
 {
+    /// <summary>Gets the slug used for headings with no usable text.</summary>
+    private static ReadOnlySpan<byte> FallbackSlug => "section"u8;
+
     /// <summary>Basic ASCII slugification.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -26,8 +29,8 @@ public class HeadingSlugifierTests
     [Test]
     public async Task EmptyInputFallsBackToSection()
     {
-        await Assert.That(HeadingSlugifier.SlugifyToBytes("???"u8).AsSpan().SequenceEqual("section"u8)).IsTrue();
-        await Assert.That(HeadingSlugifier.SlugifyToBytes(default).AsSpan().SequenceEqual("section"u8)).IsTrue();
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("???"u8).AsSpan().SequenceEqual(FallbackSlug)).IsTrue();
+        await Assert.That(HeadingSlugifier.SlugifyToBytes(default).AsSpan().SequenceEqual(FallbackSlug)).IsTrue();
     }
 
     /// <summary>Duplicates within a page get numeric suffixes.</summary>
@@ -35,14 +38,16 @@ public class HeadingSlugifierTests
     [Test]
     public async Task DuplicateSlugsGetSuffixes()
     {
+        const int headingCount = 3;
+        const int collisionCount = 2;
         byte[] html = [.. "<h2>Intro</h2><h2>Intro</h2><h2>Intro</h2>"u8];
         var headings = HeadingScanner.Scan(html);
         var (slugged, collisions) = HeadingSlugifier.AssignSlugs(html, headings);
-        await Assert.That(slugged.Length).IsEqualTo(3);
+        await Assert.That(slugged.Length).IsEqualTo(headingCount);
         await Assert.That(slugged[0].Slug.AsSpan().SequenceEqual("intro"u8)).IsTrue();
         await Assert.That(slugged[1].Slug.AsSpan().SequenceEqual("intro_1"u8)).IsTrue();
         await Assert.That(slugged[2].Slug.AsSpan().SequenceEqual("intro_2"u8)).IsTrue();
-        await Assert.That(collisions).IsEqualTo(2);
+        await Assert.That(collisions).IsEqualTo(collisionCount);
     }
 
     /// <summary>Existing id is preserved as the base slug.</summary>
@@ -60,12 +65,12 @@ public class HeadingSlugifierTests
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task SlugifyToBytesAscii() =>
-        await Assert.That(HeadingSlugifier.SlugifyToBytes("Hello World"u8).AsSpan().SequenceEqual("hello-world"u8))
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("HELLO-World_42"u8).AsSpan().SequenceEqual("hello-world_42"u8))
             .IsTrue();
 
     /// <summary>SlugifyToBytes returns the fallback when input strips to nothing.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task SlugifyToBytesFallback() =>
-        await Assert.That(HeadingSlugifier.SlugifyToBytes("???"u8).AsSpan().SequenceEqual("section"u8)).IsTrue();
+        await Assert.That(HeadingSlugifier.SlugifyToBytes("???"u8).AsSpan().SequenceEqual(FallbackSlug)).IsTrue();
 }

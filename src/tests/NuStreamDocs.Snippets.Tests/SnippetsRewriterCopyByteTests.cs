@@ -9,12 +9,15 @@ namespace NuStreamDocs.Snippets.Tests;
 /// <summary>Direct tests for SnippetsByteWriter.</summary>
 public class SnippetsRewriterCopyByteTests
 {
+    /// <summary>Initial output capacity.</summary>
+    private const int InitialOutputCapacity = 2;
+
     /// <summary>WriteOne writes the byte once.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WritesSingleByte()
     {
-        ArrayBufferWriter<byte> sink = new(2);
+        ArrayBufferWriter<byte> sink = new(InitialOutputCapacity);
         SnippetsByteWriter.WriteOne(sink, (byte)'X');
         await Assert.That(sink.WrittenCount).IsEqualTo(1);
         await Assert.That(sink.WrittenSpan[0]).IsEqualTo((byte)'X');

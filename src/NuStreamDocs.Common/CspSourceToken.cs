@@ -13,13 +13,16 @@ public static class CspSourceToken
     /// <summary>Length of the <c>'sha256-</c> prefix.</summary>
     private const int Sha256TokenPrefixLength = 8;
 
+    /// <summary>Base64 characters required for a SHA-256 digest.</summary>
+    private const int Sha256Base64Length = 44;
+
     /// <summary>Hashes <paramref name="body"/> with SHA-256 and returns the bytes of its <c>'sha256-…'</c> CSP source token.</summary>
     /// <param name="body">Inline block body bytes.</param>
     /// <returns>The token bytes.</returns>
     public static byte[] FromBody(ReadOnlySpan<byte> body)
     {
         Span<byte> hash = stackalloc byte[SHA256.HashSizeInBytes];
-        SHA256.HashData(body, hash);
+        _ = SHA256.HashData(body, hash);
         return FromHash(hash);
     }
 
@@ -28,12 +31,12 @@ public static class CspSourceToken
     /// <returns>The token bytes.</returns>
     public static byte[] FromHash(ReadOnlySpan<byte> hash)
     {
-        Span<char> chars = stackalloc char[(SHA256.HashSizeInBytes + 2) / 3 * 4];
-        Convert.TryToBase64Chars(hash, chars, out var charsWritten);
+        Span<char> chars = stackalloc char[Sha256Base64Length];
+        _ = Convert.TryToBase64Chars(hash, chars, out var charsWritten);
         var b64 = chars[..charsWritten];
         var buffer = new byte[Sha256TokenPrefixLength + b64.Length + 1];
         "'sha256-"u8.CopyTo(buffer);
-        Encoding.UTF8.GetBytes(b64, buffer.AsSpan(Sha256TokenPrefixLength));
+        _ = Encoding.UTF8.GetBytes(b64, buffer.AsSpan(Sha256TokenPrefixLength));
         buffer[^1] = (byte)'\'';
         return buffer;
     }

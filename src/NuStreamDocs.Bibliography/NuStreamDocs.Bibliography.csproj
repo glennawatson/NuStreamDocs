@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Bibliography</PackageId>
     <Description>Add academic-style citations and a bibliography to your NuStreamDocs documentation. Supports IEEE (numbered) and APA (author-year) reference styles.</Description>
     <RootNamespace>NuStreamDocs.Bibliography</RootNamespace>

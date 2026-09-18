@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Optimize.Tests;
@@ -78,6 +79,7 @@ public class HtmlMinifierTests
     /// <summary>Drives the minifier with default options.</summary>
     /// <param name="html">Source HTML string.</param>
     /// <returns>Minified HTML string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Minify(string html) => Minify(html, HtmlMinifyOptions.Default);
 
     /// <summary>Drives the minifier with the supplied options.</summary>

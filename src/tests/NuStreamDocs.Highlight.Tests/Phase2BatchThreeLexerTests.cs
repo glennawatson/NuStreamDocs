@@ -10,6 +10,12 @@ namespace NuStreamDocs.Highlight.Tests;
 /// <summary>Smoke tests for the third Phase-2 batch (VB.NET, GraphQL, Protobuf, HCL, R, Julia, MATLAB, Nim).</summary>
 public class Phase2BatchThreeLexerTests
 {
+    /// <summary>The ReturnKeywordHtml test value.</summary>
+    private const string ReturnKeywordHtml = "<span class=\"k\">return</span>";
+
+    /// <summary>The FunctionDeclarationHtml test value.</summary>
+    private const string FunctionDeclarationHtml = "<span class=\"kd\">function</span>";
+
     /// <summary>VB.NET classifies <c>Sub</c>/<c>Function</c> declarations and the case-insensitive control-flow keywords.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -91,9 +97,9 @@ public class Phase2BatchThreeLexerTests
     {
         var html = RLexer.Instance.Render(
             "greet <- function(name) {\n  if (is.null(name)) return(NULL)\n  cat(\"hi\", name)\n}\n"u8);
-        await Assert.That(html.Contains("<span class=\"kd\">function</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(FunctionDeclarationHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">if</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"k\">return</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(ReturnKeywordHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"o\">&lt;-</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kc\">NULL</span>", StringComparison.Ordinal)).IsTrue();
     }
@@ -107,8 +113,8 @@ public class Phase2BatchThreeLexerTests
             "#= block\ncomment =#\nfunction greet(name)\n  return \"hi $name\"\nend\n"u8);
         await Assert.That(html.Contains("<span class=\"cm\">#= block\ncomment =#</span>", StringComparison.Ordinal))
             .IsTrue();
-        await Assert.That(html.Contains("<span class=\"kd\">function</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"k\">return</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(FunctionDeclarationHtml, StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(ReturnKeywordHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">end</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -122,7 +128,7 @@ public class Phase2BatchThreeLexerTests
         await Assert.That(html.Contains("<span class=\"cm\">%{ block comment %}</span>", StringComparison.Ordinal))
             .IsTrue();
         await Assert.That(html.Contains("<span class=\"c1\">% line comment</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"kd\">function</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(FunctionDeclarationHtml, StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"k\">end</span>", StringComparison.Ordinal)).IsTrue();
     }
 
@@ -138,7 +144,7 @@ public class Phase2BatchThreeLexerTests
         await Assert.That(html.Contains("<span class=\"c1\"># line comment</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kd\">proc</span>", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("<span class=\"kt\">string</span>", StringComparison.Ordinal)).IsTrue();
-        await Assert.That(html.Contains("<span class=\"k\">return</span>", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains(ReturnKeywordHtml, StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>Registry resolves the new aliases to their lexers.</summary>

@@ -15,7 +15,7 @@ internal static class LinkValidationRun
     /// <param name="validatePage">Per-page validation step; receives the corpus, the page, and the shared diagnostic accumulator.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Diagnostics in arbitrary order.</returns>
-    public static async Task<LinkDiagnostic[]> ForEachPageAsync(
+    internal static async Task<LinkDiagnostic[]> ForEachPageAsync(
         ValidationCorpus corpus,
         int parallelism,
         Action<ValidationCorpus, PageLinks, ConcurrentBag<LinkDiagnostic>> validatePage,
@@ -24,11 +24,7 @@ internal static class LinkValidationRun
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(parallelism);
 
         ConcurrentBag<LinkDiagnostic> diagnostics = [];
-        ParallelOptions parallelOptions = new()
-        {
-            CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = parallelism
-        };
+        ParallelOptions parallelOptions = new() { CancellationToken = cancellationToken, MaxDegreeOfParallelism = parallelism, };
 
         await Parallel.ForEachAsync(
             corpus.Pages,

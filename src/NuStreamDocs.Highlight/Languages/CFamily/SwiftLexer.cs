@@ -67,7 +67,7 @@ public static class SwiftLexer
                 KeywordDeclarations = KeywordDeclarations,
                 KeywordConstants = KeywordConstants,
                 Operators = OperatorTable,
-                OperatorFirst = CFamilyShared.StandardOperatorFirst
+                OperatorFirst = CFamilyShared.StandardOperatorFirst,
             },
             Punctuation = CFamilyShared.AnnotationColonPunctuation,
             IntegerSuffix = CFamilyRules.NoSuffix,
@@ -76,7 +76,7 @@ public static class SwiftLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = false,
             WhitespaceIncludesNewlines = true,
-            SpecialString = multiLineString
+            SpecialString = multiLineString,
         };
 
         return CFamilyRules.CreateLexer(config);

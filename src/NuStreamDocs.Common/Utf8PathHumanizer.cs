@@ -17,10 +17,10 @@ public static class Utf8PathHumanizer
     private const int AsciiCaseDelta = 'a' - 'A';
 
     /// <summary>Humanizes a file or directory token like <c>getting-started</c> into title text.</summary>
-    /// <param name="name">Path token without separators.</param>
+    /// <param name="name">Source text to encode.</param>
     /// <returns>UTF-8 title bytes.</returns>
     /// <remarks>Replaces <c>-</c>/<c>_</c> separators with spaces and title-cases the leading letter of each word. Non-ASCII runs are preserved verbatim.</remarks>
-    public static byte[] HumanizePathName(this in ReadOnlySpan<char> name)
+    public static byte[] HumanizePathName(in ReadOnlySpan<char> name)
     {
         if (name.IsEmpty)
         {

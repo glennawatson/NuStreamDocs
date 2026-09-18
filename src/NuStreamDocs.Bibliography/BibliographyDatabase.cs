@@ -3,16 +3,15 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Bibliography.Model;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Bibliography;
 
-/// <summary>
-/// Lookup of <see cref="CitationEntry"/> records keyed by
-/// <see cref="CitationEntry.Id"/>.
-/// </summary>
+/// <summary>Lookup of <see cref="CitationEntry"/> records keyed by <see cref="CitationEntry.Id"/>.</summary>
+[System.Diagnostics.DebuggerDisplay("BibliographyDatabase: {Count}")]
 public sealed class BibliographyDatabase
 {
     /// <summary>Byte-keyed citation lookup.</summary>
@@ -23,10 +22,11 @@ public sealed class BibliographyDatabase
 
     /// <summary>Initializes a new instance of the <see cref="BibliographyDatabase"/> class.</summary>
     /// <param name="entries">All entries; duplicates by <c>id</c> are rejected.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>entry.Id is null or []</c>.</exception>
     public BibliographyDatabase(IReadOnlyList<CitationEntry> entries)
     {
         _ordered = [.. entries];
-        Dictionary<byte[], CitationEntry> byteDict = new(entries.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], CitationEntry> byteDict = [with(entries.Count, ByteArrayComparer.Instance)];
         for (var i = 0; i < _ordered.Length; i++)
         {
             var entry = _ordered[i];
@@ -57,12 +57,14 @@ public sealed class BibliographyDatabase
     /// <param name="id">Citation id bytes (no <c>@</c> prefix).</param>
     /// <param name="entry">Resolved entry on hit.</param>
     /// <returns>True when the id is in the database.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(ReadOnlySpan<byte> id, [MaybeNullWhen(false)] out CitationEntry entry) =>
         _byIdBytes.TryGetValueByUtf8(id, out entry!);
 
     /// <summary>Composes the duplicate-citation-id exception message via the project's <see cref="StringCompose"/> helper (one explicit allocation).</summary>
     /// <param name="idBytes">Offending citation id bytes (UTF-8).</param>
     /// <returns>Composed message.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string BuildDuplicateIdMessage(byte[] idBytes) =>
         StringCompose.Concat("Duplicate citation id: ", Encoding.UTF8.GetString(idBytes));
 }

@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Common;
 
 /// <summary>
@@ -10,6 +12,7 @@ namespace NuStreamDocs.Common;
 /// converts to and from <see cref="string"/>; supports Nuke-style joins with the <c>/</c> operator.
 /// </summary>
 /// <param name="Value">The underlying path string.</param>
+[System.Diagnostics.DebuggerDisplay("DirectoryPath: {IsEmpty}")]
 public readonly record struct DirectoryPath(string Value)
 {
     /// <summary>Gets a value indicating whether this path is empty (uninitialized / placeholder).</summary>
@@ -18,7 +21,7 @@ public readonly record struct DirectoryPath(string Value)
     /// <summary>Gets the file-system-style name (last segment).</summary>
     public string Name => string.IsNullOrEmpty(Value)
         ? string.Empty
-        : Path.GetFileName(Value.AsSpan().TrimEnd('/').TrimEnd('\\').ToString());
+        : new string(Path.GetFileName(Value.AsSpan().TrimEnd('/').TrimEnd('\\')));
 
     /// <summary>Gets the parent directory path.</summary>
     /// <remarks>Returns an empty <see cref="DirectoryPath"/> when the path has no parent (root or already empty).</remarks>
@@ -52,6 +55,7 @@ public readonly record struct DirectoryPath(string Value)
     /// <param name="path">Source directory.</param>
     /// <param name="segment">Relative directory segment.</param>
     /// <returns>The combined directory path.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DirectoryPath operator /(in DirectoryPath path, string segment) => path.Combine(segment);
 
     /// <summary>Joins <paramref name="path"/> and <paramref name="segment"/> as nested directories.</summary>
@@ -64,16 +68,19 @@ public readonly record struct DirectoryPath(string Value)
     /// <summary>Friendly named alias for the string→<see cref="DirectoryPath"/> implicit operator (CA2225).</summary>
     /// <param name="value">Source path string.</param>
     /// <returns>The wrapped path.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DirectoryPath FromString(string? value) => value;
 
     /// <summary>Friendly named alias for the <see cref="DirectoryPath"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source directory.</param>
     /// <returns>The underlying path string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToStringValue(in DirectoryPath path) => path;
 
     /// <summary>Friendly named alias for the <see cref="DirectoryPath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source directory.</param>
     /// <returns>The underlying path as a span.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ReadOnlySpan<char> ToReadOnlySpan(in DirectoryPath path) => path;
 
     /// <summary>Friendly named alias for the <c>/</c> string-segment operator (CA2225).</summary>
@@ -87,6 +94,13 @@ public readonly record struct DirectoryPath(string Value)
     /// <param name="right">Nested directory.</param>
     /// <returns>The combined directory path.</returns>
     public static DirectoryPath Divide(in DirectoryPath left, in DirectoryPath right) => left / right;
+
+    /// <summary>Normalizes <paramref name="value"/> by replacing backslashes with forward slashes on non-Windows OSes.</summary>
+    /// <param name="value">Source path.</param>
+    /// <returns>Normalized path.</returns>
+    /// <remarks>Minimal — does not lower-case, resolve relative segments, or touch the filesystem. Use <see cref="Path.GetFullPath(string)"/> for canonicalization.</remarks>
+    public static string Normalize(string value) =>
+        string.IsNullOrEmpty(value) ? string.Empty : value;
 
     /// <summary>Joins this directory with <paramref name="segment"/> via <see cref="Path.Combine(string, string)"/>.</summary>
     /// <param name="segment">Relative segment.</param>
@@ -116,6 +130,7 @@ public readonly record struct DirectoryPath(string Value)
     /// </summary>
     /// <param name="fileName"><see cref="UrlPath"/> identifying the file within this directory; URL-shaped (forward-slashed).</param>
     /// <returns>The composed file path with forward-slash separators.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>fileName.IsEmpty</c>.</exception>
     public FilePath UrlJoin(in UrlPath fileName)
     {
         if (fileName.IsEmpty)
@@ -123,7 +138,7 @@ public readonly record struct DirectoryPath(string Value)
             throw new ArgumentException("File name must be non-empty.", nameof(fileName));
         }
 
-        return IsEmpty ? new(fileName.Value) : new(Value + "/" + fileName.Value);
+        return IsEmpty ? new(fileName.Value) : new($"{Value}/{fileName.Value}");
     }
 
     /// <summary>
@@ -158,14 +173,14 @@ public readonly record struct DirectoryPath(string Value)
         return new(Path.DirectorySeparatorChar is '/' ? relative : relative.Replace('\\', '/'));
     }
 
-    /// <summary>
-    /// Determines if the directory exists or not.
-    /// </summary>
+    /// <summary>Determines if the directory exists or not.</summary>
     /// <returns>True if the directory exists; false otherwise.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Exists() => Directory.Exists(Value);
 
     /// <summary>Returns the underlying path as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
     /// <returns>The path span; empty when the wrapper is default.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> AsSpan() => Value.AsSpan();
 
     /// <summary>Creates this directory and any missing intermediate directories.</summary>
@@ -174,26 +189,30 @@ public readonly record struct DirectoryPath(string Value)
     {
         if (!IsEmpty)
         {
-            Directory.CreateDirectory(Value);
+            _ = Directory.CreateDirectory(Value);
         }
 
         return this;
     }
 
     /// <summary>Deletes the directory (must be empty).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Delete() => Directory.Delete(Value);
 
     /// <summary>Deletes the directory and, when <paramref name="recursive"/> is true, everything inside.</summary>
     /// <param name="recursive">When true, deletes the entire subtree.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DeleteRecursive(bool recursive) => Directory.Delete(Value, recursive);
 
     /// <summary>Enumerates files at the top level of this directory.</summary>
     /// <returns>Matching file paths.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<FilePath> EnumerateFiles() => EnumerateFiles("*", SearchOption.TopDirectoryOnly);
 
     /// <summary>Enumerates files at the top level matching <paramref name="searchPattern"/>.</summary>
     /// <param name="searchPattern">Glob pattern (e.g. <c>*.md</c>).</param>
     /// <returns>Matching file paths.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<FilePath> EnumerateFiles(string searchPattern) =>
         EnumerateFiles(searchPattern, SearchOption.TopDirectoryOnly);
 
@@ -216,12 +235,14 @@ public readonly record struct DirectoryPath(string Value)
 
     /// <summary>Enumerates direct subdirectories.</summary>
     /// <returns>Matching directory paths.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<DirectoryPath> EnumerateDirectories() =>
         EnumerateDirectories("*", SearchOption.TopDirectoryOnly);
 
     /// <summary>Enumerates direct subdirectories matching <paramref name="searchPattern"/>.</summary>
     /// <param name="searchPattern">Glob pattern.</param>
     /// <returns>Matching directory paths.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<DirectoryPath> EnumerateDirectories(string searchPattern) =>
         EnumerateDirectories(searchPattern, SearchOption.TopDirectoryOnly);
 
@@ -244,11 +265,4 @@ public readonly record struct DirectoryPath(string Value)
 
     /// <inheritdoc/>
     public override string ToString() => Value ?? string.Empty;
-
-    /// <summary>Normalizes <paramref name="value"/> by replacing backslashes with forward slashes on non-Windows OSes.</summary>
-    /// <param name="value">Source path.</param>
-    /// <returns>Normalized path.</returns>
-    /// <remarks>Minimal — does not lower-case, resolve relative segments, or touch the filesystem. Use <see cref="Path.GetFullPath(string)"/> for canonicalization.</remarks>
-    public static string Normalize(string value) =>
-        string.IsNullOrEmpty(value) ? string.Empty : value;
 }

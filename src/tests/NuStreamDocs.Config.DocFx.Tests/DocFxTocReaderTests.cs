@@ -10,6 +10,15 @@ namespace NuStreamDocs.Config.DocFx.Tests;
 /// <summary>End-to-end tests for the docfx-style toc.yml reader.</summary>
 public class DocFxTocReaderTests
 {
+    /// <summary>Toc File Name used by the test cases.</summary>
+    private const string TocFileName = "toc.yml";
+
+    /// <summary>Index File Name used by the test cases.</summary>
+    private const string IndexFileName = "index.md";
+
+    /// <summary>Expected Entry Count used by the test cases.</summary>
+    private const int ExpectedEntryCount = 2;
+
     /// <summary>Empty docs root with no toc.yml returns an empty entry array.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -27,15 +36,15 @@ public class DocFxTocReaderTests
     {
         using var fixture = TempTocTree.Create();
         await File.WriteAllTextAsync(
-            Path.Combine(fixture.Root, "toc.yml"),
+            Path.Combine(fixture.Root, TocFileName),
             "- name: Home\n  href: index.md\n- name: Guide\n  href: guide.md\n");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "index.md"), "# Home");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, IndexFileName), "# Home");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide.md"), "# Guide");
 
         var entries = DocFxTocReader.ReadTree(fixture.Root);
-        await Assert.That(entries.Length).IsEqualTo(2);
+        await Assert.That(entries.Length).IsEqualTo(ExpectedEntryCount);
         await Assert.That(Encoding.UTF8.GetString(entries[0].Title)).IsEqualTo("Home");
-        await Assert.That(Encoding.UTF8.GetString(entries[0].Path)).IsEqualTo("index.md");
+        await Assert.That(Encoding.UTF8.GetString(entries[0].Path)).IsEqualTo(IndexFileName);
         await Assert.That(Encoding.UTF8.GetString(entries[1].Title)).IsEqualTo("Guide");
         await Assert.That(Encoding.UTF8.GetString(entries[1].Path)).IsEqualTo("guide.md");
     }
@@ -47,11 +56,11 @@ public class DocFxTocReaderTests
     {
         using var fixture = TempTocTree.Create();
         await File.WriteAllTextAsync(
-            Path.Combine(fixture.Root, "toc.yml"),
+            Path.Combine(fixture.Root, TocFileName),
             "- name: Docs\n  href: docs/toc.yml\n");
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "docs"));
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Root, "docs"));
         await File.WriteAllTextAsync(
-            Path.Combine(fixture.Root, "docs", "toc.yml"),
+            Path.Combine(fixture.Root, "docs", TocFileName),
             "- name: Intro\n  href: intro.md\n");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "docs", "intro.md"), "# Intro");
 
@@ -73,10 +82,10 @@ public class DocFxTocReaderTests
     {
         using var fixture = TempTocTree.Create();
         await File.WriteAllTextAsync(
-            Path.Combine(fixture.Root, "toc.yml"),
+            Path.Combine(fixture.Root, TocFileName),
             "- name: Guide\n  href: guide/\n  homepage: guide/index.md\n");
-        Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", "index.md"), "# Guide");
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Root, "guide"));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "guide", IndexFileName), "# Guide");
 
         var entries = DocFxTocReader.ReadTree(fixture.Root);
         await Assert.That(entries.Length).IsEqualTo(1);
@@ -93,7 +102,7 @@ public class DocFxTocReaderTests
     {
         using var fixture = TempTocTree.Create();
         await File.WriteAllTextAsync(
-            Path.Combine(fixture.Root, "toc.yml"),
+            Path.Combine(fixture.Root, TocFileName),
             "- name: GitHub\n  href: https://github.com/\n");
 
         var entries = DocFxTocReader.ReadTree(fixture.Root);
@@ -110,7 +119,7 @@ public class DocFxTocReaderTests
         using var fixture = TempTocTree.Create();
         const string Yaml =
             "- name: Group\n  items:\n  - name: One\n    href: one.md\n  - name: Two\n    href: two.md\n";
-        await File.WriteAllTextAsync(Path.Combine(fixture.Root, "toc.yml"), Yaml);
+        await File.WriteAllTextAsync(Path.Combine(fixture.Root, TocFileName), Yaml);
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "one.md"), "# One");
         await File.WriteAllTextAsync(Path.Combine(fixture.Root, "two.md"), "# Two");
 
@@ -119,7 +128,7 @@ public class DocFxTocReaderTests
 
         var group = entries[0];
         await Assert.That(group.IsSection).IsTrue();
-        await Assert.That(group.Children.Length).IsEqualTo(2);
+        await Assert.That(group.Children.Length).IsEqualTo(ExpectedEntryCount);
         await Assert.That(Encoding.UTF8.GetString(group.Children[0].Path)).IsEqualTo("one.md");
         await Assert.That(Encoding.UTF8.GetString(group.Children[1].Path)).IsEqualTo("two.md");
     }

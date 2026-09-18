@@ -8,6 +8,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Plugins;
 
 /// <summary>Per-page context handed to <see cref="IPagePostRenderPlugin.PostRender"/>.</summary>
+[System.Diagnostics.DebuggerDisplay("PagePostRenderContext: {RelativePath}")]
 public readonly ref struct PagePostRenderContext
 {
     /// <summary>Initializes a new instance of the <see cref="PagePostRenderContext"/> struct.</summary>

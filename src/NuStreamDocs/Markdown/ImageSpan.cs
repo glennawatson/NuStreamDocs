@@ -23,7 +23,7 @@ internal static class ImageSpan
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when the cursor advanced past a complete <c>![…](…)</c> shape.</returns>
-    public static bool TryHandle(
+    internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,

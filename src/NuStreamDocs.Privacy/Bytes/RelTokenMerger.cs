@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Privacy.Bytes;
@@ -20,7 +21,7 @@ internal static class RelTokenMerger
     /// <param name="existing">Current <c>rel</c> value (may contain irregular whitespace).</param>
     /// <param name="extra">Extra tokens to merge in.</param>
     /// <param name="sink">UTF-8 sink that receives the merged token list.</param>
-    public static void MergeInto(ReadOnlySpan<byte> existing, ReadOnlySpan<byte> extra, IBufferWriter<byte> sink)
+    internal static void MergeInto(ReadOnlySpan<byte> existing, ReadOnlySpan<byte> extra, IBufferWriter<byte> sink)
     {
         Span<int> existingRanges = stackalloc int[MaxTokens * RangeStride];
         var existingCount = IndexTokens(existing, existingRanges);
@@ -109,6 +110,7 @@ internal static class RelTokenMerger
     /// <param name="ranges">Token-range buffer.</param>
     /// <param name="i">Token index.</param>
     /// <returns>Token byte span.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ReadOnlySpan<byte> TokenAt(ReadOnlySpan<byte> source, in ReadOnlySpan<int> ranges, int i) =>
         source[ranges[i * RangeStride]..ranges[(i * RangeStride) + 1]];
 

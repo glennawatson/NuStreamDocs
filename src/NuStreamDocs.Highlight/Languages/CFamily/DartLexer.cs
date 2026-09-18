@@ -31,7 +31,7 @@ public static class DartLexer
                 OperatorAlternationFactory.SplitLongestFirst(
                     "??= ?? ?. ... .."u8,
                     CFamilyShared.StandardOperatorsLiteral),
-            OperatorFirst = CFamilyShared.StandardOperatorFirst
+            OperatorFirst = CFamilyShared.StandardOperatorFirst,
         },
         CFamilyRules.NoSuffix,
         CFamilyRules.NoSuffix,

@@ -10,6 +10,7 @@ namespace NuStreamDocs.Highlight;
 /// <param name="Match">Matcher used to identify the pattern.</param>
 /// <param name="TokenClass">Classification assigned on a successful match.</param>
 /// <param name="NextState">State to transition to after a match (see <see cref="NoStateChange"/> / <see cref="PopState"/>).</param>
+[System.Diagnostics.DebuggerDisplay("LexerRule: {FirstBytes}")]
 public sealed record LexerRule(LexerRuleMatcher Match, TokenClass TokenClass, int NextState)
 {
     /// <summary>Sentinel for <see cref="NextState"/> — leaves the state stack unchanged.</summary>

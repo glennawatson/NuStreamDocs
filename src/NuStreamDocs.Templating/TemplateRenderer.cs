@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Html;
 
@@ -23,7 +24,7 @@ internal static class TemplateRenderer
     /// <param name="root">Root data scope.</param>
     /// <param name="partials">Partial registry, keyed by partial name; may be null.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Render(
+    internal static void Render(
         ReadOnlySpan<byte> source,
         in ReadOnlySpan<TemplateInstruction> instructions,
         TemplateData root,
@@ -52,6 +53,7 @@ internal static class TemplateRenderer
     /// <summary>Estimates the maximum scope-stack depth from instruction count.</summary>
     /// <param name="instructionCount">Number of instructions.</param>
     /// <returns>Conservative capacity hint.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int EstimateDepth(int instructionCount) =>
         Math.Max(MinScopeDepth, instructionCount / InstructionsPerScopeEstimate);
 

@@ -2,27 +2,30 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Config.MkDocs;
 
 namespace NuStreamDocs.Config.Zensical;
 
-/// <summary>
-/// <see cref="IConfigReader"/> implementation for Zensical-flavored <c>zensical.toml</c> files.
-/// </summary>
+/// <summary><see cref="IConfigReader"/> implementation for Zensical-flavored <c>zensical.toml</c> files.</summary>
+[System.Diagnostics.DebuggerDisplay("ZensicalConfigReader: {FormatName}")]
 public sealed class ZensicalConfigReader : IConfigReader
 {
     /// <inheritdoc/>
     public ReadOnlySpan<byte> FormatName => "zensical"u8;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool RecognizesExtension(ReadOnlySpan<char> extension) =>
         extension.Equals(".toml", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MkDocsConfig Read(ReadOnlySpan<byte> utf8Source) =>
         ConfigReaderJsonPipeline.Read(utf8Source, TomlToJson.Convert);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task<MkDocsConfig> ReadAsync(Stream utf8Stream, CancellationToken cancellationToken) =>
         ConfigReaderJsonPipeline.ReadAsync(utf8Stream, TomlToJson.ConvertAsync, cancellationToken);
 }

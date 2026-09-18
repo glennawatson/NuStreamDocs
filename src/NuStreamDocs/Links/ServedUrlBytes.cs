@@ -3,14 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Links;
 
-/// <summary>
-/// Maps source-relative paths to served-page URL bytes.
-/// </summary>
+/// <summary>Maps source-relative paths to served-page URL bytes.</summary>
 public static class ServedUrlBytes
 {
     /// <summary>Markdown extension length.</summary>
@@ -41,6 +40,7 @@ public static class ServedUrlBytes
     /// <param name="path">Source-relative path.</param>
     /// <param name="useDirectoryUrls">True for directory URLs.</param>
     /// <returns>UTF-8 URL bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] FromPath(in FilePath path, bool useDirectoryUrls) =>
         FromPath(path, useDirectoryUrls, false);
 
@@ -70,7 +70,7 @@ public static class ServedUrlBytes
     /// <returns>UTF-8 URL bytes.</returns>
     private static byte[] FromUtf8Path(ReadOnlySpan<byte> path, bool useDirectoryUrls, bool leadingSlash)
     {
-        using var rental = PageBuilderPool.Rent(path.Length + HtmlExtension.Length + 2);
+        using var rental = PageBuilderPool.Rent(path.Length + HtmlExtension.Length + "/"u8.Length + "/"u8.Length);
         var writer = rental.Writer;
         if (leadingSlash)
         {

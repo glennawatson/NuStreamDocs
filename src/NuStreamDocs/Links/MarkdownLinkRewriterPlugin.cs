@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
@@ -12,6 +13,8 @@ namespace NuStreamDocs.Links;
 /// <c>.html</c> (or <c>foo/</c> directory-URL) form. External URLs and non-Markdown hrefs pass
 /// through unchanged.
 /// </summary>
+/// <param name="useDirectoryUrls">Directory URL override, or null to use the build configuration.</param>
+[System.Diagnostics.DebuggerDisplay("MarkdownLinkRewriterPlugin: {Name}")]
 public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IBuildConfigurePlugin, IPagePostRenderPlugin
 {
     /// <summary>Caller-supplied directory-URL override; null defers to the config.</summary>
@@ -44,6 +47,7 @@ public sealed class MarkdownLinkRewriterPlugin(bool? useDirectoryUrls) : IBuildC
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => MarkdownLinkRewriter.NeedsRewrite(html);
 
     /// <inheritdoc/>

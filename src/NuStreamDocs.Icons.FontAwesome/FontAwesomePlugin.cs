@@ -7,10 +7,8 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Icons.FontAwesome;
 
-/// <summary>
-/// Plugin that contributes a Font Awesome <c>&lt;link&gt;</c> stylesheet
-/// reference to every page's <c>&lt;head&gt;</c>.
-/// </summary>
+/// <summary>Plugin that contributes a Font Awesome <c>&lt;link&gt;</c> stylesheet reference to every page's <c>&lt;head&gt;</c>.</summary>
+[System.Diagnostics.DebuggerDisplay("FontAwesomePlugin: {Name}")]
 public sealed class FontAwesomePlugin : IPlugin, IHeadExtraProvider
 {
     /// <summary>Configured option set.</summary>

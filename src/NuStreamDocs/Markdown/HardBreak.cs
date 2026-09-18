@@ -22,27 +22,27 @@ internal static class HardBreak
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when a hard break was emitted.</returns>
-    public static bool TryHandle(
+    internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
         IBufferWriter<byte> writer)
     {
-        var lfIndex = pos;
-        var spaceStart = lfIndex;
+        var newlineIndex = pos;
+        var spaceStart = newlineIndex;
         while (spaceStart > pendingTextStart && source[spaceStart - 1] == Sp)
         {
             spaceStart--;
         }
 
-        if (lfIndex - spaceStart < MinTrailingSpaces)
+        if (newlineIndex - spaceStart < MinTrailingSpaces)
         {
             return false;
         }
 
         InlineRenderer.FlushText(source, pendingTextStart, spaceStart, writer);
         Utf8StringWriter.Write(writer, "<br />\n"u8);
-        pos = lfIndex + 1;
+        pos = newlineIndex + 1;
         pendingTextStart = pos;
         return true;
     }

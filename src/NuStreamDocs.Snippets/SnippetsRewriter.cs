@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
@@ -27,13 +28,13 @@ internal static class SnippetsRewriter
     /// <param name="baseDirectory">Absolute path to resolve include targets against.</param>
     /// <param name="fileCache">Byte-keyed snippet cache scoped to the current build.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(
+    internal static void Rewrite(
         ReadOnlySpan<byte> source,
         in DirectoryPath baseDirectory,
         Dictionary<byte[], byte[]> fileCache,
         IBufferWriter<byte> writer)
     {
-        HashSet<byte[]> visited = new(ByteArrayComparer.Instance);
+        HashSet<byte[]> visited = [with(ByteArrayComparer.Instance)];
         RewriteCore(source, baseDirectory, fileCache, writer, visited, 0);
     }
 
@@ -177,7 +178,7 @@ internal static class SnippetsRewriter
         }
 
         var pathKey = pathBytes.ToArray();
-        visited.Add(pathKey);
+        _ = visited.Add(pathKey);
         try
         {
             if (sectionBytes.IsEmpty)
@@ -202,7 +203,7 @@ internal static class SnippetsRewriter
         }
         finally
         {
-            visited.Remove(pathKey);
+            _ = visited.Remove(pathKey);
         }
     }
 
@@ -292,5 +293,6 @@ internal static class SnippetsRewriter
     /// <summary>Writes a single byte to <paramref name="writer"/>.</summary>
     /// <param name="writer">Sink.</param>
     /// <param name="b">Byte to write.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void CopyByte(IBufferWriter<byte> writer, byte b) => SnippetsByteWriter.WriteOne(writer, b);
 }

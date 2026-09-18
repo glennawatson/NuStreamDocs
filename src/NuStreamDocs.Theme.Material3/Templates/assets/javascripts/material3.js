@@ -223,7 +223,7 @@
 (function () {
     "use strict";
 
-    document.addEventListener("DOMContentLoaded", function () {
+    function scrollActiveIntoView() {
         var sidebar = document.querySelector(".md-sidebar--primary .md-sidebar__inner");
         if (!sidebar) {
             return;
@@ -238,7 +238,11 @@
         var activeRect = active.getBoundingClientRect();
         var offset = activeRect.top - sidebarRect.top - sidebar.clientHeight / 2 + active.clientHeight / 2;
         sidebar.scrollTop = sidebar.scrollTop + offset;
-    });
+    }
+
+    document.addEventListener("DOMContentLoaded", scrollActiveIntoView);
+    // Re-run after the client router swaps regions on soft navigation.
+    document.addEventListener("nstd:page-load", scrollActiveIntoView);
 })();
 
 /* Primary-sidebar live filter. Hides nav items whose label and
@@ -379,4 +383,106 @@
             button.classList.remove("md-clipboard--copied");
         }, 1500);
     }
+})();
+
+/* Keep active-state markers in sync after the client router's soft navigations.
+   The router swaps the content + TOC regions but leaves the header tabs and the
+   primary nav (chrome) in place, so their server-rendered active markers would
+   otherwise point at the page you navigated *from*. Recompute them from the
+   current URL on every nstd:page-load (the router fires it on first load too). */
+(function () {
+    "use strict";
+
+    function pathOf(href) {
+        try {
+            return new URL(href, location.href).pathname;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function updateTabs() {
+        var items = document.querySelectorAll(".md-tabs__item");
+        if (!items.length) {
+            return;
+        }
+
+        var path = location.pathname;
+        var best = null;
+        var bestLen = -1;
+        items.forEach(function (item) {
+            var link = item.querySelector(".md-tabs__link");
+            if (!link) {
+                return;
+            }
+
+            var tabPath = pathOf(link.href);
+            if (tabPath === null) {
+                return;
+            }
+
+            var matches = tabPath === "/" ? path === "/" : (path === tabPath || path.indexOf(tabPath) === 0);
+            if (matches && tabPath.length > bestLen) {
+                best = item;
+                bestLen = tabPath.length;
+            }
+        });
+
+        items.forEach(function (item) {
+            item.classList.remove("md-tabs__item--active");
+        });
+        if (best) {
+            best.classList.add("md-tabs__item--active");
+        }
+    }
+
+    function updatePrimaryNav() {
+        var nav = document.querySelector(".md-sidebar--primary .md-nav--primary");
+        if (!nav) {
+            return;
+        }
+
+        var path = location.pathname;
+        var links = nav.querySelectorAll("a.md-nav__link[href]");
+        var best = null;
+        var bestLen = -1;
+        links.forEach(function (link) {
+            var linkPath = pathOf(link.href);
+            if (linkPath !== null && path === linkPath && linkPath.length > bestLen) {
+                best = link;
+                bestLen = linkPath.length;
+            }
+        });
+
+        links.forEach(function (link) {
+            link.classList.remove("md-nav__link--active");
+        });
+        if (!best) {
+            return;
+        }
+
+        best.classList.add("md-nav__link--active");
+
+        // Expand collapsed ancestor sections so the active item is visible.
+        var node = best.closest(".md-nav__item");
+        while (node) {
+            var toggle = node.querySelector(":scope > input.md-nav__toggle");
+            if (toggle) {
+                toggle.checked = true;
+            }
+            node = node.parentElement ? node.parentElement.closest(".md-nav__item") : null;
+        }
+    }
+
+    function sync() {
+        updateTabs();
+        updatePrimaryNav();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", sync);
+    } else {
+        sync();
+    }
+    document.addEventListener("nstd:page-load", sync);
 })();

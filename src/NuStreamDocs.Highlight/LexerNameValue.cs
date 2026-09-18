@@ -7,4 +7,5 @@ namespace NuStreamDocs.Highlight;
 /// <summary>UTF-8 language-id and lexer pair used to register extra lexers with <see cref="LexerRegistry.Build(LexerNameValue[])"/>.</summary>
 /// <param name="LanguageId">UTF-8 language id (lowercase by convention).</param>
 /// <param name="Lexer">Lexer instance.</param>
+[System.Diagnostics.DebuggerDisplay("LexerNameValue: {ToString(),nq}")]
 public readonly record struct LexerNameValue(byte[] LanguageId, Lexer Lexer);

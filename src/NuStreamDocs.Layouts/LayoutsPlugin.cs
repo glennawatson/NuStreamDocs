@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -17,6 +18,7 @@ namespace NuStreamDocs.Layouts;
 /// and <c>{% extends %}</c> + <c>{% block %}</c> inheritance with
 /// <c>{{ super() }}</c>.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("LayoutsPlugin: {Name}")]
 public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
 {
     /// <summary>Tiebreak inside <see cref="PluginBand.Latest"/>; runs before the theme shell wraps the body.</summary>
@@ -73,6 +75,7 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> html) => true;
 
     /// <inheritdoc/>
@@ -104,6 +107,7 @@ public sealed class LayoutsPlugin : IPagePostRenderPlugin, IBuildConfigurePlugin
 
     /// <summary>Returns the per-build template cache (test/diagnostic accessor; internal-only).</summary>
     /// <returns>The plugin's parse cache.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal TemplateCache GetCacheForTests() => _cache;
 
     /// <summary>Copies <paramref name="source"/> through to <paramref name="writer"/> without scanning.</summary>

@@ -2,8 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace NuStreamDocs.Csp;
 
 /// <summary>Configuration for <c>CspPlugin</c>.</summary>
@@ -21,10 +19,7 @@ namespace NuStreamDocs.Csp;
 /// <param name="Enabled">Master switch; when false the plugin contributes nothing.</param>
 /// <param name="ExtraSources">Extra <c>(directive, source)</c> pairs appended to that directive's source list (a new directive is added when it isn't one this plugin builds).</param>
 /// <param name="ExtraDirectives">Raw directive strings appended verbatim (the escape hatch).</param>
-[SuppressMessage(
-    "Major Code Smell",
-    "S107",
-    Justification = "A flat options record; each field is an independent CSP knob.")]
+[System.Diagnostics.DebuggerDisplay("CspOptions: {ToString(),nq}")]
 public readonly record struct CspOptions(
     byte[] DefaultSrc,
     byte[] BaseUri,
@@ -40,9 +35,9 @@ public readonly record struct CspOptions(
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static CspOptions Default { get; } = new(
-        [.. "'self'"u8],
-        [.. "'self'"u8],
-        [.. "'self'"u8],
+        [.. SelfSource],
+        [.. SelfSource],
+        [.. SelfSource],
         true,
         false,
         false,
@@ -51,4 +46,7 @@ public readonly record struct CspOptions(
         true,
         [],
         []);
+
+    /// <summary>Gets the self source bytes.</summary>
+    private static ReadOnlySpan<byte> SelfSource => "'self'"u8;
 }

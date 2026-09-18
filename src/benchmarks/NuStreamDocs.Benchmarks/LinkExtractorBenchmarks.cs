@@ -2,9 +2,12 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using NuStreamDocs.Common;
 using NuStreamDocs.LinkValidator;
 
 namespace NuStreamDocs.Benchmarks;
@@ -16,6 +19,7 @@ namespace NuStreamDocs.Benchmarks;
 /// per-page cost multiplies through large corpora; this benchmark
 /// matches the shapes seen on the rxui corpus.
 /// </summary>
+[DebuggerDisplay("LinkExtractorBenchmarks: PageSizeKb={PageSizeKb}, LinksPer200Bytes={LinksPer200Bytes}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class LinkExtractorBenchmarks
@@ -44,6 +48,15 @@ public class LinkExtractorBenchmarks
     /// <summary>Number of element shapes the synthesizer cycles through (internal / external / asset / image-src / heading-id).</summary>
     private const int ElementShapes = 5;
 
+    /// <summary>Body byte budget used to scale the requested link density.</summary>
+    private const int LinkDensityByteBudget = 200;
+
+    /// <summary>Element-cycle slot for a link to an image asset.</summary>
+    private const int ImageLinkShape = 2;
+
+    /// <summary>Element-cycle slot for an external image source.</summary>
+    private const int ImageSourceShape = 3;
+
     /// <summary>Pre-built page bytes for the current iteration.</summary>
     private byte[] _html = [];
 
@@ -61,29 +74,29 @@ public class LinkExtractorBenchmarks
     {
         StringBuilder sb = new(PageSizeKb * BytesPerKb);
         var totalBytes = PageSizeKb * BytesPerKb;
-        var blockEvery = 200 / Math.Max(1, LinksPer200Bytes);
+        var blockEvery = LinkDensityByteBudget / Math.Max(1, LinksPer200Bytes);
         var idx = 0;
         var written = 0;
         while (written < totalBytes)
         {
             // Mix of internal, external, asset, image, and heading-id shapes — the cross-section the validator sees on a real page.
-            var i = idx.ToString(CultureInfo.InvariantCulture);
-            var emitted = (idx % ElementShapes) switch
+            var i = new ApiCompatString(idx.ToString(CultureInfo.InvariantCulture));
+            var emitted = new ApiCompatString((idx % ElementShapes) switch
             {
                 0 => $"<a href=\"page{i}.html\">link {i}</a>",
                 1 => $"<a href=\"https://example{i}.com\">ext {i}</a>",
-                2 => $"<a href=\"image{i}.png\">img {i}</a>",
-                3 => $"<img src=\"https://cdn.test/x{i}.jpg\" />",
+                ImageLinkShape => $"<a href=\"image{i}.png\">img {i}</a>",
+                ImageSourceShape => $"<img src=\"https://cdn.test/x{i}.jpg\" />",
                 _ => $"<h2 id=\"section-{i}\">Section {i}</h2>"
-            };
-            sb.Append(emitted);
-            written += emitted.Length;
+            });
+            _ = sb.Append(emitted.Value);
+            written += emitted.Value!.Length;
 
             // Filler text between elements so links aren't packed back-to-back.
             for (var f = 0; f < blockEvery && written < totalBytes; f++)
             {
                 const string Filler = "<p>Lorem ipsum dolor sit amet.</p>";
-                sb.Append(Filler);
+                _ = sb.Append(Filler);
                 written += Filler.Length;
             }
 
@@ -95,16 +108,19 @@ public class LinkExtractorBenchmarks
 
     /// <summary>Benchmark for byte-only href scan.</summary>
     /// <returns>The captured href count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int ExtractHrefRanges() => LinkExtractor.ExtractHrefRanges(_html).Length;
 
     /// <summary>Benchmark for byte-only src scan.</summary>
     /// <returns>The captured src count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int ExtractSrcRanges() => LinkExtractor.ExtractSrcRanges(_html).Length;
 
     /// <summary>Benchmark for the heading-only id scan.</summary>
     /// <returns>The captured heading-id count.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int ExtractHeadingIdRanges() => LinkExtractor.ExtractHeadingIdRanges(_html).Length;
 }

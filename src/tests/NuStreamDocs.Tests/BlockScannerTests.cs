@@ -99,7 +99,7 @@ public class BlockScannerTests
     private static BlockKind[] ScanKinds(ReadOnlySpan<byte> utf8)
     {
         ArrayBufferWriter<BlockSpan> writer = new();
-        BlockScanner.Scan(utf8, writer);
+        _ = BlockScanner.Scan(utf8, writer);
         var spans = writer.WrittenSpan;
         var result = new BlockKind[spans.Length];
         for (var i = 0; i < spans.Length; i++)

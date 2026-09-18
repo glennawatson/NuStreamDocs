@@ -6,9 +6,7 @@ using System.Buffers;
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Optional resolver consulted by the icon-shortcode rewriter before falling back to the default font-ligature span.
-/// </summary>
+/// <summary>Optional resolver consulted by the icon-shortcode rewriter before falling back to the default font-ligature span.</summary>
 public interface IIconResolver
 {
     /// <summary>Tries to resolve <paramref name="iconName"/> and write its inline markup to <paramref name="writer"/>.</summary>

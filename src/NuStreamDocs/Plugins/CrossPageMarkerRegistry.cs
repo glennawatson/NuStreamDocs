@@ -9,19 +9,21 @@ namespace NuStreamDocs.Plugins;
 /// the registry after rendering each page; pages whose HTML contains none of the registered
 /// markers skip the cross-page barrier and write immediately.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("CrossPageMarkerRegistry: {Markers}")]
 public sealed class CrossPageMarkerRegistry
 {
     /// <summary>Initial slot capacity for registered markers.</summary>
     private const int InitialCapacity = 4;
 
     /// <summary>Backing list of registered marker byte sequences.</summary>
-    private readonly List<byte[]> _markers = new(InitialCapacity);
+    private readonly List<byte[]> _markers = [with(InitialCapacity)];
 
     /// <summary>Gets the registered marker byte sequences.</summary>
     public IReadOnlyList<byte[]> Markers => _markers;
 
     /// <summary>Registers a marker byte sequence whose presence indicates the page needs cross-page resolution.</summary>
     /// <param name="needle">UTF-8 byte sequence identifying the cross-page marker (e.g. <c>[.. "@autoref:"u8]</c>).</param>
+    /// <exception cref="ArgumentException">Thrown when <c>needle.Length is 0</c>.</exception>
     public void Register(byte[] needle)
     {
         if (needle.Length is 0)

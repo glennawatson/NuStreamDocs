@@ -99,13 +99,11 @@ public class SnippetsRewriterTests
     /// <summary>Disposable scratch directory + helper that drives the rewriter against it.</summary>
     private sealed class SnippetFixture : IDisposable
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SnippetFixture"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="SnippetFixture"/> class.</summary>
         public SnippetFixture()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-snippets-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-snippets-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the temporary base directory.</summary>
@@ -117,7 +115,7 @@ public class SnippetsRewriterTests
         public void Write(string relativePath, string content)
         {
             var absolute = Path.Combine(Root, relativePath);
-            Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
             File.WriteAllText(absolute, content);
         }
 
@@ -128,7 +126,7 @@ public class SnippetsRewriterTests
         {
             var bytes = Encoding.UTF8.GetBytes(source);
             ArrayBufferWriter<byte> sink = new(Math.Max(bytes.Length, 1));
-            Dictionary<byte[], byte[]> cache = new(ByteArrayComparer.Instance);
+            Dictionary<byte[], byte[]> cache = [with(ByteArrayComparer.Instance)];
             SnippetsRewriter.Rewrite(bytes, Root, cache, sink);
             return Encoding.UTF8.GetString(sink.WrittenSpan);
         }

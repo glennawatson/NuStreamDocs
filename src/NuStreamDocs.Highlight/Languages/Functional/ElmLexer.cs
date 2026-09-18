@@ -34,7 +34,7 @@ public static class ElmLexer
             KeywordDeclarations =
                 ByteKeywordSet.CreateFromSpaceSeparated("module import type alias port effect"u8),
             KeywordConstants = ByteKeywordSet.CreateFromSpaceSeparated("True False Nothing Just Ok Err"u8),
-            Operators = OperatorTable
-        }
+            Operators = OperatorTable,
+        },
     });
 }

@@ -11,6 +11,7 @@ using NuStreamDocs.Search.Sqlite.Logging;
 namespace NuStreamDocs.Search.Sqlite;
 
 /// <summary>SQLite/FTS5 search-index plugin — emits a single <c>search.db</c> and the sql.js-httpvfs client glue.</summary>
+[System.Diagnostics.DebuggerDisplay("SqliteSearchPlugin: {StaticAssets}")]
 public sealed class SqliteSearchPlugin : SearchPluginBase, IStaticAssetProvider
 {
     /// <summary>Output path of the vendored sql.js-httpvfs UMD loader bundle.</summary>
@@ -24,15 +25,6 @@ public sealed class SqliteSearchPlugin : SearchPluginBase, IStaticAssetProvider
 
     /// <summary>Output path of the bind glue script.</summary>
     private static readonly FilePath BindScriptPath = new("assets/javascripts/sqlite-bind.js");
-
-    /// <summary>UTF-8 head-extra snippet referencing the runtime loader and the deferred glue script.</summary>
-    private static readonly byte[] HeadExtraBytes =
-    [
-        .. """
-           <script src="/assets/javascripts/sql.js-httpvfs.js" defer></script>
-           <script src="/assets/javascripts/sqlite-bind.js" defer></script>
-           """u8
-    ];
 
     /// <summary>Cached bind-script bytes.</summary>
     private static readonly byte[] BindScriptBytes = SqliteBindScript.Bytes.ToArray();
@@ -92,6 +84,12 @@ public sealed class SqliteSearchPlugin : SearchPluginBase, IStaticAssetProvider
 
     /// <inheritdoc/>
     protected override byte[] SectionPriorities => _options.SectionPriorities;
+
+    /// <summary>Gets the script tags that load the SQLite runtime and search bindings.</summary>
+    private static ReadOnlySpan<byte> HeadExtraBytes => """
+           <script src="/assets/javascripts/sql.js-httpvfs.js" defer></script>
+           <script src="/assets/javascripts/sqlite-bind.js" defer></script>
+           """u8;
 
     /// <inheritdoc/>
     protected override ValueTask OnIndexWrittenAsync(DirectoryPath siteRoot, CancellationToken cancellationToken)

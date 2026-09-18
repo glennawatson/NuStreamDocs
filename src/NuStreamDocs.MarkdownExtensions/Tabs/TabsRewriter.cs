@@ -22,7 +22,7 @@ internal static class TabsRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         // Pre-grow the writer so the per-line WriteMultiSegment paths inside the loop don't
         // trigger an Array.Resize doubling chain. Tabbed-set output expands the source by

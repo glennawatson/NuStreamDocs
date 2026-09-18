@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
@@ -102,6 +103,7 @@ public class ExternalLinkPolisherTests
     /// <param name="source">HTML input.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>Rewritten HTML.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Polish(string source, in PrivacyOptions options) =>
         Encoding.UTF8.GetString(ExternalLinkPolisher.Polish(Encoding.UTF8.GetBytes(source), options));
 }

@@ -10,6 +10,9 @@ namespace NuStreamDocs.Toc.Tests;
 /// <summary>Tests for <c>HeadingRewriter</c>.</summary>
 public class HeadingRewriterTests
 {
+    /// <summary>Initial capacity for rewritten heading fixtures.</summary>
+    private const int OutputCapacity = 128;
+
     /// <summary>Rewriter inserts id attributes and permalink anchors.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -19,7 +22,7 @@ public class HeadingRewriterTests
         var headings = HeadingScanner.Scan(html);
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
-        ArrayBufferWriter<byte> sink = new(128);
+        ArrayBufferWriter<byte> sink = new(OutputCapacity);
         HeadingRewriter.Rewrite(html, slugged, "¶"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
@@ -39,7 +42,7 @@ public class HeadingRewriterTests
         var headings = HeadingScanner.Scan(html);
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
-        ArrayBufferWriter<byte> sink = new(128);
+        ArrayBufferWriter<byte> sink = new(OutputCapacity);
         HeadingRewriter.Rewrite(html, slugged, "#"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 
@@ -61,7 +64,7 @@ public class HeadingRewriterTests
         var headings = HeadingScanner.Scan(html);
         var (slugged, _) = HeadingSlugifier.AssignSlugs(html, headings);
 
-        ArrayBufferWriter<byte> sink = new(128);
+        ArrayBufferWriter<byte> sink = new(OutputCapacity);
         HeadingRewriter.Rewrite(html, slugged, "¶"u8, sink);
         var output = Encoding.UTF8.GetString(sink.WrittenSpan);
 

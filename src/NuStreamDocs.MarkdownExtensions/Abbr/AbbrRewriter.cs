@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Text;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 
@@ -15,15 +14,18 @@ internal static class AbbrRewriter
     /// <summary>Length of the <c>"]:"</c> separator between an abbreviation token and its definition body.</summary>
     private const int CloseBracketColonLength = 2;
 
+    /// <summary>Width of the delimiter between a link label and its destination.</summary>
+    private const int LinkDestinationDelimiterLength = 2;
+
     /// <summary>Gets the two-byte prefix that introduces an abbreviation definition.</summary>
     private static ReadOnlySpan<byte> DefinitionMarker => "*["u8;
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        Dictionary<string, byte[]> definitions = new(StringComparer.Ordinal);
+        Dictionary<byte[], byte[]> definitions = [with(ByteArrayComparer.Instance)];
         var stripped = CollectAndStripDefinitions(source, definitions);
         if (definitions.Count is 0)
         {
@@ -38,7 +40,7 @@ internal static class AbbrRewriter
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="definitions">Accumulator: token → title bytes.</param>
     /// <returns>Source bytes with definition lines stripped.</returns>
-    private static byte[] CollectAndStripDefinitions(ReadOnlySpan<byte> source, Dictionary<string, byte[]> definitions)
+    private static byte[] CollectAndStripDefinitions(ReadOnlySpan<byte> source, Dictionary<byte[], byte[]> definitions)
     {
         ArrayBufferWriter<byte> sink = new(source.Length);
         var cursor = 0;
@@ -48,7 +50,7 @@ internal static class AbbrRewriter
             var line = source[cursor..lineEnd];
             if (TryParseDefinition(line, out var token, out var title))
             {
-                definitions[Encoding.UTF8.GetString(token)] = title.ToArray();
+                definitions[[.. token]] = [.. title];
                 cursor = Utf8LineSpan.AdvancePastLineTerminator(source, lineEnd);
                 continue;
             }
@@ -88,7 +90,7 @@ internal static class AbbrRewriter
 
         token = rest[..closeBracket];
         title = AsciiByteHelpers.TrimAsciiWhitespace(rest[(closeBracket + CloseBracketColonLength)..]);
-        return title.Length > 0;
+        return !title.IsEmpty;
     }
 
     /// <summary>Walks the body bytes and wraps each definition-token occurrence in <c>&lt;abbr title="…"&gt;</c> elements.</summary>
@@ -97,7 +99,7 @@ internal static class AbbrRewriter
     /// <param name="writer">UTF-8 sink.</param>
     private static void WrapAbbreviations(
         ReadOnlySpan<byte> source,
-        Dictionary<string, byte[]> definitions,
+        Dictionary<byte[], byte[]> definitions,
         IBufferWriter<byte> writer)
     {
         var i = 0;
@@ -178,7 +180,7 @@ internal static class AbbrRewriter
     private static bool TryEmitAbbrToken(
         ReadOnlySpan<byte> source,
         int offset,
-        Dictionary<string, byte[]> definitions,
+        Dictionary<byte[], byte[]> definitions,
         IBufferWriter<byte> writer,
         out int afterToken)
     {
@@ -217,7 +219,7 @@ internal static class AbbrRewriter
             return offset;
         }
 
-        var destEnd = FindMatching(source, labelEnd + 2, (byte)'(', (byte)')');
+        var destEnd = FindMatching(source, labelEnd + LinkDestinationDelimiterLength, (byte)'(', (byte)')');
         return destEnd < 0 ? offset : destEnd + 1;
     }
 
@@ -264,7 +266,7 @@ internal static class AbbrRewriter
     private static bool TryMatchToken(
         ReadOnlySpan<byte> source,
         int offset,
-        Dictionary<string, byte[]> definitions,
+        Dictionary<byte[], byte[]> definitions,
         out int tokenLength,
         out ReadOnlySpan<byte> title)
     {
@@ -285,7 +287,7 @@ internal static class AbbrRewriter
             }
 
             var slice = source.Slice(offset, key.Length);
-            if (!MatchesAscii(slice, key))
+            if (!slice.SequenceEqual(key))
             {
                 continue;
             }
@@ -301,23 +303,6 @@ internal static class AbbrRewriter
 
         tokenLength = bestLen;
         title = bestTitle;
-        return true;
-    }
-
-    /// <summary>Byte-equality check between <paramref name="slice"/> and the ASCII bytes of <paramref name="key"/>.</summary>
-    /// <param name="slice">Source bytes (caller-sized to <paramref name="key"/>.Length).</param>
-    /// <param name="key">Token string (assumed ASCII; abbreviations universally are).</param>
-    /// <returns>True on byte-for-byte match.</returns>
-    private static bool MatchesAscii(ReadOnlySpan<byte> slice, string key)
-    {
-        for (var i = 0; i < key.Length; i++)
-        {
-            if (slice[i] != (byte)key[i])
-            {
-                return false;
-            }
-        }
-
         return true;
     }
 }

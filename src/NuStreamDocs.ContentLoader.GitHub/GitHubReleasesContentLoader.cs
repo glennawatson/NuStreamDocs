@@ -15,6 +15,7 @@ namespace NuStreamDocs.ContentLoader.GitHub;
 /// with the release notes as the body and <c>name</c> / <c>tag_name</c> / <c>published_at</c> /
 /// <c>prerelease</c> / <c>html_url</c> as frontmatter.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("GitHubReleasesContentLoader: {Name}")]
 public sealed class GitHubReleasesContentLoader : IContentLoader
 {
     /// <summary>Frontmatter fields kept from each release object.</summary>
@@ -35,7 +36,7 @@ public sealed class GitHubReleasesContentLoader : IContentLoader
     /// <summary>Personal access token; empty for unauthenticated requests.</summary>
     private readonly byte[] _token;
 
-    /// <summary>HTTP client factory; null means the loader owns a short-lived client.</summary>
+    /// <summary>Optional factory for caller-owned HTTP clients.</summary>
     private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger for diagnostics.</summary>
@@ -66,8 +67,9 @@ public sealed class GitHubReleasesContentLoader : IContentLoader
     /// <param name="repo">Repository name.</param>
     /// <param name="routePrefix">Subdirectory the changelog pages are placed under.</param>
     /// <param name="token">Personal access token; empty for unauthenticated requests.</param>
-    /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
+    /// <param name="httpClientFactory">Factory producing a caller-owned HTTP client; null uses a shared client without cookies.</param>
     /// <param name="logger">Logger for diagnostics.</param>
+    /// <exception cref="ArgumentException">The repository owner, name, or route prefix is empty.</exception>
     public GitHubReleasesContentLoader(
         byte[] owner,
         byte[] repo,
@@ -114,9 +116,10 @@ public sealed class GitHubReleasesContentLoader : IContentLoader
     /// <returns>The template bytes.</returns>
     private static byte[] RouteTemplate(PathSegment prefix)
     {
-        ArrayBufferWriter<byte> writer = new(prefix.Value.Length + 16);
-        Encoding.UTF8.GetBytes(prefix.Value.AsSpan(), writer);
-        writer.Write("/{tag_name}.md"u8);
-        return writer.WrittenSpan.ToArray();
+        var suffix = "/{tag_name}.md"u8;
+        var writer = new ArrayBufferWriter<byte>(Encoding.UTF8.GetByteCount(prefix.Value) + suffix.Length);
+        _ = Encoding.UTF8.GetBytes(prefix.Value.AsSpan(), writer);
+        writer.Write(suffix);
+        return [.. writer.WrittenSpan];
     }
 }

@@ -7,6 +7,7 @@ namespace NuStreamDocs.Optimize;
 /// <summary>Configuration for <see cref="HtmlMinifyPlugin"/>.</summary>
 /// <param name="StripComments">Remove HTML comments (<c>&lt;!-- … --&gt;</c>); IE conditional comments are dropped along with the rest.</param>
 /// <param name="CollapseWhitespace">Collapse runs of inter-tag whitespace into a single space (or strip entirely between block-level tags).</param>
+[System.Diagnostics.DebuggerDisplay("HtmlMinifyOptions: {ToString(),nq}")]
 public sealed record HtmlMinifyOptions(bool StripComments, bool CollapseWhitespace)
 {
     /// <summary>Gets the default option set — strip comments and collapse whitespace.</summary>

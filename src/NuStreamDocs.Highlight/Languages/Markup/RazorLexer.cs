@@ -118,12 +118,11 @@ public static class RazorLexer
         [
             MarkupRootRules.Build(
                 TagStateId,
-
-                // Markup literal-text run — anything up to the next < / & / @.
                 new(
                     static slice => TokenMatchers.MatchRunUntilAny(slice, MarkupTextStop),
                     TokenClass.Text,
                     LexerRule.NoStateChange),
+                [
 
                 // @* … *@ Razor block comment.
                 new(
@@ -144,10 +143,7 @@ public static class RazorLexer
                     CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
 
                 // @if / @for / @while / etc. — control directive that pushes the C# state.
-                new(static slice => MatchAtKeyword(slice, ControlDirectives), TokenClass.Keyword, CSharpStateId)
-                {
-                    FirstBytes = LanguageCommon.AtFirst
-                },
+                new(static slice => MatchAtKeyword(slice, ControlDirectives), TokenClass.Keyword, CSharpStateId) { FirstBytes = LanguageCommon.AtFirst, },
 
                 // @{ — brace-block opener that pushes the C# state.
                 new(
@@ -156,10 +152,8 @@ public static class RazorLexer
                     CSharpStateId) { FirstBytes = LanguageCommon.AtFirst },
 
                 // @identifier(.identifier)* — inline expression, stays in markup mode.
-                new(MatchInlineExpression, TokenClass.Name, LexerRule.NoStateChange)
-                {
-                    FirstBytes = LanguageCommon.AtFirst
-                }),
+                new(MatchInlineExpression, TokenClass.Name, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst, }
+                ]),
             MarkupTagRules.Build(),
             BuildCsharpStateRules(),
             CSharpRules.BuildBlockAccessorRules(CSharpBlockAccessorStateId),
@@ -175,10 +169,7 @@ public static class RazorLexer
         var shared = CSharpRules.Build(CSharpBlockAccessorStateId, CSharpArrowAccessorStateId);
         var combined = new LexerRule[shared.Length + 1];
         combined[0] =
-            new(static slice => slice is [(byte)'}', ..] ? 1 : 0, TokenClass.Punctuation, LexerRule.PopState)
-            {
-                FirstBytes = CloseBraceFirst
-            };
+            new(static slice => slice is [(byte)'}', ..] ? 1 : 0, TokenClass.Punctuation, LexerRule.PopState) { FirstBytes = CloseBraceFirst, };
         Array.Copy(shared, 0, combined, 1, shared.Length);
         return combined;
     }

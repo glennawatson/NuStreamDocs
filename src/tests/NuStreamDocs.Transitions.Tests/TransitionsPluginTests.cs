@@ -10,6 +10,9 @@ namespace NuStreamDocs.Transitions.Tests;
 /// <summary>Coverage for <see cref="TransitionsPlugin"/>.</summary>
 public class TransitionsPluginTests
 {
+    /// <summary>Minimum script length.</summary>
+    private const int MinimumScriptLength = 2000;
+
     /// <summary>The default plugin ships the router script asset and emits the config meta + script tag.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -21,7 +24,7 @@ public class TransitionsPluginTests
         var assets = plugin.StaticAssets;
         await Assert.That(assets.Length).IsEqualTo(1);
         await Assert.That(assets[0].Path.Value).IsEqualTo("assets/javascripts/nstd-router.js");
-        await Assert.That(assets[0].Bytes.Length).IsGreaterThan(2000);
+        await Assert.That(assets[0].Bytes.Length).IsGreaterThan(MinimumScriptLength);
 
         ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);

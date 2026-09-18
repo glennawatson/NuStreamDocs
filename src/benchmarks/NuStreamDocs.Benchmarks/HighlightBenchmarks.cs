@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
 using NuStreamDocs.Highlight;
@@ -15,6 +17,7 @@ using NuStreamDocs.Highlight.Languages.Scripting;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for the syntax-highlight emitter, parameterized over the production lexers.</summary>
+[DebuggerDisplay("HighlightBenchmarks: csharp={_csharp}, typescript={_typescript}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class HighlightBenchmarks
@@ -106,66 +109,79 @@ public class HighlightBenchmarks
 
     /// <summary>Benchmark: C# lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int CSharp() => Run(CSharpLexer.Instance, _csharp);
 
     /// <summary>Benchmark: TypeScript lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TypeScript() => Run(TypeScriptLexer.Instance, _typescript);
 
     /// <summary>Benchmark: HTML lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Html() => Run(HtmlLexer.Instance, _html);
 
     /// <summary>Benchmark: XML lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Xml() => Run(XmlLexer.Instance, _xml);
 
     /// <summary>Benchmark: Razor lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Razor() => Run(RazorLexer.Instance, _razor);
 
     /// <summary>Benchmark: JSON lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Json() => Run(JsonLexer.Instance, _json);
 
     /// <summary>Benchmark: YAML lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Yaml() => Run(YamlLexer.Instance, _yaml);
 
     /// <summary>Benchmark: Bash lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Bash() => Run(BashLexer.Instance, _bash);
 
     /// <summary>Benchmark: Python lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Python() => Run(PythonLexer.Instance, _python);
 
     /// <summary>Benchmark: F# lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int FSharp() => Run(FSharpLexer.Instance, _fsharp);
 
     /// <summary>Benchmark: JavaScript lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int JavaScript() => Run(JavaScriptLexer.Instance, _javascript);
 
     /// <summary>Benchmark: PowerShell lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int PowerShell() => Run(PowerShellLexer.Instance, _powershell);
 
     /// <summary>Benchmark: Diff / patch lexer.</summary>
     /// <returns>Bytes written.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int Diff() => Run(DiffLexer.Instance, _diff);
 

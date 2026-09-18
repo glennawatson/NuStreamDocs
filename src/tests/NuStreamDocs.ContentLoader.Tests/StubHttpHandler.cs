@@ -24,7 +24,7 @@ internal sealed class StubHttpHandler : HttpMessageHandler
     /// <summary>Builds an <see cref="HttpClient"/> that always returns <paramref name="body"/> with HTTP 200.</summary>
     /// <param name="body">Response body.</param>
     /// <returns>The configured client.</returns>
-    public static HttpClient ClientReturning(string body) => new(new StubHttpHandler(_ => (HttpStatusCode.OK, body)));
+    internal static HttpClient ClientReturning(string body) => new(new StubHttpHandler(_ => (HttpStatusCode.OK, body)));
 
     /// <inheritdoc/>
     protected override Task<HttpResponseMessage> SendAsync(

@@ -44,12 +44,9 @@ public static class PagefindCli
         }
 
         var binary = ResolveBinaryPath(options.BinaryPath);
-        if (binary is null)
-        {
-            return HandleMissingBinary(logger);
-        }
-
-        return await InvokeAsync(binary, siteRoot, options, logger, cancellationToken).ConfigureAwait(false);
+        return binary is { } binaryPath
+            ? await InvokeAsync(binaryPath, siteRoot, options, logger, cancellationToken).ConfigureAwait(false)
+            : HandleMissingBinary(logger);
     }
 
     /// <summary>Either throws a strict-mode error or logs a soft warning.</summary>
@@ -69,40 +66,18 @@ public static class PagefindCli
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True on exit-code-zero; false on tolerated failure (strict off).</returns>
     private static async Task<bool> InvokeAsync(
-        string binary,
+        FilePath binary,
         DirectoryPath siteRoot,
         PagefindOptions options,
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        ProcessStartInfo psi = new()
-        {
-            FileName = binary,
-            WorkingDirectory = siteRoot.Value,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardError = true,
-            RedirectStandardOutput = true
-        };
-        psi.ArgumentList.Add("--site");
-        psi.ArgumentList.Add(siteRoot.Value);
-
-        // Place output under <site>/pagefind/ — the canonical location its loader expects when consumers
-        // write `import("/pagefind/pagefind.js")`. The OutputSubdirectory option is reserved for future use.
-        psi.ArgumentList.Add("--output-subdir");
-        psi.ArgumentList.Add("pagefind");
-
-        // --quiet suppresses Pagefind's progress chatter so stdout stays empty in the success case
-        // and our drain loop is a no-op.
-        psi.ArgumentList.Add("--quiet");
-
         PagefindCliLogging.LogInvoking(logger, binary, siteRoot);
 
-        using var process = new Process();
-        process.StartInfo = psi;
+        using var process = new Process { StartInfo = CreateStartInfo(binary, siteRoot) };
         try
         {
-            process.Start();
+            _ = process.Start();
         }
         catch (Exception ex) when (!options.StrictBinaryRequired)
         {
@@ -110,52 +85,109 @@ public static class PagefindCli
             return false;
         }
 
-        // Read stdio as raw bytes via the BaseStream — avoids the BeginOutputReadLine API which
-        // delivers strings (UTF-16 decode + per-line allocation). Stdout is just drained to a counter
-        // because the success log only surfaces the byte count; stderr is pooled into an
-        // ArrayBufferWriter and decoded to string only at the error-message boundary.
-        //
-        // Drain both pipes concurrently via Task.WhenAll. Awaiting stderr-then-stdout serially
-        // (the original shape) deadlocks when the child fills its stdout pipe before stderr is
-        // done — classic on Windows, where the default child-process stdio pipe buffer is 4 KB
-        // versus 64 KB on Linux/macOS. Pagefind's --quiet flag (set above) keeps stdout near-empty
-        // in the success case, but warnings / errors still flow on both streams, so the safe shape
-        // is to wait for both pumps in parallel.
-        ArrayBufferWriter<byte> stderrSink = new();
+        // Drain both pipes concurrently so a full pipe cannot prevent the child from exiting.
+        var stderrSink = new ArrayBufferWriter<byte>();
         var stdoutDrain = DrainStdoutAsync(process.StandardOutput.BaseStream, cancellationToken).AsTask();
         var stderrDrain = DrainIntoAsync(process.StandardError.BaseStream, stderrSink, cancellationToken).AsTask();
+        var result = await WaitForCompletionAsync(process, stdoutDrain, stderrDrain, cancellationToken).ConfigureAwait(false);
 
-        long stdoutBytes;
+        if (!HandleExit(result.ExitCode, result.Signal, stderrSink.WrittenSpan, options.StrictBinaryRequired, logger))
+        {
+            return false;
+        }
+
+        PagefindCliLogging.LogSucceeded(logger, ClampToInt(result.StdoutBytes), stderrSink.WrittenCount);
+        return true;
+    }
+
+    /// <summary>Configures the Pagefind command for the rendered site.</summary>
+    /// <param name="binary">Resolved executable path.</param>
+    /// <param name="siteRoot">Rendered site directory.</param>
+    /// <returns>The process launch configuration.</returns>
+    private static ProcessStartInfo CreateStartInfo(in FilePath binary, in DirectoryPath siteRoot)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = binary.Value,
+            WorkingDirectory = siteRoot.Value,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+        };
+        startInfo.ArgumentList.Add("--site");
+        startInfo.ArgumentList.Add(siteRoot.Value);
+        startInfo.ArgumentList.Add("--output-subdir");
+        startInfo.ArgumentList.Add("pagefind");
+        startInfo.ArgumentList.Add("--quiet");
+        return startInfo;
+    }
+
+    /// <summary>Waits for output and process termination, killing the process when canceled.</summary>
+    /// <param name="process">Running Pagefind process.</param>
+    /// <param name="stdoutDrain">Output drain reporting the number of bytes read.</param>
+    /// <param name="stderrDrain">Error output drain.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The exit code, termination signal when available, and stdout byte count.</returns>
+    /// <exception cref="OperationCanceledException">The invocation was canceled.</exception>
+    private static async Task<(int ExitCode, PosixSignal? Signal, long StdoutBytes)> WaitForCompletionAsync(
+        Process process,
+        Task<long> stdoutDrain,
+        Task stderrDrain,
+        CancellationToken cancellationToken)
+    {
         try
         {
             await Task.WhenAll(stdoutDrain, stderrDrain).ConfigureAwait(false);
-            stdoutBytes = await stdoutDrain.ConfigureAwait(false);
+            var stdoutBytes = await stdoutDrain.ConfigureAwait(false);
+#if NET11_0_OR_GREATER
+            var exitStatus = await process.WaitForExitStatusAsync(cancellationToken).ConfigureAwait(false);
+            return (exitStatus.ExitCode, exitStatus.Signal, stdoutBytes);
+#else
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            return (process.ExitCode, null, stdoutBytes);
+#endif
         }
         catch (OperationCanceledException)
         {
             KillIfRunning(process);
             throw;
         }
+    }
 
-        if (process.ExitCode != 0)
+    /// <summary>Reports process failure according to the strict-mode setting.</summary>
+    /// <param name="exitCode">Process exit code.</param>
+    /// <param name="signal">Termination signal when reported by the runtime.</param>
+    /// <param name="stderr">Captured stderr bytes.</param>
+    /// <param name="strict">Whether failures throw.</param>
+    /// <param name="logger">Diagnostic logger.</param>
+    /// <returns>True for a normal zero exit code; otherwise false.</returns>
+    /// <exception cref="InvalidOperationException">The process failed and strict mode is enabled.</exception>
+    private static bool HandleExit(int exitCode, PosixSignal? signal, ReadOnlySpan<byte> stderr, bool strict, ILogger logger)
+    {
+        if (exitCode is 0 && signal is null)
         {
-            var stderrText = Encoding.UTF8.GetString(stderrSink.WrittenSpan);
-            PagefindCliLogging.LogFailed(logger, process.ExitCode, stderrText);
-            if (options.StrictBinaryRequired)
-            {
-                throw new InvalidOperationException(
-                    StringCompose.ConcatInt(
-                        "Pagefind exited with code ",
-                        process.ExitCode,
-                        StringCompose.Concat(". stderr: ", stderrText)));
-            }
+            return true;
+        }
 
+        var stderrText = new ApiCompatString(Encoding.UTF8.GetString(stderr));
+        if (signal is { } terminationSignal)
+        {
+            PagefindCliLogging.LogTerminated(logger, terminationSignal, stderrText);
+        }
+        else
+        {
+            PagefindCliLogging.LogFailed(logger, exitCode, stderrText);
+        }
+
+        if (!strict)
+        {
             return false;
         }
 
-        PagefindCliLogging.LogSucceeded(logger, ClampToInt(stdoutBytes), stderrSink.WrittenCount);
-        return true;
+        throw new InvalidOperationException(signal is { } failureSignal
+            ? StringCompose.Concat("Pagefind terminated by signal ", failureSignal.ToString(), ". stderr: ", stderrText)
+            : StringCompose.ConcatInt("Pagefind exited with code ", exitCode, StringCompose.Concat(". stderr: ", stderrText)));
     }
 
     /// <summary>Drains <paramref name="stream"/> into <paramref name="sink"/> a pooled chunk at a time.</summary>
@@ -237,7 +269,7 @@ public static class PagefindCli
     /// <summary>Resolves the absolute path of the Pagefind binary to invoke, or null on miss.</summary>
     /// <param name="explicitOverride">User-supplied override; tried first.</param>
     /// <returns>An absolute path that exists on disk, or null.</returns>
-    private static string? ResolveBinaryPath(in FilePath explicitOverride)
+    private static FilePath? ResolveBinaryPath(in FilePath explicitOverride)
     {
         if (!explicitOverride.IsEmpty && File.Exists(explicitOverride.Value))
         {
@@ -288,14 +320,9 @@ public static class PagefindCli
 
         if (OperatingSystem.IsWindows())
         {
-            return "win-" + arch;
+            return $"win-{arch}";
         }
 
-        if (OperatingSystem.IsMacOS())
-        {
-            return "osx-" + arch;
-        }
-
-        return "linux-" + arch;
+        return OperatingSystem.IsMacOS() ? $"osx-{arch}" : $"linux-{arch}";
     }
 }

@@ -9,13 +9,16 @@ namespace NuStreamDocs.ContentLoader.Feed;
 /// <summary>Builds the Markdown bytes for a page synthesized from a feed item.</summary>
 internal static class FeedMarkdown
 {
+    /// <summary>Initial space for the item's frontmatter.</summary>
+    private const int FrontmatterCapacity = 256;
+
     /// <summary>Assembles frontmatter (title / date / source / external URL) and the item body into a Markdown document.</summary>
     /// <param name="item">The feed item.</param>
     /// <param name="feedUrl">The feed URL the item came from.</param>
     /// <returns>UTF-8 Markdown source.</returns>
-    public static byte[] Build(FeedItem item, ReadOnlySpan<byte> feedUrl)
+    internal static byte[] Build(in FeedItem item, ReadOnlySpan<byte> feedUrl)
     {
-        ArrayBufferWriter<byte> writer = new(item.ContentHtml.Length + 256);
+        ArrayBufferWriter<byte> writer = new(item.ContentHtml.Length + FrontmatterCapacity);
         writer.Write("---\n"u8);
         WriteScalar(writer, "title"u8, item.Title);
         WriteScalar(writer, "date"u8, item.Date);

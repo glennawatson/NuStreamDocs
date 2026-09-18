@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using SQLitePCL;
 
@@ -63,7 +64,7 @@ public static class SqliteIndexWriter
         }
         finally
         {
-            raw.sqlite3_close_v2(db);
+            _ = raw.sqlite3_close_v2(db);
         }
     }
 
@@ -88,13 +89,13 @@ public static class SqliteIndexWriter
                     throw Fail(db, "insert step");
                 }
 
-                raw.sqlite3_reset(stmt);
-                raw.sqlite3_clear_bindings(stmt);
+                _ = raw.sqlite3_reset(stmt);
+                _ = raw.sqlite3_clear_bindings(stmt);
             }
         }
         finally
         {
-            raw.sqlite3_finalize(stmt);
+            _ = raw.sqlite3_finalize(stmt);
         }
     }
 
@@ -122,12 +123,14 @@ public static class SqliteIndexWriter
     /// <param name="stmt">Prepared statement.</param>
     /// <param name="index">One-based bind index.</param>
     /// <param name="value">UTF-8 bytes to bind.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void BindText(sqlite3_stmt stmt, int index, byte[] value) =>
         raw.sqlite3_bind_text(stmt, index, (ReadOnlySpan<byte>)value);
 
     /// <summary>Runs a single SQL statement, throwing on a non-success result code.</summary>
     /// <param name="db">Open database handle.</param>
     /// <param name="sql">SQL text.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void Run(sqlite3 db, string sql) => Check(raw.sqlite3_exec(db, sql), db, sql);
 
     /// <summary>Throws an <see cref="InvalidOperationException"/> when <paramref name="rc"/> is not a success code.</summary>

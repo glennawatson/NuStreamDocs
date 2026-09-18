@@ -17,16 +17,20 @@ namespace NuStreamDocs.Sitemap;
 /// the input root, and per-page <c>aliases:</c> frontmatter lists.
 /// Static entries win over per-page aliases on conflict.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("RedirectsPlugin: {Name}")]
 public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
 {
+    /// <summary>Initial alias capacity.</summary>
+    private const int InitialAliasCapacity = 4;
+
+    /// <summary>Initial redirect page capacity.</summary>
+    private const int InitialRedirectPageCapacity = 512;
+
     /// <summary>ASCII-only case offset between uppercase and lowercase letters.</summary>
     private const byte AsciiCaseOffset = 32;
 
     /// <summary>HTML extension bytes used to swap a markdown extension on the rendered page URL.</summary>
     private static readonly byte[] HtmlExtension = [.. ".html"u8];
-
-    /// <summary>Markdown extension bytes recognized when computing the rendered URL.</summary>
-    private static readonly byte[] MarkdownExtension = [.. ".md"u8];
 
     /// <summary>Trailing <c>index.html</c> appendix for directory-style aliases (<c>foo/</c>).</summary>
     private static readonly byte[] IndexHtml = [.. "index.html"u8];
@@ -35,7 +39,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     private readonly Dictionary<byte[], byte[]> _seed;
 
     /// <summary>Aliases harvested from page frontmatter.</summary>
-    private readonly Dictionary<byte[], byte[]> _aliases = new(ByteArrayComparer.Instance);
+    private readonly Dictionary<byte[], byte[]> _aliases = [with(ByteArrayComparer.Instance)];
 
     /// <summary>Plugin options.</summary>
     private readonly RedirectsOptions _options;
@@ -63,7 +67,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     {
         _options = options;
         _aliasKeyBytes = Utf8Encoder.Encode(options.AliasFrontmatterKey);
-        _seed = new(entries.Length, ByteArrayComparer.Instance);
+        _seed = [with(entries.Length, ByteArrayComparer.Instance)];
         for (var i = 0; i < entries.Length; i++)
         {
             var (from, to) = entries[i];
@@ -83,6 +87,9 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <inheritdoc/>
     public PluginPriority FinalizePriority => new(PluginBand.Late);
 
+    /// <summary>Gets markdown extension bytes recognized when computing the rendered URL.</summary>
+    private static ReadOnlySpan<byte> MarkdownExtension => ".md"u8;
+
     /// <inheritdoc/>
     public async ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
     {
@@ -97,21 +104,25 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
             await ScanFrontmatterAliasesAsync(inputRoot, cancellationToken).ConfigureAwait(false);
         }
 
-        if (_options.LoadConfigFile && !string.IsNullOrEmpty(_options.ConfigFileName))
+        if (!_options.LoadConfigFile || string.IsNullOrEmpty(_options.ConfigFileName))
         {
-            var configPath = Path.Combine(inputRoot.Value, _options.ConfigFileName);
-            if (File.Exists(configPath))
-            {
-                var bytes = await File.ReadAllBytesAsync(configPath, cancellationToken).ConfigureAwait(false);
-                LoadFlatYaml(bytes, _seed);
-            }
+            return;
         }
+
+        var configPath = Path.Combine(inputRoot.Value, _options.ConfigFileName);
+        if (!File.Exists(configPath))
+        {
+            return;
+        }
+
+        var bytes = await File.ReadAllBytesAsync(configPath, cancellationToken).ConfigureAwait(false);
+        LoadFlatYaml(bytes, _seed);
     }
 
     /// <inheritdoc/>
     public async ValueTask FinalizeAsync(BuildFinalizeContext context, CancellationToken cancellationToken)
     {
-        Dictionary<byte[], byte[]> merged = new(_seed.Count + _aliases.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], byte[]> merged = [with(_seed.Count + _aliases.Count, ByteArrayComparer.Instance)];
         foreach (var entry in _seed)
         {
             merged[entry.Key] = entry.Value;
@@ -120,10 +131,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
         foreach (var entry in _aliases)
         {
             // Static entries win over per-page aliases on conflict.
-            if (!merged.ContainsKey(entry.Key))
-            {
-                merged[entry.Key] = entry.Value;
-            }
+            _ = merged.TryAdd(entry.Key, entry.Value);
         }
 
         if (merged.Count is 0)
@@ -211,7 +219,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <returns>One byte-array per comma-separated entry.</returns>
     private static byte[][] ParseInlineList(ReadOnlySpan<byte> span)
     {
-        List<byte[]> result = new(4);
+        List<byte[]> result = [with(InitialAliasCapacity)];
         var start = 0;
         for (var i = 0; i <= span.Length; i++)
         {
@@ -239,7 +247,7 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     /// <returns>One byte-array per list entry.</returns>
     private static byte[][] ParseBlockList(ReadOnlySpan<byte> source, int cursor)
     {
-        List<byte[]> result = new(4);
+        List<byte[]> result = [with(InitialAliasCapacity)];
         while (cursor < source.Length)
         {
             var lineEnd = Utf8LineSpan.LfLineEnd(source, cursor);
@@ -387,8 +395,8 @@ public sealed class RedirectsPlugin : IBuildDiscoverPlugin, IBuildFinalizePlugin
     {
         var fromPath = Encoding.UTF8.GetString(fromPathBytes);
         var absolute = Path.GetFullPath(Path.Combine(outputRoot.Value, fromPath));
-        Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
-        ArrayBufferWriter<byte> sink = new(512);
+        _ = Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
+        ArrayBufferWriter<byte> sink = new(InitialRedirectPageCapacity);
         BuildStub(toUrlBytes, sink);
         await File.WriteAllBytesAsync(absolute, sink.WrittenMemory, cancellationToken).ConfigureAwait(false);
     }

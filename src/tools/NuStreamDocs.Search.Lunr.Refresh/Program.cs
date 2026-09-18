@@ -18,9 +18,9 @@ namespace NuStreamDocs.Search.Lunr.Refresh;
 /// <para>
 /// Mirrors the Pagefind refresh tool. Run after every Lunr release bump:
 /// </para>
-/// <code>
+/// <c>
 /// dotnet run --project src/tools/NuStreamDocs.Search.Lunr.Refresh -- --version 2.3.9
-/// </code>
+/// </c>
 /// <para>
 /// Lunr.js doesn't publish stand-alone GitHub release assets — the canonical
 /// distribution channel is npm. jsDelivr serves immutable, content-addressed
@@ -38,6 +38,9 @@ public static class Program
 
     /// <summary>How many directory levels to walk up from <c>AppContext.BaseDirectory</c> looking for the <c>src/</c> root.</summary>
     private const int SrcRootProbeDepth = 8;
+
+    /// <summary>Maximum duration of an asset download in minutes.</summary>
+    private const int DownloadTimeoutMinutes = 2;
 
     /// <summary>Upstream asset URL template; <c>{0}</c> = version.</summary>
     private static readonly CompositeFormat AssetUrlTemplate =
@@ -68,7 +71,7 @@ public static class Program
         handler.CheckCertificateRevocationList = true;
         using HttpClient http = new(handler);
         http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-        http.Timeout = TimeSpan.FromMinutes(2);
+        http.Timeout = TimeSpan.FromMinutes(DownloadTimeoutMinutes);
 
         await stdout.WriteLineAsync($"Lunr {version} → {outputPath}").ConfigureAwait(false);
         try
@@ -81,7 +84,7 @@ public static class Program
             await stdout.WriteLineAsync($"    SHA-256: {sha}").ConfigureAwait(false);
 
             var dir = Path.GetDirectoryName(outputPath)!;
-            Directory.CreateDirectory(dir);
+            _ = Directory.CreateDirectory(dir);
             await File.WriteAllBytesAsync(outputPath, bytes).ConfigureAwait(false);
             await stdout.WriteLineAsync($"    → {outputPath}").ConfigureAwait(false);
         }

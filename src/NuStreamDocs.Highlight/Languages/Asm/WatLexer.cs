@@ -86,11 +86,5 @@ public static class WatLexer
     private static readonly SearchValues<byte> CommentFirst = SearchValues.Create(";"u8);
 
     /// <summary>Gets the singleton WAT lexer.</summary>
-    public static Lexer Instance { get; } = AsmFamilyRules.CreateLexer(new()
-    {
-        CommentFirst = CommentFirst,
-        Mnemonics = Mnemonics,
-        Registers = Types,
-        HexPrefix = true
-    });
+    public static Lexer Instance { get; } = AsmFamilyRules.CreateLexer(new() { CommentFirst = CommentFirst, Mnemonics = Mnemonics, Registers = Types, HexPrefix = true, });
 }

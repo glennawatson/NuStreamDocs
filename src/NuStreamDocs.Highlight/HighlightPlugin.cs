@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Html;
 using NuStreamDocs.Markdown.Common;
@@ -16,23 +17,12 @@ namespace NuStreamDocs.Highlight;
 /// <see cref="HighlightOptions.AutoDetectLanguage"/> is on, unlabeled blocks are
 /// also scored and labelled when a high-confidence match is found.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("HighlightPlugin: {Name}")]
 public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
     /// <summary>The <c>&lt;link rel="stylesheet"&gt;</c> snippet the page-shell template injects into <c>&lt;head&gt;</c>.</summary>
     private static readonly byte[] HeadExtraSnippet =
         [.. "<link rel=\"stylesheet\" href=\""u8, .. "/assets/stylesheets/highlight.css"u8, .. "\">\n"u8];
-
-    /// <summary>The opening tag for a labeled (language-tagged) code block.</summary>
-    private static readonly byte[] PreOpen = [.. "<pre><code class=\"language-"u8];
-
-    /// <summary>The opening tag for an unlabeled code block (used by the auto-detect pass).</summary>
-    private static readonly byte[] PreOpenUnlabeled = [.. "<pre><code>"u8];
-
-    /// <summary>The closing tag pattern that terminates a highlighted body.</summary>
-    private static readonly byte[] CodeClose = [.. "</code>"u8];
-
-    /// <summary>Closing of the surrounding <c>&lt;/pre&gt;</c>.</summary>
-    private static readonly byte[] PreClose = [.. "</pre>"u8];
 
     /// <summary>The lexer registry built once at configure time.</summary>
     private readonly LexerRegistry _registry;
@@ -64,6 +54,18 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     public (FilePath Path, byte[] Bytes)[] StaticAssets =>
         [(HighlightStylesheet.AssetPath, HighlightStylesheet.GetBytes())];
 
+    /// <summary>Gets the opening tag for a labeled code block.</summary>
+    private static ReadOnlySpan<byte> PreOpen => "<pre><code class=\"language-"u8;
+
+    /// <summary>Gets the opening tag for an unlabeled code block.</summary>
+    private static ReadOnlySpan<byte> PreOpenUnlabeled => "<pre><code>"u8;
+
+    /// <summary>Gets the closing tag that terminates a highlighted body.</summary>
+    private static ReadOnlySpan<byte> CodeClose => "</code>"u8;
+
+    /// <summary>Gets the closing tag of the surrounding preformatted block.</summary>
+    private static ReadOnlySpan<byte> PreClose => "</pre>"u8;
+
     /// <inheritdoc/>
     public bool NeedsRewrite(ReadOnlySpan<byte> html)
     {
@@ -79,9 +81,11 @@ public sealed class HighlightPlugin : IPagePostRenderPlugin, IStaticAssetProvide
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PostRender(in PagePostRenderContext context) => Highlight(context.Html, context.Output);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteHeadExtra(IBufferWriter<byte> writer) => writer.Write(HeadExtraSnippet);
 
     /// <summary>Decodes HTML-escaped UTF-8 bytes into a fresh byte array; copies verbatim when no entities are present.</summary>

@@ -9,12 +9,15 @@ namespace NuStreamDocs.Xrefs;
 /// <summary>Parses a DocFX-compatible <c>xrefmap.json</c> into <c>(uid, href)</c> UTF-8 byte pairs. Unknown fields are ignored; entries missing either field are skipped.</summary>
 internal static class XrefMapReader
 {
+    /// <summary>Reserves entries for small imported catalogs before growth is needed.</summary>
+    private const int InitialReferenceCapacity = 64;
+
     /// <summary>Decodes <paramref name="bytes"/> into a list of <c>(uid, href)</c> UTF-8 byte pairs and the document's <c>baseUrl</c> bytes (empty when absent).</summary>
     /// <param name="bytes">UTF-8 file contents.</param>
     /// <returns>Parsed result.</returns>
-    public static XrefMapPayload Read(ReadOnlySpan<byte> bytes)
+    internal static XrefMapPayload Read(ReadOnlySpan<byte> bytes)
     {
-        List<(byte[] Uid, byte[] Href)> entries = new(64);
+        List<(byte[] Uid, byte[] Href)> entries = [with(InitialReferenceCapacity)];
         byte[] baseUrl = [];
 
         Utf8JsonReader reader = new(bytes, true, default);
@@ -38,13 +41,13 @@ internal static class XrefMapReader
 
             if (reader.ValueTextEquals("references"u8))
             {
-                reader.Read();
+                _ = reader.Read();
                 ReadReferences(ref reader, entries);
                 continue;
             }
 
             // Unknown top-level key: skip its value.
-            reader.Read();
+            _ = reader.Read();
             reader.Skip();
         }
 
@@ -105,7 +108,7 @@ internal static class XrefMapReader
             }
 
             // Unknown key (name, fullName, commentId, etc.) — skip.
-            reader.Read();
+            _ = reader.Read();
             reader.Skip();
         }
 
@@ -123,13 +126,13 @@ internal static class XrefMapReader
     /// <param name="reader">Reader positioned on the property-name token.</param>
     /// <returns>UTF-8 bytes of the string value, or an empty array.</returns>
     /// <remarks>
-    /// Uses <see cref="Utf8JsonReader.CopyString(System.Span{byte})"/> so escape sequences
+    /// Uses <see cref="Utf8JsonReader.CopyString(Span{byte})"/> so escape sequences
     /// (<c>\n</c>, <c> </c>, …) are decoded without round-tripping through a UTF-16
     /// <see cref="string"/>.
     /// </remarks>
     private static byte[] ReadStringValue(ref Utf8JsonReader reader)
     {
-        reader.Read();
+        _ = reader.Read();
         if (reader.TokenType is not JsonTokenType.String)
         {
             return [];

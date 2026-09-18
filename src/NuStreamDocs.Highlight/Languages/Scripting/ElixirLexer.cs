@@ -57,10 +57,7 @@ public static class ElixirLexer
         PreCommentRule =
             new(MatchModuleAttribute, TokenClass.NameAttribute, LexerRule.NoStateChange) { FirstBytes = AtFirst },
         LineComment =
-            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = HashFirst
-            },
+            new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, },
         SpecialString =
             new(MatchSigil, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = TildeFirst },
         IncludeDoubleQuotedString = true,
@@ -74,7 +71,7 @@ public static class ElixirLexer
         Keywords = Keywords,
         Operators = OperatorTable,
         OperatorFirst = OperatorFirst,
-        Punctuation = PunctuationSet
+        Punctuation = PunctuationSet,
     });
 
     /// <summary>Matches a <c>:atom</c> literal — colon then identifier body.</summary>

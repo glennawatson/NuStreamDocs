@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Icons.MaterialDesign</PackageId>
     <Description>Use any of the ~7000 Material Design Icons (MDI) in your NuStreamDocs documentation. Reference an icon as `:material-foo:` and the SVG is inlined directly into the page.</Description>
     <RootNamespace>NuStreamDocs.Icons.MaterialDesign</RootNamespace>

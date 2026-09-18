@@ -21,8 +21,8 @@ public class LinkValidatorPluginCtorTests
     [Test]
     public async Task ContainsPageMiss()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smkd-vc-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(dir);
+        var dir = Path.Combine(Path.GetTempPath(), $"smkd-vc-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(dir);
         try
         {
             var corpus = await ValidationCorpus.BuildAsync(dir, 1, CancellationToken.None);

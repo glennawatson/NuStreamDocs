@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Config.DocFx</PackageId>
     <Description>Build your NuStreamDocs navigation from nested `toc.yml` outline files. Drop `toc.yml` files alongside your content and the structure becomes your sidebar.</Description>
     <RootNamespace>NuStreamDocs.Config.DocFx</RootNamespace>

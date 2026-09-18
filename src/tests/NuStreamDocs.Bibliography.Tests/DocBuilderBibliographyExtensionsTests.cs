@@ -2,9 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NSubstitute;
 using NuStreamDocs.Bibliography.Model;
-using NuStreamDocs.Bibliography.Styles;
+using NuStreamDocs.Bibliography.Styles.Aglc4;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Bibliography.Tests;
@@ -28,9 +27,8 @@ public class DocBuilderBibliographyExtensionsTests
     public async Task UseBibliography_with_style_and_callback_registers_plugin()
     {
         DocBuilder builder = new();
-        var style = Substitute.For<ICitationStyle>();
         var result = builder.UseBibliography(
-            style,
+            Aglc4Style.Instance,
             static db => db.Add(new() { Id = [.. "key"u8], Type = EntryType.Book, Title = [.. "title"u8] }));
         await Assert.That(result).IsSameReferenceAs(builder);
     }

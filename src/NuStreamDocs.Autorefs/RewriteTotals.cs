@@ -7,4 +7,5 @@ namespace NuStreamDocs.Autorefs;
 /// <summary>Per-pass resolved / missing reference counters returned by <see cref="AutorefsRewriter"/>.</summary>
 /// <param name="Resolved">Resolved-reference accumulator.</param>
 /// <param name="Missing">Unresolved-reference accumulator.</param>
-public record struct RewriteTotals(int Resolved, int Missing);
+[System.Diagnostics.DebuggerDisplay("RewriteTotals: {ToString(),nq}")]
+public readonly record struct RewriteTotals(int Resolved, int Missing);

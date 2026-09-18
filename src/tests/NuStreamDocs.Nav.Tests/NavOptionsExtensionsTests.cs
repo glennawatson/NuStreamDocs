@@ -12,8 +12,9 @@ public class NavOptionsExtensionsTests
     [Test]
     public async Task WithIncludesReplacesList()
     {
+        const int ExpectedCount = 2;
         var updated = NavOptions.Default.WithIncludes("**/*.md", "docs/**");
-        await Assert.That(updated.Includes.Length).IsEqualTo(2);
+        await Assert.That(updated.Includes.Length).IsEqualTo(ExpectedCount);
         await Assert.That(updated.Includes[0]).IsEqualTo("**/*.md");
         await Assert.That(updated.Includes[1]).IsEqualTo("docs/**");
     }
@@ -33,9 +34,10 @@ public class NavOptionsExtensionsTests
     [Test]
     public async Task AddIncludesAppends()
     {
+        const int ExpectedCount = 3;
         var seeded = NavOptions.Default.WithIncludes("first.md");
         var updated = seeded.AddIncludes("second.md", "third.md");
-        await Assert.That(updated.Includes.Length).IsEqualTo(3);
+        await Assert.That(updated.Includes.Length).IsEqualTo(ExpectedCount);
         await Assert.That(updated.Includes[0]).IsEqualTo("first.md");
         await Assert.That(updated.Includes[1]).IsEqualTo("second.md");
         await Assert.That(updated.Includes[2]).IsEqualTo("third.md");
@@ -56,8 +58,9 @@ public class NavOptionsExtensionsTests
     [Test]
     public async Task AddIncludesFromEmptyReturnsTailDirectly()
     {
+        const int ExpectedCount = 2;
         var updated = NavOptions.Default.AddIncludes("a", "b");
-        await Assert.That(updated.Includes.Length).IsEqualTo(2);
+        await Assert.That(updated.Includes.Length).IsEqualTo(ExpectedCount);
         await Assert.That(updated.Includes[0]).IsEqualTo("a");
     }
 
@@ -87,8 +90,9 @@ public class NavOptionsExtensionsTests
     [Test]
     public async Task AddAndClearExcludes()
     {
+        const int ExpectedCount = 2;
         var added = NavOptions.Default.AddExcludes("a", "b");
-        await Assert.That(added.Excludes.Length).IsEqualTo(2);
+        await Assert.That(added.Excludes.Length).IsEqualTo(ExpectedCount);
 
         var cleared = added.ClearExcludes();
         await Assert.That(cleared.Excludes.Length).IsEqualTo(0);

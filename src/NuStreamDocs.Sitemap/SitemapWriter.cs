@@ -10,13 +10,22 @@ namespace NuStreamDocs.Sitemap;
 /// <summary>Composes <c>sitemap.xml</c> and <c>robots.txt</c> and writes them to the output root.</summary>
 internal static class SitemapWriter
 {
+    /// <summary>Initial sitemap capacity kibibytes.</summary>
+    private const int InitialSitemapCapacityKibibytes = 8;
+
+    /// <summary>Bytes per kibibyte.</summary>
+    private const int BytesPerKibibyte = 1024;
+
+    /// <summary>Initial robots capacity.</summary>
+    private const int InitialRobotsCapacity = 256;
+
     /// <summary>Emits <c>sitemap.xml</c> under <paramref name="outputRoot"/>.</summary>
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="baseUrl">Site URL (with trailing slash), UTF-8 bytes.</param>
     /// <param name="urlPaths">UTF-8 URL byte paths relative to <paramref name="baseUrl"/>, sorted.</param>
-    public static void WriteSitemap(in DirectoryPath outputRoot, byte[] baseUrl, byte[][] urlPaths)
+    internal static void WriteSitemap(in DirectoryPath outputRoot, byte[] baseUrl, byte[][] urlPaths)
     {
-        ArrayBufferWriter<byte> sink = new(8 * 1024);
+        ArrayBufferWriter<byte> sink = new(InitialSitemapCapacityKibibytes * BytesPerKibibyte);
         sink.Write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"u8);
         sink.Write("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"u8);
 
@@ -35,9 +44,9 @@ internal static class SitemapWriter
     /// <summary>Emits <c>robots.txt</c> with an <c>Allow: *</c> rule and a sitemap pointer.</summary>
     /// <param name="outputRoot">Absolute path to the site output directory.</param>
     /// <param name="baseUrl">Site URL (with trailing slash), UTF-8 bytes.</param>
-    public static void WriteRobots(in DirectoryPath outputRoot, byte[] baseUrl)
+    internal static void WriteRobots(in DirectoryPath outputRoot, byte[] baseUrl)
     {
-        ArrayBufferWriter<byte> sink = new(256);
+        ArrayBufferWriter<byte> sink = new(InitialRobotsCapacity);
         sink.Write("User-agent: *\nAllow: /\n\nSitemap: "u8);
         sink.Write(baseUrl);
         sink.Write("sitemap.xml\n"u8);

@@ -16,13 +16,13 @@ internal static class MarkRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < source.Length)
         {
-            if (MarkdownCodeScanner.AtLineStart(source, i) &&
-                MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
+            if (MarkdownCodeScanner.AtLineStart(source, i)
+                && MarkdownCodeScanner.TryConsumeFence(source, i, out var fenceEnd))
             {
                 writer.Write(source[i..fenceEnd]);
                 i = fenceEnd;

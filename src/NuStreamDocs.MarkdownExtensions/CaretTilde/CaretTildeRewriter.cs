@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Markdown.Common;
 
 namespace NuStreamDocs.MarkdownExtensions.CaretTilde;
@@ -19,7 +20,8 @@ internal static class CaretTildeRewriter
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
         CodeAwareRewriter.Run(source, writer, TryRewriteMarker);
 
     /// <summary>Tries to match a caret/tilde marker pair starting at <paramref name="offset"/>.</summary>
@@ -126,14 +128,6 @@ internal static class CaretTildeRewriter
     /// <param name="offset">Candidate close-run offset.</param>
     /// <param name="width">Required run width.</param>
     /// <returns>True when the run width matches.</returns>
-    private static bool IsClosingRun(ReadOnlySpan<byte> source, int offset, int width)
-    {
-        if (width == DoubleMarker)
-        {
-            return offset + 1 < source.Length && source[offset + 1] == source[offset];
-        }
-
-        // Single-marker close: must NOT be followed by another marker (else it's the doubled form).
-        return offset + 1 >= source.Length || source[offset + 1] != source[offset];
-    }
+    private static bool IsClosingRun(ReadOnlySpan<byte> source, int offset, int width) =>
+        width == DoubleMarker ? offset + 1 < source.Length && source[offset + 1] == source[offset] : offset + 1 >= source.Length || source[offset + 1] != source[offset];
 }

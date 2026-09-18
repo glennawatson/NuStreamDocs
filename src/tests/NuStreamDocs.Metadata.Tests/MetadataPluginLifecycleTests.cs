@@ -22,7 +22,7 @@ public class MetadataPluginLifecycleTests
     [Test]
     public async Task PreRenderPassesThrough()
     {
-        ArrayBufferWriter<byte> sink = new(16);
+        ArrayBufferWriter<byte> sink = new();
         PagePreRenderContext ctx = new("page.md", "hello"u8, sink);
         new MetadataPlugin().PreRender(in ctx);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).IsEqualTo("hello");

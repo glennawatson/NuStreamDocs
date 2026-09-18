@@ -16,6 +16,7 @@ namespace NuStreamDocs.Search.Sqlite;
 /// excerpt is stored, shrinking the database on body-heavy sites.
 /// </param>
 /// <param name="SectionPriorities">UTF-8 comma-separated <c>prefix:weight</c> pairs that bias result ranking by URL prefix; empty disables section weighting.</param>
+[System.Diagnostics.DebuggerDisplay("SqliteOptions: {ToString(),nq}")]
 public readonly record struct SqliteOptions(
     PathSegment OutputSubdirectory,
     int MinTokenLength,
@@ -24,9 +25,7 @@ public readonly record struct SqliteOptions(
     bool IndexFullBody,
     byte[] SectionPriorities)
 {
-    /// <summary>
-    /// The default minimum token length.
-    /// </summary>
+    /// <summary>The default minimum token length.</summary>
     private const int DefaultTokenLength = 3;
 
     /// <summary>Gets the maximum stored body length, in UTF-8 bytes, when <see cref="IndexFullBody"/> is false.</summary>

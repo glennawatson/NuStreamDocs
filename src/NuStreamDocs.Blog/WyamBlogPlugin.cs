@@ -14,8 +14,10 @@ namespace NuStreamDocs.Blog;
 /// generated index plus tag archives as synthetic pages on the build context
 /// before page discovery — nothing lands on disk in the source tree.
 /// </summary>
-public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger)
-    : IBuildDiscoverPlugin, ISyntheticNavProvider
+/// <param name="options">Blog generation options.</param>
+/// <param name="logger">Receives blog generation diagnostics.</param>
+[System.Diagnostics.DebuggerDisplay("WyamBlogPlugin: {Name}")]
+public sealed class WyamBlogPlugin(WyamBlogOptions options, ILogger logger) : IBuildDiscoverPlugin, ISyntheticNavProvider
 {
     /// <summary>Configured options.</summary>
     private readonly WyamBlogOptions _options = ValidateOptions(options);

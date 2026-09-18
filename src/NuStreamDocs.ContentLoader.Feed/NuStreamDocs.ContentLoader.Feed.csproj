@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.ContentLoader.Feed</PackageId>
     <Description>A NuStreamDocs content loader that pulls an external RSS or Atom feed and turns each item into a page — the consume-side counterpart to NuStreamDocs.Feed.</Description>
     <RootNamespace>NuStreamDocs.ContentLoader.Feed</RootNamespace>

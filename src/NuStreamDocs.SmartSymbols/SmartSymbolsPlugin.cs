@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.SmartSymbols;
@@ -13,6 +14,7 @@ namespace NuStreamDocs.SmartSymbols;
 /// fractions) become their Unicode characters in the final HTML.
 /// Fenced-code regions and inline-code spans pass through unchanged.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("SmartSymbolsPlugin: {Name}")]
 public sealed class SmartSymbolsPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -22,9 +24,11 @@ public sealed class SmartSymbolsPlugin : IPagePreRenderPlugin
     public PluginPriority PreRenderPriority => PluginPriority.Normal;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => true;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         SmartSymbolsRewriter.Rewrite(context.Source, context.Output);
 }

@@ -10,12 +10,15 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Bibliography.Csl;
 
-/// <summary>
-/// Loads a CSL-JSON bibliography file (the format used by pandoc,
-/// citation.js, and Zotero export).
-/// </summary>
+/// <summary>Loads a CSL-JSON bibliography file (the format used by pandoc, citation.js, and Zotero export).</summary>
 internal static class CslJsonLoader
 {
+    /// <summary>Initial entry capacity.</summary>
+    private const int InitialEntryCapacity = 64;
+
+    /// <summary>Initial person capacity.</summary>
+    private const int InitialPersonCapacity = 8;
+
     /// <summary>String-valued CSL properties paired with the per-entry field they populate.</summary>
     private static readonly (byte[] Name, StringFieldSetter Set)[] StringProperties =
     [
@@ -38,23 +41,7 @@ internal static class CslJsonLoader
     ];
 
     /// <summary>CSL <c>type</c> values (kebab- / snake-case) mapped to <see cref="EntryType"/>.</summary>
-    private static readonly Dictionary<byte[], EntryType> EntryTypesByName = new(ByteArrayComparer.Instance)
-    {
-        [[.. "book"u8]] = EntryType.Book,
-        [[.. "chapter"u8]] = EntryType.Chapter,
-        [[.. "article-journal"u8]] = EntryType.ArticleJournal,
-        [[.. "article-magazine"u8]] = EntryType.ArticleMagazine,
-        [[.. "article-newspaper"u8]] = EntryType.ArticleNewspaper,
-        [[.. "article"u8]] = EntryType.Article,
-        [[.. "legal_case"u8]] = EntryType.LegalCase,
-        [[.. "legislation"u8]] = EntryType.Legislation,
-        [[.. "treaty"u8]] = EntryType.Treaty,
-        [[.. "report"u8]] = EntryType.Report,
-        [[.. "paper-conference"u8]] = EntryType.PaperConference,
-        [[.. "thesis"u8]] = EntryType.Thesis,
-        [[.. "webpage"u8]] = EntryType.Webpage,
-        [[.. "manuscript"u8]] = EntryType.Manuscript
-    };
+    private static readonly Dictionary<byte[], EntryType> EntryTypesByName = CreateEntryTypesByName();
 
     /// <summary>Assigns a UTF-8 value to one string-valued field of a per-entry field bag.</summary>
     /// <param name="fields">Mutable per-entry field bag.</param>
@@ -64,7 +51,7 @@ internal static class CslJsonLoader
     /// <summary>Loads a CSL-JSON file from disk and returns the parsed entries.</summary>
     /// <param name="path">Path to a <c>.json</c> file containing a CSL-JSON array.</param>
     /// <returns>Parsed entries.</returns>
-    public static IReadOnlyList<CitationEntry> LoadFile(in FilePath path)
+    internal static IReadOnlyList<CitationEntry> LoadFile(in FilePath path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path.Value);
         var bytes = path.ReadAllBytes();
@@ -74,7 +61,7 @@ internal static class CslJsonLoader
     /// <summary>Parses a CSL-JSON UTF-8 buffer into entries.</summary>
     /// <param name="json">UTF-8 source.</param>
     /// <returns>Parsed entries.</returns>
-    public static IReadOnlyList<CitationEntry> Parse(in ReadOnlyMemory<byte> json)
+    internal static IReadOnlyList<CitationEntry> Parse(in ReadOnlyMemory<byte> json)
     {
         Utf8JsonReader reader = new(json.Span, true, default);
         if (!reader.Read() || reader.TokenType is not JsonTokenType.StartArray)
@@ -82,7 +69,7 @@ internal static class CslJsonLoader
             return [];
         }
 
-        List<CitationEntry> entries = new(64);
+        List<CitationEntry> entries = [with(InitialEntryCapacity)];
         while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
         {
             if (reader.TokenType is not JsonTokenType.StartObject)
@@ -98,6 +85,28 @@ internal static class CslJsonLoader
         }
 
         return entries;
+    }
+
+    /// <summary>Creates the recognized CSL entry types.</summary>
+    /// <returns>The name-to-kind lookup.</returns>
+    private static Dictionary<byte[], EntryType> CreateEntryTypesByName()
+    {
+        Dictionary<byte[], EntryType> values = [with(ByteArrayComparer.Instance)];
+        values[[.. "book"u8]] = EntryType.Book;
+        values[[.. "chapter"u8]] = EntryType.Chapter;
+        values[[.. "article-journal"u8]] = EntryType.ArticleJournal;
+        values[[.. "article-magazine"u8]] = EntryType.ArticleMagazine;
+        values[[.. "article-newspaper"u8]] = EntryType.ArticleNewspaper;
+        values[[.. "article"u8]] = EntryType.Article;
+        values[[.. "legal_case"u8]] = EntryType.LegalCase;
+        values[[.. "legislation"u8]] = EntryType.Legislation;
+        values[[.. "treaty"u8]] = EntryType.Treaty;
+        values[[.. "report"u8]] = EntryType.Report;
+        values[[.. "paper-conference"u8]] = EntryType.PaperConference;
+        values[[.. "thesis"u8]] = EntryType.Thesis;
+        values[[.. "webpage"u8]] = EntryType.Webpage;
+        values[[.. "manuscript"u8]] = EntryType.Manuscript;
+        return values;
     }
 
     /// <summary>Reads one CSL-JSON object into a <see cref="CitationEntry"/>; returns <see langword="false"/> when the entry is missing its <c>id</c>.</summary>
@@ -150,7 +159,7 @@ internal static class CslJsonLoader
         Court = [],
         Jurisdiction = [],
         LawReportSeries = [],
-        MediumNeutralCitation = []
+        MediumNeutralCitation = [],
     };
 
     /// <summary>Materializes the parsed field bag into a <see cref="CitationEntry"/>.</summary>
@@ -177,7 +186,7 @@ internal static class CslJsonLoader
         Court = fields.Court,
         Jurisdiction = fields.Jurisdiction,
         LawReportSeries = fields.LawReportSeries,
-        MediumNeutralCitation = fields.MediumNeutralCitation
+        MediumNeutralCitation = fields.MediumNeutralCitation,
     };
 
     /// <summary>Dispatches one CSL property-name token to its field reader.</summary>
@@ -187,11 +196,13 @@ internal static class CslJsonLoader
     {
         for (var i = 0; i < StringProperties.Length; i++)
         {
-            if (reader.ValueTextEquals(StringProperties[i].Name))
+            if (!reader.ValueTextEquals(StringProperties[i].Name))
             {
-                StringProperties[i].Set(ref fields, ReadStringBytes(ref reader));
-                return;
+                continue;
             }
+
+            StringProperties[i].Set(ref fields, ReadStringBytes(ref reader));
+            return;
         }
 
         if (reader.ValueTextEquals("type"u8))
@@ -218,7 +229,7 @@ internal static class CslJsonLoader
             return;
         }
 
-        reader.Read();
+        _ = reader.Read();
         reader.Skip();
     }
 
@@ -227,7 +238,7 @@ internal static class CslJsonLoader
     /// <returns>UTF-8 bytes; empty when the next token isn't a string.</returns>
     private static byte[] ReadStringBytes(ref Utf8JsonReader reader)
     {
-        reader.Read();
+        _ = reader.Read();
         if (reader.TokenType is not JsonTokenType.String)
         {
             return [];
@@ -266,14 +277,14 @@ internal static class CslJsonLoader
     /// <returns>Parsed names; empty array when the value isn't an array.</returns>
     private static PersonName[] ReadNames(ref Utf8JsonReader reader)
     {
-        reader.Read();
+        _ = reader.Read();
         if (reader.TokenType is not JsonTokenType.StartArray)
         {
             reader.Skip();
             return [];
         }
 
-        List<PersonName> names = new(8);
+        List<PersonName> names = [with(InitialPersonCapacity)];
         while (reader.Read() && reader.TokenType is not JsonTokenType.EndArray)
         {
             if (reader.TokenType is not JsonTokenType.StartObject)
@@ -323,7 +334,7 @@ internal static class CslJsonLoader
             }
             else
             {
-                reader.Read();
+                _ = reader.Read();
                 reader.Skip();
             }
         }
@@ -336,7 +347,7 @@ internal static class CslJsonLoader
     /// <returns>The parsed year, or 0 when absent.</returns>
     private static int ReadIssuedYear(ref Utf8JsonReader reader)
     {
-        reader.Read();
+        _ = reader.Read();
         if (reader.TokenType is not JsonTokenType.StartObject)
         {
             reader.Skip();
@@ -357,7 +368,7 @@ internal static class CslJsonLoader
             }
             else
             {
-                reader.Read();
+                _ = reader.Read();
                 reader.Skip();
             }
         }
@@ -370,7 +381,7 @@ internal static class CslJsonLoader
     /// <returns>The first integer, or 0 when absent / malformed.</returns>
     private static int ReadFirstDatePart(ref Utf8JsonReader reader)
     {
-        reader.Read();
+        _ = reader.Read();
         if (reader.TokenType is not JsonTokenType.StartArray)
         {
             reader.Skip();
@@ -420,70 +431,67 @@ internal static class CslJsonLoader
             : EntryType.Other;
 
     /// <summary>Mutable per-entry field bag.</summary>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S3898:Implement IEquatable in value type",
-        Justification = "Private mutable field bag used only as a parsing scratchpad; equality is never compared.")]
+    [SuppressMessage("Design", "SST2338", Justification = "The parser collects all citation fields together; they are not exclusive alternatives.")]
     private struct EntryFields
     {
-        /// <summary>Citation id bytes; required.</summary>
-        public byte[] Id;
+        /// <summary>Gets or sets citation id bytes; required.</summary>
+        public byte[] Id { get; set; }
 
-        /// <summary>CSL <c>type</c>.</summary>
-        public EntryType Type;
+        /// <summary>Gets or sets cSL <c>type</c>.</summary>
+        public EntryType Type { get; set; }
 
-        /// <summary>CSL <c>title</c>.</summary>
-        public byte[] Title;
+        /// <summary>Gets or sets cSL <c>title</c>.</summary>
+        public byte[] Title { get; set; }
 
-        /// <summary>CSL <c>title-short</c>.</summary>
-        public byte[] ShortTitle;
+        /// <summary>Gets or sets cSL <c>title-short</c>.</summary>
+        public byte[] ShortTitle { get; set; }
 
-        /// <summary>CSL <c>author</c> array.</summary>
-        public PersonName[] Authors;
+        /// <summary>Gets or sets cSL <c>author</c> array.</summary>
+        public PersonName[] Authors { get; set; }
 
-        /// <summary>CSL <c>editor</c> array.</summary>
-        public PersonName[] Editors;
+        /// <summary>Gets or sets cSL <c>editor</c> array.</summary>
+        public PersonName[] Editors { get; set; }
 
-        /// <summary>CSL <c>issued.date-parts[0][0]</c>.</summary>
-        public int Year;
+        /// <summary>Gets or sets cSL <c>issued.date-parts[0][0]</c>.</summary>
+        public int Year { get; set; }
 
-        /// <summary>CSL <c>container-title</c>.</summary>
-        public byte[] ContainerTitle;
+        /// <summary>Gets or sets cSL <c>container-title</c>.</summary>
+        public byte[] ContainerTitle { get; set; }
 
-        /// <summary>CSL <c>publisher</c>.</summary>
-        public byte[] Publisher;
+        /// <summary>Gets or sets cSL <c>publisher</c>.</summary>
+        public byte[] Publisher { get; set; }
 
-        /// <summary>CSL <c>publisher-place</c>.</summary>
-        public byte[] PublisherPlace;
+        /// <summary>Gets or sets cSL <c>publisher-place</c>.</summary>
+        public byte[] PublisherPlace { get; set; }
 
-        /// <summary>CSL <c>volume</c>.</summary>
-        public byte[] Volume;
+        /// <summary>Gets or sets cSL <c>volume</c>.</summary>
+        public byte[] Volume { get; set; }
 
-        /// <summary>CSL <c>issue</c>.</summary>
-        public byte[] Issue;
+        /// <summary>Gets or sets cSL <c>issue</c>.</summary>
+        public byte[] Issue { get; set; }
 
-        /// <summary>CSL <c>page</c>.</summary>
-        public byte[] Page;
+        /// <summary>Gets or sets cSL <c>page</c>.</summary>
+        public byte[] Page { get; set; }
 
-        /// <summary>CSL <c>URL</c>.</summary>
-        public byte[] Url;
+        /// <summary>Gets or sets cSL <c>URL</c>.</summary>
+        public byte[] Url { get; set; }
 
-        /// <summary>CSL <c>DOI</c>.</summary>
-        public byte[] Doi;
+        /// <summary>Gets or sets cSL <c>DOI</c>.</summary>
+        public byte[] Doi { get; set; }
 
-        /// <summary>CSL <c>note</c>.</summary>
-        public byte[] Note;
+        /// <summary>Gets or sets cSL <c>note</c>.</summary>
+        public byte[] Note { get; set; }
 
-        /// <summary>CSL <c>authority</c> (AGLC court).</summary>
-        public byte[] Court;
+        /// <summary>Gets or sets cSL <c>authority</c> (AGLC court).</summary>
+        public byte[] Court { get; set; }
 
-        /// <summary>CSL <c>jurisdiction</c>.</summary>
-        public byte[] Jurisdiction;
+        /// <summary>Gets or sets cSL <c>jurisdiction</c>.</summary>
+        public byte[] Jurisdiction { get; set; }
 
-        /// <summary>CSL <c>references</c> (AGLC law-report series).</summary>
-        public byte[] LawReportSeries;
+        /// <summary>Gets or sets cSL <c>references</c> (AGLC law-report series).</summary>
+        public byte[] LawReportSeries { get; set; }
 
-        /// <summary>CSL <c>number</c> (AGLC medium-neutral citation).</summary>
-        public byte[] MediumNeutralCitation;
+        /// <summary>Gets or sets cSL <c>number</c> (AGLC medium-neutral citation).</summary>
+        public byte[] MediumNeutralCitation { get; set; }
     }
 }

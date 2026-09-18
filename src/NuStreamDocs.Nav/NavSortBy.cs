@@ -8,11 +8,11 @@ namespace NuStreamDocs.Nav;
 public enum NavSortBy
 {
     /// <summary>Order pages by file name, case-insensitive.</summary>
-    FileName,
+    FileName = 0,
 
     /// <summary>Order pages by their first H1 heading, case-insensitive.</summary>
-    Title,
+    Title = 1,
 
     /// <summary>Preserve filesystem enumeration order.</summary>
-    None
+    None = 2,
 }

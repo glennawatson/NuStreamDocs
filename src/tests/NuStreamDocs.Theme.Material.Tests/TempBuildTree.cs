@@ -16,7 +16,7 @@ internal sealed class TempBuildTree : IDisposable
         Root = root;
         Docs = Path.Combine(root, "docs");
         Site = Path.Combine(root, "site");
-        Directory.CreateDirectory(Docs);
+        _ = Directory.CreateDirectory(Docs);
     }
 
     /// <summary>Gets the fixture root directory.</summary>
@@ -27,17 +27,6 @@ internal sealed class TempBuildTree : IDisposable
 
     /// <summary>Gets the absolute path to the output site directory.</summary>
     public string Site { get; }
-
-    /// <summary>Creates a fresh fixture under <c>Path.GetTempPath</c>.</summary>
-    /// <returns>A new fixture; caller must dispose.</returns>
-    public static TempBuildTree Create()
-    {
-        var root = Path.Combine(
-            Path.GetTempPath(),
-            "smkd-mat-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(root);
-        return new(root);
-    }
 
     /// <inheritdoc/>
     public void Dispose()
@@ -53,5 +42,16 @@ internal sealed class TempBuildTree : IDisposable
         {
             // Best-effort cleanup.
         }
+    }
+
+    /// <summary>Creates a fresh fixture under <c>Path.GetTempPath</c>.</summary>
+    /// <returns>A new fixture; caller must dispose.</returns>
+    internal static TempBuildTree Create()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            $"smkd-mat-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(root);
+        return new(root);
     }
 }

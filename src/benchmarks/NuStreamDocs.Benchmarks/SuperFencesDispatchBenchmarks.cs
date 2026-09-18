@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using BenchmarkDotNet.Attributes;
@@ -13,6 +14,7 @@ using NuStreamDocs.SuperFences;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Per-page cost of the SuperFences dispatcher across registered / unregistered fence mixes.</summary>
+[DebuggerDisplay("SuperFencesDispatchBenchmarks: PageSizeKb={PageSizeKb}, FencesPer200Bytes={FencesPer200Bytes}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class SuperFencesDispatchBenchmarks
@@ -35,6 +37,12 @@ public class SuperFencesDispatchBenchmarks
     /// <summary>Number of fence shapes the synthesizer cycles through.</summary>
     private const int FenceShapes = 3;
 
+    /// <summary>Body-byte interval used to define fence density.</summary>
+    private const int DensityIntervalBytes = 200;
+
+    /// <summary>Number of languages with custom rendering handlers.</summary>
+    private const int RegisteredLanguageCount = 2;
+
     /// <summary>Pre-built page bytes for the current iteration.</summary>
     private byte[] _html = [];
 
@@ -52,32 +60,34 @@ public class SuperFencesDispatchBenchmarks
     [Params(LowDensity, HighDensity)]
     public int FencesPer200Bytes { get; set; }
 
+    /// <summary>Gets the prose inserted between fenced blocks.</summary>
+    private static ApiCompatString Filler => "<p>Lorem ipsum dolor sit amet.</p>";
+
     /// <summary>Generates the HTML fixture for the current params.</summary>
     [GlobalSetup]
     public void Setup()
     {
         StringBuilder sb = new(PageSizeKb * BytesPerKb);
         var totalBytes = PageSizeKb * BytesPerKb;
-        var blockEvery = 200 / Math.Max(1, FencesPer200Bytes);
+        var blockEvery = DensityIntervalBytes / Math.Max(1, FencesPer200Bytes);
         var idx = 0;
         var written = 0;
         while (written < totalBytes)
         {
-            var i = idx.ToString(CultureInfo.InvariantCulture);
-            var emitted = (idx % FenceShapes) switch
+            var i = new ApiCompatString(idx.ToString(CultureInfo.InvariantCulture));
+            var emitted = new ApiCompatString((idx % FenceShapes) switch
             {
-                0 => $"<pre><code class=\"language-mermaid\">graph{i}</code></pre>",
-                1 => $"<pre><code class=\"language-math\">x_{i} = 1</code></pre>",
-                _ => $"<pre><code class=\"language-csharp\">var x{i} = 1;</code></pre>"
-            };
-            sb.Append(emitted);
-            written += emitted.Length;
+                0 => StringCompose.Concat("<pre><code class=\"language-mermaid\">graph", i, "</code></pre>"),
+                1 => StringCompose.Concat("<pre><code class=\"language-math\">x_", i, " = 1</code></pre>"),
+                _ => StringCompose.Concat("<pre><code class=\"language-csharp\">var x", i, " = 1;</code></pre>")
+            });
+            _ = sb.Append(emitted.ToStringValue());
+            written += emitted.ToStringValue().Length;
 
             for (var f = 0; f < blockEvery && written < totalBytes; f++)
             {
-                const string Filler = "<p>Lorem ipsum dolor sit amet.</p>";
-                sb.Append(Filler);
-                written += Filler.Length;
+                _ = sb.Append(Filler.ToStringValue());
+                written += Filler.ToStringValue().Length;
             }
 
             idx++;
@@ -85,14 +95,12 @@ public class SuperFencesDispatchBenchmarks
 
         _html = Encoding.UTF8.GetBytes(sb.ToString());
 
-        Dictionary<byte[], ICustomFenceHandler> fullDict = new(2, ByteArrayComparer.Instance)
-        {
-            [[.. "mermaid"u8]] = new StubMermaidHandler(),
-            [[.. "math"u8]] = new StubMathHandler()
-        };
+        Dictionary<byte[], ICustomFenceHandler> fullDict = [with(RegisteredLanguageCount, ByteArrayComparer.Instance)];
+        fullDict[[.. "mermaid"u8]] = new StubMermaidHandler();
+        fullDict[[.. "math"u8]] = new StubMathHandler();
         _allRegistered = fullDict.AsUtf8Lookup();
 
-        Dictionary<byte[], ICustomFenceHandler> emptyDict = new(0, ByteArrayComparer.Instance);
+        Dictionary<byte[], ICustomFenceHandler> emptyDict = [with(0, ByteArrayComparer.Instance)];
         _noneRegistered = emptyDict.AsUtf8Lookup();
     }
 

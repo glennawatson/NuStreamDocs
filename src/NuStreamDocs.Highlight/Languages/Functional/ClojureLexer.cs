@@ -55,7 +55,7 @@ public static class ClojureLexer
         [.. "quote"u8],
         [.. "var"u8]);
 
-    /// <summary>Constants.</summary>
+    /// <summary>Constant keywords.</summary>
     private static readonly ByteKeywordSet KeywordConstants = ByteKeywordSet.Create(
         [.. "true"u8],
         [.. "false"u8],
@@ -68,13 +68,13 @@ public static class ClojureLexer
     /// <returns>Lexer.</returns>
     private static Lexer Build()
     {
-        LispFamilyConfig config = new()
+        var config = new LispFamilyConfig
         {
             KeywordDeclarations = KeywordDeclarations,
             Keywords = Keywords,
             KeywordConstants = KeywordConstants,
             IncludeDataBrackets = true,
-            IncludeColonKeyword = true
+            IncludeColonKeyword = true,
         };
 
         return LispFamilyRules.CreateLexer(config);

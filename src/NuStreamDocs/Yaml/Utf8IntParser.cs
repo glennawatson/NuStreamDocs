@@ -14,7 +14,7 @@ internal static class Utf8IntParser
     /// <param name="bytes">UTF-8 bytes; surrounding whitespace already trimmed.</param>
     /// <param name="value">The parsed integer on success.</param>
     /// <returns>True when every byte is a digit (with an optional leading <c>-</c>) and the result fits in an <see cref="int"/>.</returns>
-    public static bool TryParseInt(ReadOnlySpan<byte> bytes, out int value)
+    internal static bool TryParseInt(ReadOnlySpan<byte> bytes, out int value)
     {
         value = 0;
         if (bytes.IsEmpty)

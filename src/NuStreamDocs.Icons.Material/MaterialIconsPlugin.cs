@@ -7,10 +7,8 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Icons.Material;
 
-/// <summary>
-/// Plugin that contributes Google Material icon-font references to
-/// every page's <c>&lt;head&gt;</c>.
-/// </summary>
+/// <summary>Plugin that contributes Google Material icon-font references to every page's <c>&lt;head&gt;</c>.</summary>
+[System.Diagnostics.DebuggerDisplay("MaterialIconsPlugin: {Name}")]
 public sealed class MaterialIconsPlugin : IPlugin, IHeadExtraProvider
 {
     /// <summary>Configured option set.</summary>

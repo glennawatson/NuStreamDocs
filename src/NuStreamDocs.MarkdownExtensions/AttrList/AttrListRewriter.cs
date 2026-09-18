@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
 using NuStreamDocs.MarkdownExtensions.AttrList.Bytes;
 
@@ -24,7 +23,7 @@ internal static class AttrListRewriter
     /// <summary>Returns true when <paramref name="html"/> may contain an attr-list marker.</summary>
     /// <param name="html">Page HTML span.</param>
     /// <returns>True when at least one recognized opener byte-sequence is present.</returns>
-    public static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
+    internal static bool NeedsRewrite(ReadOnlySpan<byte> html) =>
         html.IndexOf("{:"u8) >= 0
         || html.IndexOf("{ "u8) >= 0
         || html.IndexOf("{#"u8) >= 0
@@ -34,7 +33,7 @@ internal static class AttrListRewriter
     /// <summary>Rewrites every block- and inline-level attr-list token in <paramref name="html"/> directly into <paramref name="sink"/>.</summary>
     /// <param name="html">Page HTML span.</param>
     /// <param name="sink">UTF-8 sink the rewritten HTML is encoded into.</param>
-    public static void RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
+    internal static void RewriteInto(ReadOnlySpan<byte> html, IBufferWriter<byte> sink)
     {
         if (html.IsEmpty)
         {
@@ -65,8 +64,7 @@ internal static class AttrListRewriter
     /// <returns>True on at least one match.</returns>
     private static bool ContainsBraceBareKeyShorthand(ReadOnlySpan<byte> html)
     {
-        var i = html.IndexOf((byte)'{');
-        while (i >= 0 && i + 1 < html.Length)
+        for (var i = html.IndexOf((byte)'{'); i >= 0 && i + 1 < html.Length;)
         {
             var b = html[i + 1];
             if (b is >= (byte)'A' and <= (byte)'Z' or >= (byte)'a' and <= (byte)'z' or (byte)'_')
@@ -171,12 +169,7 @@ internal static class AttrListRewriter
             return "&#34;"u8.Length;
         }
 
-        if (rest.StartsWith("&#x22;"u8) || rest.StartsWith("&#X22;"u8))
-        {
-            return "&#x22;"u8.Length;
-        }
-
-        return 0;
+        return rest.StartsWith("&#x22;"u8) || rest.StartsWith("&#X22;"u8) ? "&#x22;"u8.Length : 0;
     }
 
     /// <summary>Finds the first <c>&amp;</c> sitting between an opening <c>{</c> and its matching <c>}</c>; returns <c>-1</c> when none.</summary>
@@ -274,10 +267,6 @@ internal static class AttrListRewriter
     {
         /// <summary>Swaps the two buffers; called after a stage commits to a rewrite so the next stage writes into the freed buffer.</summary>
         /// <returns>The swapped pair.</returns>
-        [SuppressMessage(
-            "SonarAnalyzer",
-            "S2234:Parameters should be passed in the correct order",
-            Justification = "Swap intentionally reverses the pair — the prior Other becomes the new Spare and vice versa.")]
-        public StageBuffers Swap() => new(Other, Spare);
+        public StageBuffers Swap() => new(Spare: Other, Other: Spare);
     }
 }

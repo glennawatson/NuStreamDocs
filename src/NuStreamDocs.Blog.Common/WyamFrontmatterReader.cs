@@ -17,6 +17,9 @@ namespace NuStreamDocs.Blog.Common;
 /// </summary>
 public static class WyamFrontmatterReader
 {
+    /// <summary>Initial tag capacity.</summary>
+    private const int InitialTagCapacity = 4;
+
     /// <summary>Length of the frontmatter fence (<c>---</c>).</summary>
     private const int FrontmatterFenceLength = 3;
 
@@ -42,14 +45,7 @@ public static class WyamFrontmatterReader
         firstLineEnd += FrontmatterFenceLength;
         var bodyStart = -1;
         var cursor = firstLineEnd + 1;
-        var state = new ParseState
-        {
-            Title = [],
-            Lead = [],
-            Description = [],
-            Author = [],
-            Tags = new(4)
-        };
+        var state = new ParseState { Title = [], Lead = [], Description = [], Author = [], Tags = [with(InitialTagCapacity)], };
 
         while (cursor < markdown.Length)
         {
@@ -141,8 +137,7 @@ public static class WyamFrontmatterReader
             return;
         }
 
-        var cursor = 0;
-        while (cursor < value.Length)
+        for (var cursor = 0; cursor < value.Length;)
         {
             var rest = value[cursor..];
             var next = rest.IndexOf((byte)',');
@@ -168,7 +163,14 @@ public static class WyamFrontmatterReader
     /// <returns>True when <paramref name="value"/> matches the format.</returns>
     private static bool TryParseDate(ReadOnlySpan<byte> value, out DateOnly parsed)
     {
-        Span<char> chars = stackalloc char[value.Length];
+        const int IsoDateLength = 10;
+        if (value.Length != IsoDateLength)
+        {
+            parsed = default;
+            return false;
+        }
+
+        Span<char> chars = stackalloc char[IsoDateLength];
         var written = Encoding.UTF8.GetChars(value, chars);
         return DateOnly.TryParseExact(
             chars[..written],
@@ -196,6 +198,7 @@ public static class WyamFrontmatterReader
     /// <param name="Tags">Parsed tag list (possibly empty).</param>
     /// <param name="IsBlog">True when <c>IsBlog: true</c> was present.</param>
     /// <param name="BodyStartOffset">Byte offset within the original source where the markdown body starts.</param>
+    [System.Diagnostics.DebuggerDisplay("FrontmatterResult: {ToString(),nq}")]
     public readonly record struct FrontmatterResult(
         byte[] Title,
         byte[] Lead,
@@ -222,7 +225,7 @@ public static class WyamFrontmatterReader
         public byte[] Author { get; set; }
 
         /// <summary>Gets or sets the tag accumulator.</summary>
-        public List<byte[]> Tags { get; set; }
+        public List<byte[]> Tags { get; init; }
 
         /// <summary>Gets or sets the published-date accumulator.</summary>
         public DateOnly Published { get; set; }

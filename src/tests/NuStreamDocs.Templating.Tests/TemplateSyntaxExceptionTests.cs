@@ -40,8 +40,9 @@ public class TemplateSyntaxExceptionTests
     [Test]
     public async Task MessageOffsetCtor()
     {
-        TemplateSyntaxException ex = new("oops", 42);
-        await Assert.That(ex.ByteOffset).IsEqualTo(42);
+        const int ByteOffset = 42;
+        TemplateSyntaxException ex = new("oops", ByteOffset);
+        await Assert.That(ex.ByteOffset).IsEqualTo(ByteOffset);
     }
 
     /// <summary>Message + offset + inner ctor records the byte offset and inner exception.</summary>
@@ -49,9 +50,10 @@ public class TemplateSyntaxExceptionTests
     [Test]
     public async Task MessageOffsetInnerCtor()
     {
+        const int ByteOffset = 7;
         InvalidOperationException inner = new("inner");
-        TemplateSyntaxException ex = new("oops", 7, inner);
-        await Assert.That(ex.ByteOffset).IsEqualTo(7);
+        TemplateSyntaxException ex = new("oops", ByteOffset, inner);
+        await Assert.That(ex.ByteOffset).IsEqualTo(ByteOffset);
         await Assert.That(ex.InnerException).IsEqualTo(inner);
     }
 }

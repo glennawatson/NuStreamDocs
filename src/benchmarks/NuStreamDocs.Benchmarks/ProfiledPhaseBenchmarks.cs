@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Highlight;
 using NuStreamDocs.Highlight.Languages.CFamily;
 using NuStreamDocs.Markdown;
@@ -33,15 +35,21 @@ namespace NuStreamDocs.Benchmarks;
 /// per-page allocations.
 /// </para>
 /// </remarks>
+[DebuggerDisplay("ProfiledPhaseBenchmarks: markdown={_markdown}, csharp={_csharp}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 [EventPipeProfiler(EventPipeProfile.GcVerbose)]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class ProfiledPhaseBenchmarks
 {
+    /// <summary>Estimates the input bytes represented by each parsed block.</summary>
+    private const int InputBytesPerBlock = 32;
+
+    /// <summary>Reserves room for HTML markup added during rendering.</summary>
+    private const int OutputExpansionFactor = 2;
+
+    /// <summary>Reserves enough text space for each generated page.</summary>
+    private const int PageTextCapacity = 1024;
+
     /// <summary>Number of pages in the on-disk corpus the build phase walks.</summary>
     private const int CorpusPages = 200;
 
@@ -70,7 +78,7 @@ public class ProfiledPhaseBenchmarks
         StringBuilder sb = new();
         for (var i = 0; i < Paragraphs; i++)
         {
-            sb.Append("# Heading ").Append(i).Append('\n')
+            _ = sb.Append("# Heading ").Append(i).Append('\n')
                 .Append("Paragraph with **bold**, `code`, [link](https://x/").Append(i).Append(") and a > quote.\n\n")
                 .Append("- list item ").Append(i).Append('\n')
                 .Append("- list item B\n\n");
@@ -83,11 +91,11 @@ public class ProfiledPhaseBenchmarks
 
         _inputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-prof-in-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smkd-prof-in-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         _outputRoot = Path.Combine(
             Path.GetTempPath(),
-            "smkd-prof-out-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        Directory.CreateDirectory(_inputRoot);
+            $"smkd-prof-out-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
+        _ = Directory.CreateDirectory(_inputRoot);
         for (var i = 0; i < CorpusPages; i++)
         {
             File.WriteAllText(Path.Combine(_inputRoot, $"page-{i}.md"), Page(i));
@@ -107,7 +115,7 @@ public class ProfiledPhaseBenchmarks
     public void IterationSetup()
     {
         TryDelete(_outputRoot);
-        Directory.CreateDirectory(_outputRoot);
+        _ = Directory.CreateDirectory(_outputRoot);
     }
 
     /// <summary>Block-scan only.</summary>
@@ -115,7 +123,7 @@ public class ProfiledPhaseBenchmarks
     [Benchmark]
     public int BlockScan()
     {
-        ArrayBufferWriter<BlockSpan> writer = new(_markdown.Length / 32);
+        var writer = new ArrayBufferWriter<BlockSpan>(_markdown.Length / InputBytesPerBlock);
         return BlockScanner.Scan(_markdown, writer);
     }
 
@@ -124,7 +132,7 @@ public class ProfiledPhaseBenchmarks
     [Benchmark]
     public int MarkdownRender()
     {
-        ArrayBufferWriter<byte> writer = new(_markdown.Length * 2);
+        var writer = new ArrayBufferWriter<byte>(_markdown.Length * OutputExpansionFactor);
         MarkdownRenderer.Render(_markdown, writer);
         return writer.WrittenCount;
     }
@@ -134,27 +142,27 @@ public class ProfiledPhaseBenchmarks
     [Benchmark]
     public int LexerCSharp()
     {
-        ArrayBufferWriter<byte> sink = new(_csharp.Length * 2);
+        var sink = new ArrayBufferWriter<byte>(_csharp.Length * OutputExpansionFactor);
         HighlightEmitter.Emit(CSharpLexer.Instance, _csharp, sink);
         return sink.WrittenCount;
     }
 
     /// <summary>End-to-end DocBuilder run against the on-disk corpus (no plugins).</summary>
     /// <returns>Pages processed.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
-    public int EndToEndBuild() =>
+    public Task<int> EndToEndBuild() =>
         new DocBuilder()
             .WithInput(_inputRoot)
             .WithOutput(_outputRoot)
-            .BuildAsync()
-            .GetAwaiter()
-            .GetResult();
+            .BuildAsync();
 
     /// <summary>Generates one realistic markdown page.</summary>
     /// <param name="index">Page index for unique anchors.</param>
     /// <returns>Markdown source.</returns>
-    private static string Page(int index) =>
-        new StringBuilder(1024)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ApiCompatString Page(int index) =>
+        new StringBuilder(PageTextCapacity)
             .Append("# Page ").Append(index).Append('\n').Append('\n')
             .Append("Some intro text with **bold** and `code` and a [link](https://example.com/").Append(index)
             .Append(").\n\n")
@@ -163,7 +171,6 @@ public class ProfiledPhaseBenchmarks
             .Append("| h1 | h2 |\n| --- | --- |\n| a | b |\n")
             .ToString();
 
-    /// <summary>Best-effort recursive directory delete.</summary>
     /// <summary>Repeats <paramref name="line"/> <paramref name="count"/> times into a fresh byte array.</summary>
     /// <param name="line">UTF-8 line.</param>
     /// <param name="count">Repetition count.</param>

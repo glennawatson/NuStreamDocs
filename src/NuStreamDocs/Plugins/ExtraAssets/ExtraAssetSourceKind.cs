@@ -8,14 +8,14 @@ namespace NuStreamDocs.Plugins.ExtraAssets;
 public enum ExtraAssetSourceKind
 {
     /// <summary>A file path on disk; bytes read at configure time.</summary>
-    File,
+    File = 0,
 
     /// <summary>Caller-supplied UTF-8 bytes shipped under a chosen filename.</summary>
-    Inline,
+    Inline = 1,
 
     /// <summary>An embedded resource pulled out of an assembly.</summary>
-    Embedded,
+    Embedded = 2,
 
     /// <summary>An external URL; no asset is shipped, only a <c>&lt;link&gt;</c> / <c>&lt;script&gt;</c> tag.</summary>
-    Url
+    Url = 3,
 }

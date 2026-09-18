@@ -19,7 +19,7 @@ internal static class Aglc4Cases
     /// <summary>Writes the citation per AGLC4 case rules directly to <paramref name="writer"/>.</summary>
     /// <param name="entry">Resolved entry.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Write(CitationEntry entry, IBufferWriter<byte> writer)
+    internal static void Write(CitationEntry entry, IBufferWriter<byte> writer)
     {
         Aglc4Writer.WriteBytes("*"u8, writer);
         Aglc4Writer.WriteString(entry.Title, writer);

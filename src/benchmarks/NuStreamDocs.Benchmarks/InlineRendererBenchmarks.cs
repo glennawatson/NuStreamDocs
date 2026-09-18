@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Markdown;
@@ -15,6 +16,7 @@ namespace NuStreamDocs.Benchmarks;
 /// of inline content (links, code, emphasis, autolinks, hard breaks).
 /// Isolates the inline-emit cost from the block scan and the HTML wrap.
 /// </remarks>
+[DebuggerDisplay("InlineRendererBenchmarks: source={_source}, writer={_writer}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class InlineRendererBenchmarks
@@ -38,7 +40,7 @@ public class InlineRendererBenchmarks
         StringBuilder sb = new();
         for (var i = 0; i < Repetitions; i++)
         {
-            sb.Append("Line with **bold**, *italic*, `code`, a [link](https://x/")
+            _ = sb.Append("Line with **bold**, *italic*, `code`, a [link](https://x/")
                 .Append(i)
                 .Append(") and an autolink <https://y/")
                 .Append(i)

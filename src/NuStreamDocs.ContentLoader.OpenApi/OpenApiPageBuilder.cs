@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using NuStreamDocs.Common;
@@ -19,9 +20,6 @@ namespace NuStreamDocs.ContentLoader.OpenApi;
 /// </summary>
 internal static class OpenApiPageBuilder
 {
-    /// <summary>Initial byte capacity for a per-operation buffer.</summary>
-    private const int OperationCapacity = 512;
-
     /// <summary>HTTP method property names that introduce an operation under a path item.</summary>
     private static readonly byte[][] HttpMethods =
     [
@@ -32,12 +30,15 @@ internal static class OpenApiPageBuilder
     /// <summary>Gets the bytes that must be escaped when written inside a double-quoted YAML scalar.</summary>
     private static ReadOnlySpan<byte> YamlSpecials => "\"\\\n\r"u8;
 
+    /// <summary>Gets the JSON property name for operation, parameter, and response descriptions.</summary>
+    private static ReadOnlySpan<byte> DescriptionProperty => "description"u8;
+
     /// <summary>Builds the per-tag reference pages from a spec.</summary>
     /// <param name="specJson">UTF-8 JSON of the OpenAPI document (YAML callers convert first).</param>
     /// <param name="routePrefix">Local subdirectory the pages are placed under.</param>
     /// <returns>One page per tag that has at least one operation.</returns>
     /// <exception cref="ContentLoaderException">When the spec is not valid JSON.</exception>
-    public static SyntheticPage[] Build(byte[] specJson, ReadOnlySpan<byte> routePrefix)
+    internal static SyntheticPage[] Build(byte[] specJson, ReadOnlySpan<byte> routePrefix)
     {
         ArgumentNullException.ThrowIfNull(specJson);
         var routeBase = NormalizeRouteBase(routePrefix);
@@ -155,7 +156,7 @@ internal static class OpenApiPageBuilder
                 AdvanceToValue(ref reader);
                 CopyStringValue(ref reader, state.Summary);
             }
-            else if (reader.ValueTextEquals("description"u8))
+            else if (reader.ValueTextEquals(DescriptionProperty))
             {
                 AdvanceToValue(ref reader);
                 CopyStringValue(ref reader, state.Description);
@@ -224,13 +225,14 @@ internal static class OpenApiPageBuilder
     /// <returns>The pages.</returns>
     private static SyntheticPage[] EmitPages(RenderState state, byte[] routeBase)
     {
+        const int pageEnvelopeCapacity = 64;
         var pages = new SyntheticPage[state.TagPages.Count];
         var index = 0;
 
         // foreach over Dictionary<byte[], ArrayBufferWriter<byte>> — a struct enumerator with no indexed alternative.
         foreach (var (tagBytes, body) in state.TagPages)
         {
-            ArrayBufferWriter<byte> markdown = new(body.WrittenCount + tagBytes.Length + 64);
+            ArrayBufferWriter<byte> markdown = new(body.WrittenCount + tagBytes.Length + pageEnvelopeCapacity);
             markdown.Write("---\ntitle: \""u8);
             WriteEscapedYaml(tagBytes, markdown);
             markdown.Write("\"\n---\n\n# "u8);
@@ -239,7 +241,8 @@ internal static class OpenApiPageBuilder
             markdown.Write(body.WrittenSpan);
 
             var route = ComposeRoute(routeBase, Slugify(tagBytes));
-            pages[index++] = new(new(Encoding.UTF8.GetString(route)), markdown.WrittenSpan.ToArray());
+            pages[index] = new(new(Encoding.UTF8.GetString(route)), markdown.WrittenSpan.ToArray());
+            index++;
         }
 
         return pages;
@@ -300,7 +303,7 @@ internal static class OpenApiPageBuilder
                 AdvanceToValue(ref reader);
                 CopyStringValue(ref reader, state.CellIn);
             }
-            else if (reader.ValueTextEquals("description"u8))
+            else if (reader.ValueTextEquals(DescriptionProperty))
             {
                 AdvanceToValue(ref reader);
                 CopyStringValue(ref reader, state.CellDescription);
@@ -463,7 +466,7 @@ internal static class OpenApiPageBuilder
         state.Scratch.ResetWrittenCount();
         while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
         {
-            if (reader.ValueTextEquals("description"u8))
+            if (reader.ValueTextEquals(DescriptionProperty))
             {
                 AdvanceToValue(ref reader);
                 CopyStringValue(ref reader, state.Scratch);
@@ -504,6 +507,7 @@ internal static class OpenApiPageBuilder
 
     /// <summary>Advances the reader to a property's value; the caller is positioned on the property name.</summary>
     /// <param name="reader">Reader on a property name.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void AdvanceToValue(ref Utf8JsonReader reader) => reader.Read();
 
     /// <summary>True when the property the reader is on is an HTTP method that introduces an operation.</summary>
@@ -648,7 +652,7 @@ internal static class OpenApiPageBuilder
     /// <param name="slug">The slugified tag bytes.</param>
     /// <returns>The route bytes.</returns>
     private static byte[] ComposeRoute(ReadOnlySpan<byte> routeBase, ReadOnlySpan<byte> slug) =>
-        routeBase.Length > 0 ? [.. routeBase, (byte)'/', .. slug, .. ".md"u8] : [.. slug, .. ".md"u8];
+        !routeBase.IsEmpty ? [.. routeBase, (byte)'/', .. slug, .. ".md"u8] : [.. slug, .. ".md"u8];
 
     /// <summary>Lowercases ASCII letters/digits and collapses every other run into a single hyphen.</summary>
     /// <param name="source">Source text bytes.</param>
@@ -663,12 +667,14 @@ internal static class OpenApiPageBuilder
             var b = source[i];
             if (AsciiByteHelpers.IsAsciiLetter(b) || AsciiByteHelpers.IsAsciiDigit(b))
             {
-                buffer[length++] = AsciiByteHelpers.ToAsciiLowerByte(b);
+                buffer[length] = AsciiByteHelpers.ToAsciiLowerByte(b);
+                length++;
                 lastWasHyphen = false;
             }
             else if (!lastWasHyphen)
             {
-                buffer[length++] = (byte)'-';
+                buffer[length] = (byte)'-';
+                length++;
                 lastWasHyphen = true;
             }
         }
@@ -684,8 +690,11 @@ internal static class OpenApiPageBuilder
     /// <summary>Reused buffers and per-tag pages for a single <see cref="Build"/> call.</summary>
     private sealed class RenderState
     {
+        /// <summary>Initial byte capacity for a per-operation buffer.</summary>
+        private const int OperationCapacity = 512;
+
         /// <summary>Gets the accumulated Markdown body per tag, byte-keyed.</summary>
-        public Dictionary<byte[], ArrayBufferWriter<byte>> TagPages { get; } = new(ByteArrayComparer.Instance);
+        public Dictionary<byte[], ArrayBufferWriter<byte>> TagPages { get; } = [with(ByteArrayComparer.Instance)];
 
         /// <summary>Gets the buffer the current operation is assembled into before being routed to its tag.</summary>
         public ArrayBufferWriter<byte> Operation { get; } = new(OperationCapacity);

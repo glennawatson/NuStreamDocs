@@ -44,7 +44,7 @@ internal static class Emphasis
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">The UTF-8 sink.</param>
     /// <returns>True when an emphasis run was emitted.</returns>
-    public static bool TryHandle(
+    internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
@@ -93,7 +93,7 @@ internal static class Emphasis
     /// <param name="marker">Marker byte.</param>
     /// <param name="length">Required close run length.</param>
     /// <returns>Start index of the close run, or -1.</returns>
-    public static int FindClose(ReadOnlySpan<byte> source, int searchFrom, byte marker, int length)
+    internal static int FindClose(ReadOnlySpan<byte> source, int searchFrom, byte marker, int length)
     {
         var i = searchFrom;
         while (i < source.Length)

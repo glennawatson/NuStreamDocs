@@ -11,6 +11,7 @@ namespace NuStreamDocs.Common;
 /// valid only until the next <see cref="TryReadLineAsync"/> call — copy or process it first.
 /// CR/LF and lone LF terminators are stripped.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("Utf8LineReader: {_stream}")]
 public sealed class Utf8LineReader : IDisposable
 {
     /// <summary>Carriage-return byte.</summary>
@@ -21,6 +22,9 @@ public sealed class Utf8LineReader : IDisposable
 
     /// <summary>Initial buffer capacity if the stream has no length hint.</summary>
     private const int DefaultBufferSize = 8 * 1024;
+
+    /// <summary>Growth factor when a line exceeds the buffer capacity.</summary>
+    private const int BufferGrowthFactor = 2;
 
     /// <summary>Cap on the size hint we trust from a seekable stream.</summary>
     private const int MaxSeekableHint = 1 * 1024 * 1024;
@@ -56,9 +60,7 @@ public sealed class Utf8LineReader : IDisposable
         _buffer = ArrayPool<byte>.Shared.Rent(InitialCapacity(stream));
     }
 
-    /// <summary>
-    /// Reads the next line; returns false when the stream is exhausted.
-    /// </summary>
+    /// <summary>Reads the next line; returns false when the stream is exhausted.</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple — <c>HasLine</c> is true when a line was read; <c>Line</c> holds the line bytes (no terminator).</returns>
     public async ValueTask<(bool HasLine, ReadOnlyMemory<byte> Line)> TryReadLineAsync(
@@ -150,7 +152,7 @@ public sealed class Utf8LineReader : IDisposable
 
         if (_end == _buffer.Length)
         {
-            var bigger = ArrayPool<byte>.Shared.Rent(_buffer.Length * 2);
+            var bigger = ArrayPool<byte>.Shared.Rent(_buffer.Length * BufferGrowthFactor);
             Buffer.BlockCopy(_buffer, 0, bigger, 0, _end);
             ArrayPool<byte>.Shared.Return(_buffer, true);
             _buffer = bigger;

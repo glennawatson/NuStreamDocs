@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
@@ -10,6 +12,7 @@ using NuStreamDocs.LinkValidator;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Throughput + allocation benchmarks for the link-validator hot path: per-page href/id scan and full-corpus internal validation.</summary>
+[DebuggerDisplay("LinkValidatorBenchmarks: Links={Links}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class LinkValidatorBenchmarks
@@ -25,6 +28,9 @@ public class LinkValidatorBenchmarks
 
     /// <summary>Corpus page count used by the full-validate benchmark.</summary>
     private const int CorpusPages = 200;
+
+    /// <summary>Initial HTML capacity reserved per link and heading pair.</summary>
+    private const int BytesPerLink = 96;
 
     /// <summary>Pre-built UTF-8 HTML for the per-page scan benchmark.</summary>
     private byte[] _pageHtml = [];
@@ -46,7 +52,7 @@ public class LinkValidatorBenchmarks
         _pageHtml = BuildPageHtml(Links);
         _pageUrl = "guide/page.html"u8.ToArray();
 
-        Dictionary<byte[], PageLinks> pages = new(CorpusPages, ByteArrayComparer.Instance);
+        Dictionary<byte[], PageLinks> pages = [with(CorpusPages, ByteArrayComparer.Instance)];
         for (var i = 0; i < CorpusPages; i++)
         {
             var url = Encoding.UTF8.GetBytes($"guide/page-{i}.html");
@@ -58,6 +64,7 @@ public class LinkValidatorBenchmarks
 
     /// <summary>Benchmark for <c>ValidationCorpus.Scan</c> — extracts hrefs / ids / src refs from one page.</summary>
     /// <returns>Internal link count (forces the scan to materialize).</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int ScanPage() => ValidationCorpus.Scan(_pageUrl, _pageHtml).InternalLinks.Length;
 
@@ -76,18 +83,18 @@ public class LinkValidatorBenchmarks
     /// <returns>UTF-8 HTML bytes.</returns>
     private static byte[] BuildPageHtml(int links)
     {
-        StringBuilder sb = new(links * 96);
-        sb.Append("<article>");
+        StringBuilder sb = new(links * BytesPerLink);
+        _ = sb.Append("<article>");
         for (var i = 0; i < links; i++)
         {
-            sb.Append("<h2 id=\"section-").Append(i).Append("\">Section ").Append(i).Append("</h2>")
+            _ = sb.Append("<h2 id=\"section-").Append(i).Append("\">Section ").Append(i).Append("</h2>")
                 .Append("<p>See <a href=\"page-").Append(i % CorpusPages).Append(".html#section-").Append(i)
                 .Append("\">link ").Append(i).Append("</a> ")
                 .Append("and <a href=\"../sibling/page-").Append(i).Append(".html\">sibling</a> ")
                 .Append("and <a href=\"https://example.com/external-").Append(i).Append("\">ext</a>.</p>");
         }
 
-        sb.Append("</article>");
+        _ = sb.Append("</article>");
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 }

@@ -4,6 +4,8 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using NuStreamDocs.Common;
 using Polly;
@@ -37,7 +39,7 @@ public static class ExternalLinkValidator
         }
 
         ConcurrentBag<LinkDiagnostic> diagnostics = [];
-        List<Task> hostTasks = new(byHost.Count);
+        List<Task> hostTasks = [with(byHost.Count)];
         foreach (var (host, urls) in byHost)
         {
             hostTasks.Add(ProcessHostAsync(host, urls, options, httpClient, diagnostics, cancellationToken));
@@ -52,7 +54,7 @@ public static class ExternalLinkValidator
     /// <returns>Map from host to per-URL hit list.</returns>
     internal static Dictionary<string, List<ExternalHit>> BucketByHost(ValidationCorpus corpus)
     {
-        Dictionary<string, List<ExternalHit>> map = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, List<ExternalHit>> map = [with(StringComparer.OrdinalIgnoreCase)];
         for (var p = 0; p < corpus.Pages.Length; p++)
         {
             var page = corpus.Pages[p];
@@ -67,14 +69,8 @@ public static class ExternalLinkValidator
                 }
 
                 sourcePageString ??= Encoding.UTF8.GetString(page.PageUrl);
-
-                var host = parsed.Host;
-                if (!map.TryGetValue(host, out var bucket))
-                {
-                    bucket = new(HostBucketCapacity);
-                    map[host] = bucket;
-                }
-
+                ref var bucket = ref CollectionsMarshal.GetValueRefOrAddDefault(map, parsed.Host, out _);
+                bucket ??= [with(HostBucketCapacity)];
                 bucket.Add(new(sourcePageString, url, parsed));
             }
         }
@@ -105,7 +101,7 @@ public static class ExternalLinkValidator
         _ = host;
         var pipeline = BuildPipeline(options);
         using SemaphoreSlim concurrency = new(options.MaxConcurrencyPerHost, options.MaxConcurrencyPerHost);
-        List<Task> tasks = new(hits.Count);
+        List<Task> tasks = [with(hits.Count)];
         for (var i = 0; i < hits.Count; i++)
         {
             var hit = hits[i];
@@ -137,25 +133,26 @@ public static class ExternalLinkValidator
         try
         {
             await pipeline.ExecuteAsync(
-                async ct =>
+                static async (state, ct) =>
                 {
-                    using HttpRequestMessage request = new(HttpMethod.Head, hit.Uri);
-                    request.Headers.UserAgent.ParseAdd(options.UserAgent);
+                    using HttpRequestMessage request = new(HttpMethod.Head, state.Hit.Uri);
+                    request.Headers.UserAgent.ParseAdd(state.Options.UserAgent);
 
                     using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                    timeoutCts.CancelAfter(TimeSpan.FromSeconds(options.RequestTimeoutSeconds));
-                    using var response = await httpClient
+                    timeoutCts.CancelAfter(TimeSpan.FromSeconds(state.Options.RequestTimeoutSeconds));
+                    using var response = await state.Client
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token)
                         .ConfigureAwait(false);
                     if (!response.IsSuccessStatusCode)
                     {
-                        sink.Add(new(
-                            hit.SourcePage,
-                            hit.Url,
+                        state.Sink.Add(new(
+                            state.Hit.SourcePage,
+                            state.Hit.Url,
                             LinkSeverity.Error,
-                            BuildHttpErrorMessage((int)response.StatusCode, response.ReasonPhrase, hit.Url)));
+                            BuildHttpErrorMessage((int)response.StatusCode, response.ReasonPhrase, state.Hit.Url)));
                     }
                 },
+                (Hit: hit, Client: httpClient, Options: options, Sink: sink),
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -168,13 +165,14 @@ public static class ExternalLinkValidator
         }
         finally
         {
-            concurrency.Release();
+            _ = concurrency.Release();
         }
     }
 
     /// <summary>Builds a Polly pipeline combining sliding-window rate limiting with exponential-backoff retry.</summary>
     /// <param name="options">Validator options.</param>
     /// <returns>The configured pipeline.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ResiliencePipeline BuildPipeline(ExternalLinkValidatorOptions options) =>
         ExternalLinkPipelineFactory.Create(options);
 
@@ -186,11 +184,10 @@ public static class ExternalLinkValidator
     private static string BuildHttpErrorMessage(int statusCode, string? reasonPhrase, UrlPath url)
     {
         var reason = reasonPhrase ?? string.Empty;
-        var urlText = url.Value;
         return StringCompose.ConcatInt(
             "HTTP ",
             statusCode,
-            StringCompose.Concat(" ", reason, " for ", urlText));
+            StringCompose.Concat(" ", reason, " for ", url.Value));
     }
 
     /// <summary>One external-URL occurrence: source page plus the parsed URI.</summary>

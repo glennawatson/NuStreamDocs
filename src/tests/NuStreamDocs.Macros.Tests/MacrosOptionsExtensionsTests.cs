@@ -10,15 +10,21 @@ namespace NuStreamDocs.Macros.Tests;
 /// <summary>Tests for the byte- and string-shaped <c>MacrosOptions</c> construction helpers.</summary>
 public class MacrosOptionsExtensionsTests
 {
+    /// <summary>Gets the value supplied to variable fixtures.</summary>
+    private static ReadOnlySpan<byte> WorldValue => "world"u8;
+
+    /// <summary>Gets the greeting variable name.</summary>
+    private static ReadOnlySpan<byte> GreetingName => "greeting"u8;
+
     /// <summary>Byte-shaped <c>WithVariable</c> stores the supplied byte array as the dictionary key.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WithVariableBytesStoresEntry()
     {
-        var options = MacrosOptions.Default.WithVariable([.. "name"u8], [.. "world"u8]);
+        var options = MacrosOptions.Default.WithVariable([.. "name"u8], [.. WorldValue]);
         var lookup = options.Variables.GetAlternateLookup<ReadOnlySpan<byte>>();
         await Assert.That(lookup.TryGetValue("name"u8, out var value)).IsTrue();
-        await Assert.That(value.AsSpan().SequenceEqual("world"u8)).IsTrue();
+        await Assert.That(value.AsSpan().SequenceEqual(WorldValue)).IsTrue();
     }
 
     /// <summary>String-shaped <c>WithVariable</c> encodes both inputs and produces the same byte-keyed entry.</summary>
@@ -29,7 +35,7 @@ public class MacrosOptionsExtensionsTests
         var options = MacrosOptions.Default.WithVariable("name", "world");
         var lookup = options.Variables.GetAlternateLookup<ReadOnlySpan<byte>>();
         await Assert.That(lookup.TryGetValue("name"u8, out var value)).IsTrue();
-        await Assert.That(value.AsSpan().SequenceEqual("world"u8)).IsTrue();
+        await Assert.That(value.AsSpan().SequenceEqual(WorldValue)).IsTrue();
     }
 
     /// <summary>String + byte overloads produce equivalent option records.</summary>
@@ -38,15 +44,15 @@ public class MacrosOptionsExtensionsTests
     public async Task WithVariableStringMatchesByteOverload()
     {
         var fromString = MacrosOptions.Default.WithVariable("greeting", "hello");
-        var fromBytes = MacrosOptions.Default.WithVariable([.. "greeting"u8], [.. "hello"u8]);
+        var fromBytes = MacrosOptions.Default.WithVariable([.. GreetingName], [.. "hello"u8]);
 
         await Assert.That(fromString.Variables.Count).IsEqualTo(1);
         await Assert.That(fromBytes.Variables.Count).IsEqualTo(1);
 
         var stringLookup = fromString.Variables.GetAlternateLookup<ReadOnlySpan<byte>>();
         var bytesLookup = fromBytes.Variables.GetAlternateLookup<ReadOnlySpan<byte>>();
-        await Assert.That(stringLookup.TryGetValue("greeting"u8, out var s)).IsTrue();
-        await Assert.That(bytesLookup.TryGetValue("greeting"u8, out var b)).IsTrue();
+        await Assert.That(stringLookup.TryGetValue(GreetingName, out var s)).IsTrue();
+        await Assert.That(bytesLookup.TryGetValue(GreetingName, out var b)).IsTrue();
         await Assert.That(s.AsSpan().SequenceEqual(b)).IsTrue();
     }
 
@@ -72,13 +78,9 @@ public class MacrosOptionsExtensionsTests
     [Test]
     public async Task WithVariablesBytesSeedsMap()
     {
-        Dictionary<byte[], byte[]> seed = new(ByteArrayComparer.Instance)
-        {
-            [[.. "a"u8]] = [.. "1"u8],
-            [[.. "b"u8]] = [.. "2"u8]
-        };
+        var seed = new Dictionary<byte[], byte[]>(ByteArrayComparer.Instance) { [[.. "a"u8]] = [.. "1"u8], [[.. "b"u8]] = [.. "2"u8] };
         var options = MacrosOptions.Default.WithVariables(seed);
-        await Assert.That(options.Variables.Count).IsEqualTo(2);
+        await Assert.That(options.Variables.Count).IsEqualTo(seed.Count);
     }
 
     /// <summary>String-shaped <c>WithVariables</c> encodes the input dictionary entry-by-entry.</summary>

@@ -24,7 +24,7 @@ internal static class SyntheticNavGrafter
     /// <param name="entries">Synthetic nav metadata gathered from the registered plugins.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>The grafted root (a new node when entries changed it; otherwise <paramref name="root"/>).</returns>
-    public static NavNode Graft(NavNode root, IReadOnlyList<SyntheticNavEntry> entries, bool useDirectoryUrls)
+    internal static NavNode Graft(NavNode root, IReadOnlyList<SyntheticNavEntry> entries, bool useDirectoryUrls)
     {
         if (entries.Count == 0)
         {
@@ -68,7 +68,7 @@ internal static class SyntheticNavGrafter
         out bool changed)
     {
         var diskChildren = root.Children;
-        List<NavNode> result = new(diskChildren.Length + synthetic.SectionsList.Count + synthetic.Pages.Count);
+        List<NavNode> result = [with(diskChildren.Length + synthetic.SectionsList.Count + synthetic.Pages.Count)];
         for (var i = 0; i < diskChildren.Length; i++)
         {
             result.Add(diskChildren[i]);
@@ -158,15 +158,12 @@ internal static class SyntheticNavGrafter
         var children = MergeSectionChildren(diskSection, synthetic, useDirectoryUrls);
         ResolveMergedMetadata(diskSection, synthetic, out var title, out var indexPath, out var order);
 
-        if (ChildrenUnchanged(children, diskSection.Children)
+        return ChildrenUnchanged(children, diskSection.Children)
             && ReferenceEquals(title, diskSection.Title)
             && indexPath.Value == diskSection.IndexPath.Value
-            && order == diskSection.Order)
-        {
-            return diskSection;
-        }
-
-        return new(title, diskSection.RelativePath, true, children, indexPath, useDirectoryUrls) { Order = order };
+            && order == diskSection.Order
+            ? diskSection
+            : new(title, diskSection.RelativePath, true, children, indexPath, useDirectoryUrls) { Order = order };
     }
 
     /// <summary>Combines a disk section's children with the synthetic section: new sub-pages/sections are added; a synthetic page matching a disk page transfers its Order/title onto it.</summary>
@@ -177,7 +174,7 @@ internal static class SyntheticNavGrafter
     private static NavNode[] MergeSectionChildren(NavNode diskSection, SectionBuilder synthetic, bool useDirectoryUrls)
     {
         var diskChildren = diskSection.Children;
-        List<NavNode> children = new(diskChildren.Length + synthetic.SectionsList.Count + synthetic.Pages.Count);
+        List<NavNode> children = [with(diskChildren.Length + synthetic.SectionsList.Count + synthetic.Pages.Count)];
         for (var i = 0; i < diskChildren.Length; i++)
         {
             children.Add(diskChildren[i]);
@@ -266,15 +263,9 @@ internal static class SyntheticNavGrafter
     {
         var title = synthetic.Title is { Length: > 0 } syntheticTitle ? syntheticTitle : diskPage.Title;
         var order = synthetic.Order ?? diskPage.Order;
-        if (ReferenceEquals(title, diskPage.Title) && order == diskPage.Order)
-        {
-            return diskPage;
-        }
-
-        return new(title, diskPage.RelativePath, false, diskPage.Children, diskPage.IndexPath, useDirectoryUrls)
-        {
-            Order = order
-        };
+        return ReferenceEquals(title, diskPage.Title) && order == diskPage.Order
+            ? diskPage
+            : new(title, diskPage.RelativePath, false, diskPage.Children, diskPage.IndexPath, useDirectoryUrls) { Order = order, };
     }
 
     /// <summary>Picks the title/index/order for a merged section: a disk index page wins; otherwise the synthetic index fills the gaps.</summary>
@@ -343,8 +334,8 @@ internal static class SyntheticNavGrafter
     {
         for (var i = 0; i < children.Length; i++)
         {
-            if (children[i].IsSection == isSection &&
-                NameOf(children[i]).Equals(name, StringComparison.OrdinalIgnoreCase))
+            if (children[i].IsSection == isSection
+                && NameOf(children[i]).Equals(name, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -375,7 +366,7 @@ internal static class SyntheticNavGrafter
         var accumulated = string.Empty;
         for (var i = 0; i < segments.Length - 1; i++)
         {
-            accumulated = accumulated.Length == 0 ? segments[i] : accumulated + "/" + segments[i];
+            accumulated = accumulated.Length == 0 ? segments[i] : $"{accumulated}/{segments[i]}";
             if (!section.Sections.TryGetValue(segments[i], out var child))
             {
                 child = new(segments[i], accumulated);
@@ -431,10 +422,7 @@ internal static class SyntheticNavGrafter
             true,
             children,
             string.IsNullOrEmpty(section.IndexRelativePath) ? default : new FilePath(section.IndexRelativePath),
-            useDirectoryUrls)
-        {
-            Order = section.Order ?? int.MaxValue
-        };
+            useDirectoryUrls) { Order = section.Order ?? int.MaxValue, };
     }
 
     /// <summary>Builds the sorted child array for a working section: every visible sub-section converts in (hidden ones drop out), every page becomes a leaf node.</summary>
@@ -452,15 +440,19 @@ internal static class SyntheticNavGrafter
         var written = 0;
         for (var i = 0; i < subs.Count; i++)
         {
-            if (ToNavNode(subs[i], useDirectoryUrls) is { } node)
+            if (ToNavNode(subs[i], useDirectoryUrls) is not { } node)
             {
-                children[written++] = node;
+                continue;
             }
+
+            children[written] = node;
+            written++;
         }
 
         for (var i = 0; i < pages.Count; i++)
         {
-            children[written++] = ToPageNode(pages[i], useDirectoryUrls);
+            children[written] = ToPageNode(pages[i], useDirectoryUrls);
+            written++;
         }
 
         if (written != upperBound)
@@ -528,6 +520,8 @@ internal static class SyntheticNavGrafter
     private readonly record struct PageEntry(string RelativePath, byte[]? Title, int? Order);
 
     /// <summary>Working tree node for a synthetic section while it's being assembled.</summary>
+    /// <param name="name">Section directory name.</param>
+    /// <param name="relativePath">Section path relative to the input root.</param>
     private sealed class SectionBuilder(string name, string relativePath)
     {
         /// <summary>Gets the last path segment (directory name).</summary>
@@ -549,7 +543,7 @@ internal static class SyntheticNavGrafter
         public bool Hidden { get; set; }
 
         /// <summary>Gets the child sections keyed by directory name (case-insensitive) for O(1) lookup while routing entries.</summary>
-        public Dictionary<string, SectionBuilder> Sections { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, SectionBuilder> Sections { get; } = [with(StringComparer.OrdinalIgnoreCase)];
 
         /// <summary>Gets the child sections in insertion order, indexable for foreach-free iteration. Kept in lockstep with <see cref="Sections"/> at every add.</summary>
         public List<SectionBuilder> SectionsList { get; } = [];

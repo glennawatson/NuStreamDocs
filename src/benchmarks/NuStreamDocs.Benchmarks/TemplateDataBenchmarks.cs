@@ -2,7 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Globalization;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Common;
@@ -17,6 +17,7 @@ namespace NuStreamDocs.Benchmarks;
 /// <see cref="Dictionary{TKey, TValue}.AlternateLookup{TAlternateKey}"/> shape so the probe never
 /// allocates a string. These benchmarks measure that probe in isolation.
 /// </remarks>
+[DebuggerDisplay("TemplateDataBenchmarks: EntryCount={EntryCount}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class TemplateDataBenchmarks
@@ -44,13 +45,12 @@ public class TemplateDataBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        Dictionary<byte[], ReadOnlyMemory<byte>> scalars = new(EntryCount, ByteArrayComparer.Instance);
+        Dictionary<byte[], ReadOnlyMemory<byte>> scalars = [with(EntryCount, ByteArrayComparer.Instance)];
         _keys = new byte[EntryCount][];
         _missKeys = new byte[EntryCount][];
         for (var i = 0; i < EntryCount; i++)
         {
-            var idx = i.ToString(CultureInfo.InvariantCulture);
-            var keyBytes = Encoding.UTF8.GetBytes("scalar_" + idx);
+            var keyBytes = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("scalar_", i));
             _keys[i] = keyBytes;
 
             // Miss key = real key + sentinel suffix that forces a miss without allocating in the bench loop.
@@ -59,7 +59,7 @@ public class TemplateDataBenchmarks
             missKey[keyBytes.Length] = (byte)'X';
             _missKeys[i] = missKey;
 
-            scalars[keyBytes] = Encoding.UTF8.GetBytes("value-" + idx);
+            scalars[keyBytes] = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("value-", i));
         }
 
         _data = new(scalars, null);

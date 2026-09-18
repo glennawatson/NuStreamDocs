@@ -24,6 +24,7 @@ namespace NuStreamDocs.ContentLoader;
 /// <param name="FrontmatterKeys">
 /// Field names to copy into frontmatter. Empty copies every field except <see cref="BodyKey"/>.
 /// </param>
+[System.Diagnostics.DebuggerDisplay("ContentMapping: {ToString(),nq}")]
 public sealed record ContentMapping(
     byte[] RouteTemplate,
     byte[] BodyKey,

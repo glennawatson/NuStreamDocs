@@ -10,6 +10,7 @@ namespace NuStreamDocs.Building;
 /// <param name="AbsolutePath">Absolute on-disk path to the source markdown; empty for in-memory synthetic pages (see <see cref="InMemorySource"/>).</param>
 /// <param name="RelativePath">Path relative to the input root, forward-slashed.</param>
 /// <param name="Flags">Frontmatter-derived flags (<c>draft</c>, <c>not_in_nav</c>) read once during discovery.</param>
+[System.Diagnostics.DebuggerDisplay("PageWorkItem: {InMemorySource}")]
 public readonly record struct PageWorkItem(
     FilePath AbsolutePath,
     FilePath RelativePath,

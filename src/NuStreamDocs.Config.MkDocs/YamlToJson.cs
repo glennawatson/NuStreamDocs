@@ -3,14 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// Minimal block-style YAML to UTF-8 JSON converter.
-/// </summary>
+/// <summary>Minimal block-style YAML to UTF-8 JSON converter.</summary>
 /// <remarks>
 /// Targets the subset of YAML real-world <c>mkdocs.yml</c> files use:
 /// nested block mappings, block sequences, quoted and plain scalars,
@@ -20,6 +19,9 @@ namespace NuStreamDocs.Config.MkDocs;
 /// </remarks>
 public static class YamlToJson
 {
+    /// <summary>Initial number of nested YAML containers supported by the rented stack.</summary>
+    private const int InitialContainerCapacity = 16;
+
     /// <summary>Tab byte.</summary>
     private const byte Tab = (byte)'\t';
 
@@ -50,15 +52,12 @@ public static class YamlToJson
     /// <summary>Line-feed byte.</summary>
     private const byte Lf = (byte)'\n';
 
-    /// <summary>
-    /// Converts <paramref name="yaml"/> to JSON written through
-    /// <paramref name="json"/>.
-    /// </summary>
+    /// <summary>Converts <paramref name="yaml"/> to JSON written through <paramref name="json"/>.</summary>
     /// <param name="yaml">UTF-8 YAML source bytes.</param>
     /// <param name="json">UTF-8 JSON sink.</param>
     public static void Convert(ReadOnlySpan<byte> yaml, Utf8JsonWriter json)
     {
-        var stack = ArrayPool<ContainerFrame>.Shared.Rent(16);
+        var stack = ArrayPool<ContainerFrame>.Shared.Rent(InitialContainerCapacity);
         var depth = OpenRoot(json, stack);
 
         try
@@ -78,27 +77,24 @@ public static class YamlToJson
         }
     }
 
-    /// <summary>
-    /// Streaming variant: converts <paramref name="utf8Stream"/> to JSON
-    /// without buffering the whole file in memory.
-    /// </summary>
+    /// <summary>Streaming variant: converts <paramref name="utf8Stream"/> to JSON without buffering the whole file in memory.</summary>
     /// <param name="utf8Stream">UTF-8 YAML source stream.</param>
     /// <param name="json">UTF-8 JSON sink.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the stream is fully consumed.</returns>
     public static async Task ConvertAsync(Stream utf8Stream, Utf8JsonWriter json, CancellationToken cancellationToken)
     {
-        var stack = ArrayPool<ContainerFrame>.Shared.Rent(16);
+        var stack = ArrayPool<ContainerFrame>.Shared.Rent(InitialContainerCapacity);
         var depth = OpenRoot(json, stack);
         using Utf8LineReader reader = new(utf8Stream, true);
 
         try
         {
-            var (hasLine, line) = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
-            while (hasLine)
+            var read = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
+            while (read.HasLine)
             {
-                ProcessLine(line.Span, json, stack, ref depth);
-                (hasLine, line) = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
+                ProcessLine(read.Line.Span, json, stack, ref depth);
+                read = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
             }
         }
         finally
@@ -134,9 +130,9 @@ public static class YamlToJson
             return;
         }
 
-        var lfAbs = pos + lf;
-        nextLine = lfAbs + 1;
-        contentEnd = lf > 0 && yaml[lfAbs - 1] == Cr ? lfAbs - 1 : lfAbs;
+        var lineFeedOffset = pos + lf;
+        nextLine = lineFeedOffset + 1;
+        contentEnd = lf > 0 && yaml[lineFeedOffset - 1] == Cr ? lineFeedOffset - 1 : lineFeedOffset;
     }
 
     /// <summary>Routes one YAML line through the line-shape recognizer.</summary>
@@ -181,7 +177,8 @@ public static class YamlToJson
     {
         while (depth > 1 && stack[depth - 1].Indent > lineIndent)
         {
-            CloseContainer(json, stack[--depth]);
+            depth--;
+            CloseContainer(json, stack[depth]);
         }
     }
 
@@ -215,7 +212,8 @@ public static class YamlToJson
 
         // Inline `- key: value` opens a one-key mapping for this item.
         json.WriteStartObject();
-        stack[depth++] = new(indent + InlineSequenceMappingIndent, ContainerKind.Mapping);
+        stack[depth] = new(indent + InlineSequenceMappingIndent, ContainerKind.Mapping);
+        depth++;
         WriteMappingEntry(json, rest, colon, stack, ref depth, indent + InlineSequenceMappingIndent);
     }
 
@@ -245,7 +243,8 @@ public static class YamlToJson
             default:
                 {
                     json.WriteStartArray();
-                    stack[depth++] = new(indent, ContainerKind.Sequence);
+                    stack[depth] = new(indent, ContainerKind.Sequence);
+                    depth++;
                     break;
                 }
         }
@@ -305,7 +304,8 @@ public static class YamlToJson
         {
             // Empty value — defer container creation until the next line
             // tells us whether this is a mapping or a sequence.
-            stack[depth++] = new(indent, ContainerKind.Pending);
+            stack[depth] = new(indent, ContainerKind.Pending);
+            depth++;
             return;
         }
 
@@ -320,7 +320,8 @@ public static class YamlToJson
     {
         while (depth > 0)
         {
-            CloseContainer(json, stack[--depth]);
+            depth--;
+            CloseContainer(json, stack[depth]);
         }
     }
 
@@ -357,6 +358,7 @@ public static class YamlToJson
     /// <summary>Writes a JSON property name from a YAML key span, handling pending frames.</summary>
     /// <param name="json">JSON sink.</param>
     /// <param name="key">Key bytes.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WritePropertyName(Utf8JsonWriter json, ReadOnlySpan<byte> key) =>
         json.WritePropertyName(key);
 

@@ -3,13 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Highlight.Languages.Common.Builders;
 
-/// <summary>
-/// Cross-language byte-span matchers and <see cref="SearchValues{T}"/>
-/// sets shared by the bundled lexers.
-/// </summary>
+/// <summary>Cross-language byte-span matchers and <see cref="SearchValues{T}"/> sets shared by the bundled lexers.</summary>
 internal static class LanguageCommon
 {
     /// <summary>Length of the <c>///</c> doc-comment prefix.</summary>
@@ -90,23 +88,21 @@ internal static class LanguageCommon
     /// <summary>C-style line comment — <c>//</c> to end of line.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    public static int LineComment(ReadOnlySpan<byte> slice) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static int LineComment(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchLineCommentToEol(slice, (byte)'/', (byte)'/');
 
     /// <summary>Builds a <c>#</c>-line-comment rule.</summary>
     /// <returns>Configured rule.</returns>
-    public static LexerRule CreateHashLineCommentRule() =>
-        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-        {
-            FirstBytes = HashFirst
-        };
+    internal static LexerRule CreateHashLineCommentRule() =>
+        new(TokenMatchers.MatchHashComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = HashFirst, };
 
     /// <summary>Builds a paired block-comment rule with the supplied opener / closer (e.g. <c>#[ ... ]#</c> or <c>#= ... =#</c>).</summary>
     /// <param name="open">Opening delimiter bytes.</param>
     /// <param name="close">Closing delimiter bytes.</param>
     /// <param name="firstBytes">First-byte dispatch set.</param>
     /// <returns>Configured rule.</returns>
-    public static LexerRule CreatePairedBlockCommentRule(byte[] open, byte[] close, SearchValues<byte> firstBytes) =>
+    internal static LexerRule CreatePairedBlockCommentRule(byte[] open, byte[] close, SearchValues<byte> firstBytes) =>
         new(
                 slice => TokenMatchers.MatchPairedBlockComment(slice, open, close),
                 TokenClass.CommentMulti,
@@ -116,7 +112,7 @@ internal static class LanguageCommon
     /// <summary><c>///</c> XML doc-comment to end of line — must precede the regular <c>//</c> line-comment matcher.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched (zero when the slice doesn't open with <c>///</c>).</returns>
-    public static int XmlDocCommentToEol(ReadOnlySpan<byte> slice) =>
+    internal static int XmlDocCommentToEol(ReadOnlySpan<byte> slice) =>
         slice is [(byte)'/', (byte)'/', (byte)'/', ..]
             ? DocCommentPrefixLength + TokenMatchers.LineLength(slice[DocCommentPrefixLength..])
             : 0;
@@ -124,7 +120,7 @@ internal static class LanguageCommon
     /// <summary>Single-character literal: <c>'x'</c> or <c>'\x'</c> (matches the typical C / C# / F# shape).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>3 for a basic literal, 4 for the escape form, 0 otherwise.</returns>
-    public static int CharLiteral(ReadOnlySpan<byte> slice) => slice switch
+    internal static int CharLiteral(ReadOnlySpan<byte> slice) => slice switch
     {
         [(byte)'\'', (byte)'\\', _, (byte)'\'', ..] => EscapedCharLiteralLength,
         [(byte)'\'', _, (byte)'\'', ..] => BasicCharLiteralLength,
@@ -134,7 +130,7 @@ internal static class LanguageCommon
     /// <summary>C-style block comment — <c>/* ... */</c> non-greedy.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    public static int BlockComment(ReadOnlySpan<byte> slice)
+    internal static int BlockComment(ReadOnlySpan<byte> slice)
     {
         if (slice.Length < 4 || slice[0] is not (byte)'/' || slice[1] is not (byte)'*')
         {
@@ -149,7 +145,7 @@ internal static class LanguageCommon
     /// <summary>Double-quoted no-escape string.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    public static int DoubleQuotedStringNoEscape(ReadOnlySpan<byte> slice)
+    internal static int DoubleQuotedStringNoEscape(ReadOnlySpan<byte> slice)
     {
         if (slice is [] || slice[0] is not (byte)'"')
         {
@@ -163,19 +159,19 @@ internal static class LanguageCommon
     /// <summary>Open-angle followed by a slash — XML closing tag start.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns><c>2</c> on match, <c>0</c> on miss.</returns>
-    public static int AngleOpenSlash(ReadOnlySpan<byte> slice) =>
+    internal static int AngleOpenSlash(ReadOnlySpan<byte> slice) =>
         slice.Length >= TwoCharTagDelimiter && slice[0] is (byte)'<' && slice[1] is (byte)'/' ? TwoCharTagDelimiter : 0;
 
     /// <summary>Self-closing tag terminator — <c>/&gt;</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns><c>2</c> on match, <c>0</c> on miss.</returns>
-    public static int SelfClose(ReadOnlySpan<byte> slice) =>
+    internal static int SelfClose(ReadOnlySpan<byte> slice) =>
         slice.Length >= TwoCharTagDelimiter && slice[0] is (byte)'/' && slice[1] is (byte)'>' ? TwoCharTagDelimiter : 0;
 
     /// <summary>SGML / XML entity reference — <c>&amp;name;</c> or <c>&amp;#1234;</c>.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    public static int EntityReference(ReadOnlySpan<byte> slice)
+    internal static int EntityReference(ReadOnlySpan<byte> slice)
     {
         if (slice is [] || slice[0] is not (byte)'&')
         {
@@ -191,7 +187,7 @@ internal static class LanguageCommon
     /// <summary>XML / Razor attribute name followed by <c>=</c> (lookahead, not consumed).</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length of the attribute name on a positive match.</returns>
-    public static int AttributeName(ReadOnlySpan<byte> slice)
+    internal static int AttributeName(ReadOnlySpan<byte> slice)
     {
         var nameLen = TokenMatchers.MatchIdentifier(slice, AttributeNameFirst, XmlNameContinue);
         if (nameLen is 0)
@@ -206,7 +202,7 @@ internal static class LanguageCommon
     /// <summary>Verbatim string <c>@"..."</c> with <c>""</c> as the embedded-quote escape.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    public static int MatchVerbatimString(ReadOnlySpan<byte> slice)
+    internal static int MatchVerbatimString(ReadOnlySpan<byte> slice)
     {
         if (slice is [] || slice[0] is not (byte)'@')
         {
@@ -220,7 +216,7 @@ internal static class LanguageCommon
     /// <summary>Preprocessor directive — optional leading <c>[ \t]</c>, then <c>#</c>, then the rest of the line.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    public static int MatchHashPreprocessor(ReadOnlySpan<byte> slice)
+    internal static int MatchHashPreprocessor(ReadOnlySpan<byte> slice)
     {
         var indent = TokenMatchers.MatchAsciiInlineWhitespace(slice);
         return indent >= slice.Length || slice[indent] is not (byte)'#'
@@ -232,7 +228,7 @@ internal static class LanguageCommon
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <param name="suffix">Recognized trailing suffix bytes.</param>
     /// <returns>Length matched.</returns>
-    public static int MatchFloatWithOptionalSuffix(ReadOnlySpan<byte> slice, SearchValues<byte> suffix)
+    internal static int MatchFloatWithOptionalSuffix(ReadOnlySpan<byte> slice, SearchValues<byte> suffix)
     {
         var matched = TokenMatchers.MatchUnsignedAsciiFloat(slice);
         if (matched is 0)
@@ -240,17 +236,13 @@ internal static class LanguageCommon
             return 0;
         }
 
-        if (matched < slice.Length && suffix.Contains(slice[matched]))
-        {
-            return matched + 1;
-        }
-
-        return matched;
+        return matched < slice.Length && suffix.Contains(slice[matched]) ? matched + 1 : matched;
     }
 
     /// <summary>XML / Razor tag name.</summary>
     /// <param name="slice">Slice anchored at the cursor.</param>
     /// <returns>Length matched.</returns>
-    public static int TagName(ReadOnlySpan<byte> slice) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static int TagName(ReadOnlySpan<byte> slice) =>
         TokenMatchers.MatchIdentifier(slice, TagNameFirst, XmlNameContinue);
 }

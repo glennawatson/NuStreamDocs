@@ -36,7 +36,7 @@ public static class PropertiesLexer
             RecognizeStringLiterals = false,
             RecognizeNumericLiterals = false,
             KeywordConstants = null,
-            KeywordConstantFirst = null
+            KeywordConstantFirst = null,
         };
 
         return IniFamilyRules.CreateLexer(config);

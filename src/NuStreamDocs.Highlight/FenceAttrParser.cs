@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Highlight;
 
@@ -21,21 +22,24 @@ internal static class FenceAttrParser
     /// <param name="info">UTF-8 fence-info bytes (already HTML-decoded by the caller).</param>
     /// <param name="value">Resolved title value bytes on success.</param>
     /// <returns>True when a title attribute was located.</returns>
-    public static bool TryGetTitle(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool TryGetTitle(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value) =>
         TryGet(info, "title"u8, out value);
 
     /// <summary>Tries to find a <c>linenums</c> attribute value (the start line number, e.g. <c>"1"</c>).</summary>
     /// <param name="info">UTF-8 fence-info bytes.</param>
     /// <param name="value">Resolved value bytes on success.</param>
     /// <returns>True when found.</returns>
-    public static bool TryGetLineNums(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool TryGetLineNums(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value) =>
         TryGet(info, "linenums"u8, out value);
 
     /// <summary>Tries to find a <c>hl_lines</c> attribute value (e.g. <c>"2 4-6"</c>).</summary>
     /// <param name="info">UTF-8 fence-info bytes.</param>
     /// <param name="value">Resolved value bytes on success.</param>
     /// <returns>True when found.</returns>
-    public static bool TryGetHighlightLines(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool TryGetHighlightLines(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value) =>
         TryGet(info, "hl_lines"u8, out value);
 
     /// <summary>Generic <c>key=...</c> lookup against <paramref name="info"/>.</summary>
@@ -89,8 +93,8 @@ internal static class FenceAttrParser
             return false;
         }
 
-        if (start + key.Length >= info.Length || !info[start..].StartsWith(key) ||
-            info[start + key.Length] is not (byte)'=')
+        if (start + key.Length >= info.Length || !info[start..].StartsWith(key)
+            || info[start + key.Length] is not (byte)'=')
         {
             return false;
         }

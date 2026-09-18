@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Icons.MaterialDesign;
 
 /// <summary>Equality comparer for <c>byte[]</c> keys with <see cref="ReadOnlySpan{T}"/> alternate lookups.</summary>
@@ -15,18 +17,19 @@ internal sealed class ByteArrayKeyComparer : IEqualityComparer<byte[]>,
     public bool Equals(byte[]? x, byte[]? y) => x is null ? y is null : y is not null && x.AsSpan().SequenceEqual(y);
 
     /// <inheritdoc/>
-    public int GetHashCode(byte[] obj) => GetHashCode((ReadOnlySpan<byte>)obj);
-
-    /// <inheritdoc/>
     public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) =>
         other is not null && alternate.SequenceEqual(other);
+
+    /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetHashCode(byte[] obj) => GetHashCode((ReadOnlySpan<byte>)obj);
 
     /// <inheritdoc/>
     public int GetHashCode(ReadOnlySpan<byte> alternate)
     {
         // FNV-1a 32-bit — small, fast, and stable across runs (we don't need DoS resistance for a built-once frozen table).
-        const uint FnvOffsetBasis = 2_166_136_261u;
-        const uint FnvPrime = 16_777_619u;
+        const uint FnvOffsetBasis = 2_166_136_261U;
+        const uint FnvPrime = 16_777_619U;
         var hash = FnvOffsetBasis;
         for (var i = 0; i < alternate.Length; i++)
         {
@@ -37,5 +40,6 @@ internal sealed class ByteArrayKeyComparer : IEqualityComparer<byte[]>,
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte[] Create(ReadOnlySpan<byte> alternate) => alternate.ToArray();
 }

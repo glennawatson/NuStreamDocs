@@ -10,7 +10,7 @@ internal static partial class PagefindIgnoreInjectorLogging
     /// <summary>Logs the count of files marked with <c>data-pagefind-ignore</c>.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="count">Number of files modified.</param>
-    public static void LogInjected(ILogger logger, int count)
+    internal static void LogInjected(ILogger logger, int count)
     {
         if (count == 0 || !logger.IsEnabled(LogLevel.Information))
         {

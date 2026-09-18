@@ -57,11 +57,12 @@ public class HtmlSnapshotRewriterTests
     [Test]
     public async Task StateForwardedToCallback()
     {
+        const int State = 42;
         ArrayBufferWriter<byte> writer = new();
         WriteUtf8(writer, "x");
         var observed = 0;
-        HtmlSnapshotRewriter.Rewrite(writer, 42, (_, _, state) => observed = state);
-        await Assert.That(observed).IsEqualTo(42);
+        HtmlSnapshotRewriter.Rewrite(writer, State, (_, _, state) => observed = state);
+        await Assert.That(observed).IsEqualTo(State);
     }
 
     /// <summary>UTF-8 encodes <paramref name="value"/> directly into <paramref name="writer"/>.</summary>

@@ -15,6 +15,9 @@ public sealed class LocalFontProvider : IFontProvider
     /// <summary>Shared instance.</summary>
     public static readonly LocalFontProvider Instance = new();
 
+    /// <summary>Normal font weight when no weight was requested.</summary>
+    private const int NormalWeight = 400;
+
     /// <summary>Initializes a new instance of the <see cref="LocalFontProvider"/> class.</summary>
     private LocalFontProvider()
     {
@@ -37,17 +40,17 @@ public sealed class LocalFontProvider : IFontProvider
         var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
         for (var i = 0; i < face.LocalSrc.Length; i++)
         {
-            matcher.AddInclude(face.LocalSrc[i].Value);
+            _ = matcher.AddInclude(face.LocalSrc[i].Value);
         }
 
         var matches = matcher.Execute(new DirectoryInfoWrapper(new(inputRoot.Value)));
-        var defaultWeight = face.Weights is [var first, ..] ? first : 400;
+        var defaultWeight = face.Weights is [var first, ..] ? first : NormalWeight;
         var defaultStyle = face.Styles is [var firstStyle, ..] ? firstStyle : FontStyle.Normal;
         List<FontResource> resources = [];
         foreach (var file in matches.Files)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var fullPath = Path.Combine(inputRoot.Value, file.Path);
+            FilePath fullPath = Path.Combine(inputRoot.Value, file.Path);
             if (!File.Exists(fullPath))
             {
                 continue;
@@ -64,7 +67,7 @@ public sealed class LocalFontProvider : IFontProvider
                     style,
                     [],
                     bytes,
-                    (ApiCompatString)fullPath));
+                    (ApiCompatString)fullPath.Value));
         }
 
         if (resources is [])

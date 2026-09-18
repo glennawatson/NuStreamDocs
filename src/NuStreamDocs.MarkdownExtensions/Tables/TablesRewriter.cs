@@ -19,22 +19,22 @@ internal static class TablesRewriter
     private enum Align
     {
         /// <summary>No explicit alignment.</summary>
-        None,
+        None = 0,
 
         /// <summary>Left aligned.</summary>
-        Left,
+        Left = 1,
 
         /// <summary>Right aligned.</summary>
-        Right,
+        Right = 2,
 
         /// <summary>Centre aligned.</summary>
-        Center
+        Center = 3,
     }
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < source.Length)
@@ -165,8 +165,8 @@ internal static class TablesRewriter
         for (var i = 0; i < cap; i++)
         {
             var cell = Trim(separator.Slice(cellBuffer[i].Start, cellBuffer[i].Length));
-            var startsColon = cell.Length > 0 && cell[0] is (byte)':';
-            var endsColon = cell.Length > 0 && cell[^1] is (byte)':';
+            var startsColon = !cell.IsEmpty && cell[0] is (byte)':';
+            var endsColon = !cell.IsEmpty && cell[^1] is (byte)':';
             aligns[i] = (startsColon, endsColon) switch
             {
                 (true, true) => Align.Center,
@@ -269,13 +269,15 @@ internal static class TablesRewriter
                 break;
             }
 
-            cells[count++] = new(cellStart, i - cellStart);
+            cells[count] = new(cellStart, i - cellStart);
+            count++;
             cellStart = i + 1;
         }
 
         if (count < cells.Length)
         {
-            cells[count++] = new(cellStart, trailing - cellStart);
+            cells[count] = new(cellStart, trailing - cellStart);
+            count++;
         }
 
         return count;
@@ -352,12 +354,12 @@ internal static class TablesRewriter
     /// <returns>Slice without the terminator.</returns>
     private static ReadOnlySpan<byte> TrimTerminator(ReadOnlySpan<byte> line)
     {
-        if (line.Length > 0 && line[^1] == (byte)'\n')
+        if (!line.IsEmpty && line[^1] == (byte)'\n')
         {
             line = line[..^1];
         }
 
-        if (line.Length > 0 && line[^1] == (byte)'\r')
+        if (!line.IsEmpty && line[^1] == (byte)'\r')
         {
             line = line[..^1];
         }

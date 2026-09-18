@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -151,6 +152,7 @@ public static class Css2StylesheetParser
     /// <summary>Reads the trimmed <c>unicode-range</c> value from an <c>@font-face</c> block.</summary>
     /// <param name="block">The block's inner bytes.</param>
     /// <returns>The value bytes (empty when absent).</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ReadOnlySpan<byte> ParseUnicodeRange(ReadOnlySpan<byte> block) =>
         AsciiByteHelpers.TrimAsciiWhitespace(FindPropertyValue(block, "unicode-range"u8));
 
@@ -168,12 +170,7 @@ public static class Css2StylesheetParser
 
         var rest = src[(open + UrlPrefixLength)..];
         var close = rest.IndexOf((byte)')');
-        if (close < 0)
-        {
-            return [];
-        }
-
-        return AsciiByteHelpers.TrimAsciiWhitespace(rest[..close]).Trim((byte)'"').Trim((byte)'\'');
+        return close < 0 ? [] : AsciiByteHelpers.TrimAsciiWhitespace(rest[..close]).Trim((byte)'"').Trim((byte)'\'');
     }
 
     /// <summary>Finds the value of the CSS property <paramref name="name"/> within <paramref name="block"/> (the bytes between its <c>:</c> and the next <c>;</c>).</summary>
@@ -211,6 +208,7 @@ public static class Css2StylesheetParser
     /// <param name="UnicodeRange">UTF-8 <c>unicode-range</c> value (empty when absent).</param>
     /// <param name="SubsetName">UTF-8 subset name from the preceding <c>/* ... */</c> comment (e.g. <c>latin</c>); empty when the stylesheet doesn't label blocks.</param>
     /// <param name="Woff2Url">URL of the woff2 file referenced by <c>src</c>.</param>
+    [System.Diagnostics.DebuggerDisplay("Css2FontFace: {ToString(),nq}")]
     public readonly record struct Css2FontFace(
         int Weight,
         FontStyle Style,

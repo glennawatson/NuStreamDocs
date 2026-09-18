@@ -2,11 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Emoji;
 
 /// <summary>Emoji shortcode plugin — rewrites known <c>:name:</c> shortcodes into <c>&lt;span class="twemoji"&gt;</c> wrappers. Unknown shortcodes pass through.</summary>
+[System.Diagnostics.DebuggerDisplay("EmojiPlugin: {Name}")]
 public sealed class EmojiPlugin : IPagePreRenderPlugin
 {
     /// <inheritdoc/>
@@ -19,6 +21,7 @@ public sealed class EmojiPlugin : IPagePreRenderPlugin
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)':') >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         EmojiRewriter.Rewrite(context.Source, context.Output);
 }

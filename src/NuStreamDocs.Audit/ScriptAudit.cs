@@ -18,7 +18,7 @@ internal static class ScriptAudit
     /// <param name="page">Site-relative URL of the page.</param>
     /// <param name="options">Audit options (rule toggles).</param>
     /// <param name="sink">Receives the findings.</param>
-    public static void Check(ReadOnlySpan<byte> html, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
+    internal static void Check(ReadOnlySpan<byte> html, UrlPath page, AuditOptions options, List<AuditDiagnostic> sink)
     {
         if (!options.IsRuleEnabled(AuditRule.RenderBlockingScript))
         {

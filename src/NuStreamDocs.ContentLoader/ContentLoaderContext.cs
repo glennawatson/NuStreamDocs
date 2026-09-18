@@ -8,6 +8,7 @@ namespace NuStreamDocs.ContentLoader;
 
 /// <summary>Per-build context handed to an <see cref="IContentLoader"/>.</summary>
 /// <param name="InputRoot">Absolute path to the docs input root; loaders that read local files resolve relative paths against it.</param>
+[System.Diagnostics.DebuggerDisplay("ContentLoaderContext: {UseDirectoryUrls}")]
 public readonly record struct ContentLoaderContext(DirectoryPath InputRoot)
 {
     /// <summary>Gets a value indicating whether the build emits directory-style URLs.</summary>

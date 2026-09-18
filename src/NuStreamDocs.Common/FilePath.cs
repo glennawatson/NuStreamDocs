@@ -2,10 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Common;
 
 /// <summary>Type-safe file path wrapper. Pure path manipulation; never touches the filesystem until an explicit method is called. Implicitly converts to and from <see cref="string"/>.</summary>
 /// <param name="Value">The underlying path string. Not normalized — use <see cref="Path.GetFullPath(string)"/> for canonicalization.</param>
+[System.Diagnostics.DebuggerDisplay("FilePath: {IsEmpty}")]
 public readonly record struct FilePath(string Value)
 {
     /// <summary>Gets a value indicating whether this path is empty (uninitialized / placeholder).</summary>
@@ -53,16 +56,19 @@ public readonly record struct FilePath(string Value)
     /// <summary>Friendly named alias for the string→<see cref="FilePath"/> implicit operator (CA2225).</summary>
     /// <param name="value">Source path string.</param>
     /// <returns>The wrapped path.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FilePath FromString(string? value) => value;
 
     /// <summary>Friendly named alias for the <see cref="FilePath"/>→<see cref="string"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source file.</param>
     /// <returns>The underlying path string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToStringValue(in FilePath path) => path;
 
     /// <summary>Friendly named alias for the <see cref="FilePath"/>→<see cref="ReadOnlySpan{Char}"/> implicit operator (CA2225).</summary>
     /// <param name="path">Source file.</param>
     /// <returns>The underlying path as a span.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ReadOnlySpan<char> ToReadOnlySpan(in FilePath path) => path;
 
     /// <inheritdoc/>
@@ -70,11 +76,13 @@ public readonly record struct FilePath(string Value)
 
     /// <summary>Returns the underlying path as a <see cref="ReadOnlySpan{Char}"/> for span-based parsing.</summary>
     /// <returns>The path span; empty when the wrapper is default.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> AsSpan() => Value.AsSpan();
 
     /// <summary>Returns true when this path ends with <paramref name="value"/> ordinally.</summary>
     /// <param name="value">Suffix to test for.</param>
     /// <returns>True when the path ends with <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool EndsWith(in ReadOnlySpan<char> value) =>
         AsSpan().EndsWith(value, StringComparison.Ordinal);
 
@@ -82,6 +90,7 @@ public readonly record struct FilePath(string Value)
     /// <param name="value">Suffix to test for.</param>
     /// <param name="comparison">Comparison kind.</param>
     /// <returns>True when the path ends with <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool EndsWith(in ReadOnlySpan<char> value, StringComparison comparison) =>
         AsSpan().EndsWith(value, comparison);
 
@@ -99,10 +108,12 @@ public readonly record struct FilePath(string Value)
 
     /// <summary>Determines whether this file currently exists on disk.</summary>
     /// <returns>True when the file exists; otherwise false.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Exists() => File.Exists(Value);
 
     /// <summary>Reads the file's contents as UTF-8 bytes, stripping any leading BOM.</summary>
     /// <returns>The file bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte[] ReadAllBytes() => Utf8Bom.StripIfPresent(File.ReadAllBytes(Value));
 
     /// <summary>Asynchronously reads the file's contents as UTF-8 bytes, stripping any leading BOM.</summary>
@@ -118,11 +129,13 @@ public readonly record struct FilePath(string Value)
 
     /// <summary>Writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
     /// <param name="bytes">Source bytes.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteAllBytes(ReadOnlySpan<byte> bytes) => File.WriteAllBytes(Value, bytes);
 
     /// <summary>Asynchronously writes <paramref name="bytes"/> to this file, creating or overwriting it.</summary>
     /// <param name="bytes">Source bytes.</param>
     /// <returns>A task that completes when the write finishes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task WriteAllBytesAsync(in ReadOnlyMemory<byte> bytes) =>
         File.WriteAllBytesAsync(Value, bytes);
 
@@ -130,17 +143,21 @@ public readonly record struct FilePath(string Value)
     /// <param name="bytes">Source bytes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that completes when the write finishes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task WriteAllBytesAsync(in ReadOnlyMemory<byte> bytes, in CancellationToken cancellationToken) =>
         File.WriteAllBytesAsync(Value, bytes, cancellationToken);
 
     /// <summary>Opens the file for reading.</summary>
     /// <returns>A read-only stream over the file contents.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FileStream OpenRead() => File.OpenRead(Value);
 
     /// <summary>Creates or truncates the file and opens it for writing.</summary>
     /// <returns>A writable stream.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FileStream Create() => File.Create(Value);
 
     /// <summary>Deletes the file if it exists.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Delete() => File.Delete(Value);
 }

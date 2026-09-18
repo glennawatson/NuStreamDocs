@@ -9,4 +9,5 @@ namespace NuStreamDocs.Plugins;
 /// <summary>One in-memory markdown page registered by a discovery-phase plugin so it flows through the regular render pipeline without ever touching the source folder.</summary>
 /// <param name="RelativePath">Forward-slashed path relative to the input root (e.g. <c>tags/index.md</c>); decides the output URL the same way disk-loaded pages do.</param>
 /// <param name="MarkdownBytes">UTF-8 markdown source (frontmatter + body).</param>
+[System.Diagnostics.DebuggerDisplay("SyntheticPage: {ToString(),nq}")]
 public readonly record struct SyntheticPage(FilePath RelativePath, byte[] MarkdownBytes);

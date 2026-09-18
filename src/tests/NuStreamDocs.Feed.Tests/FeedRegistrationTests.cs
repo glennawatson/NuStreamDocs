@@ -10,12 +10,15 @@ namespace NuStreamDocs.Feed.Tests;
 /// <summary>Builder-extension + options tests for <c>FeedPlugin</c>.</summary>
 public class FeedRegistrationTests
 {
+    /// <summary>Gets the SiteUrl fixture value.</summary>
+    private static ReadOnlySpan<byte> SiteUrlBytes => "https://x.test/"u8;
+
     /// <summary>Default 4-arg ctor uses the recommended item cap.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DefaultCtorUsesRecommendedCap()
     {
-        FeedOptions opts = new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog");
+        FeedOptions opts = new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog");
         await Assert.That(opts.MaxItems).IsEqualTo(FeedOptions.DefaultMaxItems);
         await Assert.That(opts.Formats).IsEqualTo(FeedFormats.Both);
     }
@@ -25,13 +28,13 @@ public class FeedRegistrationTests
     [Test]
     public async Task ValidateThrowsOnMissingFields()
     {
-        Assert.Throws<ArgumentException>(static () =>
+        _ = Assert.Throws<ArgumentException>(static () =>
             new FeedOptions([], [.. "T"u8], [.. "D"u8], "p", "o", FeedFormats.Both, 1).Validate());
-        Assert.Throws<ArgumentException>(static () =>
+        _ = Assert.Throws<ArgumentException>(static () =>
             new FeedOptions([.. "u"u8], [], [.. "D"u8], "p", "o", FeedFormats.Both, 1).Validate());
-        Assert.Throws<ArgumentException>(static () =>
+        _ = Assert.Throws<ArgumentException>(static () =>
             new FeedOptions([.. "u"u8], [.. "T"u8], [], "p", "o", FeedFormats.Both, 1).Validate());
-        Assert.Throws<ArgumentException>(static () =>
+        _ = Assert.Throws<ArgumentException>(static () =>
             new FeedOptions([.. "u"u8], [.. "T"u8], [.. "D"u8], string.Empty, "o", FeedFormats.Both, 1).Validate());
         var ex = Assert.Throws<ArgumentException>(static () =>
             new FeedOptions([.. "u"u8], [.. "T"u8], [.. "D"u8], "p", string.Empty, FeedFormats.Both, 1).Validate());
@@ -43,7 +46,7 @@ public class FeedRegistrationTests
     [Test]
     public async Task UseFeedRegisters()
     {
-        FeedOptions opts = new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog");
+        FeedOptions opts = new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog");
         await Assert.That(new DocBuilder().UseFeed(opts)).IsTypeOf<DocBuilder>();
     }
 
@@ -52,7 +55,7 @@ public class FeedRegistrationTests
     [Test]
     public async Task UseFeedLoggerRegisters()
     {
-        FeedOptions opts = new([.. "https://x.test/"u8], [.. "T"u8], [.. "D"u8], "blog");
+        FeedOptions opts = new([.. SiteUrlBytes], [.. "T"u8], [.. "D"u8], "blog");
         await Assert.That(new DocBuilder().UseFeed(opts, NullLogger.Instance)).IsTypeOf<DocBuilder>();
     }
 }

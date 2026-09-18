@@ -3,14 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers.Text;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Config.Zensical;
 
-/// <summary>
-/// Minimal TOML to UTF-8 JSON converter targeting Zensical's config shape.
-/// </summary>
+/// <summary>Minimal TOML to UTF-8 JSON converter targeting Zensical's config shape.</summary>
 /// <remarks>
 /// Recognized: top-level <c>key = value</c> entries (string, int, bool),
 /// <c>[table]</c> and <c>[table.subtable]</c> headers, and <c>#</c> comments.
@@ -71,10 +70,7 @@ public static class TomlToJson
         Finalize(json, openTables);
     }
 
-    /// <summary>
-    /// Streaming variant: converts <paramref name="utf8Stream"/> to JSON
-    /// without buffering the whole file in memory.
-    /// </summary>
+    /// <summary>Streaming variant: converts <paramref name="utf8Stream"/> to JSON without buffering the whole file in memory.</summary>
     /// <param name="utf8Stream">UTF-8 TOML source stream.</param>
     /// <param name="json">UTF-8 JSON sink.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -85,11 +81,11 @@ public static class TomlToJson
         var openTables = 0;
         using Utf8LineReader reader = new(utf8Stream, true);
 
-        var (hasLine, line) = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
-        while (hasLine)
+        var read = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
+        while (read.HasLine)
         {
-            ProcessLine(line.Span, json, ref openTables);
-            (hasLine, line) = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
+            ProcessLine(read.Line.Span, json, ref openTables);
+            read = await reader.TryReadLineAsync(cancellationToken).ConfigureAwait(false);
         }
 
         Finalize(json, openTables);
@@ -123,9 +119,9 @@ public static class TomlToJson
             return;
         }
 
-        var lfAbs = pos + lf;
-        nextLine = lfAbs + 1;
-        contentEnd = lf > 0 && toml[lfAbs - 1] == Cr ? lfAbs - 1 : lfAbs;
+        var lineFeedOffset = pos + lf;
+        nextLine = lineFeedOffset + 1;
+        contentEnd = lf > 0 && toml[lineFeedOffset - 1] == Cr ? lineFeedOffset - 1 : lineFeedOffset;
     }
 
     /// <summary>Routes one TOML line to a header or key/value handler.</summary>
@@ -323,6 +319,7 @@ public static class TomlToJson
     /// <summary>Trims leading and trailing whitespace.</summary>
     /// <param name="value">UTF-8 bytes.</param>
     /// <returns>Trimmed bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ReadOnlySpan<byte> Trim(ReadOnlySpan<byte> value) =>
         value.TrimStart(Sp).TrimStart(Tab).TrimEnd(Sp).TrimEnd(Tab);
 }

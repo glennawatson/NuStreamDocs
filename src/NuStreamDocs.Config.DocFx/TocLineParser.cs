@@ -27,7 +27,7 @@ internal ref struct TocLineParser
     /// <summary>Looks at the next non-blank/non-comment line without advancing.</summary>
     /// <param name="line">Decoded line on success.</param>
     /// <returns>True when a line was found.</returns>
-    public bool Peek(out TocLine line)
+    internal bool Peek(out TocLine line)
     {
         var snapshot = _pos;
         var ok = TryConsume(out line);
@@ -38,7 +38,7 @@ internal ref struct TocLineParser
     /// <summary>Advances past the next non-blank/non-comment line and returns it.</summary>
     /// <param name="line">Decoded line on success.</param>
     /// <returns>True when a line was consumed.</returns>
-    public bool TryConsume(out TocLine line)
+    internal bool TryConsume(out TocLine line)
     {
         while (_pos < _source.Length)
         {
@@ -108,7 +108,7 @@ internal ref struct TocLineParser
 
         var body = rawLine[indent..];
         var isSequenceItem = false;
-        if (body.Length > 0 && body[0] is (byte)'-' && (body.Length is 1 || body[1] is (byte)' '))
+        if (!body.IsEmpty && body[0] is (byte)'-' && (body.Length is 1 || body[1] is (byte)' '))
         {
             isSequenceItem = true;
             body = body.Length is 1 ? [] : body[SequenceMarkerLength..];

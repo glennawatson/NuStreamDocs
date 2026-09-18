@@ -11,6 +11,7 @@ namespace NuStreamDocs.Theme.Material3;
 /// Plugin that wraps every rendered page in the Material 3 shell and
 /// writes the theme's static assets at finalization time.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("Material3ThemePlugin: {Name}")]
 public sealed class Material3ThemePlugin : ThemePluginBase<Material3Theme, Material3ThemeOptions>
 {
     /// <summary>Initializes a new instance of the <see cref="Material3ThemePlugin"/> class with default options.</summary>

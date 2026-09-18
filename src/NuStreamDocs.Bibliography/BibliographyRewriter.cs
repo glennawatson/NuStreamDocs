@@ -20,14 +20,11 @@ namespace NuStreamDocs.Bibliography;
 /// </summary>
 internal static class BibliographyRewriter
 {
+    /// <summary>Output capacity multiplier.</summary>
+    private const int OutputCapacityMultiplier = 2;
+
     /// <summary>Length of the <c>[@</c> opening sequence.</summary>
     private const int MarkerOpenLength = 2;
-
-    /// <summary>Initial capacity for per-page state buffers.</summary>
-    private const int InitialStateCapacity = 16;
-
-    /// <summary>Growth factor applied each time a state buffer overflows.</summary>
-    private const int StateGrowthFactor = 2;
 
     /// <summary>Bytes that may begin a marker.</summary>
     private static readonly SearchValues<byte> OpenChar = SearchValues.Create("["u8);
@@ -48,7 +45,7 @@ internal static class BibliographyRewriter
     /// <param name="missing">Optional callback fired for unresolved keys.</param>
     /// <param name="writer">UTF-8 sink.</param>
     /// <returns>True when at least one citation was rewritten.</returns>
-    public static bool Rewrite(
+    internal static bool Rewrite(
         ReadOnlySpan<byte> source,
         BibliographyDatabase database,
         ICitationStyle style,
@@ -60,7 +57,7 @@ internal static class BibliographyRewriter
             return false;
         }
 
-        using var rental = PageBuilderPool.Rent(source.Length * 2);
+        using var rental = PageBuilderPool.Rent(source.Length * OutputCapacityMultiplier);
         var body = rental.Writer;
         var state = ResolveState.Create(database, style, missing);
         try
@@ -381,7 +378,8 @@ internal static class BibliographyRewriter
         if (!ContainsByReference(state.Unique, state.UniqueCount, resolved))
         {
             state.EnsureUniqueCapacity();
-            state.Unique[state.UniqueCount++] = resolved;
+            var uniqueIndex = state.UniqueCount++;
+            state.Unique[uniqueIndex] = resolved;
         }
 
         num = state.AssignedCount;
@@ -559,38 +557,40 @@ internal static class BibliographyRewriter
     }
 
     /// <summary>Single-page citation resolution state.</summary>
-    [SuppressMessage(
-        "Sonar Code Smell",
-        "S3898:Implement IEquatable<T>",
-        Justification = "Internal scratch struct; never used as a dictionary key or compared for equality.")]
     private struct ResolveState
     {
-        /// <summary>Citation database.</summary>
-        public BibliographyDatabase Database;
+        /// <summary>Initial capacity for per-page state buffers.</summary>
+        private const int InitialStateCapacity = 16;
 
-        /// <summary>Citation style.</summary>
-        public ICitationStyle Style;
+        /// <summary>Growth factor when a state buffer overflows.</summary>
+        private const int StateGrowthFactor = 2;
 
-        /// <summary>Optional missing-key callback.</summary>
-        public MissingCitationCallback? Missing;
+        /// <summary>Gets or sets citation database.</summary>
+        public BibliographyDatabase Database { get; set; }
 
-        /// <summary>Entry indexed by 1-based footnote number; slot 0 is unused.</summary>
-        public CitationEntry[] EntryByNum;
+        /// <summary>Gets or sets citation style.</summary>
+        public ICitationStyle Style { get; set; }
 
-        /// <summary>Locator indexed by 1-based footnote number.</summary>
-        public CitationLocator[] LocatorByNum;
+        /// <summary>Gets or sets optional missing-key callback.</summary>
+        public MissingCitationCallback? Missing { get; set; }
 
-        /// <summary>Each cited entry once, in first-citation order.</summary>
-        public CitationEntry[] Unique;
+        /// <summary>Gets or sets entry indexed by 1-based footnote number; slot 0 is unused.</summary>
+        public CitationEntry[] EntryByNum { get; set; }
 
-        /// <summary>Total assigned footnote numbers.</summary>
-        public int AssignedCount;
+        /// <summary>Gets or sets locator indexed by 1-based footnote number.</summary>
+        public CitationLocator[] LocatorByNum { get; set; }
 
-        /// <summary>Live count in <see cref="Unique"/>.</summary>
-        public int UniqueCount;
+        /// <summary>Gets or sets each cited entry once, in first-citation order.</summary>
+        public CitationEntry[] Unique { get; set; }
 
-        /// <summary>Snapshot recorded at the start of a marker, used to roll back on parse failure.</summary>
-        public ResolveSnapshot Snapshot;
+        /// <summary>Gets or sets total assigned footnote numbers.</summary>
+        public int AssignedCount { get; set; }
+
+        /// <summary>Gets or sets live count in <see cref="Unique"/>.</summary>
+        public int UniqueCount { get; set; }
+
+        /// <summary>Gets or sets snapshot recorded at the start of a marker, used to roll back on parse failure.</summary>
+        public ResolveSnapshot Snapshot { get; set; }
 
         /// <summary>Initializes a new state. The caller must invoke <see cref="ReturnToPool"/> on every exit path.</summary>
         /// <param name="database">Citation database.</param>

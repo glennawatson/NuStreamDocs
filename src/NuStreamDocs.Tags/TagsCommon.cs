@@ -27,7 +27,7 @@ internal static class TagsCommon
     /// <summary>Lowercases <paramref name="tag"/> and replaces non-alphanumeric ASCII runs with single hyphens for use as a filename.</summary>
     /// <param name="tag">UTF-8 tag display bytes.</param>
     /// <returns>UTF-8 filesystem-safe slug bytes; <c>"tag"</c> when the input has no slug-safe bytes.</returns>
-    public static byte[] SlugifyTag(ReadOnlySpan<byte> tag)
+    internal static byte[] SlugifyTag(ReadOnlySpan<byte> tag)
     {
         if (tag.IsEmpty)
         {
@@ -43,10 +43,9 @@ internal static class TagsCommon
     /// <param name="slug">ASCII slug bytes (alphanumeric / hyphen only).</param>
     /// <param name="extensionWithDot">Extension bytes to append, including the leading dot (e.g. <c>".md"u8</c>, <c>".html"u8</c>); ASCII.</param>
     /// <returns>The slug followed by the extension as a URL-shaped path component (no separators, ASCII-only by construction).</returns>
-    public static UrlPath BuildSlugFileName(ReadOnlySpan<byte> slug, ReadOnlySpan<byte> extensionWithDot)
+    internal static UrlPath BuildSlugFileName(ReadOnlySpan<byte> slug, ReadOnlySpan<byte> extensionWithDot)
     {
-        var totalLength = slug.Length + extensionWithDot.Length;
-        var fileName = string.Create(totalLength, (slug.ToArray(), extensionWithDot.ToArray()), static (dst, src) =>
+        var fileName = string.Create(slug.Length + extensionWithDot.Length, (slug.ToArray(), extensionWithDot.ToArray()), static (dst, src) =>
         {
             var (slugBytes, extBytes) = src;
             for (var i = 0; i < slugBytes.Length; i++)
@@ -78,7 +77,8 @@ internal static class TagsCommon
                 case >= (byte)'A' and <= (byte)'Z':
                     {
                         count = FlushHyphen(dst, count, pendingHyphen);
-                        dst[count++] = (byte)(b | AsciiCaseBit);
+                        var lowercaseIndex = count++;
+                        dst[lowercaseIndex] = (byte)(b | AsciiCaseBit);
                         pendingHyphen = false;
                         continue;
                     }
@@ -86,7 +86,8 @@ internal static class TagsCommon
                 case >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9':
                     {
                         count = FlushHyphen(dst, count, pendingHyphen);
-                        dst[count++] = b;
+                        var literalIndex = count++;
+                        dst[literalIndex] = b;
                         pendingHyphen = false;
                         continue;
                     }

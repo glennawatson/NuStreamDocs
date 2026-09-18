@@ -8,6 +8,7 @@ namespace NuStreamDocs.Versions;
 /// <param name="Version">Identifier for the version this build represents.</param>
 /// <param name="Title">Human-readable selector label.</param>
 /// <param name="Aliases">UTF-8 aliases that point at this version (e.g. <c>latest</c>).</param>
+[System.Diagnostics.DebuggerDisplay("VersionOptions: {ToString(),nq}")]
 public sealed record VersionOptions(string Version, string Title, byte[][] Aliases)
 {
     /// <summary>Initializes a new instance of the <see cref="VersionOptions"/> class with no aliases.</summary>

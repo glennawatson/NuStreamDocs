@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
 using NuStreamDocs.Privacy.Bytes;
 
@@ -19,7 +18,7 @@ internal static class PrivacyRewriter
     /// <param name="filter">Host filter.</param>
     /// <param name="sink">Destination buffer; only written to when at least one pass changed the input.</param>
     /// <returns>True when bytes were written to <paramref name="sink"/>; false when no pass changed the input.</returns>
-    public static bool TryRewriteInto(
+    internal static bool TryRewriteInto(
         ReadOnlySpan<byte> html,
         in PrivacyOptions options,
         ExternalAssetRegistry registry,
@@ -67,8 +66,7 @@ internal static class PrivacyRewriter
         ref bool changed)
     {
         slots.Spare.ResetWrittenCount();
-        var source = changed ? current.Span : originalHtml;
-        if (!MixedContentBytes.RewriteInto(source, slots.Spare))
+        if (!MixedContentBytes.RewriteInto(changed ? current.Span : originalHtml, slots.Spare))
         {
             return;
         }
@@ -92,8 +90,7 @@ internal static class PrivacyRewriter
         ref bool changed)
     {
         slots.Spare.ResetWrittenCount();
-        var source = changed ? current.Span : originalHtml;
-        if (!AnchorBytes.RewriteInto(source, options.AddRelNoOpener, options.AddTargetBlank, slots.Spare))
+        if (!AnchorBytes.RewriteInto(changed ? current.Span : originalHtml, options.AddRelNoOpener, options.AddTargetBlank, slots.Spare))
         {
             return;
         }
@@ -117,8 +114,7 @@ internal static class PrivacyRewriter
         ref bool changed)
     {
         slots.Spare.ResetWrittenCount();
-        var source = changed ? current.Span : originalHtml;
-        if (!ExternalUrlScanner.RewriteInto(source, ctx, slots.Spare))
+        if (!ExternalUrlScanner.RewriteInto(changed ? current.Span : originalHtml, ctx, slots.Spare))
         {
             return;
         }
@@ -135,10 +131,6 @@ internal static class PrivacyRewriter
     {
         /// <summary>Swaps the two buffers; called after a stage commits to a rewrite so the next stage writes into the freed buffer.</summary>
         /// <returns>The swapped pair.</returns>
-        [SuppressMessage(
-            "SonarAnalyzer",
-            "S2234:Parameters should be passed in the correct order",
-            Justification = "Swap intentionally reverses the pair — the prior Other becomes the new Spare and vice versa.")]
-        public StageBuffers Swap() => new(Other, Spare);
+        public StageBuffers Swap() => new(Spare: Other, Other: Spare);
     }
 }

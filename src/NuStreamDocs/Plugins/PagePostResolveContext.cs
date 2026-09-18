@@ -12,6 +12,7 @@ namespace NuStreamDocs.Plugins;
 /// cross-page resolve barrier, so <see cref="Html"/> can be rewritten using a frozen view of
 /// cross-page state.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("PagePostResolveContext: {RelativePath}")]
 public readonly ref struct PagePostResolveContext
 {
     /// <summary>Initializes a new instance of the <see cref="PagePostResolveContext"/> struct.</summary>

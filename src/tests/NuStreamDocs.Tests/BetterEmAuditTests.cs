@@ -10,6 +10,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Pins the core inline-emphasis renderer's behavior against a fixed list of bold / italic / underscore edge cases.</summary>
 public class BetterEmAuditTests
 {
+    /// <summary>Strong Opening Tag used by the test cases.</summary>
+    private const string StrongOpeningTag = "<strong>";
+
     /// <summary><c>**bold**</c> and <c>__bold__</c> both render as <c>&lt;strong&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -34,7 +37,7 @@ public class BetterEmAuditTests
     public async Task MixedNestingRenders()
     {
         var html = Render("**bold _and italic_ together**");
-        await Assert.That(html).Contains("<strong>");
+        await Assert.That(html).Contains(StrongOpeningTag);
         await Assert.That(html).Contains("<em>and italic</em>");
     }
 
@@ -53,7 +56,7 @@ public class BetterEmAuditTests
     public async Task TripleStarYieldsBoldItalic()
     {
         var html = Render("***both***");
-        await Assert.That(html).Contains("<strong>");
+        await Assert.That(html).Contains(StrongOpeningTag);
         await Assert.That(html).Contains("<em>");
     }
 
@@ -63,7 +66,7 @@ public class BetterEmAuditTests
     public async Task NestedRunsBalance()
     {
         var html = Render("**a *b* c**");
-        await Assert.That(html).Contains("<strong>");
+        await Assert.That(html).Contains(StrongOpeningTag);
         await Assert.That(html).Contains("<em>b</em>");
     }
 

@@ -15,6 +15,9 @@ namespace NuStreamDocs.Autorefs;
 /// </summary>
 public static class AutorefsReferenceLinkPreprocessor
 {
+    /// <summary>Link separator length.</summary>
+    private const int LinkSeparatorLength = 2;
+
     /// <summary>Length of the autoref marker prefix written into the rewritten link target.</summary>
     private const int AutorefMarkerPrefixLength = 9;
 
@@ -47,10 +50,13 @@ public static class AutorefsReferenceLinkPreprocessor
 
         // The fence-toggle path triggers on '\n' so a fence on the first line of the
         // file isn't seen by the per-byte scan. Detect a leading fence up-front.
-        if (TryAdvancePastFenceMarker(source, ref state.Cursor))
+        var cursor = state.Cursor;
+        if (TryAdvancePastFenceMarker(source, ref cursor))
         {
             state.InFence = true;
         }
+
+        state.Cursor = cursor;
 
         while (state.Cursor < source.Length)
         {
@@ -75,10 +81,13 @@ public static class AutorefsReferenceLinkPreprocessor
         if (b is (byte)'\n')
         {
             state.Cursor++;
-            if (TryAdvancePastFenceMarker(source, ref state.Cursor))
+            var cursor = state.Cursor;
+            if (TryAdvancePastFenceMarker(source, ref cursor))
             {
                 state.InFence = !state.InFence;
             }
+
+            state.Cursor = cursor;
 
             return;
         }
@@ -93,7 +102,9 @@ public static class AutorefsReferenceLinkPreprocessor
         {
             case (byte)'`':
                 {
-                    SkipInlineCodeSpan(source, ref state.Cursor);
+                    var cursor = state.Cursor;
+                    SkipInlineCodeSpan(source, ref cursor);
+                    state.Cursor = cursor;
                     return;
                 }
 
@@ -152,7 +163,7 @@ public static class AutorefsReferenceLinkPreprocessor
     /// <returns>Case-sensitive set of defined label byte sequences.</returns>
     private static HashSet<string> CollectLinkDefinitions(ReadOnlySpan<byte> source)
     {
-        HashSet<string> labels = new(StringComparer.Ordinal);
+        HashSet<string> labels = [with(StringComparer.Ordinal)];
         var cursor = 0;
         while (cursor < source.Length)
         {
@@ -181,7 +192,7 @@ public static class AutorefsReferenceLinkPreprocessor
                 continue;
             }
 
-            labels.Add(Encoding.UTF8.GetString(source.Slice(labelStart, labelEnd - labelStart)));
+            _ = labels.Add(Encoding.UTF8.GetString(source.Slice(labelStart, labelEnd - labelStart)));
             cursor = AdvanceToNextLineStart(source, afterLabel);
         }
 
@@ -202,10 +213,7 @@ public static class AutorefsReferenceLinkPreprocessor
         return cursor < source.Length ? cursor + 1 : cursor;
     }
 
-    /// <summary>
-    /// Returns true when the bytes between <paramref name="idStart"/> and <paramref name="idEnd"/>
-    /// match a label declared by a CommonMark <c>[label]: url</c> definition.
-    /// </summary>
+    /// <summary>Returns true when the bytes between <paramref name="idStart"/> and <paramref name="idEnd"/> match a label declared by a CommonMark <c>[label]: url</c> definition.</summary>
     /// <param name="defined">Definition set.</param>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="idStart">Inclusive start of the candidate label.</param>
@@ -292,19 +300,23 @@ public static class AutorefsReferenceLinkPreprocessor
     {
         var labelLen = labelEnd - labelStart;
         var idLen = idEnd - idStart;
-        var totalLen = 1 + labelLen + 2 + AutorefMarkerPrefixLength + idLen + 1;
+        var totalLen = 1 + labelLen + LinkSeparatorLength + AutorefMarkerPrefixLength + idLen + 1;
         var dst = writer.GetSpan(totalLen);
         var pos = 0;
-        dst[pos++] = (byte)'[';
+        dst[pos] = (byte)'[';
+        pos++;
         source.Slice(labelStart, labelLen).CopyTo(dst[pos..]);
         pos += labelLen;
-        dst[pos++] = (byte)']';
-        dst[pos++] = (byte)'(';
+        dst[pos] = (byte)']';
+        pos++;
+        dst[pos] = (byte)'(';
+        pos++;
         AutorefPrefix.CopyTo(dst[pos..]);
         pos += AutorefMarkerPrefixLength;
         source.Slice(idStart, idLen).CopyTo(dst[pos..]);
         pos += idLen;
-        dst[pos++] = (byte)')';
+        dst[pos] = (byte)')';
+        pos++;
         writer.Advance(pos);
     }
 
@@ -415,13 +427,13 @@ public static class AutorefsReferenceLinkPreprocessor
     /// <summary>Cursor, emit-pointer, and fence flag threaded through the rewriter loop.</summary>
     private record struct ScanState
     {
-        /// <summary>Current scan offset.</summary>
-        public int Cursor;
+        /// <summary>Gets or sets the current scan offset.</summary>
+        public int Cursor { get; set; }
 
-        /// <summary>Offset up to which the verbatim run has been flushed to the sink.</summary>
-        public int LastEmitted;
+        /// <summary>Gets or sets the offset through which verbatim bytes have been emitted.</summary>
+        public int LastEmitted { get; set; }
 
-        /// <summary>True while inside a fenced code block.</summary>
-        public bool InFence;
+        /// <summary>Gets or sets a value indicating whether the cursor is inside a fenced code block.</summary>
+        public bool InFence { get; set; }
     }
 }

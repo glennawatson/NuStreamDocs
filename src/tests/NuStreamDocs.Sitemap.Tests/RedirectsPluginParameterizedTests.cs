@@ -7,6 +7,9 @@ namespace NuStreamDocs.Sitemap.Tests;
 /// <summary>Parameterized frontmatter-shape tests for RedirectsPlugin.DiscoverAsync.</summary>
 public class RedirectsPluginParameterizedTests
 {
+    /// <summary>Gets the expected plugin name.</summary>
+    private static ReadOnlySpan<byte> PluginName => "redirects"u8;
+
     /// <summary>Each frontmatter shape that declares an aliases list registers the entries.</summary>
     /// <param name="frontmatter">Frontmatter (between the <c>---</c> fences).</param>
     /// <returns>Async test.</returns>
@@ -24,7 +27,7 @@ public class RedirectsPluginParameterizedTests
     {
         using ScratchDir input = new();
         using ScratchDir output = new();
-        Directory.CreateDirectory(Path.Combine(input.Root, "guide"));
+        _ = Directory.CreateDirectory(Path.Combine(input.Root, "guide"));
         await File.WriteAllTextAsync(Path.Combine(input.Root, "guide", "intro.md"), $"---\n{frontmatter}---\n# body");
 
         RedirectsPlugin plugin = new();
@@ -55,11 +58,11 @@ public class RedirectsPluginParameterizedTests
     [Test]
     public async Task CtorOverloads()
     {
-        await Assert.That(new RedirectsPlugin().Name.SequenceEqual("redirects"u8)).IsTrue();
-        await Assert.That(new RedirectsPlugin(("a.html", "/b.html")).Name.SequenceEqual("redirects"u8)).IsTrue();
+        await Assert.That(new RedirectsPlugin().Name.SequenceEqual(PluginName)).IsTrue();
+        await Assert.That(new RedirectsPlugin(("a.html", "/b.html")).Name.SequenceEqual(PluginName)).IsTrue();
         await Assert
             .That(new RedirectsPlugin(RedirectsOptions.Default, [("a.html", "/b.html")]).Name.SequenceEqual(
-                "redirects"u8)).IsTrue();
+                PluginName)).IsTrue();
     }
 
     /// <summary>Disposable scratch directory.</summary>
@@ -68,8 +71,8 @@ public class RedirectsPluginParameterizedTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-rdp-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-rdp-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch directory.</summary>

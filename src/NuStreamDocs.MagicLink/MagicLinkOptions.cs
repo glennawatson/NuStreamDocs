@@ -9,6 +9,7 @@ namespace NuStreamDocs.MagicLink;
 /// <c>@user</c> shortrefs are opt-in via <see cref="DefaultRepo"/> /
 /// <see cref="ExpandUserMentions"/>.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("MagicLinkOptions: {DefaultRepo}")]
 public sealed record MagicLinkOptions
 {
     /// <summary>

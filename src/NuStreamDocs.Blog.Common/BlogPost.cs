@@ -6,9 +6,7 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Blog.Common;
 
-/// <summary>
-/// Parsed metadata for one blog post.
-/// </summary>
+/// <summary>Parsed metadata for one blog post.</summary>
 /// <param name="RelativePath">Source-relative path of the markdown file (forward-slashed).</param>
 /// <param name="RelativeUrlUtf8">Docs-root-relative <c>.md</c> path bytes.</param>
 /// <param name="Slug">URL-safe slug derived from the filename (after the date prefix), as UTF-8 bytes.</param>
@@ -19,6 +17,7 @@ namespace NuStreamDocs.Blog.Common;
 /// <param name="Published">Publication date from <c>Published:</c> frontmatter, or <see cref="DateOnly.MinValue"/> when absent.</param>
 /// <param name="Tags">Tags pulled from <c>Tags:</c> frontmatter (single value or comma/space separated), each as UTF-8 bytes.</param>
 /// <param name="Excerpt">Plain-text excerpt — first paragraph of the body, used for index listings; empty when absent.</param>
+[System.Diagnostics.DebuggerDisplay("BlogPost: {ToString(),nq}")]
 public sealed record BlogPost(
     FilePath RelativePath,
     byte[] RelativeUrlUtf8,

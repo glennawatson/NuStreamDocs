@@ -16,6 +16,7 @@ internal sealed class CompositeAssemblySource(IAssemblySource[] sources) : IAsse
     private readonly IAssemblySource[] _sources = sources;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
     /// <inheritdoc/>

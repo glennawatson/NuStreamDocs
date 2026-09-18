@@ -13,6 +13,9 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <summary>Builds an <see cref="IAssemblySource"/> from one or more <see cref="CSharpApiGeneratorInput"/> shapes.</summary>
 internal static class AssemblySourceFactory
 {
+    /// <summary>Initial capacity for an inline package manifest.</summary>
+    private const int ManifestBufferCapacity = 256;
+
     /// <summary>Synthesized-manifest scratch directory name.</summary>
     private const string SynthesizedManifestDirectory = ".csharp-apigen-manifest";
 
@@ -23,7 +26,7 @@ internal static class AssemblySourceFactory
     /// <param name="inputs">Caller-supplied input shapes.</param>
     /// <param name="logger">Logger handed to NuGet-driven sources.</param>
     /// <returns>The resolved source.</returns>
-    public static IAssemblySource Create(CSharpApiGeneratorInput[] inputs, ILogger logger)
+    internal static IAssemblySource Create(CSharpApiGeneratorInput[] inputs, ILogger logger)
     {
         if (inputs.Length is 1)
         {
@@ -43,6 +46,7 @@ internal static class AssemblySourceFactory
     /// <param name="input">Input shape.</param>
     /// <param name="logger">Logger.</param>
     /// <returns>The resolved source.</returns>
+    /// <exception cref="ArgumentException">The input shape is not supported.</exception>
     internal static IAssemblySource CreateOne(CSharpApiGeneratorInput input, ILogger logger) => input switch
     {
         NuGetManifestInput m => new NuGetAssemblySource(m.RootDirectory, m.ApiCachePath, logger),
@@ -61,7 +65,7 @@ internal static class AssemblySourceFactory
     internal static NuGetAssemblySource CreateFromPackages(NuGetPackagesInput input, ILogger logger)
     {
         var scratch = Path.Combine(input.ApiCachePath, SynthesizedManifestDirectory);
-        Directory.CreateDirectory(scratch);
+        _ = Directory.CreateDirectory(scratch);
         var manifestPath = Path.Combine(scratch, ManifestFileName);
         File.WriteAllBytes(manifestPath, BuildManifestJson(input));
         return new(scratch, input.ApiCachePath, logger);
@@ -72,7 +76,7 @@ internal static class AssemblySourceFactory
     /// <returns>UTF-8 manifest bytes.</returns>
     internal static byte[] BuildManifestJson(NuGetPackagesInput input)
     {
-        ArrayBufferWriter<byte> sink = new(256);
+        ArrayBufferWriter<byte> sink = new(ManifestBufferCapacity);
         using (Utf8JsonWriter writer = new(sink, new() { Indented = false }))
         {
             writer.WriteStartObject();

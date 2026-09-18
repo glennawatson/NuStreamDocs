@@ -12,6 +12,7 @@ public static class StaticAssetComposer
     /// <summary>Writes every provider's assets under <paramref name="outputRoot"/>.</summary>
     /// <param name="plugins">Registered plugins.</param>
     /// <param name="outputRoot">Absolute output root.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>outputRoot.IsEmpty</c>.</exception>
     public static void WriteAll(IPlugin[] plugins, in DirectoryPath outputRoot)
     {
         if (outputRoot.IsEmpty)
@@ -33,7 +34,7 @@ public static class StaticAssetComposer
                 var target = Path.Combine(
                     outputRoot.Value,
                     relativePath.Value.Replace('/', Path.DirectorySeparatorChar));
-                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                _ = Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.WriteAllBytes(target, bytes);
             }
         }

@@ -12,6 +12,7 @@ internal sealed class NavTree
 
     /// <summary>Initializes a new instance of the <see cref="NavTree"/> class.</summary>
     /// <param name="nodes">BFS-ordered nodes; root must be at index 0.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>nodes.Length is 0</c>.</exception>
     public NavTree(NavTreeNode[] nodes)
     {
         if (nodes.Length is 0)

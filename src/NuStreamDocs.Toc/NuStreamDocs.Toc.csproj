@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Toc</PackageId>
     <Description>Add a per-page table of contents and clickable permalink anchors next to each heading in your NuStreamDocs documentation.</Description>
     <RootNamespace>NuStreamDocs.Toc</RootNamespace>

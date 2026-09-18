@@ -11,6 +11,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Parameterized inputs covering BlockScanner heading, list, and fence variants.</summary>
 public class BlockScannerParameterizedTests
 {
+    /// <summary>Fence Boundary Count used by the test cases.</summary>
+    private const int FenceBoundaryCount = 2;
+
     /// <summary>Each ATX heading level produces an AtxHeading block with the right level.</summary>
     /// <param name="hashes">ATX prefix.</param>
     /// <param name="expectedLevel">Expected level recorded on the block.</param>
@@ -72,10 +75,24 @@ public class BlockScannerParameterizedTests
                         content++;
                         break;
                     }
+
+                case BlockKind.None:
+                case BlockKind.Blank:
+                case BlockKind.AtxHeading:
+                case BlockKind.SetextHeading:
+                case BlockKind.ThematicBreak:
+                case BlockKind.IndentedCode:
+                case BlockKind.BlockQuote:
+                case BlockKind.ListItem:
+                case BlockKind.ListItemContent:
+                case BlockKind.Paragraph:
+                case BlockKind.HtmlBlock:
+                case BlockKind.HtmlBlockContent:
+                    break;
             }
         }
 
-        await Assert.That(fences).IsEqualTo(2);
+        await Assert.That(fences).IsEqualTo(FenceBoundaryCount);
         await Assert.That(content).IsEqualTo(1);
     }
 
@@ -99,7 +116,7 @@ public class BlockScannerParameterizedTests
             }
         }
 
-        await Assert.That(fences).IsEqualTo(2);
+        await Assert.That(fences).IsEqualTo(FenceBoundaryCount);
     }
 
     /// <summary>An ATX line with too many hashes degrades to a paragraph rather than a heading.</summary>
@@ -124,7 +141,7 @@ public class BlockScannerParameterizedTests
     private static BlockSpan[] Scan(string markdown)
     {
         ArrayBufferWriter<BlockSpan> sink = new();
-        BlockScanner.Scan(Encoding.UTF8.GetBytes(markdown), sink);
+        _ = BlockScanner.Scan(Encoding.UTF8.GetBytes(markdown), sink);
         return [.. sink.WrittenSpan];
     }
 }

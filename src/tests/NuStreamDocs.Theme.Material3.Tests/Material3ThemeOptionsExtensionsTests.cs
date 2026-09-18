@@ -7,6 +7,18 @@ namespace NuStreamDocs.Theme.Material3.Tests;
 /// <summary>Behavior tests for <c>Material3ThemeOptionsExtensions</c>.</summary>
 public class Material3ThemeOptionsExtensionsTests
 {
+    /// <summary>Gets the fixture CDN root.</summary>
+    private static ReadOnlySpan<byte> CdnRootBytes => "https://cdn.md3"u8;
+
+    /// <summary>Gets the fixture asset root.</summary>
+    private static ReadOnlySpan<byte> AssetRootBytes => "/assets"u8;
+
+    /// <summary>Gets the repository edit path.</summary>
+    private static ReadOnlySpan<byte> EditPrefixBytes => "edit/main/docs"u8;
+
+    /// <summary>Gets the fixture site URL.</summary>
+    private static ReadOnlySpan<byte> SiteUrlBytes => "https://md3.example"u8;
+
     /// <summary>String overloads encode to UTF-8 once at the boundary.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,13 +35,13 @@ public class Material3ThemeOptionsExtensionsTests
             .WithCdnRoot("https://cdn.md3");
 
         await Assert.That(updated.SiteName.AsSpan().SequenceEqual("MD3 Site"u8)).IsTrue();
-        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual("https://md3.example"u8)).IsTrue();
+        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual(SiteUrlBytes)).IsTrue();
         await Assert.That(updated.Language.AsSpan().SequenceEqual("en"u8)).IsTrue();
         await Assert.That(updated.Copyright.AsSpan().SequenceEqual("(c)"u8)).IsTrue();
         await Assert.That(updated.RepoUrl.AsSpan().SequenceEqual("https://github.com/owner/repo"u8)).IsTrue();
-        await Assert.That(updated.EditUri.AsSpan().SequenceEqual("edit/main/docs"u8)).IsTrue();
-        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual("/assets"u8)).IsTrue();
-        await Assert.That(updated.CdnRoot.AsSpan().SequenceEqual("https://cdn.md3"u8)).IsTrue();
+        await Assert.That(updated.EditUri.AsSpan().SequenceEqual(EditPrefixBytes)).IsTrue();
+        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual(AssetRootBytes)).IsTrue();
+        await Assert.That(updated.CdnRoot.AsSpan().SequenceEqual(CdnRootBytes)).IsTrue();
     }
 
     /// <summary>Byte overloads store the supplied array verbatim.</summary>
@@ -51,7 +63,7 @@ public class Material3ThemeOptionsExtensionsTests
         await Assert.That(d.SiteName.Length).IsEqualTo(0);
         await Assert.That(d.SiteUrl.Length).IsEqualTo(0);
         await Assert.That(d.Language.AsSpan().SequenceEqual("en"u8)).IsTrue();
-        await Assert.That(d.EmbeddedAssetRoot.AsSpan().SequenceEqual("/assets"u8)).IsTrue();
+        await Assert.That(d.EmbeddedAssetRoot.AsSpan().SequenceEqual(AssetRootBytes)).IsTrue();
         await Assert.That(d.CdnRoot.Length).IsEqualTo(0);
     }
 
@@ -61,7 +73,7 @@ public class Material3ThemeOptionsExtensionsTests
     public async Task ResolveAssetRootSwitchesByAssetSource()
     {
         var embedded = Material3ThemeOptions.Default;
-        await Assert.That(embedded.ResolveAssetRoot().SequenceEqual("/assets"u8)).IsTrue();
+        await Assert.That(embedded.ResolveAssetRoot().SequenceEqual(AssetRootBytes)).IsTrue();
 
         var cdn = embedded.WithCdnRoot("https://cdn.md3.example") with { AssetSource = Material3AssetSource.Cdn };
         await Assert.That(cdn.ResolveAssetRoot().SequenceEqual("https://cdn.md3.example"u8)).IsTrue();
@@ -74,21 +86,21 @@ public class Material3ThemeOptionsExtensionsTests
     {
         var updated = Material3ThemeOptions.Default
             .WithSiteName("MD3"u8)
-            .WithSiteUrl("https://md3.example"u8)
+            .WithSiteUrl(SiteUrlBytes)
             .WithLanguage("en"u8)
             .WithCopyright("(c)"u8)
             .WithRepoUrl("https://github.com/o/r"u8)
-            .WithEditUri("edit/main/docs"u8)
-            .WithEmbeddedAssetRoot("/assets"u8)
-            .WithCdnRoot("https://cdn.md3"u8);
+            .WithEditUri(EditPrefixBytes)
+            .WithEmbeddedAssetRoot(AssetRootBytes)
+            .WithCdnRoot(CdnRootBytes);
 
         await Assert.That(updated.SiteName.AsSpan().SequenceEqual("MD3"u8)).IsTrue();
-        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual("https://md3.example"u8)).IsTrue();
+        await Assert.That(updated.SiteUrl.AsSpan().SequenceEqual(SiteUrlBytes)).IsTrue();
         await Assert.That(updated.Language.AsSpan().SequenceEqual("en"u8)).IsTrue();
         await Assert.That(updated.Copyright.AsSpan().SequenceEqual("(c)"u8)).IsTrue();
         await Assert.That(updated.RepoUrl.AsSpan().SequenceEqual("https://github.com/o/r"u8)).IsTrue();
-        await Assert.That(updated.EditUri.AsSpan().SequenceEqual("edit/main/docs"u8)).IsTrue();
-        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual("/assets"u8)).IsTrue();
-        await Assert.That(updated.CdnRoot.AsSpan().SequenceEqual("https://cdn.md3"u8)).IsTrue();
+        await Assert.That(updated.EditUri.AsSpan().SequenceEqual(EditPrefixBytes)).IsTrue();
+        await Assert.That(updated.EmbeddedAssetRoot.AsSpan().SequenceEqual(AssetRootBytes)).IsTrue();
+        await Assert.That(updated.CdnRoot.AsSpan().SequenceEqual(CdnRootBytes)).IsTrue();
     }
 }

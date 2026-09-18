@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Functional;
@@ -223,7 +224,8 @@ internal static class FSharpRules
 
     /// <summary>Builds the F# root-state rule list.</summary>
     /// <returns>Ordered rule list.</returns>
-    public static LexerRule[] Build() =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static LexerRule[] Build() =>
         BuildRules();
 
     /// <summary>Constructs the F# rule list — order matters: longer/more-specific rules precede their substring counterparts.</summary>
@@ -234,34 +236,29 @@ internal static class FSharpRules
         var i = 0;
 
         // Whitespace including newlines — F# scripts span multiple lines.
-        rules[i++] =
-            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange)
-            {
-                FirstBytes = WhitespaceFirst
-            };
+        rules[i] =
+            new(TokenMatchers.MatchAsciiWhitespace, TokenClass.Whitespace, LexerRule.NoStateChange) { FirstBytes = WhitespaceFirst, };
+        i++;
 
         AppendCommentAndPreprocessorRules(rules, ref i);
 
         // """..."""B? triple-quoted string — must precede regular and verbatim strings.
-        rules[i++] =
-            new(MatchTripleQuotedString, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.DoubleQuoteFirst
-            };
+        rules[i] =
+            new(MatchTripleQuotedString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.DoubleQuoteFirst, };
+        i++;
 
         // @"..." verbatim string with "" as embedded-quote escape.
-        rules[i++] =
-            new(LanguageCommon.MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.AtFirst
-            };
+        rules[i] =
+            new(LanguageCommon.MatchVerbatimString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.AtFirst, };
+        i++;
 
         // "..."B? regular double-quoted string with backslash escapes.
-        rules[i++] =
+        rules[i] =
             new(MatchRegularString, TokenClass.StringDouble, LexerRule.NoStateChange) { FirstBytes = StringFirst };
+        i++;
 
         // 'x' or '\x' single-character literal.
-        rules[i++] = new(
+        rules[i] = new(
             static slice => slice switch
             {
                 [(byte)'\'', (byte)'\\', _, (byte)'\'', ..] => EscapedCharLiteralLength,
@@ -271,40 +268,45 @@ internal static class FSharpRules
             TokenClass.StringSingle,
             LexerRule.NoStateChange)
         { FirstBytes = LanguageCommon.SingleQuoteFirst };
+        i++;
 
         AppendNumberRules(rules, ref i);
 
         // Word operator (and / or / not) — must precede the keyword and identifier rules.
-        rules[i++] =
+        rules[i] =
             new(
                     static slice => TokenMatchers.MatchKeyword(slice, WordOperators),
                     TokenClass.Operator,
                     LexerRule.NoStateChange)
             { FirstBytes = WordOperatorFirst };
+        i++;
 
         // true / false / null literal — must precede the general keyword and primitive-type rules.
-        rules[i++] =
+        rules[i] =
             new(
                     static slice => TokenMatchers.MatchKeyword(slice, KeywordConstants),
                     TokenClass.KeywordConstant,
                     LexerRule.NoStateChange)
             { FirstBytes = KeywordConstantFirst };
+        i++;
 
         // Built-in primitive type keyword (int / string / bool / list / ...).
-        rules[i++] =
+        rules[i] =
             new(
                     static slice => TokenMatchers.MatchKeyword(slice, PrimitiveTypes),
                     TokenClass.KeywordType,
                     LexerRule.NoStateChange)
             { FirstBytes = PrimitiveTypeFirst };
+        i++;
 
         // General keyword (let / fun / match / module / ... + reserved words).
-        rules[i++] =
+        rules[i] =
             new(
                     static slice => TokenMatchers.MatchKeyword(slice, Keywords),
                     TokenClass.Keyword,
                     LexerRule.NoStateChange)
             { FirstBytes = KeywordFirst };
+        i++;
 
         return AppendIdentifierAndPunctuation(rules, i);
     }
@@ -315,32 +317,29 @@ internal static class FSharpRules
     private static void AppendCommentAndPreprocessorRules(LexerRule[] rules, ref int i)
     {
         // /// xml-doc-comment to end-of-line — must precede the line-comment rule.
-        rules[i++] = new(
+        rules[i] = new(
             static slice => slice is [(byte)'/', (byte)'/', (byte)'/', ..]
                 ? DocCommentPrefixLength + TokenMatchers.LineLength(slice[DocCommentPrefixLength..])
                 : 0,
             TokenClass.CommentSpecial,
             LexerRule.NoStateChange)
         { FirstBytes = LanguageCommon.SlashFirst };
+        i++;
 
         // // line comment to end-of-line.
-        rules[i++] =
-            new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange)
-            {
-                FirstBytes = LanguageCommon.SlashFirst
-            };
+        rules[i] =
+            new(LanguageCommon.LineComment, TokenClass.CommentSingle, LexerRule.NoStateChange) { FirstBytes = LanguageCommon.SlashFirst, };
+        i++;
 
         // (* block comment *) — flat match (nesting degrades gracefully).
-        rules[i++] =
+        rules[i] =
             new(MatchBlockComment, TokenClass.CommentMulti, LexerRule.NoStateChange) { FirstBytes = ParenFirst };
+        i++;
 
         // # preprocessor directive — line-anchored (#if / #endif / #else / #line / #nowarn / #light).
-        rules[i++] =
-            new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange)
-            {
-                FirstBytes = PreprocessorFirst,
-                RequiresLineStart = true
-            };
+        rules[i] =
+            new(LanguageCommon.MatchHashPreprocessor, TokenClass.CommentPreproc, LexerRule.NoStateChange) { FirstBytes = PreprocessorFirst, RequiresLineStart = true, };
+        i++;
     }
 
     /// <summary>Appends the hex / float / integer literal rules to <paramref name="rules"/>, advancing <paramref name="i"/>.</summary>
@@ -349,26 +348,29 @@ internal static class FSharpRules
     private static void AppendNumberRules(LexerRule[] rules, ref int i)
     {
         // 0x[hex_]+[suffix]* hex integer literal — must precede the integer rule.
-        rules[i++] = new(
+        rules[i] = new(
             static slice => TokenMatchers.MatchAsciiHexLiteral(slice, HexBody, IntegerSuffix),
             TokenClass.NumberHex,
             LexerRule.NoStateChange)
         { FirstBytes = LanguageCommon.HexFirst };
+        i++;
 
         // [0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fFmM]? float literal — must precede the integer rule.
-        rules[i++] =
+        rules[i] =
             new(
                     static slice => LanguageCommon.MatchFloatWithOptionalSuffix(slice, FloatSuffix),
                     TokenClass.NumberFloat,
                     LexerRule.NoStateChange)
             { FirstBytes = LanguageCommon.DigitFirst };
+        i++;
 
         // [0-9_]+[suffix]* integer literal.
-        rules[i++] = new(
+        rules[i] = new(
             static slice => TokenMatchers.MatchRunWithSuffix(slice, LanguageCommon.IntegerFirst, IntegerSuffix),
             TokenClass.NumberInteger,
             LexerRule.NoStateChange)
         { FirstBytes = LanguageCommon.IntegerFirst };
+        i++;
     }
 
     /// <summary>Appends the identifier, operator, and punctuation rules to <paramref name="rules"/> starting at <paramref name="written"/>.</summary>
@@ -382,24 +384,27 @@ internal static class FSharpRules
     /// </remarks>
     private static LexerRule[] AppendIdentifierAndPunctuation(LexerRule[] rules, int written)
     {
-        var grown = new LexerRule[written + 3];
+        const int TrailingRuleCount = 3;
+        var grown = new LexerRule[written + TrailingRuleCount];
         Array.Copy(rules, 0, grown, 0, written);
         var i = written;
 
         // [A-Za-z_][A-Za-z0-9_']* identifier — F# allows trailing apostrophes (`x'`).
-        grown[i++] = new(
+        grown[i] = new(
             static slice =>
                 TokenMatchers.MatchIdentifier(slice, TokenMatchers.AsciiIdentifierStart, FSharpIdentifierContinue),
             TokenClass.Name,
             LexerRule.NoStateChange)
         { FirstBytes = TokenMatchers.AsciiIdentifierStart };
+        i++;
 
         // Operator alternation (longest-first).
-        grown[i++] = new(
+        grown[i] = new(
             static slice => TokenMatchers.MatchLongestLiteral(slice, Operators),
             TokenClass.Operator,
             LexerRule.NoStateChange)
         { FirstBytes = OperatorFirst };
+        i++;
 
         // F# punctuation: ( ) { } , . — semicolons are operators in F# (`;;` is the FSI terminator).
         grown[i] = new(
@@ -460,11 +465,6 @@ internal static class FSharpRules
             return 0;
         }
 
-        if (matched < slice.Length && slice[matched] is (byte)'B')
-        {
-            return matched + 1;
-        }
-
-        return matched;
+        return matched < slice.Length && slice[matched] is (byte)'B' ? matched + 1 : matched;
     }
 }

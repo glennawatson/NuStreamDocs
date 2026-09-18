@@ -14,7 +14,7 @@ public class BlogPostScannerBranchCoverageTests
     [Test]
     public async Task MissingDirectoryReturnsEmpty()
     {
-        var path = Path.Combine(Path.GetTempPath(), "smkd-bps-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(Path.GetTempPath(), $"smkd-bps-{Guid.NewGuid():N}");
         await Assert.That(BlogPostScanner.Scan(path, path).Length).IsEqualTo(0);
     }
 
@@ -35,6 +35,8 @@ public class BlogPostScannerBranchCoverageTests
     [Test]
     public async Task ScanProducesPosts()
     {
+        const int ExpectedPostCount = 2;
+        const int ExpectedTagCount = 2;
         using ScratchDir temp = new();
         await File.WriteAllTextAsync(
             Path.Combine(temp.Root, "2026-01-15-hello-world.md"),
@@ -44,14 +46,14 @@ public class BlogPostScannerBranchCoverageTests
             "Just a body, no frontmatter.\n");
 
         var posts = BlogPostScanner.Scan(temp.Root, temp.Root);
-        await Assert.That(posts.Length).IsEqualTo(2);
+        await Assert.That(posts.Length).IsEqualTo(ExpectedPostCount);
 
         // Newest first: 2026-02-10 > 2026-01-20
         await Assert.That(posts[0].Slug.AsSpan().SequenceEqual("no-frontmatter"u8)).IsTrue();
         await Assert.That(posts[0].Title.AsSpan().SequenceEqual("No Frontmatter"u8)).IsTrue();
         await Assert.That(posts[1].Title.AsSpan().SequenceEqual("Custom Title"u8)).IsTrue();
         await Assert.That(posts[1].Author.AsSpan().SequenceEqual("Alice"u8)).IsTrue();
-        await Assert.That(posts[1].Tags.Length).IsEqualTo(2);
+        await Assert.That(posts[1].Tags.Length).IsEqualTo(ExpectedTagCount);
     }
 
     /// <summary>Disposable scratch directory.</summary>
@@ -60,8 +62,8 @@ public class BlogPostScannerBranchCoverageTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-bps-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-bps-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

@@ -3,11 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Bibliography.Model;
 
 namespace NuStreamDocs.Bibliography.Styles.Aglc4;
 
 /// <summary>Australian Guide to Legal Citation (4th ed) formatting rules.</summary>
+[System.Diagnostics.DebuggerDisplay("Aglc4Style: {Name}")]
 public sealed class Aglc4Style : ICitationStyle
 {
     /// <summary>Gets the singleton instance.</summary>
@@ -42,6 +44,7 @@ public sealed class Aglc4Style : ICitationStyle
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteBibliography(CitationEntry entry, IBufferWriter<byte> writer) => WriteCore(entry, writer);
 
     /// <summary>Writes the bare citation (no locator) per AGLC4 rules for the entry's type.</summary>
@@ -81,14 +84,9 @@ public sealed class Aglc4Style : ICitationStyle
     /// <summary>Selects the right print-style formatter for the entry type, or <c>null</c> when none applies.</summary>
     /// <param name="type">Entry type.</param>
     /// <returns>Formatter delegate or null.</returns>
-    private static Action<CitationEntry, IBufferWriter<byte>>? SelectPrintFormatter(EntryType type)
-    {
-        if (IsArticleType(type))
-        {
-            return Aglc4Articles.Write;
-        }
-
-        return type switch
+    private static Action<CitationEntry, IBufferWriter<byte>>? SelectPrintFormatter(EntryType type) => IsArticleType(type)
+        ? Aglc4Articles.Write
+        : type switch
         {
             EntryType.Book or EntryType.Chapter => Aglc4Books.Write,
             EntryType.Report => Aglc4Reports.Write,
@@ -96,7 +94,6 @@ public sealed class Aglc4Style : ICitationStyle
             EntryType.Webpage => Aglc4Webpages.Write,
             _ => null
         };
-    }
 
     /// <summary>True for the AGLC4 article entry types (journal / magazine / newspaper / generic article).</summary>
     /// <param name="type">Entry type.</param>

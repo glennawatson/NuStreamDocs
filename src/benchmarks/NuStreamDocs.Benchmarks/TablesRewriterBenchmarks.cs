@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.MarkdownExtensions.Tables;
@@ -10,6 +11,7 @@ using NuStreamDocs.MarkdownExtensions.Tables;
 namespace NuStreamDocs.Benchmarks;
 
 /// <summary>Direct micro-benchmarks for <c>TablesRewriter.Rewrite</c>; isolates the parse + emit hot path from the plugin context wrapper.</summary>
+[DebuggerDisplay("TablesRewriterBenchmarks: small={_small}, wide={_wide}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class TablesRewriterBenchmarks
@@ -88,28 +90,28 @@ public class TablesRewriterBenchmarks
         StringBuilder sb = new();
         for (var i = 0; i < columns; i++)
         {
-            sb.Append("| h").Append(i).Append(' ');
+            _ = sb.Append("| h").Append(i).Append(' ');
         }
 
-        sb.Append("|\n");
+        _ = sb.Append("|\n");
         for (var i = 0; i < columns; i++)
         {
-            sb.Append("| --- ");
+            _ = sb.Append("| --- ");
         }
 
-        sb.Append("|\n");
+        _ = sb.Append("|\n");
         for (var i = 0; i < columns; i++)
         {
-            sb.Append("| a").Append(i).Append(' ');
+            _ = sb.Append("| a").Append(i).Append(' ');
         }
 
-        sb.Append("|\n");
+        _ = sb.Append("|\n");
         for (var i = 0; i < columns; i++)
         {
-            sb.Append("| b").Append(i).Append(' ');
+            _ = sb.Append("| b").Append(i).Append(' ');
         }
 
-        sb.Append("|\n\n");
+        _ = sb.Append("|\n\n");
         return sb.ToString();
     }
 
@@ -121,10 +123,10 @@ public class TablesRewriterBenchmarks
         StringBuilder sb = new("| h1 | h2 | h3 |\n| --- | --- | --- |\n");
         for (var i = 0; i < rows; i++)
         {
-            sb.Append("| r").Append(i).Append("a | r").Append(i).Append("b | r").Append(i).Append("c |\n");
+            _ = sb.Append("| r").Append(i).Append("a | r").Append(i).Append("b | r").Append(i).Append("c |\n");
         }
 
-        sb.Append('\n');
+        _ = sb.Append('\n');
         return sb.ToString();
     }
 
@@ -137,7 +139,7 @@ public class TablesRewriterBenchmarks
         StringBuilder sb = new(block.Length * count);
         for (var i = 0; i < count; i++)
         {
-            sb.Append(block);
+            _ = sb.Append(block);
         }
 
         return Encoding.UTF8.GetBytes(sb.ToString());

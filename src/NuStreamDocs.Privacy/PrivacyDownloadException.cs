@@ -7,6 +7,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Privacy;
 
 /// <summary>Thrown when one or more external assets fail to download and <see cref="PrivacyOptions.FailOnError"/> is set.</summary>
+[System.Diagnostics.DebuggerDisplay("PrivacyDownloadException: {FailedUrls}")]
 public sealed class PrivacyDownloadException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="PrivacyDownloadException"/> class.</summary>

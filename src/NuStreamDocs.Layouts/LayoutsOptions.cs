@@ -9,6 +9,7 @@ namespace NuStreamDocs.Layouts;
 /// <summary>Configuration for <see cref="LayoutsPlugin"/>.</summary>
 /// <param name="TemplateDirectory">Directory the plugin reads layout files from when a page's frontmatter requests one via <c>template:</c>.</param>
 /// <param name="MaxIncludeDepth">Upper bound on nested <c>{% include %}</c> / <c>{% extends %}</c> expansion before the renderer stops recursing and logs a warning.</param>
+[System.Diagnostics.DebuggerDisplay("LayoutsOptions: {ToString(),nq}")]
 public sealed record LayoutsOptions(
     DirectoryPath TemplateDirectory,
     int MaxIncludeDepth)

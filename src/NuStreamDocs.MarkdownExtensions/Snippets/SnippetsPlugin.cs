@@ -2,12 +2,14 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Snippets;
 
 /// <summary>Snippets plugin — expands <c>--8&lt;-- "path"</c> lines into the contents of the referenced file, resolving paths against the configured base directories in order.</summary>
+[System.Diagnostics.DebuggerDisplay("SnippetsPlugin: {Name}")]
 public sealed class SnippetsPlugin : IPagePreRenderPlugin
 {
     /// <summary>Resolution roots in lookup order.</summary>
@@ -28,6 +30,7 @@ public sealed class SnippetsPlugin : IPagePreRenderPlugin
         source.IndexOf("--8<--"u8) >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         SnippetsRewriter.Rewrite(context.Source, context.Output, _basePaths);
 }

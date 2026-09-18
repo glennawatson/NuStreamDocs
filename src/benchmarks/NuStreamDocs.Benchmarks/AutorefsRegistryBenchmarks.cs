@@ -3,10 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Globalization;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Autorefs;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Benchmarks;
 
@@ -22,6 +23,7 @@ namespace NuStreamDocs.Benchmarks;
 /// a concatenated string per call, so isolating that cost from the
 /// dictionary-insert and contention costs is what we want here.
 /// </remarks>
+[DebuggerDisplay("AutorefsRegistryBenchmarks: EntryCount={EntryCount}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class AutorefsRegistryBenchmarks
@@ -68,11 +70,8 @@ public class AutorefsRegistryBenchmarks
         _pageUrlBytes = new byte[EntryCount][];
         for (var i = 0; i < EntryCount; i++)
         {
-            var idx = i.ToString(CultureInfo.InvariantCulture);
-            _idBytes[i] = Encoding.UTF8.GetBytes("section-" + idx);
-            _pageUrlBytes[i] =
-                Encoding.UTF8.GetBytes("guide/page-" + (i / HeadingsPerPage).ToString(CultureInfo.InvariantCulture) +
-                                       ".html");
+            _idBytes[i] = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("section-", i));
+            _pageUrlBytes[i] = Encoding.UTF8.GetBytes(StringCompose.ConcatInt("guide/page-", i / HeadingsPerPage, ".html"));
         }
 
         _resolveSink = new(ResolveSinkCapacity);
@@ -141,7 +140,7 @@ public class AutorefsRegistryBenchmarks
         for (var i = 0; i < _idBytes.Length; i++)
         {
             _resolveSink.ResetWrittenCount();
-            _populatedRegistry.TryResolveInto(_idBytes[i], _resolveSink);
+            _ = _populatedRegistry.TryResolveInto(_idBytes[i], _resolveSink);
             total += _resolveSink.WrittenCount;
         }
 

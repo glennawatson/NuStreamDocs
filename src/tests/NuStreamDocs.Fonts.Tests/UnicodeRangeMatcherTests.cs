@@ -7,6 +7,9 @@ namespace NuStreamDocs.Fonts.Tests;
 /// <summary>Coverage for <see cref="UnicodeRangeMatcher"/>.</summary>
 public class UnicodeRangeMatcherTests
 {
+    /// <summary>Gets the Unicode range covering Latin Extended characters.</summary>
+    private static ReadOnlySpan<byte> LatinExtendedRangeBytes => "U+0100-024F"u8;
+
     /// <summary>A fresh bitset has only block 0 (ASCII) set; <c>MarkSeen</c> sets the blocks the text touches.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -32,7 +35,7 @@ public class UnicodeRangeMatcherTests
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0000-00FF, U+0131, U+0152-0153"u8, ascii)).IsTrue();
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+00??"u8, ascii)).IsTrue();
         await Assert.That(UnicodeRangeMatcher.Overlaps("U+0400-045F"u8, ascii)).IsFalse();
-        await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, ascii)).IsFalse();
+        await Assert.That(UnicodeRangeMatcher.Overlaps(LatinExtendedRangeBytes, ascii)).IsFalse();
 
         var withCyrillic = UnicodeRangeMatcher.NewSeenBlocks();
         UnicodeRangeMatcher.MarkSeen("Привет"u8, withCyrillic);
@@ -42,9 +45,9 @@ public class UnicodeRangeMatcherTests
         UnicodeRangeMatcher.MarkSeen(
             "café"u8,
             withLatinExt); // é = U+00E9 → block 0, but ē U+0113 would be block 1; here only block 0.
-        await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, withLatinExt)).IsFalse();
+        await Assert.That(UnicodeRangeMatcher.Overlaps(LatinExtendedRangeBytes, withLatinExt)).IsFalse();
         UnicodeRangeMatcher.MarkSeen("Tōkyō"u8, withLatinExt); // ō = U+014D → block 1.
-        await Assert.That(UnicodeRangeMatcher.Overlaps("U+0100-024F"u8, withLatinExt)).IsTrue();
+        await Assert.That(UnicodeRangeMatcher.Overlaps(LatinExtendedRangeBytes, withLatinExt)).IsTrue();
     }
 
     /// <summary>A garbled range value never throws and simply doesn't overlap.</summary>

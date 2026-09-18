@@ -14,16 +14,25 @@ namespace NuStreamDocs.CSharpApiGenerator.Tests;
 /// <summary>Direct tests for the previously private helpers in CSharpApiGenerator and AssemblySourceFactory.</summary>
 public class CSharpApiGeneratorHelperTests
 {
+    /// <summary>Cache Directory used by the test cases.</summary>
+    private const string CacheDirectory = "/cache";
+
+    /// <summary>Target Framework used by the test cases.</summary>
+    private const string TargetFramework = "net10.0";
+
+    /// <summary>Package Count used by the test cases.</summary>
+    private const int PackageCount = 2;
+
     /// <summary>DescribeInput renders each shape with its diagnostic shape.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task DescribeInputShapes()
     {
-        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetManifestInput("/repo", "/cache")))
+        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetManifestInput("/repo", CacheDirectory)))
             .IsEqualTo("manifest:/repo");
-        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetPackagesInput([new("Foo", "1.0")], "/cache")))
+        await Assert.That(CSharpApiGenerator.DescribeInput(new NuGetPackagesInput([new("Foo", "1.0")], CacheDirectory)))
             .IsEqualTo("packages:1");
-        await Assert.That(CSharpApiGenerator.DescribeInput(new LocalAssembliesInput("net10.0", ["/a.dll", "/b.dll"])))
+        await Assert.That(CSharpApiGenerator.DescribeInput(new LocalAssembliesInput(TargetFramework, ["/a.dll", "/b.dll"])))
             .IsEqualTo("assemblies:2@net10.0");
         await Assert.That(CSharpApiGenerator.DescribeInput(new CustomInput(new EmptySource())))
             .IsEqualTo("custom-source");
@@ -46,7 +55,7 @@ public class CSharpApiGeneratorHelperTests
         var label = CSharpApiGenerator.DescribeInputs(
         [
             new NuGetManifestInput("/r", "/c"),
-            new LocalAssembliesInput("net10.0", ["/x.dll"])
+            new LocalAssembliesInput(TargetFramework, ["/x.dll"])
         ]);
         await Assert.That(label).IsEqualTo("manifest:/r,assemblies:1@net10.0");
     }
@@ -57,14 +66,14 @@ public class CSharpApiGeneratorHelperTests
     public async Task BuildManifestJsonShape()
     {
         var bytes = AssemblySourceFactory.BuildManifestJson(
-            new([new("Foo", "1.2.3"), new("Bar", "4.5")], "/cache"));
+            new([new("Foo", "1.2.3"), new("Bar", "4.5")], CacheDirectory));
         var json = Encoding.UTF8.GetString(bytes);
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         await Assert.That(root.GetProperty("nugetPackageOwners").GetArrayLength()).IsEqualTo(0);
         await Assert.That(root.GetProperty("tfmPreference").GetArrayLength()).IsGreaterThan(0);
         var pkgs = root.GetProperty("additionalPackages");
-        await Assert.That(pkgs.GetArrayLength()).IsEqualTo(2);
+        await Assert.That(pkgs.GetArrayLength()).IsEqualTo(PackageCount);
         await Assert.That(pkgs[0].GetProperty("id").GetString()).IsEqualTo("Foo");
         await Assert.That(pkgs[0].GetProperty("version").GetString()).IsEqualTo("1.2.3");
     }
@@ -84,12 +93,12 @@ public class CSharpApiGeneratorHelperTests
     [Test]
     public async Task CreateOneLocalAssemblies()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "smkd-cln-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(dir);
+        var dir = Path.Combine(Path.GetTempPath(), $"smkd-cln-{Guid.NewGuid():N}");
+        _ = Directory.CreateDirectory(dir);
         try
         {
             var resolved = AssemblySourceFactory.CreateOne(
-                new LocalAssembliesInput("net10.0", []),
+                new LocalAssembliesInput(TargetFramework, []),
                 NullLogger.Instance);
             await Assert.That(resolved).IsTypeOf<LocalAssemblySource>();
         }
@@ -103,6 +112,7 @@ public class CSharpApiGeneratorHelperTests
     private sealed class EmptySource : IAssemblySource
     {
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAsyncEnumerable<AssemblyGroup> DiscoverAsync() => DiscoverAsync(CancellationToken.None);
 
         /// <inheritdoc/>

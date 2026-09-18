@@ -59,10 +59,6 @@ public static class DiffLexer
         "StyleCop.CSharp.ReadabilityRules",
         "SA1115",
         Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage(
-        "Major Code Smell",
-        "S125:Sections of code should not be commented out",
-        Justification = "Not commented out code")]
     public static Lexer Instance { get; } = new(
         LanguageRuleBuilder.BuildSingleState([
 

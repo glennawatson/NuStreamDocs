@@ -54,7 +54,7 @@ public class AutorefsRewriterTests
         var input = "see <a href=\"@autoref:a\">A</a> and <a href=\"@autoref:b\">B</a>"u8;
 
         ArrayBufferWriter<byte> sink = new();
-        AutorefsRewriter.RewriteSpan(input, registry, sink);
+        _ = AutorefsRewriter.RewriteSpan(input, registry, sink);
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
 
         await Assert.That(result).IsEqualTo("see <a href=\"a.html\">A</a> and <a href=\"b.html#b\">B</a>");

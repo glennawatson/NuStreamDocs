@@ -2,10 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NuStreamDocs.Building;
-using NuStreamDocs.Config.MkDocs;
 
 namespace NuStreamDocs.Config.Zensical.Tests;
 
@@ -40,14 +38,10 @@ public class ZensicalConfigReaderTests
     /// <summary>Streaming overload should match the span overload byte-for-byte.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
-    [SuppressMessage(
-        "Performance",
-        "CA1859:Use concrete types when possible for improved performance",
-        Justification = "Test deliberately exercises the IConfigReader.ReadAsync default-interface-method path.")]
     public async Task ReadAsyncMatchesSpanOverload()
     {
         byte[] bytes = [.. "site_name = \"Async\"\n[theme]\nname = \"material\"\n"u8];
-        IConfigReader reader = new ZensicalConfigReader();
+        ZensicalConfigReader reader = new();
 
         await using MemoryStream stream = new(bytes);
         var fromStream = await reader.ReadAsync(stream, CancellationToken.None);

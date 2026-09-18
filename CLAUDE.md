@@ -80,7 +80,7 @@ This repo uses **Microsoft Testing Platform (MTP)** with **TUnit** (not VSTest).
 - MTP is configured via `src/global.json` (`"runner": "Microsoft.Testing.Platform"`).
 - `TestingPlatformDotnetTestSupport` is enabled in `src/Directory.Build.props`.
 - `IsTestProject` is auto-detected via `$(MSBuildProjectName.Contains('Tests'))` in `Directory.Build.props`. Test
-  projects automatically get `<OutputType>Exe</OutputType>`, the TUnit + Verify.TUnit packages, the implicit-usings
+  projects automatically get `<OutputType>Exe</OutputType>`, the TUnit package, the implicit-usings
   switches, and `<NoWarn>$(NoWarn);CA1812</NoWarn>`.
 - `IsPackable=false` is set on each test project explicitly (defence-in-depth — Directory.Build.props sets it too).
 
@@ -93,10 +93,10 @@ This repo uses **Microsoft Testing Platform (MTP)** with **TUnit** (not VSTest).
 cd src
 
 # Core tests
-dotnet run --project tests/NuStreamDocs.Tests/NuStreamDocs.Tests.csproj
+dotnet test --project tests/NuStreamDocs.Tests/NuStreamDocs.Tests.csproj
 
 # Nav tests
-dotnet run --project tests/NuStreamDocs.Nav.Tests/NuStreamDocs.Nav.Tests.csproj
+dotnet test --project tests/NuStreamDocs.Nav.Tests/NuStreamDocs.Nav.Tests.csproj
 
 # Detailed output
 dotnet test --project tests/NuStreamDocs.Tests/NuStreamDocs.Tests.csproj -- --output Detailed
@@ -139,10 +139,10 @@ cd src
 # Full sweep — every benchmark in the assembly. ~25-30 min on developer hardware
 # for a ShortRunJob × ~270 benchmark variants pass. Use this when validating a
 # cross-cutting change; per-class enumeration hits shell-glob issues.
-dotnet run --project benchmarks/NuStreamDocs.Benchmarks --configuration Release -- --filter "*"
+dotnet run --project benchmarks/NuStreamDocs.Benchmarks --framework net11.0 --configuration Release -- --filter "*"
 
 # Filter to a single benchmark / class via the BenchmarkDotNet switcher
-dotnet run --project benchmarks/NuStreamDocs.Benchmarks --configuration Release -- --filter "*Toc*"
+dotnet run --project benchmarks/NuStreamDocs.Benchmarks --framework net11.0 --configuration Release -- --filter "*Toc*"
 ```
 
 **Profiler workflow — separate the two questions.** A profiler attached to BDN inflates absolute timings (
@@ -505,12 +505,11 @@ in [CONTRIBUTING.md](CONTRIBUTING.md#commit-style).
 
 ## Versioning
 
-`MinVer` derives the version from the most recent `v*` git tag. Untagged commits build as
-`{nextMinor}.0.0-alpha.0.{height}+sha` (auto-increment minor). Releases run via the `Release` workflow (
-`workflow_dispatch`) — pick `major` / `minor` / `patch`; the workflow computes the next version from the latest RTM tag
-in shell, creates the `v$VERSION` tag, propagates the version via `MINVERVERSIONOVERRIDE` so every downstream MSBuild
-project skips MinVer's per-project git walk, then builds / packs / signs / pushes to NuGet and creates the GitHub
-Release.
+`MinVer` derives the version from the most recent `v*` git tag with minor auto-increment.
+Releases run via the `Release` workflow (`workflow_dispatch`): choose `major` / `minor` / `patch`,
+an optional pre-release channel, or an exact version override. C# workflow scripts compute the version
+and export `MINVERVERSIONOVERRIDE`. The workflow builds and tests both target frameworks, packs,
+signs, publishes to NuGet, and creates the GitHub release and `v`-prefixed tag at the built commit.
 
 ## Acknowledgements
 

@@ -10,6 +10,7 @@ namespace NuStreamDocs.Macros;
 /// <param name="Variables">UTF-8 name to UTF-8 value map used to resolve <c>{{ name }}</c> markers.</param>
 /// <param name="EscapeHtml">When true, HTML-escapes resolved values before substitution.</param>
 /// <param name="WarnOnMissing">When true, logs unresolved markers at <c>Warning</c>; otherwise they pass through unchanged.</param>
+[System.Diagnostics.DebuggerDisplay("MacrosOptions: {ToString(),nq}")]
 public sealed record MacrosOptions(
     Dictionary<byte[], byte[]> Variables,
     bool EscapeHtml,
@@ -17,7 +18,7 @@ public sealed record MacrosOptions(
 {
     /// <summary>Gets the default options: empty variables map, no escaping, no warnings.</summary>
     public static MacrosOptions Default { get; } = new(
-        new(ByteArrayComparer.Instance),
+        [with(ByteArrayComparer.Instance)],
         false,
         false);
 }

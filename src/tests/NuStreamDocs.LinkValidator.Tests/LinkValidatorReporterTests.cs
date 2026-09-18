@@ -7,6 +7,15 @@ namespace NuStreamDocs.LinkValidator.Tests;
 /// <summary>Direct unit tests for the static <c>LinkValidatorReporter</c> helper extracted out of the plugin.</summary>
 public class LinkValidatorReporterTests
 {
+    /// <summary>Internal Link Count used by the test cases.</summary>
+    private const int InternalLinkCount = 2;
+
+    /// <summary>External Link Count used by the test cases.</summary>
+    private const int ExternalLinkCount = 3;
+
+    /// <summary>Diagnostic Count used by the test cases.</summary>
+    private const int DiagnosticCount = 3;
+
     /// <summary>HasFatal returns false on an empty stream.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -47,8 +56,8 @@ public class LinkValidatorReporterTests
     public async Task TallyCountsCorrectly()
     {
         var (broken, warnings) = LinkValidatorReporter.Tally([Err("a"), Warn("b"), Err("c"), Warn("d"), Warn("e")]);
-        await Assert.That(broken).IsEqualTo(2);
-        await Assert.That(warnings).IsEqualTo(3);
+        await Assert.That(broken).IsEqualTo(InternalLinkCount);
+        await Assert.That(warnings).IsEqualTo(ExternalLinkCount);
     }
 
     /// <summary>Tally on an empty stream returns zeros.</summary>
@@ -69,7 +78,7 @@ public class LinkValidatorReporterTests
         LinkDiagnostic[] internalDiags = [Err("i1"), Err("i2")];
         LinkDiagnostic[] externalDiags = [Err("e1")];
         var merged = LinkValidatorReporter.Merge(internalDiags, externalDiags, false, true);
-        await Assert.That(merged.Length).IsEqualTo(3);
+        await Assert.That(merged.Length).IsEqualTo(DiagnosticCount);
         await Assert.That(merged[0].Severity).IsEqualTo(LinkSeverity.Warning);
         await Assert.That(merged[1].Severity).IsEqualTo(LinkSeverity.Warning);
         await Assert.That(merged[2].Severity).IsEqualTo(LinkSeverity.Error);

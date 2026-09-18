@@ -5,6 +5,7 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.IO.Hashing;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.Common;
@@ -15,8 +16,12 @@ using NuStreamDocs.Plugins;
 namespace NuStreamDocs.Nav;
 
 /// <summary>Discovers and renders the navigation tree, replacing <c>&lt;!--@@nav@@--&gt;</c> / <c>&lt;!--@@nav-tabs@@--&gt;</c> markers in rendered pages.</summary>
+[System.Diagnostics.DebuggerDisplay("NavPlugin: {Name}")]
 public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INavNeighboursProvider
 {
+    /// <summary>Initial file stamp capacity.</summary>
+    private const int InitialFileStampCapacity = 256;
+
     /// <summary>Length of the <c>.md</c> extension stripped when computing served URLs.</summary>
     private const int MarkdownExtensionLength = 3;
 
@@ -88,10 +93,10 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     }
 
     /// <summary>Gets the UTF-8 marker bytes the theme places where the rendered nav should land.</summary>
-    public static byte[] NavMarker { get; } = [.. "<!--@@nav@@-->"u8];
+    public static byte[] NavMarker { get; } = [.. NavPlaceholder];
 
     /// <summary>Gets the UTF-8 marker bytes the theme places where the top-bar tabs should land (mkdocs-material's <c>navigation.tabs</c>).</summary>
-    public static byte[] NavTabsMarker { get; } = [.. "<!--@@nav-tabs@@-->"u8];
+    public static byte[] NavTabsMarker { get; } = [.. NavTabsPlaceholder];
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "nav"u8;
@@ -104,6 +109,12 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
 
     /// <summary>Gets the computed nav tree root; null before <see cref="DiscoverAsync"/> has run.</summary>
     public object? Root => _root;
+
+    /// <summary>Gets the nav placeholder bytes.</summary>
+    private static ReadOnlySpan<byte> NavPlaceholder => "<!--@@nav@@-->"u8;
+
+    /// <summary>Gets the nav tabs placeholder bytes.</summary>
+    private static ReadOnlySpan<byte> NavTabsPlaceholder => "<!--@@nav-tabs@@-->"u8;
 
     /// <inheritdoc/>
     public ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
@@ -150,7 +161,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
             return false;
         }
 
-        return html.IndexOf("<!--@@nav@@-->"u8) >= 0 || (_options.Tabs && html.IndexOf("<!--@@nav-tabs@@-->"u8) >= 0);
+        return html.IndexOf(NavPlaceholder) >= 0 || (_options.Tabs && html.IndexOf(NavTabsPlaceholder) >= 0);
     }
 
     /// <inheritdoc/>
@@ -168,12 +179,11 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
 
         // First-pass marker replacement: copy bytes through the writer, swapping
         // every recognized marker with its rendered payload.
-        var cursor = 0;
-        while (cursor < html.Length)
+        for (var cursor = 0; cursor < html.Length;)
         {
             var remaining = html[cursor..];
-            var navIdx = remaining.IndexOf("<!--@@nav@@-->"u8);
-            var tabsIdx = _options.Tabs ? remaining.IndexOf("<!--@@nav-tabs@@-->"u8) : -1;
+            var navIdx = remaining.IndexOf(NavPlaceholder);
+            var tabsIdx = _options.Tabs ? remaining.IndexOf(NavTabsPlaceholder) : -1;
 
             if (navIdx < 0 && tabsIdx < 0)
             {
@@ -188,13 +198,13 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
             if (navIdx >= 0 && (tabsIdx < 0 || navIdx <= tabsIdx))
             {
                 markerOffset = navIdx;
-                markerLength = "<!--@@nav@@-->"u8.Length;
+                markerLength = NavPlaceholder.Length;
                 isTabs = false;
             }
             else
             {
                 markerOffset = tabsIdx;
-                markerLength = "<!--@@nav-tabs@@-->"u8.Length;
+                markerLength = NavTabsPlaceholder.Length;
                 isTabs = true;
             }
 
@@ -271,6 +281,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
 
     /// <summary>Gets the typed nav root; for use from the plugin's own assembly + tests.</summary>
     /// <returns>The nav root, or null when <see cref="DiscoverAsync"/> has not yet run.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NavNode? GetRoot() => _root;
 
     /// <summary>Gathers the nav metadata contributed by any registered <see cref="ISyntheticNavProvider"/>.</summary>
@@ -314,11 +325,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
     /// <summary>Returns true when <paramref name="relativePath"/> is the docs-root <c>index.md</c>.</summary>
     /// <param name="relativePath">Source-relative page path.</param>
     /// <returns>True for the root landing page.</returns>
-    private static bool IsRootIndex(in FilePath relativePath)
-    {
-        var value = relativePath.Value;
-        return value is "index.md" or "index.MD" or "INDEX.md" or "INDEX.MD";
-    }
+    private static bool IsRootIndex(in FilePath relativePath) => relativePath.Value is "index.md" or "index.MD" or "INDEX.md" or "INDEX.MD";
 
     /// <summary>Computes a cheap stat-only fingerprint over every <c>.md</c> and <c>.pages</c> file under <paramref name="inputRoot"/>.</summary>
     /// <param name="inputRoot">Absolute docs root.</param>
@@ -330,7 +337,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
             return 0UL;
         }
 
-        List<(string Path, long Ticks, long Length)> entries = new(256);
+        List<(string Path, long Ticks, long Length)> entries = [with(InitialFileStampCapacity)];
         AppendStats(inputRoot, "*.md", entries);
         AppendStats(inputRoot, ".pages", entries);
         entries.Sort(static (a, b) => string.CompareOrdinal(a.Path, b.Path));
@@ -386,7 +393,7 @@ public sealed class NavPlugin : IBuildDiscoverPlugin, IPagePostRenderPlugin, INa
         }
 
         NavNode[] ordered = [.. leaves];
-        Dictionary<byte[], int> index = new(leaves.Count, ByteArrayComparer.Instance);
+        Dictionary<byte[], int> index = [with(leaves.Count, ByteArrayComparer.Instance)];
         for (var i = 0; i < ordered.Length; i++)
         {
             index[Encoding.UTF8.GetBytes(ordered[i].RelativePath)] = i;

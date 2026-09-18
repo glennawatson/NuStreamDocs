@@ -18,14 +18,14 @@ internal static class ExternalUrlScanner
     /// <summary>Returns true when <paramref name="html"/> may contain an external <c>http(s)://</c> reference.</summary>
     /// <param name="html">Page HTML.</param>
     /// <returns>True when the cheap pre-filter matches.</returns>
-    public static bool MayHaveExternalUrls(ReadOnlySpan<byte> html) =>
+    internal static bool MayHaveExternalUrls(ReadOnlySpan<byte> html) =>
         html.IndexOf("http"u8) >= 0;
 
     /// <summary>Records every external URL <see cref="Rewrite"/> would have localized, without modifying <paramref name="html"/>.</summary>
     /// <param name="html">Page HTML.</param>
     /// <param name="filter">Host filter.</param>
     /// <param name="auditSet">Concurrent byte-array-keyed set the URLs are added to (the value is unused).</param>
-    public static void Audit(ReadOnlySpan<byte> html, HostFilter filter, ConcurrentDictionary<byte[], byte> auditSet)
+    internal static void Audit(ReadOnlySpan<byte> html, HostFilter filter, ConcurrentDictionary<byte[], byte> auditSet)
     {
         UrlAuditContext ctx = new(filter, auditSet);
         AssetAttributeBytes.AuditInto(html, ctx);
@@ -38,7 +38,7 @@ internal static class ExternalUrlScanner
     /// <param name="ctx">URL-rewrite context (filter + registry).</param>
     /// <param name="sink">Destination sink; only written to when at least one URL is rewritten.</param>
     /// <returns>True when at least one URL was rewritten; false when the input passed through unchanged.</returns>
-    public static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink)
+    internal static bool RewriteInto(ReadOnlySpan<byte> html, in UrlRewriteContext ctx, IBufferWriter<byte> sink)
     {
         var changed = false;
         var lastEmit = 0;
@@ -74,7 +74,7 @@ internal static class ExternalUrlScanner
     /// <param name="registry">URL registry; entries created on demand.</param>
     /// <param name="filter">Per-URL filter encapsulating the allow/skip lists.</param>
     /// <returns>The rewritten HTML (or the input bytes verbatim when nothing matched).</returns>
-    public static byte[] Rewrite(ReadOnlySpan<byte> html, ExternalAssetRegistry registry, HostFilter filter)
+    internal static byte[] Rewrite(ReadOnlySpan<byte> html, ExternalAssetRegistry registry, HostFilter filter)
     {
         UrlRewriteContext ctx = new(filter, registry);
         using var rental = PageBuilderPool.Rent(html.Length);

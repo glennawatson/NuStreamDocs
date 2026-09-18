@@ -11,6 +11,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Tests for the inline link parser.</summary>
 public class LinkSpanTests
 {
+    /// <summary>Closing Link Offset used by the test cases.</summary>
+    private const int ClosingLinkOffset = 7;
+
     /// <summary>Inputs whose shape is malformed return false from TryReadShape.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <returns>Async test.</returns>
@@ -80,7 +83,7 @@ public class LinkSpanTests
         var pendingTextStart = 0;
         await Assert.That(LinkSpan.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(writer.WrittenSpan)).IsEqualTo("<a href=\"u\">hi</a>");
-        await Assert.That(pos).IsEqualTo(7);
+        await Assert.That(pos).IsEqualTo(ClosingLinkOffset);
     }
 
     /// <summary>TryHandle on a malformed shape advances nothing and returns false.</summary>

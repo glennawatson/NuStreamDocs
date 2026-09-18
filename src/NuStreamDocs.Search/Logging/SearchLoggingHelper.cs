@@ -20,7 +20,7 @@ internal static partial class SearchLoggingHelper
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogIndexBuildStart(
+    internal static void LogIndexBuildStart(
         ILogger logger,
         int documentCount,
         ReadOnlySpan<byte> formatName,
@@ -43,7 +43,7 @@ internal static partial class SearchLoggingHelper
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
-    public static void LogIndexBuildComplete(
+    internal static void LogIndexBuildComplete(
         ILogger logger,
         int recordCount,
         long totalContentBytes,
@@ -65,7 +65,7 @@ internal static partial class SearchLoggingHelper
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "False positive: GetString call is gated on logger.IsEnabled above.")]
-    public static void LogDocumentIndexed(ILogger logger, ReadOnlySpan<byte> slug, int contentLength)
+    internal static void LogDocumentIndexed(ILogger logger, ReadOnlySpan<byte> slug, int contentLength)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
         {

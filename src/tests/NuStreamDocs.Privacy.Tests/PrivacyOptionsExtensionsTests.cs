@@ -9,6 +9,36 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Behavior tests for <c>PrivacyOptionsExtensions</c>'s host-list helpers.</summary>
 public class PrivacyOptionsExtensionsTests
 {
+    /// <summary>Custom Host used by the test cases.</summary>
+    private const string CustomHost = "custom.example";
+
+    /// <summary>First Host used by the test cases.</summary>
+    private const string FirstHost = "a.example";
+
+    /// <summary>Second Host used by the test cases.</summary>
+    private const string SecondHost = "b.example";
+
+    /// <summary>Cdn Pattern used by the test cases.</summary>
+    private const string CdnPattern = "https://*.cdn/**";
+
+    /// <summary>Audit File Name used by the test cases.</summary>
+    private const string AuditFileName = "audit.json";
+
+    /// <summary>Cache Directory used by the test cases.</summary>
+    private const string CacheDirectory = "/var/cache/p";
+
+    /// <summary>Csp File Name used by the test cases.</summary>
+    private const string CspFileName = "csp.json";
+
+    /// <summary>Added Host Count used by the test cases.</summary>
+    private const int AddedHostCount = 2;
+
+    /// <summary>Gets the custom host as UTF-8 bytes.</summary>
+    private static ReadOnlySpan<byte> CustomHostBytes => "custom.example"u8;
+
+    /// <summary>Gets the tracker pattern used by the test cases.</summary>
+    private static ReadOnlySpan<byte> TrackerPattern => "https://*.tracker/**"u8;
+
     /// <summary><see cref="PrivacyOptions.Default"/> ships with the well-known never-localize hosts populated, so consumers don't have to repeat the boilerplate.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -27,10 +57,10 @@ public class PrivacyOptionsExtensionsTests
     [Test]
     public async Task WithHostsToSkipReplacesTheList()
     {
-        var updated = PrivacyOptions.Default.WithHostsToSkip("custom.example");
+        var updated = PrivacyOptions.Default.WithHostsToSkip(CustomHost);
         var hosts = Decode(updated.HostsToSkip);
         await Assert.That(hosts.Length).IsEqualTo(1);
-        await Assert.That(hosts[0]).IsEqualTo("custom.example");
+        await Assert.That(hosts[0]).IsEqualTo(CustomHost);
     }
 
     /// <summary><c>AddHostsToSkip(string[])</c> appends to the existing list, preserving the well-known defaults.</summary>
@@ -41,7 +71,7 @@ public class PrivacyOptionsExtensionsTests
         var defaultCount = PrivacyOptions.Default.HostsToSkip.Length;
         var updated = PrivacyOptions.Default.AddHostsToSkip("reactivex.slack.com", "discord.gg");
 
-        await Assert.That(updated.HostsToSkip.Length).IsEqualTo(defaultCount + 2);
+        await Assert.That(updated.HostsToSkip.Length).IsEqualTo(defaultCount + AddedHostCount);
         var hosts = Decode(updated.HostsToSkip);
         await Assert.That(hosts).Contains("github.com");
         await Assert.That(hosts).Contains("reactivex.slack.com");
@@ -53,7 +83,7 @@ public class PrivacyOptionsExtensionsTests
     [Test]
     public async Task AddHostsToSkipWithEmptyInputIsNoOp()
     {
-        var updated = PrivacyOptions.Default.AddHostsToSkip(Array.Empty<string>());
+        var updated = PrivacyOptions.Default.AddHostsToSkip((string[])[]);
         var defaults = PrivacyOptions.Default.HostsToSkip;
         await Assert.That(updated.HostsToSkip.Length).IsEqualTo(defaults.Length);
         for (var i = 0; i < defaults.Length; i++)
@@ -68,7 +98,7 @@ public class PrivacyOptionsExtensionsTests
     public async Task ClearHostsToSkipEmptiesTheList()
     {
         var updated = PrivacyOptions.Default
-            .AddHostsToSkip("custom.example")
+            .AddHostsToSkip(CustomHost)
             .ClearHostsToSkip();
         await Assert.That(updated.HostsToSkip.Length).IsEqualTo(0);
     }
@@ -78,7 +108,7 @@ public class PrivacyOptionsExtensionsTests
     [Test]
     public async Task WithHostsToSkipByteOverloadStoresBytesVerbatim()
     {
-        byte[][] hosts = [[.. "custom.example"u8], [.. "another.example"u8]];
+        byte[][] hosts = [[.. CustomHostBytes], [.. "another.example"u8]];
         var updated = PrivacyOptions.Default.WithHostsToSkip(hosts);
         await Assert.That(updated.HostsToSkip.Length).IsEqualTo(hosts.Length);
         for (var i = 0; i < hosts.Length; i++)
@@ -93,11 +123,11 @@ public class PrivacyOptionsExtensionsTests
     public async Task AddHostsToSkipByteOverloadAppends()
     {
         var defaultCount = PrivacyOptions.Default.HostsToSkip.Length;
-        byte[][] hosts = [[.. "custom.example"u8]];
+        byte[][] hosts = [[.. CustomHostBytes]];
         var updated = PrivacyOptions.Default.AddHostsToSkip(hosts);
         await Assert.That(updated.HostsToSkip.Length).IsEqualTo(defaultCount + 1);
         var decoded = Decode(updated.HostsToSkip);
-        await Assert.That(decoded).Contains("custom.example");
+        await Assert.That(decoded).Contains(CustomHost);
     }
 
     /// <summary><c>WithHostsAllowed(string[])</c> replaces the allow list (which is empty by default).</summary>
@@ -105,11 +135,11 @@ public class PrivacyOptionsExtensionsTests
     [Test]
     public async Task WithHostsAllowedReplacesAllowList()
     {
-        var updated = PrivacyOptions.Default.WithHostsAllowed("a.example", "b.example");
+        var updated = PrivacyOptions.Default.WithHostsAllowed(FirstHost, SecondHost);
         var hosts = Decode(updated.HostsAllowed);
-        await Assert.That(hosts.Length).IsEqualTo(2);
-        await Assert.That(hosts[0]).IsEqualTo("a.example");
-        await Assert.That(hosts[1]).IsEqualTo("b.example");
+        await Assert.That(hosts.Length).IsEqualTo(AddedHostCount);
+        await Assert.That(hosts[0]).IsEqualTo(FirstHost);
+        await Assert.That(hosts[1]).IsEqualTo(SecondHost);
     }
 
     /// <summary><c>AddHostsAllowed</c> + <c>ClearHostsAllowed</c> mirror the skip-list semantics.</summary>
@@ -117,8 +147,8 @@ public class PrivacyOptionsExtensionsTests
     [Test]
     public async Task AddAndClearHostsAllowed()
     {
-        var added = PrivacyOptions.Default.AddHostsAllowed("a.example", "b.example");
-        await Assert.That(added.HostsAllowed.Length).IsEqualTo(2);
+        var added = PrivacyOptions.Default.AddHostsAllowed(FirstHost, SecondHost);
+        await Assert.That(added.HostsAllowed.Length).IsEqualTo(AddedHostCount);
 
         var cleared = added.ClearHostsAllowed();
         await Assert.That(cleared.HostsAllowed.Length).IsEqualTo(0);
@@ -133,13 +163,13 @@ public class PrivacyOptionsExtensionsTests
         await Assert.That(stringForm.UrlIncludePatterns.Length).IsEqualTo(1);
         await Assert.That(Encoding.UTF8.GetString(stringForm.UrlIncludePatterns[0])).IsEqualTo("https://*.example/**");
 
-        byte[][] excludes = [[.. "https://*.tracker/**"u8]];
+        byte[][] excludes = [[.. TrackerPattern]];
         var byteForm = PrivacyOptions.Default.WithUrlExcludePatterns(excludes);
         await Assert.That(byteForm.UrlExcludePatterns).IsSameReferenceAs(excludes);
 
-        var added = byteForm.AddUrlIncludePatterns("https://*.cdn/**");
+        var added = byteForm.AddUrlIncludePatterns(CdnPattern);
         await Assert.That(added.UrlIncludePatterns.Length).IsEqualTo(1);
-        await Assert.That(Encoding.UTF8.GetString(added.UrlIncludePatterns[0])).IsEqualTo("https://*.cdn/**");
+        await Assert.That(Encoding.UTF8.GetString(added.UrlIncludePatterns[0])).IsEqualTo(CdnPattern);
 
         var cleared = added.ClearUrlIncludePatterns().ClearUrlExcludePatterns();
         await Assert.That(cleared.UrlIncludePatterns.Length).IsEqualTo(0);
@@ -153,12 +183,12 @@ public class PrivacyOptionsExtensionsTests
     {
         // String form encodes via Utf8Encoder.Encode (empty maps to empty).
         var byString = PrivacyOptions.Default
-            .WithAuditManifestPath("audit.json")
-            .WithCacheDirectory("/var/cache/p")
-            .WithCspManifestPath("csp.json");
-        await Assert.That(Encoding.UTF8.GetString(byString.AuditManifestPath)).IsEqualTo("audit.json");
-        await Assert.That(Encoding.UTF8.GetString(byString.CacheDirectory)).IsEqualTo("/var/cache/p");
-        await Assert.That(Encoding.UTF8.GetString(byString.CspManifestPath)).IsEqualTo("csp.json");
+            .WithAuditManifestPath(AuditFileName)
+            .WithCacheDirectory(CacheDirectory)
+            .WithCspManifestPath(CspFileName);
+        await Assert.That(Encoding.UTF8.GetString(byString.AuditManifestPath)).IsEqualTo(AuditFileName);
+        await Assert.That(Encoding.UTF8.GetString(byString.CacheDirectory)).IsEqualTo(CacheDirectory);
+        await Assert.That(Encoding.UTF8.GetString(byString.CspManifestPath)).IsEqualTo(CspFileName);
 
         // Byte form stores verbatim.
         byte[] auditBytes = [.. "a.json"u8];
@@ -180,16 +210,16 @@ public class PrivacyOptionsExtensionsTests
     {
         var defaultCount = PrivacyOptions.Default.HostsToSkip.Length;
         var updated = PrivacyOptions.Default
-            .AddHostsToSkip("custom.example"u8)
+            .AddHostsToSkip(CustomHostBytes)
             .AddHostsAllowed("allowed.example"u8)
             .AddUrlIncludePatterns("https://*.cdn/**"u8)
-            .AddUrlExcludePatterns("https://*.tracker/**"u8);
+            .AddUrlExcludePatterns(TrackerPattern);
 
         await Assert.That(updated.HostsToSkip.Length).IsEqualTo(defaultCount + 1);
-        await Assert.That(updated.HostsToSkip[^1].AsSpan().SequenceEqual("custom.example"u8)).IsTrue();
+        await Assert.That(updated.HostsToSkip[^1].AsSpan().SequenceEqual(CustomHostBytes)).IsTrue();
         await Assert.That(updated.HostsAllowed[^1].AsSpan().SequenceEqual("allowed.example"u8)).IsTrue();
         await Assert.That(updated.UrlIncludePatterns[^1].AsSpan().SequenceEqual("https://*.cdn/**"u8)).IsTrue();
-        await Assert.That(updated.UrlExcludePatterns[^1].AsSpan().SequenceEqual("https://*.tracker/**"u8)).IsTrue();
+        await Assert.That(updated.UrlExcludePatterns[^1].AsSpan().SequenceEqual(TrackerPattern)).IsTrue();
     }
 
     /// <summary><see cref="ReadOnlySpan{T}"/> overloads on the path scalars accept <c>"..."u8</c> literals directly.</summary>

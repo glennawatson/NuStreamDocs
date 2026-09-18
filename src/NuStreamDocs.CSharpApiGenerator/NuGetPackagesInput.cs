@@ -15,6 +15,7 @@ namespace NuStreamDocs.CSharpApiGenerator;
 /// <param name="Packages">Packages to fetch.</param>
 /// <param name="ApiCachePath">Destination root for fetched packages and the synthesized manifest.</param>
 /// <param name="TfmPreference">Ordered list of preferred TFMs. Empty falls back to <see cref="DefaultTfmPreference"/>.</param>
+[System.Diagnostics.DebuggerDisplay("NuGetPackagesInput: {ToString(),nq}")]
 public sealed record NuGetPackagesInput(
     NuGetPackageReference[] Packages,
     DirectoryPath ApiCachePath,

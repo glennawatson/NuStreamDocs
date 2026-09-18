@@ -40,7 +40,7 @@ public static class CommonLispLexer
             Keywords = Keywords,
             KeywordConstants = KeywordConstants,
             IncludeDataBrackets = false,
-            IncludeColonKeyword = true
+            IncludeColonKeyword = true,
         };
 
         return LispFamilyRules.CreateLexer(config);

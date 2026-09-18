@@ -13,6 +13,9 @@ namespace NuStreamDocs.Tests;
 /// <summary>Lifecycle / registration tests for <c>MarkdownLinkRewriterPlugin</c>.</summary>
 public class MarkdownLinkRewriterPluginTests
 {
+    /// <summary>Output Capacity used by the test cases.</summary>
+    private const int OutputCapacity = 64;
+
     /// <summary>Plugin name is stable.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -74,7 +77,7 @@ public class MarkdownLinkRewriterPluginTests
     /// <returns>Rewritten output bytes.</returns>
     private static byte[] RunPostRender(MarkdownLinkRewriterPlugin plugin, ReadOnlySpan<byte> html)
     {
-        ArrayBufferWriter<byte> output = new(64);
+        ArrayBufferWriter<byte> output = new(OutputCapacity);
         PagePostRenderContext ctx = new("p.md", default, html, output);
         plugin.PostRender(in ctx);
         return [.. output.WrittenSpan];

@@ -2,11 +2,12 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Config.MkDocs;
 
-/// <summary>
-/// <see cref="IConfigReader"/> implementation for <c>mkdocs.yml</c> files.
-/// </summary>
+/// <summary><see cref="IConfigReader"/> implementation for <c>mkdocs.yml</c> files.</summary>
+[System.Diagnostics.DebuggerDisplay("MkDocsConfigReader: {FormatName}")]
 public sealed class MkDocsConfigReader : IConfigReader
 {
     /// <inheritdoc/>
@@ -14,14 +15,16 @@ public sealed class MkDocsConfigReader : IConfigReader
 
     /// <inheritdoc/>
     public bool RecognizesExtension(ReadOnlySpan<char> extension) =>
-        extension.Equals(".yml", StringComparison.OrdinalIgnoreCase) ||
-        extension.Equals(".yaml", StringComparison.OrdinalIgnoreCase);
+        extension.Equals(".yml", StringComparison.OrdinalIgnoreCase)
+        || extension.Equals(".yaml", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MkDocsConfig Read(ReadOnlySpan<byte> utf8Source) =>
         ConfigReaderJsonPipeline.Read(utf8Source, YamlToJson.Convert);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task<MkDocsConfig> ReadAsync(Stream utf8Stream, CancellationToken cancellationToken) =>
         ConfigReaderJsonPipeline.ReadAsync(utf8Stream, YamlToJson.ConvertAsync, cancellationToken);
 }

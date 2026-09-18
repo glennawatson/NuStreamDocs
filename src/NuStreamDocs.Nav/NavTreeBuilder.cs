@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
@@ -31,7 +32,8 @@ internal static class NavTreeBuilder
     /// <param name="inputRoot">Absolute path to the docs root.</param>
     /// <param name="options">Plugin options.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
-    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static NavNode Build(in DirectoryPath inputRoot, in NavOptions options) =>
         Build(inputRoot, in options, false, NullLogger.Instance);
 
     /// <summary>Builds the nav tree with an explicit served URL shape.</summary>
@@ -39,7 +41,8 @@ internal static class NavTreeBuilder
     /// <param name="options">Plugin options.</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
-    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, bool useDirectoryUrls) =>
         Build(inputRoot, in options, useDirectoryUrls, NullLogger.Instance);
 
     /// <summary>Builds the nav tree with logging.</summary>
@@ -47,12 +50,13 @@ internal static class NavTreeBuilder
     /// <param name="options">Plugin options.</param>
     /// <param name="logger">Logger that receives start/complete events.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "Logging is not a performance bottleneck.")]
-    public static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, ILogger logger)
-        => Build(inputRoot, in options, false, logger);
+    internal static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, ILogger logger) =>
+        Build(inputRoot, in options, false, logger);
 
     /// <summary>Builds the nav tree with an explicit served URL shape and logging.</summary>
     /// <param name="inputRoot">Absolute path to the docs root.</param>
@@ -60,7 +64,8 @@ internal static class NavTreeBuilder
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <param name="logger">Logger that receives start/complete events.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
-    public static NavNode Build(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static NavNode Build(
         in DirectoryPath inputRoot,
         in NavOptions options,
         bool useDirectoryUrls,
@@ -78,7 +83,7 @@ internal static class NavTreeBuilder
         "Performance",
         "CA1873:Avoid potentially expensive logging",
         Justification = "Logging is not a performance bottleneck.")]
-    public static NavNode Build(
+    internal static NavNode Build(
         in DirectoryPath inputRoot,
         in NavOptions options,
         bool useDirectoryUrls,
@@ -103,8 +108,8 @@ internal static class NavTreeBuilder
         NavLoggingHelper.LogNavBuildStart(logger, inputRoot, candidateCount);
 
         var matcher = BuildMatcher(in options);
-        var root = BuildSection(inputRoot, inputRoot, matcher, in options, useDirectoryUrls, logger) ??
-                   new([], default, true, [], useDirectoryUrls);
+        var root = BuildSection(inputRoot, inputRoot, matcher, in options, useDirectoryUrls, logger)
+                   ?? new([], default, true, [], useDirectoryUrls);
 
         // Graft in synthetic pages (generated API reference, etc.) the disk walk can't see.
         root = SyntheticNavGrafter.Graft(root, syntheticEntries, useDirectoryUrls);
@@ -144,7 +149,7 @@ internal static class NavTreeBuilder
         if (matcher is null)
         {
             // No glob filters configured; orphan candidates are every .md file under the root.
-            foreach (var file in inputRoot.EnumerateFiles("*" + MarkdownExtension, SearchOption.AllDirectories))
+            foreach (var file in inputRoot.EnumerateFiles($"*{MarkdownExtension}", SearchOption.AllDirectories))
             {
                 var rel = NavPathHelper.ToForwardSlashRelative(inputRoot, file);
                 if (!navPaths.Contains(rel))
@@ -184,7 +189,7 @@ internal static class NavTreeBuilder
     /// <returns>Set of leaf source-relative paths (forward-slash, ordinal).</returns>
     private static HashSet<string> CollectNavLeafPaths(NavNode root)
     {
-        HashSet<string> paths = new(StringComparer.Ordinal);
+        HashSet<string> paths = [with(StringComparer.Ordinal)];
         CollectPaths(root, paths);
         return paths;
     }
@@ -198,7 +203,7 @@ internal static class NavTreeBuilder
         {
             if (!string.IsNullOrEmpty(node.RelativePath))
             {
-                paths.Add(node.RelativePath);
+                _ = paths.Add(node.RelativePath);
             }
 
             return;
@@ -206,7 +211,7 @@ internal static class NavTreeBuilder
 
         if (!string.IsNullOrEmpty(node.IndexPath))
         {
-            paths.Add(node.IndexPath);
+            _ = paths.Add(node.IndexPath);
         }
 
         var children = node.Children;
@@ -222,7 +227,7 @@ internal static class NavTreeBuilder
     private static int CountMarkdownFiles(in DirectoryPath root)
     {
         var count = 0;
-        var enumerable = Directory.EnumerateFiles(root, "*" + MarkdownExtension, SearchOption.AllDirectories);
+        var enumerable = Directory.EnumerateFiles(root, $"*{MarkdownExtension}", SearchOption.AllDirectories);
         using var enumerator = enumerable.GetEnumerator();
         while (enumerator.MoveNext())
         {
@@ -283,27 +288,25 @@ internal static class NavTreeBuilder
         Matcher matcher = new(StringComparison.OrdinalIgnoreCase);
         if (options.Includes.Length is 0)
         {
-            matcher.AddInclude("**/*" + MarkdownExtension);
+            _ = matcher.AddInclude($"**/*{MarkdownExtension}");
         }
         else
         {
             for (var i = 0; i < options.Includes.Length; i++)
             {
-                matcher.AddInclude(options.Includes[i]);
+                _ = matcher.AddInclude(options.Includes[i]);
             }
         }
 
         for (var i = 0; i < options.Excludes.Length; i++)
         {
-            matcher.AddExclude(options.Excludes[i]);
+            _ = matcher.AddExclude(options.Excludes[i]);
         }
 
         return matcher;
     }
 
-    /// <summary>
-    /// Recursively builds the <see cref="NavNode"/> for one directory.
-    /// </summary>
+    /// <summary>Recursively builds the <see cref="NavNode"/> for one directory.</summary>
     /// <param name="root">Absolute path to the input root (constant across recursion).</param>
     /// <param name="directory">Absolute path to the directory being built.</param>
     /// <param name="matcher">Pre-built glob matcher.</param>
@@ -327,7 +330,7 @@ internal static class NavTreeBuilder
             return null;
         }
 
-        var files = Directory.GetFiles(directory, "*" + MarkdownExtension, SearchOption.TopDirectoryOnly);
+        var files = Directory.GetFiles(directory, $"*{MarkdownExtension}", SearchOption.TopDirectoryOnly);
         var subdirectories = Directory.GetDirectories(directory);
 
         var pageBuffer = ArrayPool<NavNode>.Shared.Rent(files.Length);
@@ -335,14 +338,7 @@ internal static class NavTreeBuilder
         try
         {
             var pageCount = AppendPages(root, files, matcher, pageBuffer, useDirectoryUrls, logger);
-            var sectionCount = AppendSections(
-                root,
-                subdirectories,
-                matcher,
-                in options,
-                sectionBuffer,
-                useDirectoryUrls,
-                logger);
+            var sectionCount = AppendSections(root, subdirectories, matcher, in options, sectionBuffer, useDirectoryUrls, logger);
 
             SortPages(pageBuffer, pageCount, in options);
             SortSections(sectionBuffer, sectionCount);
@@ -376,10 +372,7 @@ internal static class NavTreeBuilder
             var sectionOrder = indexPath.IsEmpty
                 ? int.MaxValue
                 : ResolveOrder(new(Path.Combine(root.Value, indexPath.Value)));
-            return new(sectionTitle, sectionRelative, true, children, indexPath, useDirectoryUrls)
-            {
-                Order = sectionOrder
-            };
+            return new(sectionTitle, sectionRelative, true, children, indexPath, useDirectoryUrls) { Order = sectionOrder, };
         }
         finally
         {
@@ -389,11 +382,11 @@ internal static class NavTreeBuilder
     }
 
     /// <summary>Reorders <paramref name="children"/> to match <paramref name="ordered"/> and applies any per-entry title overrides.</summary>
-    /// <remarks>Entries not in <paramref name="ordered"/> follow in their original order.</remarks>
     /// <param name="children">Built children.</param>
     /// <param name="ordered">Awesome-pages entries (path + optional title override).</param>
     /// <param name="useDirectoryUrls">True when the rendered site uses directory-style URLs.</param>
     /// <returns>A reordered child array.</returns>
+    /// <remarks>Entries not in <paramref name="ordered"/> follow in their original order.</remarks>
     private static NavNode[] ApplyOrdering(NavNode[] children, PagesEntry[] ordered, bool useDirectoryUrls)
     {
         var result = new NavNode[children.Length];
@@ -414,9 +407,10 @@ internal static class NavTreeBuilder
                     continue;
                 }
 
-                result[write++] = ordered[i].Title.Length > 0
+                result[write] = ordered[i].Title.Length > 0
                     ? CloneWithTitle(children[j], ordered[i].Title, useDirectoryUrls)
                     : children[j];
+                write++;
                 taken[j] = true;
                 break;
             }
@@ -424,10 +418,13 @@ internal static class NavTreeBuilder
 
         for (var j = 0; j < children.Length; j++)
         {
-            if (!taken[j])
+            if (taken[j])
             {
-                result[write++] = children[j];
+                continue;
             }
+
+            result[write] = children[j];
+            write++;
         }
 
         return result;
@@ -439,10 +436,7 @@ internal static class NavTreeBuilder
     /// <param name="useDirectoryUrls">URL-shape flag forwarded to the constructor.</param>
     /// <returns>New node carrying the same children and order.</returns>
     private static NavNode CloneWithTitle(NavNode node, byte[] title, bool useDirectoryUrls) =>
-        new(title, node.RelativePath, node.IsSection, node.Children, node.IndexPath, useDirectoryUrls)
-        {
-            Order = node.Order
-        };
+        new(title, node.RelativePath, node.IsSection, node.Children, node.IndexPath, useDirectoryUrls) { Order = node.Order, };
 
     /// <summary>Determines whether <paramref name="node"/> is named by <paramref name="entry"/> (file name with or without <c>.md</c>, or section directory name).</summary>
     /// <param name="node">Candidate child.</param>
@@ -503,7 +497,7 @@ internal static class NavTreeBuilder
                         LogLevel.Debug,
                         relative.Value,
                         "glob excluded",
-                        static (l, path, reason) => NavLoggingHelper.LogNavPruned(l, path, reason));
+                        NavLoggingHelper.LogNavPruned);
                     continue;
                 }
             }
@@ -516,13 +510,14 @@ internal static class NavTreeBuilder
                     LogLevel.Debug,
                     relative.Value,
                     "frontmatter not_in_nav",
-                    static (l, path, reason) => NavLoggingHelper.LogNavPruned(l, path, reason));
+                    NavLoggingHelper.LogNavPruned);
                 continue;
             }
 
             var title = ResolveLeafTitle(file);
             var order = ResolveOrder(file);
-            buffer[count++] = new(title, relative, false, [], useDirectoryUrls) { Order = order };
+            buffer[count] = new(title, relative, false, [], useDirectoryUrls) { Order = order };
+            count++;
         }
 
         return count;
@@ -624,7 +619,8 @@ internal static class NavTreeBuilder
                 continue;
             }
 
-            buffer[count++] = node;
+            buffer[count] = node;
+            count++;
         }
 
         return count;
@@ -689,6 +685,7 @@ internal static class NavTreeBuilder
     /// <summary>Sorts sections by directory name.</summary>
     /// <param name="buffer">Section buffer.</param>
     /// <param name="count">Valid section count.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SortSections(NavNode[] buffer, int count) =>
         Array.Sort(buffer, 0, count, NavNodeFileNameComparer.Instance);
 

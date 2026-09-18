@@ -63,8 +63,7 @@ public static class UnicodeRangeMatcher
     /// <returns><see langword="true"/> when at least one entry overlaps a seen block.</returns>
     public static bool Overlaps(ReadOnlySpan<byte> unicodeRange, bool[] seenBlocks)
     {
-        var pos = 0;
-        while (pos < unicodeRange.Length)
+        for (var pos = 0; pos < unicodeRange.Length;)
         {
             var commaRel = unicodeRange[pos..].IndexOf((byte)',');
             var entry = AsciiByteHelpers.TrimAsciiWhitespace(commaRel < 0
@@ -125,14 +124,9 @@ public static class UnicodeRangeMatcher
             return false;
         }
 
-        var body = entry[2..];
+        var body = entry["U+"u8.Length..];
         var dash = body.IndexOf((byte)'-');
-        if (dash < 0)
-        {
-            return TryParseHex(body, out lo, out hi);
-        }
-
-        return TryParseHex(body[..dash], out lo, out _) && TryParseHex(body[(dash + 1)..], out _, out hi);
+        return dash < 0 ? TryParseHex(body, out lo, out hi) : TryParseHex(body[..dash], out lo, out _) && TryParseHex(body[(dash + 1)..], out _, out hi);
     }
 
     /// <summary>Parses a hex string that may contain <c>?</c> wildcards into its inclusive low/high codepoints.</summary>

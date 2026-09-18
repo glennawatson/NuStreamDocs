@@ -8,11 +8,11 @@ namespace NuStreamDocs.Transitions;
 public enum PrefetchStrategy
 {
     /// <summary>Never pre-fetch; each navigation triggers its own fetch.</summary>
-    Off,
+    Off = 0,
 
     /// <summary>Pre-fetch a link's target on <c>mouseenter</c> / <c>touchstart</c> (after a short debounce).</summary>
-    Hover,
+    Hover = 1,
 
     /// <summary>Pre-fetch every same-origin link as it scrolls into view.</summary>
-    Viewport
+    Viewport = 2,
 }

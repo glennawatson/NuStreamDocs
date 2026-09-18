@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Building;
 
 namespace NuStreamDocs.Fonts;
@@ -9,28 +10,32 @@ namespace NuStreamDocs.Fonts;
 /// <summary>Builder-extension surface for <see cref="FontsPlugin"/>.</summary>
 public static class DocBuilderFontsExtensions
 {
-    /// <summary>Registers <see cref="FontsPlugin"/> with the supplied font configuration.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="options">Plugin options (the declared faces).</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFonts(this DocBuilder builder, in FontsOptions options) =>
-        builder.UsePlugin(new FontsPlugin(options));
-
-    /// <summary>Registers <see cref="FontsPlugin"/> with caller-tweaked options.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="configure">Function that receives <see cref="FontsOptions.Default"/> and returns the customized set.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFonts(this DocBuilder builder, Func<FontsOptions, FontsOptions> configure)
+    /// <summary>Extension members for <c>DocBuilder</c>.</summary>
+    /// <param name="builder">Builder to configure.</param>
+    extension(DocBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(configure);
-        return builder.UsePlugin(new FontsPlugin(configure(FontsOptions.Default)));
-    }
+        /// <summary>Registers <see cref="FontsPlugin"/> with the supplied font configuration.</summary>
+        /// <param name="options">Plugin options (the declared faces).</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseFonts(in FontsOptions options) =>
+            builder.UsePlugin(new FontsPlugin(options));
 
-    /// <summary>Registers <see cref="FontsPlugin"/> with caller-supplied options and a logger.</summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="options">Plugin options.</param>
-    /// <param name="logger">Logger for diagnostics.</param>
-    /// <returns>The builder for chaining.</returns>
-    public static DocBuilder UseFonts(this DocBuilder builder, in FontsOptions options, ILogger logger) =>
-        builder.UsePlugin(new FontsPlugin(options, logger));
+        /// <summary>Registers <see cref="FontsPlugin"/> with caller-tweaked options.</summary>
+        /// <param name="configure">Function that receives <see cref="FontsOptions.Default"/> and returns the customized set.</param>
+        /// <returns>The builder for chaining.</returns>
+        public DocBuilder UseFonts(Func<FontsOptions, FontsOptions> configure)
+        {
+            ArgumentNullException.ThrowIfNull(configure);
+            return builder.UsePlugin(new FontsPlugin(configure(FontsOptions.Default)));
+        }
+
+        /// <summary>Registers <see cref="FontsPlugin"/> with caller-supplied options and a logger.</summary>
+        /// <param name="options">Plugin options.</param>
+        /// <param name="logger">Logger for diagnostics.</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseFonts(in FontsOptions options, ILogger logger) =>
+            builder.UsePlugin(new FontsPlugin(options, logger));
+    }
 }

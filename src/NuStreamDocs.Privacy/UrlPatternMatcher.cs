@@ -12,6 +12,7 @@ internal sealed class UrlPatternMatcher
 
     /// <summary>Initializes a new instance of the <see cref="UrlPatternMatcher"/> class.</summary>
     /// <param name="patterns">UTF-8 glob patterns. Null or empty disables matching.</param>
+    /// <exception cref="ArgumentException">Thrown when <c>patterns[i] is null or []</c>.</exception>
     public UrlPatternMatcher(byte[][]? patterns)
     {
         if (patterns is null or [])
@@ -37,7 +38,7 @@ internal sealed class UrlPatternMatcher
     /// <summary>Returns true when at least one configured pattern matches <paramref name="url"/>.</summary>
     /// <param name="url">Candidate UTF-8 URL bytes.</param>
     /// <returns>True on match.</returns>
-    public bool IsMatch(ReadOnlySpan<byte> url)
+    internal bool IsMatch(ReadOnlySpan<byte> url)
     {
         for (var i = 0; i < _patterns.Length; i++)
         {

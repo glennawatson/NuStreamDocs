@@ -10,6 +10,12 @@ namespace NuStreamDocs.Lightbox.Tests;
 /// <summary>Behavior tests for <c>ImageWrapper</c>.</summary>
 public class ImageWrapperTests
 {
+    /// <summary>Expected image count.</summary>
+    private const int ExpectedImageCount = 2;
+
+    /// <summary>Gets the lightbox class bytes.</summary>
+    private static ReadOnlySpan<byte> LightboxClass => "glightbox"u8;
+
     /// <summary>Standalone images get wrapped in a glightbox anchor.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -17,7 +23,7 @@ public class ImageWrapperTests
     {
         var input = "<p><img src=\"/img/foo.png\" alt=\"foo\"></p>"u8;
         ArrayBufferWriter<byte> sink = new();
-        var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
+        var wrapped = ImageWrapper.Rewrite(input, LightboxClass, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(wrapped).IsEqualTo(1);
@@ -33,7 +39,7 @@ public class ImageWrapperTests
     {
         var input = "<a href=\"https://example.com\"><img src=\"/img/foo.png\"></a>"u8;
         ArrayBufferWriter<byte> sink = new();
-        var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
+        var wrapped = ImageWrapper.Rewrite(input, LightboxClass, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
         await Assert.That(wrapped).IsEqualTo(0);
@@ -47,10 +53,10 @@ public class ImageWrapperTests
     {
         var input = "<img src=\"a.png\"><img src=\"b.png\">"u8;
         ArrayBufferWriter<byte> sink = new();
-        var wrapped = ImageWrapper.Rewrite(input, "glightbox"u8, sink);
+        var wrapped = ImageWrapper.Rewrite(input, LightboxClass, sink);
 
         var result = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(wrapped).IsEqualTo(2);
+        await Assert.That(wrapped).IsEqualTo(ExpectedImageCount);
         await Assert.That(result.Contains("href=\"a.png\"", StringComparison.Ordinal)).IsTrue();
         await Assert.That(result.Contains("href=\"b.png\"", StringComparison.Ordinal)).IsTrue();
     }

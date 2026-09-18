@@ -34,7 +34,7 @@ internal static class ApiIndexWriter
     /// <param name="introduction">Optional UTF-8 intro paragraph rendered between the title and the namespace list.</param>
     /// <param name="order">Optional <c>Order:</c> integer; emitted as a YAML frontmatter block at the top of the page when set.</param>
     /// <returns>The rendered UTF-8 page bytes, or an empty array when <paramref name="namespaces"/> is empty.</returns>
-    public static byte[] BuildBytes(
+    internal static byte[] BuildBytes(
         byte[][] namespaces,
         ReadOnlySpan<byte> title,
         ReadOnlySpan<byte> introduction,
@@ -60,7 +60,7 @@ internal static class ApiIndexWriter
     /// <summary>Returns true when <paramref name="name"/> is a known infrastructure folder that should not appear in the namespace index.</summary>
     /// <param name="name">UTF-8 folder-name bytes (top-level segment of an emitted page path).</param>
     /// <returns>True when the folder should be filtered out.</returns>
-    public static bool IsInfraDirectory(ReadOnlySpan<byte> name)
+    internal static bool IsInfraDirectory(ReadOnlySpan<byte> name)
     {
         for (var i = 0; i < InfraDirectoryNamesUtf8.Length; i++)
         {
@@ -76,6 +76,7 @@ internal static class ApiIndexWriter
     /// <summary>Writes a minimal YAML frontmatter block carrying just <c>Order: N</c>.</summary>
     /// <param name="sink">UTF-8 sink.</param>
     /// <param name="order">Order integer.</param>
+    /// <exception cref="InvalidOperationException">The order value cannot be formatted.</exception>
     private static void WriteOrderFrontmatter(IBufferWriter<byte> sink, int order)
     {
         WriteSpan(sink, "---\nOrder: "u8);

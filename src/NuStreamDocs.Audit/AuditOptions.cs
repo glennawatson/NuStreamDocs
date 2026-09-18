@@ -2,12 +2,15 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace NuStreamDocs.Audit;
 
 /// <summary>Configuration for <see cref="AuditPlugin"/>.</summary>
 /// <param name="Strict">When true, any finding sets a non-zero process exit code; otherwise findings are reported as warnings only.</param>
 /// <param name="Parallelism">Maximum number of pages audited in parallel.</param>
 /// <param name="DisabledRules">Lints to skip entirely.</param>
+[System.Diagnostics.DebuggerDisplay("AuditOptions: {ToString(),nq}")]
 public sealed record AuditOptions(
     bool Strict,
     int Parallelism,
@@ -40,5 +43,6 @@ public sealed record AuditOptions(
 
     /// <summary>Throws when any field is invalid.</summary>
     /// <exception cref="ArgumentOutOfRangeException">When <see cref="Parallelism"/> is non-positive.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Validate() => ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Parallelism);
 }

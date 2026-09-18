@@ -11,6 +11,18 @@ namespace NuStreamDocs.Versions.Tests;
 /// <summary>Behavior tests for <c>VersionsManifest</c>.</summary>
 public class VersionsManifestTests
 {
+    /// <summary>Version retained for compatibility with legacy documentation.</summary>
+    private const string LegacyVersion = "0.1.0";
+
+    /// <summary>Version identified as the latest release.</summary>
+    private const string LatestVersion = "0.4.2";
+
+    /// <summary>Display title for the latest release.</summary>
+    private const string LatestTitle = "0.4 (latest)";
+
+    /// <summary>Gets the alias identifying the latest release.</summary>
+    private static ReadOnlySpan<byte> LatestAlias => "latest"u8;
+
     /// <summary>A round-trip via UTF-8 preserves the entries.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -18,17 +30,17 @@ public class VersionsManifestTests
     {
         VersionEntry[] input =
         [
-            new("0.1.0", "0.1 (legacy)", []),
-            new("0.4.2", "0.4 (latest)", [[.. "latest"u8], [.. "stable"u8]])
+            new(LegacyVersion, "0.1 (legacy)", []),
+            new(LatestVersion, LatestTitle, [[.. LatestAlias], [.. "stable"u8]])
         ];
 
         ArrayBufferWriter<byte> sink = new();
         VersionsManifest.WriteToUtf8(input, sink);
         var roundTripped = VersionsManifest.ReadFromUtf8(sink.WrittenSpan);
 
-        await Assert.That(roundTripped.Length).IsEqualTo(2);
-        await Assert.That(roundTripped[0].Version).IsEqualTo("0.1.0");
-        await Assert.That(roundTripped[1].Aliases.Length).IsEqualTo(2);
+        await Assert.That(roundTripped.Length).IsEqualTo(input.Length);
+        await Assert.That(roundTripped[0].Version).IsEqualTo(LegacyVersion);
+        await Assert.That(roundTripped[1].Aliases.Length).IsEqualTo(input[1].Aliases.Length);
         await Assert.That(Encoding.UTF8.GetString(roundTripped[1].Aliases[0])).IsEqualTo("latest");
     }
 
@@ -39,14 +51,14 @@ public class VersionsManifestTests
     {
         VersionEntry[] existing =
         [
-            new("0.1.0", "0.1", []),
-            new("0.4.2", "0.4 (old)", [])
+            new(LegacyVersion, "0.1", []),
+            new(LatestVersion, "0.4 (old)", [])
         ];
 
-        var merged = VersionsManifest.Upsert(existing, new("0.4.2", "0.4 (latest)", [[.. "latest"u8]]));
+        var merged = VersionsManifest.Upsert(existing, new(LatestVersion, LatestTitle, [[.. LatestAlias]]));
 
-        await Assert.That(merged.Length).IsEqualTo(2);
-        await Assert.That(merged[1].Title).IsEqualTo("0.4 (latest)");
+        await Assert.That(merged.Length).IsEqualTo(existing.Length);
+        await Assert.That(merged[1].Title).IsEqualTo(LatestTitle);
         await Assert.That(merged[1].Aliases.Length).IsEqualTo(1);
     }
 
@@ -55,11 +67,11 @@ public class VersionsManifestTests
     [Test]
     public async Task UpsertAppendsNewVersion()
     {
-        VersionEntry[] existing = [new("0.1.0", "0.1", [])];
-        var merged = VersionsManifest.Upsert(existing, new("0.4.2", "0.4", [[.. "latest"u8]]));
+        VersionEntry[] existing = [new(LegacyVersion, "0.1", [])];
+        var merged = VersionsManifest.Upsert(existing, new(LatestVersion, "0.4", [[.. LatestAlias]]));
 
-        await Assert.That(merged.Length).IsEqualTo(2);
-        await Assert.That(merged[1].Version).IsEqualTo("0.4.2");
+        await Assert.That(merged.Length).IsEqualTo(existing.Length + 1);
+        await Assert.That(merged[1].Version).IsEqualTo(LatestVersion);
     }
 
     /// <summary>Reading an empty span yields no entries.</summary>
@@ -69,10 +81,10 @@ public class VersionsManifestTests
     {
         var dir = Path.Combine(
             Path.GetTempPath(),
-            "smd-versions-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
+            $"smd-versions-{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}");
         try
         {
-            Directory.CreateDirectory(dir);
+            _ = Directory.CreateDirectory(dir);
             var entries = VersionsManifest.Read(dir);
             await Assert.That(entries.Length).IsEqualTo(0);
         }
@@ -87,10 +99,9 @@ public class VersionsManifestTests
     [Test]
     public async Task ReadIgnoresUnknownProperties()
     {
-        const string Json = """[{"version":"0.1.0","title":"0.1","aliases":[],"docVersion":"foo"}]""";
-        var entries = VersionsManifest.ReadFromUtf8(Encoding.UTF8.GetBytes(Json));
+        var entries = VersionsManifest.ReadFromUtf8("""[{"version":"0.1.0","title":"0.1","aliases":[],"docVersion":"foo"}]"""u8);
 
         await Assert.That(entries.Length).IsEqualTo(1);
-        await Assert.That(entries[0].Version).IsEqualTo("0.1.0");
+        await Assert.That(entries[0].Version).IsEqualTo(LegacyVersion);
     }
 }

@@ -49,7 +49,7 @@ public class MarkdownExtensionPluginTests
     [Test]
     public async Task PreprocessorsRunWithoutThrowing()
     {
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new();
         RunPreRender(new AdmonitionPlugin(), sink);
         RunPreRender(new CaretTildePlugin(), sink);
         RunPreRender(new CheckListPlugin(), sink);

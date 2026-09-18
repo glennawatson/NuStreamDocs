@@ -21,12 +21,7 @@ public static class LessLexer
     /// <returns>Lexer.</returns>
     private static Lexer Build()
     {
-        CssFamilyConfig config = new()
-        {
-            IncludeLineComment = true,
-            VariableSigil = (byte)'@',
-            IncludeParentSelector = true
-        };
+        CssFamilyConfig config = new() { IncludeLineComment = true, VariableSigil = (byte)'@', IncludeParentSelector = true, };
 
         return CssFamilyRules.CreateLexer(config);
     }

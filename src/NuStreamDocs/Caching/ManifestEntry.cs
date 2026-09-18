@@ -10,6 +10,7 @@ namespace NuStreamDocs.Caching;
 /// <param name="RelativePath">Page path relative to the input root, forward-slashed.</param>
 /// <param name="ContentHash">16-byte ASCII lowercase hex digest of the source UTF-8 bytes.</param>
 /// <param name="OutputLengthBytes">Length of the previously emitted output file.</param>
+[System.Diagnostics.DebuggerDisplay("ManifestEntry: {ToString(),nq}")]
 public readonly record struct ManifestEntry(
     FilePath RelativePath,
     byte[] ContentHash,

@@ -10,6 +10,9 @@ namespace NuStreamDocs.Sitemap.Tests;
 /// <summary>Lifecycle tests for <c>SitemapPlugin</c>, <c>NotFoundPlugin</c>, and <c>RedirectsPlugin</c> registrations.</summary>
 public class SitemapPluginTests
 {
+    /// <summary>Filename of the emitted sitemap.</summary>
+    private const string SitemapFileName = "sitemap.xml";
+
     /// <summary>End-to-end finalize emits sitemap.xml + robots.txt when SiteUrl is configured.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -24,7 +27,7 @@ public class SitemapPluginTests
         ScanPage(plugin, "index.md");
         await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, SitemapFileName))).IsTrue();
         await Assert.That(File.Exists(Path.Combine(temp.Root, "robots.txt"))).IsTrue();
     }
 
@@ -41,7 +44,7 @@ public class SitemapPluginTests
         ScanPage(plugin, "any.md");
         await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, SitemapFileName))).IsFalse();
     }
 
     /// <summary>Pages whose relative path produces an empty URL are skipped.</summary>
@@ -58,7 +61,7 @@ public class SitemapPluginTests
         await plugin.FinalizeAsync(new(temp.Root, []), CancellationToken.None);
 
         // No entries → no sitemap written.
-        await Assert.That(File.Exists(Path.Combine(temp.Root, "sitemap.xml"))).IsFalse();
+        await Assert.That(File.Exists(Path.Combine(temp.Root, SitemapFileName))).IsFalse();
     }
 
     /// <summary>Plugin name is stable.</summary>
@@ -106,8 +109,8 @@ public class SitemapPluginTests
         /// <summary>Initializes a new instance of the <see cref="SitemapTempDir"/> class.</summary>
         public SitemapTempDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-sm-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-sm-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path to the scratch directory.</summary>

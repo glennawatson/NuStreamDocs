@@ -57,9 +57,7 @@
 
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <PackageReference Include="TUnit"/>
-    <PackageReference Include="Verify.TUnit"/>
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage"/>
-    <PackageReference Include="NSubstitute"/>
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
@@ -77,15 +75,10 @@
 
   <ItemGroup>
     <PackageReference Include="MinVer" PrivateAssets="all"/>
-    <PackageReference Include="stylecop.analyzers" PrivateAssets="all"/>
-    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All"/>
-    <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All"/>
-    <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all"/>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\stylecop.json" Link="stylecop.json"/>
+    <PackageReference Include="StyleSharp.Analyzers" PrivateAssets="all"/>
+    <PackageReference Include="PerformanceSharp.Analyzers" PrivateAssets="all"/>
+    <PackageReference Include="SecuritySharp.Analyzers" PrivateAssets="all"/>
   </ItemGroup>
 
   <!--

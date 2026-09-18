@@ -17,7 +17,7 @@ internal static class AttrListElementRewriter
     /// <param name="lastEmit">Source offset emitted up to (updated on success).</param>
     /// <param name="advanceTo">Next scan cursor.</param>
     /// <returns>True when a rewrite succeeded.</returns>
-    public static bool TryRewriteInlinePaired(
+    internal static bool TryRewriteInlinePaired(
         ReadOnlySpan<byte> html,
         int lt,
         IBufferWriter<byte> sink,
@@ -73,7 +73,7 @@ internal static class AttrListElementRewriter
     /// <param name="lastEmit">Source offset emitted up to (updated on success).</param>
     /// <param name="advanceTo">Next scan cursor.</param>
     /// <returns>True when a rewrite succeeded.</returns>
-    public static bool TryRewriteBlock(
+    internal static bool TryRewriteBlock(
         ReadOnlySpan<byte> html,
         int lt,
         IBufferWriter<byte> sink,
@@ -132,7 +132,7 @@ internal static class AttrListElementRewriter
     /// <param name="lastEmit">Source offset emitted up to (updated on success).</param>
     /// <param name="advanceTo">Next scan cursor.</param>
     /// <returns>True when a rewrite succeeded.</returns>
-    public static bool TryRewriteInlineVoid(
+    internal static bool TryRewriteInlineVoid(
         ReadOnlySpan<byte> html,
         int lt,
         IBufferWriter<byte> sink,

@@ -27,6 +27,7 @@ public static class NavEntryFactory
     /// <param name="title">UTF-8 title bytes; empty to derive from the file at render time.</param>
     /// <param name="path">UTF-8 source-relative path bytes or absolute URL.</param>
     /// <returns>A leaf <see cref="NavEntry"/>.</returns>
+    /// <exception cref="ArgumentException">The path is empty.</exception>
     public static NavEntry Leaf(byte[] title, byte[] path) =>
         path.Length is 0
             ? throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path))
@@ -36,6 +37,7 @@ public static class NavEntryFactory
     /// <param name="title">UTF-8 title bytes; empty span to derive at render time.</param>
     /// <param name="path">UTF-8 path bytes.</param>
     /// <returns>A leaf <see cref="NavEntry"/>.</returns>
+    /// <exception cref="ArgumentException">The path is empty.</exception>
     public static NavEntry Leaf(ReadOnlySpan<byte> title, ReadOnlySpan<byte> path) =>
         path.IsEmpty
             ? throw new ArgumentException("Path bytes must be non-empty for a leaf entry.", nameof(path))
@@ -45,6 +47,7 @@ public static class NavEntryFactory
     /// <param name="title">Section display title.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
+    /// <exception cref="ArgumentException">The title or children are empty.</exception>
     public static NavEntry Section(in ApiCompatString title, NavEntry[] children)
     {
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
@@ -57,6 +60,7 @@ public static class NavEntryFactory
     /// <param name="title">UTF-8 title bytes; must be non-empty.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>title.Length is 0</c>.</exception>
     public static NavEntry Section(byte[] title, NavEntry[] children)
     {
         if (title.Length is 0)
@@ -74,6 +78,7 @@ public static class NavEntryFactory
     /// <param name="indexPath">Source-relative landing-page path.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
+    /// <exception cref="ArgumentException">The title, index path, or children are empty.</exception>
     public static NavEntry SectionWithIndex(in ApiCompatString title, in FilePath indexPath, NavEntry[] children)
     {
         ArgumentException.ThrowIfNullOrEmpty(title.Value);
@@ -88,6 +93,7 @@ public static class NavEntryFactory
     /// <param name="indexPath">UTF-8 landing-page path bytes; must be non-empty.</param>
     /// <param name="children">Children; must be non-empty.</param>
     /// <returns>A section <see cref="NavEntry"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <c>title.Length is 0</c>.</exception>
     public static NavEntry SectionWithIndex(byte[] title, byte[] indexPath, NavEntry[] children)
     {
         if (title.Length is 0)

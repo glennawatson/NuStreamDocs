@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Markdown;
@@ -14,6 +15,7 @@ namespace NuStreamDocs.Benchmarks;
 /// Isolates the cost of the structural pass — fence detection, paragraph
 /// boundaries, list / blockquote scope tracking — from inline + HTML emit.
 /// </remarks>
+[DebuggerDisplay("BlockScannerBenchmarks: Paragraphs={Paragraphs}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class BlockScannerBenchmarks
@@ -48,7 +50,7 @@ public class BlockScannerBenchmarks
         StringBuilder sb = new();
         for (var i = 0; i < Paragraphs; i++)
         {
-            sb.Append("# Heading ").Append(i).Append('\n')
+            _ = sb.Append("# Heading ").Append(i).Append('\n')
                 .Append("Paragraph with `inline code`, a [link](https://x/").Append(i).Append(") and a > quote.\n\n")
                 .Append("- list item ").Append(i).Append('\n')
                 .Append("- list item B\n\n")
@@ -88,7 +90,7 @@ public class BlockScannerBenchmarks
         StringBuilder sb = new();
         for (var i = 0; i < Paragraphs; i++)
         {
-            sb.Append("<!-- single-line note ").Append(i).Append(" -->\n")
+            _ = sb.Append("<!-- single-line note ").Append(i).Append(" -->\n")
                 .Append("## Heading ").Append(i).Append('\n')
                 .Append("<!--- triple-dash form ").Append(i).Append(" --->\n")
                 .Append("Body paragraph ").Append(i).Append(".\n\n");

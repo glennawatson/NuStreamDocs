@@ -8,4 +8,5 @@ namespace NuStreamDocs.ContentLoader.GitHub;
 /// <param name="Owner">Repository owner (user or organization).</param>
 /// <param name="Repo">Repository name.</param>
 /// <param name="Reference">Branch name, tag name, or commit SHA.</param>
+[System.Diagnostics.DebuggerDisplay("GitHubRepoRef: {ToString(),nq}")]
 public readonly record struct GitHubRepoRef(byte[] Owner, byte[] Repo, byte[] Reference);

@@ -6,13 +6,12 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
-/// <summary>
-/// Read-only context handed to <see cref="IBuildConfigurePlugin.ConfigureAsync"/>.
-/// </summary>
+/// <summary>Read-only context handed to <see cref="IBuildConfigurePlugin.ConfigureAsync"/>.</summary>
 /// <param name="InputRoot">Absolute path to the docs root directory.</param>
 /// <param name="OutputRoot">Absolute path to the site output directory.</param>
 /// <param name="Plugins">Every plugin registered with the builder, in registration order. Plugins use this to discover companion contracts such as <see cref="IHeadExtraProvider"/>.</param>
 /// <param name="CrossPageMarkers">Registry plugins write into to declare byte markers that signal a page needs cross-page resolution.</param>
+[System.Diagnostics.DebuggerDisplay("BuildConfigureContext: {UseDirectoryUrls}")]
 public readonly record struct BuildConfigureContext(
     DirectoryPath InputRoot,
     DirectoryPath OutputRoot,

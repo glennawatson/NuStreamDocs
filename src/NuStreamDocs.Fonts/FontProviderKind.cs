@@ -8,11 +8,11 @@ namespace NuStreamDocs.Fonts;
 public enum FontProviderKind
 {
     /// <summary>Resolve the family + weights/styles against the Google Fonts <c>css2</c> API and download the woff2 files.</summary>
-    Google,
+    Google = 0,
 
     /// <summary>Resolve the family against the Fontsource catalogue served from jsDelivr and download the woff2 files.</summary>
-    Fontsource,
+    Fontsource = 1,
 
     /// <summary>Use font files already present in the author's input directory, matched by glob.</summary>
-    Local
+    Local = 2,
 }

@@ -30,8 +30,8 @@ public class ContentLoaderPluginTests
         BuildDiscoverContext context = new(default, default, [], sink);
         await plugin.DiscoverAsync(context, CancellationToken.None);
 
-        var paths = sink.Snapshot().Select(p => p.RelativePath.Value).OrderBy(static p => p, StringComparer.Ordinal)
-            .ToArray();
+        var paths = Array.ConvertAll(sink.Snapshot(), static page => page.RelativePath.Value);
+        Array.Sort(paths, StringComparer.Ordinal);
         await Assert.That(string.Join(",", paths)).IsEqualTo("a/x.md,a/y.md,b/z.md");
     }
 
@@ -47,6 +47,7 @@ public class ContentLoaderPluginTests
     }
 
     /// <summary>A test loader that returns a fixed page set.</summary>
+    /// <param name="pages">Pages returned by each load.</param>
     private sealed class FakeLoader(SyntheticPage[] pages) : IContentLoader
     {
         /// <inheritdoc/>

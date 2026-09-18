@@ -61,14 +61,7 @@ public static class VbNetLexer
 
         CFamilyConfig config = new()
         {
-            Tables = new()
-            {
-                Keywords = Keywords,
-                KeywordTypes = KeywordTypes,
-                KeywordDeclarations = KeywordDeclarations,
-                KeywordConstants = KeywordConstants,
-                Operators = OperatorTable
-            },
+            Tables = new() { Keywords = Keywords, KeywordTypes = KeywordTypes, KeywordDeclarations = KeywordDeclarations, KeywordConstants = KeywordConstants, Operators = OperatorTable, },
             Punctuation = PunctuationSet,
             IntegerSuffix = CFamilyRules.NoSuffix,
             FloatSuffix = CFamilyRules.NoSuffix,
@@ -76,7 +69,7 @@ public static class VbNetLexer
             IncludePreprocessor = false,
             IncludeCharacterLiteral = false,
             WhitespaceIncludesNewlines = true,
-            SpecialString = lineComment
+            SpecialString = lineComment,
         };
 
         return CFamilyRules.CreateLexer(config);

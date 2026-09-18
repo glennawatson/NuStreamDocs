@@ -2,6 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.Privacy.Tests;
@@ -9,18 +10,24 @@ namespace NuStreamDocs.Privacy.Tests;
 /// <summary>Behavior tests for <c>ExternalUrlScanner</c>.</summary>
 public class ExternalUrlScannerTests
 {
+    /// <summary>Image Url used by the test cases.</summary>
+    private const string ImageUrl = "https://example.com/x.png";
+
     /// <summary>Filter that allows every host (no skip, no allow-list).</summary>
     private static readonly HostFilter EmptyHosts = new(null, null);
+
+    /// <summary>Gets the asset directory used by the test cases.</summary>
+    private static ReadOnlySpan<byte> AssetDirectory => "assets/external"u8;
 
     /// <summary>An <c>img src</c> with an absolute URL gets rewritten to the registry's local path.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task RewritesAbsoluteImgSrc()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("<img src=\"https://example.com/x.png\" alt=\"x\">", registry, EmptyHosts);
         await Assert.That(output).Contains("src=\"/assets/external/");
-        await Assert.That(output).DoesNotContain("https://example.com/x.png");
+        await Assert.That(output).DoesNotContain(ImageUrl);
     }
 
     /// <summary>A <c>link href</c> stylesheet URL gets rewritten the same way.</summary>
@@ -28,7 +35,7 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task RewritesAbsoluteLinkHref()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("<link rel=\"stylesheet\" href=\"https://cdn.example/x.css\">", registry, EmptyHosts);
         await Assert.That(output).Contains("href=\"/assets/external/");
     }
@@ -38,7 +45,7 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task LeavesRelativeUrlsAlone()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite("<a href=\"/local/page.html\">x</a>", registry, EmptyHosts);
         await Assert.That(output).IsEqualTo("<a href=\"/local/page.html\">x</a>");
     }
@@ -48,7 +55,7 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task SkipsHostsOnSkipList()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         HostFilter skip = new(PrivacyTestHelpers.Utf8("trusted.cdn.example"), null);
         var output = Rewrite("<img src=\"https://trusted.cdn.example/x.png\">", registry, skip);
         await Assert.That(output).IsEqualTo("<img src=\"https://trusted.cdn.example/x.png\">");
@@ -59,7 +66,7 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task SameUrlMapsToSameLocalPath()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var first = registry.GetOrAdd("https://example.com/x.png"u8);
         var second = registry.GetOrAdd("https://example.com/x.png"u8);
         await Assert.That(first.AsSpan().SequenceEqual(second)).IsTrue();
@@ -76,7 +83,7 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task LeavesCanonicalLinkAlone()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         const string Source = "<link rel=\"canonical\" href=\"https://reactiveui.net/docs/\">";
         var output = Rewrite(Source, registry, EmptyHosts);
         await Assert.That(output).IsEqualTo(Source);
@@ -87,7 +94,7 @@ public class ExternalUrlScannerTests
     [Test]
     public async Task RewritesAlternateLinkHreflangVariant()
     {
-        ExternalAssetRegistry registry = new([.. "assets/external"u8]);
+        ExternalAssetRegistry registry = new([.. AssetDirectory]);
         var output = Rewrite(
             "<link rel=\"alternate\" hreflang=\"de\" href=\"https://example.com/de/\">",
             registry,
@@ -100,6 +107,7 @@ public class ExternalUrlScannerTests
     /// <param name="registry">URL registry.</param>
     /// <param name="filter">Host filter.</param>
     /// <returns>Rewritten HTML.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Rewrite(string source, ExternalAssetRegistry registry, HostFilter filter) =>
         Encoding.UTF8.GetString(ExternalUrlScanner.Rewrite(Encoding.UTF8.GetBytes(source), registry, filter));
 }

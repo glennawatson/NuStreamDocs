@@ -2,7 +2,7 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
@@ -20,12 +20,9 @@ namespace NuStreamDocs.Benchmarks;
 /// overhead specifically. Useful as a reference for any future change to
 /// either the channel shape or the streaming-sink contract.
 /// </summary>
+[DebuggerDisplay("CSharpApiGeneratorBridgeBenchmarks: Pages={Pages}")]
 [ShortRunJob]
 [MemoryDiagnoser]
-[SuppressMessage(
-    "Major Code Smell",
-    "S4462:Calls to \"async\" methods should not be blocking",
-    Justification = "BenchmarkDotNet drives benchmarks synchronously; GetResult is the pragmatic way to measure end-to-end async pipelines.")]
 public class CSharpApiGeneratorBridgeBenchmarks
 {
     /// <summary>Small page count (smoke).</summary>
@@ -41,7 +38,7 @@ public class CSharpApiGeneratorBridgeBenchmarks
     private static readonly byte[] PagePayload = "# Type X\n\nbody"u8.ToArray();
 
     /// <summary>Pre-built relative paths the simulated emitter pretends to emit; sized once so the per-iteration cost focuses on bridge behaviour.</summary>
-    private string[] _emitterRelativePaths = [];
+    private FilePath[] _emitterRelativePaths = [];
 
     /// <summary>Gets or sets the page count for the current parameter set.</summary>
     [Params(SmallPages, MediumPages, LargePages)]
@@ -51,10 +48,10 @@ public class CSharpApiGeneratorBridgeBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _emitterRelativePaths = new string[Pages];
+        _emitterRelativePaths = new FilePath[Pages];
         for (var i = 0; i < Pages; i++)
         {
-            _emitterRelativePaths[i] = "Splat/Splat/Type" + i.ToString(CultureInfo.InvariantCulture) + ".md";
+            _emitterRelativePaths[i] = $"Splat/Splat/Type{i.ToString(CultureInfo.InvariantCulture)}.md";
         }
     }
 
@@ -64,14 +61,9 @@ public class CSharpApiGeneratorBridgeBenchmarks
     /// </summary>
     /// <returns>Number of synthetic pages drained (returned so BenchmarkDotNet doesn't elide the call).</returns>
     [Benchmark]
-    public int Bridge()
+    public Task<int> Bridge()
     {
-        var channel = Channel.CreateUnbounded<SyntheticPage>(new()
-        {
-            SingleReader = true,
-            SingleWriter = true,
-            AllowSynchronousContinuations = false
-        });
+        var channel = Channel.CreateUnbounded<SyntheticPage>(new() { SingleReader = true, SingleWriter = true, AllowSynchronousContinuations = false, });
 
         // Producer — mirrors what CSharpApiGeneratorPlugin's CallbackPageSink does:
         // for each emitter page, build a SyntheticPage and TryWrite into the channel.
@@ -81,8 +73,8 @@ public class CSharpApiGeneratorBridgeBenchmarks
             {
                 for (var i = 0; i < _emitterRelativePaths.Length; i++)
                 {
-                    var virtualPath = (FilePath)("api/" + _emitterRelativePaths[i]);
-                    channel.Writer.TryWrite(new(virtualPath, PagePayload));
+                    var virtualPath = (FilePath)$"api/{_emitterRelativePaths[i]}";
+                    _ = channel.Writer.TryWrite(new(virtualPath, PagePayload));
                 }
             }
             finally
@@ -93,14 +85,8 @@ public class CSharpApiGeneratorBridgeBenchmarks
 
         SyntheticPageSink sink = new();
         sink.RegisterStream(StreamFromChannelAsync(channel.Reader, producer, CancellationToken.None));
-        return DrainSync(sink);
+        return CountDrainAsync(sink);
     }
-
-    /// <summary>Drains the sink synchronously so BDN can time the full iteration without async overhead in the timer loop.</summary>
-    /// <param name="sink">Sink to drain.</param>
-    /// <returns>Page count yielded.</returns>
-    private static int DrainSync(SyntheticPageSink sink) =>
-        CountDrainAsync(sink).GetAwaiter().GetResult();
 
     /// <summary>Async helper that walks the full <c>DrainAsync</c> stream and returns the count.</summary>
     /// <param name="sink">Sink to drain.</param>

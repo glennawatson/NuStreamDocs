@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Plugins;
@@ -18,6 +20,7 @@ namespace NuStreamDocs.Benchmarks;
 /// gone — this benchmark surfaces any regression and gives the
 /// allocation profiler something focused to chew on.
 /// </remarks>
+[DebuggerDisplay("ThemeWrapBenchmarks: plugin={_plugin}, bodyTemplate={_bodyTemplate}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class ThemeWrapBenchmarks
@@ -49,7 +52,7 @@ public class ThemeWrapBenchmarks
         StringBuilder sb = new(BodyBytes);
         while (sb.Length < BodyBytes)
         {
-            sb.Append(
+            _ = sb.Append(
                 "<p>This is a paragraph that fills the synthetic page body. <a href=\"x\">link</a> &amp; more.</p>\n");
         }
 
@@ -58,6 +61,7 @@ public class ThemeWrapBenchmarks
     }
 
     /// <summary>Resets the output writer before each iteration so the plugin sees a fresh sink.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [IterationSetup]
     public void IterationSetup() => _html.ResetWrittenCount();
 

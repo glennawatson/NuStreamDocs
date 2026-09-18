@@ -21,6 +21,9 @@ namespace NuStreamDocs.Toc;
 /// </remarks>
 internal static class HeadingSlugifier
 {
+    /// <summary>Initial heading text capacity.</summary>
+    private const int InitialHeadingTextCapacity = 64;
+
     /// <summary>The hyphen byte used as the only allowed punctuation in slugs.</summary>
     private const byte HyphenByte = (byte)'-';
 
@@ -40,7 +43,7 @@ internal static class HeadingSlugifier
     /// <param name="html">Original HTML snapshot, used to read each heading's existing-id span and inner text bytes.</param>
     /// <param name="headings">Heading records to populate; updated in place via a returned new array.</param>
     /// <returns>A tuple of <c>(headings with slug populated, collisionCount)</c>.</returns>
-    public static (Heading[] Slugged, int Collisions) AssignSlugs(ReadOnlySpan<byte> html, Heading[] headings)
+    internal static (Heading[] Slugged, int Collisions) AssignSlugs(ReadOnlySpan<byte> html, Heading[] headings)
     {
         if (headings.Length is 0)
         {
@@ -48,11 +51,11 @@ internal static class HeadingSlugifier
         }
 
         var result = new Heading[headings.Length];
-        Dictionary<byte[], int> seen = new(headings.Length, ByteArrayComparer.Instance);
+        Dictionary<byte[], int> seen = [with(headings.Length, ByteArrayComparer.Instance)];
         var collisions = 0;
 
         // One reusable text-decode buffer for the whole page; reset between headings.
-        using var textRental = PageBuilderPool.Rent(64);
+        using var textRental = PageBuilderPool.Rent(InitialHeadingTextCapacity);
         var textBuffer = textRental.Writer;
 
         for (var i = 0; i < headings.Length; i++)
@@ -91,7 +94,7 @@ internal static class HeadingSlugifier
     /// <summary>Reduces <paramref name="text"/> bytes to a slug byte array.</summary>
     /// <param name="text">Raw heading text bytes (UTF-8). May contain leading/trailing whitespace and inline punctuation.</param>
     /// <returns>ASCII slug bytes; never empty (returns the fallback when input strips to nothing).</returns>
-    public static byte[] SlugifyToBytes(ReadOnlySpan<byte> text)
+    internal static byte[] SlugifyToBytes(ReadOnlySpan<byte> text)
     {
         if (text.IsEmpty)
         {
@@ -146,10 +149,12 @@ internal static class HeadingSlugifier
 
             if (pendingHyphen)
             {
-                dst[len++] = HyphenByte;
+                var separatorIndex = len++;
+                dst[separatorIndex] = HyphenByte;
             }
 
-            dst[len++] = slugByte;
+            var slugIndex = len++;
+            dst[slugIndex] = slugByte;
             pendingHyphen = false;
         }
 
@@ -169,9 +174,7 @@ internal static class HeadingSlugifier
     private static byte ToSlugByte(byte b) => b switch
     {
         >= (byte)'A' and <= (byte)'Z' => (byte)(b + AsciiUpperToLowerOffset),
-        >= (byte)'a' and <= (byte)'z' => b,
-        >= (byte)'0' and <= (byte)'9' => b,
-        (byte)'_' => b,
+        >= (byte)'a' and <= (byte)'z' or >= (byte)'0' and <= (byte)'9' or (byte)'_' => b,
         _ => 0
     };
 

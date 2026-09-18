@@ -2,20 +2,21 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using NuStreamDocs.Highlight;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>
-/// Micro-benchmarks for the per-call helpers inside <c>NuStreamDocs.Highlight</c>.
-/// </summary>
+/// <summary>Micro-benchmarks for the per-call helpers inside <c>NuStreamDocs.Highlight</c>.</summary>
 /// <remarks>
 /// The end-to-end <c>HighlightBenchmarks</c> + <c>LanguageDetectorBenchmarks</c> measure the
 /// composed pipeline; this fixture isolates the building blocks so regressions / wins land on a
 /// single helper rather than on a full lexer pass. Covers the alias-lookup, keyword-set,
 /// fence-attribute parser, and the most-used <c>TokenMatchers</c> primitives.
 /// </remarks>
+[DebuggerDisplay("HighlightHelperBenchmarks: registry={_registry}, aliasShortHit={_aliasShortHit}")]
 [ShortRunJob]
 [MemoryDiagnoser]
 public class HighlightHelperBenchmarks
@@ -150,90 +151,105 @@ public class HighlightHelperBenchmarks
 
     /// <summary>LexerRegistry alias hit — short alias bucket.</summary>
     /// <returns>True (hit).</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool Registry_TryGet_ShortHit() =>
         _registry.TryGet(_aliasShortHit, out _);
 
     /// <summary>LexerRegistry alias hit — medium alias bucket.</summary>
     /// <returns>True (hit).</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool Registry_TryGet_MediumHit() =>
         _registry.TryGet(_aliasMediumHit, out _);
 
     /// <summary>LexerRegistry alias hit — long alias bucket.</summary>
     /// <returns>True (hit).</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool Registry_TryGet_LongHit() =>
         _registry.TryGet(_aliasLongHit, out _);
 
     /// <summary>LexerRegistry alias miss — same bucket as the medium hit, full bucket walk.</summary>
     /// <returns>False (miss).</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool Registry_TryGet_Miss() =>
         _registry.TryGet(_aliasMiss, out _);
 
     /// <summary>ByteKeywordSet hit, case-sensitive.</summary>
     /// <returns>True.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool KeywordSet_Hit() =>
         _keywordSet.Contains(_keywordHit);
 
     /// <summary>ByteKeywordSet miss, case-sensitive.</summary>
     /// <returns>False.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool KeywordSet_Miss() =>
         _keywordSet.Contains(_keywordMiss);
 
     /// <summary>ByteKeywordSet case-insensitive hit on mixed-case input.</summary>
     /// <returns>True.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool KeywordSet_IgnoreCase_Hit() =>
         _keywordSetIgnoreCase.Contains(_keywordHitMixedCase);
 
     /// <summary>FenceAttrParser pulling <c>title="…"</c> from a single-attr fixture.</summary>
     /// <returns>True (attr present).</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool FenceAttr_Title_FastHit() =>
         FenceAttrParser.TryGetTitle(_infoTitleOnly, out _);
 
     /// <summary>FenceAttrParser pulling <c>title="…"</c> from a multi-attr fixture (more bytes to scan).</summary>
     /// <returns>True (attr present).</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool FenceAttr_Title_MultiAttr() =>
         FenceAttrParser.TryGetTitle(_infoMultiAttr, out _);
 
     /// <summary>FenceAttrParser miss — no <c>title=</c> attribute in the bare fixture.</summary>
     /// <returns>False.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public bool FenceAttr_Title_Miss() =>
         FenceAttrParser.TryGetTitle(_infoBare, out _);
 
     /// <summary>TokenMatchers identifier match against an all-identifier fixture.</summary>
     /// <returns>Identifier byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TokenMatch_Identifier() =>
         TokenMatchers.MatchAsciiIdentifier(_identifierFixture);
 
     /// <summary>TokenMatchers ASCII whitespace match.</summary>
     /// <returns>Whitespace byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TokenMatch_Whitespace() =>
         TokenMatchers.MatchAsciiWhitespace(_whitespaceFixture);
 
     /// <summary>TokenMatchers line-comment to EOL.</summary>
     /// <returns>Comment byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TokenMatch_LineComment() =>
         TokenMatchers.MatchLineCommentToEol(_lineCommentFixture, (byte)'/', (byte)'/');
 
     /// <summary>TokenMatchers double-quoted string with backslash escape.</summary>
     /// <returns>String byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TokenMatch_DoubleQuoted() =>
         TokenMatchers.MatchDoubleQuotedWithBackslashEscape(_doubleQuotedFixture);
 
     /// <summary>TokenMatchers hex literal (<c>0x…</c> with optional suffix).</summary>
     /// <returns>Hex literal byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TokenMatch_HexLiteral() =>
         TokenMatchers.MatchAsciiHexLiteral(
@@ -243,12 +259,14 @@ public class HighlightHelperBenchmarks
 
     /// <summary>TokenMatchers unsigned float.</summary>
     /// <returns>Float byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TokenMatch_UnsignedFloat() =>
         TokenMatchers.MatchUnsignedAsciiFloat(_floatFixture);
 
     /// <summary>TokenMatchers ASCII digit run.</summary>
     /// <returns>Digit byte length.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     [Benchmark]
     public int TokenMatch_Digits() =>
         TokenMatchers.MatchAsciiDigits(_digitsFixture);

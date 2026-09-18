@@ -18,8 +18,12 @@ namespace NuStreamDocs.ContentLoader.OpenApi;
 /// reference pages: one page per tag, listing each operation with its parameters, request body, and
 /// responses. <c>$ref</c>-resolved schemas, examples, and security schemes are not expanded.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("OpenApiContentLoader: {_specFile} {_specUrl}")]
 public sealed class OpenApiContentLoader : IContentLoader
 {
+    /// <summary>HTTP transport for requests without a caller-supplied client.</summary>
+    private static readonly HttpClient SharedClient = new(new SocketsHttpHandler { UseCookies = false });
+
     /// <summary>Local spec file, or empty when reading from a URL.</summary>
     private readonly FilePath _specFile;
 
@@ -29,7 +33,7 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <summary>Local subdirectory the pages are placed under.</summary>
     private readonly PathSegment _routePrefix;
 
-    /// <summary>HTTP client factory; null means the loader owns a short-lived client.</summary>
+    /// <summary>Optional factory for caller-owned HTTP clients.</summary>
     private readonly Func<HttpClient>? _httpClientFactory;
 
     /// <summary>Logger for diagnostics.</summary>
@@ -54,7 +58,7 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <summary>Initializes a new instance of the <see cref="OpenApiContentLoader"/> class reading a spec URL with a logger and HTTP factory.</summary>
     /// <param name="specUrl">Spec URL.</param>
     /// <param name="routePrefix">Local subdirectory the pages are placed under.</param>
-    /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
+    /// <param name="httpClientFactory">Factory producing a caller-owned HTTP client; null uses a shared client without cookies.</param>
     /// <param name="logger">Logger for diagnostics.</param>
     public OpenApiContentLoader(
         UrlPath specUrl,
@@ -69,8 +73,9 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <param name="specFile">Spec file path, or empty when reading from a URL.</param>
     /// <param name="specUrl">Spec URL, or empty when reading from a local file.</param>
     /// <param name="routePrefix">Local subdirectory the pages are placed under.</param>
-    /// <param name="httpClientFactory">Factory producing the HTTP client; null means the loader owns a short-lived client.</param>
+    /// <param name="httpClientFactory">Factory producing a caller-owned HTTP client; null uses a shared client without cookies.</param>
     /// <param name="logger">Logger for diagnostics.</param>
+    /// <exception cref="ArgumentException">Exactly one spec source must be supplied.</exception>
     private OpenApiContentLoader(
         FilePath specFile,
         UrlPath specUrl,
@@ -134,6 +139,7 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <param name="inputRoot">Build input root (used to resolve a relative file path).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The raw spec bytes.</returns>
+    /// <exception cref="ContentLoaderException">The spec file does not exist.</exception>
     private Task<byte[]> ReadSpecAsync(DirectoryPath inputRoot, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(_specFile.Value))
@@ -155,16 +161,10 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <summary>Fetches the spec from its URL.</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The raw spec bytes.</returns>
-    private async Task<byte[]> FetchAsync(CancellationToken cancellationToken)
+    private Task<byte[]> FetchAsync(CancellationToken cancellationToken)
     {
         Uri endpoint = new(_specUrl.Value, UriKind.Absolute);
-        if (_httpClientFactory is not null)
-        {
-            return await GetAsync(_httpClientFactory(), endpoint, cancellationToken).ConfigureAwait(false);
-        }
-
-        using HttpClient owned = new();
-        return await GetAsync(owned, endpoint, cancellationToken).ConfigureAwait(false);
+        return GetAsync(_httpClientFactory is null ? SharedClient : _httpClientFactory(), endpoint, cancellationToken);
     }
 
     /// <summary>Issues the GET and reads the body.</summary>
@@ -172,12 +172,13 @@ public sealed class OpenApiContentLoader : IContentLoader
     /// <param name="endpoint">Spec URL.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The raw response body.</returns>
+    /// <exception cref="ContentLoaderException">The HTTP request failed.</exception>
     private async Task<byte[]> GetAsync(HttpClient client, Uri endpoint, CancellationToken cancellationToken)
     {
         try
         {
             using var response = await client.GetAsync(endpoint, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            _ = response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)

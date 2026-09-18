@@ -13,10 +13,10 @@ internal sealed class NavNodeFileNameComparer : IComparer<NavNode>
     /// <inheritdoc/>
     public int Compare(NavNode? x, NavNode? y)
     {
-        var xOrder = x?.Order ?? int.MaxValue;
-        var yOrder = y?.Order ?? int.MaxValue;
-        return xOrder != yOrder
-            ? xOrder.CompareTo(yOrder)
+        var leftOrder = x?.Order ?? int.MaxValue;
+        var rightOrder = y?.Order ?? int.MaxValue;
+        return leftOrder != rightOrder
+            ? leftOrder.CompareTo(rightOrder)
             : string.Compare(x?.RelativePath, y?.RelativePath, StringComparison.OrdinalIgnoreCase);
     }
 }

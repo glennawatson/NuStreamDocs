@@ -12,6 +12,24 @@ namespace NuStreamDocs.Bibliography.Tests;
 /// <summary>End-to-end shape tests for AGLC4 byte-writing formatters.</summary>
 public class Aglc4StyleTests
 {
+    /// <summary>Publication year of the book fixture.</summary>
+    private const int BookYear = 2018;
+
+    /// <summary>Decision year of the Mabo fixture.</summary>
+    private const int CaseYear = 1992;
+
+    /// <summary>Publication year of the article and case fixtures.</summary>
+    private const int PublicationYear = 2020;
+
+    /// <summary>Year of the legislation fixture.</summary>
+    private const int LegislationYear = 1979;
+
+    /// <summary>Initial capacity for a short footnote.</summary>
+    private const int FootnoteBufferCapacity = 64;
+
+    /// <summary>Initial capacity for a bibliography entry.</summary>
+    private const int BibliographyBufferCapacity = 128;
+
     /// <summary>Books emit <c>Author, *Title* (Publisher, Year)</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -23,8 +41,8 @@ public class Aglc4StyleTests
             Type = EntryType.Book,
             Title = [.. "Change and Continuity"u8],
             Authors = [PersonName.Of("William", "Gummow")],
-            Year = 2018,
-            Publisher = [.. "Federation Press"u8]
+            Year = BookYear,
+            Publisher = [.. "Federation Press"u8],
         };
         await Assert.That(RenderBibliography(entry))
             .IsEqualTo("William Gummow, *Change and Continuity* (Federation Press, 2018)");
@@ -35,14 +53,7 @@ public class Aglc4StyleTests
     [Test]
     public async Task CaseRendersWithSeries()
     {
-        CitationEntry entry = new()
-        {
-            Id = [.. "mabo"u8],
-            Type = EntryType.LegalCase,
-            Title = [.. "Mabo v Queensland (No 2)"u8],
-            Year = 1992,
-            LawReportSeries = [.. "(1992) 175 CLR 1"u8]
-        };
+        CitationEntry entry = new() { Id = [.. "mabo"u8], Type = EntryType.LegalCase, Title = [.. "Mabo v Queensland (No 2)"u8], Year = CaseYear, LawReportSeries = [.. "(1992) 175 CLR 1"u8] };
         await Assert.That(RenderBibliography(entry)).IsEqualTo("*Mabo v Queensland (No 2)* (1992) 175 CLR 1");
     }
 
@@ -57,10 +68,10 @@ public class Aglc4StyleTests
             Type = EntryType.ArticleJournal,
             Title = [.. "On Federalism"u8],
             Authors = [PersonName.Of("Anne", "Smith")],
-            Year = 2020,
+            Year = PublicationYear,
             ContainerTitle = [.. "Australian Law Journal"u8],
             Volume = [.. "94"u8],
-            Page = [.. "200"u8]
+            Page = [.. "200"u8],
         };
         var output = RenderBibliography(entry);
         await Assert.That(output).Contains("'On Federalism'");
@@ -74,14 +85,7 @@ public class Aglc4StyleTests
     [Test]
     public async Task LegislationRendersAglc4Form()
     {
-        CitationEntry entry = new()
-        {
-            Id = [.. "hca-act"u8],
-            Type = EntryType.Legislation,
-            Title = [.. "High Court of Australia Act 1979"u8],
-            Jurisdiction = [.. "Cth"u8],
-            Year = 1979
-        };
+        CitationEntry entry = new() { Id = [.. "hca-act"u8], Type = EntryType.Legislation, Title = [.. "High Court of Australia Act 1979"u8], Jurisdiction = [.. "Cth"u8], Year = LegislationYear };
         var output = RenderBibliography(entry);
         await Assert.That(output).IsEqualTo("*High Court of Australia Act 1979* (Cth)");
     }
@@ -94,7 +98,7 @@ public class Aglc4StyleTests
         CitationEntry entry = new() { Id = [.. "x"u8], Type = EntryType.Book, Title = [.. "T"u8] };
         byte[] source = [.. "23"u8];
         CitationLocator locator = new(LocatorKind.Page, 0, source.Length);
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(FootnoteBufferCapacity);
         Aglc4Style.Instance.WriteFootnote(entry, locator, source, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).EndsWith(" 23");
     }
@@ -107,7 +111,7 @@ public class Aglc4StyleTests
         CitationEntry entry = new() { Id = [.. "x"u8], Type = EntryType.Book, Title = [.. "T"u8] };
         byte[] source = [.. "12"u8];
         CitationLocator locator = new(LocatorKind.Paragraph, 0, source.Length);
-        ArrayBufferWriter<byte> sink = new(64);
+        ArrayBufferWriter<byte> sink = new(FootnoteBufferCapacity);
         Aglc4Style.Instance.WriteFootnote(entry, locator, source, sink);
         await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan)).EndsWith(" [12]");
     }
@@ -123,7 +127,7 @@ public class Aglc4StyleTests
     /// <returns>Decoded markdown line.</returns>
     private static string RenderBibliography(CitationEntry entry)
     {
-        ArrayBufferWriter<byte> sink = new(128);
+        ArrayBufferWriter<byte> sink = new(BibliographyBufferCapacity);
         Aglc4Style.Instance.WriteBibliography(entry, sink);
         return Encoding.UTF8.GetString(sink.WrittenSpan);
     }

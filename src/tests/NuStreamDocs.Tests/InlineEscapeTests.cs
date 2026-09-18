@@ -11,6 +11,12 @@ namespace NuStreamDocs.Tests;
 /// <summary>Tests for backslash inline-escape handling.</summary>
 public class InlineEscapeTests
 {
+    /// <summary>Escaped Character End used by the test cases.</summary>
+    private const int EscapedCharacterEnd = 2;
+
+    /// <summary>Pending Text End used by the test cases.</summary>
+    private const int PendingTextEnd = 4;
+
     /// <summary>Each ASCII-punctuation backslash escape emits the literal character (with HTML escaping).</summary>
     /// <param name="escaped">Two-byte source: backslash + escapee.</param>
     /// <param name="expected">Rendered output.</param>
@@ -38,7 +44,7 @@ public class InlineEscapeTests
         var pendingTextStart = 0;
         await Assert.That(InlineEscape.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(writer.WrittenSpan)).IsEqualTo(expected);
-        await Assert.That(pos).IsEqualTo(2);
+        await Assert.That(pos).IsEqualTo(EscapedCharacterEnd);
     }
 
     /// <summary>Non-punctuation followers leave the cursor unchanged and return false.</summary>
@@ -84,6 +90,6 @@ public class InlineEscapeTests
         var pendingTextStart = 0;
         await Assert.That(InlineEscape.TryHandle(bytes, ref pos, ref pendingTextStart, writer)).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(writer.WrittenSpan)).IsEqualTo("hi!");
-        await Assert.That(pendingTextStart).IsEqualTo(4);
+        await Assert.That(pendingTextStart).IsEqualTo(PendingTextEnd);
     }
 }

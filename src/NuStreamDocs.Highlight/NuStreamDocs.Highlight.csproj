@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>NuStreamDocs.Highlight</PackageId>
     <Description>Syntax-highlight fenced code blocks in your NuStreamDocs documentation at build time. No JavaScript needed at runtime — the highlighting is baked into the generated HTML.</Description>
     <RootNamespace>NuStreamDocs.Highlight</RootNamespace>

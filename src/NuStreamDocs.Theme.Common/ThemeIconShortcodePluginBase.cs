@@ -2,13 +2,13 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.Theme.Common;
 
-/// <summary>
-/// Shared base for theme-specific icon shortcode preprocessors.
-/// </summary>
+/// <summary>Shared base for theme-specific icon shortcode preprocessors.</summary>
+[System.Diagnostics.DebuggerDisplay("ThemeIconShortcodePluginBase: {Name}")]
 public abstract class ThemeIconShortcodePluginBase : IPagePreRenderPlugin
 {
     /// <summary>Optional inline-SVG resolver consulted before the font-ligature fallback.</summary>
@@ -31,6 +31,7 @@ public abstract class ThemeIconShortcodePluginBase : IPagePreRenderPlugin
     public bool NeedsRewrite(ReadOnlySpan<byte> source) => source.IndexOf((byte)':') >= 0;
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
         IconShortcodeRewriter.Rewrite(context.Source, context.Output, IconFontClass, _resolver);
 }

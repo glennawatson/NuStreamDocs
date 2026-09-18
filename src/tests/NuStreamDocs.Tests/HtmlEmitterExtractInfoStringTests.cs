@@ -11,13 +11,19 @@ namespace NuStreamDocs.Tests;
 /// <summary>Direct tests for <c>HtmlEmitter.ExtractInfoString</c> covering the language-tag extraction edge cases.</summary>
 public class HtmlEmitterExtractInfoStringTests
 {
+    /// <summary>CSharp Language used by the test cases.</summary>
+    private const string CSharpLanguage = "csharp";
+
+    /// <summary>Fence Marker Length used by the test cases.</summary>
+    private const int FenceMarkerLength = 3;
+
     /// <summary>A simple <c>```csharp</c> opener yields the language token.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task BacktickWithLanguage()
     {
         byte[] bytes = [.. "```csharp"u8];
-        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo("csharp");
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo(CSharpLanguage);
     }
 
     /// <summary>A <c>~~~js</c> opener also yields the language.</summary>
@@ -44,7 +50,7 @@ public class HtmlEmitterExtractInfoStringTests
     public async Task LeadingWhitespaceTrimmed()
     {
         byte[] bytes = [.. "```   csharp"u8];
-        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo("csharp");
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo(CSharpLanguage);
     }
 
     /// <summary>Extra metadata after a space is dropped — only the language survives.</summary>
@@ -53,7 +59,7 @@ public class HtmlEmitterExtractInfoStringTests
     public async Task ExtraMetadataDropped()
     {
         byte[] bytes = [.. "```csharp title=\"hello.cs\""u8];
-        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo("csharp");
+        await Assert.That(Decode(bytes, bytes.Length)).IsEqualTo(CSharpLanguage);
     }
 
     /// <summary>Wraps the helper with the small bytes/openerLength dance ExtractInfoString needs.</summary>
@@ -62,7 +68,7 @@ public class HtmlEmitterExtractInfoStringTests
     /// <returns>The extracted info string as a UTF-16 string.</returns>
     private static string Decode(byte[] bytes, int openerLength)
     {
-        BlockSpan opener = new(BlockKind.FencedCode, 0, openerLength, 3);
+        BlockSpan opener = new(BlockKind.FencedCode, 0, openerLength, FenceMarkerLength);
         var info = HtmlEmitter.ExtractInfoString(bytes, opener);
         return Encoding.UTF8.GetString(info);
     }

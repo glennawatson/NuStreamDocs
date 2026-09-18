@@ -34,7 +34,7 @@ public class VersionsManifestBranchTests
         VersionEntry[] entries = [new("1.0", "Stable", [[.. "latest"u8]]), new("2.0", "Next", [])];
         VersionsManifest.Write(temp.Root, entries);
         var roundTripped = VersionsManifest.Read(temp.Root);
-        await Assert.That(roundTripped.Length).IsEqualTo(2);
+        await Assert.That(roundTripped.Length).IsEqualTo(entries.Length);
         await Assert.That(roundTripped[0].Version).IsEqualTo("1.0");
         await Assert.That(roundTripped[0].Aliases.Length).IsEqualTo(1);
         await Assert.That(roundTripped[1].Version).IsEqualTo("2.0");
@@ -47,7 +47,7 @@ public class VersionsManifestBranchTests
     {
         VersionEntry[] existing = [new("1.0", "A", [])];
         var merged = VersionsManifest.Upsert(existing, new("2.0", "B", []));
-        await Assert.That(merged.Length).IsEqualTo(2);
+        await Assert.That(merged.Length).IsEqualTo(existing.Length + 1);
         await Assert.That(merged[1].Version).IsEqualTo("2.0");
     }
 
@@ -58,7 +58,7 @@ public class VersionsManifestBranchTests
     {
         VersionEntry[] existing = [new("1.0", "Old", []), new("2.0", "Untouched", [])];
         var merged = VersionsManifest.Upsert(existing, new("1.0", "New", [[.. "latest"u8]]));
-        await Assert.That(merged.Length).IsEqualTo(2);
+        await Assert.That(merged.Length).IsEqualTo(existing.Length);
         await Assert.That(merged[0].Title).IsEqualTo("New");
         await Assert.That(merged[1].Title).IsEqualTo("Untouched");
     }
@@ -69,8 +69,8 @@ public class VersionsManifestBranchTests
         /// <summary>Initializes a new instance of the <see cref="ScratchDir"/> class.</summary>
         public ScratchDir()
         {
-            Root = Path.Combine(Path.GetTempPath(), "smkd-vm-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            Root = Path.Combine(Path.GetTempPath(), $"smkd-vm-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(Root);
         }
 
         /// <summary>Gets the absolute path of the scratch directory.</summary>

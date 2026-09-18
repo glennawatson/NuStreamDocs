@@ -6,11 +6,10 @@ using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Plugins;
 
-/// <summary>
-/// Read-only context handed to <see cref="IBuildFinalizePlugin.FinalizeAsync"/>.
-/// </summary>
+/// <summary>Read-only context handed to <see cref="IBuildFinalizePlugin.FinalizeAsync"/>.</summary>
 /// <param name="OutputRoot">Absolute path to the site output directory.</param>
 /// <param name="Plugins">Every plugin registered with the builder; finalizers consult sibling state through their owning plugin instance.</param>
+[System.Diagnostics.DebuggerDisplay("BuildFinalizeContext: {ToString(),nq}")]
 public readonly record struct BuildFinalizeContext(
     DirectoryPath OutputRoot,
     IPlugin[] Plugins);
