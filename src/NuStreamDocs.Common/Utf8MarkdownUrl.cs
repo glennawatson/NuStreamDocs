@@ -24,7 +24,7 @@ public static class Utf8MarkdownUrl
     /// <summary>Gets the UTF-8 bytes of the self-directory marker (<c>./</c>) emitted when a bare <c>index.md</c> resolves to its containing directory.</summary>
     private static ReadOnlySpan<byte> SelfDirectory => "./"u8;
 
-    /// <summary>Maps <paramref name="relativePath"/> to its rendered-page URL.</summary>
+    /// <summary>Maps a source path to its rendered-page URL; index filenames are case-insensitive in directory-URL mode.</summary>
     /// <param name="relativePath">Source path relative to the docs root.</param>
     /// <param name="useDirectoryUrls">True for directory-URL mode (<c>foo/bar/</c>); false for flat-URL mode (<c>foo/bar.html</c>).</param>
     /// <returns>UTF-8 URL bytes; an empty array when <paramref name="relativePath"/> is empty.</returns>

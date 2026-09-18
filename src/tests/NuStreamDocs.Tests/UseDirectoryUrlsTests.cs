@@ -4,6 +4,7 @@
 
 using System.Text;
 using NuStreamDocs.Building;
+using NuStreamDocs.Common;
 using NuStreamDocs.Links;
 
 namespace NuStreamDocs.Tests;
@@ -39,6 +40,71 @@ public class UseDirectoryUrlsTests
     {
         var path = OutputPathBuilder.ForDirectoryUrls("/out", "guide/index.md");
         await Assert.That(path).IsEqualTo($"/out{Sep}guide/index.html");
+    }
+
+    /// <summary>Index filename casing does not change the directory URL's output filename.</summary>
+    /// <param name="source">The source-relative index path.</param>
+    /// <param name="expected">The output path relative to the site root.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments("Index.md", "index.html")]
+    [Arguments("INDEX.md", "index.html")]
+    [Arguments("guide/Index.md", "guide/index.html")]
+    [Arguments("guide/iNdEx.MD", "guide/index.html")]
+    public async Task DirectoryUrlsNormalizeIndexFilename(string source, string expected)
+    {
+        var path = OutputPathBuilder.ForDirectoryUrls("/out", source);
+        await Assert.That(path.Replace('\\', '/').Value).IsEqualTo($"/out/{expected}");
+    }
+
+    /// <summary>Links to index pages resolve to emitted HTML containing the requested anchor.</summary>
+    /// <param name="fileName">The index filename casing.</param>
+    /// <param name="directory">The source-relative directory containing the index.</param>
+    /// <param name="useDirectoryUrls">Whether to emit directory URLs.</param>
+    /// <param name="cancellationToken">The test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [MatrixDataSource]
+    public async Task IndexLinksResolveToEmittedAnchor(
+        [Matrix("index.md", "Index.md", "INDEX.md", "iNdEx.md")] string fileName,
+        [Matrix("", "api/System")] string directory,
+        [Matrix(false, true)] bool useDirectoryUrls,
+        CancellationToken cancellationToken)
+    {
+        const int ExpectedPageCount = 2;
+        using var fixture = TempBuildFixture.Create();
+        var sourceDirectory = Path.Combine(fixture.Input, directory);
+        _ = Directory.CreateDirectory(Path.Combine(sourceDirectory, "members"));
+        await File.WriteAllTextAsync(Path.Combine(sourceDirectory, fileName), "<a id=\"T:System.Index\"></a>\n\n# Index", cancellationToken);
+        await File.WriteAllTextAsync(
+            Path.Combine(sourceDirectory, "members", "FromStart.md"),
+            $"[Index](../{fileName}#T:System.Index)",
+            cancellationToken);
+
+        var count = await new DocBuilder()
+            .WithInput(fixture.Input)
+            .WithOutput(fixture.Output)
+            .UseDirectoryUrls(useDirectoryUrls)
+            .UseMarkdownLinks()
+            .BuildAsync(cancellationToken);
+
+        await Assert.That(count).IsEqualTo(ExpectedPageCount);
+        var relativeSource = directory.Length is 0 ? fileName : $"{directory}/{fileName}";
+        var pageUrl = Encoding.UTF8.GetString(Utf8MarkdownUrl.FromRelativePath(relativeSource, useDirectoryUrls));
+        var pageUri = new Uri(new Uri("https://docs.example/"), pageUrl);
+        var relativeOutput = pageUri.AbsolutePath.TrimStart('/') + (useDirectoryUrls ? "index.html" : string.Empty);
+        var outputPath = Path.Combine(fixture.Output, relativeOutput);
+        await Assert.That(File.Exists(outputPath)).IsTrue();
+        await Assert.That(await File.ReadAllTextAsync(outputPath, cancellationToken)).Contains("id=\"T:System.Index\"");
+
+        var memberPath = useDirectoryUrls ? "members/FromStart/index.html" : "members/FromStart.html";
+        var memberHtml = await File.ReadAllTextAsync(Path.Combine(fixture.Output, directory, memberPath), cancellationToken);
+        var expectedLink = useDirectoryUrls ? "../../#T:System.Index" : $"../{Path.ChangeExtension(fileName, ".html")}#T:System.Index";
+        await Assert.That(memberHtml).Contains($"href=\"{expectedLink}\"");
+        var memberUri = new Uri(new Uri("https://docs.example/"), $"{directory}/{memberPath}".TrimStart('/'));
+        var target = new Uri(memberUri, expectedLink);
+        await Assert.That(target.AbsolutePath).IsEqualTo(pageUri.AbsolutePath);
+        await Assert.That(target.Fragment).IsEqualTo("#T:System.Index");
     }
 
     /// <summary>Directory-URL form passes non-markdown assets through unchanged.</summary>

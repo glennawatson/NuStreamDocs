@@ -19,8 +19,8 @@ internal static class OutputPathBuilder
     /// <summary>Length of the replacement <c>.html</c> extension.</summary>
     private const int HtmlExtensionLength = 5;
 
-    /// <summary>Length of the trailing <c>/index.html</c> appended to directory-URL outputs (separator + 'index.html').</summary>
-    private const int IndexHtmlSuffixLength = 11;
+    /// <summary>Length of the directory landing-page filename.</summary>
+    private const int IndexHtmlLength = 10;
 
     /// <summary>Source extension recognized by the path mapper.</summary>
     private const string MarkdownExtension = ".md";
@@ -50,15 +50,13 @@ internal static class OutputPathBuilder
             static (span, state) => WriteOutputPath(span, state));
     }
 
-    /// <summary>Directory-URL form: <c>guide/foo.md</c> → <c>guide/foo/index.html</c>; <c>guide/index.md</c> stays as <c>guide/index.html</c>.</summary>
+    /// <summary>Maps pages to directory URLs; every casing of <c>index.md</c> emits lowercase <c>index.html</c> in its containing directory.</summary>
     /// <param name="outputRoot">Absolute output root.</param>
     /// <param name="relativePath">Source-relative path.</param>
     /// <returns>The absolute output path.</returns>
     internal static FilePath ForDirectoryUrls(in DirectoryPath outputRoot, in FilePath relativePath)
     {
-        var rootStr = outputRoot.Value ?? string.Empty;
-        var relStr = relativePath.Value ?? string.Empty;
-        var relSpan = relStr.AsSpan();
+        var relSpan = relativePath.AsSpan();
         if (!relSpan.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase))
         {
             return ForFlatUrls(outputRoot, relativePath);
@@ -67,16 +65,13 @@ internal static class OutputPathBuilder
         var stem = relSpan[..^MarkdownExtensionLength];
         var lastSep = stem.LastIndexOfAny('/', '\\');
         var fileName = lastSep < 0 ? stem : stem[(lastSep + 1)..];
-        if (fileName.Equals("index", StringComparison.OrdinalIgnoreCase))
-        {
-            return ForFlatUrls(outputRoot, relativePath);
-        }
-
-        var stemLength = stem.Length;
-        var totalLength = rootStr.Length + 1 + stemLength + IndexHtmlSuffixLength;
+        var directoryLength = fileName.Equals("index", StringComparison.OrdinalIgnoreCase)
+            ? lastSep + 1
+            : stem.Length + 1;
+        var totalLength = outputRoot.Value.AsSpan().Length + 1 + directoryLength + IndexHtmlLength;
         return string.Create(
             totalLength,
-            (rootStr, relStr, stemLength, Path.DirectorySeparatorChar),
+            (outputRoot, relativePath, directoryLength),
             static (span, state) => WriteDirectoryUrlPath(span, state));
     }
 
@@ -101,16 +96,21 @@ internal static class OutputPathBuilder
 
     /// <summary>Writes a directory-URL output path (<c>outputRoot/sep/stem/sep/index.html</c>) into <paramref name="span"/>.</summary>
     /// <param name="span">Pre-sized destination span.</param>
-    /// <param name="state">Tuple of (outputRoot, relativePath, stemLength, separator).</param>
+    /// <param name="state">Output root, source path, and output directory length.</param>
     private static void WriteDirectoryUrlPath(
         in Span<char> span,
-        (string Root, string Rel, int StemLen, char Sep) state)
+        (DirectoryPath Root, FilePath Relative, int DirectoryLength) state)
     {
-        state.Root.AsSpan().CopyTo(span);
-        span[state.Root.Length] = state.Sep;
-        var afterRoot = span[(state.Root.Length + 1)..];
-        state.Rel.AsSpan(0, state.StemLen).CopyTo(afterRoot);
-        afterRoot[state.StemLen] = state.Sep;
-        IndexHtml.AsSpan().CopyTo(afterRoot[(state.StemLen + 1)..]);
+        var root = state.Root.Value.AsSpan();
+        root.CopyTo(span);
+        span[root.Length] = Path.DirectorySeparatorChar;
+        var afterRoot = span[(root.Length + 1)..];
+        state.Relative.AsSpan()[..state.DirectoryLength].CopyTo(afterRoot);
+        if (state.DirectoryLength is not 0)
+        {
+            afterRoot[state.DirectoryLength - 1] = Path.DirectorySeparatorChar;
+        }
+
+        IndexHtml.AsSpan().CopyTo(afterRoot[state.DirectoryLength..]);
     }
 }

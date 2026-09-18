@@ -17,6 +17,18 @@ public class BuildPipelineTests
     /// <summary>Expected Page Count used by the test cases.</summary>
     private const int ExpectedPageCount = 2;
 
+    /// <summary>Source filename for the directory landing page.</summary>
+    private const string IndexFileName = "index.md";
+
+    /// <summary>Mixed-case source filename for a directory landing page.</summary>
+    private const string MixedCaseIndexFileName = "Index.md";
+
+    /// <summary>Output filename for a directory landing page.</summary>
+    private const string IndexOutputFileName = "index.html";
+
+    /// <summary>Markdown excluded from builds that omit drafts.</summary>
+    private const string DraftMarkdown = "---\ndraft: true\n---\n# Draft";
+
     /// <summary>The pipeline should walk a docs tree and emit one HTML file per markdown source.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
@@ -66,7 +78,7 @@ public class BuildPipelineTests
     {
         using var fixture = TempBuildFixture.Create();
         await File.WriteAllTextAsync(Path.Combine(fixture.Input, "live.md"), "# Live");
-        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "draft.md"), "---\ndraft: true\n---\n# Draft");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "draft.md"), DraftMarkdown);
 
         var processed = await BuildPipeline.RunAsync(
             fixture.Input,
@@ -85,7 +97,7 @@ public class BuildPipelineTests
     public async Task IncludeDraftsBuildsDraftPages()
     {
         using var fixture = TempBuildFixture.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "draft.md"), "---\ndraft: true\n---\n# Draft");
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, "draft.md"), DraftMarkdown);
 
         var options = BuildPipelineOptions.Default with { IncludeDrafts = true };
         var processed =
@@ -105,7 +117,99 @@ public class BuildPipelineTests
         var options = BuildPipelineOptions.Default with { UseDirectoryUrls = true };
         await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, CancellationToken.None);
 
-        await Assert.That(File.Exists(Path.Combine(fixture.Output, GuideDirectory, "index.html"))).IsTrue();
+        await Assert.That(File.Exists(Path.Combine(fixture.Output, GuideDirectory, IndexOutputFileName))).IsTrue();
+    }
+
+    /// <summary>Index sources that differ only by filename casing cannot share a directory.</summary>
+    /// <param name="directory">The source directory containing both pages.</param>
+    /// <param name="fileName">The second index filename.</param>
+    /// <param name="useDirectoryUrls">Whether to emit directory URLs.</param>
+    /// <param name="cancellationToken">The test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [MatrixDataSource]
+    public async Task RejectsIndexFilenameCollisions(
+        [Matrix("", "api/System")] string directory,
+        [Matrix(MixedCaseIndexFileName, "INDEX.md")] string fileName,
+        [Matrix(false, true)] bool useDirectoryUrls,
+        CancellationToken cancellationToken)
+    {
+        using var fixture = TempBuildFixture.Create();
+        var sourceDirectory = Path.Combine(fixture.Input, directory);
+        _ = Directory.CreateDirectory(sourceDirectory);
+        await File.WriteAllTextAsync(Path.Combine(sourceDirectory, IndexFileName), "# Namespace", cancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(sourceDirectory, fileName), "# Type", cancellationToken);
+        if (Directory.GetFiles(sourceDirectory, "*.md").Length is 1)
+        {
+            Skip.Test("Two index filename casings require a case-sensitive source filesystem.");
+        }
+
+        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = useDirectoryUrls };
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, cancellationToken));
+
+        await Assert.That(exception!.Message).Contains(Path.Combine(directory, IndexFileName).Replace('\\', '/'));
+        await Assert.That(exception.Message).Contains(Path.Combine(directory, fileName).Replace('\\', '/'));
+        await Assert.That(exception.Message).Contains("Rename");
+    }
+
+    /// <summary>Generated pages cannot overwrite a disk-backed index page.</summary>
+    /// <param name="useDirectoryUrls">Whether to emit directory URLs.</param>
+    /// <param name="cancellationToken">The test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task RejectsSyntheticIndexCollisionBeforeOverwrite(bool useDirectoryUrls, CancellationToken cancellationToken)
+    {
+        using var fixture = TempBuildFixture.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, IndexFileName), "# Namespace", cancellationToken);
+        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = useDirectoryUrls, Parallelism = 1 };
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            BuildPipeline.RunAsync(fixture.Input, fixture.Output, [new IndexPagePlugin()], options, cancellationToken));
+
+        await Assert.That(exception!.Message).Contains(IndexFileName);
+        await Assert.That(exception.Message).Contains(MixedCaseIndexFileName);
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Output, IndexOutputFileName), cancellationToken);
+        await Assert.That(html).Contains("Namespace");
+        await Assert.That(html).DoesNotContain("Generated type");
+    }
+
+    /// <summary>Each source directory can supply its own index page across repeated builds.</summary>
+    /// <param name="cancellationToken">The test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task IndexPagesInSeparateDirectoriesSurviveCachedBuilds(CancellationToken cancellationToken)
+    {
+        using var fixture = TempBuildFixture.Create();
+        _ = Directory.CreateDirectory(Path.Combine(fixture.Input, GuideDirectory));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, MixedCaseIndexFileName), "# Home", cancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, GuideDirectory, "INDEX.md"), "# Guide", cancellationToken);
+        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = true };
+
+        var first = await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, cancellationToken);
+        var second = await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, cancellationToken);
+
+        await Assert.That(first).IsEqualTo(ExpectedPageCount);
+        await Assert.That(second).IsEqualTo(ExpectedPageCount);
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(fixture.Output, IndexOutputFileName), cancellationToken)).Contains("Home");
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(fixture.Output, GuideDirectory, IndexOutputFileName), cancellationToken)).Contains("Guide");
+    }
+
+    /// <summary>An excluded draft index does not reserve the directory's landing-page output.</summary>
+    /// <param name="cancellationToken">The test cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task DraftIndexDoesNotConflictWithPublishedIndex(CancellationToken cancellationToken)
+    {
+        using var fixture = TempBuildFixture.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, IndexFileName), DraftMarkdown, cancellationToken);
+        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = true };
+
+        var count = await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [new IndexPagePlugin()], options, cancellationToken);
+
+        await Assert.That(count).IsEqualTo(1);
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(fixture.Output, IndexOutputFileName), cancellationToken)).Contains("Generated type");
     }
 
     /// <summary>Re-running with the same source bytes produces a cache hit (manifest hash match).</summary>
@@ -149,6 +253,23 @@ public class BuildPipelineTests
     {
         await Assert.That(static () => BuildPipeline.RunAsync(string.Empty, "/out", [])).Throws<ArgumentException>();
         await Assert.That(static () => BuildPipeline.RunAsync("/in", string.Empty, [])).Throws<ArgumentException>();
+    }
+
+    /// <summary>Registers a generated index page.</summary>
+    private sealed class IndexPagePlugin : IBuildDiscoverPlugin
+    {
+        /// <inheritdoc/>
+        public ReadOnlySpan<byte> Name => "index-page"u8;
+
+        /// <inheritdoc/>
+        public PluginPriority DiscoverPriority => PluginPriority.Normal;
+
+        /// <inheritdoc/>
+        public ValueTask DiscoverAsync(BuildDiscoverContext context, CancellationToken cancellationToken)
+        {
+            context.SyntheticPages.Add(MixedCaseIndexFileName, [.. "# Generated type"u8]);
+            return ValueTask.CompletedTask;
+        }
     }
 
     /// <summary>Test pre-render plugin that replaces every <c>A</c> with <c>B</c>.</summary>

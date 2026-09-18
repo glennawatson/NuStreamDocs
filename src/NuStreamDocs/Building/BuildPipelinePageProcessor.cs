@@ -39,6 +39,8 @@ internal static class BuildPipelinePageProcessor
         PerPageDispatch dispatch,
         CancellationToken cancellationToken)
     {
+        dispatch.IndexPages.Register(item.RelativePath);
+
         // Synthetic pages skip the file-read entirely — bytes already live in process memory,
         // there's nothing to pool or release. Disk pages take the RandomAccess + ArrayPool
         // path: File.ReadAllBytesAsync allocates a fresh byte[] per page (158 MB on a 13.8K-page

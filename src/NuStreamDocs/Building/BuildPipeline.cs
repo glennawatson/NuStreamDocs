@@ -50,6 +50,7 @@ public static class BuildPipeline
     /// <param name="options">Pipeline options (filter, logger, URL shape, draft toggle).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The total number of pages processed.</returns>
+    /// <exception cref="InvalidOperationException">Multiple index pages share a source directory, regardless of filename casing.</exception>
     public static async Task<int> RunAsync(
         DirectoryPath inputRoot,
         DirectoryPath outputRoot,
