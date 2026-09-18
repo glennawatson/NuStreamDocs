@@ -78,6 +78,46 @@ public class CSharpApiGeneratorHelperTests
         await Assert.That(pkgs[0].GetProperty("version").GetString()).IsEqualTo("1.2.3");
     }
 
+    /// <summary>Package versions and framework selections retain independent manifests in a shared cache.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task InlinePackageInputsKeepIndependentManifests()
+    {
+        var cache = Path.Combine(Path.GetTempPath(), $"smkd-manifests-{Guid.NewGuid():N}");
+        var first = new NuGetPackagesInput([new("Fixture", "1.0.0")], cache, [TargetFramework]);
+        NuGetPackagesInput[] inputs =
+        [
+            first,
+            first with { Packages = [new("Fixture", "2.0.0")] },
+            first with { TfmPreference = ["netstandard2.0"] }
+        ];
+        try
+        {
+            foreach (var input in inputs)
+            {
+                using var source = AssemblySourceFactory.CreateFromPackages(input, NullLogger.Instance);
+            }
+
+            using var repeated = AssemblySourceFactory.CreateFromPackages(first, NullLogger.Instance);
+            var files = Directory.GetFiles(cache, "nuget-packages.json", SearchOption.AllDirectories);
+            await Assert.That(files.Length).IsEqualTo(inputs.Length);
+            HashSet<string> manifests = [with(StringComparer.Ordinal)];
+            foreach (var file in files)
+            {
+                _ = manifests.Add(await File.ReadAllTextAsync(file));
+            }
+
+            foreach (var input in inputs)
+            {
+                await Assert.That(manifests).Contains(Encoding.UTF8.GetString(AssemblySourceFactory.BuildManifestJson(input)));
+            }
+        }
+        finally
+        {
+            Directory.Delete(cache, true);
+        }
+    }
+
     /// <summary>CreateOne dispatches to the right source per input shape.</summary>
     /// <returns>Async test.</returns>
     [Test]

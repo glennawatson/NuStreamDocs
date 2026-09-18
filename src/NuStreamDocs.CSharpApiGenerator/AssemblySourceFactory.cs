@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Security.Cryptography;
 using System.Text.Json;
 using NuStreamDocs.Common;
 using SourceDocParser;
@@ -64,10 +65,11 @@ internal static class AssemblySourceFactory
     /// <returns>A source ready to walk.</returns>
     internal static NuGetAssemblySource CreateFromPackages(NuGetPackagesInput input, ILogger logger)
     {
-        var scratch = Path.Combine(input.ApiCachePath, SynthesizedManifestDirectory);
+        var manifest = BuildManifestJson(input);
+        var scratch = input.ApiCachePath / SynthesizedManifestDirectory / Convert.ToHexStringLower(SHA256.HashData(manifest));
         _ = Directory.CreateDirectory(scratch);
-        var manifestPath = Path.Combine(scratch, ManifestFileName);
-        File.WriteAllBytes(manifestPath, BuildManifestJson(input));
+        var manifestPath = scratch.File(ManifestFileName);
+        File.WriteAllBytes(manifestPath, manifest);
         return new(scratch, input.ApiCachePath, logger);
     }
 
