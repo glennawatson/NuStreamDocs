@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using NuStreamDocs.Common;
@@ -30,10 +31,26 @@ public static class PagefindCli
     /// <param name="logger">Diagnostic logger.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True when Pagefind ran and exited cleanly; false when skipped (binary missing with non-strict, or <c>RunCli=false</c>).</returns>
-    public static async Task<bool> RunAsync(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Task<bool> RunAsync(
         DirectoryPath siteRoot,
         PagefindOptions options,
         ILogger logger,
+        CancellationToken cancellationToken) =>
+        RunAsync(siteRoot, options, logger, static () => new PagefindProcess(), cancellationToken);
+
+    /// <summary>Invokes Pagefind through the supplied process provider.</summary>
+    /// <param name="siteRoot">Rendered site directory.</param>
+    /// <param name="options">Binary selection and failure behavior.</param>
+    /// <param name="logger">Diagnostic logger.</param>
+    /// <param name="processFactory">Creates an invocation owned by this call.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True when indexing succeeds; false when disabled, unavailable, or a tolerated failure.</returns>
+    internal static async Task<bool> RunAsync(
+        DirectoryPath siteRoot,
+        PagefindOptions options,
+        ILogger logger,
+        Func<IPagefindProcess> processFactory,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(siteRoot.Value);
@@ -45,7 +62,7 @@ public static class PagefindCli
 
         var binary = ResolveBinaryPath(options.BinaryPath);
         return binary is { } binaryPath
-            ? await InvokeAsync(binaryPath, siteRoot, options, logger, cancellationToken).ConfigureAwait(false)
+            ? await InvokeAsync(binaryPath, siteRoot, options, logger, processFactory, cancellationToken).ConfigureAwait(false)
             : HandleMissingBinary(logger);
     }
 
@@ -63,6 +80,7 @@ public static class PagefindCli
     /// <param name="siteRoot">Rendered site directory (passed via <c>--site</c>).</param>
     /// <param name="options">Plugin options (carries the strict toggle).</param>
     /// <param name="logger">Diagnostic logger.</param>
+    /// <param name="processFactory">Creates the process owned by this invocation.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True on exit-code-zero; false on tolerated failure (strict off).</returns>
     private static async Task<bool> InvokeAsync(
@@ -70,14 +88,15 @@ public static class PagefindCli
         DirectoryPath siteRoot,
         PagefindOptions options,
         ILogger logger,
+        Func<IPagefindProcess> processFactory,
         CancellationToken cancellationToken)
     {
         PagefindCliLogging.LogInvoking(logger, binary, siteRoot);
 
-        using var process = new Process { StartInfo = CreateStartInfo(binary, siteRoot) };
+        using var process = processFactory();
         try
         {
-            _ = process.Start();
+            process.Start(CreateStartInfo(binary, siteRoot));
         }
         catch (Exception ex) when (!options.StrictBinaryRequired)
         {
@@ -87,8 +106,8 @@ public static class PagefindCli
 
         // Drain both pipes concurrently so a full pipe cannot prevent the child from exiting.
         var stderrSink = new ArrayBufferWriter<byte>();
-        var stdoutDrain = DrainStdoutAsync(process.StandardOutput.BaseStream, cancellationToken).AsTask();
-        var stderrDrain = DrainIntoAsync(process.StandardError.BaseStream, stderrSink, cancellationToken).AsTask();
+        var stdoutDrain = DrainStdoutAsync(process.StandardOutput, cancellationToken).AsTask();
+        var stderrDrain = DrainIntoAsync(process.StandardError, stderrSink, cancellationToken).AsTask();
         var result = await WaitForCompletionAsync(process, stdoutDrain, stderrDrain, cancellationToken).ConfigureAwait(false);
 
         if (!HandleExit(result.ExitCode, result.Signal, stderrSink.WrittenSpan, options.StrictBinaryRequired, logger))
@@ -131,7 +150,7 @@ public static class PagefindCli
     /// <returns>The exit code, termination signal when available, and stdout byte count.</returns>
     /// <exception cref="OperationCanceledException">The invocation was canceled.</exception>
     private static async Task<(int ExitCode, PosixSignal? Signal, long StdoutBytes)> WaitForCompletionAsync(
-        Process process,
+        IPagefindProcess process,
         Task<long> stdoutDrain,
         Task stderrDrain,
         CancellationToken cancellationToken)
@@ -140,17 +159,12 @@ public static class PagefindCli
         {
             await Task.WhenAll(stdoutDrain, stderrDrain).ConfigureAwait(false);
             var stdoutBytes = await stdoutDrain.ConfigureAwait(false);
-#if NET11_0_OR_GREATER
-            var exitStatus = await process.WaitForExitStatusAsync(cancellationToken).ConfigureAwait(false);
+            var exitStatus = await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             return (exitStatus.ExitCode, exitStatus.Signal, stdoutBytes);
-#else
-            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-            return (process.ExitCode, null, stdoutBytes);
-#endif
         }
         catch (OperationCanceledException)
         {
-            KillIfRunning(process);
+            process.KillIfRunning();
             throw;
         }
     }
@@ -251,20 +265,6 @@ public static class PagefindCli
     /// <param name="value">Source value.</param>
     /// <returns>Clamped value.</returns>
     private static int ClampToInt(long value) => value > int.MaxValue ? int.MaxValue : (int)value;
-
-    /// <summary>Kills <paramref name="process"/> tolerating "already exited".</summary>
-    /// <param name="process">Process handle.</param>
-    private static void KillIfRunning(Process process)
-    {
-        try
-        {
-            process.Kill(true);
-        }
-        catch (InvalidOperationException) when (process.HasExited)
-        {
-            // already exited
-        }
-    }
 
     /// <summary>Resolves the absolute path of the Pagefind binary to invoke, or null on miss.</summary>
     /// <param name="explicitOverride">User-supplied override; tried first.</param>
