@@ -5,6 +5,8 @@
     <PackageId>NuStreamDocs.Privacy</PackageId>
     <Description>Stop your NuStreamDocs pages from leaking visitor data to third-party CDNs. Downloads external images, scripts, and stylesheets at build time, ships them with your site, and rewrites the page HTML to load the local copies.</Description>
     <RootNamespace>NuStreamDocs.Privacy</RootNamespace>
+    <!-- The net11.0 dependency group requires the .NET 11 release-candidate rate limiter. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,8 @@
     <PackageId>NuStreamDocs.CSharpApiGenerator</PackageId>
     <Description>Generate API reference pages from your .NET assemblies as part of your NuStreamDocs build. Point at NuGet packages or local DLLs and the plugin writes Markdown reference docs into your docs tree, ready to be linked from your handwritten content.</Description>
     <RootNamespace>NuStreamDocs.CSharpApiGenerator</RootNamespace>
+    <!-- SourceDocParser requires the .NET 11 release-candidate rate limiter for net11.0. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
