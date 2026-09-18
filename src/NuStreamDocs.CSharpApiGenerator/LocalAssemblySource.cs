@@ -2,6 +2,8 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using SourceDocParser;
@@ -33,7 +35,7 @@ internal sealed record LocalAssemblySource(
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    /// <summary>Adds every <c>.dll</c> in <paramref name="directory"/> to <paramref name="index"/>; the first directory wins on duplicate filenames.</summary>
+    /// <summary>Adds managed assemblies from a directory; the first directory wins on duplicate filenames.</summary>
     /// <param name="index">Destination index, keyed by filename.</param>
     /// <param name="directory">Directory to scan.</param>
     private static void AddDllsFromDirectory(Dictionary<string, string> index, in DirectoryPath directory)
@@ -46,8 +48,30 @@ internal sealed record LocalAssemblySource(
         var files = Directory.GetFiles(directory.Value, "*.dll", SearchOption.TopDirectoryOnly);
         for (var i = 0; i < files.Length; i++)
         {
-            var name = Path.GetFileName(files[i]);
-            _ = index.TryAdd(name, files[i]);
+            var file = new FilePath(files[i]);
+            if (!HasManagedMetadata(file))
+            {
+                continue;
+            }
+
+            _ = index.TryAdd(file.FileName, file);
+        }
+    }
+
+    /// <summary>Determines whether a local DLL can supply assembly metadata.</summary>
+    /// <param name="path">Candidate assembly file.</param>
+    /// <returns>True when the file contains a managed assembly manifest.</returns>
+    private static bool HasManagedMetadata(in FilePath path)
+    {
+        using var stream = File.OpenRead(path);
+        try
+        {
+            using var reader = new PEReader(stream, PEStreamOptions.LeaveOpen);
+            return reader.HasMetadata && reader.GetMetadataReader().IsAssembly;
+        }
+        catch (BadImageFormatException)
+        {
+            return false;
         }
     }
 

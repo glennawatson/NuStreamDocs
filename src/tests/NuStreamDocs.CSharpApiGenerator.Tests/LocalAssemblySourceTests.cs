@@ -56,6 +56,22 @@ public class LocalAssemblySourceTests
         await Assert.That(group.FallbackIndex).ContainsKey("Fallback.dll");
     }
 
+    /// <summary>Native or invalid DLL files do not become metadata references.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task FallbackExcludesFilesWithoutManagedMetadata()
+    {
+        using TempDir directory = new();
+        var assembly = await Touch(directory.Root, AssemblyFileName);
+        await File.WriteAllTextAsync(Path.Combine(directory.Root, "Native.dll"), "native payload");
+        LocalAssemblySource source = new(TargetFramework, [assembly], []);
+
+        var group = await FirstGroup(source);
+
+        await Assert.That(group.FallbackIndex).ContainsKey(AssemblyFileName);
+        await Assert.That(group.FallbackIndex.ContainsKey("Native.dll")).IsFalse();
+    }
+
     /// <summary>A non-existent fallback search path is silently skipped.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -83,14 +99,15 @@ public class LocalAssemblySourceTests
         await Assert.That(group.FallbackIndex[DuplicateFileName]).IsEqualTo(winner);
     }
 
-    /// <summary>Creates an empty file at <paramref name="dir"/>/<paramref name="name"/>.</summary>
+    /// <summary>Creates a managed assembly file at the requested fixture path.</summary>
     /// <param name="dir">Containing directory.</param>
     /// <param name="name">File name.</param>
     /// <returns>Absolute path of the created file.</returns>
     private static async Task<string> Touch(string dir, string name)
     {
         var path = Path.Combine(dir, name);
-        await File.WriteAllTextAsync(path, string.Empty);
+        var source = Path.Combine(AppContext.BaseDirectory, "NuStreamDocs.CSharpApiGenerator.dll");
+        await File.WriteAllBytesAsync(path, await File.ReadAllBytesAsync(source));
         return path;
     }
 

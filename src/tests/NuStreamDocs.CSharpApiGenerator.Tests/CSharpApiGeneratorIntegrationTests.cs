@@ -49,6 +49,7 @@ public sealed class CSharpApiGeneratorIntegrationTests
             await Assert.That(emitted.Success).IsTrue().Because(string.Join(Environment.NewLine, emitted.Diagnostics));
             await File.WriteAllBytesAsync(assemblyPath, assembly.ToArray(), cancellationToken);
             await File.WriteAllBytesAsync(Path.ChangeExtension(assemblyPath, ".xml"), documentation.ToArray(), cancellationToken);
+            await File.WriteAllTextAsync(Path.Combine(directory.FullName, "Native.dll"), "native payload", cancellationToken);
 
             var options = CSharpApiGeneratorOptions.From(new LocalAssembliesInput(
                 $"net{Environment.Version.Major}.0",
