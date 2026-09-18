@@ -88,17 +88,18 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "groupName": "GitHub Actions"
+      "pinDigests": true,
+      "groupName": "GitHub Actions digests"
     },
     {
       "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["pin", "pinDigest"],
-      "group": { "commitMessageTopic": "GitHub Actions digests" }
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "enabled": false
     },
     {
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["/^actions\\//", "/^github\\//", "/^microsoft\\//"],
-      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "matchUpdateTypes": ["digest", "pin", "pinDigest"],
       "automerge": true
     },
     {
