@@ -652,7 +652,7 @@ a:hover {
     /* Break long unbreakable tokens (URLs, login IDs) inside cells so they don't push column width
        beyond the content track. */
     overflow-wrap: anywhere;
-    word-break: break-word;
+    word-break: normal;
 }
 
 .md-typeset th {
