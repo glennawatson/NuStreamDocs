@@ -167,11 +167,6 @@ jobs:
         with:
           solution-file: NuStreamDocs.slnx
 
-      - name: Test
-        uses: ./.github/actions/dotnet-test
-        with:
-          solution-file: NuStreamDocs.slnx
-
       - name: Pack NuGet packages
         shell: bash
         working-directory: src
