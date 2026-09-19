@@ -3,12 +3,40 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
+using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Logging;
 
 /// <summary>Source-generated <see cref="ILogger"/> messages for the <see cref="Building.BuildPipeline"/> driver.</summary>
 internal static partial class BuildPipelineLoggingHelper
 {
+    /// <summary>Warns that two generated pages target the same output.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="generatedPath">Skipped generated page.</param>
+    /// <param name="existingPath">Page whose contents are preserved.</param>
+    /// <param name="outputPath">Conflicting output destination.</param>
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message = "Generated page '{GeneratedPath}' is ignored: generated page '{ExistingPath}' already owns output '{OutputPath}'. Resolve the duplicate generated page registrations.")]
+    internal static partial void LogGeneratedPageConflict(ILogger logger, FilePath generatedPath, FilePath existingPath, FilePath outputPath);
+
+    /// <summary>Warns that generated content takes precedence over an existing source page.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="sourcePath">Ignored source page.</param>
+    /// <param name="generatedPath">Generated page whose content is used.</param>
+    /// <param name="outputPath">Selected output destination.</param>
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message = "Source page '{SourcePath}' is ignored for this build because generated page '{GeneratedPath}' owns output '{OutputPath}'. The source file has not been changed.")]
+    internal static partial void LogSourcePageIgnoredForGeneratedPage(ILogger logger, FilePath sourcePath, FilePath generatedPath, FilePath outputPath);
+
+    /// <summary>Warns that a source page conflicts with the first page discovered for an output.</summary>
+    /// <param name="logger">Target logger.</param>
+    /// <param name="skippedPath">Skipped source page.</param>
+    /// <param name="existingPath">Page whose contents are preserved.</param>
+    /// <param name="outputPath">Conflicting output destination.</param>
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message = "Source page '{SkippedPath}' is ignored: page '{ExistingPath}' already owns output '{OutputPath}'. Rename or exclude one of these pages to give each a distinct output.")]
+    internal static partial void LogSourcePageConflict(ILogger logger, FilePath skippedPath, FilePath existingPath, FilePath outputPath);
+
     /// <summary>Logs the build start and configuration summary.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="inputRoot">Absolute input docs root.</param>

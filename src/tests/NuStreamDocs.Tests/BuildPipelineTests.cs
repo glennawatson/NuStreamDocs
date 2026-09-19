@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
 using NuStreamDocs.Building;
 using NuStreamDocs.Plugins;
 
@@ -25,6 +26,9 @@ public class BuildPipelineTests
 
     /// <summary>Output filename for a directory landing page.</summary>
     private const string IndexOutputFileName = "index.html";
+
+    /// <summary>Authored index content used to verify source preservation.</summary>
+    private const string NamespaceMarkdown = "# Namespace";
 
     /// <summary>Markdown excluded from builds that omit drafts.</summary>
     private const string DraftMarkdown = "---\ndraft: true\n---\n# Draft";
@@ -120,7 +124,7 @@ public class BuildPipelineTests
         await Assert.That(File.Exists(Path.Combine(fixture.Output, GuideDirectory, IndexOutputFileName))).IsTrue();
     }
 
-    /// <summary>Index sources that differ only by filename casing cannot share a directory.</summary>
+    /// <summary>Index sources that differ only by filename casing produce one page and an actionable warning.</summary>
     /// <param name="directory">The source directory containing both pages.</param>
     /// <param name="fileName">The second index filename.</param>
     /// <param name="useDirectoryUrls">Whether to emit directory URLs.</param>
@@ -128,7 +132,7 @@ public class BuildPipelineTests
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     [MatrixDataSource]
-    public async Task RejectsIndexFilenameCollisions(
+    public async Task WarnsAndSkipsIndexFilenameCollisions(
         [Matrix("", "api/System")] string directory,
         [Matrix(MixedCaseIndexFileName, "INDEX.md")] string fileName,
         [Matrix(false, true)] bool useDirectoryUrls,
@@ -137,42 +141,51 @@ public class BuildPipelineTests
         using var fixture = TempBuildFixture.Create();
         var sourceDirectory = Path.Combine(fixture.Input, directory);
         _ = Directory.CreateDirectory(sourceDirectory);
-        await File.WriteAllTextAsync(Path.Combine(sourceDirectory, IndexFileName), "# Namespace", cancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(sourceDirectory, IndexFileName), NamespaceMarkdown, cancellationToken);
         await File.WriteAllTextAsync(Path.Combine(sourceDirectory, fileName), "# Type", cancellationToken);
         if (Directory.GetFiles(sourceDirectory, "*.md").Length is 1)
         {
             Skip.Test("Two index filename casings require a case-sensitive source filesystem.");
         }
 
-        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = useDirectoryUrls };
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, cancellationToken));
+        var logger = new WarningLogger();
+        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = useDirectoryUrls, Logger = logger };
+        var count = await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [], options, cancellationToken);
 
-        await Assert.That(exception!.Message).Contains(Path.Combine(directory, IndexFileName).Replace('\\', '/'));
-        await Assert.That(exception.Message).Contains(Path.Combine(directory, fileName).Replace('\\', '/'));
-        await Assert.That(exception.Message).Contains("Rename");
+        await Assert.That(count).IsEqualTo(1);
+        await Assert.That(Directory.GetFiles(fixture.Output, "*.html", SearchOption.AllDirectories).Length).IsEqualTo(1);
+        await Assert.That(logger.Messages.Count).IsEqualTo(1);
+        await Assert.That(logger.Messages[0]).Contains(Path.Combine(directory, IndexFileName).Replace('\\', '/'));
+        await Assert.That(logger.Messages[0]).Contains(Path.Combine(directory, fileName).Replace('\\', '/'));
+        await Assert.That(logger.Messages[0]).Contains("Rename");
     }
 
-    /// <summary>Generated pages cannot overwrite a disk-backed index page.</summary>
+    /// <summary>A generated index owns the output while the ignored source file remains unchanged.</summary>
     /// <param name="useDirectoryUrls">Whether to emit directory URLs.</param>
     /// <param name="cancellationToken">The test cancellation token.</param>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     [Arguments(false)]
     [Arguments(true)]
-    public async Task RejectsSyntheticIndexCollisionBeforeOverwrite(bool useDirectoryUrls, CancellationToken cancellationToken)
+    public async Task WarnsAndUsesGeneratedIndexWhenSourceExists(bool useDirectoryUrls, CancellationToken cancellationToken)
     {
         using var fixture = TempBuildFixture.Create();
-        await File.WriteAllTextAsync(Path.Combine(fixture.Input, IndexFileName), "# Namespace", cancellationToken);
-        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = useDirectoryUrls, Parallelism = 1 };
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            BuildPipeline.RunAsync(fixture.Input, fixture.Output, [new IndexPagePlugin()], options, cancellationToken));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Input, IndexFileName), NamespaceMarkdown, cancellationToken);
+        var logger = new WarningLogger();
+        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = useDirectoryUrls, Logger = logger };
+        var count = await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [new IndexPagePlugin()], options, cancellationToken);
 
-        await Assert.That(exception!.Message).Contains(IndexFileName);
-        await Assert.That(exception.Message).Contains(MixedCaseIndexFileName);
-        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Output, IndexOutputFileName), cancellationToken);
-        await Assert.That(html).Contains("Namespace");
-        await Assert.That(html).DoesNotContain("Generated type");
+        await Assert.That(count).IsEqualTo(1);
+        await Assert.That(logger.Messages.Count).IsEqualTo(1);
+        await Assert.That(logger.Messages[0]).Contains(IndexFileName);
+        await Assert.That(logger.Messages[0]).Contains(MixedCaseIndexFileName);
+        await Assert.That(logger.Messages[0]).Contains("generated");
+        await Assert.That(logger.Messages[0]).Contains("ignored");
+        var outputFileName = useDirectoryUrls ? IndexOutputFileName : "Index.html";
+        var html = await File.ReadAllTextAsync(Path.Combine(fixture.Output, outputFileName), cancellationToken);
+        await Assert.That(html).Contains("Generated type");
+        await Assert.That(html).DoesNotContain("Namespace");
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(fixture.Input, IndexFileName), cancellationToken)).IsEqualTo(NamespaceMarkdown);
     }
 
     /// <summary>Each source directory can supply its own index page across repeated builds.</summary>
@@ -269,6 +282,30 @@ public class BuildPipelineTests
         {
             context.SyntheticPages.Add(MixedCaseIndexFileName, [.. "# Generated type"u8]);
             return ValueTask.CompletedTask;
+        }
+    }
+
+    /// <summary>Collects warnings produced during page discovery.</summary>
+    private sealed class WarningLogger : ILogger
+    {
+        /// <summary>Gets warning messages.</summary>
+        public List<string> Messages { get; } = [];
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        /// <inheritdoc/>
+        public bool IsEnabled(LogLevel logLevel) => logLevel is LogLevel.Warning;
+
+        /// <inheritdoc/>
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel is LogLevel.Warning)
+            {
+                Messages.Add(formatter(state, exception));
+            }
         }
     }
 

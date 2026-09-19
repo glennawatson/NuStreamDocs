@@ -50,7 +50,6 @@ public static class BuildPipeline
     /// <param name="options">Pipeline options (filter, logger, URL shape, draft toggle).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The total number of pages processed.</returns>
-    /// <exception cref="InvalidOperationException">Multiple index pages share a source directory, regardless of filename casing.</exception>
     public static async Task<int> RunAsync(
         DirectoryPath inputRoot,
         DirectoryPath outputRoot,
@@ -60,9 +59,7 @@ public static class BuildPipeline
     {
         ValidateInputs(inputRoot, outputRoot);
 
-        var filter = options.Filter ?? PathFilter.Empty;
         var useDirectoryUrls = options.UseDirectoryUrls;
-        var includeDrafts = options.IncludeDrafts;
 
         var log = options.Logger ?? NullLogger.Instance;
         BuildPipelineLoggingHelper.LogBuildStart(log, inputRoot.Value, outputRoot.Value, plugins.Length);
@@ -96,15 +93,10 @@ public static class BuildPipeline
         BuildPipelineLoggingHelper.LogRenderStart(log, parallelOptions.MaxDegreeOfParallelism);
         var renderStarted = Stopwatch.GetTimestamp();
         await Parallel.ForEachAsync(
-            BuildPipelinePageProcessor.EnumerateDiskAndSyntheticAsync(inputRoot, filter, syntheticPages, cancellationToken),
+            BuildPipelinePageProcessor.EnumerateDiskAndSyntheticAsync(shell, syntheticPages, cancellationToken),
             parallelOptions,
             async (item, ct) =>
             {
-                if (!includeDrafts && (item.Flags & PageFlags.Draft) != 0)
-                {
-                    return;
-                }
-
                 var (entry, hit, didBuffer) = await BuildPipelinePageProcessor.ProcessOnePageAsync(item, outputRoot, useDirectoryUrls, perPage, ct)
                     .ConfigureAwait(false);
                 if (!didBuffer)

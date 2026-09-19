@@ -11,8 +11,10 @@ namespace NuStreamDocs.Plugins;
 /// <summary>
 /// Thread-safe collector for <see cref="SyntheticPage"/> entries that discovery-phase plugins
 /// register instead of writing intermediate <c>.md</c> files into the source folder. After
-/// the discover phase completes the build pipeline drains the sink and yields the entries
-/// alongside disk-loaded pages. Plugins that produce a small known set of pages add eagerly;
+/// the discover phase completes the build pipeline drains generated pages before source
+/// pages. Generated output takes precedence over a source page at the same destination;
+/// the source page is ignored with a warning and its file is preserved.
+/// Plugins that produce a small known set of pages add eagerly;
 /// plugins that emit many pages register a stream so the pipeline pulls one page at a time
 /// and lets each render before reading the next.
 /// </summary>

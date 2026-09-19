@@ -19,8 +19,4 @@ internal readonly record struct PerPageDispatch(
     BuildManifest Previous,
     PluginTimingTable PluginTiming,
     ConcurrentQueue<BufferedPage> Buffered,
-    byte[][] CrossPageMarkerNeedles)
-{
-    /// <summary>Gets the index pages reserved by this build.</summary>
-    internal IndexPageRegistry IndexPages { get; } = new();
-}
+    byte[][] CrossPageMarkerNeedles);

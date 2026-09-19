@@ -39,8 +39,6 @@ internal static class BuildPipelinePageProcessor
         PerPageDispatch dispatch,
         CancellationToken cancellationToken)
     {
-        dispatch.IndexPages.Register(item.RelativePath);
-
         // Synthetic pages skip the file-read entirely — bytes already live in process memory,
         // there's nothing to pool or release. Disk pages take the RandomAccess + ArrayPool
         // path: File.ReadAllBytesAsync allocates a fresh byte[] per page (158 MB on a 13.8K-page
@@ -151,39 +149,37 @@ internal static class BuildPipelinePageProcessor
     }
 
     /// <summary>
-    /// Streams disk-loaded markdown pages first, then drains the synthetic-page sink so
-    /// plugin-registered in-memory pages flow through the same render pipeline without
-    /// ever landing in the source folder.
+    /// Resolves generated pages before source pages so each output has one owner.
+    /// Generated Markdown remains in memory until the normal render pipeline writes it.
     /// </summary>
-    /// <param name="inputRoot">Absolute docs root.</param>
-    /// <param name="filter">Include/exclude path filter.</param>
+    /// <param name="shell">Build roots, options, and diagnostics.</param>
     /// <param name="syntheticPages">Sink populated during the discover phase.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Combined async stream of work items.</returns>
     internal static async IAsyncEnumerable<PageWorkItem> EnumerateDiskAndSyntheticAsync(
-        DirectoryPath inputRoot,
-        PathFilter filter,
+        BuildPhaseShell shell,
         SyntheticPageSink syntheticPages,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await foreach (var item in PageDiscovery.EnumerateAsync(inputRoot.Value, filter, cancellationToken).WithCancellation(cancellationToken)
-                           .ConfigureAwait(false))
-        {
-            yield return item;
-        }
-
-        if (syntheticPages.Count is 0 && syntheticPages.StreamCount is 0)
-        {
-            yield break;
-        }
-
-        // Drain eager pages first, then any registered streams. The sink yields one item at a
-        // time so a high-fanout producer (e.g. the C# API generator) keeps peak memory low —
-        // each page renders and writes before the next one is pulled.
+        var pages = new PageOutputRegistry(shell.OutputRoot);
         await foreach (var page in syntheticPages.DrainAsync(cancellationToken).ConfigureAwait(false))
         {
             var flags = FrontmatterFlagReader.ReadFlags(page.MarkdownBytes);
-            yield return new(default, page.RelativePath, flags) { InMemorySource = page.MarkdownBytes };
+            var item = new PageWorkItem(default, page.RelativePath.Replace('\\', '/'), flags) { InMemorySource = page.MarkdownBytes };
+            if (pages.TryRegister(item, shell))
+            {
+                yield return item;
+            }
+        }
+
+        var filter = shell.Options.Filter ?? PathFilter.Empty;
+        await foreach (var item in PageDiscovery.EnumerateAsync(shell.InputRoot.Value, filter, cancellationToken).WithCancellation(cancellationToken)
+                           .ConfigureAwait(false))
+        {
+            if (pages.TryRegister(item, shell))
+            {
+                yield return item;
+            }
         }
     }
 
