@@ -161,7 +161,7 @@ internal static class BuildPipelinePageProcessor
         SyntheticPageSink syntheticPages,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var pages = new PageOutputRegistry(shell.OutputRoot);
+        var pages = shell.PageOutputs ?? new PageOutputRegistry(shell.OutputRoot);
         await foreach (var page in syntheticPages.DrainAsync(cancellationToken).ConfigureAwait(false))
         {
             var flags = FrontmatterFlagReader.ReadFlags(page.MarkdownBytes);

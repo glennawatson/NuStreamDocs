@@ -18,4 +18,8 @@ internal readonly record struct BuildPhaseShell(
     DirectoryPath OutputRoot,
     BuildPipelineOptions Options,
     PluginTimingTable PluginTiming,
-    ILogger Log);
+    ILogger Log)
+{
+    /// <summary>Gets the output destinations owned by the current build.</summary>
+    public PageOutputRegistry? PageOutputs { get; init; }
+}

@@ -22,6 +22,25 @@ internal sealed class PageOutputRegistry
     internal PageOutputRegistry(in DirectoryPath outputRoot) =>
         _pages = [with(InitialCapacity, new OutputPathComparer(FileSystemPathComparison.GetComparer(outputRoot)))];
 
+    /// <summary>Gets path equality for this build's output filesystem.</summary>
+    internal IEqualityComparer<FilePath> Comparer => _pages.Comparer;
+
+    /// <summary>Returns the rendered file paths owned by accepted pages.</summary>
+    /// <param name="outputRoot">Root against which output paths are recorded.</param>
+    /// <returns>Output-relative paths for the current build.</returns>
+    internal FilePath[] GetOutputPaths(in DirectoryPath outputRoot)
+    {
+        var paths = new FilePath[_pages.Count];
+        var index = 0;
+        foreach (var page in _pages.Values)
+        {
+            paths[index] = outputRoot.Relative(page.OutputPath);
+            index++;
+        }
+
+        return paths;
+    }
+
     /// <summary>Accepts a publishable page only when its output has not been reserved.</summary>
     /// <param name="item">Page discovered before dispatch to a rendering worker.</param>
     /// <param name="shell">Build options and diagnostics.</param>

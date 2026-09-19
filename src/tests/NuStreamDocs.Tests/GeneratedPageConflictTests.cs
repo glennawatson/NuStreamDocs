@@ -81,6 +81,38 @@ public sealed class GeneratedPageConflictTests
         await Assert.That(Directory.GetFiles(fixture.Output, "*.html", SearchOption.AllDirectories).Length).IsEqualTo(1);
     }
 
+    /// <summary>Removed generated pages do not survive rebuilds or URL-shape changes.</summary>
+    /// <param name="directoryUrls">Whether generated output uses directory URLs.</param>
+    /// <param name="changeUrlShape">Whether the second build changes the output URL shape.</param>
+    /// <param name="cancellationToken">Test cancellation.</param>
+    /// <returns>The asynchronous assertions.</returns>
+    [Test]
+    [Arguments(false, false)]
+    [Arguments(true, false)]
+    [Arguments(false, true)]
+    [Arguments(true, true)]
+    public async Task ObsoleteGeneratedOutputsAreRemoved(bool directoryUrls, bool changeUrlShape, CancellationToken cancellationToken)
+    {
+        using var fixture = TempBuildFixture.Create();
+        var options = BuildPipelineOptions.Default with { UseDirectoryUrls = directoryUrls };
+        var retained = new SyntheticPage("api/Current.md", [.. GeneratedBytes]);
+        var obsolete = new SyntheticPage("api/Obsolete.md", [.. GeneratedBytes]);
+        await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [new GeneratedPagesPlugin(false, [retained, obsolete])], options, cancellationToken);
+        var unrelated = Path.Combine(fixture.Output, "manual.html");
+        await File.WriteAllTextAsync(unrelated, "User-managed output", cancellationToken);
+        var nextOptions = options with { UseDirectoryUrls = changeUrlShape ? !directoryUrls : directoryUrls };
+
+        await BuildPipeline.RunAsync(fixture.Input, fixture.Output, [new GeneratedPagesPlugin(false, [retained])], nextOptions, cancellationToken);
+
+        await Assert.That(File.Exists(BuildPipelinePageProcessor.OutputPathFor(fixture.Output, obsolete.RelativePath, directoryUrls))).IsFalse();
+        await Assert.That(File.Exists(BuildPipelinePageProcessor.OutputPathFor(fixture.Output, retained.RelativePath, nextOptions.UseDirectoryUrls))).IsTrue();
+        await Assert.That(await File.ReadAllTextAsync(unrelated, cancellationToken)).IsEqualTo("User-managed output");
+        if (changeUrlShape)
+        {
+            await Assert.That(File.Exists(BuildPipelinePageProcessor.OutputPathFor(fixture.Output, retained.RelativePath, directoryUrls))).IsFalse();
+        }
+    }
+
     /// <summary>Missing source directories are not created for generated Markdown.</summary>
     /// <param name="stream">Whether generation uses an asynchronous stream.</param>
     /// <param name="cancellationToken">Test cancellation.</param>

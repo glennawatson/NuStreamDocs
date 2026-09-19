@@ -80,7 +80,7 @@ public static class BuildPipeline
         // Partition into per-phase sorted arrays (one allocation per phase, once per build).
         var phases = PluginPhases.Partition(plugins);
         CrossPageMarkerRegistry crossPageMarkers = new();
-        BuildPhaseShell shell = new(inputRoot, outputRoot, options, pluginTiming, log);
+        BuildPhaseShell shell = new(inputRoot, outputRoot, options, pluginTiming, log) { PageOutputs = new(outputRoot) };
 
         var syntheticPages = await FireStartupPhasesAsync(phases, plugins, shell, crossPageMarkers, cancellationToken).ConfigureAwait(false);
 
@@ -147,6 +147,13 @@ public static class BuildPipeline
         {
             await BuildPipelinePluginOrchestrator.FireResolveAsync(phases.Resolves, plugins, shell, cancellationToken).ConfigureAwait(false);
             await BuildPipelinePageProcessor.DrainBufferedPagesAsync(bufferedPages, phases.PostResolves, fresh, shell, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (shell.PageOutputs is { } outputs)
+        {
+            var currentPaths = outputs.GetOutputPaths(shell.OutputRoot);
+            BuildOutputCleanup.RemoveObsolete(previous.GetOutputPaths(), currentPaths, outputs.Comparer, shell);
+            previous.SetOutputPaths(currentPaths);
         }
 
         // Copy author-supplied static content from docs/ to site/ — images, fonts, vendor JS,

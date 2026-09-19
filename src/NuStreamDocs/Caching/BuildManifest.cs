@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
+using NuStreamDocs.Building;
 using NuStreamDocs.Common;
 using NuStreamDocs.Logging;
 
@@ -21,11 +22,17 @@ public sealed class BuildManifest
     /// <summary>Schema version emitted in the JSON document; bumped on breaking changes.</summary>
     private const int SchemaVersion = 2;
 
+    /// <summary>Flat and directory URL shapes recorded by manifests without an output inventory.</summary>
+    private const int LegacyOutputShapeCount = 2;
+
     /// <summary>Raw SHA-256 fingerprint bytes of the pipeline that produced these entries.</summary>
     private readonly byte[] _buildFingerprint;
 
     /// <summary>Relative-path → entry lookup, frozen for read-mostly access.</summary>
     private Dictionary<FilePath, ManifestEntry> _entries;
+
+    /// <summary>Rendered files owned by the preceding successful build.</summary>
+    private FilePath[] _outputPaths = [];
 
     /// <summary>Initializes a new instance of the <see cref="BuildManifest"/> class.</summary>
     /// <param name="entries">Entries to seed the manifest with.</param>
@@ -102,6 +109,7 @@ public sealed class BuildManifest
         {
             var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
             var manifest = Parse(bytes);
+            manifest._outputPaths = ResolveLegacyOutputs(manifest, outputRoot);
             CachingLoggingHelper.LogManifestLoaded(log, path, manifest.Count);
             return manifest;
         }
@@ -127,7 +135,7 @@ public sealed class BuildManifest
         var manifest = await LoadAsync(outputRoot, cancellationToken, logger).ConfigureAwait(false);
         return manifest._buildFingerprint.AsSpan().SequenceEqual(buildFingerprint)
             ? manifest
-            : Empty(buildFingerprint);
+            : new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint) { _outputPaths = manifest._outputPaths };
     }
 
     /// <summary>Looks up an entry by relative path.</summary>
@@ -194,9 +202,87 @@ public sealed class BuildManifest
         }
 
         writer.WriteEndArray();
+        writer.WriteStartArray("outputs"u8);
+        for (var i = 0; i < _outputPaths.Length; i++)
+        {
+            writer.WriteStringValue(_outputPaths[i]);
+        }
+
+        writer.WriteEndArray();
         writer.WriteEndObject();
         await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
         CachingLoggingHelper.LogManifestSaved(log, path, _entries.Count);
+    }
+
+    /// <summary>Gets rendered paths recorded independently of cache validity.</summary>
+    /// <returns>Output-relative paths owned by the preceding build.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal FilePath[] GetOutputPaths() => _outputPaths;
+
+    /// <summary>Records the rendered paths owned by a successful build.</summary>
+    /// <param name="paths">Output-relative paths.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetOutputPaths(FilePath[] paths) => _outputPaths = paths;
+
+    /// <summary>Recovers output candidates from manifests that recorded only source paths.</summary>
+    /// <param name="manifest">The preceding build's manifest.</param>
+    /// <param name="outputRoot">Site output root.</param>
+    /// <returns>The recorded or recovered output paths.</returns>
+    private static FilePath[] ResolveLegacyOutputs(BuildManifest manifest, in DirectoryPath outputRoot)
+    {
+        if (manifest._outputPaths is [_, ..] || manifest._entries.Count is 0)
+        {
+            return manifest._outputPaths;
+        }
+
+        var paths = new FilePath[manifest._entries.Count * LegacyOutputShapeCount];
+        var index = 0;
+        foreach (var entry in manifest._entries.Values)
+        {
+            paths[index] = outputRoot.Relative(BuildPipelinePageProcessor.OutputPathFor(outputRoot, entry.RelativePath, false));
+            index++;
+            paths[index] = outputRoot.Relative(BuildPipelinePageProcessor.OutputPathFor(outputRoot, entry.RelativePath, true));
+            index++;
+        }
+
+        return paths;
+    }
+
+    /// <summary>Reads the independent inventory of generated output files.</summary>
+    /// <param name="root">Manifest document.</param>
+    /// <returns>The recorded output-relative paths.</returns>
+    private static FilePath[] ReadOutputPaths(in JsonElement root)
+    {
+        if (!root.TryGetProperty("outputs"u8, out var outputs) || outputs.ValueKind is not JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var paths = new FilePath[outputs.GetArrayLength()];
+        var index = 0;
+        foreach (var output in outputs.EnumerateArray())
+        {
+            if (output.ValueKind is not JsonValueKind.String)
+            {
+                continue;
+            }
+
+            FilePath path = output.GetString() ?? string.Empty;
+            if (path.IsEmpty)
+            {
+                continue;
+            }
+
+            paths[index] = path;
+            index++;
+        }
+
+        if (index != paths.Length)
+        {
+            Array.Resize(ref paths, index);
+        }
+
+        return paths;
     }
 
     /// <summary>Parses the manifest from a UTF-8 JSON byte buffer.</summary>
@@ -212,16 +298,17 @@ public sealed class BuildManifest
             return Empty();
         }
 
+        var outputPaths = ReadOutputPaths(doc.RootElement);
         if (entries.GetArrayLength() is 0)
         {
-            return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
+            return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint) { _outputPaths = outputPaths };
         }
 
         var buffer = new ManifestEntry[entries.GetArrayLength()];
         var count = ReadEntries(entries, buffer);
         if (count == 0)
         {
-            return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint);
+            return new(EmptyCollections.DictionaryFor<FilePath, ManifestEntry>(), buildFingerprint) { _outputPaths = outputPaths };
         }
 
         if (count != buffer.Length)
@@ -229,7 +316,7 @@ public sealed class BuildManifest
             Array.Resize(ref buffer, count);
         }
 
-        return new(ManifestIndex.Build(buffer), buildFingerprint);
+        return new(ManifestIndex.Build(buffer), buildFingerprint) { _outputPaths = outputPaths };
     }
 
     /// <summary>Validates the document shape and exposes the build fingerprint and entries array.</summary>
