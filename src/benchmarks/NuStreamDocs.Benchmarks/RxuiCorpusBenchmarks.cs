@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Diagnosers;
 using NuStreamDocs.Autorefs;
 using NuStreamDocs.Bibliography;
 using NuStreamDocs.Building;
@@ -24,29 +23,10 @@ using NuStreamDocs.Theme.Material.IconShortcode;
 
 namespace NuStreamDocs.Benchmarks;
 
-/// <summary>
-/// Scale-test benchmark that points DocBuilder at the local rxui website
-/// corpus (~13.8K markdown files / ~72 MB) and runs an end-to-end build
-/// with most in-process plugins enabled. Pinned via an absolute path on
-/// the maintainer's workstation; gated on the directory existing so CI
-/// and other contributors can run the rest of the suite without it.
-/// </summary>
-/// <remarks>
-/// Profiled with <c>EventPipeProfilerAttribute</c> at
-/// <c>EventPipeProfile.GcVerbose</c> so the resulting
-/// <c>.nettrace</c> can be fed through <c>smkd-allocreport</c> to
-/// surface real hotspots — the synthetic corpora elsewhere don't
-/// stress real-world heading/link/code-block density the way the
-/// rxui docs do.
-/// <para>
-/// `[ShortRunJob]` because each iteration is multi-second; one launch
-/// + warmup + a few iterations is plenty for relative ranking.
-/// </para>
-/// </remarks>
+/// <summary>Measures documentation builds against the local ReactiveUI website corpus.</summary>
 [DebuggerDisplay("RxuiCorpusBenchmarks: outputRoot={_outputRoot}")]
 [ShortRunJob]
 [MemoryDiagnoser]
-[EventPipeProfiler(EventPipeProfile.GcVerbose)]
 public class RxuiCorpusBenchmarks
 {
     /// <summary>Absolute path to the maintainer's local rxui-website corpus checkout.</summary>
@@ -213,7 +193,7 @@ public class RxuiCorpusBenchmarks
             .BuildAsync();
     }
 
-    /// <summary>Kitchen sink — every shipped plugin in the pipeline at once. The honest end-to-end stress profile.</summary>
+    /// <summary>Builds with the combined snippet, macro, bibliography, Markdown, navigation, search, and icon stack.</summary>
     /// <returns>Pages processed.</returns>
     [Benchmark]
     public Task<int> EverythingStack()

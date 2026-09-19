@@ -991,46 +991,10 @@ options-customizer+logger).
 
 ## Why pick NuStreamDocs
 
-For a small site, every modern static-site generator is fast enough. The
-difference shows up when an editor reruns the build on every save, when
-CI pays for every minute, or when the corpus grows past a few hundred
-pages. NuStreamDocs is built for those shapes. Numbers are from
-BenchmarkDotNet on a single workstation (AMD Ryzen 7 5800X, 16 logical
-cores, .NET 10.0.7, Release config — see `src/benchmarks/`).
-
-### End-to-end build, real-world corpus (211 pages, 7.6 MB)
-
-The reference fixture is a snapshot of the ReactiveUI website docs.
-`Baseline` is parse + render + emit; everything else layers a plugin on
-top of the same input.
-
-| Scenario                         |        Time | Allocated | Per-page |
-|----------------------------------|------------:|----------:|---------:|
-| Baseline (parse → render → emit) | **11.2 ms** |    770 KB |    53 µs |
-| + markdown extensions            |     13.9 ms |   1.96 MB |    66 µs |
-| + syntax highlighter             |     23.3 ms |   2.14 MB |   110 µs |
-| + nav (full discovery)           |     20.6 ms |   2.24 MB |    98 µs |
-| + bibliography                   |     11.3 ms |    901 KB |    54 µs |
-| + magic-link / autolinks         |     13.7 ms |    956 KB |    65 µs |
-| + every plugin (Full stack)      | **87.9 ms** |   13.2 MB |   417 µs |
-
-That's the **whole 211-page corpus, every plugin enabled, in 88 ms** —
-**~2,400 pages / second** with the works on. Without plugins the parse-
-render-emit core handles **~19,000 pages / second** on the same box.
-
-### Per-page synthetic (no I/O, pure pipeline)
-
-| Pages |            Baseline |           Full stack |
-|-------|--------------------:|---------------------:|
-| 50    | 1.1 ms (22 µs/page) |  3.9 ms (79 µs/page) |
-| 500   | 7.6 ms (15 µs/page) | 28.8 ms (58 µs/page) |
-
-The per-page cost goes *down* at 500 pages because JIT tiering kicks in
-and the parallel scheduler amortizes its overhead.
-
-Per-plugin micro-benchmarks, syntax-highlighter throughput by language,
-zero-allocation render-core measurements, and the full cross-suite
-allocation + CPU profile are in [BENCHMARKS.md](BENCHMARKS.md).
+NuStreamDocs focuses on fast documentation builds, with content, plugins, and
+generated pages determining the work required. See the
+[performance overview](docs/performance.md) for measurements and what they mean
+for your site.
 
 ### Native AOT-ready
 
