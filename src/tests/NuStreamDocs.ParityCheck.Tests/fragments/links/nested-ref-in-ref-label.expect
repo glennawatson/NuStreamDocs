@@ -1,0 +1,4 @@
+kind: known-bug
+reason: A reference link inside the label of another reference link renders as literal text; the references nest the anchors.
+---
+<p><a href="/s">a [r] b</a></p>

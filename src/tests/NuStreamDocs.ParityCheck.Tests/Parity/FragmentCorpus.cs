@@ -18,6 +18,9 @@ internal static class FragmentCorpus
     /// <summary>Feature name of a fragment that sits directly in the corpus directory.</summary>
     private const string RootFeature = "root";
 
+    /// <summary>File-name prefix of a fragment stored with LF line endings that is rendered with CRLF line endings.</summary>
+    private const string CrlfPrefix = "crlf-";
+
     /// <summary>Loads every fragment below <paramref name="directory"/>, ordered by id.</summary>
     /// <param name="directory">Corpus directory.</param>
     /// <returns>The fragments with their sidecars.</returns>
@@ -33,7 +36,7 @@ internal static class FragmentCorpus
             fragments[i] = new(
                 id,
                 slash < 0 ? RootFeature : id[..slash],
-                File.ReadAllText(files[i], Encoding.UTF8),
+                ReadMarkdown(files[i]),
                 File.Exists(sidecarPath) ? Expectation.Parse(File.ReadAllText(sidecarPath, Encoding.UTF8)) : null);
         }
 
@@ -47,4 +50,15 @@ internal static class FragmentCorpus
     /// <returns>The sidecar path, whether or not the file exists.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static string SidecarPath(string directory, string id) => Path.Combine(directory, id + SidecarExtension);
+
+    /// <summary>Reads the Markdown of a fragment file; a file whose name starts with <c>crlf-</c> has its line feeds turned into CRLF pairs.</summary>
+    /// <param name="path">Fragment file path.</param>
+    /// <returns>The Markdown source.</returns>
+    private static string ReadMarkdown(string path)
+    {
+        var text = File.ReadAllText(path, Encoding.UTF8);
+        return Path.GetFileName(path).StartsWith(CrlfPrefix, StringComparison.Ordinal)
+            ? text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", "\r\n", StringComparison.Ordinal)
+            : text;
+    }
 }

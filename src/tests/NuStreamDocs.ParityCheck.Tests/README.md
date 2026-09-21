@@ -63,6 +63,7 @@ The tool references `NuStreamDocs.csproj` by path, so it renders with the curren
 
 `fragments/<feature>/<name>.md`, one fragment per file, the id is `<feature>/<name>`. Basic Markdown only.
 Fragments render exactly as stored (tabs, trailing spaces and missing final newlines are significant).
+A fragment whose file name starts with `crlf-` is stored with LF line endings, which the repository's line-ending normalization requires, and rendered with CRLF line endings.
 
 An optional `<name>.expect` sidecar records why a fragment does not simply equal Zensical:
 
