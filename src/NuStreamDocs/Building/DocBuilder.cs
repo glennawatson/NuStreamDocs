@@ -406,6 +406,7 @@ public sealed class DocBuilder
         PluginTimingTable pluginTiming = new();
         List<PageBuilderRental> scratch = [];
         var input = PageBuilderPool.Rent(html.WrittenCount);
+        var owned = input;
         try
         {
             input.Writer.Write(html.WrittenSpan);
@@ -420,7 +421,7 @@ public sealed class DocBuilder
             html.Write(final.Writer.WrittenSpan);
             if (!final.Equals(input))
             {
-                final.Dispose();
+                owned = final;
             }
         }
         finally
@@ -430,7 +431,7 @@ public sealed class DocBuilder
                 scratch[i].Dispose();
             }
 
-            input.Dispose();
+            owned.Dispose();
         }
 
         return Task.CompletedTask;
