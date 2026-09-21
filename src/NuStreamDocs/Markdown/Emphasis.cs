@@ -8,9 +8,10 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Markdown;
 
 /// <summary>
-/// Greedy emphasis / strong handler. Recognizes <c>*em*</c>, <c>**strong**</c>, <c>***both***</c>
-/// and the underscore equivalents; honors CommonMark's intra-word rule for underscores so
-/// <c>foo_bar</c>-shaped identifiers don't trigger emphasis.
+/// Emphasis / strong handler. Recognizes <c>*em*</c>, <c>**strong**</c>, <c>***both***</c> and the
+/// underscore equivalents. An opening run must be followed by non-whitespace, a closing run must follow
+/// non-whitespace, and underscore runs cannot open or close inside a word so <c>foo_bar</c>-shaped
+/// identifiers stay literal. Nested emphasis inside the span is matched before the outer close is chosen.
 /// </summary>
 internal static class Emphasis
 {
@@ -19,6 +20,27 @@ internal static class Emphasis
 
     /// <summary>Strong-emphasis run length.</summary>
     private const int StrongRun = 2;
+
+    /// <summary>Length of a backslash escape sequence.</summary>
+    private const int EscapeLength = 2;
+
+    /// <summary>Marker-run inspections one match attempt may spend before it gives up and leaves the text literal.</summary>
+    private const int MaxSteps = 1024;
+
+    /// <summary>Backslash byte.</summary>
+    private const byte Backslash = (byte)'\\';
+
+    /// <summary>Backtick byte.</summary>
+    private const byte Backtick = (byte)'`';
+
+    /// <summary>Underscore byte.</summary>
+    private const byte Underscore = (byte)'_';
+
+    /// <summary>First byte of a multi-byte UTF-8 sequence; such bytes count as word characters.</summary>
+    private const byte FirstNonAsciiByte = 0x80;
+
+    /// <summary>Bytes the close search must stop at: both emphasis markers, escapes and code spans.</summary>
+    private static readonly SearchValues<byte> CloseSearchBytes = SearchValues.Create("*_\\`"u8);
 
     /// <summary>Gets the UTF-8 bytes for the <c>em</c> open tag.</summary>
     private static ReadOnlySpan<byte> EmOpen => "<em>"u8;
@@ -50,72 +72,206 @@ internal static class Emphasis
         ref int pendingTextStart,
         IBufferWriter<byte> writer)
     {
-        var marker = source[pos];
-        var openRun = AsciiByteHelpers.RunLength(source, pos, marker);
-        var maxProbe = openRun >= MaxRunLength ? MaxRunLength : openRun;
-
-        var openLength = 0;
-        var closeStart = -1;
-        for (var probe = maxProbe; probe >= 1; probe--)
-        {
-            var contentStart = pos + probe;
-            var candidate = FindClose(source, contentStart, marker, probe);
-            if (candidate < 0)
-            {
-                continue;
-            }
-
-            if (marker is (byte)'_' && IsIntraWord(source, pos, contentStart, candidate, probe))
-            {
-                continue;
-            }
-
-            openLength = probe;
-            closeStart = candidate;
-            break;
-        }
-
-        if (openLength is 0)
+        var steps = MaxSteps;
+        if (!TryMatch(source, pos, ref steps, out var openStart, out var openLength, out var closeStart))
         {
             return false;
         }
 
-        InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
-        EmitWrapped(source, pos + openLength, closeStart, openLength, writer);
+        InlineRenderer.FlushText(source, pendingTextStart, openStart, writer);
+        EmitWrapped(source, openStart + openLength, closeStart, openLength, writer);
         pos = closeStart + openLength;
         pendingTextStart = pos;
         return true;
     }
 
-    /// <summary>Finds the start of a matching close run.</summary>
+    /// <summary>Finds the emphasis span whose opening run starts at <paramref name="pos"/>.</summary>
     /// <param name="source">The UTF-8 source.</param>
-    /// <param name="searchFrom">First byte to consider.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <param name="length">Required close run length.</param>
-    /// <returns>Start index of the close run, or -1.</returns>
-    internal static int FindClose(ReadOnlySpan<byte> source, int searchFrom, byte marker, int length)
+    /// <param name="pos">Index of the first byte of the marker run.</param>
+    /// <param name="steps">Remaining marker-run inspections.</param>
+    /// <param name="openStart">Index of the first byte of the opening delimiter; earlier bytes of the run stay literal.</param>
+    /// <param name="openLength">1 = em, 2 = strong, 3 = strong+em.</param>
+    /// <param name="closeStart">Index of the first byte of the closing delimiter.</param>
+    /// <returns>True when a span was found.</returns>
+    private static bool TryMatch(
+        ReadOnlySpan<byte> source,
+        int pos,
+        ref int steps,
+        out int openStart,
+        out int openLength,
+        out int closeStart)
     {
-        var i = searchFrom;
-        while (i < source.Length)
+        openStart = 0;
+        openLength = 0;
+        closeStart = -1;
+
+        var marker = source[pos];
+        var run = AsciiByteHelpers.RunLength(source, pos, marker);
+        if (!CanOpen(source, pos, run, marker))
         {
-            if (source[i] != marker)
+            return false;
+        }
+
+        for (var probe = Math.Min(run, MaxRunLength); probe >= 1; probe--)
+        {
+            var candidate = FindClose(source, pos + run, marker, probe, ref steps);
+            if (candidate < 0)
             {
-                i++;
                 continue;
             }
 
-            var runStart = i;
-            var run = AsciiByteHelpers.RunLength(source, i, marker);
-            if (run >= length)
+            var surplus = run - probe;
+            var outerClose = surplus > 0 ? FindClose(source, candidate + probe, marker, surplus, ref steps) : -1;
+            if (outerClose >= 0)
             {
-                return runStart;
+                openStart = pos;
+                openLength = surplus;
+                closeStart = outerClose;
+                return true;
             }
 
-            i = runStart + run;
+            if (openLength is 0)
+            {
+                openStart = pos + surplus;
+                openLength = probe;
+                closeStart = candidate;
+            }
+
+            if (surplus is 0)
+            {
+                break;
+            }
+        }
+
+        return openLength > 0;
+    }
+
+    /// <summary>Finds the start of the run that closes an opener of <paramref name="length"/> markers.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="contentStart">First byte after the opening run.</param>
+    /// <param name="marker">Marker byte.</param>
+    /// <param name="length">Required close run length.</param>
+    /// <param name="steps">Remaining marker-run inspections.</param>
+    /// <returns>Start index of the close run, or -1.</returns>
+    private static int FindClose(ReadOnlySpan<byte> source, int contentStart, byte marker, int length, ref int steps)
+    {
+        var i = contentStart;
+        while (TryAdvanceToSpecial(source, ref i, ref steps))
+        {
+            if (source[i] != marker)
+            {
+                i = SkipNonMarker(source, i);
+                continue;
+            }
+
+            var run = AsciiByteHelpers.RunLength(source, i, marker);
+            if (i > contentStart && run >= length && CanClose(source, i, run, marker))
+            {
+                return i;
+            }
+
+            i = SkipOrMatchNested(source, i, run, marker, ref steps);
         }
 
         return -1;
     }
+
+    /// <summary>Moves <paramref name="index"/> to the next byte the close search must inspect.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="index">Search cursor; advanced on success.</param>
+    /// <param name="steps">Remaining marker-run inspections; one is spent per call.</param>
+    /// <returns>True when a special byte was found within budget.</returns>
+    private static bool TryAdvanceToSpecial(ReadOnlySpan<byte> source, ref int index, ref int steps)
+    {
+        if (index >= source.Length)
+        {
+            return false;
+        }
+
+        var rel = source[index..].IndexOfAny(CloseSearchBytes);
+        if (rel < 0)
+        {
+            return false;
+        }
+
+        steps--;
+        index += rel;
+        return steps >= 0;
+    }
+
+    /// <summary>Returns the index past an escape, code span, or run of the other emphasis marker starting at <paramref name="index"/>.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="index">Index of a backslash, backtick, or the emphasis marker that is not being matched.</param>
+    /// <returns>Index of the first byte to inspect next.</returns>
+    private static int SkipNonMarker(ReadOnlySpan<byte> source, int index)
+    {
+        var b = source[index];
+        if (b is Backslash)
+        {
+            return index + EscapeLength;
+        }
+
+        var run = AsciiByteHelpers.RunLength(source, index, b);
+        if (b is not Backtick)
+        {
+            return index + run;
+        }
+
+        var close = CodeSpan.FindMatchingClose(source, index + run, run);
+        return close < 0 ? index + run : close + run;
+    }
+
+    /// <summary>Returns the index past a nested emphasis span opened by the run at <paramref name="index"/>, or past the run when none opens.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="index">Index of the marker run.</param>
+    /// <param name="run">Length of the run.</param>
+    /// <param name="marker">Marker byte.</param>
+    /// <param name="steps">Remaining marker-run inspections.</param>
+    /// <returns>Index of the first byte to inspect next.</returns>
+    private static int SkipOrMatchNested(ReadOnlySpan<byte> source, int index, int run, byte marker, ref int steps) =>
+        CanOpen(source, index, run, marker) && TryMatch(source, index, ref steps, out _, out var length, out var close)
+            ? close + length
+            : index + run;
+
+    /// <summary>True when the marker run at <paramref name="pos"/> can start emphasis.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="pos">Index of the run's first byte.</param>
+    /// <param name="run">Length of the run.</param>
+    /// <param name="marker">Marker byte.</param>
+    /// <returns>True when non-whitespace follows the run and, for underscores, no word character precedes it.</returns>
+    private static bool CanOpen(ReadOnlySpan<byte> source, int pos, int run, byte marker)
+    {
+        var after = pos + run;
+        if (after >= source.Length || AsciiByteHelpers.IsAsciiWhitespace(source[after]))
+        {
+            return false;
+        }
+
+        return marker is not Underscore || pos is 0 || !IsWordByte(source[pos - 1]);
+    }
+
+    /// <summary>True when the marker run at <paramref name="pos"/> can end emphasis.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="pos">Index of the run's first byte.</param>
+    /// <param name="run">Length of the run.</param>
+    /// <param name="marker">Marker byte.</param>
+    /// <returns>True when non-whitespace precedes the run and, for underscores, no word character follows it.</returns>
+    private static bool CanClose(ReadOnlySpan<byte> source, int pos, int run, byte marker)
+    {
+        if (pos is 0 || AsciiByteHelpers.IsAsciiWhitespace(source[pos - 1]))
+        {
+            return false;
+        }
+
+        var after = pos + run;
+        return marker is not Underscore || after >= source.Length || !IsWordByte(source[after]);
+    }
+
+    /// <summary>True for ASCII letters and digits and for any byte of a multi-byte UTF-8 sequence.</summary>
+    /// <param name="b">Candidate byte.</param>
+    /// <returns>True when the byte is part of a word.</returns>
+    private static bool IsWordByte(byte b) =>
+        b >= FirstNonAsciiByte || AsciiByteHelpers.IsAsciiLetter(b) || AsciiByteHelpers.IsAsciiDigit(b);
 
     /// <summary>Writes the open + content + close tags for the chosen <paramref name="openLength"/>.</summary>
     /// <param name="source">the UTF-8 source.</param>
@@ -154,27 +310,4 @@ internal static class Emphasis
         StrongRun => StrongClose,
         _ => EmClose
     };
-
-    /// <summary>Returns true when an underscore run at <paramref name="pos"/> is intra-word and should not delimit emphasis.</summary>
-    /// <param name="source">the UTF-8 source.</param>
-    /// <param name="pos">Position of the open marker.</param>
-    /// <param name="contentStart">First byte of the inner content (just past the open run).</param>
-    /// <param name="closeStart">Position of the close marker.</param>
-    /// <param name="length">Run length being considered.</param>
-    /// <returns>True when both the open and close violate the intra-word rule.</returns>
-    private static bool IsIntraWord(ReadOnlySpan<byte> source, int pos, int contentStart, int closeStart, int length)
-    {
-        var openIntraWord = pos > 0
-                            && AsciiByteHelpers.IsAsciiIdentifierByte(source[pos - 1])
-                            && contentStart < source.Length
-                            && AsciiByteHelpers.IsAsciiIdentifierByte(source[contentStart]);
-
-        var closeIntraWord = closeStart > 0
-                             && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart - 1])
-                             && closeStart + length < source.Length
-                             && AsciiByteHelpers.IsAsciiIdentifierByte(source[closeStart + length]);
-
-        // Reject when *either* end is intra-word — the run can't legally delimit on that side.
-        return openIntraWord || closeIntraWord;
-    }
 }
