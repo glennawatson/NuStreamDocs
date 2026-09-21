@@ -339,22 +339,18 @@ public static class HtmlEmitter
             end++;
         }
 
+        if (end < blocks.Length && blocks[end].Kind is BlockKind.SetextHeading)
+        {
+            EmitSetextHeading(source, blocks, openerIndex, end, writer);
+            return end + 1;
+        }
+
         if (!tight)
         {
             Write("<p>"u8, writer);
         }
 
-        for (var i = openerIndex; i < end; i++)
-        {
-            if (i > openerIndex)
-            {
-                Write("\n"u8, writer);
-            }
-
-            var block = blocks[i];
-            var line = source.Slice(block.Start, block.Length).TrimStart((byte)' ');
-            InlineRenderer.Render(line, writer);
-        }
+        EmitInlineLines(source, blocks, openerIndex, end, writer);
 
         if (tight)
         {
@@ -364,6 +360,51 @@ public static class HtmlEmitter
 
         Write(ParagraphClose, writer);
         return end;
+    }
+
+    /// <summary>Renders the lines of consecutive paragraph blocks as inline content separated by newlines.</summary>
+    /// <param name="source">UTF-8 source buffer.</param>
+    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="start">Index of the first line block.</param>
+    /// <param name="end">Exclusive end index.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void EmitInlineLines(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int start,
+        int end,
+        IBufferWriter<byte> writer)
+    {
+        for (var i = start; i < end; i++)
+        {
+            if (i > start)
+            {
+                Write("\n"u8, writer);
+            }
+
+            var block = blocks[i];
+            var line = source.Slice(block.Start, block.Length).TrimStart((byte)' ');
+            InlineRenderer.Render(i == end - 1 ? line.TrimEnd((byte)' ') : line, writer);
+        }
+    }
+
+    /// <summary>Writes a setext heading: the paragraph lines in [<paramref name="start"/>, <paramref name="underline"/>) wrapped in the level the underline block carries.</summary>
+    /// <param name="source">UTF-8 source buffer.</param>
+    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="start">Index of the first heading text line.</param>
+    /// <param name="underline">Index of the <see cref="BlockKind.SetextHeading"/> underline block.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void EmitSetextHeading(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int start,
+        int underline,
+        IBufferWriter<byte> writer)
+    {
+        var level = Math.Clamp(blocks[underline].Level, MinHeadingLevel, MaxHeadingLevel);
+        Write(OpenTags[level], writer);
+        EmitInlineLines(source, blocks, start, underline, writer);
+        Write(CloseTags[level], writer);
     }
 
     /// <summary>Dispatches block kinds deferred from the outer <see cref="Emit"/> switch.</summary>
@@ -1009,7 +1050,9 @@ public static class HtmlEmitter
             return;
         }
 
-        if (loose || blocks[first].Kind is not BlockKind.Paragraph)
+        var runEnd = FindKindRunEnd(blocks, first, BlockKind.Paragraph);
+        var startsWithParagraph = runEnd > first && !(runEnd < blocks.Length && blocks[runEnd].Kind is BlockKind.SetextHeading);
+        if (loose || !startsWithParagraph)
         {
             Write("\n"u8, writer);
         }

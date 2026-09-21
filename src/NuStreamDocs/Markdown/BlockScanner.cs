@@ -343,14 +343,14 @@ public static class BlockScanner
             return BlockKind.AtxHeading;
         }
 
-        if (TryClassifyThematicBreak(body))
-        {
-            return BlockKind.ThematicBreak;
-        }
-
         if (TryClassifySetextUnderline(body, prevKind, out level))
         {
             return BlockKind.SetextHeading;
+        }
+
+        if (TryClassifyThematicBreak(body))
+        {
+            return BlockKind.ThematicBreak;
         }
 
         if (body[0] == Gt)
@@ -561,18 +561,9 @@ public static class BlockScanner
             return false;
         }
 
-        for (var i = 0; i < body.Length; i++)
+        if (HasTrailingNonWhitespace(body[MarkerRunLength(body, marker)..]))
         {
-            var b = body[i];
-            if (b == marker)
-            {
-                continue;
-            }
-
-            if (b is not Sp and not Tab)
-            {
-                return false;
-            }
+            return false;
         }
 
         level = marker == EqualSign ? SetextLevelEquals : SetextLevelHyphen;
