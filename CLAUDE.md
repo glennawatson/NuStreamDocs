@@ -166,9 +166,18 @@ per-method-call overhead). Use the right pass for the right question:
 
 The core renderer (`BlockScanner`, `HtmlEmitter`, `InlineRenderer`, `TabExpander`) targets MkDocs / Python-Markdown output
 for basic Markdown and stays compatible with Zensical. Reference order: Zensical first, MkDocs where Zensical is buggy or
-lacks the behavior; CSS and theme markup are out of scope. The parity tool lives at
-`~/source/glennawatson/tools/markdown-parity` (see the README there). The deliberate CommonMark-side deviations are
-listed in the README under "Core Markdown rendering" and stay as they are.
+lacks the behavior; CSS and theme markup are out of scope. The parity check is the test project
+`src/tests/NuStreamDocs.ParityCheck.Tests` (see the README there): it builds a Python venv under `artifacts/parity-venv`,
+renders the fragment corpus with MkDocs and Zensical once per test session and classifies every fragment; the reference
+tests skip when no Python 3.10+ is installed, while the pinned-output tests for `deviation`, `extension` and
+`mkdocs-better` sidecars always run. The maintenance tool (list, `--show-all` diffs, `--pin`, `--emit-tests`,
+`--emit-pinned`) is `dotnet run --file tools/Program.cs` from that project directory. The deliberate CommonMark-side
+deviations are listed in the README under "Core Markdown rendering" and stay as they are.
+
+```bash
+cd src
+dotnet test --project tests/NuStreamDocs.ParityCheck.Tests/NuStreamDocs.ParityCheck.Tests.csproj
+```
 
 - Every rendering fix ships as its own commit with focused tests through `MarkdownRenderer.Render`.
 - New scanning logic works on UTF-8 spans and starts with a cheap exit when its syntax is absent (see `TabExpander`,

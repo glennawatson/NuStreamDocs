@@ -1,0 +1,9 @@
+kind: quirk
+reason: Python-Markdown continues an empty block quote lazily onto the next line.
+---
+<blockquote>
+</blockquote>
+<p>&lt;</p>
+<h1></h1>
+<blockquote>
+</blockquote>

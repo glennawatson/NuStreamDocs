@@ -1,0 +1,4 @@
+kind: quirk
+reason: Python-Markdown renders seven hashes as an h6 that starts with a literal hash.
+---
+<p>####### Seven hashes</p>

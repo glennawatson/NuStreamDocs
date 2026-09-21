@@ -1,0 +1,13 @@
+kind: deviation
+reason: A nested list needs only the parent item's content indent, not four spaces.
+---
+<ul>
+<li>
+<p>item with code:</p>
+<pre><code>  indented code in item
+</code></pre>
+</li>
+<li>
+<p>next item</p>
+</li>
+</ul>

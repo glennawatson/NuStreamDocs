@@ -1,0 +1,2 @@
+kind: extension
+reason: Zensical rewrites relative .md link targets to directory URLs as part of site link processing; the Markdown core keeps the target as written.

@@ -1,0 +1,2 @@
+kind: mkdocs-better
+reason: Zensical emits a pre element inside the paragraph, which is invalid HTML; a fence ends the paragraph and MkDocs emits separate blocks.

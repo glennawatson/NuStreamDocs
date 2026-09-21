@@ -1,0 +1,11 @@
+kind: deviation
+reason: README bullet: ATX headings may be indented up to three spaces, setext headings may span several lines, 1) starts an ordered list, a lone list marker is an empty item.
+---
+<ul>
+<li></li>
+<li></li>
+<li></li>
+</ul>
+<ol>
+<li></li>
+</ol>

@@ -1,0 +1,11 @@
+kind: deviation
+reason: A change of marker kind starts a new list.
+---
+<ul>
+<li>bullet one</li>
+<li>bullet two</li>
+</ul>
+<ol>
+<li>ordered one</li>
+<li>ordered two</li>
+</ol>

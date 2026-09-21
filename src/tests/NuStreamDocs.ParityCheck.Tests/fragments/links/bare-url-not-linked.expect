@@ -1,0 +1,2 @@
+kind: extension
+reason: Zensical's magiclink extension turns bare URLs, www hosts and email addresses into links; basic Markdown leaves them as text.

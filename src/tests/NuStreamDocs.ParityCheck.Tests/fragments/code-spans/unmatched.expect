@@ -1,0 +1,2 @@
+kind: mkdocs-better
+reason: Zensical pairs backtick runs of different lengths and drops characters (nmatched); an unmatched run is literal text.

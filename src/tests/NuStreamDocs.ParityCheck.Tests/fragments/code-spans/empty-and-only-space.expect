@@ -1,0 +1,4 @@
+kind: quirk
+reason: Python-Markdown produces nonsense for empty and whitespace-only code spans.
+---
+<p>`` and <code></code> and <code></code></p>

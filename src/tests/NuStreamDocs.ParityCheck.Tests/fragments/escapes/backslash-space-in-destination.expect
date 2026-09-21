@@ -1,0 +1,2 @@
+kind: extension
+reason: Zensical's subscript and superscript extensions treat backslash-space as an escaped space; in basic Markdown the backslash stays.

@@ -1,0 +1,8 @@
+kind: quirk
+reason: Python-Markdown turns a lone - line into a setext heading of the previous line.
+---
+<ul>
+<li>one</li>
+<li></li>
+<li>three</li>
+</ul>

@@ -1,0 +1,4 @@
+kind: deviation
+reason: Every ASCII punctuation character can be backslash-escaped.
+---
+<p>&quot; # $ % &amp; ' , / : ; &lt; = &gt; ? @ ^ | ~</p>

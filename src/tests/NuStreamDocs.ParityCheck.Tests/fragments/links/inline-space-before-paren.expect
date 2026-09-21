@@ -1,0 +1,2 @@
+kind: extension
+reason: Zensical's magiclink extension links the URL inside the parentheses; basic Markdown leaves it as text.

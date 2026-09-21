@@ -1,0 +1,4 @@
+kind: quirk
+reason: Python-Markdown resolves consecutive reference definitions to the wrong target.
+---
+<p>Links: <a href="http://example.com/e">e</a> <a href="http://example.com/f">f</a> <a href="http://example.com/g">g</a></p>

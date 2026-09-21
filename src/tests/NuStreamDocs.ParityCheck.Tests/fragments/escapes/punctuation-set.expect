@@ -1,0 +1,2 @@
+kind: extension
+reason: Zensical's arithmatex extension keeps the backslashes of the inline math delimiters \( and \).

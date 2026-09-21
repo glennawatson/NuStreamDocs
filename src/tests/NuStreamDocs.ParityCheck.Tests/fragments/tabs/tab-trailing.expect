@@ -1,0 +1,5 @@
+kind: quirk
+reason: Python-Markdown expands a trailing tab into a hard break.
+---
+<p>trailing tab	
+next line</p>

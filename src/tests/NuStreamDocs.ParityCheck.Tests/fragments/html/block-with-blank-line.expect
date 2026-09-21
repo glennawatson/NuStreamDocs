@@ -1,0 +1,7 @@
+kind: deviation
+reason: An HTML block ends at the first blank line.
+---
+<div>
+first part
+<p>second part</p>
+</div>

@@ -1,0 +1,17 @@
+kind: deviation
+reason: A list is loose as a whole, not item by item.
+---
+<ul>
+<li>
+<p>one</p>
+</li>
+<li>
+<p>two</p>
+</li>
+<li>
+<p>three</p>
+</li>
+<li>
+<p>four</p>
+</li>
+</ul>

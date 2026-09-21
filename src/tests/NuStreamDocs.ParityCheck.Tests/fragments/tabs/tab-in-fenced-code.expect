@@ -1,0 +1,6 @@
+kind: deviation
+reason: README bullet: tabs inside fenced code lines are kept after the leading indentation.
+---
+<pre><code>a	b
+    leading tab
+</code></pre>

@@ -1,0 +1,8 @@
+kind: deviation
+reason: Ordered lists emit <ol start=N>.
+---
+<ol start="0">
+<li>zero</li>
+<li>one</li>
+<li>two</li>
+</ol>

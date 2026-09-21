@@ -1,0 +1,4 @@
+kind: deviation
+reason: #hashtag (no space after #) is text, not a heading.
+---
+<p>#hashtag</p>

@@ -1,0 +1,16 @@
+kind: deviation
+reason: A nested list needs only the parent item's content indent, not four spaces.
+---
+<ol>
+<li>Warning
+<ol>
+<li>Event: something happened.</li>
+<li>Consequence: something followed.</li>
+</ol>
+</li>
+<li>Suspension
+<ol>
+<li>Event: something else.</li>
+</ol>
+</li>
+</ol>

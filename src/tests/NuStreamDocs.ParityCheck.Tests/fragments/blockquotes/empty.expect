@@ -1,0 +1,7 @@
+kind: deviation
+reason: README bullet: block quotes separated by a blank line are separate quotes.
+---
+<blockquote>
+</blockquote>
+<blockquote>
+</blockquote>

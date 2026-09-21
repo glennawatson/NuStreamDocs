@@ -1,0 +1,6 @@
+kind: quirk
+reason: Python-Markdown swallows malformed reference definitions.
+---
+<p>[broken]: 
+[also broken]: &lt;unclosed</p>
+<p>See <a href="http://example.com">ok</a> and [broken].</p>

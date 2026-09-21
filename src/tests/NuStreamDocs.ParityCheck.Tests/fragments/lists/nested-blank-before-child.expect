@@ -1,0 +1,15 @@
+kind: quirk
+reason: Python-Markdown attaches the following sibling item to the nested list.
+---
+<ul>
+<li>
+<p>parent one</p>
+<ul>
+<li>child one</li>
+<li>child two</li>
+</ul>
+</li>
+<li>
+<p>parent two</p>
+</li>
+</ul>

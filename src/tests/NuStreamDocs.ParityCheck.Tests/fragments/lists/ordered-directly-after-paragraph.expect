@@ -1,0 +1,8 @@
+kind: deviation
+reason: A list can start directly after a paragraph line without a blank line.
+---
+<p>A paragraph line</p>
+<ol>
+<li>ordered item directly after it</li>
+<li>second item</li>
+</ol>

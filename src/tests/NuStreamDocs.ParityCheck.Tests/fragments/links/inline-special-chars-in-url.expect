@@ -1,0 +1,4 @@
+kind: quirk
+reason: Python-Markdown reads a quoted string glued to a bare URL as a link title.
+---
+<p><a href="http://example.com/?a=1&amp;b=2&amp;c=3">query</a> and <a href="http://example.com/&quot;x&quot;">quote</a> and <a href="http://example.com/&amp;">amp</a></p>

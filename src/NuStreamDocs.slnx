@@ -132,6 +132,7 @@
         <Project Path="tests/NuStreamDocs.Toc.Tests/NuStreamDocs.Toc.Tests.csproj"/>
         <Project Path="tests/NuStreamDocs.Transitions.Tests/NuStreamDocs.Transitions.Tests.csproj"/>
         <Project Path="tests/NuStreamDocs.Xrefs.Tests/NuStreamDocs.Xrefs.Tests.csproj"/>
+        <Project Path="tests/NuStreamDocs.ParityCheck.Tests/NuStreamDocs.ParityCheck.Tests.csproj"/>
     </Folder>
     <Folder Name="/benchmarks/">
         <Project Path="benchmarks/NuStreamDocs.Benchmarks/NuStreamDocs.Benchmarks.csproj"/>

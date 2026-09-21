@@ -1,0 +1,2 @@
+kind: extension
+reason: Zensical's magiclink extension links the bare URLs inside the malformed link syntax; basic Markdown leaves them as text.

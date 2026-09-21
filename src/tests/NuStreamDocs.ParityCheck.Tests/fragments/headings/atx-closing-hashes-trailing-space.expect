@@ -1,0 +1,4 @@
+kind: quirk
+reason: Python-Markdown keeps a closing # run when a space follows it.
+---
+<h1>Closed with trailing space</h1>

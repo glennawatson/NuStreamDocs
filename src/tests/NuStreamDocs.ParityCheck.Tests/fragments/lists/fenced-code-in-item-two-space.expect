@@ -1,0 +1,10 @@
+kind: deviation
+reason: README bullet: a list item's body is indented only to the item's content column (nested lists, indented code, fenced code).
+---
+<ul>
+<li>
+<p>item with code:</p>
+<pre><code>code in item
+</code></pre>
+</li>
+</ul>

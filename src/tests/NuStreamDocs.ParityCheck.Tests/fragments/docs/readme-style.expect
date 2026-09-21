@@ -1,0 +1,2 @@
+kind: extension
+reason: Zensical rewrites the relative .md link target (CONTRIBUTING.md) to a directory URL as part of site link processing; the rest of the document is identical.

@@ -1,0 +1,5 @@
+kind: deviation
+reason: README bullet: text after the language on a fence line is kept in a data-info attribute.
+---
+<pre><code class="language-js" data-info="title=&quot;a.js&quot; {1,3}">let a = 1;
+</code></pre>

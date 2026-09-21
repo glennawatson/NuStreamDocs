@@ -1,0 +1,7 @@
+kind: deviation
+reason: README bullet: an unclosed fence runs to the end of the document and is closed only by its own fence character.
+---
+<p>Before.</p>
+<pre><code>code that never closes
+still code
+</code></pre>

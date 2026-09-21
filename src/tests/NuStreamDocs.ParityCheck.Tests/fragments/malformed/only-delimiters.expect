@@ -1,0 +1,2 @@
+kind: mkdocs-better
+reason: Zensical wraps a lone backtick in a code span although no run of the same length closes it; unmatched runs are literal text.

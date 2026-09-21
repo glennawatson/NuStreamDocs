@@ -1,0 +1,2 @@
+kind: mkdocs-better
+reason: Zensical emits a spurious newline inside an empty code block; the block content is empty.
