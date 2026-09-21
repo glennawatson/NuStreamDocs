@@ -127,6 +127,103 @@ public class HtmlEmitterListTests
         await Assert.That(html).DoesNotContain("<ol");
     }
 
+    /// <summary>A fenced code block indented under a tight item renders as a code block inside the item.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task FencedCodeInsideTightItemRendersAsCodeBlock()
+    {
+        var html = Render("1. step\n   ```bash\n   dotnet build\n   ```\n2. next"u8);
+        await Assert.That(html).IsEqualTo(
+            "<ol>\n<li>step\n<pre><code class=\"language-bash\">dotnet build\n</code></pre>\n</li>\n<li>next</li>\n</ol>\n");
+    }
+
+    /// <summary>A blank line before the fence makes the list loose and the fence still renders as code.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task FencedCodeInsideLooseItemRendersAsCodeBlock()
+    {
+        var html = Render("1. step\n\n   ```bash\n   dotnet build\n   ```\n2. next"u8);
+        await Assert.That(html).IsEqualTo(
+            "<ol>\n<li>\n<p>step</p>\n<pre><code class=\"language-bash\">dotnet build\n</code></pre>\n</li>\n<li>\n<p>next</p>\n</li>\n</ol>\n");
+    }
+
+    /// <summary>Blank lines inside a fenced code block do not make the list loose.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BlankLineInsideFencedCodeKeepsListTight()
+    {
+        var html = Render("- step\n  ```\n  a\n\n  b\n  ```\n- next"u8);
+        await Assert.That(html).Contains("<li>step\n<pre><code>a\n\nb\n</code></pre>\n</li>");
+        await Assert.That(html).Contains("<li>next</li>");
+    }
+
+    /// <summary>An ATX heading inside an item renders as a heading.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task HeadingInsideItemRendersAsHeading()
+    {
+        var html = Render("- a\n  # title\n- b"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li>a\n<h1>title</h1>\n</li>\n<li>b</li>\n</ul>\n");
+    }
+
+    /// <summary>An item that opens with a nested list renders that list as its first child.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task ItemOpeningWithListRendersNestedList()
+    {
+        var html = Render("- - a\n  - b"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li>\n<ul>\n<li>a</li>\n<li>b</li>\n</ul>\n</li>\n</ul>\n");
+    }
+
+    /// <summary>A blank line between an item's text and its nested list makes the list loose.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BlankBeforeNestedListMakesListLoose()
+    {
+        var html = Render("- a\n\n  - b\n- c"u8);
+        await Assert.That(html).IsEqualTo(
+            "<ul>\n<li>\n<p>a</p>\n<ul>\n<li>b</li>\n</ul>\n</li>\n<li>\n<p>c</p>\n</li>\n</ul>\n");
+    }
+
+    /// <summary>A blank line between two items makes every item in the list loose.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BlankBetweenItemsMakesEveryItemLoose()
+    {
+        var html = Render("- a\n- b\n\n- c"u8);
+        await Assert.That(html).IsEqualTo(
+            "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n<li>\n<p>c</p>\n</li>\n</ul>\n");
+    }
+
+    /// <summary>A blank line inside a nested list does not make the outer list loose.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task LooseNestedListKeepsOuterListTight()
+    {
+        var html = Render("- a\n  - b\n\n  - c\n- d"u8);
+        await Assert.That(html).IsEqualTo(
+            "<ul>\n<li>a\n<ul>\n<li>\n<p>b</p>\n</li>\n<li>\n<p>c</p>\n</li>\n</ul>\n</li>\n<li>d</li>\n</ul>\n");
+    }
+
+    /// <summary>An HTML block indented under an item is emitted verbatim.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task HtmlBlockInsideItemIsVerbatim()
+    {
+        var html = Render("- a\n  <div>raw</div>"u8);
+        await Assert.That(html).Contains("<div>raw</div>");
+        await Assert.That(html).DoesNotContain("&lt;div");
+    }
+
+    /// <summary>An empty item renders an empty <c>&lt;li&gt;</c>.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task EmptyItemRendersEmptyLi()
+    {
+        var html = Render("*\n* b"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li></li>\n<li>b</li>\n</ul>\n");
+    }
+
     /// <summary>Renders <paramref name="markdown"/> to an HTML string.</summary>
     /// <param name="markdown">UTF-8 markdown.</param>
     /// <returns>Rendered HTML.</returns>
