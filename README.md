@@ -581,7 +581,7 @@ Each is a separate assembly so you only pull what you use:
 
 ## Core Markdown rendering
 
-The core renderer turns UTF-8 Markdown into HTML in a single pass with no regular expressions. Its output targets Zensical, with MkDocs (Python-Markdown) as the reference where Zensical is buggy or lacks the behavior. CSS classes, theme markup and highlighter wrappers are not part of the comparison. The test project `src/tests/NuStreamDocs.ParityCheck.Tests` renders a corpus of fragments with both references and compares the output.
+The core renderer turns UTF-8 Markdown into HTML in a single pass with no regular expressions. Its output targets Zensical, with MkDocs (Python-Markdown) as the reference where Zensical is buggy or lacks the behavior. CSS classes, theme markup and highlighter wrappers are not part of the comparison. The test project `src/tests/NuStreamDocs.ParityCheck.Tests` renders a corpus of fragments with both references and compares the output. Every difference is written up, with examples, in [Markdown rendering: where we differ from MkDocs and Zensical](docs/markdown-deviations.md).
 
 - ATX and setext headings (a closing `#` run is dropped), paragraphs, hard breaks (two trailing spaces), thematic breaks.
 - Emphasis and strong with nesting, links and images with quoted titles and `<angle>` destinations, URL and email autolinks, code spans (surrounding whitespace trimmed, an unmatched backtick run stays literal), reference links.
