@@ -208,9 +208,31 @@ public static class HtmlEmitter
         Write(OpenTags[level], writer);
 
         var inner = source.Slice(block.Start + level, block.Length - level).TrimStart((byte)' ');
-        InlineRenderer.Render(inner, writer);
+        InlineRenderer.Render(StripClosingHashes(inner), writer);
 
         Write(CloseTags[level], writer);
+    }
+
+    /// <summary>Removes trailing spaces and an optional closing run of <c>#</c> that is preceded by whitespace (or is the whole text).</summary>
+    /// <param name="text">Heading text after the opening marker.</param>
+    /// <returns>The heading text without the closing sequence.</returns>
+    private static ReadOnlySpan<byte> StripClosingHashes(ReadOnlySpan<byte> text)
+    {
+        var trimmed = text.TrimEnd((byte)' ').TrimEnd((byte)'\t');
+        if (trimmed.IsEmpty || trimmed[^1] != (byte)'#')
+        {
+            return trimmed;
+        }
+
+        var start = trimmed.Length;
+        while (start > 0 && trimmed[start - 1] == (byte)'#')
+        {
+            start--;
+        }
+
+        return start > 0 && !AsciiByteHelpers.IsAsciiHorizontalWhitespace(trimmed[start - 1])
+            ? trimmed
+            : trimmed[..start].TrimEnd((byte)' ').TrimEnd((byte)'\t');
     }
 
     /// <summary>Writes a <c>&lt;pre&gt;&lt;code&gt;</c> block, consuming every <see cref="BlockKind.FencedCodeContent"/> line until the matching closer.</summary>

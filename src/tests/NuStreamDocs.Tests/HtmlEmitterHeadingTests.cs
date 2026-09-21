@@ -109,6 +109,22 @@ public class HtmlEmitterHeadingTests
         await Assert.That(html).IsEqualTo("<ul>\n<li>\n<h1>Title</h1>\n</li>\n</ul>\n");
     }
 
+    /// <summary>ATX headings drop trailing spaces and a closing hash run that follows whitespace.</summary>
+    /// <param name="markdown">Source text.</param>
+    /// <param name="expected">Expected rendered HTML.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("# Title #", "<h1>Title</h1>\n")]
+    [Arguments("## Title ##  ", "<h2>Title</h2>\n")]
+    [Arguments("# Title   ", "<h1>Title</h1>\n")]
+    [Arguments("### #", "<h3></h3>\n")]
+    [Arguments("# foo#", "<h1>foo#</h1>\n")]
+    [Arguments("# C#", "<h1>C#</h1>\n")]
+    [Arguments("# Title # x", "<h1>Title # x</h1>\n")]
+    [Arguments("#", "<h1></h1>\n")]
+    public async Task AtxClosingSequenceIsStripped(string markdown, string expected) =>
+        await Assert.That(Render(Encoding.UTF8.GetBytes(markdown))).IsEqualTo(expected);
+
     /// <summary>Renders <paramref name="markdown"/> to an HTML string.</summary>
     /// <param name="markdown">UTF-8 markdown.</param>
     /// <returns>Rendered HTML.</returns>
