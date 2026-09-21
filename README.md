@@ -584,9 +584,9 @@ Each is a separate assembly so you only pull what you use:
 The core renderer turns UTF-8 Markdown into HTML in a single pass with no regular expressions. Its output targets MkDocs (Python-Markdown) and is compatible with Zensical for the basics:
 
 - ATX and setext headings (a closing `#` run is dropped), paragraphs, hard breaks (two trailing spaces), thematic breaks.
-- Emphasis and strong with nesting, links and images with quoted titles and `<angle>` destinations, URL and email autolinks, code spans, reference links.
+- Emphasis and strong with nesting, links and images with quoted titles and `<angle>` destinations, URL and email autolinks, code spans (surrounding whitespace trimmed, an unmatched backtick run stays literal), reference links.
 - Fenced, tilde-fenced and indented code, block quotes (including lazy continuation and nesting), HTML blocks, tab-indented content.
-- Ordered, bullet and nested lists with tight and loose items; a list item body may hold paragraphs, code, headings, quotes and further lists.
+- Ordered, bullet and nested lists with tight and loose items; a list item body may hold paragraphs, code, headings, quotes and further lists. A paragraph line directly after item text continues the item.
 
 Intentional deviations from Python-Markdown, where the CommonMark behavior is kept:
 
