@@ -49,6 +49,7 @@ public static class InlineRenderer
     {
         var pos = 0;
         var pendingTextStart = 0;
+        EmphasisCloserSlots lastClosers = default;
         while (pos < source.Length)
         {
             var rel = source[pos..].IndexOfAny(SpecialBytes);
@@ -58,7 +59,7 @@ public static class InlineRenderer
             }
 
             pos += rel;
-            var handled = TryHandleSpecial(source, ref pos, ref pendingTextStart, source[pos], writer);
+            var handled = TryHandleSpecial(source, ref pos, ref pendingTextStart, source[pos], writer, ref lastClosers);
             if (!handled)
             {
                 pos++;
@@ -89,18 +90,20 @@ public static class InlineRenderer
     /// <param name="pendingTextStart">Start of the pending escaped-text run.</param>
     /// <param name="b">Byte at <paramref name="pos"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="lastClosers">Emphasis scratch space for this <paramref name="source"/>.</param>
     /// <returns>True when the byte opened a known inline construct.</returns>
     private static bool TryHandleSpecial(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
         byte b,
-        IBufferWriter<byte> writer) =>
+        IBufferWriter<byte> writer,
+        ref EmphasisCloserSlots lastClosers) =>
         b switch
         {
             Backslash => InlineEscape.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Backtick => CodeSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            Star or Underscore => Emphasis.TryHandle(source, ref pos, ref pendingTextStart, writer),
+            Star or Underscore => Emphasis.TryHandle(source, ref pos, ref pendingTextStart, writer, ref lastClosers),
             Lf => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
             _ => TryHandleStructural(source, ref pos, ref pendingTextStart, b, writer)
         };

@@ -27,6 +27,9 @@ internal static class Emphasis
     /// <summary>Marker-run inspections one match attempt may spend before it gives up and leaves the text literal.</summary>
     private const int MaxSteps = 1024;
 
+    /// <summary>Offset added to a stored last-closer position so that zero means "not yet computed" and one means "no closer".</summary>
+    private const int LastCloserBias = 2;
+
     /// <summary>Backslash byte.</summary>
     private const byte Backslash = (byte)'\\';
 
@@ -65,15 +68,17 @@ internal static class Emphasis
     /// <param name="pos">Cursor; advanced past the close run on success.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">The UTF-8 sink.</param>
+    /// <param name="lastClosers">Default-initialized by the caller and reused for every marker run of the same <paramref name="source"/>.</param>
     /// <returns>True when an emphasis run was emitted.</returns>
     internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
-        IBufferWriter<byte> writer)
+        IBufferWriter<byte> writer,
+        ref EmphasisCloserSlots lastClosers)
     {
         var steps = MaxSteps;
-        if (!TryMatch(source, pos, ref steps, out var openStart, out var openLength, out var closeStart))
+        if (!TryMatch(source, pos, ref steps, ref lastClosers, out var openStart, out var openLength, out var closeStart))
         {
             return false;
         }
@@ -89,6 +94,7 @@ internal static class Emphasis
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="pos">Index of the first byte of the marker run.</param>
     /// <param name="steps">Remaining marker-run inspections.</param>
+    /// <param name="lastClosers">Per-source last-closer positions.</param>
     /// <param name="openStart">Index of the first byte of the opening delimiter; earlier bytes of the run stay literal.</param>
     /// <param name="openLength">1 = em, 2 = strong, 3 = strong+em.</param>
     /// <param name="closeStart">Index of the first byte of the closing delimiter.</param>
@@ -97,6 +103,7 @@ internal static class Emphasis
         ReadOnlySpan<byte> source,
         int pos,
         ref int steps,
+        ref EmphasisCloserSlots lastClosers,
         out int openStart,
         out int openLength,
         out int closeStart)
@@ -114,14 +121,14 @@ internal static class Emphasis
 
         for (var probe = Math.Min(run, MaxRunLength); probe >= 1; probe--)
         {
-            var candidate = FindClose(source, pos + run, marker, probe, ref steps);
+            var candidate = FindClose(source, pos + run, marker, probe, ref steps, ref lastClosers);
             if (candidate < 0)
             {
                 continue;
             }
 
             var surplus = run - probe;
-            var outerClose = surplus > 0 ? FindClose(source, candidate + probe, marker, surplus, ref steps) : -1;
+            var outerClose = surplus > 0 ? FindClose(source, candidate + probe, marker, surplus, ref steps, ref lastClosers) : -1;
             if (outerClose >= 0)
             {
                 openStart = pos;
@@ -152,9 +159,21 @@ internal static class Emphasis
     /// <param name="marker">Marker byte.</param>
     /// <param name="length">Required close run length.</param>
     /// <param name="steps">Remaining marker-run inspections.</param>
+    /// <param name="lastClosers">Per-source last-closer positions.</param>
     /// <returns>Start index of the close run, or -1.</returns>
-    private static int FindClose(ReadOnlySpan<byte> source, int contentStart, byte marker, int length, ref int steps)
+    private static int FindClose(
+        ReadOnlySpan<byte> source,
+        int contentStart,
+        byte marker,
+        int length,
+        ref int steps,
+        ref EmphasisCloserSlots lastClosers)
     {
+        if (LastCloserStart(source, marker, length, ref lastClosers) <= contentStart)
+        {
+            return -1;
+        }
+
         var i = contentStart;
         while (TryAdvanceToSpecial(source, ref i, ref steps))
         {
@@ -170,7 +189,60 @@ internal static class Emphasis
                 return i;
             }
 
-            i = SkipOrMatchNested(source, i, run, marker, ref steps);
+            i = SkipOrMatchNested(source, i, run, marker, ref steps, ref lastClosers);
+        }
+
+        return -1;
+    }
+
+    /// <summary>Gets the start of the last run in <paramref name="source"/> that could close an opener of <paramref name="length"/> markers.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="marker">Marker byte.</param>
+    /// <param name="length">Required close run length.</param>
+    /// <param name="lastClosers">Per-source last-closer positions; filled on first use.</param>
+    /// <returns>Start index of the last candidate close run, or -1 when the source has none.</returns>
+    private static int LastCloserStart(ReadOnlySpan<byte> source, byte marker, int length, ref EmphasisCloserSlots lastClosers)
+    {
+        var underscore = marker is Underscore;
+        var stored = lastClosers.Get(underscore, length);
+        if (stored is 0)
+        {
+            stored = FindLastCloser(source, marker, Math.Min(length, MaxRunLength)) + LastCloserBias;
+            lastClosers.Set(underscore, length, stored);
+        }
+
+        return stored - LastCloserBias;
+    }
+
+    /// <summary>Finds the start of the last run of <paramref name="marker"/> that passes <see cref="CanClose"/> with at least <paramref name="length"/> markers.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="marker">Marker byte.</param>
+    /// <param name="length">Required close run length.</param>
+    /// <returns>Start index of the candidate, or -1 when the source has none.</returns>
+    private static int FindLastCloser(ReadOnlySpan<byte> source, byte marker, int length)
+    {
+        var end = source.Length;
+        while (end > 0)
+        {
+            var last = source[..end].LastIndexOf(marker);
+            if (last < 0)
+            {
+                return -1;
+            }
+
+            var runStart = last;
+            while (runStart > 0 && source[runStart - 1] == marker)
+            {
+                runStart--;
+            }
+
+            var start = last + 1 - length;
+            if (start >= runStart && CanClose(source, start, length, marker))
+            {
+                return start;
+            }
+
+            end = runStart;
         }
 
         return -1;
@@ -227,9 +299,17 @@ internal static class Emphasis
     /// <param name="run">Length of the run.</param>
     /// <param name="marker">Marker byte.</param>
     /// <param name="steps">Remaining marker-run inspections.</param>
+    /// <param name="lastClosers">Per-source last-closer positions.</param>
     /// <returns>Index of the first byte to inspect next.</returns>
-    private static int SkipOrMatchNested(ReadOnlySpan<byte> source, int index, int run, byte marker, ref int steps) =>
-        CanOpen(source, index, run, marker) && TryMatch(source, index, ref steps, out _, out var length, out var close)
+    private static int SkipOrMatchNested(
+        ReadOnlySpan<byte> source,
+        int index,
+        int run,
+        byte marker,
+        ref int steps,
+        ref EmphasisCloserSlots lastClosers) =>
+        CanOpen(source, index, run, marker)
+        && TryMatch(source, index, ref steps, ref lastClosers, out _, out var length, out var close)
             ? close + length
             : index + run;
 
