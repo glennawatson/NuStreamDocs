@@ -44,7 +44,7 @@ internal static class ImageSpan
         Utf8StringWriter.Write(writer, "<img alt=\""u8);
         HtmlEscape.EscapeText(source[shape.LabelStart..shape.LabelEnd], writer);
         Utf8StringWriter.Write(writer, "\" src=\""u8);
-        HtmlEscape.EscapeText(source[shape.HrefStart..shape.HrefEnd], writer);
+        LinkSpan.WriteDestination(source, shape, writer);
         Utf8StringWriter.Write(writer, "\""u8);
         LinkSpan.WriteTitleAttribute(source, shape, writer);
         Utf8StringWriter.Write(writer, " />"u8);

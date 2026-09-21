@@ -41,6 +41,9 @@ internal static class LinkSpan
     /// <summary>Bytes separating a link label from its destination.</summary>
     private const int LabelDestinationSeparatorLength = 2;
 
+    /// <summary>Length of one backslash-escape sequence (the backslash and one escaped byte).</summary>
+    private const int EscapeSequenceLength = 2;
+
     /// <summary>Handles an open bracket at <paramref name="pos"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="pos">Cursor; advanced past the close paren on success.</param>
@@ -61,7 +64,7 @@ internal static class LinkSpan
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
 
         Utf8StringWriter.Write(writer, "<a href=\""u8);
-        HtmlEscape.EscapeText(source[shape.HrefStart..shape.HrefEnd], writer);
+        WriteDestination(source, shape, writer);
         Utf8StringWriter.Write(writer, "\""u8);
         WriteTitleAttribute(source, shape, writer);
         Utf8StringWriter.Write(writer, ">"u8);
@@ -105,6 +108,35 @@ internal static class LinkSpan
 
         shape = ParseDestination(source, start + 1, labelEnd, contentStart, contentEnd);
         return true;
+    }
+
+    /// <summary>Writes the destination as attribute text, dropping the backslash of every escaped ASCII punctuation byte.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="shape">Parsed link or image shape.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    internal static void WriteDestination(ReadOnlySpan<byte> source, in LinkShape shape, IBufferWriter<byte> writer)
+    {
+        var remaining = source[shape.HrefStart..shape.HrefEnd];
+        while (!remaining.IsEmpty)
+        {
+            var backslash = remaining.IndexOf(Backslash);
+            if (backslash < 0)
+            {
+                HtmlEscape.EscapeText(remaining, writer);
+                return;
+            }
+
+            if (backslash + 1 >= remaining.Length || !InlineEscape.IsAsciiPunct(remaining[backslash + 1]))
+            {
+                HtmlEscape.EscapeText(remaining[..(backslash + 1)], writer);
+                remaining = remaining[(backslash + 1)..];
+                continue;
+            }
+
+            HtmlEscape.EscapeText(remaining[..backslash], writer);
+            HtmlEscape.EscapeText(remaining.Slice(backslash + 1, 1), writer);
+            remaining = remaining[(backslash + EscapeSequenceLength)..];
+        }
     }
 
     /// <summary>Writes the <c> title="..."</c> attribute when the shape carries a title.</summary>

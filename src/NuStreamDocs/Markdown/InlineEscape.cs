@@ -46,7 +46,7 @@ internal static class InlineEscape
     /// <summary>True for ASCII punctuation per CommonMark §2.4.</summary>
     /// <param name="b">Candidate byte.</param>
     /// <returns>True when the byte is a punctuation character.</returns>
-    private static bool IsAsciiPunct(byte b) =>
+    internal static bool IsAsciiPunct(byte b) =>
         b is >= (byte)'!' and <= (byte)'/'
             or >= (byte)':' and <= (byte)'@'
             or >= (byte)'[' and <= (byte)'`'
