@@ -41,6 +41,9 @@ public sealed class DocBuilder
     /// <summary>Configured exclude globs (forward-slashed, relative to the docs root).</summary>
     private readonly List<string> _excludes = [with(4)];
 
+    /// <summary>Accumulates the time each post-render plugin spends across <see cref="RenderPageAsync"/> calls.</summary>
+    private readonly PluginTimingTable _renderTiming = new();
+
     /// <summary>Post-render participants for the plugins registered when it was built; shared across renders through <see cref="Volatile"/> reads and writes.</summary>
     private PostRenderSnapshot? _postRenderSnapshot;
 
@@ -400,13 +403,12 @@ public sealed class DocBuilder
         _ = cancellationToken;
         MarkdownRenderer.Render(source.Span, html);
 
-        var postRenders = PostRendersForRegisteredPlugins();
-        if (postRenders.Length is 0)
+        var snapshot = PostRendersForRegisteredPlugins();
+        if (snapshot.PostRenders.Length is 0)
         {
             return Task.CompletedTask;
         }
 
-        PluginTimingTable pluginTiming = new();
         List<PageBuilderRental> scratch = [];
         var input = PageBuilderPool.Rent(html.WrittenCount);
         var owned = input;
@@ -417,9 +419,9 @@ public sealed class DocBuilder
                 input,
                 scratch,
                 source.Span,
-                postRenders,
+                snapshot,
                 relativePath,
-                pluginTiming);
+                _renderTiming);
             html.ResetWrittenCount();
             html.Write(final.Writer.WrittenSpan);
             if (!final.Equals(input))
@@ -451,7 +453,7 @@ public sealed class DocBuilder
     /// <param name="input">Rental holding the rendered HTML.</param>
     /// <param name="scratch">Disposal list — caller disposes every entry.</param>
     /// <param name="source">Original markdown bytes (passed via context).</param>
-    /// <param name="plugins">Sorted post-render participants.</param>
+    /// <param name="snapshot">Sorted post-render participants and their names.</param>
     /// <param name="relativePath">Page path relative to the input root.</param>
     /// <param name="pluginTiming">Per-plugin time accumulator.</param>
     /// <returns>The rental whose writer holds the final post-render HTML.</returns>
@@ -459,10 +461,11 @@ public sealed class DocBuilder
         in PageBuilderRental input,
         List<PageBuilderRental> scratch,
         ReadOnlySpan<byte> source,
-        IPagePostRenderPlugin[] plugins,
+        PostRenderSnapshot snapshot,
         in FilePath relativePath,
         PluginTimingTable pluginTiming)
     {
+        var plugins = snapshot.PostRenders;
         var anyRewrites = false;
         for (var i = 0; i < plugins.Length; i++)
         {
@@ -492,7 +495,7 @@ public sealed class DocBuilder
 
             back.Writer.ResetWrittenCount();
             PagePostRenderContext ctx = new(relativePath, source, front.Writer.WrittenSpan, back.Writer);
-            using (pluginTiming.Measure(plugin.Name))
+            using (pluginTiming.MeasureStable(snapshot.PluginNames[i]))
             {
                 plugin.PostRender(in ctx);
             }
@@ -505,19 +508,26 @@ public sealed class DocBuilder
     }
 
     /// <summary>Gets the sorted post-render participants among the registered plugins.</summary>
-    /// <returns>The post-render plugins in priority order.</returns>
-    private IPagePostRenderPlugin[] PostRendersForRegisteredPlugins()
+    /// <returns>The post-render plugins in priority order with their names.</returns>
+    private PostRenderSnapshot PostRendersForRegisteredPlugins()
     {
         var snapshot = Volatile.Read(ref _postRenderSnapshot);
         if (snapshot is not null && snapshot.PluginCount == _plugins.Count)
         {
-            return snapshot.PostRenders;
+            return snapshot;
         }
 
         IPlugin[] plugins = [.. _plugins];
-        snapshot = new(plugins.Length, PluginPhases.Partition(plugins).PostRenders);
+        var postRenders = PluginPhases.Partition(plugins).PostRenders;
+        var names = new byte[postRenders.Length][];
+        for (var i = 0; i < postRenders.Length; i++)
+        {
+            names[i] = [.. postRenders[i].Name];
+        }
+
+        snapshot = new(plugins.Length, postRenders, names);
         Volatile.Write(ref _postRenderSnapshot, snapshot);
-        return snapshot.PostRenders;
+        return snapshot;
     }
 
     /// <summary>Post-render participants computed for a specific number of registered plugins.</summary>
@@ -526,10 +536,12 @@ public sealed class DocBuilder
         /// <summary>Initializes a new instance of the <see cref="PostRenderSnapshot"/> class.</summary>
         /// <param name="pluginCount">Number of registered plugins the snapshot was computed for.</param>
         /// <param name="postRenders">Sorted post-render participants.</param>
-        public PostRenderSnapshot(int pluginCount, IPagePostRenderPlugin[] postRenders)
+        /// <param name="pluginNames">UTF-8 name of each post-render participant, index-aligned with <paramref name="postRenders"/>.</param>
+        public PostRenderSnapshot(int pluginCount, IPagePostRenderPlugin[] postRenders, byte[][] pluginNames)
         {
             PluginCount = pluginCount;
             PostRenders = postRenders;
+            PluginNames = pluginNames;
         }
 
         /// <summary>Gets the number of registered plugins the snapshot was computed for.</summary>
@@ -537,5 +549,8 @@ public sealed class DocBuilder
 
         /// <summary>Gets the sorted post-render participants.</summary>
         public IPagePostRenderPlugin[] PostRenders { get; }
+
+        /// <summary>Gets the UTF-8 name of each post-render participant, index-aligned with <see cref="PostRenders"/>.</summary>
+        public byte[][] PluginNames { get; }
     }
 }

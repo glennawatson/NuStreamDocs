@@ -94,6 +94,39 @@ public class PluginTimingTableTests
         await Assert.That(rows[0].Seconds).IsGreaterThan(MinimumAccumulatedSeconds);
     }
 
+    /// <summary><c>MeasureStable</c> scopes accumulate into the same bucket as <c>Measure</c> scopes for the same plugin.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task MeasureStableAccumulatesIntoNamedBucket()
+    {
+        PluginTimingTable table = new();
+        byte[] name = [.. PluginName];
+        using (table.MeasureStable(name))
+        {
+            await Task.Delay(RepeatedDelayMilliseconds);
+        }
+
+        using (table.Measure(PluginName))
+        {
+            await Task.Delay(RepeatedDelayMilliseconds);
+        }
+
+        var rows = table.Snapshot();
+        await Assert.That(rows.Length).IsEqualTo(1);
+        await Assert.That(rows[0].Name.SequenceEqual(PluginName)).IsTrue();
+        await Assert.That(rows[0].Seconds).IsGreaterThan(MinimumMeasuredSeconds);
+    }
+
+    /// <summary><c>MeasureStable</c> rejects an empty plugin name.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task MeasureStableRejectsEmptyName()
+    {
+        PluginTimingTable table = new();
+        var ex = Assert.Throws<ArgumentException>(() => table.MeasureStable([]));
+        await Assert.That(ex).IsNotNull();
+    }
+
     /// <summary>Snapshot rows are sorted by total time descending.</summary>
     /// <returns>Async test.</returns>
     [Test]

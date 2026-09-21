@@ -20,6 +20,9 @@ public sealed class PluginTimingTable
     /// <summary>Threshold (in seconds) under which an entry is logged at Debug level rather than Info — 10ms.</summary>
     private const double SignificantSecondsThreshold = 0.010;
 
+    /// <summary>Message raised when a plugin name is empty.</summary>
+    private const string EmptyPluginNameMessage = "Plugin name must be non-empty.";
+
     /// <summary>Plugin-name → cumulative ticks.</summary>
     private readonly ConcurrentDictionary<byte[], long> _ticks = new(ByteArrayComparer.Instance);
 
@@ -32,7 +35,7 @@ public sealed class PluginTimingTable
     /// <exception cref="ArgumentException">The plugin name is empty.</exception>
     public MeasurementScope Measure(ReadOnlySpan<byte> pluginName) =>
         pluginName.Length is 0
-            ? throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName))
+            ? throw new ArgumentException(EmptyPluginNameMessage, nameof(pluginName))
             : new(this, [.. pluginName]);
 
     /// <summary>Adds a pre-captured tick delta to <paramref name="pluginName"/>'s running total.</summary>
@@ -44,7 +47,7 @@ public sealed class PluginTimingTable
     {
         if (pluginName.Length is 0)
         {
-            throw new ArgumentException("Plugin name must be non-empty.", nameof(pluginName));
+            throw new ArgumentException(EmptyPluginNameMessage, nameof(pluginName));
         }
 
         _ = _ticks.AddOrUpdate(
@@ -78,6 +81,15 @@ public sealed class PluginTimingTable
             }
         }
     }
+
+    /// <summary>Begins a measurement scope for <paramref name="pluginName"/> without copying the name; the caller must not modify the array afterwards.</summary>
+    /// <param name="pluginName">Plugin <see cref="NuStreamDocs.Plugins.IPlugin.Name"/> bytes owned by the caller.</param>
+    /// <returns>A scope to wrap with <c>using</c>.</returns>
+    /// <exception cref="ArgumentException">The plugin name is empty.</exception>
+    internal MeasurementScope MeasureStable(byte[] pluginName) =>
+        pluginName.Length is 0
+            ? throw new ArgumentException(EmptyPluginNameMessage, nameof(pluginName))
+            : new(this, pluginName);
 
     /// <summary>Returns a snapshot sorted by total time descending; primarily for tests.</summary>
     /// <returns>Per-plugin (UTF-8 name bytes, total seconds) entries.</returns>
