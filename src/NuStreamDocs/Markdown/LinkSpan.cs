@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Html;
 
@@ -49,18 +50,30 @@ internal static class LinkSpan
     /// <param name="pos">Cursor; advanced past the close paren on success.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="table">Render state of the whole source.</param>
     /// <returns>True when the link was complete and rendered.</returns>
     internal static bool TryHandle(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
-        IBufferWriter<byte> writer)
+        IBufferWriter<byte> writer,
+        ref EmphasisTable table)
     {
         if (!TryReadShape(source, pos, out var shape))
         {
             return false;
         }
 
+        // An inline link in the leading text of a link label stays literal, and the label of a
+        // link renders its own inline links literally too, unless the link came from a reference
+        // or sits inside emphasis.
+        var nestable = HasNestableMarker(source, shape);
+        if (table.LinksBlocked && !nestable)
+        {
+            return false;
+        }
+
+        table.LinksBlocked = false;
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
 
         Utf8StringWriter.Write(writer, "<a href=\""u8);
@@ -71,7 +84,7 @@ internal static class LinkSpan
 
         // Render the label as inline content so emphasis / code / etc.
         // still work inside link text.
-        InlineRenderer.Render(source[shape.LabelStart..shape.LabelEnd], writer);
+        InlineRenderer.Render(source[shape.LabelStart..shape.LabelEnd], !(nestable || table.Depth > 0), writer);
 
         Utf8StringWriter.Write(writer, "</a>"u8);
 
@@ -264,6 +277,14 @@ internal static class LinkSpan
 
         return -1;
     }
+
+    /// <summary>True when whitespace separates the open paren from the destination, the form a resolved reference link takes when it may nest with other links.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="shape">Parsed link shape.</param>
+    /// <returns>True when the link may nest with other links.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool HasNestableMarker(ReadOnlySpan<byte> source, in LinkShape shape) =>
+        AsciiByteHelpers.IsAsciiWhitespace(source[shape.LabelEnd + LabelDestinationSeparatorLength]);
 
     /// <summary>True when [<paramref name="start"/>, <paramref name="end"/>) is a non-empty <c>&lt;destination&gt;</c>.</summary>
     /// <param name="source">UTF-8 source.</param>

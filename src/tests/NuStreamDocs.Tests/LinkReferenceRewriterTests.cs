@@ -121,6 +121,26 @@ public sealed class LinkReferenceRewriterTests
         await Assert.That(result).IsEqualTo(expected.ToString());
     }
 
+    /// <summary>A reference link that sits inside, or holds, an inline link is written with a space before its href; every other reference link is not.</summary>
+    /// <param name="source">Markdown source.</param>
+    /// <param name="expected">Expected rewritten source.</param>
+    /// <returns>The assertion task.</returns>
+    [Test]
+    [Arguments("[a [l][r]](u)\n\n[r]: /r\n", "[a [l]( /r)](u)\n\n")]
+    [Arguments("[a [r] b](u)\n\n[r]: /r\n", "[a [r]( /r) b](u)\n\n")]
+    [Arguments("[a [r][] b](u)\n\n[r]: /r \"t\"\n", "[a [r]( /r \"t\") b](u)\n\n")]
+    [Arguments("[a [l](m) b][r]\n\n[r]: /r\n", "[a [l](m) b]( /r)\n\n")]
+    [Arguments("[a [k](j) [l][r]](u)\n\n[r]: /r\n", "[a [k](j) [l]( /r)](u)\n\n")]
+    [Arguments("[a](b) [l][r]\n\n[r]: /r\n", "[a](b) [l](/r)\n\n")]
+    [Arguments("[l][r] then [a](b)\n\n[r]: /r\n", "[l](/r) then [a](b)\n\n")]
+    [Arguments("[a [b] c][r]\n\n[r]: /r\n[b]: /b\n", "[a [b] c](/r)\n\n")]
+    public async Task Rewrite_MarksReferenceLinksThatNestWithInlineLinks(string source, string expected)
+    {
+        var result = Encoding.UTF8.GetString(LinkReferenceRewriter.Rewrite(Encoding.UTF8.GetBytes(source)));
+
+        await Assert.That(result).IsEqualTo(expected);
+    }
+
     /// <summary>The writer overload produces the same output as the array overload.</summary>
     /// <returns>The assertion task.</returns>
     [Test]

@@ -24,6 +24,7 @@ internal ref struct EmphasisTable
         StackCount = 0;
         Cursor = 0;
         Depth = 0;
+        LinksBlocked = false;
     }
 
     /// <summary>Gets the run storage.</summary>
@@ -46,6 +47,9 @@ internal ref struct EmphasisTable
 
     /// <summary>Gets or sets the number of emphasis spans currently open around the render position.</summary>
     internal int Depth { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether inline links render as literal text because the render position has not yet passed an inline element of the enclosing link label.</summary>
+    internal bool LinksBlocked { get; set; }
 
     /// <summary>Gets or sets the index of the first run that ends after the render position.</summary>
     private int Cursor { get; set; }

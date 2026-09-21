@@ -106,9 +106,10 @@ public static class LinkReferenceRewriter
         IBufferWriter<byte> writer)
     {
         var pos = 0;
+        var inlineLabelEnd = 0;
         while (pos < source.Length)
         {
-            pos = ProcessOne(source, pos, definitions, writer);
+            pos = ProcessOne(source, pos, definitions, writer, ref inlineLabelEnd);
         }
     }
 
@@ -117,12 +118,14 @@ public static class LinkReferenceRewriter
     /// <param name="pos">Current cursor.</param>
     /// <param name="definitions">Pre-built definition map.</param>
     /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="inlineLabelEnd">Index of the close bracket of the furthest-reaching inline link label the cursor has entered.</param>
     /// <returns>Updated cursor.</returns>
     private static int ProcessOne(
         ReadOnlySpan<byte> source,
         int pos,
         LinkReferenceTable definitions,
-        IBufferWriter<byte> writer)
+        IBufferWriter<byte> writer,
+        ref int inlineLabelEnd)
     {
         if (TryConsumeCodeRegion(source, pos, writer, out var afterCode))
         {
@@ -134,7 +137,7 @@ public static class LinkReferenceRewriter
             return definitionEnd;
         }
 
-        return source[pos] is (byte)'[' && TryRewriteReference(source, pos, definitions, writer, out var consumed)
+        return source[pos] is (byte)'[' && TryRewriteReference(source, pos, definitions, writer, ref inlineLabelEnd, out var consumed)
             ? pos + consumed
             : CopyPlainRun(source, pos, writer);
     }
@@ -218,6 +221,7 @@ public static class LinkReferenceRewriter
     /// <param name="pos">Cursor at the leading <c>[</c>.</param>
     /// <param name="definitions">Defined references.</param>
     /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="inlineLabelEnd">Index of the close bracket of the furthest-reaching inline link label the cursor has entered; raised when <paramref name="pos"/> starts an inline link.</param>
     /// <param name="consumed">Bytes consumed from <paramref name="pos"/> on success.</param>
     /// <returns>True when a reference was rewritten.</returns>
     private static bool TryRewriteReference(
@@ -225,6 +229,7 @@ public static class LinkReferenceRewriter
         int pos,
         LinkReferenceTable definitions,
         IBufferWriter<byte> writer,
+        ref int inlineLabelEnd,
         out int consumed)
     {
         consumed = 0;
@@ -239,10 +244,12 @@ public static class LinkReferenceRewriter
         var afterFirst = firstClose + 1;
         if (afterFirst < source.Length && source[afterFirst] is (byte)'(')
         {
+            inlineLabelEnd = Math.Max(inlineLabelEnd, firstClose);
             return false;
         }
 
         var label = source[(pos + 1)..firstClose];
+        var nestable = IsNestable(label, pos < inlineLabelEnd);
 
         if (afterFirst < source.Length && source[afterFirst] is (byte)'[')
         {
@@ -264,7 +271,7 @@ public static class LinkReferenceRewriter
                 return false;
             }
 
-            EmitInlineLink(label, href.AsSpan(source), title.AsSpan(source), writer);
+            EmitInlineLink(label, href.AsSpan(source), title.AsSpan(source), nestable, writer);
             consumed = secondClose + 1 - pos;
             return true;
         }
@@ -275,25 +282,34 @@ public static class LinkReferenceRewriter
             return false;
         }
 
-        EmitInlineLink(label, shortcutHref.AsSpan(source), shortcutTitle.AsSpan(source), writer);
+        EmitInlineLink(label, shortcutHref.AsSpan(source), shortcutTitle.AsSpan(source), nestable, writer);
         consumed = firstClose + 1 - pos;
         return true;
     }
+
+    /// <summary>Tells whether a reference link holds or sits inside an inline link.</summary>
+    /// <param name="label">Visible label bytes.</param>
+    /// <param name="insideInlineLabel">True when the reference starts inside the label of an inline link.</param>
+    /// <returns>True when the resolved link must stay a link next to another inline link.</returns>
+    private static bool IsNestable(ReadOnlySpan<byte> label, bool insideInlineLabel) =>
+        insideInlineLabel || label.IndexOf("]("u8) >= 0;
 
     /// <summary>Emits <c>[text](href "title")</c> into <paramref name="writer"/>.</summary>
     /// <param name="text">Visible label bytes.</param>
     /// <param name="href">Resolved href bytes.</param>
     /// <param name="title">Resolved title bytes; empty for no title.</param>
+    /// <param name="nestable">True when the link holds or sits inside another inline link; a space before the href tells the renderer to keep it a link there.</param>
     /// <param name="writer">UTF-8 sink.</param>
     private static void EmitInlineLink(
         ReadOnlySpan<byte> text,
         ReadOnlySpan<byte> href,
         ReadOnlySpan<byte> title,
+        bool nestable,
         IBufferWriter<byte> writer)
     {
         Write(writer, "["u8);
         Write(writer, text);
-        Write(writer, "]("u8);
+        Write(writer, nestable ? "]( "u8 : "]("u8);
         Write(writer, href);
         if (title is [_, ..])
         {

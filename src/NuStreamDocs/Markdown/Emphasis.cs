@@ -39,16 +39,17 @@ internal static class Emphasis
     /// <summary>Renders <paramref name="source"/>, which holds at least one emphasis marker byte, pairing its emphasis first.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="markerCount">Number of <c>*</c> and <c>_</c> bytes in <paramref name="source"/>.</param>
+    /// <param name="linksBlocked">True when inline links stay literal until the first inline element of <paramref name="source"/>.</param>
     /// <param name="writer">The UTF-8 sink.</param>
-    internal static void Render(ReadOnlySpan<byte> source, int markerCount, IBufferWriter<byte> writer)
+    internal static void Render(ReadOnlySpan<byte> source, int markerCount, bool linksBlocked, IBufferWriter<byte> writer)
     {
         if (markerCount <= StackMarkerLimit)
         {
-            RenderWithStackTable(source, writer);
+            RenderWithStackTable(source, linksBlocked, writer);
             return;
         }
 
-        RenderWithPooledTable(source, markerCount, writer);
+        RenderWithPooledTable(source, markerCount, linksBlocked, writer);
     }
 
     /// <summary>Handles an emphasis marker run at <paramref name="pos"/>.</summary>
@@ -100,6 +101,7 @@ internal static class Emphasis
         InlineRenderer.FlushText(source, pendingTextStart, pair.OpenStart - origin, writer);
         var contentStart = pair.OpenStart + pair.Length;
         Utf8StringWriter.Write(writer, pair.Length is StrongLength ? StrongOpen : EmOpen);
+        table.LinksBlocked = false;
         table.Depth++;
         InlineRenderer.RenderRange(source[(contentStart - origin)..(pair.CloseStart - origin)], contentStart, writer, ref table);
         table.Depth--;
@@ -112,27 +114,29 @@ internal static class Emphasis
 
     /// <summary>Renders <paramref name="source"/> with a delimiter table held on the stack.</summary>
     /// <param name="source">The UTF-8 source.</param>
+    /// <param name="linksBlocked">True when inline links stay literal until the first inline element of <paramref name="source"/>.</param>
     /// <param name="writer">The UTF-8 sink.</param>
-    private static void RenderWithStackTable(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    private static void RenderWithStackTable(ReadOnlySpan<byte> source, bool linksBlocked, IBufferWriter<byte> writer)
     {
         Span<EmphasisRun> runs = stackalloc EmphasisRun[StackMarkerLimit];
         Span<EmphasisPair> pairs = stackalloc EmphasisPair[StackMarkerLimit];
         Span<int> stack = stackalloc int[StackMarkerLimit];
-        RenderWithTable(source, new(runs, pairs, stack), writer);
+        RenderWithTable(source, new(runs, pairs, stack), linksBlocked, writer);
     }
 
     /// <summary>Renders <paramref name="source"/> with a delimiter table held in pooled arrays.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="markerCount">Number of <c>*</c> and <c>_</c> bytes in <paramref name="source"/>.</param>
+    /// <param name="linksBlocked">True when inline links stay literal until the first inline element of <paramref name="source"/>.</param>
     /// <param name="writer">The UTF-8 sink.</param>
-    private static void RenderWithPooledTable(ReadOnlySpan<byte> source, int markerCount, IBufferWriter<byte> writer)
+    private static void RenderWithPooledTable(ReadOnlySpan<byte> source, int markerCount, bool linksBlocked, IBufferWriter<byte> writer)
     {
         var runs = ArrayPool<EmphasisRun>.Shared.Rent(markerCount);
         var pairs = ArrayPool<EmphasisPair>.Shared.Rent(markerCount / StrongLength);
         var stack = ArrayPool<int>.Shared.Rent(markerCount);
         try
         {
-            RenderWithTable(source, new(runs, pairs, stack), writer);
+            RenderWithTable(source, new(runs, pairs, stack), linksBlocked, writer);
         }
         finally
         {
@@ -145,9 +149,11 @@ internal static class Emphasis
     /// <summary>Builds the delimiter table of <paramref name="source"/> and renders it.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="table">Empty table with room for every run and pair of <paramref name="source"/>.</param>
+    /// <param name="linksBlocked">True when inline links stay literal until the first inline element of <paramref name="source"/>.</param>
     /// <param name="writer">The UTF-8 sink.</param>
-    private static void RenderWithTable(ReadOnlySpan<byte> source, EmphasisTable table, IBufferWriter<byte> writer)
+    private static void RenderWithTable(ReadOnlySpan<byte> source, EmphasisTable table, bool linksBlocked, IBufferWriter<byte> writer)
     {
+        table.LinksBlocked = linksBlocked;
         EmphasisMatcher.Build(source, ref table);
         InlineRenderer.RenderRange(source, 0, writer, ref table);
     }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Html;
 
 namespace NuStreamDocs.Markdown;
@@ -45,16 +46,25 @@ public static class InlineRenderer
     /// <summary>Renders the inline content of <paramref name="source"/> to <paramref name="writer"/>.</summary>
     /// <param name="source">UTF-8 inner text of the block.</param>
     /// <param name="writer">UTF-8 HTML sink.</param>
-    public static void Render(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Render(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+        Render(source, false, writer);
+
+    /// <summary>Renders the inline content of <paramref name="source"/>, optionally keeping inline links literal until its first inline element.</summary>
+    /// <param name="source">UTF-8 inner text of the block or link label.</param>
+    /// <param name="linksBlocked">True when inline links in the leading text render as literal text, as inside a link label.</param>
+    /// <param name="writer">UTF-8 HTML sink.</param>
+    internal static void Render(ReadOnlySpan<byte> source, bool linksBlocked, IBufferWriter<byte> writer)
     {
         var markerCount = source.Count(Star) + source.Count(Underscore);
         if (markerCount > 0)
         {
-            Emphasis.Render(source, markerCount, writer);
+            Emphasis.Render(source, markerCount, linksBlocked, writer);
             return;
         }
 
         EmphasisTable none = default;
+        none.LinksBlocked = linksBlocked;
         RenderRange(source, 0, writer, ref none);
     }
 
@@ -121,11 +131,25 @@ public static class InlineRenderer
         b switch
         {
             Backslash => InlineEscape.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            Backtick => CodeSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
+            Backtick => MarkElement(CodeSpan.TryHandle(source, ref pos, ref pendingTextStart, writer), ref table),
             Star or Underscore => Emphasis.TryHandle(source, origin, ref pos, ref pendingTextStart, writer, ref table),
-            Lf => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            _ => TryHandleStructural(source, ref pos, ref pendingTextStart, b, writer)
+            Lf => MarkElement(HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer), ref table),
+            _ => TryHandleStructural(source, ref pos, ref pendingTextStart, b, writer, ref table)
         };
+
+    /// <summary>Records that an inline element was emitted, which ends the leading text of a link label.</summary>
+    /// <param name="handled">True when the handler emitted an element.</param>
+    /// <param name="table">Render state of the whole source.</param>
+    /// <returns><paramref name="handled"/>.</returns>
+    private static bool MarkElement(bool handled, ref EmphasisTable table)
+    {
+        if (handled)
+        {
+            table.LinksBlocked = false;
+        }
+
+        return handled;
+    }
 
     /// <summary>Dispatches structural inline constructs (links, images, autolinks, raw HTML).</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -133,18 +157,20 @@ public static class InlineRenderer
     /// <param name="pendingTextStart">Start of the pending escaped-text run.</param>
     /// <param name="b">Byte at <paramref name="pos"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="table">Render state of the whole source.</param>
     /// <returns>True when the byte opened a known structural construct.</returns>
     private static bool TryHandleStructural(
         ReadOnlySpan<byte> source,
         ref int pos,
         ref int pendingTextStart,
         byte b,
-        IBufferWriter<byte> writer) =>
+        IBufferWriter<byte> writer,
+        ref EmphasisTable table) =>
         b switch
         {
-            OpenBracket => LinkSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            Bang => ImageSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            Lt => AutoLink.TryHandle(source, ref pos, ref pendingTextStart, writer)
+            OpenBracket => LinkSpan.TryHandle(source, ref pos, ref pendingTextStart, writer, ref table),
+            Bang => MarkElement(ImageSpan.TryHandle(source, ref pos, ref pendingTextStart, writer), ref table),
+            Lt => MarkElement(AutoLink.TryHandle(source, ref pos, ref pendingTextStart, writer), ref table)
                   || RawHtml.TryHandle(source, ref pos, ref pendingTextStart, writer),
             _ => false
         };

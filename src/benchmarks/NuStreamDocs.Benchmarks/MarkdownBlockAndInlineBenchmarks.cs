@@ -127,6 +127,18 @@ public class MarkdownBlockAndInlineBenchmarks
 
         """;
 
+    /// <summary>Inline links inside link text, literal and nested by an inline element, inside emphasis, and through reference links.</summary>
+    private const string NestedLinkTemplate =
+        """
+        See [the [inner @](https://example.com/i/@) link](https://example.com/o/@ "Outer title") and [a [b [c](/d@) e](/f@) g](/h@).
+        An [image ![alt @](img/@.png) then [tail](/t@) link](/u@) plus *[wrapped [inner](/w@) link](/x@)* and [code `x` [tail](/y@)](/z@).
+        Reference [outer [in][r@] text](/o@) beside a [label [x](/x@) here][r@] and [short [s@] link](/s@).
+
+        [r@]: https://example.com/r/@
+        [s@]: /short/@
+
+        """;
+
     /// <summary>Multi-line paragraphs with two-space and backslash hard breaks.</summary>
     private const string ParagraphTemplate =
         "First line of paragraph @ with some words  \n"
@@ -473,6 +485,9 @@ public class MarkdownBlockAndInlineBenchmarks
     /// <summary>Links, images and autolinks document.</summary>
     private byte[] _links = [];
 
+    /// <summary>Links nested inside link text document.</summary>
+    private byte[] _nestedLinks = [];
+
     /// <summary>Multi-line paragraph document.</summary>
     private byte[] _paragraphs = [];
 
@@ -546,6 +561,7 @@ public class MarkdownBlockAndInlineBenchmarks
         _headings = Encoding.UTF8.GetBytes(Repeat(HeadingTemplate));
         _emphasis = Encoding.UTF8.GetBytes(Repeat(EmphasisTemplate));
         _links = Encoding.UTF8.GetBytes(Repeat(LinkTemplate));
+        _nestedLinks = Encoding.UTF8.GetBytes(Repeat(NestedLinkTemplate));
         _paragraphs = Encoding.UTF8.GetBytes(Repeat(ParagraphTemplate));
         _whitespaceLines = Encoding.UTF8.GetBytes(Repeat(WhitespaceLineTemplate));
 
@@ -621,6 +637,12 @@ public class MarkdownBlockAndInlineBenchmarks
     [Benchmark]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int LinksImagesAndAutolinks() => RenderInto(_links);
+
+    /// <summary>Renders inline and reference links nested inside link text.</summary>
+    /// <returns>Bytes written.</returns>
+    [Benchmark]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int NestedInlineLinks() => RenderInto(_nestedLinks);
 
     /// <summary>Renders multi-line paragraphs with hard breaks.</summary>
     /// <returns>Bytes written.</returns>
