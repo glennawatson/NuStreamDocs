@@ -40,23 +40,28 @@ internal static class AttrListRewriter
             return;
         }
 
+        // Every marker and every decodable quote entity sits inside a brace pair.
+        if (html.IndexOf((byte)'{') < 0)
+        {
+            sink.Write(html);
+            return;
+        }
+
         using var rentalA = PageBuilderPool.Rent(html.Length);
         using var rentalB = PageBuilderPool.Rent(html.Length);
-        using var rentalC = PageBuilderPool.Rent(html.Length);
         StageBuffers slots = new(rentalA.Writer, rentalB.Writer);
 
         // Pre-pass: the markdown inline renderer escapes `"` to `&quot;` inside paragraph text,
         // so the value parsers downstream never see literal quotes inside `{key="val"}` markers.
         // Decode HTML quote entities only inside brace regions before the rewrite stages run.
-        var prepared = DecodeQuoteEntitiesInBraces(html, rentalC.Writer);
+        var current = DecodeQuoteEntitiesInBraces(html, ref slots);
 
-        // Stage 1 reads the prepared bytes directly; subsequent stages
-        // read from whichever two-buffer buffer holds the latest output.
-        var current = RunFirstStage(prepared, ref slots, InlinePairedAttrListBytes.RewriteInto);
+        // The working source is always either the caller's span or the buffer the last stage committed to.
+        current = RunStage(current, ref slots, InlinePairedAttrListBytes.RewriteInto);
         current = RunStage(current, ref slots, InlineVoidAttrListBytes.RewriteInto);
         current = RunStage(current, ref slots, BlockAttrListBytes.RewriteInto);
 
-        sink.Write(current.Span);
+        sink.Write(current);
     }
 
     /// <summary>True when <paramref name="html"/> contains a <c>{</c> immediately followed by an ASCII letter or underscore — the bare-key shorthand <c>{width=…}</c>.</summary>
@@ -86,17 +91,16 @@ internal static class AttrListRewriter
 
     /// <summary>Replaces HTML quote entities inside <c>{...}</c> regions with literal <c>"</c>; passes spans outside braces through unchanged.</summary>
     /// <param name="html">Source HTML.</param>
-    /// <param name="scratch">Scratch sink used when at least one entity is rewritten.</param>
-    /// <returns><paramref name="html"/> when no quote entity sits inside a brace region; otherwise <paramref name="scratch"/>'s written span.</returns>
-    private static ReadOnlySpan<byte> DecodeQuoteEntitiesInBraces(
-        ReadOnlySpan<byte> html,
-        ArrayBufferWriter<byte> scratch)
+    /// <param name="slots">Ping-pong buffer pair; the spare buffer receives the decoded bytes when at least one entity is rewritten.</param>
+    /// <returns><paramref name="html"/> when no quote entity sits inside a brace region; otherwise the decoded bytes.</returns>
+    private static ReadOnlySpan<byte> DecodeQuoteEntitiesInBraces(ReadOnlySpan<byte> html, ref StageBuffers slots)
     {
         if (FindEntityInsideBrace(html) < 0)
         {
             return html;
         }
 
+        var scratch = slots.Spare;
         scratch.ResetWrittenCount();
         var i = 0;
         var insideBrace = false;
@@ -132,7 +136,9 @@ internal static class AttrListRewriter
             i++;
         }
 
-        return scratch.WrittenSpan;
+        var decoded = scratch.WrittenSpan;
+        slots = slots.Swap();
+        return decoded;
     }
 
     /// <summary>If a quote entity starts at <paramref name="i"/>, writes <c>"</c> to <paramref name="scratch"/> and advances past the entity.</summary>
@@ -219,43 +225,20 @@ internal static class AttrListRewriter
         sink.Advance(1);
     }
 
-    /// <summary>Runs the first stage with <paramref name="html"/> as the source.</summary>
-    /// <param name="html">Original HTML span.</param>
+    /// <summary>Runs one stage over <paramref name="source"/>, committing its output only when it rewrote something.</summary>
+    /// <param name="source">Pipeline source; never aliases the spare buffer.</param>
     /// <param name="slots">Ping-pong buffer pair.</param>
     /// <param name="stage">Stage delegate.</param>
-    /// <returns>Memory view of the current pipeline output.</returns>
-    private static ReadOnlyMemory<byte> RunFirstStage(ReadOnlySpan<byte> html, ref StageBuffers slots, ByteStage stage)
+    /// <returns><paramref name="source"/> when the stage made no rewrite; otherwise the stage output.</returns>
+    private static ReadOnlySpan<byte> RunStage(ReadOnlySpan<byte> source, ref StageBuffers slots, ByteStage stage)
     {
         slots.Spare.ResetWrittenCount();
-        if (!stage(html, slots.Spare))
-        {
-            // No rewrite — materialize html as memory once so subsequent
-            // stages don't need a ReadOnlySpan-vs-Memory branch.
-            return new([.. html]);
-        }
-
-        var output = slots.Spare.WrittenMemory;
-        slots = slots.Swap();
-        return output;
-    }
-
-    /// <summary>Runs a follow-on stage; the working source is already <see cref="ReadOnlyMemory{T}"/>-rooted.</summary>
-    /// <param name="source">Pipeline source.</param>
-    /// <param name="slots">Ping-pong buffer pair.</param>
-    /// <param name="stage">Stage delegate.</param>
-    /// <returns>Memory view of the current pipeline output.</returns>
-    private static ReadOnlyMemory<byte> RunStage(
-        in ReadOnlyMemory<byte> source,
-        ref StageBuffers slots,
-        ByteStage stage)
-    {
-        slots.Spare.ResetWrittenCount();
-        if (!stage(source.Span, slots.Spare))
+        if (!stage(source, slots.Spare))
         {
             return source;
         }
 
-        var output = slots.Spare.WrittenMemory;
+        var output = slots.Spare.WrittenSpan;
         slots = slots.Swap();
         return output;
     }
