@@ -165,9 +165,10 @@ per-method-call overhead). Use the right pass for the right question:
 ### Markdown rendering parity
 
 The core renderer (`BlockScanner`, `HtmlEmitter`, `InlineRenderer`, `TabExpander`) targets MkDocs / Python-Markdown output
-for basic Markdown and stays compatible with Zensical. Where they differ, follow MkDocs unless its behavior is clearly a
-bug; where Zensical deliberately and documentedly deviates for a reason that affects us, follow Zensical. The deliberate
-CommonMark-side deviations are listed in the README under "Core Markdown rendering" and stay as they are.
+for basic Markdown and stays compatible with Zensical. Reference order: Zensical first, MkDocs where Zensical is buggy or
+lacks the behavior; CSS and theme markup are out of scope. The parity tool lives at
+`~/source/glennawatson/tools/markdown-parity` (see the README there). The deliberate CommonMark-side deviations are
+listed in the README under "Core Markdown rendering" and stay as they are.
 
 - Every rendering fix ships as its own commit with focused tests through `MarkdownRenderer.Render`.
 - New scanning logic works on UTF-8 spans and starts with a cheap exit when its syntax is absent (see `TabExpander`,

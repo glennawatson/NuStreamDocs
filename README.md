@@ -581,23 +581,59 @@ Each is a separate assembly so you only pull what you use:
 
 ## Core Markdown rendering
 
-The core renderer turns UTF-8 Markdown into HTML in a single pass with no regular expressions. Its output targets MkDocs (Python-Markdown) and is compatible with Zensical for the basics:
+The core renderer turns UTF-8 Markdown into HTML in a single pass with no regular expressions. Its output targets Zensical, with MkDocs (Python-Markdown) as the reference where Zensical is buggy or lacks the behavior. CSS classes, theme markup and highlighter wrappers are not part of the comparison.
 
 - ATX and setext headings (a closing `#` run is dropped), paragraphs, hard breaks (two trailing spaces), thematic breaks.
 - Emphasis and strong with nesting, links and images with quoted titles and `<angle>` destinations, URL and email autolinks, code spans (surrounding whitespace trimmed, an unmatched backtick run stays literal), reference links.
 - Fenced, tilde-fenced and indented code, block quotes (including lazy continuation and nesting), HTML blocks, tab-indented content.
 - Ordered, bullet and nested lists with tight and loose items; a list item body may hold paragraphs, code, headings, quotes and further lists. A paragraph line directly after item text continues the item.
 
-Intentional deviations from Python-Markdown, where the CommonMark behavior is kept:
+### Deliberate deviations
 
-- A nested list needs only the parent item's content indent, not four spaces.
-- A list can start directly after a paragraph line without a blank line.
-- Ordered lists emit `<ol start="N">`, and a change of marker kind starts a new list.
-- A list is loose as a whole, not item by item.
-- `#hashtag` (no space after `#`) is text, not a heading.
-- An HTML block ends at the first blank line.
-- Every ASCII punctuation character can be backslash-escaped.
-- Email autolinks are plain `mailto:` links, not entity-obfuscated.
+Where the references differ from us, the CommonMark behavior is kept unless a bullet names another reason.
+
+- A list item's body is indented only to the item's content column, not four spaces; this applies to nested lists, indented code and fenced code (CommonMark item structure).
+- A list can start directly after a paragraph line without a blank line (CommonMark).
+- Ordered lists emit `<ol start="N">`, and a change of marker kind starts a new list (CommonMark).
+- A list is loose as a whole, not item by item (CommonMark).
+- `#hashtag` (no space after `#`) is text, not a heading (CommonMark).
+- An HTML block ends at the first blank line (CommonMark).
+- Every ASCII punctuation character can be backslash-escaped (CommonMark).
+- Email autolinks are plain `mailto:` links, not entity-obfuscated (smaller, readable output).
+- Block quotes separated by a blank line are separate quotes (CommonMark).
+- Text after the language on a fence line is kept in a `data-info` attribute of the code element, so tooling can read it.
+- An unclosed fence runs to the end of the document, and a fence is closed only by its own fence character (CommonMark).
+- ATX headings may be indented up to three spaces, setext headings may span several lines, `1)` starts an ordered list, and a lone list marker is an empty item (CommonMark).
+- Tabs inside fenced code lines are kept after the leading indentation, so code is emitted as written; leading tabs expand to spaces.
+- An emphasis match attempt inspects at most 1024 marker runs; beyond that the markers stay literal, which bounds the cost of pathological input.
+
+### Reference behavior not copied
+
+Each of these is a defect or side effect in Zensical, MkDocs or both; we render the intended result.
+
+- `####### text` (seven hashes) is a paragraph, not an `h6` that starts with a stray `#`.
+- `# text # ` (closing `#` run followed by a space) drops the closing run instead of keeping it in the heading text.
+- `[a](http://example.com/"x")` keeps the quoted string in the URL instead of reading it as a link title.
+- Consecutive reference definitions each resolve to their own target; the references resolve `[e]` to the next definition's target and lose one.
+- A lone `-` line after `- one` is an empty list item, not a setext underline that turns the previous line into an `h2`.
+- A sibling item after a nested list that follows a blank line stays a sibling of the parent item and is not attached to the nested list.
+- A lone `>` line is an empty block quote and does not continue lazily onto the next line.
+- A malformed reference definition such as `[also broken]: <unclosed` stays paragraph text and does not swallow the following line.
+- A trailing tab is not a hard break.
+- Empty and whitespace-only code spans pair only backtick runs of equal length; the references pair a two-backtick run with a one-backtick run.
+- A fence directly after a paragraph line ends the paragraph; Zensical nests the `<pre>` inside the `<p>`.
+- An empty fence renders an empty code element; Zensical adds a newline.
+- Unmatched backtick runs of different lengths stay literal; Zensical pairs them and drops characters.
+- A lone backtick with no closing run stays literal; Zensical wraps it in `<code>`.
+
+### Reference features out of scope
+
+These come from Zensical's default extensions and are site-build or extension concerns, not basic Markdown; they are intentionally not adopted.
+
+- Bare URL, `www` host and email autolinking (magiclink), including URLs inside malformed link syntax.
+- Math delimiters `\(` and `\)` keeping their backslashes (arithmatex).
+- Backslash-space treated as an escaped space (subscript and superscript).
+- Rewriting relative `.md` link targets to directory URLs.
 
 ## Markdown extensions
 
