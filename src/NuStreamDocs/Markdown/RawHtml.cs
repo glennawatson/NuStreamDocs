@@ -62,19 +62,7 @@ internal static class RawHtml
         ref int pendingTextStart,
         IBufferWriter<byte> writer)
     {
-        if (pos + 1 >= source.Length)
-        {
-            return false;
-        }
-
-        var second = source[pos + 1];
-        var end = second switch
-        {
-            Slash => FindCloseTagEnd(source, pos),
-            Bang => FindCommentEnd(source, pos),
-            _ => FindOpenTagEnd(source, pos)
-        };
-
+        var end = FindEnd(source, pos);
         if (end < 0)
         {
             return false;
@@ -86,6 +74,25 @@ internal static class RawHtml
         pendingTextStart = pos;
         return true;
     }
+
+    /// <summary>Locates the end of the raw-HTML construct that starts at <paramref name="pos"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="pos">Cursor at the leading <c>&lt;</c>.</param>
+    /// <returns>Exclusive end offset, or -1 when no raw-HTML construct is recognized.</returns>
+    internal static int FindEnd(ReadOnlySpan<byte> source, int pos) =>
+        pos + 1 >= source.Length ? -1 : FindEndAfterLessThan(source, pos);
+
+    /// <summary>Locates the end of the raw-HTML construct that starts at <paramref name="pos"/>, which has at least one byte after it.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="pos">Cursor at the leading <c>&lt;</c>.</param>
+    /// <returns>Exclusive end offset, or -1 when no raw-HTML construct is recognized.</returns>
+    private static int FindEndAfterLessThan(ReadOnlySpan<byte> source, int pos) =>
+        source[pos + 1] switch
+        {
+            Slash => FindCloseTagEnd(source, pos),
+            Bang => FindCommentEnd(source, pos),
+            _ => FindOpenTagEnd(source, pos)
+        };
 
     /// <summary>Locates the end of an open / self-closing tag starting at <paramref name="start"/>.</summary>
     /// <param name="source">UTF-8 source.</param>

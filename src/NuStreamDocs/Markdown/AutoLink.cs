@@ -46,24 +46,17 @@ internal static class AutoLink
         ref int pendingTextStart,
         IBufferWriter<byte> writer)
     {
-        var contentStart = pos + 1;
-        var closeIndex = FindClose(source, contentStart);
-        if (closeIndex < 0)
+        var end = FindEnd(source, pos);
+        if (end < 0)
         {
             return false;
         }
 
-        var content = source[contentStart..closeIndex];
-        var isEmail = !IsAutolink(content) && IsEmailAddress(content);
-        if (!isEmail && !IsAutolink(content))
-        {
-            return false;
-        }
-
+        var content = source[(pos + 1)..(end - 1)];
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
 
         Utf8StringWriter.Write(writer, "<a href=\""u8);
-        if (isEmail)
+        if (!IsAutolink(content))
         {
             Utf8StringWriter.Write(writer, "mailto:"u8);
         }
@@ -73,9 +66,25 @@ internal static class AutoLink
         HtmlEscape.EscapeText(content, writer);
         Utf8StringWriter.Write(writer, "</a>"u8);
 
-        pos = closeIndex + 1;
+        pos = end;
         pendingTextStart = pos;
         return true;
+    }
+
+    /// <summary>Locates the end of the autolink that starts at <paramref name="pos"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="pos">Cursor at the leading <c>&lt;</c>.</param>
+    /// <returns>Exclusive end offset, or -1 when no autolink is recognized.</returns>
+    internal static int FindEnd(ReadOnlySpan<byte> source, int pos)
+    {
+        var closeIndex = FindClose(source, pos + 1);
+        if (closeIndex < 0)
+        {
+            return -1;
+        }
+
+        var content = source[(pos + 1)..closeIndex];
+        return IsAutolink(content) || IsEmailAddress(content) ? closeIndex + 1 : -1;
     }
 
     /// <summary>Locates the closing <c>&gt;</c> on the same line.</summary>

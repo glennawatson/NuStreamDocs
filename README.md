@@ -605,7 +605,8 @@ Where the references differ from us, the CommonMark behavior is kept unless a bu
 - An unclosed fence runs to the end of the document, and a fence is closed only by its own fence character (CommonMark).
 - ATX headings may be indented up to three spaces, setext headings may span several lines, `1)` starts an ordered list, and a lone list marker is an empty item (CommonMark).
 - Tabs inside fenced code lines are kept after the leading indentation, so code is emitted as written; leading tabs expand to spaces.
-- An emphasis match attempt inspects at most 1024 marker runs; beyond that the markers stay literal, which bounds the cost of pathological input.
+- Mismatched and unmatched emphasis runs pair by the CommonMark delimiter-run rules (nearest opener, the multiple-of-three rule); where Zensical differs, such as `**a*b**` rendering as a strong span around `a*b`, CommonMark wins.
+- Emphasis nests at most 32 spans deep; markers beyond that stay literal, which bounds the cost and stack use of pathological input.
 
 ### Reference behavior not copied
 

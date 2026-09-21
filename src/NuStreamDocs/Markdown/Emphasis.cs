@@ -9,41 +9,20 @@ namespace NuStreamDocs.Markdown;
 
 /// <summary>
 /// Emphasis / strong handler. Recognizes <c>*em*</c>, <c>**strong**</c>, <c>***both***</c> and the
-/// underscore equivalents. An opening run must be followed by non-whitespace, a closing run must follow
-/// non-whitespace, and underscore runs cannot open or close inside a word so <c>foo_bar</c>-shaped
-/// identifiers stay literal. Nested emphasis inside the span is matched before the outer close is chosen.
+/// underscore equivalents by the CommonMark delimiter-run rules: a closing run pairs with the nearest opening
+/// run, runs of different lengths pair, and underscore runs cannot open or close inside a word so
+/// <c>foo_bar</c>-shaped identifiers stay literal.
 /// </summary>
 internal static class Emphasis
 {
-    /// <summary>Maximum emphasis-marker run length the probe considers (triple = em wrapping strong).</summary>
-    private const int MaxRunLength = 3;
+    /// <summary>Marker count that makes a pair strong emphasis.</summary>
+    private const int StrongLength = 2;
 
-    /// <summary>Strong-emphasis run length.</summary>
-    private const int StrongRun = 2;
+    /// <summary>Marker bytes a source may hold and still keep its delimiter table on the stack.</summary>
+    private const int StackMarkerLimit = 32;
 
-    /// <summary>Length of a backslash escape sequence.</summary>
-    private const int EscapeLength = 2;
-
-    /// <summary>Marker-run inspections one match attempt may spend before it gives up and leaves the text literal.</summary>
-    private const int MaxSteps = 1024;
-
-    /// <summary>Offset added to a stored last-closer position so that zero means "not yet computed" and one means "no closer".</summary>
-    private const int LastCloserBias = 2;
-
-    /// <summary>Backslash byte.</summary>
-    private const byte Backslash = (byte)'\\';
-
-    /// <summary>Backtick byte.</summary>
-    private const byte Backtick = (byte)'`';
-
-    /// <summary>Underscore byte.</summary>
-    private const byte Underscore = (byte)'_';
-
-    /// <summary>First byte of a multi-byte UTF-8 sequence; such bytes count as word characters.</summary>
-    private const byte FirstNonAsciiByte = 0x80;
-
-    /// <summary>Bytes the close search must stop at: both emphasis markers, escapes and code spans.</summary>
-    private static readonly SearchValues<byte> CloseSearchBytes = SearchValues.Create("*_\\`"u8);
+    /// <summary>Emphasis spans that may be open around one position; deeper pairs stay literal.</summary>
+    private const int MaxNestingDepth = 32;
 
     /// <summary>Gets the UTF-8 bytes for the <c>em</c> open tag.</summary>
     private static ReadOnlySpan<byte> EmOpen => "<em>"u8;
@@ -57,337 +36,119 @@ internal static class Emphasis
     /// <summary>Gets the UTF-8 bytes for the <c>strong</c> close tag.</summary>
     private static ReadOnlySpan<byte> StrongClose => "</strong>"u8;
 
-    /// <summary>Gets the UTF-8 bytes for the combined <c>em</c> wrapping <c>strong</c> open.</summary>
-    private static ReadOnlySpan<byte> StrongEmOpen => "<em><strong>"u8;
+    /// <summary>Renders <paramref name="source"/>, which holds at least one emphasis marker byte, pairing its emphasis first.</summary>
+    /// <param name="source">The UTF-8 source.</param>
+    /// <param name="markerCount">Number of <c>*</c> and <c>_</c> bytes in <paramref name="source"/>.</param>
+    /// <param name="writer">The UTF-8 sink.</param>
+    internal static void Render(ReadOnlySpan<byte> source, int markerCount, IBufferWriter<byte> writer)
+    {
+        if (markerCount <= StackMarkerLimit)
+        {
+            RenderWithStackTable(source, writer);
+            return;
+        }
 
-    /// <summary>Gets the UTF-8 bytes for the combined <c>strong</c> inside <c>em</c> close.</summary>
-    private static ReadOnlySpan<byte> StrongEmClose => "</strong></em>"u8;
+        RenderWithPooledTable(source, markerCount, writer);
+    }
 
     /// <summary>Handles an emphasis marker run at <paramref name="pos"/>.</summary>
-    /// <param name="source">The UTF-8 source.</param>
-    /// <param name="pos">Cursor; advanced past the close run on success.</param>
+    /// <param name="source">The UTF-8 source of the range being rendered.</param>
+    /// <param name="origin">Position of <paramref name="source"/> within the source the table was built from.</param>
+    /// <param name="pos">Cursor; advanced past the closing delimiter on success, and to the last byte of the marker run when the run stays literal.</param>
     /// <param name="pendingTextStart">Start of pending text run.</param>
     /// <param name="writer">The UTF-8 sink.</param>
-    /// <param name="lastClosers">Default-initialized by the caller and reused for every marker run of the same <paramref name="source"/>.</param>
-    /// <returns>True when an emphasis run was emitted.</returns>
+    /// <param name="table">Delimiter table of the whole source.</param>
+    /// <returns>True when an emphasis span was emitted.</returns>
     internal static bool TryHandle(
         ReadOnlySpan<byte> source,
+        int origin,
         ref int pos,
         ref int pendingTextStart,
         IBufferWriter<byte> writer,
-        ref EmphasisCloserSlots lastClosers)
+        ref EmphasisTable table)
     {
-        var steps = MaxSteps;
-        if (!TryMatch(source, pos, ref steps, ref lastClosers, out var openStart, out var openLength, out var closeStart))
+        var position = origin + pos;
+        var runIndex = table.FindRun(position);
+        if (runIndex < 0)
         {
+            pos += AsciiByteHelpers.RunLength(source, pos, source[pos]) - 1;
             return false;
         }
 
-        InlineRenderer.FlushText(source, pendingTextStart, openStart, writer);
-        EmitWrapped(source, openStart + openLength, closeStart, openLength, writer);
-        pos = closeStart + openLength;
+        ref var run = ref table.Runs[runIndex];
+        var pairIndex = run.FirstPair;
+        while (pairIndex > 0 && table.Pairs[pairIndex - 1].OpenStart < position)
+        {
+            pairIndex = table.Pairs[pairIndex - 1].Next;
+        }
+
+        if (pairIndex is 0)
+        {
+            run.FirstPair = 0;
+            pos += run.End - position - 1;
+            return false;
+        }
+
+        var pair = table.Pairs[pairIndex - 1];
+        run.FirstPair = pair.Next;
+        if (table.Depth >= MaxNestingDepth || pair.CloseStart + pair.Length > origin + source.Length)
+        {
+            pos = pair.OpenStart + pair.Length - 1 - origin;
+            return false;
+        }
+
+        InlineRenderer.FlushText(source, pendingTextStart, pair.OpenStart - origin, writer);
+        var contentStart = pair.OpenStart + pair.Length;
+        Utf8StringWriter.Write(writer, pair.Length is StrongLength ? StrongOpen : EmOpen);
+        table.Depth++;
+        InlineRenderer.RenderRange(source[(contentStart - origin)..(pair.CloseStart - origin)], contentStart, writer, ref table);
+        table.Depth--;
+        Utf8StringWriter.Write(writer, pair.Length is StrongLength ? StrongClose : EmClose);
+
+        pos = pair.CloseStart + pair.Length - origin;
         pendingTextStart = pos;
         return true;
     }
 
-    /// <summary>Finds the emphasis span whose opening run starts at <paramref name="pos"/>.</summary>
+    /// <summary>Renders <paramref name="source"/> with a delimiter table held on the stack.</summary>
     /// <param name="source">The UTF-8 source.</param>
-    /// <param name="pos">Index of the first byte of the marker run.</param>
-    /// <param name="steps">Remaining marker-run inspections.</param>
-    /// <param name="lastClosers">Per-source last-closer positions.</param>
-    /// <param name="openStart">Index of the first byte of the opening delimiter; earlier bytes of the run stay literal.</param>
-    /// <param name="openLength">1 = em, 2 = strong, 3 = em wrapping strong.</param>
-    /// <param name="closeStart">Index of the first byte of the closing delimiter.</param>
-    /// <returns>True when a span was found.</returns>
-    private static bool TryMatch(
-        ReadOnlySpan<byte> source,
-        int pos,
-        ref int steps,
-        ref EmphasisCloserSlots lastClosers,
-        out int openStart,
-        out int openLength,
-        out int closeStart)
+    /// <param name="writer">The UTF-8 sink.</param>
+    private static void RenderWithStackTable(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        openStart = 0;
-        openLength = 0;
-        closeStart = -1;
-
-        var marker = source[pos];
-        var run = AsciiByteHelpers.RunLength(source, pos, marker);
-        if (!CanOpen(source, pos, run, marker))
-        {
-            return false;
-        }
-
-        for (var probe = Math.Min(run, MaxRunLength); probe >= 1; probe--)
-        {
-            var candidate = FindClose(source, pos + run, marker, probe, ref steps, ref lastClosers);
-            if (candidate < 0)
-            {
-                continue;
-            }
-
-            var surplus = run - probe;
-            var outerClose = surplus > 0 ? FindClose(source, candidate + probe, marker, surplus, ref steps, ref lastClosers) : -1;
-            if (outerClose >= 0)
-            {
-                openStart = pos;
-                openLength = surplus;
-                closeStart = outerClose;
-                return true;
-            }
-
-            if (openLength is 0)
-            {
-                openStart = pos + surplus;
-                openLength = probe;
-                closeStart = candidate;
-            }
-
-            if (surplus is 0)
-            {
-                break;
-            }
-        }
-
-        return openLength > 0;
+        Span<EmphasisRun> runs = stackalloc EmphasisRun[StackMarkerLimit];
+        Span<EmphasisPair> pairs = stackalloc EmphasisPair[StackMarkerLimit];
+        Span<int> stack = stackalloc int[StackMarkerLimit];
+        RenderWithTable(source, new(runs, pairs, stack), writer);
     }
 
-    /// <summary>Finds the start of the run that closes an opener of <paramref name="length"/> markers.</summary>
+    /// <summary>Renders <paramref name="source"/> with a delimiter table held in pooled arrays.</summary>
     /// <param name="source">The UTF-8 source.</param>
-    /// <param name="contentStart">First byte after the opening run.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <param name="length">Required close run length.</param>
-    /// <param name="steps">Remaining marker-run inspections.</param>
-    /// <param name="lastClosers">Per-source last-closer positions.</param>
-    /// <returns>Start index of the close run, or -1.</returns>
-    private static int FindClose(
-        ReadOnlySpan<byte> source,
-        int contentStart,
-        byte marker,
-        int length,
-        ref int steps,
-        ref EmphasisCloserSlots lastClosers)
+    /// <param name="markerCount">Number of <c>*</c> and <c>_</c> bytes in <paramref name="source"/>.</param>
+    /// <param name="writer">The UTF-8 sink.</param>
+    private static void RenderWithPooledTable(ReadOnlySpan<byte> source, int markerCount, IBufferWriter<byte> writer)
     {
-        if (LastCloserStart(source, marker, length, ref lastClosers) <= contentStart)
+        var runs = ArrayPool<EmphasisRun>.Shared.Rent(markerCount);
+        var pairs = ArrayPool<EmphasisPair>.Shared.Rent(markerCount / StrongLength);
+        var stack = ArrayPool<int>.Shared.Rent(markerCount);
+        try
         {
-            return -1;
+            RenderWithTable(source, new(runs, pairs, stack), writer);
         }
-
-        var i = contentStart;
-        while (TryAdvanceToSpecial(source, ref i, ref steps))
+        finally
         {
-            if (source[i] != marker)
-            {
-                i = SkipNonMarker(source, i);
-                continue;
-            }
-
-            var run = AsciiByteHelpers.RunLength(source, i, marker);
-            if (i > contentStart && run >= length && CanClose(source, i, run, marker))
-            {
-                return i;
-            }
-
-            i = SkipOrMatchNested(source, i, run, marker, ref steps, ref lastClosers);
+            ArrayPool<EmphasisRun>.Shared.Return(runs);
+            ArrayPool<EmphasisPair>.Shared.Return(pairs);
+            ArrayPool<int>.Shared.Return(stack);
         }
-
-        return -1;
     }
 
-    /// <summary>Gets the start of the last run in <paramref name="source"/> that could close an opener of <paramref name="length"/> markers.</summary>
+    /// <summary>Builds the delimiter table of <paramref name="source"/> and renders it.</summary>
     /// <param name="source">The UTF-8 source.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <param name="length">Required close run length.</param>
-    /// <param name="lastClosers">Per-source last-closer positions; filled on first use.</param>
-    /// <returns>Start index of the last candidate close run, or -1 when the source has none.</returns>
-    private static int LastCloserStart(ReadOnlySpan<byte> source, byte marker, int length, ref EmphasisCloserSlots lastClosers)
+    /// <param name="table">Empty table with room for every run and pair of <paramref name="source"/>.</param>
+    /// <param name="writer">The UTF-8 sink.</param>
+    private static void RenderWithTable(ReadOnlySpan<byte> source, EmphasisTable table, IBufferWriter<byte> writer)
     {
-        var underscore = marker is Underscore;
-        var stored = lastClosers.Get(underscore, length);
-        if (stored is 0)
-        {
-            stored = FindLastCloser(source, marker, Math.Min(length, MaxRunLength)) + LastCloserBias;
-            lastClosers.Set(underscore, length, stored);
-        }
-
-        return stored - LastCloserBias;
+        EmphasisMatcher.Build(source, ref table);
+        InlineRenderer.RenderRange(source, 0, writer, ref table);
     }
-
-    /// <summary>Finds the start of the last run of <paramref name="marker"/> that passes <see cref="CanClose"/> with at least <paramref name="length"/> markers.</summary>
-    /// <param name="source">The UTF-8 source.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <param name="length">Required close run length.</param>
-    /// <returns>Start index of the candidate, or -1 when the source has none.</returns>
-    private static int FindLastCloser(ReadOnlySpan<byte> source, byte marker, int length)
-    {
-        var end = source.Length;
-        while (end > 0)
-        {
-            var last = source[..end].LastIndexOf(marker);
-            if (last < 0)
-            {
-                return -1;
-            }
-
-            var runStart = last;
-            while (runStart > 0 && source[runStart - 1] == marker)
-            {
-                runStart--;
-            }
-
-            var start = last + 1 - length;
-            if (start >= runStart && CanClose(source, start, length, marker))
-            {
-                return start;
-            }
-
-            end = runStart;
-        }
-
-        return -1;
-    }
-
-    /// <summary>Moves <paramref name="index"/> to the next byte the close search must inspect.</summary>
-    /// <param name="source">The UTF-8 source.</param>
-    /// <param name="index">Search cursor; advanced on success.</param>
-    /// <param name="steps">Remaining marker-run inspections; one is spent per call.</param>
-    /// <returns>True when a special byte was found within budget.</returns>
-    private static bool TryAdvanceToSpecial(ReadOnlySpan<byte> source, ref int index, ref int steps)
-    {
-        if (index >= source.Length)
-        {
-            return false;
-        }
-
-        var rel = source[index..].IndexOfAny(CloseSearchBytes);
-        if (rel < 0)
-        {
-            return false;
-        }
-
-        steps--;
-        index += rel;
-        return steps >= 0;
-    }
-
-    /// <summary>Returns the index past an escape, code span, or run of the other emphasis marker starting at <paramref name="index"/>.</summary>
-    /// <param name="source">The UTF-8 source.</param>
-    /// <param name="index">Index of a backslash, backtick, or the emphasis marker that is not being matched.</param>
-    /// <returns>Index of the first byte to inspect next.</returns>
-    private static int SkipNonMarker(ReadOnlySpan<byte> source, int index)
-    {
-        var b = source[index];
-        if (b is Backslash)
-        {
-            return index + EscapeLength;
-        }
-
-        var run = AsciiByteHelpers.RunLength(source, index, b);
-        if (b is not Backtick)
-        {
-            return index + run;
-        }
-
-        var close = CodeSpan.FindMatchingClose(source, index + run, run);
-        return close < 0 ? index + run : close + run;
-    }
-
-    /// <summary>Returns the index past a nested emphasis span opened by the run at <paramref name="index"/>, or past the run when none opens.</summary>
-    /// <param name="source">The UTF-8 source.</param>
-    /// <param name="index">Index of the marker run.</param>
-    /// <param name="run">Length of the run.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <param name="steps">Remaining marker-run inspections.</param>
-    /// <param name="lastClosers">Per-source last-closer positions.</param>
-    /// <returns>Index of the first byte to inspect next.</returns>
-    private static int SkipOrMatchNested(
-        ReadOnlySpan<byte> source,
-        int index,
-        int run,
-        byte marker,
-        ref int steps,
-        ref EmphasisCloserSlots lastClosers) =>
-        CanOpen(source, index, run, marker)
-        && TryMatch(source, index, ref steps, ref lastClosers, out _, out var length, out var close)
-            ? close + length
-            : index + run;
-
-    /// <summary>True when the marker run at <paramref name="pos"/> can start emphasis.</summary>
-    /// <param name="source">The UTF-8 source.</param>
-    /// <param name="pos">Index of the run's first byte.</param>
-    /// <param name="run">Length of the run.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <returns>True when non-whitespace follows the run and, for underscores, no word character precedes it.</returns>
-    private static bool CanOpen(ReadOnlySpan<byte> source, int pos, int run, byte marker)
-    {
-        var after = pos + run;
-        if (after >= source.Length || AsciiByteHelpers.IsAsciiWhitespace(source[after]))
-        {
-            return false;
-        }
-
-        return marker is not Underscore || pos is 0 || !IsWordByte(source[pos - 1]);
-    }
-
-    /// <summary>True when the marker run at <paramref name="pos"/> can end emphasis.</summary>
-    /// <param name="source">The UTF-8 source.</param>
-    /// <param name="pos">Index of the run's first byte.</param>
-    /// <param name="run">Length of the run.</param>
-    /// <param name="marker">Marker byte.</param>
-    /// <returns>True when non-whitespace precedes the run and, for underscores, no word character follows it.</returns>
-    private static bool CanClose(ReadOnlySpan<byte> source, int pos, int run, byte marker)
-    {
-        if (pos is 0 || AsciiByteHelpers.IsAsciiWhitespace(source[pos - 1]))
-        {
-            return false;
-        }
-
-        var after = pos + run;
-        return marker is not Underscore || after >= source.Length || !IsWordByte(source[after]);
-    }
-
-    /// <summary>True for ASCII letters and digits and for any byte of a multi-byte UTF-8 sequence.</summary>
-    /// <param name="b">Candidate byte.</param>
-    /// <returns>True when the byte is part of a word.</returns>
-    private static bool IsWordByte(byte b) =>
-        b >= FirstNonAsciiByte || AsciiByteHelpers.IsAsciiLetter(b) || AsciiByteHelpers.IsAsciiDigit(b);
-
-    /// <summary>Writes the open + content + close tags for the chosen <paramref name="openLength"/>.</summary>
-    /// <param name="source">the UTF-8 source.</param>
-    /// <param name="contentStart">Start of inner content.</param>
-    /// <param name="closeStart">Start of close run.</param>
-    /// <param name="openLength">1 = em, 2 = strong, 3 = em wrapping strong.</param>
-    /// <param name="writer">the UTF-8 sink.</param>
-    private static void EmitWrapped(
-        ReadOnlySpan<byte> source,
-        int contentStart,
-        int closeStart,
-        int openLength,
-        IBufferWriter<byte> writer)
-    {
-        Utf8StringWriter.Write(writer, OpenTag(openLength));
-        InlineRenderer.Render(source[contentStart..closeStart], writer);
-        Utf8StringWriter.Write(writer, CloseTag(openLength));
-    }
-
-    /// <summary>Returns the open the UTF-8 tag bytes for <paramref name="openLength"/>.</summary>
-    /// <param name="openLength">1, 2, or 3.</param>
-    /// <returns>Open tag bytes.</returns>
-    private static ReadOnlySpan<byte> OpenTag(int openLength) => openLength switch
-    {
-        MaxRunLength => StrongEmOpen,
-        StrongRun => StrongOpen,
-        _ => EmOpen
-    };
-
-    /// <summary>Returns the close the UTF-8 tag bytes for <paramref name="openLength"/>.</summary>
-    /// <param name="openLength">1, 2, or 3.</param>
-    /// <returns>Close tag bytes.</returns>
-    private static ReadOnlySpan<byte> CloseTag(int openLength) => openLength switch
-    {
-        MaxRunLength => StrongEmClose,
-        StrongRun => StrongClose,
-        _ => EmClose
-    };
 }

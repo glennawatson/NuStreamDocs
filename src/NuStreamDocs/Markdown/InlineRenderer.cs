@@ -47,9 +47,26 @@ public static class InlineRenderer
     /// <param name="writer">UTF-8 HTML sink.</param>
     public static void Render(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
+        var markerCount = source.Count(Star) + source.Count(Underscore);
+        if (markerCount > 0)
+        {
+            Emphasis.Render(source, markerCount, writer);
+            return;
+        }
+
+        EmphasisTable none = default;
+        RenderRange(source, 0, writer, ref none);
+    }
+
+    /// <summary>Renders a range of a source whose emphasis pairs are already recorded in <paramref name="table"/>.</summary>
+    /// <param name="source">UTF-8 text of the range.</param>
+    /// <param name="origin">Position of <paramref name="source"/> within the source the table was built from.</param>
+    /// <param name="writer">UTF-8 HTML sink.</param>
+    /// <param name="table">Delimiter table of the whole source.</param>
+    internal static void RenderRange(ReadOnlySpan<byte> source, int origin, IBufferWriter<byte> writer, ref EmphasisTable table)
+    {
         var pos = 0;
         var pendingTextStart = 0;
-        EmphasisCloserSlots lastClosers = default;
         while (pos < source.Length)
         {
             var rel = source[pos..].IndexOfAny(SpecialBytes);
@@ -59,7 +76,7 @@ public static class InlineRenderer
             }
 
             pos += rel;
-            var handled = TryHandleSpecial(source, ref pos, ref pendingTextStart, source[pos], writer, ref lastClosers);
+            var handled = TryHandleSpecial(source, origin, ref pos, ref pendingTextStart, source[pos], writer, ref table);
             if (!handled)
             {
                 pos++;
@@ -86,24 +103,26 @@ public static class InlineRenderer
 
     /// <summary>Dispatches a single byte to its inline handler.</summary>
     /// <param name="source">UTF-8 source.</param>
+    /// <param name="origin">Position of <paramref name="source"/> within the source the emphasis table was built from.</param>
     /// <param name="pos">Cursor; advanced past handled construct on success.</param>
     /// <param name="pendingTextStart">Start of the pending escaped-text run.</param>
     /// <param name="b">Byte at <paramref name="pos"/>.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <param name="lastClosers">Emphasis scratch space for this <paramref name="source"/>.</param>
+    /// <param name="table">Emphasis delimiter table of the whole source.</param>
     /// <returns>True when the byte opened a known inline construct.</returns>
     private static bool TryHandleSpecial(
         ReadOnlySpan<byte> source,
+        int origin,
         ref int pos,
         ref int pendingTextStart,
         byte b,
         IBufferWriter<byte> writer,
-        ref EmphasisCloserSlots lastClosers) =>
+        ref EmphasisTable table) =>
         b switch
         {
             Backslash => InlineEscape.TryHandle(source, ref pos, ref pendingTextStart, writer),
             Backtick => CodeSpan.TryHandle(source, ref pos, ref pendingTextStart, writer),
-            Star or Underscore => Emphasis.TryHandle(source, ref pos, ref pendingTextStart, writer, ref lastClosers),
+            Star or Underscore => Emphasis.TryHandle(source, origin, ref pos, ref pendingTextStart, writer, ref table),
             Lf => HardBreak.TryHandle(source, ref pos, ref pendingTextStart, writer),
             _ => TryHandleStructural(source, ref pos, ref pendingTextStart, b, writer)
         };
