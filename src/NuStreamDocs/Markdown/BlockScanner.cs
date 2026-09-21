@@ -252,7 +252,7 @@ public static class BlockScanner
             return ClassifyInsideHtmlBlock(line, ref html);
         }
 
-        if (line.IsEmpty)
+        if (IsBlankLine(line))
         {
             // Blank doesn't close the list; the next line decides.
             return BlockKind.Blank;
@@ -288,6 +288,12 @@ public static class BlockScanner
             : default;
         return kind;
     }
+
+    /// <summary>True when <paramref name="line"/> is empty or holds only spaces and tabs.</summary>
+    /// <param name="line">UTF-8 line bytes.</param>
+    /// <returns>True for a blank line.</returns>
+    private static bool IsBlankLine(ReadOnlySpan<byte> line) =>
+        line.IsEmpty || (line[0] is Sp or Tab && AsciiByteHelpers.IsAllAsciiWhitespace(line));
 
     /// <summary>Returns the content column for a list item — the column where the post-marker content actually begins.</summary>
     /// <param name="line">UTF-8 line.</param>

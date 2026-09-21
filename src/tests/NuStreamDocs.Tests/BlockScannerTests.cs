@@ -38,6 +38,17 @@ public class BlockScannerTests
         await Assert.That(kinds[1]).IsEqualTo(BlockKind.SetextHeading);
     }
 
+    /// <summary>A line holding only spaces and tabs is a blank line.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task WhitespaceOnlyLineIsBlank()
+    {
+        var kinds = ScanKinds("a\n  \t \nb\n"u8);
+        await Assert.That(kinds[0]).IsEqualTo(BlockKind.Paragraph);
+        await Assert.That(kinds[1]).IsEqualTo(BlockKind.Blank);
+        await Assert.That(kinds[2]).IsEqualTo(BlockKind.Paragraph);
+    }
+
     /// <summary>A lone hyphen with no paragraph above is a list item, not a setext underline.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

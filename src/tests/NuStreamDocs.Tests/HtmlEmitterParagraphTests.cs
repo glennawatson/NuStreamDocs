@@ -91,6 +91,24 @@ public class HtmlEmitterParagraphTests
         await Assert.That(html).IsEqualTo("<ul>\n<li>see <a href=\"/u\">long\ntext</a></li>\n</ul>\n");
     }
 
+    /// <summary>A line of spaces separates two paragraphs like an empty line.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WhitespaceOnlyLineSeparatesParagraphs()
+    {
+        var html = Render("one\n   \ntwo"u8);
+        await Assert.That(html).IsEqualTo("<p>one</p>\n<p>two</p>\n");
+    }
+
+    /// <summary>A line of spaces inside a list item separates its paragraphs.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WhitespaceOnlyLineInsideListItemSeparatesParagraphs()
+    {
+        var html = Render("- one\n  \n  two"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li>\n<p>one</p>\n<p>two</p>\n</li>\n</ul>\n");
+    }
+
     /// <summary>Renders <paramref name="markdown"/> to an HTML string.</summary>
     /// <param name="markdown">UTF-8 markdown.</param>
     /// <returns>Rendered HTML.</returns>
