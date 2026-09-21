@@ -409,7 +409,7 @@ public sealed class DocBuilder
             return Task.CompletedTask;
         }
 
-        List<PageBuilderRental> scratch = [];
+        PageBuilderRental scratch = default;
         var input = PageBuilderPool.Rent(html.WrittenCount);
         var owned = input;
         try
@@ -417,7 +417,7 @@ public sealed class DocBuilder
             input.Writer.Write(html.WrittenSpan);
             var final = ApplyPostRendersExternal(
                 input,
-                scratch,
+                out scratch,
                 source.Span,
                 snapshot,
                 relativePath,
@@ -431,11 +431,7 @@ public sealed class DocBuilder
         }
         finally
         {
-            for (var i = 0; i < scratch.Count; i++)
-            {
-                scratch[i].Dispose();
-            }
-
+            scratch.Dispose();
             owned.Dispose();
         }
 
@@ -451,7 +447,7 @@ public sealed class DocBuilder
 
     /// <summary>External adapter mirroring <c>BuildPipeline.ApplyPostRenders</c> for the standalone <see cref="RenderPageAsync"/> path.</summary>
     /// <param name="input">Rental holding the rendered HTML.</param>
-    /// <param name="scratch">Disposal list — caller disposes every entry.</param>
+    /// <param name="scratch">Receives the spare rental the caller disposes; default when no rental was rented.</param>
     /// <param name="source">Original markdown bytes (passed via context).</param>
     /// <param name="snapshot">Sorted post-render participants and their names.</param>
     /// <param name="relativePath">Page path relative to the input root.</param>
@@ -459,7 +455,7 @@ public sealed class DocBuilder
     /// <returns>The rental whose writer holds the final post-render HTML.</returns>
     private static PageBuilderRental ApplyPostRendersExternal(
         in PageBuilderRental input,
-        List<PageBuilderRental> scratch,
+        out PageBuilderRental scratch,
         ReadOnlySpan<byte> source,
         PostRenderSnapshot snapshot,
         in FilePath relativePath,
@@ -480,6 +476,7 @@ public sealed class DocBuilder
 
         if (!anyRewrites)
         {
+            scratch = default;
             return input;
         }
 
@@ -503,7 +500,7 @@ public sealed class DocBuilder
             (front, back) = (back, front);
         }
 
-        scratch.Add(back);
+        scratch = back;
         return front;
     }
 
