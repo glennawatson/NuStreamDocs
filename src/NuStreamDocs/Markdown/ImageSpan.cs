@@ -41,11 +41,13 @@ internal static class ImageSpan
 
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
 
-        Utf8StringWriter.Write(writer, "<img src=\""u8);
-        HtmlEscape.EscapeText(source[shape.HrefStart..shape.HrefEnd], writer);
-        Utf8StringWriter.Write(writer, "\" alt=\""u8);
+        Utf8StringWriter.Write(writer, "<img alt=\""u8);
         HtmlEscape.EscapeText(source[shape.LabelStart..shape.LabelEnd], writer);
-        Utf8StringWriter.Write(writer, "\">"u8);
+        Utf8StringWriter.Write(writer, "\" src=\""u8);
+        HtmlEscape.EscapeText(source[shape.HrefStart..shape.HrefEnd], writer);
+        Utf8StringWriter.Write(writer, "\""u8);
+        LinkSpan.WriteTitleAttribute(source, shape, writer);
+        Utf8StringWriter.Write(writer, " />"u8);
 
         pos = shape.End;
         pendingTextStart = pos;
