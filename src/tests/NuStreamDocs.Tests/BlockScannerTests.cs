@@ -112,14 +112,24 @@ public class BlockScannerTests
         await Assert.That(kinds[4]).IsEqualTo(BlockKind.ListItemContent);
     }
 
-    /// <summary>An outdented non-list line should close the list and reclassify normally.</summary>
+    /// <summary>An outdented non-list line after a blank line should close the list and reclassify normally.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]
     public async Task OutdentedLineClosesList()
     {
+        var kinds = ScanKinds("- item\n\noutside\n"u8);
+        await Assert.That(kinds[0]).IsEqualTo(BlockKind.ListItem);
+        await Assert.That(kinds[2]).IsEqualTo(BlockKind.Paragraph);
+    }
+
+    /// <summary>An outdented paragraph line directly after item text continues the item.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task OutdentedLineDirectlyAfterItemTextContinuesItem()
+    {
         var kinds = ScanKinds("- item\noutside\n"u8);
         await Assert.That(kinds[0]).IsEqualTo(BlockKind.ListItem);
-        await Assert.That(kinds[1]).IsEqualTo(BlockKind.Paragraph);
+        await Assert.That(kinds[1]).IsEqualTo(BlockKind.ListItemContent);
     }
 
     /// <summary>Helper that scans <paramref name="utf8"/> and returns the emitted kinds.</summary>

@@ -283,11 +283,25 @@ public static class BlockScanner
         }
 
         var kind = ClassifyContentLine(line[indent..], prevKind, ref fence, ref html, out level);
+        if (IsLazyListContinuation(kind, list, prevKind))
+        {
+            level = list.ContentIndent;
+            return BlockKind.ListItemContent;
+        }
+
         list = kind is BlockKind.ListItem
             ? new(ComputeListContentIndent(line, indent, level))
             : default;
         return kind;
     }
+
+    /// <summary>True when an unindented paragraph line directly follows list item text and so continues that item.</summary>
+    /// <param name="kind">Classification of the current line ignoring list context.</param>
+    /// <param name="list">Open list state.</param>
+    /// <param name="prevKind">Classification of the previous line.</param>
+    /// <returns>True for a lazy continuation line.</returns>
+    private static bool IsLazyListContinuation(BlockKind kind, in ListState list, BlockKind prevKind) =>
+        kind is BlockKind.Paragraph && list.IsOpen && prevKind is BlockKind.ListItem or BlockKind.ListItemContent;
 
     /// <summary>True when <paramref name="line"/> is empty or holds only spaces and tabs.</summary>
     /// <param name="line">UTF-8 line bytes.</param>

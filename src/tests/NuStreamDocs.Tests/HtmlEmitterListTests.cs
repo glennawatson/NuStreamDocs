@@ -234,6 +234,56 @@ public class HtmlEmitterListTests
         await Assert.That(html).IsEqualTo("<ul>\n<li></li>\n<li>b</li>\n</ul>\n");
     }
 
+    /// <summary>An unindented line directly after item text continues that item.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnindentedLineContinuesItemText()
+    {
+        var html = Render("- a\nlazy\n- b"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li>a\nlazy</li>\n<li>b</li>\n</ul>\n");
+    }
+
+    /// <summary>An unindented line after an ordered item continues that item.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnindentedLineContinuesOrderedItemText()
+    {
+        var html = Render("1. a\nlazy\n2. b"u8);
+        await Assert.That(html).IsEqualTo("<ol>\n<li>a\nlazy</li>\n<li>b</li>\n</ol>\n");
+    }
+
+    /// <summary>An unindented line after a nested item continues the nested item.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnindentedLineContinuesNestedItemText()
+    {
+        var html = Render("- a\n  - b\nlazy"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li>a\n<ul>\n<li>b\nlazy</li>\n</ul>\n</li>\n</ul>\n");
+    }
+
+    /// <summary>A blank line ends the list, so the next unindented line is a new paragraph.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BlankLineEndsLazyContinuation()
+    {
+        var html = Render("- a\n\nnot lazy"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li>a</li>\n</ul>\n<p>not lazy</p>\n");
+    }
+
+    /// <summary>An unindented heading, quote, fence or thematic break after item text is a new block, not a continuation.</summary>
+    /// <param name="markdown">Source text.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("- a\n# h")]
+    [Arguments("- a\n> q")]
+    [Arguments("- a\n```\nc\n```")]
+    [Arguments("- a\n***")]
+    public async Task BlockStartsEndTheList(string markdown)
+    {
+        var html = Render(System.Text.Encoding.UTF8.GetBytes(markdown));
+        await Assert.That(html).StartsWith("<ul>\n<li>a</li>\n</ul>\n");
+    }
+
     /// <summary>An empty item renders an empty <c>&lt;li&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
