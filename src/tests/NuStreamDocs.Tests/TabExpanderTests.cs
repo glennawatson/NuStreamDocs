@@ -21,37 +21,37 @@ public class TabExpanderTests
     /// <returns>Async test.</returns>
     [Test]
     public async Task LeadingTabBecomesFourSpaces() =>
-        await Assert.That(Encoding.UTF8.GetString(TabExpander.Expand("\tx"u8))).IsEqualTo("    x");
+        await Assert.That(Expand("\tx"u8)).IsEqualTo("    x");
 
     /// <summary>A tab after spaces advances to the next multiple of four.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TabAfterSpacesAdvancesToNextStop() =>
-        await Assert.That(Encoding.UTF8.GetString(TabExpander.Expand("  \tx"u8))).IsEqualTo("    x");
+        await Assert.That(Expand("  \tx"u8)).IsEqualTo("    x");
 
     /// <summary>Two leading tabs become eight spaces.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task TwoTabsBecomeEightSpaces() =>
-        await Assert.That(Encoding.UTF8.GetString(TabExpander.Expand("\t\tx"u8))).IsEqualTo("        x");
+        await Assert.That(Expand("\t\tx"u8)).IsEqualTo("        x");
 
     /// <summary>Tabs after the first non-whitespace byte are kept.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task InteriorTabIsKept() =>
-        await Assert.That(Encoding.UTF8.GetString(TabExpander.Expand("a\tb"u8))).IsEqualTo("a\tb");
+        await Assert.That(Expand("a\tb"u8)).IsEqualTo("a\tb");
 
     /// <summary>Each line is expanded independently.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task EveryLineIsExpanded() =>
-        await Assert.That(Encoding.UTF8.GetString(TabExpander.Expand("\ta\n\tb\n"u8))).IsEqualTo("    a\n    b\n");
+        await Assert.That(Expand("\ta\n\tb\n"u8)).IsEqualTo("    a\n    b\n");
 
     /// <summary>A whitespace-only tab line keeps its line ending.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task WhitespaceOnlyLineKeepsLineEnding() =>
-        await Assert.That(Encoding.UTF8.GetString(TabExpander.Expand("\t\r\nx"u8))).IsEqualTo("    \r\nx");
+        await Assert.That(Expand("\t\r\nx"u8)).IsEqualTo("    \r\nx");
 
     /// <summary>A tab-indented line after a blank line renders as an indented code block.</summary>
     /// <returns>Async test.</returns>
@@ -76,6 +76,16 @@ public class TabExpanderTests
     [Test]
     public async Task InteriorTabInsideFenceIsPreserved() =>
         await Assert.That(Render("```\na\tb\n```"u8)).IsEqualTo("<pre><code>a\tb\n</code></pre>\n");
+
+    /// <summary>Expands the indentation tabs of <paramref name="markdown"/>.</summary>
+    /// <param name="markdown">UTF-8 markdown.</param>
+    /// <returns>The expanded text.</returns>
+    private static string Expand(ReadOnlySpan<byte> markdown)
+    {
+        var expanded = new byte[TabExpander.MeasureExpanded(markdown)];
+        TabExpander.Expand(markdown, expanded);
+        return Encoding.UTF8.GetString(expanded);
+    }
 
     /// <summary>Renders <paramref name="markdown"/> to an HTML string.</summary>
     /// <param name="markdown">UTF-8 markdown.</param>

@@ -39,13 +39,30 @@ public static class MarkdownRenderer
 
         // Tabs in line indentation become spaces so nested lists and code blocks see stable columns.
         // The vectorized IndexOf keeps the tab-free common case free of any copy.
-        byte[]? expandedBuffer = null;
-        if (TabExpander.MayNeedExpansion(markdown))
+        if (!TabExpander.MayNeedExpansion(markdown))
         {
-            expandedBuffer = TabExpander.Expand(markdown);
-            markdown = expandedBuffer;
+            RenderBlocks(markdown, writer);
+            return;
         }
 
+        var expandedLength = TabExpander.MeasureExpanded(markdown);
+        var expandedBuffer = ArrayPool<byte>.Shared.Rent(expandedLength);
+        try
+        {
+            TabExpander.Expand(markdown, expandedBuffer);
+            RenderBlocks(expandedBuffer.AsSpan(0, expandedLength), writer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(expandedBuffer);
+        }
+    }
+
+    /// <summary>Renders markdown that has no frontmatter and no indentation tabs.</summary>
+    /// <param name="markdown">UTF-8 markdown source.</param>
+    /// <param name="writer">UTF-8 sink for the rendered HTML.</param>
+    private static void RenderBlocks(ReadOnlySpan<byte> markdown, IBufferWriter<byte> writer)
+    {
         // CommonMark reference-style links: collect `[label]: url "title"` definitions and rewrite
         // every `[text][label]` / `[text][]` / collapsed `[label]` into the inline `[text](url)`
         // form before block scanning. Skips when the source has no `]:` sequence at all so the

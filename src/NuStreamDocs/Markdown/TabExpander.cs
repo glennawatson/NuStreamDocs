@@ -24,33 +24,30 @@ internal static class TabExpander
     /// <returns>True when a tab is present.</returns>
     internal static bool MayNeedExpansion(ReadOnlySpan<byte> source) => source.IndexOf(Tab) >= 0;
 
-    /// <summary>Returns a copy of <paramref name="source"/> with every tab in a line's leading whitespace replaced by spaces up to the next tab stop.</summary>
+    /// <summary>Writes <paramref name="source"/> to <paramref name="destination"/> with every tab in a line's leading whitespace replaced by spaces up to the next tab stop.</summary>
     /// <param name="source">UTF-8 markdown source.</param>
-    /// <returns>The expanded copy; tabs after the first non-whitespace byte of a line are kept.</returns>
-    internal static byte[] Expand(ReadOnlySpan<byte> source)
+    /// <param name="destination">Receives the expanded bytes; at least <see cref="MeasureExpanded"/> bytes long. Tabs after the first non-whitespace byte of a line are kept.</param>
+    internal static void Expand(ReadOnlySpan<byte> source, Span<byte> destination)
     {
-        var result = new byte[MeasureExpanded(source)];
         var written = 0;
         var pos = 0;
         while (pos < source.Length)
         {
             var indentEnd = SkipIndent(source, pos, out var columns);
-            result.AsSpan(written, columns).Fill(Space);
+            destination.Slice(written, columns).Fill(Space);
             written += columns;
 
             var next = NextLineStart(source, indentEnd);
-            source[indentEnd..next].CopyTo(result.AsSpan(written));
+            source[indentEnd..next].CopyTo(destination[written..]);
             written += next - indentEnd;
             pos = next;
         }
-
-        return result;
     }
 
     /// <summary>Computes the byte length of the expanded output.</summary>
     /// <param name="source">UTF-8 markdown source.</param>
     /// <returns>Expanded length in bytes.</returns>
-    private static int MeasureExpanded(ReadOnlySpan<byte> source)
+    internal static int MeasureExpanded(ReadOnlySpan<byte> source)
     {
         var total = 0;
         var pos = 0;
