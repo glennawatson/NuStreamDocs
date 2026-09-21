@@ -112,13 +112,9 @@ public static class LinkReferenceRewriter
             return afterCode;
         }
 
-        if (MarkdownCodeScanner.AtLineStart(source, pos))
+        if (MarkdownCodeScanner.AtLineStart(source, pos) && TryParseDefinition(source, pos, out _, out var definitionEnd))
         {
-            var lineEnd = Utf8LineSpan.LfLineEnd(source, pos);
-            if (TryParseDefinitionLine(source, pos, lineEnd, out _))
-            {
-                return lineEnd;
-            }
+            return definitionEnd;
         }
 
         return source[pos] is (byte)'[' && TryRewriteReference(source, pos, definitions, writer, out var consumed)
@@ -345,54 +341,129 @@ public static class LinkReferenceRewriter
                 continue;
             }
 
-            var lineEnd = Utf8LineSpan.LfLineEnd(source, pos);
-            if (TryParseDefinitionLine(source, pos, lineEnd, out var def))
+            if (TryParseDefinition(source, pos, out var def, out var definitionEnd))
             {
                 _ = map.TryAdd(def.Key, new(def.Href.ToArray(), def.Title.ToArray()));
+                pos = definitionEnd;
+                continue;
             }
 
-            pos = lineEnd;
+            pos = Utf8LineSpan.LfLineEnd(source, pos);
         }
 
         return map;
     }
 
-    /// <summary>Parses a single line as <c>[label]: url "optional title"</c>.</summary>
+    /// <summary>
+    /// Parses a definition that starts at <paramref name="lineStart"/>:
+    /// <c>[label]: url "optional title"</c>, where the URL may sit on the line after the label
+    /// and the title on the line after the URL.
+    /// </summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <param name="lineStart">Inclusive line start.</param>
-    /// <param name="lineEnd">Exclusive line end.</param>
+    /// <param name="lineStart">Inclusive start of the first line.</param>
     /// <param name="parsed">Parsed definition on success.</param>
-    /// <returns>True when the line is a well-formed definition.</returns>
-    private static bool TryParseDefinitionLine(
+    /// <param name="end">Exclusive end of the last line the definition occupies on success.</param>
+    /// <returns>True when the lines form a well-formed definition.</returns>
+    private static bool TryParseDefinition(
         ReadOnlySpan<byte> source,
         int lineStart,
-        int lineEnd,
-        out ParsedDefinition parsed)
+        out ParsedDefinition parsed,
+        out int end)
     {
         parsed = default;
+        end = lineStart;
+        var lineEnd = Utf8LineSpan.LfLineEnd(source, lineStart);
         if (!TryParseDefinitionLabel(source, lineStart, lineEnd, out var label, out var afterColon))
         {
             return false;
         }
 
-        if (!TryParseDefinitionHref(source, afterColon, lineEnd, out var hrefBytes, out var afterHref))
+        if (!TryLocateDefinitionHref(source, afterColon, lineEnd, out var hrefStart, out var hrefLineEnd))
         {
             return false;
         }
 
-        var titleStart = SkipSpaces(source, afterHref, lineEnd);
-        var titleBytes = titleStart > afterHref ? ParseDefinitionTitle(source, titleStart, lineEnd) : default;
-        parsed = new(NormalizeLabel(label), hrefBytes, titleBytes);
+        if (!TryParseDefinitionHref(source, hrefStart, hrefLineEnd, out var hrefBytes, out var afterHref))
+        {
+            return false;
+        }
+
+        var afterSpaces = SkipSpaces(source, afterHref, hrefLineEnd);
+        if (afterSpaces < hrefLineEnd && !IsLineBreak(source[afterSpaces]))
+        {
+            if (afterSpaces == afterHref || !TryParseDefinitionTitle(source, afterSpaces, hrefLineEnd, out var sameLineTitle))
+            {
+                return false;
+            }
+
+            parsed = new(NormalizeLabel(label), hrefBytes, sameLineTitle);
+            end = hrefLineEnd;
+            return true;
+        }
+
+        var hasNextLineTitle = TryParseNextLineTitle(source, hrefLineEnd, out var nextLineTitle, out var nextLineEnd);
+        parsed = new(NormalizeLabel(label), hrefBytes, nextLineTitle);
+        end = hasNextLineTitle ? nextLineEnd : hrefLineEnd;
         return true;
     }
 
-    /// <summary>Parses the optional quoted or parenthesized title that follows a definition's URL.</summary>
+    /// <summary>Finds where a definition's URL starts: after the colon on the label line, or at the first content of the next line.</summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <param name="start">Cursor at the first byte after the whitespace that follows the URL.</param>
-    /// <param name="lineEnd">End of the line.</param>
-    /// <returns>The title bytes without their delimiters, or an empty span when there is no well-formed title.</returns>
-    private static ReadOnlySpan<byte> ParseDefinitionTitle(ReadOnlySpan<byte> source, int start, int lineEnd)
+    /// <param name="afterColon">Cursor just after the colon and any inline whitespace, within the label line.</param>
+    /// <param name="lineEnd">Exclusive end of the label line.</param>
+    /// <param name="hrefStart">Index of the URL's first byte on success.</param>
+    /// <param name="hrefLineEnd">Exclusive end of the line holding the URL on success.</param>
+    /// <returns>True when a URL start was found.</returns>
+    private static bool TryLocateDefinitionHref(
+        ReadOnlySpan<byte> source,
+        int afterColon,
+        int lineEnd,
+        out int hrefStart,
+        out int hrefLineEnd)
     {
+        hrefStart = afterColon;
+        hrefLineEnd = lineEnd;
+        if (!IsLineBreak(source[afterColon]))
+        {
+            return true;
+        }
+
+        hrefLineEnd = Utf8LineSpan.LfLineEnd(source, lineEnd);
+        hrefStart = SkipSpaces(source, lineEnd, hrefLineEnd);
+        return hrefStart < hrefLineEnd && !IsLineBreak(source[hrefStart]);
+    }
+
+    /// <summary>Parses a title that occupies the whole line starting at <paramref name="lineStart"/>.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="lineStart">Inclusive start of the candidate line.</param>
+    /// <param name="title">Title bytes without delimiters on success.</param>
+    /// <param name="lineEnd">Exclusive end of the title line on success.</param>
+    /// <returns>True when the line is a well-formed title.</returns>
+    private static bool TryParseNextLineTitle(
+        ReadOnlySpan<byte> source,
+        int lineStart,
+        out ReadOnlySpan<byte> title,
+        out int lineEnd)
+    {
+        title = default;
+        lineEnd = Utf8LineSpan.LfLineEnd(source, lineStart);
+        var start = SkipSpaces(source, lineStart, lineEnd);
+        return start < lineEnd && TryParseDefinitionTitle(source, start, lineEnd, out title);
+    }
+
+    /// <summary>Parses the quoted or parenthesized title that ends a definition line.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="start">Cursor at the title's opening delimiter.</param>
+    /// <param name="lineEnd">End of the line.</param>
+    /// <param name="title">Title bytes without delimiters on success; empty for an empty title.</param>
+    /// <returns>True when the delimiters are matched and nothing follows the closing delimiter.</returns>
+    private static bool TryParseDefinitionTitle(
+        ReadOnlySpan<byte> source,
+        int start,
+        int lineEnd,
+        out ReadOnlySpan<byte> title)
+    {
+        title = default;
         var closer = source[start] switch
         {
             (byte)'"' => '"',
@@ -407,10 +478,19 @@ public static class LinkReferenceRewriter
             end--;
         }
 
-        return closer != '\0' && end - start >= MinTitleLength && source[end - 1] == closer
-            ? source[(start + 1)..(end - 1)]
-            : default;
+        if (closer == '\0' || end - start < MinTitleLength || source[end - 1] != closer)
+        {
+            return false;
+        }
+
+        title = source[(start + 1)..(end - 1)];
+        return true;
     }
+
+    /// <summary>Returns true for a line-terminator byte.</summary>
+    /// <param name="b">Byte to test.</param>
+    /// <returns>True for <c>\n</c> or <c>\r</c>.</returns>
+    private static bool IsLineBreak(byte b) => b is (byte)'\n' or (byte)'\r';
 
     /// <summary>Parses the <c>[label]:</c> prefix of a definition line.</summary>
     /// <param name="source">UTF-8 source.</param>
