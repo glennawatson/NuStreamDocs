@@ -32,6 +32,12 @@ public static class LinkReferenceRewriter
     /// <summary>Cap above which a parked definition table is dropped instead of cached, so an outlier page doesn't pin a large table.</summary>
     private const int MaxCachedTableCapacity = 4 * 1024;
 
+    /// <summary>Distance from the start of a label back to the <c>!</c> that marks an image.</summary>
+    private const int ImageMarkerOffset = 2;
+
+    /// <summary>Deepest nesting of reference labels inside reference labels that is resolved; deeper labels are copied as written.</summary>
+    private const int MaxLabelDepth = 32;
+
     /// <summary>Per-thread parked definition table reused across rewrites on the same worker.</summary>
     [ThreadStatic]
     private static LinkReferenceTable? _tableCache;
@@ -105,42 +111,50 @@ public static class LinkReferenceRewriter
         LinkReferenceTable definitions,
         IBufferWriter<byte> writer)
     {
+        RewriteState state = new(source, definitions, writer);
         var pos = 0;
-        var inlineLabelEnd = 0;
         while (pos < source.Length)
         {
-            pos = ProcessOne(source, pos, definitions, writer, ref inlineLabelEnd);
+            pos = ProcessOne(source, pos, ref state);
         }
     }
 
     /// <summary>Handles one cursor position: code region, definition line, reference-link span, or plain bytes.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="pos">Current cursor.</param>
-    /// <param name="definitions">Pre-built definition map.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    /// <param name="inlineLabelEnd">Index of the close bracket of the furthest-reaching inline link label the cursor has entered.</param>
+    /// <param name="state">Rewrite state of the whole source.</param>
     /// <returns>Updated cursor.</returns>
-    private static int ProcessOne(
-        ReadOnlySpan<byte> source,
-        int pos,
-        LinkReferenceTable definitions,
-        IBufferWriter<byte> writer,
-        ref int inlineLabelEnd)
+    private static int ProcessOne(ReadOnlySpan<byte> source, int pos, ref RewriteState state)
     {
-        if (TryConsumeCodeRegion(source, pos, writer, out var afterCode))
+        if (TryConsumeCodeRegion(source, pos, state.Writer, out var afterCode))
         {
             return afterCode;
         }
 
-        if (MarkdownCodeScanner.AtLineStart(source, pos) && TryParseDefinition(source, pos, out _, out var definitionEnd))
-        {
-            return definitionEnd;
-        }
-
-        return source[pos] is (byte)'[' && TryRewriteReference(source, pos, definitions, writer, ref inlineLabelEnd, out var consumed)
-            ? pos + consumed
-            : CopyPlainRun(source, pos, writer);
+        return MarkdownCodeScanner.AtLineStart(source, pos) && TryParseDefinition(source, pos, out _, out var definitionEnd)
+            ? definitionEnd
+            : ProcessInline(source, pos, ref state);
     }
+
+    /// <summary>Handles one cursor position of a reference label: code region, reference-link span, or plain bytes.</summary>
+    /// <param name="source">UTF-8 source, cut off at the end of the label.</param>
+    /// <param name="pos">Current cursor.</param>
+    /// <param name="state">Rewrite state of the whole source.</param>
+    /// <returns>Updated cursor.</returns>
+    private static int ProcessLabelByte(ReadOnlySpan<byte> source, int pos, ref RewriteState state) =>
+        TryConsumeCodeRegion(source, pos, state.Writer, out var afterCode)
+            ? afterCode
+            : ProcessInline(source, pos, ref state);
+
+    /// <summary>Handles one cursor position that is not a code region or definition: a reference-link span or plain bytes.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="pos">Current cursor.</param>
+    /// <param name="state">Rewrite state of the whole source.</param>
+    /// <returns>Updated cursor.</returns>
+    private static int ProcessInline(ReadOnlySpan<byte> source, int pos, ref RewriteState state) =>
+        source[pos] is (byte)'[' && TryRewriteReference(source, pos, ref state, out var consumed)
+            ? pos + consumed
+            : CopyPlainRun(source, pos, state.Writer);
 
     /// <summary>Skips a fenced or inline-code region, copying it through verbatim.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -219,17 +233,13 @@ public static class LinkReferenceRewriter
     /// <summary>Tries to rewrite a reference-style link at <paramref name="pos"/>.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="pos">Cursor at the leading <c>[</c>.</param>
-    /// <param name="definitions">Defined references.</param>
-    /// <param name="writer">UTF-8 sink.</param>
-    /// <param name="inlineLabelEnd">Index of the close bracket of the furthest-reaching inline link label the cursor has entered; raised when <paramref name="pos"/> starts an inline link.</param>
+    /// <param name="state">Rewrite state of the whole source; its inline label end is raised when <paramref name="pos"/> starts an inline link.</param>
     /// <param name="consumed">Bytes consumed from <paramref name="pos"/> on success.</param>
     /// <returns>True when a reference was rewritten.</returns>
     private static bool TryRewriteReference(
         ReadOnlySpan<byte> source,
         int pos,
-        LinkReferenceTable definitions,
-        IBufferWriter<byte> writer,
-        ref int inlineLabelEnd,
+        ref RewriteState state,
         out int consumed)
     {
         consumed = 0;
@@ -244,12 +254,11 @@ public static class LinkReferenceRewriter
         var afterFirst = firstClose + 1;
         if (afterFirst < source.Length && source[afterFirst] is (byte)'(')
         {
-            inlineLabelEnd = Math.Max(inlineLabelEnd, firstClose);
+            state.InlineLabelEnd = Math.Max(state.InlineLabelEnd, firstClose);
             return false;
         }
 
         var label = source[(pos + 1)..firstClose];
-        var nestable = IsNestable(label, pos < inlineLabelEnd);
 
         if (afterFirst < source.Length && source[afterFirst] is (byte)'[')
         {
@@ -266,59 +275,97 @@ public static class LinkReferenceRewriter
                 refLabel = label;
             }
 
-            if (!TryResolve(source, definitions, refLabel, out var href, out var title))
+            if (!TryResolve(state.Document, state.Definitions, refLabel, out var href, out var title))
             {
                 return false;
             }
 
-            EmitInlineLink(label, href.AsSpan(source), title.AsSpan(source), nestable, writer);
+            EmitInlineLink(source, pos + 1, firstClose, href, title, ref state);
             consumed = secondClose + 1 - pos;
             return true;
         }
 
         // Shortcut reference: `[label]` only.
-        if (!TryResolve(source, definitions, label, out var shortcutHref, out var shortcutTitle))
+        if (!TryResolve(state.Document, state.Definitions, label, out var shortcutHref, out var shortcutTitle))
         {
             return false;
         }
 
-        EmitInlineLink(label, shortcutHref.AsSpan(source), shortcutTitle.AsSpan(source), nestable, writer);
+        EmitInlineLink(source, pos + 1, firstClose, shortcutHref, shortcutTitle, ref state);
         consumed = firstClose + 1 - pos;
         return true;
     }
 
-    /// <summary>Tells whether a reference link holds or sits inside an inline link.</summary>
-    /// <param name="label">Visible label bytes.</param>
-    /// <param name="insideInlineLabel">True when the reference starts inside the label of an inline link.</param>
-    /// <returns>True when the resolved link must stay a link next to another inline link.</returns>
-    private static bool IsNestable(ReadOnlySpan<byte> label, bool insideInlineLabel) =>
-        insideInlineLabel || label.IndexOf("]("u8) >= 0;
-
-    /// <summary>Emits <c>[text](href "title")</c> into <paramref name="writer"/>.</summary>
-    /// <param name="text">Visible label bytes.</param>
-    /// <param name="href">Resolved href bytes.</param>
-    /// <param name="title">Resolved title bytes; empty for no title.</param>
-    /// <param name="nestable">True when the link holds or sits inside another inline link; a space before the href tells the renderer to keep it a link there.</param>
-    /// <param name="writer">UTF-8 sink.</param>
+    /// <summary>
+    /// Emits <c>[text](href "title")</c>. References inside the text are resolved too, and a link that holds
+    /// or sits inside another link gets a space before its href so the renderer keeps it a link there.
+    /// </summary>
+    /// <param name="source">UTF-8 source holding the label.</param>
+    /// <param name="labelStart">Inclusive start of the visible label.</param>
+    /// <param name="labelEnd">Exclusive end of the visible label.</param>
+    /// <param name="href">Resolved href range of the whole document.</param>
+    /// <param name="title">Resolved title range of the whole document; empty for no title.</param>
+    /// <param name="state">Rewrite state of the whole source.</param>
     private static void EmitInlineLink(
-        ReadOnlySpan<byte> text,
-        ReadOnlySpan<byte> href,
-        ReadOnlySpan<byte> title,
-        bool nestable,
-        IBufferWriter<byte> writer)
+        ReadOnlySpan<byte> source,
+        int labelStart,
+        int labelEnd,
+        in ByteRange href,
+        in ByteRange title,
+        ref RewriteState state)
     {
+        var writer = state.Writer;
+        var label = source[labelStart..labelEnd];
+        var insideInlineLabel = labelStart <= state.InlineLabelEnd;
+        var linkCount = state.LinkCount;
+
         Write(writer, "["u8);
-        Write(writer, text);
+        if (label.Contains((byte)'[') && state.Depth < MaxLabelDepth && !IsImageLabel(source, labelStart))
+        {
+            RewriteLabel(source[..labelEnd], labelStart, ref state);
+        }
+        else
+        {
+            Write(writer, label);
+        }
+
+        var nestable = insideInlineLabel || state.LinkCount != linkCount || label.IndexOf("]("u8) >= 0;
         Write(writer, nestable ? "]( "u8 : "]("u8);
-        Write(writer, href);
-        if (title is [_, ..])
+        Write(writer, href.AsSpan(state.Document));
+        var titleBytes = title.AsSpan(state.Document);
+        if (titleBytes is [_, ..])
         {
             Write(writer, " \""u8);
-            WriteTitle(writer, title);
+            WriteTitle(writer, titleBytes);
             Write(writer, "\""u8);
         }
 
         Write(writer, ")"u8);
+        state.LinkCount++;
+    }
+
+    /// <summary>Tells whether the label at <paramref name="labelStart"/> belongs to an image, whose alt text stays as written.</summary>
+    /// <param name="source">UTF-8 source holding the label.</param>
+    /// <param name="labelStart">Inclusive start of the label, just after its open bracket.</param>
+    /// <returns>True when a <c>!</c> precedes the open bracket.</returns>
+    private static bool IsImageLabel(ReadOnlySpan<byte> source, int labelStart) =>
+        labelStart >= ImageMarkerOffset && source[labelStart - ImageMarkerOffset] is (byte)'!';
+
+    /// <summary>Copies a reference label while resolving the references it holds.</summary>
+    /// <param name="source">UTF-8 source, cut off at the end of the label.</param>
+    /// <param name="labelStart">Inclusive start of the label.</param>
+    /// <param name="state">Rewrite state of the whole source.</param>
+    private static void RewriteLabel(ReadOnlySpan<byte> source, int labelStart, ref RewriteState state)
+    {
+        state.Depth++;
+        state.InlineLabelEnd = Math.Max(state.InlineLabelEnd, source.Length);
+        var pos = labelStart;
+        while (pos < source.Length)
+        {
+            pos = ProcessLabelByte(source, pos, ref state);
+        }
+
+        state.Depth--;
     }
 
     /// <summary>Writes title bytes with each double quote as an entity so the title cannot end the inline link's quoted title early.</summary>
@@ -767,6 +814,39 @@ public static class LinkReferenceRewriter
         slice.IsEmpty
             ? default
             : new((int)Unsafe.ByteOffset(ref MemoryMarshal.GetReference(source), ref MemoryMarshal.GetReference(slice)), slice.Length);
+
+    /// <summary>Rewrite pass state that stays the same whichever slice of the source is being scanned.</summary>
+    private ref struct RewriteState
+    {
+        /// <summary>Initializes a new instance of the <see cref="RewriteState"/> struct.</summary>
+        /// <param name="document">Whole UTF-8 source the definition ranges index into.</param>
+        /// <param name="definitions">Defined references.</param>
+        /// <param name="writer">UTF-8 sink.</param>
+        public RewriteState(ReadOnlySpan<byte> document, LinkReferenceTable definitions, IBufferWriter<byte> writer)
+        {
+            Document = document;
+            Definitions = definitions;
+            Writer = writer;
+        }
+
+        /// <summary>Gets the whole UTF-8 source the definition ranges index into.</summary>
+        public readonly ReadOnlySpan<byte> Document { get; }
+
+        /// <summary>Gets the defined references.</summary>
+        public readonly LinkReferenceTable Definitions { get; }
+
+        /// <summary>Gets the UTF-8 sink.</summary>
+        public readonly IBufferWriter<byte> Writer { get; }
+
+        /// <summary>Gets or sets the index of the close bracket of the furthest-reaching link label the cursor has entered.</summary>
+        public int InlineLabelEnd { get; set; }
+
+        /// <summary>Gets or sets the number of reference links emitted so far.</summary>
+        public int LinkCount { get; set; }
+
+        /// <summary>Gets or sets how many reference labels enclose the cursor.</summary>
+        public int Depth { get; set; }
+    }
 
     /// <summary>Transient parse result used during the collection pass.</summary>
     /// <param name="Label">Label range.</param>

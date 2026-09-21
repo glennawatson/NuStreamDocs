@@ -164,7 +164,7 @@ public class InlineLinkRenderingTests
         await Assert.That(html).IsEqualTo($"<p>{expected}</p>\n");
     }
 
-    /// <summary>Reference links keep nesting with inline links, both inside a label and around one.</summary>
+    /// <summary>Reference links keep nesting with inline links, both inside a label and around one, and nest with references in their own label.</summary>
     /// <param name="markdown">Source text.</param>
     /// <param name="expected">Expected HTML.</param>
     /// <returns>Async test.</returns>
@@ -177,6 +177,16 @@ public class InlineLinkRenderingTests
     [Arguments("[a [l][r] [k](j)](u)\n\n[r]: /r\n", "<p><a href=\"u\">a <a href=\"/r\">l</a> <a href=\"j\">k</a></a></p>\n")]
     [Arguments("[a [l](m) [r] b](u)\n\n[r]: /r\n", "<p><a href=\"u\">a [l](m) <a href=\"/r\">r</a> b</a></p>\n")]
     [Arguments("[l][r] then [a [k](j)](u)\n\n[r]: /r\n", "<p><a href=\"/r\">l</a> then <a href=\"u\">a [k](j)</a></p>\n")]
+    [Arguments("[a [r] b][s]\n\n[r]: /r\n[s]: /s\n", "<p><a href=\"/s\">a <a href=\"/r\">r</a> b</a></p>\n", DisplayName = "reference in the middle of a reference label")]
+    [Arguments("[[r]][s]\n\n[r]: /r\n[s]: /s\n", "<p><a href=\"/s\"><a href=\"/r\">r</a></a></p>\n", DisplayName = "reference as a whole reference label")]
+    [Arguments("[a [r] b][r]\n\n[r]: /r\n", "<p><a href=\"/r\">a <a href=\"/r\">r</a> b</a></p>\n", DisplayName = "reference label with the outer definition")]
+    [Arguments("[a [r] b][s]\n\n[r]: /r \"t\"\n[s]: /s \"u\"\n", "<p><a href=\"/s\" title=\"u\">a <a href=\"/r\" title=\"t\">r</a> b</a></p>\n", DisplayName = "titles")]
+    [Arguments("[a *[r]* b][s]\n\n[r]: /r\n[s]: /s\n", "<p><a href=\"/s\">a <em><a href=\"/r\">r</a></em> b</a></p>\n", DisplayName = "reference inside emphasis in a label")]
+    [Arguments("[a [r] [l](m) b][s]\n\n[r]: /r\n[s]: /s\n", "<p><a href=\"/s\">a <a href=\"/r\">r</a> <a href=\"m\">l</a> b</a></p>\n", DisplayName = "reference next to an inline link")]
+    [Arguments("[a [u] b][s]\n\n[s]: /s\n", "<p><a href=\"/s\">a [u] b</a></p>\n", DisplayName = "undefined reference in a label stays text")]
+    [Arguments("[a `[r]` b][s]\n\n[r]: /r\n[s]: /s\n", "<p><a href=\"/s\">a <code>[r]</code> b</a></p>\n", DisplayName = "reference in code span stays text")]
+    [Arguments("[a [r] b][s] then [r]\n\n[r]: /r\n[s]: /s\n", "<p><a href=\"/s\">a <a href=\"/r\">r</a> b</a> then <a href=\"/r\">r</a></p>\n", DisplayName = "plain reference after it")]
+    [Arguments("![a [r] b][s]\n\n[r]: /r\n[s]: /s\n", "<p><img alt=\"a [r] b\" src=\"/s\" /></p>\n", DisplayName = "image alt text stays as written")]
     public async Task ReferenceLinksNestWithInlineLinks(string markdown, string expected) =>
         await Assert.That(Render(markdown)).IsEqualTo(expected);
 

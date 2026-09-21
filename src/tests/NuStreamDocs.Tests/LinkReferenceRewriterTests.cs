@@ -121,7 +121,10 @@ public sealed class LinkReferenceRewriterTests
         await Assert.That(result).IsEqualTo(expected.ToString());
     }
 
-    /// <summary>A reference link that sits inside, or holds, an inline link is written with a space before its href; every other reference link is not.</summary>
+    /// <summary>
+    /// A reference link that sits inside, or holds, another link is written with a space before its href; every other reference link is not.
+    /// References inside the label of a reference link are resolved.
+    /// </summary>
     /// <param name="source">Markdown source.</param>
     /// <param name="expected">Expected rewritten source.</param>
     /// <returns>The assertion task.</returns>
@@ -133,12 +136,66 @@ public sealed class LinkReferenceRewriterTests
     [Arguments("[a [k](j) [l][r]](u)\n\n[r]: /r\n", "[a [k](j) [l]( /r)](u)\n\n")]
     [Arguments("[a](b) [l][r]\n\n[r]: /r\n", "[a](b) [l](/r)\n\n")]
     [Arguments("[l][r] then [a](b)\n\n[r]: /r\n", "[l](/r) then [a](b)\n\n")]
-    [Arguments("[a [b] c][r]\n\n[r]: /r\n[b]: /b\n", "[a [b] c](/r)\n\n")]
+    [Arguments("[a [r] b][s]\n\n[r]: /r\n[s]: /s\n", "[a [r]( /r) b]( /s)\n\n", DisplayName = "shortcut reference in full reference")]
+    [Arguments("[a [r] b][]\n\n[a [r] b]: /s\n[r]: /r\n", "[a [r]( /r) b]( /s)\n\n", DisplayName = "shortcut reference in collapsed reference")]
+    [Arguments("[a [r] b]\n\n[a [r] b]: /s\n[r]: /r\n", "[a [r]( /r) b]( /s)\n\n", DisplayName = "shortcut reference in shortcut reference")]
+    [Arguments("[a [r][] b][s]\n\n[r]: /r\n[s]: /s\n", "[a [r]( /r) b]( /s)\n\n", DisplayName = "collapsed reference in full reference")]
+    [Arguments("[a [l][r] b][s]\n\n[r]: /r\n[s]: /s\n", "[a [l]( /r) b]( /s)\n\n", DisplayName = "full reference in full reference")]
+    [Arguments("[[r]][s]\n\n[r]: /r\n[s]: /s\n", "[[r]( /r)]( /s)\n\n", DisplayName = "label made of one reference")]
+    [Arguments("[a [r] b [q] c][s]\n\n[r]: /r\n[q]: /q\n[s]: /s\n", "[a [r]( /r) b [q]( /q) c]( /s)\n\n", DisplayName = "two references")]
+    [Arguments("[a [r] [l](m) b][s]\n\n[r]: /r\n[s]: /s\n", "[a [r]( /r) [l](m) b]( /s)\n\n", DisplayName = "reference next to inline link")]
+    [Arguments("[a [b [r] c] d][s]\n\n[b [r] c]: /b\n[r]: /r\n[s]: /s\n", "[a [b [r]( /r) c]( /b) d]( /s)\n\n", DisplayName = "reference in reference in reference")]
+    [Arguments("[a [r] b][s]\n\n[r]: /r \"t\"\n[s]: /s \"u\"\n", "[a [r]( /r \"t\") b]( /s \"u\")\n\n", DisplayName = "titles")]
+    [Arguments("[a [u] b][s]\n\n[s]: /s\n", "[a [u] b](/s)\n\n", DisplayName = "undefined inner reference")]
+    [Arguments("[a `[r]` b][s]\n\n[r]: /r\n[s]: /s\n", "[a `[r]` b](/s)\n\n", DisplayName = "inner reference in code span")]
+    [Arguments("[a [r] b][u]\n\n[r]: /r\n", "[a [r](/r) b][u]\n\n", DisplayName = "undefined outer reference")]
+    [Arguments("[a [r] b][s]\n\n[r]: /r\n[s]: /s\n\n[r] then [a] [r]\n", "[a [r]( /r) b]( /s)\n\n\n[r](/r) then [a] [r](/r)\n", DisplayName = "references after the link stay plain")]
+    [Arguments("![a [r] b][s]\n\n[r]: /r\n[s]: /s\n", "![a [r] b](/s)\n\n", DisplayName = "image alt text stays as written")]
     public async Task Rewrite_MarksReferenceLinksThatNestWithInlineLinks(string source, string expected)
     {
         var result = Encoding.UTF8.GetString(LinkReferenceRewriter.Rewrite(Encoding.UTF8.GetBytes(source)));
 
         await Assert.That(result).IsEqualTo(expected);
+    }
+
+    /// <summary>Reference labels nested past the depth limit are copied as written.</summary>
+    /// <returns>The assertion task.</returns>
+    [Test]
+    public async Task Rewrite_StopsResolvingLabelsPastTheDepthLimit()
+    {
+        const int levels = 40;
+        const int resolvedLevels = 33;
+        var text = new string[levels + 1];
+        text[0] = "x";
+        for (var i = 1; i <= levels; i++)
+        {
+            text[i] = $"[{text[i - 1]}]";
+        }
+
+        StringBuilder markdown = new();
+        _ = markdown.Append(text[levels]).Append("\n\n");
+        for (var i = 0; i < levels; i++)
+        {
+            _ = markdown.Append('[').Append(text[i]).Append("]: /u").Append(i).Append('\n');
+        }
+
+        StringBuilder expected = new();
+        for (var i = 1; i <= resolvedLevels; i++)
+        {
+            _ = expected.Append('[');
+        }
+
+        _ = expected.Append(text[levels - resolvedLevels]);
+        for (var i = resolvedLevels; i >= 1; i--)
+        {
+            _ = expected.Append("]( /u").Append(levels - i).Append(')');
+        }
+
+        _ = expected.Append("\n\n");
+
+        var result = Encoding.UTF8.GetString(LinkReferenceRewriter.Rewrite(Encoding.UTF8.GetBytes(markdown.ToString())));
+
+        await Assert.That(result).IsEqualTo(expected.ToString());
     }
 
     /// <summary>The writer overload produces the same output as the array overload.</summary>
