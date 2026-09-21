@@ -201,7 +201,8 @@ public static class HtmlEmitter
 
         Write(OpenTags[level], writer);
 
-        var inner = source.Slice(block.Start + level, block.Length - level).TrimStart((byte)' ');
+        var line = source.Slice(block.Start, block.Length);
+        var inner = line[(SkipSpaces(line, 0) + level)..].TrimStart((byte)' ');
         InlineRenderer.Render(StripClosingHashes(inner), writer);
 
         Write(CloseTags[level], writer);

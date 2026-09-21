@@ -125,6 +125,21 @@ public class HtmlEmitterHeadingTests
     public async Task AtxClosingSequenceIsStripped(string markdown, string expected) =>
         await Assert.That(Render(Encoding.UTF8.GetBytes(markdown))).IsEqualTo(expected);
 
+    /// <summary>An ATX heading inside a list item drops its marker like a top-level heading does.</summary>
+    /// <param name="markdown">Source text.</param>
+    /// <param name="expected">Expected rendered HTML.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("- item\n\n    # H1 in item\n", "<ul>\n<li>\n<p>item</p>\n<h1>H1 in item</h1>\n</li>\n</ul>\n")]
+    [Arguments("- item\n    ## H2 in item\n", "<ul>\n<li>item\n<h2>H2 in item</h2>\n</li>\n</ul>\n")]
+    [Arguments("- a:\n\n    ## H2\n\n    text\n", "<ul>\n<li>\n<p>a:</p>\n<h2>H2</h2>\n<p>text</p>\n</li>\n</ul>\n")]
+    [Arguments("   ### Indented heading  ###\n", "<h3>Indented heading</h3>\n")]
+    public async Task HeadingInsideListItemDropsItsMarker(string markdown, string expected)
+    {
+        var html = Render(Encoding.UTF8.GetBytes(markdown));
+        await Assert.That(html).IsEqualTo(expected);
+    }
+
     /// <summary>Renders <paramref name="markdown"/> to an HTML string.</summary>
     /// <param name="markdown">UTF-8 markdown.</param>
     /// <returns>Rendered HTML.</returns>
