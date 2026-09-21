@@ -71,6 +71,31 @@ public class InlineLinkRenderingTests
     public async Task LinksImagesAndAutolinksRender(string markdown, string expected) =>
         await Assert.That(Render(markdown)).IsEqualTo($"<p>{expected}</p>\n");
 
+    /// <summary>The alt text of an image is the plain text of its label: inline links are reduced to their label text.</summary>
+    /// <param name="markdown">Source text.</param>
+    /// <param name="expected">Expected paragraph content.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("![a [l](m)](s)", "<img alt=\"a l\" src=\"s\" />", DisplayName = "link after text")]
+    [Arguments("![[l](m)](s)", "<img alt=\"l\" src=\"s\" />", DisplayName = "link only")]
+    [Arguments("![a [l](m) d](s)", "<img alt=\"a l d\" src=\"s\" />", DisplayName = "link between text")]
+    [Arguments("![a [l](m) b [k](j) c](s)", "<img alt=\"a l b k c\" src=\"s\" />", DisplayName = "two links")]
+    [Arguments("![a [l \"t\"](m \"u\") d](s \"v\")", "<img alt=\"a l &quot;t&quot; d\" src=\"s\" title=\"v\" />", DisplayName = "link with title")]
+    [Arguments("![a [l](<m n>) d](s)", "<img alt=\"a l d\" src=\"s\" />", DisplayName = "angle destination")]
+    [Arguments("![a [](m) d](s)", "<img alt=\"a  d\" src=\"s\" />", DisplayName = "empty link label")]
+    [Arguments("![a [ [b](c) ](m) d](s)", "<img alt=\"a  [b](c)  d\" src=\"s\" />", DisplayName = "link inside link label stays literal")]
+    [Arguments("![a [l [m](n)](o) d](s)", "<img alt=\"a l [m](n) d\" src=\"s\" />", DisplayName = "leading link inside link label stays literal")]
+    [Arguments("![a ![b](c) d](s)", "<img alt=\"a ![b](c) d\" src=\"s\" />", DisplayName = "image inside label stays literal")]
+    [Arguments("![a [l] b](s)", "<img alt=\"a [l] b\" src=\"s\" />", DisplayName = "brackets without destination")]
+    [Arguments("![a [l](m d](s)", "<img alt=\"a [l](m d\" src=\"s\" />", DisplayName = "link inside label without close")]
+    [Arguments("![a `c` [l](m) b](s)", "<img alt=\"a c l b\" src=\"s\" />", DisplayName = "code span and link")]
+    [Arguments("![a `[l](m)` b](s)", "<img alt=\"a [l](m) b\" src=\"s\" />", DisplayName = "link inside code span stays literal")]
+    [Arguments("![a [l](m) d](s) and ![](x)", "<img alt=\"a l d\" src=\"s\" /> and <img alt=\"\" src=\"x\" />", DisplayName = "image after image with link")]
+    [Arguments("![a [l][r] b](s)\n\n[r]: /r\n", "<img alt=\"a l b\" src=\"s\" />", DisplayName = "reference link")]
+    [Arguments("![a [l][] b](s)\n\n[l]: /r\n", "<img alt=\"a l b\" src=\"s\" />", DisplayName = "collapsed reference link")]
+    public async Task ImageAltTextReducesInlineLinksToText(string markdown, string expected) =>
+        await Assert.That(Render(markdown)).StartsWith($"<p>{expected}</p>");
+
     /// <summary>Angle-bracket text that is not an address stays literal or raw inline HTML.</summary>
     /// <param name="markdown">Source text.</param>
     /// <returns>Async test.</returns>

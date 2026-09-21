@@ -20,6 +20,15 @@ internal static class ImageSpan
     /// <summary>Backtick byte that delimits a code span inside the alt text.</summary>
     private const byte Backtick = (byte)'`';
 
+    /// <summary>Backslash byte that escapes the byte after it.</summary>
+    private const byte Backslash = (byte)'\\';
+
+    /// <summary>Bang byte that turns a following link into an image.</summary>
+    private const byte Bang = (byte)'!';
+
+    /// <summary>Length of one backslash-escape sequence (the backslash and one escaped byte).</summary>
+    private const int EscapeLength = 2;
+
     /// <summary>Handles an image span at <paramref name="pos"/> when the next byte is <c>[</c>.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="pos">Cursor on the leading <c>!</c>; advanced past the close paren on success.</param>
@@ -45,7 +54,7 @@ internal static class ImageSpan
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
 
         Utf8StringWriter.Write(writer, "<img alt=\""u8);
-        WriteAltText(source[shape.LabelStart..shape.LabelEnd], writer);
+        WriteAltText(source[shape.LabelStart..shape.LabelEnd], true, writer);
         Utf8StringWriter.Write(writer, "\" src=\""u8);
         LinkSpan.WriteDestination(source, shape, writer);
         Utf8StringWriter.Write(writer, "\""u8);
@@ -57,43 +66,74 @@ internal static class ImageSpan
         return true;
     }
 
-    /// <summary>Writes the alt attribute value: code-span backticks are dropped and their content kept; everything else is escaped as written.</summary>
+    /// <summary>Writes the alt attribute value: code spans and inline links are reduced to their text and everything else is escaped as written.</summary>
     /// <param name="label">Image label bytes.</param>
+    /// <param name="reduceLinks">True when inline links in <paramref name="label"/> are reduced to their label text; false when they stay as written.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void WriteAltText(ReadOnlySpan<byte> label, IBufferWriter<byte> writer)
+    private static void WriteAltText(ReadOnlySpan<byte> label, bool reduceLinks, IBufferWriter<byte> writer)
     {
-        var firstBacktick = label.IndexOf(Backtick);
-        if (firstBacktick < 0)
+        var i = label.IndexOfAny(Backtick, OpenBracket, Backslash);
+        if (i < 0)
         {
             HtmlEscape.EscapeText(label, writer);
             return;
         }
 
         var textStart = 0;
-        var i = firstBacktick;
         while (i < label.Length)
         {
-            if (label[i] != Backtick)
+            var next = label[i] switch
             {
-                i++;
-                continue;
-            }
+                Backslash => i + EscapeLength,
+                OpenBracket => reduceLinks ? WriteAltLink(label, i, ref textStart, writer) : i + 1,
+                _ => WriteAltCodeSpan(label, i, ref textStart, writer)
+            };
 
-            var runLength = AsciiByteHelpers.RunLength(label, i, Backtick);
-            var contentStart = i + runLength;
-            var closeStart = CodeSpan.FindMatchingClose(label, contentStart, runLength);
-            if (closeStart < 0)
-            {
-                i = contentStart;
-                continue;
-            }
-
-            HtmlEscape.EscapeText(label[textStart..i], writer);
-            HtmlEscape.EscapeText(AsciiByteHelpers.TrimAsciiWhitespace(label[contentStart..closeStart]), writer);
-            i = closeStart + runLength;
-            textStart = i;
+            var rel = next < label.Length ? label[next..].IndexOfAny(Backtick, OpenBracket, Backslash) : -1;
+            i = rel < 0 ? label.Length : next + rel;
         }
 
         HtmlEscape.EscapeText(label[textStart..], writer);
+    }
+
+    /// <summary>Writes the label of the inline link that starts at <paramref name="i"/>, when there is one.</summary>
+    /// <param name="label">Image label bytes.</param>
+    /// <param name="i">Index of the open bracket.</param>
+    /// <param name="textStart">Start of the label text not yet written; advanced past the link when one was written.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Index of the first byte to inspect next.</returns>
+    private static int WriteAltLink(ReadOnlySpan<byte> label, int i, ref int textStart, IBufferWriter<byte> writer)
+    {
+        if ((i > 0 && label[i - 1] is Bang) || !LinkSpan.TryReadShape(label, i, out var shape))
+        {
+            return i + 1;
+        }
+
+        HtmlEscape.EscapeText(label[textStart..i], writer);
+        WriteAltText(label[shape.LabelStart..shape.LabelEnd], false, writer);
+        textStart = shape.End;
+        return shape.End;
+    }
+
+    /// <summary>Writes the content of the code span that starts at <paramref name="i"/>, when there is one.</summary>
+    /// <param name="label">Image label bytes.</param>
+    /// <param name="i">Index of the first backtick.</param>
+    /// <param name="textStart">Start of the label text not yet written; advanced past the code span when one was written.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Index of the first byte to inspect next.</returns>
+    private static int WriteAltCodeSpan(ReadOnlySpan<byte> label, int i, ref int textStart, IBufferWriter<byte> writer)
+    {
+        var runLength = AsciiByteHelpers.RunLength(label, i, Backtick);
+        var contentStart = i + runLength;
+        var closeStart = CodeSpan.FindMatchingClose(label, contentStart, runLength);
+        if (closeStart < 0)
+        {
+            return contentStart;
+        }
+
+        HtmlEscape.EscapeText(label[textStart..i], writer);
+        HtmlEscape.EscapeText(AsciiByteHelpers.TrimAsciiWhitespace(label[contentStart..closeStart]), writer);
+        textStart = closeStart + runLength;
+        return textStart;
     }
 }
