@@ -362,9 +362,9 @@ public static class HtmlEmitter
         return end;
     }
 
-    /// <summary>Renders the lines of consecutive paragraph blocks as inline content separated by newlines.</summary>
+    /// <summary>Renders the consecutive line blocks in [<paramref name="start"/>, <paramref name="end"/>) as one inline run, so constructs that wrap across lines resolve.</summary>
     /// <param name="source">UTF-8 source buffer.</param>
-    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="blocks">Block descriptors; the lines are adjacent in <paramref name="source"/>.</param>
     /// <param name="start">Index of the first line block.</param>
     /// <param name="end">Exclusive end index.</param>
     /// <param name="writer">UTF-8 sink.</param>
@@ -375,17 +375,9 @@ public static class HtmlEmitter
         int end,
         IBufferWriter<byte> writer)
     {
-        for (var i = start; i < end; i++)
-        {
-            if (i > start)
-            {
-                Write("\n"u8, writer);
-            }
-
-            var block = blocks[i];
-            var line = source.Slice(block.Start, block.Length).TrimStart((byte)' ');
-            InlineRenderer.Render(i == end - 1 ? line.TrimEnd((byte)' ') : line, writer);
-        }
+        var last = blocks[end - 1];
+        var text = source[blocks[start].Start..(last.Start + last.Length)];
+        InlineRenderer.Render(text.TrimStart((byte)' ').TrimEnd((byte)' '), writer);
     }
 
     /// <summary>Writes a setext heading: the paragraph lines in [<paramref name="start"/>, <paramref name="underline"/>) wrapped in the level the underline block carries.</summary>
