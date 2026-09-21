@@ -11,6 +11,9 @@ namespace NuStreamDocs.Markdown;
 /// <summary>Inline-link handler. Recognizes <c>[label](href "title")</c> and emits a matching <c>&lt;a&gt;</c> element with the href and title HTML-escaped.</summary>
 internal static class LinkSpan
 {
+    /// <summary>Backslash byte that escapes the byte after it.</summary>
+    private const byte Backslash = (byte)'\\';
+
     /// <summary>Open-bracket byte.</summary>
     private const byte OpenBracket = (byte)'[';
 
@@ -120,7 +123,7 @@ internal static class LinkSpan
         Utf8StringWriter.Write(writer, "\""u8);
     }
 
-    /// <summary>Finds the matching close byte, respecting nested open/close pairs.</summary>
+    /// <summary>Finds the matching close byte, respecting nested open/close pairs and backslash-escaped bytes.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="searchFrom">First byte to consider.</param>
     /// <param name="open">Open marker.</param>
@@ -132,6 +135,12 @@ internal static class LinkSpan
         for (var i = searchFrom; i < source.Length; i++)
         {
             var b = source[i];
+            if (b == Backslash)
+            {
+                i++;
+                continue;
+            }
+
             if (b == open)
             {
                 depth++;
