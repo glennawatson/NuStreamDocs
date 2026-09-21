@@ -15,7 +15,7 @@ namespace NuStreamDocs.Markdown;
 /// </summary>
 internal static class Emphasis
 {
-    /// <summary>Maximum emphasis-marker run length the probe considers (triple = strong + em).</summary>
+    /// <summary>Maximum emphasis-marker run length the probe considers (triple = em wrapping strong).</summary>
     private const int MaxRunLength = 3;
 
     /// <summary>Strong-emphasis run length.</summary>
@@ -57,11 +57,11 @@ internal static class Emphasis
     /// <summary>Gets the UTF-8 bytes for the <c>strong</c> close tag.</summary>
     private static ReadOnlySpan<byte> StrongClose => "</strong>"u8;
 
-    /// <summary>Gets the UTF-8 bytes for the combined <c>strong</c>+<c>em</c> open.</summary>
-    private static ReadOnlySpan<byte> StrongEmOpen => "<strong><em>"u8;
+    /// <summary>Gets the UTF-8 bytes for the combined <c>em</c> wrapping <c>strong</c> open.</summary>
+    private static ReadOnlySpan<byte> StrongEmOpen => "<em><strong>"u8;
 
-    /// <summary>Gets the UTF-8 bytes for the combined <c>em</c>+<c>strong</c> close.</summary>
-    private static ReadOnlySpan<byte> StrongEmClose => "</em></strong>"u8;
+    /// <summary>Gets the UTF-8 bytes for the combined <c>strong</c> inside <c>em</c> close.</summary>
+    private static ReadOnlySpan<byte> StrongEmClose => "</strong></em>"u8;
 
     /// <summary>Handles an emphasis marker run at <paramref name="pos"/>.</summary>
     /// <param name="source">The UTF-8 source.</param>
@@ -96,7 +96,7 @@ internal static class Emphasis
     /// <param name="steps">Remaining marker-run inspections.</param>
     /// <param name="lastClosers">Per-source last-closer positions.</param>
     /// <param name="openStart">Index of the first byte of the opening delimiter; earlier bytes of the run stay literal.</param>
-    /// <param name="openLength">1 = em, 2 = strong, 3 = strong+em.</param>
+    /// <param name="openLength">1 = em, 2 = strong, 3 = em wrapping strong.</param>
     /// <param name="closeStart">Index of the first byte of the closing delimiter.</param>
     /// <returns>True when a span was found.</returns>
     private static bool TryMatch(
@@ -357,7 +357,7 @@ internal static class Emphasis
     /// <param name="source">the UTF-8 source.</param>
     /// <param name="contentStart">Start of inner content.</param>
     /// <param name="closeStart">Start of close run.</param>
-    /// <param name="openLength">1 = em, 2 = strong, 3 = strong+em.</param>
+    /// <param name="openLength">1 = em, 2 = strong, 3 = em wrapping strong.</param>
     /// <param name="writer">the UTF-8 sink.</param>
     private static void EmitWrapped(
         ReadOnlySpan<byte> source,

@@ -13,7 +13,7 @@ public class EmphasisRenderingTests
     /// <summary>Repetitions of an unmatched opener in the pathological-input test.</summary>
     private const int UnmatchedRepeats = 4000;
 
-    /// <summary>Emphasis, strong, combined, and nested spans render.</summary>
+    /// <summary>Emphasis, strong, combined, and nested spans render; a triple run nests strong inside emphasis.</summary>
     /// <param name="markdown">Source text.</param>
     /// <param name="expected">Expected paragraph content.</param>
     /// <returns>Async test.</returns>
@@ -22,7 +22,13 @@ public class EmphasisRenderingTests
     [Arguments("_a_", "<em>a</em>")]
     [Arguments("**a**", "<strong>a</strong>")]
     [Arguments("__a__", "<strong>a</strong>")]
-    [Arguments("***a***", "<strong><em>a</em></strong>")]
+    [Arguments("***a***", "<em><strong>a</strong></em>")]
+    [Arguments("___a___", "<em><strong>a</strong></em>")]
+    [Arguments("***strong and emphasized***", "<em><strong>strong and emphasized</strong></em>")]
+    [Arguments("a***b***c", "a<em><strong>b</strong></em>c")]
+    [Arguments(
+        "This is ***strong and emphasized*** text and ___this too___.",
+        "This is <em><strong>strong and emphasized</strong></em> text and <em><strong>this too</strong></em>.")]
     [Arguments("foo*bar*baz", "foo<em>bar</em>baz")]
     [Arguments("**a**b", "<strong>a</strong>b")]
     [Arguments("__init__", "<strong>init</strong>")]

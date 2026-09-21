@@ -31,8 +31,8 @@ public class EmphasisUnmatchedOpenerTests
         yield return ("_a_", "<p><em>a</em></p>\n");
         yield return ("**a**", "<p><strong>a</strong></p>\n");
         yield return ("__a__", "<p><strong>a</strong></p>\n");
-        yield return ("***a***", "<p><strong><em>a</em></strong></p>\n");
-        yield return ("___a___", "<p><strong><em>a</em></strong></p>\n");
+        yield return ("***a***", "<p><em><strong>a</strong></em></p>\n");
+        yield return ("___a___", "<p><em><strong>a</strong></em></p>\n");
         yield return ("***a** b*", "<p><em><strong>a</strong> b</em></p>\n");
         yield return ("***a* b**", "<p><strong><em>a</em> b</strong></p>\n");
         yield return ("**a *b* c**", "<p><strong>a <em>b</em> c</strong></p>\n");
@@ -47,8 +47,8 @@ public class EmphasisUnmatchedOpenerTests
         yield return ("***a**", "<p>*<strong>a</strong></p>\n");
         yield return ("*a***", "<p><em>a</em>**</p>\n");
         yield return ("**a***", "<p><strong>a</strong>*</p>\n");
-        yield return ("****a****", "<p>*<strong><em>a</em></strong>*</p>\n");
-        yield return ("*****a*****", "<p>**<strong><em>a</em></strong>**</p>\n");
+        yield return ("****a****", "<p>*<em><strong>a</strong></em>*</p>\n");
+        yield return ("*****a*****", "<p>**<em><strong>a</strong></em>**</p>\n");
     }
 
     /// <summary>Gets unclosed, misplaced and intra-word markers.</summary>
@@ -153,12 +153,12 @@ public class EmphasisUnmatchedOpenerTests
         yield return ("*a*b*c*d*", "<p><em>a</em>b<em>c</em>d*</p>\n");
         yield return ("a*b*c", "<p>a<em>b</em>c</p>\n");
         yield return ("a**b**c", "<p>a<strong>b</strong>c</p>\n");
-        yield return ("a***b***c", "<p>a<strong><em>b</em></strong>c</p>\n");
+        yield return ("a***b***c", "<p>a<em><strong>b</strong></em>c</p>\n");
         yield return ("a_b_c", "<p>a_b_c</p>\n");
         yield return ("a__b__c", "<p>a__b__c</p>\n");
         yield return (
             "x *a* y **b** z ***c*** w _d_ v __e__ u ___f___",
-            "<p>x <em>a</em> y <strong>b</strong> z <strong><em>c</em></strong> w <em>d</em> v <strong>e</strong> u <strong><em>f</em></strong></p>\n");
+            "<p>x <em>a</em> y <strong>b</strong> z <em><strong>c</strong></em> w <em>d</em> v <strong>e</strong> u <em><strong>f</strong></em></p>\n");
         yield return ("*a `b` c* `d *e* f` *g*", "<p><em>a <code>b</code> c</em> <code>d *e* f</code> <em>g</em></p>\n");
         yield return ("*a \\* b* \\*c\\* *d*", "<p><em>a * b</em> *c* <em>d</em></p>\n");
         yield return ("2 * 3 * 4", "<p>2 * 3 * 4</p>\n");
