@@ -20,8 +20,19 @@ internal static class AutoLink
     /// <summary>Colon byte.</summary>
     private const byte Colon = (byte)':';
 
+    /// <summary>At-sign byte separating an email local part from its domain.</summary>
+    private const byte At = (byte)'@';
+
     /// <summary>Minimum scheme name length per CommonMark §6.5.</summary>
     private const int MinSchemeLength = 2;
+
+    /// <summary>Bytes allowed in the local part of an email autolink.</summary>
+    private static readonly SearchValues<byte> EmailLocalBytes =
+        SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!#$%&'*+/=?^_`{|}~-"u8);
+
+    /// <summary>Bytes allowed in a domain label of an email autolink.</summary>
+    private static readonly SearchValues<byte> DomainLabelBytes =
+        SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"u8);
 
     /// <summary>Handles an open angle bracket at <paramref name="pos"/>.</summary>
     /// <param name="source">UTF-8 source.</param>
@@ -43,7 +54,8 @@ internal static class AutoLink
         }
 
         var content = source[contentStart..closeIndex];
-        if (!IsAutolink(content))
+        var isEmail = !IsAutolink(content) && IsEmailAddress(content);
+        if (!isEmail && !IsAutolink(content))
         {
             return false;
         }
@@ -51,6 +63,11 @@ internal static class AutoLink
         InlineRenderer.FlushText(source, pendingTextStart, pos, writer);
 
         Utf8StringWriter.Write(writer, "<a href=\""u8);
+        if (isEmail)
+        {
+            Utf8StringWriter.Write(writer, "mailto:"u8);
+        }
+
         HtmlEscape.EscapeText(content, writer);
         Utf8StringWriter.Write(writer, "\">"u8);
         HtmlEscape.EscapeText(content, writer);
@@ -81,6 +98,37 @@ internal static class AutoLink
         return -1;
     }
 
+    /// <summary>True when <paramref name="content"/> is a plain email address: a local part, one <c>@</c>, and dot-separated alphanumeric or hyphen domain labels.</summary>
+    /// <param name="content">Slice between the angle brackets.</param>
+    /// <returns>True when the slice is an email address.</returns>
+    internal static bool IsEmailAddress(ReadOnlySpan<byte> content)
+    {
+        var at = content.IndexOf(At);
+        if (at < 1 || content[..at].IndexOfAnyExcept(EmailLocalBytes) >= 0)
+        {
+            return false;
+        }
+
+        var domain = content[(at + 1)..];
+        var labelStart = 0;
+        for (var i = 0; i <= domain.Length; i++)
+        {
+            if (i < domain.Length && domain[i] is not (byte)'.')
+            {
+                continue;
+            }
+
+            if (!IsDomainLabel(domain[labelStart..i]))
+            {
+                return false;
+            }
+
+            labelStart = i + 1;
+        }
+
+        return true;
+    }
+
     /// <summary>True when <paramref name="content"/> is a CommonMark URI autolink.</summary>
     /// <param name="content">Slice between the angle brackets.</param>
     /// <returns>True when the slice has the form <c>scheme:rest</c>.</returns>
@@ -109,4 +157,13 @@ internal static class AutoLink
 
         return true;
     }
+
+    /// <summary>True when <paramref name="label"/> is a non-empty run of letters, digits and inner hyphens.</summary>
+    /// <param name="label">One dot-separated domain label.</param>
+    /// <returns>True for a valid label.</returns>
+    private static bool IsDomainLabel(ReadOnlySpan<byte> label) =>
+        !label.IsEmpty
+        && label[0] is not (byte)'-'
+        && label[^1] is not (byte)'-'
+        && label.IndexOfAnyExcept(DomainLabelBytes) < 0;
 }

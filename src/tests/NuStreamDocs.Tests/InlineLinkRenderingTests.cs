@@ -34,8 +34,26 @@ public class InlineLinkRenderingTests
     [Arguments("![](i.png)", "<img alt=\"\" src=\"i.png\" />")]
     [Arguments("![*a*](i.png)", "<img alt=\"*a*\" src=\"i.png\" />")]
     [Arguments("![a](<i 1.png>)", "<img alt=\"a\" src=\"i 1.png\" />")]
-    public async Task LinksAndImagesRender(string markdown, string expected) =>
+    [Arguments("<https://x.com/a?b=c&d>", "<a href=\"https://x.com/a?b=c&amp;d\">https://x.com/a?b=c&amp;d</a>")]
+    [Arguments("<me@x.com>", "<a href=\"mailto:me@x.com\">me@x.com</a>")]
+    [Arguments("<a.b+c@sub.example.org>", "<a href=\"mailto:a.b+c@sub.example.org\">a.b+c@sub.example.org</a>")]
+    [Arguments("<mailto:me@x.com>", "<a href=\"mailto:me@x.com\">mailto:me@x.com</a>")]
+    public async Task LinksImagesAndAutolinksRender(string markdown, string expected) =>
         await Assert.That(Render(markdown)).IsEqualTo($"<p>{expected}</p>\n");
+
+    /// <summary>Angle-bracket text that is not an address stays literal or raw inline HTML.</summary>
+    /// <param name="markdown">Source text.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("<@x.com>")]
+    [Arguments("<me@>")]
+    [Arguments("<me@x..com>")]
+    [Arguments("<me@-x.com>")]
+    [Arguments("<me@x.com->")]
+    [Arguments("<me@x_y.com>")]
+    [Arguments("<m e@x.com>")]
+    public async Task NonAddressesAreNotMailtoLinks(string markdown) =>
+        await Assert.That(Render(markdown)).DoesNotContain("mailto:");
 
     /// <summary>Renders <paramref name="markdown"/> to an HTML string.</summary>
     /// <param name="markdown">Markdown text.</param>
