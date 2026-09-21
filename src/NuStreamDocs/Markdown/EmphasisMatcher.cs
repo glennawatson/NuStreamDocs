@@ -55,10 +55,11 @@ internal static class EmphasisMatcher
 
     /// <summary>Records every marker run in <paramref name="source"/> and the pairs they form.</summary>
     /// <param name="source">The UTF-8 source.</param>
-    /// <param name="table">Empty table with room for every run and pair of <paramref name="source"/>.</param>
+    /// <param name="table">Empty table with room for every run and pair of <paramref name="source"/>; while its links are blocked, inline links pair as literal text.</param>
     internal static void Build(ReadOnlySpan<byte> source, ref EmphasisTable table)
     {
         Span<int> stackFloors = stackalloc int[CloserKindCount];
+        var linksBlocked = table.LinksBlocked;
         var index = 0;
         while (index < source.Length)
         {
@@ -72,53 +73,87 @@ internal static class EmphasisMatcher
             index = source[index] switch
             {
                 Backslash => index + EscapeLength,
-                Backtick => SkipCodeSpan(source, index),
-                OpenBracket => SkipLink(source, index),
-                Bang => SkipImage(source, index),
-                LessThan => SkipAngleConstruct(source, index),
+                Backtick => SkipCodeSpan(source, index, ref linksBlocked),
+                OpenBracket => SkipLink(source, index, table.PairCount is 0, ref linksBlocked),
+                Bang => SkipImage(source, index, ref linksBlocked),
+                LessThan => SkipAngleConstruct(source, index, ref linksBlocked),
                 _ => AddRun(source, index, stackFloors, ref table)
             };
         }
     }
 
-    /// <summary>Returns the index past the inline link at <paramref name="index"/>, or past the bracket when none starts there.</summary>
+    /// <summary>Returns the index past the inline link at <paramref name="index"/>, or past the bracket when none starts there or the link renders as literal text.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="index">Index of the open bracket.</param>
+    /// <param name="noPairYet">True when no emphasis pair has been formed before <paramref name="index"/>.</param>
+    /// <param name="linksBlocked">True while inline links render as literal text; cleared when a link is skipped.</param>
     /// <returns>Index of the first byte to inspect next.</returns>
-    private static int SkipLink(ReadOnlySpan<byte> source, int index) =>
-        LinkSpan.TryReadShape(source, index, out var shape) ? shape.End : index + 1;
+    private static int SkipLink(ReadOnlySpan<byte> source, int index, bool noPairYet, ref bool linksBlocked)
+    {
+        if (!LinkSpan.TryReadShape(source, index, out var shape))
+        {
+            return index + 1;
+        }
+
+        if (linksBlocked && noPairYet && !LinkSpan.HasNestableMarker(source, shape))
+        {
+            return index + 1;
+        }
+
+        linksBlocked = false;
+        return shape.End;
+    }
 
     /// <summary>Returns the index past the inline image at <paramref name="index"/>, or past the bang when none starts there.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="index">Index of the bang.</param>
+    /// <param name="linksBlocked">True while inline links render as literal text; cleared when an image is skipped.</param>
     /// <returns>Index of the first byte to inspect next.</returns>
-    private static int SkipImage(ReadOnlySpan<byte> source, int index) =>
-        index + 1 < source.Length && LinkSpan.TryReadShape(source, index + 1, out var shape) ? shape.End : index + 1;
+    private static int SkipImage(ReadOnlySpan<byte> source, int index, ref bool linksBlocked)
+    {
+        if (index + 1 >= source.Length || !LinkSpan.TryReadShape(source, index + 1, out var shape))
+        {
+            return index + 1;
+        }
+
+        linksBlocked = false;
+        return shape.End;
+    }
 
     /// <summary>Returns the index past the autolink or raw HTML construct at <paramref name="index"/>, or past the angle bracket when none starts there.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="index">Index of the less-than sign.</param>
+    /// <param name="linksBlocked">True while inline links render as literal text; cleared when an autolink is skipped.</param>
     /// <returns>Index of the first byte to inspect next.</returns>
-    private static int SkipAngleConstruct(ReadOnlySpan<byte> source, int index)
+    private static int SkipAngleConstruct(ReadOnlySpan<byte> source, int index, ref bool linksBlocked)
     {
         var end = AutoLink.FindEnd(source, index);
-        if (end < 0)
+        if (end >= 0)
         {
-            end = RawHtml.FindEnd(source, index);
+            linksBlocked = false;
+            return end;
         }
 
+        end = RawHtml.FindEnd(source, index);
         return end < 0 ? index + 1 : end;
     }
 
     /// <summary>Returns the index past the code span or unmatched backtick run at <paramref name="index"/>.</summary>
     /// <param name="source">The UTF-8 source.</param>
     /// <param name="index">Index of the first backtick.</param>
+    /// <param name="linksBlocked">True while inline links render as literal text; cleared when a code span is skipped.</param>
     /// <returns>Index of the first byte to inspect next.</returns>
-    private static int SkipCodeSpan(ReadOnlySpan<byte> source, int index)
+    private static int SkipCodeSpan(ReadOnlySpan<byte> source, int index, ref bool linksBlocked)
     {
         var run = AsciiByteHelpers.RunLength(source, index, Backtick);
         var close = CodeSpan.FindMatchingClose(source, index + run, run);
-        return close < 0 ? index + run : close + run;
+        if (close < 0)
+        {
+            return index + run;
+        }
+
+        linksBlocked = false;
+        return close + run;
     }
 
     /// <summary>Records the marker run at <paramref name="start"/> and pairs it with earlier openers.</summary>

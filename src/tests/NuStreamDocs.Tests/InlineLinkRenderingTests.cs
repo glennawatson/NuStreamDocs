@@ -23,6 +23,7 @@ public class InlineLinkRenderingTests
         [
             new($"[a [l](m) {spans}b](u)", $"<p><a href=\"u\">a [l](m) {renderedSpans}b</a></p>\n"),
             new($"[*x* [l](m) {spans}b](u)", $"<p><a href=\"u\"><em>x</em> <a href=\"m\">l</a> {renderedSpans}b</a></p>\n"),
+            new($"[a [l*x*](m) {spans}b](u)", $"<p><a href=\"u\">a [l<em>x</em>](m) {renderedSpans}b</a></p>\n"),
         ];
     }
 
@@ -112,7 +113,8 @@ public class InlineLinkRenderingTests
 
     /// <summary>
     /// An inline link inside the text of another inline link renders as literal text up to the first inline element
-    /// of the label; after that element, and inside emphasis, inline links stay links.
+    /// of the label, and emphasis inside that literal text still pairs; after that element, and inside emphasis,
+    /// inline links stay links.
     /// </summary>
     /// <param name="markdown">Source text.</param>
     /// <param name="expected">Expected paragraph content.</param>
@@ -146,6 +148,16 @@ public class InlineLinkRenderingTests
     [Arguments("[a `[l](m)` b](u)", "<a href=\"u\">a <code>[l](m)</code> b</a>")]
     [Arguments("[a ![i](s) b](u)", "<a href=\"u\">a <img alt=\"i\" src=\"s\" /> b</a>")]
     [Arguments("[a <https://x.org> b](u)", "<a href=\"u\">a <a href=\"https://x.org\">https://x.org</a> b</a>")]
+    [Arguments("[a [l*x*](m) b](u)", "<a href=\"u\">a [l<em>x</em>](m) b</a>")]
+    [Arguments("[a [l*x*](m)](u)", "<a href=\"u\">a [l<em>x</em>](m)</a>")]
+    [Arguments("[a [l*x*](m*y*) b](u)", "<a href=\"u\">a [l<em>x</em>](m<em>y</em>) b</a>")]
+    [Arguments("[a [b [c*x*](d)](e) f](u)", "<a href=\"u\">a [b [c<em>x</em>](d)](e) f</a>")]
+    [Arguments("[a [l**x**](m) b](u)", "<a href=\"u\">a [l<strong>x</strong>](m) b</a>")]
+    [Arguments("[a [l_x_](m) b](u)", "<a href=\"u\">a [l_x_](m) b</a>")]
+    [Arguments("[a [l*x](m) b*](u)", "<a href=\"u\">a [l<em>x](m) b</em></a>")]
+    [Arguments("[a [l*x*](m) b*](u)", "<a href=\"u\">a [l<em>x</em>](m) b*</a>")]
+    [Arguments("[a <b> [l*x*](m) b](u)", "<a href=\"u\">a <b> [l<em>x</em>](m) b</a>")]
+    [Arguments("[a [l*x*][r] b](u)\n\n[r]: /r\n", "<a href=\"u\">a <a href=\"/r\">l<em>x</em></a> b</a>")]
     public async Task InlineLinksNestOnlyAfterAnInlineElement(string markdown, string expected)
     {
         var html = Render(markdown);

@@ -207,6 +207,14 @@ internal static class LinkSpan
         return -1;
     }
 
+    /// <summary>True when whitespace separates the open paren from the destination, the form a resolved reference link takes when it may nest with other links.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="shape">Parsed link shape.</param>
+    /// <returns>True when the link may nest with other links.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool HasNestableMarker(ReadOnlySpan<byte> source, in LinkShape shape) =>
+        AsciiByteHelpers.IsAsciiWhitespace(source[shape.LabelEnd + LabelDestinationSeparatorLength]);
+
     /// <summary>Splits the text between the parentheses into a destination and an optional quoted title.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="labelStart">Inclusive start of the label.</param>
@@ -277,14 +285,6 @@ internal static class LinkSpan
 
         return -1;
     }
-
-    /// <summary>True when whitespace separates the open paren from the destination, the form a resolved reference link takes when it may nest with other links.</summary>
-    /// <param name="source">UTF-8 source.</param>
-    /// <param name="shape">Parsed link shape.</param>
-    /// <returns>True when the link may nest with other links.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool HasNestableMarker(ReadOnlySpan<byte> source, in LinkShape shape) =>
-        AsciiByteHelpers.IsAsciiWhitespace(source[shape.LabelEnd + LabelDestinationSeparatorLength]);
 
     /// <summary>True when [<paramref name="start"/>, <paramref name="end"/>) is a non-empty <c>&lt;destination&gt;</c>.</summary>
     /// <param name="source">UTF-8 source.</param>
