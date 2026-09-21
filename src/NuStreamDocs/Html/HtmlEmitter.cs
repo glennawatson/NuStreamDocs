@@ -296,7 +296,7 @@ public static class HtmlEmitter
     private static void EmitCodeContentLine(ReadOnlySpan<byte> source, in BlockSpan block, IBufferWriter<byte> writer)
     {
         var line = StripContentIndent(source.Slice(block.Start, block.Length), block.Level);
-        HtmlEscape.EscapeText(line, writer);
+        HtmlEscape.EscapeCode(line, writer);
         Write("\n"u8, writer);
     }
 
@@ -548,7 +548,7 @@ public static class HtmlEmitter
     {
         var line = source.Slice(block.Start, block.Length);
         var stripped = StripIndentPrefix(line);
-        HtmlEscape.EscapeText(stripped, writer);
+        HtmlEscape.EscapeCode(stripped, writer);
         Write("\n"u8, writer);
     }
 

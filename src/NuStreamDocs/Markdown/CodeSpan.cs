@@ -48,7 +48,7 @@ internal static class CodeSpan
 
         InlineRenderer.FlushText(source, pendingTextStart, fenceStart, writer);
         Utf8StringWriter.Write(writer, "<code>"u8);
-        HtmlEscape.EscapeText(AsciiByteHelpers.TrimAsciiWhitespace(source[contentStart..closeStart]), writer);
+        HtmlEscape.EscapeCode(AsciiByteHelpers.TrimAsciiWhitespace(source[contentStart..closeStart]), writer);
         Utf8StringWriter.Write(writer, "</code>"u8);
 
         pos = closeStart + fenceLength;

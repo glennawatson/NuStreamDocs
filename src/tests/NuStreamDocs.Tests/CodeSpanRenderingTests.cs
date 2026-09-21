@@ -25,8 +25,18 @@ public class CodeSpanRenderingTests
     [Arguments("`a\\`", "<code>a\\</code>")]
     [Arguments("`a", "`a")]
     [Arguments("``a`", "``a`")]
+    [Arguments("`&copy;` and `&amp;` and `&#35;`", "<code>&amp;copy;</code> and <code>&amp;amp;</code> and <code>&amp;#35;</code>")]
+    [Arguments("`&copy; &amp;`", "<code>&amp;copy; &amp;amp;</code>")]
+    [Arguments("`&#x263A;`", "<code>&amp;#x263A;</code>")]
+    [Arguments("`` a &lt; b ``", "<code>a &amp;lt; b</code>")]
     public async Task CodeSpansRender(string markdown, string expected) =>
         await Assert.That(Render(markdown)).IsEqualTo($"<p>{expected}</p>\n");
+
+    /// <summary>Character references outside code keep their entity form.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task PlainTextCharacterReferencesPassThrough() =>
+        await Assert.That(Render("&copy; and `&copy;`")).IsEqualTo("<p>&copy; and <code>&amp;copy;</code></p>\n");
 
     /// <summary>Renders <paramref name="markdown"/> to an HTML string.</summary>
     /// <param name="markdown">Markdown text.</param>

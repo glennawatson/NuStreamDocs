@@ -153,6 +153,35 @@ public static class HtmlEscape
         }
     }
 
+    /// <summary>
+    /// Writes <paramref name="source"/> to <paramref name="writer"/> as literal code text, replacing
+    /// <c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>, and <c>&quot;</c> with their named HTML entities.
+    /// Character references in the input are escaped like any other text.
+    /// </summary>
+    /// <param name="source">UTF-8 input span.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    internal static void EscapeCode(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    {
+        var cursor = source;
+        while (!cursor.IsEmpty)
+        {
+            var idx = cursor.IndexOfAny(EscapeBytes);
+            if (idx < 0)
+            {
+                CopyTo(cursor, writer);
+                return;
+            }
+
+            if (idx > 0)
+            {
+                CopyTo(cursor[..idx], writer);
+            }
+
+            WriteEntity(cursor[idx], writer);
+            cursor = cursor[(idx + 1)..];
+        }
+    }
+
     /// <summary>Encodes a non-empty run of UTF-16 chars into <paramref name="writer"/> as UTF-8 with no intermediate buffer.</summary>
     /// <param name="chars">UTF-16 span (must be non-empty).</param>
     /// <param name="writer">UTF-8 sink.</param>
